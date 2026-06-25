@@ -24,9 +24,25 @@ runtime** — o vault Obsidian é só espelho humano.
 
 ## Início de sessão — contexto base obrigatório (`alwaysApply: true`)
 Carregue **antes da primeira tarefa**:
-este `CLAUDE.md` · `docs/STATE.md` · `docs/PROJECT.md` · `spec.md` da feature ativa em `specs/`.
+este `CLAUDE.md` · `docs/STATE.md` · `docs/epics/ROADMAP.md` · `docs/PROJECT.md` · `spec.md` da feature ativa em `specs/`.
 
 Todos os outros docs são `alwaysApply: false` — puxe **sob demanda** pelo `description` no frontmatter.
+
+## Processo de trabalho por story (OBRIGATÓRIO — trabalho paralelo)
+O desenvolvimento é feito por **múltiplas pessoas/sessões Claude simultaneamente**.
+Cada sessão pode estar em um épico diferente. Para não haver conflito:
+
+1. **Leia `docs/epics/ROADMAP.md` ao iniciar.** Veja qual story está disponível (sem owner).
+2. **Marque o owner** da story nessa tabela antes de codar qualquer linha.
+3. **Siga o ciclo de agentes Triviaiox** (`AGENTS.md`):
+   - `@pm` / `@analyst` → define/refina o escopo da story e escreve `product.md`
+   - `@architect` → (se tier arquitetural) escreve `design.md`
+   - `@sm` → quebra em tasks (`tasks.md`) com referência de AC
+   - `@dev` → implementa (somente após tasks.md existir)
+   - `@qa` → valida ACs contra os gates
+   - `@devops` → merge, commit, push
+4. **Nunca implemente sem `spec.md` e `tasks.md` existirem.** Se não existirem, crie-os primeiro.
+5. **Ao concluir**, atualize `docs/epics/ROADMAP.md` (status, AC verdes) e `docs/STATE.md`.
 
 ## A spec é a fonte da verdade
 - Implemente **a partir de** `specs/NNNN-*/spec.md`. Os AC (Given/When/Then) são o contrato e

@@ -18,8 +18,12 @@
     "@sinergica/shared": "workspace:*",
     "@sinergica/ui": "workspace:*",
     "@supabase/supabase-js": "^2.45.0",
+    "@tailwindcss/vite": "^4.3.1",
+    "lucide-react": "^1.21.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-router-dom": "^7.18.0",
+    "tailwindcss": "^4.3.1",
     "zod": "^3.23.0"
   },
   "devDependencies": {
