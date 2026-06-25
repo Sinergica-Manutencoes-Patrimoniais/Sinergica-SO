@@ -30,6 +30,7 @@ alwaysApply: true
 ### E00 — Shell & Infra
 | Story ID | Descrição | Spec | Status | Owner | AC verdes |
 |----------|-----------|------|--------|-------|-----------|
+| E00-S00 | Schemas de domínio — migration base (9 contextos, RLS FORCE, audit) | — | Implementado (casca) | Claude (sessão Lucas) | ✅ |
 | E00-S01 | Tela de login + Home com cards dos módulos | [spec](../../specs/E00-S01-login-home/spec.md) | Implementado | Claude (sessão Lucas) | ✅ |
 
 ### E01 — PCM · Operação

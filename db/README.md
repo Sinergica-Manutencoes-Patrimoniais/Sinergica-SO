@@ -12,7 +12,12 @@ alwaysApply: false
 > exemplo real: `db/migrations/0001_comissoes.sql`.
 
 ## Migrations
-- Uma migration por mudança, numerada e descritiva: `db/migrations/NNNN_descricao.sql`.
+- **Naming obrigatório:** `NNNN_E0N-S0N_descricao.sql`
+  - `NNNN` = sequência numérica crescente (garante ordem de execução no Supabase)
+  - `E0N-S0N` = ID do épico + story que gerou esta migration (ex.: `E01-S02`)
+  - Exemplos: `0001_E00-S00_schemas_dominio.sql` · `0002_E01-S02_tabela_ordens.sql`
+- **Uma migration por story** — se a story cria várias tabelas, tudo em um único arquivo.
+  Se duas stories tocam o mesmo schema em paralelo, coordenar via ROADMAP (sem merge conflict).
 - **Idempotência de DDL:** use `create table if not exists`, `add column if not exists`,
   `create index if not exists` — a migration pode reaplicar sem quebrar.
 - **Reverso documentado no topo:** toda migration começa com um comentário com o SQL de rollback

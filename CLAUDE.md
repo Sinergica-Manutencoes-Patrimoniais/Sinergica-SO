@@ -44,6 +44,25 @@ Cada sessão pode estar em um épico diferente. Para não haver conflito:
 4. **Nunca implemente sem `spec.md` e `tasks.md` existirem.** Se não existirem, crie-os primeiro.
 5. **Ao concluir**, atualize `docs/epics/ROADMAP.md` (status, AC verdes) e `docs/STATE.md`.
 
+## Convenções de nomeação — rastreio épico/story (OBRIGATÓRIO)
+
+### Commits
+Sempre incluir o ID da story no escopo do Conventional Commit:
+```
+feat(E01-S02): descrição do que foi feito
+fix(E03-S01): descrição do fix
+chore(E00-S00): descrição da tarefa de infra
+```
+
+### Migrations
+Formato: `NNNN_E0N-S0N_descricao.sql`
+- `NNNN` = sequência crescente (garante ordem de execução no Supabase)
+- `E0N-S0N` = ID do épico + story que criou esta migration
+- Exemplo: `0002_E01-S02_tabela_ordens_servico.sql`
+
+A sequência nunca pula: se a última é `0001`, a próxima é `0002`.
+Ver `db/README.md` para detalhes.
+
 ## A spec é a fonte da verdade
 - Implemente **a partir de** `specs/NNNN-*/spec.md`. Os AC (Given/When/Then) são o contrato e
   o oráculo de teste.
