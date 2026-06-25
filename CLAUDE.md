@@ -22,6 +22,11 @@ runtime** — o vault Obsidian é só espelho humano.
 - **PCM é o system of record**; Auvo é o braço de campo (execução insubstituível).
 - **Papéis:** admin · escritorio · tecnico · cliente-síndico.
 
+## Regras aprendidas em sessões anteriores (leia sempre)
+
+@.claude/memory/feedback-processo-stories.md
+@.claude/memory/feedback-devops-branch-pr.md
+
 ## Início de sessão — contexto base obrigatório (`alwaysApply: true`)
 Carregue **antes da primeira tarefa**:
 este `CLAUDE.md` · `docs/STATE.md` · `docs/epics/ROADMAP.md` · `docs/PROJECT.md` · `spec.md` da feature ativa em `specs/`.
