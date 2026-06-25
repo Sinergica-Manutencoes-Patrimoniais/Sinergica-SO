@@ -22,5 +22,13 @@
       "Bash(ls *)",
       "Bash(cat *)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node scripts/check-story.mjs" }]
+      }
+    ]
   }
 }
