@@ -1,0 +1,19 @@
+bundle:
+  name: Team All
+  icon: 👥
+  description: Includes every core system agent.
+agents:
+  - triviaiox-orchestrator
+  - triviaiox-developer
+  - '*'
+workflows:
+  - brownfield-fullstack.yaml
+  - brownfield-service.yaml
+  - brownfield-ui.yaml
+  - greenfield-fullstack.yaml
+  - greenfield-service.yaml
+  - greenfield-ui.yaml
+  - incident-response.yaml
+  - prompt-iteration.yaml
+  - cost-regression-response.yaml
+  - compliance-gated-story.yaml

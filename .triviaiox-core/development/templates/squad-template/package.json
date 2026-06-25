@@ -1,0 +1,19 @@
+{
+  "name": "{{squad-name}}",
+  "version": "0.1.0",
+  "description": "{{description}}",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint src/",
+    "dev": "triviaiox-dev-server"
+  },
+  "keywords": ["triviaiox", "triviaiox-squad"],
+  "author": "{{author}}",
+  "license": "MIT",
+  "devDependencies": {
+    "@triviaiox/testing": "^2.1.0",
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0"
+  }
+}

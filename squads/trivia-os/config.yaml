@@ -1,0 +1,54 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Squad: Trivia OS
+# Domain: Padrão OS da Trivia — esteira SDD sobre os agentes Triviaiox
+# Version: 2.0.0
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Este squad NÃO redefine agentes nem toca no core do Triviaiox (.triviaiox-core/).
+# Ele adapta os agentes existentes para produzir/consumir os artefatos canônicos da
+# esteira SDD (spec/domain/design/tasks/product + ADR), conforme base/AGENTS.md.
+
+squad:
+  name: trivia-os
+  display_name: "Trivia OS — Esteira SDD"
+  version: "2.0.0"
+  domain: "Spec-Driven Development sobre os agentes Triviaiox"
+  description: |
+    Camada da Trivia que faz os agentes Triviaiox seguirem o Padrão OS:
+    artefato canônico único (SDD), gates executáveis, dois perfis (single-repo/OS),
+    baseline de segurança por perfil e trilha de IA. Sem alterar o core do Triviaiox.
+  keywords: [trivia, padrao-os, sdd, spec-driven, ddd, gates, supabase]
+  created_at: "2026-06-22"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Artefato canônico × agente (espelha base/AGENTS.md — fonte da verdade)
+# ─────────────────────────────────────────────────────────────────────────────
+artifact_ownership:
+  product.md:  { produces: "@pm",          consumes: [todos] }
+  spec.md:     { produces: "@pm",          consumes: [todos] }
+  domain.md:   { produces: "@architect",   consumes: ["@dev", "@qa"] }
+  design.md:   { produces: "@architect",   consumes: ["@dev", "@data-engineer", "@qa"] }
+  tasks.md:    { produces: "@sm",          consumes: ["@dev", "@qa"] }
+  adr:         { produces: "@architect",   consumes: [todos] }
+  migrations:  { produces: "@data-engineer", consumes: ["@dev"] }
+
+# A "story" do Triviaiox é VISÃO DE EXECUÇÃO derivada de tasks.md — não um artefato paralelo.
+story_policy:
+  canonical_artifacts: true
+  story_is_view_of: tasks.md
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Skill (esteira) → agente dono
+# ─────────────────────────────────────────────────────────────────────────────
+skill_routing:
+  /clarificar:   "@pm"
+  /nova-feature: ["@sm", "@dev"]
+  /validar:      "@qa"
+  /revisar-pr:   "@qa"
+  /auditar:      "@architect"
+  /handoff:      any
+  ia_features:   "@prompt-engineer"
+
+# Autoridade exclusiva preservada do Triviaiox (não sobrescrever)
+authority:
+  git_push_pr_cicd: "@devops"   # exclusivo

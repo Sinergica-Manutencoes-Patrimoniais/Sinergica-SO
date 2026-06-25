@@ -1,0 +1,7 @@
+{
+  "name": "@sinergica/config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Configs compartilhadas do monorepo (tsconfig base, etc.).",
+  "files": ["tsconfig.base.json"]
+}

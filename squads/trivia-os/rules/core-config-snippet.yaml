@@ -1,0 +1,25 @@
+# Trecho para o core-config.yaml do PROJETO (technical preferences).
+# Aplique no core-config.yaml gerado pelo Triviaiox — NÃO edite o core do framework.
+# Aponta os agentes ao artefato canônico SDD do Padrão OS.
+
+technicalPreferences:
+  methodology: spec-driven-development
+  artifacts:
+    location: specs/NNNN-<slug>/
+    canonical: [product.md, domain.md, design.md, spec.md, tasks.md]
+    adr: docs/adr/
+    reference_example: specs/0001-calculo-comissao/
+  story_is_view_of: tasks.md      # não criar story como artefato paralelo
+  gates:
+    audit: "node scripts/audit-esteira.mjs"
+    fidelity: "node scripts/eval-spec-fidelity.mjs"
+    tests: "npm test"
+    typecheck: "npm run typecheck"
+    lint: "npm run lint"
+  profiles:
+    single_repo:
+      security: seguranca/baseline-minimo.md
+    os_monorepo:
+      security: os-layer/seguranca/os-grade.md
+      monorepo: [pnpm-workspaces, turborepo]
+  ai_features_track: ia/          # evals, prompt versioning, injection (OWASP LLM Top 10)

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/audit-esteira.mjs)",
+      "Bash(node scripts/eval-spec-fidelity.mjs)",
+      "Bash(pnpm test)",
+      "Bash(pnpm run test*)",
+      "Bash(pnpm run lint)",
+      "Bash(pnpm run typecheck)",
+      "Bash(pnpm run build)",
+      "Bash(pnpm install*)",
+      "Bash(pnpm --filter*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git branch*)",
+      "Bash(git checkout*)",
+      "Bash(git stash*)",
+      "Bash(find . *)",
+      "Bash(ls *)",
+      "Bash(cat *)"
+    ]
+  }
+}

@@ -1,0 +1,173 @@
+workflow:
+  id: prompt-iteration
+  name: Prompt Iteration Cycle
+  version: "1.0"
+  description: >-
+    End-to-end prompt engineering cycle: design → eval → A/B → regression → safety gate → version → ship.
+    Ensures no prompt ships to production without baseline and injection audit.
+
+  type: linear-with-loops
+  project_types:
+    - any
+    - llm-pipeline
+    - ai-agent
+
+  triggers:
+    - event: command
+      command: "*prompt-design"
+      action: start_workflow
+      start_at: design
+
+    - event: command
+      command: "*prompt-regression-test"
+      action: start_workflow
+      start_at: regression
+
+    - event: command
+      command: "*prompt-iteration"
+      action: start_workflow
+      start_at: design
+
+  config:
+    qualityGate: checklists/prompt-quality-gate.md
+    promptsDir: docs/prompts
+    evalsDir: docs/prompts/evals
+    minEvalSetSize: 20
+    regressionThresholds:
+      pass_rate_delta: -0.05
+      latency_delta: +0.20
+      cost_delta: +0.10
+
+  phases:
+
+    # ─── PHASE 1: DESIGN ─────────────────────────────────────────────────────────
+    - id: design
+      name: Design Prompt
+      agent: prompt-engineer
+      task: prompt-design.md
+      steps:
+        - id: behavioral-spec
+          action: Document behavioral specification (5 questions)
+          gate: blocking
+          check: All 5 spec questions answered
+
+        - id: choose-architecture
+          action: Select prompt architecture (zero-shot/few-shot/CoT/structured)
+          gate: non-blocking
+
+        - id: write-prompt
+          action: Write prompt following guidelines
+          gate: blocking
+          check: Prompt card created at docs/prompts/{slug}-v1.0.0.md
+
+        - id: define-schema
+          action: Define output schema (JSON schema or format example)
+          gate: blocking
+          check: Output schema section non-empty
+
+    # ─── PHASE 2: EVAL BUILD ─────────────────────────────────────────────────────
+    - id: eval_build
+      name: Build Eval Harness
+      agent: prompt-engineer
+      task: prompt-eval-harness.md
+      steps:
+        - id: categorize-cases
+          action: "Build ≥ 20 eval cases across: typical, edge, borderline, adversarial"
+          gate: blocking
+          check: "eval.jsonl has ≥ 20 entries with 4 categories"
+
+        - id: define-grader
+          action: Define grader (exact match / LLM judge / multi-dimension)
+          gate: blocking
+          check: grader.yaml parseable
+
+        - id: run-baseline
+          action: Execute all cases, record baseline results
+          gate: blocking
+          check: baseline.json has pass_rates and latency_p95
+
+    # ─── PHASE 3: ITERATE ────────────────────────────────────────────────────────
+    - id: iterate
+      name: Iterate and Improve
+      agent: prompt-engineer
+      description: >-
+        Loop: modify prompt → run regression → decide pass/fail.
+        Exit when regression PASS or deliberate IMPROVEMENT decision.
+      loop:
+        max_iterations: 10
+        exit_condition: regression decision is PASS or IMPROVEMENT
+      steps:
+        - id: modify-prompt
+          action: Apply one targeted change based on eval feedback
+          gate: non-blocking
+
+        - id: run-regression
+          action: Execute regression test (prompt-regression-test.md)
+          gate: blocking
+          check: regression_report generated
+
+        - id: evaluate-decision
+          decision:
+            PASS: proceed to safety_gate
+            IMPROVEMENT: proceed to safety_gate (with note on trade-off acceptance)
+            REGRESSION: loop back to modify_prompt
+            MIXED: human decision required — document trade-off acceptance
+
+    # ─── PHASE 4: SAFETY GATE ────────────────────────────────────────────────────
+    - id: safety_gate
+      name: Injection Defense Audit
+      agent: prompt-engineer
+      task: prompt-injection-defense.md
+      steps:
+        - id: run-audit
+          action: Run injection test battery
+          gate: blocking
+          check: All OWASP LLM01 payloads tested
+
+        - id: verify-hardening
+          action: Confirm zero successful overrides after hardening
+          gate: blocking
+          check: "audit_report.successful_overrides == 0"
+
+    # ─── PHASE 5: QUALITY GATE ───────────────────────────────────────────────────
+    - id: quality_gate
+      name: Prompt Quality Gate
+      agent: prompt-engineer
+      task: execute-checklist.md
+      checklist: prompt-quality-gate.md
+      steps:
+        - id: run-checklist
+          action: Execute prompt-quality-gate checklist
+          gate: blocking
+          check: "0 blocking failures"
+
+    # ─── PHASE 6: VERSION ────────────────────────────────────────────────────────
+    - id: version
+      name: Version Prompt
+      agent: prompt-engineer
+      task: prompt-versioning.md
+      steps:
+        - id: determine-bump
+          action: Classify change as MAJOR/MINOR/PATCH
+          gate: blocking
+
+        - id: update-card
+          action: Bump version, add changelog entry, create immutable artifact
+          gate: blocking
+          check: prompt card version > previous
+
+    # ─── PHASE 7: SHIP ───────────────────────────────────────────────────────────
+    - id: ship
+      name: Ship to Production
+      agent: devops
+      description: Hand off versioned prompt to @devops for PR creation
+      steps:
+        - id: handoff-to-devops
+          action: Create handoff artifact with prompt card and regression report
+          check: Handoff .yaml created at .triviaiox/handoffs/
+
+        - id: pr-created
+          action: "@devops creates PR with prompt changes"
+          check: PR link in handoff artifact
+
+      terminal: true

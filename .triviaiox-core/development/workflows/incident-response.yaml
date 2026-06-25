@@ -1,0 +1,232 @@
+workflow:
+  id: incident-response
+  name: Incident Response Orchestrator
+  version: "1.0"
+  description: >-
+    End-to-end incident response orchestration: detect → declare → mitigate →
+    resolve → postmortem → action-items. Ensures no step is skipped and timeline
+    is captured throughout.
+
+  type: linear-with-loops
+  project_types:
+    - any
+    - production-system
+    - llm-pipeline
+
+  # ═══════════════════════════════════════════════════════════════════════════════════
+  #                              TRIGGER CONFIGURATION
+  # ═══════════════════════════════════════════════════════════════════════════════════
+
+  triggers:
+    - event: command
+      command: "*incident-declare"
+      action: start_workflow
+      start_at: detect
+
+    - event: command
+      command: "*postmortem-blameless"
+      action: start_workflow
+      start_at: postmortem
+
+    - event: command
+      command: "*incident-response"
+      action: start_workflow
+      start_at: detect
+
+  # ═══════════════════════════════════════════════════════════════════════════════════
+  #                              CONFIGURATION
+  # ═══════════════════════════════════════════════════════════════════════════════════
+
+  config:
+    statusFile: ops/incidents/active-incident.json
+    postmortemDeadlineDays: 5
+    requiredRoles:
+      SEV1: [incident_commander, technical_lead, comms_lead]
+      SEV2: [incident_commander, technical_lead]
+      SEV3: [technical_lead]
+
+  # ═══════════════════════════════════════════════════════════════════════════════════
+  #                              PHASES
+  # ═══════════════════════════════════════════════════════════════════════════════════
+
+  phases:
+
+    # ─── PHASE 1: DETECT ─────────────────────────────────────────────────────────
+    - id: detect
+      name: Detect & Assess Severity
+      agent: reliability
+      description: >-
+        Confirm the symptom is real, determine severity, decide whether to declare.
+      steps:
+        - id: confirm-symptom
+          action: Verify the alert or user report is genuine — not a test or flapping alert
+          check: Observable in monitoring backend or user report confirmed
+          gate: blocking
+
+        - id: assess-severity
+          action: Apply severity framework (SEV1/SEV2/SEV3) from incident-declare.md
+          check: Severity assigned with reasoning
+          gate: blocking
+
+        - id: declare-or-skip
+          action: >-
+            SEV1/SEV2 → proceed to declare.
+            SEV3 → create ticket and proceed to monitor_only branch.
+          branch:
+            SEV3: monitor_only
+            SEV1|SEV2: declare
+
+    # ─── BRANCH: MONITOR_ONLY (SEV3) ─────────────────────────────────────────────
+    - id: monitor_only
+      name: Monitor Only (SEV3)
+      agent: reliability
+      description: SEV3 — track in ticket, no war-room
+      steps:
+        - id: create-ticket
+          action: Create ticket with symptom, affected service, and next review time
+          check: Ticket created
+          gate: blocking
+        - id: resolve-async
+          action: Resolve without declaration; update ticket when fixed
+      exits_to: postmortem_trigger
+
+    # ─── PHASE 2: DECLARE ────────────────────────────────────────────────────────
+    - id: declare
+      name: Declare Incident
+      agent: reliability
+      task: incident-declare.md
+      description: Execute incident-declare task to open record and assign IC.
+      steps:
+        - id: open-incident-record
+          action: Create ops/incidents/{date}-{slug}.md from template
+          check: File exists with timeline started
+          gate: blocking
+
+        - id: assign-roles
+          action: Assign IC, Technical Lead; Comms Lead for SEV1
+          check: All required roles filled per severity config
+          gate: blocking
+
+        - id: establish-comms-rhythm
+          action: Set update cadence (30m SEV1 / 4h SEV2)
+          check: First status update sent
+          gate: non-blocking
+
+    # ─── PHASE 3: MITIGATE ───────────────────────────────────────────────────────
+    - id: mitigate
+      name: Mitigate — Stop the Bleeding
+      agent: reliability
+      description: >-
+        Prioritize reducing user impact BEFORE root-cause analysis.
+        Loop until user impact mitigated.
+      loop:
+        max_iterations: 10
+        exit_condition: SLI signals back within SLO bounds for 5+ minutes
+      steps:
+        - id: diagnose
+          action: Run diagnostic steps from runbook; read trace and logs
+          check: Hypothesis about cause formed
+          gate: non-blocking
+
+        - id: attempt-mitigation
+          action: >-
+            Execute mitigation from runbook:
+            rollback | feature-flag off | scale up | route around | kill loop
+          check: Mitigation action recorded in timeline
+          gate: blocking
+
+        - id: verify-impact
+          action: Check SLI signals after 2-3 minutes
+          check: User impact reduced or gone
+          decision:
+            impact_gone: proceed to resolve
+            impact_continues: loop back to diagnose
+
+    # ─── PHASE 4: RESOLVE ────────────────────────────────────────────────────────
+    - id: resolve
+      name: Resolve — Confirm and Communicate
+      agent: reliability
+      description: Confirm full recovery, communicate to stakeholders, close record.
+      steps:
+        - id: confirm-recovery
+          action: Verify SLI signals stable for 10+ minutes
+          check: No anomaly in SLI for ≥ 10 minutes
+          gate: blocking
+
+        - id: update-stakeholders
+          action: Send resolution update with what happened and time to recover
+          check: Update sent to all communication channels opened during incident
+          gate: blocking
+
+        - id: close-incident-record
+          action: >-
+            Update status → Resolved.
+            Record TTM (time to mitigate) and TTR (time to resolve).
+          check: Status field = Resolved, TTM and TTR populated
+          gate: blocking
+
+    # ─── PHASE 5: POSTMORTEM TRIGGER ─────────────────────────────────────────────
+    - id: postmortem_trigger
+      name: Determine Postmortem Requirement
+      agent: reliability
+      steps:
+        - id: check-postmortem-required
+          decision:
+            SEV1_or_customer_impacting_SEV2: schedule_postmortem
+            SEV3_or_no_customer_impact: done
+          gate: blocking
+
+    # ─── PHASE 6: POSTMORTEM ─────────────────────────────────────────────────────
+    - id: postmortem
+      name: Blameless Postmortem
+      agent: reliability
+      task: postmortem-blameless.md
+      description: >-
+        Execute postmortem-blameless task within 5 business days.
+        Produce action items for @po backlog.
+      deadline_days: 5
+      steps:
+        - id: schedule
+          action: Schedule postmortem within 5 business days with all stakeholders
+          check: Calendar invite sent
+          gate: blocking
+
+        - id: facilitate
+          action: Run postmortem per postmortem-blameless.md — blameless, timeline, 5-whys
+          check: Postmortem doc published at ops/postmortems/{date}-{slug}.md
+          gate: blocking
+
+        - id: action-items
+          action: Send action items to @po backlog with priority and due dates
+          check: Stories created in backlog for each action item
+          gate: blocking
+
+    # ─── END ─────────────────────────────────────────────────────────────────────
+    - id: done
+      name: Incident Closed
+      action: >-
+        Archive incident record. Update DORA metrics (MTTR).
+        Notify @reliability of any SLO breaches for budget review.
+      terminal: true
+
+  # ═══════════════════════════════════════════════════════════════════════════════════
+  #                              GUARDS & OVERRIDES
+  # ═══════════════════════════════════════════════════════════════════════════════════
+
+  guards:
+    - id: no-rca-before-mitigation
+      rule: >-
+        RCA investigation MUST NOT begin before mitigation is attempted.
+        If IC observes technical lead spending >10 minutes on RCA before
+        mitigation attempt: intervene and redirect.
+
+    - id: postmortem-deadline
+      rule: >-
+        Postmortem MUST be completed within 5 business days.
+        Auto-creates a HIGH priority story via @po if deadline missed.
+
+    - id: blameless-language
+      rule: >-
+        Any postmortem containing "human error", "engineer X failed to", or
+        equivalent blame language is considered incomplete.
+        Rex must flag and request revision before publishing.

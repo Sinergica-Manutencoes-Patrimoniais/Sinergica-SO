@@ -1,0 +1,19 @@
+const fs = require("fs");
+
+/**
+ * Safely read and parse a JSON file.
+ * Returns null on any error (file not found, invalid JSON, permissions, etc.)
+ *
+ * @param {string} filePath - Absolute path to JSON file
+ * @returns {Object|null} Parsed data or null
+ */
+function safeReadJson(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { safeReadJson };

@@ -1,0 +1,18 @@
+# CODEOWNERS — review obrigatório por área (Padrão OS, perfil monorepo).
+# Substitua os handles pelos donos reais de cada domínio.
+
+# Default
+*                               @org/leads
+
+# Esteira e arquitetura (decisões estruturais)
+/docs/adr/                      @org/arquitetura
+/specs/                         @org/arquitetura
+
+# Banco e segurança (alto risco)
+/supabase/migrations/           @org/data
+/supabase/functions/            @org/backend
+/seguranca/                     @org/seguranca
+
+# Domínios (exemplos — um time por bounded context)
+/apps/web/src/features/financeiro/   @org/financeiro
+/apps/web/src/features/comercial/    @org/comercial

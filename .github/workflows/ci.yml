@@ -1,0 +1,60 @@
+name: CI (OS monorepo)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-os-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualidade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # turbo precisa do histórico para calcular o "affected"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Gates da esteira SDD (no monorepo inteiro)
+      - name: Auditoria da esteira
+        run: pnpm run audit:esteira
+      - name: Fidelidade spec→implementação
+        run: pnpm run eval:spec
+
+      # Gates de segurança (BLOQUEANTES)
+      - name: Secret scanning (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Dependências vulneráveis (runtime)
+        run: pnpm audit --prod --audit-level=high
+
+      # Gates de código — só nos pacotes AFETADOS (turbo affected) para feedback rápido
+      - name: Lint / typecheck / test (affected)
+        run: pnpm turbo run lint typecheck test --filter="...[origin/${{ github.base_ref || 'main' }}]"
+
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint de migrations (proibir DROP sem reverso documentado)
+        run: |
+          set -e
+          for f in $(git ls-files 'supabase/migrations/*.sql'); do
+            if grep -iqE 'drop (table|column|schema)' "$f" && ! grep -iq 'Reverso' "$f"; then
+              echo "::error file=$f::Migration destrutiva sem '-- Reverso:' documentado no topo"
+              exit 1
+            fi
+          done
+          echo "Migrations OK"

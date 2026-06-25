@@ -1,0 +1,79 @@
+{
+  "$schema": "https://geminicli.com/schemas/settings.json",
+  "previewFeatures": true,
+  "folderTrust": {
+    "enabled": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "triviaiox-session-init",
+            "type": "command",
+            "command": "node .triviaiox-core/hooks/gemini/session-start.js",
+            "timeout": 5000,
+            "enabled": false
+          }
+        ]
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "triviaiox-context-inject",
+            "type": "command",
+            "command": "node .triviaiox-core/hooks/gemini/before-agent.js",
+            "timeout": 3000,
+            "enabled": false
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "write_file|replace|shell",
+        "hooks": [
+          {
+            "name": "triviaiox-security-check",
+            "type": "command",
+            "command": "node .triviaiox-core/hooks/gemini/before-tool.js",
+            "timeout": 2000,
+            "enabled": false
+          }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "triviaiox-audit-log",
+            "type": "command",
+            "command": "node .triviaiox-core/hooks/gemini/after-tool.js",
+            "timeout": 2000,
+            "enabled": false
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "triviaiox-session-persist",
+            "type": "command",
+            "command": "node .triviaiox-core/hooks/gemini/session-end.js",
+            "timeout": 5000,
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  }
+}

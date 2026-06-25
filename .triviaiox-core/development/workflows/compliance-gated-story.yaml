@@ -1,0 +1,154 @@
+workflow:
+  id: compliance-gated-story
+  name: Compliance-Gated Story Development Cycle
+  version: "1.0"
+  description: >-
+    Extends the standard story-development-cycle with a privacy compliance gate
+    before development starts. Triggered when a story is classified as requiring
+    privacy review (privacy_gate_required = true).
+
+    Standard story cycle for non-PII stories is unaffected.
+
+  type: linear
+  extends: story-development-cycle
+  project_types:
+    - any
+    - pii-touching
+    - outreach
+    - user-data
+
+  triggers:
+    - event: story_classification
+      condition: story.privacy_gate_required == true
+      action: start_workflow
+      start_at: classify
+
+    - event: command
+      command: "*data-classification"
+      action: start_workflow
+      start_at: classify
+
+  config:
+    privacyGate: checklists/privacy-by-design-checklist.md
+    storiesDir: docs/stories
+    privacyDocsDir: docs/stories/{story_id}/privacy
+
+  phases:
+
+    # ─── PHASE 0: STANDARD STORY CREATION (unchanged) ────────────────────────────
+    - id: story_creation
+      name: Story Creation
+      agent: sm
+      description: "@sm creates story per standard create-next-story procedure"
+      passes_to: classify
+
+    # ─── PHASE 1: DATA CLASSIFICATION ────────────────────────────────────────────
+    - id: classify
+      name: Data Classification
+      agent: po
+      task: data-classification.md
+      description: >-
+        Pax classifies all data items in the story.
+        If no PII: jump directly to standard development.
+        If PII: continue to privacy gate.
+      steps:
+        - id: run-classification
+          action: Execute data-classification.md for story
+          check: data-classification.md exists in story privacy folder
+          gate: blocking
+
+        - id: route
+          decision:
+            privacy_gate_required_false: standard_dev  # Skip to normal dev cycle
+            privacy_gate_required_true: pia             # Privacy gate required
+
+    # ─── BRANCH: STANDARD DEV (no PII) ───────────────────────────────────────────
+    - id: standard_dev
+      name: Standard Development (No PII)
+      description: Delegate to standard story-development-cycle workflow
+      agent: dev
+      note: No privacy gate required for this story
+
+    # ─── PHASE 2: PRIVACY IMPACT ASSESSMENT ──────────────────────────────────────
+    - id: pia
+      name: Privacy Impact Assessment
+      agent: po
+      task: privacy-impact-assessment.md
+      steps:
+        - id: run-pia
+          action: Conduct PIA for all classified data items
+          check: pia.md exists with decision = APPROVED or APPROVED_WITH_CONDITIONS
+          gate: blocking
+
+        - id: pia-decision
+          decision:
+            APPROVED: retention_policy
+            APPROVED_WITH_CONDITIONS: retention_policy  # Conditions documented
+            BLOCKED: halt  # Story cannot proceed — escalate to @pm
+
+    # ─── PHASE 3: RETENTION & CONSENT ────────────────────────────────────────────
+    - id: retention_policy
+      name: Retention Policy & Consent Design
+      agent: po
+      description: Run in parallel — both must complete before dev starts
+      parallel:
+        - task: data-retention-policy.md
+          check: retention policy defined for all Confidential data
+        - task: consent-management-design.md
+          check: opt-out flow designed (and consent mechanism if legal_basis = consent)
+
+    # ─── PHASE 4: PRIVACY GATE ───────────────────────────────────────────────────
+    - id: privacy_gate
+      name: Privacy by Design Gate
+      agent: po
+      task: execute-checklist.md
+      checklist: privacy-by-design-checklist.md
+      steps:
+        - id: run-checklist
+          action: Execute privacy-by-design-checklist for story
+          check: "0 blocking failures"
+          gate: blocking
+
+        - id: gate-decision
+          decision:
+            PASS: development
+            FAIL: return_to_pia  # Fix blocking items, re-run gate
+
+    # ─── PHASE 5: DEVELOPMENT (privacy-compliant) ────────────────────────────────
+    - id: development
+      name: Privacy-Compliant Development
+      agent: dev
+      description: >-
+        Standard development proceeds. Privacy artifacts (consent schema, blocklist,
+        RLS policies) are implementation requirements documented in PIA/consent design.
+      note: Dev must implement: opt-out blocklist, RLS on PII tables, consent record schema
+
+    # ─── PHASE 6: QA (with privacy additions) ────────────────────────────────────
+    - id: qa_review
+      name: QA Review + PII Scan
+      agent: qa
+      description: Standard QA gate + pii-leakage-scan.md
+      tasks:
+        - qa-review-story.md
+        - qa-pii-leakage-scan.md
+      check: Both tasks PASS
+
+    # ─── HALT (blocked) ──────────────────────────────────────────────────────────
+    - id: halt
+      name: Story Blocked — Privacy Risk Unresolved
+      description: >-
+        PIA decision = BLOCKED. Story must not proceed.
+        Escalate to @pm and product stakeholder for scope decision.
+      terminal: true
+
+  guards:
+    - id: no-dev-before-privacy-gate
+      rule: >-
+        Story status MUST NOT change to em-progresso until privacy_gate has PASSED.
+        Pax enforces this via validate-story-draft rejection.
+
+    - id: opt-out-blocklist-required
+      rule: >-
+        Any story that introduces outbound messaging (email, WhatsApp, push)
+        MUST implement opt-out blocklist check before sending.
+        QA gate fails if blocklist check is absent in message-sending code.

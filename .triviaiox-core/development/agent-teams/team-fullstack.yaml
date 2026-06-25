@@ -1,0 +1,20 @@
+bundle:
+  name: Team Fullstack
+  icon: 🚀
+  description: Team capable of full stack, front end only, or service development.
+agents:
+  - triviaiox-orchestrator
+  - analyst
+  - pm
+  - ux-expert
+  - architect
+  - po
+  - reliability
+  - prompt-engineer
+workflows:
+  - brownfield-fullstack.yaml
+  - brownfield-service.yaml
+  - brownfield-ui.yaml
+  - greenfield-fullstack.yaml
+  - greenfield-service.yaml
+  - greenfield-ui.yaml

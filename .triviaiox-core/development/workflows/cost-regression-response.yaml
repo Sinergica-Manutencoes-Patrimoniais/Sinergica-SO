@@ -1,0 +1,135 @@
+workflow:
+  id: cost-regression-response
+  name: Cost Regression Response Cycle
+  version: "1.0"
+  description: >-
+    Response workflow for cost anomalies: detect → report → identify root cause →
+    optimize → validate savings. Driven by Atlas (@analyst) with @prompt-engineer
+    for model changes and @dev for implementation.
+
+  type: linear
+  project_types:
+    - any
+    - llm-pipeline
+    - ai-agent
+
+  triggers:
+    - event: command
+      command: "*cost-anomaly-detect"
+      condition: anomaly.severity == "HIGH"
+      action: start_workflow
+      start_at: report
+
+    - event: command
+      command: "*cost-regression-response"
+      action: start_workflow
+      start_at: detect
+
+    - event: budget_alert
+      condition: threshold_pct >= 80
+      action: start_workflow
+      start_at: report
+
+  phases:
+
+    - id: detect
+      name: Detect Anomaly
+      agent: analyst
+      task: cost-anomaly-detect.md
+      steps:
+        - id: run-detection
+          action: "Run cost anomaly detection for service and period"
+          check: anomaly_report generated
+          gate: blocking
+
+        - id: classify-severity
+          decision:
+            LOW_or_INFO: done
+            MEDIUM: schedule_report
+            HIGH: proceed_to_report
+          gate: blocking
+
+    - id: report
+      name: Generate Cost Report
+      agent: analyst
+      task: cost-per-task-report.md
+      steps:
+        - id: pull-report
+          action: Generate cost-per-task report for anomaly window
+          check: Report generated with cost breakdown and comparison
+          gate: blocking
+
+        - id: identify-driver
+          action: Identify top cost driver from report
+          check: Top 3 cost drivers documented with delta vs baseline
+          gate: blocking
+
+    - id: root_cause
+      name: Root Cause Analysis
+      agent: analyst
+      steps:
+        - id: classify-cause
+          action: |
+            Classify anomaly cause:
+            - Volume spike: more pipeline runs, cost_per_run stable → may be acceptable
+            - Model regression: same volume, higher cost_per_run → model change needed
+            - Prompt regression: more tokens, same model → prompt change needed
+            - New source: unknown cost source → audit and instrument
+          check: Cause classified with evidence
+          gate: blocking
+
+        - id: route-to-owner
+          decision:
+            volume_spike: notify_po_for_capacity_story
+            model_regression: route_to_prompt_engineer
+            prompt_regression: route_to_prompt_engineer
+            new_source: create_audit_story
+          gate: blocking
+
+    - id: optimize
+      name: Optimize (if not volume)
+      agent: analyst
+      task: model-cost-optimization.md
+      condition: cause != volume_spike
+      steps:
+        - id: generate-recommendations
+          action: Generate optimization recommendations
+          check: Recommendations document created with savings estimate
+          gate: blocking
+
+        - id: validate-with-prompt-engineer
+          action: If model downgrade recommended → @prompt-engineer runs regression eval
+          agent: prompt-engineer
+          task: prompt-regression-test.md
+          check: Regression test PASS before downgrade approved
+          gate: blocking
+
+        - id: implement
+          action: "@dev implements approved optimizations"
+          agent: dev
+          check: Story created and assigned via @sm/@po
+          gate: non-blocking
+
+    - id: validate_savings
+      name: Validate Savings
+      agent: analyst
+      steps:
+        - id: wait-one-week
+          action: Allow 7 days for changes to take effect
+          gate: non-blocking
+
+        - id: compare-post-optimization
+          action: Run cost-per-task-report for post-optimization period
+          task: cost-per-task-report.md
+          check: Cost regression resolved (delta back within +10% of original baseline)
+          gate: blocking
+
+        - id: update-baseline
+          action: Update cost baseline in docs/finops/ to reflect new normal
+          check: Baseline updated with new measurements
+          gate: blocking
+
+    - id: done
+      name: Regression Resolved
+      action: Notify team of resolution. Update DORA cost-regression metric.
+      terminal: true
