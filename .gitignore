@@ -6,3 +6,5 @@ dist/
 .env.local
 .env.*.local
 *.tsbuildinfo
+# Marcador de story ativa (local por sessão, não vai para o repo)
+.current-story
