@@ -60,6 +60,25 @@ por contrato.
 - Técnico registra resultado por item: executado / adiado / parcial / cancelado.
 - Relatório gerado e enviado ao finalizar.
 
+### Calendário de Manutenção Preventiva
+
+Duas visões do plano preventivo, solicitadas pela Sinérgica:
+
+**Visão compacta (padrão):** lista tabular com equipamento, área, frequência, última execução, próxima data e status (em dia / pendente).
+
+**Visão calendário (expandida):** grid mensal/anual — colunas = dias do mês, linhas = frequência por equipamento, células coloridas com código de atividade:
+- Ciano: programada sem pendência
+- Âmbar: programada com pendência
+- Cinza: executada/baixada
+
+Hierarquia de navegação: `Cliente → Torre/Bloco → Área → Equipamento → Frequência`
+
+Filtros: cliente (um ou todos), período (mês / visão anual 12 meses), agrupamento por localização.
+
+Exportação: PDF com cabeçalho (empresa, cliente, período, logo do condomínio) + legenda de cores.
+
+Fonte de dados: `pcm.plano_preventivo` (regras de recorrência) × `pcm.ordens_servico` (execuções) — o calendário é gerado pelo PCM, não depende do Auvo para a renderização. A célula muda para "executada" quando a OS preventiva é fechada (via Auvo webhook).
+
 ### Relatório Diário
 - Um por (técnico, cliente, data).
 - Texto resumido gerado por LLM + resumo JSON.
