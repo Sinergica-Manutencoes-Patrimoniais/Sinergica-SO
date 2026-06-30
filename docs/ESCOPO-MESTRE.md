@@ -61,7 +61,7 @@ base única — e dela passam a fluir decisões, faturamento, prestação de con
 prazo que o sistema cuida — raro nos concorrentes — e uma camada de **inteligência** (roteirização,
 preditiva) que a maioria não tem.
 
-**O que precisa do Fabrício para começar:** 14 decisões de produto em §11 — cada uma já vem com a nossa
+**O que precisa do Fabrício para começar:** 15 decisões de produto em §11 — cada uma já vem com a nossa
 recomendação para acelerar o "OK".
 
 ---
@@ -290,15 +290,32 @@ vários condomínios** (`Administradora → Condomínio → Torre/Bloco`).
   N prédios. O sistema precisa enxergar o portfólio inteiro de uma administradora **e** cada prédio
   individualmente. *Sem isso, o crescimento via administradora vira gambiarra de planilha.*
 
-#### Árvore de Ativos + Histórico por Equipamento + Garantia
-`Cliente → Torre/Bloco → Área → Sistema → Equipamento`, com ficha e histórico de **toda intervenção**
-por equipamento.
-- **Poder:** saber a vida de cada bomba/chiller — quando foi mexido, com qual peça, quantas vezes
-  falhou. É a base da manutenção preditiva (§6.11).
-- **Controle de garantia:** quando uma corretiva é refeita no mesmo equipamento dentro do prazo de
-  garantia, o sistema **sinaliza**. *Hoje:* refaz-se o serviço sem saber se o custo é nosso. *Com o
-  OS:* fica claro o que é garantia (custo a engolir + sinal de qualidade) e o que é serviço novo (a
-  faturar). *Valor: para de vazar dinheiro em retrabalho silencioso.*
+#### ⭐ Gestão de Ativos / Equipamentos do Cliente — *o maior salto sobre o PCM atual*
+> **Pedido explícito do Fabrício.** Hoje o PCM só **espelha** o equipamento do Auvo (uma lista plana
+> com nome + categoria, usada só para anexar um plano preventivo). Não há ficha, hierarquia, histórico
+> nem ciclo de vida. O OS transforma isso em **gestão de ativos de verdade** — e o PCM passa a ser o
+> **dono** do ativo (cadastra no OS, empurra para o Auvo via `externalId`; o Auvo vira espelho de campo).
+
+A gestão de ativos cobre:
+- **Ficha técnica completa** por equipamento: tipo, marca, modelo, nº de série, **capacidade**
+  (ex.: BTU/TR para climatização), fabricante, data de instalação, fotos, **QR code**, manuais e
+  documentos anexos.
+- **Hierarquia de localização:** `Cliente → Torre/Bloco → Área → Sistema → Equipamento` (hoje é lista
+  plana). Permite "todos os ativos da Torre A" ou "o histórico daquela bomba específica".
+- **Histórico unificado por ativo:** toda OS (corretiva/preventiva), inspeção, peça trocada,
+  medição/leitura e laudo daquele equipamento numa **linha do tempo única**. *(Hoje: não existe.)*
+- **Plano preventivo / PMOC por ativo:** cada equipamento carrega sua periodicidade e obrigações.
+- **Ciclo de vida / status:** operando · em manutenção · parado · substituído · baixado.
+- **Garantia (fabricante + serviço):** alerta quando uma corretiva é refeita no mesmo equipamento
+  dentro do prazo — separa retrabalho (custo a engolir) de serviço novo (a faturar).
+
+- **Hoje:** o equipamento é uma linha cacheada do Auvo, sem prontuário; "qual a vida desse chiller?"
+  não tem resposta.
+- **Com o OS:** cada ativo tem um **prontuário completo** com tudo que já aconteceu nele.
+- **Poder:** decidir **trocar vs. consertar** com dados, provar conformidade por equipamento, planejar
+  o preventivo certo.
+- **Valor:** é o **alicerce** do preventivo/PMOC, da garantia, dos laudos e da manutenção preditiva
+  (§6.11). Sem gestão de ativos robusta, o "controle por cliente" fica oco.
 
 #### Backlog & Priorização GUT
 Score Gravidade × Urgência × Tendência (1–5 cada, máx 125); faixas (crítica ≥100, alta ≥50, média ≥20,
@@ -899,6 +916,16 @@ executivo; agentes comerciais (SDR/closer/CS) e agente de apoio ao técnico. Go-
   informa; acima, exige aprovação do cliente). Reduz fricção no dia a dia sem perder controle nos
   gastos relevantes.
 
+**D15 — Gestão de ativos: ficha técnica e hierarquia**
+- *Pergunta:* Quais campos da ficha de equipamento são obrigatórios para a Sinérgica (marca, modelo,
+  nº de série, capacidade/BTU, fabricante, data de instalação…)? A hierarquia `Torre/Bloco → Área →
+  Sistema → Equipamento` reflete como vocês organizam os prédios?
+- *Recomendação Trívia:* Ficha enxuta obrigatória (tipo, identificação, localização, capacidade) +
+  campos opcionais ricos (fotos, QR, manuais, garantia). Hierarquia **configurável** — nem todo
+  condomínio tem "Torre"; tratar a localização como níveis flexíveis. Como o PCM passa a ser **dono**
+  do ativo (e empurra para o Auvo), confirmar com o Fabrício a migração dos equipamentos que hoje
+  vivem no Auvo para o cadastro mestre do OS.
+
 ---
 
 ## 12. Glossário rápido
@@ -933,7 +960,7 @@ executivo; agentes comerciais (SDR/closer/CS) e agente de apoio ao técnico. Go-
 ### M1 · PCM / Operação ⭐ *(a espinha dorsal — começa por aqui)*
 - [ ] **Visão 360 do Cliente** 🟢 — uma tela por condomínio com contrato, ativos, backlog, OS, preventivo, financeiro e comunicação.
 - [ ] **Cadastro de Clientes + Administradora → Condomínio** 🟢 — uma administradora com vários prédios, cada um gerido individualmente.
-- [ ] **Árvore de Ativos + Histórico por Equipamento** 🟢 — `Torre → Área → Sistema → Equipamento` com a vida inteira de cada equipamento.
+- [ ] **Gestão de Ativos / Equipamentos do Cliente** 🟢 ⭐ — ficha técnica completa + hierarquia (`Torre → Área → Sistema → Equipamento`) + histórico unificado por ativo + ciclo de vida. *(pedido do Fabrício; hoje só existe espelho do Auvo)*
 - [ ] **Controle de Garantia** 🔵 — sinaliza quando um conserto é refeito dentro do prazo (retrabalho a não faturar).
 - [ ] **Backlog & Priorização GUT** 🟢 — fila objetiva por Gravidade × Urgência × Tendência, com saúde do contrato.
 - [ ] **Ordens de Serviço (Kanban) + sync Auvo** 🟢 — OS vira tarefa no Auvo automaticamente; volta com status/foto/peça.
@@ -1064,6 +1091,7 @@ Marque as que você consegue decidir agora; o resto a gente fecha na conversa.
 - [ ] **D12** — Ferramentas: profundidade do controle e calibração no V1
 - [ ] **D13** — Garantia de serviço: prazo padrão
 - [ ] **D14** — Aprovação de orçamento: limite de alçada
+- [ ] **D15** — Gestão de ativos: quais campos da ficha técnica são obrigatórios (marca, modelo, série, capacidade/BTU…) e a hierarquia de localização da Sinérgica (Torre/Bloco/Área batem?)
 
 > 💬 **Veredito geral / prioridades do Fabrício:** ___________________________________________
 >
