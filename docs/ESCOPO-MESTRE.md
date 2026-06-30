@@ -274,6 +274,42 @@ Auvo) e tem suas **contas prestadas**. Se o PCM for bom, todo o resto do OS tem 
 > existe. As features-marco vêm com **Hoje → Com o OS → Poder → Valor** para deixar explícito o que
 > muda na operação.
 
+#### 🔒 Paridade com o PCM v2 — base obrigatória (não regredir) + o que o OS acrescenta
+> Auditamos o **código inteiro** do PCM v2 (12 módulos, 28 tabelas, 24 edge functions). O OS deve
+> entregar **100% do que o PCM faz hoje** como linha de base — e ir além. Abaixo, features reais do v2
+> que estavam implícitas no escopo e agora ficam **explícitas**, para não perdermos nada na migração.
+
+Features do v2 a **preservar e melhorar**:
+- **Catálogo real de tipos de serviço** (hoje mapeado a IDs do Auvo): Corretiva, Ar-Condicionado, Bomba,
+  Quadro Elétrico, Luminária, Porta/Portão, Extintor, Hidrante, **Rondas** (semanal/diária por cliente),
+  Levantamento e Atendimento Emergencial. *(O OS mantém esse catálogo — não uma lista genérica.)*
+- **Decisão de material no levantamento:** ao levantar um serviço, registrar quem fornece o material —
+  *cliente compra* / *Sinérgica fornece com markup* / *vira proposta de execução* — com o markup aplicado.
+- **Vínculo de OS (pai-filho):** uma corretiva pode gerar/atrelar OS filhas, mantendo a árvore do chamado.
+- **Estimativa de esforço por IA:** o backlog já calcula horas estimadas com justificativa — o OS mantém
+  e passa a **aprender com o realizado** (esforço estimado × real).
+- **Citação normativa por IA:** cada item de backlog/inspeção cita a norma (NBR etc.) — base de qualidade.
+- **Inspeção por sistema predial** (12 sistemas: estrutural, hidrossanitário, elétrico, SPDA, cobertura,
+  fachada, áreas comuns, equipamentos, incêndio, ar-condicionado, elevadores, geral), com análise de foto
+  por IA (descrição, norma, GUT, esforço, título de backlog pronto).
+- **Importação de inspeção/laudo legado** (PDF e XLS): extrai itens via IA e estrutura no backlog —
+  acelera a migração do histórico de papel/planilha.
+- **Rondas recorrentes** (diária/semanal) além do preventivo mensal→anual — o calendário mostra ambos.
+- **Resultado por item de visita** (executado/adiado/parcial/cancelado) + flags de "planejamento enviado"
+  e "relatório enviado".
+- **Contrato com visitas/semana, visitas/mês e horas/visita** — alimenta a saúde do backlog e o
+  previsto×realizado.
+- **Relatório diário automático** ao fechar a visita no Auvo (ou manual, com **preview** antes de enviar).
+- **Questionário do Auvo → backlog:** respostas de checklist no fim da visita geram itens de backlog.
+- **Laudo SPDA completo** (edifício/dimensões, pontos de medição de resistência, nível de proteção I–IV,
+  agentes de IA: analisador de foto, consultor NBR, diagnóstico, redator).
+- **Leads/prospects** que hoje convivem no cadastro de clientes do PCM → migram para o **Comercial**,
+  mantendo **uma identidade única** de cliente (centralidade).
+
+O que o OS **acrescenta** sobre essa base: gestão de ativos de verdade (abaixo), Visão 360, conformidade
+legal (§9), inteligência e roteirização (§6.11), garantia, contrato previsto×realizado, central de alertas
+e relatórios sob demanda — sempre com a régua de **mais inteligência, mais qualidade, mais centralidade**.
+
 #### ⭐ Visão 360 do Cliente — *a tela que muda tudo*
 Uma página por condomínio reunindo contrato, árvore de equipamentos, backlog, histórico de OS,
 calendário preventivo, relatórios, situação financeira e linha do tempo de comunicação.
@@ -329,7 +365,7 @@ sugestão de repriorização por IA.
 #### Ordens de Serviço (Kanban) + sincronismo com o Auvo
 `solicitação → planejamento → em execução → finalizado → faturado/cancelado`. Ao entrar em
 planejamento, **gera a tarefa no Auvo automaticamente** (idempotente por `externalId = os.id`).
-Categorias: corretiva, preventiva, inspeção, levantamento, emergencial.
+Categorias e **tipos de serviço seguem o catálogo real** do v2 (ver paridade acima): corretiva, preventiva (AC, bomba, quadro, extintor, hidrante…), ronda/inspeção, levantamento, emergencial.
 - **Hoje:** abrir a OS, lançar no Auvo e avisar o técnico = **três** trabalhos manuais, com erro de
   transcrição.
 - **Com o OS:** um clique — vira tarefa no Auvo, o técnico recebe **com o contexto e o histórico** do
@@ -974,6 +1010,15 @@ executivo; agentes comerciais (SDR/closer/CS) e agente de apoio ao técnico. Go-
 - [ ] **Onboarding de Contrato Novo** 🔵 — roteiro guiado: cadastra condomínio, ativos, plano e acessos.
 - [ ] **Equipe & Técnicos (skills + disponibilidade)** 🔵 — quem sabe fazer o quê e quem está livre; alimenta roteirização.
 - [ ] **Laudos Técnicos (SPDA)** 🟠 — wizard NBR 5419 com cálculo de risco e assinatura.
+
+*Paridade v2 (preservar — já existe no PCM atual, não pode regredir):*
+- [ ] **Catálogo de tipos de serviço + decisão de material no levantamento** 🟢 — tipos reais (AC, bomba, ronda…) + quem fornece material (cliente / Sinérgica c/ markup / proposta).
+- [ ] **Vínculo de OS pai-filho** 🟢 — corretiva gera/atrela OS filhas.
+- [ ] **Estimativa de esforço + citação normativa por IA** 🟢 — backlog/inspeção já calculam horas e citam NBR.
+- [ ] **Inspeção por sistema predial (12 sistemas) + análise de foto por IA** 🔵 — vistoria estruturada vira backlog.
+- [ ] **Importação de inspeção/laudo legado (PDF e XLS)** 🔵 — migra histórico de papel/planilha via IA.
+- [ ] **Rondas recorrentes (diária/semanal)** 🔵 — além do preventivo mensal→anual.
+- [ ] **Questionário do Auvo → backlog** 🔵 — checklist de fim de visita gera itens.
 
 > 💬 **Considerações (M1):** ______________________________________________________________
 
