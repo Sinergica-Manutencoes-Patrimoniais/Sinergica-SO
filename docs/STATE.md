@@ -10,17 +10,19 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-01 por @architect (sessão PMOC + rename OS→SO)
+**Última atualização:** 2026-07-01 por @devops (E00-S04: sidebar colapsável + logo Sinérgica)
 
 ## Status geral
-**Fase:** Casca concluída — specs PMOC incorporadas; aguarda push/PR para `Sinergica-M-P/Sinergica-OS`.
+**Fase:** Casca concluída — E00-S04 implementado; aguarda push/PR para `Sinergica-M-P/Sinergica-OS`.
 **Gates:** pnpm test ✅ · typecheck ✅ · lint ✅ · audit-esteira ✅ · eval-spec-fidelity ✅
 
 ## Em andamento / próximo passo
 - **Branches locais prontas para push** (aguardando write access em `Sinergica-M-P/Sinergica-OS`):
   - `docs/E01-S03-pmoc-spec` — PMOC spec + rename OS→SO + design system (2 commits)
   - `feat/E00-S03-dashboard-geral` — auth bypass + Dashboard Geral (1 commit `905c37c`)
-- **Próximo passo imediato:** após acesso concedido → push das 2 branches + `gh pr create` para cada
+  - `feat/E00-S04-sidebar-logo` — sidebar colapsável + logos reais Sinérgica (1 commit `0c1e278`)
+- **Próximo passo imediato:** após acesso concedido → push das 3 branches + `gh pr create` para cada
+- **Próximo passo de feature:** E01-S09 — PCM telas de operação com mock data (listagem OS, modal detalhes, backlog GUT completo)
 - **Próximo passo (Mês 2):** provisionar Supabase + Netlify reais; implementar `specs/0002` + spec de E01-S03 (tem design.md pronto)
 
 ## Specs implementadas / artefatos prontos
@@ -28,7 +30,8 @@ alwaysApply: true
 |------|--------|------|
 | `0001-priorizacao-backlog-gut` | implementado, todos os ACs verdes | pnpm test |
 | `0002-abertura-chamado-ze` | aprovado (aguarda implementação — Mês 2) | — |
-| `E00-S03-dashboard-geral` | **implementado**, todos os ACs verdes | typecheck ✅ · lint ✅ |
+| `E00-S03-dashboard-geral` | implementado, todos os ACs verdes | typecheck ✅ · lint ✅ |
+| `E00-S04-sidebar-logo` | **implementado**, todos os ACs verdes | typecheck ✅ · lint ✅ |
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
 
 ## Decisões recentes

@@ -18,56 +18,52 @@ alwaysApply: false
 ## T2 — Favicon (`apps/web/index.html`)
 **AC:** AC-6
 
-- [ ] Substituir `data:image/svg+xml,...⚙️...` por `<link rel="icon" href="/logos/favicon.png" />`
+- [x] Substituir `data:image/svg+xml,...⚙️...` por `<link rel="icon" href="/logos/favicon.png" />`
 
 ## T3 — HomePage.tsx: state + imports
 **AC:** AC-1, AC-2, AC-3
 
-- [ ] Adicionar import `ChevronLeft, ChevronRight` do lucide-react
-- [ ] Adicionar `const [sidebarCollapsed, setSidebarCollapsed] = useState(false)`
-- [ ] Remover import `Settings` (não será mais usado após remover o ícone genérico da brand area)
+- [x] Adicionar import `ChevronLeft, ChevronRight` do lucide-react
+- [x] Adicionar `const [sidebarCollapsed, setSidebarCollapsed] = useState(false)`
+- [x] Remover import `Settings` (não será mais usado após remover o ícone genérico da brand area)
 
 ## T4 — HomePage.tsx: `<aside>` largura dinâmica
 **AC:** AC-1
 
-- [ ] `<aside className={...sidebarCollapsed ? "w-14" : "w-56"...transition-[width] duration-200...}>`
+- [x] `<aside className={...sidebarCollapsed ? "w-14" : "w-56"...transition-[width] duration-200...}>`
 
 ## T5 — HomePage.tsx: brand area com logo
 **AC:** AC-4
 
-- [ ] Remover `<div>` com `<Settings>` icon + texto "Sinérgica SO" + role
-- [ ] Condicional: collapsed → `<img src="/logos/logo-simbolo-laranja.png" className="w-8 h-8 object-contain" />`; expanded → `<img src="/logos/logo-horizontal-branco.png" className="h-7 object-contain" />`
-- [ ] Brand area mantém `px-4 py-4 border-b border-navy-line`; flex centralizado quando collapsed
+- [x] Remover `<div>` com `<Settings>` icon + texto "Sinérgica SO" + role
+- [x] Condicional: collapsed → `<img logo-simbolo-laranja.png w-8 h-8 />`; expanded → `<img logo-horizontal-branco.png h-7 />`
+- [x] Brand area com flex centralizado quando collapsed
 
 ## T6 — HomePage.tsx: nav items com label condicional
 **AC:** AC-2, AC-3
 
-- [ ] Sidebar "inicio" (lista de módulos): cada `<button>` → adicionar `title={m.label}`, wrapper do span com `{!sidebarCollapsed && <span>}`
-- [ ] Sidebar PCM (PCM_NAV items): idem — `title={item.label}`, span condicional
-- [ ] Sidebar "outros": parágrafo de "Navegação disponível..." só aparece `{!sidebarCollapsed && ...}`
-- [ ] Section titles (MÓDULOS, OPERAÇÃO, etc.): `{!sidebarCollapsed && <p ...>}`
+- [x] Sidebar "inicio": cada `<button>` com `title={m.label}`, span condicional
+- [x] Sidebar PCM: idem — `title={item.label}`, span condicional
+- [x] Sidebar "outros": parágrafo só aparece `{!sidebarCollapsed && ...}`
+- [x] Section titles (MÓDULOS, OPERAÇÃO, etc.): `{!sidebarCollapsed && <p ...>}`
 
 ## T7 — HomePage.tsx: footer com toggle + labels condicionais
 **AC:** AC-1, AC-2
 
-- [ ] Botão toggle antes dos botões de Configurações/Sair:
-  - `onClick={() => setSidebarCollapsed(!sidebarCollapsed)}`
-  - icon: `sidebarCollapsed ? <ChevronRight> : <ChevronLeft>`
-  - label: `{!sidebarCollapsed && <span>Recolher</span>}`
-- [ ] Botão Configurações: adicionar `title="Configurações"`, span condicional
-- [ ] Botão Sair: adicionar `title="Sair"`, span condicional
+- [x] Botão toggle antes dos botões de Configurações/Sair
+- [x] Botão Configurações: `title="Configurações"`, span condicional
+- [x] Botão Sair: `title="Sair"`, span condicional
 
 ## T8 — LoginPage.tsx: logo oficial
 **AC:** AC-5
 
-- [ ] Remover bloco `<div className="inline-flex..."> <svg gear ... /></div>`
-- [ ] Remover `<h1 className="text-2xl ...">Sinérgica SO</h1>`
-- [ ] Inserir `<img src="/logos/logo-horizontal-positivo.png" alt="Sinérgica" className="mx-auto h-14 object-contain mb-6" />`
-- [ ] Ajustar `<p>` de subtítulo para `"Sistema Operacional"` (o logo já traz "Manutenções Patrimoniais")
+- [x] Remover bloco com gear SVG + `<h1>Sinérgica SO</h1>`
+- [x] Inserir `<img src="/logos/logo-horizontal-positivo.png" className="mx-auto h-14 object-contain mb-2" />`
+- [x] Subtítulo ajustado para `"Sistema Operacional"`
 
 ## T9 — Gates de qualidade
 **AC:** AC-7
 
-- [ ] `pnpm run typecheck` → verde
-- [ ] `pnpm exec biome check apps/web/src/` → verde
-- [ ] Testar no browser: AC-1 a AC-6 verificados manualmente
+- [x] `pnpm run typecheck` → verde
+- [x] `pnpm exec biome check apps/web/src/` → verde
+- [x] Assets /logos/* respondem 200 no dev server (http://localhost:5174)
