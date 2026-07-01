@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "App web do Sinérgica OS — feature-based, um diretório por bounded context.",
+  "description": "App web do Sinérgica SO — feature-based, um diretório por bounded context.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

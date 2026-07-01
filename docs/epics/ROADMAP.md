@@ -1,6 +1,6 @@
 ---
 name: roadmap-epicos
-description: Painel mestre de épicos e stories do Sinérgica OS. Leia antes de iniciar qualquer sessão de desenvolvimento.
+description: Painel mestre de épicos e stories do Sinérgica SO. Leia antes de iniciar qualquer sessão de desenvolvimento.
 alwaysApply: true
 ---
 
@@ -39,6 +39,12 @@ alwaysApply: true
 |----------|-----------|------|--------|-------|-----------|
 | E01-S01 | Priorização de backlog por Matriz GUT | [spec](../../specs/0001-priorizacao-backlog-gut/spec.md) | Implementado | Claude (sessão Lucas) | ✅ |
 | E01-S02 | Abertura de chamado via Agente Zé | [spec](../../specs/0002-abertura-chamado-ze/spec.md) | Spec aprovada | — | ⏳ |
+| E01-S03 | PMOC — Sub-módulo legal: schema, contratos e cronograma automático | — | Planejado (tier arquitetural) | — | — |
+| E01-S04 | PMOC — Inventário de equipamentos de climatização (cadastro + wizard) | — | Planejado | — | — |
+| E01-S05 | PMOC — Registros de visita, laudo PDF e envio por e-mail | — | Planejado | — | — |
+| E01-S06 | PMOC — Análise microbiológica e log de não-conformidades | — | Planejado | — | — |
+| E01-S07 | Hub de OS — Fila unificada de Ordens de Serviço (C1/C2/P1/P2/IN, SLA, prioridade) | — | Planejado (tier arquitetural) | — | — |
+| E01-S08 | PMOC — Dashboard e telas de gestão de contratos | — | Planejado | — | — |
 
 ### E02 — Atendimento · Zé
 *Stories serão abertas quando E01-S02 iniciar (dependência de design).*

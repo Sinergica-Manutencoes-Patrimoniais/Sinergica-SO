@@ -1,10 +1,10 @@
 ---
 name: PROJECT
-description: Identidade do Sinérgica OS — contexto base de todo agente. Leia em toda sessão.
+description: Identidade do Sinérgica SO — contexto base de todo agente. Leia em toda sessão.
 alwaysApply: true
 ---
 
-# PROJECT.md — Sinérgica OS
+# PROJECT.md — Sinérgica SO
 
 > Status: **casca (Mês 1)** · Início: 2026-06-25 · Desenvolvido por: Trívia Studio
 
@@ -18,7 +18,7 @@ da operação. O **Auvo** é o braço de campo insubstituível (app móvel dos t
 fotos, checklist, assinatura offline).
 
 ## Perfil
-**OS (monorepo multi-domínio)** — Padrão OS v2 da Trívia.
+**SO (monorepo multi-domínio)** — Padrão SO v2 da Trívia.
 
 ## Stack
 | Camada | Tecnologia |

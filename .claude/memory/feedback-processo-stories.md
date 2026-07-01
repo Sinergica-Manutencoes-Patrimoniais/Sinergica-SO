@@ -1,6 +1,6 @@
 ---
 name: feedback-processo-stories
-description: Processo obrigatório de stories/épicos com agentes Triviaiox — múltiplos devs simultâneos no Sinérgica OS.
+description: Processo obrigatório de stories/épicos com agentes Triviaiox — múltiplos devs simultâneos no Sinérgica SO.
 metadata: 
   node_type: memory
   type: feedback

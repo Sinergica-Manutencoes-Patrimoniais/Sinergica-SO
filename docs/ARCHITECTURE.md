@@ -1,10 +1,10 @@
 ---
 name: ARCHITECTURE
-description: Arquitetura viva do Sinérgica OS — bounded contexts, context-map, schemas. Puxe ao tocar fronteira de domínio ou ao criar migration.
+description: Arquitetura viva do Sinérgica SO — bounded contexts, context-map, schemas. Puxe ao tocar fronteira de domínio ou ao criar migration.
 alwaysApply: false
 ---
 
-# ARCHITECTURE — Sinérgica OS
+# ARCHITECTURE — Sinérgica SO
 
 > Documento **vivo** — atualize quando a fronteira mudar. Decisão estrutural → ADR em `docs/adr/`.
 

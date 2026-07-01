@@ -1,6 +1,6 @@
 ---
 name: blueprint-pcm-operacao
-description: Requirements do módulo PCM / Operação — núcleo do Sinérgica OS. Puxe ao planejar specs de OS, backlog, visitas ou inspeções.
+description: Requirements do módulo PCM / Operação — núcleo do Sinérgica SO. Puxe ao planejar specs de OS, backlog, visitas ou inspeções.
 alwaysApply: false
 ---
 
@@ -101,3 +101,108 @@ Fonte de dados: `pcm.plano_preventivo` (regras de recorrência) × `pcm.ordens_s
 | **% preventivo cumprido** | OS preventivas realizadas / planejadas no período |
 | **Backlog em semanas** | Horas pendentes / horas contratuais por semana |
 | **Taxa de não-conformidade** | Itens `nao_conforme` / total inspecionados |
+
+---
+
+## Sub-módulo PMOC (Plano de Manutenção, Operação e Controle)
+
+> Stories: E01-S03 a E01-S06 · Schema Postgres: `pcm` (prefixo `pmoc_*`)
+
+### O que é e por que existe
+
+PMOC é um **documento legal obrigatório** (Portaria MS nº 3.523/1998 + ABNT NBR 13.971/2014 + ANVISA RDC 09/2003) para toda edificação de uso coletivo com sistema de ar condicionado. Define quais equipamentos existem, quais manutenções devem ser feitas, com que frequência, quem é o responsável técnico (Fabrício Medeiros, CREA) e registra todas as visitas executadas.
+
+A Sinérgica executa o PMOC para seus clientes de contrato Completo e Premium. O sistema automatiza o cronograma anual, gera os laudos de visita em PDF e emite alertas de vencimento de ART e análise microbiológica.
+
+**Consequência de não ter PMOC válido:** multa da ANVISA/Vigilância Sanitária, responsabilidade civil do proprietário e invalidação de seguro do imóvel.
+
+### Base legal
+
+| Norma | Obrigação |
+|-------|-----------|
+| Portaria MS 3.523/1998 | Obrigatoriedade do PMOC para edificações coletivas com AC |
+| ABNT NBR 13.971/2014 | Especificações técnicas dos procedimentos de manutenção |
+| ANVISA RDC 09/2003 | Qualidade do ar interior — obriga análise microbiológica semestral |
+
+### Entidades do PMOC
+
+| Entidade | Tabela | Descrição |
+|----------|--------|-----------|
+| **Imóvel PMOC** | `pcm.pmoc_properties` | Local físico com AC. Vinculado ao cliente PCM. Dados: nome, tipo, endereço, CNPJ, contato do responsável, e-mail para laudos. |
+| **Equipamento de Climatização** | `pcm.pmoc_equipment` | Um registro por sistema (evaporadora + condensadora = 1 equipamento). Tag único por imóvel (AC-01, AC-02…). Dados: tipo, marca, modelo, nº de série, BTU/h, refrigerante, fase, localização, condição. |
+| **Contrato PMOC** | `pcm.pmoc_contracts` | Vínculo imóvel + Sinérgica com vigência anual. Campos obrigatórios: ART, CREA, start/end date. Ao criar, gera automaticamente o cronograma anual. |
+| **Cronograma de Visitas** | `pcm.pmoc_schedules` | Uma linha por visita planejada (12 por ano). Tipo: `mensal` / `trimestral` / `semestral` / `anual`. Gerado automaticamente pela Edge Function ao criar o contrato. |
+| **Registro de Visita / Laudo** | `pcm.pmoc_records` | Criado via webhook do Auvo quando a OS é fechada. Contém: checklist executado (JSONB), equipamentos atendidos, NCs, materiais, assinaturas. Gera PDF e envia por e-mail ao responsável do imóvel. |
+| **Análise Microbiológica** | `pcm.pmoc_microbio_analysis` | Laudo de laboratório acreditado (INMETRO). Obrigatório a cada 6 meses. Limites legais: fungos ≤ 750 UFC/m³, relação I/E ≤ 1,5, coliformes = ausência. |
+| **Log de NC** | `pcm.pmoc_nonconformity_log` | Registro persistente de não-conformidades com severidade (alta/média/baixa), responsável e prazo. NC alta dispara alerta imediato ao engenheiro. |
+
+### Periodicidades acumulativas
+
+As manutenções são acumulativas: uma visita trimestral executa tudo do mensal + os extras trimestrais.
+
+| Tipo | Meses (contrato 12m) | Inclui |
+|------|---------------------|--------|
+| Mensal | 1, 2, 4, 5, 7, 8, 10, 11 | Checklists mensais (evaporadora + condensadora) |
+| Trimestral | 3, 9 | Mensal + limpeza serpentina + medições elétricas |
+| Semestral | 6 | Trimestral + limpeza química + medição refrigerante + **análise microbiológica obrigatória** |
+| Anual | 12 | Semestral + revisão geral + renovação ART + novo PMOC |
+
+### Checklists canônicos
+
+Os checklists são definidos como **constante TypeScript em `packages/shared`** (não no banco — é dado estático). Cada item tem um ID estável (ex: `m_e_01`, `t_c_03`, `s_m_01`) usado no JSONB de `pmoc_records.checklist` e nos payloads enviados ao Auvo.
+
+Grupos: `evaporadora`, `condensadora`, `sistema` (trimestral), `limpeza_profunda`, `eletrico`, `refrigeracao`, `microbiologico` (semestral), `revisao_geral`, `documentacao` (anual).
+
+### ART — Anotação de Responsabilidade Técnica
+
+Vincula Fabrício Medeiros (CREA) ao serviço executado. Campos em `pmoc_contracts`: `crea`, `art_number`, `art_date`. Alerta automático D-30 antes do `end_date`: `status → 'renovar'` + notificação no dashboard.
+
+### Integração PMOC ↔ inventário geral (`pcm_equipment`)
+
+Ao cadastrar um equipamento de AR no PMOC, o sistema cria automaticamente um registro em `pcm.pcm_equipment` com `discipline = 'climatizacao'` e `pmoc_equipment_id` preenchido. Isso garante que o AR apareça no plano de manutenção geral do imóvel sem duplicação de dados.
+
+### Automações (Edge Functions / cron)
+
+| Job | Frequência | O que faz |
+|-----|-----------|-----------|
+| `pmoc-daily-status` | Diário 00:01 | Atualiza `pmoc_schedules.status → 'atrasado'` quando data vencida |
+| `pmoc-create-auvo-os` | Diário 08:00 | Cria OS no Auvo para visitas com `scheduled_date = hoje + 7d` e sem `auvo_os_id` |
+| `pmoc-alert-art` | Diário 08:00 | Alerta D-30 de vencimento de ART (`pmoc_contracts.end_date - 30 <= hoje`) |
+| `pmoc-alert-microbio` | Diário 08:00 | Alerta quando análise microbiológica vence em ≤ 30 dias |
+
+---
+
+## Hub de OS — Fila Unificada de Ordens de Serviço
+
+> Story: E01-S07 (tier arquitetural) · Tabela: `pcm.os_hub`
+
+### Tipos de OS
+
+| Código | Nome | Origem | SLA | Prioridade base |
+|--------|------|--------|-----|-----------------|
+| **C1** | Emergencial | Chamado urgente (Zé / escritório) | 4h | 1 |
+| **C2** | Corretiva programada | Chamado normal | 72h | 2 |
+| **P1** | Preventiva PMOC | Gerada pelo módulo PMOC (automático D-7) | Janela ±3 dias | 3 (2 se atrasada) |
+| **P2** | Preventiva predial | Gerada pelo PCM geral | Janela ±7 dias | 3 |
+| **IN** | Inspeção / follow-up | Detectada em visita anterior | Prazo acordado | 4 |
+
+> **Regra de escalonamento:** P1 atrasada (data vencida) sobe para prioridade 2 — equivalente a corretiva programada. O atraso num PMOC é risco legal.
+
+### Cálculo de prioridade
+
+```
+C1 → 1 (deslocar agora)
+C2 → 2 (corretiva programada)
+P1 com scheduled_date < hoje → 2 (PMOC atrasado = risco legal)
+P1 com scheduled_date >= hoje → 3 (preventiva no prazo)
+P2 → 3 (preventiva predial)
+IN → 4 (follow-up)
+```
+
+### Dias preventivos
+
+Cada técnico pode ter N dias/semana marcados como "preventivos" — esses dias só recebem P1 e P2. OS C2 e IN não são alocadas nesses dias. C1 pode entrar em qualquer dia (é emergencial).
+
+### Observação arquitetural (decisão para E01-S07)
+
+O `os_hub` pode ser implementado como: (a) **nova tabela** que projeta/unifica as OS do PCM com os schedules do PMOC, ou (b) **refatoração da tabela de OS existente** para absorver os tipos C1/C2/P1/P2/IN. Esta decisão será tomada no `design.md` de E01-S07 antes de implementar.

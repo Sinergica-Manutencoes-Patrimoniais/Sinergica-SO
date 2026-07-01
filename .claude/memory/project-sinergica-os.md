@@ -1,13 +1,13 @@
 ---
 name: project-sinergica-os
-description: "Estado e decisões do projeto Sinérgica OS — casca concluída, próximo passo é implementar os módulos."
+description: "Estado e decisões do projeto Sinérgica SO — casca concluída, próximo passo é implementar os módulos."
 metadata: 
   node_type: memory
   type: project
   originSessionId: f5f215d0-bb44-4034-b748-086da2842008
 ---
 
-# Sinérgica OS — Estado do Projeto
+# Sinérgica SO — Estado do Projeto
 
 **Fase atual:** Casca concluída (Mês 1 do contrato). Pronto para construção dos módulos (Mês 2).
 
@@ -15,10 +15,10 @@ metadata:
 
 ## Decisões estruturais tomadas
 - Monorepo `apps/web` único com features por bounded context (não apps separados).
-- Padrão OS v2 (Trívia Studio) com Triviaiox wired (squad `trivia-os`).
+- Padrão SO v2 (Trívia Studio) com Triviaiox wired (squad `trivia-os`).
 - PCM como origin of truth; Auvo como braço de campo com `externalId` idempotente (ADR-0001).
 - Detecção determinística de menção ao Zé antes do LLM (ADR-0002).
-- Dinheiro em centavos (inteiro) — herdado do Padrão OS.
+- Dinheiro em centavos (inteiro) — herdado do Padrão SO.
 
 ## Gates (todos verdes no commit inicial)
 - `pnpm --filter @sinergica/web test` → 20 testes (log, env, GUT)

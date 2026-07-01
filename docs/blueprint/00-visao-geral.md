@@ -1,10 +1,10 @@
 ---
 name: blueprint-visao-geral
-description: Visão geral de requirements do Sinérgica OS — todos os 9 módulos. Puxe ao planejar épicos ou revisar escopo.
+description: Visão geral de requirements do Sinérgica SO — todos os 9 módulos. Puxe ao planejar épicos ou revisar escopo.
 alwaysApply: false
 ---
 
-# Blueprint — Sinérgica OS: Visão Geral
+# Blueprint — Sinérgica SO: Visão Geral
 
 > Este blueprint captura os requirements de alto nível de cada módulo, extraídos do PCM v2
 > (legado) e das conversas com o cliente. A especificação executável (AC testáveis) fica em

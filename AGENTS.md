@@ -1,12 +1,12 @@
 ---
 name: AGENTS
-description: Quem produz/consome cada artefato SDD, autoridade de comando e mapa skill→agente Triviaiox. Puxe ao orquestrar o trabalho (Sinérgica OS).
+description: Quem produz/consome cada artefato SDD, autoridade de comando e mapa skill→agente Triviaiox. Puxe ao orquestrar o trabalho (Sinérgica SO).
 alwaysApply: false
 ---
 
-# AGENTS.md — Agentes Triviaiox no Sinérgica OS
+# AGENTS.md — Agentes Triviaiox no Sinérgica SO
 
-O Padrão OS usa os agentes do **Triviaiox** (sem alterar o core dele) para executar a **esteira
+O Padrão SO usa os agentes do **Triviaiox** (sem alterar o core dele) para executar a **esteira
 SDD**. A regra de ouro: **há um único conjunto de artefatos canônicos** — `product.md`,
 `domain.md`, `design.md`, `spec.md`, `tasks.md` + ADR. Não existe "story" como artefato paralelo;
 a *story* do Triviaiox é apenas a **visão de execução derivada de `tasks.md`**.

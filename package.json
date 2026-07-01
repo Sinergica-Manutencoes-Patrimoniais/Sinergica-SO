@@ -2,7 +2,7 @@
   "name": "sinergica-os",
   "private": true,
   "version": "0.1.0",
-  "description": "Sinérgica OS — sistema operacional da Sinérgica Manutenções (monorepo, Padrão OS v2).",
+  "description": "Sinérgica SO — sistema operacional da Sinérgica Manutenções (monorepo, Padrão SO v2).",
   "packageManager": "pnpm@9.0.0",
   "engines": { "node": ">=20" },
   "scripts": {

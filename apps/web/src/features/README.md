@@ -1,4 +1,4 @@
-# features/ — bounded contexts do Sinérgica OS
+# features/ — bounded contexts do Sinérgica SO
 
 Um diretório por **bounded context** (ver `docs/ARCHITECTURE.md` para o context-map completo).
 Features de domínios diferentes **não se importam** entre si — o compartilhamento acontece só
