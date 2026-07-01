@@ -144,14 +144,14 @@ const PCM_NAV: NavGroup[] = [
 // ─── mock data ────────────────────────────────────────────────────────────────
 
 const KPIS = [
-  { label: "OS Abertas", valor: "12", sub: "+3 hoje", trend: "up", cor: "emerald" },
-  { label: "Em Andamento", valor: "5", sub: "2 técnicos", trend: "neutro", cor: "blue" },
-  { label: "Backlog Pendente", valor: "23", sub: "4 críticos", trend: "down", cor: "orange" },
-  { label: "SLA no Prazo", valor: "87%", sub: "+2% vs. semana", trend: "up", cor: "emerald" },
-  { label: "Inspeções (mês)", valor: "8", sub: "3 esta semana", trend: "up", cor: "blue" },
-  { label: "Preventivas Pend.", valor: "4", sub: "vencem em 7 dias", trend: "down", cor: "orange" },
-  { label: "Técnicos em Campo", valor: "3", sub: "1 disponível", trend: "neutro", cor: "blue" },
-  { label: "Tempo Médio OS", valor: "2.3d", sub: "-0.4d vs. mês", trend: "up", cor: "emerald" },
+  { label: "OS Abertas", valor: "12", sub: "+3 hoje", trend: "up" },
+  { label: "Em Andamento", valor: "5", sub: "2 técnicos", trend: "neutro" },
+  { label: "Backlog Pendente", valor: "23", sub: "4 críticos", trend: "down" },
+  { label: "SLA no Prazo", valor: "87%", sub: "+2% vs. semana", trend: "up" },
+  { label: "Inspeções (mês)", valor: "8", sub: "3 esta semana", trend: "up" },
+  { label: "Preventivas Pend.", valor: "4", sub: "vencem em 7 dias", trend: "down" },
+  { label: "Técnicos em Campo", valor: "3", sub: "1 disponível", trend: "neutro" },
+  { label: "Tempo Médio OS", valor: "2.3d", sub: "-0.4d vs. mês", trend: "up" },
 ];
 
 const OS_RECENTES = [
@@ -221,35 +221,33 @@ const BACKLOG_TOP = [
 // ─── helpers visuais ──────────────────────────────────────────────────────────
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
-  solicitacao: { label: "Solicitação", cls: "bg-slate-100 text-slate-600" },
-  planejado: { label: "Planejado", cls: "bg-blue-50 text-blue-700" },
-  andamento: { label: "Em andamento", cls: "bg-amber-50 text-amber-700" },
-  concluido: { label: "Concluído", cls: "bg-emerald-50 text-emerald-700" },
+  solicitacao: { label: "Solicitação", cls: "bg-[#EFF1F4] text-[#5A6175]" },
+  planejado: { label: "Planejado", cls: "bg-[#EAEEF8] text-[#2E3C70]" },
+  andamento: { label: "Em andamento", cls: "bg-[#FDF1DF] text-[#B26A00]" },
+  concluido: { label: "Concluído", cls: "bg-[#E7F6EC] text-[#1E8E45]" },
 };
 
 const PRIO_MAP: Record<string, { label: string; dot: string }> = {
-  critica: { label: "Crítica", dot: "bg-red-500" },
-  alta: { label: "Alta", dot: "bg-orange-400" },
-  media: { label: "Média", dot: "bg-yellow-400" },
-  baixa: { label: "Baixa", dot: "bg-slate-300" },
-};
-
-const KPI_COR: Record<string, string> = {
-  emerald: "text-emerald-600 bg-emerald-50",
-  blue: "text-blue-600 bg-blue-50",
-  orange: "text-orange-600 bg-orange-50",
+  critica: { label: "Crítica", dot: "bg-[#E23B2E]" },
+  alta: { label: "Alta", dot: "bg-[#EF7E25]" },
+  media: { label: "Média", dot: "bg-[#F7A600]" },
+  baixa: { label: "Baixa", dot: "bg-[#C2C7D2]" },
 };
 
 // ─── componentes ─────────────────────────────────────────────────────────────
 
-function KpiCard({ label, valor, sub, trend, cor }: (typeof KPIS)[number]) {
+function KpiCard({ label, valor, sub, trend }: (typeof KPIS)[number]) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col gap-2 hover:shadow-sm transition-shadow">
-      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</span>
-      <span className="text-2xl font-bold text-slate-900">{valor}</span>
+    <div className="bg-card rounded-[6px] border border-line p-5 flex flex-col gap-1.5">
+      <span className="text-[10px] font-semibold text-ink-3 uppercase tracking-[0.16em] font-brand">
+        {label}
+      </span>
+      <span className="text-[28px] font-bold text-ink tabular-nums font-brand leading-none mt-0.5">
+        {valor}
+      </span>
       <span
-        className={`inline-flex items-center gap-1 text-xs font-medium ${
-          trend === "up" ? "text-emerald-600" : trend === "down" ? "text-red-500" : "text-slate-400"
+        className={`inline-flex items-center gap-1 text-[11px] font-medium ${
+          trend === "up" ? "text-[#1E8E45]" : trend === "down" ? "text-[#C5362B]" : "text-ink-3"
         }`}
       >
         {trend === "up" && <TrendingUp className="w-3 h-3" />}
@@ -264,15 +262,15 @@ function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
   const Icon = modulo.icon;
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-12">
-      <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
-        <Icon className="w-8 h-8 text-slate-400" strokeWidth={1.5} />
+      <div className="w-16 h-16 rounded-2xl bg-line flex items-center justify-center">
+        <Icon className="w-8 h-8 text-ink-3" strokeWidth={1.5} />
       </div>
       <div>
-        <h2 className="text-lg font-semibold text-slate-700">{modulo.label}</h2>
-        <p className="text-sm text-slate-400 mt-1 max-w-sm">{modulo.descricao}</p>
+        <h2 className="text-lg font-semibold text-ink-2">{modulo.label}</h2>
+        <p className="text-sm text-ink-3 mt-1 max-w-sm">{modulo.descricao}</p>
       </div>
-      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#B26A00] bg-orange-soft border border-[#F0D4B0] rounded-full px-3 py-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#E8731B]" />
         Em construção
       </span>
     </div>
@@ -282,7 +280,7 @@ function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
 function PcmDashboard() {
   return (
     <div className="flex flex-col gap-6">
-      {/* KPIs */}
+      {/* KPI rail */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {KPIS.map((k) => (
           <KpiCard key={k.label} {...k} />
@@ -292,38 +290,38 @@ function PcmDashboard() {
       {/* OS recentes + Backlog top */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* OS recentes */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200">
-          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="lg:col-span-2 bg-card rounded-[10px] border border-line">
+          <div className="px-5 py-4 border-b border-line-soft flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-slate-800">Ordens de Serviço Recentes</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Últimas 5 abertas ou atualizadas</p>
+              <h3 className="text-sm font-semibold text-ink">Ordens de Serviço Recentes</h3>
+              <p className="text-xs text-ink-3 mt-0.5">Últimas 5 abertas ou atualizadas</p>
             </div>
-            <span className="text-xs text-emerald-600 font-medium cursor-pointer hover:underline">
+            <span className="text-xs text-orange font-medium cursor-pointer hover:underline">
               Ver todas →
             </span>
           </div>
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-line-soft">
             {OS_RECENTES.map((os) => {
               const status = STATUS_MAP[os.status] ?? {
                 label: os.status,
-                cls: "bg-slate-100 text-slate-600",
+                cls: "bg-[#EFF1F4] text-[#5A6175]",
               };
-              const prio = PRIO_MAP[os.prioridade] ?? { label: os.prioridade, dot: "bg-slate-300" };
+              const prio = PRIO_MAP[os.prioridade] ?? { label: os.prioridade, dot: "bg-[#C2C7D2]" };
               return (
                 <div
                   key={os.numero}
-                  className="px-5 py-3.5 flex items-center gap-3 hover:bg-slate-50 transition-colors cursor-default"
+                  className="px-5 py-3.5 flex items-center gap-3 hover:bg-line-soft transition-colors cursor-default"
                 >
-                  <span className="text-xs font-mono text-slate-400 w-14 shrink-0">
+                  <span className="text-xs font-brand tabular-nums text-ink-3 w-14 shrink-0">
                     {os.numero}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{os.titulo}</p>
-                    <p className="text-xs text-slate-400 truncate">{os.condominio}</p>
+                    <p className="text-sm font-medium text-ink truncate">{os.titulo}</p>
+                    <p className="text-xs text-ink-3 truncate">{os.condominio}</p>
                   </div>
                   <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium shrink-0">
                     <span className={`w-1.5 h-1.5 rounded-full ${prio.dot}`} />
-                    <span className="text-slate-500">{prio.label}</span>
+                    <span className="text-ink-2">{prio.label}</span>
                   </span>
                   <span
                     className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${status.cls}`}
@@ -337,33 +335,35 @@ function PcmDashboard() {
         </div>
 
         {/* Backlog top */}
-        <div className="bg-white rounded-xl border border-slate-200">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-800">Top Backlog GUT</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Itens com maior score de prioridade</p>
+        <div className="bg-card rounded-[10px] border border-line">
+          <div className="px-5 py-4 border-b border-line-soft">
+            <h3 className="text-sm font-semibold text-ink">Top Backlog GUT</h3>
+            <p className="text-xs text-ink-3 mt-0.5">Itens com maior score de prioridade</p>
           </div>
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-line-soft">
             {BACKLOG_TOP.map((item, i) => {
               const prio = PRIO_MAP[item.prioridade] ?? {
                 label: item.prioridade,
-                dot: "bg-slate-300",
+                dot: "bg-[#C2C7D2]",
               };
               return (
                 <div
                   key={item.titulo}
-                  className="px-5 py-4 flex gap-3 hover:bg-slate-50 transition-colors cursor-default"
+                  className="px-5 py-4 flex gap-3 hover:bg-line-soft transition-colors cursor-default"
                 >
-                  <span className="text-xl font-bold text-slate-200 shrink-0 w-5 text-center leading-none mt-0.5">
+                  <span className="text-xl font-bold font-brand text-line shrink-0 w-5 text-center leading-none mt-0.5">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-slate-700 leading-snug">{item.titulo}</p>
-                    <p className="text-xs text-slate-400 mt-1">{item.condominio}</p>
+                    <p className="text-xs font-medium text-ink-2 leading-snug">{item.titulo}</p>
+                    <p className="text-xs text-ink-3 mt-1">{item.condominio}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xs font-bold text-slate-600">Score {item.score}</span>
+                      <span className="text-xs font-bold font-brand text-ink-2">
+                        Score {item.score}
+                      </span>
                       <span className="inline-flex items-center gap-1 text-[11px] font-medium">
                         <span className={`w-1.5 h-1.5 rounded-full ${prio.dot}`} />
-                        <span className="text-slate-500">{prio.label}</span>
+                        <span className="text-ink-2">{prio.label}</span>
                       </span>
                     </div>
                   </div>
@@ -393,18 +393,18 @@ export function HomePage() {
   const firstName = user?.name.split(" ")[0] ?? "usuário";
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-paper overflow-hidden">
       {/* ── Sidebar ──────────────────────────────────────────── */}
-      <aside className="w-56 shrink-0 bg-white border-r border-slate-200 flex flex-col">
+      <aside className="w-56 shrink-0 bg-navy-deep border-r border-navy-line flex flex-col">
         {/* Brand */}
-        <div className="px-4 py-4 border-b border-slate-100">
+        <div className="px-4 py-4 border-b border-navy-line">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-700 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
               <Settings className="w-4 h-4 text-white" strokeWidth={1.8} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-slate-900 truncate">Sinérgica OS</p>
-              <p className="text-[11px] text-slate-400 truncate capitalize">{user?.role}</p>
+              <p className="text-sm font-bold text-white truncate">Sinérgica SO</p>
+              <p className="text-[11px] text-[#A8B0CC] truncate capitalize">{user?.role}</p>
             </div>
           </div>
         </div>
@@ -414,7 +414,7 @@ export function HomePage() {
           {activeModulo === "pcm" ? (
             PCM_NAV.map((group) => (
               <div key={group.titulo}>
-                <p className="px-2 text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">
+                <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
                   {group.titulo}
                 </p>
                 {group.items.map((item) => {
@@ -423,10 +423,10 @@ export function HomePage() {
                     <button
                       key={item.label}
                       type="button"
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm transition-colors cursor-pointer ${
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${
                         item.active
-                          ? "bg-emerald-50 text-emerald-700 font-medium"
-                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                          ? "border-orange bg-white/[0.07] text-white font-medium"
+                          : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
                       }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -438,7 +438,7 @@ export function HomePage() {
             ))
           ) : (
             <div className="px-2 pt-4 text-center">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#A8B0CC]">
                 Navegação disponível quando o módulo for construído.
               </p>
             </div>
@@ -446,10 +446,10 @@ export function HomePage() {
         </nav>
 
         {/* Footer */}
-        <div className="px-2 py-3 border-t border-slate-100 space-y-0.5">
+        <div className="px-2 py-3 border-t border-navy-line space-y-0.5">
           <button
             type="button"
-            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent"
           >
             <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
             <span>Configurações</span>
@@ -457,7 +457,7 @@ export function HomePage() {
           <button
             type="button"
             onClick={logout}
-            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent"
           >
             <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.8} />
             <span>Sair</span>
@@ -468,7 +468,7 @@ export function HomePage() {
       {/* ── Main ─────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar com abas */}
-        <header className="bg-white border-b border-slate-200 shrink-0">
+        <header className="bg-card border-b border-line shrink-0">
           <div className="flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
             {MODULOS.map((m) => {
               const Icon = m.icon;
@@ -480,11 +480,14 @@ export function HomePage() {
                   onClick={() => setActiveModulo(m.id)}
                   className={`flex items-center gap-1.5 px-3.5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors cursor-pointer shrink-0 ${
                     isActive
-                      ? "border-emerald-600 text-emerald-700"
-                      : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+                      ? "border-orange text-navy"
+                      : "border-transparent text-ink-3 hover:text-ink hover:border-line"
                   }`}
                 >
-                  <Icon className="w-4 h-4" strokeWidth={isActive ? 2 : 1.8} />
+                  <Icon
+                    className={`w-4 h-4 ${isActive ? "text-orange" : ""}`}
+                    strokeWidth={isActive ? 2 : 1.8}
+                  />
                   {m.label}
                 </button>
               );
@@ -492,7 +495,7 @@ export function HomePage() {
 
             {/* Avatar no canto */}
             <div className="ml-auto pl-4 flex items-center gap-2 shrink-0">
-              <div className="w-7 h-7 rounded-full bg-emerald-700 flex items-center justify-center text-white text-xs font-bold">
+              <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center text-white text-xs font-bold">
                 {initials}
               </div>
             </div>
@@ -503,8 +506,8 @@ export function HomePage() {
         <main className="flex-1 overflow-y-auto p-6">
           {/* Greeting */}
           <div className="mb-6">
-            <h1 className="text-xl font-bold text-slate-900">Olá, {firstName}! 👋</h1>
-            <p className="text-sm text-slate-400 mt-0.5">
+            <h1 className="text-xl font-bold text-ink">Olá, {firstName}! 👋</h1>
+            <p className="text-sm text-ink-3 mt-0.5">
               {activeModulo === "pcm"
                 ? "Sinérgica Manutenções · PCM Operação"
                 : `Sinérgica Manutenções · ${modulo?.label ?? ""}`}

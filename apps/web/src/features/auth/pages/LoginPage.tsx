@@ -26,18 +26,18 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 shadow-lg mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-navy shadow-lg mb-4">
             <svg
               className="w-9 h-9 text-white"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.8}
               viewBox="0 0 24 24"
-              aria-label="Sinérgica OS"
+              aria-label="Sinérgica SO"
               role="img"
             >
               <path
@@ -52,18 +52,18 @@ export function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Sinérgica OS</h1>
-          <p className="text-sm text-slate-500 mt-1">Sistema Operacional · Sinérgica Manutenções</p>
+          <h1 className="text-2xl font-bold text-ink tracking-tight">Sinérgica SO</h1>
+          <p className="text-sm text-ink-3 mt-1">Sistema Operacional · Sinérgica Manutenções</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-          <h2 className="text-lg font-semibold text-slate-800 mb-1">Entrar na sua conta</h2>
-          <p className="text-sm text-slate-500 mb-6">Acesso restrito à equipe Sinérgica.</p>
+        <div className="bg-card rounded-2xl border border-line p-8">
+          <h2 className="text-lg font-semibold text-ink mb-1">Entrar na sua conta</h2>
+          <p className="text-sm text-ink-3 mb-6">Acesso restrito à equipe Sinérgica.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-ink-2 mb-1.5">
                 E-mail
               </label>
               <input
@@ -73,12 +73,12 @@ export function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="voce@sinergica.com.br"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink placeholder-ink-4 text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-ink-2 mb-1.5">
                 Senha
               </label>
               <input
@@ -88,12 +88,12 @@ export function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink placeholder-ink-4 text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
               />
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p className="text-sm text-[#C5362B] bg-[#FCEAE8] border border-[#F2C4C0] rounded-lg px-3 py-2">
                 {error}
               </p>
             )}
@@ -101,15 +101,15 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+              className="w-full py-2.5 px-4 bg-orange hover:bg-orange-deep disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition shadow-[0_2px_0_0_#C5590C] hover:shadow-none focus:outline-none focus:ring-2 focus:ring-orange/30 focus:ring-offset-2 cursor-pointer"
             >
               {loading ? "Entrando…" : "Entrar"}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-6">
-          Sinérgica OS · Padrão OS v2 · Trívia Studio
+        <p className="text-center text-xs text-ink-3 mt-6">
+          Sinérgica SO · Padrão SO v2 · Trívia Studio
         </p>
       </div>
     </div>
