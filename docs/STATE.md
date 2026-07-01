@@ -17,10 +17,10 @@ alwaysApply: true
 **Gates:** pnpm test ✅ · typecheck ✅ · lint ✅ · audit-esteira ✅ · eval-spec-fidelity ✅
 
 ## Em andamento / próximo passo
-- **Branch local:** `docs/E01-S03-pmoc-spec` — 2 commits prontos, aguardando acesso de push ao repo `Sinergica-M-P/Sinergica-OS`.
-  - Commit 1: `chore(E00-S02)` — design system brand tokens (navy/orange/paper, Google Fonts)
-  - Commit 2: `docs(E01-S03)` — PMOC spec + rename OS→SO + stories E01-S03 a E01-S08 (19 arquivos, 535 inserções)
-- **Próximo passo imediato:** após acesso concedido → `git push origin docs/E01-S03-pmoc-spec` + `gh pr create`
+- **Branches locais prontas para push** (aguardando write access em `Sinergica-M-P/Sinergica-OS`):
+  - `docs/E01-S03-pmoc-spec` — PMOC spec + rename OS→SO + design system (2 commits)
+  - `feat/E00-S03-dashboard-geral` — auth bypass + Dashboard Geral (1 commit `905c37c`)
+- **Próximo passo imediato:** após acesso concedido → push das 2 branches + `gh pr create` para cada
 - **Próximo passo (Mês 2):** provisionar Supabase + Netlify reais; implementar `specs/0002` + spec de E01-S03 (tem design.md pronto)
 
 ## Specs implementadas / artefatos prontos
@@ -28,6 +28,7 @@ alwaysApply: true
 |------|--------|------|
 | `0001-priorizacao-backlog-gut` | implementado, todos os ACs verdes | pnpm test |
 | `0002-abertura-chamado-ze` | aprovado (aguarda implementação — Mês 2) | — |
+| `E00-S03-dashboard-geral` | **implementado**, todos os ACs verdes | typecheck ✅ · lint ✅ |
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
 
 ## Decisões recentes
