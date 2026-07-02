@@ -8,23 +8,32 @@ alter table public.nome_tabela enable row level security;
 -- (perfil OS) nem o owner escapa das policies:
 -- alter table public.nome_tabela force row level security;
 
--- 2) Leitura — papéis com acesso
+-- 2) GRANT de privilégio (OBRIGATÓRIO — não é opcional)
+-- ⚠️ Pegadinha clássica do Postgres: RLS só é avaliada DEPOIS do privilégio de tabela. Sem o
+-- GRANT abaixo, o Postgres nega ANTES de olhar a policy — a tabela fica inacessível mesmo com a
+-- policy "certa" (quebra em produção, não só no teste). Toda tabela com RLS precisa disto —
+-- checado por máquina em `npm run lint:migrations` (falha se um CREATE POLICY não tiver GRANT).
+-- (Em schema de domínio no perfil OS, some: `grant usage on schema <schema> to authenticated;`)
+grant select, insert, update, delete on public.nome_tabela to authenticated;
+-- A RLS é que decide QUAIS linhas/colunas cada papel acessa; o GRANT só abre a porta da tabela.
+
+-- 3) Leitura — papéis com acesso
 create policy "nome_tabela_select" on public.nome_tabela
   for select to authenticated
   using (auth.jwt() ->> 'user_role' in ('ceo', 'financeiro', 'analista'));
 
--- 3) Inserção — papéis de escrita
+-- 4) Inserção — papéis de escrita
 create policy "nome_tabela_insert" on public.nome_tabela
   for insert to authenticated
   with check (auth.jwt() ->> 'user_role' in ('ceo', 'financeiro'));
 
--- 4) Atualização
+-- 5) Atualização
 create policy "nome_tabela_update" on public.nome_tabela
   for update to authenticated
   using (auth.jwt() ->> 'user_role' in ('ceo', 'financeiro'))
   with check (auth.jwt() ->> 'user_role' in ('ceo', 'financeiro'));
 
--- 5) Exclusão — mais restrito
+-- 6) Exclusão — mais restrito
 create policy "nome_tabela_delete" on public.nome_tabela
   for delete to authenticated
   using (auth.jwt() ->> 'user_role' = 'ceo');
