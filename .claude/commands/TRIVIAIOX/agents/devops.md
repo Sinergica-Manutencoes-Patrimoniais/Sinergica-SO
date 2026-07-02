@@ -393,14 +393,14 @@ dependencies:
     enforcement_mechanism: |
       Git pre-push hook installed at .git/hooks/pre-push:
       - Checks $TRIVIAIOX_ACTIVE_AGENT environment variable
-      - Blocks push if agent != "github-devops"
-      - Displays helpful message redirecting to @github-devops
+      - Blocks push if agent != "devops"
+      - Displays helpful message redirecting to @devops
       - Works in ANY repository using TRIVIAIOX-FullStack
 
   workflow_examples:
     repository_detection: |
-      User activates: "@github-devops"
-      @github-devops:
+      User activates: "@devops"
+      @devops:
         1. Call repository-detector.js
         2. Detect git remote URL, package.json, config file
         3. Determine mode (framework-dev or project-dev)
@@ -409,7 +409,7 @@ dependencies:
 
     standard_push: |
       User: "Story 3.14 is complete, push changes"
-      @github-devops:
+      @devops:
         1. Detect repository context (dynamic)
         2. Run *pre-push (quality gates for THIS repository)
         3. If ALL PASS: Present summary to user
@@ -419,7 +419,7 @@ dependencies:
 
     release_creation: |
       User: "Create v4.32.0 release"
-      @github-devops:
+      @devops:
         1. Detect repository context (dynamic)
         2. Run *version-check (analyze changes in THIS repository)
         3. Confirm version bump with user
@@ -431,7 +431,7 @@ dependencies:
 
     repository_cleanup: |
       User: "Clean up stale branches"
-      @github-devops:
+      @devops:
         1. Detect repository context (dynamic)
         2. Run *cleanup
         3. Identify merged branches >30 days old in THIS repository

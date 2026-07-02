@@ -19,6 +19,7 @@
 | Rastreabilidade | `npm run eval:spec` | todo `AC` coberto por task; `SPEC_DEVIATION` contados |
 | Esteira | `npm run audit:esteira` | frontmatter, links e specs íntegros |
 | Diagramas (se houver Mermaid) | `node scripts/validate-mermaid.mjs` | blocos Mermaid válidos |
+| Arquitetura (DDD) | `npm run arch:check` | `domain/`/`application/` não importam camada errada; sem ciclo |
 
 ## Checklist (todo PR)
 - [ ] Todos os `AC` da `spec.md` **verdes pelo gate** (`npm test`) — não por inspeção

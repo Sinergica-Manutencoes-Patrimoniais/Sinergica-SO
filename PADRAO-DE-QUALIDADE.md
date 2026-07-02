@@ -28,11 +28,12 @@ alwaysApply: false
 | 5 | Sem `SPEC_DEVIATION` pendente | ☑️ DoD | `Definition-of-Done.md` | ambos | @dev |
 | 6 | Decisão difícil de reverter vira ADR | ☑️ DoD / 📖 | `docs/adr/`, `ANTI-PADROES.md` | ambos | @architect |
 | 7 | Runbook para incidente recorrente | 📖 Guia | `runbooks/` | ambos | @reliability |
+| 7a | Deploy de banco/Edge Functions via CI (não manual) | 🟢 Gate CI | `.github/workflows/deploy.yml` | ambos | @devops |
 | **Código / Arquitetura** |
 | 8 | Lint + format limpos | 🟢 Gate CI + 🪝 | `npm run lint` (Biome) | ambos | @dev |
 | 9 | TypeScript strict sem erro | 🟢 Gate CI + 🪝 | `npm run typecheck` | ambos | @dev |
 | 10 | Cobertura ≥ threshold | 🟢 Gate CI | `npm run test:coverage` (`vitest.config.ts`) | ambos | @qa |
-| 11 | Dependência aponta só para dentro (DDD) | 📖 Guia | `CLAUDE.md`, `04 - Arquitetura` | ambos | @architect |
+| 11 | Dependência aponta só para dentro (DDD) | 🟢 Gate CI | `npm run arch:check` (`.dependency-cruiser.cjs`) | ambos | @architect |
 | 12 | Conventional commits | 🪝 Hook | `commit-msg` (commitlint) | ambos | @dev |
 | 13 | Sem over-engineering (YAGNI, tier certo) | 📖 Guia | `ANTI-PADROES.md` | ambos | @architect |
 | **Segurança** |
@@ -63,7 +64,7 @@ alwaysApply: false
 ```bash
 npm run audit:esteira && npm run eval:spec && node scripts/validate-mermaid.mjs \
   && npm run lint && npm run typecheck && npm run test:coverage \
-  && npm run audit:deps
+  && npm run audit:deps && npm run arch:check
 # secret scanning: gitleaks detect (se instalado localmente)
 ```
 A skill `/validar` (@qa) executa esses gates e emite **PASS / CONCERNS / FAIL**.

@@ -10,20 +10,34 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-01 por @devops (migração repo → Sinergica-SO; Supabase provisionado)
+**Última atualização:** 2026-07-02 por @dev (E00-S06 — sync Padrão OS v3/Triviaiox: agente morto, gate de arquitetura, CI/deploy)
 
 ## Status geral
 **Fase:** Casca concluída — E00-S04 implementado. Repo migrado para `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO` (Lucas é owner). Supabase provisionado.
-**Gates:** pnpm test ✅ · typecheck ✅ · lint ✅ · audit-esteira ✅ · eval-spec-fidelity ✅
+**Em paralelo (branches não mergeadas):** `feat/E00-S05-autenticacao-autorizacao` (Supabase Auth real + RBAC, aguardando validação com Docker) e `chore/E00-S06-sync-padrao-os-v3` (esta sessão — ver abaixo).
+**Gates (main):** pnpm test ✅ · typecheck ✅ · lint ✅ · audit-esteira ✅ · eval-spec-fidelity ✅ · arch:check ✅ (novo, ver E00-S06)
 
 ## Em andamento / próximo passo
-- **Branches no novo repo** (`Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`) — todas pushadas:
-  - `docs/E01-S03-pmoc-spec` — PMOC spec + rename OS→SO + design system
-  - `feat/E00-S03-dashboard-geral` — auth bypass + Dashboard Geral
-  - `feat/E00-S04-sidebar-logo` — sidebar colapsável + logos reais Sinérgica ← **branch atual**
-- **Próximo passo imediato:** abrir PRs (`gh pr create`) para as 3 branches pendentes de merge em `main`
-- **Próximo passo de feature:** E01-S09 — PCM telas de operação com mock data (listagem OS, modal detalhes, backlog GUT completo)
-- **Próximo passo (Mês 2):** provisionar Netlify real; implementar `specs/0002` + spec de E01-S03 (tem design.md pronto)
+- **Branch atual:** `chore/E00-S06-sync-padrao-os-v3` — sincroniza correções identificadas no
+  Padrão OS v3.0.0 (vault) e Triviaiox (commits `ad48746`/`e05d8d0` de 2026-07-01): agente morto
+  `@github-devops` → `@devops` nos 6 wrappers Claude Code; gate `arch:check`
+  (dependency-cruiser, adaptado a `apps/web/src/features/*/{domain,application,infrastructure}`);
+  `gitleaks-action@v2` (exigia `GITLEAKS_LICENSE` em repo de organização, provável causa de CI
+  não rodar) trocado pela CLI grátis; `.github/workflows/deploy.yml` novo (migrations + Edge
+  Functions automatizadas no merge, staging/production). Ver `specs/E00-S06-sync-padrao-os-v3/`.
+- **Pendência (AC-2, bloqueada):** hook `enforce-git-push-authority.sh` foi criado em
+  `.claude/hooks/` mas **não está ativo** (sem `chmod +x`, sem merge no `.claude/settings.json`)
+  — o classificador de auto-modo do Claude Code bloqueou essa escrita por ser self-modification de
+  permissões, exige confirmação explícita e nomeada do usuário. Ver `tasks.md` da story
+  (SPEC_DEVIATION documentada).
+- **Pendência (deploy.yml):** só funciona depois que alguém com acesso ao GitHub configurar os
+  environments `staging`/`production` e os secrets `SUPABASE_ACCESS_TOKEN`/`SUPABASE_PROJECT_ID`/
+  `SUPABASE_DB_PASSWORD` — ver `docs/ENVIRONMENTS.md`.
+- **Próximo passo de E00-S05:** alguém com Docker rodar `supabase start && supabase db reset &&
+  supabase test db` + validar login manual antes do merge — checklist completo em
+  `specs/E00-S05-autenticacao-autorizacao/tasks.md` (só existe na branch `feat/E00-S05-*`).
+- **Próximo passo de feature (depois de E00-S05/E00-S06 mergeadas):** E01-S09 — PCM telas de
+  operação com dados reais; ou `specs/0002` (abertura de chamado via Zé).
 
 ## Specs implementadas / artefatos prontos
 | Spec | Status | Gate |
@@ -32,9 +46,14 @@ alwaysApply: true
 | `0002-abertura-chamado-ze` | aprovado (aguarda implementação — Mês 2) | — |
 | `E00-S03-dashboard-geral` | implementado, todos os ACs verdes | typecheck ✅ · lint ✅ |
 | `E00-S04-sidebar-logo` | **implementado**, todos os ACs verdes | typecheck ✅ · lint ✅ |
+| `E00-S05-autenticacao-autorizacao` (branch própria) | código implementado, gates de banco pendentes de Docker | typecheck ✅ · lint ✅ · pnpm test ✅ |
+| `E00-S06-sync-padrao-os-v3` | implementado — AC-1,3,4,5 verdes; AC-2 bloqueado (ver acima) | audit-esteira ✅ · eval:spec ✅ · typecheck ✅ · lint ✅ · test ✅ · arch:check ✅ |
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
 
 ## Decisões recentes
+- 2026-07-02: `arch:check` (dependency-cruiser) roda sobre `apps/web/src` com `tsConfig.fileName`
+  **absoluto** (`require("node:path").join(__dirname, ...)`) — passar caminho relativo causa bug
+  de resolução do `extends` do `tsconfig.json` em monorepo (dependency-cruiser 18.0.0).
 - 2026-07-01: Renomeação produto "Sinérgica OS" → "Sinérgica SO" para eliminar ambiguidade com OS (Ordem de Serviço). "OS" = Ordem de Serviço; "SO" = Sistema Operacional.
 - 2026-07-01: Tabelas PMOC (`pmoc_*`) vivem no schema `pcm` — PMOC é sub-módulo do PCM, não contexto autônomo.
 - 2026-07-01: Checklists PMOC canônicos são constantes TypeScript em `packages/shared` (não no banco).

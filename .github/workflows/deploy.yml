@@ -1,0 +1,63 @@
+# CD — deploy de banco (migrations) e Edge Functions via GitHub, não manual.
+# Autoridade: @devops (o merge que dispara isto já passou pelo CI verde — branch protection).
+# Deploy manual pela CLI é só emergência, seguindo runbooks/rollback-deploy.md.
+#
+# Secrets necessários (Settings → Secrets and variables → Actions), por environment:
+#   SUPABASE_ACCESS_TOKEN  → token pessoal/da org (supabase.com/dashboard/account/tokens)
+#   SUPABASE_PROJECT_ID    → ref do projeto (ex.: abcdefghijklmnop)
+#   SUPABASE_DB_PASSWORD   → senha do banco (necessária para `db push`)
+# Com staging: crie os environments "staging" e "production" no GitHub e configure os
+# secrets em cada um apontando para o projeto Supabase correspondente (ver docs/ENVIRONMENTS.md).
+
+name: Deploy (Supabase)
+
+on:
+  push:
+    branches: [main, develop]
+    # só dispara quando muda algo que se deploya — doc não gasta deploy
+    paths:
+      - "supabase/**"
+  workflow_dispatch: # deploy manual consciente (@devops), ex.: primeiro setup
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false # deploy não se cancela no meio
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # main → production · develop → staging (ver docs/ENVIRONMENTS.md)
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link ao projeto do ambiente
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Migrations (supabase db push)
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Edge Functions (supabase functions deploy)
+        # deploya todas as funções versionadas em supabase/functions/ (exceto _shared/_template)
+        run: |
+          if [ -d supabase/functions ]; then
+            supabase functions deploy
+          else
+            echo "Sem supabase/functions — pulando"
+          fi
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # Rollback de migration = NOVA migration com o reverso (nunca editar a antiga) —
+      # ver runbooks/rollback-deploy.md. Edge Function: redeploy da versão anterior via git revert.

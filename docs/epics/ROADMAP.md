@@ -35,6 +35,8 @@ alwaysApply: true
 | E00-S02 | Redesign home — sidebar + abas por módulo + dashboard PCM | [spec](../../specs/E00-S02-home-dashboard/spec.md) | Implementado (SPEC_DEVIATION) | Claude (sessão Lucas) | ✅ |
 | E00-S03 | Auth bypass dev + Dashboard Geral inicial (9 módulos resumidos) | [spec](../../specs/E00-S03-dashboard-geral/spec.md) | Implementado | Claude (sessão Lucas) | ✅ |
 | E00-S04 | Sidebar colapsável + Logo Sinérgica (sidebar e login) | [spec](../../specs/E00-S04-sidebar-logo/spec.md) | Implementado ✅ | Claude (sessão Lucas) | ✅ |
+| E00-S05 | Autenticação e Autorização — Supabase Auth real + RBAC (substitui bypass dev) | spec na branch `feat/E00-S05-autenticacao-autorizacao` (ainda não mergeada em `main`) | Código implementado — aguardando validação com Docker/Supabase local + @qa (ver tasks.md) | Claude (sessão Lucas) | ⏳ (código pronto, gates de banco não executados) |
+| E00-S06 | Sincronizar correções do Padrão OS v3 / Triviaiox (agente morto, hook de push, gate de arquitetura, CI/deploy) | [spec](../../specs/E00-S06-sync-padrao-os-v3/spec.md) | Implementado (AC-2 bloqueado — aguarda confirmação explícita para ativar hook, ver tasks.md) | Claude (sessão Lucas) | ✅ AC-1,3,4,5 · ⏳ AC-2 |
 
 ### E01 — PCM · Operação
 | Story ID | Descrição | Spec | Status | Owner | AC verdes |

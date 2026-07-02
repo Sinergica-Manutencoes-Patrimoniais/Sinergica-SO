@@ -444,7 +444,7 @@ Type `*help` to see all commands, or `*kb` to enable KB mode.
 | Prompt design / versioning / A/B | @prompt-engineer (Pria) — `*prompt-design`, `*prompt-ab-test` |
 | Prompt eval / regression testing | @prompt-engineer (Pria) — `*prompt-eval-harness`, `*prompt-regression-test` |
 | Injection defense / model routing | @prompt-engineer (Pria) — `*prompt-injection-defense`, `*model-routing-strategy` |
-| Git operations / PR creation | @github-devops (Gage) |
+| Git operations / PR creation | @devops (Gage) |
 
 **Note:** Use this agent for meta-framework operations, workflow orchestration, and when you need cross-agent coordination.
 

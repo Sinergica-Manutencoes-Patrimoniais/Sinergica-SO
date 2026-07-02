@@ -36,6 +36,19 @@ supabase secrets list                # sem mostrar valores
 Rotacione ao suspeitar de vazamento; registre rotação. Refresh token de OAuth no Vault (perfil OS).
 
 ## Promoção dev → staging → prod
-1. Merge para `develop` → CI verde → deploy de staging → smoke test.
-2. Merge `develop` → `main` (PR, 1 aprovação) → CI verde → deploy de produção (`@devops`).
+1. Merge para `develop` → CI verde (branch protection) → `.github/workflows/deploy.yml` roda
+   migrations + Edge Functions automaticamente no ambiente **staging** → smoke test.
+2. Merge `develop` → `main` (PR, 1 aprovação) → CI verde → `deploy.yml` roda no ambiente
+   **production**. Todo deploy já passou pelos gates porque a branch protection não deixa
+   mergear sem CI verde.
 3. Smoke test pós-deploy; se falhar, `runbooks/rollback-deploy.md`.
+4. Deploy manual pela CLI (`supabase db push` / `functions deploy`) é **exceção de emergência**
+   (`@devops`), não o caminho normal.
+
+### Configurar o deploy automático (uma vez, por ambiente)
+1. GitHub → Settings → Environments → criar `staging` e `production`.
+2. Em cada environment, configurar os secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID`,
+   `SUPABASE_DB_PASSWORD` (apontando para o projeto Supabase daquele ambiente — nunca reutilize
+   secret de produção em staging).
+3. Sem os secrets configurados, `deploy.yml` falha visivelmente no step `Link ao projeto do
+   ambiente` (fail-safe: não há deploy silencioso).

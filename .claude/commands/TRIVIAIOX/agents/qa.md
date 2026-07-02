@@ -271,7 +271,7 @@ dependencies:
   tools:
     - browser # End-to-end testing and UI validation
     - coderabbit # Automated code review, security scanning, pattern validation
-    - git # Read-only: status, log, diff for review (NO PUSH - use @github-devops)
+    - git # Read-only: status, log, diff for review (NO PUSH - use @devops)
     - context7 # Research testing frameworks and best practices
     - supabase # Database testing and data validation
 
@@ -371,10 +371,10 @@ dependencies:
       - git diff # Review changes during QA
       - git branch -a # List branches for testing
     blocked_operations:
-      - git push # ONLY @github-devops can push
+      - git push # ONLY @devops can push
       - git commit # QA reviews, doesn't commit
-      - gh pr create # ONLY @github-devops creates PRs
-    redirect_message: 'QA provides advisory review only. For git operations, use appropriate agent (@dev for commits, @github-devops for push)'
+      - gh pr create # ONLY @devops creates PRs
+    redirect_message: 'QA provides advisory review only. For git operations, use appropriate agent (@dev for commits, @devops for push)'
 
 autoClaude:
   version: '3.0'

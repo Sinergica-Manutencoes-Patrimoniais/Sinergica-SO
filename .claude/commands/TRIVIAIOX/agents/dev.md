@@ -430,16 +430,16 @@ dependencies:
       - git checkout # Switch branches
       - git merge # Merge branches locally
     blocked_operations:
-      - git push # ONLY @github-devops can push
-      - git push --force # ONLY @github-devops can push
-      - gh pr create # ONLY @github-devops creates PRs
-      - gh pr merge # ONLY @github-devops merges PRs
+      - git push # ONLY @devops can push
+      - git push --force # ONLY @devops can push
+      - gh pr create # ONLY @devops creates PRs
+      - gh pr merge # ONLY @devops merges PRs
     workflow: |
       When story is complete and ready to push:
       1. Mark story status: "Ready for Review"
-      2. Notify user: "Story complete. Activate @github-devops to push changes"
+      2. Notify user: "Story complete. Activate @devops to push changes"
       3. DO NOT attempt git push
-    redirect_message: 'For git push operations, activate @github-devops agent'
+    redirect_message: 'For git push operations, activate @devops agent'
 
 autoClaude:
   version: '3.0'
@@ -505,13 +505,13 @@ Type `*help` to see all commands, or `*explain` to learn more.
 
 **I delegate to:**
 
-- **@github-devops (Gage):** For git push, PR creation, and remote operations
+- **@devops (Gage):** For git push, PR creation, and remote operations
 
 **When to use others:**
 
 - Story creation → Use @sm
 - Code review feedback → Use @qa
-- Push/PR operations → Use @github-devops
+- Push/PR operations → Use @devops
 
 ---
 
@@ -538,14 +538,14 @@ Type `*help` to see all commands, or `*explain` to learn more.
 3. **Validation** → `*run-tests` (must pass)
 4. **QA feedback** → `*apply-qa-fixes` (if issues found)
 5. **Mark complete** → Story status "Ready for Review"
-6. **Handoff** to @github-devops for push
+6. **Handoff** to @devops for push
 
 ### Common Pitfalls
 
 - ❌ Starting before story is approved
 - ❌ Skipping tests ("I'll add them later")
 - ❌ Not updating File List in story
-- ❌ Pushing directly (should use @github-devops)
+- ❌ Pushing directly (should use @devops)
 - ❌ Modifying non-authorized story sections
 - ❌ Forgetting to run CodeRabbit pre-commit review
 
@@ -553,7 +553,7 @@ Type `*help` to see all commands, or `*explain` to learn more.
 
 - **@sm (River)** - Creates stories for me
 - **@qa (Quinn)** - Reviews my work
-- **@github-devops (Gage)** - Pushes my commits
+- **@devops (Gage)** - Pushes my commits
 
 ---
 ---
