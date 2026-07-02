@@ -10,8 +10,8 @@ alwaysApply: false
 | #  | Task                                                                 | Cobre AC | Depende de | Gate (comando)                                               | Status |
 |----|-----------------------------------------------------------------------|----------|------------|----------------------------------------------------------------|--------|
 | 1  | Substituir `@github-devops` → `@devops` nos 6 wrappers Claude Code    | AC-1     | —          | `grep -rL "@github-devops\|agent != \\\"github-devops\\\"" .claude/commands/TRIVIAIOX/agents/*.md` sem resultado | done   |
-| 2  | Copiar hook `enforce-git-push-authority.sh` para `.claude/hooks/`     | AC-2     | —          | `test -x .claude/hooks/enforce-git-push-authority.sh`           | bloqueado |
-| 3  | Mesclar `PreToolUse.Bash` no `.claude/settings.json` sem remover o hook `Edit\|Write` existente | AC-2 | 2 | payload de teste `git push` → `permissionDecision: deny`; payload `pnpm test` → sem output (allow) | bloqueado |
+| 2  | Copiar hook `enforce-git-push-authority.sh` para `.claude/hooks/`     | AC-2     | —          | `test -x .claude/hooks/enforce-git-push-authority.sh`           | done   |
+| 3  | Mesclar `PreToolUse.Bash` no `.claude/settings.json` sem remover o hook `Edit\|Write` existente | AC-2 | 2 | payload de teste `git push` → `permissionDecision: deny`; payload `pnpm test` → sem output (allow) | done   |
 | 4  | Criar `.dependency-cruiser.cjs` adaptado a `apps/web/src/features/*` | AC-3     | —          | `pnpm exec depcruise apps/web/src --config .dependency-cruiser.cjs` | done |
 | 5  | Adicionar `dependency-cruiser` como devDependency + script `arch:check` (raiz) `[P]` | AC-3 | 4 | `pnpm run arch:check` | done |
 | 6  | Adicionar step `arch:check` no `.github/workflows/ci.yml`             | AC-3     | 5          | inspeção do workflow (roda no job `qualidade`)                  | done   |
@@ -31,18 +31,16 @@ alwaysApply: false
   se um import de teste violar a regra (validado manualmente, revertido antes do commit).
 
 ## Divergências (SPEC_DEVIATION)
-- **Task 2/3 (AC-2) · bloqueado pelo classificador de auto-modo do Claude Code**: escrever em
-  `.claude/hooks/` e mesclar `.claude/settings.json` mexe no mecanismo que controla as próprias
-  permissões da sessão (self-modification) — o classificador exige confirmação explícita e
-  nomeada do usuário, não coberta por "ajuste tudo" genérico. O arquivo do hook foi criado
-  (`.claude/hooks/enforce-git-push-authority.sh`, conteúdo idêntico ao squad `trivia-os`) mas
-  **sem `chmod +x`** e **sem estar wired no `.claude/settings.json`** — ou seja, inerte. Resolução:
-  aguardando confirmação explícita do usuário para os 2 passos finais (chmod +x + merge do
-  `PreToolUse.Bash`).
+- **Task 2/3 (AC-2) · resolvida**: escrever em `.claude/hooks/` e mesclar `.claude/settings.json`
+  mexe no mecanismo que controla as próprias permissões da sessão (self-modification) — o
+  classificador de auto-modo bloqueou a ação até confirmação explícita e nomeada do usuário
+  (não coberta por "ajuste tudo" genérico). Usuário confirmou explicitamente via pergunta direta
+  ("Sim, ative agora") em 2026-07-02; `chmod +x` aplicado e `PreToolUse.Bash` mesclado no
+  `.claude/settings.json` mantendo o hook `Edit|Write` existente. Validado com payload de teste.
 
 ## Checklist de Definition of Done
-- [x] Todos os AC verdes **pelo gate executável** (exceto AC-2 — ver divergência acima)
-- [x] `SPEC_DEVIATION` documentada acima (AC-2)
+- [x] Todos os AC verdes **pelo gate executável**
+- [x] Nenhum `SPEC_DEVIATION` pendente
 - [x] ADRs de decisões difíceis de reverter registrados (N/A — correção mecânica)
 - [x] Glossário atualizado se mudou (N/A — sem termo novo)
 - [x] Spec reflete o que foi construído

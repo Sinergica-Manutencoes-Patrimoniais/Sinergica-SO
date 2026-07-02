@@ -25,11 +25,12 @@ alwaysApply: true
   `gitleaks-action@v2` (exigia `GITLEAKS_LICENSE` em repo de organização, provável causa de CI
   não rodar) trocado pela CLI grátis; `.github/workflows/deploy.yml` novo (migrations + Edge
   Functions automatizadas no merge, staging/production). Ver `specs/E00-S06-sync-padrao-os-v3/`.
-- **Pendência (AC-2, bloqueada):** hook `enforce-git-push-authority.sh` foi criado em
-  `.claude/hooks/` mas **não está ativo** (sem `chmod +x`, sem merge no `.claude/settings.json`)
-  — o classificador de auto-modo do Claude Code bloqueou essa escrita por ser self-modification de
-  permissões, exige confirmação explícita e nomeada do usuário. Ver `tasks.md` da story
-  (SPEC_DEVIATION documentada).
+- **AC-2 resolvido:** hook `enforce-git-push-authority.sh` ativado (`chmod +x` + merge do
+  `PreToolUse.Bash` em `.claude/settings.json`, mantendo o hook `Edit|Write` existente) após
+  confirmação explícita do usuário em 2026-07-02. `git push` fora do `@devops` agora é bloqueado
+  por máquina nesta sessão/repositório, não só por prosa no `AGENTS.md`.
+- **E00-S06 pronto para PR** — falta só push + `gh pr create` (usuário optou por revisar local
+  antes; não pushado ainda).
 - **Pendência (deploy.yml):** só funciona depois que alguém com acesso ao GitHub configurar os
   environments `staging`/`production` e os secrets `SUPABASE_ACCESS_TOKEN`/`SUPABASE_PROJECT_ID`/
   `SUPABASE_DB_PASSWORD` — ver `docs/ENVIRONMENTS.md`.
@@ -47,7 +48,7 @@ alwaysApply: true
 | `E00-S03-dashboard-geral` | implementado, todos os ACs verdes | typecheck ✅ · lint ✅ |
 | `E00-S04-sidebar-logo` | **implementado**, todos os ACs verdes | typecheck ✅ · lint ✅ |
 | `E00-S05-autenticacao-autorizacao` (branch própria) | código implementado, gates de banco pendentes de Docker | typecheck ✅ · lint ✅ · pnpm test ✅ |
-| `E00-S06-sync-padrao-os-v3` | implementado — AC-1,3,4,5 verdes; AC-2 bloqueado (ver acima) | audit-esteira ✅ · eval:spec ✅ · typecheck ✅ · lint ✅ · test ✅ · arch:check ✅ |
+| `E00-S06-sync-padrao-os-v3` | implementado, todos os ACs verdes | audit-esteira ✅ · eval:spec ✅ · typecheck ✅ · lint ✅ · test ✅ · arch:check ✅ |
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
 
 ## Decisões recentes
