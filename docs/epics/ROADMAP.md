@@ -35,7 +35,7 @@ alwaysApply: true
 | E00-S02 | Redesign home — sidebar + abas por módulo + dashboard PCM | [spec](../../specs/E00-S02-home-dashboard/spec.md) | Implementado (SPEC_DEVIATION) | Claude (sessão Lucas) | ✅ |
 | E00-S03 | Auth bypass dev + Dashboard Geral inicial (9 módulos resumidos) | [spec](../../specs/E00-S03-dashboard-geral/spec.md) | Implementado | Claude (sessão Lucas) | ✅ |
 | E00-S04 | Sidebar colapsável + Logo Sinérgica (sidebar e login) | [spec](../../specs/E00-S04-sidebar-logo/spec.md) | Implementado ✅ | Claude (sessão Lucas) | ✅ |
-| E00-S05 | Autenticação e Autorização — Supabase Auth real + RBAC (substitui bypass dev) | spec na branch `feat/E00-S05-autenticacao-autorizacao` (ainda não mergeada em `main`) | Código implementado — aguardando validação com Docker/Supabase local + @qa (ver tasks.md) | Claude (sessão Lucas) | ⏳ (código pronto, gates de banco não executados) |
+| E00-S05 | Autenticação e Autorização — Supabase Auth real + RBAC (substitui bypass dev) | [spec](../../specs/E00-S05-autenticacao-autorizacao/spec.md) | Implementado — gates de banco validados via CI (job `db-tests`, Docker), login manual e config no Supabase hospedado ainda pendentes (ver tasks.md) | Claude (sessão Lucas) | ✅ (código + `db-tests` CI) |
 | E00-S06 | Sincronizar correções do Padrão OS v3 / Triviaiox (agente morto, hook de push, gate de arquitetura, CI/deploy) | [spec](../../specs/E00-S06-sync-padrao-os-v3/spec.md) | Implementado | Claude (sessão Lucas) | ✅ |
 
 ### E01 — PCM · Operação
