@@ -1,12 +1,21 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, erroSessao, limparErroSessao } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // AC-4: sessão restaurada sem perfil (config.usuarios) mostra a mensagem uma vez, ao chegar
+  // no login — depois o auth-context já limpou a sessão via signOut automático.
+  useEffect(() => {
+    if (erroSessao) {
+      setError(erroSessao);
+      limparErroSessao();
+    }
+  }, [erroSessao, limparErroSessao]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -18,8 +27,10 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-    } catch {
-      setError("Credenciais inválidas.");
+    } catch (err) {
+      // CredenciaisInvalidasError e ContaSemPerfilError já trazem mensagem apropriada
+      // (AC-2 nunca revela qual campo está errado; AC-4 é explícita sobre perfil ausente).
+      setError(err instanceof Error ? err.message : "Não foi possível entrar. Tente novamente.");
     } finally {
       setLoading(false);
     }
