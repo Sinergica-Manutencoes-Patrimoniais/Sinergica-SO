@@ -17,6 +17,8 @@ const IGNORE_DIRS = new Set([
 ]);
 const NO_FRONTMATTER_OK = new Set([
   "README.md", "CHANGELOG.md", "Definition-of-Done.md", "pull_request_template.md",
+  // Índice do sistema de memória — deliberadamente sem frontmatter (ver .claude/memory/MEMORY.md).
+  "MEMORY.md",
 ]);
 // Views derivadas geradas por outras ferramentas (não a fonte canônica).
 const isGenerated = (f) => {
@@ -55,6 +57,9 @@ const isSkillDialect = (f) =>
   f.replace(/\\/g, "/").includes("/.claude/skills/") ||
   /(?:^|\/)(skill|subagent)\.template\.md$/.test(f.replace(/\\/g, "/"));
 
+// Sistema de memória (auto memory) usa `metadata: { type: ... }` em vez de `alwaysApply`.
+const isMemoryDialect = (f) => f.replace(/\\/g, "/").includes("/.claude/memory/");
+
 const files = walk(ROOT).filter((f) => !isGenerated(f));
 
 // 1) Frontmatter + dialeto
@@ -67,6 +72,8 @@ for (const f of files) {
   if (!fm.description) err(f, "frontmatter sem `description`");
   if (isSkillDialect(f)) {
     if ("alwaysApply" in fm) err(f, "dialeto skill não deve ter `alwaysApply`");
+  } else if (isMemoryDialect(f)) {
+    if (!("metadata" in fm)) err(f, "memória sem `metadata`");
   } else {
     if (!("alwaysApply" in fm)) err(f, "doc sem `alwaysApply`");
     else if (!/^(true|false)$/.test(fm.alwaysApply)) err(f, `alwaysApply inválido: ${fm.alwaysApply}`);
