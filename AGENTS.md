@@ -33,7 +33,7 @@ Cada artefato tem **um dono que produz** e **agentes que consomem**.
 @architect    → domain.md / design.md / ADR (só no tier que exige)
 @sm           → tasks.md (AC → task → gate executável)
 @dev          → implementa task a task (1 commit por task), local git só
-@qa           → valida cada AC PELO GATE (não por inspeção); security gate
+@qa           → valida cada AC PELO GATE (não por inspeção) + revisão adversarial (tenta quebrar); security gate
 @devops       → único que faz git push / abre e faz merge de PR / CI/CD
 ```
 Features de **IA/LLM** acrescentam `@prompt-engineer` (evals, versionamento de prompt, defesa
@@ -59,6 +59,7 @@ As skills da esteira ficam em `.claude/skills/` e roteiam para os donos de coman
 | `/clarificar` | entrevista para afiar spec ambígua (1 pergunta por vez) | `@pm` |
 | `/nova-feature` | loop tier → spec → tasks → implementação | `@sm` + `@dev` |
 | `/validar` | UAT local: roda gates (AC→teste), checa DoD | `@qa` |
+| `/revisao-adversarial` | tenta **quebrar** cada AC (borda, erro, concorrência, abuso) antes do PASS | `@qa` + `@security` |
 | `/revisar-pr` | gate de conformidade SDD no PR | `@qa` |
 | `/auditar` | valida integridade da esteira (frontmatter, links, rastreabilidade) | `@architect` |
 | `/handoff` | pausa/retoma via `docs/STATE.md` | qualquer |

@@ -4,7 +4,7 @@ Sistema operacional completo da **Sinérgica Manutenções Patrimoniais** (Campi
 manutenção predial que atende condomínios residenciais e comerciais. Centraliza desde a captação
 comercial até a execução técnica em campo, faturamento e prestação de contas ao cliente.
 
-> Status: **casca (Mês 1)** · Desenvolvido pela **Trívia Studio** seguindo o **Padrão SO v2** (SDD + Triviaiox).
+> Status: **casca (Mês 1)** · Desenvolvido pela **Trívia Studio** seguindo o **Padrão SO v3** (SDD + Triviaiox).
 > Contexto completo em [`CLAUDE.md`](CLAUDE.md), [`docs/PROJECT.md`](docs/PROJECT.md) e [`docs/STATE.md`](docs/STATE.md).
 
 ## O que é
@@ -50,7 +50,7 @@ Detalhes de arquitetura e context-map em [`docs/ARCHITECTURE.md`](docs/ARCHITECT
 | WhatsApp | Evolution API (Cloudfy) |
 | Campo | Auvo (app técnicos — integração bidirecional via API + webhooks) |
 | Monorepo | pnpm workspaces + Turborepo |
-| Qualidade | Biome (lint/format) · Vitest · Husky · Conventional Commits |
+| Qualidade | Biome (lint/format) · Vitest · dependency-cruiser · Squawk · Lefthook · Conventional Commits |
 
 ## Estrutura do repositório
 
