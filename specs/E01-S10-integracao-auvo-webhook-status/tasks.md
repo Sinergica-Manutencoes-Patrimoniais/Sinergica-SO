@@ -13,7 +13,7 @@ alwaysApply: false
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|-----------------|--------|
 | 1  | Registrar webhooks no Auvo (`POST /webhooks`, `entity=Task`, `action=Alteração`) apontando para a URL da Edge Function — passo manual/script, não código de app | AC-2, AC-3, AC-4 | `E01-S09` implementada | `GET /webhooks` mostra `active: true` | todo |
-| 2  | Secret do webhook (`AUVO_WEBHOOK_SECRET`) no Supabase Vault | AC-1 | — | `supabase secrets list` | todo |
+| 2  | Secret do webhook (`AUVO_WEBHOOK_SECRET`): `gh secret set AUVO_WEBHOOK_SECRET` no repo + adicionar na lista de `supabase secrets set` de `.github/workflows/sync-secrets.yml` (mesmo padrão de `E01-S09` task 2) | AC-1 | — | `supabase secrets list` (após rodar o workflow) | todo |
 | 3  | Validação de assinatura HMAC-SHA256 (`_shared/auvo/verify-signature.ts`, baseado no exemplo TS do mapeamento §13.2) | AC-1 | 2 | teste unitário: assinatura válida passa, inválida retorna 401 | todo |
 | 4  | Edge Function `pcm-auvo-webhook`: parse do evento, resolve OS por `auvo_task_id` | AC-2 a AC-6 | 3 | teste de integração com payload de exemplo | todo |
 | 5  | Máquina de transição de status (Auvo status → `pcm.ordens_servico.status`), idempotente `[P]` | AC-2, AC-3, AC-4, AC-5 | 4 | teste unitário: mesma transição 2x não gera erro | todo |

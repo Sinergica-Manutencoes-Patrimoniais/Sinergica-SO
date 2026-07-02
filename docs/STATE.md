@@ -175,10 +175,16 @@ test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de
       (decisão de produto do Fabrício) — bloqueia só `AC-7` de `E01-S09`, resto da story pode ser
       implementado sem isso. Ver `specs/E01-S09-integracao-auvo-fundacao/design.md` → Questões em
       aberto.
-- [ ] **`AUVO_API_KEY`/`AUVO_API_TOKEN` só em `.env.local`** — precisam ir para
-      `supabase secrets set` em produção antes do primeiro deploy real das Edge Functions de
-      `E01-S09` (hoje as credenciais só existem para dev local). Quem destrava: @devops na hora
-      de implementar `E01-S09`.
+- [x] ~~`AUVO_API_KEY`/`AUVO_USER_TOKEN` só em `.env.local`~~ ✅ Resolvido — todas as vars de
+      `.env.local` (Auvo, Supabase, Evolution API, OpenRouter, CORS) subidas como GitHub Actions
+      secrets no repo (`gh secret list`, 14 secrets) a pedido do usuário ("vamos manter elas no
+      github para você usar em tempo de deploy"). Novo workflow
+      `.github/workflows/sync-secrets.yml` (gatilho: push em `supabase/functions/**` na `main`,
+      ou `workflow_dispatch` manual) roda `supabase secrets set` para as que são runtime de Edge
+      Function (Auvo, Evolution, OpenRouter, CORS — não as `SUPABASE_*`, que são reservadas/
+      auto-injetadas pelo runtime). Falta só disparar o workflow uma vez quando `E01-S09` for
+      implementada de verdade (hoje não há Edge Function nenhuma ainda, path do gatilho não
+      dispara vazio).
 
 ## Ideias adiadas / backlog técnico
 - Evals de laudo SPDA (comparação de saída LLM com laudos validados por engenheiro) → gatilho: primeira geração de laudo em produção

@@ -14,7 +14,7 @@ alwaysApply: false
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|-----------------|--------|
 | 1  | Confirmar com Fabrício `taskTypeId` de `levantamento`/`emergencial` e mapeamento `prioridade` GUT → `priority` Auvo (Questões em aberto do `design.md`) | AC-7 | — | resposta registrada em `design.md` (remove a questão em aberto) | todo |
-| 2  | `supabase secrets set AUVO_API_KEY AUVO_API_TOKEN` em produção (hoje só em `.env.local`) | — | — | `supabase secrets list` mostra as 2 chaves | todo |
+| 2  | ~~`supabase secrets set AUVO_API_KEY AUVO_USER_TOKEN` manual~~ — **já resolvido**: secrets em GitHub Actions (`gh secret list`) + `.github/workflows/sync-secrets.yml` sincroniza no push a `main`/`workflow_dispatch`. Só falta rodar o workflow uma vez após o 1º deploy das Edge Functions | — | — | `gh workflow run sync-secrets.yml` + `supabase secrets list` mostra as chaves | done |
 | 3  | Cliente HTTP Auvo compartilhado (`supabase/functions/_shared/auvo/client.ts`): login cacheado, retry 401, backoff 429 | AC-1 a AC-6 | — | teste unitário do cache/retry | todo |
 | 4  | `task-type-map.ts` (categoria → `taskTypeId`) `[P]` | AC-4, AC-7 | 1 | teste unitário do mapeamento | todo |
 | 5  | Port `AuvoGatewayPort` na `application` da feature PCM (`syncCustomer`, `createTask`) | AC-1 a AC-7 | — | teste do caso de uso com fake do port | todo |

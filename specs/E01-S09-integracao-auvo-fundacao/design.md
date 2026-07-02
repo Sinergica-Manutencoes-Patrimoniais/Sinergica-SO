@@ -121,8 +121,9 @@ Segue `interfaces → application → domain ← infrastructure` já em vigor:
 
 ### 3. Infra
 - Secrets novos no Supabase Vault (não no `.env` do client — `service_role`/Auvo nunca no
-  browser): `AUVO_API_KEY`, `AUVO_API_TOKEN` (já em `.env.local` local para dev, precisam ir
-  para `supabase secrets set` em produção antes do deploy real).
+  browser): `AUVO_API_KEY`, `AUVO_USER_TOKEN` (já em `.env.local` local para dev e como GitHub
+  Actions secrets em produção — sincronizados para o Supabase via
+  `.github/workflows/sync-secrets.yml` a cada deploy, não mais via `supabase secrets set` manual).
 - Sem infra nova (fila, cache) nesta fase — token cacheado em memória do processo Edge Function
   já é suficiente dado o volume baixo.
 - Reversão: `AuvoGatewayPort` tem uma implementação `NullAuvoGateway` (no-op, sempre
