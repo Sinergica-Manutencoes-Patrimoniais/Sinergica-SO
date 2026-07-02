@@ -10,33 +10,44 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-02 por @dev (E00-S06 — sync Padrão OS v3/Triviaiox: agente morto, gate de arquitetura, CI/deploy)
+**Última atualização:** 2026-07-02 por @dev (E00-S06 — sync Padrão OS v3.1.1: CD via GitHub Integration nativa, não Action; Supabase reprovisionado)
 
 ## Status geral
-**Fase:** Casca concluída — E00-S04 implementado. Repo migrado para `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO` (Lucas é owner). Supabase provisionado.
+**Fase:** Casca concluída — E00-S04 implementado. Repo migrado para `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO` (Lucas é owner). Supabase **reprovisionado** em 2026-07-02 (projeto novo, ver Bloqueios).
 **Em paralelo (branches não mergeadas):** `feat/E00-S05-autenticacao-autorizacao` (Supabase Auth real + RBAC, aguardando validação com Docker) e `chore/E00-S06-sync-padrao-os-v3` (esta sessão — ver abaixo).
 **Gates (main):** pnpm test ✅ · typecheck ✅ · lint ✅ · audit-esteira ✅ · eval-spec-fidelity ✅ · arch:check ✅ (novo, ver E00-S06)
 
 ## Em andamento / próximo passo
 - **Branch atual:** `chore/E00-S06-sync-padrao-os-v3` — sincroniza correções identificadas no
-  Padrão OS v3.0.0 (vault) e Triviaiox (commits `ad48746`/`e05d8d0` de 2026-07-01): agente morto
-  `@github-devops` → `@devops` nos 6 wrappers Claude Code; gate `arch:check`
+  Padrão OS v3.0.0→v3.1.1 (vault) e Triviaiox (commits `ad48746`/`e05d8d0` de 2026-07-01): agente
+  morto `@github-devops` → `@devops` nos 6 wrappers Claude Code; gate `arch:check`
   (dependency-cruiser, adaptado a `apps/web/src/features/*/{domain,application,infrastructure}`);
   `gitleaks-action@v2` (exigia `GITLEAKS_LICENSE` em repo de organização, provável causa de CI
-  não rodar) trocado pela CLI grátis; `.github/workflows/deploy.yml` novo (migrations + Edge
-  Functions automatizadas no merge, staging/production). Ver `specs/E00-S06-sync-padrao-os-v3/`.
+  não rodar) trocado pela CLI grátis. Ver `specs/E00-S06-sync-padrao-os-v3/`.
 - **AC-2 resolvido:** hook `enforce-git-push-authority.sh` ativado (`chmod +x` + merge do
   `PreToolUse.Bash` em `.claude/settings.json`, mantendo o hook `Edit|Write` existente) após
   confirmação explícita do usuário em 2026-07-02. `git push` fora do `@devops` agora é bloqueado
   por máquina nesta sessão/repositório, não só por prosa no `AGENTS.md`.
+- **v3.1.1 (correção sobre a v3.1.0 desta mesma story):** o caminho de CD deixou de ser o
+  `.github/workflows/deploy.yml` (Action + `SUPABASE_ACCESS_TOKEN`, token de conta inteira) e
+  passou a ser a **GitHub Integration nativa do Supabase** (Dashboard do projeto → Settings →
+  Integrations → GitHub → "Deploy to production" — sem token nenhum no GitHub). `deploy.yml` foi
+  **rebaixado a fallback** (gatilho automático desligado, só `workflow_dispatch`), documentado só
+  para o caso de monorepo com mais de um projeto Supabase (não é o caso aqui). Ver
+  `docs/ENVIRONMENTS.md` e `PADRAO-DE-QUALIDADE.md` (item 7a).
+- **Pendente no GitHub/Supabase (ação humana, fora do meu alcance):** ativar a integração nativa
+  no projeto novo (`nudannsrfvjggoergvyn`) com `main` como production branch, e declarar cada
+  Edge Function real em `supabase/config.toml` — hoje esse arquivo só existe (com schemas + o
+  Custom Access Token Hook do E00-S05) na branch `feat/E00-S05-*`, não em `main`; a declaração de
+  funções (`[functions.<nome>]`) entra quando esse arquivo chegar em `main` (via merge de E00-S05
+  ou nesta story) **e** houver uma função real além de `_template`/`_shared` (hoje não há).
 - **E00-S06 pronto para PR** — falta só push + `gh pr create` (usuário optou por revisar local
   antes; não pushado ainda).
-- **Pendência (deploy.yml):** só funciona depois que alguém com acesso ao GitHub configurar os
-  environments `staging`/`production` e os secrets `SUPABASE_ACCESS_TOKEN`/`SUPABASE_PROJECT_ID`/
-  `SUPABASE_DB_PASSWORD` — ver `docs/ENVIRONMENTS.md`.
 - **Próximo passo de E00-S05:** alguém com Docker rodar `supabase start && supabase db reset &&
   supabase test db` + validar login manual antes do merge — checklist completo em
-  `specs/E00-S05-autenticacao-autorizacao/tasks.md` (só existe na branch `feat/E00-S05-*`).
+  `specs/E00-S05-autenticacao-autorizacao/tasks.md` (só existe na branch `feat/E00-S05-*`). Como o
+  Supabase foi reprovisionado, o `.env.local` dessa branch/sessão também precisa ser atualizado
+  com o projeto novo antes de rodar os testes contra o banco hospedado.
 - **Próximo passo de feature (depois de E00-S05/E00-S06 mergeadas):** E01-S09 — PCM telas de
   operação com dados reais; ou `specs/0002` (abertura de chamado via Zé).
 
@@ -65,7 +76,13 @@ alwaysApply: true
 
 ## Bloqueios
 - [x] ~~Git push bloqueado~~ ✅ Resolvido — novo repo `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`, Lucas é owner.
-- [x] ~~Supabase não provisionado~~ ✅ Resolvido — `ljvpmcamqydeklvkiigy.supabase.co` · migration `0001` aplicada · `.env.local` configurado.
+- [x] ~~Supabase não provisionado~~ ✅ Resolvido, depois **reprovisionado** — projeto atual:
+      `nudannsrfvjggoergvyn.supabase.co`. Projeto antigo (`ljvpmcamqydeklvkiigy`) obsoleto; migrations
+      precisam ser reaplicadas do zero no projeto novo antes de qualquer teste contra banco hospedado.
+      `.env.local` local já atualizado (URL + anon key); `SUPABASE_SERVICE_ROLE_KEY` ainda é a
+      chave do projeto antigo — inválida, precisa ser buscada no dashboard do projeto novo.
+- [ ] Ativar GitHub Integration nativa do Supabase no projeto novo (production branch = `main`) —
+      ver `docs/ENVIRONMENTS.md`. Quem destrava: @devops/Lucas (é ação no dashboard, não em código).
 - [ ] Evolution API: instância existe na Cloudfy mas webhook não apontado para Supabase Edge Function ainda. Quem destrava: @devops/Lucas.
 
 ## Ideias adiadas / backlog técnico

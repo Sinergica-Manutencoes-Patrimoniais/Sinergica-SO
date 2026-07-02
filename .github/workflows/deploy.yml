@@ -1,23 +1,34 @@
-# CD — deploy de banco (migrations) e Edge Functions via GitHub, não manual.
-# Autoridade: @devops (o merge que dispara isto já passou pelo CI verde — branch protection).
-# Deploy manual pela CLI é só emergência, seguindo runbooks/rollback-deploy.md.
+# FALLBACK de CD — o caminho canônico é a GitHub Integration nativa do Supabase
+# (Dashboard do projeto → Settings → Integrations → GitHub → "Deploy to production"), que
+# aplica migrations + Edge Functions/Storage (declarados em supabase/config.toml) no merge,
+# sem token de conta nenhum no GitHub. Ver docs/ENVIRONMENTS.md.
+#
+# Este workflow só existe para o caso real em que a integração nativa não serve: monorepo com
+# MAIS DE UM projeto Supabase no mesmo repositório (a integração é 1 projeto ↔ 1 repo/pasta).
+# Não é o caso deste repo hoje — por isso o gatilho automático (`on: push`) está DESLIGADO;
+# só roda via workflow_dispatch manual e consciente. Se um dia isto virar o caminho real:
+#   1. Desligue "Deploy to production" na integração nativa (evita aplicar a mesma migration 2x).
+#   2. Gere o SUPABASE_ACCESS_TOKEN de uma CONTA DE AUTOMAÇÃO separada (nunca a conta pessoal —
+#      o token do Supabase carrega acesso à conta inteira, não há token restrito a 1 projeto).
+#   3. Reative o gatilho `on: push` abaixo.
 #
 # Secrets necessários (Settings → Secrets and variables → Actions), por environment:
-#   SUPABASE_ACCESS_TOKEN  → token pessoal/da org (supabase.com/dashboard/account/tokens)
+#   SUPABASE_ACCESS_TOKEN  → PAT da conta de automação (supabase.com/dashboard/account/tokens)
 #   SUPABASE_PROJECT_ID    → ref do projeto (ex.: abcdefghijklmnop)
 #   SUPABASE_DB_PASSWORD   → senha do banco (necessária para `db push`)
 # Com staging: crie os environments "staging" e "production" no GitHub e configure os
 # secrets em cada um apontando para o projeto Supabase correspondente (ver docs/ENVIRONMENTS.md).
 
-name: Deploy (Supabase)
+name: Deploy (Supabase) — fallback, não usado por padrão
 
 on:
-  push:
-    branches: [main, develop]
-    # só dispara quando muda algo que se deploya — doc não gasta deploy
-    paths:
-      - "supabase/**"
-  workflow_dispatch: # deploy manual consciente (@devops), ex.: primeiro setup
+  # Gatilho automático desligado de propósito — ver comentário acima. Descomente só ao migrar
+  # para o cenário de monorepo multi-projeto e após desligar a integração nativa.
+  # push:
+  #   branches: [main, develop]
+  #   paths:
+  #     - "supabase/**"
+  workflow_dispatch: # único gatilho hoje — deploy manual consciente (@devops)
 
 concurrency:
   group: deploy-${{ github.ref }}

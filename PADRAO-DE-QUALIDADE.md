@@ -28,7 +28,7 @@ alwaysApply: false
 | 5 | Sem `SPEC_DEVIATION` pendente | ☑️ DoD | `Definition-of-Done.md` | ambos | @dev |
 | 6 | Decisão difícil de reverter vira ADR | ☑️ DoD / 📖 | `docs/adr/`, `ANTI-PADROES.md` | ambos | @architect |
 | 7 | Runbook para incidente recorrente | 📖 Guia | `runbooks/` | ambos | @reliability |
-| 7a | Deploy de banco/Edge Functions via CI (não manual) | 🟢 Gate CI | `.github/workflows/deploy.yml` | ambos | @devops |
+| 7a | Deploy de banco/Edge Functions via GitHub (não manual) | 🟢 Gate CI* | GitHub Integration nativa do Supabase (`supabase/config.toml`); fallback `deploy.yml` | ambos | @devops |
 | **Código / Arquitetura** |
 | 8 | Lint + format limpos | 🟢 Gate CI + 🪝 | `npm run lint` (Biome) | ambos | @dev |
 | 9 | TypeScript strict sem erro | 🟢 Gate CI + 🪝 | `npm run typecheck` | ambos | @dev |
@@ -59,6 +59,8 @@ alwaysApply: false
 | 30 | OWASP LLM Top 10 revisado | 📖 Guia | `ia/README.md` | quando há LLM | @security/@qa |
 
 > \* Item 24 é gate quando o projeto tem app web (liga Lighthouse CI/size-limit); até lá, é guia + DoD.
+> \* Item 7a é gate por integração nativa do Supabase (não pipeline neste repo) — falha visível
+>   se a migration for inválida (ative o "required check" na proteção da branch).
 
 ## Como rodar tudo localmente (espelho da CI)
 ```bash

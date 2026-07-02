@@ -19,6 +19,10 @@ alwaysApply: false
 | 8  | Trocar `gitleaks-action@v2` pela CLI no `ci.yml`                       | AC-4     | —          | inspeção (YAML válido; org repo não depende de `GITLEAKS_LICENSE`) | done |
 | 9  | Criar `.github/workflows/deploy.yml` adaptado (sem `db/migrations/`, só `supabase/**`) | AC-5 | — | YAML parseia (`js-yaml`); revisão manual dos secrets referenciados | done |
 | 10 | Atualizar `docs/ENVIRONMENTS.md` (promoção automática) e `PADRAO-DE-QUALIDADE.md` (item 7a) `[P]` | AC-5 | 9 | inspeção | done |
+| 11 | Rebaixar `deploy.yml` a fallback (desligar gatilho `on: push`, só `workflow_dispatch`) | AC-6 | 9 | inspeção — YAML válido, sem gatilho automático ativo | done |
+| 12 | Reescrever `docs/ENVIRONMENTS.md` com GitHub Integration nativa como caminho canônico | AC-6 | 11 | inspeção | done |
+| 13 | Atualizar `PADRAO-DE-QUALIDADE.md` (item 7a) e `docs/STATE.md` (bloqueio: ativar integração no dashboard) `[P]` | AC-6 | 11 | inspeção | done |
+| 14 | Atualizar `.env.local`/`.env.example` com infra Supabase reprovisionada (URL, publishable key, `SUPABASE_DB_PASSWORD` novo) `[P]` | — | — | inspeção (`.env.local` fora do git — `git status` não lista) | done |
 
 > Uma task só vira `done` quando o **gate passa** — não por inspeção visual (exceto 6/7, que são
 > documentação/CI e verificadas por leitura, já que não há runner de CI local neste ambiente).
