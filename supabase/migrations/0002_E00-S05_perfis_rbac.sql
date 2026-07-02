@@ -64,6 +64,14 @@ create policy "config.usuarios: auth admin le hook" on config.usuarios
 -- Único caminho documentado para vincular um auth.users a um papel (ver runbooks/provisionar-usuario.md).
 -- Não há trigger automático em auth.users: o papel não pode ser inferido, e a constraint
 -- `not null` acima garante que toda linha que existir em config.usuarios tem papel válido.
+--
+-- Não existe policy de INSERT em config.usuarios de propósito: o INSERT dentro desta função
+-- só funciona se o role que a executa tiver BYPASSRLS (o `postgres` do Supabase tem, tanto local
+-- quanto hospedado — é o mesmo motivo pelo qual o SQL Editor do Dashboard consegue rodar isto).
+-- Rodar como `authenticated`/`anon` falharia com "new row violates row-level security policy"
+-- mesmo sendo security definer — FORCE ROW LEVEL SECURITY não é contornável só por SECURITY
+-- DEFINER, exige BYPASSRLS de fato. @qa: validar essa suposição ao rodar `supabase db reset`
+-- localmente (task 1/2 de tasks.md) antes do merge.
 create or replace function config.provisionar_usuario(
   p_user_id uuid,
   p_papel   text,

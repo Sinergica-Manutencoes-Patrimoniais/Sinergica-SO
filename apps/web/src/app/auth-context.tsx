@@ -54,13 +54,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     resolverSessaoAtual();
 
-    // Reage a mudanças externas de sessão (outra aba, expiração, refresh) depois da carga inicial.
+    // Reage a mudanças externas de sessão (outra aba, expiração, refresh de token). Quando ainda
+    // há sessão, resolve o perfil de novo (não só checa presença) — sem isso, papel/nome ficam
+    // desatualizados na UI se config.usuarios mudar/for removido enquanto a sessão está viva, e
+    // um perfil removido no meio da sessão nunca seria detectado até um reload manual.
     const unsubscribe = supabaseAuthAdapter.onAuthStateChange((sessao) => {
       if (!ativo) return;
       if (!sessao) {
         setUser(null);
         setStatus("nao-autenticado");
+        return;
       }
+      resolverSessaoAtual();
     });
 
     return () => {
