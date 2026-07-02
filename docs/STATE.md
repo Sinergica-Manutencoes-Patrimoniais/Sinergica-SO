@@ -10,20 +10,20 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-01 por @devops (E00-S04: sidebar colapsável + logo Sinérgica)
+**Última atualização:** 2026-07-01 por @devops (migração repo → Sinergica-SO; Supabase provisionado)
 
 ## Status geral
-**Fase:** Casca concluída — E00-S04 implementado; aguarda push/PR para `Sinergica-M-P/Sinergica-OS`.
+**Fase:** Casca concluída — E00-S04 implementado. Repo migrado para `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO` (Lucas é owner). Supabase provisionado.
 **Gates:** pnpm test ✅ · typecheck ✅ · lint ✅ · audit-esteira ✅ · eval-spec-fidelity ✅
 
 ## Em andamento / próximo passo
-- **Branches locais prontas para push** (aguardando write access em `Sinergica-M-P/Sinergica-OS`):
-  - `docs/E01-S03-pmoc-spec` — PMOC spec + rename OS→SO + design system (2 commits)
-  - `feat/E00-S03-dashboard-geral` — auth bypass + Dashboard Geral (1 commit `905c37c`)
-  - `feat/E00-S04-sidebar-logo` — sidebar colapsável + logos reais Sinérgica (1 commit `0c1e278`)
-- **Próximo passo imediato:** após acesso concedido → push das 3 branches + `gh pr create` para cada
+- **Branches no novo repo** (`Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`) — todas pushadas:
+  - `docs/E01-S03-pmoc-spec` — PMOC spec + rename OS→SO + design system
+  - `feat/E00-S03-dashboard-geral` — auth bypass + Dashboard Geral
+  - `feat/E00-S04-sidebar-logo` — sidebar colapsável + logos reais Sinérgica ← **branch atual**
+- **Próximo passo imediato:** abrir PRs (`gh pr create`) para as 3 branches pendentes de merge em `main`
 - **Próximo passo de feature:** E01-S09 — PCM telas de operação com mock data (listagem OS, modal detalhes, backlog GUT completo)
-- **Próximo passo (Mês 2):** provisionar Supabase + Netlify reais; implementar `specs/0002` + spec de E01-S03 (tem design.md pronto)
+- **Próximo passo (Mês 2):** provisionar Netlify real; implementar `specs/0002` + spec de E01-S03 (tem design.md pronto)
 
 ## Specs implementadas / artefatos prontos
 | Spec | Status | Gate |
@@ -44,8 +44,8 @@ alwaysApply: true
 - 2026-06-25: Monorepo app único (`apps/web`) com features por bounded context — sem apps separados
 
 ## Bloqueios
-- [ ] **Git push bloqueado:** `LmAzevedo94` tem apenas acesso `pull` em `Sinergica-M-P/Sinergica-OS`. Quem destrava: Fabrício / admin da org Sinérgica — conceder acesso `push` (ou `admin`) ao `LmAzevedo94` e ao time Trívia Studio.
-- [ ] Supabase: projeto ainda não provisionado (URL/anon key reais ausentes). Quem destrava: @devops/Lucas.
+- [x] ~~Git push bloqueado~~ ✅ Resolvido — novo repo `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`, Lucas é owner.
+- [x] ~~Supabase não provisionado~~ ✅ Resolvido — `ljvpmcamqydeklvkiigy.supabase.co` · migration `0001` aplicada · `.env.local` configurado.
 - [ ] Evolution API: instância existe na Cloudfy mas webhook não apontado para Supabase Edge Function ainda. Quem destrava: @devops/Lucas.
 
 ## Ideias adiadas / backlog técnico
