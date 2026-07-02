@@ -7,5 +7,10 @@ supabase/.temp/
 .env.local
 .env.*.local
 *.tsbuildinfo
+
+# SBOM e binário de secret scanning baixados localmente (ci:local/CI) — nunca versionar
+sbom.json
+gitleaks
+
 # Marcador de story ativa (local por sessão, não vai para o repo)
 .current-story
