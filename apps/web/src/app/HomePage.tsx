@@ -527,12 +527,12 @@ export function HomePage() {
 
   const modulo = MODULOS.find((m) => m.id === activeModulo);
   const initials =
-    user?.name
+    user?.nome
       .split(" ")
       .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase() ?? "")
+      .map((w: string) => w[0]?.toUpperCase() ?? "")
       .join("") ?? "?";
-  const firstName = user?.name.split(" ")[0] ?? "usuário";
+  const firstName = user?.nome.split(" ")[0] ?? "usuário";
 
   const greetingSub =
     activeModulo === "inicio"

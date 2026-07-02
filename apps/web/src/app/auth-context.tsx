@@ -1,51 +1,93 @@
-import { createContext, useCallback, useContext, useState } from "react";
+// Estado de sessão transversal — consumido pelo shell/roteamento de toda a app (guard de rota é
+// preocupação cross-feature, por isso vive em app/ e não dentro de features/auth/ — ver
+// specs/E00-S05-autenticacao-autorizacao/design.md).
+// A lógica de autenticação real vive em features/auth/application; este arquivo só orquestra
+// estado de UI (loading, usuário atual, erro de sessão) sobre os casos de uso.
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { getSession } from "../features/auth/application/get-session";
+import { signIn } from "../features/auth/application/sign-in";
+import { signOut } from "../features/auth/application/sign-out";
+import type { UsuarioAutenticado } from "../features/auth/domain/role";
+import { supabaseAuthAdapter } from "../features/auth/infrastructure/supabase-auth-adapter";
 
-interface AuthUser {
-  name: string;
-  email: string;
-  role: "admin" | "escritorio" | "tecnico";
-}
+export type StatusSessao = "carregando" | "autenticado" | "nao-autenticado";
 
 interface AuthCtx {
-  user: AuthUser | null;
+  user: UsuarioAutenticado | null;
+  status: StatusSessao;
+  /** Mensagem de erro de sessão restaurada sem perfil (AC-4) — lida uma vez pelo LoginPage. */
+  erroSessao: string | null;
+  limparErroSessao: () => void;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-const STORAGE_KEY = "sinergica_os_user";
-
-// DEV-ONLY bypass — substituir por Supabase Auth no Mês 2
-const DEV_EMAIL = "trivia@triviastudio.com.br";
-const DEV_PASSWORD = "Trivia123456";
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as AuthUser) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState<UsuarioAutenticado | null>(null);
+  const [status, setStatus] = useState<StatusSessao>("carregando");
+  const [erroSessao, setErroSessao] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+
+    const resolverSessaoAtual = async () => {
+      const resultado = await getSession(supabaseAuthAdapter);
+      if (!ativo) return;
+
+      if (resultado.status === "autenticado") {
+        setUser(resultado.usuario);
+        setStatus("autenticado");
+        return;
+      }
+
+      if (resultado.status === "sem-perfil") {
+        await supabaseAuthAdapter.signOut();
+        if (!ativo) return;
+        setErroSessao("Conta sem perfil configurado — contate o administrador.");
+      }
+
+      setUser(null);
+      setStatus("nao-autenticado");
+    };
+
+    resolverSessaoAtual();
+
+    // Reage a mudanças externas de sessão (outra aba, expiração, refresh) depois da carga inicial.
+    const unsubscribe = supabaseAuthAdapter.onAuthStateChange((sessao) => {
+      if (!ativo) return;
+      if (!sessao) {
+        setUser(null);
+        setStatus("nao-autenticado");
+      }
+    });
+
+    return () => {
+      ativo = false;
+      unsubscribe();
+    };
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    await new Promise((r) => setTimeout(r, 600)); // simula latência de rede
-    if (email.toLowerCase() !== DEV_EMAIL || password !== DEV_PASSWORD) {
-      throw new Error("Usuário ou senha inválidos");
-    }
-    const u: AuthUser = { name: "Trívia Studio", email: DEV_EMAIL, role: "admin" };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    setUser(u);
+    const usuario = await signIn(supabaseAuthAdapter, email, password);
+    setUser(usuario);
+    setStatus("autenticado");
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    signOut(supabaseAuthAdapter);
     setUser(null);
+    setStatus("nao-autenticado");
   }, []);
 
-  return <Ctx.Provider value={{ user, login, logout }}>{children}</Ctx.Provider>;
+  const limparErroSessao = useCallback(() => setErroSessao(null), []);
+
+  return (
+    <Ctx.Provider value={{ user, status, erroSessao, limparErroSessao, login, logout }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useAuth() {
