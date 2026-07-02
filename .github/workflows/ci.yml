@@ -60,3 +60,18 @@ jobs:
             fi
           done
           echo "Migrations OK"
+
+  db-tests:
+    # Roda migrations + pgTAP contra um Postgres local via Docker — runners do GitHub Actions já
+    # têm Docker. Substitui a necessidade de Docker local para validar RLS/invariantes de banco
+    # (ver STATE.md e specs/E00-S05-autenticacao-autorizacao/tasks.md — "Pendências antes do merge").
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Subir Supabase local (Docker) — aplica migrations do zero
+        run: supabase start
+      - name: pgTAP — RLS e invariantes (supabase/tests/)
+        run: supabase test db

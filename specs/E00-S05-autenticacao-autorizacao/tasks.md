@@ -29,24 +29,28 @@ alwaysApply: false
 | 14 | Ajustar `LoginPage.tsx` — mensagem genérica de erro (AC-2) e mensagem "Conta sem perfil configurado — contate o administrador." (caso de borda AC-4) | AC-2, AC-4 | 12 | teste de aceite manual: login com credencial inválida → mensagem genérica; login com usuário sem `config.usuarios` → mensagem específica de perfil ausente, sessão encerrada | código pronto — teste manual no browser pendente (requer Supabase local rodando) |
 | 15 | Gates finais de qualidade do projeto | AC-1 a AC-9 | 6, 13, 14 | `pnpm run typecheck && pnpm exec biome check apps/web/src/ && supabase test db` | `pnpm run typecheck` ✅ · `pnpm exec biome check apps/web/src/` ✅ · `pnpm run test` ✅ (34 passed, 3 skipped) · `supabase test db` **não executado** (Docker indisponível) |
 
-## Pendências antes do merge (ambiente sem Docker)
+## Pendências antes do merge
 
-O `@dev` desta sessão não tinha Docker disponível — todo gate que depende de `supabase start`
-(banco local real) foi **escrito mas não executado**. Antes de considerar a story pronta,
-alguém com Docker precisa, nesta ordem:
+O `@dev` desta sessão não tinha Docker disponível localmente — mas os runners do GitHub Actions
+têm. Itens 1-3 abaixo passaram a rodar automaticamente no job `db-tests` do `ci.yml`
+(`supabase start` + `supabase test db`), então ficam validados **pela pipeline**, não por Docker
+local. Achado ao ligar esse job: `supabase/config.toml` apontava `db.seed.sql_paths` para um
+`seed.sql` que nunca existiu — teria quebrado o `start`; corrigido (seed desligado, sem dado
+ainda).
 
-1. `supabase start` — confirma que `supabase/config.toml` (Custom Access Token Hook, schemas
-   expostos) sobe sem erro.
-2. `supabase db reset` — aplica `0002_E00-S05_perfis_rbac.sql` do zero; confirma que a migration
-   roda sem erro de sintaxe/dependência.
-3. `supabase test db` — roda `supabase/tests/e00-s05_rbac.test.sql` (29 assertions); é o gate
-   real de AC-8 e AC-9.
-4. Login manual no browser (`pnpm dev` + usuário provisionado via `runbooks/provisionar-usuario.md`)
-   para validar AC-1, AC-2, AC-4, AC-5, AC-6, AC-7 fim a fim (tasks 5, 13, 14).
-5. Em produção (fora do local): registrar o Custom Access Token Hook e expor os schemas
+1. ~~`supabase start`~~ — job `db-tests` do CI.
+2. ~~`supabase db reset` (aplica `0002_E00-S05_perfis_rbac.sql` do zero)~~ — idem, via `start` num
+   runner limpo.
+3. ~~`supabase test db` (29 assertions de RLS)~~ — idem, gate real de AC-8/AC-9 agora **bloqueante
+   no CI**, não mais dependência de ambiente local.
+4. **Ainda manual:** login no browser (`pnpm dev` + usuário provisionado via
+   `runbooks/provisionar-usuario.md`) para validar AC-1, AC-2, AC-4, AC-5, AC-6, AC-7 fim a fim —
+   CI não substitui esse smoke test humano.
+5. **Ainda manual, em produção:** registrar o Custom Access Token Hook e expor os schemas
    `pcm`/`atendimento`/`comercial`/`config` no Dashboard do projeto Supabase hospedado — **isso
-   não é aplicado por migration**, é configuração manual (ver comentários em `supabase/config.toml`
-   e `design.md`).
+   não é aplicado por migration nem por CI**, é configuração manual (ver comentários em
+   `supabase/config.toml` e `design.md`). Projeto Supabase foi **reprovisionado** em 2026-07-02
+   (`nudannsrfvjggoergvyn`) — ver `docs/STATE.md`.
 
 ## Plano de teste
 

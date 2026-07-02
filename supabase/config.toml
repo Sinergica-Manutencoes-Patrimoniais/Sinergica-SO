@@ -64,10 +64,12 @@ schema_paths = []
 
 [db.seed]
 # If enabled, seeds the database after migrations during a db reset.
-enabled = true
+# Desligado: sql_paths apontava para ./seed.sql, que nunca existiu — quebrava `supabase start`/
+# `db reset` (achado ao ligar o job de CI com Docker, ver ci.yml). Sem dado de seed ainda.
+enabled = false
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+sql_paths = []
 
 [db.network_restrictions]
 # Enable management of network restrictions.
