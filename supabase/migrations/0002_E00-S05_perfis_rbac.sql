@@ -3,6 +3,9 @@
 -- design.md e ADR-0003 (docs/adr/0003-rbac-jwt-claim-config-usuarios.md) para o racional completo.
 --
 -- Reverso:
+--   revoke all on pcm.clientes, pcm.ordens_servico, atendimento.config_ze, atendimento.wa_messages,
+--     atendimento.wa_queue, comercial.leads, config.feature_flags, config.usuarios from authenticated;
+--   revoke usage on schema pcm, atendimento, comercial, config from authenticated;
 --   drop policy if exists "config.usuarios: auth admin le hook" on config.usuarios;
 --   drop function if exists config.custom_access_token_hook(jsonb);
 --   drop function if exists config.provisionar_usuario(uuid, text, text);
@@ -16,7 +19,10 @@
 --   3. Função config.custom_access_token_hook — injeta o claim `user_role` no JWT emitido pelo
 --      Supabase Auth. Precisa ser registrada como Auth Hook do projeto (não só aplicada via SQL —
 --      ver supabase/config.toml para o ambiente local; produção é configurada no Dashboard).
---   4. RLS policies nas 7 tabelas de domínio já existentes, lendo `auth.jwt() ->> 'user_role'`
+--   4. GRANT base (USAGE nos schemas + SELECT/INSERT/UPDATE nas tabelas) para `authenticated` —
+--      sem isso o Postgres nega antes de sequer avaliar a RLS policy ("permission denied for
+--      schema"); achado rodando `supabase test db` pela 1ª vez (job db-tests do CI).
+--   5. RLS policies nas 7 tabelas de domínio já existentes, lendo `auth.jwt() ->> 'user_role'`
 --      (mesmo padrão do perfil single-repo em db/rls.template.sql) — sem subquery a
 --      config.usuarios em tempo de policy (evita custo e recursão).
 
@@ -127,6 +133,21 @@ $$;
 
 grant execute on function config.custom_access_token_hook(jsonb) to supabase_auth_admin;
 revoke execute on function config.custom_access_token_hook(jsonb) from public, anon, authenticated;
+
+-- ─────────────────────────── GRANT BASE (pré-requisito da RLS) ─────────────
+-- Postgres checa privilégio de schema/tabela ANTES de avaliar RLS — sem este GRANT, toda query
+-- de `authenticated` a estas tabelas falha com "permission denied for schema", mesmo com a
+-- policy certa abaixo. `anon` não recebe nada (deny by default, AC-9): schemas de domínio nunca
+-- são acessíveis sem sessão autenticada. RLS continua sendo quem decide QUAIS linhas cada papel
+-- vê — este GRANT só abre a possibilidade de a policy ser avaliada.
+grant usage on schema pcm, atendimento, comercial, config to authenticated;
+
+grant select, insert, update on pcm.clientes, pcm.ordens_servico to authenticated;
+grant select, insert, update on atendimento.config_ze, atendimento.wa_messages, atendimento.wa_queue
+  to authenticated;
+grant select, insert, update on comercial.leads to authenticated;
+grant select, insert, update on config.feature_flags to authenticated;
+grant select, update on config.usuarios to authenticated; -- insert só via provisionar_usuario (SECURITY DEFINER)
 
 -- ─────────────────────────── RLS — TABELAS DE DOMÍNIO EXISTENTES ───────────
 -- Matriz de decisão completa: specs/E00-S05-autenticacao-autorizacao/spec.md (AC-8, AC-9).
