@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Sinérgica SO — sistema operacional da Sinérgica Manutenções (monorepo, Padrão SO v2).",
   "packageManager": "pnpm@9.0.0",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "scripts": {
     "prepare": "husky",
     "build": "turbo run build",
