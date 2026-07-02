@@ -35,8 +35,10 @@ alwaysApply: true
 | E00-S02 | Redesign home — sidebar + abas por módulo + dashboard PCM | [spec](../../specs/E00-S02-home-dashboard/spec.md) | Implementado (SPEC_DEVIATION) | Claude (sessão Lucas) | ✅ |
 | E00-S03 | Auth bypass dev + Dashboard Geral inicial (9 módulos resumidos) | [spec](../../specs/E00-S03-dashboard-geral/spec.md) | Implementado | Claude (sessão Lucas) | ✅ |
 | E00-S04 | Sidebar colapsável + Logo Sinérgica (sidebar e login) | [spec](../../specs/E00-S04-sidebar-logo/spec.md) | Implementado ✅ | Claude (sessão Lucas) | ✅ |
-| E00-S05 | Autenticação e Autorização — Supabase Auth real + RBAC (substitui bypass dev) | [spec](../../specs/E00-S05-autenticacao-autorizacao/spec.md) | Implementado — gates de banco validados via CI (job `db-tests`, Docker), login manual e config no Supabase hospedado ainda pendentes (ver tasks.md) | Claude (sessão Lucas) | ✅ (código + `db-tests` CI) |
+| E00-S05 | Autenticação e Autorização — Supabase Auth real + RBAC (substitui bypass dev) | [spec](../../specs/E00-S05-autenticacao-autorizacao/spec.md) | **Implementado e em produção** — migrations aplicadas, hook + schemas expostos confirmados via Management API. Só falta login manual no browser (fora do meu alcance) | Claude (sessão Lucas) | ✅ |
 | E00-S06 | Sincronizar correções do Padrão OS v3 / Triviaiox (agente morto, hook de push, gate de arquitetura, CI/deploy) | [spec](../../specs/E00-S06-sync-padrao-os-v3/spec.md) | Implementado | Claude (sessão Lucas) | ✅ |
+| E00-S07 | Hardening pós-primeira-pipeline-real (Padrão OS v3.2.0→v3.4.0) — Lefthook, Squawk, revisão adversarial | [spec](../../specs/E00-S07-hardening-padrao-v3.2.0/spec.md) | Implementado — `ci:local` verde de ponta a ponta; commits locais só (sem push, instrução explícita) | Claude (sessão Lucas) | ✅ (2 SPEC_DEVIATION: skill `/revisao-adversarial` e regexes extra do gitleaks bloqueados pelo classificador — ver tasks.md) |
+| E00-S07 | Hardening pós-primeira-pipeline-real (Padrão OS v3.2.0) — ci:local, lint de migrations com GRANT, gates de QA exigem CI real | [spec](../../specs/E00-S07-hardening-padrao-v3.2.0/spec.md) | Em andamento (commits locais, sem push) | Claude (sessão Lucas) | ⏳ |
 
 ### E01 — PCM · Operação
 | Story ID | Descrição | Spec | Status | Owner | AC verdes |
@@ -49,6 +51,9 @@ alwaysApply: true
 | E01-S06 | PMOC — Análise microbiológica e log de não-conformidades | — | Planejado | — | — |
 | E01-S07 | Hub de OS — Fila unificada de Ordens de Serviço (C1/C2/P1/P2/IN, SLA, prioridade) | — | Planejado (tier arquitetural) | — | — |
 | E01-S08 | PMOC — Dashboard e telas de gestão de contratos | — | Planejado | — | — |
+| E01-S09 | Integração Auvo — Fundação: cliente HTTP, sync de clientes, criação de task ao entrar em `planejamento` | [spec](../../specs/E01-S09-integracao-auvo-fundacao/spec.md) · [design](../../specs/E01-S09-integracao-auvo-fundacao/design.md) | Spec pronta para dev (tier arquitetural) — estudo/planejamento feito, implementação não iniciada | — | — |
+| E01-S10 | Integração Auvo — Webhook de status/conclusão de OS (+ gatilho `pcm.pmoc_records`) | [spec](../../specs/E01-S10-integracao-auvo-webhook-status/spec.md) | Spec pronta para dev — depende de E01-S09 implementada primeiro | — | — |
+| E01-S11 | Integração Auvo — Sync de técnicos/equipes/equipamentos (Auvo → PCM, cache read-only) | [spec](../../specs/E01-S11-integracao-auvo-sync-tecnicos-equipamentos/spec.md) | Spec pronta para dev — depende de E01-S09 implementada primeiro | — | — |
 
 ### E02 — Atendimento · Zé
 *Stories serão abertas quando E01-S02 iniciar (dependência de design).*

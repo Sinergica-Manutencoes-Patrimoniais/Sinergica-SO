@@ -1,0 +1,25 @@
+# Squawk — linter de migrations PostgreSQL (segurança: locks, breaking change, downtime).
+# https://squawkhq.com/docs/rules   Instale: `pnpm add -D squawk-cli` (ou brew/binário).
+# Roda no pre-push (via scripts/lint-migrations.mjs, best-effort) e BLOQUEIA na CI (squawk-action).
+#
+# Squawk cobre SEGURANÇA de migration. A correção SEMÂNTICA de RLS (CREATE POLICY exige GRANT)
+# NÃO é coberta por ele — fica no check custom em scripts/lint-migrations.mjs.
+
+# ATENÇÃO: excluded_rules é TOP-LEVEL — dentro de [default] o Squawk ignora silenciosamente
+# (testado; achado real ao ligar o gate pela primeira vez neste repo).
+#
+# Excluídas: só disparavam em `0001`/`0002`, JÁ APLICADAS em produção (nunca editadas — ver
+# AGENTS.md/convenção do projeto), então não há como "corrigir" o achado. Reavaliar antes de
+# reativar: `require-timeout-settings` importa quando as tabelas tiverem volume/carga real (hoje
+# é casca, Mês 1); `prefer-bigint-over-int` não se aplica às colunas que a disparou
+# (gravidade/urgencia/tendencia da matriz GUT — sempre 1 a 5, nunca perto do limite de int32).
+excluded_rules = ["require-timeout-settings", "prefer-bigint-over-int"]
+
+[default]
+# Regras opt-in úteis para o perfil da Trivia (mutação segura sob carga), avaliar se a dor surgir:
+# - require-concurrent-index-creation: CREATE INDEX sem CONCURRENTLY trava escrita.
+# - constraint-missing-not-valid: ADD CONSTRAINT sem NOT VALID valida a tabela inteira (lock).
+# - prefer-robust-stmts: statements idempotentes/robustos (suprimido via --assume-in-transaction
+#   no script/CI — o Supabase já roda cada migration dentro de transação).
+
+# Ignorar pontual dentro do SQL: `-- squawk-ignore <regra>` na linha acima do statement.

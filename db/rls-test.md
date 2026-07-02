@@ -63,3 +63,32 @@ supabase test db   # roda os testes pgTAP em supabase/tests/
 - Papel com permissão **liberado** (não trancar demais).
 - Multi-tenant: usuário de um tenant **não lê** dado de outro tenant.
 - Tabela `audit.*` (perfil OS): UPDATE/DELETE negados inclusive para `service_role`.
+
+## ⚠️ Pegadinha: `throws_ok` só funciona pra INSERT (não SELECT/UPDATE/DELETE)
+Postgres avalia a RLS de formas diferentes por tipo de comando:
+- **INSERT** — a cláusula `WITH CHECK` rejeita a linha específica que você tentou inserir. Postgres
+  **lança exceção** (`42501 — insufficient_privilege` ou "new row violates row-level security
+  policy"). `throws_ok` funciona aqui.
+- **SELECT / UPDATE / DELETE** — a cláusula `USING` só **filtra** quais linhas o comando enxerga.
+  Se nenhuma linha bate, o comando **completa com sucesso afetando 0 linhas** — **não lança
+  exceção nenhuma**. Usar `throws_ok` aqui é um teste que **nunca falha por engano** (passa mesmo
+  se a policy estiver toda errada e liberando tudo).
+
+Teste por **efeito** (contagem/valor), não por erro, para SELECT/UPDATE/DELETE:
+```sql
+-- ERRADO — throws_ok nunca vai capturar nada aqui (UPDATE filtrado não lança):
+-- select throws_ok(
+--   $$ update public.comissoes set valor = 0 where id = 'x' $$,
+--   '42501', null, 'analista NAO edita comissao'
+-- );
+
+-- CERTO — confirma que a linha não mudou (RLS filtrou, 0 linhas afetadas):
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"u1","user_role":"analista"}';
+update public.comissoes set valor = 999 where id = 'x';
+select is(
+  (select valor from public.comissoes where id = 'x'),
+  100,  -- valor original, inalterado
+  'analista NAO edita comissao (RLS filtra a linha — 0 afetadas)'
+);
+```

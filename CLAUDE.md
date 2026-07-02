@@ -1,13 +1,13 @@
 ---
 name: CLAUDE
-description: Convenções do agente para o Sinérgica SO (Padrão SO v2 + Triviaiox). Sempre ativo.
+description: Convenções do agente para o Sinérgica SO (Padrão SO v3 + Triviaiox). Sempre ativo.
 alwaysApply: true
 ---
 
 # CLAUDE.md — Sinérgica SO
 
 > Projeto: **Sinérgica SO** · Cliente: Sinérgica Manutenções · Perfil: **SO (monorepo multi-domínio)**
-> Desenvolvido pela Trívia Studio seguindo o **Padrão SO v2** (SDD + Triviaiox).
+> Desenvolvido pela Trívia Studio seguindo o **Padrão SO v3** (SDD + Triviaiox).
 > Idioma: **PT-BR com termos técnicos em inglês** (spec, AC, bounded context, gate, ADR, RLS, etc.).
 
 Leia este arquivo antes de qualquer implementação. **É a fonte de verdade que o agente lê em
@@ -125,8 +125,15 @@ Ver `seguranca/os-grade.md`. Toda dívida → `docs/SECURITY_DEBT.md`.
 ## Definition of Done
 `Definition-of-Done.md` (gates executáveis). Resumo:
 - AC verdes **pelo comando** (não inspeção).
-- `pnpm test` · `pnpm run typecheck` · `pnpm run lint` · `node scripts/audit-esteira.mjs` · `node scripts/eval-spec-fidelity.mjs` verdes.
+- `pnpm run ci:local` (= `lefthook run pre-push`, espelho da CI) verde; depois `gh pr checks` verde
+  no PR, sem check obrigatório pulado (RLS/pgTAP do job `db-tests` exige Docker — não pode ter
+  sido silenciosamente pulado).
 - Sem `SPEC_DEVIATION` pendente · ADRs registrados · glossário e `docs/STATE.md` atualizados.
+
+> **Gate verde não é "correto", é "o caminho feliz funciona".** Antes de dar PASS, faça a
+> **revisão adversarial** (`/revisao-adversarial`): assuma que a feature está quebrada e tente
+> prová-lo (borda, erro parcial, concorrência, buraco na spec, abuso). É a passada que pega o que
+> o checklist confirmatório não vê — achado reproduzido vira teste e volta ao `@dev`.
 
 ## Mapa de documentos sob demanda
 - **Identidade do projeto:** `docs/PROJECT.md`.

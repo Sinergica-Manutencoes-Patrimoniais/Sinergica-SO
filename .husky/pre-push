@@ -1,3 +1,0 @@
-#!/bin/sh
-echo "▶ pre-push: typecheck + testes (gate pré-CI)"
-npm run typecheck && npm test

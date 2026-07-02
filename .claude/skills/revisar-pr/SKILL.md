@@ -11,7 +11,12 @@ do Biome).
 ## Checklist de review
 - [ ] PR linka a `spec.md` e lista os `AC` cobertos.
 - [ ] **Rastreabilidade:** cada `AC` entregue tem task em `tasks.md` e teste correspondente.
-- [ ] **Gates verdes** no CI (testes, typecheck, lint, `eval:spec`, `audit:esteira`).
+- [ ] **CI real verde** (`gh pr checks`): todos os checks passaram e **nenhum obrigatório foi
+      pulado** — gate que precisa de Docker/banco (RLS/pgTAP, job `db-tests`) rodou de verdade,
+      não "skipped".
+- [ ] **Revisão adversarial feita** (`/revisao-adversarial`): tentou-se **quebrar** cada `AC`
+      (borda, erro parcial, concorrência, buraco na spec, abuso), não só confirmar o caminho feliz;
+      achados viraram teste. Gate verde ≠ correto.
 - [ ] Nada **fora de escopo** da spec foi implementado.
 - [ ] Nenhum `SPEC_DEVIATION` pendente sem resolução (corrigir código OU atualizar spec+ADR).
 - [ ] Decisão difícil de reverter tem **ADR**.
