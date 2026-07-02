@@ -10,7 +10,7 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-02 por @dev (E00-S07 — hardening pós-pipeline v3.2.0→v3.4.0: Lefthook, Squawk, gates de QA exigem CI real. Commits locais, sem push — instrução explícita)
+**Última atualização:** 2026-07-02 por @analyst/@architect (estudo + specs da integração Auvo — 3 stories novas no ROADMAP: `E01-S09/S10/S11`. Commits locais, sem push — instrução explícita)
 
 ## Status geral
 **Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) mergeadas em
@@ -42,9 +42,26 @@ test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de
 - **Ainda manual (não coberto por CI/API):** login no browser para validar AC-1,2,4-7 do E00-S05
   fim a fim; rotacionar o JWT secret legado do projeto Supabase (exposto sem querer num
   diagnóstico de sessão anterior) — ver Bloqueios.
-- **Próximo passo de feature:** integração Auvo (pedido do usuário, ver seção própria abaixo se
-  já iniciada) — ou E01-S09 (PCM telas de operação com dados reais) — ou `specs/0002` (abertura
-  de chamado via Zé).
+- **Integração Auvo — estudo e specs concluídos** (pedido explícito do usuário: "veja aonde
+  acoplar as informações do Auvo... gere as specs para desenvolver na sequência" — só estudo e
+  planejamento, sem implementar código). Cruzei `docs/ARCHITECTURE.md`, ADR-0001,
+  `docs/blueprint/integracoes/auvo.md` (já continha boa parte do design técnico) e o mapeamento
+  completo da API Auvo (vault) com o schema real (`0001_E00-S00`, colunas `auvo_*` já existiam
+  mas sem código nenhum as usando). Resultado: 3 stories novas no ROADMAP, todas tier
+  arquitetural/pequeno, nenhuma implementada ainda —
+  - `E01-S09` (**arquitetural**, tem `design.md`): fundação — cliente HTTP Auvo compartilhado,
+    sync de cliente PCM→Auvo, criação de task Auvo quando OS entra em `planejamento`.
+  - `E01-S10` (pequeno, consome o design de S09): webhook Auvo → atualização de status da OS
+    (execução/conclusão/cancelamento) + gatilho de `pcm.pmoc_records`.
+  - `E01-S11` (pequeno, consome o design de S09): sync Auvo→PCM de técnicos/equipes/equipamentos
+    (cache read-only local, `pcm.tecnicos_cache`/`pcm.equipamentos_cache` — tabelas novas, ainda
+    sem migration).
+  Duas questões de produto ficaram em aberto (ver `E01-S09/design.md` → Questões em aberto):
+  `taskTypeId` de `levantamento`/`emergencial` e mapeamento GUT→`priority` Auvo — bloqueiam só
+  `AC-7` de `E01-S09`, não o resto. Próximo passo real: `@dev` pega `E01-S09` (tasks.md já tem
+  13 tasks ordenadas) quando alguém marcar o owner.
+- **Outros próximos passos possíveis** (não iniciados): `specs/0002` (abertura de chamado via
+  Zé, spec já aprovada) ou telas de operação do PCM com dados reais.
 - **Branches anteriores ainda pendentes de PR:** `docs/E01-S03-pmoc-spec` (PMOC spec + rename
   OS→SO + design system).
 
@@ -59,8 +76,20 @@ test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de
 | `E00-S06-sync-padrao-os-v3` | implementado, todos os ACs verdes | audit-esteira ✅ · eval:spec ✅ · typecheck ✅ · lint ✅ · test ✅ · arch:check ✅ |
 | `E00-S07-hardening-padrao-v3.2.0` | implementado, `ci:local` verde — commits locais, sem push | `pnpm run ci:local` ✅ (esteira/fidelidade/mermaid/migrations/lint/typecheck/arch/build/test) |
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
+| `E01-S09-integracao-auvo-fundacao` | spec+domain+design prontos, **implementação não iniciada** | revisão humana (Fabrício) |
+| `E01-S10-integracao-auvo-webhook-status` | spec pronta, **implementação não iniciada** | depende de E01-S09 |
+| `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | spec pronta, **implementação não iniciada** | depende de E01-S09 |
 
 ## Decisões recentes
+- 2026-07-02: Integração Auvo decomposta em 3 stories sequenciais em vez de uma só — `E01-S09`
+  (fundação: cliente HTTP + sync cliente + criação de task, tier arquitetural, único com
+  `design.md`) → `E01-S10` (webhook de status, consome o design de S09) → `E01-S11` (sync
+  técnicos/equipamentos, direção invertida Auvo→PCM, consome o design de S09). Motivo: cada uma
+  é entregável/testável isoladamente, e `docs/blueprint/integracoes/auvo.md` já apontava para 6
+  Edge Functions com direções de dados diferentes — uma spec só ficaria grande demais para AC
+  rastreáveis. Trigger de disparo escolhido para S09 é `pg_net` assíncrono (não bloqueante),
+  não trigger síncrono — para a falha do Auvo nunca travar o *system of record* do PCM (ver
+  `E01-S09/design.md` → Alternativas consideradas).
 - 2026-07-02: Padrão OS evoluiu de v3.2.0 para v3.3.0/v3.3.1/v3.4.0 **durante** a story E00-S07 —
   husky+lint-staged+`ci-local.mjs` (task-runner caseiro) substituídos por **Lefthook**
   (`lefthook.yml` único, paralelo) + **Squawk** (segurança de migration: locks/breaking-change).
@@ -142,6 +171,14 @@ test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de
       (enfraqueceriam o gate de secret scanning sem pedido específico). Quem destrava: Lucas.
 - [ ] **Push/PR da branch `chore/E00-S07-hardening-padrao-v3.2.0`** — instrução explícita foi não
       fazer push/merge nesta story; `pnpm run ci:local` está verde, pronta quando Lucas decidir.
+- [ ] **Definir `taskTypeId` Auvo de `levantamento`/`emergencial` e mapeamento GUT→`priority`**
+      (decisão de produto do Fabrício) — bloqueia só `AC-7` de `E01-S09`, resto da story pode ser
+      implementado sem isso. Ver `specs/E01-S09-integracao-auvo-fundacao/design.md` → Questões em
+      aberto.
+- [ ] **`AUVO_API_KEY`/`AUVO_API_TOKEN` só em `.env.local`** — precisam ir para
+      `supabase secrets set` em produção antes do primeiro deploy real das Edge Functions de
+      `E01-S09` (hoje as credenciais só existem para dev local). Quem destrava: @devops na hora
+      de implementar `E01-S09`.
 
 ## Ideias adiadas / backlog técnico
 - Evals de laudo SPDA (comparação de saída LLM com laudos validados por engenheiro) → gatilho: primeira geração de laudo em produção

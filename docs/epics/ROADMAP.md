@@ -51,6 +51,9 @@ alwaysApply: true
 | E01-S06 | PMOC — Análise microbiológica e log de não-conformidades | — | Planejado | — | — |
 | E01-S07 | Hub de OS — Fila unificada de Ordens de Serviço (C1/C2/P1/P2/IN, SLA, prioridade) | — | Planejado (tier arquitetural) | — | — |
 | E01-S08 | PMOC — Dashboard e telas de gestão de contratos | — | Planejado | — | — |
+| E01-S09 | Integração Auvo — Fundação: cliente HTTP, sync de clientes, criação de task ao entrar em `planejamento` | [spec](../../specs/E01-S09-integracao-auvo-fundacao/spec.md) · [design](../../specs/E01-S09-integracao-auvo-fundacao/design.md) | Spec pronta para dev (tier arquitetural) — estudo/planejamento feito, implementação não iniciada | — | — |
+| E01-S10 | Integração Auvo — Webhook de status/conclusão de OS (+ gatilho `pcm.pmoc_records`) | [spec](../../specs/E01-S10-integracao-auvo-webhook-status/spec.md) | Spec pronta para dev — depende de E01-S09 implementada primeiro | — | — |
+| E01-S11 | Integração Auvo — Sync de técnicos/equipes/equipamentos (Auvo → PCM, cache read-only) | [spec](../../specs/E01-S11-integracao-auvo-sync-tecnicos-equipamentos/spec.md) | Spec pronta para dev — depende de E01-S09 implementada primeiro | — | — |
 
 ### E02 — Atendimento · Zé
 *Stories serão abertas quando E01-S02 iniciar (dependência de design).*
