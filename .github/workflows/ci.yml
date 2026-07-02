@@ -17,9 +17,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # turbo precisa do histórico para calcular o "affected"
+      # Sem `with: version` — pnpm/action-setup@v4 recusa rodar se a versão também estiver
+      # fixada no package.json (`packageManager: pnpm@9.0.0`), erro "Multiple versions of pnpm
+      # specified". A versão vem só do packageManager.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
