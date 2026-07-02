@@ -4,6 +4,8 @@ import {
   Briefcase,
   Calendar,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   FileBarChart2,
   FileText,
@@ -521,6 +523,7 @@ function PcmDashboard() {
 export function HomePage() {
   const { user, logout } = useAuth();
   const [activeModulo, setActiveModulo] = useState<ModuloId>("inicio");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const modulo = MODULOS.find((m) => m.id === activeModulo);
   const initials =
@@ -539,38 +542,49 @@ export function HomePage() {
   return (
     <div className="flex h-screen bg-paper overflow-hidden">
       {/* ── Sidebar ──────────────────────────────────────────── */}
-      <aside className="w-56 shrink-0 bg-navy-deep border-r border-navy-line flex flex-col">
+      <aside
+        className={`${sidebarCollapsed ? "w-14" : "w-56"} shrink-0 bg-navy-deep border-r border-navy-line flex flex-col transition-[width] duration-200 ease-in-out overflow-hidden`}
+      >
         {/* Brand */}
-        <div className="px-4 py-4 border-b border-navy-line">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center shrink-0">
-              <Settings className="w-4 h-4 text-white" strokeWidth={1.8} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-white truncate">Sinérgica SO</p>
-              <p className="text-[11px] text-[#A8B0CC] truncate capitalize">{user?.role}</p>
-            </div>
-          </div>
+        <div
+          className={`px-3 py-4 border-b border-navy-line flex items-center ${sidebarCollapsed ? "justify-center" : ""}`}
+        >
+          {sidebarCollapsed ? (
+            <img
+              src="/logos/logo-simbolo-laranja.png"
+              alt="Sinérgica"
+              className="w-8 h-8 object-contain shrink-0"
+            />
+          ) : (
+            <img
+              src="/logos/logo-horizontal-branco.png"
+              alt="Sinérgica"
+              className="h-7 object-contain"
+            />
+          )}
         </div>
 
         {/* Nav groups */}
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
           {activeModulo === "inicio" ? (
             <div>
-              <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
-                MÓDULOS
-              </p>
+              {!sidebarCollapsed && (
+                <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                  MÓDULOS
+                </p>
+              )}
               {MODULOS.filter((m) => m.id !== "inicio").map((m) => {
                 const Icon = m.icon;
                 return (
                   <button
                     key={m.id}
                     type="button"
+                    title={m.label}
                     onClick={() => setActiveModulo(m.id)}
-                    className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white ${sidebarCollapsed ? "justify-center" : ""}`}
                   >
                     <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                    <span className="truncate">{m.label}</span>
+                    {!sidebarCollapsed && <span className="truncate">{m.label}</span>}
                   </button>
                 );
               })}
@@ -578,34 +592,39 @@ export function HomePage() {
           ) : activeModulo === "pcm" ? (
             PCM_NAV.map((group) => (
               <div key={group.titulo}>
-                <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
-                  {group.titulo}
-                </p>
+                {!sidebarCollapsed && (
+                  <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                    {group.titulo}
+                  </p>
+                )}
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   return (
                     <button
                       key={item.label}
                       type="button"
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${
+                      title={item.label}
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
                         item.active
                           ? "border-orange bg-white/[0.07] text-white font-medium"
                           : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
                       }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                      <span className="truncate">{item.label}</span>
+                      {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
                     </button>
                   );
                 })}
               </div>
             ))
           ) : (
-            <div className="px-2 pt-4 text-center">
-              <p className="text-xs text-[#A8B0CC]">
-                Navegação disponível quando o módulo for construído.
-              </p>
-            </div>
+            !sidebarCollapsed && (
+              <div className="px-2 pt-4 text-center">
+                <p className="text-xs text-[#A8B0CC]">
+                  Navegação disponível quando o módulo for construído.
+                </p>
+              </div>
+            )
           )}
         </nav>
 
@@ -613,18 +632,35 @@ export function HomePage() {
         <div className="px-2 py-3 border-t border-navy-line space-y-0.5">
           <button
             type="button"
-            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent"
+            title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCollapsed ? "justify-center" : ""}`}
           >
-            <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-            <span>Configurações</span>
+            {sidebarCollapsed ? (
+              <ChevronRight className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+            ) : (
+              <>
+                <ChevronLeft className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                <span>Recolher</span>
+              </>
+            )}
           </button>
           <button
             type="button"
+            title="Configurações"
+            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCollapsed ? "justify-center" : ""}`}
+          >
+            <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+            {!sidebarCollapsed && <span>Configurações</span>}
+          </button>
+          <button
+            type="button"
+            title="Sair"
             onClick={logout}
-            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent"
+            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCollapsed ? "justify-center" : ""}`}
           >
             <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-            <span>Sair</span>
+            {!sidebarCollapsed && <span>Sair</span>}
           </button>
         </div>
       </aside>
