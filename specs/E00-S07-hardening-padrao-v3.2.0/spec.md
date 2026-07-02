@@ -4,11 +4,17 @@ description: Contrato da feature (critérios de aceite). Base enquanto a feature
 alwaysApply: true
 ---
 
-# Spec — Hardening pós-primeira-pipeline-real (Padrão OS v3.2.0)
+# Spec — Hardening pós-primeira-pipeline-real (Padrão OS v3.2.0 → v3.4.0)
 
 > **Fonte da verdade.** Status: aprovado
 > Tier: Pequeno (mecânico, sem decisão nova de domínio — traz mecanismos já decididos no vault,
 > reconciliando com correções manuais já aplicadas em sessões anteriores). Sem `design.md`.
+>
+> **Atualização:** o vault evoluiu de v3.2.0 para v3.3.0/v3.3.1/v3.4.0 durante a execução desta
+> mesma story (husky/lint-staged/ci-local.mjs → Lefthook; Squawk para segurança de migration;
+> skill `/revisao-adversarial`). Os AC abaixo continuam válidos conceitualmente (ci:local espelha
+> a CI, lint de migrations exige GRANT, gates de QA exigem CI real) — o mecanismo mudou, não o
+> objetivo. Detalhe real do que foi feito: `tasks.md`.
 
 ## Resumo
 Trazer os mecanismos novos do Padrão OS v3.2.0 (`ci:local` espelhando a CI no pre-push, lint de
