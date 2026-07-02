@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isPapel } from "./role";
 
 describe("isPapel", () => {
-  it.each(["admin", "escritorio", "tecnico", "cliente-sindico"])(
+  it.each(["superadmin", "supervisor", "colaborador", "cliente-sindico"])(
     "aceita '%s' como papel válido",
     (papel) => {
       expect(isPapel(papel)).toBe(true);

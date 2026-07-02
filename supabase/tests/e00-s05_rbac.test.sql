@@ -1,7 +1,11 @@
 -- e00-s05_rbac.test.sql — pgTAP: prova a matriz de decisão de RLS por papel (spec.md AC-8, AC-9)
 -- Rodar com: supabase test db (requer `supabase start` local — ver db/rls-test.md)
 --
--- Estratégia: simula 5 identidades via request.jwt.claims (admin, escritorio, tecnico,
+-- Papéis renomeados em E00-S08 (admin→superadmin, escritorio→supervisor, tecnico→colaborador;
+-- cliente-sindico inalterado) — mesma matriz de permissão de E00-S05, ver
+-- specs/E00-S08-renomear-papeis-rbac/spec.md.
+--
+-- Estratégia: simula 5 identidades via request.jwt.claims (superadmin, supervisor, colaborador,
 -- cliente-sindico, sem-papel) contra as 7 tabelas da matriz de decisão. Seed inicial roda como
 -- `postgres` (superuser local, bypassa RLS) para existir 1 linha por tabela a enxergar/não
 -- enxergar. Cada bloco fecha com `reset role`.
@@ -14,17 +18,17 @@ select plan(29);
 -- Usuários fake em auth.users (mínimo exigido pelo schema local do GoTrue)
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
-  ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
-  ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'escritorio@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
-  ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tecnico@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
+  ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'superadmin@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
+  ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'supervisor@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
+  ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'colaborador@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
   ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sindico@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
   ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sem-papel@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
 -- config.usuarios — nota: '000...005' NÃO tem linha aqui (é o caso "sem perfil", AC-9)
-select config.provisionar_usuario('00000000-0000-0000-0000-000000000001', 'admin', 'Admin Teste');
-select config.provisionar_usuario('00000000-0000-0000-0000-000000000002', 'escritorio', 'Escritorio Teste');
-select config.provisionar_usuario('00000000-0000-0000-0000-000000000003', 'tecnico', 'Tecnico Teste');
+select config.provisionar_usuario('00000000-0000-0000-0000-000000000001', 'superadmin', 'Superadmin Teste');
+select config.provisionar_usuario('00000000-0000-0000-0000-000000000002', 'supervisor', 'Supervisor Teste');
+select config.provisionar_usuario('00000000-0000-0000-0000-000000000003', 'colaborador', 'Colaborador Teste');
 select config.provisionar_usuario('00000000-0000-0000-0000-000000000004', 'cliente-sindico', 'Sindico Teste');
 
 -- 1 linha por tabela de domínio (seed via superuser, bypassa RLS)
@@ -55,20 +59,20 @@ reset role;
 -- set_papel(uuid, papel|null) → seta o contexto de authenticated simulando o JWT pós-hook
 
 -- ═══════════════════════ pcm.clientes ═══════════════════════════════════════
--- select: admin, escritorio, tecnico | insert/update: admin, escritorio
+-- select: superadmin, supervisor, colaborador | insert/update: superadmin, supervisor
 
 set local role authenticated;
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"tecnico"}';
-select is((select count(*) from pcm.clientes)::int, 1, 'tecnico le pcm.clientes');
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"colaborador"}';
+select is((select count(*) from pcm.clientes)::int, 1, 'colaborador le pcm.clientes');
 select throws_ok(
   $$ insert into pcm.clientes (nome, created_by) values ('x', '00000000-0000-0000-0000-000000000003') $$,
-  '42501', null, 'tecnico NAO insere em pcm.clientes'
+  '42501', null, 'colaborador NAO insere em pcm.clientes'
 );
 
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","user_role":"escritorio"}';
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","user_role":"supervisor"}';
 select lives_ok(
   $$ insert into pcm.clientes (nome, created_by) values ('y', '00000000-0000-0000-0000-000000000002') $$,
-  'escritorio insere em pcm.clientes'
+  'supervisor insere em pcm.clientes'
 );
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000004","user_role":"cliente-sindico"}';
@@ -80,25 +84,25 @@ select is((select count(*) from pcm.clientes)::int, 0, 'sem papel NAO le pcm.cli
 reset role;
 
 -- ═══════════════════════ pcm.ordens_servico ═════════════════════════════════
--- select: admin, escritorio, tecnico | insert/update: admin, escritorio
+-- select: superadmin, supervisor, colaborador | insert/update: superadmin, supervisor
 
 set local role authenticated;
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"tecnico"}';
-select is((select count(*) from pcm.ordens_servico)::int, 1, 'tecnico le pcm.ordens_servico');
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"colaborador"}';
+select is((select count(*) from pcm.ordens_servico)::int, 1, 'colaborador le pcm.ordens_servico');
 -- UPDATE bloqueado pela USING da policy não lança 42501 (diferente de INSERT/WITH CHECK) — a
 -- policy simplesmente não seleciona nenhuma linha para atualizar. O gate real é "0 linhas
 -- afetadas", não exceção.
-update pcm.ordens_servico set titulo = 'tecnico tentou alterar' where id = '20000000-0000-0000-0000-000000000001';
+update pcm.ordens_servico set titulo = 'colaborador tentou alterar' where id = '20000000-0000-0000-0000-000000000001';
 select is(
   (select titulo from pcm.ordens_servico where id = '20000000-0000-0000-0000-000000000001'),
   'OS de teste',
-  'tecnico NAO edita pcm.ordens_servico (RLS filtra a linha — 0 afetadas)'
+  'colaborador NAO edita pcm.ordens_servico (RLS filtra a linha — 0 afetadas)'
 );
 
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","user_role":"escritorio"}';
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","user_role":"supervisor"}';
 select lives_ok(
-  $$ update pcm.ordens_servico set titulo = 'alterado por escritorio' where id = '20000000-0000-0000-0000-000000000001' $$,
-  'escritorio edita pcm.ordens_servico'
+  $$ update pcm.ordens_servico set titulo = 'alterado por supervisor' where id = '20000000-0000-0000-0000-000000000001' $$,
+  'supervisor edita pcm.ordens_servico'
 );
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000004","user_role":"cliente-sindico"}';
@@ -107,21 +111,21 @@ select is((select count(*) from pcm.ordens_servico)::int, 0, 'cliente-sindico NA
 reset role;
 
 -- ═══════════════════════ atendimento.* ═══════════════════════════════════════
--- select/insert/update: admin, escritorio | tecnico e cliente-sindico SEM acesso
+-- select/insert/update: superadmin, supervisor | colaborador e cliente-sindico SEM acesso
 
 set local role authenticated;
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","user_role":"escritorio"}';
-select is((select count(*) from atendimento.config_ze)::int, 1, 'escritorio le atendimento.config_ze');
-select is((select count(*) from atendimento.wa_messages)::int, 1, 'escritorio le atendimento.wa_messages');
-select is((select count(*) from atendimento.wa_queue)::int, 1, 'escritorio le atendimento.wa_queue');
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","user_role":"supervisor"}';
+select is((select count(*) from atendimento.config_ze)::int, 1, 'supervisor le atendimento.config_ze');
+select is((select count(*) from atendimento.wa_messages)::int, 1, 'supervisor le atendimento.wa_messages');
+select is((select count(*) from atendimento.wa_queue)::int, 1, 'supervisor le atendimento.wa_queue');
 
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"tecnico"}';
-select is((select count(*) from atendimento.config_ze)::int, 0, 'tecnico NAO le atendimento.config_ze');
-select is((select count(*) from atendimento.wa_messages)::int, 0, 'tecnico NAO le atendimento.wa_messages');
-select is((select count(*) from atendimento.wa_queue)::int, 0, 'tecnico NAO le atendimento.wa_queue');
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"colaborador"}';
+select is((select count(*) from atendimento.config_ze)::int, 0, 'colaborador NAO le atendimento.config_ze');
+select is((select count(*) from atendimento.wa_messages)::int, 0, 'colaborador NAO le atendimento.wa_messages');
+select is((select count(*) from atendimento.wa_queue)::int, 0, 'colaborador NAO le atendimento.wa_queue');
 select throws_ok(
   $$ insert into atendimento.wa_queue (queue_key, wait_until) values ('x', now()) $$,
-  '42501', null, 'tecnico NAO insere em atendimento.wa_queue'
+  '42501', null, 'colaborador NAO insere em atendimento.wa_queue'
 );
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000004","user_role":"cliente-sindico"}';
@@ -130,21 +134,21 @@ select is((select count(*) from atendimento.config_ze)::int, 0, 'cliente-sindico
 reset role;
 
 -- ═══════════════════════ comercial.leads ═════════════════════════════════════
--- select/insert/update: admin, escritorio | demais SEM acesso
+-- select/insert/update: superadmin, supervisor | demais SEM acesso
 
 set local role authenticated;
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001","user_role":"admin"}';
-select is((select count(*) from comercial.leads)::int, 1, 'admin le comercial.leads');
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001","user_role":"superadmin"}';
+select is((select count(*) from comercial.leads)::int, 1, 'superadmin le comercial.leads');
 select lives_ok(
-  $$ insert into comercial.leads (nome, created_by) values ('lead admin', '00000000-0000-0000-0000-000000000001') $$,
-  'admin insere em comercial.leads'
+  $$ insert into comercial.leads (nome, created_by) values ('lead superadmin', '00000000-0000-0000-0000-000000000001') $$,
+  'superadmin insere em comercial.leads'
 );
 
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"tecnico"}';
-select is((select count(*) from comercial.leads)::int, 0, 'tecnico NAO le comercial.leads');
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"colaborador"}';
+select is((select count(*) from comercial.leads)::int, 0, 'colaborador NAO le comercial.leads');
 select throws_ok(
   $$ insert into comercial.leads (nome, created_by) values ('x', '00000000-0000-0000-0000-000000000003') $$,
-  '42501', null, 'tecnico NAO insere em comercial.leads'
+  '42501', null, 'colaborador NAO insere em comercial.leads'
 );
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000005"}';
@@ -153,31 +157,31 @@ select is((select count(*) from comercial.leads)::int, 0, 'sem papel NAO le come
 reset role;
 
 -- ═══════════════════════ config.feature_flags ═══════════════════════════════
--- select: admin, escritorio | insert/update: admin apenas
+-- select: superadmin, supervisor | insert/update: superadmin apenas
 
 set local role authenticated;
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","user_role":"escritorio"}';
-select is((select count(*) from config.feature_flags)::int, 1, 'escritorio le config.feature_flags');
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","user_role":"supervisor"}';
+select is((select count(*) from config.feature_flags)::int, 1, 'supervisor le config.feature_flags');
 select throws_ok(
   $$ insert into config.feature_flags (chave) values ('nova_flag') $$,
-  '42501', null, 'escritorio NAO insere em config.feature_flags (somente leitura)'
+  '42501', null, 'supervisor NAO insere em config.feature_flags (somente leitura)'
 );
 
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001","user_role":"admin"}';
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001","user_role":"superadmin"}';
 select lives_ok(
-  $$ insert into config.feature_flags (chave) values ('flag_admin') $$,
-  'admin insere em config.feature_flags'
+  $$ insert into config.feature_flags (chave) values ('flag_superadmin') $$,
+  'superadmin insere em config.feature_flags'
 );
 
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"tecnico"}';
-select is((select count(*) from config.feature_flags)::int, 0, 'tecnico NAO le config.feature_flags');
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"colaborador"}';
+select is((select count(*) from config.feature_flags)::int, 0, 'colaborador NAO le config.feature_flags');
 
 reset role;
 
 -- ═══════════════════════ config.usuarios (auto-referência) ═══════════════════
 
 set local role authenticated;
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"tecnico"}';
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"colaborador"}';
 select is(
   (select count(*) from config.usuarios where user_id = '00000000-0000-0000-0000-000000000003')::int, 1,
   'usuario le o proprio registro em config.usuarios'
@@ -187,8 +191,8 @@ select is(
   'usuario NAO le registro de outros em config.usuarios'
 );
 
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001","user_role":"admin"}';
-select is((select count(*) from config.usuarios)::int, 4, 'admin le todos os registros de config.usuarios');
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001","user_role":"superadmin"}';
+select is((select count(*) from config.usuarios)::int, 4, 'superadmin le todos os registros de config.usuarios');
 
 reset role;
 

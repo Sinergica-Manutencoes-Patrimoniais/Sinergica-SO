@@ -48,9 +48,9 @@ fotos, checklist, assinatura offline).
 ## Papéis de usuário
 | Papel | Acesso |
 |-------|--------|
-| `admin` | Acesso total; configura Agente Zé, integrações, usuários |
-| `escritorio` | Operacional — clientes, chamados, backlog, visitas, propostas, relatórios, planos |
-| `tecnico` | Restrito — leitura geral + escrita no próprio (OS onde é responsável, inspeções) |
+| `superadmin` | Acesso total; configura Agente Zé, integrações, usuários |
+| `supervisor` | Operacional — clientes, chamados, backlog, visitas, propostas, relatórios, planos |
+| `colaborador` | Restrito — leitura geral + escrita no próprio (OS onde é responsável, inspeções) |
 | `cliente-sindico` | WhatsApp (Zé) + Portal (Área do Cliente) — só dados do próprio condomínio |
 
 ## Regra de ouro da integração Auvo

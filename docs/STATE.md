@@ -10,28 +10,30 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-02 por @analyst/@architect (estudo + specs da integração Auvo — 3 stories novas no ROADMAP: `E01-S09/S10/S11`. Commits locais, sem push — instrução explícita)
+**Última atualização:** 2026-07-02 por @dev (E00-S08 — renomeia papéis RBAC para
+superadmin/supervisor/colaborador + provisiona o primeiro superadmin, `sinergicaengenharia@gmail.com`)
 
 ## Status geral
-**Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) mergeadas em
-`main` **e aplicadas em produção**. E00-S07 (hardening v3.3.0/v3.4.0) implementada em commits
-locais na branch `chore/E00-S07-hardening-padrao-v3.2.0`, aguardando o usuário decidir sobre
-push/PR (instrução explícita: não fazer). Repo `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`.
-Supabase **reprovisionado** (`nudannsrfvjggoergvyn`) — schemas, migrations, GRANTs, Custom Access
-Token Hook e Data API expostos, confirmados via query direta/Management API.
+**Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) + E00-S07
+(hardening v3.4.0) **mergeadas em `main` e aplicadas em produção** (PRs #4/#5/#6/#7). E00-S08
+(rename de papéis) em implementação na branch `feat/E00-S08-renomear-papeis-rbac`. Repo
+`Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`. Supabase **reprovisionado**
+(`nudannsrfvjggoergvyn`) — schemas, migrations, GRANTs, Custom Access Token Hook e Data API
+expostos, confirmados via query direta/Management API.
 **Gates locais (`pnpm run ci:local`, = `lefthook run pre-push`):** esteira ✅ · fidelidade ✅ ·
 mermaid ✅ · migrations (Squawk + RLS-GRANT) ✅ · lint ✅ · typecheck ✅ · arch:check ✅ · build ✅ ·
 test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de verdade).
 
 ## Em andamento / próximo passo
-- **Branch atual:** `chore/E00-S07-hardening-padrao-v3.2.0` — comecei trazendo o hardening v3.2.0
-  (10 bugs achados na 1ª pipeline real: `pnpm/action-setup`, Node 22, gitleaks falso-positivo,
-  vite vuln, migration sem GRANT, pgTAP com premissa errada, hook Auth/schemas não registrados —
-  ver Decisões de 2026-07-02 mais antigas). No meio do trabalho, o vault evoluiu de novo
-  (v3.3.0→v3.4.0): infra caseira (`ci-local.mjs`) trocada por **Lefthook** + **Squawk**
-  (segurança de migration); nova skill `/revisao-adversarial` (tenta quebrar cada AC antes do
-  PASS). Reconciliei tudo sem duplicar — ver `specs/E00-S07-hardening-padrao-v3.2.0/tasks.md`
-  para o detalhe completo (25 tasks, quase todas `done`).
+- **Branch atual:** `feat/E00-S08-renomear-papeis-rbac` — usuário pediu para renomear os papéis
+  RBAC (`admin/escritorio/tecnico` → `superadmin/supervisor/colaborador`, `cliente-sindico`
+  inalterado, confirmado 1:1 via pergunta de esclarecimento) e cadastrar
+  `sinergicaengenharia@gmail.com` como superadmin, porque vai começar a desenvolver
+  auth/autorização e, na sequência, o PCM. Feito: usuário criado no Supabase Auth + provisionado
+  com papel `admin` (valor válido hoje — a migration `0004` desta story remapeia
+  automaticamente para `superadmin` quando mergear, sem passo manual extra). Migration `0004`
+  usa `alter policy` (não recria) nas ~19 policies de `0002_E00-S05_perfis_rbac.sql`. Ver
+  `specs/E00-S08-renomear-papeis-rbac/tasks.md`.
 - **Pendente (SPEC_DEVIATION, aguardando aprovação do usuário):** (1) criar de fato
   `.claude/skills/revisao-adversarial/SKILL.md` — o classificador de auto-modo bloqueou por ser
   arquivo novo de comportamento padrão, mandato geral não foi específico o suficiente; conteúdo
@@ -40,8 +42,9 @@ test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de
   VITE_SUPABASE_ANON_KEY) pelo mesmo motivo — só o path `.triviaiox/` foi adicionado (mesma
   categoria já aprovada de `.triviaiox-core/`).
 - **Ainda manual (não coberto por CI/API):** login no browser para validar AC-1,2,4-7 do E00-S05
-  fim a fim; rotacionar o JWT secret legado do projeto Supabase (exposto sem querer num
-  diagnóstico de sessão anterior) — ver Bloqueios.
+  fim a fim (agora com o superadmin já provisionado, dá pra testar de verdade); rotacionar o JWT
+  secret legado do projeto Supabase (exposto sem querer num diagnóstico de sessão anterior) —
+  ver Bloqueios.
 - **Integração Auvo — estudo e specs concluídos** (pedido explícito do usuário: "veja aonde
   acoplar as informações do Auvo... gere as specs para desenvolver na sequência" — só estudo e
   planejamento, sem implementar código). Cruzei `docs/ARCHITECTURE.md`, ADR-0001,
@@ -74,13 +77,22 @@ test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de
 | `E00-S04-sidebar-logo` | implementado, todos os ACs verdes | typecheck ✅ · lint ✅ |
 | `E00-S05-autenticacao-autorizacao` | **implementado**, todos os ACs verdes (`db-tests` no CI) | typecheck ✅ · lint ✅ · test ✅ · `supabase test db` ✅ (29/29, via CI/Docker) |
 | `E00-S06-sync-padrao-os-v3` | implementado, todos os ACs verdes | audit-esteira ✅ · eval:spec ✅ · typecheck ✅ · lint ✅ · test ✅ · arch:check ✅ |
-| `E00-S07-hardening-padrao-v3.2.0` | implementado, `ci:local` verde — commits locais, sem push | `pnpm run ci:local` ✅ (esteira/fidelidade/mermaid/migrations/lint/typecheck/arch/build/test) |
+| `E00-S07-hardening-padrao-v3.2.0` | **implementado e mergeado** (PR #7) | `pnpm run ci:local` ✅ (esteira/fidelidade/mermaid/migrations/lint/typecheck/arch/build/test) |
+| `E00-S08-renomear-papeis-rbac` | implementado, usuário superadmin já provisionado | aguardando `ci:local`/PR |
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
 | `E01-S09-integracao-auvo-fundacao` | spec+domain+design prontos, **implementação não iniciada** | revisão humana (Fabrício) |
 | `E01-S10-integracao-auvo-webhook-status` | spec pronta, **implementação não iniciada** | depende de E01-S09 |
 | `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | spec pronta, **implementação não iniciada** | depende de E01-S09 |
 
 ## Decisões recentes
+- 2026-07-02: Papéis RBAC renomeados (E00-S08) — `admin→superadmin`, `escritorio→supervisor`,
+  `tecnico→colaborador`; `cliente-sindico` inalterado (ator externo, fora da hierarquia de
+  colaborador). Confirmado com o usuário: rename 1:1, mesma matriz de permissão de E00-S05, sem
+  nova regra. Migration `0004` usa `alter policy` (não `drop`+`create`) nas ~19 policies de
+  `0002_E00-S05_perfis_rbac.sql`, e remapeia dados existentes automaticamente (drop constraint →
+  update → add constraint nova, nessa ordem — senão o remap violaria a constraint antiga).
+  `docs/adr/0003` não foi editado (mecanismo JWT-claim/`config.usuarios` não mudou, só o
+  vocabulário — não justifica ADR novo).
 - 2026-07-02: Integração Auvo decomposta em 3 stories sequenciais em vez de uma só — `E01-S09`
   (fundação: cliente HTTP + sync cliente + criação de task, tier arquitetural, único com
   `design.md`) → `E01-S10` (webhook de status, consome o design de S09) → `E01-S11` (sync
@@ -169,8 +181,8 @@ test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de
 - [ ] **Decidir sobre os `regexes` de allowlist extra do `.gitleaks.toml`** (`EXAMPLE`,
       `your-api-key-here`, `VITE_SUPABASE_ANON_KEY`) do scaffold v3.2.0 — não trazidos por padrão
       (enfraqueceriam o gate de secret scanning sem pedido específico). Quem destrava: Lucas.
-- [ ] **Push/PR da branch `chore/E00-S07-hardening-padrao-v3.2.0`** — instrução explícita foi não
-      fazer push/merge nesta story; `pnpm run ci:local` está verde, pronta quando Lucas decidir.
+- [x] ~~Push/PR da branch `chore/E00-S07-hardening-padrao-v3.2.0`~~ ✅ Resolvido — PR #7 mergeado
+      em `main`.
 - [ ] **Definir `taskTypeId` Auvo de `levantamento`/`emergencial` e mapeamento GUT→`priority`**
       (decisão de produto do Fabrício) — bloqueia só `AC-7` de `E01-S09`, resto da story pode ser
       implementado sem isso. Ver `specs/E01-S09-integracao-auvo-fundacao/design.md` → Questões em
@@ -185,6 +197,10 @@ test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de
       auto-injetadas pelo runtime). Falta só disparar o workflow uma vez quando `E01-S09` for
       implementada de verdade (hoje não há Edge Function nenhuma ainda, path do gatilho não
       dispara vazio).
+- [ ] **Merge da PR de `E00-S08`** — só depois disso a migration `0004` aplica em produção via
+      GitHub Integration nativa e a linha de `sinergicaengenharia@gmail.com` em
+      `config.usuarios` remapeia de `admin` para `superadmin` automaticamente (o login já
+      funciona hoje com acesso total, só o *label* do papel muda no merge). Quem destrava: Lucas.
 
 ## Ideias adiadas / backlog técnico
 - Evals de laudo SPDA (comparação de saída LLM com laudos validados por engenheiro) → gatilho: primeira geração de laudo em produção
