@@ -8,6 +8,7 @@ import {
   FileBarChart2,
   FileText,
   HardHat,
+  Home,
   LayoutDashboard,
   LayoutGrid,
   LogOut,
@@ -27,6 +28,7 @@ import { useAuth } from "./auth-context";
 // ─── tipos ──────────────────────────────────────────────────────────────────
 
 type ModuloId =
+  | "inicio"
   | "pcm"
   | "atendimento"
   | "comercial"
@@ -58,6 +60,12 @@ interface NavGroup {
 // ─── dados ───────────────────────────────────────────────────────────────────
 
 const MODULOS: ModuloTab[] = [
+  {
+    id: "inicio",
+    label: "Início",
+    icon: Home,
+    descricao: "Visão geral consolidada de todos os módulos do Sinérgica SO.",
+  },
   {
     id: "pcm",
     label: "PCM · Operação",
@@ -142,6 +150,81 @@ const PCM_NAV: NavGroup[] = [
 ];
 
 // ─── mock data ────────────────────────────────────────────────────────────────
+
+interface ModuloResumo {
+  moduloId: ModuloId;
+  kpis: Array<{ label: string; valor: string }>;
+  alerta?: string;
+}
+
+const DASHBOARD_GERAL: ModuloResumo[] = [
+  {
+    moduloId: "pcm",
+    kpis: [
+      { label: "OS Abertas", valor: "12" },
+      { label: "SLA no Prazo", valor: "87%" },
+      { label: "Backlog", valor: "23 itens" },
+    ],
+  },
+  {
+    moduloId: "atendimento",
+    kpis: [
+      { label: "Chamados hoje", valor: "8" },
+      { label: "Pendentes", valor: "3" },
+    ],
+  },
+  {
+    moduloId: "comercial",
+    kpis: [
+      { label: "Leads ativos", valor: "5" },
+      { label: "Contratos ativos", valor: "3" },
+    ],
+  },
+  {
+    moduloId: "financeiro",
+    kpis: [
+      { label: "Recebido (mês)", valor: "R$ 48,5k" },
+      { label: "Inadimplentes", valor: "1" },
+    ],
+    alerta: "1 contrato",
+  },
+  {
+    moduloId: "operacao",
+    kpis: [
+      { label: "Itens críticos", valor: "2" },
+      { label: "Pedidos pend.", valor: "4" },
+    ],
+    alerta: "2 itens",
+  },
+  {
+    moduloId: "marketing",
+    kpis: [
+      { label: "Publicações/sem.", valor: "3" },
+      { label: "Alcance", valor: "1.2k" },
+    ],
+  },
+  {
+    moduloId: "growth",
+    kpis: [
+      { label: "Leads (mês)", valor: "12" },
+      { label: "Conversão", valor: "18%" },
+    ],
+  },
+  {
+    moduloId: "gestao",
+    kpis: [
+      { label: "Alertas críticos", valor: "0" },
+      { label: "Score geral", valor: "94" },
+    ],
+  },
+  {
+    moduloId: "area-cliente",
+    kpis: [
+      { label: "Portais ativos", valor: "15" },
+      { label: "OS via portal", valor: "2" },
+    ],
+  },
+];
 
 const KPIS = [
   { label: "OS Abertas", valor: "12", sub: "+3 hoje", trend: "up" },
@@ -277,6 +360,62 @@ function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
   );
 }
 
+function DashboardGeral({ onSelect }: { onSelect: (id: ModuloId) => void }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      {DASHBOARD_GERAL.map((resumo) => {
+        const modulo = MODULOS.find((m) => m.id === resumo.moduloId);
+        if (!modulo) return null;
+        const Icon = modulo.icon;
+        return (
+          <div
+            key={resumo.moduloId}
+            className="bg-card rounded-[10px] border border-line overflow-hidden flex flex-col"
+          >
+            {/* Header */}
+            <div className="bg-navy px-4 py-3 flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0">
+                <Icon className="w-4 h-4 text-white" strokeWidth={1.8} />
+              </div>
+              <span className="text-sm font-semibold text-white flex-1 truncate">
+                {modulo.label}
+              </span>
+              {resumo.alerta && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1a1000] bg-amber rounded-full px-2 py-0.5 shrink-0">
+                  ⚠ {resumo.alerta}
+                </span>
+              )}
+            </div>
+
+            {/* KPIs */}
+            <div className="px-4 py-3 flex flex-col gap-2.5 flex-1">
+              {resumo.kpis.map((kpi) => (
+                <div key={kpi.label} className="flex items-baseline justify-between gap-2">
+                  <span className="text-xs text-ink-3 truncate">{kpi.label}</span>
+                  <span className="text-lg font-bold font-brand text-ink tabular-nums shrink-0">
+                    {kpi.valor}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 pb-4">
+              <button
+                type="button"
+                onClick={() => onSelect(resumo.moduloId)}
+                className="w-full text-center text-xs font-semibold text-orange hover:text-orange-deep transition-colors cursor-pointer py-1"
+              >
+                Ver módulo →
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function PcmDashboard() {
   return (
     <div className="flex flex-col gap-6">
@@ -381,7 +520,7 @@ function PcmDashboard() {
 
 export function HomePage() {
   const { user, logout } = useAuth();
-  const [activeModulo, setActiveModulo] = useState<ModuloId>("pcm");
+  const [activeModulo, setActiveModulo] = useState<ModuloId>("inicio");
 
   const modulo = MODULOS.find((m) => m.id === activeModulo);
   const initials =
@@ -391,6 +530,11 @@ export function HomePage() {
       .map((w) => w[0]?.toUpperCase() ?? "")
       .join("") ?? "?";
   const firstName = user?.name.split(" ")[0] ?? "usuário";
+
+  const greetingSub =
+    activeModulo === "inicio"
+      ? "Sinérgica Manutenções · Visão Geral"
+      : `Sinérgica Manutenções · ${modulo?.label ?? ""}`;
 
   return (
     <div className="flex h-screen bg-paper overflow-hidden">
@@ -411,7 +555,27 @@ export function HomePage() {
 
         {/* Nav groups */}
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
-          {activeModulo === "pcm" ? (
+          {activeModulo === "inicio" ? (
+            <div>
+              <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                MÓDULOS
+              </p>
+              {MODULOS.filter((m) => m.id !== "inicio").map((m) => {
+                const Icon = m.icon;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setActiveModulo(m.id)}
+                    className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                  >
+                    <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                    <span className="truncate">{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : activeModulo === "pcm" ? (
             PCM_NAV.map((group) => (
               <div key={group.titulo}>
                 <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
@@ -507,15 +671,17 @@ export function HomePage() {
           {/* Greeting */}
           <div className="mb-6">
             <h1 className="text-xl font-bold text-ink">Olá, {firstName}! 👋</h1>
-            <p className="text-sm text-ink-3 mt-0.5">
-              {activeModulo === "pcm"
-                ? "Sinérgica Manutenções · PCM Operação"
-                : `Sinérgica Manutenções · ${modulo?.label ?? ""}`}
-            </p>
+            <p className="text-sm text-ink-3 mt-0.5">{greetingSub}</p>
           </div>
 
           {/* Conteúdo por módulo */}
-          {activeModulo === "pcm" || !modulo ? <PcmDashboard /> : <EmConstrucao modulo={modulo} />}
+          {activeModulo === "inicio" ? (
+            <DashboardGeral onSelect={setActiveModulo} />
+          ) : activeModulo === "pcm" ? (
+            <PcmDashboard />
+          ) : modulo ? (
+            <EmConstrucao modulo={modulo} />
+          ) : null}
         </main>
       </div>
     </div>
