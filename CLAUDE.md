@@ -20,7 +20,8 @@ runtime** — o vault Obsidian é só espelho humano.
 - **Stack:** React 19 + Vite + TypeScript + Tailwind; Supabase (Postgres + Edge Functions + Storage);
   Netlify; OpenRouter (LLM); Auvo (campo); Evolution API (WhatsApp).
 - **PCM é o system of record**; Auvo é o braço de campo (execução insubstituível).
-- **Papéis:** admin · escritorio · tecnico · cliente-síndico.
+- **Papéis:** superadmin · supervisor · colaborador · cliente-síndico (renomeado de
+  admin/escritorio/tecnico em E00-S08 — mesma matriz de permissão).
 
 ## Regras aprendidas em sessões anteriores (leia sempre)
 

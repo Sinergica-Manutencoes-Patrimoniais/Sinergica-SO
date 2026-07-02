@@ -7,7 +7,7 @@ function gatewayMock(overrides: Partial<AuthGateway> = {}): AuthGateway {
     signInWithPassword: vi.fn(async () => ({ userId: "u1", email: "a@b.com" })),
     signOut: vi.fn(async () => undefined),
     getSession: vi.fn(async () => ({ userId: "u1", email: "a@b.com" })),
-    getPerfil: vi.fn(async () => ({ papel: "tecnico", nome: "Tecnico Teste" })),
+    getPerfil: vi.fn(async () => ({ papel: "colaborador", nome: "Colaborador Teste" })),
     onAuthStateChange: vi.fn(() => () => undefined),
     ...overrides,
   };
@@ -28,7 +28,7 @@ describe("getSession", () => {
     const gateway = gatewayMock();
     expect(await getSession(gateway)).toEqual({
       status: "autenticado",
-      usuario: { id: "u1", email: "a@b.com", nome: "Tecnico Teste", papel: "tecnico" },
+      usuario: { id: "u1", email: "a@b.com", nome: "Colaborador Teste", papel: "colaborador" },
     });
   });
 });

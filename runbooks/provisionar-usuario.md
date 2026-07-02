@@ -13,16 +13,17 @@ alwaysApply: false
 
 ## Cenário
 
-Alguém da Sinérgica ou da Trívia precisa de acesso ao Sinérgica SO (admin, escritório ou técnico).
+Alguém da Sinérgica ou da Trívia precisa de acesso ao Sinérgica SO (superadmin, supervisor ou
+colaborador — renomeado de admin/escritorio/tecnico em E00-S08, mesma matriz de permissão).
 `cliente-sindico` **não** passa por este runbook — o acesso dele é via WhatsApp/portal (E09, ainda
 não implementado).
 
 ## Pré-requisitos
 
-- Acesso ao **Supabase Dashboard** do projeto (`ljvpmcamqydeklvkiigy.supabase.co`) com permissão
-  de Authentication e SQL Editor — só `admin`/`@devops` tem isso hoje.
-- Papel a atribuir: `admin`, `escritorio` ou `tecnico` (ver `docs/PROJECT.md` para o que cada um
-  pode fazer).
+- Acesso ao **Supabase Dashboard** do projeto (`nudannsrfvjggoergvyn.supabase.co`) com permissão
+  de Authentication e SQL Editor — só `superadmin`/`@devops` tem isso hoje.
+- Papel a atribuir: `superadmin`, `supervisor` ou `colaborador` (ver `docs/PROJECT.md` para o que
+  cada um pode fazer).
 
 ## Procedimento
 
@@ -39,13 +40,13 @@ No **SQL Editor** do Dashboard (roda como um role que bypassa RLS — não use i
 ```sql
 select config.provisionar_usuario(
   p_user_id => '<uuid do passo 1>',
-  p_papel   => 'escritorio', -- admin | escritorio | tecnico
+  p_papel   => 'supervisor', -- superadmin | supervisor | colaborador
   p_nome    => 'Nome Completo da Pessoa'
 );
 ```
 
-A função valida o papel contra a constraint (`admin`, `escritorio`, `tecnico`, `cliente-sindico`)
-— papel inválido retorna erro claro, não insere linha inconsistente.
+A função valida o papel contra a constraint (`superadmin`, `supervisor`, `colaborador`,
+`cliente-sindico`) — papel inválido retorna erro claro, não insere linha inconsistente.
 
 ### Passo 3 — Confirmar
 Peça para a pessoa logar em `/login` com o e-mail e a senha temporária, e trocar a senha (fluxo
@@ -67,6 +68,6 @@ o e-mail de reset padrão do Supabase).
   (confira os 4 valores exatos, sem acento/maiúscula diferente).
 
 ## Autoridade
-- **Executa:** `admin`/`@devops` (único com acesso ao Dashboard/SQL Editor nesta fase).
+- **Executa:** `superadmin`/`@devops` (único com acesso ao Dashboard/SQL Editor nesta fase).
 - Não é possível fazer isso de dentro da aplicação — `config.provisionar_usuario` tem `execute`
   revogado de `authenticated`/`anon` de propósito (ver `supabase/migrations/0002_E00-S05_perfis_rbac.sql`).

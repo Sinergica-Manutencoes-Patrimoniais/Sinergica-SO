@@ -27,7 +27,7 @@ prestação de contas eram feitas por PDF enviado manualmente.
 
 ## Autenticação
 - Login por email/senha (Supabase Auth) — convite enviado pelo escritório.
-- Sem acesso ao dashboard principal (`escritorio`/`admin`).
+- Sem acesso ao dashboard principal (`supervisor`/`superadmin`).
 
 ## Interface
 - Design simplificado, orientado ao síndico leigo.

@@ -792,10 +792,10 @@ Resumo (detalhe completo em *Mapeamento Auvo x PCM como Hub (29-06-2026)*):
 
 | Papel | Acesso |
 |-------|--------|
-| `admin` | Total — configura agentes de IA, integrações, usuários, parâmetros |
-| `escritorio` | Operacional — clientes, chamados, backlog, visitas, propostas, relatórios, financeiro |
-| `comercial` | Funil, propostas, contratos (pode ser refinamento de `escritorio`) |
-| `tecnico` | Restrito — leitura geral + escrita no próprio (OS, inspeções) + agente de apoio |
+| `superadmin` | Total — configura agentes de IA, integrações, usuários, parâmetros |
+| `supervisor` | Operacional — clientes, chamados, backlog, visitas, propostas, relatórios, financeiro |
+| `comercial` | Funil, propostas, contratos (pode ser refinamento de `supervisor`) |
+| `colaborador` | Restrito — leitura geral + escrita no próprio (OS, inspeções) + agente de apoio |
 | `cliente-sindico` | Portal + WhatsApp (Zé) — só dados do próprio condomínio |
 
 Princípio: **menor privilégio**; dado financeiro sensível nunca exposto ao síndico além da própria
