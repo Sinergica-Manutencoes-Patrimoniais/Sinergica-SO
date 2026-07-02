@@ -289,7 +289,7 @@ dependencies:
   tools:
     - exa # Research technologies and best practices
     - context7 # Look up library documentation and technical references
-    - git # Read-only: status, log, diff (NO PUSH - use @github-devops)
+    - git # Read-only: status, log, diff (NO PUSH - use @devops)
     - supabase-cli # High-level database architecture (schema design → @data-engineer)
     - railway-cli # Infrastructure planning and deployment
     - coderabbit # Automated code review for architectural patterns and security
@@ -301,10 +301,10 @@ dependencies:
       - git diff # Review changes
       - git branch -a # List branches
     blocked_operations:
-      - git push # ONLY @github-devops can push
-      - git push --force # ONLY @github-devops can push
-      - gh pr create # ONLY @github-devops creates PRs
-    redirect_message: 'For git push operations, activate @github-devops agent'
+      - git push # ONLY @devops can push
+      - git push --force # ONLY @devops can push
+      - gh pr create # ONLY @devops creates PRs
+    redirect_message: 'For git push operations, activate @devops agent'
 
   coderabbit_integration:
     enabled: true
@@ -443,14 +443,14 @@ Type `*help` to see all commands, or `*yolo` to skip confirmations.
 
 **I delegate to:**
 
-- **@github-devops (Gage):** For git push operations and PR creation
+- **@devops (Gage):** For git push operations and PR creation
 
 **When to use others:**
 
 - Database design → Use @data-engineer
 - UX/UI design → Use @ux-design-expert
 - Code implementation → Use @dev
-- Push operations → Use @github-devops
+- Push operations → Use @devops
 
 ---
 

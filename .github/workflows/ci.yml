@@ -23,7 +23,8 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # dependency-cruiser 18 exige Node ^22||^24||>=26 (arch:check falhava em "20").
+          node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
@@ -35,7 +36,7 @@ jobs:
 
       # Gates de segurança (BLOQUEANTES)
       # gitleaks via CLI (MIT, grátis) — a gitleaks-action exige GITLEAKS_LICENSE em repos de
-      # organização e falha silenciosamente sem ela.
+      # organização (caso deste repo) e falha sem ela.
       - name: Secret scanning (gitleaks)
         run: |
           curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar -xz gitleaks
@@ -46,6 +47,8 @@ jobs:
       # Gates de código — só nos pacotes AFETADOS (turbo affected) para feedback rápido
       - name: Lint / typecheck / test (affected)
         run: pnpm turbo run lint typecheck test --filter="...[origin/${{ github.base_ref || 'main' }}]"
+      - name: Arquitetura (dependência DDD por máquina)
+        run: pnpm run arch:check
 
   migrations:
     runs-on: ubuntu-latest

@@ -28,6 +28,10 @@
       {
         "matcher": "Edit|Write",
         "hooks": [{ "type": "command", "command": "node scripts/check-story.mjs" }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": ".claude/hooks/enforce-git-push-authority.sh" }]
       }
     ]
   }
