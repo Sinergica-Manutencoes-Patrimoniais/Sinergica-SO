@@ -11,10 +11,10 @@ alwaysApply: false
 > Ver `seguranca/os-grade.md` (baseline OS obrigatório neste projeto).
 
 ## Dívidas herdadas do PCM v2 (evitar na recriação)
-> Estas são as issues do sistema legado — servem como LISTA NEGRA ao construir o Sinérgica OS.
+> Estas são as issues do sistema legado — servem como LISTA NEGRA ao construir o Sinérgica SO.
 > Não são dívidas do repositório atual, mas guias do que garantir por design.
 
-| ID | Origem (PCM v2) | O que evitar no Sinérgica OS |
+| ID | Origem (PCM v2) | O que evitar no Sinérgica SO |
 |----|-----------------|------------------------------|
 | LEGADO-001 | IDOR em `atualizar_chamado` — sem filtro por `client_id` | RLS FORCE com policy `WHERE client_id = auth.uid()` ou workspace isolado |
 | LEGADO-002 | 63 tabelas sem `FORCE RLS` | `ALTER TABLE ... FORCE ROW LEVEL SECURITY` em toda tabela na migration |
@@ -25,7 +25,7 @@ alwaysApply: false
 | LEGADO-007 | Login via GET (credenciais em logs) | Login via POST; nunca credenciais em query string ou URL |
 | LEGADO-008 | Webhook Auvo sem validação de assinatura HMAC | `crypto.ts` (_shared) com `constantTimeEqual` para validar HMAC |
 
-## Dívidas do Sinérgica OS (atuais)
+## Dívidas do Sinérgica SO (atuais)
 | ID | Descrição | Risco / impacto | Prio | Plano de correção | Status |
 |----|-----------|-----------------|------|-------------------|--------|
 | SEC-001 | Projeto Supabase ainda não provisionado — RLS/FORCE não verificada em prod | acesso indevido | P0 | provisionar no Mês 2 e aplicar `0001_schemas_dominio.sql` | aberto |

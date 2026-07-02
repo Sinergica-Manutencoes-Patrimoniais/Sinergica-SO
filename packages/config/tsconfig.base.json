@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Sinérgica OS — base TypeScript config (strict)",
+  "display": "Sinérgica SO — base TypeScript config (strict)",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",

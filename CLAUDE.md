@@ -1,13 +1,13 @@
 ---
 name: CLAUDE
-description: Convenções do agente para o Sinérgica OS (Padrão OS v2 + Triviaiox). Sempre ativo.
+description: Convenções do agente para o Sinérgica SO (Padrão SO v2 + Triviaiox). Sempre ativo.
 alwaysApply: true
 ---
 
-# CLAUDE.md — Sinérgica OS
+# CLAUDE.md — Sinérgica SO
 
-> Projeto: **Sinérgica OS** · Cliente: Sinérgica Manutenções · Perfil: **OS (monorepo multi-domínio)**
-> Desenvolvido pela Trívia Studio seguindo o **Padrão OS v2** (SDD + Triviaiox).
+> Projeto: **Sinérgica SO** · Cliente: Sinérgica Manutenções · Perfil: **SO (monorepo multi-domínio)**
+> Desenvolvido pela Trívia Studio seguindo o **Padrão SO v2** (SDD + Triviaiox).
 > Idioma: **PT-BR com termos técnicos em inglês** (spec, AC, bounded context, gate, ADR, RLS, etc.).
 
 Leia este arquivo antes de qualquer implementação. **É a fonte de verdade que o agente lê em

@@ -1,12 +1,12 @@
 ---
 name: ESCOPO-MESTRE
-description: Documento mestre de escopo do Sinérgica OS (produto) — dores do setor, 11 módulos, features com motivador, roadmap e checklist de aprovação. Puxe ao planejar qualquer módulo ou alinhar escopo com o cliente.
+description: Documento mestre de escopo do Sinérgica SO (produto) — dores do setor, 11 módulos, features com motivador, roadmap e checklist de aprovação. Puxe ao planejar qualquer módulo ou alinhar escopo com o cliente.
 alwaysApply: false
 ---
 
-# Sinérgica OS — Documento Mestre de Escopo
+# Sinérgica SO — Documento Mestre de Escopo
 
-> **Projeto:** Sinérgica OS · **Cliente:** Sinérgica Manutenções Patrimoniais · **Autor:** Trívia Studio
+> **Projeto:** Sinérgica SO · **Cliente:** Sinérgica Manutenções Patrimoniais · **Autor:** Trívia Studio
 > **Versão:** 1.1 · **Status:** escopo de referência (vivo) · **Para avaliação de:** Fabrício Medeiros
 
 > **Propósito.** Escopar, de ponta a ponta, o sistema operacional da Sinérgica: as dores do mercado de
@@ -23,7 +23,7 @@ alwaysApply: false
 
 ## ⚡ Resumo Executivo (1 página)
 
-**O quê.** O **Sinérgica OS** é o sistema operacional único da Sinérgica Manutenções — onde a
+**O quê.** O **Sinérgica SO** é o sistema operacional único da Sinérgica Manutenções — onde a
 liderança e o escritório operam a empresa inteira a partir de um só lugar. Ele **comanda o Auvo** (que
 segue na mão do técnico, no campo) e constrói ao redor tudo que falta hoje: visão por cliente, controle
 de backlog, preventivo conforme a lei, ciclo financeiro, comercial, atendimento com IA e portal do cliente.
@@ -104,7 +104,7 @@ condomínios e empresas em Campinas/SP. Como toda empresa do setor que cresce, e
 de uma operação coordenada por WhatsApp, planilhas e um app de campo (Auvo) sem um cérebro central
 que conecte comercial, operação, campo, financeiro e cliente.
 
-O **Sinérgica OS** é esse cérebro: um sistema operacional único onde a liderança **opera a empresa
+O **Sinérgica SO** é esse cérebro: um sistema operacional único onde a liderança **opera a empresa
 inteira a partir de um só lugar**. Ele não substitui o Auvo — o técnico continua no Auvo, no campo.
 Ele **comanda** o Auvo e é realimentado por ele, e ao redor disso constrói tudo que falta: visão
 360 por cliente, controle de backlog e SLA, plano preventivo legalmente conforme (PMOC, SPDA),
@@ -854,7 +854,7 @@ executivo; agentes comerciais (SDR/closer/CS) e agente de apoio ao técnico. Go-
 > Cada item traz a **pergunta** para o Fabrício **e** a **Recomendação** — o que 
 > responderíamos como especialistas do setor, para o cliente reagir a uma proposta concreta em vez de
 > partir do zero. Bloqueadores de produto, não técnicos. Origem em
-> *Sinérgica OS — Escopo Contratual (Cláusula 3ª)*.
+> *Sinérgica SO — Escopo Contratual (Cláusula 3ª)*.
 
 **D1 — Agentes comerciais (SDR / Closer / CS)**
 - *Pergunta:* Quais papéis a Sinérgica quer? Em quais canais? Agente próprio ou extensão do Zé?

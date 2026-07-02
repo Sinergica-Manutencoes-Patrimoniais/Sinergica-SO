@@ -1,6 +1,6 @@
-# Memory Index — Sinérgica OS
+# Memory Index — Sinérgica SO
 
-- [Projeto — Sinérgica OS](project-sinergica-os.md) — Casca concluída, 9 bounded contexts, stack, gates verdes, commit inicial feito
+- [Projeto — Sinérgica SO](project-sinergica-os.md) — Casca concluída, 9 bounded contexts, stack, gates verdes, commit inicial feito
 - [Usuário — Lucas (LmAzevedo94)](user-lucas.md) — Dono do projeto e do Triviaiox, parceiro da Trívia Studio
 - [Processo: Stories + Agentes Triviaiox](feedback-processo-stories.md) — OBRIGATÓRIO: ler ROADMAP → marcar owner → spec+tasks → agentes → implementar
 - [Git: NUNCA push direto para main](feedback-devops-branch-pr.md) — Sempre branch → PR → merge; push direto para main é proibido

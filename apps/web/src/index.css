@@ -1,6 +1,48 @@
 @import "tailwindcss";
 
+/* ── Sinérgica OS — Design System tokens ──────────────────────────────────────
+   Paleta extraída dos logos e peças oficiais da marca.
+   Navy (#1C2748) é a estrutura. Laranja (#E8731B) é cirúrgico (só CTA/ativo).
+   Papel quente (#F4F2EC) diferencia do dashboard genérico slate.
+   ──────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Fontes */
+  --font-brand: "Saira", system-ui, sans-serif; /* numerais, labels caixa-alta */
+
+  /* ── Marca ─────────────────────────────────────────────────────────────── */
+  --color-navy: #1c2748; /* azul institucional — sidebar, ativo, foco */
+  --color-navy-deep: #141c36; /* fundo do sidebar */
+  --color-navy-line: #2e3a60; /* divisores sobre navy */
+  --color-orange: #e8731b; /* CTA, indicador ativo, prioridade crítica */
+  --color-orange-deep: #d2630f; /* hover / pressed */
+  --color-orange-soft: #fbeee0; /* fundo de selos/realces laranja */
+  --color-amber: #f4a300; /* âmbar — fim do gradiente */
+
+  /* ── Produto — superfícies ─────────────────────────────────────────────── */
+  --color-paper: #f4f2ec; /* papel quente — fundo principal do app */
+  --color-card: #ffffff; /* superfície de card */
+  --color-line: #e5e2d9; /* hairline quente — bordas de card */
+  --color-line-soft: #edeae2; /* divisores de linha dentro de card */
+
+  /* ── Texto ─────────────────────────────────────────────────────────────── */
+  --color-ink: #1a2138; /* texto principal */
+  --color-ink-2: #585e72; /* texto secundário */
+  --color-ink-3: #8c8f9b; /* texto terciário / legendas */
+  --color-ink-4: #b4b6be; /* placeholder */
+}
+
+@layer base {
+  html {
+    font-family: "Poppins", system-ui, sans-serif;
+  }
+}
+
 @layer utilities {
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
