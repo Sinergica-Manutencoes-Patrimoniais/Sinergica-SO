@@ -96,3 +96,4 @@ interfaces (pages/components/hooks) → application → domain ← infrastructur
 ## Decisões estruturais (ADRs)
 - [ADR-0001 — PCM como origin of truth + externalId idempotente no Auvo](adr/0001-pcm-origin-truth-externalid.md)
 - [ADR-0002 — Detecção determinística de menção ao Zé antes do LLM](adr/0002-deteccao-deterministica-ze.md)
+- [ADR-0003 — RBAC via claim `user_role` no JWT + tabela `config.usuarios`](adr/0003-rbac-jwt-claim-config-usuarios.md)
