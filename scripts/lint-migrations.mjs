@@ -1,11 +1,14 @@
 #!/usr/bin/env node
-// Lint de migrations SQL — gate na CI (job `migrations`) e no ci:local.
-// Verifica DUAS pegadinhas que só apareceriam em produção:
-//   1) DROP destrutivo sem reverso documentado (rollback impossível de auditar).
-//   2) CREATE POLICY sem GRANT correspondente — o clássico do Postgres/Supabase: RLS roda
-//      DEPOIS do privilégio de tabela. Sem GRANT ao role (ex.: authenticated), o Postgres nega
-//      no nível de privilégio e a policy NUNCA é avaliada — a tabela fica inacessível mesmo com
-//      a policy "certa". Quebra em produção, não só no teste.
+// Lint de migrations SQL — gate no pre-push (Lefthook) e na CI (job `migrations`).
+//
+// Divisão de responsabilidade:
+//   • SEGURANÇA de migration (locks, breaking change, downtime) → SQUAWK (squawkhq.com).
+//     Rodado aqui best-effort (se instalado); BLOQUEANTE na CI via squawk-action.
+//   • Convenções da Trivia que Squawk não cobre (checadas SEMPRE aqui, bloqueantes):
+//       1) DROP destrutivo sem '-- Reverso:' documentado (auditabilidade do rollback).
+//       2) CREATE POLICY sem GRANT correspondente — o clássico do Postgres/Supabase: RLS roda
+//          DEPOIS do privilégio de tabela. Sem GRANT ao role, a policy NUNCA é avaliada e a
+//          tabela fica inacessível em produção, não só no teste. Nenhum linter pronto pega isto.
 //
 // O GRANT pode estar em QUALQUER migration (não precisa ser a mesma que cria a policy) — uma
 // migration já aplicada é imutável (nunca editada, ver convenção do projeto); o gate valida o
@@ -13,7 +16,8 @@
 //
 // Uso: node scripts/lint-migrations.mjs   (varre supabase/migrations/ — perfil OS deste repo)
 
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const ROOT = resolve(process.argv[2] || ".");
@@ -21,10 +25,8 @@ const DIRS = ["db/migrations", "supabase/migrations"];
 const errors = [];
 const err = (file, msg) => errors.push(`${file}: ${msg}`);
 
-// Remove comentários (-- linha e /* bloco */) para não casar exemplos comentados.
 const stripComments = (sql) => sql.replace(/\/\*[\s\S]*?\*\//g, "").replace(/--[^\n]*/g, "");
 
-let count = 0;
 const files = [];
 for (const dir of DIRS) {
   const full = join(ROOT, dir);
@@ -34,22 +36,21 @@ for (const dir of DIRS) {
   }
 }
 
-// Passo 1: estado cumulativo (todas as migrations combinadas) — é contra isso que os GRANTs são
-// checados, não arquivo a arquivo, porque uma migration já aplicada nunca é editada; o GRANT que
-// destrava uma policy antiga pode (e deve) vir numa migration nova.
+// Estado cumulativo (todas as migrations combinadas) — é contra isso que os GRANTs são checados,
+// não arquivo a arquivo (ver comentário acima).
 const combinedSql = files.map((f) => stripComments(readFileSync(f, "utf8")).toLowerCase()).join("\n");
 
-function lintFile(path) {
+// ── Convenções Trivia (sempre, bloqueante) ───────────────────────────────────
+function checkConventions(path) {
   const raw = readFileSync(path, "utf8");
   const sql = stripComments(raw).toLowerCase();
-  count++;
 
-  // 1) DROP sem reverso (procura "reverso" no arquivo BRUTO — costuma estar em comentário).
   if (/\bdrop\s+(table|column|schema|type|function)\b/.test(sql) && !/reverso/i.test(raw)) {
     err(path, "DROP destrutivo sem '-- Reverso:' documentado no topo da migration");
   }
 
-  // 2) CREATE POLICY exige GRANT — checado no estado CUMULATIVO (ver Passo 1).
+  // Schema/tabela extraídos só do que segue "create policy ... on" (não qualquer "on x.y" do
+  // arquivo — CREATE INDEX/FK também casam esse padrão e geravam falso positivo aqui).
   for (const m of sql.matchAll(
     /\bcreate\s+policy\s+"[^"]*"\s+on\s+([a-z_][a-z0-9_]*)\.([a-z_][a-z0-9_]*)/g,
   )) {
@@ -82,14 +83,50 @@ function lintFile(path) {
   }
 }
 
-for (const f of files) lintFile(f);
+// ── Squawk (segurança, best-effort local; bloqueante na CI via squawk-action) ───────────────
+// devDependency (squawk-cli) instala o binário em node_modules/.bin, não no PATH do sistema —
+// por isso a checagem/execução passam por `pnpm exec`, não pelo binário "nu".
+const squawkInstalled = () => {
+  try {
+    execSync("pnpm exec squawk --version", { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+function runSquawk() {
+  if (files.length === 0) return;
+  if (!squawkInstalled()) {
+    console.log("… Squawk não instalado — segurança de migration só será checada na CI.");
+    console.log("  (rode `pnpm install` — squawk-cli é devDependency — para o gate completo no pre-push)\n");
+    return;
+  }
+  try {
+    // --assume-in-transaction: o Supabase (CLI e GitHub Integration) roda cada arquivo de
+    // migration dentro de uma transação — sem a flag, Squawk avisa "sem transação" em toda
+    // migration (falso positivo para este ambiente).
+    execSync(
+      `pnpm exec squawk --assume-in-transaction ${files.map((f) => `"${f}"`).join(" ")}`,
+      { stdio: "inherit" },
+    );
+    console.log("✓ Squawk: migrations seguras (sem lock/breaking-change bloqueante).\n");
+  } catch {
+    console.error("\n✗ Squawk reprovou uma migration (segurança). Veja acima.\n");
+    process.exit(1);
+  }
+}
+
+for (const f of files) checkConventions(f);
 
 if (errors.length) {
-  console.error(`\n✗ Lint de migrations: ${errors.length} problema(s)\n`);
+  console.error(`\n✗ Convenções de migration: ${errors.length} problema(s)\n`);
   for (const e of errors) console.error(`  • ${e}`);
   console.error("");
   process.exit(1);
 }
 console.log(
-  `✓ Lint de migrations: ${count} arquivo(s) OK (DROP com reverso, CREATE POLICY com GRANT).`,
+  `✓ Convenções OK em ${files.length} migration(s) (DROP com reverso, CREATE POLICY com GRANT).`,
 );
+
+runSquawk();

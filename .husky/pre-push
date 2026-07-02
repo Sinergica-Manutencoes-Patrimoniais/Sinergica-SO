@@ -1,8 +1,0 @@
-#!/bin/sh
-# Escudo do @devops: espelho FIEL da CI antes de o código sair da máquina.
-# Roda a mesma sequência de gates do pipeline (esteira, lint, typecheck, arquitetura, migrations,
-# build e testes). Se passar aqui, o pipeline deve passar (exceto db-tests/pgTAP, que exige
-# Docker — ver scripts/ci-local.mjs).
-# Emergência real: `git push --no-verify` (registre o porquê; o CI ainda vai cobrar).
-echo "▶ pre-push: ci:local (espelho da CI)"
-pnpm run ci:local

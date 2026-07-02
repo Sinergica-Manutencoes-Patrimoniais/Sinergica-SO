@@ -53,15 +53,25 @@ jobs:
         run: pnpm run arch:check
 
   migrations:
-    # DROP sem reverso e CREATE POLICY sem GRANT correspondente (ver scripts/lint-migrations.mjs).
-    # Separado porque roda mesmo em PR que não toca código, e é barato.
+    # Squawk = SEGURANÇA de migration (locks, breaking change, downtime). lint-migrations.mjs =
+    # convenções da Trivia que nenhum tool pronto cobre (DROP sem reverso, CREATE POLICY sem
+    # GRANT). Separado porque roda mesmo em PR que não toca código, e é barato.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Squawk (segurança de migration)
+        uses: sbdchd/squawk-action@v2
+        with:
+          pattern: |
+            supabase/migrations/*.sql
+          config: .squawk.toml
+          # Supabase roda cada migration dentro de transação — sem isto, Squawk avisa "sem
+          # transação" em toda migration (falso positivo para este ambiente).
+          assume-in-transaction: "true"
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Lint de migrations (DROP sem reverso, CREATE POLICY sem GRANT)
+      - name: Convenções de migration (DROP sem reverso, CREATE POLICY sem GRANT)
         run: node scripts/lint-migrations.mjs
 
   db-tests:

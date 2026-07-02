@@ -2,11 +2,11 @@
   "name": "sinergica-os",
   "private": true,
   "version": "0.1.0",
-  "description": "Sinérgica SO — sistema operacional da Sinérgica Manutenções (monorepo, Padrão SO v2).",
+  "description": "Sinérgica SO — sistema operacional da Sinérgica Manutenções (monorepo, Padrão SO v3).",
   "packageManager": "pnpm@9.0.0",
   "engines": { "node": ">=22" },
   "scripts": {
-    "prepare": "husky",
+    "prepare": "lefthook install",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "biome check .",
@@ -18,7 +18,7 @@
     "audit:deps": "pnpm audit --prod --audit-level=high",
     "arch:check": "depcruise apps/web/src --config .dependency-cruiser.cjs",
     "lint:migrations": "node scripts/lint-migrations.mjs",
-    "ci:local": "node scripts/ci-local.mjs",
+    "ci:local": "lefthook run pre-push",
     "nova-story": "node scripts/nova-story.mjs"
   },
   "devDependencies": {
@@ -26,8 +26,8 @@
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.3.0",
     "dependency-cruiser": "^18.0.0",
-    "husky": "^9.1.0",
-    "lint-staged": "^15.2.0",
+    "lefthook": "^2.1.9",
+    "squawk-cli": "^2.59.0",
     "turbo": "^2.1.0",
     "typescript": "^5.6.0"
   }
