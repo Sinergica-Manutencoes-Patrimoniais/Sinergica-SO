@@ -85,9 +85,14 @@ reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000003","user_role":"tecnico"}';
 select is((select count(*) from pcm.ordens_servico)::int, 1, 'tecnico le pcm.ordens_servico');
-select throws_ok(
-  $$ update pcm.ordens_servico set titulo = 'alterado' where id = '20000000-0000-0000-0000-000000000001' $$,
-  '42501', null, 'tecnico NAO edita pcm.ordens_servico'
+-- UPDATE bloqueado pela USING da policy não lança 42501 (diferente de INSERT/WITH CHECK) — a
+-- policy simplesmente não seleciona nenhuma linha para atualizar. O gate real é "0 linhas
+-- afetadas", não exceção.
+update pcm.ordens_servico set titulo = 'tecnico tentou alterar' where id = '20000000-0000-0000-0000-000000000001';
+select is(
+  (select titulo from pcm.ordens_servico where id = '20000000-0000-0000-0000-000000000001'),
+  'OS de teste',
+  'tecnico NAO edita pcm.ordens_servico (RLS filtra a linha — 0 afetadas)'
 );
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","user_role":"escritorio"}';
