@@ -33,6 +33,8 @@ jobs:
         run: pnpm run audit:esteira
       - name: Fidelidade spec→implementação
         run: pnpm run eval:spec
+      - name: Diagramas Mermaid
+        run: node scripts/validate-mermaid.mjs
 
       # Gates de segurança (BLOQUEANTES)
       # gitleaks via CLI (MIT, grátis) — a gitleaks-action exige GITLEAKS_LICENSE em repos de
@@ -51,19 +53,16 @@ jobs:
         run: pnpm run arch:check
 
   migrations:
+    # DROP sem reverso e CREATE POLICY sem GRANT correspondente (ver scripts/lint-migrations.mjs).
+    # Separado porque roda mesmo em PR que não toca código, e é barato.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Lint de migrations (proibir DROP sem reverso documentado)
-        run: |
-          set -e
-          for f in $(git ls-files 'supabase/migrations/*.sql'); do
-            if grep -iqE 'drop (table|column|schema)' "$f" && ! grep -iq 'Reverso' "$f"; then
-              echo "::error file=$f::Migration destrutiva sem '-- Reverso:' documentado no topo"
-              exit 1
-            fi
-          done
-          echo "Migrations OK"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Lint de migrations (DROP sem reverso, CREATE POLICY sem GRANT)
+        run: node scripts/lint-migrations.mjs
 
   db-tests:
     # Roda migrations + pgTAP contra um Postgres local via Docker — runners do GitHub Actions já

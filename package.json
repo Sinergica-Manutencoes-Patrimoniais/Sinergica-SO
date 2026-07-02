@@ -17,6 +17,8 @@
     "eval:spec": "node scripts/eval-spec-fidelity.mjs",
     "audit:deps": "pnpm audit --prod --audit-level=high",
     "arch:check": "depcruise apps/web/src --config .dependency-cruiser.cjs",
+    "lint:migrations": "node scripts/lint-migrations.mjs",
+    "ci:local": "node scripts/ci-local.mjs",
     "nova-story": "node scripts/nova-story.mjs"
   },
   "devDependencies": {
