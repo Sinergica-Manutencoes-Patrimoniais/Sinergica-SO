@@ -1,0 +1,74 @@
+# FALLBACK de CD — o caminho canônico é a GitHub Integration nativa do Supabase
+# (Dashboard do projeto → Settings → Integrations → GitHub → "Deploy to production"), que
+# aplica migrations + Edge Functions/Storage (declarados em supabase/config.toml) no merge,
+# sem token de conta nenhum no GitHub. Ver docs/ENVIRONMENTS.md.
+#
+# Este workflow só existe para o caso real em que a integração nativa não serve: monorepo com
+# MAIS DE UM projeto Supabase no mesmo repositório (a integração é 1 projeto ↔ 1 repo/pasta).
+# Não é o caso deste repo hoje — por isso o gatilho automático (`on: push`) está DESLIGADO;
+# só roda via workflow_dispatch manual e consciente. Se um dia isto virar o caminho real:
+#   1. Desligue "Deploy to production" na integração nativa (evita aplicar a mesma migration 2x).
+#   2. Gere o SUPABASE_ACCESS_TOKEN de uma CONTA DE AUTOMAÇÃO separada (nunca a conta pessoal —
+#      o token do Supabase carrega acesso à conta inteira, não há token restrito a 1 projeto).
+#   3. Reative o gatilho `on: push` abaixo.
+#
+# Secrets necessários (Settings → Secrets and variables → Actions), por environment:
+#   SUPABASE_ACCESS_TOKEN  → PAT da conta de automação (supabase.com/dashboard/account/tokens)
+#   SUPABASE_PROJECT_ID    → ref do projeto (ex.: abcdefghijklmnop)
+#   SUPABASE_DB_PASSWORD   → senha do banco (necessária para `db push`)
+# Com staging: crie os environments "staging" e "production" no GitHub e configure os
+# secrets em cada um apontando para o projeto Supabase correspondente (ver docs/ENVIRONMENTS.md).
+
+name: Deploy (Supabase) — fallback, não usado por padrão
+
+on:
+  # Gatilho automático desligado de propósito — ver comentário acima. Descomente só ao migrar
+  # para o cenário de monorepo multi-projeto e após desligar a integração nativa.
+  # push:
+  #   branches: [main, develop]
+  #   paths:
+  #     - "supabase/**"
+  workflow_dispatch: # único gatilho hoje — deploy manual consciente (@devops)
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false # deploy não se cancela no meio
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # main → production · develop → staging (ver docs/ENVIRONMENTS.md)
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link ao projeto do ambiente
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Migrations (supabase db push)
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Edge Functions (supabase functions deploy)
+        # deploya todas as funções versionadas em supabase/functions/ (exceto _shared/_template)
+        run: |
+          if [ -d supabase/functions ]; then
+            supabase functions deploy
+          else
+            echo "Sem supabase/functions — pulando"
+          fi
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # Rollback de migration = NOVA migration com o reverso (nunca editar a antiga) —
+      # ver runbooks/rollback-deploy.md. Edge Function: redeploy da versão anterior via git revert.

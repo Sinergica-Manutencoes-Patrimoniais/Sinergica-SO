@@ -2,6 +2,7 @@ node_modules/
 coverage/
 dist/
 .turbo/
+supabase/.temp/
 .env
 .env.local
 .env.*.local

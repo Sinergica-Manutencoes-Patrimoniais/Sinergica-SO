@@ -8,7 +8,10 @@ module.exports = {
         "scope-epic-story": ({ scope }) => {
           // Commits de merge ou revert podem não ter scope — deixamos passar
           if (!scope) {
-            return [false, "scope obrigatório no formato E0N-S0N (ex: E00-S01). Leia docs/epics/ROADMAP.md."];
+            return [
+              false,
+              "scope obrigatório no formato E0N-S0N (ex: E00-S01). Leia docs/epics/ROADMAP.md.",
+            ];
           }
           if (!/^E\d{2}-S\d{2}$/.test(scope)) {
             return [
