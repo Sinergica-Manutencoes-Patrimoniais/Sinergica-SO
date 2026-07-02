@@ -1,0 +1,10 @@
+title = "gitleaks config — Sinérgica SO"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Vendored — não é código do projeto (nunca editado, ver AGENTS.md). Falso positivo confirmado: qa-security-checklist.md:492 é um exemplo ilustrativo de código no próprio checklist do Triviaiox ('sk-live-abc123xyz789'), não um secret real."
+paths = [
+  '''\.triviaiox-core/''',
+]
