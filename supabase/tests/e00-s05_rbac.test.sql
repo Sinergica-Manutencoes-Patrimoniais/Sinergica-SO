@@ -141,7 +141,12 @@ select is(
 );
 
 set local role authenticated;
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000004","user_role":"colaborador","user_modulos":{"pcm":"escrita","comercial":"leitura"}}';
+-- "role":"authenticated" aqui é o claim padrão do PostgREST (distinto do "user_role" customizado)
+-- — presente em todo JWT real, mas ausente nos claims simulados acima neste arquivo. É o que
+-- `resolver_permissoes_modulo`/`definir_permissao_usuario` usam pra saber que isto é uma chamada
+-- de usuário comum via PostgREST, não uma chamada interna confiável (hook/service_role) — ver
+-- migration 0008.
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000004","role":"authenticated","user_role":"colaborador","user_modulos":{"pcm":"escrita","comercial":"leitura"}}';
 select is((select count(*) from config.minhas_permissoes)::int, 2, 'minhas_permissoes retorna permissoes do proprio usuario');
 select throws_ok(
   $$ select * from config.resolver_permissoes_modulo('00000000-0000-0000-0000-000000000003') $$,

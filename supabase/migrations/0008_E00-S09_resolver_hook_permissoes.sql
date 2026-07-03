@@ -26,15 +26,28 @@ begin
     return;
   end if;
 
-  -- BUG DE SEGURANÇA CORRIGIDO (achado em revisão, nunca chegou a rodar via `supabase test db`):
-  -- `current_user`, dentro de uma função SECURITY DEFINER, é sempre o DONO da função (ex.:
-  -- `postgres`), não quem chamou — então `current_user not in ('postgres', ...)` era sempre
-  -- falso, e a guarda inteira nunca disparava. `session_user` não muda com SECURITY DEFINER,
-  -- é sempre quem efetivamente conectou/chamou — é o certo para essa checagem.
-  if session_user not in ('postgres', 'service_role', 'supabase_auth_admin')
+  -- BUG DE SEGURANÇA CORRIGIDO DUAS VEZES (achado em revisão + achado real via `supabase test
+  -- db` no CI, job db-tests — nenhuma leitura estática pegou a segunda rodada):
+  -- 1ª tentativa: `current_user` dentro de SECURITY DEFINER é sempre o DONO da função, não quem
+  -- chamou — a guarda nunca disparava.
+  -- 2ª tentativa (`session_user`): não muda dentro de SECURITY DEFINER, mas TAMBÉM não muda com
+  -- `SET LOCAL ROLE` — e é exatamente assim que PostgREST (e os testes pgTAP que simulam
+  -- PostgREST) trocam de papel numa conexão já aberta. `session_user` continha o role da conexão
+  -- física (ex.: `postgres`), nunca 'authenticated', então a guarda também nunca disparava pra
+  -- chamada de usuário comum — achado pelo teste "colaborador NAO resolve permissoes de outro
+  -- usuario" falhando de verdade no CI.
+  -- Fix real: usar o claim padrão `role` do JWT (`auth.jwt() ->> 'role'`), não introspecção de
+  -- role do Postgres. Esse claim vem sempre presente num JWT real do PostgREST
+  -- (`authenticated`/`anon`/`service_role`) e nunca está setado quando não há contexto de
+  -- request nenhum (chamada interna do hook, migration, SQL Editor como superuser) — nesses
+  -- casos `coalesce(..., 'service_role')` trata como confiável de propósito.
+  -- coalesce no user_role: se vier ausente/NULL, `NULL IN (...)` também é NULL, e `NOT (falso OR
+  -- NULL)` vira NULL — o `IF` trata NULL como falso e NÃO levantaria a exceção, liberando por
+  -- engano quem não tem user_role nenhum. Com coalesce pra string vazia, cai em falso de verdade.
+  if coalesce(auth.jwt() ->> 'role', 'service_role') <> 'service_role'
      and not (
        auth.uid() = p_user_id
-       or auth.jwt() ->> 'user_role' in ('superadmin', 'supervisor')
+       or coalesce(auth.jwt() ->> 'user_role', '') in ('superadmin', 'supervisor')
      ) then
     raise exception 'sem_permissao_para_resolver_permissoes'
       using errcode = '42501';
@@ -99,9 +112,9 @@ as $$
 declare
   v_item record;
 begin
-  -- Mesma correção de session_user vs current_user do resolver acima — ver comentário lá.
-  if session_user not in ('postgres', 'service_role')
-     and auth.jwt() ->> 'user_role' not in ('superadmin', 'supervisor') then
+  -- Mesma correção do resolver acima (role claim do JWT, não introspecção de role do Postgres).
+  if coalesce(auth.jwt() ->> 'role', 'service_role') <> 'service_role'
+     and coalesce(auth.jwt() ->> 'user_role', '') not in ('superadmin', 'supervisor') then
     raise exception 'sem_permissao_para_definir_permissao_usuario'
       using errcode = '42501';
   end if;
@@ -189,8 +202,17 @@ begin
     into v_modulos
     from config.resolver_permissoes_modulo((event ->> 'user_id')::uuid) p;
 
+  -- BUG REAL ACHADO VIA `supabase test db` (CI): `to_jsonb(v_papel)` quando `v_papel` é NULL em
+  -- SQL (usuário sem perfil ativo — inclui o caso "inativo", já que a query acima filtra por
+  -- `ativo = true`) retorna NULL em SQL, não o literal JSON `null` — `to_jsonb()` é STRICT.
+  -- `jsonb_set(alvo, caminho, NULL)` por sua vez também retorna NULL (é STRICT nos 3 primeiros
+  -- argumentos) — então TODO o `v_claims` virava NULL, e a função inteira devolvia `event = NULL`
+  -- em vez de um evento válido com `user_role: null`. Esse mesmo bug já existia desde a versão
+  -- original do hook em 0002_E00-S05 (nunca foi pego porque nenhum teste chamava o hook de
+  -- verdade para um usuário sem perfil/inativo). Fix: `coalesce(to_jsonb(v_papel), 'null'::jsonb)`
+  -- força o literal JSON null explicitamente, sem deixar o NULL de SQL se propagar.
   v_claims := coalesce(event -> 'claims', '{}'::jsonb);
-  v_claims := jsonb_set(v_claims, '{user_role}', to_jsonb(v_papel));
+  v_claims := jsonb_set(v_claims, '{user_role}', coalesce(to_jsonb(v_papel), 'null'::jsonb));
   v_claims := jsonb_set(v_claims, '{user_modulos}', v_modulos);
 
   event := jsonb_set(event, '{claims}', v_claims);
