@@ -204,6 +204,7 @@ nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
 | `E01-S09-integracao-auvo-fundacao` | **implementado e mergeado** (PR #10) — cliente HTTP, task/priority-map, 2 Edge Functions, migration do trigger; 6 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` ✅ · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
 | `E01-S10-integracao-auvo-webhook-status` | **implementado e mergeado** (PR #11) — AC-1 a AC-6 (`_shared/auvo/verify-signature.ts` + `pcm-auvo-webhook`), AC-7 deferido (SPEC_DEVIATION — PMOC não existe); 2 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` n/a (sem migration nova) · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
 | `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | spec pronta, **implementação não iniciada** | depende de E01-S10 |
+| `E01-S12-visao-360-cliente` | **spec.md pronta** (tier Pequeno, aprovada por Lucas 2026-07-03) — 8 ACs (gating PCM, cabeçalho, backlog GUT, histórico Auvo, estado vazio, painel condicional S11, read-only, cliente não encontrado); 2 OPEN-QUESTION não-bloqueantes. Próximo: `@sm` → tasks.md | leitura/agregação — sem migration nova |
 
 ## Decisões recentes
 - 2026-07-03: `E01-S09` (fundação Auvo) implementada em branch própria

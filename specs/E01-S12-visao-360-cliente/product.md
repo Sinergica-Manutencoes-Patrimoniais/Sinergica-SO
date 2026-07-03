@@ -6,9 +6,9 @@ alwaysApply: false
 
 # Product — Visão 360 do Cliente (v1)
 
-> **Tier:** a definir pelo @architect (provável Pequeno — leitura/agregação sobre tabelas que já
-> existem; sem novo bounded context nem migration com dados em produção) · **Status:** rascunho,
-> aguardando @architect/aprovação · **Dono:** Lucas (produto) / Claude (sessão Lucas — @pm)
+> **Tier:** **Pequeno** (confirmado — leitura/agregação sobre tabelas que já existem, sem novo
+> bounded context, sem RLS nova, ver §6) · **Status:** aprovado pelo Lucas em 2026-07-03, pronto
+> para `@analyst` escrever `spec.md` · **Dono:** Lucas (produto) / Claude (sessão Lucas — @pm)
 > Responde: **por quê** e **para quem**. Mantém em ~1 página.
 
 ## 1. Problema / dor (dor L1 do ESCOPO-MESTRE)
@@ -92,27 +92,21 @@ sem sair do sistema, o que está pendente (backlog priorizado) e o que já foi f
 - **Métrica de percepção (qualitativa):** o gestor deixa de dizer *"deixa eu verificar e te
   retorno"* para as duas perguntas cobertas pela v1.
 
-## 6. Perguntas em aberto (decisão do usuário — NÃO decididas por mim)
+## 6. Decisões do usuário (Lucas, 2026-07-03 — confirmadas via pergunta direta)
 
-> São decisões de **produto/negócio**; a spec/escopo mestre é silenciosa sobre elas. Reportadas ao
-> Lucas em vez de inventadas.
+1. **Abrir a v1 enxuta agora** (opção recomendada) — cadastro + backlog + histórico de OS, sem
+   esperar PMOC/Gestão de Ativos. Painéis futuros entram por fase quando o módulo de base existir.
+2. **Sub-tela dentro de PCM/Operação** (opção recomendada) — acessada a partir do cliente/OS,
+   herda o gating de módulo já existente de E00-S09/S10. Não é módulo novo de topo.
+3. **Todo `colaborador` vê todos os clientes** (opção recomendada) — mesma visibilidade que já
+   existe hoje para backlog/OS dentro do PCM. **Sem RLS nova por cliente** — isso confirma que a
+   story permanece tier **Pequeno** (não eleva para arquitetural; não precisa de `design.md` de
+   `@architect` — reaproveita a RLS de módulo já existente de `pcm.ordens_servico`/`pcm.clientes`,
+   sem cross-bounded-context: tudo fica dentro do domínio PCM já existente).
 
-1. **[OPEN-QUESTION] Vale abrir a v1 agora, dado o volume de "fora de escopo"?** — 4 dos 8
-   painéis descritos no escopo mestre dependem de módulos não construídos. A v1 entregaria
-   cadastro + backlog + histórico (+ técnicos/equipamentos se E01-S11 fechar). *Opções:* (a) abrir
-   a v1 enxuta agora e evoluir por fase; (b) esperar PMOC + Gestão de Ativos existirem para lançar
-   uma versão "mais completa de uma vez". **Recomendação @pm:** (a) — a v1 já responde à dor L1 nas
-   duas perguntas mais frequentes e cria o "esqueleto" da tela onde os painéis futuros encaixam;
-   risco de (b) é a dor L1 seguir sem resposta por vários épicos.
-2. **[OPEN-QUESTION] Onde a Visão 360 mora na navegação?** — *Opções:* (a) sub-tela dentro do
-   módulo **PCM/Operação** (a partir do cliente/OS); (b) **módulo novo** de topo. Isso afeta o
-   gating de E00-S09/S10 (a tela herda a permissão do módulo onde mora). **Recomendação @pm:** (a)
-   sub-tela do PCM no v1 — reaproveita a permissão de módulo existente e evita criar um módulo cujo
-   valor pleno só aparece nas fases 2.
-3. **[OPEN-QUESTION] Quem enxerga a Visão 360 de qual cliente?** — *Opções:* (a) todo
-   `colaborador` vê todos os clientes; (b) só `supervisor`+ ; (c) por grupo/permissão de módulo
-   (E00-S09/S10), possivelmente restringindo colaborador aos clientes que atende. Envolve escopo de
-   dado por papel — **não decido**; depende de como a Sinérgica quer expor a carteira internamente.
+**Consequência para @sm/@dev:** não há necessidade de nova policy RLS por cliente/carteira; a
+Visão 360 é uma tela nova em `apps/web/src/features/pcm/` (ou equivalente) que consulta as mesmas
+tabelas/policies já usadas pelo Hub de OS e pelo backlog GUT, sem elevação de permissão.
 
 ## 7. Riscos / premissas
 - **Premissa:** E01-S11 (cache de técnicos/equipamentos) fecha em breve; se atrasar, o painel de
