@@ -18,7 +18,7 @@ alwaysApply: false
 | 5  | `PermissoesProvider` (`app/`) — chama `resolverMinhasPermissoes` ao autenticar, expõe `podeAcessar(modulo, nivel)` | AC-4 | 4 | teste unitário | done (lógica) — a resolução pura (`podeAcessarModulo`) está em `domain/permissao.ts` e testada; o Provider React em si (`app/permissoes-context.tsx`) não tem teste próprio — projeto não tem `@testing-library/react` instalado, mesma lacuna que `auth-context.tsx` já tinha |
 | 6  | `HomePage.tsx`: sidebar/tab-bar filtra `MODULOS` por `podeAcessar`; botão "Configurações" ganha `onClick` e visibilidade por papel | AC-1, AC-4 | 5 | teste manual (browser) | parcial — código implementado, `typecheck`/`build`/`lint` verdes; **teste manual em browser não executado** (sem ambiente Supabase logável nesta sessão) — golden path e borda por papel ficam para validação humana |
 | 7  | Componente `ModuloPermissaoGrid` (9 módulos × nenhum/leitura/escrita) reaproveitado nas 2 telas | AC-2, AC-3 | 2 | teste unitário | done (parcial) — componente puro implementado e reaproveitado por `GruposPage`/`UsuariosPage`; sem `.test.tsx` dedicado (mesma lacuna de `LoginPage.tsx`/`HomePage.tsx` — projeto não testa componentes React, só domain/application) |
-| 8  | `GruposPage` — listar/criar/editar `[P]` | AC-2 | 4, 7 | teste manual (browser) | parcial — listar/criar (caminho feliz) e toggle `ativo` implementados; **editar permissões de um grupo existente vai falhar em runtime** por um gap de GRANT/RLS em E00-S09 (ver seção "Bug encontrado em E00-S09" abaixo) — não é bug desta story, mas bloqueia esse fluxo até corrigirem lá |
+| 8  | `GruposPage` — listar/criar/editar `[P]` | AC-2 | 4, 7 | teste manual (browser) | parcial — código completo (listar/criar/editar/toggle `ativo`); o gap de GRANT/RLS que bloquearia "editar permissões" foi corrigido em E00-S09 (migration `0010`, ver seção abaixo); teste manual em browser ainda pendente de validação humana |
 | 9  | `UsuariosPage` — listar/criar/editar, toggle grupo↔individual sem estado inválido `[P]` | AC-3 | 4, 7 | teste manual (browser) | parcial — código implementado (`typecheck`/`build`/`lint` verdes); troca de modo sempre passa por `definirPermissaoUsuario` (nunca duas escritas separadas); **teste manual em browser não executado** |
 | 10 | `docs/STATE.md` + `docs/epics/ROADMAP.md` atualizados | — | 1-9 | inspeção | done |
 
@@ -48,7 +48,7 @@ alwaysApply: false
   consistente com a intenção do AC — sem isso, um usuário sem acesso a um módulo ainda veria o
   card de KPI dele na Home.
 
-## Bug encontrado em E00-S09 (fora do meu escopo consertar — reportado, não corrigido)
+## Bug encontrado em E00-S09 — CORRIGIDO (revisão pós-implementação, migration `0010`)
 - **`supabase/migrations/0006_E00-S09_grupos_permissoes_modulo.sql` linha 77 nunca concede
   `DELETE`** em `config.grupos`/`config.grupo_modulos`/`config.usuario_modulos` para o role
   `authenticated` (`grant select, insert, update on ... to authenticated;` — falta `delete`), e
@@ -68,12 +68,14 @@ alwaysApply: false
 - **Não afetado:** criar grupo no caminho feliz (INSERT, sem delete envolvido), toggle
   `ativo` (UPDATE), e tudo em `UsuariosPage` (passa por `definir_permissao_usuario`, que é
   SECURITY DEFINER).
-- **Fix sugerido para quem revisar E00-S09** (não implementado aqui — fora do meu escopo mexer em
-  `supabase/migrations/`): nova migration `00010_E0N-SNN_grant_delete_grupos.sql` adicionando
-  `grant delete on config.grupos, config.grupo_modulos, config.usuario_modulos to authenticated;`
-  + policies `_delete` espelhando as `_update` já existentes (`using (auth.jwt() ->> 'user_role'
-  in ('superadmin', 'supervisor'))`, e para `usuario_modulos` seguir o mesmo padrão de
-  `usuario_modulos_update`).
+- **Corrigido** em `supabase/migrations/0010_E00-S09_delete_grupos_grupo_modulos.sql`:
+  `grant delete on config.grupos, config.grupo_modulos to authenticated;` + policies
+  `grupos_delete`/`grupo_modulos_delete` (`superadmin`/`supervisor`), rebaseado no topo desta
+  branch. `config.usuario_modulos` foi deixado de fora de propósito — nenhum fluxo desta story
+  precisa de DELETE direto nela (troca de modo sempre passa por `definir_permissao_usuario`,
+  `SECURITY DEFINER`). `pnpm run lint:migrations` e `node scripts/audit-esteira.mjs` verdes após
+  o rebase. Teste manual em browser (editar permissões de um grupo existente) continua pendente
+  de validação humana, mas o gap de GRANT/RLS que bloqueava isso está fechado.
 
 ## Checklist de Definition of Done
 - [x] Todos os AC verdes **pelo gate executável** onde há runner automatizado (lint/typecheck/
