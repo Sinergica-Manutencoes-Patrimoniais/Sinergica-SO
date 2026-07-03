@@ -10,8 +10,10 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-03 por @dev (E00-S09 — grupos/permissões por módulo: fundação
-implementada, com revisão de segurança que achou e corrigiu um bug real antes do PR)
+**Última atualização:** 2026-07-03 por @dev (3 stories em volume: E00-S09 (fundação de grupos),
+E00-S10 (UI de grupos, em cima de E00-S09) e E01-S09 (fundação Auvo) — implementadas via agentes
+`@dev` em worktrees paralelos, cada uma revisada como `@qa` antes de aceitar. Todas com commits
+locais, nenhuma pusheada ainda — aguardando decisão do usuário sobre push/PR)
 
 ## Status geral
 **Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) + E00-S07
@@ -47,6 +49,39 @@ Token Hook e Data API expostos, confirmados via query direta/Management API.
   para descartar corrupção do upload em lote de sessão anterior. `sync-secrets.yml` teve o
   gatilho automático (`push`) desligado por precaução até confirmar que o secret está certo —
   rodar manualmente (`workflow_dispatch`) antes de reativar o automático.
+
+## Entrega em volume — 3 stories via agentes paralelos (2026-07-03)
+Usuário pediu para não parar em E00-S09/E00-S10 — "veja o que tem planejado e pendente e use todo
+o fluxo de desenvolvimento com os agentes triviaiox", visando um PR com volume grande de entrega.
+Rodei 2 agentes `@dev` em paralelo, cada um num worktree git isolado (evita conflito de working
+tree), depois revisei cada resultado como `@qa` (ler o diff inteiro, não só o relatório do
+agente) antes de aceitar:
+
+- **E00-S10** (UI de grupos/permissões), worktree em cima da branch de E00-S09 — telas de Grupos
+  e Usuários, `PermissoesProvider` novo, sidebar/tab-bar/dashboard filtrados por permissão
+  real (capacidade que não existia antes: hoje todo mundo via todos os 10 módulos). 75 testes
+  verdes, lint/typecheck/build/arch:check verdes.
+- **E01-S09** (fundação Auvo), worktree/branch nova baseada em `main` — cliente HTTP Auvo
+  compartilhado, `pcm-auvo-customers-sync`/`pcm-auvo-create-task` (Edge Functions), trigger
+  `pg_net` assíncrono em `pcm.ordens_servico`. Gates de código (lint:migrations/audit-esteira/
+  eval-spec-fidelity) verdes; Edge Functions (Deno) não puderam ser type-checked nem executadas
+  nesta sessão — sem Deno CLI disponível — e o formato exato de resposta da API Auvo (paramFilter,
+  campos do envelope `result`) segue a descrição do design.md, não uma chamada real confirmada.
+
+**2 bugs reais achados na revisão (nenhum dos dois pego pelos gates automáticos, só por leitura
+cética do diff):**
+1. `pcm-auvo-customers-sync`/`pcm-auvo-create-task`: fallback `?? search.result[0]` quando a
+   busca por `externalId` não achava match — se o `paramFilter` do Auvo não filtrar como
+   documentado (incerteza já sinalizada pelo próprio código), isso vincularia um cliente/task
+   Auvo **errado** ao registro do PCM, silenciosamente. Corrigido: tratar "sem match" como
+   "não encontrado", nunca pegar o primeiro resultado às cegas.
+2. `config.grupos`/`config.grupo_modulos` (migration `0006`) nunca ganharam GRANT/policy de
+   `DELETE` — só apareceu como bug real quando o agente de E00-S10 tentou consumir o backend
+   (`editarGrupo()` precisa apagar+reinserir `grupo_modulos`; `criarGrupo()` faz rollback
+   apagando o grupo se a gravação de permissões falhar). Corrigido em nova migration `0010`,
+   rebaseada no topo de E00-S10 também.
+
+**Nenhuma das 3 branches foi pusheada** — commits locais, aguardando decisão do usuário.
 
 ## Em andamento / próximo passo
 - **Branch atual:** `feat/E00-S09-grupos-permissao-modulo` — usuário pediu um sistema de grupos
