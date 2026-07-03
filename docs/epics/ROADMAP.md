@@ -40,7 +40,7 @@ alwaysApply: true
 | E00-S07 | Hardening pós-primeira-pipeline-real (Padrão OS v3.2.0→v3.4.0) — Lefthook, Squawk, revisão adversarial | [spec](../../specs/E00-S07-hardening-padrao-v3.2.0/spec.md) | **Implementado e mergeado** (PR [#7](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/pull/7)) | Claude (sessão Lucas) | ✅ (2 SPEC_DEVIATION: skill `/revisao-adversarial` e regexes extra do gitleaks bloqueados pelo classificador — ver tasks.md) |
 | E00-S08 | Renomear papéis RBAC — admin/escritorio/tecnico → superadmin/supervisor/colaborador (mesma matriz de permissão) + provisiona primeiro superadmin | [spec](../../specs/E00-S08-renomear-papeis-rbac/spec.md) | **Implementado e mergeado** (PR [#8](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/pull/8)) — `sinergicaengenharia@gmail.com` já é `superadmin` em produção | Claude (sessão Lucas) | ✅ |
 | E00-S09 | Grupos e permissões por módulo — fundação: schema, resolver, hook JWT, Edge Function de gestão de usuário | [spec](../../specs/E00-S09-grupos-permissao-modulo/spec.md) · [design](../../specs/E00-S09-grupos-permissao-modulo/design.md) | Em andamento | Claude (sessão Lucas) | ⏳ |
-| E00-S10 | Grupos e permissões por módulo — UI administrativa (grupos, usuários) e gating de sidebar | [spec](../../specs/E00-S10-grupos-permissao-ui/spec.md) | Planejado — depende de E00-S09 mergeada | — | — |
+| E00-S10 | Grupos e permissões por módulo — UI administrativa (grupos, usuários) e gating de sidebar | [spec](../../specs/E00-S10-grupos-permissao-ui/spec.md) | Em andamento — na mesma branch de E00-S09 (não mergeada ainda, mas construído em cima localmente) | Claude (sessão Lucas) | ⏳ |
 
 ### E01 — PCM · Operação
 | Story ID | Descrição | Spec | Status | Owner | AC verdes |
@@ -53,7 +53,7 @@ alwaysApply: true
 | E01-S06 | PMOC — Análise microbiológica e log de não-conformidades | — | Planejado | — | — |
 | E01-S07 | Hub de OS — Fila unificada de Ordens de Serviço (C1/C2/P1/P2/IN, SLA, prioridade) | — | Planejado (tier arquitetural) | — | — |
 | E01-S08 | PMOC — Dashboard e telas de gestão de contratos | — | Planejado | — | — |
-| E01-S09 | Integração Auvo — Fundação: cliente HTTP, sync de clientes, criação de task ao entrar em `planejamento` | [spec](../../specs/E01-S09-integracao-auvo-fundacao/spec.md) · [design](../../specs/E01-S09-integracao-auvo-fundacao/design.md) | Spec pronta para dev (tier arquitetural) — estudo/planejamento feito, implementação não iniciada | — | — |
+| E01-S09 | Integração Auvo — Fundação: cliente HTTP, sync de clientes, criação de task ao entrar em `planejamento` | [spec](../../specs/E01-S09-integracao-auvo-fundacao/spec.md) · [design](../../specs/E01-S09-integracao-auvo-fundacao/design.md) | Em andamento | Claude (sessão Lucas) | ⏳ |
 | E01-S10 | Integração Auvo — Webhook de status/conclusão de OS (+ gatilho `pcm.pmoc_records`) | [spec](../../specs/E01-S10-integracao-auvo-webhook-status/spec.md) | Spec pronta para dev — depende de E01-S09 implementada primeiro | — | — |
 | E01-S11 | Integração Auvo — Sync de técnicos/equipes/equipamentos (Auvo → PCM, cache read-only) | [spec](../../specs/E01-S11-integracao-auvo-sync-tecnicos-equipamentos/spec.md) | Spec pronta para dev — depende de E01-S09 implementada primeiro | — | — |
 
