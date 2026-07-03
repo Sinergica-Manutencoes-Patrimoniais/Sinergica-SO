@@ -94,10 +94,13 @@ serve(async (req) => {
       }
 
       // 5) Idempotência no Auvo: busca por externalId antes de criar (AC-5, reprocesso de trigger).
+      // Correção de revisão: não cair para search.result[0] sem bater o externalId — mesmo risco
+      // documentado em pcm-auvo-customers-sync (vincularia a task errada se o paramFilter não
+      // filtrar como esperado no lado do Auvo).
       const search = await auvoGet<{ result: AuvoTask[] }>(
         `/tasks?${buildParamFilter({ externalId: input.osId })}`,
       );
-      const existente = search?.result?.find((t) => t.externalId === input.osId) ?? search?.result?.[0];
+      const existente = search?.result?.find((t) => t.externalId === input.osId);
 
       let taskId: number;
       if (existente) {

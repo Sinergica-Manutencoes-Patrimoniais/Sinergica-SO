@@ -67,10 +67,15 @@ serve(async (req) => {
     // SPEC_DEVIATION: design.md → Contrato dos dados trocados lista `clientes.endereco` → `address`,
     // mas `pcm.clientes` (migration 0001_E00-S00) não tem coluna `endereco` — só `nome`/`cnpj`.
     // Envia apenas `description` (nome) até a coluna existir; registrado em tasks.md.
+    // Correção de revisão: NÃO cair para search.result[0] se nada bater com o externalId — se o
+    // paramFilter não filtrar como esperado no lado do Auvo (formato não verificado neste
+    // ambiente, ver nota no topo do arquivo), pegar "o primeiro resultado" vincularia um cliente
+    // Auvo ERRADO ao registro do PCM. Melhor tratar como "não encontrado" e criar um novo — pior
+    // caso é um cliente duplicado no Auvo (recuperável), não um vínculo cruzado silencioso.
     const search = await auvoGet<{ result: AuvoCustomer[] }>(
       `/customers?${buildParamFilter({ externalId: input.clienteId })}`,
     );
-    const existente = search?.result?.find((c) => c.externalId === input.clienteId) ?? search?.result?.[0];
+    const existente = search?.result?.find((c) => c.externalId === input.clienteId);
 
     let customerId: number;
     let created: boolean;
