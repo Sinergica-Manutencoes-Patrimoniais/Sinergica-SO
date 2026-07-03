@@ -37,7 +37,14 @@ alwaysApply: false
   corretos no JWT).
 
 ## Divergências (SPEC_DEVIATION)
-- Nenhuma no contrato da spec — mas registrando aqui um achado real de revisão: a primeira versão
+- **Migration `0010` (achado durante a implementação de E00-S10, que consome este backend):**
+  `config.grupos` e `config.grupo_modulos` não tinham GRANT/policy de `DELETE` — a UI de E00-S10
+  precisa apagar (`criarGrupo()` faz rollback de um grupo recém-criado se a gravação de
+  permissões falhar; `editarGrupo()` substitui as permissões de um grupo apagando e reinserindo
+  `grupo_modulos`). `config.usuario_modulos` não precisou do mesmo tratamento — a troca de modo
+  do usuário passa por `config.definir_permissao_usuario` (`SECURITY DEFINER`, já bypassa RLS).
+  Corrigido antes do merge.
+- Nenhuma outra no contrato da spec — mas registrando aqui um achado real de revisão: a primeira versão
   implementada de `config.resolver_permissoes_modulo` e `config.definir_permissao_usuario` usava
   `current_user` para reconhecer chamadas internas (hook/service_role), o que é sempre o **dono**
   da função dentro de um `SECURITY DEFINER` (não quem chamou) — a guarda de autorização nunca
