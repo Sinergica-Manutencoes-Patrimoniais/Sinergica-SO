@@ -18,7 +18,7 @@
 
 import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 
 const ROOT = resolve(process.argv[2] || ".");
 const DIRS = ["db/migrations", "supabase/migrations"];
@@ -117,7 +117,39 @@ function runSquawk() {
   }
 }
 
+// ── Sequência sem colisão (sempre, bloqueante) ───────────────────────────────
+// Risco real deste projeto: várias sessões/branches trabalham em paralelo (ver CLAUDE.md —
+// "trabalho paralelo") e cada uma pode pegar independentemente o "próximo" número disponível na
+// sua própria branch. Duas migrations com o mesmo prefixo numérico aplicam sem erro em cada
+// branch isolada, mas colidem na PRIMARY KEY de `supabase_migrations.schema_migrations` assim
+// que as duas se juntam numa história compartilhada (`main`) — só aparece no `db-tests` da CI,
+// tarde demais. Achado ao vivo nesta sessão (dois `0006_*` de stories diferentes).
+function checkSequence() {
+  const byNumber = new Map();
+  for (const f of files) {
+    const m = basename(f).match(/^(\d+)_/);
+    if (!m) {
+      err(f, "nome de arquivo não começa com NNNN_ (convenção NNNN_E0N-S0N_descricao.sql)");
+      continue;
+    }
+    const num = m[1];
+    if (!byNumber.has(num)) byNumber.set(num, []);
+    byNumber.get(num).push(basename(f));
+  }
+  for (const [num, names] of byNumber) {
+    if (names.length > 1) {
+      err(
+        names[0],
+        `prefixo '${num}' usado em ${names.length} migrations: ${names.join(", ")} — renumere a mais ` +
+          "nova para o próximo número livre (provável causa: duas branches paralelas pegaram o " +
+          "mesmo 'próximo' número; some cedo/tarde em supabase_migrations.schema_migrations)",
+      );
+    }
+  }
+}
+
 for (const f of files) checkConventions(f);
+checkSequence();
 
 if (errors.length) {
   console.error(`\n✗ Convenções de migration: ${errors.length} problema(s)\n`);
