@@ -6,7 +6,7 @@
   "packageManager": "pnpm@9.0.0",
   "engines": { "node": ">=22" },
   "scripts": {
-    "prepare": "lefthook install",
+    "prepare": "node scripts/prepare-hooks.mjs",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "biome check .",

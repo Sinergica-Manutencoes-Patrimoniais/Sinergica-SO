@@ -10,30 +10,65 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-02 por @dev (E00-S08 — renomeia papéis RBAC para
-superadmin/supervisor/colaborador + provisiona o primeiro superadmin, `sinergicaengenharia@gmail.com`)
+**Última atualização:** 2026-07-03 por @dev (E00-S09 — grupos/permissões por módulo: fundação
+implementada, com revisão de segurança que achou e corrigiu um bug real antes do PR)
 
 ## Status geral
 **Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) + E00-S07
-(hardening v3.4.0) **mergeadas em `main` e aplicadas em produção** (PRs #4/#5/#6/#7). E00-S08
-(rename de papéis) em implementação na branch `feat/E00-S08-renomear-papeis-rbac`. Repo
-`Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`. Supabase **reprovisionado**
-(`nudannsrfvjggoergvyn`) — schemas, migrations, GRANTs, Custom Access Token Hook e Data API
-expostos, confirmados via query direta/Management API.
-**Gates locais (`pnpm run ci:local`, = `lefthook run pre-push`):** esteira ✅ · fidelidade ✅ ·
-mermaid ✅ · migrations (Squawk + RLS-GRANT) ✅ · lint ✅ · typecheck ✅ · arch:check ✅ · build ✅ ·
-test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de verdade).
+(hardening v3.4.0) + E00-S08 (rename de papéis) **mergeadas em `main` e aplicadas em produção**
+(PRs #4/#5/#6/#7/#8). E00-S09 (grupos/permissões por módulo, fundação) implementada na branch
+`feat/E00-S09-grupos-permissao-modulo` — parte foi rascunhada por outro agente (Codex) na mesma
+branch antes desta sessão retomar; revisei tudo linha a linha (não confiar às cegas) e achei um
+bug de segurança real (ver Decisões). Repo `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`.
+Supabase **reprovisionado** (`nudannsrfvjggoergvyn`) — schemas, migrations, GRANTs, Custom Access
+Token Hook e Data API expostos, confirmados via query direta/Management API.
+**Gates locais rodados nesta sessão:** `lint:migrations` ✅ (9 migrations, Squawk limpo) ·
+`audit:esteira` ✅ · `lint` (Biome) ✅ · `typecheck` ✅. **Não rodado:** `supabase test db`
+(pgTAP) — Docker indisponível localmente nesta sessão; job `db-tests` do CI é o gate real,
+**checar antes do merge**.
+
+## Incidentes resolvidos nesta sessão
+- **Login do superadmin "credenciais inválidas"**: investigado — a senha/usuário estão corretos
+  (confirmado testando `POST /auth/v1/token?grant_type=password` direto na API, retornou token
+  válido). A causa real é o deploy do Netlify estar quebrado (ver item abaixo) — o site em
+  produção está servindo um build antigo/stale, possivelmente com env vars do Supabase antigo.
+  **Ação do usuário**: depois que o Netlify voltar a buildar (fix já commitado), confirmar em
+  Site settings → Environment variables que `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` apontam
+  pro projeto atual (`nudannsrfvjggoergvyn`) — não consigo checar isso eu mesmo (Netlify CLI
+  local não está autenticado).
+- **Build do Netlify falhando** (`core.hooksPath is set locally to '.husky/_'`, Lefthook recusa
+  instalar): `scripts/prepare-hooks.mjs` novo (pula `lefthook install` quando `CI`/`NETLIFY`/
+  `GITHUB_ACTIONS` estão setados — hooks de git não servem pra nada em CI/build) +
+  `package.json` `prepare` aponta pra ele. Revisado, correto e seguro (CI já roda os gates
+  direto, nunca dependeu dos hooks instalados).
+- **GitHub Actions `deploy.yml`/`sync-secrets.yml` falhando** ("Invalid access token format"):
+  o secret `SUPABASE_ACCESS_TOKEN` no GitHub não estava no formato `sbp_...` esperado pelo
+  Supabase CLI, mesmo o `.env.local` local estando correto — re-sincronizado via `gh secret set`
+  para descartar corrupção do upload em lote de sessão anterior. `sync-secrets.yml` teve o
+  gatilho automático (`push`) desligado por precaução até confirmar que o secret está certo —
+  rodar manualmente (`workflow_dispatch`) antes de reativar o automático.
 
 ## Em andamento / próximo passo
-- **Branch atual:** `feat/E00-S08-renomear-papeis-rbac` — usuário pediu para renomear os papéis
-  RBAC (`admin/escritorio/tecnico` → `superadmin/supervisor/colaborador`, `cliente-sindico`
-  inalterado, confirmado 1:1 via pergunta de esclarecimento) e cadastrar
-  `sinergicaengenharia@gmail.com` como superadmin, porque vai começar a desenvolver
-  auth/autorização e, na sequência, o PCM. Feito: usuário criado no Supabase Auth + provisionado
-  com papel `admin` (valor válido hoje — a migration `0004` desta story remapeia
-  automaticamente para `superadmin` quando mergear, sem passo manual extra). Migration `0004`
-  usa `alter policy` (não recria) nas ~19 policies de `0002_E00-S05_perfis_rbac.sql`. Ver
-  `specs/E00-S08-renomear-papeis-rbac/tasks.md`.
+- **Branch atual:** `feat/E00-S09-grupos-permissao-modulo` — usuário pediu um sistema de grupos
+  de permissão por módulo (`superadmin`/`supervisor` criam grupos com leitura/escrita por
+  módulo, atribuem usuário a grupo OU permissão individual, nunca os dois). Plano completo
+  aprovado em plan mode (ver `docs/adr/0004-permissoes-por-modulo-grupos.md` e
+  `specs/E00-S09-grupos-permissao-modulo/design.md`). Implementado: migrations `0006`-`0009`
+  (schema `grupos`/`grupo_modulos`/`usuario_modulos`, resolver + hook JWT `user_modulos`, RLS de
+  domínio por módulo, `feature_flags` superadmin-only), Edge Function
+  `config-gerenciar-usuario` (cria usuário Auth + papel + permissão inicial numa chamada), pgTAP
+  (28 asserções), ADR-0004, glossário, `db/rls.template.sql`, runbook. **E00-S10** (UI
+  administrativa + gating de sidebar) é a próxima story, depende desta mergeada.
+- **Revisão de segurança nesta sessão** (parte do trabalho tinha sido rascunhada por outro
+  agente/Codex antes de eu retomar — usuário pediu revisão cética, não confiar às cegas):
+  achei e corrigi um bug real — `config.resolver_permissoes_modulo` e
+  `config.definir_permissao_usuario` usavam `current_user` pra reconhecer chamadas
+  internas/privilegiadas, mas `current_user` dentro de uma função `SECURITY DEFINER` é sempre o
+  **dono** da função, nunca quem chamou — a guarda nunca disparava, então qualquer
+  `authenticated` conseguiria ler a permissão de qualquer usuário e reatribuir grupo/permissão
+  de qualquer um. Corrigido pra `session_user`. Achei também `plan(34)` no pgTAP quando só havia
+  28 asserções reais — corrigido. Nenhum dos dois bugs tinha sido pego porque o código nunca foi
+  rodado de verdade (sem `supabase test db`) antes desta revisão.
 - **Pendente (SPEC_DEVIATION, aguardando aprovação do usuário):** (1) criar de fato
   `.claude/skills/revisao-adversarial/SKILL.md` — o classificador de auto-modo bloqueou por ser
   arquivo novo de comportamento padrão, mandato geral não foi específico o suficiente; conteúdo

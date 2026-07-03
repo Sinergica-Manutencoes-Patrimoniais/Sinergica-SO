@@ -1,7 +1,7 @@
 -- Template de RLS (Row Level Security) — copie e adapte por tabela.
 -- Regra do Padrão OS: toda tabela com dado de usuário tem RLS. Sem policy = sem acesso.
--- Single-repo: schema public. OS: troque public.<tabela> pelo schema do domínio e use FORCE
--- (ver os-layer/seguranca/os-grade.md). Papéis lidos do JWT: ceo, financeiro, analista.
+-- Sinérgica SO: tabelas de domínio devem usar permissão por módulo via claim `user_modulos`
+-- (ADR-0004). `user_role = 'superadmin'` segue como bypass explícito.
 
 -- 1) Habilitar RLS
 alter table public.nome_tabela enable row level security;
@@ -17,30 +17,46 @@ alter table public.nome_tabela enable row level security;
 grant select, insert, update, delete on public.nome_tabela to authenticated;
 -- A RLS é que decide QUAIS linhas/colunas cada papel acessa; o GRANT só abre a porta da tabela.
 
--- 3) Leitura — papéis com acesso
+-- 3) Leitura — módulo com `leitura` ou `escrita`
 create policy "nome_tabela_select" on public.nome_tabela
   for select to authenticated
-  using (auth.jwt() ->> 'user_role' in ('ceo', 'financeiro', 'analista'));
+  using (
+    auth.jwt() ->> 'user_role' = 'superadmin'
+    or auth.jwt() -> 'user_modulos' ->> '<modulo>' in ('leitura', 'escrita')
+  );
 
--- 4) Inserção — papéis de escrita
+-- 4) Inserção — módulo com `escrita`
 create policy "nome_tabela_insert" on public.nome_tabela
   for insert to authenticated
-  with check (auth.jwt() ->> 'user_role' in ('ceo', 'financeiro'));
+  with check (
+    auth.jwt() ->> 'user_role' = 'superadmin'
+    or auth.jwt() -> 'user_modulos' ->> '<modulo>' = 'escrita'
+  );
 
 -- 5) Atualização
 create policy "nome_tabela_update" on public.nome_tabela
   for update to authenticated
-  using (auth.jwt() ->> 'user_role' in ('ceo', 'financeiro'))
-  with check (auth.jwt() ->> 'user_role' in ('ceo', 'financeiro'));
+  using (
+    auth.jwt() ->> 'user_role' = 'superadmin'
+    or auth.jwt() -> 'user_modulos' ->> '<modulo>' = 'escrita'
+  )
+  with check (
+    auth.jwt() ->> 'user_role' = 'superadmin'
+    or auth.jwt() -> 'user_modulos' ->> '<modulo>' = 'escrita'
+  );
 
 -- 6) Exclusão — mais restrito
 create policy "nome_tabela_delete" on public.nome_tabela
   for delete to authenticated
-  using (auth.jwt() ->> 'user_role' = 'ceo');
+  using (auth.jwt() ->> 'user_role' = 'superadmin');
 
 -- ── Multi-tenant (quando houver workspace/org) ────────────────────────────────
 -- Acrescente o isolamento por tenant ao USING/WITH CHECK:
---   using (workspace_id = (auth.jwt() ->> 'workspace_id')::uuid and auth.jwt() ->> 'user_role' in (...))
+--   using (
+--     workspace_id = (auth.jwt() ->> 'workspace_id')::uuid
+--     and (auth.jwt() ->> 'user_role' = 'superadmin'
+--       or auth.jwt() -> 'user_modulos' ->> '<modulo>' in ('leitura', 'escrita'))
+--   )
 
 -- ── Verificação (rode após aplicar) ───────────────────────────────────────────
 -- RLS ativa por tabela:
