@@ -10,10 +10,12 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-03 por @dev (3 stories em volume: E00-S09 (fundação de grupos),
-E00-S10 (UI de grupos, em cima de E00-S09) e E01-S09 (fundação Auvo) — implementadas via agentes
-`@dev` em worktrees paralelos, cada uma revisada como `@qa` antes de aceitar. PR #9 (E00-S09+S10)
-e PR #10 (E01-S09) abertos; `db-tests` real no CI achou mais 2 bugs em E00-S09, corrigidos)
+**Última atualização:** 2026-07-03 por @dev (PR #9 (E00-S09+S10), PR #10 (E01-S09) e PR #11
+(E01-S10) mergeados em `main`. `E01-S10` (webhook Auvo → status da OS): AC-1 a AC-6 implementados
+e mergeados, AC-7 deferido — `pcm.pmoc_records` não existe, PMOC não construído — ver
+SPEC_DEVIATION em `specs/E01-S10-integracao-auvo-webhook-status/tasks.md`. Sessão pausada aqui por
+aviso de limite (reset 5am) — E01-S11 e E01-S02 seguem "Planejado", sem owner, próxima sessão pode
+seguir o ROADMAP normalmente)
 
 ## Status geral
 **Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) + E00-S07
@@ -43,6 +45,21 @@ de escopo (o que ficou de fora e por quê) em
 `specs/E00-S10-grupos-permissao-ui/tasks.md` → "Decisões de escopo". O gap de GRANT/DELETE em
 `config.grupos`/`grupo_modulos` achado durante esta implementação já está corrigido (migration
 `0010`, ver "Entrega em volume" abaixo).
+
+**E01-S10** (webhook Auvo — status/conclusão de OS) implementada sobre a fundação `E01-S09` já
+mergeada: `supabase/functions/_shared/auvo/verify-signature.ts` (validação HMAC-SHA256 do header
+`X-Auvo-Signature`, com teste unitário de 12 casos) + `supabase/functions/pcm-auvo-webhook/
+index.ts` (Edge Function chamada pelo Auvo — auth por assinatura, não `requireServiceRole`, já
+que não é chamada interna). AC-1 a AC-6 implementados; AC-7 (registro PMOC na conclusão de
+preventiva) **deferido** via SPEC_DEVIATION — `pcm.pmoc_records` não existe (PMOC ainda
+"Planejado" no ROADMAP). Segunda SPEC_DEVIATION: o mapeamento de "task Cancelada" (AC-4) não tem
+`taskStatus` documentado no mapeamento Auvo consultado — inferido como `action=3 (Exclusão)` da
+task, a confirmar contra webhook real antes de produção. Nenhuma migration nova (o índice
+`idx_os_auvo_task` de `0001_E00-S00` já cobre a busca por `auvo_task_id`, e `status` é coluna
+`text` livre, sem `CHECK` a alterar). `.github/workflows/sync-secrets.yml` ganhou
+`AUVO_WEBHOOK_SECRET` na lista (wiring de placeholder — valor real é provisionamento manual, fora
+do alcance deste agente). **Não verificado, mesma ressalva de E01-S09:** sem Deno CLI neste
+ambiente, nada foi type-checked/executado contra o Auvo real.
 
 ## Incidentes resolvidos nesta sessão
 - **Login do superadmin "credenciais inválidas"**: investigado — a senha/usuário estão corretos
@@ -184,9 +201,9 @@ nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
 | `E00-S07-hardening-padrao-v3.2.0` | **implementado e mergeado** (PR #7) | `pnpm run ci:local` ✅ (esteira/fidelidade/mermaid/migrations/lint/typecheck/arch/build/test) |
 | `E00-S08-renomear-papeis-rbac` | implementado, usuário superadmin já provisionado | aguardando `ci:local`/PR |
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
-| `E01-S09-integracao-auvo-fundacao` | **código escrito** (cliente HTTP, task/priority-map, 2 Edge Functions, migration do trigger) — sem execução Deno/Postgres real neste ambiente, 6 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` ✅ · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
-| `E01-S10-integracao-auvo-webhook-status` | spec pronta, **implementação não iniciada** | depende de E01-S09 |
-| `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | spec pronta, **implementação não iniciada** | depende de E01-S09 |
+| `E01-S09-integracao-auvo-fundacao` | **implementado e mergeado** (PR #10) — cliente HTTP, task/priority-map, 2 Edge Functions, migration do trigger; 6 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` ✅ · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
+| `E01-S10-integracao-auvo-webhook-status` | **implementado e mergeado** (PR #11) — AC-1 a AC-6 (`_shared/auvo/verify-signature.ts` + `pcm-auvo-webhook`), AC-7 deferido (SPEC_DEVIATION — PMOC não existe); 2 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` n/a (sem migration nova) · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
+| `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | spec pronta, **implementação não iniciada** | depende de E01-S10 |
 
 ## Decisões recentes
 - 2026-07-03: `E01-S09` (fundação Auvo) implementada em branch própria
