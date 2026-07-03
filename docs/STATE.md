@@ -10,7 +10,38 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-03 por @dev (Dex). **E01-S11 (sync técnicos/equipes/equipamentos
+**Última atualização:** 2026-07-03 por @dev (Dex) — **blocker do @qa CORRIGIDO.** O único blocker
+da revisão @qa (pgTAP `tecnicos_equipamentos_cache_rls.test.sql` falharia no `db-tests` da CI: os
+4 blocos UPDATE/DELETE de `authenticated` esperavam filtro silencioso, mas sem `GRANT UPDATE/DELETE`
+o Postgres nega no nível de ACL — `42501` — e aborta a transação) foi resolvido: os 4 blocos agora
+usam `throws_ok(..., '42501', ...)`, mesmo padrão dos INSERT. `lint:migrations` segue verde. Falta
+só a CI (`db-tests`, precisa de Docker) confirmar o pgTAP verde — não roda neste ambiente. A
+OPEN-QUESTION ao lead (pular soft-delete quando o Auvo devolve 0 registros) segue aberta, não
+bloqueante. Revisão @qa abaixo preservada.
+
+**Revisão anterior (@qa Quinn):** revisão adversarial de `E01-S11`.
+**Veredito: CONCERNS — NÃO liberar para @devops/merge ainda.** O código-fonte (migrations
+`0012`/`0013`, Edge Functions, `paginate.ts`) e o schema implementam AC-1..AC-5 corretamente;
+revisei o diff `c9a6bcf` linha a linha e rerodei os gates Node (lint:migrations, typecheck, test,
+build) — todos verdes; `audit:esteira` vermelho é 100% pré-existente/fora de escopo (só
+`.claude/agents/*.md` + `.claude/agent-memory/*` não rastreados, nada da story). Concern #2
+(vínculo de equipamento a cliente errado) **não** se confirmou: a resolução de `auvo_customer_id`
+é match exato em lote contra `pcm.clientes.auvo_id`, ou `null` — nunca "primeiro resultado às
+cegas". Guarda de soft-delete (AC-4) correta por construção (`auvoPaginate` propaga erro → `catch`
+antes de qualquer escrita). Secrets de `0013` reusam exatamente `auvo_trigger_project_url`/
+`auvo_trigger_service_role_key` de `0011`. **1 blocker real:** o pgTAP
+`tecnicos_equipamentos_cache_rls.test.sql` vai falhar no job `db-tests` da CI — as tabelas de
+cache dão a `authenticated` só `GRANT SELECT`, então `UPDATE`/`DELETE` fora de `throws_ok`
+(linhas 51/57/65/70) levantam `42501 permission denied` e abortam a transação, em vez de
+"filtrar 0 linhas" como o teste assume (modelo copiado de `pcm.clientes`, que tem grant de
+update). AC-3 continua satisfeito (authenticated realmente não escreve — até mais estrito), mas
+o teste, como está, não passa. → **@dev**: envolver os UPDATE/DELETE em `throws_ok(..., '42501')`
+e confirmar `db-tests` verde. **1 OPEN-QUESTION ao lead** (já sinalizada por @dev): pular
+reconciliação de soft-delete quando o Auvo devolve 0 registros — fronteira produto/implementação.
+Não verificado aqui (sem Deno/Docker): type-check Deno, testes de integração, execução real do
+pgTAP. Detalhe abaixo (bloco @dev preservado).
+
+**Atualização anterior (@dev, Dex):** **E01-S11 (sync técnicos/equipes/equipamentos
 Auvo → PCM) implementada** na branch `feat/E01-S11-integracao-auvo-sync-tecnicos-equipamentos`,
 commit local (sem push — push bloqueado nesta sessão, @devops abre o PR depois). Entregue: migrations
 `0012` (cache `pcm.tecnicos_cache`/`pcm.equipamentos_cache`, RLS FORCE, `grant usage on schema pcm to

@@ -125,7 +125,10 @@ Arquivos criados/alterados:
 - `supabase/functions/_shared/auvo/paginate.ts` (+ `paginate.test.ts`, Deno).
 - `supabase/functions/pcm-auvo-users-sync/index.ts`.
 - `supabase/functions/pcm-auvo-equipment-sync/index.ts`.
-- `supabase/tests/tecnicos_equipamentos_cache_rls.test.sql` (pgTAP, AC-3).
+- `supabase/tests/tecnicos_equipamentos_cache_rls.test.sql` (pgTAP, AC-3). **Correção @qa:** os
+  blocos de UPDATE/DELETE de `authenticated` usam `throws_ok('42501')`, não teste-por-efeito — como
+  `authenticated` só tem `grant select`, o Postgres nega no nível de ACL antes da RLS (lança exceção,
+  não filtra silenciosamente); a versão original teria abortado a transação no `db-tests` da CI.
 - `docs/blueprint/integracoes/auvo.md` — conferido, nomes batem, sem mudança.
 
 Gates rodados nesta sessão:
