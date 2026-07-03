@@ -197,7 +197,7 @@ nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
   `service_role`, sem `sub`); `_shared/auvo/client.ts` (login cacheado 30min−120s, retry 401 1x,
   backoff 429 1x, log `X-Request-Id`+UTC); `_shared/auvo/task-type-map.ts` +
   `_shared/auvo/priority-map.ts` (+ testes Deno); Edge Functions `pcm-auvo-customers-sync` e
-  `pcm-auvo-create-task`; migration `0006_E01-S09_trigger_auvo_planejamento.sql` (trigger
+  `pcm-auvo-create-task`; migration `0011_E01-S09_trigger_auvo_planejamento.sql` (trigger
   `pg_net` assíncrono, `exception when others` nunca propaga, secrets via Vault
   `auvo_trigger_project_url`/`auvo_trigger_service_role_key`, não commitados). **Não construído**
   nesta sessão (fora do escopo explícito passado ao `@dev`): port `AuvoGatewayPort` na

@@ -1,4 +1,4 @@
--- 0006_E01-S09_trigger_auvo_planejamento.sql — Sinérgica SO
+-- 0011_E01-S09_trigger_auvo_planejamento.sql — Sinérgica SO
 -- Story E01-S09. Trigger assíncrono (pg_net) em pcm.ordens_servico: quando `status` transiciona
 -- para 'planejamento', dispara HTTP POST para a Edge Function `pcm-auvo-create-task` — SEM
 -- bloquear o UPDATE da OS. Falha do Auvo (ou do próprio pg_net) nunca trava o *system of record*
