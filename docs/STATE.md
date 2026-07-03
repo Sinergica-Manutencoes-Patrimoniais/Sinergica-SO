@@ -10,30 +10,134 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-02 por @dev (E00-S08 — renomeia papéis RBAC para
-superadmin/supervisor/colaborador + provisiona o primeiro superadmin, `sinergicaengenharia@gmail.com`)
+**Última atualização:** 2026-07-03 por @dev (3 stories em volume: E00-S09 (fundação de grupos),
+E00-S10 (UI de grupos, em cima de E00-S09) e E01-S09 (fundação Auvo) — implementadas via agentes
+`@dev` em worktrees paralelos, cada uma revisada como `@qa` antes de aceitar. PR #9 (E00-S09+S10)
+e PR #10 (E01-S09) abertos; `db-tests` real no CI achou mais 2 bugs em E00-S09, corrigidos)
 
 ## Status geral
 **Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) + E00-S07
-(hardening v3.4.0) **mergeadas em `main` e aplicadas em produção** (PRs #4/#5/#6/#7). E00-S08
-(rename de papéis) em implementação na branch `feat/E00-S08-renomear-papeis-rbac`. Repo
-`Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`. Supabase **reprovisionado**
-(`nudannsrfvjggoergvyn`) — schemas, migrations, GRANTs, Custom Access Token Hook e Data API
-expostos, confirmados via query direta/Management API.
-**Gates locais (`pnpm run ci:local`, = `lefthook run pre-push`):** esteira ✅ · fidelidade ✅ ·
-mermaid ✅ · migrations (Squawk + RLS-GRANT) ✅ · lint ✅ · typecheck ✅ · arch:check ✅ · build ✅ ·
-test ✅ (gitleaks pulado local por condição — binário ausente; CI cobre de verdade).
+(hardening v3.4.0) + E00-S08 (rename de papéis) **mergeadas em `main` e aplicadas em produção**
+(PRs #4/#5/#6/#7/#8). E00-S09 (grupos/permissões por módulo, fundação) implementada na branch
+`feat/E00-S09-grupos-permissao-modulo` — parte foi rascunhada por outro agente (Codex) na mesma
+branch antes desta sessão retomar; revisei tudo linha a linha (não confiar às cegas) e achei um
+bug de segurança real (ver Decisões). Repo `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`.
+Supabase **reprovisionado** (`nudannsrfvjggoergvyn`) — schemas, migrations, GRANTs, Custom Access
+Token Hook e Data API expostos, confirmados via query direta/Management API.
+**Gates locais rodados nesta sessão:** `lint:migrations` ✅ (9 migrations, Squawk limpo) ·
+`audit:esteira` ✅ · `lint` (Biome) ✅ · `typecheck` ✅. **Não rodado:** `supabase test db`
+(pgTAP) — Docker indisponível localmente nesta sessão; job `db-tests` do CI é o gate real,
+**checar antes do merge**.
+
+E00-S10 (UI administrativa — grupos, usuários, gating de sidebar) implementada em
+`apps/web/src/features/config/` (domain/application/infrastructure/pages/components, seguindo o
+mesmo padrão hexagonal de `features/auth/`), `apps/web/src/app/permissoes-context.tsx`
+(`PermissoesProvider`/`usePermissoes`) e alterações em `HomePage.tsx`/`App.tsx`. **Gates rodados
+e verdes nesta sessão:** `pnpm run lint`, `pnpm run typecheck`, `pnpm test` (75 passed, 5
+skipped), `pnpm run build`, `pnpm run arch:check`, `node scripts/audit-esteira.mjs`. **Não
+verificado:** teste manual em browser (login real por papel, criar/editar grupo e usuário,
+confirmar sidebar filtrada) — sem ambiente Supabase logável nesta sessão; e o teste de integração
+do novo adapter (`supabase-config-adapter.integration.test.ts`, escrito mas self-skip sem
+`SUPABASE_LOCAL`/Docker). Ambos ficam como validação humana/@qa pendente antes do merge. Detalhes
+de escopo (o que ficou de fora e por quê) em
+`specs/E00-S10-grupos-permissao-ui/tasks.md` → "Decisões de escopo". O gap de GRANT/DELETE em
+`config.grupos`/`grupo_modulos` achado durante esta implementação já está corrigido (migration
+`0010`, ver "Entrega em volume" abaixo).
+
+## Incidentes resolvidos nesta sessão
+- **Login do superadmin "credenciais inválidas"**: investigado — a senha/usuário estão corretos
+  (confirmado testando `POST /auth/v1/token?grant_type=password` direto na API, retornou token
+  válido). A causa real é o deploy do Netlify estar quebrado (ver item abaixo) — o site em
+  produção está servindo um build antigo/stale, possivelmente com env vars do Supabase antigo.
+  **Ação do usuário**: depois que o Netlify voltar a buildar (fix já commitado), confirmar em
+  Site settings → Environment variables que `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` apontam
+  pro projeto atual (`nudannsrfvjggoergvyn`) — não consigo checar isso eu mesmo (Netlify CLI
+  local não está autenticado).
+- **Build do Netlify falhando** (`core.hooksPath is set locally to '.husky/_'`, Lefthook recusa
+  instalar): `scripts/prepare-hooks.mjs` novo (pula `lefthook install` quando `CI`/`NETLIFY`/
+  `GITHUB_ACTIONS` estão setados — hooks de git não servem pra nada em CI/build) +
+  `package.json` `prepare` aponta pra ele. Revisado, correto e seguro (CI já roda os gates
+  direto, nunca dependeu dos hooks instalados).
+- **GitHub Actions `deploy.yml`/`sync-secrets.yml` falhando** ("Invalid access token format"):
+  o secret `SUPABASE_ACCESS_TOKEN` no GitHub não estava no formato `sbp_...` esperado pelo
+  Supabase CLI, mesmo o `.env.local` local estando correto — re-sincronizado via `gh secret set`
+  para descartar corrupção do upload em lote de sessão anterior. `sync-secrets.yml` teve o
+  gatilho automático (`push`) desligado por precaução até confirmar que o secret está certo —
+  rodar manualmente (`workflow_dispatch`) antes de reativar o automático.
+
+## Entrega em volume — 3 stories via agentes paralelos (2026-07-03)
+Usuário pediu para não parar em E00-S09/E00-S10 — "veja o que tem planejado e pendente e use todo
+o fluxo de desenvolvimento com os agentes triviaiox", visando um PR com volume grande de entrega.
+Rodei 2 agentes `@dev` em paralelo, cada um num worktree git isolado (evita conflito de working
+tree), depois revisei cada resultado como `@qa` (ler o diff inteiro, não só o relatório do
+agente) antes de aceitar:
+
+- **E00-S10** (UI de grupos/permissões), worktree em cima da branch de E00-S09 — telas de Grupos
+  e Usuários, `PermissoesProvider` novo, sidebar/tab-bar/dashboard filtrados por permissão
+  real (capacidade que não existia antes: hoje todo mundo via todos os 10 módulos). 75 testes
+  verdes, lint/typecheck/build/arch:check verdes.
+- **E01-S09** (fundação Auvo), worktree/branch nova baseada em `main` — cliente HTTP Auvo
+  compartilhado, `pcm-auvo-customers-sync`/`pcm-auvo-create-task` (Edge Functions), trigger
+  `pg_net` assíncrono em `pcm.ordens_servico`. Gates de código (lint:migrations/audit-esteira/
+  eval-spec-fidelity) verdes; Edge Functions (Deno) não puderam ser type-checked nem executadas
+  nesta sessão — sem Deno CLI disponível — e o formato exato de resposta da API Auvo (paramFilter,
+  campos do envelope `result`) segue a descrição do design.md, não uma chamada real confirmada.
+
+**2 bugs reais achados na revisão (nenhum dos dois pego pelos gates automáticos, só por leitura
+cética do diff):**
+1. `pcm-auvo-customers-sync`/`pcm-auvo-create-task`: fallback `?? search.result[0]` quando a
+   busca por `externalId` não achava match — se o `paramFilter` do Auvo não filtrar como
+   documentado (incerteza já sinalizada pelo próprio código), isso vincularia um cliente/task
+   Auvo **errado** ao registro do PCM, silenciosamente. Corrigido: tratar "sem match" como
+   "não encontrado", nunca pegar o primeiro resultado às cegas.
+2. `config.grupos`/`config.grupo_modulos` (migration `0006`) nunca ganharam GRANT/policy de
+   `DELETE` — só apareceu como bug real quando o agente de E00-S10 tentou consumir o backend
+   (`editarGrupo()` precisa apagar+reinserir `grupo_modulos`; `criarGrupo()` faz rollback
+   apagando o grupo se a gravação de permissões falhar). Corrigido em nova migration `0010`,
+   rebaseada no topo de E00-S10 também.
+
+**Mais 2 bugs achados só depois de abrir o PR #9 e o `db-tests` rodar de verdade no CI (Docker) —
+nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
+3. `custom_access_token_hook`: `to_jsonb(v_papel)` quando `v_papel` é `NULL` em SQL (usuário sem
+   perfil ativo/inativo) retorna `NULL` de SQL, não o literal JSON `null` (`to_jsonb()` é
+   `STRICT`). `jsonb_set(..., NULL)` também é `STRICT` e retorna `NULL` — então **todo** o
+   `v_claims` virava `NULL`, e a função inteira devolvia `event = NULL` em vez de um evento
+   válido. Esse bug já existia desde a versão original do hook em `0002_E00-S05` (nunca pego
+   porque nenhum teste chamava o hook de verdade para um usuário sem perfil/inativo) — ou seja,
+   **já estava ao vivo em produção**. Corrigido com `coalesce(to_jsonb(v_papel), 'null'::jsonb)`.
+4. Minha própria correção anterior (`current_user` → `session_user`, achado #1 acima) também
+   estava errada: `session_user` não muda dentro de `SECURITY DEFINER` (certo), mas **também não
+   muda com `SET LOCAL ROLE`** — e é assim que o PostgREST (e os testes pgTAP que simulam
+   PostgREST) trocam de papel numa conexão já aberta. `session_user` continha sempre o role da
+   conexão física (`postgres`), nunca `'authenticated'` — a guarda nunca disparava pra chamada de
+   usuário comum. Achado pelo teste `"colaborador NAO resolve permissoes de outro usuario"`
+   falhando de verdade no `db-tests`. Fix real: usar o claim padrão `role` do JWT
+   (`auth.jwt() ->> 'role'`), não introspecção de role do Postgres — sempre presente num JWT real
+   do PostgREST, ausente só quando não há contexto de request (chamada interna confiável).
+
+**Nenhuma das 3 branches foi pusheada** — commits locais, aguardando decisão do usuário.
 
 ## Em andamento / próximo passo
-- **Branch atual:** `feat/E00-S08-renomear-papeis-rbac` — usuário pediu para renomear os papéis
-  RBAC (`admin/escritorio/tecnico` → `superadmin/supervisor/colaborador`, `cliente-sindico`
-  inalterado, confirmado 1:1 via pergunta de esclarecimento) e cadastrar
-  `sinergicaengenharia@gmail.com` como superadmin, porque vai começar a desenvolver
-  auth/autorização e, na sequência, o PCM. Feito: usuário criado no Supabase Auth + provisionado
-  com papel `admin` (valor válido hoje — a migration `0004` desta story remapeia
-  automaticamente para `superadmin` quando mergear, sem passo manual extra). Migration `0004`
-  usa `alter policy` (não recria) nas ~19 policies de `0002_E00-S05_perfis_rbac.sql`. Ver
-  `specs/E00-S08-renomear-papeis-rbac/tasks.md`.
+- **Branch atual:** `feat/E00-S09-grupos-permissao-modulo` — usuário pediu um sistema de grupos
+  de permissão por módulo (`superadmin`/`supervisor` criam grupos com leitura/escrita por
+  módulo, atribuem usuário a grupo OU permissão individual, nunca os dois). Plano completo
+  aprovado em plan mode (ver `docs/adr/0004-permissoes-por-modulo-grupos.md` e
+  `specs/E00-S09-grupos-permissao-modulo/design.md`). Implementado: migrations `0006`-`0009`
+  (schema `grupos`/`grupo_modulos`/`usuario_modulos`, resolver + hook JWT `user_modulos`, RLS de
+  domínio por módulo, `feature_flags` superadmin-only), Edge Function
+  `config-gerenciar-usuario` (cria usuário Auth + papel + permissão inicial numa chamada), pgTAP
+  (28 asserções), ADR-0004, glossário, `db/rls.template.sql`, runbook. **E00-S10** (UI
+  administrativa + gating de sidebar) é a próxima story, depende desta mergeada.
+- **Revisão de segurança nesta sessão** (parte do trabalho tinha sido rascunhada por outro
+  agente/Codex antes de eu retomar — usuário pediu revisão cética, não confiar às cegas):
+  achei e corrigi um bug real — `config.resolver_permissoes_modulo` e
+  `config.definir_permissao_usuario` usavam `current_user` pra reconhecer chamadas
+  internas/privilegiadas, mas `current_user` dentro de uma função `SECURITY DEFINER` é sempre o
+  **dono** da função, nunca quem chamou — a guarda nunca disparava, então qualquer
+  `authenticated` conseguiria ler a permissão de qualquer usuário e reatribuir grupo/permissão
+  de qualquer um. Corrigido pra `session_user`. Achei também `plan(34)` no pgTAP quando só havia
+  28 asserções reais — corrigido. Nenhum dos dois bugs tinha sido pego porque o código nunca foi
+  rodado de verdade (sem `supabase test db`) antes desta revisão.
 - **Pendente (SPEC_DEVIATION, aguardando aprovação do usuário):** (1) criar de fato
   `.claude/skills/revisao-adversarial/SKILL.md` — o classificador de auto-modo bloqueou por ser
   arquivo novo de comportamento padrão, mandato geral não foi específico o suficiente; conteúdo

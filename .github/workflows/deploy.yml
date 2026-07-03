@@ -46,6 +46,22 @@ jobs:
         with:
           version: latest
 
+      - name: Validar secrets do Supabase CLI
+        run: |
+          case "$SUPABASE_ACCESS_TOKEN" in
+            sbp_*) ;;
+            *)
+              echo "::error::SUPABASE_ACCESS_TOKEN inválido. Use um Personal Access Token da Supabase no formato sbp_..., não service_role, anon key, project ref ou DB password."
+              exit 1
+              ;;
+          esac
+          test -n "$SUPABASE_PROJECT_ID" || { echo "::error::SUPABASE_PROJECT_ID ausente"; exit 1; }
+          test -n "$SUPABASE_DB_PASSWORD" || { echo "::error::SUPABASE_DB_PASSWORD ausente"; exit 1; }
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
       - name: Link ao projeto do ambiente
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
         env:
