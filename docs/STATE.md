@@ -40,7 +40,14 @@ confirmar sidebar filtrada) — sem ambiente Supabase logável nesta sessão; e 
 do novo adapter (`supabase-config-adapter.integration.test.ts`, escrito mas self-skip sem
 `SUPABASE_LOCAL`/Docker). Ambos ficam como validação humana/@qa pendente antes do merge. Detalhes
 de escopo (o que ficou de fora e por quê) em
-`specs/E00-S10-grupos-permissao-ui/tasks.md` → "Decisões de escopo".
+`specs/E00-S10-grupos-permissao-ui/tasks.md` → "Decisões de escopo". **Achado durante esta
+sessão (bug em E00-S09, não corrigido — fora do meu escopo mexer em `supabase/migrations/`):**
+a migration `0006_E00-S09_grupos_permissoes_modulo.sql` nunca concede `DELETE` (nem define RLS
+policy de delete) em `config.grupos`/`config.grupo_modulos`/`config.usuario_modulos` para
+`authenticated` — isso quebra em runtime o fluxo de "editar permissões de um grupo existente" da
+nova `GruposPage` (que precisa apagar as linhas antigas de `grupo_modulos` antes de reinserir).
+Detalhe completo e fix sugerido em
+`specs/E00-S10-grupos-permissao-ui/tasks.md` → "Bug encontrado em E00-S09".
 
 ## Incidentes resolvidos nesta sessão
 - **Login do superadmin "credenciais inválidas"**: investigado — a senha/usuário estão corretos

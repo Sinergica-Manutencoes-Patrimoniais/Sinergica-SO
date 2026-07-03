@@ -18,7 +18,7 @@ alwaysApply: false
 | 5  | `PermissoesProvider` (`app/`) — chama `resolverMinhasPermissoes` ao autenticar, expõe `podeAcessar(modulo, nivel)` | AC-4 | 4 | teste unitário | done (lógica) — a resolução pura (`podeAcessarModulo`) está em `domain/permissao.ts` e testada; o Provider React em si (`app/permissoes-context.tsx`) não tem teste próprio — projeto não tem `@testing-library/react` instalado, mesma lacuna que `auth-context.tsx` já tinha |
 | 6  | `HomePage.tsx`: sidebar/tab-bar filtra `MODULOS` por `podeAcessar`; botão "Configurações" ganha `onClick` e visibilidade por papel | AC-1, AC-4 | 5 | teste manual (browser) | parcial — código implementado, `typecheck`/`build`/`lint` verdes; **teste manual em browser não executado** (sem ambiente Supabase logável nesta sessão) — golden path e borda por papel ficam para validação humana |
 | 7  | Componente `ModuloPermissaoGrid` (9 módulos × nenhum/leitura/escrita) reaproveitado nas 2 telas | AC-2, AC-3 | 2 | teste unitário | done (parcial) — componente puro implementado e reaproveitado por `GruposPage`/`UsuariosPage`; sem `.test.tsx` dedicado (mesma lacuna de `LoginPage.tsx`/`HomePage.tsx` — projeto não testa componentes React, só domain/application) |
-| 8  | `GruposPage` — listar/criar/editar `[P]` | AC-2 | 4, 7 | teste manual (browser) | parcial — código implementado (`typecheck`/`build`/`lint` verdes); **teste manual em browser não executado** |
+| 8  | `GruposPage` — listar/criar/editar `[P]` | AC-2 | 4, 7 | teste manual (browser) | parcial — listar/criar (caminho feliz) e toggle `ativo` implementados; **editar permissões de um grupo existente vai falhar em runtime** por um gap de GRANT/RLS em E00-S09 (ver seção "Bug encontrado em E00-S09" abaixo) — não é bug desta story, mas bloqueia esse fluxo até corrigirem lá |
 | 9  | `UsuariosPage` — listar/criar/editar, toggle grupo↔individual sem estado inválido `[P]` | AC-3 | 4, 7 | teste manual (browser) | parcial — código implementado (`typecheck`/`build`/`lint` verdes); troca de modo sempre passa por `definirPermissaoUsuario` (nunca duas escritas separadas); **teste manual em browser não executado** |
 | 10 | `docs/STATE.md` + `docs/epics/ROADMAP.md` atualizados | — | 1-9 | inspeção | done |
 
@@ -47,6 +47,33 @@ alwaysApply: false
   sidebar/tab-bar (que é o que o AC-4 menciona literalmente). Extensão de escopo pequena e
   consistente com a intenção do AC — sem isso, um usuário sem acesso a um módulo ainda veria o
   card de KPI dele na Home.
+
+## Bug encontrado em E00-S09 (fora do meu escopo consertar — reportado, não corrigido)
+- **`supabase/migrations/0006_E00-S09_grupos_permissoes_modulo.sql` linha 77 nunca concede
+  `DELETE`** em `config.grupos`/`config.grupo_modulos`/`config.usuario_modulos` para o role
+  `authenticated` (`grant select, insert, update on ... to authenticated;` — falta `delete`), e
+  **nenhuma migration de E00-S09 define policy de RLS para o comando DELETE** nessas 3 tabelas
+  (só existem policies `_select`/`_insert`/`_update`). `config.definir_permissao_usuario` continua
+  funcionando porque é `SECURITY DEFINER` e roda com o privilégio do dono da função (bypassa
+  GRANT/RLS) — mas **qualquer DELETE feito pelo client via PostgREST/supabase-js falha com
+  permission denied (42501)**, mesmo para superadmin/supervisor (GRANT é por role do Postgres,
+  não pelo `papel` da aplicação).
+- **Impacto concreto no código desta story:** `supabase-config-adapter.ts` → `editarGrupo()` faz
+  `delete from grupo_modulos where grupo_id = id` antes de reinserir as novas permissões (padrão
+  "substituir tudo") — **essa chamada vai falhar em produção/local** quando um
+  superadmin/supervisor editar as permissões de um grupo existente pela `GruposPage`. O mesmo
+  adapter também tenta um `delete` de rollback em `criarGrupo()` se o insert de `grupo_modulos`
+  falhar parcialmente — também vai falhar (silenciosamente deixando o grupo órfão, sem lançar um
+  segundo erro visível, porque o catch já está lançando o erro original).
+- **Não afetado:** criar grupo no caminho feliz (INSERT, sem delete envolvido), toggle
+  `ativo` (UPDATE), e tudo em `UsuariosPage` (passa por `definir_permissao_usuario`, que é
+  SECURITY DEFINER).
+- **Fix sugerido para quem revisar E00-S09** (não implementado aqui — fora do meu escopo mexer em
+  `supabase/migrations/`): nova migration `00010_E0N-SNN_grant_delete_grupos.sql` adicionando
+  `grant delete on config.grupos, config.grupo_modulos, config.usuario_modulos to authenticated;`
+  + policies `_delete` espelhando as `_update` já existentes (`using (auth.jwt() ->> 'user_role'
+  in ('superadmin', 'supervisor'))`, e para `usuario_modulos` seguir o mesmo padrão de
+  `usuario_modulos_update`).
 
 ## Checklist de Definition of Done
 - [x] Todos os AC verdes **pelo gate executável** onde há runner automatizado (lint/typecheck/
