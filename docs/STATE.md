@@ -184,11 +184,37 @@ nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
 | `E00-S07-hardening-padrao-v3.2.0` | **implementado e mergeado** (PR #7) | `pnpm run ci:local` ✅ (esteira/fidelidade/mermaid/migrations/lint/typecheck/arch/build/test) |
 | `E00-S08-renomear-papeis-rbac` | implementado, usuário superadmin já provisionado | aguardando `ci:local`/PR |
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
-| `E01-S09-integracao-auvo-fundacao` | spec+domain+design prontos, **implementação não iniciada** | revisão humana (Fabrício) |
+| `E01-S09-integracao-auvo-fundacao` | **código escrito** (cliente HTTP, task/priority-map, 2 Edge Functions, migration do trigger) — sem execução Deno/Postgres real neste ambiente, 6 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` ✅ · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
 | `E01-S10-integracao-auvo-webhook-status` | spec pronta, **implementação não iniciada** | depende de E01-S09 |
 | `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | spec pronta, **implementação não iniciada** | depende de E01-S09 |
 
 ## Decisões recentes
+- 2026-07-03: `E01-S09` (fundação Auvo) implementada em branch própria
+  (`feat/E01-S09-integracao-auvo-fundacao`, a partir de `main`/`origin/main`, sem misturar com o
+  trabalho paralelo de RBAC/grupos de outra sessão). Entregue: `_shared/auth.ts` ganhou
+  `requireServiceRole` (chamada interna sistema→sistema via `SUPABASE_SERVICE_ROLE_KEY` como
+  Bearer, comparação em tempo constante — `requireAuth`/`auth.getUser()` não serve para JWT de
+  `service_role`, sem `sub`); `_shared/auvo/client.ts` (login cacheado 30min−120s, retry 401 1x,
+  backoff 429 1x, log `X-Request-Id`+UTC); `_shared/auvo/task-type-map.ts` +
+  `_shared/auvo/priority-map.ts` (+ testes Deno); Edge Functions `pcm-auvo-customers-sync` e
+  `pcm-auvo-create-task`; migration `0006_E01-S09_trigger_auvo_planejamento.sql` (trigger
+  `pg_net` assíncrono, `exception when others` nunca propaga, secrets via Vault
+  `auvo_trigger_project_url`/`auvo_trigger_service_role_key`, não commitados). **Não construído**
+  nesta sessão (fora do escopo explícito passado ao `@dev`): port `AuvoGatewayPort` na
+  `application` da feature PCM e o `NullAuvoGateway` de `design.md` §Infra — as Edge Functions
+  chamam o cliente Auvo direto. **6 SPEC_DEVIATION registrados** em `tasks.md` (porta não
+  construída, coluna `clientes.endereco` inexistente, mapeamento de prioridade provisório,
+  mecanismo de auth interna não estava em `design.md`, contrato exato da API Auvo não verificável
+  neste ambiente, Deno CLI ausente — nenhum `.ts` foi type-checked/executado). Gates Node
+  rodaram e passaram (`lint:migrations`, `audit-esteira`, `eval-spec-fidelity`); Squawk não
+  instalado localmente (best-effort, CI é quem bloqueia de verdade). Sem git push (hook bloqueia
+  por design) — trabalho commitado localmente na branch, aguardando push/PR por um devops humano
+  ou sessão com permissão. Nota operacional: no início desta sessão, comandos de git exploratórios
+  (`checkout`/`pull`/`branch -b`) foram rodados por engano no checkout compartilhado
+  `~/Documents/GitHub/Sinergica/Sinergica-SO` (usado por outra sessão em paralelo) antes de eu
+  perceber que meu trabalho real deveria ficar isolado no worktree
+  `.claude/worktrees/agent-ae59de4e0ebc9048e` — nenhum comando destrutivo foi executado lá (só
+  checkout/pull/criação de branch), mas vale registrar caso a outra sessão note o branch mudado.
 - 2026-07-02: Papéis RBAC renomeados (E00-S08) — `admin→superadmin`, `escritorio→supervisor`,
   `tecnico→colaborador`; `cliente-sindico` inalterado (ator externo, fora da hierarquia de
   colaborador). Confirmado com o usuário: rename 1:1, mesma matriz de permissão de E00-S05, sem
