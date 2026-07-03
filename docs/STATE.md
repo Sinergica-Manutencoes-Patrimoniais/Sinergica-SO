@@ -12,8 +12,8 @@ alwaysApply: true
 
 **Última atualização:** 2026-07-03 por @dev (3 stories em volume: E00-S09 (fundação de grupos),
 E00-S10 (UI de grupos, em cima de E00-S09) e E01-S09 (fundação Auvo) — implementadas via agentes
-`@dev` em worktrees paralelos, cada uma revisada como `@qa` antes de aceitar. Todas com commits
-locais, nenhuma pusheada ainda — aguardando decisão do usuário sobre push/PR)
+`@dev` em worktrees paralelos, cada uma revisada como `@qa` antes de aceitar. PR #9 (E00-S09+S10)
+e PR #10 (E01-S09) abertos; `db-tests` real no CI achou mais 2 bugs em E00-S09, corrigidos)
 
 ## Status geral
 **Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) + E00-S07
@@ -28,6 +28,19 @@ Token Hook e Data API expostos, confirmados via query direta/Management API.
 `audit:esteira` ✅ · `lint` (Biome) ✅ · `typecheck` ✅. **Não rodado:** `supabase test db`
 (pgTAP) — Docker indisponível localmente nesta sessão; job `db-tests` do CI é o gate real,
 **checar antes do merge**.
+
+E00-S10 (UI administrativa — grupos, usuários, gating de sidebar) implementada em
+`apps/web/src/features/config/` (domain/application/infrastructure/pages/components, seguindo o
+mesmo padrão hexagonal de `features/auth/`), `apps/web/src/app/permissoes-context.tsx`
+(`PermissoesProvider`/`usePermissoes`) e alterações em `HomePage.tsx`/`App.tsx`. **Gates rodados
+e verdes nesta sessão:** `pnpm run lint`, `pnpm run typecheck`, `pnpm test` (75 passed, 5
+skipped), `pnpm run build`, `pnpm run arch:check`, `node scripts/audit-esteira.mjs`. **Não
+verificado:** teste manual em browser (login real por papel, criar/editar grupo e usuário,
+confirmar sidebar filtrada) — sem ambiente Supabase logável nesta sessão; e o teste de integração
+do novo adapter (`supabase-config-adapter.integration.test.ts`, escrito mas self-skip sem
+`SUPABASE_LOCAL`/Docker). Ambos ficam como validação humana/@qa pendente antes do merge. Detalhes
+de escopo (o que ficou de fora e por quê) em
+`specs/E00-S10-grupos-permissao-ui/tasks.md` → "Decisões de escopo".
 
 ## Incidentes resolvidos nesta sessão
 - **Login do superadmin "credenciais inválidas"**: investigado — a senha/usuário estão corretos
@@ -80,6 +93,25 @@ cética do diff):**
    (`editarGrupo()` precisa apagar+reinserir `grupo_modulos`; `criarGrupo()` faz rollback
    apagando o grupo se a gravação de permissões falhar). Corrigido em nova migration `0010`,
    rebaseada no topo de E00-S10 também.
+
+**Mais 2 bugs achados só depois de abrir o PR #9 e o `db-tests` rodar de verdade no CI (Docker) —
+nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
+3. `custom_access_token_hook`: `to_jsonb(v_papel)` quando `v_papel` é `NULL` em SQL (usuário sem
+   perfil ativo/inativo) retorna `NULL` de SQL, não o literal JSON `null` (`to_jsonb()` é
+   `STRICT`). `jsonb_set(..., NULL)` também é `STRICT` e retorna `NULL` — então **todo** o
+   `v_claims` virava `NULL`, e a função inteira devolvia `event = NULL` em vez de um evento
+   válido. Esse bug já existia desde a versão original do hook em `0002_E00-S05` (nunca pego
+   porque nenhum teste chamava o hook de verdade para um usuário sem perfil/inativo) — ou seja,
+   **já estava ao vivo em produção**. Corrigido com `coalesce(to_jsonb(v_papel), 'null'::jsonb)`.
+4. Minha própria correção anterior (`current_user` → `session_user`, achado #1 acima) também
+   estava errada: `session_user` não muda dentro de `SECURITY DEFINER` (certo), mas **também não
+   muda com `SET LOCAL ROLE`** — e é assim que o PostgREST (e os testes pgTAP que simulam
+   PostgREST) trocam de papel numa conexão já aberta. `session_user` continha sempre o role da
+   conexão física (`postgres`), nunca `'authenticated'` — a guarda nunca disparava pra chamada de
+   usuário comum. Achado pelo teste `"colaborador NAO resolve permissoes de outro usuario"`
+   falhando de verdade no `db-tests`. Fix real: usar o claim padrão `role` do JWT
+   (`auth.jwt() ->> 'role'`), não introspecção de role do Postgres — sempre presente num JWT real
+   do PostgREST, ausente só quando não há contexto de request (chamada interna confiável).
 
 **Nenhuma das 3 branches foi pusheada** — commits locais, aguardando decisão do usuário.
 

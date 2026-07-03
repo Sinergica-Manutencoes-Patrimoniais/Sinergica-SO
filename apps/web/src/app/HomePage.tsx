@@ -20,26 +20,30 @@ import {
   TrendingDown,
   TrendingUp,
   UserCircle,
+  UserCog,
+  Users,
   Wrench,
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
+import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
+import { GruposPage } from "../features/config/pages/GruposPage";
+import { UsuariosPage } from "../features/config/pages/UsuariosPage";
 import { useAuth } from "./auth-context";
+import { usePermissoes } from "./permissoes-context";
 
 // ─── tipos ──────────────────────────────────────────────────────────────────
 
-type ModuloId =
-  | "inicio"
-  | "pcm"
-  | "atendimento"
-  | "comercial"
-  | "financeiro"
-  | "operacao"
-  | "marketing"
-  | "growth"
-  | "gestao"
-  | "area-cliente";
+type ModuloId = "inicio" | ModuloNegocioId;
+
+// "config" não é módulo de negócio (não tem permissão por módulo) — é a área administrativa,
+// visível só por papel (superadmin/supervisor), não por config.minhas_permissoes.
+type AreaAtiva = ModuloId | "config";
+
+function isModuloNegocio(id: ModuloId): id is ModuloNegocioId {
+  return id !== "inicio";
+}
 
 interface ModuloTab {
   id: ModuloId;
@@ -122,6 +126,11 @@ const MODULOS: ModuloTab[] = [
     icon: UserCircle,
     descricao: "Portal do síndico — chamados, histórico e download de relatórios.",
   },
+];
+
+const CONFIG_NAV: Array<{ id: "grupos" | "usuarios"; label: string; icon: LucideIcon }> = [
+  { id: "grupos", label: "Grupos", icon: Users },
+  { id: "usuarios", label: "Usuários", icon: UserCog },
 ];
 
 const PCM_NAV: NavGroup[] = [
@@ -362,10 +371,16 @@ function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
   );
 }
 
-function DashboardGeral({ onSelect }: { onSelect: (id: ModuloId) => void }) {
+function DashboardGeral({
+  resumos,
+  onSelect,
+}: {
+  resumos: ModuloResumo[];
+  onSelect: (id: ModuloId) => void;
+}) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-      {DASHBOARD_GERAL.map((resumo) => {
+      {resumos.map((resumo) => {
         const modulo = MODULOS.find((m) => m.id === resumo.moduloId);
         if (!modulo) return null;
         const Icon = modulo.icon;
@@ -522,8 +537,20 @@ function PcmDashboard() {
 
 export function HomePage() {
   const { user, logout } = useAuth();
-  const [activeModulo, setActiveModulo] = useState<ModuloId>("inicio");
+  const { podeAcessar } = usePermissoes();
+  const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
+  const [configTab, setConfigTab] = useState<"grupos" | "usuarios">("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // AC-4: superadmin sempre vê tudo (claim user_modulos vem vazio pra ele — bypass, igual RLS);
+  // demais papéis só veem módulo com ao menos leitura resolvida (config.minhas_permissoes).
+  function podeVerModulo(id: ModuloId): boolean {
+    if (!isModuloNegocio(id)) return true;
+    return user?.papel === "superadmin" || podeAcessar(id, "leitura");
+  }
+
+  const podeGerenciarConfig = user?.papel === "superadmin" || user?.papel === "supervisor";
+  const dashboardVisivel = DASHBOARD_GERAL.filter((r) => podeVerModulo(r.moduloId));
 
   const modulo = MODULOS.find((m) => m.id === activeModulo);
   const initials =
@@ -537,7 +564,9 @@ export function HomePage() {
   const greetingSub =
     activeModulo === "inicio"
       ? "Sinérgica Manutenções · Visão Geral"
-      : `Sinérgica Manutenções · ${modulo?.label ?? ""}`;
+      : activeModulo === "config"
+        ? "Sinérgica Manutenções · Configurações"
+        : `Sinérgica Manutenções · ${modulo?.label ?? ""}`;
 
   return (
     <div className="flex h-screen bg-paper overflow-hidden">
@@ -573,7 +602,7 @@ export function HomePage() {
                   MÓDULOS
                 </p>
               )}
-              {MODULOS.filter((m) => m.id !== "inicio").map((m) => {
+              {MODULOS.filter((m) => m.id !== "inicio" && podeVerModulo(m.id)).map((m) => {
                 const Icon = m.icon;
                 return (
                   <button
@@ -585,6 +614,34 @@ export function HomePage() {
                   >
                     <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
                     {!sidebarCollapsed && <span className="truncate">{m.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          ) : activeModulo === "config" ? (
+            <div>
+              {!sidebarCollapsed && (
+                <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                  CONFIGURAÇÕES
+                </p>
+              )}
+              {CONFIG_NAV.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.id === configTab;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    title={item.label}
+                    onClick={() => setConfigTab(item.id)}
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
+                      isActive
+                        ? "border-orange bg-white/[0.07] text-white font-medium"
+                        : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                    {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
                   </button>
                 );
               })}
@@ -645,14 +702,21 @@ export function HomePage() {
               </>
             )}
           </button>
-          <button
-            type="button"
-            title="Configurações"
-            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCollapsed ? "justify-center" : ""}`}
-          >
-            <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-            {!sidebarCollapsed && <span>Configurações</span>}
-          </button>
+          {podeGerenciarConfig && (
+            <button
+              type="button"
+              title="Configurações"
+              onClick={() => setActiveModulo("config")}
+              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
+                activeModulo === "config"
+                  ? "border-orange bg-white/[0.07] text-white font-medium"
+                  : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+              }`}
+            >
+              <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+              {!sidebarCollapsed && <span>Configurações</span>}
+            </button>
+          )}
           <button
             type="button"
             title="Sair"
@@ -670,7 +734,7 @@ export function HomePage() {
         {/* Top bar com abas */}
         <header className="bg-card border-b border-line shrink-0">
           <div className="flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
-            {MODULOS.map((m) => {
+            {MODULOS.filter((m) => podeVerModulo(m.id)).map((m) => {
               const Icon = m.icon;
               const isActive = m.id === activeModulo;
               return (
@@ -712,9 +776,15 @@ export function HomePage() {
 
           {/* Conteúdo por módulo */}
           {activeModulo === "inicio" ? (
-            <DashboardGeral onSelect={setActiveModulo} />
+            <DashboardGeral resumos={dashboardVisivel} onSelect={setActiveModulo} />
           ) : activeModulo === "pcm" ? (
             <PcmDashboard />
+          ) : activeModulo === "config" ? (
+            configTab === "grupos" ? (
+              <GruposPage />
+            ) : (
+              <UsuariosPage />
+            )
           ) : modulo ? (
             <EmConstrucao modulo={modulo} />
           ) : null}
