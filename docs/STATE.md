@@ -10,12 +10,20 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-03 por @dev (PR #9 (E00-S09+S10), PR #10 (E01-S09) e PR #11
-(E01-S10) mergeados em `main`. `E01-S10` (webhook Auvo → status da OS): AC-1 a AC-6 implementados
-e mergeados, AC-7 deferido — `pcm.pmoc_records` não existe, PMOC não construído — ver
-SPEC_DEVIATION em `specs/E01-S10-integracao-auvo-webhook-status/tasks.md`. Sessão pausada aqui por
-aviso de limite (reset 5am) — E01-S11 e E01-S02 seguem "Planejado", sem owner, próxima sessão pode
-seguir o ROADMAP normalmente)
+**Última atualização:** 2026-07-03 por @dev (**E01-S12 Visão 360 do Cliente v1 implementada** na
+branch `feat/E01-S12-visao-360-cliente`, worktree isolado, **ainda não mergeada** — aguarda review
++ @devops). Feature hexagonal nova em `apps/web/src/features/pcm/` (domain `cliente-360.ts` +
+application `obter-visao-cliente` + infrastructure `supabase-cliente-360-adapter` + 5 componentes +
+`VisaoClientePage`, recebe `clienteId` por prop). AC-1 a AC-8 cobertas; **0 SPEC_DEVIATION**. Gates
+locais **verdes**: lint, typecheck, test (88 pass/9 skip), build, `audit:esteira`, `eval:spec`.
+Pendências reportadas: **(1) AC-6 caminho real** (retorno `"indisponivel"`/PGRST205 do PostgREST)
+**NÃO executado localmente** (sem Docker) — fica no CI `db-tests`; **(2) Task 18 (navegação até a
+Visão 360) NÃO feita** — OPEN-QUESTION #3 é decisão de produto, reportada ao Lucas/PO (`HomePage.tsx`
+não foi tocado; página integrável por prop assim que Hub de OS E01-S07 ou lista de clientes existir);
+**(3) assunção de acoplamento** do nome da coluna de vínculo em `pcm.equipamentos_cache` (E01-S11
+ainda não existe nesta build — sem migration 0012) a reconciliar quando E01-S11 mergear (inofensiva
+agora: tabela ausente → degrada para "indisponível"). Contexto anterior: PR #9/#10/#11 (E00-S09/S10,
+E01-S09/S10) mergeados em `main`; E01-S11 e E01-S02 seguem "Planejado", sem owner)
 
 ## Status geral
 **Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) + E00-S07
