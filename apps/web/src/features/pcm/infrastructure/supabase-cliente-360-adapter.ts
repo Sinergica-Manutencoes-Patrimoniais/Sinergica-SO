@@ -131,22 +131,14 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     // sequer consultar (não é erro, é ausência de vínculo).
     if (auvoId === null) return [];
 
-    // pcm.equipamentos_cache é de E01-S11, que NÃO está mergeada nesta build (confirmado: sem
-    // migration 0012). A ausência é detectada pelo código de erro do PostgREST — PGRST205 (relação
-    // fora do schema cache, esperado quando a tabela nunca foi criada) ou 42P01 (relation does not
-    // exist). Nesses casos devolve "indisponivel" (degradação graciosa); qualquer OUTRO erro é
-    // relançado — degradação silenciosa não pode mascarar um bug real (permissão, rede, etc.).
-    //
-    // ASSUNÇÃO DE ACOPLAMENTO (E01-S11): o nome da coluna de vínculo (`cliente_auvo_id`) e o campo
-    // `nome` seguem o modelo de dados assumido da spec E01-S11 (equipamento vinculado ao cliente
-    // via pcm.clientes.auvo_id). Como a tabela ainda não existe, esta query nunca roda com sucesso
-    // nesta build (sempre cai em "indisponivel") — os nomes devem ser reconciliados quando E01-S11
-    // mergear. Registrado em tasks.md (não é SPEC_DEVIATION: a spec não define o schema do cache).
+    // E01-S16: E01-S11 já definiu o vínculo real como `auvo_customer_id` (FK para
+    // pcm.clientes.auvo_id). Não consultar coluna inventada/obsoleta (`cliente_auvo_id`), senão o
+    // painel ficaria "indisponível" mesmo com o cache mergeado e populado.
     const { data, error } = await supabase
       .schema("pcm")
       .from("equipamentos_cache")
       .select("id,nome")
-      .eq("cliente_auvo_id", auvoId)
+      .eq("auvo_customer_id", auvoId)
       .eq("ativo", true);
 
     if (error) {

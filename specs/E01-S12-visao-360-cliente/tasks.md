@@ -182,16 +182,10 @@ em backlog propaga). Gates reexecutados: typecheck ✅, test **90 pass/9 skip** 
 
 ### Assunções / incertezas registradas (não são SPEC_DEVIATION — a spec não fala do assunto)
 
-- **[ASSUNÇÃO DE ACOPLAMENTO — E01-S11] Nome da coluna de vínculo em `pcm.equipamentos_cache`.**
-  A tabela `pcm.equipamentos_cache` (E01-S11) **não existe nesta build** (sem migration 0012), e a
-  spec de E01-S11 **não define o DDL** (só diz que o equipamento vincula ao cliente via
-  `pcm.clientes.auvo_id` e tem `ativo`). O adapter assumiu `cliente_auvo_id` como coluna de vínculo
-  e `nome` como campo de exibição (`listarEquipamentosCliente`). **Como a tabela não existe, essa
-  query nunca roda com sucesso nesta build — sempre cai em `"indisponivel"` (PGRST205)** — então a
-  assunção é inofensiva *agora*, mas **os nomes precisam ser reconciliados quando E01-S11 mergear**
-  (senão o painel de equipamentos continuará mostrando "indisponível" mesmo com cache populado).
-  Documentado em comentário no próprio adapter. Não é SPEC_DEVIATION porque nenhuma spec afirma o
-  schema do cache.
+- **[RESOLVIDO EM E01-S16] Nome da coluna de vínculo em `pcm.equipamentos_cache`.**
+  A versão original desta story assumiu `cliente_auvo_id` enquanto E01-S11 ainda estava em paralelo.
+  Depois de E01-S11 mergear, E01-S16 reconciliou o adapter para usar a coluna real
+  `auvo_customer_id` (FK para `pcm.clientes.auvo_id`). O campo de exibição segue `nome`.
 
 - **[VERIFICAÇÃO NÃO EXECUTADA — AC-6 caminho real] Degradação PGRST205 não rodada contra banco.**
   O teste manual pedido na Task 10 (rodar contra Supabase local sem `equipamentos_cache` e confirmar
