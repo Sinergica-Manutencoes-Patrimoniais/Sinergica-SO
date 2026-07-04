@@ -10,13 +10,27 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-04 — Reconciliação final pós-merge. **E01-S11 (PR #12)**, **E01-S12
-(PR #14)** e o chore **`audit-esteira` (PR #13)** estão todos **mergeados em `main`**. Ordem real do
-merge: #13 → #12 → #14 (cada um dos dois últimos exigiu resolver conflito de docs — `STATE.md`/
-`ROADMAP.md` — contra a `main` avançada pelo anterior; sem conflito de código). PR
-[#15](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/pull/15) (fix de hardening
-da tela de loading/erro de sessão do E00-S05, achado solto de sessão anterior) segue aberto,
-aguardando CI. Ver blocos abaixo, um por story, para o histórico detalhado de cada revisão `@qa`.
+**Última atualização:** 2026-07-04 — **E01-S13 aberta e implementada** (import inicial de clientes
+Auvo → PCM, branch `feat/E01-S13-import-inicial-clientes-auvo`). Usuário testou a Visão 360 (E01-S12,
+já em produção) e viu PCM/Clientes vazio — investigado: não é bug, `docs/blueprint/integracoes/
+auvo.md` já definia "Clientes: dono PCM, fluxo PCM→Auvo" (E01-S09 só empurra, nunca importa) e não
+existe CRUD de cliente no PCM ainda. Usuário decidiu: import inicial em massa Auvo→PCM (não quis
+CRUD agora). Implementado sem os subagentes `triviaiox-*` (ficaram intermitentemente indisponíveis
+nesta sessão — usuário confirmou que é por rodar o Codex em paralelo na mesma pasta, disputando os
+arquivos não-versionados de `.claude/agents/`; resolvido continuando o processo diretamente, mesmo
+rigor): migration `0014` (GRANT `service_role` em `pcm.clientes` — faltava desde sempre, mesma
+classe de bug já corrigida 2x neste projeto) + `0015` (pg_cron diário, reusa secrets de `0011`/
+`0013`); Edge Function `pcm-auvo-customers-import` (paginação + upsert por `auvo_id` + soft-delete
+guardado, mesmo padrão de `E01-S11`). Gates Node verdes. **Gap real sinalizado**: nenhum teste Deno
+dedicado escrito para a function (diferente de `E01-S11`, que testou `paginate.ts`) — sem lógica
+nova além de orquestrar helpers já testados, mas vale revisão antes do merge. Ainda sem push/PR.
+
+**Sessão anterior — Reconciliação final pós-merge.** **E01-S11 (PR #12)**, **E01-S12 (PR #14)**,
+**E01-S15 (PR #15, fix loading/erro de sessão E00-S05)** e o chore **`audit-esteira` (PR #13)**
+estão todos **mergeados em `main`**. Ordem real do merge: #13 → #12 → #14 → #15 → #16 (docs) — os
+PRs #12/#14 exigiram resolver conflito de docs (`STATE.md`/`ROADMAP.md`) contra a `main` avançada
+pelo anterior; sem conflito de código. Ver blocos abaixo, um por story, para o histórico detalhado
+de cada revisão `@qa`.
 
 **E01-S12 — Task 18 (lista mínima de clientes)
 implementada; OPEN-QUESTION #3 RESOLVIDA pelo PO**). Decisão de produto do Lucas: entregar a lista
