@@ -138,6 +138,17 @@ policy nova é necessária — confirmado lendo a migration, não assumido.
 ## Divergências (SPEC_DEVIATION)
 - **Nenhum SPEC_DEVIATION** — a implementação segue a spec e o schema existentes sem desviar.
 
+### Correção pós-revisão @qa (achado C1, média — corrigida)
+A revisão do @qa apontou que o `Promise.all` em `obter-visao-cliente.ts` relançava QUALQUER erro
+inesperado de `listarEquipamentosCliente` (além do `PGRST205`/`42P01` já tratado no adapter — ex.:
+E01-S11 mergear com nome de coluna diferente do assumido → `42703`/`PGRST204`), derrubando a página
+inteira e contrariando o espírito de AC-6 ("a ausência do cache não é bloqueante para o restante").
+**Corrigido**: a query de equipamentos passou a ser isolada num helper `carregarEquipamentos` com
+`try/catch` → `"indisponivel"`; assim a falha degrada só o painel e não some com
+cabeçalho/backlog/histórico. Backlog/histórico (conteúdo central) **continuam propagando** erro de
+propósito (não é isolado). +2 testes em `obter-visao-cliente.test.ts` (erro inesperado isola; erro
+em backlog propaga). Gates reexecutados: typecheck ✅, test **90 pass/9 skip** ✅.
+
 ### Assunções / incertezas registradas (não são SPEC_DEVIATION — a spec não fala do assunto)
 
 - **[ASSUNÇÃO DE ACOPLAMENTO — E01-S11] Nome da coluna de vínculo em `pcm.equipamentos_cache`.**

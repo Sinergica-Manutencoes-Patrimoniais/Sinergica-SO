@@ -96,6 +96,39 @@ describe("obterVisaoCliente", () => {
     expect(resultado.historico).toHaveLength(1);
   });
 
+  // AC-6 (achado @qa C1): erro INESPERADO no gateway de equipamentos (não só PGRST205/42P01, mas
+  // qualquer throw — ex.: E01-S11 mergear com coluna diferente e o PostgREST devolver 42703) NÃO
+  // pode derrubar cabeçalho/backlog/histórico. O painel degrada para "indisponivel", o resto renderiza.
+  it("AC-6: erro inesperado nos equipamentos degrada só o painel, sem derrubar o resto", async () => {
+    const gateway = gatewayMock({
+      listarEquipamentosCliente: vi.fn(async () => {
+        throw new Error("PGRST204: column pcm.equipamentos_cache.cliente_auvo_id does not exist");
+      }),
+    });
+
+    const resultado = await obterVisaoCliente(gateway, "c1");
+
+    expect(resultado.tipo).toBe("ok");
+    if (resultado.tipo !== "ok") throw new Error("esperava ok");
+    expect(resultado.equipamentos).toBe("indisponivel");
+    // o núcleo continua vivo — é o ponto do achado C1
+    expect(resultado.cliente).toEqual(CLIENTE);
+    expect(resultado.backlog).toHaveLength(1);
+    expect(resultado.historico).toHaveLength(1);
+  });
+
+  // Contraste: falha em backlog/histórico (conteúdo central) NÃO é isolada — propaga (a página
+  // deve entrar em erro, não fingir que está tudo bem).
+  it("erro no backlog (conteúdo central) propaga — não é engolido", async () => {
+    const gateway = gatewayMock({
+      listarBacklogCliente: vi.fn(async () => {
+        throw new Error("falha real de leitura do backlog");
+      }),
+    });
+
+    await expect(obterVisaoCliente(gateway, "c1")).rejects.toThrow(/backlog/);
+  });
+
   // AC-6: lista real de equipamentos é repassada como está
   it("AC-6: lista de equipamentos é repassada intacta", async () => {
     const gateway = gatewayMock();
