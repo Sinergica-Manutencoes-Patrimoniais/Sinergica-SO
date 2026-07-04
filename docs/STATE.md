@@ -10,23 +10,212 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-04 — **E01-S13 aberta e implementada** (import inicial de clientes
-Auvo → PCM, branch `feat/E01-S13-import-inicial-clientes-auvo`). Usuário testou a Visão 360 (E01-S12,
-já em produção) e viu PCM/Clientes vazio — investigado: não é bug, `docs/blueprint/integracoes/
-auvo.md` já definia "Clientes: dono PCM, fluxo PCM→Auvo" (E01-S09 só empurra, nunca importa) e não
-existe CRUD de cliente no PCM ainda. Usuário decidiu: import inicial em massa Auvo→PCM (não quis
-CRUD agora). Implementado sem os subagentes `triviaiox-*` (ficaram intermitentemente indisponíveis
-nesta sessão — usuário confirmou que é por rodar o Codex em paralelo na mesma pasta, disputando os
-arquivos não-versionados de `.claude/agents/`; resolvido continuando o processo diretamente, mesmo
-rigor): migration `0014` (GRANT `service_role` em `pcm.clientes` — faltava desde sempre, mesma
-classe de bug já corrigida 2x neste projeto) + `0015` (pg_cron diário, reusa secrets de `0011`/
-`0013`); Edge Function `pcm-auvo-customers-import` (paginação + upsert por `auvo_id` + soft-delete
-guardado, mesmo padrão de `E01-S11`). Gates Node verdes. **Gap real sinalizado**: nenhum teste Deno
-dedicado escrito para a function (diferente de `E01-S11`, que testou `paginate.ts`) — sem lógica
-nova além de orquestrar helpers já testados, mas vale revisão antes do merge. Ainda sem push/PR.
+**Última atualização:** 2026-07-04 — **Revisão @qa (Claude) do handoff Codex → Claude concluída.**
+Gates locais rerodados e verdes (`lint:migrations` 20 migrations, `lint`, `typecheck`, `test`
+114/9skip, `build`, `audit:esteira` 142 docs, `eval:spec`). Migrations `0016`-`0020` e Edge
+Functions (`pcm-auvo-webhook`, `pcm-whatsapp-webhook`, `pcm-ze-agent`, `pcm-auvo-customers-import`)
+revisadas linha a linha — RLS/grants/HMAC corretos, sem achado bloqueante nelas. **1 bug crítico
+real corrigido:** `supabase-qualidade-adapter.ts` gravava `ordem: Date.now()` (ms) numa coluna
+`int` (int4) — estourava `integer out of range` em todo insert de item de inspeção; trocado para
+segundos desde epoch. Decisão do Lucas: publicar as 7 stories (E01-S02 parcial/S15/S16/S18/S19/
+S20/S21, já commitadas em cima de E01-S13) num PR único, mesmo padrão do PR #9; merge final fica
+para aprovação humana no GitHub (não automático). Próximo passo: commit, push da branch, abrir PR.
+Ressalvas que seguem no PR: numeração sequencial via `count()` tem race condition sob concorrência
+real (débito conhecido); fluxo Zé (E01-S02) não foi validado contra Evolution/OpenRouter reais —
+não configurar os secrets em produção antes de testar end-to-end.
+
+**Última atualização anterior:** 2026-07-04 — **E01-S21 implementada localmente** (Dashboard PCM
+sem mocks internos, usando OS/inspeções reais), após E01-S15/S16/S18/S19/S20 e Fluxo A parcial do
+Zé. Ainda sem push/PR; `@devops` deve ser acionado só no fim.
+
+**Sessão Codex 2026-07-04 — E01-S13 aberta e implementada.** Import inicial de clientes Auvo →
+PCM, branch `feat/E01-S13-import-inicial-clientes-auvo`. Usuário testou a Visão 360 (E01-S12, já em
+produção) e viu PCM/Clientes vazio — investigado: não é bug, `docs/blueprint/integracoes/auvo.md`
+já definia "Clientes: dono PCM, fluxo PCM→Auvo" (E01-S09 só empurra, nunca importa) e não existe
+CRUD de cliente no PCM ainda. Usuário decidiu: import inicial em massa Auvo→PCM (não quis CRUD
+agora). Implementado sem os subagentes `triviaiox-*` (ficaram intermitentemente indisponíveis nesta
+sessão — usuário confirmou que é por rodar o Codex em paralelo na mesma pasta, disputando os arquivos
+não-versionados de `.claude/agents/`; resolvido continuando o processo diretamente, mesmo rigor):
+migration `0014` (GRANT `service_role` em `pcm.clientes` — faltava desde sempre, mesma classe de bug
+já corrigida 2x neste projeto) + `0015` (pg_cron diário, reusa secrets de `0011`/`0013`); Edge
+Function `pcm-auvo-customers-import` (paginação + upsert por `auvo_id` + soft-delete guardado,
+mesmo padrão de `E01-S11`). Gates Node verdes. **Gap real sinalizado**: nenhum teste Deno dedicado
+escrito para a function (diferente de `E01-S11`, que testou `paginate.ts`) — sem lógica nova além de
+orquestrar helpers já testados, mas vale revisão antes do merge. Ainda sem push/PR.
+
+**Sessão Codex 2026-07-04 — Frente 1 priorizada pelo Lucas.** `E01-S15` e `E01-S16`
+implementadas localmente seguindo SDD (spec/tasks antes de código; owner Codex no ROADMAP).
+`E01-S15`: adicionada migration `0016_E01-S15_auvo_task_snapshots.sql` com
+`pcm.auvo_task_snapshots` para snapshot rico do webhook Auvo (payload bruto + relato/anexos/
+checklist/peças/horas/timeline), e `pcm-auvo-webhook` passou a fazer upsert idempotente depois de
+validar HMAC e resolver a OS. **Sem Supabase Storage**: anexos/fotos ficam como JSON/URL/referência
+do Auvo, conforme orientação do Lucas. `E01-S16`: adicionada migration
+`0017_E01-S16_os_equipamentos_auvo.sql` com `pcm.os_equipamentos_auvo` (relacionamento OS ↔
+`auvo_equipment_id`, sem duplicar identificador/categoria/garantia), webhook faz upsert quando o
+payload traz equipamento, e a Visão 360 foi corrigida para filtrar `equipamentos_cache` pela coluna
+real `auvo_customer_id` de E01-S11. `E01-S17`: investigada e **bloqueada/não implementada** — há
+evidência pública de módulos Auvo de Financeiro/Central/Tickets/Orçamentos, mas não endpoint API v2
+confirmado para leitura por cliente; sem contrato confirmado, não foi criado painel/schema/adapter.
+Gates verdes: `lint:migrations` (17 migrations + Squawk), `lint`, `typecheck`, `test` (93 pass/9
+skip), `build` (warning conhecido de chunk >500k), `audit:esteira`, `eval:spec` (com ressalva
+conhecida: não avalia pastas `E01-*`). Não verificado: Deno/Edge Functions e payload real do Auvo.
+
+**Sessão Codex 2026-07-04 — Frente 2 iniciada.** `E01-S02` (Fluxo A) implementada localmente de
+forma parcial: domínio de detecção determinística de menção (`apps/web/src/features/atendimento/`)
+com 5 testes, `OrdemServicoInput` em `packages/shared`, migration
+`0018_E01-S02_ze_fluxo_a_operacional.sql` (grants para `service_role`, cron fallback minutely com
+secrets Vault `ze_agent_project_url`/`ze_agent_service_role_key`) e Edge Functions
+`pcm-whatsapp-webhook`/`pcm-ze-agent`. O agent cria OS direta com `origem='ze'`,
+`status='solicitacao'`, responde via Evolution e pergunta dado faltante quando o OpenRouter retorna
+`pronto=false`. Gates verdes após correções: `lint:migrations` (18 migrations + Squawk), `lint`,
+`typecheck`, `test` (98 pass/9 skip), `build`. **Ressalvas/SPEC_DEVIATION em tasks.md:** Edge
+Functions Deno e integração real Evolution/OpenRouter/Supabase local não executadas; `ze_active`
+não existe no schema (usa `modo`/ausência de config como SKIP); geração `CH-XXX` por contagem é MVP
+e deve virar sequence/RPC se houver colisão concorrente. `E01-S14`: criado apenas
+`specs/E01-S14-fluxo-b-orcamento/design.md` e **parado antes de código**, com recomendação
+arquitetural de entidade pré-OS + orçamento; bloqueado pelas duas perguntas de negócio do Lucas.
+
+**Sessão Codex 2026-07-04 — E01-S18 abertura manual de OS.** A partir das telas do PCM antigo
+enviadas pelo Lucas, criada story pequena `E01-S18` com spec/tasks e implementação local: botão
+"Nova OS" no dashboard PCM (visível só para `podeAcessar('pcm','escrita')`), modal de abertura
+manual com cliente, solicitante, título, descrição, categoria, origem, prioridade, fatores GUT,
+tipo Auvo sugerido, técnico, localização e data prevista. Inteligência adicionada: categoria sugere
+tipo Auvo; GUT calcula score e sugere prioridade, permitindo sobrescrita. Adapter cria
+`pcm.ordens_servico` em `status='solicitacao'`. Sem migration nova; `tipoAuvo`/técnico/data prevista
+ficam na `descricao` até existir schema próprio do Hub de OS/despacho. Gates verdes: `lint`,
+`typecheck`, `test` (103 pass/9 skip), `build` (warning conhecido de chunk >500k).
+
+**Sessão Codex 2026-07-04 — E01-S19 Inspeções + Laudos SPDA.** A pedido do Lucas, implementado o
+transplante funcional das telas do PCM antigo (`pcm-sinergica-v2/src`) para o SO: criada story
+arquitetural com `spec.md`/`design.md`/`tasks.md`; migration
+`0019_E01-S19_inspecoes_laudos_spda.sql` com `pcm.inspecoes`, `pcm.inspecao_itens`,
+`pcm.laudos_spda`, `pcm.laudo_spda_pontos`, RLS por `user_modulos.pcm`, grants e trigger de totais
+de inspeção; domínio/application/adapter em `features/pcm`; abas navegáveis `Inspeções` e
+`Laudo SPDA` na Home. Decisão desta entrega: **sem Storage** — fotos ficam como `foto_url`/link Auvo
+ou referência externa em tempo de consulta. Gates verdes: `lint:migrations`, `lint`, `typecheck`,
+`test` (108 pass/9 skip), `build` (warning conhecido de chunk >500k), `audit:esteira`, `eval:spec`.
+Revisão adversarial @qa registrada em `tasks.md`; gap residual: número do laudo por contagem deve
+virar sequence/RPC se houver criação concorrente real. Falta validação manual em browser/DB real.
+
+**Sessão Codex 2026-07-04 — E01-S20 OS + Backlog GUT operacionais.** Continuação do desenvolvimento
+do PCM como ferramenta primária: criada story pequena `E01-S20` com spec/tasks antes de código.
+Implementado com migration `0020_E01-S20_os_backlog_operacional.sql`, que cria
+`pcm.os_status_eventos` e trigger append-only para criação/mudança de status em
+`pcm.ordens_servico`. Também adicionados domínio `ordens-servico`, application/gateway/adapter
+Supabase, páginas `Ordens de Serviço` e `Backlog GUT`, navegação real na sidebar e ação de planejar
+OS (`status='planejamento'`). A tela de OS mostra KPIs, filtros, detalhe, erro de sync Auvo quando
+existir e permite alterar status com gate de escrita; a tela de Backlog ordena OS abertas por
+`score_pcm desc` e mostra G/U/T. Reaproveita o trigger Auvo de `0011` quando a OS entra em
+planejamento. Gates verdes: `lint:migrations`, `lint`, `typecheck`, `test` (113 pass/9 skip),
+`build` (warning conhecido de chunk >500k), `audit:esteira`. Gap residual: regras finas de
+transição/kanban completo permanecem para E01-S07. Falta validação manual em browser/DB real.
+
+**Sessão Codex 2026-07-04 — E01-S21 Dashboard PCM real.** A pedido do Lucas, revisado o dashboard
+para identificar informação mockada. Removidos os arrays mockados internos do dashboard PCM
+(`KPIS`, `OS_RECENTES`, `BACKLOG_TOP`) e criada `PcmDashboardPage` com domínio `dashboard-pcm`.
+Agora os KPIs, OS recentes e Top Backlog GUT vêm de `pcm.ordens_servico` e `pcm.inspecoes` via
+`supabaseHubOsAdapter`/`supabaseQualidadeAdapter`. Métricas sem fonte real no schema atual (SLA real,
+técnicos em campo, tempo médio com data de conclusão contratual) foram substituídas por métricas do
+alvo já disponível: OS com Auvo, falhas Auvo, preventivas abertas e inspeções no mês. Os cards do
+dashboard geral de módulos ainda não construídos continuam placeholders. Gates verdes: `lint`,
+`typecheck`, `test` (114 pass/9 skip), `build` (warning conhecido de chunk >500k). Falta validação
+manual em browser/DB real.
+
+## Plano — PCM como ferramenta primária do escritório + funil de chamado (2026-07-04)
+
+Usuário mandou 5 telas do Auvo (cliente, tarefa, lista de clientes, calendário, equipamentos) e
+pediu um plano de execução (vai rodar via Codex, não nesta sessão) para duas frentes. Registrando
+aqui em detalhe porque as duas envolvem tier arquitetural e não devem ser codadas sem `@architect`.
+
+### Frente 1 — Espelhamento rico do Auvo (aprofundar o que já existe)
+Hoje o PCM só reflete o mínimo: cliente (nome/cnpj/auvo_id/ativo — E01-S09/E01-S13), técnicos/
+equipamentos (cache raso, nome/equipe — E01-S11), OS (só status — E01-S10, sem o payload rico de
+conclusão). As telas do Auvo mostram muito mais já disponível na API:
+- **Tarefa**: Relato do usuário, Anexos, Questionários (checklist), Pendências, Controle de horas,
+  Envios, Valores, timeline (Recebida/Visualizada/Check-in/Check-out).
+- **Equipamento**: Identificador, Associação (cliente), Categoria, Garantia até, Status.
+- **Cliente** (no Auvo): stats agregadas de tarefas (total, tempo médio, atraso médio, satisfação),
+  abas de Financeiro/Tickets/Orçamentos.
+
+Candidatas (`E01-S15`/`E01-S16`/`E01-S17` no ROADMAP, todas **Planejado**, sem owner):
+- **E01-S15** — Enriquecer webhook de OS (estende E01-S10): capturar o payload completo na
+  conclusão (fotos/anexos, checklist preenchido, peças consumidas, controle de horas, timeline).
+  Avaliar tier na hora: se envolver Storage de anexos/fotos, sobe de Pequeno pra Arquitetural
+  (bucket, políticas de acesso, ADR).
+- **E01-S16** — **Decisão do usuário (2026-07-04): Auvo continua dono dos dados de equipamento —
+  NÃO duplicar no PCM.** Regra geral dada pelo Lucas: "o que for sobre o Auvo precisa ficar no
+  Auvo, isso evita dados duplicados; só fica no PCM aquilo que não tem no Auvo — no PCM é feito o
+  relacionamento entre o Auvo e outras informações do PCM." Ou seja: **NÃO** adicionar
+  `identificador`/`categoria`/`garantia_até` ao `pcm.equipamentos_cache` (isso replicaria atributo
+  que já é do Auvo). O cache continua mínimo (só o suficiente pra exibir nome/vínculo sem chamar o
+  Auvo a cada render, como já é hoje em E01-S11). Se a UI precisar mostrar
+  identificador/categoria/garantia, é **leitura sob demanda direto do Auvo** (chamada de API), não
+  um campo espelhado. O que o PCM efetivamente armazena sobre um equipamento é só o que **não
+  existe no Auvo** e o **relacionamento** (ex.: qual OS/PMOC está vinculado a qual `auvo_equipment_id`
+  — isso sim é dado do domínio PCM, não duplicação). Esta decisão MUDA a proposta original do
+  ROADMAP para `E01-S16` — reescrever a linha/descrição antes de abrir a story pra não sugerir
+  duplicação de dado.
+- **E01-S17** — Painel financeiro/tickets/orçamentos do cliente na Visão 360 (já previsto como
+  "fase 2" em `E01-S12` §4) — depende de mapear se existe endpoint Auvo equivalente pra esses dados
+  (não confirmado nesta sessão).
+
+### Frente 2 — Funil de chamado → (orçamento) → OS
+Usuário descreveu 2 fluxos:
+- **Fluxo A** (direto): chamado (Área do Cliente/WhatsApp, tratamento humano hoje, IA no futuro) →
+  **gera OS diretamente** → OS contém tarefas. **Isso já é EXATAMENTE `E01-S02`** (Abertura de
+  chamado via Agente Zé, `specs/0002-abertura-chamado-ze/spec.md`) — spec já aprovada, tier
+  arquitetural, **nunca implementada** (status "Spec aprovada", sem owner desde sempre). AC-1 já
+  diz literalmente: OS criada com `status='solicitacao'`, `origem='ze'`. Não precisa reescrever a
+  spec, só implementar.
+- **Fluxo B** (com orçamento): chamado → tratamento humano/IA → **requisição de serviço** → gera
+  **orçamento** → aceite do cliente → **então** vira OS → OS contém tarefas. **Isso é conceito
+  NOVO, não existe em nenhum schema hoje** — confirmei: `comercial` (schema já existe desde
+  `0001_E00-S00`) só tem `comercial.leads`; não há tabela de orçamento/proposta em lugar nenhum.
+  Registrado como **E01-S14**, tier arquitetural — **precisa de `design.md` do `@architect` antes
+  de qualquer código**, porque a modelagem tem pelo menos 2 caminhos plausíveis e são decisões
+  irreversíveis de schema:
+
+  **Escopo esclarecido pelo usuário (2026-07-04) — responde a pergunta 1 abaixo**: o Fluxo B
+  **NÃO é para lead** (`comercial.leads`, prospect novo). É para um **cliente já existente**
+  (`pcm.clientes`, já tem contrato ativo) pedindo **algo extra-contratual** — fora do que o
+  contrato de manutenção já cobre. É esse caráter "extra-contratual" que decide se o chamado cai
+  no Fluxo B em vez do Fluxo A (não é por categoria/valor estimado — é por estar ou não coberto
+  pelo contrato vigente do cliente). O fluxo de `comercial.leads` (prospect novo) **também** vai
+  precisar gerar orçamento no futuro, mas isso é uma story **separada**, do épico Comercial (E03),
+  fora do escopo de `E01-S14` — não misturar os dois.
+  1. Novos estados dentro de `pcm.ordens_servico.status` (ex.: inserir
+     `aguardando_orcamento`/`orcamento_enviado`/`aguardando_aceite` entre `solicitacao` e
+     `planejamento`) — mais simples, mas OS "existe" antes de ter valor aprovado (pode confundir
+     backlog GUT/Visão 360 com OS que ainda nem foram aceitas).
+  2. Entidade nova (`comercial.orcamentos` ou `pcm.requisicoes_servico` + `comercial.orcamentos`)
+     que só vira uma linha em `pcm.ordens_servico` DEPOIS do aceite — mais fiel ao fluxo real
+     descrito pelo usuário, mas mais schema novo.
+
+  **Perguntas de negócio ainda em aberto** (o @architect deve levantar formalmente com o
+  Lucas/Fabrício, não decidir sozinho):
+  1. ~~Quem decide se um chamado vai pelo Fluxo A ou B~~ — **RESPONDIDA acima**: é por ser
+     extra-contratual ou não, não por categoria/valor estimado.
+  2. Orçamento recusado pelo cliente — o quê acontece com o chamado? Arquiva? Cliente pode pedir
+     revisão/segunda proposta?
+  3. Onde a Área do Cliente (E09, ainda não construída) entra nesse funil — o MVP usa só
+     WhatsApp/atendimento humano primeiro, e a Área do Cliente vem depois?
+
+### Sequenciamento sugerido — REPRIORIZADO pelo usuário em 2026-07-04
+Decisão do Lucas: **Frente 1 primeiro** (`E01-S15`/`E01-S16`/`E01-S17`) — entrega valor visível pro
+Fabrício rapidamente (ele já acessa o SO e vê coisa útil de verdade), sem esperar a arquitetura do
+funil de chamado (Frente 2) ficar pronta. Ordem:
+1. **`E01-S15`** (webhook de OS rico — relato, anexos/fotos, checklist, peças, controle de horas,
+   timeline recebida/visualizada/check-in/check-out). Avaliar tier na hora: se envolver Storage de
+   anexos, sobe de Pequeno pra Arquitetural.
+2. **`E01-S16`** (relacionamento equipamento Auvo↔PCM — decisão já tomada, ver acima: Auvo continua
+   dono, PCM não duplica identificador/categoria/garantia, só guarda o relacionamento).
+3. **`E01-S17`** (painel financeiro/tickets/orçamentos do cliente na Visão 360, fase 2 de E01-S12).
+4. **Frente 2** (`E01-S02` Fluxo A, depois `E01-S14` Fluxo B com `design.md` antes de codar) segue
+   em paralelo ou depois — continua sendo o maior valor de negócio de médio prazo (gera as OS de
+   verdade), mas não é mais o que entra primeiro nesta leva.
 
 **Sessão anterior — Reconciliação final pós-merge.** **E01-S11 (PR #12)**, **E01-S12 (PR #14)**,
-**E01-S15 (PR #15, fix loading/erro de sessão E00-S05)** e o chore **`audit-esteira` (PR #13)**
+**fix(E00-S05) loading/erro de sessão (PR #15)** e o chore **`audit-esteira` (PR #13)**
 estão todos **mergeados em `main`**. Ordem real do merge: #13 → #12 → #14 → #15 → #16 (docs) — os
 PRs #12/#14 exigiram resolver conflito de docs (`STATE.md`/`ROADMAP.md`) contra a `main` avançada
 pelo anterior; sem conflito de código. Ver blocos abaixo, um por story, para o histórico detalhado
@@ -45,7 +234,8 @@ caso de uso `listar-clientes.ts` (+3 testes, passthrough estilo `listarGrupos`);
 HomePage, `VisaoClientePage` intacta → AC-7 preservado). Gates verdes rodados nesta sessão: lint (91
 arquivos), typecheck (4 pacotes), test **93 pass/9 skip** (+3 `listar-clientes`), build (vite 1877
 módulos), `audit-esteira` (124 docs), `eval-spec-fidelity` (exit 0). Pendente: validação humana em
-browser + push (@devops); reconciliar nome de coluna de `equipamentos_cache` quando E01-S11 mergear.
+browser + push (@devops). Nome de coluna de `equipamentos_cache` reconciliado depois em E01-S16
+(`auvo_customer_id`).
 Commit local `feat(E01-S12): lista mínima de clientes para navegação até a Visão 360 (Task 18)`.
 
 **Contexto anterior (revisão @qa aplicada):** E01-S12 Visão 360 v1 na branch
@@ -63,9 +253,9 @@ locais **verdes**: lint, typecheck, test (90 pass/9 skip), build, `audit:esteira
 Pendências reportadas: **(1) AC-6 caminho real** (retorno `"indisponivel"`/PGRST205 do PostgREST)
 **NÃO executado localmente** (sem Docker) — fica no CI `db-tests`; **(2) Task 18 (navegação até a
 Visão 360) — RESOLVIDA nesta sessão** (ver bloco "Última atualização" no topo): lista mínima de
-clientes implementada no mesmo PR por decisão do PO; **(3) assunção de acoplamento** do nome da coluna de vínculo em `pcm.equipamentos_cache` (E01-S11
-ainda não existe nesta build — sem migration 0012) a reconciliar quando E01-S11 mergear (inofensiva
-agora: tabela ausente → degrada para "indisponível"). Contexto anterior: PR #9/#10/#11 (E00-S09/S10,
+clientes implementada no mesmo PR por decisão do PO; **(3) assunção de acoplamento** do nome da
+coluna de vínculo em `pcm.equipamentos_cache`, reconciliada depois em E01-S16 para
+`auvo_customer_id`. Contexto anterior: PR #9/#10/#11 (E00-S09/S10,
 E01-S09/S10) mergeados em `main`; E01-S11 e E01-S02 seguem "Planejado", sem owner)
 
 **QA gate (@qa Quinn, 2026-07-03): CONCERNS** (passa com reservas documentadas — não bloqueia).
@@ -80,7 +270,8 @@ inesperado da query de equipamentos (ex.: coluna divergente quando E01-S11 merge
 dentro do `Promise.all` → rejeita o caso de uso → **página inteira cai no estado de erro**,
 contrariando a intenção de AC-6 de que o cache ausente não bloqueia o resto; falha alto (bom), mas
 mais amplo que o ideal — recomendação: isolar a falha do painel de equipamentos (não deixar derrubar
-cabeçalho/backlog/histórico) e reconciliar `cliente_auvo_id`/`nome` quando E01-S11 fechar.
+cabeçalho/backlog/histórico) e reconciliar a coluna de vínculo quando E01-S11 fechar (feito depois
+em E01-S16: `auvo_customer_id`).
 **(C2, BAIXA-MÉDIA)** retorno real PGRST205 não verificado empiricamente (sem Docker) — validar no CI
 `db-tests` antes do merge. **(C3, produto)** navegação até a tela adiada (Task 18/OPEN-QUESTION #3) —
 feature não exercitável por humano até o PO decidir a lista/entrada. Não conserto bugs — reportado ao
