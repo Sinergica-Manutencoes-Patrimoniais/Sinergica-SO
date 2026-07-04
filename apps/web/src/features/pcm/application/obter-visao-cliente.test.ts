@@ -30,6 +30,7 @@ function os(over: Partial<OrdemServicoResumo> = {}): OrdemServicoResumo {
 
 function gatewayMock(overrides: Partial<Cliente360Gateway> = {}): Cliente360Gateway {
   return {
+    listarClientes: vi.fn(async () => []),
     buscarCliente: vi.fn(async () => CLIENTE),
     listarBacklogCliente: vi.fn(async () => [os()]),
     listarHistoricoCliente: vi.fn(async () => [os({ id: "os2", status: "finalizado" })]),

@@ -24,14 +24,17 @@ apps/web/src/features/pcm/
     cliente-360.test.ts                          # NOVO
     priorizacao-backlog.ts                       # existente — REAPROVEITAR classificarPrioridade()
   application/
-    cliente-360-gateway.ts                       # NOVO — porta (interface)
+    cliente-360-gateway.ts                       # NOVO — porta (interface) [+ listarClientes/ClienteResumo, Task 18]
     obter-visao-cliente.ts                       # NOVO — caso de uso principal
     obter-visao-cliente.test.ts                  # NOVO
+    listar-clientes.ts                           # NOVO — caso de uso da lista mínima (Task 18)
+    listar-clientes.test.ts                      # NOVO
   infrastructure/
     supabase-cliente-360-adapter.ts               # NOVO — implementa a porta
     supabase-cliente-360-adapter.integration.test.ts  # NOVO
   pages/
     VisaoClientePage.tsx                          # NOVO — orquestra estado + gating
+    ListaClientesPage.tsx                         # NOVO — lista mínima de clientes (Task 18)
   components/                                     # pasta nova em pcm/ (hoje só existe domain/)
     CabecalhoCliente.tsx                           # NOVO — AC-2
     PainelBacklog.tsx                              # NOVO — AC-3, AC-5
@@ -64,7 +67,7 @@ docs/glossary.md                                   # TOCAR — termo "Visão 360
 | 15 | `components/PainelEquipamentos.tsx` — 3 estados possíveis do resultado (`"indisponivel"` → placeholder "Integração de campo indisponível"; `[]` → "Sem equipamentos vinculados"; lista → renderiza) — **nenhum dos dois estados vazios lança erro** (AC-6) `[P]` | AC-6 | 2, 10 | `pnpm run typecheck` | **done** |
 | 16 | `components/ClienteNaoEncontrado.tsx` — estado "cliente não encontrado" sem detalhe de implementação vazado (AC-8) `[P]` | AC-8 | — | `pnpm run typecheck` | **done** |
 | 17 | `pages/VisaoClientePage.tsx` — recebe `clienteId: string` via prop; gate **AC-1**: `usePermissoes().podeAcessar('pcm', 'leitura')` — se falso, não renderiza nada do conteúdo (mesmo padrão de `podeVerModulo` em `HomePage.tsx`); orquestra `obterVisaoCliente(supabaseCliente360Adapter, clienteId)` e roteia entre `nao_encontrado` / `ok` (que por sua vez compõe os 4 componentes de painel); **nenhum elemento de escrita/ação de mutação em nenhum estado** (AC-7 — revisão explícita antes do PASS: nenhum botão de editar/repriorizar/mudar status/criar OS/disparar sync) | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8 | 5, 12, 13, 14, 15, 16 | `pnpm run typecheck` + `pnpm run build` | **done** (AC-7 confirmado por scan: único `onClick`/`<button>` é "Tentar novamente" = re-leitura, não mutação) |
-| 18 | Wiring de entrada em `HomePage.tsx` — **ver observação/decisão abaixo antes de codar** (não há hoje nenhuma tela de lista de clientes nem roteamento por id no app; este é o gap real de navegação, não uma trivialidade). [AUTO-DECISION] adicionar item "Clientes" ao `PCM_NAV`, com uma lista mínima (`nome`/`cnpj`/`ativo` de `pcm.clientes`, mesma query já usada pelo cabeçalho) que abre `VisaoClientePage` ao clicar numa linha — é wiring de navegação, não um novo painel de produto (reaproveita dado já buscado, não introduz feature nova). **Não bloqueia o DoD** desta story se ficar incompleto — as ACs testam o conteúdo da página dado um `clienteId`, não a navegação até ela (ver OPEN-QUESTION #3) | (nenhuma AC formal cobre isto) | 17 | inspeção manual (clicar no fluxo) | **NÃO FEITO — adiado como OPEN-QUESTION #3 (decisão de produto).** `HomePage.tsx` não foi tocado. Motivo: (1) o prompt da missão instrui explicitamente a NÃO inventar solução de roteamento; (2) OPEN-QUESTION #3 é decisão de produto reportada ao Lucas/PO ("lista mínima no mesmo PR ou depois"); (3) task marcada como não-bloqueante para o DoD e nenhuma das 8 AC testa navegação. `VisaoClientePage` fica integrável por prop assim que Hub de OS (E01-S07) ou uma lista de clientes existir. **Retornado ao lead/PO.** |
+| 18 | Wiring de entrada em `HomePage.tsx` — lista mínima de clientes no PCM que navega até a Visão 360. **DECIDIDO pelo PO (Lucas): lista mínima no mesmo PR** (não esperar o Hub de OS/E01-S07 — OPEN-QUESTION #3 resolvida). Item "Clientes" no `PCM_NAV` (grupo CADASTROS) → `ListaClientesPage` (`nome`/`cnpj`/`ativo` de `pcm.clientes`, ordenado `nome` asc no servidor, mesma RLS de `buscarCliente`, sem permissão nova) → clique numa linha abre `VisaoClientePage`. Navegação por `useState` local (`pcmView` + `clienteSelecionado`), MESMO padrão de abas do app — sem `react-router` (over-engineering p/ escopo "lista mínima"). Sem filtro/busca/paginação nesta v1 (fora de escopo). | (nenhuma AC formal cobre isto — navegação) | 17 | `pnpm run lint`+`typecheck`+`test`+`build` (unit da listagem) + inspeção manual | **done** — ver observação "Task 18 — lista mínima de clientes" abaixo. |
 | 19 | `docs/glossary.md` — adicionar termo "Visão 360 do Cliente" (não existe hoje — confirmado via grep) | — | 17 | inspeção | **done** |
 | 20 | `docs/epics/ROADMAP.md` + `docs/STATE.md` — marcar `E01-S12` implementado, AC verdes/parciais conforme o que passou | — | 1-19 | inspeção | **done** |
 
@@ -92,7 +95,35 @@ detectar "tabela não exposta" via `@supabase/supabase-js` é o código de erro 
 (`PGRST205`) — decisão técnica de implementação, não de produto; documentada para o `@dev` não
 precisar redescobrir isso por tentativa e erro.
 
-### [OPEN-QUESTION #3] Como o usuário chega numa Visão 360 de um cliente específico?
+### Task 18 — lista mínima de clientes (RESOLVE OPEN-QUESTION #3, decisão de produto do Lucas)
+O PO (Lucas) decidiu entregar a **lista mínima de clientes no mesmo PR** (opção (b) da
+OPEN-QUESTION #3 abaixo). Implementação (escopo enxuto, nada além do pedido):
+- **`application/cliente-360-gateway.ts`**: adicionado `listarClientes(): Promise<ClienteResumo[]>`
+  ao gateway existente (NÃO um gateway paralelo) + novo read-model `ClienteResumo`
+  (`id`/`nome`/`cnpj`/`ativo` — sem `auvoId`, que a lista não usa).
+- **`infrastructure/supabase-cliente-360-adapter.ts`**: `listarClientes` = `select id,nome,cnpj,ativo`
+  de `pcm.clientes`, `deleted_at IS NULL`, `order('nome', asc)` **no servidor**. Mesma tabela/RLS de
+  `buscarCliente` (SELECT gated por módulo `pcm`, `0009_E00-S09_rls_modulos.sql`) — **sem permissão
+  nova**.
+- **`application/listar-clientes.ts`** (+ `.test.ts`, 3 casos): passthrough fino sobre o gateway,
+  mesmo estilo de `listarGrupos`.
+- **`pages/ListaClientesPage.tsx`**: lista read-only, cada linha clicável → `onSelecionar(id)`. Mesmo
+  gate AC-1 (`podeAcessar('pcm','leitura')`) e estados carregando/erro(retry)/vazio da
+  `VisaoClientePage`. Nenhuma ação de mutação (só navegação).
+- **`app/HomePage.tsx`**: item "Clientes" no `PCM_NAV` (grupo CADASTROS) + estado local
+  `pcmView`/`clienteSelecionado` (MESMO padrão `useState` de abas — **sem lib de rotas**). Botão
+  "Voltar para clientes" (re-navegação, não mutação) mora na HomePage, **não** dentro da
+  `VisaoClientePage` — que permanece read-only intacta (AC-7 preservado).
+- **Fora de escopo (não feito, de propósito):** busca/filtro/paginação, novo painel de produto,
+  edição de cliente, `react-router`.
+- **Gates rodados nesta sessão:** `pnpm run lint` ✅ · `typecheck` ✅ · `test` ✅ (93 pass/9 skip;
+  +3 de `listar-clientes.test.ts`) · `build` ✅ · `audit-esteira` ✅ · `eval-spec-fidelity` ✅.
+- Não é `SPEC_DEVIATION`: é a resposta a uma decisão de produto explícita (a spec era silente sobre
+  navegação); documentado aqui a pedido do lead.
+
+### [OPEN-QUESTION #3 — RESOLVIDA] Como o usuário chega numa Visão 360 de um cliente específico?
+**Resolução (2026-07-03):** PO escolheu a opção (b) — lista mínima de clientes no mesmo PR (Task 18
+acima, `done`). Registro original mantido abaixo para contexto.
 `product.md` §6.2 diz que a tela é "acessada a partir do cliente/OS" — mas **investigação confirmou
 que isso não existe hoje**: `apps/web/src/app/HomePage.tsx` não usa nenhuma lib de rotas (sem
 `react-router`/similar no `package.json`), navega só por `useState` de abas dentro da própria
@@ -201,8 +232,9 @@ em backlog propaga). Gates reexecutados: typecheck ✅, test **90 pass/9 skip** 
 - [x] Spec reflete o que foi construído (nenhuma mudança em `spec.md`; detecção de tabela ausente
       via `error.code` conforme AC-6, sem necessidade de ajustar a spec)
 - [x] `docs/STATE.md` atualizado
-- [ ] OPEN-QUESTION #3 (navegação até a Visão 360) — **adiada com registro de decisão** (Task 18
-      não feita, reportada ao Lucas/PO). Falta a resposta final do Lucas/PO.
+- [x] OPEN-QUESTION #3 (navegação até a Visão 360) — **RESOLVIDA** pelo PO (Lucas): lista mínima de
+      clientes no mesmo PR. Task 18 implementada (`ListaClientesPage` + wiring `useState` na
+      `HomePage`), gates verdes. Ver observação "Task 18 — lista mínima de clientes".
 - [x] Revisão adversarial rodada antes do PASS — AC-6 (degradação sem `equipamentos_cache`: caminho
       real nesta build, coberto por unit da application + revisão de código; execução real do
       PGRST205 pendente do CI) e AC-7 (scan confirmou zero botões de mutação nos 4 painéis; único
@@ -213,10 +245,14 @@ em backlog propaga). Gates reexecutados: typecheck ✅, test **90 pass/9 skip** 
 |------|---------|-----------|
 | Lint | `pnpm run lint` (Biome) | ✅ verde (88 arquivos) |
 | Typecheck | `pnpm run typecheck` | ✅ verde (4 pacotes) |
-| Testes | `pnpm test` | ✅ 88 passed, 9 skipped (integração self-skip sem Docker) — inclui 7 (domain) + 6 (application) novos |
-| Build | `pnpm run build` | ✅ verde (vite, 1865 módulos) |
+| Testes | `pnpm test` | ✅ 93 passed, 9 skipped (integração self-skip sem Docker) — inclui 7 (domain) + 6 (application Visão 360) + 3 (`listar-clientes`, Task 18) |
+| Build | `pnpm run build` | ✅ verde (vite, 1877 módulos) |
 | Esteira | `node scripts/audit-esteira.mjs` | ✅ verde (124 docs OK) — sem o vermelho pré-existente de `.claude/agents/*.md` (esses arquivos não estão neste worktree) |
 | Fidelidade spec | `node scripts/eval-spec-fidelity.mjs` | ✅ exit 0 (só avalia specs `NNNN-*`; ignora `E0N-S0N-*` por design — E01-S12 não é avaliada, comportamento conhecido) |
+
+> **Task 18 (lista mínima de clientes) — gates re-rodados nesta sessão:** `pnpm run lint` ✅ (91
+> arquivos) · `typecheck` ✅ (4 pacotes) · `pnpm test` ✅ (93 pass/9 skip) · `pnpm run build` ✅ (vite,
+> 1877 módulos) · `audit-esteira` ✅ · `eval-spec-fidelity` ✅.
 
 **Não executado (sem ambiente):** teste manual da Task 10 contra Supabase local (sem Docker) e
 validação humana em browser das páginas/componentes (mesma convenção de `features/config/`, que não

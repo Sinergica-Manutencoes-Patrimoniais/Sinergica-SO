@@ -12,6 +12,18 @@ export interface ClienteHeader {
 }
 
 /**
+ * Item da lista mínima de clientes do PCM (Task 18) — ponto de entrada de navegação até a Visão
+ * 360. Read-model enxuto (sem `auvoId`, que a lista não usa): só o suficiente para identificar e
+ * selecionar um cliente. A Visão 360 completa é buscada por `buscarCliente(id)` após o clique.
+ */
+export interface ClienteResumo {
+  id: string;
+  nome: string;
+  cnpj: string | null;
+  ativo: boolean;
+}
+
+/**
  * Resumo de uma OS para os painéis Backlog (AC-3) e Histórico (AC-4). Um único tipo cobre os dois:
  * o backlog usa `scorePcm`/G·U·T para o badge de prioridade; o histórico usa `status`/`auvoSyncStatus`
  * (estado sincronizado do campo via Auvo).
@@ -43,6 +55,8 @@ export interface EquipamentoResumo {
 export type ResultadoEquipamentos = EquipamentoResumo[] | "indisponivel";
 
 export interface Cliente360Gateway {
+  /** Clientes não soft-deleted, ordenados por `nome` asc no servidor — lista de navegação (Task 18). */
+  listarClientes(): Promise<ClienteResumo[]>;
   /** Cabeçalho do cliente (`deleted_at IS NULL`); `null` quando não existe/soft-deleted (AC-8). */
   buscarCliente(id: string): Promise<ClienteHeader | null>;
   /** OS em aberto, já ordenadas por `score_pcm` desc no servidor (AC-3). */

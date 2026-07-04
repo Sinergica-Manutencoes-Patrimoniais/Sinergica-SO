@@ -6,6 +6,7 @@ import { supabase } from "../../../lib/supabase-client";
 import type {
   Cliente360Gateway,
   ClienteHeader,
+  ClienteResumo,
   OrdemServicoResumo,
   ResultadoEquipamentos,
 } from "../application/cliente-360-gateway";
@@ -48,6 +49,26 @@ function mapearOs(row: OrdemServicoRow): OrdemServicoResumo {
 }
 
 export const supabaseCliente360Adapter: Cliente360Gateway = {
+  async listarClientes(): Promise<ClienteResumo[]> {
+    // Task 18: lista mínima de clientes para navegação até a Visão 360. Mesma tabela e MESMA RLS de
+    // buscarCliente (SELECT em pcm.clientes gated por módulo pcm — 0009_E00-S09_rls_modulos.sql);
+    // nenhuma permissão nova. Ordenação por nome asc no SERVIDOR (sem sort no client), soft-deletes
+    // excluídos. Sem filtro/busca/paginação nesta v1 (fora de escopo da lista mínima).
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("clientes")
+      .select("id,nome,cnpj,ativo")
+      .is("deleted_at", null)
+      .order("nome", { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map((row) => ({
+      id: row.id as string,
+      nome: row.nome as string,
+      cnpj: (row.cnpj as string | null) ?? null,
+      ativo: row.ativo as boolean,
+    }));
+  },
+
   async buscarCliente(id): Promise<ClienteHeader | null> {
     // maybeSingle() (não single()): 0 linhas devolve data=null em vez de lançar erro — é o que
     // sinaliza "cliente não encontrado/soft-deleted" para AC-8, sem virar exceção.

@@ -10,9 +10,25 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-03 por @dev (**E01-S12 Visão 360 do Cliente v1 implementada +
-revisão @qa aplicada** na branch `feat/E01-S12-visao-360-cliente`, worktree isolado, **ainda não
-mergeada** — aguarda review final + @devops). **@qa deu CONCERNS; achado C1 (média) corrigido:**
+**Última atualização:** 2026-07-03 por @dev (**E01-S12 — Task 18 (lista mínima de clientes)
+implementada; OPEN-QUESTION #3 RESOLVIDA pelo PO**). Decisão de produto do Lucas: entregar a lista
+mínima de clientes no MESMO PR (não esperar o Hub de OS/E01-S07). Implementado (escopo enxuto, sem
+`react-router`): `listarClientes()` + read-model `ClienteResumo` adicionados ao gateway/adapter
+existentes (`cliente-360-gateway.ts` / `supabase-cliente-360-adapter.ts` — `select id,nome,cnpj,ativo`
+de `pcm.clientes`, `order('nome')` no servidor, MESMA RLS de `buscarCliente`, sem permissão nova);
+caso de uso `listar-clientes.ts` (+3 testes, passthrough estilo `listarGrupos`); `ListaClientesPage.tsx`
+(gate AC-1 `podeAcessar('pcm','leitura')`, estados carregando/erro/vazio, cada linha clicável →
+`onSelecionar(id)`, read-only); wiring em `HomePage.tsx` com `useState` local (`pcmView` +
+`clienteSelecionado`, item "Clientes" no `PCM_NAV`/grupo CADASTROS, botão "Voltar" = re-navegação na
+HomePage, `VisaoClientePage` intacta → AC-7 preservado). Gates verdes rodados nesta sessão: lint (91
+arquivos), typecheck (4 pacotes), test **93 pass/9 skip** (+3 `listar-clientes`), build (vite 1877
+módulos), `audit-esteira` (124 docs), `eval-spec-fidelity` (exit 0). Pendente: validação humana em
+browser + push (@devops); reconciliar nome de coluna de `equipamentos_cache` quando E01-S11 mergear.
+Commit local `feat(E01-S12): lista mínima de clientes para navegação até a Visão 360 (Task 18)`.
+
+**Contexto anterior (revisão @qa aplicada):** E01-S12 Visão 360 v1 na branch
+`feat/E01-S12-visao-360-cliente`, worktree isolado, **ainda não mergeada** — aguarda review final +
+@devops. **@qa deu CONCERNS; achado C1 (média) corrigido:**
 `obter-visao-cliente` agora isola a falha do painel de equipamentos (qualquer erro, não só o
 PGRST205 já tratado no adapter) num helper `carregarEquipamentos` com try/catch → "indisponivel",
 para que um erro inesperado (ex.: E01-S11 mergear com coluna diferente → 42703/PGRST204) degrade só
@@ -24,9 +40,8 @@ application `obter-visao-cliente` + infrastructure `supabase-cliente-360-adapter
 locais **verdes**: lint, typecheck, test (90 pass/9 skip), build, `audit:esteira`, `eval:spec`.
 Pendências reportadas: **(1) AC-6 caminho real** (retorno `"indisponivel"`/PGRST205 do PostgREST)
 **NÃO executado localmente** (sem Docker) — fica no CI `db-tests`; **(2) Task 18 (navegação até a
-Visão 360) NÃO feita** — OPEN-QUESTION #3 é decisão de produto, reportada ao Lucas/PO (`HomePage.tsx`
-não foi tocado; página integrável por prop assim que Hub de OS E01-S07 ou lista de clientes existir);
-**(3) assunção de acoplamento** do nome da coluna de vínculo em `pcm.equipamentos_cache` (E01-S11
+Visão 360) — RESOLVIDA nesta sessão** (ver bloco "Última atualização" no topo): lista mínima de
+clientes implementada no mesmo PR por decisão do PO; **(3) assunção de acoplamento** do nome da coluna de vínculo em `pcm.equipamentos_cache` (E01-S11
 ainda não existe nesta build — sem migration 0012) a reconciliar quando E01-S11 mergear (inofensiva
 agora: tabela ausente → degrada para "indisponível"). Contexto anterior: PR #9/#10/#11 (E00-S09/S10,
 E01-S09/S10) mergeados em `main`; E01-S11 e E01-S02 seguem "Planejado", sem owner)

@@ -2,6 +2,7 @@ import {
   BarChart3,
   Bot,
   Briefcase,
+  Building2,
   Calendar,
   CheckCircle2,
   ChevronLeft,
@@ -30,6 +31,8 @@ import { useState } from "react";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { GruposPage } from "../features/config/pages/GruposPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
+import { ListaClientesPage } from "../features/pcm/pages/ListaClientesPage";
+import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
 import { usePermissoes } from "./permissoes-context";
 
@@ -52,10 +55,17 @@ interface ModuloTab {
   descricao: string;
 }
 
+// Sub-navegação interna do PCM (mesmo padrão useState de abas do resto do app — sem lib de rotas).
+// "dashboard" = tela mock atual; "clientes" = lista mínima → Visão 360 (Task 18/E01-S12).
+type PcmView = "dashboard" | "clientes";
+
 interface NavItem {
   label: string;
   icon: LucideIcon;
   active?: boolean;
+  // Quando presente, o item navega (seta o PcmView). Itens sem `view` seguem decorativos (mock),
+  // como já eram antes desta story — não são o foco do escopo enxuto da Task 18.
+  view?: PcmView;
 }
 
 interface NavGroup {
@@ -137,11 +147,15 @@ const PCM_NAV: NavGroup[] = [
   {
     titulo: "OPERAÇÃO",
     items: [
-      { label: "Dashboard", icon: LayoutDashboard, active: true },
+      { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
       { label: "Ordens de Serviço", icon: ClipboardList },
       { label: "Backlog GUT", icon: LayoutGrid },
       { label: "Inspeções", icon: CheckCircle2 },
     ],
+  },
+  {
+    titulo: "CADASTROS",
+    items: [{ label: "Clientes", icon: Building2, view: "clientes" }],
   },
   {
     titulo: "PREVENTIVO",
@@ -541,6 +555,14 @@ export function HomePage() {
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
   const [configTab, setConfigTab] = useState<"grupos" | "usuarios">("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Sub-navegação do PCM (Task 18/E01-S12) — mesmo padrão useState de abas, sem lib de rotas.
+  const [pcmView, setPcmView] = useState<PcmView>("dashboard");
+  const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
+
+  function irParaPcmView(view: PcmView) {
+    setPcmView(view);
+    setClienteSelecionado(null); // ao trocar de sub-tela, sai da Visão 360 de um cliente específico
+  }
 
   // AC-4: superadmin sempre vê tudo (claim user_modulos vem vazio pra ele — bypass, igual RLS);
   // demais papéis só veem módulo com ao menos leitura resolvida (config.minhas_permissoes).
@@ -656,13 +678,17 @@ export function HomePage() {
                 )}
                 {group.items.map((item) => {
                   const Icon = item.icon;
+                  const view = item.view;
+                  // Item ativo: com `view`, reflete a sub-tela atual; sem `view`, mantém o mock.
+                  const isActive = view ? view === pcmView : item.active;
                   return (
                     <button
                       key={item.label}
                       type="button"
                       title={item.label}
+                      onClick={view ? () => irParaPcmView(view) : undefined}
                       className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
-                        item.active
+                        isActive
                           ? "border-orange bg-white/[0.07] text-white font-medium"
                           : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
                       }`}
@@ -778,7 +804,27 @@ export function HomePage() {
           {activeModulo === "inicio" ? (
             <DashboardGeral resumos={dashboardVisivel} onSelect={setActiveModulo} />
           ) : activeModulo === "pcm" ? (
-            <PcmDashboard />
+            pcmView === "clientes" ? (
+              clienteSelecionado ? (
+                // Visão 360 de um cliente específico. O botão "Voltar" é RE-navegação (não mutação),
+                // por isso mora aqui e não dentro da VisaoClientePage — que segue read-only (AC-7).
+                <div className="flex flex-col gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setClienteSelecionado(null)}
+                    className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-orange hover:text-orange-deep cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" strokeWidth={2} />
+                    Voltar para clientes
+                  </button>
+                  <VisaoClientePage clienteId={clienteSelecionado} />
+                </div>
+              ) : (
+                <ListaClientesPage onSelecionar={setClienteSelecionado} />
+              )
+            ) : (
+              <PcmDashboard />
+            )
           ) : activeModulo === "config" ? (
             configTab === "grupos" ? (
               <GruposPage />
