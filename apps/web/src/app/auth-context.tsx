@@ -33,23 +33,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let ativo = true;
 
     const resolverSessaoAtual = async () => {
-      const resultado = await getSession(supabaseAuthAdapter);
-      if (!ativo) return;
-
-      if (resultado.status === "autenticado") {
-        setUser(resultado.usuario);
-        setStatus("autenticado");
-        return;
-      }
-
-      if (resultado.status === "sem-perfil") {
-        await supabaseAuthAdapter.signOut();
+      try {
+        const resultado = await getSession(supabaseAuthAdapter);
         if (!ativo) return;
-        setErroSessao("Conta sem perfil configurado — contate o administrador.");
-      }
 
-      setUser(null);
-      setStatus("nao-autenticado");
+        if (resultado.status === "autenticado") {
+          setUser(resultado.usuario);
+          setStatus("autenticado");
+          return;
+        }
+
+        if (resultado.status === "sem-perfil") {
+          await supabaseAuthAdapter.signOut();
+          if (!ativo) return;
+          setErroSessao("Conta sem perfil configurado — contate o administrador.");
+        }
+
+        setUser(null);
+        setStatus("nao-autenticado");
+      } catch {
+        if (!ativo) return;
+        setUser(null);
+        setStatus("nao-autenticado");
+        setErroSessao("Não foi possível restaurar a sessão. Tente entrar novamente.");
+      }
     };
 
     resolverSessaoAtual();

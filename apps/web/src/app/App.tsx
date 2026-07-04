@@ -4,19 +4,34 @@ import { HomePage } from "./HomePage";
 import { AuthProvider, useAuth } from "./auth-context";
 import { PermissoesProvider } from "./permissoes-context";
 
+function TelaCarregando() {
+  return (
+    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
+      <div className="text-center">
+        <img
+          src="/logos/logo-horizontal-positivo.png"
+          alt="Sinérgica Manutenções Patrimoniais"
+          className="mx-auto h-12 object-contain mb-4"
+        />
+        <p className="text-sm text-ink-3">Carregando sessão...</p>
+      </div>
+    </div>
+  );
+}
+
 // Enquanto a sessão está "carregando" (restauração assíncrona via Supabase Auth), nenhuma das
 // duas rotas decide nada ainda — evita tanto o "flash" de tela protegida quanto redirect
 // prematuro para /login com uma sessão que na verdade é válida (AC-7).
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, status } = useAuth();
-  if (status === "carregando") return null;
+  if (status === "carregando") return <TelaCarregando />;
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function PublicOnly({ children }: { children: React.ReactNode }) {
   const { user, status } = useAuth();
-  if (status === "carregando") return null;
+  if (status === "carregando") return <TelaCarregando />;
   if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
