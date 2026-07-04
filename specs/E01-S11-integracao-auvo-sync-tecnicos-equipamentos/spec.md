@@ -6,7 +6,8 @@ alwaysApply: true
 
 # Spec — Integração Auvo: Sync de Técnicos, Equipes e Equipamentos (Auvo → PCM, espelho read-only)
 
-> **Fonte da verdade.** Status: aprovado (estudo/planejamento — ver `docs/STATE.md`)
+> **Fonte da verdade.** Status: aprovado — decisão de gatilho do sync confirmada em 2026-07-03
+> (ver AC-5 e "Casos de borda").
 > Tier: Pequeno (reaproveita a fundação/ACL de `E01-S09` — direção invertida: Auvo é a fonte,
 > PCM espelha). Sem `design.md` próprio; consome o design de `E01-S09`.
 
@@ -19,8 +20,8 @@ OS) sem chamar a API do Auvo a cada renderização de tela.
 
 ### AC-1: Sync de técnicos popula o cache local
 - **Dado** usuários (`userType = 1`, colaborador de campo) cadastrados no Auvo
-- **Quando** a Edge Function `pcm-auvo-users-sync` é executada (gatilho manual ou agendado — ver
-  Casos de borda)
+- **Quando** a Edge Function `pcm-auvo-users-sync` é executada (via `pg_cron` diário ou via
+  chamada HTTP autenticada sob demanda — ver AC-5)
 - **Então** `pcm.tecnicos_cache` é populado/atualizado com `auvo_user_id`, nome, equipe — um
   upsert por `auvo_user_id`, nunca duplica.
 
@@ -45,16 +46,23 @@ OS) sem chamar a API do Auvo a cada renderização de tela.
 - **Então** o registro no cache é marcado inativo (soft delete, ex. `ativo = false`), não
   deletado fisicamente — OS históricas que referenciam esse técnico continuam exibindo o nome.
 
+### AC-5: Gatilho do sync — agendado + sob demanda
+- **Dado** as Edge Functions `pcm-auvo-users-sync`/`pcm-auvo-equipment-sync` implantadas
+- **Quando** (a) o `pg_cron` dispara no horário agendado (diário, fora do horário comercial), OU
+  (b) alguém faz uma chamada HTTP autenticada (`service_role`/superadmin) diretamente à Edge
+  Function
+- **Então** o sync roda do mesmo jeito nos dois casos — a Edge Function não sabe nem se importa
+  quem/o que a invocou, só que a chamada é autenticada. Não há botão de UI dedicado nesta story
+  (fora de escopo, ver abaixo); "sob demanda" aqui significa que a função é invocável a qualquer
+  momento via `supabase functions invoke` / `curl` autenticado, não que existe uma tela para isso.
+
 ## Casos de borda e erros
-- Gatilho do sync: **não é evento por-item** como `E01-S09` (cliente/task nascem de uma ação do
-  PCM); aqui o Auvo é a fonte, então o sync roda por agendamento (cron/`pg_cron`, periodicidade a
-  definir — sugestão inicial: diário, volume baixo) ou botão manual "Sincronizar" na tela de
-  configuração de integrações. **Decisão de produto, não técnica** — confirmar com Fabrício antes
-  de implementar.
 - Paginação: `GET /users` e `GET /equipments` são paginados (mapeamento §2.2, §2.x) — o sync
   precisa iterar todas as páginas, não só a primeira.
 - Rate limit: sync em lote pode se aproximar do limite de 400 req/min se o número de
   clientes/técnicos crescer — usar `pageSize` alto (100) para minimizar chamadas.
+- `pg_cron` roda como `service_role` (mesmo padrão de outros triggers assíncronos já existentes
+  via `pg_net`/`pg_cron` no schema `pcm`) — sem segredo de usuário embutido no job SQL.
 
 ## Fora de escopo
 > Vinculante. Não implemente nada aqui.
