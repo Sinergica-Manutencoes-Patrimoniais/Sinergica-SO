@@ -14,6 +14,9 @@ const IGNORE_DIRS = new Set([
   ".cursor", ".gemini", ".windsurf",
   // Triviaiox agent files use their own format (not SDD frontmatter)
   "TRIVIAIOX", ".codex",
+  // Definições de subagente (.claude/agents) e auto-memory (.claude/agent-memory) — geradas/
+  // gerenciadas pelo harness, não são docs da esteira SDD e não seguem nenhum dos dois dialetos.
+  "agents", "agent-memory",
 ]);
 const NO_FRONTMATTER_OK = new Set([
   "README.md", "CHANGELOG.md", "Definition-of-Done.md", "pull_request_template.md",
