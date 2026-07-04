@@ -10,7 +10,10 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-03 por @dev (**E01-S12 — Task 18 (lista mínima de clientes)
+**Última atualização:** 2026-07-04 — E01-S11 (PR #12) e E01-S12 (PR #14) ambas mergeadas/em review
+final em `main` nesta sessão; ver blocos abaixo, um por story.
+
+**E01-S12 — Task 18 (lista mínima de clientes)
 implementada; OPEN-QUESTION #3 RESOLVIDA pelo PO**). Decisão de produto do Lucas: entregar a lista
 mínima de clientes no MESMO PR (não esperar o Hub de OS/E01-S07). Implementado (escopo enxuto, sem
 `react-router`): `listarClientes()` + read-model `ClienteResumo` adicionados ao gateway/adapter
@@ -71,6 +74,54 @@ cabeçalho/backlog/histórico (AC-6). Backlog/histórico (conteúdo central) **c
 de propósito. +2 testes (`obter-visao-cliente.test.ts`: erro inesperado isola; erro em backlog
 propaga). test agora **90 pass/9 skip**. **C2** (PGRST205 empírico) e **C3** (navegação/OPEN-QUESTION
 #3) permanecem abertos por design — C2 fica no CI `db-tests`, C3 é decisão de produto do PO.
+
+**E01-S11 — @dev (Dex) — blocker do @qa CORRIGIDO.** O único blocker
+da revisão @qa (pgTAP `tecnicos_equipamentos_cache_rls.test.sql` falharia no `db-tests` da CI: os
+4 blocos UPDATE/DELETE de `authenticated` esperavam filtro silencioso, mas sem `GRANT UPDATE/DELETE`
+o Postgres nega no nível de ACL — `42501` — e aborta a transação) foi resolvido: os 4 blocos agora
+usam `throws_ok(..., '42501', ...)`, mesmo padrão dos INSERT. `lint:migrations` segue verde. Falta
+só a CI (`db-tests`, precisa de Docker) confirmar o pgTAP verde — não roda neste ambiente. A
+OPEN-QUESTION ao lead (pular soft-delete quando o Auvo devolve 0 registros) segue aberta, não
+bloqueante. Revisão @qa abaixo preservada.
+
+**Revisão anterior (@qa Quinn):** revisão adversarial de `E01-S11`.
+**Veredito: CONCERNS — NÃO liberar para @devops/merge ainda.** O código-fonte (migrations
+`0012`/`0013`, Edge Functions, `paginate.ts`) e o schema implementam AC-1..AC-5 corretamente;
+revisei o diff `c9a6bcf` linha a linha e rerodei os gates Node (lint:migrations, typecheck, test,
+build) — todos verdes; `audit:esteira` vermelho é 100% pré-existente/fora de escopo (só
+`.claude/agents/*.md` + `.claude/agent-memory/*` não rastreados, nada da story). Concern #2
+(vínculo de equipamento a cliente errado) **não** se confirmou: a resolução de `auvo_customer_id`
+é match exato em lote contra `pcm.clientes.auvo_id`, ou `null` — nunca "primeiro resultado às
+cegas". Guarda de soft-delete (AC-4) correta por construção (`auvoPaginate` propaga erro → `catch`
+antes de qualquer escrita). Secrets de `0013` reusam exatamente `auvo_trigger_project_url`/
+`auvo_trigger_service_role_key` de `0011`. **1 blocker real:** o pgTAP
+`tecnicos_equipamentos_cache_rls.test.sql` vai falhar no job `db-tests` da CI — as tabelas de
+cache dão a `authenticated` só `GRANT SELECT`, então `UPDATE`/`DELETE` fora de `throws_ok`
+(linhas 51/57/65/70) levantam `42501 permission denied` e abortam a transação, em vez de
+"filtrar 0 linhas" como o teste assume (modelo copiado de `pcm.clientes`, que tem grant de
+update). AC-3 continua satisfeito (authenticated realmente não escreve — até mais estrito), mas
+o teste, como está, não passa. → **@dev**: envolver os UPDATE/DELETE em `throws_ok(..., '42501')`
+e confirmar `db-tests` verde. **1 OPEN-QUESTION ao lead** (já sinalizada por @dev): pular
+reconciliação de soft-delete quando o Auvo devolve 0 registros — fronteira produto/implementação.
+Não verificado aqui (sem Deno/Docker): type-check Deno, testes de integração, execução real do
+pgTAP. Detalhe abaixo (bloco @dev preservado).
+
+**Atualização anterior (@dev, Dex):** **E01-S11 (sync técnicos/equipes/equipamentos
+Auvo → PCM) implementada** na branch `feat/E01-S11-integracao-auvo-sync-tecnicos-equipamentos`,
+commit local (sem push — push bloqueado nesta sessão, @devops abre o PR depois). Entregue: migrations
+`0012` (cache `pcm.tecnicos_cache`/`pcm.equipamentos_cache`, RLS FORCE, `grant usage on schema pcm to
+service_role` que faltava) e `0013` (pg_cron diário 06:00 UTC reusando secrets do Vault de `0011`);
+Edge Functions `pcm-auvo-users-sync`/`pcm-auvo-equipment-sync`; `_shared/auvo/paginate.ts` (+ teste
+Deno); pgTAP RLS (AC-3). **Gates Node verdes** (lint:migrations, lint, typecheck, test, build).
+`audit:esteira` vermelho por causa pré-existente e fora de escopo (14 `.claude/agents/*.md` sem
+`alwaysApply`). Ressalvas reais: sem Deno CLI aqui → Edge Functions/`paginate.ts` não type-checked
+nem testadas (biome/turbo ignoram `supabase/functions/**`); sem Supabase local/Docker → pgTAP não
+rodado; `eval:spec` não cobre pastas `E01-S11` (rastreabilidade conferida à mão). Pendências
+operacionais: habilitar extensão `pg_cron` no Dashboard (task 8), validar `cron.job`/chamada sob
+demanda pós-deploy. Nenhum SPEC_DEVIATION; 1 [AUTO-DECISION] a confirmar com o lead (pular
+reconciliação de soft-delete quando o Auvo devolve 0 registros — para não desativar o cache em massa).
+Anteriormente: PR #9/#10/#11 mergeados; `E01-S10` AC-7 deferido (PMOC não construído). E01-S02 segue
+"Spec aprovada", sem owner.
 
 ## Status geral
 **Fase:** Casca concluída (E00-S04) + E00-S05 (Auth/RBAC) + E00-S06 (sync Padrão OS) + E00-S07
@@ -258,10 +309,26 @@ nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
 | `E01-S09-integracao-auvo-fundacao` | **implementado e mergeado** (PR #10) — cliente HTTP, task/priority-map, 2 Edge Functions, migration do trigger; 6 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` ✅ · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
 | `E01-S10-integracao-auvo-webhook-status` | **implementado e mergeado** (PR #11) — AC-1 a AC-6 (`_shared/auvo/verify-signature.ts` + `pcm-auvo-webhook`), AC-7 deferido (SPEC_DEVIATION — PMOC não existe); 2 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` n/a (sem migration nova) · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
-| `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | spec pronta, **implementação não iniciada** | depende de E01-S10 |
-| `E01-S12-visao-360-cliente` | **spec.md pronta** (tier Pequeno, aprovada por Lucas 2026-07-03) — 8 ACs (gating PCM, cabeçalho, backlog GUT, histórico Auvo, estado vazio, painel condicional S11, read-only, cliente não encontrado); 2 OPEN-QUESTION não-bloqueantes. Próximo: `@sm` → tasks.md | leitura/agregação — sem migration nova |
+| `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | **implementado e mergeado** (PR #12) — migrations `0012`/`0013`, Edge Functions `pcm-auvo-users-sync`/`pcm-auvo-equipment-sync`, pg_cron; `@qa` achou 1 bug real no pgTAP, corrigido; task 8 (habilitar `pg_cron` no Dashboard) pendência operacional | `db-tests` ✅ na CI |
+| `E01-S12-visao-360-cliente` | **implementado — PR #14 aberto** (tier Pequeno) — 8 ACs cobertas (gating PCM, cabeçalho, backlog GUT, histórico Auvo, estado vazio, painel condicional S11 já reconciliado, read-only, cliente não encontrado) + Task 18 (navegação). `@qa` achou C1 (média), corrigido | leitura/agregação — sem migration nova; falta validação humana em browser
 
 ## Decisões recentes
+- 2026-07-03: `@sm` (River) preparou `specs/E01-S11-integracao-auvo-sync-tecnicos-equipamentos/
+  tasks.md` (12 tasks) na branch `feat/E01-S11-integracao-auvo-sync-tecnicos-equipamentos` —
+  nenhum código tocado, só decomposição. Reaproveita 100% da fundação de `E01-S09` (cliente HTTP,
+  `requireServiceRole`, secrets do Vault `auvo_trigger_project_url`/`auvo_trigger_service_role_key`
+  já criados em `0011`) — nenhum secret novo, nenhuma auth nova. Decisões técnicas registradas como
+  `[AUTO-DECISION]` em `tasks.md` (não sobem a nível de SPEC_DEVIATION): FK de
+  `pcm.equipamentos_cache` para `pcm.clientes` via `auvo_id` (não `id` interno, coluna nullable com
+  soft-fail se o cliente ainda não estiver sincronizado), horário do cron (`06:00 UTC`/`03:00 BRT`),
+  filtro `userType = 1` client-side em `pcm-auvo-users-sync`, guarda para o soft-delete do AC-4
+  nunca rodar se a paginação falhar no meio. Achado relevante para o time (não é bug desta story):
+  `scripts/eval-spec-fidelity.mjs` só varre `specs/NNNN-*/` (regex `^\d{4}-`) — silenciosamente
+  ignora todas as pastas `E0N-S0N-*` (`E01-S09`, `E01-S10`, este `E01-S11`), então o gate "verde"
+  não garante rastreabilidade AC↔task nessas stories; mitigado à mão nesta sessão (cada AC citado
+  na tabela de tasks), mas o script continua sem cobrir o padrão real do projeto até alguém abrir
+  uma chore para ele. Nenhuma migration criada ainda (`0012`/`0013` são só o plano, descritas em
+  `tasks.md`) — próxima sessão de `@dev` implementa a partir daqui.
 - 2026-07-03: `E01-S09` (fundação Auvo) implementada em branch própria
   (`feat/E01-S09-integracao-auvo-fundacao`, a partir de `main`/`origin/main`, sem misturar com o
   trabalho paralelo de RBAC/grupos de outra sessão). Entregue: `_shared/auth.ts` ganhou
