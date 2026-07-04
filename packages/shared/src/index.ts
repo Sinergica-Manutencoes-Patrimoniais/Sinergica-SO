@@ -7,3 +7,18 @@
 // Placeholder inicial — preenchido feature a feature na fase de construção.
 
 export const SHARED_PACKAGE = "@sinergica/shared";
+
+export type OrdemServicoCategoria = "corretiva" | "preventiva" | "emergencial";
+export type OrdemServicoPrioridade = "baixa" | "normal" | "media" | "alta" | "critica";
+
+export interface OrdemServicoInput {
+  client_id: string;
+  titulo: string;
+  descricao: string;
+  categoria: OrdemServicoCategoria;
+  prioridade: OrdemServicoPrioridade;
+  local_descricao: string;
+  origem: "ze";
+  origem_ref_id: string;
+  solicitante?: string;
+}

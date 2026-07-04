@@ -30,6 +30,7 @@ alwaysApply: false
 |--------|---------|-----------|
 | `pcm-auvo-create-task` | PCM → Auvo | Cria task quando OS entra em `planejamento` |
 | `pcm-auvo-customers-sync` | PCM ↔ Auvo | Sincroniza clientes |
+| `pcm-auvo-customers-import` | Auvo → PCM | Import inicial/diário de clientes já cadastrados no Auvo (bootstrap, E01-S13) |
 | `pcm-auvo-equipment-sync` | Auvo → PCM | Espelha equipamentos (cache) |
 | `pcm-auvo-users-sync` | Auvo → PCM | Espelha técnicos |
 | `pcm-auvo-patch-task-orientation` | PCM → Auvo | Atualiza descrição/orientação da task |

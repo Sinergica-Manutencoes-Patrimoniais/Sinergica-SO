@@ -98,12 +98,12 @@ describe("obterVisaoCliente", () => {
   });
 
   // AC-6 (achado @qa C1): erro INESPERADO no gateway de equipamentos (não só PGRST205/42P01, mas
-  // qualquer throw — ex.: E01-S11 mergear com coluna diferente e o PostgREST devolver 42703) NÃO
+  // qualquer throw — ex.: PostgREST devolver erro inesperado no cache de equipamentos) NÃO
   // pode derrubar cabeçalho/backlog/histórico. O painel degrada para "indisponivel", o resto renderiza.
   it("AC-6: erro inesperado nos equipamentos degrada só o painel, sem derrubar o resto", async () => {
     const gateway = gatewayMock({
       listarEquipamentosCliente: vi.fn(async () => {
-        throw new Error("PGRST204: column pcm.equipamentos_cache.cliente_auvo_id does not exist");
+        throw new Error("PGRST204: erro inesperado no cache de equipamentos");
       }),
     });
 

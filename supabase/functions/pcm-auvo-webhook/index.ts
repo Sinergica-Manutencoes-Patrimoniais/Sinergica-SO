@@ -39,6 +39,7 @@ const AUVO_TASK_STATUS_FINALIZADA = 5;
 const AUVO_TASK_STATUS_EM_ANDAMENTO = new Set([2, 3, 4]); // deslocamento/check-in/check-out
 
 type OsStatus = "em_execucao" | "finalizado" | "cancelado";
+type JsonObject = Record<string, unknown>;
 
 // Schema deliberadamente leniente: só exige `entity`/`action` numéricos (coagidos, o Auvo pode
 // mandar como string). O resto do payload é validado/extraído defensivamente em runtime — ver
@@ -169,6 +170,30 @@ serve(async (req) => {
       }),
     );
 
+    // E01-S15: captura rica do webhook. Não copia anexos/fotos para Storage; guarda metadados,
+    // URLs/referências do Auvo quando existirem, e sempre preserva o payload bruto.
+    await upsertTaskSnapshot(db, os.id, taskId, payload, targetStatus);
+
+    // E01-S16: relacionamento OS ↔ equipamento Auvo. O PCM NÃO duplica identificador/categoria/
+    // garantia do equipamento; guarda apenas o vínculo de domínio PCM quando o payload trouxer ID.
+    const auvoEquipmentId = extractEquipmentId(evento);
+    if (auvoEquipmentId != null) {
+      const { error: equipmentLinkError } = await db
+        .schema("pcm")
+        .from("os_equipamentos_auvo")
+        .upsert(
+          {
+            ordem_servico_id: os.id,
+            auvo_equipment_id: auvoEquipmentId,
+            source: "auvo_webhook",
+            payload_ref: { taskId },
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "ordem_servico_id,auvo_equipment_id" },
+        );
+      if (equipmentLinkError) throw equipmentLinkError;
+    }
+
     // AC-7: OS preventiva de climatização concluída deveria disparar criação de registro PMOC
     // (pcm.pmoc_records) — spec.md AC-7. PMOC (E01-S03..S08) ainda não tem essa tabela no schema
     // (ROADMAP: "Planejado"). Criar a tabela aqui seria decisão arquitetural de outra story, fora
@@ -212,6 +237,158 @@ function extractTaskStatus(evento: Record<string, unknown>): number | null {
   for (const c of candidatos) {
     if (typeof c === "number" && Number.isFinite(c)) return c;
     if (typeof c === "string" && /^\d+$/.test(c)) return Number(c);
+  }
+  return null;
+}
+
+function extractEquipmentId(evento: Record<string, unknown>): number | null {
+  const candidatos = [
+    evento.equipmentId,
+    evento.auvoEquipmentId,
+    evento.equipment_id,
+    valueAtPath(evento, ["equipment", "id"]),
+    valueAtPath(evento, ["equipamento", "id"]),
+    valueAtPath(evento, ["task", "equipmentId"]),
+    valueAtPath(evento, ["result", "equipmentId"]),
+  ];
+  return firstNumber(candidatos);
+}
+
+async function upsertTaskSnapshot(
+  db: ReturnType<typeof createClient>,
+  osId: string,
+  taskId: number,
+  payload: unknown,
+  targetStatus: OsStatus,
+): Promise<void> {
+  const root = isObject(payload) ? payload : {};
+  const now = new Date().toISOString();
+  const timeline = normalizeTimeline(root);
+  const { error } = await db
+    .schema("pcm")
+    .from("auvo_task_snapshots")
+    .upsert(
+      {
+        ordem_servico_id: osId,
+        auvo_task_id: taskId,
+        payload_raw: payload,
+        relato_usuario: firstString([
+          deepFind(root, ["userReport", "user_report", "relatoUsuario", "relato_usuario", "report", "description", "descricao", "orientation"]),
+        ]),
+        anexos: firstArray([
+          deepFind(root, ["attachments", "anexos", "files", "fotos", "photos", "images"]),
+        ]),
+        checklist: firstArray([
+          deepFind(root, ["checklist", "questionnaire", "questionario", "questions", "answers", "respostas"]),
+        ]),
+        pecas_consumidas: firstArray([
+          deepFind(root, ["parts", "pieces", "materials", "pecas", "pecasConsumidas", "materiais"]),
+        ]),
+        controle_horas: firstObject([
+          deepFind(root, ["hours", "workHours", "controleHoras", "timeTracking", "timesheet"]),
+        ]),
+        timeline,
+        recebida_em: timeline.recebida_em ?? null,
+        visualizada_em: timeline.visualizada_em ?? null,
+        checkin_em: timeline.checkin_em ?? null,
+        checkout_em: timeline.checkout_em ?? null,
+        concluida_em: timeline.concluida_em ?? (targetStatus === "finalizado" ? now : null),
+        last_webhook_received_at: now,
+        updated_at: now,
+      },
+      { onConflict: "auvo_task_id" },
+    );
+  if (error) throw error;
+}
+
+function normalizeTimeline(root: JsonObject): JsonObject {
+  const timelineObject = firstObject([deepFind(root, ["timeline", "events", "history", "historico"])]);
+  const source = timelineObject && Object.keys(timelineObject).length > 0 ? timelineObject : root;
+  return {
+    raw: timelineObject,
+    recebida_em: firstIsoString([
+      deepFind(source, ["receivedAt", "received_at", "recebidaEm", "recebida_em", "dataRecebida"]),
+    ]),
+    visualizada_em: firstIsoString([
+      deepFind(source, ["viewedAt", "viewed_at", "visualizadaEm", "visualizada_em", "dataVisualizada"]),
+    ]),
+    checkin_em: firstIsoString([
+      deepFind(source, ["checkInAt", "checkinAt", "check_in_at", "checkin", "checkIn", "dataCheckIn"]),
+    ]),
+    checkout_em: firstIsoString([
+      deepFind(source, ["checkOutAt", "checkoutAt", "check_out_at", "checkout", "checkOut", "dataCheckOut"]),
+    ]),
+    concluida_em: firstIsoString([
+      deepFind(source, ["finishedAt", "completedAt", "concludedAt", "concluidaEm", "finalizadaEm", "dataConclusao"]),
+    ]),
+  };
+}
+
+function deepFind(root: unknown, names: string[]): unknown {
+  if (!isObject(root)) return undefined;
+  for (const name of names) {
+    if (root[name] != null) return root[name];
+  }
+  for (const container of ["task", "result", "data", "payload"]) {
+    const nested = root[container];
+    if (isObject(nested)) {
+      const value = deepFind(nested, names);
+      if (value != null) return value;
+    }
+  }
+  return undefined;
+}
+
+function valueAtPath(root: unknown, path: string[]): unknown {
+  let current = root;
+  for (const part of path) {
+    if (!isObject(current)) return undefined;
+    current = current[part];
+  }
+  return current;
+}
+
+function isObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function firstString(values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim().length > 0) return value;
+  }
+  return null;
+}
+
+function firstIsoString(values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && !Number.isNaN(Date.parse(value))) return new Date(value).toISOString();
+    if (typeof value === "number" && Number.isFinite(value)) {
+      const ms = value > 10_000_000_000 ? value : value * 1000;
+      const date = new Date(ms);
+      if (!Number.isNaN(date.getTime())) return date.toISOString();
+    }
+  }
+  return null;
+}
+
+function firstArray(values: unknown[]): unknown[] {
+  for (const value of values) {
+    if (Array.isArray(value)) return value;
+  }
+  return [];
+}
+
+function firstObject(values: unknown[]): JsonObject {
+  for (const value of values) {
+    if (isObject(value)) return value;
+  }
+  return {};
+}
+
+function firstNumber(values: unknown[]): number | null {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && /^\d+$/.test(value)) return Number(value);
   }
   return null;
 }
