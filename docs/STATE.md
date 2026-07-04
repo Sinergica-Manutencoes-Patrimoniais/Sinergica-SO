@@ -10,7 +10,72 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-03 por @dev (Dex) — **blocker do @qa CORRIGIDO.** O único blocker
+**Última atualização:** 2026-07-04 — E01-S11 (PR #12) e E01-S12 (PR #14) ambas mergeadas/em review
+final em `main` nesta sessão; ver blocos abaixo, um por story.
+
+**E01-S12 — Task 18 (lista mínima de clientes)
+implementada; OPEN-QUESTION #3 RESOLVIDA pelo PO**). Decisão de produto do Lucas: entregar a lista
+mínima de clientes no MESMO PR (não esperar o Hub de OS/E01-S07). Implementado (escopo enxuto, sem
+`react-router`): `listarClientes()` + read-model `ClienteResumo` adicionados ao gateway/adapter
+existentes (`cliente-360-gateway.ts` / `supabase-cliente-360-adapter.ts` — `select id,nome,cnpj,ativo`
+de `pcm.clientes`, `order('nome')` no servidor, MESMA RLS de `buscarCliente`, sem permissão nova);
+caso de uso `listar-clientes.ts` (+3 testes, passthrough estilo `listarGrupos`); `ListaClientesPage.tsx`
+(gate AC-1 `podeAcessar('pcm','leitura')`, estados carregando/erro/vazio, cada linha clicável →
+`onSelecionar(id)`, read-only); wiring em `HomePage.tsx` com `useState` local (`pcmView` +
+`clienteSelecionado`, item "Clientes" no `PCM_NAV`/grupo CADASTROS, botão "Voltar" = re-navegação na
+HomePage, `VisaoClientePage` intacta → AC-7 preservado). Gates verdes rodados nesta sessão: lint (91
+arquivos), typecheck (4 pacotes), test **93 pass/9 skip** (+3 `listar-clientes`), build (vite 1877
+módulos), `audit-esteira` (124 docs), `eval-spec-fidelity` (exit 0). Pendente: validação humana em
+browser + push (@devops); reconciliar nome de coluna de `equipamentos_cache` quando E01-S11 mergear.
+Commit local `feat(E01-S12): lista mínima de clientes para navegação até a Visão 360 (Task 18)`.
+
+**Contexto anterior (revisão @qa aplicada):** E01-S12 Visão 360 v1 na branch
+`feat/E01-S12-visao-360-cliente`, worktree isolado, **ainda não mergeada** — aguarda review final +
+@devops. **@qa deu CONCERNS; achado C1 (média) corrigido:**
+`obter-visao-cliente` agora isola a falha do painel de equipamentos (qualquer erro, não só o
+PGRST205 já tratado no adapter) num helper `carregarEquipamentos` com try/catch → "indisponivel",
+para que um erro inesperado (ex.: E01-S11 mergear com coluna diferente → 42703/PGRST204) degrade só
+o próprio painel e NÃO derrube cabeçalho/backlog/histórico junto (AC-6 real); +2 testes
+(erro inesperado isola; erro em backlog/conteúdo central continua propagando). test agora 90 pass.
+Feature hexagonal nova em `apps/web/src/features/pcm/` (domain `cliente-360.ts` +
+application `obter-visao-cliente` + infrastructure `supabase-cliente-360-adapter` + 5 componentes +
+`VisaoClientePage`, recebe `clienteId` por prop). AC-1 a AC-8 cobertas; **0 SPEC_DEVIATION**. Gates
+locais **verdes**: lint, typecheck, test (90 pass/9 skip), build, `audit:esteira`, `eval:spec`.
+Pendências reportadas: **(1) AC-6 caminho real** (retorno `"indisponivel"`/PGRST205 do PostgREST)
+**NÃO executado localmente** (sem Docker) — fica no CI `db-tests`; **(2) Task 18 (navegação até a
+Visão 360) — RESOLVIDA nesta sessão** (ver bloco "Última atualização" no topo): lista mínima de
+clientes implementada no mesmo PR por decisão do PO; **(3) assunção de acoplamento** do nome da coluna de vínculo em `pcm.equipamentos_cache` (E01-S11
+ainda não existe nesta build — sem migration 0012) a reconciliar quando E01-S11 mergear (inofensiva
+agora: tabela ausente → degrada para "indisponível"). Contexto anterior: PR #9/#10/#11 (E00-S09/S10,
+E01-S09/S10) mergeados em `main`; E01-S11 e E01-S02 seguem "Planejado", sem owner)
+
+**QA gate (@qa Quinn, 2026-07-03): CONCERNS** (passa com reservas documentadas — não bloqueia).
+Revisão adversarial linha a linha do diff `a3a9e0b`; gates reexecutados neste worktree (lint,
+typecheck, test 88 pass/9 skip, build, `audit:esteira` 124 OK — **todos verdes**). AC-1 a AC-8 OK
+nos caminhos existentes; **read-only confirmado** (grep: zero `insert/update/delete/upsert/rpc`; o
+único botão é "Tentar novamente" = re-leitura). AC-1 é gate real (o `useEffect` só chama `carregar()`
+com `temAcesso`, não busca dados sem permissão) + RLS de banco. O fallback perigoso do E01-S09
+(mascarar erro real como estado "ok") **NÃO se repete**: o adapter só devolve `"indisponivel"` em
+`PGRST205`/`42P01` e **relança** qualquer outro erro. Reservas p/ @dev/PO: **(C1, MÉDIA)** erro
+inesperado da query de equipamentos (ex.: coluna divergente quando E01-S11 mergear) é relançado
+dentro do `Promise.all` → rejeita o caso de uso → **página inteira cai no estado de erro**,
+contrariando a intenção de AC-6 de que o cache ausente não bloqueia o resto; falha alto (bom), mas
+mais amplo que o ideal — recomendação: isolar a falha do painel de equipamentos (não deixar derrubar
+cabeçalho/backlog/histórico) e reconciliar `cliente_auvo_id`/`nome` quando E01-S11 fechar.
+**(C2, BAIXA-MÉDIA)** retorno real PGRST205 não verificado empiricamente (sem Docker) — validar no CI
+`db-tests` antes do merge. **(C3, produto)** navegação até a tela adiada (Task 18/OPEN-QUESTION #3) —
+feature não exercitável por humano até o PO decidir a lista/entrada. Não conserto bugs — reportado ao
+@dev/PO)
+
+**Resolução @dev (2026-07-03, commit de fix após `a3a9e0b`):** **C1 CORRIGIDO** — `obter-visao-cliente`
+isola a query de equipamentos num helper `carregarEquipamentos` com `try/catch` → `"indisponivel"`,
+para que QUALQUER erro (não só `PGRST205`/`42P01`) degrade só o painel e não derrube
+cabeçalho/backlog/histórico (AC-6). Backlog/histórico (conteúdo central) **continuam propagando** erro
+de propósito. +2 testes (`obter-visao-cliente.test.ts`: erro inesperado isola; erro em backlog
+propaga). test agora **90 pass/9 skip**. **C2** (PGRST205 empírico) e **C3** (navegação/OPEN-QUESTION
+#3) permanecem abertos por design — C2 fica no CI `db-tests`, C3 é decisão de produto do PO.
+
+**E01-S11 — @dev (Dex) — blocker do @qa CORRIGIDO.** O único blocker
 da revisão @qa (pgTAP `tecnicos_equipamentos_cache_rls.test.sql` falharia no `db-tests` da CI: os
 4 blocos UPDATE/DELETE de `authenticated` esperavam filtro silencioso, mas sem `GRANT UPDATE/DELETE`
 o Postgres nega no nível de ACL — `42501` — e aborta a transação) foi resolvido: os 4 blocos agora
@@ -244,7 +309,8 @@ nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
 | `specs/E01-S03-pmoc-schema/design.md` | design arquitetural criado (tier arquitetural) | revisão humana |
 | `E01-S09-integracao-auvo-fundacao` | **implementado e mergeado** (PR #10) — cliente HTTP, task/priority-map, 2 Edge Functions, migration do trigger; 6 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` ✅ · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
 | `E01-S10-integracao-auvo-webhook-status` | **implementado e mergeado** (PR #11) — AC-1 a AC-6 (`_shared/auvo/verify-signature.ts` + `pcm-auvo-webhook`), AC-7 deferido (SPEC_DEVIATION — PMOC não existe); 2 SPEC_DEVIATION abertos (ver tasks.md) | `lint:migrations` n/a (sem migration nova) · `audit-esteira` ✅ · `eval-spec-fidelity` ✅ · Deno type-check/testes: não executado (sem Deno CLI) |
-| `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | spec + `tasks.md` prontos (12 tasks, `@sm`/River), **implementação não iniciada** | depende de E01-S09 (já mergeada) |
+| `E01-S11-integracao-auvo-sync-tecnicos-equipamentos` | **implementado e mergeado** (PR #12) — migrations `0012`/`0013`, Edge Functions `pcm-auvo-users-sync`/`pcm-auvo-equipment-sync`, pg_cron; `@qa` achou 1 bug real no pgTAP, corrigido; task 8 (habilitar `pg_cron` no Dashboard) pendência operacional | `db-tests` ✅ na CI |
+| `E01-S12-visao-360-cliente` | **implementado — PR #14 aberto** (tier Pequeno) — 8 ACs cobertas (gating PCM, cabeçalho, backlog GUT, histórico Auvo, estado vazio, painel condicional S11 já reconciliado, read-only, cliente não encontrado) + Task 18 (navegação). `@qa` achou C1 (média), corrigido | leitura/agregação — sem migration nova; falta validação humana em browser
 
 ## Decisões recentes
 - 2026-07-03: `@sm` (River) preparou `specs/E01-S11-integracao-auvo-sync-tecnicos-equipamentos/
