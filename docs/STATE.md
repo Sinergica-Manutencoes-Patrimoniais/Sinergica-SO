@@ -10,8 +10,13 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-04 — E01-S11 (PR #12) e E01-S12 (PR #14) ambas mergeadas/em review
-final em `main` nesta sessão; ver blocos abaixo, um por story.
+**Última atualização:** 2026-07-04 — Reconciliação final pós-merge. **E01-S11 (PR #12)**, **E01-S12
+(PR #14)** e o chore **`audit-esteira` (PR #13)** estão todos **mergeados em `main`**. Ordem real do
+merge: #13 → #12 → #14 (cada um dos dois últimos exigiu resolver conflito de docs — `STATE.md`/
+`ROADMAP.md` — contra a `main` avançada pelo anterior; sem conflito de código). PR
+[#15](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/pull/15) (fix de hardening
+da tela de loading/erro de sessão do E00-S05, achado solto de sessão anterior) segue aberto,
+aguardando CI. Ver blocos abaixo, um por story, para o histórico detalhado de cada revisão `@qa`.
 
 **E01-S12 — Task 18 (lista mínima de clientes)
 implementada; OPEN-QUESTION #3 RESOLVIDA pelo PO**). Decisão de produto do Lucas: entregar a lista
