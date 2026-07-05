@@ -230,13 +230,14 @@ async function obterUsuarioSistema(db: ReturnType<typeof createClient>): Promise
   return data.user_id as string;
 }
 
-function normalizarCnpj(valor: string | undefined): string | null {
-  const cnpj = valor?.trim();
+function normalizarCnpj(valor: unknown): string | null {
+  const cnpj = textoOuNull(valor);
   return cnpj ? cnpj : null;
 }
 
-function textoOuNull(valor: string | undefined): string | null {
-  const texto = valor?.trim();
+function textoOuNull(valor: unknown): string | null {
+  if (valor === null || valor === undefined) return null;
+  const texto = String(valor).trim();
   return texto ? texto : null;
 }
 
