@@ -1,8 +1,11 @@
 // Caso de uso principal da Visão 360 (E01-S12) — orquestra o gateway, sem I/O direto.
 import type {
+  Cliente360Evento,
   Cliente360Gateway,
+  Cliente360Metricas,
   ClienteHeader,
   OrdemServicoResumo,
+  QualidadeClienteResumo,
   ResultadoEquipamentos,
 } from "./cliente-360-gateway";
 
@@ -15,9 +18,12 @@ export type VisaoCliente =
   | {
       tipo: "ok";
       cliente: ClienteHeader;
+      metricas: Cliente360Metricas;
+      eventos: Cliente360Evento[];
       backlog: OrdemServicoResumo[];
       historico: OrdemServicoResumo[];
       equipamentos: ResultadoEquipamentos;
+      qualidade: QualidadeClienteResumo;
     };
 
 /**
@@ -42,13 +48,24 @@ export async function obterVisaoCliente(
   const cliente = await gateway.buscarCliente(clienteId);
   if (cliente === null) return { tipo: "nao_encontrado" };
 
-  const [backlog, historico, equipamentos] = await Promise.all([
+  const [backlog, historico, equipamentos, eventos, qualidade] = await Promise.all([
     gateway.listarBacklogCliente(clienteId),
     gateway.listarHistoricoCliente(clienteId),
     carregarEquipamentos(gateway, clienteId, cliente.auvoId),
+    carregarEventos(gateway, clienteId),
+    carregarQualidade(gateway, clienteId),
   ]);
 
-  return { tipo: "ok", cliente, backlog, historico, equipamentos };
+  return {
+    tipo: "ok",
+    cliente,
+    metricas: montarMetricas(backlog, historico, equipamentos, eventos),
+    eventos,
+    backlog,
+    historico,
+    equipamentos,
+    qualidade,
+  };
 }
 
 /**
@@ -69,4 +86,52 @@ async function carregarEquipamentos(
   } catch {
     return "indisponivel";
   }
+}
+
+async function carregarEventos(
+  gateway: Cliente360Gateway,
+  clienteId: string,
+): Promise<Cliente360Evento[]> {
+  try {
+    return await gateway.listarEventosCliente(clienteId);
+  } catch {
+    return [];
+  }
+}
+
+async function carregarQualidade(
+  gateway: Cliente360Gateway,
+  clienteId: string,
+): Promise<QualidadeClienteResumo> {
+  try {
+    return await gateway.listarQualidadeCliente(clienteId);
+  } catch {
+    return { inspecoes: [], laudos: [] };
+  }
+}
+
+function montarMetricas(
+  backlog: OrdemServicoResumo[],
+  historico: OrdemServicoResumo[],
+  equipamentos: ResultadoEquipamentos,
+  eventos: Cliente360Evento[],
+): Cliente360Metricas {
+  const todas = [...backlog, ...historico];
+  const sincronizadas = todas.filter((ordem) => ordem.auvoSyncStatus === "synced").length;
+  const comSinalAuvo = todas.filter((ordem) => ordem.auvoSyncStatus !== null).length;
+  const ultimaAtividadeEm =
+    eventos[0]?.data ??
+    todas
+      .map((ordem) => ordem.auvoSyncedAt ?? ordem.createdAt ?? null)
+      .filter((data): data is string => Boolean(data))
+      .sort((a, b) => b.localeCompare(a))[0] ??
+    null;
+
+  return {
+    osAbertas: backlog.length,
+    backlogTotal: backlog.length,
+    slaPercentual: comSinalAuvo > 0 ? Math.round((sincronizadas / comSinalAuvo) * 100) : null,
+    equipamentosAtivos: equipamentos === "indisponivel" ? null : equipamentos.length,
+    ultimaAtividadeEm,
+  };
 }

@@ -9,6 +9,16 @@ export interface ClienteHeader {
   cnpj: string | null;
   auvoId: number | null;
   ativo: boolean;
+  tipo?: "cliente" | "lead";
+  statusComercial?: "ativo" | "inativo" | "prospecto";
+  endereco?: string | null;
+  cidade?: string | null;
+  estado?: string | null;
+  cep?: string | null;
+  contatoNome?: string | null;
+  contatoTelefone?: string | null;
+  contatoEmail?: string | null;
+  observacoes?: string | null;
 }
 
 /**
@@ -21,6 +31,12 @@ export interface ClienteResumo {
   nome: string;
   cnpj: string | null;
   ativo: boolean;
+  auvoId?: number | null;
+  cidade?: string | null;
+  estado?: string | null;
+  contatoTelefone?: string | null;
+  contatoEmail?: string | null;
+  statusComercial?: "ativo" | "inativo" | "prospecto";
 }
 
 /**
@@ -39,12 +55,17 @@ export interface OrdemServicoResumo {
   urgencia: number | null;
   tendencia: number | null;
   auvoSyncStatus: string | null;
+  createdAt?: string | null;
+  auvoSyncedAt?: string | null;
+  localDescricao?: string | null;
+  solicitante?: string | null;
 }
 
 /** Equipamento vinculado ao cliente, vindo do cache plano do Auvo (E01-S11) — AC-6. */
 export interface EquipamentoResumo {
   id: string;
   nome: string;
+  auvoEquipmentId?: number | null;
 }
 
 /**
@@ -53,6 +74,41 @@ export interface EquipamentoResumo {
  * ser consultado, sem lançar exceção — a UI o traduz num placeholder de degradação (AC-6).
  */
 export type ResultadoEquipamentos = EquipamentoResumo[] | "indisponivel";
+
+export interface Cliente360Metricas {
+  osAbertas: number;
+  backlogTotal: number;
+  slaPercentual: number | null;
+  equipamentosAtivos: number | null;
+  ultimaAtividadeEm: string | null;
+}
+
+export interface Cliente360Evento {
+  id: string;
+  tipo: "os" | "inspecao" | "laudo" | "whatsapp" | "auvo";
+  titulo: string;
+  subtitulo: string | null;
+  data: string;
+  criticidade?: "neutra" | "atencao" | "critica" | "sucesso";
+}
+
+export interface QualidadeClienteResumo {
+  inspecoes: Array<{
+    id: string;
+    titulo: string;
+    status: string;
+    dataInspecao: string;
+    totalItens: number;
+    itensNaoConformes: number;
+  }>;
+  laudos: Array<{
+    id: string;
+    numero: string;
+    status: string;
+    dataVistoria: string;
+    nivelProtecao: string | null;
+  }>;
+}
 
 export interface Cliente360Gateway {
   /** Clientes não soft-deleted, ordenados por `nome` asc no servidor — lista de navegação (Task 18). */
@@ -68,4 +124,8 @@ export interface Cliente360Gateway {
     clienteId: string,
     auvoId: number | null,
   ): Promise<ResultadoEquipamentos>;
+  /** Eventos recentes consolidados de OS, inspeções, laudos e snapshots Auvo. */
+  listarEventosCliente(id: string): Promise<Cliente360Evento[]>;
+  /** Resumo operacional de qualidade do cliente. */
+  listarQualidadeCliente(id: string): Promise<QualidadeClienteResumo>;
 }

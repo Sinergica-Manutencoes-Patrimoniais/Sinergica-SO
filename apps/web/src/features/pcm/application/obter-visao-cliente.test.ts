@@ -35,6 +35,16 @@ function gatewayMock(overrides: Partial<Cliente360Gateway> = {}): Cliente360Gate
     listarBacklogCliente: vi.fn(async () => [os()]),
     listarHistoricoCliente: vi.fn(async () => [os({ id: "os2", status: "finalizado" })]),
     listarEquipamentosCliente: vi.fn(async () => [{ id: "e1", nome: "Elevador" }]),
+    listarEventosCliente: vi.fn(async () => [
+      {
+        id: "evt-1",
+        tipo: "os" as const,
+        titulo: "OS CH-001 aberta — Vazamento",
+        subtitulo: "corretiva",
+        data: "2026-07-05T03:00:00.000Z",
+      },
+    ]),
+    listarQualidadeCliente: vi.fn(async () => ({ inspecoes: [], laudos: [] })),
     ...overrides,
   };
 }
@@ -65,6 +75,8 @@ describe("obterVisaoCliente", () => {
     expect(resultado.cliente).toEqual(CLIENTE);
     expect(resultado.backlog).toHaveLength(1);
     expect(resultado.historico[0]?.status).toBe("finalizado");
+    expect(resultado.metricas.osAbertas).toBe(1);
+    expect(resultado.eventos).toHaveLength(1);
   });
 
   // AC-5: cliente sem nenhuma OS → backlog e histórico vazios, sem erro
