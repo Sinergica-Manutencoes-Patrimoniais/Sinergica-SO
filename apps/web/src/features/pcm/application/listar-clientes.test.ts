@@ -16,6 +16,8 @@ function gatewayMock(overrides: Partial<Cliente360Gateway> = {}): Cliente360Gate
     listarBacklogCliente: vi.fn(async () => []),
     listarHistoricoCliente: vi.fn(async () => []),
     listarEquipamentosCliente: vi.fn(async () => "indisponivel" as const),
+    listarEventosCliente: vi.fn(async () => []),
+    listarQualidadeCliente: vi.fn(async () => ({ inspecoes: [], laudos: [] })),
     ...overrides,
   };
 }

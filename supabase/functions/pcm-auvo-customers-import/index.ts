@@ -44,6 +44,17 @@ interface AuvoCustomer {
   name?: string;
   cnpj?: string;
   cpfCnpj?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  cep?: string;
+  contactName?: string;
+  phone?: string;
+  mobilePhone?: string;
+  email?: string;
+  active?: boolean;
+  notes?: string;
 }
 
 interface AuvoCustomersResponse {
@@ -56,7 +67,17 @@ interface CacheRow {
   auvo_id: number;
   nome: string;
   cnpj: string | null;
-  ativo: true;
+  ativo: boolean;
+  status_comercial: "ativo" | "inativo";
+  tipo: "cliente";
+  endereco: string | null;
+  cidade: string | null;
+  estado: string | null;
+  cep: string | null;
+  contato_nome: string | null;
+  contato_telefone: string | null;
+  contato_email: string | null;
+  observacoes: string | null;
   updated_at: string;
   created_by: string;
   updated_by: string;
@@ -112,7 +133,17 @@ serve(async (req) => {
         auvo_id: auvoId,
         nome: c.description ?? c.name ?? `Cliente ${auvoId}`,
         cnpj: normalizarCnpj(c.cnpj ?? c.cpfCnpj),
-        ativo: true,
+        ativo: c.active !== false,
+        status_comercial: c.active === false ? "inativo" : "ativo",
+        tipo: "cliente",
+        endereco: textoOuNull(c.address),
+        cidade: textoOuNull(c.city),
+        estado: textoOuNull(c.state),
+        cep: textoOuNull(c.zipCode ?? c.cep),
+        contato_nome: textoOuNull(c.contactName),
+        contato_telefone: textoOuNull(c.phone ?? c.mobilePhone),
+        contato_email: textoOuNull(c.email),
+        observacoes: textoOuNull(c.notes),
         updated_at: now,
         created_by: systemUserId,
         updated_by: systemUserId,
@@ -202,6 +233,11 @@ async function obterUsuarioSistema(db: ReturnType<typeof createClient>): Promise
 function normalizarCnpj(valor: string | undefined): string | null {
   const cnpj = valor?.trim();
   return cnpj ? cnpj : null;
+}
+
+function textoOuNull(valor: string | undefined): string | null {
+  const texto = valor?.trim();
+  return texto ? texto : null;
 }
 
 function json(status: number, body: unknown, cors: Record<string, string>): Response {

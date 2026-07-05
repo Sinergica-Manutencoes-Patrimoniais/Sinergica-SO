@@ -1,3 +1,4 @@
+import { Building2, Mail, MapPin, Phone, Search } from "lucide-react";
 // Lista mínima de clientes do PCM (Task 18/E01-S12) — ponto de entrada de navegação até a Visão
 // 360. Escopo enxuto (decisão de produto do Lucas: lista mínima no mesmo PR, não esperar o Hub de
 // OS/E01-S07): nome + CNPJ + status ativo, cada linha clicável abre a Visão 360 do cliente. Sem
@@ -22,6 +23,7 @@ export function ListaClientesPage({
 }) {
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
+  const [busca, setBusca] = useState("");
 
   // Mesmo gate da Visão 360 (AC-1): sem leitura no módulo pcm, a lista não é acessível. A RLS de
   // pcm.clientes já garante isso no banco; este é o espelho de UI (sem permissão nova).
@@ -76,40 +78,106 @@ export function ListaClientesPage({
     );
   }
 
+  const termo = busca.trim().toLowerCase();
+  const clientesFiltrados =
+    estado.fase === "pronto"
+      ? estado.clientes.filter((cliente) => {
+          if (!termo) return true;
+          return [
+            cliente.nome,
+            cliente.cnpj,
+            cliente.cidade,
+            cliente.estado,
+            cliente.contatoTelefone,
+            cliente.contatoEmail,
+            cliente.auvoId ? String(cliente.auvoId) : null,
+          ]
+            .filter(Boolean)
+            .some((valor) => String(valor).toLowerCase().includes(termo));
+        })
+      : [];
+
   return (
-    <div className="bg-card rounded-[10px] border border-line">
-      <div className="px-5 py-4 border-b border-line-soft">
-        <h3 className="text-sm font-semibold text-ink">Clientes</h3>
-        <p className="text-xs text-ink-3 mt-0.5">Selecione um cliente para ver a Visão 360</p>
+    <div className="flex flex-col gap-4">
+      <div className="rounded-[8px] border border-line bg-card p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-ink">Clientes</h3>
+            <p className="text-sm text-ink-3 mt-0.5">
+              {estado.clientes.length} cadastro(s) sincronizados via Auvo
+            </p>
+          </div>
+          <div className="relative w-full md:w-[340px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
+            <input
+              value={busca}
+              onChange={(event) => setBusca(event.target.value)}
+              className="input w-full pl-9"
+              placeholder="Buscar cliente, cidade, contato ou ID Auvo"
+            />
+          </div>
+        </div>
       </div>
 
       {estado.clientes.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-ink-3">Nenhum cliente cadastrado</div>
+        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+          <Building2 className="mx-auto h-9 w-9 text-ink-3" />
+          <p className="mt-3 text-sm text-ink-3">Nenhum cliente cadastrado</p>
+        </div>
+      ) : clientesFiltrados.length === 0 ? (
+        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center text-sm text-ink-3">
+          Nenhum cliente encontrado para a busca.
+        </div>
       ) : (
-        <div className="divide-y divide-line-soft">
-          {estado.clientes.map((cliente) => (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+          {clientesFiltrados.map((cliente) => (
             <button
               key={cliente.id}
               type="button"
               onClick={() => onSelecionar(cliente.id)}
-              className="w-full px-5 py-3.5 flex items-center gap-3 text-left hover:bg-line-soft transition-colors cursor-pointer"
+              className="rounded-[8px] border border-line bg-card p-4 text-left transition-colors hover:border-orange/60 hover:bg-orange-soft/30"
             >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-ink truncate">{cliente.nome}</p>
-                <p className="text-xs text-ink-3 truncate tabular-nums">
-                  CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")}
-                </p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-semibold text-ink">{cliente.nome}</p>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                        cliente.ativo
+                          ? "bg-[#E7F6EC] text-[#1E8E45]"
+                          : "bg-[#EFF1F4] text-[#5A6175]"
+                      }`}
+                    >
+                      {cliente.ativo ? "Ativo" : "Inativo"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs tabular-nums text-ink-3">
+                    CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")} · Auvo{" "}
+                    {rotuloOuPlaceholder(cliente.auvoId ?? null, "—")}
+                  </p>
+                </div>
               </div>
-              <span
-                className={`shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider rounded-full px-2.5 py-1 ${
-                  cliente.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"
-                }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${cliente.ativo ? "bg-[#1E8E45]" : "bg-[#8A90A0]"}`}
-                />
-                {cliente.ativo ? "Ativo" : "Inativo"}
-              </span>
+
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-3">
+                {(cliente.cidade || cliente.estado) && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {[cliente.cidade, cliente.estado].filter(Boolean).join(" — ")}
+                  </span>
+                )}
+                {cliente.contatoTelefone && (
+                  <span className="inline-flex items-center gap-1">
+                    <Phone className="h-3.5 w-3.5" />
+                    {cliente.contatoTelefone}
+                  </span>
+                )}
+                {cliente.contatoEmail && (
+                  <span className="inline-flex items-center gap-1">
+                    <Mail className="h-3.5 w-3.5" />
+                    {cliente.contatoEmail}
+                  </span>
+                )}
+              </div>
             </button>
           ))}
         </div>
