@@ -58,7 +58,7 @@ serve(async (req) => {
 
   const reqId = crypto.randomUUID().slice(0, 8);
   const now = new Date().toISOString();
-  console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, method: req.method }));
+  console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, method: req.method, deployMarker: "debug-2026-07-05-01" }));
 
   try {
     if (req.method !== "POST") throw new HttpError(405, "Método não permitido");
