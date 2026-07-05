@@ -46,6 +46,21 @@ export const SISTEMAS_INSPECAO: Array<OpcaoSelect<SistemaInspecao>> = [
   { valor: "geral", rotulo: "Geral" },
 ];
 
+export const SISTEMA_ICONE: Record<SistemaInspecao, string> = {
+  estrutural: "🏗️",
+  hidrossanitario: "🚿",
+  eletrico: "⚡",
+  spda: "⛈️",
+  cobertura: "🏠",
+  fachada: "🪟",
+  areas_comuns: "🏛️",
+  equipamentos: "⚙️",
+  incendio: "🔥",
+  ar_condicionado: "❄️",
+  elevadores: "🛗",
+  geral: "📋",
+};
+
 export const RESULTADOS_INSPECAO: Array<OpcaoSelect<ItemResultado>> = [
   { valor: "nao_avaliado", rotulo: "Não avaliado" },
   { valor: "conforme", rotulo: "Conforme" },

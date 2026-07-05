@@ -13,17 +13,14 @@
 // — nunca marcamos como inativo um técnico que só não foi alcançado por causa de um erro de rede
 // parcial. Isso é intencional; não simplificar para "melhor esforço".
 //
-// NÃO VERIFICADO NESTE AMBIENTE: sem Deno CLI aqui, este código não foi type-checked nem executado
-// contra a API real do Auvo. Os nomes de campo da resposta do Auvo (`result`, `userID`/`id`,
-// `userType`, `name`, `jobPosition`/`team`) e o formato de paginação (`paramFilter` com
-// `page`/`pageSize`) seguem a descrição textual do mapeamento (mesma ressalva de `client.ts` desde
-// E01-S09) — confirmar contra o mapeamento real / uma chamada de teste antes do primeiro deploy.
+// Verificado contra a API real do Auvo em 2026-07-05: `/users` pagina com `page`/`pageSize` e
+// devolve os registros em `result.entityList`; `userType` pode vir como objeto com `userTypeId`.
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
-import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
+import { AuvoApiError, auvoGet } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 
 const FN = "pcm-auvo-users-sync";
@@ -35,9 +32,18 @@ interface AuvoUser {
   userID?: number;
   id?: number;
   name?: string;
-  userType?: number;
+  userType?: number | {
+    userTypeId?: number;
+    description?: string;
+  };
   jobPosition?: string;
   team?: string;
+}
+
+interface AuvoUsersResponse {
+  result?: AuvoUser[] | {
+    entityList?: AuvoUser[];
+  };
 }
 
 interface CacheRow {
@@ -73,9 +79,13 @@ serve(async (req) => {
     //    nenhuma escrita no banco; guarda de soft-delete satisfeita por construção).
     const usuarios = await auvoPaginate<AuvoUser>(
       (pageNumber, pageSize) =>
-        auvoGet<{ result?: AuvoUser[] }>(
-          `/users?${buildParamFilter({ page: pageNumber, pageSize })}`,
-        ).then((r) => r?.result ?? []),
+        auvoGet<AuvoUsersResponse>(
+          `/users?page=${pageNumber}&pageSize=${pageSize}&order=asc`,
+        ).then((r) => {
+          if (Array.isArray(r?.result)) return r.result;
+          if (Array.isArray(r?.result?.entityList)) return r.result.entityList;
+          return [];
+        }),
       { pageSize: DEFAULT_PAGE_SIZE },
     );
 
@@ -85,7 +95,7 @@ serve(async (req) => {
     const rows: CacheRow[] = [];
     const syncedIds = new Set<number>();
     for (const u of usuarios) {
-      if (u.userType !== USER_TYPE_TECNICO) continue;
+      if (auvoUserTypeId(u.userType) !== USER_TYPE_TECNICO) continue;
       const auvoUserId = u.userID ?? u.id;
       if (auvoUserId == null) {
         console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "usuário Auvo sem id — ignorado", user: u }));
@@ -155,6 +165,12 @@ function json(status: number, body: unknown, cors: Record<string, string>): Resp
     status,
     headers: { "Content-Type": "application/json", ...cors },
   });
+}
+
+function auvoUserTypeId(userType: AuvoUser["userType"]): number | null {
+  if (typeof userType === "number") return userType;
+  if (typeof userType?.userTypeId === "number") return userType.userTypeId;
+  return null;
 }
 
 function problem(status: number, detail: string, reqId: string, cors: Record<string, string>): Response {

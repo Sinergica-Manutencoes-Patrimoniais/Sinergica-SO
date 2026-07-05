@@ -1,4 +1,14 @@
-import { ClipboardList, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  ClipboardList,
+  DatabaseZap,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Wrench,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { montarDashboardPcm } from "../domain/dashboard-pcm";
 import type { DashboardPcmResumo, KpiDashboardPcm } from "../domain/dashboard-pcm";
@@ -8,6 +18,7 @@ import {
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
+import { supabaseDashboardPcmAdapter } from "../infrastructure/supabase-dashboard-pcm-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 
@@ -38,7 +49,11 @@ export function PcmDashboardPage({
         supabaseHubOsAdapter.listarOrdensServico(),
         supabaseQualidadeAdapter.listarInspecoes(),
       ]);
-      setEstado({ fase: "pronto", dashboard: montarDashboardPcm(ordens, inspecoes) });
+      const resumoAuvo = await supabaseDashboardPcmAdapter.obterResumoAuvo();
+      setEstado({
+        fase: "pronto",
+        dashboard: montarDashboardPcm(ordens, inspecoes, new Date(), resumoAuvo),
+      });
     } catch (error) {
       setEstado({
         fase: "erro",
@@ -84,7 +99,7 @@ export function PcmDashboardPage({
         <div>
           <h2 className="text-base font-semibold text-ink">PCM · Operação</h2>
           <p className="text-sm text-ink-3">
-            Dados reais de OS, backlog e inspeções carregados do alvo
+            Dados reais de OS, backlog, inspeções e caches sincronizados do Auvo
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -114,6 +129,8 @@ export function PcmDashboardPage({
           <KpiCard key={kpi.label} kpi={kpi} />
         ))}
       </div>
+
+      {dashboard.auvo && <PainelAuvo dashboard={dashboard.auvo} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-card rounded-[10px] border border-line">
@@ -209,6 +226,128 @@ export function PcmDashboardPage({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["auvo"]> }) {
+  const coberturaClientes =
+    dashboard.clientesAtivos === 0
+      ? 0
+      : Math.round((dashboard.clientesSincronizados / dashboard.clientesAtivos) * 100);
+  const coberturaEquipamentos =
+    dashboard.equipamentosAtivos === 0
+      ? 0
+      : Math.round((dashboard.equipamentosVinculados / dashboard.equipamentosAtivos) * 100);
+  const ultimaAtualizacao = dashboard.ultimaAtualizacao
+    ? new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(dashboard.ultimaAtualizacao))
+    : "sem sync";
+
+  return (
+    <section className="bg-card rounded-[10px] border border-line overflow-hidden">
+      <div className="px-5 py-4 border-b border-line-soft flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Operação Auvo</h3>
+          <p className="text-xs text-ink-3 mt-0.5">
+            Clientes, equipe e ativos espelhados da API Auvo · atualização {ultimaAtualizacao}
+          </p>
+        </div>
+        {dashboard.equipamentosSemCliente > 0 && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FDF1DF] px-3 py-1 text-xs font-semibold text-[#B26A00]">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            {dashboard.equipamentosSemCliente} ativos sem cliente
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 divide-y divide-line-soft lg:grid-cols-[1.2fr_1fr] lg:divide-x lg:divide-y-0">
+        <div className="p-5">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-5 md:grid-cols-4">
+            <AuvoResumoItem
+              icon={Building2}
+              label="Cobertura clientes"
+              value={`${coberturaClientes}%`}
+              detail={`${dashboard.clientesSincronizados}/${dashboard.clientesAtivos} com Auvo`}
+            />
+            <AuvoResumoItem
+              icon={Wrench}
+              label="Ativos vinculados"
+              value={`${coberturaEquipamentos}%`}
+              detail={`${dashboard.equipamentosVinculados}/${dashboard.equipamentosAtivos}`}
+            />
+            <AuvoResumoItem
+              icon={Users}
+              label="Equipe de campo"
+              value={String(dashboard.tecnicosAtivos)}
+              detail={`${dashboard.equipesTecnicas} equipes/cargos`}
+            />
+            <AuvoResumoItem
+              icon={DatabaseZap}
+              label="Cadastro completo"
+              value={String(dashboard.clientesComEndereco)}
+              detail={`${dashboard.clientesComContato} com contato`}
+            />
+          </div>
+        </div>
+
+        <div className="p-5">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-3">
+            Clientes com mais ativos
+          </h4>
+          {dashboard.topClientesEquipamentos.length === 0 ? (
+            <p className="mt-4 text-sm text-ink-3">Nenhum equipamento Auvo vinculado a clientes.</p>
+          ) : (
+            <div className="mt-3 space-y-3">
+              {dashboard.topClientesEquipamentos.map((cliente) => (
+                <div
+                  key={cliente.auvoId}
+                  className="flex items-center justify-between gap-3 border-b border-line-soft pb-2 last:border-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-ink">{cliente.nome}</p>
+                    <p className="text-xs text-ink-3">Auvo #{cliente.auvoId}</p>
+                  </div>
+                  <span className="font-brand text-lg font-bold tabular-nums text-ink">
+                    {cliente.total}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AuvoResumoItem({
+  icon: Icon,
+  label,
+  value,
+  detail,
+}: {
+  icon: typeof Building2;
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-2 text-ink-3">
+        <Icon className="h-4 w-4 text-orange" />
+        <span className="truncate text-[10px] font-semibold uppercase tracking-[0.16em]">
+          {label}
+        </span>
+      </div>
+      <p className="mt-2 font-brand text-2xl font-bold leading-none text-ink tabular-nums">
+        {value}
+      </p>
+      <p className="mt-1 truncate text-xs text-ink-3">{detail}</p>
     </div>
   );
 }

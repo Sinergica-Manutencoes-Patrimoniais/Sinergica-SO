@@ -2,17 +2,20 @@
 // Recebe `clienteId` por prop (o app ainda não tem roteamento por id — ver OPEN-QUESTION #3 em
 // tasks.md; a página é testável/integrável isoladamente). Orquestra o gate AC-1 + o caso de uso.
 //
-// AC-7 (somente leitura): NENHUM elemento de mutação em nenhum estado — sem botão de editar OS,
-// repriorizar/alterar GUT, mudar status, criar OS ou disparar sync. Os 4 painéis abaixo só exibem
-// dados. Qualquer ação de escrita permanece nas telas de origem (Hub de OS etc.).
+// A tela não grava cadastro nem operação localmente: dados de cliente são governados pelo Auvo e
+// OS/qualidade continuam nas telas de origem. A ação de edição só leva o usuário para o alvo.
 import {
   Activity,
   Calendar,
   ClipboardList,
+  Copy,
   DollarSign,
+  ExternalLink,
   Layers,
   MessageCircle,
   Package,
+  RefreshCw,
+  ShieldCheck,
   TrendingUp,
   Wrench,
 } from "lucide-react";
@@ -39,10 +42,11 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; visao: VisaoCliente };
 
-type Aba360 = "resumo" | "os" | "qualidade" | "ativos" | "financeiro" | "comunicacao";
+type Aba360 = "resumo" | "timeline" | "os" | "qualidade" | "ativos" | "financeiro" | "comunicacao";
 
 const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   { id: "resumo", label: "Resumo", icon: Activity },
+  { id: "timeline", label: "Timeline", icon: RefreshCw },
   { id: "os", label: "OS", icon: ClipboardList },
   { id: "qualidade", label: "Inspeções", icon: Calendar },
   { id: "ativos", label: "Ativos", icon: Layers },
@@ -121,6 +125,7 @@ export function VisaoClientePage({ clienteId }: { clienteId: string }) {
   return (
     <div className="flex flex-col gap-5">
       <CabecalhoCliente cliente={cliente} />
+      <PainelCadastroAuvo cliente={cliente} />
 
       <div className="border-b border-line-soft overflow-x-auto">
         <div className="flex min-w-max gap-2">
@@ -152,6 +157,8 @@ export function VisaoClientePage({ clienteId }: { clienteId: string }) {
           qualidade={qualidade}
         />
       )}
+
+      {aba === "timeline" && <TimelineCliente eventos={eventos} />}
 
       {aba === "os" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -200,7 +207,7 @@ function Resumo360({
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
-        <EventosRecentes eventos={eventos} />
+        <TimelineCliente eventos={eventos} compacta />
         <ResumoOperacional equipamentos={equipamentos} qualidade={qualidade} />
       </div>
     </div>
@@ -227,44 +234,172 @@ function MetricCard({
   );
 }
 
-function EventosRecentes({ eventos }: { eventos: Cliente360Evento[] }) {
+function PainelCadastroAuvo({ cliente }: { cliente: ClienteHeader }) {
+  const itens = [
+    { label: "Vínculo Auvo", ok: cliente.auvoId !== null },
+    { label: "Endereço", ok: Boolean(cliente.endereco || cliente.cidade || cliente.estado) },
+    { label: "Contato", ok: Boolean(cliente.contatoTelefone || cliente.contatoEmail) },
+    { label: "CNPJ", ok: Boolean(cliente.cnpj) },
+  ];
+
+  async function copiarAuvoId() {
+    if (cliente.auvoId === null) return;
+    await navigator.clipboard?.writeText(String(cliente.auvoId));
+  }
+
+  return (
+    <section className="rounded-[8px] border border-line bg-card px-5 py-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-orange" />
+            <h3 className="text-sm font-semibold text-ink">Cadastro governado pelo Auvo</h3>
+          </div>
+          <p className="mt-1 text-xs text-ink-3">
+            O OS consome o cache sincronizado; alterações cadastrais devem nascer no Auvo e voltar
+            no próximo import.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={copiarAuvoId}
+            disabled={cliente.auvoId === null}
+            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <Copy className="h-4 w-4" />
+            Copiar ID Auvo
+          </button>
+          <button
+            type="button"
+            onClick={() => window.open("https://app.auvo.com.br", "_blank", "noopener,noreferrer")}
+            className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Editar no Auvo
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+        {itens.map((item) => (
+          <div
+            key={item.label}
+            className={`rounded-[6px] border px-3 py-2 text-xs font-semibold ${
+              item.ok
+                ? "border-[#BFE9CC] bg-[#E7F6EC] text-[#1E8E45]"
+                : "border-[#F3D8AD] bg-[#FDF1DF] text-[#9A5A00]"
+            }`}
+          >
+            {item.label}: {item.ok ? "ok" : "pendente"}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TimelineCliente({
+  eventos,
+  compacta = false,
+}: {
+  eventos: Cliente360Evento[];
+  compacta?: boolean;
+}) {
+  const [filtro, setFiltro] = useState<Cliente360Evento["tipo"] | "todos">("todos");
+  const eventosFiltrados =
+    filtro === "todos" ? eventos : eventos.filter((evento) => evento.tipo === filtro);
+  const eventosVisiveis = compacta ? eventosFiltrados.slice(0, 6) : eventosFiltrados;
+
   return (
     <section className="rounded-[8px] border border-line bg-card">
       <div className="border-b border-line-soft px-5 py-4">
-        <h3 className="text-sm font-semibold text-ink">Eventos recentes</h3>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-ink">
+              {compacta ? "Eventos recentes" : "Timeline do cliente"}
+            </h3>
+            <p className="mt-0.5 text-xs text-ink-3">
+              OS, inspeções, laudos e sinais de sincronização Auvo em ordem cronológica
+            </p>
+          </div>
+          {!compacta && (
+            <select
+              value={filtro}
+              onChange={(event) =>
+                setFiltro(event.target.value as Cliente360Evento["tipo"] | "todos")
+              }
+              className="input h-9 w-[170px] bg-card text-xs"
+              aria-label="Filtrar timeline"
+            >
+              <option value="todos">Todos os eventos</option>
+              <option value="os">OS</option>
+              <option value="inspecao">Inspeções</option>
+              <option value="laudo">Laudos</option>
+              <option value="auvo">Auvo</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+          )}
+        </div>
       </div>
       {eventos.length === 0 ? (
         <div className="px-5 py-8 text-center text-sm text-ink-3">Sem eventos recentes</div>
+      ) : eventosVisiveis.length === 0 ? (
+        <div className="px-5 py-8 text-center text-sm text-ink-3">
+          Nenhum evento para o filtro selecionado.
+        </div>
       ) : (
-        <div className="divide-y divide-line-soft">
-          {eventos.map((evento) => (
-            <div key={evento.id} className="flex items-center gap-3 px-5 py-3.5">
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${
-                  evento.criticidade === "critica"
-                    ? "bg-[#E23B2E]"
-                    : evento.criticidade === "sucesso"
-                      ? "bg-[#1E8E45]"
-                      : evento.criticidade === "atencao"
-                        ? "bg-orange"
-                        : "bg-[#AAB0BF]"
-                }`}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-ink">{evento.titulo}</p>
-                {evento.subtitulo && (
-                  <p className="truncate text-xs text-ink-3">{evento.subtitulo}</p>
-                )}
+        <div className="px-5 py-4">
+          <div className="relative space-y-4 before:absolute before:left-[15px] before:top-2 before:h-[calc(100%-16px)] before:w-px before:bg-line-soft">
+            {eventosVisiveis.map((evento) => (
+              <div key={evento.id} className="relative flex gap-3">
+                <span
+                  className={`z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-card ${corEvento(evento.criticidade)}`}
+                >
+                  <EventoIcone tipo={evento.tipo} />
+                </span>
+                <div className="min-w-0 flex-1 pb-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium text-ink">{evento.titulo}</p>
+                    <span className="shrink-0 text-xs tabular-nums text-ink-3">
+                      {formatarData(evento.data)}
+                    </span>
+                  </div>
+                  {evento.subtitulo && (
+                    <p className="mt-0.5 line-clamp-2 text-xs text-ink-3">{evento.subtitulo}</p>
+                  )}
+                </div>
               </div>
-              <span className="shrink-0 text-xs tabular-nums text-ink-3">
-                {formatarData(evento.data)}
-              </span>
+            ))}
+          </div>
+          {compacta && eventosFiltrados.length > eventosVisiveis.length && (
+            <div className="mt-3 border-t border-line-soft pt-3 text-xs text-ink-3">
+              Mais {eventosFiltrados.length - eventosVisiveis.length} evento(s) na aba Timeline.
             </div>
-          ))}
+          )}
         </div>
       )}
     </section>
   );
+}
+
+function EventoIcone({ tipo }: { tipo: Cliente360Evento["tipo"] }) {
+  const icons: Record<Cliente360Evento["tipo"], LucideIcon> = {
+    os: ClipboardList,
+    inspecao: Calendar,
+    laudo: ShieldCheck,
+    whatsapp: MessageCircle,
+    auvo: RefreshCw,
+  };
+  const Icon = icons[tipo];
+  return <Icon className="h-4 w-4" />;
+}
+
+function corEvento(criticidade: Cliente360Evento["criticidade"]): string {
+  if (criticidade === "critica") return "border-[#F2B8B0] text-[#C4271A]";
+  if (criticidade === "sucesso") return "border-[#BFE9CC] text-[#1E8E45]";
+  if (criticidade === "atencao") return "border-[#F3D8AD] text-[#B26A00]";
+  return "border-line text-ink-3";
 }
 
 function ResumoOperacional({

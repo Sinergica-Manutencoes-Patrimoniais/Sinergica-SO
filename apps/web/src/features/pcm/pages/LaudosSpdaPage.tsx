@@ -2,16 +2,16 @@ import { Plus, RefreshCw, Zap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { criarLaudoSpda, criarPontoSpda } from "../application/qualidade";
+import { criarPontoSpda } from "../application/qualidade";
 import type {
   ClienteOpcao,
   LaudoSpdaPonto,
   LaudoSpdaResumo,
 } from "../application/qualidade-gateway";
+import { NovoLaudoSpdaModal } from "../components/NovoLaudoSpdaModal";
 import {
   CONFORMIDADE_SPDA_LABEL,
   LAUDO_STATUS_LABEL,
-  NIVEIS_PROTECAO,
   classificarPontoSpda,
   resultadoColor,
   statusColor,
@@ -24,12 +24,6 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; clientes: ClienteOpcao[]; laudos: LaudoSpdaResumo[] };
 
-function hojeIso(): string {
-  const hoje = new Date();
-  hoje.setMinutes(hoje.getMinutes() - hoje.getTimezoneOffset());
-  return hoje.toISOString().slice(0, 10);
-}
-
 export function LaudosSpdaPage() {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
@@ -39,19 +33,11 @@ export function LaudosSpdaPage() {
   const [carregandoPontos, setCarregandoPontos] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
   const semClientes = estado.fase === "pronto" && estado.clientes.length === 0;
-
-  const [formLaudo, setFormLaudo] = useState({
-    clientId: "",
-    dataVistoria: hojeIso(),
-    arteNumero: "",
-    responsavelTecnico: "",
-    notasGerais: "",
-    nivelProtecao: "III",
-  });
 
   const [formPonto, setFormPonto] = useState({
     numeroPonto: "1",
@@ -79,7 +65,6 @@ export function LaudosSpdaPage() {
       ]);
       setEstado({ fase: "pronto", clientes, laudos });
       setSelecionadoId((atual) => atual ?? laudos[0]?.id ?? null);
-      setFormLaudo((form) => ({ ...form, clientId: form.clientId || clientes[0]?.id || "" }));
     } catch (error) {
       setEstado({
         fase: "erro",
@@ -112,37 +97,6 @@ export function LaudosSpdaPage() {
   useEffect(() => {
     if (selecionadoId) void carregarPontos(selecionadoId);
   }, [selecionadoId, carregarPontos]);
-
-  async function onCriarLaudo() {
-    if (!user || estado.fase !== "pronto") return;
-    setSalvando(true);
-    setErroAcao(null);
-    try {
-      const criado = await criarLaudoSpda(supabaseQualidadeAdapter, {
-        clientId: formLaudo.clientId,
-        dataVistoria: formLaudo.dataVistoria,
-        arteNumero: formLaudo.arteNumero || null,
-        responsavelTecnico: formLaudo.responsavelTecnico || null,
-        notasGerais: formLaudo.notasGerais || null,
-        nivelProtecao: formLaudo.nivelProtecao as LaudoSpdaResumo["nivelProtecao"],
-        createdBy: user.id,
-      });
-      setEstado({ ...estado, laudos: [criado, ...estado.laudos] });
-      setSelecionadoId(criado.id);
-      setFormLaudo({
-        clientId: formLaudo.clientId,
-        dataVistoria: hojeIso(),
-        arteNumero: "",
-        responsavelTecnico: "",
-        notasGerais: "",
-        nivelProtecao: "III",
-      });
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível criar laudo.");
-    } finally {
-      setSalvando(false);
-    }
-  }
 
   async function onCriarPonto() {
     if (!user || !laudoSelecionado) return;
@@ -215,14 +169,27 @@ export function LaudosSpdaPage() {
           <h2 className="text-base font-semibold text-ink">Laudo SPDA</h2>
           <p className="text-sm text-ink-3">Vistoria, pontos de medição e conclusão técnica</p>
         </div>
-        <button
-          type="button"
-          onClick={carregar}
-          className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Atualizar
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={carregar}
+            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Atualizar
+          </button>
+          {temEscrita && (
+            <button
+              type="button"
+              onClick={() => setModalAberto(true)}
+              disabled={semClientes}
+              className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" />
+              Novo laudo
+            </button>
+          )}
+        </div>
       </div>
 
       {erroAcao && (
@@ -231,81 +198,11 @@ export function LaudosSpdaPage() {
         </div>
       )}
 
-      {temEscrita && (
-        <section className="bg-card rounded-[10px] border border-line p-4">
-          {semClientes && (
-            <div className="mb-3 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
-              Nenhum cliente disponível no PCM. Execute o import Auvo para liberar laudos SPDA
-              vinculados a condomínios reais.
-            </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-            <select
-              className="input md:col-span-2"
-              value={formLaudo.clientId}
-              disabled={semClientes}
-              onChange={(event) => setFormLaudo({ ...formLaudo, clientId: event.target.value })}
-            >
-              {estado.clientes.length === 0 ? (
-                <option value="">Nenhum cliente disponível</option>
-              ) : (
-                estado.clientes.map((cliente) => (
-                  <option key={cliente.id} value={cliente.id}>
-                    {cliente.nome}
-                  </option>
-                ))
-              )}
-            </select>
-            <input
-              className="input"
-              type="date"
-              value={formLaudo.dataVistoria}
-              onChange={(event) => setFormLaudo({ ...formLaudo, dataVistoria: event.target.value })}
-            />
-            <select
-              className="input"
-              value={formLaudo.nivelProtecao}
-              onChange={(event) =>
-                setFormLaudo({ ...formLaudo, nivelProtecao: event.target.value })
-              }
-            >
-              {NIVEIS_PROTECAO.map((nivel) => (
-                <option key={nivel.valor} value={nivel.valor}>
-                  {nivel.rotulo}
-                </option>
-              ))}
-            </select>
-            <input
-              className="input"
-              placeholder="ART"
-              value={formLaudo.arteNumero}
-              onChange={(event) => setFormLaudo({ ...formLaudo, arteNumero: event.target.value })}
-            />
-            <button
-              type="button"
-              onClick={onCriarLaudo}
-              disabled={salvando || !formLaudo.clientId || semClientes}
-              className="inline-flex items-center justify-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
-            >
-              <Plus className="h-4 w-4" />
-              Criar
-            </button>
-            <input
-              className="input md:col-span-2"
-              placeholder="Responsável técnico"
-              value={formLaudo.responsavelTecnico}
-              onChange={(event) =>
-                setFormLaudo({ ...formLaudo, responsavelTecnico: event.target.value })
-              }
-            />
-            <input
-              className="input md:col-span-4"
-              placeholder="Notas gerais da vistoria"
-              value={formLaudo.notasGerais}
-              onChange={(event) => setFormLaudo({ ...formLaudo, notasGerais: event.target.value })}
-            />
-          </div>
-        </section>
+      {temEscrita && semClientes && (
+        <div className="rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+          Nenhum cliente disponível no PCM. Execute o import Auvo para liberar laudos SPDA
+          vinculados a condomínios reais.
+        </div>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4">
@@ -497,6 +394,21 @@ export function LaudosSpdaPage() {
           )}
         </section>
       </div>
+
+      {modalAberto && user && (
+        <NovoLaudoSpdaModal
+          clientes={estado.clientes}
+          clienteInicialId={laudoSelecionado?.clientId}
+          userId={user.id}
+          onClose={() => setModalAberto(false)}
+          onCreated={(laudo, pontosCriados) => {
+            setEstado({ ...estado, laudos: [laudo, ...estado.laudos] });
+            setSelecionadoId(laudo.id);
+            setPontos(pontosCriados);
+            setModalAberto(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -22,9 +22,8 @@ export interface ClienteHeader {
 }
 
 /**
- * Item da lista mínima de clientes do PCM (Task 18) — ponto de entrada de navegação até a Visão
- * 360. Read-model enxuto (sem `auvoId`, que a lista não usa): só o suficiente para identificar e
- * selecionar um cliente. A Visão 360 completa é buscada por `buscarCliente(id)` após o clique.
+ * Item da carteira de clientes do PCM — ponto de entrada de navegação até a Visão 360. Combina
+ * cadastro sincronizado do Auvo com sinais operacionais locais para busca, filtro e priorização.
  */
 export interface ClienteResumo {
   id: string;
@@ -32,11 +31,20 @@ export interface ClienteResumo {
   cnpj: string | null;
   ativo: boolean;
   auvoId?: number | null;
+  tipo?: "cliente" | "lead";
+  endereco?: string | null;
   cidade?: string | null;
   estado?: string | null;
+  cep?: string | null;
+  contatoNome?: string | null;
   contatoTelefone?: string | null;
   contatoEmail?: string | null;
   statusComercial?: "ativo" | "inativo" | "prospecto";
+  equipamentosAtivos?: number;
+  osAbertas?: number;
+  maiorScorePcm?: number;
+  ultimaAtividadeEm?: string | null;
+  cadastroCompleto?: boolean;
 }
 
 /**

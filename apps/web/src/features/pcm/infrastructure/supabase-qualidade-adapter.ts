@@ -1,17 +1,19 @@
 import { supabase } from "../../../lib/supabase-client";
 import type {
   ClienteOpcao,
+  CriarInspecaoImportadaInput,
   CriarInspecaoInput,
   CriarInspecaoItemInput,
   CriarLaudoSpdaInput,
   CriarPontoSpdaInput,
   InspecaoItem,
   InspecaoResumo,
+  ItemInspecaoImportado,
   LaudoSpdaPonto,
   LaudoSpdaResumo,
   QualidadeGateway,
 } from "../application/qualidade-gateway";
-import { classificarPontoSpda } from "../domain/inspecoes-laudos";
+import { type SistemaInspecao, classificarPontoSpda } from "../domain/inspecoes-laudos";
 
 interface ClienteRow {
   id: string;
@@ -83,6 +85,21 @@ const LAUDO_COLS =
 const PONTO_COLS =
   "id,laudo_id,numero_ponto,localizacao,resistencia_ohm,status_conformidade,observacoes,foto_url" as const;
 
+const SISTEMAS_VALIDOS: SistemaInspecao[] = [
+  "estrutural",
+  "hidrossanitario",
+  "eletrico",
+  "spda",
+  "cobertura",
+  "fachada",
+  "areas_comuns",
+  "equipamentos",
+  "incendio",
+  "ar_condicionado",
+  "elevadores",
+  "geral",
+];
+
 function mapClientes(rows: ClienteRow[]): Map<string, string> {
   return new Map(rows.map((cliente) => [cliente.id, cliente.nome]));
 }
@@ -116,6 +133,51 @@ function mapItem(row: InspecaoItemRow): InspecaoItem {
     recomendacao: row.recomendacao,
     prazoRecomendado: row.prazo_recomendado,
     fotoUrl: row.foto_url,
+  };
+}
+
+function normalizarSistema(valor: unknown): SistemaInspecao {
+  return SISTEMAS_VALIDOS.includes(valor as SistemaInspecao) ? (valor as SistemaInspecao) : "geral";
+}
+
+function severidadePorGUT(score: number): InspecaoItem["severidade"] {
+  if (score >= 80) return "critica";
+  if (score >= 45) return "alta";
+  if (score >= 16) return "media";
+  return "baixa";
+}
+
+function mapItemImportado(raw: Record<string, unknown>): ItemInspecaoImportado {
+  const gravidade = Number(raw.gravidade ?? 3);
+  const urgencia = Number(raw.urgencia ?? 3);
+  const tendencia = Number(raw.tendencia ?? 3);
+  return {
+    local: String(raw.local ?? raw.localizacao ?? "").trim(),
+    relatoOriginal: String(raw.relato_original ?? raw.relatoOriginal ?? "").trim(),
+    sistema: normalizarSistema(raw.sistema),
+    tituloBacklog: String(
+      raw.titulo_backlog ?? raw.tituloBacklog ?? "Inconformidade importada",
+    ).trim(),
+    descricaoTecnica: String(
+      raw.descricao_tecnica ?? raw.descricaoTecnica ?? raw.relato_original ?? "",
+    ).trim(),
+    citacaoNormativa:
+      typeof raw.citacao_normativa === "string" && raw.citacao_normativa.trim()
+        ? raw.citacao_normativa.trim()
+        : null,
+    prioridade: String(raw.prioridade ?? "media"),
+    categoria: String(raw.categoria ?? "corretiva"),
+    gravidade: Number.isFinite(gravidade) ? gravidade : 3,
+    urgencia: Number.isFinite(urgencia) ? urgencia : 3,
+    tendencia: Number.isFinite(tendencia) ? tendencia : 3,
+    esforcoHoras: Number(raw.esforco_horas ?? raw.esforcoHoras ?? 0),
+    justificativaEsforco:
+      typeof raw.justificativa_esforco === "string" && raw.justificativa_esforco.trim()
+        ? raw.justificativa_esforco.trim()
+        : null,
+    fotoUrls: Array.isArray(raw.foto_urls)
+      ? raw.foto_urls.filter((url): url is string => typeof url === "string" && Boolean(url.trim()))
+      : undefined,
   };
 }
 
@@ -265,6 +327,68 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
 
     if (error) throw error;
     return mapItem(data as InspecaoItemRow);
+  },
+
+  async processarRelatorioInspecao(texto: string): Promise<ItemInspecaoImportado[]> {
+    const { data, error } = await supabase.functions.invoke("importar-relatorio-pdf", {
+      body: { texto },
+    });
+    if (error) throw error;
+    const payload = data as { itens?: Record<string, unknown>[] } | null;
+    const itens = Array.isArray(payload?.itens) ? payload.itens : [];
+    return itens.map((item: Record<string, unknown>) => mapItemImportado(item));
+  },
+
+  async criarInspecaoImportada(input: CriarInspecaoImportadaInput): Promise<InspecaoResumo> {
+    const { data: inspecao, error: inspecaoError } = await supabase
+      .schema("pcm")
+      .from("inspecoes")
+      .insert({
+        client_id: input.clientId,
+        titulo: input.titulo,
+        data_inspecao: input.dataInspecao,
+        responsavel_tecnico: input.responsavelTecnico,
+        observacoes_gerais: input.observacoesGerais,
+        status: "concluida",
+        created_by: input.createdBy,
+      })
+      .select(INSPECAO_COLS)
+      .single();
+    if (inspecaoError) throw inspecaoError;
+
+    const inspecaoId = (inspecao as InspecaoRow).id;
+    if (input.itens.length > 0) {
+      const linhas = input.itens.map((item, index) => {
+        const score = item.gravidade * item.urgencia * item.tendencia;
+        const fotos = item.fotoUrls ?? [];
+        return {
+          inspecao_id: inspecaoId,
+          client_id: input.clientId,
+          sistema: item.sistema,
+          localizacao: item.local || null,
+          descricao: item.descricaoTecnica || item.relatoOriginal || item.tituloBacklog,
+          resultado: "nao_conforme",
+          severidade: severidadePorGUT(score),
+          recomendacao:
+            [item.tituloBacklog, item.citacaoNormativa].filter(Boolean).join(" · ") || null,
+          foto_url: fotos[0] ?? null,
+          ordem: index + 1,
+          created_by: input.createdBy,
+        };
+      });
+      const { error: itensError } = await supabase
+        .schema("pcm")
+        .from("inspecao_itens")
+        .insert(linhas);
+      if (itensError) throw itensError;
+    }
+
+    const [{ data: atualizada, error: atualizadaError }, clientes] = await Promise.all([
+      supabase.schema("pcm").from("inspecoes").select(INSPECAO_COLS).eq("id", inspecaoId).single(),
+      clientesPorId(),
+    ]);
+    if (atualizadaError) throw atualizadaError;
+    return mapInspecao(atualizada as InspecaoRow, clientes);
   },
 
   async listarLaudosSpda(): Promise<LaudoSpdaResumo[]> {

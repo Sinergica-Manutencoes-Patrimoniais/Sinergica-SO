@@ -14,16 +14,14 @@
 // só roda após TODAS as páginas terem sido buscadas com sucesso (auvoPaginate propaga erro → catch
 // antes de qualquer escrita).
 //
-// NÃO VERIFICADO NESTE AMBIENTE: sem Deno CLI, não type-checado nem executado contra o Auvo real.
-// Nomes de campo (`result`, `id`, `name`/`description`, `customerId`) e formato de paginação
-// (`paramFilter` com `page`/`pageSize`) seguem a descrição textual do mapeamento (mesma ressalva de
-// `client.ts` desde E01-S09) — confirmar antes do primeiro deploy.
+// Verificado contra a API real do Auvo em 2026-07-05: `/equipments` pagina com `page`/`pageSize`,
+// devolve os registros em `result.entityList` e vincula cliente pelo campo `associatedCustomerId`.
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
-import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
+import { AuvoApiError, auvoGet } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 
 const FN = "pcm-auvo-equipment-sync";
@@ -34,13 +32,21 @@ interface AuvoEquipment {
   name?: string;
   description?: string;
   customerId?: number;
+  associatedCustomerId?: number;
+  active?: boolean;
+}
+
+interface AuvoEquipmentsResponse {
+  result?: AuvoEquipment[] | {
+    entityList?: AuvoEquipment[];
+  };
 }
 
 interface CacheRow {
   auvo_equipment_id: number;
   nome: string;
   auvo_customer_id: number | null;
-  ativo: true;
+  ativo: boolean;
   updated_at: string;
 }
 
@@ -69,15 +75,19 @@ serve(async (req) => {
     //    nenhuma escrita; guarda de soft-delete satisfeita por construção).
     const equipamentos = await auvoPaginate<AuvoEquipment>(
       (pageNumber, pageSize) =>
-        auvoGet<{ result?: AuvoEquipment[] }>(
-          `/equipments?${buildParamFilter({ page: pageNumber, pageSize })}`,
-        ).then((r) => r?.result ?? []),
+        auvoGet<AuvoEquipmentsResponse>(
+          `/equipments?page=${pageNumber}&pageSize=${pageSize}&order=asc`,
+        ).then((r) => {
+          if (Array.isArray(r?.result)) return r.result;
+          if (Array.isArray(r?.result?.entityList)) return r.result.entityList;
+          return [];
+        }),
       { pageSize: DEFAULT_PAGE_SIZE },
     );
 
     // 3) Resolve quais `customerId` do Auvo têm cliente correspondente já sincronizado no PCM
     //    (pcm.clientes.auvo_id). Consulta em lote (um SELECT) em vez de por-equipamento.
-    const customerIds = [...new Set(equipamentos.map((e) => e.customerId).filter((c): c is number => c != null))];
+    const customerIds = [...new Set(equipamentos.map(auvoCustomerId).filter((c): c is number => c != null))];
     const clientesExistentes = new Set<number>();
     if (customerIds.length > 0) {
       const { data: clientes, error: clientesError } = await db
@@ -102,18 +112,19 @@ serve(async (req) => {
         continue;
       }
       let auvoCustomerId: number | null = null;
-      if (e.customerId != null) {
-        if (clientesExistentes.has(e.customerId)) {
-          auvoCustomerId = e.customerId;
+      const customerId = auvoCustomerId(e);
+      if (customerId != null) {
+        if (clientesExistentes.has(customerId)) {
+          auvoCustomerId = customerId;
         } else {
-          console.error(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "cliente do equipamento ainda não sincronizado no PCM — auvo_customer_id gravado como null", auvo_equipment_id: auvoEquipmentId, customerId: e.customerId }));
+          console.error(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "cliente do equipamento ainda não sincronizado no PCM — auvo_customer_id gravado como null", auvo_equipment_id: auvoEquipmentId, customerId }));
         }
       }
       rows.push({
         auvo_equipment_id: auvoEquipmentId,
         nome: e.name ?? e.description ?? `Equipamento ${auvoEquipmentId}`,
         auvo_customer_id: auvoCustomerId,
-        ativo: true,
+        ativo: e.active !== false,
         updated_at: now,
       });
       syncedIds.add(auvoEquipmentId);
@@ -166,6 +177,10 @@ function json(status: number, body: unknown, cors: Record<string, string>): Resp
     status,
     headers: { "Content-Type": "application/json", ...cors },
   });
+}
+
+function auvoCustomerId(equipment: AuvoEquipment): number | null {
+  return equipment.customerId ?? equipment.associatedCustomerId ?? null;
 }
 
 function problem(status: number, detail: string, reqId: string, cors: Record<string, string>): Response {
