@@ -17,11 +17,13 @@ type Estado =
   | { fase: "pronto"; dashboard: DashboardPcmResumo };
 
 export function PcmDashboardPage({
+  refreshKey = 0,
   podeCriarOs,
   onNovaOs,
   onVerOrdens,
   onVerBacklog,
 }: {
+  refreshKey?: number;
   podeCriarOs: boolean;
   onNovaOs: () => void;
   onVerOrdens: () => void;
@@ -48,6 +50,10 @@ export function PcmDashboardPage({
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  useEffect(() => {
+    if (refreshKey > 0) void carregar();
+  }, [refreshKey, carregar]);
 
   if (estado.fase === "carregando") {
     return <div className="p-8 text-center text-sm text-ink-3">Carregando dashboard PCM…</div>;

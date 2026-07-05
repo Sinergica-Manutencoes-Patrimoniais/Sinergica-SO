@@ -115,6 +115,7 @@ export function NovaOrdemServicoModal({
   }, [tipoManual, tipoSugerido]);
 
   if (!aberto) return null;
+  const semClientes = dados.clientes.length === 0;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -179,6 +180,12 @@ export function NovaOrdemServicoModal({
           {erro && (
             <div className="rounded-[6px] border border-[#F0C9C4] bg-[#FFF3F1] px-3 py-2 text-sm text-[#A72E24]">
               {erro}
+            </div>
+          )}
+          {!carregando && semClientes && (
+            <div className="rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+              Nenhum cliente disponível no PCM. Conclua o import Auvo antes de abrir OS, inspeções
+              ou laudos para um condomínio.
             </div>
           )}
 
@@ -368,7 +375,7 @@ export function NovaOrdemServicoModal({
           </button>
           <button
             type="submit"
-            disabled={salvando || carregando}
+            disabled={salvando || carregando || semClientes}
             className="px-4 py-2 rounded-[6px] bg-navy text-white text-sm font-semibold hover:bg-navy-deep disabled:opacity-60"
           >
             {salvando ? "Criando..." : "Criar OS"}

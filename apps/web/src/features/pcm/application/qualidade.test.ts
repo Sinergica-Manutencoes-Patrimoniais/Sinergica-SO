@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { criarInspecao, criarItemInspecao } from "./qualidade";
+import { criarInspecao, criarItemInspecao, criarLaudoSpda } from "./qualidade";
 import type { QualidadeGateway } from "./qualidade-gateway";
 
 function gatewayFake(): QualidadeGateway {
@@ -34,7 +34,21 @@ function gatewayFake(): QualidadeGateway {
       fotoUrl: input.fotoUrl,
     })),
     listarLaudosSpda: vi.fn(),
-    criarLaudoSpda: vi.fn(),
+    criarLaudoSpda: vi.fn(async (input) => ({
+      id: "laudo-1",
+      clientId: input.clientId,
+      clienteNome: "Cliente",
+      numero: "SPDA-0001",
+      status: "em_andamento" as const,
+      dataVistoria: input.dataVistoria,
+      arteNumero: input.arteNumero,
+      responsavelTecnico: input.responsavelTecnico,
+      notasGerais: input.notasGerais,
+      conclusao: null,
+      nivelProtecao: input.nivelProtecao,
+      necessitaSpda: null,
+      riscoTotal: null,
+    })),
     listarPontosSpda: vi.fn(),
     criarPontoSpda: vi.fn(),
   };
@@ -62,6 +76,22 @@ describe("qualidade", () => {
     );
   });
 
+  it("bloqueia inspeção sem cliente", async () => {
+    const gateway = gatewayFake();
+
+    await expect(
+      criarInspecao(gateway, {
+        clientId: "",
+        titulo: "Inspeção mensal",
+        dataInspecao: "2026-07-04",
+        responsavelTecnico: null,
+        observacoesGerais: null,
+        createdBy: "user-1",
+      }),
+    ).rejects.toThrow("Cliente é obrigatório.");
+    expect(gateway.criarInspecao).not.toHaveBeenCalled();
+  });
+
   it("bloqueia item sem descrição", async () => {
     await expect(
       criarItemInspecao(gatewayFake(), {
@@ -78,5 +108,22 @@ describe("qualidade", () => {
         createdBy: "user-1",
       }),
     ).rejects.toThrow("Descrição do item é obrigatório.");
+  });
+
+  it("bloqueia laudo SPDA sem cliente", async () => {
+    const gateway = gatewayFake();
+
+    await expect(
+      criarLaudoSpda(gateway, {
+        clientId: "",
+        dataVistoria: "2026-07-04",
+        arteNumero: null,
+        responsavelTecnico: null,
+        notasGerais: null,
+        nivelProtecao: "III",
+        createdBy: "user-1",
+      }),
+    ).rejects.toThrow("Cliente é obrigatório.");
+    expect(gateway.criarLaudoSpda).not.toHaveBeenCalled();
   });
 });

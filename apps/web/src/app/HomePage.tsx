@@ -352,6 +352,7 @@ export function HomePage() {
   const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
   const [novaOsAberta, setNovaOsAberta] = useState(false);
   const [feedbackOs, setFeedbackOs] = useState<string | null>(null);
+  const [pcmRefreshKey, setPcmRefreshKey] = useState(0);
 
   function irParaPcmView(view: PcmView) {
     setPcmView(view);
@@ -622,7 +623,10 @@ export function HomePage() {
             ) : pcmView === "laudos-spda" ? (
               <LaudosSpdaPage />
             ) : pcmView === "ordens" ? (
-              <OrdensServicoPage onNovaOs={() => setNovaOsAberta(true)} />
+              <OrdensServicoPage
+                refreshKey={pcmRefreshKey}
+                onNovaOs={() => setNovaOsAberta(true)}
+              />
             ) : pcmView === "backlog" ? (
               <BacklogGutPage />
             ) : (
@@ -633,6 +637,7 @@ export function HomePage() {
                   </div>
                 )}
                 <PcmDashboardPage
+                  refreshKey={pcmRefreshKey}
                   podeCriarOs={podeCriarOs}
                   onNovaOs={() => setNovaOsAberta(true)}
                   onVerOrdens={() => irParaPcmView("ordens")}
@@ -657,6 +662,9 @@ export function HomePage() {
           onFechar={() => setNovaOsAberta(false)}
           onCriada={(numero) => {
             setFeedbackOs(`OS ${numero} criada em solicitação.`);
+            setPcmView("ordens");
+            setClienteSelecionado(null);
+            setPcmRefreshKey((atual) => atual + 1);
             setTimeout(() => setFeedbackOs(null), 5000);
           }}
         />

@@ -22,6 +22,7 @@ export async function carregarDadosQualidade(gateway: QualidadeGateway) {
 }
 
 export async function criarInspecao(gateway: QualidadeGateway, input: CriarInspecaoInput) {
+  if (!input.clientId) throw new Error("Cliente é obrigatório.");
   return gateway.criarInspecao({
     ...input,
     titulo: exigirTexto(input.titulo, "Título"),
@@ -41,6 +42,7 @@ export async function criarItemInspecao(gateway: QualidadeGateway, input: CriarI
 }
 
 export async function criarLaudoSpda(gateway: QualidadeGateway, input: CriarLaudoSpdaInput) {
+  if (!input.clientId) throw new Error("Cliente é obrigatório.");
   return gateway.criarLaudoSpda({
     ...input,
     arteNumero: input.arteNumero?.trim() || null,
