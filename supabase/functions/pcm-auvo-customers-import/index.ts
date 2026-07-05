@@ -42,19 +42,23 @@ interface AuvoCustomer {
   code?: number;
   description?: string;
   name?: string;
+  legalName?: string;
   cnpj?: string;
   cpfCnpj?: string;
   address?: string;
+  adressComplement?: string;
   city?: string;
   state?: string;
   zipCode?: string;
   cep?: string;
   contactName?: string;
   phone?: string;
+  phoneNumber?: string;
   mobilePhone?: string;
   email?: string;
   active?: boolean;
   notes?: string;
+  note?: string;
 }
 
 interface AuvoCustomersResponse {
@@ -129,6 +133,9 @@ serve(async (req) => {
         console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "cliente Auvo sem id — ignorado", cliente: c }));
         continue;
       }
+      const endereco = textoOuNull(c.address);
+      const enderecoDerivado = extrairPartesEndereco(endereco);
+      const observacoes = [c.note, c.notes, c.adressComplement].map(textoOuNull).filter(Boolean).join(" · ");
       rows.push({
         auvo_id: auvoId,
         nome: c.description ?? c.name ?? `Cliente ${auvoId}`,
@@ -136,14 +143,14 @@ serve(async (req) => {
         ativo: c.active !== false,
         status_comercial: c.active === false ? "inativo" : "ativo",
         tipo: "cliente",
-        endereco: textoOuNull(c.address),
-        cidade: textoOuNull(c.city),
-        estado: textoOuNull(c.state),
-        cep: textoOuNull(c.zipCode ?? c.cep),
-        contato_nome: textoOuNull(c.contactName),
-        contato_telefone: textoOuNull(c.phone ?? c.mobilePhone),
+        endereco,
+        cidade: textoOuNull(c.city) ?? enderecoDerivado.cidade,
+        estado: textoOuNull(c.state) ?? enderecoDerivado.estado,
+        cep: textoOuNull(c.zipCode ?? c.cep) ?? enderecoDerivado.cep,
+        contato_nome: textoOuNull(c.contactName ?? c.legalName),
+        contato_telefone: textoOuNull(c.phone ?? c.phoneNumber ?? c.mobilePhone),
         contato_email: textoOuNull(c.email),
-        observacoes: textoOuNull(c.notes),
+        observacoes: textoOuNull(observacoes),
         updated_at: now,
         created_by: systemUserId,
         updated_by: systemUserId,
@@ -239,6 +246,24 @@ function textoOuNull(valor: unknown): string | null {
   if (valor === null || valor === undefined) return null;
   const texto = String(valor).trim();
   return texto ? texto : null;
+}
+
+function extrairPartesEndereco(endereco: string | null): {
+  cidade: string | null;
+  estado: string | null;
+  cep: string | null;
+} {
+  if (!endereco) return { cidade: null, estado: null, cep: null };
+
+  const cep = endereco.match(/\b\d{5}-?\d{3}\b/)?.[0] ?? null;
+  const cidadeEstado = endereco.match(/,\s*([^,]+?)\s*-\s*([A-Z]{2})(?:,|\s*$)/);
+  if (!cidadeEstado) return { cidade: null, estado: null, cep };
+
+  return {
+    cidade: textoOuNull(cidadeEstado[1]),
+    estado: textoOuNull(cidadeEstado[2]),
+    cep,
+  };
 }
 
 function json(status: number, body: unknown, cors: Record<string, string>): Response {
