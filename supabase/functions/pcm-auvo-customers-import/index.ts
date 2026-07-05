@@ -159,10 +159,20 @@ serve(async (req) => {
       console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "falha Auvo", status: e.status, requestId: e.requestId }));
       return problem(502, `Auvo indisponível ou erro: ${e.message}`, reqId, cors);
     }
-    console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "erro inesperado", detail: String(e) }));
-    return problem(500, "Erro interno", reqId, cors); // nunca vaza stack
+    const detail = safeErrorDetail(e);
+    console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "erro inesperado", detail }));
+    return problem(500, `Erro interno: ${detail}`, reqId, cors);
   }
 });
+
+function safeErrorDetail(e: unknown): string {
+  const raw = e instanceof Error ? e.message : JSON.stringify(e);
+  return (raw || String(e))
+    .replace(/apiKey=[^&\s"]+/gi, "apiKey=[redacted]")
+    .replace(/apiToken=[^&\s"]+/gi, "apiToken=[redacted]")
+    .replace(/Bearer\s+[^,\s"]+/gi, "Bearer [redacted]")
+    .slice(0, 300);
+}
 
 function json(status: number, body: unknown, cors: Record<string, string>): Response {
   return new Response(JSON.stringify(body), {
