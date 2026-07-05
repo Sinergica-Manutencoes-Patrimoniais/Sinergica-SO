@@ -58,6 +58,8 @@ interface CacheRow {
   cnpj: string | null;
   ativo: true;
   updated_at: string;
+  created_by: string;
+  updated_by: string;
 }
 
 serve(async (req) => {
@@ -80,6 +82,7 @@ serve(async (req) => {
     const db = createClient(url, serviceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+    const systemUserId = await obterUsuarioSistema(db);
 
     // 2) Pagina TODAS as páginas de `GET /customers` (se qualquer página falhar, propaga → catch →
     //    nenhuma escrita no banco; guarda de soft-delete satisfeita por construção).
@@ -111,6 +114,8 @@ serve(async (req) => {
         cnpj: c.cnpj ?? c.cpfCnpj ?? null,
         ativo: true,
         updated_at: now,
+        created_by: systemUserId,
+        updated_by: systemUserId,
       });
       syncedIds.add(auvoId);
     }
@@ -172,6 +177,26 @@ function safeErrorDetail(e: unknown): string {
     .replace(/apiToken=[^&\s"]+/gi, "apiToken=[redacted]")
     .replace(/Bearer\s+[^,\s"]+/gi, "Bearer [redacted]")
     .slice(0, 300);
+}
+
+async function obterUsuarioSistema(db: ReturnType<typeof createClient>): Promise<string> {
+  const { data, error } = await db
+    .schema("config")
+    .from("usuarios")
+    .select("user_id,papel,created_at")
+    .eq("ativo", true)
+    .in("papel", ["superadmin", "supervisor"])
+    .order("papel", { ascending: true })
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data?.user_id) {
+    throw new HttpError(500, "Nenhum usuário ativo superadmin/supervisor encontrado para autoria do import");
+  }
+
+  return data.user_id as string;
 }
 
 function json(status: number, body: unknown, cors: Record<string, string>): Response {
