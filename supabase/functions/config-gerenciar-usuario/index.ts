@@ -5,7 +5,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { badRequest, HttpError, requireAuth } from "../_shared/auth.ts";
+import { badRequest, getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
 
 const FN = "config-gerenciar-usuario";
 
@@ -58,7 +58,7 @@ serve(async (req) => {
     const token = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
     const url = Deno.env.get("SUPABASE_URL") ?? "";
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const serviceKey = getSupabaseServiceKey();
 
     if (!url || !anonKey || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
 
