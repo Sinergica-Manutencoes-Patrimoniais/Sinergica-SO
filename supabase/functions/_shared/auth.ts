@@ -41,10 +41,36 @@ export async function requireAuth(req: Request): Promise<{ userId: string }> {
  * `pcm-auvo-create-task`) — nunca expostas ao frontend, só invocadas pelo trigger de banco ou
  * uma pela outra. Ver specs/E01-S09-integracao-auvo-fundacao/design.md (fluxo TRG→EF1→EF2).
  */
+/**
+ * Fingerprint não-criptográfico e não-reversível (FNV-1a 32-bit), só para diagnóstico
+ * comparativo — não revela nada do valor original, é só um número determinístico.
+ */
+function fingerprint(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
 export function requireServiceRole(req: Request): void {
   const token = req.headers.get("Authorization")?.replace("Bearer ", "");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   if (!token || !serviceKey || !constantTimeEqual(token, serviceKey)) {
+    // DIAGNÓSTICO TEMPORÁRIO (remover após investigar mismatch) — fingerprint, nunca o valor.
+    console.error(
+      JSON.stringify({
+        nivel: "error",
+        msg: "requireServiceRole DEBUG",
+        hasToken: Boolean(token),
+        tokenLen: token?.length ?? 0,
+        tokenFingerprint: token ? fingerprint(token) : null,
+        hasServiceKey: Boolean(serviceKey),
+        serviceKeyLen: serviceKey.length,
+        serviceKeyFingerprint: serviceKey ? fingerprint(serviceKey) : null,
+      }),
+    );
     throw unauthorized("Chamada interna não autorizada");
   }
 }
