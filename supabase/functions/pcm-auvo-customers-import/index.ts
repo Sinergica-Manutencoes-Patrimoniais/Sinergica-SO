@@ -31,7 +31,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
-import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
+import { AuvoApiError, auvoGet } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 
 const FN = "pcm-auvo-customers-import";
@@ -39,9 +39,17 @@ const FN = "pcm-auvo-customers-import";
 interface AuvoCustomer {
   id?: number;
   customerId?: number;
+  code?: number;
   description?: string;
   name?: string;
   cnpj?: string;
+  cpfCnpj?: string;
+}
+
+interface AuvoCustomersResponse {
+  result?: AuvoCustomer[] | {
+    entityList?: AuvoCustomer[];
+  };
 }
 
 interface CacheRow {
@@ -58,7 +66,7 @@ serve(async (req) => {
 
   const reqId = crypto.randomUUID().slice(0, 8);
   const now = new Date().toISOString();
-  console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, method: req.method, deployMarker: "debug-2026-07-05-01" }));
+  console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, method: req.method }));
 
   try {
     if (req.method !== "POST") throw new HttpError(405, "Método não permitido");
@@ -77,9 +85,13 @@ serve(async (req) => {
     //    nenhuma escrita no banco; guarda de soft-delete satisfeita por construção).
     const clientes = await auvoPaginate<AuvoCustomer>(
       (pageNumber, pageSize) =>
-        auvoGet<{ result?: AuvoCustomer[] }>(
-          `/customers?${buildParamFilter({ page: pageNumber, pageSize })}`,
-        ).then((r) => r?.result ?? []),
+        auvoGet<AuvoCustomersResponse>(
+          `/customers?page=${pageNumber}&pageSize=${pageSize}&order=asc`,
+        ).then((r) => {
+          if (Array.isArray(r?.result)) return r.result;
+          if (Array.isArray(r?.result?.entityList)) return r.result.entityList;
+          return [];
+        }),
       { pageSize: DEFAULT_PAGE_SIZE },
     );
 
@@ -88,7 +100,7 @@ serve(async (req) => {
     const rows: CacheRow[] = [];
     const syncedIds = new Set<number>();
     for (const c of clientes) {
-      const auvoId = c.id ?? c.customerId;
+      const auvoId = c.id ?? c.customerId ?? c.code;
       if (auvoId == null) {
         console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "cliente Auvo sem id — ignorado", cliente: c }));
         continue;
@@ -96,7 +108,7 @@ serve(async (req) => {
       rows.push({
         auvo_id: auvoId,
         nome: c.description ?? c.name ?? `Cliente ${auvoId}`,
-        cnpj: c.cnpj ?? null,
+        cnpj: c.cnpj ?? c.cpfCnpj ?? null,
         ativo: true,
         updated_at: now,
       });
