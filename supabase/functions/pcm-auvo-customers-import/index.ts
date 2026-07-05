@@ -111,7 +111,7 @@ serve(async (req) => {
       rows.push({
         auvo_id: auvoId,
         nome: c.description ?? c.name ?? `Cliente ${auvoId}`,
-        cnpj: c.cnpj ?? c.cpfCnpj ?? null,
+        cnpj: normalizarCnpj(c.cnpj ?? c.cpfCnpj),
         ativo: true,
         updated_at: now,
         created_by: systemUserId,
@@ -197,6 +197,11 @@ async function obterUsuarioSistema(db: ReturnType<typeof createClient>): Promise
   }
 
   return data.user_id as string;
+}
+
+function normalizarCnpj(valor: string | undefined): string | null {
+  const cnpj = valor?.trim();
+  return cnpj ? cnpj : null;
 }
 
 function json(status: number, body: unknown, cors: Record<string, string>): Response {
