@@ -42,6 +42,7 @@ export function LaudosSpdaPage() {
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
+  const semClientes = estado.fase === "pronto" && estado.clientes.length === 0;
 
   const [formLaudo, setFormLaudo] = useState({
     clientId: "",
@@ -232,17 +233,28 @@ export function LaudosSpdaPage() {
 
       {temEscrita && (
         <section className="bg-card rounded-[10px] border border-line p-4">
+          {semClientes && (
+            <div className="mb-3 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+              Nenhum cliente disponível no PCM. Execute o import Auvo para liberar laudos SPDA
+              vinculados a condomínios reais.
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
             <select
               className="input md:col-span-2"
               value={formLaudo.clientId}
+              disabled={semClientes}
               onChange={(event) => setFormLaudo({ ...formLaudo, clientId: event.target.value })}
             >
-              {estado.clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.id}>
-                  {cliente.nome}
-                </option>
-              ))}
+              {estado.clientes.length === 0 ? (
+                <option value="">Nenhum cliente disponível</option>
+              ) : (
+                estado.clientes.map((cliente) => (
+                  <option key={cliente.id} value={cliente.id}>
+                    {cliente.nome}
+                  </option>
+                ))
+              )}
             </select>
             <input
               className="input"
@@ -272,7 +284,7 @@ export function LaudosSpdaPage() {
             <button
               type="button"
               onClick={onCriarLaudo}
-              disabled={salvando || !formLaudo.clientId}
+              disabled={salvando || !formLaudo.clientId || semClientes}
               className="inline-flex items-center justify-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
             >
               <Plus className="h-4 w-4" />

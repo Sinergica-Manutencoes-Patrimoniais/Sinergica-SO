@@ -15,6 +15,33 @@ export class HttpError extends Error {
 export const unauthorized = (msg = "Não autorizado") => new HttpError(401, msg);
 export const badRequest = (msg: string) => new HttpError(400, msg);
 
+function getSupabaseSecretKeyValues(): string[] {
+  const legacyServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const secretKeysJson = Deno.env.get("SUPABASE_SECRET_KEYS") ?? "";
+  const keys = new Set<string>();
+
+  if (legacyServiceKey) keys.add(legacyServiceKey);
+
+  if (secretKeysJson) {
+    try {
+      const secretKeys = JSON.parse(secretKeysJson) as Record<string, unknown>;
+      for (const value of Object.values(secretKeys)) {
+        if (typeof value === "string" && value) keys.add(value);
+      }
+    } catch {
+      // Ignora JSON inválido: a validação abaixo falha fechado se nenhuma chave utilizável existir.
+    }
+  }
+
+  return [...keys];
+}
+
+export function getSupabaseServiceKey(): string {
+  const [serviceKey] = getSupabaseSecretKeyValues();
+  if (!serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
+  return serviceKey;
+}
+
 /** Valida o Bearer token e retorna o user. Lança HttpError 401 se inválido. */
 export async function requireAuth(req: Request): Promise<{ userId: string }> {
   const token = req.headers.get("Authorization")?.replace("Bearer ", "");
@@ -32,45 +59,20 @@ export async function requireAuth(req: Request): Promise<{ userId: string }> {
 
 /**
  * Valida chamada interna sistema→sistema (trigger `pg_net`, ou uma Edge Function chamando outra).
- * Não há usuário final nessas chamadas — `requireAuth`/`auth.getUser()` não se aplica, pois a
- * `service_role` key é um JWT válido mas sem `sub` de usuário real. Em vez disso, exige que o
- * Bearer token seja exatamente a `SUPABASE_SERVICE_ROLE_KEY` do próprio projeto, comparado em
- * tempo constante (`_shared/crypto.ts`) contra timing attack.
+ * Não há usuário final nessas chamadas — `requireAuth`/`auth.getUser()` não se aplica. Em vez
+ * disso, exige que o Bearer token seja uma das chaves privilegiadas do próprio projeto
+ * (`SUPABASE_SERVICE_ROLE_KEY` ou valores de `SUPABASE_SECRET_KEYS`), comparado em tempo
+ * constante (`_shared/crypto.ts`) contra timing attack.
  *
  * Usado pelas Edge Functions de integração Auvo (`pcm-auvo-customers-sync`,
  * `pcm-auvo-create-task`) — nunca expostas ao frontend, só invocadas pelo trigger de banco ou
  * uma pela outra. Ver specs/E01-S09-integracao-auvo-fundacao/design.md (fluxo TRG→EF1→EF2).
  */
-/**
- * Fingerprint não-criptográfico e não-reversível (FNV-1a 32-bit), só para diagnóstico
- * comparativo — não revela nada do valor original, é só um número determinístico.
- */
-function fingerprint(value: string): string {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < value.length; i++) {
-    hash ^= value.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(16).padStart(8, "0");
-}
-
 export function requireServiceRole(req: Request): void {
   const token = req.headers.get("Authorization")?.replace("Bearer ", "");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if (!token || !serviceKey || !constantTimeEqual(token, serviceKey)) {
-    // DIAGNÓSTICO TEMPORÁRIO (remover após investigar mismatch) — fingerprint, nunca o valor.
-    console.error(
-      JSON.stringify({
-        nivel: "error",
-        msg: "requireServiceRole DEBUG",
-        hasToken: Boolean(token),
-        tokenLen: token?.length ?? 0,
-        tokenFingerprint: token ? fingerprint(token) : null,
-        hasServiceKey: Boolean(serviceKey),
-        serviceKeyLen: serviceKey.length,
-        serviceKeyFingerprint: serviceKey ? fingerprint(serviceKey) : null,
-      }),
-    );
+  const serviceKeys = getSupabaseSecretKeyValues();
+  if (!token || serviceKeys.length === 0) throw unauthorized("Chamada interna não autorizada");
+  if (!serviceKeys.some((serviceKey) => constantTimeEqual(token, serviceKey))) {
     throw unauthorized("Chamada interna não autorizada");
   }
 }

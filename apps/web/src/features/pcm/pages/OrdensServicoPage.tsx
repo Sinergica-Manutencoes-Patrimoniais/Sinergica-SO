@@ -19,7 +19,13 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; ordens: OrdemServicoOperacional[] };
 
-export function OrdensServicoPage({ onNovaOs }: { onNovaOs: () => void }) {
+export function OrdensServicoPage({
+  refreshKey = 0,
+  onNovaOs,
+}: {
+  refreshKey?: number;
+  onNovaOs: () => void;
+}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
@@ -50,6 +56,10 @@ export function OrdensServicoPage({ onNovaOs }: { onNovaOs: () => void }) {
   useEffect(() => {
     if (!permissoesCarregando && temLeitura) carregar();
   }, [permissoesCarregando, temLeitura, carregar]);
+
+  useEffect(() => {
+    if (refreshKey > 0 && !permissoesCarregando && temLeitura) carregar();
+  }, [refreshKey, permissoesCarregando, temLeitura, carregar]);
 
   const ordensFiltradas = useMemo(() => {
     if (estado.fase !== "pronto") return [];

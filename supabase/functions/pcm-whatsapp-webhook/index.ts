@@ -5,7 +5,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { HttpError } from "../_shared/auth.ts";
+import { getSupabaseServiceKey, HttpError } from "../_shared/auth.ts";
 import { constantTimeEqual } from "../_shared/crypto.ts";
 
 const FN = "pcm-whatsapp-webhook";
@@ -39,7 +39,7 @@ serve(async (req) => {
     }
 
     const url = Deno.env.get("SUPABASE_URL") ?? "";
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const serviceKey = getSupabaseServiceKey();
     if (!url || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
     const db = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
