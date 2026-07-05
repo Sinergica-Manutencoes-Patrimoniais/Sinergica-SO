@@ -48,6 +48,7 @@ interface ClienteRow {
   contato_telefone: string | null;
   contato_email: string | null;
   observacoes: string | null;
+  updated_at: string | null;
 }
 
 interface InspecaoEventoRow {
@@ -67,6 +68,20 @@ interface LaudoEventoRow {
   data_vistoria: string;
   created_at: string;
   nivel_protecao: string | null;
+}
+
+interface OsClienteListaRow {
+  client_id: string;
+  status: string;
+  score_pcm: number;
+  created_at: string;
+  auvo_synced_at: string | null;
+}
+
+interface EquipamentoClienteListaRow {
+  auvo_customer_id: number | null;
+  ativo: boolean;
+  updated_at: string | null;
 }
 
 const COLUNAS_OS =
@@ -127,20 +142,40 @@ function erroColunaAusente(error: { code?: string; message?: string } | null): b
   );
 }
 
+function rotuloStatusOperacional(status: string): string {
+  const labels: Record<string, string> = {
+    solicitacao: "Solicitação",
+    triagem: "Triagem",
+    planejamento: "Planejamento",
+    em_execucao: "Em execução",
+    aguardando_cliente: "Aguardando cliente",
+    finalizado: "Finalizada",
+    cancelado: "Cancelada",
+  };
+  return labels[status] ?? status;
+}
+
 export const supabaseCliente360Adapter: Cliente360Gateway = {
   async listarClientes(): Promise<ClienteResumo[]> {
-    // Task 18: lista mínima de clientes para navegação até a Visão 360. Mesma tabela e MESMA RLS de
-    // buscarCliente (SELECT em pcm.clientes gated por módulo pcm — 0009_E00-S09_rls_modulos.sql);
-    // nenhuma permissão nova. Ordenação por nome asc no SERVIDOR (sem sort no client), soft-deletes
-    // excluídos. Sem filtro/busca/paginação nesta v1 (fora de escopo da lista mínima).
-    const { data, error } = await supabase
-      .schema("pcm")
-      .from("clientes")
-      .select(
-        "id,nome,cnpj,auvo_id,ativo,cidade,estado,contato_telefone,contato_email,status_comercial",
-      )
-      .is("deleted_at", null)
-      .order("nome", { ascending: true });
+    // A lista virou um cockpit de carteira: além do cadastro Auvo, cruza ativos e OS para permitir
+    // filtro operacional sem novas tabelas nem mutação local.
+    const [clientes, ordens, equipamentos] = await Promise.all([
+      supabase
+        .schema("pcm")
+        .from("clientes")
+        .select(
+          "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,updated_at",
+        )
+        .is("deleted_at", null)
+        .order("nome", { ascending: true }),
+      supabase
+        .schema("pcm")
+        .from("ordens_servico")
+        .select("client_id,status,score_pcm,created_at,auvo_synced_at")
+        .is("deleted_at", null),
+      supabase.schema("pcm").from("equipamentos_cache").select("auvo_customer_id,ativo,updated_at"),
+    ]);
+    const { data, error } = clientes;
     if (error && erroColunaAusente(error)) {
       const fallback = await supabase
         .schema("pcm")
@@ -158,18 +193,89 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       }));
     }
     if (error) throw error;
-    return (data ?? []).map((row) => ({
-      id: row.id as string,
-      nome: row.nome as string,
-      cnpj: (row.cnpj as string | null) ?? null,
-      ativo: row.ativo as boolean,
-      auvoId: (row.auvo_id as number | null) ?? null,
-      cidade: (row.cidade as string | null) ?? null,
-      estado: (row.estado as string | null) ?? null,
-      contatoTelefone: (row.contato_telefone as string | null) ?? null,
-      contatoEmail: (row.contato_email as string | null) ?? null,
-      statusComercial: row.status_comercial as "ativo" | "inativo" | "prospecto",
-    }));
+    if (ordens.error) throw ordens.error;
+    if (equipamentos.error && !["PGRST205", "42P01"].includes(equipamentos.error.code ?? "")) {
+      throw equipamentos.error;
+    }
+
+    const ordensPorCliente = new Map<
+      string,
+      { abertas: number; maiorScore: number; ultimaAtividadeEm: string | null }
+    >();
+    for (const ordem of (ordens.data ?? []) as OsClienteListaRow[]) {
+      const atual = ordensPorCliente.get(ordem.client_id) ?? {
+        abertas: 0,
+        maiorScore: 0,
+        ultimaAtividadeEm: null,
+      };
+      if (!STATUS_HISTORICO.includes(ordem.status as (typeof STATUS_HISTORICO)[number])) {
+        atual.abertas += 1;
+      }
+      atual.maiorScore = Math.max(atual.maiorScore, ordem.score_pcm ?? 0);
+      const dataAtividade = ordem.auvo_synced_at ?? ordem.created_at;
+      if (dataAtividade && (!atual.ultimaAtividadeEm || dataAtividade > atual.ultimaAtividadeEm)) {
+        atual.ultimaAtividadeEm = dataAtividade;
+      }
+      ordensPorCliente.set(ordem.client_id, atual);
+    }
+
+    const equipamentosPorAuvoId = new Map<
+      number,
+      { total: number; ultimaAtualizacao: string | null }
+    >();
+    for (const equipamento of ((equipamentos.data ?? []) as EquipamentoClienteListaRow[]).filter(
+      (item) => item.ativo,
+    )) {
+      if (equipamento.auvo_customer_id === null) continue;
+      const atual = equipamentosPorAuvoId.get(equipamento.auvo_customer_id) ?? {
+        total: 0,
+        ultimaAtualizacao: null,
+      };
+      atual.total += 1;
+      if (
+        equipamento.updated_at &&
+        (!atual.ultimaAtualizacao || equipamento.updated_at > atual.ultimaAtualizacao)
+      ) {
+        atual.ultimaAtualizacao = equipamento.updated_at;
+      }
+      equipamentosPorAuvoId.set(equipamento.auvo_customer_id, atual);
+    }
+
+    return ((data ?? []) as ClienteRow[]).map((row) => {
+      const osResumo = ordensPorCliente.get(row.id);
+      const eqResumo = row.auvo_id === null ? undefined : equipamentosPorAuvoId.get(row.auvo_id);
+      const ultimaAtividadeEm =
+        [osResumo?.ultimaAtividadeEm, eqResumo?.ultimaAtualizacao, row.updated_at]
+          .filter((valor): valor is string => Boolean(valor))
+          .sort((a, b) => b.localeCompare(a))[0] ?? null;
+
+      return {
+        id: row.id,
+        nome: row.nome,
+        cnpj: row.cnpj,
+        ativo: row.ativo,
+        auvoId: row.auvo_id,
+        tipo: row.tipo,
+        statusComercial: row.status_comercial,
+        endereco: row.endereco,
+        cidade: row.cidade,
+        estado: row.estado,
+        cep: row.cep,
+        contatoNome: row.contato_nome,
+        contatoTelefone: row.contato_telefone,
+        contatoEmail: row.contato_email,
+        equipamentosAtivos: eqResumo?.total ?? 0,
+        osAbertas: osResumo?.abertas ?? 0,
+        maiorScorePcm: osResumo?.maiorScore ?? 0,
+        ultimaAtividadeEm,
+        cadastroCompleto: Boolean(
+          row.auvo_id &&
+            row.endereco &&
+            (row.cidade || row.estado) &&
+            (row.contato_telefone || row.contato_email),
+        ),
+      };
+    });
   },
 
   async buscarCliente(id): Promise<ClienteHeader | null> {
@@ -270,7 +376,14 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
   },
 
   async listarEventosCliente(id): Promise<Cliente360Evento[]> {
-    const [os, inspecoes, laudos] = await Promise.all([
+    const [cliente, os, inspecoes, laudos] = await Promise.all([
+      supabase
+        .schema("pcm")
+        .from("clientes")
+        .select("auvo_id,updated_at")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .maybeSingle(),
       supabase
         .schema("pcm")
         .from("ordens_servico")
@@ -297,6 +410,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         .limit(5),
     ]);
 
+    if (cliente.error) throw cliente.error;
     if (os.error) throw os.error;
     if (inspecoes.error) throw inspecoes.error;
     if (laudos.error) throw laudos.error;
@@ -304,10 +418,16 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     const eventosOs = ((os.data ?? []) as OrdemServicoRow[]).map((ordem) => ({
       id: `os-${ordem.id}`,
       tipo: "os" as const,
-      titulo: `OS ${ordem.numero} aberta — ${ordem.titulo}`,
-      subtitulo: ordem.local_descricao ?? ordem.solicitante ?? ordem.categoria,
-      data: ordem.created_at,
-      criticidade: ordem.score_pcm >= 80 ? ("critica" as const) : ("atencao" as const),
+      titulo: `OS ${ordem.numero} · ${rotuloStatusOperacional(ordem.status)}`,
+      subtitulo: [ordem.titulo, ordem.local_descricao ?? ordem.solicitante ?? ordem.categoria]
+        .filter(Boolean)
+        .join(" — "),
+      data: ordem.auvo_synced_at ?? ordem.created_at,
+      criticidade: STATUS_HISTORICO.includes(ordem.status as (typeof STATUS_HISTORICO)[number])
+        ? ("sucesso" as const)
+        : ordem.score_pcm >= 80
+          ? ("critica" as const)
+          : ("atencao" as const),
     }));
 
     const eventosInspecao = ((inspecoes.data ?? []) as InspecaoEventoRow[]).map((inspecao) => ({
@@ -336,7 +456,41 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
           : ("neutra" as const),
     }));
 
-    return ordenarEventos([...eventosOs, ...eventosInspecao, ...eventosLaudo]);
+    const eventosAuvo: Cliente360Evento[] = [];
+    const auvoId = (cliente.data?.auvo_id as number | null | undefined) ?? null;
+    if (cliente.data?.updated_at) {
+      eventosAuvo.push({
+        id: `auvo-cadastro-${id}`,
+        tipo: "auvo",
+        titulo: "Cadastro Auvo sincronizado",
+        subtitulo: auvoId ? `Cliente Auvo #${auvoId}` : "Cliente ainda sem vínculo Auvo",
+        data: cliente.data.updated_at as string,
+        criticidade: auvoId ? "sucesso" : "atencao",
+      });
+    }
+
+    if (auvoId !== null) {
+      const equipamentos = await supabase
+        .schema("pcm")
+        .from("equipamentos_cache")
+        .select("auvo_equipment_id,updated_at")
+        .eq("auvo_customer_id", auvoId)
+        .eq("ativo", true)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      if (!equipamentos.error && equipamentos.data?.[0]?.updated_at) {
+        eventosAuvo.push({
+          id: `auvo-ativos-${auvoId}`,
+          tipo: "auvo",
+          titulo: "Ativos Auvo atualizados",
+          subtitulo: `Último equipamento no cache: #${equipamentos.data[0].auvo_equipment_id}`,
+          data: equipamentos.data[0].updated_at as string,
+          criticidade: "neutra",
+        });
+      }
+    }
+
+    return ordenarEventos([...eventosOs, ...eventosInspecao, ...eventosLaudo, ...eventosAuvo]);
   },
 
   async listarQualidadeCliente(id): Promise<QualidadeClienteResumo> {

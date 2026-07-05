@@ -16,8 +16,10 @@ import {
   LayoutGrid,
   LogOut,
   Megaphone,
+  Moon,
   Package,
   Settings,
+  Sun,
   TrendingUp,
   UserCircle,
   UserCog,
@@ -40,6 +42,7 @@ import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
 import { usePermissoes } from "./permissoes-context";
+import { useTheme } from "./theme-context";
 
 // ─── tipos ──────────────────────────────────────────────────────────────────
 
@@ -343,6 +346,7 @@ function DashboardGeral({
 
 export function HomePage() {
   const { user, logout } = useAuth();
+  const { mode, toggleMode } = useTheme();
   const { podeAcessar } = usePermissoes();
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
   const [configTab, setConfigTab] = useState<"grupos" | "usuarios">("grupos");
@@ -581,6 +585,19 @@ export function HomePage() {
 
             {/* Avatar no canto */}
             <div className="ml-auto pl-4 flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                title={mode === "dark" ? "Usar modo dia" : "Usar modo noite"}
+                aria-label={mode === "dark" ? "Usar modo dia" : "Usar modo noite"}
+                onClick={toggleMode}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-line text-ink-3 transition-colors hover:bg-line-soft hover:text-ink"
+              >
+                {mode === "dark" ? (
+                  <Sun className="h-4 w-4" strokeWidth={2} />
+                ) : (
+                  <Moon className="h-4 w-4" strokeWidth={2} />
+                )}
+              </button>
               <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center text-white text-xs font-bold">
                 {initials}
               </div>

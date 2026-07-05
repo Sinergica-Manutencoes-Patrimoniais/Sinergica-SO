@@ -64,6 +64,33 @@ export interface CriarInspecaoItemInput {
   createdBy: string;
 }
 
+export interface ItemInspecaoImportado {
+  local: string;
+  relatoOriginal: string;
+  sistema: SistemaInspecao;
+  tituloBacklog: string;
+  descricaoTecnica: string;
+  citacaoNormativa: string | null;
+  prioridade: string;
+  categoria: string;
+  gravidade: number;
+  urgencia: number;
+  tendencia: number;
+  esforcoHoras: number;
+  justificativaEsforco: string | null;
+  fotoUrls?: string[];
+}
+
+export interface CriarInspecaoImportadaInput {
+  clientId: string;
+  titulo: string;
+  dataInspecao: string;
+  responsavelTecnico: string | null;
+  observacoesGerais: string | null;
+  itens: ItemInspecaoImportado[];
+  createdBy: string;
+}
+
 export interface LaudoSpdaResumo {
   id: string;
   clientId: string;
@@ -118,6 +145,8 @@ export interface QualidadeGateway {
   criarInspecao(input: CriarInspecaoInput): Promise<InspecaoResumo>;
   listarItensInspecao(inspecaoId: string): Promise<InspecaoItem[]>;
   criarItemInspecao(input: CriarInspecaoItemInput): Promise<InspecaoItem>;
+  processarRelatorioInspecao(texto: string): Promise<ItemInspecaoImportado[]>;
+  criarInspecaoImportada(input: CriarInspecaoImportadaInput): Promise<InspecaoResumo>;
   listarLaudosSpda(): Promise<LaudoSpdaResumo[]>;
   criarLaudoSpda(input: CriarLaudoSpdaInput): Promise<LaudoSpdaResumo>;
   listarPontosSpda(laudoId: string): Promise<LaudoSpdaPonto[]>;

@@ -13,6 +13,28 @@ export interface DashboardPcmResumo {
   kpis: KpiDashboardPcm[];
   ordensRecentes: OrdemServicoOperacional[];
   topBacklog: OrdemServicoOperacional[];
+  auvo: DashboardPcmAuvoResumo | null;
+}
+
+export interface ClienteEquipamentosAuvo {
+  auvoId: number;
+  nome: string;
+  total: number;
+}
+
+export interface DashboardPcmAuvoResumo {
+  clientesAtivos: number;
+  clientesSincronizados: number;
+  clientesComEndereco: number;
+  clientesComContato: number;
+  tecnicosAtivos: number;
+  equipesTecnicas: number;
+  equipamentosAtivos: number;
+  equipamentosVinculados: number;
+  equipamentosSemCliente: number;
+  clientesComEquipamentos: number;
+  ultimaAtualizacao: string | null;
+  topClientesEquipamentos: ClienteEquipamentosAuvo[];
 }
 
 function inicioDoMes(data: Date): Date {
@@ -36,6 +58,7 @@ export function montarDashboardPcm(
   ordens: readonly OrdemServicoOperacional[],
   inspecoes: readonly InspecaoResumo[],
   agora = new Date(),
+  auvo: DashboardPcmAuvoResumo | null = null,
 ): DashboardPcmResumo {
   const backlog = filtrarBacklogGut(ordens);
   const abertas = backlog.length;
@@ -46,6 +69,10 @@ export function montarDashboardPcm(
   const comTaskAuvo = ordens.filter((ordem) => ordem.auvoTaskId !== null).length;
   const falhasAuvo = ordens.filter(
     (ordem) => ordem.auvoSyncStatus === "failed" || ordem.auvoSyncError !== null,
+  ).length;
+  const ordensComSinalAuvo = ordens.filter((ordem) => ordem.auvoSyncStatus !== null).length;
+  const ordensSincronizadasAuvo = ordens.filter(
+    (ordem) => ordem.auvoSyncStatus === "synced",
   ).length;
   const criadasHoje = ordens.filter((ordem) =>
     desde(ordem.createdAt, new Date(agora.toDateString())),
@@ -107,8 +134,36 @@ export function montarDashboardPcm(
         sub: falhasAuvo > 0 ? "verificar sync" : "sem falhas",
         trend: falhasAuvo > 0 ? "down" : "up",
       },
+      {
+        label: "Clientes Auvo",
+        valor: auvo ? String(auvo.clientesSincronizados) : "—",
+        sub: auvo ? `${auvo.clientesAtivos} ativos no PCM` : "cache indisponível",
+        trend: auvo && auvo.clientesSincronizados > 0 ? "up" : "neutro",
+      },
+      {
+        label: "Ativos Auvo",
+        valor: auvo ? String(auvo.equipamentosAtivos) : "—",
+        sub: auvo ? `${auvo.equipamentosVinculados} vinculados` : "cache indisponível",
+        trend: auvo && auvo.equipamentosSemCliente > 0 ? "down" : "neutro",
+      },
+      {
+        label: "Técnicos Auvo",
+        valor: auvo ? String(auvo.tecnicosAtivos) : "—",
+        sub: auvo ? `${auvo.equipesTecnicas} equipes/cargos` : "cache indisponível",
+        trend: auvo && auvo.tecnicosAtivos > 0 ? "up" : "neutro",
+      },
+      {
+        label: "Sync OS",
+        valor:
+          ordensComSinalAuvo === 0
+            ? "—"
+            : `${Math.round((ordensSincronizadasAuvo / ordensComSinalAuvo) * 100)}%`,
+        sub: `${ordensSincronizadasAuvo}/${ordensComSinalAuvo} com sinal`,
+        trend: falhasAuvo > 0 ? "down" : ordensComSinalAuvo > 0 ? "up" : "neutro",
+      },
     ],
     ordensRecentes: [...ordens].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5),
     topBacklog: backlog.slice(0, 3),
+    auvo,
   };
 }

@@ -60,11 +60,28 @@ describe("dashboard-pcm", () => {
       ],
       [inspecao("2026-07-04"), inspecao("2026-06-20")],
       new Date("2026-07-04T15:00:00Z"),
+      {
+        clientesAtivos: 4,
+        clientesSincronizados: 3,
+        clientesComEndereco: 2,
+        clientesComContato: 1,
+        tecnicosAtivos: 5,
+        equipesTecnicas: 2,
+        equipamentosAtivos: 10,
+        equipamentosVinculados: 8,
+        equipamentosSemCliente: 2,
+        clientesComEquipamentos: 3,
+        ultimaAtualizacao: "2026-07-04T12:00:00Z",
+        topClientesEquipamentos: [{ auvoId: 100, nome: "Cliente", total: 6 }],
+      },
     );
 
     expect(dashboard.kpis.find((kpi) => kpi.label === "OS Abertas")?.valor).toBe("2");
     expect(dashboard.kpis.find((kpi) => kpi.label === "Maior Score")?.valor).toBe("125");
     expect(dashboard.kpis.find((kpi) => kpi.label === "Inspeções (mês)")?.valor).toBe("1");
+    expect(dashboard.kpis.find((kpi) => kpi.label === "Clientes Auvo")?.valor).toBe("3");
+    expect(dashboard.kpis.find((kpi) => kpi.label === "Ativos Auvo")?.sub).toBe("8 vinculados");
+    expect(dashboard.auvo?.topClientesEquipamentos[0]?.total).toBe(6);
     expect(dashboard.ordensRecentes.map((ordem) => ordem.id)).toEqual(["b", "a", "c"]);
     expect(dashboard.topBacklog.map((ordem) => ordem.id)).toEqual(["b", "a"]);
   });

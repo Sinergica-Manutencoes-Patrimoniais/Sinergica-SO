@@ -34,12 +34,29 @@
 @layer base {
   html {
     font-family: "Poppins", system-ui, sans-serif;
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  html[data-theme="dark"] {
+    --color-navy: #27365f;
+    --color-navy-deep: #10172d;
+    --color-navy-line: #38456d;
+    --color-orange-soft: #402817;
+    --color-paper: #10131d;
+    --color-card: #171b28;
+    --color-line: #2a3040;
+    --color-line-soft: #222838;
+    --color-ink: #f3f5fa;
+    --color-ink-2: #c8cedb;
+    --color-ink-3: #939cad;
+    --color-ink-4: #697285;
   }
 }
 
 @layer utilities {
   .input {
-    @apply w-full rounded-[6px] border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-ink-4 focus:border-navy focus:ring-2 focus:ring-navy/10 disabled:bg-line-soft disabled:text-ink-3;
+    @apply w-full rounded-[6px] border border-line bg-card px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-ink-4 focus:border-navy focus:ring-2 focus:ring-navy/10 disabled:bg-line-soft disabled:text-ink-3;
   }
 
   .no-scrollbar::-webkit-scrollbar {
