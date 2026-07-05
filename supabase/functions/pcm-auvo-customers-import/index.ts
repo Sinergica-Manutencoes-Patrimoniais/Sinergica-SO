@@ -3,6 +3,10 @@
 // as duas coexistem, cada uma resolve um problema diferente e nenhuma mexe na outra. AC-1, AC-2,
 // AC-3, AC-4 de specs/E01-S13-import-inicial-clientes-auvo/spec.md.
 //
+// NOTA DE DEPLOY: `supabase functions deploy` não detecta mudanças em `_shared/*.ts` como diff
+// desta function — precisa tocar o arquivo próprio da function para forçar redeploy (ver diag.
+// de 2026-07-04, mismatch de SUPABASE_SERVICE_ROLE_KEY em requireServiceRole).
+//
 // Gatilho (AC-5): idêntico ao padrão de E01-S11 — a função não sabe quem a invocou, só que a
 // chamada é autenticada como `service_role`. (a) `pg_cron` diário (migration 0015) via
 // `net.http_post`; ou (b) invocação sob demanda `supabase functions invoke
@@ -54,7 +58,7 @@ serve(async (req) => {
 
   const reqId = crypto.randomUUID().slice(0, 8);
   const now = new Date().toISOString();
-  console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, method: req.method }));
+  console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, method: req.method, deployMarker: "debug-2026-07-05-01" }));
 
   try {
     if (req.method !== "POST") throw new HttpError(405, "Método não permitido");
