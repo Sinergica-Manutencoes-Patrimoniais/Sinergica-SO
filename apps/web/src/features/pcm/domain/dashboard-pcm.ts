@@ -35,6 +35,17 @@ export interface DashboardPcmAuvoResumo {
   clientesComEquipamentos: number;
   ultimaAtualizacao: string | null;
   topClientesEquipamentos: ClienteEquipamentosAuvo[];
+  campo: DashboardPcmAuvoCampoResumo;
+}
+
+export interface DashboardPcmAuvoCampoResumo {
+  snapshotsRecebidos: number;
+  snapshotsComAnexos: number;
+  checklistsRecebidos: number;
+  pecasRegistradas: number;
+  controlesHoras: number;
+  osComEquipamentoVinculado: number;
+  ultimaExecucaoCampo: string | null;
 }
 
 function inicioDoMes(data: Date): Date {
