@@ -12,6 +12,7 @@ export type PrioridadeOrdemServico = "baixa" | "normal" | "media" | "alta" | "cr
 
 export interface OrdemServicoOperacional {
   id: string;
+  clientId?: string | null;
   numero: string;
   titulo: string;
   clienteNome: string;

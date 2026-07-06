@@ -36,6 +36,7 @@ const COLUNAS_OS =
 function mapearOrdem(row: OrdemRow, clientes: Map<string, string>): OrdemServicoOperacional {
   return {
     id: row.id,
+    clientId: row.client_id,
     numero: row.numero,
     titulo: row.titulo,
     clienteNome: clientes.get(row.client_id) ?? "Cliente não identificado",

@@ -35,12 +35,16 @@ import { GruposPage } from "../features/config/pages/GruposPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
 import { BacklogGutPage } from "../features/pcm/pages/BacklogGutPage";
+import { CronogramaPage } from "../features/pcm/pages/CronogramaPage";
 import { InspecoesPage } from "../features/pcm/pages/InspecoesPage";
 import { LaudosSpdaPage } from "../features/pcm/pages/LaudosSpdaPage";
 import { ListaClientesPage } from "../features/pcm/pages/ListaClientesPage";
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
+import { PreventivasPage } from "../features/pcm/pages/PreventivasPage";
+import { RelatorioDiarioPage } from "../features/pcm/pages/RelatorioDiarioPage";
+import { RelatorioMensalPage } from "../features/pcm/pages/RelatorioMensalPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
 import { usePermissoes } from "./permissoes-context";
@@ -74,6 +78,10 @@ type PcmView =
   | "backlog"
   | "inspecoes"
   | "pmoc"
+  | "cronograma"
+  | "preventivas"
+  | "relatorio-diario"
+  | "relatorio-mensal"
   | "laudos-spda";
 
 interface NavItem {
@@ -178,15 +186,15 @@ const PCM_NAV: NavGroup[] = [
     titulo: "PREVENTIVO",
     items: [
       { label: "PMOC", icon: Snowflake, view: "pmoc" },
-      { label: "Cronograma", icon: Calendar },
-      { label: "Preventivas", icon: Wrench },
+      { label: "Cronograma", icon: Calendar, view: "cronograma" },
+      { label: "Preventivas", icon: Wrench, view: "preventivas" },
     ],
   },
   {
     titulo: "RELATÓRIOS",
     items: [
-      { label: "Relatório Diário", icon: FileText },
-      { label: "Relatório Mensal", icon: FileBarChart2 },
+      { label: "Relatório Diário", icon: FileText, view: "relatorio-diario" },
+      { label: "Relatório Mensal", icon: FileBarChart2, view: "relatorio-mensal" },
       { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
     ],
   },
@@ -651,6 +659,14 @@ export function HomePage() {
               <LaudosSpdaPage />
             ) : pcmView === "pmoc" ? (
               <PmocPage />
+            ) : pcmView === "cronograma" ? (
+              <CronogramaPage />
+            ) : pcmView === "preventivas" ? (
+              <PreventivasPage onNovaOs={() => setNovaOsAberta(true)} />
+            ) : pcmView === "relatorio-diario" ? (
+              <RelatorioDiarioPage />
+            ) : pcmView === "relatorio-mensal" ? (
+              <RelatorioMensalPage />
             ) : pcmView === "ordens" ? (
               <OrdensServicoPage
                 refreshKey={pcmRefreshKey}
