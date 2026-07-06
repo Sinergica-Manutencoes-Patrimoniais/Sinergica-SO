@@ -1,8 +1,13 @@
 import {
+  Activity,
   AlertTriangle,
   Building2,
+  Camera,
+  CheckSquare,
   ClipboardList,
+  Clock3,
   DatabaseZap,
+  Link2,
   RefreshCw,
   TrendingDown,
   TrendingUp,
@@ -131,6 +136,7 @@ export function PcmDashboardPage({
       </div>
 
       {dashboard.auvo && <PainelAuvo dashboard={dashboard.auvo} />}
+      {dashboard.auvo && <PainelCampoAuvo dashboard={dashboard.auvo} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-card rounded-[10px] border border-line">
@@ -230,6 +236,18 @@ export function PcmDashboardPage({
   );
 }
 
+function formatarDataHoraCurta(dataIso: string | null): string {
+  if (!dataIso) return "sem sinal";
+  const data = new Date(dataIso);
+  if (Number.isNaN(data.getTime())) return "sem sinal";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(data);
+}
+
 function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["auvo"]> }) {
   const coberturaClientes =
     dashboard.clientesAtivos === 0
@@ -322,6 +340,93 @@ function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["
         </div>
       </div>
     </section>
+  );
+}
+
+function PainelCampoAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["auvo"]> }) {
+  const campo = dashboard.campo;
+  const ultimaExecucao = formatarDataHoraCurta(campo.ultimaExecucaoCampo);
+
+  return (
+    <section className="rounded-[10px] border border-line bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Sinais de campo Auvo</h3>
+          <p className="mt-0.5 text-xs text-ink-3">
+            Evidências recebidas por webhook: execução, fotos, checklist, peças e horas
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF2FF] px-3 py-1 text-xs font-semibold text-navy">
+          <Activity className="h-3.5 w-3.5" />
+          última execução {ultimaExecucao}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-3 p-5 md:grid-cols-3 xl:grid-cols-6">
+        <CampoAuvoItem
+          icon={Activity}
+          label="Snapshots"
+          value={campo.snapshotsRecebidos}
+          detail="tarefas recebidas"
+        />
+        <CampoAuvoItem
+          icon={Camera}
+          label="Anexos"
+          value={campo.snapshotsComAnexos}
+          detail="com foto/arquivo"
+        />
+        <CampoAuvoItem
+          icon={CheckSquare}
+          label="Checklists"
+          value={campo.checklistsRecebidos}
+          detail="execução registrada"
+        />
+        <CampoAuvoItem
+          icon={Wrench}
+          label="Peças"
+          value={campo.pecasRegistradas}
+          detail="materiais no campo"
+        />
+        <CampoAuvoItem
+          icon={Clock3}
+          label="Horas"
+          value={campo.controlesHoras}
+          detail="controle apontado"
+        />
+        <CampoAuvoItem
+          icon={Link2}
+          label="OS + ativo"
+          value={campo.osComEquipamentoVinculado}
+          detail="rastreáveis"
+        />
+      </div>
+    </section>
+  );
+}
+
+function CampoAuvoItem({
+  icon: Icon,
+  label,
+  value,
+  detail,
+}: {
+  icon: typeof Activity;
+  label: string;
+  value: number;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-[8px] border border-line-soft px-4 py-3">
+      <div className="flex items-center gap-2 text-ink-3">
+        <Icon className="h-4 w-4 text-orange" />
+        <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em]">
+          {label}
+        </span>
+      </div>
+      <p className="mt-2 font-brand text-2xl font-bold leading-none text-ink tabular-nums">
+        {value}
+      </p>
+      <p className="mt-1 truncate text-xs text-ink-3">{detail}</p>
+    </div>
   );
 }
 

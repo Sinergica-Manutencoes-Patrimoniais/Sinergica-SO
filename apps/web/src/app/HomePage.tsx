@@ -19,6 +19,7 @@ import {
   Moon,
   Package,
   Settings,
+  Snowflake,
   Sun,
   TrendingUp,
   UserCircle,
@@ -39,6 +40,7 @@ import { LaudosSpdaPage } from "../features/pcm/pages/LaudosSpdaPage";
 import { ListaClientesPage } from "../features/pcm/pages/ListaClientesPage";
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
+import { PmocPage } from "../features/pcm/pages/PmocPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
 import { usePermissoes } from "./permissoes-context";
@@ -65,7 +67,14 @@ interface ModuloTab {
 
 // Sub-navegação interna do PCM (mesmo padrão useState de abas do resto do app — sem lib de rotas).
 // "dashboard" = tela mock atual; "clientes" = lista mínima → Visão 360 (Task 18/E01-S12).
-type PcmView = "dashboard" | "clientes" | "ordens" | "backlog" | "inspecoes" | "laudos-spda";
+type PcmView =
+  | "dashboard"
+  | "clientes"
+  | "ordens"
+  | "backlog"
+  | "inspecoes"
+  | "pmoc"
+  | "laudos-spda";
 
 interface NavItem {
   label: string;
@@ -168,6 +177,7 @@ const PCM_NAV: NavGroup[] = [
   {
     titulo: "PREVENTIVO",
     items: [
+      { label: "PMOC", icon: Snowflake, view: "pmoc" },
       { label: "Cronograma", icon: Calendar },
       { label: "Preventivas", icon: Wrench },
     ],
@@ -639,6 +649,8 @@ export function HomePage() {
               <InspecoesPage />
             ) : pcmView === "laudos-spda" ? (
               <LaudosSpdaPage />
+            ) : pcmView === "pmoc" ? (
+              <PmocPage />
             ) : pcmView === "ordens" ? (
               <OrdensServicoPage
                 refreshKey={pcmRefreshKey}

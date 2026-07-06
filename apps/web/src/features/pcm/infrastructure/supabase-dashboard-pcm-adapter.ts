@@ -25,11 +25,40 @@ interface EquipamentoAuvoRow {
   updated_at: string | null;
 }
 
+interface AuvoTaskSnapshotRow {
+  anexos: unknown;
+  checklist: unknown;
+  pecas_consumidas: unknown;
+  controle_horas: unknown;
+  checkin_em: string | null;
+  concluida_em: string | null;
+  last_webhook_received_at: string | null;
+}
+
+interface OsEquipamentoAuvoRow {
+  ordem_servico_id: string;
+}
+
 function maxIso(datas: Array<string | null | undefined>): string | null {
   const ordenadas = datas
     .filter((data): data is string => Boolean(data))
     .sort((a, b) => b.localeCompare(a));
   return ordenadas[0] ?? null;
+}
+
+function temConteudoJson(valor: unknown): boolean {
+  if (Array.isArray(valor)) return valor.length > 0;
+  if (valor && typeof valor === "object") return Object.keys(valor).length > 0;
+  return false;
+}
+
+function isTabelaCampoAusente(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return (
+    error.code === "42P01" ||
+    error.code === "PGRST205" ||
+    Boolean(error.message?.includes("schema cache") || error.message?.includes("does not exist"))
+  );
 }
 
 function contarEquipes(tecnicos: TecnicoAuvoRow[]): number {
@@ -71,7 +100,7 @@ function topClientesPorEquipamento(
 
 export const supabaseDashboardPcmAdapter = {
   async obterResumoAuvo(): Promise<DashboardPcmAuvoResumo> {
-    const [clientes, tecnicos, equipamentos] = await Promise.all([
+    const [clientes, tecnicos, equipamentos, snapshots, osEquipamentos] = await Promise.all([
       supabase
         .schema("pcm")
         .from("clientes")
@@ -82,13 +111,28 @@ export const supabaseDashboardPcmAdapter = {
         .schema("pcm")
         .from("equipamentos_cache")
         .select("auvo_equipment_id,auvo_customer_id,ativo,updated_at"),
+      supabase
+        .schema("pcm")
+        .from("auvo_task_snapshots")
+        .select(
+          "anexos,checklist,pecas_consumidas,controle_horas,checkin_em,concluida_em,last_webhook_received_at",
+        ),
+      supabase.schema("pcm").from("os_equipamentos_auvo").select("ordem_servico_id"),
     ]);
 
     if (clientes.error) throw clientes.error;
     if (tecnicos.error) throw tecnicos.error;
     if (equipamentos.error) throw equipamentos.error;
+    if (snapshots.error && !isTabelaCampoAusente(snapshots.error)) throw snapshots.error;
+    if (osEquipamentos.error && !isTabelaCampoAusente(osEquipamentos.error)) {
+      throw osEquipamentos.error;
+    }
 
     const clientesRows = (clientes.data ?? []) as ClienteAuvoRow[];
+    const snapshotsRows = snapshots.error ? [] : ((snapshots.data ?? []) as AuvoTaskSnapshotRow[]);
+    const osEquipamentosRows = osEquipamentos.error
+      ? []
+      : ((osEquipamentos.data ?? []) as OsEquipamentoAuvoRow[]);
     const tecnicosAtivos = ((tecnicos.data ?? []) as TecnicoAuvoRow[]).filter(
       (tecnico) => tecnico.ativo,
     );
@@ -123,8 +167,30 @@ export const supabaseDashboardPcmAdapter = {
         ...clientesRows.map((cliente) => cliente.updated_at),
         ...tecnicosAtivos.map((tecnico) => tecnico.updated_at),
         ...equipamentosAtivos.map((equipamento) => equipamento.updated_at),
+        ...snapshotsRows.map((snapshot) => snapshot.last_webhook_received_at),
       ]),
       topClientesEquipamentos: topClientesPorEquipamento(clientesAtivos, equipamentosAtivos),
+      campo: {
+        snapshotsRecebidos: snapshotsRows.length,
+        snapshotsComAnexos: snapshotsRows.filter((snapshot) => temConteudoJson(snapshot.anexos))
+          .length,
+        checklistsRecebidos: snapshotsRows.filter((snapshot) => temConteudoJson(snapshot.checklist))
+          .length,
+        pecasRegistradas: snapshotsRows.filter((snapshot) =>
+          temConteudoJson(snapshot.pecas_consumidas),
+        ).length,
+        controlesHoras: snapshotsRows.filter((snapshot) => temConteudoJson(snapshot.controle_horas))
+          .length,
+        osComEquipamentoVinculado: new Set(osEquipamentosRows.map((item) => item.ordem_servico_id))
+          .size,
+        ultimaExecucaoCampo: maxIso(
+          snapshotsRows.flatMap((snapshot) => [
+            snapshot.concluida_em,
+            snapshot.checkin_em,
+            snapshot.last_webhook_received_at,
+          ]),
+        ),
+      },
     };
   },
 };
