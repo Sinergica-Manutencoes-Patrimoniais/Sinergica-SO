@@ -62,6 +62,11 @@ create trigger trg_test_enqueue
   after insert or update or delete on pcm._test_auvo_enqueue
   for each row execute function pcm.fn_auvo_enqueue('_test_entity');
 
+-- Tabela nova só tem privilégios pra quem a criou (role da conexão do teste, não service_role) —
+-- sem este GRANT, o INSERT/UPDATE abaixo como service_role falha com 42501 antes mesmo de exercitar
+-- a trigger que o teste quer provar.
+grant select, insert, update on pcm._test_auvo_enqueue to service_role;
+
 set local role service_role;
 
 -- INSERT genuíno enfileira op='create' (AC-1).
