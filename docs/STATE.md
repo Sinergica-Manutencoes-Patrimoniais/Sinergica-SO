@@ -10,7 +10,64 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-04 — **Revisão @qa (Claude) do handoff Codex → Claude concluída.**
+**Última atualização:** 2026-07-07 — **Nova épica aberta: "PCM como front-end completo do Auvo"**
+(plano completo em `~/.claude/plans/auvo-a-plataforma-ethereal-bonbon.md`, mapeando todo o catálogo
+da API Auvo v2 — clientes, funcionários, produtos/ferramentas, serviços, equipamentos, categorias,
+equipes, tickets — para CRUD dentro do PCM, com Financeiro descartado pelo usuário e Produtos
+reformulado como "ferramentas/kits de técnico"). Decisões do usuário: delete no PCM = soft-delete →
+`PATCH active:false` no Auvo (nunca DELETE físico); Produtos vira Ferramentas (schema `pcm`, usa
+`employee-product-stock` do Auvo para saber quem está com qual ferramenta).
+
+**Antes de implementar, revisão adversarial dos commits recentes de Codex** (`dfb1077`
+"enriquece PCM com Auvo e inspeções", `42367ac` "integra PMOC aos sinais do Auvo", PR #29 aberto
+"tolera busca indisponível de task Auvo") — achou **1 bug crítico real já em produção**:
+`pcm-auvo-equipment-sync/index.ts` linha 114 declarava `let auvoCustomerId` sombreando a função de
+mesmo nome usada na linha seguinte — `TypeError`, sync de equipamentos quebrado desde o merge de
+`dfb1077` (~2 dias). **Corrigido e commitado isoladamente** na branch `fix/E01-S11-equipment-sync-
+shadowing` (renomeada a variável local para `resolvedCustomerId`), **aguardando push/PR** (ver
+Bloqueios). Achados não-bloqueantes registrados para acompanhar depois: PR #29 (400-tolerance na
+busca de task) pode mascarar um `paramFilter` sistematicamente errado e permitir tasks duplicadas
+no Auvo se o formato do filtro nunca tiver sido validado contra produção — não é um bug óbvio, é um
+risco a monitorar; migration `0023` (PMOC) não tem policy de `DELETE` em nenhuma das 7 tabelas
+novas (default-deny, não é falha de segurança, só inconsistência com o padrão do projeto); e
+`E01-S03` (PMOC) foi implementada com `design.md` mas **sem `spec.md`/`tasks.md`** — mesma classe de
+gap de processo já registrada como aprendizado em `.claude/memory/feedback-processo-stories.md`,
+sinalizada no ROADMAP (linha `E01-S03b`) para reconciliar depois.
+
+**E01-S22 (motor de sync Auvo, write path) implementada localmente** na branch
+`feat/E01-S22-motor-sync-auvo-write` (a partir de `origin/main`, isolada do hotfix acima). Fundação
+da épica: `docs/adr/0005-outbox-sync-auvo.md`, `specs/E01-S22-motor-sync-auvo-write/*` (product/
+design/domain/spec/tasks), migrations `0024` (`pcm.auvo_sync_outbox`, `fn_auvo_enqueue`,
+`fn_apply_auvo_sync`, `fn_claim_auvo_outbox_batch`) e `0025` (`pg_cron` de 1 min, reusa secrets do
+Vault de `0011`/`0013`), `auvoPatch`/`auvoDelete` em `_shared/auvo/client.ts`, scaffold do entity
+registry (`_shared/auvo/registry/`, vazio até `E01-S24`), Edge Function `pcm-auvo-push` (drain com
+idempotência por `externalId`, nunca trava o lote por 1 linha com falha) e pgTAP
+`auvo_sync_outbox_rls.test.sql`. **2 refinamentos de design feitos durante a implementação, spec
+atualizada ANTES de codar (não SPEC_DEVIATION silencioso)**: (1) o "sentinela `updated_by`" do
+design original foi trocado por um GUC transacional (`app.auvo_sync_write`) + RPC
+`fn_apply_auvo_sync`, porque `updated_by` tem `references auth.users` e um sentinela exigiria linha
+falsa na tabela do Supabase Auth; (2) adicionado o estado `'processing'` + RPC
+`fn_claim_auvo_outbox_batch` para a reivindicação atômica de lote (`FOR UPDATE SKIP LOCKED` não é
+exposto pelo PostgREST a um `SELECT` solto do cliente). Gates Node rodados e verdes nesta sessão:
+`lint:migrations` (27 migrations), `lint`, `typecheck`, `test` (126 pass/9 skip), `build`,
+`audit:esteira` (148 docs), `eval:spec`, `arch:check`. **Gap conhecido, mesma ressalva de toda a
+integração Auvo desde E01-S09:** sem Deno CLI/Docker neste ambiente, os 3 `*.test.ts` Deno novos
+(`client.test.ts`, `registry/index.test.ts`, `pcm-auvo-push/index.test.ts`) e o pgTAP novo não foram
+executados — confirmar no CI `db-tests` antes do merge.
+
+**Bloqueio novo: hook `enforce-git-push-authority.sh` bloqueia TODO `git push` nesta sessão**,
+incondicionalmente (não checa qual "agente" está ativo — isso é só texto de persona do
+`TRIVIAIOX/agents/devops.md`, sem efeito real no hook). Duas branches commitadas localmente
+aguardando push humano: `fix/E01-S11-equipment-sync-shadowing` (1 commit) e
+`feat/E01-S22-motor-sync-auvo-write` (2 commits). Ver Bloqueios.
+
+**Próximo passo:** push das 2 branches acima + abrir PRs (fora do alcance desta sessão); depois,
+seguir a épica com `E01-S23` (read path — dispatcher de webhook genérico + `pcm-auvo-pull` +
+auto-registro de webhook), mesmo `design.md` de `E01-S22`.
+
+---
+
+**Última atualização anterior:** 2026-07-04 — **Revisão @qa (Claude) do handoff Codex → Claude concluída.**
 Gates locais rerodados e verdes (`lint:migrations` 20 migrations, `lint`, `typecheck`, `test`
 114/9skip, `build`, `audit:esteira` 142 docs, `eval:spec`). Migrations `0016`-`0020` e Edge
 Functions (`pcm-auvo-webhook`, `pcm-whatsapp-webhook`, `pcm-ze-agent`, `pcm-auvo-customers-import`)
@@ -629,6 +686,14 @@ nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
 - 2026-06-25: Monorepo app único (`apps/web`) com features por bounded context — sem apps separados
 
 ## Bloqueios
+- [ ] **`git push` bloqueado incondicionalmente por `.claude/hooks/enforce-git-push-authority.sh`
+      nesta sessão** (2026-07-07) — o hook casa qualquer comando Bash com `/\bgit\s+push\b/` e nega,
+      sem checar de fato qual "agente" está ativo (o texto de `TRIVIAIOX/agents/devops.md` descreve
+      uma variável de ambiente `TRIVIAIOX_ACTIVE_AGENT` que o hook real não lê). Não há como uma
+      sessão Claude Code contornar isso — é fail-closed por design. **Duas branches prontas,
+      aguardando push humano:** `fix/E01-S11-equipment-sync-shadowing` (hotfix crítico, 1 commit) e
+      `feat/E01-S22-motor-sync-auvo-write` (motor de sync, 2 commits). Quem destrava: Lucas (`git
+      push -u origin <branch>` + `gh pr create` de cada uma).
 - [x] ~~Git push bloqueado~~ ✅ Resolvido — novo repo `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`, Lucas é owner.
 - [x] ~~Supabase não provisionado~~ ✅ Resolvido, depois **reprovisionado** — projeto atual:
       `nudannsrfvjggoergvyn.supabase.co`. `.env.local` atualizado (URL, publishable key,
