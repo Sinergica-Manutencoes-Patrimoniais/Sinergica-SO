@@ -97,10 +97,28 @@ serve(async (req) => {
       // Correção de revisão: não cair para search.result[0] sem bater o externalId — mesmo risco
       // documentado em pcm-auvo-customers-sync (vincularia a task errada se o paramFilter não
       // filtrar como esperado no lado do Auvo).
-      const search = await auvoGet<{ result: AuvoTask[] }>(
-        `/tasks?${buildParamFilter({ externalId: input.osId })}`,
-      );
-      const existente = search?.result?.find((t) => t.externalId === input.osId);
+      let existente: AuvoTask | undefined;
+      try {
+        const search = await auvoGet<{ result: AuvoTask[] }>(
+          `/tasks?${buildParamFilter({ externalId: input.osId })}`,
+        );
+        existente = search?.result?.find((t) => t.externalId === input.osId);
+      } catch (searchError) {
+        if (!(searchError instanceof AuvoApiError) || searchError.status !== 400) {
+          throw searchError;
+        }
+        console.warn(
+          JSON.stringify({
+            ts: new Date().toISOString(),
+            nivel: "warn",
+            fn: FN,
+            reqId,
+            msg: "Auvo rejeitou busca de task por externalId; seguindo para criação com externalId",
+            osId: input.osId,
+            detail: searchError.message,
+          }),
+        );
+      }
 
       let taskId: number;
       if (existente) {
