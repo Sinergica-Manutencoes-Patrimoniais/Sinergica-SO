@@ -116,6 +116,22 @@ Deno.test("processOutboxRow — create sem auvo_id existente faz POST com extern
   }
 });
 
+Deno.test("processOutboxRow — externalIdField customizado (ex. Services usa externalCode)", async () => {
+  const restoreEnv = withEnv(ENV);
+  const { restore, calls } = withFetch(() => new Response(JSON.stringify({ result: { id: 7 } }), { status: 201 }));
+  try {
+    const descriptor = { ...fakeDescriptor(), externalIdField: "externalCode" };
+    const db = fakeDb({ id: "row-1", nome: "X" });
+    await processOutboxRow(db, baseRow, descriptor);
+    const corpo = await calls[0].json();
+    assertEquals(corpo.externalCode, "row-1");
+    assertEquals(corpo.externalId, undefined);
+  } finally {
+    restore();
+    restoreEnv();
+  }
+});
+
 Deno.test("processOutboxRow — reprocessar linha com auvo_id existente faz PATCH, nunca um novo POST (AC-4)", async () => {
   const restoreEnv = withEnv(ENV);
   const { restore, calls } = withFetch((req) => {
@@ -169,6 +185,73 @@ Deno.test("processOutboxRow — delete de linha nunca sincronizada não chama o 
     assertEquals(resultado.ok, true);
     assertEquals(calls.length, 0);
     assertEquals(db.patches[0].patch.auvo_sync_status, "synced");
+  } finally {
+    restore();
+    restoreEnv();
+  }
+});
+
+Deno.test("processOutboxRow — deleteStrategy='hard-delete' chama DELETE físico, não PATCH", async () => {
+  const restoreEnv = withEnv(ENV);
+  const { restore, calls } = withFetch((req) => {
+    assertEquals(req.method, "DELETE");
+    return new Response(null, { status: 204 });
+  });
+  try {
+    const descriptor = { ...fakeDescriptor(), deleteStrategy: "hard-delete" as const };
+    const db = fakeDb({ id: "row-1", nome: "X", auvo_id: 88 });
+    const row: OutboxRow = { ...baseRow, op: "delete" };
+    const resultado = await processOutboxRow(db, row, descriptor);
+    assertEquals(resultado.ok, true);
+    assertEquals(calls.length, 1);
+  } finally {
+    restore();
+    restoreEnv();
+  }
+});
+
+Deno.test("processOutboxRow — deactivatePatch customizado é usado em vez de active:false", async () => {
+  const restoreEnv = withEnv(ENV);
+  const { restore, calls } = withFetch(() => new Response(null, { status: 204 }));
+  try {
+    const descriptor = { ...fakeDescriptor(), deactivatePatch: { unavailableForTasks: true } };
+    const db = fakeDb({ id: "row-1", nome: "X", auvo_id: 99 });
+    const row: OutboxRow = { ...baseRow, op: "delete" };
+    await processOutboxRow(db, row, descriptor);
+    const corpo = await calls[0].json();
+    assertEquals(corpo, [{ op: "replace", path: "unavailableForTasks", value: true }]);
+  } finally {
+    restore();
+    restoreEnv();
+  }
+});
+
+Deno.test("processOutboxRow — deleteStrategy='unsupported' não chama o Auvo (ex. Teams sem DELETE)", async () => {
+  const restoreEnv = withEnv(ENV);
+  const { restore, calls } = withFetch(() => new Response("não deveria ser chamado", { status: 500 }));
+  try {
+    const descriptor = { ...fakeDescriptor(), deleteStrategy: "unsupported" as const };
+    const db = fakeDb({ id: "row-1", nome: "X", auvo_id: 44 });
+    const row: OutboxRow = { ...baseRow, op: "delete" };
+    const resultado = await processOutboxRow(db, row, descriptor);
+    assertEquals(resultado.ok, true);
+    assertEquals(calls.length, 0);
+  } finally {
+    restore();
+    restoreEnv();
+  }
+});
+
+Deno.test("processOutboxRow — supportsUpdate=false trata op='update' como no-op de sucesso", async () => {
+  const restoreEnv = withEnv(ENV);
+  const { restore, calls } = withFetch(() => new Response("não deveria ser chamado", { status: 500 }));
+  try {
+    const descriptor = { ...fakeDescriptor(), supportsUpdate: false };
+    const db = fakeDb({ id: "row-1", nome: "X", auvo_id: 10 });
+    const row: OutboxRow = { ...baseRow, op: "update" };
+    const resultado = await processOutboxRow(db, row, descriptor);
+    assertEquals(resultado.ok, true);
+    assertEquals(calls.length, 0);
   } finally {
     restore();
     restoreEnv();

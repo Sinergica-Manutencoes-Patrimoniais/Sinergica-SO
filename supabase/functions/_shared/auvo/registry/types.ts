@@ -47,6 +47,38 @@ export interface AuvoEntityDescriptor<TAuvo, TRow> {
    */
   readonly writeEnabled: boolean;
 
+  /**
+   * Como uma exclusão no PCM (soft-delete, `deleted_at` preenchido) se traduz no Auvo:
+   * - `'soft-patch'` (padrão quando ausente) — `PATCH` com `deactivatePatch` (ou `{active:false}`
+   *   se `deactivatePatch` também estiver ausente). Use para entidades com um campo de
+   *   ativo/inativo (Task Types, Customers, Products, Equipments, Services — a maioria).
+   * - `'hard-delete'` — `DELETE` físico no Auvo. Use só quando o recurso não tem NENHUM campo de
+   *   ativo/inativo (Segments, Keywords, Categorias, Customer Groups) e o risco de perder o
+   *   registro sem histórico é aceitável (metadado de classificação, não entidade de negócio).
+   * - `'unsupported'` — o recurso Auvo não tem `PATCH` nem `DELETE` (ex. `Teams`, só
+   *   `POST`/`GET`). A exclusão fica só no PCM (soft-delete local), sem nenhuma chamada ao Auvo —
+   *   a UI deve avisar que o registro pode continuar existindo lá.
+   */
+  readonly deleteStrategy?: "soft-patch" | "hard-delete" | "unsupported";
+
+  /** Patch a enviar quando `deleteStrategy` é `'soft-patch'` e o campo de "desativado" do Auvo
+   * NÃO se chama `active` (ex.: Users usa `unavailableForTasks: true`, não `active: false`).
+   * Ausente = usa `{ active: false }` (padrão da maioria das entidades). */
+  readonly deactivatePatch?: Record<string, unknown>;
+
+  /**
+   * `false` quando o recurso Auvo não tem endpoint de edição (`PATCH`) — ex. `/customergroups`
+   * só tem `POST`/`DELETE`. Nesse caso o drain trata `op='update'` como sucesso no-op (não chama
+   * o Auvo, marca o outbox `sent`) em vez de tentar um `PATCH` que não existe. Padrão `true`.
+   */
+  readonly supportsUpdate?: boolean;
+
+  /** Nome do campo de idempotência de criação que o `POST` deste recurso espera (ADR-0001).
+   * Padrão `'externalId'` (a maioria dos recursos) — alguns usam outro nome (`Services` usa
+   * `externalCode`, confirmado no catálogo). `pcm-auvo-push` usa este campo, nunca hardcoda
+   * `externalId`. */
+  readonly externalIdField?: string;
+
   /** Traduz uma linha PCM para o payload que a API Auvo espera em `POST`/`PUT`/`PATCH`. */
   toAuvo(row: TRow): TAuvo;
 

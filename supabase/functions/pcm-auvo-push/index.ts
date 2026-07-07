@@ -18,7 +18,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
-import { AuvoApiError, auvoPatch, auvoPost } from "../_shared/auvo/client.ts";
+import { AuvoApiError, auvoDelete, auvoPatch, auvoPost } from "../_shared/auvo/client.ts";
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
 import { getDescriptor } from "../_shared/auvo/registry/index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
@@ -80,17 +80,31 @@ export async function processOutboxRow(
   const existingAuvoId = origem["auvo_id"] as number | null | undefined;
 
   if (row.op === "delete") {
-    // Decisão do usuário: delete no PCM nunca é DELETE físico no Auvo — soft-delete via PATCH
-    // active:false (ver design.md → Non-goals). Se nunca foi sincronizado, não há o que desativar.
-    // PATCH da Auvo v2 é JSON Patch, não objeto flat — ver _shared/auvo/json-patch.ts.
-    if (existingAuvoId != null) {
-      await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, toAuvoJsonPatch({ active: false }));
+    if (existingAuvoId != null && descriptor.deleteStrategy !== "unsupported") {
+      if (descriptor.deleteStrategy === "hard-delete") {
+        await auvoDelete(`${descriptor.auvoBasePath}/${existingAuvoId}`);
+      } else {
+        // Padrão 'soft-patch': decisão do usuário — delete no PCM nunca é DELETE físico no Auvo
+        // por padrão (ver design.md → Non-goals). O campo de "desativado" varia por entidade
+        // (`active` na maioria, `unavailableForTasks` em Users) — `deactivatePatch` do descriptor
+        // decide; ausente = `{active:false}`. PATCH da Auvo v2 é JSON Patch, não objeto flat —
+        // ver _shared/auvo/json-patch.ts.
+        const patch = descriptor.deactivatePatch ?? { active: false };
+        await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, toAuvoJsonPatch(patch));
+      }
     }
+    // 'unsupported' (ex. Teams: sem PATCH/DELETE): exclusão fica só local, nenhuma chamada ao Auvo.
     await db.applyAuvoSync(descriptor.pcmTable, row.row_id, {
       auvo_sync_status: "synced",
       auvo_synced_at: new Date().toISOString(),
       auvo_sync_error: null,
     });
+    return { ok: true };
+  }
+
+  // Recurso sem endpoint de edição no Auvo (ex. /customergroups): update é no-op de sucesso, não
+  // tenta um PATCH que não existe.
+  if (row.op === "update" && descriptor.supportsUpdate === false) {
     return { ok: true };
   }
 
@@ -105,9 +119,12 @@ export async function processOutboxRow(
     await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, toAuvoJsonPatch(payload));
     auvoId = existingAuvoId;
   } else {
+    // Idempotência por ADR-0001 — nome do campo varia por recurso (a maioria usa `externalId`,
+    // `Services` usa `externalCode`, confirmado no catálogo). Nunca hardcodar o nome do campo.
+    const externalIdField = descriptor.externalIdField ?? "externalId";
     const criado = await auvoPost<{ result: { id: number } }>(descriptor.auvoBasePath, {
       ...payload,
-      externalId: row.row_id, // idempotência por externalId (ADR-0001)
+      [externalIdField]: row.row_id,
     });
     auvoId = criado.result.id;
   }

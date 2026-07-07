@@ -10,7 +10,45 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-07 — **Nova épica aberta: "PCM como front-end completo do Auvo"**
+**Última atualização:** 2026-07-07 (2ª sessão do dia) — **Todas as specs de E01-S23 a E01-S33
+escritas** (o Lucas pediu para escrever tudo até o limite de contexto, "se esgotar o Codex
+continua"), na mesma branch `feat/E01-S22-motor-sync-auvo-write` (ainda sem push — só dá push ao
+fechar a épica inteira). Cada story ganhou `spec.md`+`tasks.md` (S23 também `product.md`, reusa
+`design.md`/`domain.md` de S22, mesmo padrão de S10/S11 sobre S09).
+
+**Mapeamento do catálogo real da API Auvo (Apiary/blueprint público) revelou 4 divergências reais
+do motor genérico de `E01-S22`, todas corrigidas no código ANTES de escrever as specs seguintes
+(nunca deixadas como "descobrir depois em produção"):**
+1. **PATCH da Auvo v2 é JSON Patch** (`[{op:"replace",path,value}]`), não objeto flat — `pcm-auvo-push`
+   enviava o objeto flat direto; teria quebrado o primeiro PATCH real. Corrigido com
+   `_shared/auvo/json-patch.ts` (`toAuvoJsonPatch`), aplicado nas 2 chamadas `auvoPatch` do drain.
+2. **Nem todo recurso tem `active`/`PATCH`/`externalId`** — `Segments`/`Keywords`/`Categorias`/
+   `Customer Groups` sem `active` (só DELETE físico); `Customer Groups`/`Teams` sem `PATCH`;
+   `Users` usa `unavailableForTasks` em vez de `active`; `Task Types`/`Segments`/`Keywords`/
+   `Customer Groups`/`Teams` sem `externalId` no POST. `AuvoEntityDescriptor` ganhou 3 campos
+   aditivos: `deleteStrategy` (`'soft-patch'`\|`'hard-delete'`\|`'unsupported'`),
+   `deactivatePatch`, `supportsUpdate`.
+3. **`Services` usa `externalCode`** (não `externalId`) e `id` GUID (não bigint) — campo aditivo
+   `externalIdField` no descriptor, `pcm-auvo-push` nunca mais hardcoda o nome do campo.
+4. Todos os 3 pontos acima já têm teste Deno cobrindo o caso novo em
+   `pcm-auvo-push/index.test.ts` (não executado aqui — sem Deno CLI — mas escrito).
+
+**Achado que ficou registrado como bloqueio real, não resolvido nesta sessão:** `E01-S28`
+(Funcionários) tem uma decisão de produto pendente — criar funcionário novo pelo PCM significa
+provisionar uma credencial de login real no Auvo (`password`/`login` no `POST /users/`), não é um
+cadastro inofensivo de metadado. `E01-S29` (Equipamentos) segue **bloqueada** — reverteria a
+decisão explícita do Lucas em `E01-S16` ("Auvo é dono do equipamento, PCM não duplica"), nunca
+formalizada como ADR; a spec só documenta a pergunta, sem AC/código.
+
+**Próximo passo:** implementar `E01-S23` (read path) e depois as entidades em ordem de
+dependência (`S24`→`S25`→`S26`→`S27`→`S28`(pendente task 0)→`S30`→`S31`→`S32`→`S33`; `S29` só
+depois de decisão do PO). Se o Codex continuar a partir daqui, ler `E01-S22/design.md` inteiro
+primeiro (tem todos os achados de API documentados) antes de implementar qualquer entidade — évita
+redescobrir os mesmos 4 problemas por tentativa e erro.
+
+---
+
+**Última atualização anterior:** 2026-07-07 — **Nova épica aberta: "PCM como front-end completo do Auvo"**
 (plano completo em `~/.claude/plans/auvo-a-plataforma-ethereal-bonbon.md`, mapeando todo o catálogo
 da API Auvo v2 — clientes, funcionários, produtos/ferramentas, serviços, equipamentos, categorias,
 equipes, tickets — para CRUD dentro do PCM, com Financeiro descartado pelo usuário e Produtos
