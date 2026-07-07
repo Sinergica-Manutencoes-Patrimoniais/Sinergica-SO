@@ -19,6 +19,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
 import { AuvoApiError, auvoPatch, auvoPost } from "../_shared/auvo/client.ts";
+import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
 import { getDescriptor } from "../_shared/auvo/registry/index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
 
@@ -81,8 +82,9 @@ export async function processOutboxRow(
   if (row.op === "delete") {
     // Decisão do usuário: delete no PCM nunca é DELETE físico no Auvo — soft-delete via PATCH
     // active:false (ver design.md → Non-goals). Se nunca foi sincronizado, não há o que desativar.
+    // PATCH da Auvo v2 é JSON Patch, não objeto flat — ver _shared/auvo/json-patch.ts.
     if (existingAuvoId != null) {
-      await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, { active: false });
+      await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, toAuvoJsonPatch({ active: false }));
     }
     await db.applyAuvoSync(descriptor.pcmTable, row.row_id, {
       auvo_sync_status: "synced",
@@ -97,7 +99,10 @@ export async function processOutboxRow(
   const payload = descriptor.toAuvo(origem);
   let auvoId: number;
   if (existingAuvoId != null) {
-    await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, payload);
+    // PATCH da Auvo v2 é JSON Patch (`[{op:"replace",path,value}]`), não o objeto flat de
+    // `toAuvo()` — confirmado no catálogo (Task Types/Services/Equipments/Products/Tickets, todos
+    // com o mesmo dialeto). Ver _shared/auvo/json-patch.ts.
+    await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, toAuvoJsonPatch(payload));
     auvoId = existingAuvoId;
   } else {
     const criado = await auvoPost<{ result: { id: number } }>(descriptor.auvoBasePath, {

@@ -31,7 +31,7 @@ function withFetch(handler: (req: Request) => Response): { restore: () => void; 
         ),
       );
     }
-    calls.push(req);
+    calls.push(req.clone());
     return Promise.resolve(handler(req));
   }) as typeof fetch;
   return { restore: () => { globalThis.fetch = original; }, calls };
@@ -129,13 +129,16 @@ Deno.test("processOutboxRow — reprocessar linha com auvo_id existente faz PATC
     assertEquals(resultado.ok, true);
     assertEquals(calls.length, 1); // só o PATCH — nenhuma chamada extra de criação
     assertEquals(db.patches[0].patch.auvo_id, 55);
+    // PATCH da Auvo é JSON Patch, não objeto flat — ver _shared/auvo/json-patch.ts.
+    const corpo = await calls[0].json();
+    assertEquals(corpo, [{ op: "replace", path: "name", value: "X" }]);
   } finally {
     restore();
     restoreEnv();
   }
 });
 
-Deno.test("processOutboxRow — delete com auvo_id existente faz PATCH active:false", async () => {
+Deno.test("processOutboxRow — delete com auvo_id existente faz PATCH active:false em formato JSON Patch", async () => {
   const restoreEnv = withEnv(ENV);
   const { restore, calls } = withFetch((req) => {
     assertEquals(req.method, "PATCH");
@@ -148,6 +151,8 @@ Deno.test("processOutboxRow — delete com auvo_id existente faz PATCH active:fa
     const resultado = await processOutboxRow(db, row, fakeDescriptor());
     assertEquals(resultado.ok, true);
     assertEquals(calls.length, 1);
+    const corpo = await calls[0].json();
+    assertEquals(corpo, [{ op: "replace", path: "active", value: false }]);
   } finally {
     restore();
     restoreEnv();
