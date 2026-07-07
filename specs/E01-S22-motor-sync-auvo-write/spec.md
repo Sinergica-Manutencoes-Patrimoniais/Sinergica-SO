@@ -25,9 +25,10 @@ falha e sem nunca bloquear a transação de origem no PCM.
 - **Então** uma linha aparece em `pcm.auvo_sync_outbox` com `entity='<x>'`, `row_id` = id da linha,
   `op` correto (`create`/`update`/`delete`), `status='pending'`
 
-### AC-2: Escrita originada do sentinela Auvo NÃO enfileira (anti-loop)
+### AC-2: Escrita aplicada via `fn_apply_auvo_sync` NÃO enfileira (anti-loop)
 - **Dado** a mesma tabela registrada
-- **Quando** uma linha é atualizada com `updated_by = auvo_system_user_id` (sentinela)
+- **Quando** uma linha é atualizada pela RPC `pcm.fn_apply_auvo_sync` (que seta o GUC transacional
+  `app.auvo_sync_write=true` antes do `UPDATE`)
 - **Então** nenhuma linha nova aparece em `pcm.auvo_sync_outbox`
 
 ### AC-3: Drain processa um lote pendente e chama o Auvo com idempotência
@@ -35,8 +36,9 @@ falha e sem nunca bloquear a transação de origem no PCM.
 - **Quando** `pcm-auvo-push` é invocada (via `service_role`)
 - **Então** cada linha é processada no máximo uma vez por invocação (`FOR UPDATE SKIP LOCKED`),
   o Auvo é chamado com `externalId = row_id` (create) ou `PATCH`/`PUT` (update), a linha de origem
-  recebe `auvo_id`/`auvo_sync_status='synced'`/`auvo_synced_at` gravados com `updated_by =
-  auvo_system_user_id`, e a linha do outbox vira `status='sent'`, `sent_at` preenchido
+  recebe `auvo_id`/`auvo_sync_status='synced'`/`auvo_synced_at` gravados via `pcm.fn_apply_auvo_sync`
+  (RPC que aplica o patch sob o GUC `app.auvo_sync_write`, ver AC-2), e a linha do outbox vira
+  `status='sent'`, `sent_at` preenchido
 
 ### AC-4: Reprocessar a mesma linha do outbox não duplica no Auvo
 - **Dado** uma linha de origem que já tem `auvo_id` preenchido (sincronizada antes)

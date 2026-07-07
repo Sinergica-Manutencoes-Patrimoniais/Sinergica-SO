@@ -32,9 +32,11 @@ retrabalhar todas as stories de entidade já implementadas.
    resultado de volta na linha de origem.
 3. Idempotência por `externalId = row.id` (reaproveita ADR-0001) em toda chamada do drain.
 4. Anti-loop: escritas que se originam de dados vindos do Auvo (o próprio drain confirmando
-   sucesso, ou o dispatcher/poller de `E01-S23` no sentido inverso) usam um `updated_by` sentinela
-   reservado (`auvo_system_user_id`) — `fn_auvo_enqueue` não enfileira quando o sentinela é o
-   autor da escrita.
+   sucesso, ou o dispatcher/poller de `E01-S23` no sentido inverso) passam por uma RPC
+   `security definer` (`pcm.fn_apply_auvo_sync`) que seta um GUC transacional
+   (`app.auvo_sync_write`) antes do `UPDATE` — `fn_auvo_enqueue` não enfileira quando esse GUC
+   está `true`. Descartada a ideia inicial de usar um `updated_by` sentinela: essa coluna tem
+   `references auth.users`, o que exigiria uma linha falsa na tabela gerenciada pelo Supabase Auth.
 5. Os 2 fluxos síncronos já existentes (`pcm-auvo-customers-sync`, `pcm-auvo-create-task`)
    **não** migram para o outbox nesta decisão — continuam como estão; o outbox é o mecanismo para
    toda entidade nova a partir de `E01-S24`.
