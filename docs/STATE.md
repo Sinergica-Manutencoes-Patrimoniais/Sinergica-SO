@@ -10,7 +10,15 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-07 (2ª sessão do dia) — **Todas as specs de E01-S23 a E01-S33
+**Última atualização:** 2026-07-07 (retomada Codex) — **Decisões PO resolvidas para E01-S28/E01-S29.**
+`E01-S28` agora permite criar funcionário novo pelo PCM, mesmo provisionando credencial real no
+Auvo (`login`/`password` no `POST /users/`); a spec/tasks exigem que senha não seja persistida nem
+logada e que credenciais nunca entrem em PATCH comum. `E01-S29` saiu de bloqueio: Equipamentos
+seguem o padrão da OS (`ADR-0001`) formalizado em `ADR-0006` — PCM origina cadastro/comandos e
+movimenta o Auvo; Auvo segue autoridade operacional/de campo e devolve estado por webhook
+`Equipment`. ROADMAP atualizado; nenhuma implementação/código além de docs/ADR nesta retomada.
+
+**Última atualização anterior:** 2026-07-07 (2ª sessão do dia) — **Todas as specs de E01-S23 a E01-S33
 escritas** (o Lucas pediu para escrever tudo até o limite de contexto, "se esgotar o Codex
 continua"), na mesma branch `feat/E01-S22-motor-sync-auvo-write` (ainda sem push — só dá push ao
 fechar a épica inteira). Cada story ganhou `spec.md`+`tasks.md` (S23 também `product.md`, reusa
@@ -33,18 +41,17 @@ do motor genérico de `E01-S22`, todas corrigidas no código ANTES de escrever a
 4. Todos os 3 pontos acima já têm teste Deno cobrindo o caso novo em
    `pcm-auvo-push/index.test.ts` (não executado aqui — sem Deno CLI — mas escrito).
 
-**Achado que ficou registrado como bloqueio real, não resolvido nesta sessão:** `E01-S28`
-(Funcionários) tem uma decisão de produto pendente — criar funcionário novo pelo PCM significa
-provisionar uma credencial de login real no Auvo (`password`/`login` no `POST /users/`), não é um
-cadastro inofensivo de metadado. `E01-S29` (Equipamentos) segue **bloqueada** — reverteria a
-decisão explícita do Lucas em `E01-S16` ("Auvo é dono do equipamento, PCM não duplica"), nunca
-formalizada como ADR; a spec só documenta a pergunta, sem AC/código.
+**Achado que foi registrado como bloqueio real naquela sessão e resolvido em 2026-07-07 (retomada
+Codex):** `E01-S28` (Funcionários) tinha decisão de produto pendente sobre criar funcionário novo
+pelo PCM; Lucas confirmou que pode criar. `E01-S29` (Equipamentos) estava bloqueada por possível
+reversão de `E01-S16`; Lucas confirmou que o Auvo segue dono operacional, mas o registro/comando
+deve partir do PCM e movimentar o Auvo, como OS. Ver topo deste STATE e `ADR-0006`.
 
 **Próximo passo:** implementar `E01-S23` (read path) e depois as entidades em ordem de
-dependência (`S24`→`S25`→`S26`→`S27`→`S28`(pendente task 0)→`S30`→`S31`→`S32`→`S33`; `S29` só
-depois de decisão do PO). Se o Codex continuar a partir daqui, ler `E01-S22/design.md` inteiro
-primeiro (tem todos os achados de API documentados) antes de implementar qualquer entidade — évita
-redescobrir os mesmos 4 problemas por tentativa e erro.
+dependência (`S24`→`S25`→`S26`→`S27`→`S28`→`S29`→`S30`→`S31`→`S32`→`S33`). Se o Codex continuar a
+partir daqui, ler `E01-S22/design.md` inteiro primeiro (tem todos os achados de API documentados)
+antes de implementar qualquer entidade — evita redescobrir os mesmos 4 problemas por tentativa e
+erro.
 
 ---
 
