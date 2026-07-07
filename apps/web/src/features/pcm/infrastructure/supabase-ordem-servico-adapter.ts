@@ -38,9 +38,10 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
           .order("nome", { ascending: true }),
         supabase
           .schema("pcm")
-          .from("tecnicos_cache")
+          .from("funcionarios")
           .select("id,nome,auvo_user_id")
           .eq("ativo", true)
+          .is("deleted_at", null)
           .order("nome", { ascending: true }),
       ]);
 

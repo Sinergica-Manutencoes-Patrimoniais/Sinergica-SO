@@ -10,7 +10,307 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-04 — **Revisão @qa (Claude) do handoff Codex → Claude concluída.**
+**Última atualização:** 2026-07-07 (sessão Claude) — **Revisão adversarial de E01-S22 a S32 +
+correções + E01-S33 (Tickets) implementada localmente. Épica E01-S22..S33 fecha aqui.**
+Usuário pediu revisão completa de qualidade/conformidade do que o Codex implementou nas retomadas
+anteriores (S22-S32). Rodei os gates eu mesma (não confiei no que STATE.md alegava) e 3 revisões
+adversariais paralelas (migrations/segurança, Edge Functions/registry, features web). Achado mais
+urgente não era de código: **nada de S23 a S32 estava commitado** (129 arquivos só no working
+tree) — commitado agora (`feat(E01-S23): ...`, bundle único das 10 stories, mesmo padrão de PR
+bundle já usado neste projeto para stories sequenciais revisadas juntas). Achados de código,
+todos com fix aplicado nesta sessão (detalhe completo na seção "Revisão adversarial" do `tasks.md`
+de cada story afetada):
+- **C1 (crítico, perda de dado):** editar cliente pela lista (`ListaClientesPage`) apagava
+  `observacoes` silenciosamente — `observacoes` nunca era selecionada em `listarClientes()` nem
+  usada como valor inicial do form. Corrigido (S27).
+- **C2 (crítico, anti-loop quebrado):** 4 Edge Functions legadas de `E01-S09`/`E01-S11`/`E01-S13`
+  (`pcm-auvo-customers-sync`, `-customers-import`, `pcm-auvo-users-sync`, `pcm-auvo-equipment-sync`,
+  todas ainda ativas via `pg_cron`) escreviam em `pcm.clientes`/`funcionarios`/`equipamentos` sem
+  passar pela RPC anti-loop — o trigger `fn_auvo_enqueue` anexado por `E01-S27`/`S28`/`S29`
+  enfileiraria eco de escrita pro Auvo assim que `writeEnabled` for ligado. Corrigido: as 4 usam
+  `fn_upsert_auvo_sync`/`fn_apply_auvo_sync` agora.
+- **C3 (crítico):** `pcm.fn_upsert_auvo_sync` (migration `0026`, `E01-S23`) quebrava em qualquer
+  patch com coluna array (`malformed array literal`) — `equipesDescriptor.fromAuvo` popula
+  `participantes_auvo_ids`/`gestores_auvo_ids` (`bigint[]`). Corrigido na RPC.
+- **C4 (crítico):** `created_by NOT NULL` sem default em 6 tabelas (`tipos_tarefa`, `segmentos`,
+  `palavras_chave`, `produto_categorias`, `equipamento_categorias`, `cliente_grupos`) — a RPC
+  inbound genérica nunca preenche essa coluna, primeiro registro novo via pull/webhook estouraria
+  `NOT NULL violation`. Corrigido: coluna nullable, mesmo padrão já usado a partir de `E01-S28`.
+- Achados médios/baixos não corrigidos (documentados como follow-up no `tasks.md` de cada story:
+  race condition em alocação de ferramenta sem lock no banco, violação de camada em
+  `EquipamentosPage`, `client_id`/arrays de `cliente_grupos` nunca populados no sentido Auvo→PCM,
+  mitigação "match-by-description" prometida no design nunca implementada, falha parcial no drain
+  pode duplicar criação no Auvo em cenário raro de retry manual).
+
+Depois das correções, implementei **E01-S33 (Tickets)** — só tinha `spec.md`/`tasks.md`, sem
+código. Migration `0036_E01-S33_tickets.sql` cria `pcm.tickets` com `cliente_auvo_id`/
+`equipe_auvo_id` denormalizados (mesmo padrão de `pcm.cliente_grupos.clientes_auvo_ids` — o
+descriptor não pode fazer join, é função pura). Descriptor `tickets` (`/tickets`,
+`webhookEntity:62`, `deleteStrategy:'unsupported'`, `writeEnabled:false`) com teste Deno.
+**Mudança de contrato aditiva em `AuvoEntityDescriptor`:** novo campo opcional
+`toAuvoUpdate?(row)` — Tickets é a primeira entidade cujo PATCH só documenta um subconjunto de
+campos (`statusId`); `pcm-auvo-push` usa esse payload restrito no PATCH quando presente, cai para
+`toAuvo()` completo quando ausente (zero mudança de comportamento para as outras 12 entidades).
+Edge Function nova `pcm-auvo-tickets-referencia` (proxy autenticado para `GET /tickets/request-
+type` e `GET /tickets/status`, listas de referência não sincronizadas pelo motor genérico). Web:
+slice `tickets` (domain/application/infrastructure/página) + item "Tickets" em PCM > OPERAÇÃO.
+pgTAP `tickets_rls.test.sql` escrito. Gates verdes: `lint:migrations` (36 migrations), `lint`,
+`typecheck`, `test` (164 pass/9 skip), `build`, `arch:check`, `audit:esteira`, `eval:spec`. Deno
+CLI e Docker seguem ausentes; testes Deno e `supabase test db` não foram executados. Nenhum dado
+real foi criado/usado; teste manual em browser não executado.
+
+**Bloqueio de processo (não resolvido nesta sessão):** o classificador de auto-modo bloqueou o
+commit de infra do `graphify` (`.claude/settings.json`, `biome.json`, `scripts/audit-esteira.mjs`,
+`AGENTS.md`, `CLAUDE.md`) por ser "auto-modificação de config não pedida explicitamente nesta
+sessão" — esses 5 arquivos seguem modificados e não commitados (mudança de tooling, não do épico
+Auvo; instalada em algum momento desta sessão/ambiente, não pelo Codex). Revisar e commitar
+manualmente se for intencional.
+
+**Próximo passo:** push da branch + abrir PR (fora do alcance desta sessão — `@devops`, decisão
+humana). Antes de mergear: (1) confirmar Deno/pgTAP no CI `db-tests`; (2) revisar/commitar (ou
+descartar) os 5 arquivos de infra do graphify; (3) decidir se os achados médios/baixos documentados
+viram tasks de follow-up antes ou depois do merge — nenhum bloqueia, mas C2-C4 eram reais e só
+foram pegos porque alguém pediu revisão adversarial explícita, o que reforça o valor de sempre
+pedir essa revisão antes de fechar uma leva grande de stories.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S32 Equipes implementada localmente.**
+Código novo: migration `0035_E01-S32_equipes.sql` cria `pcm.equipes` com
+`participantes_auvo_ids bigint[]`, `gestores_auvo_ids bigint[]`, RLS FORCE com escrita por
+`pcm:escrita` e trigger `fn_auvo_enqueue('equipes')`. Descriptor `equipes` registrado
+(`/teams`, cron `0 */6 * * *`, `supportsUpdate:false`, `deleteStrategy:'unsupported'`,
+`writeEnabled:false`) com teste Deno escrito. Web: novo slice `equipes` e `EquipesPage` em PCM >
+CADASTROS, com seletor de técnicos sincronizados (`auvo_user_id`) e aviso permanente de que
+editar/desativar equipes já sincronizadas não propaga ao Auvo. pgTAP `equipes_rls.test.sql`
+escrito. Gates verdes: `lint:migrations`, `lint`, `typecheck`, `test` (158 pass/9 skip), `build`,
+`arch:check`, `audit:esteira`, `eval:spec`, `git diff --check` e `pnpm run ci:local`. Deno CLI e
+Docker seguem ausentes; testes Deno e `supabase test db` não foram executados. Nenhum dado real foi
+criado/usado.
+
+**Próximo passo:** seguir `E01-S33` (Tickets).
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S31 Serviços implementada localmente.**
+Código novo: migration `0034_E01-S31_servicos.sql` cria `pcm.servicos` com `auvo_id text`
+(GUID/string), `preco_centavos int`, RLS FORCE com escrita por `pcm:escrita` e trigger
+`fn_auvo_enqueue('servicos')`. Descriptor `servicos` registrado (`/services`, cron `0 */6 * * *`,
+`externalIdField:'externalCode'`, `deleteStrategy:'soft-patch'`, `writeEnabled:false`) com teste
+Deno escrito cobrindo conversão centavos↔decimal. Web: novo slice `servicos` e `ServicosPage` em
+PCM > CADASTROS, mantendo `auvoId: string | null` na stack e preço em centavos no domínio. pgTAP
+`servicos_rls.test.sql` escrito, incluindo checagem de `auvo_id` como `text`. Gates verdes:
+`lint:migrations`, `lint`, `typecheck`, `test` (156 pass/9 skip), `build`, `arch:check`,
+`audit:esteira`, `eval:spec`, `git diff --check` e `pnpm run ci:local`. Deno CLI e Docker seguem
+ausentes; testes Deno e `supabase test db` não foram executados. Nenhum dado real foi criado/usado.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S30 Ferramentas/Kits implementada localmente.**
+Código novo: migration `0033_E01-S30_ferramentas.sql` cria `pcm.ferramentas` e
+`pcm.ferramenta_alocacoes`, com RLS FORCE, escrita por `pcm:escrita`, trigger
+`fn_auvo_enqueue('ferramentas')` e RPC `fn_reconcile_ferramenta_alocacoes` para reconciliar
+`employeesStock`. Descriptor `ferramentas` registrado (`/products`, cron `0 */6 * * *`,
+`deleteStrategy:'soft-patch'`, `writeEnabled:false`) com teste Deno escrito. `pcm-auvo-pull` foi
+ajustado para permitir leitura/poller mesmo com `writeEnabled:false` (o gate segue protegendo
+apenas o drain de escrita) e reconcilia `employeesStock` em `pcm.ferramenta_alocacoes`. Edge
+Function dedicada `pcm-auvo-ferramenta-alocacao` chama
+`PUT /products/employee-product-stock` e grava a alocação local, fora do outbox genérico. Web:
+novo slice `ferramentas`, páginas `FerramentasPage` e `FerramentasPorTecnicoPage`, ligadas em PCM
+> CADASTROS e PCM > OPERAÇÃO. pgTAP `ferramentas_rls.test.sql` e
+`ferramenta_alocacoes_rls.test.sql` escritos. Gates verdes: `lint:migrations`, `lint`,
+`typecheck`, `test` (153 pass/9 skip), `build`, `arch:check`, `audit:esteira`, `eval:spec`,
+`git diff --check` e `pnpm run ci:local`. Deno CLI e Docker seguem ausentes; testes Deno e
+`supabase test db` não foram executados. Nenhum dado real foi criado/usado.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S29 Equipamentos implementada localmente.**
+Código novo: migration `0032_E01-S29_equipamentos.sql` cria a tabela promovida
+`pcm.equipamentos`, migra dados de `pcm.equipamentos_cache`, mantém a cache legada para
+compatibilidade, adiciona colunas cadastrais/sync, RLS FORCE com escrita por `pcm:escrita` e
+trigger `fn_auvo_enqueue('equipamentos')` com referência a `ADR-0006`. Descriptor `equipamentos`
+registrado (`/equipments`, webhook `Equipment=27`, `deleteStrategy:'soft-patch'`,
+`writeEnabled:false`), teste Deno escrito, e `pcm-auvo-equipment-sync` agora upserta
+`pcm.equipamentos` com vínculo opcional a `pcm.clientes`. Web: novo slice `equipamentos` e
+`EquipamentosPage` em PCM > CADASTROS, com listar/criar/editar/desativar, status de sync, gate de
+permissão e confirmação conservadora quando há vínculo OS ↔ equipamento. Consumidores que liam
+`pcm.equipamentos_cache` (Visão 360, Dashboard PCM, PMOC) foram movidos para a fonte promovida.
+pgTAP `equipamentos_rls.test.sql` escrito. Gates rodados e verdes até aqui: `lint:migrations`,
+`lint`, `typecheck`, `test` (150 pass/9 skip), `build`, `arch:check`, `audit:esteira`,
+`eval:spec` e `git diff --check`. Deno CLI e Docker seguem ausentes; testes Deno e
+`supabase test db` não foram executados. Nenhum dado real foi criado/usado.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S28 Funcionários implementada localmente.**
+Código novo: migration `0031_E01-S28_funcionarios.sql` cria `pcm.funcionarios` a partir de
+`pcm.tecnicos_cache` (mantém o cache antigo/deprecated para não quebrar contrato read-only),
+adiciona colunas de cargo/contato/tipo/culture/sync, RLS FORCE com escrita por `pcm:escrita`,
+trigger `fn_auvo_enqueue('funcionarios')` e RPC `fn_insert_funcionario_auvo_sync` para inserção com
+anti-loop. Descriptor `funcionarios` registrado (`/users`, webhook `User=1`,
+`deactivatePatch:{unavailableForTasks:true}`, `writeEnabled:false`); `pcm-auvo-users-sync` agora
+upserta `pcm.funcionarios`. Criação com senha ficou fora do outbox genérico por segurança:
+`pcm-auvo-users-create` recebe `password` em memória, cria no Auvo, e grava a linha local via RPC
+sem persistir senha. Web: novo slice `funcionarios` e `FuncionariosPage` em PCM > CADASTROS, com
+aviso de acesso real ao app Auvo, criar/editar/desativar e gate de permissão. pgTAP
+`funcionarios_rls.test.sql` e teste Deno do descriptor escritos. Gates rodados e verdes:
+`lint:migrations`, `lint`, `typecheck`, `test` (148 pass/9 skip), `build`, `arch:check`,
+`audit:esteira`, `eval:spec` e `pnpm run ci:local`. Deno CLI e Docker seguem ausentes; testes
+Deno e `supabase test db` não foram executados. Nenhum dado real foi criado/usado.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S27 Clientes CRUD + Grupos de Clientes implementada localmente.**
+Código novo: migration `0030_E01-S27_clientes_grupos.sql` adiciona colunas de sync e trigger
+`fn_auvo_enqueue('clientes')` em `pcm.clientes`, cria `pcm.cliente_grupos` com RLS FORCE,
+`cliente_ids uuid[]` + `clientes_auvo_ids bigint[]` (decisão para o descriptor montar
+`clientsId[]` sem join), trigger de outbox; descriptors `clientes` (`/customers`, webhook
+`Customer=7`) e `cliente_grupos` (`/customergroups`, `deleteStrategy:'hard-delete'`,
+`supportsUpdate:false`, cron diário) registrados no entity registry, com testes Deno escritos.
+Web: `ListaClientesPage` ganhou criar/editar/excluir com gate `podeAcessar('pcm','escrita')` e
+bloqueio de exclusão quando há OS aberta; novo slice `cliente-grupos` (domain/application/adapter/
+page) com aviso de que renomear/alterar composição é local porque Auvo não documenta PATCH; item
+“Grupos de Clientes” ligado em PCM > CADASTROS. Testes pgTAP escritos:
+`clientes_crud_rls.test.sql` e `cliente_grupos_rls.test.sql`. Gates rodados e verdes:
+`lint:migrations`, `lint`, `typecheck`, `test` (146 pass/9 skip), `build`, `arch:check`,
+`audit:esteira`, `eval:spec` e `pnpm run ci:local`. Deno CLI e Docker seguem ausentes; testes Deno
+e `supabase test db` não foram executados. Nenhum dado real foi criado/usado.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S26 Categorias implementada localmente.**
+Código novo: migration `0029_E01-S26_categorias.sql` (`pcm.produto_categorias` e
+`pcm.equipamento_categorias`, RLS FORCE módulo `pcm`, triggers do outbox); descriptors em
+`_shared/auvo/registry/categorias.ts` com `deleteStrategy:'hard-delete'` e `writeEnabled:false`;
+slice web `catalogos-simples` estendido para usar `nome` nas categorias, reaproveitando UI e
+adapter; páginas `ProdutoCategoriasPage` e `EquipamentoCategoriasPage` ligadas em `HomePage` >
+PCM > CADASTROS. Gates rodados e verdes: `lint:migrations`, `lint`, `typecheck`, `test` (139
+pass/9 skip), `build`, `arch:check`. Deno CLI e Docker seguem ausentes; Deno/pgTAP/browser real
+pendentes. Ajuste de infra: `biome.json` agora ignora `.claude/**` e `graphify-out/**`, porque
+Graphify gerou JSON grande e `.claude/settings.json` estava modificado fora do escopo.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S25 Segmentos + Palavras-chave implementada localmente.**
+Código novo: migration `0028_E01-S25_segmentos_palavras_chave.sql` (`pcm.segmentos` e
+`pcm.palavras_chave`, RLS FORCE módulo `pcm`, triggers do outbox); descriptors compartilhados em
+`_shared/auvo/registry/catalogos-simples.ts` com `deleteStrategy:'hard-delete'` e
+`writeEnabled:false`; domínio/use cases/adapter/páginas compartilhados em `catalogos-simples`;
+`SegmentosPage` e `PalavrasChavePage` ligados em `HomePage` > PCM > CADASTROS. Gates rodados e
+verdes: `lint:migrations`, `lint`, `typecheck`, `test` (138 pass/9 skip), `build`,
+`audit:esteira`, `arch:check`. Deno CLI e Docker seguem ausentes, então testes Deno e pgTAP não
+foram executados; teste manual com dado reversível também não foi feito.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S24 Tipos de Tarefa implementada localmente.**
+Código novo: migration `0027_E01-S24_tipos_tarefa.sql` (`pcm.tipos_tarefa`, RLS FORCE módulo
+`pcm`, trigger `fn_auvo_enqueue('tipos_tarefa')`); descriptor
+`_shared/auvo/registry/tipos-tarefa.ts` registrado em `registry/index.ts` com `writeEnabled:false`
+e teste Deno de mapeamento; domínio/use cases/adapter Supabase (`tipos-tarefa*`); página
+`TiposTarefaPage` ligada em `HomePage` > PCM > CADASTROS. Gates rodados e verdes:
+`lint:migrations`, `lint`, `typecheck`, `test` (132 pass/9 skip), `build`, `audit:esteira`,
+`eval:spec`, `arch:check`. Deno CLI e Docker seguem ausentes: testes Deno e pgTAP/`supabase test
+db` não executados. Teste manual com usuário real não foi feito porque exigiria aplicar migration e
+criar dado; se fizer depois, usar registro descartável e excluir/reverter no fim, como Lucas pediu.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S23 read path implementada localmente.**
+Código novo: registry com `byWebhookEntity`/`cronEnabled`; função pura
+`_shared/auvo/webhook-dispatch.ts` + teste; `pcm-auvo-webhook` agora tenta dispatcher genérico para
+entidades registradas antes do caminho legado de `Task` (sem mexer no handler antigo); novas Edge
+Functions `pcm-auvo-pull` (poller genérico) e `pcm-auvo-webhooks-register` (one-shot pós-deploy);
+migration `0026_E01-S23_auvo_sync_upsert_rpc.sql` com `fn_upsert_auvo_sync` e
+`fn_soft_delete_missing_auvo_sync`, ambas com GUC `app.auvo_sync_write=true` para anti-loop. Gates
+rodados e verdes: `lint:migrations`, `lint`, `typecheck`, `test` (126 pass/9 skip), `build`,
+`audit:esteira`, `eval:spec`, `arch:check`. Deno CLI e Docker continuam ausentes, então testes
+Deno novos e pgTAP/`supabase test db` ainda precisam rodar no CI antes do merge.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **Decisões PO resolvidas para E01-S28/E01-S29.**
+`E01-S28` agora permite criar funcionário novo pelo PCM, mesmo provisionando credencial real no
+Auvo (`login`/`password` no `POST /users/`); a spec/tasks exigem que senha não seja persistida nem
+logada e que credenciais nunca entrem em PATCH comum. `E01-S29` saiu de bloqueio: Equipamentos
+seguem o padrão da OS (`ADR-0001`) formalizado em `ADR-0006` — PCM origina cadastro/comandos e
+movimenta o Auvo; Auvo segue autoridade operacional/de campo e devolve estado por webhook
+`Equipment`. ROADMAP atualizado; nenhuma implementação/código além de docs/ADR nesta retomada.
+
+**Última atualização anterior:** 2026-07-07 (2ª sessão do dia) — **Todas as specs de E01-S23 a E01-S33
+escritas** (o Lucas pediu para escrever tudo até o limite de contexto, "se esgotar o Codex
+continua"), na mesma branch `feat/E01-S22-motor-sync-auvo-write` (ainda sem push — só dá push ao
+fechar a épica inteira). Cada story ganhou `spec.md`+`tasks.md` (S23 também `product.md`, reusa
+`design.md`/`domain.md` de S22, mesmo padrão de S10/S11 sobre S09).
+
+**Mapeamento do catálogo real da API Auvo (Apiary/blueprint público) revelou 4 divergências reais
+do motor genérico de `E01-S22`, todas corrigidas no código ANTES de escrever as specs seguintes
+(nunca deixadas como "descobrir depois em produção"):**
+1. **PATCH da Auvo v2 é JSON Patch** (`[{op:"replace",path,value}]`), não objeto flat — `pcm-auvo-push`
+   enviava o objeto flat direto; teria quebrado o primeiro PATCH real. Corrigido com
+   `_shared/auvo/json-patch.ts` (`toAuvoJsonPatch`), aplicado nas 2 chamadas `auvoPatch` do drain.
+2. **Nem todo recurso tem `active`/`PATCH`/`externalId`** — `Segments`/`Keywords`/`Categorias`/
+   `Customer Groups` sem `active` (só DELETE físico); `Customer Groups`/`Teams` sem `PATCH`;
+   `Users` usa `unavailableForTasks` em vez de `active`; `Task Types`/`Segments`/`Keywords`/
+   `Customer Groups`/`Teams` sem `externalId` no POST. `AuvoEntityDescriptor` ganhou 3 campos
+   aditivos: `deleteStrategy` (`'soft-patch'`\|`'hard-delete'`\|`'unsupported'`),
+   `deactivatePatch`, `supportsUpdate`.
+3. **`Services` usa `externalCode`** (não `externalId`) e `id` GUID (não bigint) — campo aditivo
+   `externalIdField` no descriptor, `pcm-auvo-push` nunca mais hardcoda o nome do campo.
+4. Todos os 3 pontos acima já têm teste Deno cobrindo o caso novo em
+   `pcm-auvo-push/index.test.ts` (não executado aqui — sem Deno CLI — mas escrito).
+
+**Achado que foi registrado como bloqueio real naquela sessão e resolvido em 2026-07-07 (retomada
+Codex):** `E01-S28` (Funcionários) tinha decisão de produto pendente sobre criar funcionário novo
+pelo PCM; Lucas confirmou que pode criar. `E01-S29` (Equipamentos) estava bloqueada por possível
+reversão de `E01-S16`; Lucas confirmou que o Auvo segue dono operacional, mas o registro/comando
+deve partir do PCM e movimentar o Auvo, como OS. Ver topo deste STATE e `ADR-0006`.
+
+**Próximo passo:** implementar `E01-S23` (read path) e depois as entidades em ordem de
+dependência (`S24`→`S25`→`S26`→`S27`→`S28`→`S29`→`S30`→`S31`→`S32`→`S33`). Se o Codex continuar a
+partir daqui, ler `E01-S22/design.md` inteiro primeiro (tem todos os achados de API documentados)
+antes de implementar qualquer entidade — evita redescobrir os mesmos 4 problemas por tentativa e
+erro.
+
+---
+
+**Última atualização anterior:** 2026-07-07 — **Nova épica aberta: "PCM como front-end completo do Auvo"**
+(plano completo em `~/.claude/plans/auvo-a-plataforma-ethereal-bonbon.md`, mapeando todo o catálogo
+da API Auvo v2 — clientes, funcionários, produtos/ferramentas, serviços, equipamentos, categorias,
+equipes, tickets — para CRUD dentro do PCM, com Financeiro descartado pelo usuário e Produtos
+reformulado como "ferramentas/kits de técnico"). Decisões do usuário: delete no PCM = soft-delete →
+`PATCH active:false` no Auvo (nunca DELETE físico); Produtos vira Ferramentas (schema `pcm`, usa
+`employee-product-stock` do Auvo para saber quem está com qual ferramenta).
+
+**Antes de implementar, revisão adversarial dos commits recentes de Codex** (`dfb1077`
+"enriquece PCM com Auvo e inspeções", `42367ac` "integra PMOC aos sinais do Auvo", PR #29 aberto
+"tolera busca indisponível de task Auvo") — achou **1 bug crítico real já em produção**:
+`pcm-auvo-equipment-sync/index.ts` linha 114 declarava `let auvoCustomerId` sombreando a função de
+mesmo nome usada na linha seguinte — `TypeError`, sync de equipamentos quebrado desde o merge de
+`dfb1077` (~2 dias). **Corrigido e commitado isoladamente** na branch `fix/E01-S11-equipment-sync-
+shadowing` (renomeada a variável local para `resolvedCustomerId`), **aguardando push/PR** (ver
+Bloqueios). Achados não-bloqueantes registrados para acompanhar depois: PR #29 (400-tolerance na
+busca de task) pode mascarar um `paramFilter` sistematicamente errado e permitir tasks duplicadas
+no Auvo se o formato do filtro nunca tiver sido validado contra produção — não é um bug óbvio, é um
+risco a monitorar; migration `0023` (PMOC) não tem policy de `DELETE` em nenhuma das 7 tabelas
+novas (default-deny, não é falha de segurança, só inconsistência com o padrão do projeto); e
+`E01-S03` (PMOC) foi implementada com `design.md` mas **sem `spec.md`/`tasks.md`** — mesma classe de
+gap de processo já registrada como aprendizado em `.claude/memory/feedback-processo-stories.md`,
+sinalizada no ROADMAP (linha `E01-S03b`) para reconciliar depois.
+
+**E01-S22 (motor de sync Auvo, write path) implementada localmente** na branch
+`feat/E01-S22-motor-sync-auvo-write` (a partir de `origin/main`, isolada do hotfix acima). Fundação
+da épica: `docs/adr/0005-outbox-sync-auvo.md`, `specs/E01-S22-motor-sync-auvo-write/*` (product/
+design/domain/spec/tasks), migrations `0024` (`pcm.auvo_sync_outbox`, `fn_auvo_enqueue`,
+`fn_apply_auvo_sync`, `fn_claim_auvo_outbox_batch`) e `0025` (`pg_cron` de 1 min, reusa secrets do
+Vault de `0011`/`0013`), `auvoPatch`/`auvoDelete` em `_shared/auvo/client.ts`, scaffold do entity
+registry (`_shared/auvo/registry/`, vazio até `E01-S24`), Edge Function `pcm-auvo-push` (drain com
+idempotência por `externalId`, nunca trava o lote por 1 linha com falha) e pgTAP
+`auvo_sync_outbox_rls.test.sql`. **2 refinamentos de design feitos durante a implementação, spec
+atualizada ANTES de codar (não SPEC_DEVIATION silencioso)**: (1) o "sentinela `updated_by`" do
+design original foi trocado por um GUC transacional (`app.auvo_sync_write`) + RPC
+`fn_apply_auvo_sync`, porque `updated_by` tem `references auth.users` e um sentinela exigiria linha
+falsa na tabela do Supabase Auth; (2) adicionado o estado `'processing'` + RPC
+`fn_claim_auvo_outbox_batch` para a reivindicação atômica de lote (`FOR UPDATE SKIP LOCKED` não é
+exposto pelo PostgREST a um `SELECT` solto do cliente). Gates Node rodados e verdes nesta sessão:
+`lint:migrations` (27 migrations), `lint`, `typecheck`, `test` (126 pass/9 skip), `build`,
+`audit:esteira` (148 docs), `eval:spec`, `arch:check`. **Gap conhecido, mesma ressalva de toda a
+integração Auvo desde E01-S09:** sem Deno CLI/Docker neste ambiente, os 3 `*.test.ts` Deno novos
+(`client.test.ts`, `registry/index.test.ts`, `pcm-auvo-push/index.test.ts`) e o pgTAP novo não foram
+executados — confirmar no CI `db-tests` antes do merge.
+
+**Bloqueio novo: hook `enforce-git-push-authority.sh` bloqueia TODO `git push` nesta sessão**,
+incondicionalmente (não checa qual "agente" está ativo — isso é só texto de persona do
+`TRIVIAIOX/agents/devops.md`, sem efeito real no hook). Duas branches commitadas localmente
+aguardando push humano: `fix/E01-S11-equipment-sync-shadowing` (1 commit) e
+`feat/E01-S22-motor-sync-auvo-write` (2 commits). Ver Bloqueios.
+
+**Próximo passo:** push das 2 branches acima + abrir PRs (fora do alcance desta sessão); depois,
+seguir a épica com `E01-S23` (read path — dispatcher de webhook genérico + `pcm-auvo-pull` +
+auto-registro de webhook), mesmo `design.md` de `E01-S22`.
+
+---
+
+**Última atualização anterior:** 2026-07-04 — **Revisão @qa (Claude) do handoff Codex → Claude concluída.**
 Gates locais rerodados e verdes (`lint:migrations` 20 migrations, `lint`, `typecheck`, `test`
 114/9skip, `build`, `audit:esteira` 142 docs, `eval:spec`). Migrations `0016`-`0020` e Edge
 Functions (`pcm-auvo-webhook`, `pcm-whatsapp-webhook`, `pcm-ze-agent`, `pcm-auvo-customers-import`)
@@ -629,6 +929,14 @@ nenhuma leitura estática, nem a revisão acima, pegou estes dois:**
 - 2026-06-25: Monorepo app único (`apps/web`) com features por bounded context — sem apps separados
 
 ## Bloqueios
+- [ ] **`git push` bloqueado incondicionalmente por `.claude/hooks/enforce-git-push-authority.sh`
+      nesta sessão** (2026-07-07) — o hook casa qualquer comando Bash com `/\bgit\s+push\b/` e nega,
+      sem checar de fato qual "agente" está ativo (o texto de `TRIVIAIOX/agents/devops.md` descreve
+      uma variável de ambiente `TRIVIAIOX_ACTIVE_AGENT` que o hook real não lê). Não há como uma
+      sessão Claude Code contornar isso — é fail-closed por design. **Duas branches prontas,
+      aguardando push humano:** `fix/E01-S11-equipment-sync-shadowing` (hotfix crítico, 1 commit) e
+      `feat/E01-S22-motor-sync-auvo-write` (motor de sync, 2 commits). Quem destrava: Lucas (`git
+      push -u origin <branch>` + `gh pr create` de cada uma).
 - [x] ~~Git push bloqueado~~ ✅ Resolvido — novo repo `Sinergica-Manutencoes-Patrimoniais/Sinergica-SO`, Lucas é owner.
 - [x] ~~Supabase não provisionado~~ ✅ Resolvido, depois **reprovisionado** — projeto atual:
       `nudannsrfvjggoergvyn.supabase.co`. `.env.local` atualizado (URL, publishable key,

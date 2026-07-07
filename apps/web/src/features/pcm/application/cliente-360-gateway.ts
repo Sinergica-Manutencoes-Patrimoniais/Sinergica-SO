@@ -39,6 +39,7 @@ export interface ClienteResumo {
   contatoNome?: string | null;
   contatoTelefone?: string | null;
   contatoEmail?: string | null;
+  observacoes?: string | null;
   statusComercial?: "ativo" | "inativo" | "prospecto";
   equipamentosAtivos?: number;
   osAbertas?: number;
@@ -118,6 +119,32 @@ export interface QualidadeClienteResumo {
   }>;
 }
 
+export interface ClienteFormData {
+  nome: string;
+  cnpj?: string | null;
+  endereco?: string | null;
+  cidade?: string | null;
+  estado?: string | null;
+  cep?: string | null;
+  contatoNome?: string | null;
+  contatoTelefone?: string | null;
+  contatoEmail?: string | null;
+  observacoes?: string | null;
+}
+
+export interface ClienteCommand extends ClienteFormData {
+  userId: string;
+}
+
+export interface EditarClienteCommand extends ClienteCommand {
+  id: string;
+}
+
+export interface ExcluirClienteCommand {
+  id: string;
+  userId: string;
+}
+
 export interface Cliente360Gateway {
   /** Clientes não soft-deleted, ordenados por `nome` asc no servidor — lista de navegação (Task 18). */
   listarClientes(): Promise<ClienteResumo[]>;
@@ -136,4 +163,7 @@ export interface Cliente360Gateway {
   listarEventosCliente(id: string): Promise<Cliente360Evento[]>;
   /** Resumo operacional de qualidade do cliente. */
   listarQualidadeCliente(id: string): Promise<QualidadeClienteResumo>;
+  criarCliente?(input: ClienteCommand): Promise<ClienteHeader>;
+  editarCliente?(input: EditarClienteCommand): Promise<ClienteHeader>;
+  excluirCliente?(input: ExcluirClienteCommand): Promise<void>;
 }

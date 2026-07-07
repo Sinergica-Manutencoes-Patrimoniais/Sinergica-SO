@@ -1,6 +1,5 @@
-// pcm-auvo-equipment-sync — espelha equipamentos do Auvo no cache local `pcm.equipamentos_cache`
-// (Auvo → PCM, read-only do lado do PCM). AC-2 e AC-4 de
-// specs/E01-S11-integracao-auvo-sync-tecnicos-equipamentos/spec.md.
+// pcm-auvo-equipment-sync — espelha equipamentos do Auvo em `pcm.equipamentos` (promovido em
+// E01-S29 a partir do cache read-only `pcm.equipamentos_cache`). AC-2 e AC-4 de E01-S11 + E01-S29.
 //
 // Mesma estrutura de pcm-auvo-users-sync (paginação → upsert → soft-delete guardado), com um passo
 // extra: resolver `auvo_customer_id`. O Auvo devolve `customerId` por equipamento; a FK do cache é
@@ -44,8 +43,12 @@ interface AuvoEquipmentsResponse {
 
 interface CacheRow {
   auvo_equipment_id: number;
+  auvo_id: number;
   nome: string;
   auvo_customer_id: number | null;
+  client_id: string | null;
+  auvo_sync_status: "synced";
+  auvo_synced_at: string;
   ativo: boolean;
   updated_at: string;
 }
@@ -88,16 +91,16 @@ serve(async (req) => {
     // 3) Resolve quais `customerId` do Auvo têm cliente correspondente já sincronizado no PCM
     //    (pcm.clientes.auvo_id). Consulta em lote (um SELECT) em vez de por-equipamento.
     const customerIds = [...new Set(equipamentos.map(auvoCustomerId).filter((c): c is number => c != null))];
-    const clientesExistentes = new Set<number>();
+    const clientesExistentes = new Map<number, string>();
     if (customerIds.length > 0) {
       const { data: clientes, error: clientesError } = await db
         .schema("pcm")
         .from("clientes")
-        .select("auvo_id")
+        .select("id,auvo_id")
         .in("auvo_id", customerIds);
       if (clientesError) throw clientesError;
       for (const c of clientes ?? []) {
-        if (c.auvo_id != null) clientesExistentes.add(c.auvo_id);
+        if (c.auvo_id != null) clientesExistentes.set(c.auvo_id, c.id);
       }
     }
 
@@ -112,48 +115,77 @@ serve(async (req) => {
         continue;
       }
       let auvoCustomerId: number | null = null;
+      let clientId: string | null = null;
       const customerId = auvoCustomerId(e);
       if (customerId != null) {
         if (clientesExistentes.has(customerId)) {
           auvoCustomerId = customerId;
+          clientId = clientesExistentes.get(customerId) ?? null;
         } else {
           console.error(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "cliente do equipamento ainda não sincronizado no PCM — auvo_customer_id gravado como null", auvo_equipment_id: auvoEquipmentId, customerId }));
         }
       }
       rows.push({
         auvo_equipment_id: auvoEquipmentId,
+        auvo_id: auvoEquipmentId,
         nome: e.name ?? e.description ?? `Equipamento ${auvoEquipmentId}`,
         auvo_customer_id: auvoCustomerId,
+        client_id: clientId,
+        auvo_sync_status: "synced",
+        auvo_synced_at: now,
         ativo: e.active !== false,
         updated_at: now,
       });
       syncedIds.add(auvoEquipmentId);
     }
 
-    // 5) Upsert por `auvo_equipment_id` (AC-2: um upsert por id, nunca duplica; idempotente).
-    if (rows.length > 0) {
-      const { error: upsertError } = await db
-        .schema("pcm")
-        .from("equipamentos_cache")
-        .upsert(rows, { onConflict: "auvo_equipment_id" });
+    // 5) Upsert por `auvo_equipment_id`, um RPC por linha via `fn_upsert_auvo_sync` — mesma RPC
+    //    anti-loop do motor genérico (E01-S23), que seta `app.auvo_sync_write` ANTES de gravar.
+    //    Sem isso, `trg_equipamentos_auvo_enqueue` (E01-S29) reenfileiraria esta escrita inbound de
+    //    volta pro Auvo — inofensivo hoje só por `writeEnabled:false`, vira eco assim que for ligado
+    //    (achado C2 da revisão adversarial de 2026-07-07). AC-2 preservado: upsert por id, idempotente.
+    for (const row of rows) {
+      const { error: upsertError } = await db.schema("pcm").rpc("fn_upsert_auvo_sync", {
+        p_table: "equipamentos",
+        p_auvo_id: String(row.auvo_equipment_id),
+        p_patch: {
+          auvo_equipment_id: row.auvo_equipment_id,
+          nome: row.nome,
+          auvo_customer_id: row.auvo_customer_id,
+          client_id: row.client_id,
+          auvo_sync_status: row.auvo_sync_status,
+          auvo_synced_at: row.auvo_synced_at,
+          ativo: row.ativo,
+          updated_at: row.updated_at,
+        },
+      });
       if (upsertError) throw upsertError;
     }
 
     // 6) Soft-delete (AC-4) dos equipamentos que sumiram do Auvo. Mesma guarda/decisão de
-    //    pcm-auvo-users-sync: só após paginação completa, e pula se `syncedIds` vier vazio (evita
-    //    desativação em massa por resposta suspeita). Ver [AUTO-DECISION] em tasks.md.
+    //    pcm-auvo-users-sync: só após paginação completa, pula se `syncedIds` vier vazio (evita
+    //    desativação em massa por resposta suspeita — ver [AUTO-DECISION] em tasks.md), e usa o
+    //    mesmo anti-loop do passo 5 (SELECT dos ids + `fn_apply_auvo_sync` por linha, em vez de um
+    //    UPDATE em massa desprotegido).
     let desativados = 0;
     if (syncedIds.size > 0) {
       const idList = `(${[...syncedIds].join(",")})`;
-      const { data: deactivated, error: deactivateError } = await db
+      const { data: paraDesativar, error: selectError } = await db
         .schema("pcm")
-        .from("equipamentos_cache")
-        .update({ ativo: false, updated_at: now })
+        .from("equipamentos")
+        .select("id")
         .eq("ativo", true)
-        .not("auvo_equipment_id", "in", idList)
-        .select("auvo_equipment_id");
-      if (deactivateError) throw deactivateError;
-      desativados = deactivated?.length ?? 0;
+        .not("auvo_equipment_id", "in", idList);
+      if (selectError) throw selectError;
+      for (const equipamento of paraDesativar ?? []) {
+        const { error: deactivateError } = await db.schema("pcm").rpc("fn_apply_auvo_sync", {
+          p_table: "equipamentos",
+          p_row_id: equipamento.id,
+          p_patch: { ativo: false, updated_at: now },
+        });
+        if (deactivateError) throw deactivateError;
+      }
+      desativados = paraDesativar?.length ?? 0;
     } else {
       console.error(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "GET /equipments retornou 0 equipamentos — reconciliação de soft-delete pulada para não desativar o cache em massa" }));
     }

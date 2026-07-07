@@ -91,12 +91,16 @@ serve(async (req) => {
       created = true;
     }
 
-    // 4) Grava o vínculo de volta no PCM.
-    const { error: updateError } = await db
-      .schema("pcm")
-      .from("clientes")
-      .update({ auvo_id: customerId, updated_at: new Date().toISOString() })
-      .eq("id", input.clienteId);
+    // 4) Grava o vínculo de volta no PCM via `fn_apply_auvo_sync` — a mesma RPC anti-loop do motor
+    //    genérico (E01-S22), que seta `app.auvo_sync_write` ANTES de gravar. Sem isso,
+    //    `trg_clientes_auvo_enqueue` (E01-S27) reenfileiraria esta escrita como se fosse uma mudança
+    //    local a empurrar de volta pro Auvo — inofensivo hoje só por `writeEnabled:false`, vira eco
+    //    assim que for ligado (achado C2 da revisão adversarial de 2026-07-07).
+    const { error: updateError } = await db.schema("pcm").rpc("fn_apply_auvo_sync", {
+      p_table: "clientes",
+      p_row_id: input.clienteId,
+      p_patch: { auvo_id: customerId, updated_at: new Date().toISOString() },
+    });
     if (updateError) throw updateError;
 
     return json(200, { customerId, created }, cors);

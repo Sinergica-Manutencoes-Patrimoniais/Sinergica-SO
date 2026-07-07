@@ -117,7 +117,7 @@ interface AuvoRequestState {
 }
 
 async function auvoRequest<T>(
-  method: "GET" | "POST" | "PUT",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   body: unknown,
   state: AuvoRequestState = {},
@@ -170,6 +170,21 @@ export function auvoPost<T>(path: string, body: unknown): Promise<T> {
 
 export function auvoPut<T>(path: string, body: unknown): Promise<T> {
   return auvoRequest<T>("PUT", path, body);
+}
+
+/** PATCH parcial — usado pelo motor de sync (E01-S22) para update de entidades já existentes no
+ * Auvo (evita reenviar o payload inteiro de `POST`/`PUT`) e para soft-delete (`{ active: false }`,
+ * decisão do usuário: delete no PCM nunca vira DELETE físico no Auvo). */
+export function auvoPatch<T>(path: string, body: unknown): Promise<T> {
+  return auvoRequest<T>("PATCH", path, body);
+}
+
+/** DELETE físico — implementado por completude de contrato do cliente HTTP, mas nenhum descriptor
+ * do motor de sync (E01-S22+) o invoca ainda: a política vigente é soft-delete → `auvoPatch` com
+ * `active:false` (ver design.md → Non-goals). Reservado para um fluxo futuro de hard-delete atrás
+ * de superadmin + confirmação explícita. */
+export function auvoDelete<T>(path: string): Promise<T> {
+  return auvoRequest<T>("DELETE", path, undefined);
 }
 
 /** Monta o querystring `paramFilter` (JSON-encoded) usado pelos endpoints de busca do Auvo v2
