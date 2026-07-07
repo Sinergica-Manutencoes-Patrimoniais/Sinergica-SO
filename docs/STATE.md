@@ -10,7 +10,62 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-07 (sessão Claude) — **Revisão adversarial de E01-S22 a S32 +
+**Última atualização:** 2026-07-07 (sessão Claude) — **PR #30 aberto, CI verde, e E01-S34
+(Reconciliação Auvo→PCM) aberta e implementada localmente em cima dele.**
+Lucas testou o PR #30 num deploy preview e achou 4 problemas: (1) criar funcionário deu "Failed to
+send a request to the Edge Function", (2) Tickets deu o mesmo erro, (3) OS abertas direto no Auvo
+não aparecem no PCM, (4) o Dashboard reflete essa mesma falta de dado. Investigação: (1)/(2) eram
+esperados — `pcm-auvo-users-create`/`pcm-auvo-tickets-referencia` são funções novas desta PR, só
+vão pro Supabase real no merge (integração nativa Supabase↔GitHub, confirmado via curl → 404 nas
+duas). (3)/(4) revelaram um achado bem maior: **9 dos 12 descriptors do motor genérico declaravam
+`cronSchedule`, mas nenhuma migration desde `E01-S23` jamais criou o `pg_cron` que chama
+`pcm-auvo-pull`** — metadado morto, zero sincronização Auvo→PCM real para essas 9 entidades (nem
+webhook, que a maioria não suporta, nem cron, que nunca foi ligado). E o webhook de OS/Task (desde
+`E01-S10`) só faz `UPDATE` numa OS já existente por `auvo_task_id`, nunca `INSERT` — tarefa nova
+criada direto no Auvo nunca vira OS no PCM.
+
+Aberta `E01-S34` (tier arquitetural, `product.md`/`design.md`/`spec.md`/`tasks.md` completos) pra
+fechar isso: migration `0037` liga 3 `pg_cron` reais (diário 6 entidades de catálogo, 6h 3
+entidades operacionais, horário Tickets) chamando `pcm.fn_invoke_auvo_pull` (nova RPC, espaça as
+chamadas com `pg_sleep(2)` pra não rajar o Auvo); `_shared/auvo/os-from-task.ts` (novo, compartilhado)
+resolve `client_id` via `pcm.clientes.auvo_id` e cria a OS (`origem='auvo'`, `categoria='corretiva'`
+AUTO-DECISION, `numero` via mesma lógica de `pcm-ze-agent`); `pcm-auvo-webhook` passa a criar OS no
+branch `if (!os)` em vez de só ignorar (zero mudança no caminho de OS já conhecida — só
+reindentação, revisão manual linha a linha feita); nova Edge Function `pcm-auvo-tasks-import`
+(migration `0038`, cron diário 05:00 UTC) faz backfill de tarefas antigas sem soft-delete (OS é
+dado operacional, não se apaga sozinho). Limitação consciente documentada: o primeiro evento de uma
+tarefa genuinamente nova com `taskStatus=1`("Aberta") sozinho não cria OS em tempo real — a ordem de
+checagem existente no webhook (`targetStatus==null` ignora antes de resolver a OS) não foi
+reordenada pra não arriscar regressão em código de produção ativo desde `E01-S10`; fica coberto pelo
+import diário, não é lacuna sem cobertura. Gates locais verdes: `lint:migrations` (38 migrations),
+`lint`/`typecheck`/`build`/`arch:check` (cobrem só `apps/web` — `supabase/functions/**` está fora
+do escopo do biome/tsc deste monorepo), `test` (164 pass/9 skip), `audit:esteira` (176 docs),
+`eval:spec`. Deno CLI/Docker ausentes — os testes Deno novos (`os-from-task.test.ts`,
+`pcm-auvo-tasks-import/index.test.ts`, `tickets.test.ts` atualizado) foram escritos mas não
+executados; confirmar no CI antes do merge.
+
+**Sobre o PR #30 em si:** commitado e pusheado (5 commits), CI 100% verde
+(`qualidade`/`migrations`/`db-tests` todos `pass`) — achado e corrigido nesse processo um `GRANT`
+faltante no pgTAP de outbox (`E01-S22`, nunca tinha rodado de verdade antes, primeira vez que o
+pgTAP roda contra Postgres real via CI nesta épica inteira). Também ajustado, a pedido do Lucas, o
+hook `.claude/hooks/enforce-git-push-authority.sh`: era `deny` incondicional (criado numa sessão
+anterior porque um agente fazia push a cada commit sem perguntar); virou `ask` — sempre pede
+confirmação explícita antes de qualquer `git push`, nunca bloqueia nem libera sozinho.
+
+**Bloqueio de processo (não resolvido, herdado da atualização anterior):** 5 arquivos de infra do
+`graphify` (`.claude/settings.json`, `biome.json`, `scripts/audit-esteira.mjs`, `AGENTS.md`,
+`CLAUDE.md`) seguem modificados e não commitados — o classificador de auto-modo bloqueou esse
+commit por ser "auto-modificação de config não pedida explicitamente". Revisar/commitar manualmente
+se for intencional.
+
+**Próximo passo:** commitar e pushear E01-S34 em cima do PR #30 (mesma branch); aguardar CI;
+depois do merge, confirmar manualmente que `pcm-auvo-tasks-import`/`pcm-auvo-tickets-referencia`/
+`pcm-auvo-users-create` foram deployadas e que os 3 `pg_cron` novos aparecem em
+`select * from cron.job where jobname like 'pcm_auvo%'`; testar em browser de novo com dado real.
+
+---
+
+**Última atualização anterior:** 2026-07-07 (sessão Claude) — **Revisão adversarial de E01-S22 a S32 +
 correções + E01-S33 (Tickets) implementada localmente. Épica E01-S22..S33 fecha aqui.**
 Usuário pediu revisão completa de qualidade/conformidade do que o Codex implementou nas retomadas
 anteriores (S22-S32). Rodei os gates eu mesma (não confiei no que STATE.md alegava) e 3 revisões

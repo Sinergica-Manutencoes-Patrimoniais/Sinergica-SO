@@ -31,6 +31,9 @@ export const ticketsDescriptor: AuvoEntityDescriptor<AuvoTicket, TicketRow> = {
   auvoBasePath: "/tickets",
   pcmTable: "tickets",
   webhookEntity: 62,
+  // E01-S34: rede de segurança além do webhook — webhook continua sendo o caminho primário de
+  // tempo real; o cron horário pega o que ele perder (registro não confirmado, reentrega falhou).
+  cronSchedule: "0 * * * *",
   writeEnabled: false,
   deleteStrategy: "unsupported",
   toAuvo(row) {
