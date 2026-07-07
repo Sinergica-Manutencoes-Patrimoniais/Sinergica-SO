@@ -21,6 +21,7 @@ import {
   Settings,
   Snowflake,
   Sun,
+  Ticket,
   TrendingUp,
   UserCircle,
   UserCog,
@@ -54,6 +55,7 @@ import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
 import { ServicosPage } from "../features/pcm/pages/ServicosPage";
+import { TicketsPage } from "../features/pcm/pages/TicketsPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
@@ -96,6 +98,7 @@ type PcmView =
   | "palavras-chave"
   | "produto-categorias"
   | "equipamento-categorias"
+  | "tickets"
   | "ordens"
   | "backlog"
   | "inspecoes"
@@ -195,6 +198,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Backlog GUT", icon: LayoutGrid, view: "backlog" },
       { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
+      { label: "Tickets", icon: Ticket, view: "tickets" },
     ],
   },
   {
@@ -699,6 +703,8 @@ export function HomePage() {
               <FerramentasPage />
             ) : pcmView === "ferramentas-por-tecnico" ? (
               <FerramentasPorTecnicoPage />
+            ) : pcmView === "tickets" ? (
+              <TicketsPage />
             ) : pcmView === "servicos" ? (
               <ServicosPage />
             ) : pcmView === "tipos-tarefa" ? (

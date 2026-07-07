@@ -110,20 +110,22 @@ export async function processOutboxRow(
 
   // create/update: AC-4 — se já existe auvo_id, é sempre PATCH (nunca um novo POST de criação),
   // mesmo que a linha do outbox diga `op='create'` (corrida entre duas fontes de escrita).
-  const payload = descriptor.toAuvo(origem);
   let auvoId: number;
   if (existingAuvoId != null) {
     // PATCH da Auvo v2 é JSON Patch (`[{op:"replace",path,value}]`), não o objeto flat de
     // `toAuvo()` — confirmado no catálogo (Task Types/Services/Equipments/Products/Tickets, todos
-    // com o mesmo dialeto). Ver _shared/auvo/json-patch.ts.
-    await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, toAuvoJsonPatch(payload));
+    // com o mesmo dialeto). Ver _shared/auvo/json-patch.ts. `toAuvoUpdate`, se definido, restringe
+    // o patch a um subconjunto de campos editáveis (ex.: Tickets só documenta `statusId`) — cai
+    // para `toAuvo()` completo quando ausente, mesmo comportamento de todas as outras entidades.
+    const patchPayload = descriptor.toAuvoUpdate?.(origem) ?? descriptor.toAuvo(origem);
+    await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, toAuvoJsonPatch(patchPayload));
     auvoId = existingAuvoId;
   } else {
     // Idempotência por ADR-0001 — nome do campo varia por recurso (a maioria usa `externalId`,
     // `Services` usa `externalCode`, confirmado no catálogo). Nunca hardcodar o nome do campo.
     const externalIdField = descriptor.externalIdField ?? "externalId";
     const criado = await auvoPost<{ result: { id: number } }>(descriptor.auvoBasePath, {
-      ...payload,
+      ...descriptor.toAuvo(origem),
       [externalIdField]: row.row_id,
     });
     auvoId = criado.result.id;

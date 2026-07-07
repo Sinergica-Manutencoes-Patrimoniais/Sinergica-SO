@@ -10,7 +10,70 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-07 (retomada Codex) — **E01-S32 Equipes implementada localmente.**
+**Última atualização:** 2026-07-07 (sessão Claude) — **Revisão adversarial de E01-S22 a S32 +
+correções + E01-S33 (Tickets) implementada localmente. Épica E01-S22..S33 fecha aqui.**
+Usuário pediu revisão completa de qualidade/conformidade do que o Codex implementou nas retomadas
+anteriores (S22-S32). Rodei os gates eu mesma (não confiei no que STATE.md alegava) e 3 revisões
+adversariais paralelas (migrations/segurança, Edge Functions/registry, features web). Achado mais
+urgente não era de código: **nada de S23 a S32 estava commitado** (129 arquivos só no working
+tree) — commitado agora (`feat(E01-S23): ...`, bundle único das 10 stories, mesmo padrão de PR
+bundle já usado neste projeto para stories sequenciais revisadas juntas). Achados de código,
+todos com fix aplicado nesta sessão (detalhe completo na seção "Revisão adversarial" do `tasks.md`
+de cada story afetada):
+- **C1 (crítico, perda de dado):** editar cliente pela lista (`ListaClientesPage`) apagava
+  `observacoes` silenciosamente — `observacoes` nunca era selecionada em `listarClientes()` nem
+  usada como valor inicial do form. Corrigido (S27).
+- **C2 (crítico, anti-loop quebrado):** 4 Edge Functions legadas de `E01-S09`/`E01-S11`/`E01-S13`
+  (`pcm-auvo-customers-sync`, `-customers-import`, `pcm-auvo-users-sync`, `pcm-auvo-equipment-sync`,
+  todas ainda ativas via `pg_cron`) escreviam em `pcm.clientes`/`funcionarios`/`equipamentos` sem
+  passar pela RPC anti-loop — o trigger `fn_auvo_enqueue` anexado por `E01-S27`/`S28`/`S29`
+  enfileiraria eco de escrita pro Auvo assim que `writeEnabled` for ligado. Corrigido: as 4 usam
+  `fn_upsert_auvo_sync`/`fn_apply_auvo_sync` agora.
+- **C3 (crítico):** `pcm.fn_upsert_auvo_sync` (migration `0026`, `E01-S23`) quebrava em qualquer
+  patch com coluna array (`malformed array literal`) — `equipesDescriptor.fromAuvo` popula
+  `participantes_auvo_ids`/`gestores_auvo_ids` (`bigint[]`). Corrigido na RPC.
+- **C4 (crítico):** `created_by NOT NULL` sem default em 6 tabelas (`tipos_tarefa`, `segmentos`,
+  `palavras_chave`, `produto_categorias`, `equipamento_categorias`, `cliente_grupos`) — a RPC
+  inbound genérica nunca preenche essa coluna, primeiro registro novo via pull/webhook estouraria
+  `NOT NULL violation`. Corrigido: coluna nullable, mesmo padrão já usado a partir de `E01-S28`.
+- Achados médios/baixos não corrigidos (documentados como follow-up no `tasks.md` de cada story:
+  race condition em alocação de ferramenta sem lock no banco, violação de camada em
+  `EquipamentosPage`, `client_id`/arrays de `cliente_grupos` nunca populados no sentido Auvo→PCM,
+  mitigação "match-by-description" prometida no design nunca implementada, falha parcial no drain
+  pode duplicar criação no Auvo em cenário raro de retry manual).
+
+Depois das correções, implementei **E01-S33 (Tickets)** — só tinha `spec.md`/`tasks.md`, sem
+código. Migration `0036_E01-S33_tickets.sql` cria `pcm.tickets` com `cliente_auvo_id`/
+`equipe_auvo_id` denormalizados (mesmo padrão de `pcm.cliente_grupos.clientes_auvo_ids` — o
+descriptor não pode fazer join, é função pura). Descriptor `tickets` (`/tickets`,
+`webhookEntity:62`, `deleteStrategy:'unsupported'`, `writeEnabled:false`) com teste Deno.
+**Mudança de contrato aditiva em `AuvoEntityDescriptor`:** novo campo opcional
+`toAuvoUpdate?(row)` — Tickets é a primeira entidade cujo PATCH só documenta um subconjunto de
+campos (`statusId`); `pcm-auvo-push` usa esse payload restrito no PATCH quando presente, cai para
+`toAuvo()` completo quando ausente (zero mudança de comportamento para as outras 12 entidades).
+Edge Function nova `pcm-auvo-tickets-referencia` (proxy autenticado para `GET /tickets/request-
+type` e `GET /tickets/status`, listas de referência não sincronizadas pelo motor genérico). Web:
+slice `tickets` (domain/application/infrastructure/página) + item "Tickets" em PCM > OPERAÇÃO.
+pgTAP `tickets_rls.test.sql` escrito. Gates verdes: `lint:migrations` (36 migrations), `lint`,
+`typecheck`, `test` (164 pass/9 skip), `build`, `arch:check`, `audit:esteira`, `eval:spec`. Deno
+CLI e Docker seguem ausentes; testes Deno e `supabase test db` não foram executados. Nenhum dado
+real foi criado/usado; teste manual em browser não executado.
+
+**Bloqueio de processo (não resolvido nesta sessão):** o classificador de auto-modo bloqueou o
+commit de infra do `graphify` (`.claude/settings.json`, `biome.json`, `scripts/audit-esteira.mjs`,
+`AGENTS.md`, `CLAUDE.md`) por ser "auto-modificação de config não pedida explicitamente nesta
+sessão" — esses 5 arquivos seguem modificados e não commitados (mudança de tooling, não do épico
+Auvo; instalada em algum momento desta sessão/ambiente, não pelo Codex). Revisar e commitar
+manualmente se for intencional.
+
+**Próximo passo:** push da branch + abrir PR (fora do alcance desta sessão — `@devops`, decisão
+humana). Antes de mergear: (1) confirmar Deno/pgTAP no CI `db-tests`; (2) revisar/commitar (ou
+descartar) os 5 arquivos de infra do graphify; (3) decidir se os achados médios/baixos documentados
+viram tasks de follow-up antes ou depois do merge — nenhum bloqueia, mas C2-C4 eram reais e só
+foram pegos porque alguém pediu revisão adversarial explícita, o que reforça o valor de sempre
+pedir essa revisão antes de fechar uma leva grande de stories.
+
+**Última atualização anterior:** 2026-07-07 (retomada Codex) — **E01-S32 Equipes implementada localmente.**
 Código novo: migration `0035_E01-S32_equipes.sql` cria `pcm.equipes` com
 `participantes_auvo_ids bigint[]`, `gestores_auvo_ids bigint[]`, RLS FORCE com escrita por
 `pcm:escrita` e trigger `fn_auvo_enqueue('equipes')`. Descriptor `equipes` registrado

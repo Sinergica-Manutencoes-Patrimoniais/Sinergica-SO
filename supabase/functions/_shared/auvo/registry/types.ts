@@ -82,6 +82,14 @@ export interface AuvoEntityDescriptor<TAuvo, TRow> {
   /** Traduz uma linha PCM para o payload que a API Auvo espera em `POST`/`PUT`/`PATCH`. */
   toAuvo(row: TRow): TAuvo;
 
+  /**
+   * Payload restrito para `PATCH` (op='update'), se o recurso Auvo documentar edição só de um
+   * subconjunto de campos (ex.: `Tickets` só documenta `statusId`/`externalId` como editáveis —
+   * título/descrição não têm caminho de edição). Ausente = `pcm-auvo-push` usa `toAuvo()` também
+   * para o PATCH (comportamento padrão de todas as outras entidades).
+   */
+  toAuvoUpdate?(row: TRow): Partial<TAuvo>;
+
   /** Traduz um registro Auvo (webhook ou pull) para um patch parcial de `pcm.<pcmTable>`. */
   fromAuvo(auvo: TAuvo): Partial<TRow>;
 }

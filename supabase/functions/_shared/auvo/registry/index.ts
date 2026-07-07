@@ -13,6 +13,7 @@ import { equipesDescriptor } from "./equipes.ts";
 import { ferramentasDescriptor } from "./ferramentas.ts";
 import { funcionariosDescriptor } from "./funcionarios.ts";
 import { servicosDescriptor } from "./servicos.ts";
+import { ticketsDescriptor } from "./tickets.ts";
 import { tiposTarefaDescriptor } from "./tipos-tarefa.ts";
 
 let registry: AuvoEntityRegistry = {
@@ -27,6 +28,7 @@ let registry: AuvoEntityRegistry = {
   produto_categorias: produtoCategoriasDescriptor,
   servicos: servicosDescriptor,
   segmentos: segmentosDescriptor,
+  tickets: ticketsDescriptor,
   tipos_tarefa: tiposTarefaDescriptor,
 };
 

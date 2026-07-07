@@ -242,6 +242,30 @@ Deno.test("processOutboxRow — deleteStrategy='unsupported' não chama o Auvo (
   }
 });
 
+Deno.test("processOutboxRow — toAuvoUpdate restringe o PATCH a um subconjunto de campos (ex. Tickets: só statusId)", async () => {
+  const restoreEnv = withEnv(ENV);
+  const { restore, calls } = withFetch((req) => {
+    assertEquals(req.method, "PATCH");
+    return new Response(JSON.stringify({ result: { id: 66 } }), { status: 200 });
+  });
+  try {
+    const descriptor = {
+      ...fakeDescriptor(),
+      toAuvo: (row: Record<string, unknown>) => ({ title: row.titulo, statusId: row.status_id }),
+      toAuvoUpdate: (row: Record<string, unknown>) => ({ statusId: row.status_id }),
+    };
+    const db = fakeDb({ id: "row-1", titulo: "Não deve ir no PATCH", status_id: 2, auvo_id: 66 });
+    const row: OutboxRow = { ...baseRow, op: "update" };
+    const resultado = await processOutboxRow(db, row, descriptor);
+    assertEquals(resultado.ok, true);
+    const corpo = await calls[0].json();
+    assertEquals(corpo, [{ op: "replace", path: "statusId", value: 2 }]);
+  } finally {
+    restore();
+    restoreEnv();
+  }
+});
+
 Deno.test("processOutboxRow — supportsUpdate=false trata op='update' como no-op de sucesso", async () => {
   const restoreEnv = withEnv(ENV);
   const { restore, calls } = withFetch(() => new Response("não deveria ser chamado", { status: 500 }));
