@@ -377,7 +377,7 @@ async function carregarDataset() {
       .is("deleted_at", null),
     supabase
       .schema("pcm")
-      .from("equipamentos_cache")
+      .from("equipamentos")
       .select("auvo_equipment_id,nome,auvo_customer_id,ativo,updated_at"),
     supabase
       .schema("pcm")

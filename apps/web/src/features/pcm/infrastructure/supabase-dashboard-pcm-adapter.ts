@@ -106,10 +106,10 @@ export const supabaseDashboardPcmAdapter = {
         .from("clientes")
         .select("nome,auvo_id,ativo,endereco,contato_telefone,contato_email,updated_at")
         .is("deleted_at", null),
-      supabase.schema("pcm").from("tecnicos_cache").select("auvo_user_id,equipe,ativo,updated_at"),
+      supabase.schema("pcm").from("funcionarios").select("auvo_user_id,equipe,ativo,updated_at"),
       supabase
         .schema("pcm")
-        .from("equipamentos_cache")
+        .from("equipamentos")
         .select("auvo_equipment_id,auvo_customer_id,ativo,updated_at"),
       supabase
         .schema("pcm")

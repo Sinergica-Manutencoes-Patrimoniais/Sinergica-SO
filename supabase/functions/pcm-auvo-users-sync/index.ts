@@ -1,6 +1,6 @@
-// pcm-auvo-users-sync — espelha técnicos/equipes do Auvo no cache local `pcm.tecnicos_cache`
-// (Auvo → PCM, read-only do lado do PCM). AC-1 e AC-4 de
-// specs/E01-S11-integracao-auvo-sync-tecnicos-equipamentos/spec.md.
+// pcm-auvo-users-sync — espelha técnicos/equipes do Auvo em `pcm.funcionarios` (promovido em
+// E01-S28 a partir do cache read-only `pcm.tecnicos_cache`). AC-1 e AC-4 de
+// specs/E01-S11-integracao-auvo-sync-tecnicos-equipamentos/spec.md + E01-S28 AC-4.
 //
 // Gatilho (AC-5): idêntico nos dois casos — a função não sabe quem a invocou, só que a chamada é
 // autenticada como `service_role`. (a) `pg_cron` diário (migration 0013) via `net.http_post`; ou
@@ -48,8 +48,14 @@ interface AuvoUsersResponse {
 
 interface CacheRow {
   auvo_user_id: number;
+  auvo_id: number;
   nome: string;
   equipe: string | null;
+  cargo: string | null;
+  culture: string;
+  user_type: number;
+  auvo_sync_status: "synced";
+  auvo_synced_at: string;
   ativo: true;
   updated_at: string;
 }
@@ -103,27 +109,51 @@ serve(async (req) => {
       }
       rows.push({
         auvo_user_id: auvoUserId,
+        auvo_id: auvoUserId,
         nome: u.name ?? `Técnico ${auvoUserId}`,
         equipe: u.team ?? u.jobPosition ?? null,
+        cargo: u.jobPosition ?? null,
+        culture: "pt-BR",
+        user_type: USER_TYPE_TECNICO,
+        auvo_sync_status: "synced",
+        auvo_synced_at: now,
         ativo: true,
         updated_at: now,
       });
       syncedIds.add(auvoUserId);
     }
 
-    // 4) Upsert por `auvo_user_id` (AC-1: um upsert por id, nunca duplica). Idempotente: rodar 2x
-    //    seguidas produz o mesmo estado.
-    if (rows.length > 0) {
-      const { error: upsertError } = await db
-        .schema("pcm")
-        .from("tecnicos_cache")
-        .upsert(rows, { onConflict: "auvo_user_id" });
+    // 4) Upsert por `auvo_user_id`, um RPC por linha via `fn_upsert_auvo_sync` — a mesma RPC
+    //    anti-loop do motor genérico (E01-S23), que seta `app.auvo_sync_write` ANTES de gravar.
+    //    Sem isso, o trigger `trg_funcionarios_auvo_enqueue` (E01-S28) reenfileiraria esta escrita
+    //    inbound como se fosse uma mudança local a empurrar de volta pro Auvo — inofensivo hoje só
+    //    porque `writeEnabled:false` barra o PATCH, mas vira eco de escrita assim que for ligado
+    //    (achado C2 da revisão adversarial de 2026-07-07). AC-1 preservado: upsert por id, idempotente.
+    for (const row of rows) {
+      const { error: upsertError } = await db.schema("pcm").rpc("fn_upsert_auvo_sync", {
+        p_table: "funcionarios",
+        p_auvo_id: String(row.auvo_user_id),
+        p_patch: {
+          auvo_user_id: row.auvo_user_id,
+          nome: row.nome,
+          equipe: row.equipe,
+          cargo: row.cargo,
+          culture: row.culture,
+          user_type: row.user_type,
+          auvo_sync_status: row.auvo_sync_status,
+          auvo_synced_at: row.auvo_synced_at,
+          ativo: row.ativo,
+          updated_at: row.updated_at,
+        },
+      });
       if (upsertError) throw upsertError;
     }
 
     // 5) Soft-delete (AC-4): técnicos que estavam no cache e sumiram do Auvo → `ativo = false`
     //    (nunca DELETE físico — OS históricas continuam exibindo o nome). Só chegamos aqui se a
-    //    paginação inteira teve sucesso (guarda de task 6).
+    //    paginação inteira teve sucesso (guarda de task 6). Mesmo anti-loop do passo 4: identifica
+    //    os ids primeiro (SELECT simples, sem gravar) e aplica cada patch via `fn_apply_auvo_sync`
+    //    (GUC anti-loop), em vez de um UPDATE em massa desprotegido.
     //    [AUTO-DECISION] Se `syncedIds` vier vazio (Auvo respondeu com sucesso mas ZERO técnicos de
     //    campo), NÃO desativamos tudo em massa — logamos aviso e pulamos a reconciliação. Reason:
     //    AC-4 fala de técnico REMOVIDO individualmente; um resultado totalmente vazio de um endpoint
@@ -133,15 +163,22 @@ serve(async (req) => {
     let desativados = 0;
     if (syncedIds.size > 0) {
       const idList = `(${[...syncedIds].join(",")})`;
-      const { data: deactivated, error: deactivateError } = await db
+      const { data: paraDesativar, error: selectError } = await db
         .schema("pcm")
-        .from("tecnicos_cache")
-        .update({ ativo: false, updated_at: now })
+        .from("funcionarios")
+        .select("id")
         .eq("ativo", true)
-        .not("auvo_user_id", "in", idList)
-        .select("auvo_user_id");
-      if (deactivateError) throw deactivateError;
-      desativados = deactivated?.length ?? 0;
+        .not("auvo_user_id", "in", idList);
+      if (selectError) throw selectError;
+      for (const funcionario of paraDesativar ?? []) {
+        const { error: deactivateError } = await db.schema("pcm").rpc("fn_apply_auvo_sync", {
+          p_table: "funcionarios",
+          p_row_id: funcionario.id,
+          p_patch: { ativo: false, updated_at: now },
+        });
+        if (deactivateError) throw deactivateError;
+      }
+      desativados = paraDesativar?.length ?? 0;
     } else {
       console.error(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "GET /users retornou 0 técnicos (userType=1) — reconciliação de soft-delete pulada para não desativar o cache em massa" }));
     }

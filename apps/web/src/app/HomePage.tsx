@@ -35,12 +35,26 @@ import { GruposPage } from "../features/config/pages/GruposPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
 import { BacklogGutPage } from "../features/pcm/pages/BacklogGutPage";
+import {
+  EquipamentoCategoriasPage,
+  PalavrasChavePage,
+  ProdutoCategoriasPage,
+  SegmentosPage,
+} from "../features/pcm/pages/CatalogoSimplesPage";
+import { ClienteGruposPage } from "../features/pcm/pages/ClienteGruposPage";
+import { EquipamentosPage } from "../features/pcm/pages/EquipamentosPage";
+import { EquipesPage } from "../features/pcm/pages/EquipesPage";
+import { FerramentasPage } from "../features/pcm/pages/FerramentasPage";
+import { FerramentasPorTecnicoPage } from "../features/pcm/pages/FerramentasPorTecnicoPage";
+import { FuncionariosPage } from "../features/pcm/pages/FuncionariosPage";
 import { InspecoesPage } from "../features/pcm/pages/InspecoesPage";
 import { LaudosSpdaPage } from "../features/pcm/pages/LaudosSpdaPage";
 import { ListaClientesPage } from "../features/pcm/pages/ListaClientesPage";
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
+import { ServicosPage } from "../features/pcm/pages/ServicosPage";
+import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
 import { usePermissoes } from "./permissoes-context";
@@ -70,6 +84,18 @@ interface ModuloTab {
 type PcmView =
   | "dashboard"
   | "clientes"
+  | "cliente-grupos"
+  | "equipamentos"
+  | "equipes"
+  | "ferramentas"
+  | "ferramentas-por-tecnico"
+  | "funcionarios"
+  | "tipos-tarefa"
+  | "segmentos"
+  | "servicos"
+  | "palavras-chave"
+  | "produto-categorias"
+  | "equipamento-categorias"
   | "ordens"
   | "backlog"
   | "inspecoes"
@@ -168,11 +194,25 @@ const PCM_NAV: NavGroup[] = [
       { label: "Ordens de Serviço", icon: ClipboardList, view: "ordens" },
       { label: "Backlog GUT", icon: LayoutGrid, view: "backlog" },
       { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
+      { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
     ],
   },
   {
     titulo: "CADASTROS",
-    items: [{ label: "Clientes", icon: Building2, view: "clientes" }],
+    items: [
+      { label: "Clientes", icon: Building2, view: "clientes" },
+      { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
+      { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
+      { label: "Equipes", icon: Users, view: "equipes" },
+      { label: "Ferramentas", icon: Package, view: "ferramentas" },
+      { label: "Funcionários", icon: UserCog, view: "funcionarios" },
+      { label: "Serviços", icon: Briefcase, view: "servicos" },
+      { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
+      { label: "Segmentos", icon: LayoutGrid, view: "segmentos" },
+      { label: "Palavras-chave", icon: FileText, view: "palavras-chave" },
+      { label: "Categorias Produto", icon: Package, view: "produto-categorias" },
+      { label: "Categorias Equip.", icon: Wrench, view: "equipamento-categorias" },
+    ],
   },
   {
     titulo: "PREVENTIVO",
@@ -647,6 +687,30 @@ export function HomePage() {
               )
             ) : pcmView === "inspecoes" ? (
               <InspecoesPage />
+            ) : pcmView === "cliente-grupos" ? (
+              <ClienteGruposPage />
+            ) : pcmView === "funcionarios" ? (
+              <FuncionariosPage />
+            ) : pcmView === "equipamentos" ? (
+              <EquipamentosPage />
+            ) : pcmView === "equipes" ? (
+              <EquipesPage />
+            ) : pcmView === "ferramentas" ? (
+              <FerramentasPage />
+            ) : pcmView === "ferramentas-por-tecnico" ? (
+              <FerramentasPorTecnicoPage />
+            ) : pcmView === "servicos" ? (
+              <ServicosPage />
+            ) : pcmView === "tipos-tarefa" ? (
+              <TiposTarefaPage />
+            ) : pcmView === "segmentos" ? (
+              <SegmentosPage />
+            ) : pcmView === "palavras-chave" ? (
+              <PalavrasChavePage />
+            ) : pcmView === "produto-categorias" ? (
+              <ProdutoCategoriasPage />
+            ) : pcmView === "equipamento-categorias" ? (
+              <EquipamentoCategoriasPage />
             ) : pcmView === "laudos-spda" ? (
               <LaudosSpdaPage />
             ) : pcmView === "pmoc" ? (

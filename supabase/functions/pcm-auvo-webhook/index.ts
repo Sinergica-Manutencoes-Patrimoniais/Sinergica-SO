@@ -23,6 +23,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError } from "../_shared/auth.ts";
 import { validateAuvoSignature } from "../_shared/auvo/verify-signature.ts";
+import { byWebhookEntity } from "../_shared/auvo/registry/index.ts";
+import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
+import { resolveWebhookDispatch } from "../_shared/auvo/webhook-dispatch.ts";
 
 const FN = "pcm-auvo-webhook";
 
@@ -102,14 +105,55 @@ serve(async (req) => {
     }
     const evento = parsed.data;
 
-    // 5) Só `entity=Task` é processado — outras entidades são fora de escopo desta story
-    // (Customer/User/Equipment, ver spec.md → Fora de escopo). No-op silencioso, 200.
+    // 5) E01-S23: entidades novas passam pelo dispatcher genérico do registry. `entity=Task`
+    // continua no handler legado abaixo, sem alterar sua semântica (AC-4 de E01-S23).
+    if (evento.entity !== AUVO_ENTITY_TASK) {
+      const descriptor = byWebhookEntity(evento.entity) as
+        | AuvoEntityDescriptor<Record<string, unknown>, Record<string, unknown>>
+        | undefined;
+      if (descriptor) {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        const serviceKey = getSupabaseServiceKey();
+        if (!supabaseUrl || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
+        const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+        const decision = resolveWebhookDispatch(evento, descriptor);
+
+        if (decision.action === "ignore") {
+          console.log(JSON.stringify({ ...logBase, nivel: "info", msg: "webhook ignorado pelo dispatcher genérico", entity: evento.entity, reason: decision.reason }));
+          return json(200, { ok: true, ignored: true, reason: decision.reason }, cors);
+        }
+
+        const { data: rowId, error } = await db.schema("pcm").rpc("fn_upsert_auvo_sync", {
+          p_table: descriptor.pcmTable,
+          p_auvo_id: String(decision.auvoId),
+          p_patch: decision.patch,
+        });
+        if (error) throw error;
+
+        console.log(
+          JSON.stringify({
+            ...logBase,
+            nivel: "info",
+            msg: "webhook aplicado pelo dispatcher genérico",
+            entity: evento.entity,
+            descriptor: descriptor.key,
+            action: decision.action,
+            auvoId: decision.auvoId,
+            rowId,
+          }),
+        );
+        return json(200, { ok: true, entity: descriptor.key, action: decision.action, rowId }, cors);
+      }
+    }
+
+    // 6) Só `entity=Task` segue no caminho legado. Outras entidades sem descriptor são no-op
+    // silencioso, 200, para o Auvo não reentregar para sempre.
     if (evento.entity !== AUVO_ENTITY_TASK) {
       console.log(JSON.stringify({ ...logBase, nivel: "info", msg: "entity fora de escopo, ignorado", entity: evento.entity }));
       return json(200, { ok: true, ignored: true, reason: "entity_out_of_scope" }, cors);
     }
 
-    // 6) Resolve o taskId do Auvo referenciado pelo evento — defensivo quanto ao nome do campo
+    // 7) Resolve o taskId do Auvo referenciado pelo evento — defensivo quanto ao nome do campo
     // (shape de entrega não confirmado neste ambiente, ver nota no topo do arquivo).
     const taskId = extractTaskId(evento);
     if (taskId == null) {
@@ -117,7 +161,7 @@ serve(async (req) => {
       return json(200, { ok: true, ignored: true, reason: "task_id_not_found" }, cors);
     }
 
-    // 7) Máquina de transição de status (AC-2, AC-3, AC-4). Ver SPEC_DEVIATION em tasks.md: o
+    // 8) Máquina de transição de status (AC-2, AC-3, AC-4). Ver SPEC_DEVIATION em tasks.md: o
     // mapeamento action=3 (Exclusão) → cancelado é uma inferência, não um taskStatus documentado.
     const targetStatus = resolveTargetStatus(evento, taskId, logBase);
     if (targetStatus == null) {
@@ -130,7 +174,7 @@ serve(async (req) => {
     if (!supabaseUrl || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
     const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
-    // 8) Resolve a OS pelo auvo_task_id — AC-6: taskId desconhecido nunca derruba o endpoint.
+    // 9) Resolve a OS pelo auvo_task_id — AC-6: taskId desconhecido nunca derruba o endpoint.
     const { data: os, error: osError } = await db
       .schema("pcm")
       .from("ordens_servico")
@@ -144,7 +188,7 @@ serve(async (req) => {
       return json(200, { ok: true, ignored: true, reason: "unknown_task_id", taskId }, cors);
     }
 
-    // 9) AC-5: UPDATE idempotente — só transiciona se a OS não estiver já no status alvo. Uma
+    // 10) AC-5: UPDATE idempotente — só transiciona se a OS não estiver já no status alvo. Uma
     // reentrega do mesmo evento (retry de rede do Auvo) não gera erro, só confirma (0 linhas
     // afetadas = já estava no estado certo, tratado como sucesso, não como falha).
     const { data: updated, error: updateError } = await db

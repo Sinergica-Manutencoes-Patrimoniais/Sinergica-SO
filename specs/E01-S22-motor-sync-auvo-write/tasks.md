@@ -49,6 +49,24 @@ alwaysApply: false
       LOCKED ... RETURNING` inteiro dentro de uma única função `security definer`. Documentado em
       `design.md` → Componentes/Riscos antes de escrever a migration.
 
+## Revisão adversarial (2026-07-07)
+- **Follow-up não corrigido (médio)** — em `pcm-auvo-push/index.ts` (`processOutboxRow`), se o
+  `POST`/`PATCH` no Auvo tiver sucesso mas o `fn_apply_auvo_sync` subsequente (grava `auvo_id`/
+  status na linha de origem) falhar por qualquer motivo, a linha da outbox vira `status='error'` sem
+  o `externalId` ter sido persistido localmente. `fn_claim_auvo_outbox_batch` só reivindica
+  `status='pending'`, então essa linha não é reprocessada automaticamente — mas se um operador
+  resetar manualmente para `pending`, `existingAuvoId` continua `null` e um segundo `POST` é
+  disparado, podendo duplicar o recurso no Auvo (a deduplicação por `externalId` do lado do Auvo não
+  é verificada, ver nota no topo de `client.ts`). Mitigação futura: persistir o `externalId`
+  retornado ANTES de considerar a linha bem-sucedida, ou separar os dois passos numa transação única
+  via RPC (hoje são 2 chamadas independentes: HTTP externo + RPC local, não podem ser atômicas por
+  natureza — mas o "gravar o id assim que a Auvo responder, mesmo que o resto falhe" é possível).
+- Achados C2/C3/C4 relacionados ao contrato deste motor genérico (anti-loop nas Edge Functions
+  legadas, bug de array em `fn_upsert_auvo_sync`, `created_by NOT NULL` sem default) foram
+  corrigidos nos arquivos de `E01-S23`/`E01-S24`-`S27`/`E01-S32` — o design/contrato deste story
+  (outbox, `fn_apply_auvo_sync`, GUC anti-loop) em si estava correto; o gap era código que não o
+  adotou.
+
 ## Checklist de Definition of Done
 - [x] Todos os AC (AC-1 a AC-7) implementados — gate executável real (`supabase test db`/Deno)
       pendente do CI, ver task 8

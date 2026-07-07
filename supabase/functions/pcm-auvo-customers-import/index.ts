@@ -158,19 +158,42 @@ serve(async (req) => {
       syncedIds.add(auvoId);
     }
 
-    // 4) Upsert por `auvo_id` (AC-1/AC-2: um upsert por id, nunca duplica — coluna já `unique`
-    //    desde 0001_E00-S00). Idempotente: rodar 2x seguidas produz o mesmo estado.
-    if (rows.length > 0) {
-      const { error: upsertError } = await db
-        .schema("pcm")
-        .from("clientes")
-        .upsert(rows, { onConflict: "auvo_id" });
+    // 4) Upsert por `auvo_id`, um RPC por linha via `fn_upsert_auvo_sync` — a mesma RPC anti-loop
+    //    do motor genérico (E01-S23), que seta `app.auvo_sync_write` ANTES de gravar. Sem isso,
+    //    `trg_clientes_auvo_enqueue` (E01-S27) reenfileiraria esta escrita inbound de volta pro
+    //    Auvo — inofensivo hoje só por `writeEnabled:false`, vira eco assim que for ligado (achado
+    //    C2 da revisão adversarial de 2026-07-07). AC-1/AC-2 preservados: upsert por id, idempotente.
+    for (const row of rows) {
+      const { error: upsertError } = await db.schema("pcm").rpc("fn_upsert_auvo_sync", {
+        p_table: "clientes",
+        p_auvo_id: String(row.auvo_id),
+        p_patch: {
+          nome: row.nome,
+          cnpj: row.cnpj,
+          ativo: row.ativo,
+          status_comercial: row.status_comercial,
+          tipo: row.tipo,
+          endereco: row.endereco,
+          cidade: row.cidade,
+          estado: row.estado,
+          cep: row.cep,
+          contato_nome: row.contato_nome,
+          contato_telefone: row.contato_telefone,
+          contato_email: row.contato_email,
+          observacoes: row.observacoes,
+          updated_at: row.updated_at,
+          created_by: row.created_by,
+          updated_by: row.updated_by,
+        },
+      });
       if (upsertError) throw upsertError;
     }
 
     // 5) Soft-delete (AC-3): clientes que estavam no PCM (importados) e sumiram do Auvo →
     //    `ativo = false` (nunca DELETE físico — `pcm.ordens_servico.client_id` é FK não anulável,
-    //    OS históricas quebrariam). Só chegamos aqui se a paginação inteira teve sucesso.
+    //    OS históricas quebrariam). Só chegamos aqui se a paginação inteira teve sucesso. Mesmo
+    //    anti-loop do passo 4: SELECT dos ids + `fn_apply_auvo_sync` por linha, em vez de um UPDATE
+    //    em massa desprotegido.
     //    [AUTO-DECISION] Se `syncedIds` vier vazio (Auvo respondeu com sucesso mas ZERO clientes),
     //    NÃO desativamos tudo em massa — logamos aviso e pulamos a reconciliação. Mesmo raciocínio
     //    defensivo de `pcm-auvo-users-sync`/`pcm-auvo-equipment-sync` (E01-S11): um resultado
@@ -179,16 +202,23 @@ serve(async (req) => {
     let desativados = 0;
     if (syncedIds.size > 0) {
       const idList = `(${[...syncedIds].join(",")})`;
-      const { data: deactivated, error: deactivateError } = await db
+      const { data: paraDesativar, error: selectError } = await db
         .schema("pcm")
         .from("clientes")
-        .update({ ativo: false, updated_at: now })
+        .select("id")
         .eq("ativo", true)
         .not("auvo_id", "is", null)
-        .not("auvo_id", "in", idList)
-        .select("auvo_id");
-      if (deactivateError) throw deactivateError;
-      desativados = deactivated?.length ?? 0;
+        .not("auvo_id", "in", idList);
+      if (selectError) throw selectError;
+      for (const cliente of paraDesativar ?? []) {
+        const { error: deactivateError } = await db.schema("pcm").rpc("fn_apply_auvo_sync", {
+          p_table: "clientes",
+          p_row_id: cliente.id,
+          p_patch: { ativo: false, updated_at: now },
+        });
+        if (deactivateError) throw deactivateError;
+      }
+      desativados = paraDesativar?.length ?? 0;
     } else {
       console.error(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "GET /customers retornou 0 clientes — reconciliação de soft-delete pulada para não desativar o cadastro em massa" }));
     }

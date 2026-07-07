@@ -6,8 +6,11 @@ import { supabase } from "../../../lib/supabase-client";
 import type {
   Cliente360Evento,
   Cliente360Gateway,
+  ClienteCommand,
   ClienteHeader,
   ClienteResumo,
+  EditarClienteCommand,
+  ExcluirClienteCommand,
   OrdemServicoResumo,
   QualidadeClienteResumo,
   ResultadoEquipamentos,
@@ -91,6 +94,26 @@ const COLUNAS_OS =
 // redigitada aqui (mantém `('finalizado','cancelado')` num só lugar).
 const STATUS_HISTORICO_LISTA = `(${STATUS_HISTORICO.join(",")})`;
 
+function mapearClienteCommand(input: ClienteCommand | EditarClienteCommand) {
+  return {
+    nome: input.nome,
+    cnpj: input.cnpj,
+    endereco: input.endereco,
+    cidade: input.cidade,
+    estado: input.estado,
+    cep: input.cep,
+    contato_nome: input.contatoNome,
+    contato_telefone: input.contatoTelefone,
+    contato_email: input.contatoEmail,
+    observacoes: input.observacoes,
+    tipo: "cliente",
+    status_comercial: "ativo",
+    ativo: true,
+    auvo_sync_status: "pending",
+    updated_by: input.userId,
+  };
+}
+
 function mapearOs(row: OrdemServicoRow): OrdemServicoResumo {
   return {
     id: row.id,
@@ -156,6 +179,72 @@ function rotuloStatusOperacional(status: string): string {
 }
 
 export const supabaseCliente360Adapter: Cliente360Gateway = {
+  async criarCliente(input: ClienteCommand): Promise<ClienteHeader> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("clientes")
+      .insert({
+        ...mapearClienteCommand(input),
+        created_by: input.userId,
+      })
+      .select(
+        "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes",
+      )
+      .single();
+
+    if (error) throw error;
+    return mapearCliente(data as ClienteRow);
+  },
+
+  async editarCliente(input: EditarClienteCommand): Promise<ClienteHeader> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("clientes")
+      .update({
+        ...mapearClienteCommand(input),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", input.id)
+      .select(
+        "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes",
+      )
+      .single();
+
+    if (error) throw error;
+    return mapearCliente(data as ClienteRow);
+  },
+
+  async excluirCliente(input: ExcluirClienteCommand): Promise<void> {
+    const abertas = await supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select("id", { count: "exact", head: true })
+      .eq("client_id", input.id)
+      .is("deleted_at", null)
+      .not("status", "in", STATUS_HISTORICO_LISTA);
+
+    if (abertas.error) throw abertas.error;
+    if ((abertas.count ?? 0) > 0) {
+      throw new Error("Cliente possui OS aberta. Finalize ou cancele as OS antes de excluir.");
+    }
+
+    const agora = new Date().toISOString();
+    const { error } = await supabase
+      .schema("pcm")
+      .from("clientes")
+      .update({
+        ativo: false,
+        status_comercial: "inativo",
+        deleted_at: agora,
+        auvo_sync_status: "pending",
+        updated_at: agora,
+        updated_by: input.userId,
+      })
+      .eq("id", input.id);
+
+    if (error) throw error;
+  },
+
   async listarClientes(): Promise<ClienteResumo[]> {
     // A lista virou um cockpit de carteira: além do cadastro Auvo, cruza ativos e OS para permitir
     // filtro operacional sem novas tabelas nem mutação local.
@@ -164,7 +253,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         .schema("pcm")
         .from("clientes")
         .select(
-          "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,updated_at",
+          "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,updated_at",
         )
         .is("deleted_at", null)
         .order("nome", { ascending: true }),
@@ -173,7 +262,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         .from("ordens_servico")
         .select("client_id,status,score_pcm,created_at,auvo_synced_at")
         .is("deleted_at", null),
-      supabase.schema("pcm").from("equipamentos_cache").select("auvo_customer_id,ativo,updated_at"),
+      supabase.schema("pcm").from("equipamentos").select("auvo_customer_id,ativo,updated_at"),
     ]);
     const { data, error } = clientes;
     if (error && erroColunaAusente(error)) {
@@ -264,6 +353,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         contatoNome: row.contato_nome,
         contatoTelefone: row.contato_telefone,
         contatoEmail: row.contato_email,
+        observacoes: row.observacoes,
         equipamentosAtivos: eqResumo?.total ?? 0,
         osAbertas: osResumo?.abertas ?? 0,
         maiorScorePcm: osResumo?.maiorScore ?? 0,
@@ -359,7 +449,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     // painel ficaria "indisponível" mesmo com o cache mergeado e populado.
     const { data, error } = await supabase
       .schema("pcm")
-      .from("equipamentos_cache")
+      .from("equipamentos")
       .select("id,nome,auvo_equipment_id")
       .eq("auvo_customer_id", auvoId)
       .eq("ativo", true);
@@ -472,7 +562,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     if (auvoId !== null) {
       const equipamentos = await supabase
         .schema("pcm")
-        .from("equipamentos_cache")
+        .from("equipamentos")
         .select("auvo_equipment_id,updated_at")
         .eq("auvo_customer_id", auvoId)
         .eq("ativo", true)
