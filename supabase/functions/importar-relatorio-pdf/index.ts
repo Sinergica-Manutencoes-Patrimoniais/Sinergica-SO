@@ -8,7 +8,7 @@ const InputSchema = z.object({ texto: z.string().trim().min(20).max(100_000) });
 
 serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin"));
-  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   try {
     if (req.method !== "POST") throw new HttpError(405, "Método não permitido");
     await requireAuth(req);

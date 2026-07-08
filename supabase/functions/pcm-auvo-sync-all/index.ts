@@ -87,7 +87,7 @@ function claimsFrom(req: Request): { user_role?: string; user_modulos?: Record<s
 
 if (import.meta.main) serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin"));
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors, status: 204 });
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors, status: 204 });
 
   const reqId = crypto.randomUUID().slice(0, 8);
   const now = new Date().toISOString();
