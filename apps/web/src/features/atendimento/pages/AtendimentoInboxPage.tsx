@@ -4,17 +4,25 @@ import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { acionarZeAgora } from "../application/acionar-ze-agora";
 import { assumirConversa } from "../application/assumir-conversa";
+import { listarWaTemplates } from "../application/canais-externos";
 import { devolverAoZe } from "../application/devolver-ao-ze";
 import { enviarMensagem } from "../application/enviar-mensagem";
+import { atualizarTagsConversa, enviarMensagemRica } from "../application/enviar-mensagem-rica";
 import { listarConversas } from "../application/listar-conversas";
 import { listarMensagens } from "../application/listar-mensagens";
+import { listarTags } from "../application/listar-tags";
 import { marcarConversaLida } from "../application/marcar-conversa-lida";
 import { ConversaChat } from "../components/ConversaChat";
 import { ConversaLista } from "../components/ConversaLista";
 import { ConversaPerfil } from "../components/ConversaPerfil";
+import type { WaTemplateItem } from "../domain/canais-externos";
 import type { ConversaItem } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
+import type { MensagemRicaInput } from "../domain/mensagens";
+import type { TagItem } from "../domain/tags";
 import { supabaseAtendimentoAdapter } from "../infrastructure/supabase-atendimento-adapter";
+import { supabaseCanaisExternosAdapter } from "../infrastructure/supabase-canais-externos-adapter";
+import { supabaseConfigAdapter } from "../infrastructure/supabase-config-adapter";
 
 const INTERVALO_LISTA_MS = 5000;
 const INTERVALO_MENSAGENS_MS = 3000;
@@ -30,6 +38,8 @@ export function AtendimentoInboxPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [conversaSelecionadaId, setConversaSelecionadaId] = useState<string | null>(null);
   const [mensagens, setMensagens] = useState<MensagemItem[]>([]);
+  const [templates, setTemplates] = useState<WaTemplateItem[]>([]);
+  const [tags, setTags] = useState<TagItem[]>([]);
   const abaVisivelRef = useRef(true);
 
   const temLeitura = podeAcessar("atendimento", "leitura");
@@ -67,6 +77,15 @@ export function AtendimentoInboxPage() {
   useEffect(() => {
     if (permissoesCarregando || !temLeitura) return;
     carregarConversas();
+    Promise.all([
+      listarWaTemplates(supabaseCanaisExternosAdapter),
+      listarTags(supabaseConfigAdapter),
+    ])
+      .then(([listaTemplates, listaTags]) => {
+        setTemplates(listaTemplates);
+        setTags(listaTags);
+      })
+      .catch(() => undefined);
     const intervalo = setInterval(() => {
       if (abaVisivelRef.current) carregarConversas();
     }, INTERVALO_LISTA_MS);
@@ -104,6 +123,22 @@ export function AtendimentoInboxPage() {
     if (!conversaSelecionada) return;
     await enviarMensagem(supabaseAtendimentoAdapter, { conversaId: conversaSelecionada.id, texto });
     await carregarMensagens(conversaSelecionada.id);
+  }
+
+  async function handleEnviarRico(input: MensagemRicaInput) {
+    if (!conversaSelecionada) return;
+    await enviarMensagemRica(supabaseAtendimentoAdapter, {
+      ...input,
+      conversaId: conversaSelecionada.id,
+      canal: conversaSelecionada.canal,
+    });
+    await carregarMensagens(conversaSelecionada.id);
+  }
+
+  async function handleAtualizarTags(novasTags: string[]) {
+    if (!conversaSelecionada) return;
+    await atualizarTagsConversa(supabaseAtendimentoAdapter, conversaSelecionada.id, novasTags);
+    await carregarConversas();
   }
 
   async function handleAssumir() {
@@ -174,6 +209,10 @@ export function AtendimentoInboxPage() {
         onAssumir={handleAssumir}
         onDevolver={handleDevolver}
         onAcionarIa={handleAcionarIa}
+        templates={templates}
+        tagsDisponiveis={tags}
+        onEnviarRico={handleEnviarRico}
+        onAtualizarTags={handleAtualizarTags}
       />
       <ConversaPerfil conversa={conversaSelecionada} />
     </div>

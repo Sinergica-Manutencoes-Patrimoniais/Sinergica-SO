@@ -13,11 +13,18 @@
 # reativar: `require-timeout-settings` importa quando as tabelas tiverem volume/carga real (hoje
 # é casca, Mês 1); `prefer-bigint-over-int` não se aplica às colunas que a disparou
 # (gravidade/urgencia/tendencia da matriz GUT — sempre 1 a 5, nunca perto do limite de int32).
-excluded_rules = ["require-timeout-settings", "prefer-bigint-over-int"]
+#
+# `require-concurrent-index-creation` (E02-S10, 2026-07-08): CREATE INDEX CONCURRENTLY não pode
+# rodar dentro de uma transação — e o runner de migration do Supabase roda cada migration inteira
+# dentro de uma (mesmo motivo do `--assume-in-transaction` abaixo). Não há como satisfazer a regra
+# neste pipeline sem tirar o CREATE INDEX do fluxo normal de migration. Aceitável hoje: as tabelas
+# que passaram a ganhar índice novo em tabela já existente têm volume baixo (Mês 1, mesmo racional
+# de `require-timeout-settings`). Reavaliar (índice fora de transação, via runbook manual) se o
+# volume real justificar o cuidado.
+excluded_rules = ["require-timeout-settings", "prefer-bigint-over-int", "require-concurrent-index-creation"]
 
 [default]
 # Regras opt-in úteis para o perfil da Trivia (mutação segura sob carga), avaliar se a dor surgir:
-# - require-concurrent-index-creation: CREATE INDEX sem CONCURRENTLY trava escrita.
 # - constraint-missing-not-valid: ADD CONSTRAINT sem NOT VALID valida a tabela inteira (lock).
 # - prefer-robust-stmts: statements idempotentes/robustos (suprimido via --assume-in-transaction
 #   no script/CI — o Supabase já roda cada migration dentro de transação).

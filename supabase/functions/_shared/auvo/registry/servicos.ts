@@ -34,7 +34,7 @@ export const servicosDescriptor: AuvoEntityDescriptor<AuvoService, ServicoRow> =
       price: centavosParaDecimal(row.preco_centavos),
       active: row.ativo ?? true,
       fiscalServiceId: row.fiscal_service_id ?? null,
-    });
+    }) as AuvoService;
   },
   fromAuvo(auvo) {
     return {

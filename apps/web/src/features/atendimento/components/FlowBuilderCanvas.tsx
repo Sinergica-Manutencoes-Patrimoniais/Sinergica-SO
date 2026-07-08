@@ -1,9 +1,12 @@
 import {
   Background,
+  type Connection,
   type Edge,
+  Handle,
   type Node,
   type NodeProps,
   type OnNodesChange,
+  Position,
   ReactFlow,
   applyNodeChanges,
 } from "@xyflow/react";
@@ -23,6 +26,7 @@ function PassoNode({ data }: NodeProps<Node<PassoNodeData>>) {
   const { passo, readOnly, onEditar, onExcluir } = data;
   return (
     <div className="w-64 rounded-[8px] border border-line bg-card p-3 shadow-sm">
+      <Handle type="target" position={Position.Top} />
       <div className="flex items-center justify-between gap-2">
         <input
           className="input text-sm font-semibold"
@@ -49,6 +53,26 @@ function PassoNode({ data }: NodeProps<Node<PassoNodeData>>) {
         disabled={readOnly}
         onChange={(event) => onEditar(passo.id, { pergunta: event.target.value })}
       />
+      <select
+        className="input mt-2 text-xs"
+        value={passo.tipo ?? "pergunta"}
+        disabled={readOnly}
+        onChange={(event) =>
+          onEditar(passo.id, { tipo: event.target.value as "pergunta" | "decisao" })
+        }
+      >
+        <option value="pergunta">Pergunta</option>
+        <option value="decisao">Decisão/condição</option>
+      </select>
+      {(passo.tipo ?? "pergunta") === "decisao" && (
+        <input
+          className="input mt-2 text-xs"
+          value={passo.condicao ?? ""}
+          placeholder="Condição desta saída"
+          disabled={readOnly}
+          onChange={(event) => onEditar(passo.id, { condicao: event.target.value })}
+        />
+      )}
       <label className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
         <input
           type="checkbox"
@@ -58,6 +82,7 @@ function PassoNode({ data }: NodeProps<Node<PassoNodeData>>) {
         />
         Obrigatório
       </label>
+      <Handle type="source" position={Position.Bottom} />
     </div>
   );
 }
@@ -82,7 +107,15 @@ export function FlowBuilderCanvas({
 
   const excluirPasso = useCallback(
     (id: string) => {
-      onChange(passos.filter((p) => p.id !== id).map((p, index) => ({ ...p, ordem: index })));
+      onChange(
+        passos
+          .filter((p) => p.id !== id)
+          .map((p, index) => ({
+            ...p,
+            ordem: index,
+            proximoIds: (p.proximoIds ?? []).filter((destino) => destino !== id),
+          })),
+      );
     },
     [passos, onChange],
   );
@@ -102,6 +135,14 @@ export function FlowBuilderCanvas({
 
   const edges: Edge[] = useMemo(() => {
     const ordenados = [...passos].sort((a, b) => a.ordem - b.ordem);
+    const explicitas = ordenados.flatMap((passo) =>
+      (passo.proximoIds ?? []).map((destino) => ({
+        id: `${passo.id}-${destino}`,
+        source: passo.id,
+        target: destino,
+      })),
+    );
+    if (explicitas.length > 0) return explicitas;
     const pares: Edge[] = [];
     for (let i = 1; i < ordenados.length; i++) {
       const anterior = ordenados[i - 1];
@@ -111,6 +152,40 @@ export function FlowBuilderCanvas({
     }
     return pares;
   }, [passos]);
+
+  const conectar = useCallback(
+    (connection: Connection) => {
+      if (!connection.source || !connection.target || connection.source === connection.target)
+        return;
+      onChange(
+        passos.map((passo) =>
+          passo.id === connection.source
+            ? {
+                ...passo,
+                proximoIds: [
+                  ...new Set([...(passo.proximoIds ?? []), connection.target as string]),
+                ],
+              }
+            : passo,
+        ),
+      );
+    },
+    [passos, onChange],
+  );
+  const excluirArestas = useCallback(
+    (removidas: Edge[]) => {
+      const ids = new Set(removidas.map((aresta) => `${aresta.source}:${aresta.target}`));
+      onChange(
+        passos.map((passo) => ({
+          ...passo,
+          proximoIds: (passo.proximoIds ?? []).filter(
+            (destino) => !ids.has(`${passo.id}:${destino}`),
+          ),
+        })),
+      );
+    },
+    [passos, onChange],
+  );
 
   const onNodesChange: OnNodesChange<Node<PassoNodeData>> = useCallback(
     (changes) => {
@@ -134,8 +209,10 @@ export function FlowBuilderCanvas({
         edges={edges}
         nodeTypes={NODE_TYPES}
         onNodesChange={readOnly ? undefined : onNodesChange}
+        onConnect={readOnly ? undefined : conectar}
+        onEdgesDelete={readOnly ? undefined : excluirArestas}
         nodesDraggable={!readOnly}
-        nodesConnectable={false}
+        nodesConnectable={!readOnly}
         fitView
       >
         <Background />

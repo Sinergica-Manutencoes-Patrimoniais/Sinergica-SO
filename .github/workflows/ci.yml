@@ -26,6 +26,10 @@ jobs:
           # dependency-cruiser 18 exige Node ^22||^24||>=26 (arch:check falhava em "20").
           node-version: "22"
           cache: pnpm
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
       - run: pnpm install --frozen-lockfile
 
       # Gates da esteira SDD (no monorepo inteiro)
@@ -35,6 +39,12 @@ jobs:
         run: pnpm run eval:spec
       - name: Diagramas Mermaid
         run: node scripts/validate-mermaid.mjs
+      - name: Consistência de Edge Functions (função órfã / invoke sem função)
+        run: pnpm run check:edge-functions
+      - name: Tipos das Edge Functions
+        run: deno check --node-modules-dir=auto supabase/functions/*/index.ts
+      - name: Testes Deno das Edge Functions
+        run: deno test --node-modules-dir=auto --allow-env --allow-net supabase/functions
 
       # Gates de segurança (BLOQUEANTES)
       # gitleaks via CLI (MIT, grátis) — a gitleaks-action exige GITLEAKS_LICENSE em repos de

@@ -10,7 +10,9 @@
       ".turbo/**",
       "supabase/.temp/**",
       ".triviaiox-core/**",
-      ".codex/**"
+      ".codex/**",
+      ".claude/**",
+      "graphify-out/**"
     ]
   },
   "organizeImports": { "enabled": true },

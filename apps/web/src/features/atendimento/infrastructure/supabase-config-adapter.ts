@@ -11,6 +11,8 @@ import type {
   EditarPersonaGatewayInput,
   EditarTagCommand,
   SalvarConfigCanalGatewayInput,
+  SalvarConfigIaGatewayInput,
+  SalvarConfigOperacaoGatewayInput,
 } from "../application/config-gateway";
 import type { ConfigCanalItem, ModoZe } from "../domain/config-canal";
 import type { InstanciaAgenteItem } from "../domain/instancias-agente";
@@ -38,7 +40,25 @@ interface PersonaRow {
   prompt_sistema: string;
   base_conhecimento: string | null;
   ativo: boolean;
+  modelo_llm: string;
+  janela_inicio: string | null;
+  janela_fim: string | null;
+  janela_dias: number[];
+  tool_use_enabled: boolean;
+  rag_enabled: boolean;
+  vendas_enabled: boolean;
+  consulta_pedidos_enabled: boolean;
+  limite_diario_mensagens: number | null;
+  transferir_apos_n_respostas: number | null;
+  palavras_transferencia: string[];
+  orcamento_mensal_usd: number | null;
 }
+
+// Uma única string literal (sem concatenação) — supabase-js infere o tipo de retorno do
+// `.select()` a partir do LITERAL da coluna; concatenar com `+` vira `string` genérico e quebra
+// essa inferência (erro TS2352 "GenericStringError").
+const PERSONA_COLUNAS =
+  "id,nome,tipo,prompt_sistema,base_conhecimento,ativo,modelo_llm,janela_inicio,janela_fim,janela_dias,tool_use_enabled,rag_enabled,vendas_enabled,consulta_pedidos_enabled,limite_diario_mensagens,transferir_apos_n_respostas,palavras_transferencia,orcamento_mensal_usd";
 
 interface InstanciaAgenteRow {
   id: string;
@@ -70,6 +90,18 @@ function mapPersona(row: PersonaRow): PersonaItem {
     promptSistema: row.prompt_sistema,
     baseConhecimento: row.base_conhecimento,
     ativo: row.ativo,
+    modeloLlm: row.modelo_llm,
+    janelaInicio: row.janela_inicio,
+    janelaFim: row.janela_fim,
+    janelaDias: row.janela_dias,
+    toolUseEnabled: row.tool_use_enabled,
+    ragEnabled: row.rag_enabled,
+    vendasEnabled: row.vendas_enabled,
+    consultaPedidosEnabled: row.consulta_pedidos_enabled,
+    limiteDiarioMensagens: row.limite_diario_mensagens,
+    transferirAposNRespostas: row.transferir_apos_n_respostas,
+    palavrasTransferencia: row.palavras_transferencia,
+    orcamentoMensalUsd: row.orcamento_mensal_usd,
   };
 }
 
@@ -182,7 +214,7 @@ export const supabaseConfigAdapter: ConfigGateway = {
     const { data, error } = await supabase
       .schema("atendimento")
       .from("personas")
-      .select("id,nome,tipo,prompt_sistema,base_conhecimento,ativo")
+      .select(PERSONA_COLUNAS)
       .order("nome");
     if (error) throw error;
     return ((data ?? []) as PersonaRow[]).map(mapPersona);
@@ -199,7 +231,7 @@ export const supabaseConfigAdapter: ConfigGateway = {
         base_conhecimento: input.baseConhecimento,
         created_by: input.userId,
       })
-      .select("id,nome,tipo,prompt_sistema,base_conhecimento,ativo")
+      .select(PERSONA_COLUNAS)
       .single();
     if (error) throw error;
     return mapPersona(data as PersonaRow);
@@ -218,7 +250,7 @@ export const supabaseConfigAdapter: ConfigGateway = {
         updated_by: input.userId,
       })
       .eq("id", input.id)
-      .select("id,nome,tipo,prompt_sistema,base_conhecimento,ativo")
+      .select(PERSONA_COLUNAS)
       .single();
     if (error) throw error;
     return mapPersona(data as PersonaRow);
@@ -231,6 +263,25 @@ export const supabaseConfigAdapter: ConfigGateway = {
       .update({ ativo: false, updated_at: new Date().toISOString(), updated_by: input.userId })
       .eq("id", input.id);
     if (error) throw error;
+  },
+
+  async salvarConfigIa(input: SalvarConfigIaGatewayInput) {
+    const { data, error } = await supabase
+      .schema("atendimento")
+      .from("personas")
+      .update({
+        modelo_llm: input.modeloLlm,
+        janela_inicio: input.janelaInicio,
+        janela_fim: input.janelaFim,
+        janela_dias: input.janelaDias,
+        updated_at: new Date().toISOString(),
+        updated_by: input.userId,
+      })
+      .eq("id", input.personaId)
+      .select(PERSONA_COLUNAS)
+      .single();
+    if (error) throw error;
+    return mapPersona(data as PersonaRow);
   },
 
   async listarInstanciasAgente() {
@@ -265,5 +316,28 @@ export const supabaseConfigAdapter: ConfigGateway = {
       .update({ ativo: false, updated_at: new Date().toISOString(), updated_by: input.userId })
       .eq("id", input.id);
     if (error) throw error;
+  },
+
+  async salvarConfigOperacao(input: SalvarConfigOperacaoGatewayInput) {
+    const { data, error } = await supabase
+      .schema("atendimento")
+      .from("personas")
+      .update({
+        tool_use_enabled: input.toolUseEnabled,
+        rag_enabled: input.ragEnabled,
+        vendas_enabled: input.vendasEnabled,
+        consulta_pedidos_enabled: input.consultaPedidosEnabled,
+        limite_diario_mensagens: input.limiteDiarioMensagens,
+        transferir_apos_n_respostas: input.transferirAposNRespostas,
+        palavras_transferencia: input.palavrasTransferencia,
+        orcamento_mensal_usd: input.orcamentoMensalUsd,
+        updated_at: new Date().toISOString(),
+        updated_by: input.userId,
+      })
+      .eq("id", input.personaId)
+      .select(PERSONA_COLUNAS)
+      .single();
+    if (error) throw error;
+    return mapPersona(data as PersonaRow);
   },
 };

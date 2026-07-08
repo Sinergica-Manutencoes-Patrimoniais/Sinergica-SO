@@ -1,6 +1,6 @@
 import { Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { FluxoItem, PassoFluxo } from "../domain/fluxos";
+import type { FluxoItem, FluxoLog, FluxoRecipe, PassoFluxo } from "../domain/fluxos";
 import { novoPasso } from "../domain/fluxos";
 import type { PersonaItem } from "../domain/personas";
 import { FlowBuilderCanvas } from "./FlowBuilderCanvas";
@@ -12,6 +12,10 @@ export function FluxosManager({
   onCriar,
   onSalvarPassos,
   onDesativar,
+  recipes,
+  logs,
+  onCriarDeRecipe,
+  onCarregarLogs,
 }: {
   fluxos: FluxoItem[];
   personas: PersonaItem[];
@@ -19,12 +23,18 @@ export function FluxosManager({
   onCriar: (nome: string, personaId: string) => Promise<void>;
   onSalvarPassos: (fluxoId: string, passos: PassoFluxo[]) => Promise<void>;
   onDesativar: (id: string) => Promise<void>;
+  recipes: FluxoRecipe[];
+  logs: FluxoLog[];
+  onCriarDeRecipe: (recipeId: string, nome: string, personaId: string) => Promise<void>;
+  onCarregarLogs: (fluxoId: string) => Promise<void>;
 }) {
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
   const [passosLocais, setPassosLocais] = useState<PassoFluxo[]>([]);
   const [criando, setCriando] = useState(false);
   const [nome, setNome] = useState("");
   const [personaId, setPersonaId] = useState("");
+  const [recipeId, setRecipeId] = useState("");
+  const [mostrarLogs, setMostrarLogs] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -39,10 +49,12 @@ export function FluxosManager({
     setSalvando(true);
     setErro(null);
     try {
-      await onCriar(nome, personaId);
+      if (recipeId) await onCriarDeRecipe(recipeId, nome, personaId);
+      else await onCriar(nome, personaId);
       setCriando(false);
       setNome("");
       setPersonaId("");
+      setRecipeId("");
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Não foi possível criar o fluxo.");
     } finally {
@@ -117,6 +129,23 @@ export function FluxosManager({
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
               />
+            </label>
+            <label className="block">
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+                Recipe (opcional)
+              </span>
+              <select
+                className="input mt-1"
+                value={recipeId}
+                onChange={(e) => setRecipeId(e.target.value)}
+              >
+                <option value="">Começar vazio</option>
+                {recipes.map((recipe) => (
+                  <option key={recipe.id} value={recipe.id}>
+                    {recipe.nome}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="block">
               <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
@@ -197,6 +226,16 @@ export function FluxosManager({
                   Adicionar passo
                 </button>
               )}
+              <button
+                type="button"
+                onClick={async () => {
+                  setMostrarLogs((valor) => !valor);
+                  await onCarregarLogs(selecionado.id);
+                }}
+                className="rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2"
+              >
+                Logs
+              </button>
             </div>
             {temEscrita && (
               <div className="flex items-center gap-2">
@@ -225,6 +264,23 @@ export function FluxosManager({
             readOnly={!temEscrita}
             onChange={setPassosLocais}
           />
+          {mostrarLogs && (
+            <section className="rounded-[10px] border border-line bg-card p-4">
+              <h4 className="text-sm font-semibold text-ink">Execuções recentes</h4>
+              {logs.length === 0 ? (
+                <p className="mt-2 text-sm text-ink-3">Nenhuma execução registrada.</p>
+              ) : (
+                <div className="mt-2 divide-y divide-line-soft">
+                  {logs.map((log) => (
+                    <div key={log.id} className="py-2 text-xs text-ink-2">
+                      {new Date(log.createdAt).toLocaleString("pt-BR")} · conversa {log.conversaId}{" "}
+                      · {log.nosPercorridos.join(" → ")}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </>
       )}
     </div>

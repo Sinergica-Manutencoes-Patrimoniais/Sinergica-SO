@@ -46,13 +46,13 @@ export const ticketsDescriptor: AuvoEntityDescriptor<AuvoTicket, TicketRow> = {
       priority: row.prioridade,
       requestTypeId: row.request_type_id,
       statusId: row.status_id,
-    });
+    }) as AuvoTicket;
   },
   // PATCH só documenta statusId/externalId como editáveis (spec.md → Contexto específico) —
   // título/descrição não têm caminho de edição, então o PATCH de update nunca os inclui, mesmo
   // que tenham mudado localmente.
   toAuvoUpdate(row) {
-    return { statusId: row.status_id };
+    return row.status_id == null ? {} : { statusId: row.status_id };
   },
   fromAuvo(auvo) {
     const auvoId = auvo.id ?? auvo.ticketId;

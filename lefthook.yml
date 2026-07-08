@@ -37,6 +37,8 @@ pre-push:
       run: node scripts/validate-mermaid.mjs
     migrations:
       run: pnpm run lint:migrations # RLS-GRANT (custom) + Squawk se instalado
+    edge-functions:
+      run: pnpm run check:edge-functions # função órfã / functions.invoke sem função declarada (E00-S11)
     lint:
       run: pnpm exec biome check .
     typecheck:

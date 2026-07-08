@@ -39,6 +39,17 @@ interface OsEquipamentoAuvoRow {
   ordem_servico_id: string;
 }
 
+export interface AuvoSyncHealthItem {
+  entity: string;
+  writeEnabled: boolean | null;
+  lastPushOkAt: string | null;
+  lastPullOkAt: string | null;
+  lastErrorAt: string | null;
+  lastError: string | null;
+  pendingCount: number;
+  errorCount: number;
+}
+
 function maxIso(datas: Array<string | null | undefined>): string | null {
   const ordenadas = datas
     .filter((data): data is string => Boolean(data))
@@ -99,6 +110,30 @@ function topClientesPorEquipamento(
 }
 
 export const supabaseDashboardPcmAdapter = {
+  async obterSaudeSync(): Promise<AuvoSyncHealthItem[]> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("auvo_sync_health")
+      .select(
+        "entity,write_enabled,last_push_ok_at,last_pull_ok_at,last_error_at,last_error,push_pending_count,push_error_count",
+      )
+      .order("entity");
+    if (error) {
+      if (isTabelaCampoAusente(error)) return [];
+      throw error;
+    }
+    return (data ?? []).map((row) => ({
+      entity: row.entity as string,
+      writeEnabled: row.write_enabled as boolean | null,
+      lastPushOkAt: row.last_push_ok_at as string | null,
+      lastPullOkAt: row.last_pull_ok_at as string | null,
+      lastErrorAt: row.last_error_at as string | null,
+      lastError: row.last_error as string | null,
+      pendingCount: Number(row.push_pending_count ?? 0),
+      errorCount: Number(row.push_error_count ?? 0),
+    }));
+  },
+
   async obterResumoAuvo(): Promise<DashboardPcmAuvoResumo> {
     const [clientes, tecnicos, equipamentos, snapshots, osEquipamentos] = await Promise.all([
       supabase

@@ -20,6 +20,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError } from "../_shared/auth.ts";
 import { validateAuvoSignature } from "../_shared/auvo/verify-signature.ts";
@@ -344,7 +345,7 @@ function extractEquipmentId(evento: Record<string, unknown>): number | null {
 }
 
 async function upsertTaskSnapshot(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   osId: string,
   taskId: number,
   payload: unknown,

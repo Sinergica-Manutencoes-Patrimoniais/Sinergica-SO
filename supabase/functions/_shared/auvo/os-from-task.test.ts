@@ -80,9 +80,9 @@ function fakeDb(fixtures: {
           throw new Error(`tabela não mapeada no stub: ${table}`);
           // deno-lint-ignore no-unreachable
         },
-      };
-      // deno-lint-ignore no-explicit-any
-    } as any,
+        // deno-lint-ignore no-explicit-any
+      } as any;
+    },
   };
 }
 

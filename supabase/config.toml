@@ -391,6 +391,66 @@ port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
 
+# Edge Functions (E01-S35) — declaração OBRIGATÓRIA para a GitHub Integration nativa do Supabase
+# deployar cada função no merge (Settings → Integrations → GitHub → "Deploy to production"). Uma
+# pasta em supabase/functions/ sem bloco aqui NUNCA é deployada — foi a causa raiz do 404 em
+# `pcm-auvo-tickets-referencia`/`pcm-auvo-users-create` (ver specs/E01-S35-deploy-edge-functions-auvo).
+# `scripts/check-edge-functions.mjs` (E00-S11) falha o CI se uma pasta nova ficar sem bloco aqui.
+#
+# verify_jwt = false: só as duas que são chamadas por sistema EXTERNO sem JWT do Supabase (Auvo,
+# Evolution/WhatsApp) — validam autenticidade por assinatura HMAC própria no corpo/header, não por
+# JWT. Todas as outras exigem verify_jwt = true: chamadas de usuário final (functions.invoke do
+# front, JWT da sessão) ou sistema→sistema internas (trigger pg_net/outra Edge Function, Bearer =
+# service_role key, que também é um JWT válido do projeto — requireServiceRole faz a checagem fina
+# por dentro).
+[functions.pcm-auvo-webhook]
+verify_jwt = false
+[functions.pcm-whatsapp-webhook]
+verify_jwt = false
+[functions.atendimento-meta-webhook]
+verify_jwt = false
+
+[functions.atendimento-metrics]
+verify_jwt = true
+[functions.atendimento-meta]
+verify_jwt = true
+[functions.atendimento-evolution]
+verify_jwt = true
+[functions.atendimento-whatsapp-envio]
+verify_jwt = true
+[functions.importar-relatorio-pdf]
+verify_jwt = true
+[functions.config-gerenciar-usuario]
+verify_jwt = true
+[functions.pcm-auvo-create-task]
+verify_jwt = true
+[functions.pcm-auvo-customers-import]
+verify_jwt = true
+[functions.pcm-auvo-customers-sync]
+verify_jwt = true
+[functions.pcm-auvo-equipment-sync]
+verify_jwt = true
+[functions.pcm-auvo-ferramenta-alocacao]
+verify_jwt = true
+[functions.pcm-auvo-pull]
+verify_jwt = true
+[functions.pcm-auvo-push]
+verify_jwt = true
+[functions.pcm-auvo-sync-all]
+verify_jwt = true
+[functions.pcm-auvo-tasks-import]
+verify_jwt = true
+[functions.pcm-auvo-tickets-referencia]
+verify_jwt = true
+[functions.pcm-auvo-users-create]
+verify_jwt = true
+[functions.pcm-auvo-users-sync]
+verify_jwt = true
+[functions.pcm-auvo-webhooks-register]
+verify_jwt = true
+[functions.pcm-ze-agent]
+verify_jwt = true
+
 # Experimental features may be deprecated any time
 [experimental]
 # Configures Postgres storage engine to use OrioleDB (S3)

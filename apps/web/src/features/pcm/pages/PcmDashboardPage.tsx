@@ -8,6 +8,7 @@ import {
   Clock3,
   DatabaseZap,
   Link2,
+  Loader2,
   RefreshCw,
   TrendingDown,
   TrendingUp,
@@ -15,6 +16,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { sincronizarAuvo } from "../application/sincronizar-auvo";
 import { montarDashboardPcm } from "../domain/dashboard-pcm";
 import type { DashboardPcmResumo, KpiDashboardPcm } from "../domain/dashboard-pcm";
 import {
@@ -24,8 +26,16 @@ import {
   statusOsColor,
 } from "../domain/ordens-servico";
 import { supabaseDashboardPcmAdapter } from "../infrastructure/supabase-dashboard-pcm-adapter";
+import type { AuvoSyncHealthItem } from "../infrastructure/supabase-dashboard-pcm-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
+import { supabaseSincronizarAuvoAdapter } from "../infrastructure/supabase-sincronizar-auvo-adapter";
+
+type EstadoSincronizacaoAuvo =
+  | { fase: "ocioso" }
+  | { fase: "sincronizando" }
+  | { fase: "concluido"; syncedAt: string; etapasComErro: string[] }
+  | { fase: "erro"; mensagem: string };
 
 type Estado =
   | { fase: "carregando" }
@@ -46,6 +56,10 @@ export function PcmDashboardPage({
   onVerBacklog: () => void;
 }) {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
+  const [sincronizacaoAuvo, setSincronizacaoAuvo] = useState<EstadoSincronizacaoAuvo>({
+    fase: "ocioso",
+  });
+  const [saudeSync, setSaudeSync] = useState<AuvoSyncHealthItem[]>([]);
 
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
@@ -54,7 +68,11 @@ export function PcmDashboardPage({
         supabaseHubOsAdapter.listarOrdensServico(),
         supabaseQualidadeAdapter.listarInspecoes(),
       ]);
-      const resumoAuvo = await supabaseDashboardPcmAdapter.obterResumoAuvo();
+      const [resumoAuvo, saude] = await Promise.all([
+        supabaseDashboardPcmAdapter.obterResumoAuvo(),
+        supabaseDashboardPcmAdapter.obterSaudeSync(),
+      ]);
+      setSaudeSync(saude);
       setEstado({
         fase: "pronto",
         dashboard: montarDashboardPcm(ordens, inspecoes, new Date(), resumoAuvo),
@@ -74,6 +92,25 @@ export function PcmDashboardPage({
   useEffect(() => {
     if (refreshKey > 0) void carregar();
   }, [refreshKey, carregar]);
+
+  const sincronizar = useCallback(async () => {
+    setSincronizacaoAuvo({ fase: "sincronizando" });
+    try {
+      const resultado = await sincronizarAuvo(supabaseSincronizarAuvoAdapter);
+      setSincronizacaoAuvo({
+        fase: "concluido",
+        syncedAt: resultado.syncedAt,
+        etapasComErro: resultado.etapas.filter((e) => !e.ok).map((e) => e.step),
+      });
+      await carregar(); // relê o cache local, agora atualizado pelo pull
+    } catch (error) {
+      setSincronizacaoAuvo({
+        fase: "erro",
+        mensagem:
+          error instanceof Error ? error.message : "Não foi possível sincronizar com o Auvo.",
+      });
+    }
+  }, [carregar]);
 
   if (estado.fase === "carregando") {
     return <div className="p-8 text-center text-sm text-ink-3">Carregando dashboard PCM…</div>;
@@ -107,25 +144,45 @@ export function PcmDashboardPage({
             Dados reais de OS, backlog, inspeções e caches sincronizados do Auvo
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={carregar}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Atualizar
-          </button>
-          {podeCriarOs && (
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onNovaOs}
-              className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+              onClick={carregar}
+              title="Relê os dados já sincronizados localmente (rápido, não chama o Auvo)"
+              className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
-              <ClipboardList className="w-4 h-4" />
-              Nova OS
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
             </button>
-          )}
+            <button
+              type="button"
+              onClick={sincronizar}
+              disabled={sincronizacaoAuvo.fase === "sincronizando"}
+              title="Puxa os dados do Auvo agora (clientes, equipe, tarefas viram OS aberta) — os cadastros feitos aqui já vão pro Auvo na hora, isto é só para trazer o que mudou lá"
+              className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Loader2
+                className={`h-4 w-4 ${sincronizacaoAuvo.fase === "sincronizando" ? "animate-spin" : "hidden"}`}
+              />
+              <DatabaseZap
+                className={`h-4 w-4 ${sincronizacaoAuvo.fase === "sincronizando" ? "hidden" : ""}`}
+              />
+              {sincronizacaoAuvo.fase === "sincronizando" ? "Sincronizando…" : "Sincronizar Auvo"}
+            </button>
+            {podeCriarOs && (
+              <button
+                type="button"
+                onClick={onNovaOs}
+                className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+              >
+                <ClipboardList className="w-4 h-4" />
+                Nova OS
+              </button>
+            )}
+          </div>
+          <StatusSincronizacaoAuvo estado={sincronizacaoAuvo} />
+          <BadgeSaudeSync itens={saudeSync} />
         </div>
       </div>
 
@@ -233,6 +290,58 @@ export function PcmDashboardPage({
         </div>
       </div>
     </div>
+  );
+}
+
+function BadgeSaudeSync({ itens }: { itens: AuvoSyncHealthItem[] }) {
+  if (itens.length === 0) {
+    return <span className="text-[11px] text-ink-3">Saúde Auvo: sem dados</span>;
+  }
+  const comErro = itens.filter((item) => item.lastErrorAt || item.errorCount > 0);
+  const dryRun = itens.filter((item) => item.writeEnabled === false);
+  const titulo = comErro
+    .map((item) => `${item.entity}: ${item.lastError ?? `${item.errorCount} erro(s)`}`)
+    .join("\n");
+  return (
+    <span
+      title={titulo || `${itens.length} entidades monitoradas`}
+      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+        comErro.length > 0
+          ? "bg-[#FFF4F2] text-[#A12D24]"
+          : dryRun.length > 0
+            ? "bg-[#FFF8E6] text-[#8A5A00]"
+            : "bg-[#E7F5EC] text-[#1E8E45]"
+      }`}
+    >
+      Saúde Auvo: {comErro.length > 0 ? `${comErro.length} com erro` : `${dryRun.length} dry-run`}
+    </span>
+  );
+}
+
+function StatusSincronizacaoAuvo({ estado }: { estado: EstadoSincronizacaoAuvo }) {
+  if (estado.fase === "ocioso") return null;
+
+  if (estado.fase === "sincronizando") {
+    return <p className="text-xs text-ink-3">Puxando dados do Auvo…</p>;
+  }
+
+  if (estado.fase === "erro") {
+    return <p className="text-xs font-medium text-[#C5362B]">{estado.mensagem}</p>;
+  }
+
+  if (estado.etapasComErro.length > 0) {
+    return (
+      <p className="text-xs font-medium text-[#B26A00]">
+        Sincronizado às {formatarDataHoraCurta(estado.syncedAt)} — falhou em:{" "}
+        {estado.etapasComErro.join(", ")}
+      </p>
+    );
+  }
+
+  return (
+    <p className="text-xs text-ink-3">
+      Sincronizado com o Auvo às {formatarDataHoraCurta(estado.syncedAt)}
+    </p>
   );
 }
 

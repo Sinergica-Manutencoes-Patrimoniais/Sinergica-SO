@@ -114,12 +114,12 @@ serve(async (req) => {
         console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "equipamento Auvo sem id — ignorado", equip: e }));
         continue;
       }
-      let auvoCustomerId: number | null = null;
+      let resolvedAuvoCustomerId: number | null = null;
       let clientId: string | null = null;
       const customerId = auvoCustomerId(e);
       if (customerId != null) {
         if (clientesExistentes.has(customerId)) {
-          auvoCustomerId = customerId;
+          resolvedAuvoCustomerId = customerId;
           clientId = clientesExistentes.get(customerId) ?? null;
         } else {
           console.error(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "cliente do equipamento ainda não sincronizado no PCM — auvo_customer_id gravado como null", auvo_equipment_id: auvoEquipmentId, customerId }));
@@ -129,7 +129,7 @@ serve(async (req) => {
         auvo_equipment_id: auvoEquipmentId,
         auvo_id: auvoEquipmentId,
         nome: e.name ?? e.description ?? `Equipamento ${auvoEquipmentId}`,
-        auvo_customer_id: auvoCustomerId,
+        auvo_customer_id: resolvedAuvoCustomerId,
         client_id: clientId,
         auvo_sync_status: "synced",
         auvo_synced_at: now,

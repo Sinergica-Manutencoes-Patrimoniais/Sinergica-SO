@@ -42,7 +42,7 @@ export const funcionariosDescriptor: AuvoEntityDescriptor<AuvoUser, FuncionarioR
       phoneNumber: row.telefone,
       email: row.email,
       unavailableForTasks: row.ativo === false,
-    });
+    }) as AuvoUser;
   },
   fromAuvo(auvo) {
     const auvoId = auvo.userID ?? auvo.id;

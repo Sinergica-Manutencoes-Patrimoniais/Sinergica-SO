@@ -1,5 +1,6 @@
 import type { ConversaItem, StatusConversa } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
+import type { MensagemRicaInput } from "../domain/mensagens";
 
 export interface EnviarMensagemCommand {
   conversaId: string;
@@ -31,4 +32,6 @@ export interface AtendimentoGateway {
   devolverAoZe(input: DevolverAoZeCommand): Promise<void>;
   marcarComoLida(input: MarcarConversaLidaCommand): Promise<void>;
   acionarZeAgora(input: AcionarZeAgoraCommand): Promise<void>;
+  enviarMensagemRica(input: MensagemRicaInput & { conversaId: string }): Promise<MensagemItem>;
+  atualizarTags(conversaId: string, tags: string[]): Promise<void>;
 }

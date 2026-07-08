@@ -22,6 +22,7 @@ import { AuvoApiError, auvoDelete, auvoPatch, auvoPost } from "../_shared/auvo/c
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
 import { getDescriptor } from "../_shared/auvo/registry/index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 
 const FN = "pcm-auvo-push";
 
@@ -43,6 +44,10 @@ export interface OutboxRow {
 export interface OutboxRowDb {
   fetchOrigem(table: string, rowId: string): Promise<Record<string, unknown> | null>;
   applyAuvoSync(table: string, rowId: string, patch: Record<string, unknown>): Promise<void>;
+  /** Espelha o `writeEnabled` do descriptor em `pcm.auvo_entity_status` (E00-S11) — a única forma
+   * de uma view SQL saber se uma entidade está em dry-run de propósito (não é erro) ou se algo
+   * quebrou. Chamado uma vez por entidade vista no lote, nunca por linha. */
+  upsertEntityStatus(entity: string, writeEnabled: boolean): Promise<void>;
 }
 
 export interface ProcessResult {
@@ -141,7 +146,7 @@ export async function processOutboxRow(
   return { ok: true };
 }
 
-function makeSupabaseOutboxRowDb(db: ReturnType<typeof createClient>): OutboxRowDb {
+function makeSupabaseOutboxRowDb(db: UntypedSupabaseClient): OutboxRowDb {
   return {
     async fetchOrigem(table, rowId) {
       const { data, error } = await db.schema("pcm").from(table).select("*").eq("id", rowId).maybeSingle();
@@ -156,10 +161,18 @@ function makeSupabaseOutboxRowDb(db: ReturnType<typeof createClient>): OutboxRow
       });
       if (error) throw error;
     },
+    async upsertEntityStatus(entity, writeEnabled) {
+      const { error } = await db
+        .schema("pcm")
+        .from("auvo_entity_status")
+        .upsert({ entity, write_enabled: writeEnabled, updated_at: new Date().toISOString() }, { onConflict: "entity" });
+      // Nunca deixa a saúde-de-sync (visibilidade) derrubar o drain (função) — só loga.
+      if (error) console.error(JSON.stringify({ nivel: "error", fn: FN, msg: "falha ao gravar auvo_entity_status", entity, detail: error.message }));
+    },
   };
 }
 
-serve(async (req) => {
+if (import.meta.main) serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin"));
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors, status: 204 });
 
@@ -188,11 +201,19 @@ serve(async (req) => {
     const linhas = (lote ?? []) as OutboxRow[];
     let sent = 0;
     let failed = 0;
+    const entidadesVistas = new Set<string>();
 
     for (const linha of linhas) {
       const descriptor = getDescriptor(linha.entity) as
         | AuvoEntityDescriptor<Record<string, unknown>, Record<string, unknown>>
         | undefined;
+
+      // E00-S11: espelha write_enabled uma vez por entidade (não por linha) — visibilidade de
+      // saúde de sync, nunca bloqueia o processamento da linha em si.
+      if (descriptor && !entidadesVistas.has(linha.entity)) {
+        entidadesVistas.add(linha.entity);
+        await rowDb.upsertEntityStatus(linha.entity, descriptor.writeEnabled);
+      }
 
       let resultado: ProcessResult;
       try {

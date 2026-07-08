@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { novoPasso, validarFluxo, validarPassos } from "./fluxos";
+import { copiarRecipe, novoPasso, validarFluxo, validarPassos } from "./fluxos";
 import type { PassoFluxo } from "./fluxos";
 
 describe("validarFluxo", () => {
@@ -66,5 +66,25 @@ describe("validarPassos", () => {
     expect(() => validarPassos([fakePasso({ pergunta: "  " })])).toThrow(
       "Todo passo precisa de uma pergunta.",
     );
+  });
+});
+
+describe("grafo ramificável", () => {
+  it("aceita ramificação alcançável e rejeita ciclo/nó órfão", () => {
+    const raiz = fakePasso({ id: "raiz", proximoIds: ["a", "b"] });
+    const a = fakePasso({ id: "a", ordem: 1, proximoIds: [] });
+    const b = fakePasso({ id: "b", ordem: 2, proximoIds: [] });
+    expect(validarPassos([raiz, a, b])).toHaveLength(3);
+    expect(() => validarPassos([raiz, a, { ...b, proximoIds: ["raiz"] }])).toThrow("ciclos");
+    expect(() => validarPassos([{ ...raiz, proximoIds: ["a"] }, a, b])).toThrow("órfão");
+  });
+
+  it("copia recipe sem manter ids/referência viva", () => {
+    const original = fakePasso({ id: "origem", proximoIds: [] });
+    const copia = copiarRecipe({ id: "r1", nome: "R", descricao: "", definicao: [original] });
+    expect(copia[0]?.id).not.toBe(original.id);
+    if (!copia[0]) throw new Error("cópia ausente");
+    copia[0].campo = "alterado";
+    expect(original.campo).toBe("orcamento");
   });
 });

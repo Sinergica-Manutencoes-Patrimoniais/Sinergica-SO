@@ -1,7 +1,8 @@
-import type { FluxoFormData, FluxoItem, PassoFluxo } from "../domain/fluxos";
+import type { FluxoFormData, FluxoItem, FluxoLog, FluxoRecipe, PassoFluxo } from "../domain/fluxos";
 
 export interface CriarFluxoCommand extends FluxoFormData {
   userId: string;
+  definicao?: PassoFluxo[];
 }
 
 export interface SalvarPassosCommand {
@@ -20,4 +21,6 @@ export interface FluxoGateway {
   criarFluxo(input: CriarFluxoCommand): Promise<FluxoItem>;
   salvarPassos(input: SalvarPassosCommand): Promise<FluxoItem>;
   desativarFluxo(input: DesativarFluxoCommand): Promise<void>;
+  listarRecipes(): Promise<FluxoRecipe[]>;
+  listarLogs(fluxoId: string): Promise<FluxoLog[]>;
 }
