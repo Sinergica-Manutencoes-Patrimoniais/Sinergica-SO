@@ -12,7 +12,7 @@ const InputSchema = z.discriminatedUnion("acao", [
 
 serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin"));
-  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   try {
     if (req.method !== "POST") throw new HttpError(405, "Método não permitido");
     await requireAuth(req);

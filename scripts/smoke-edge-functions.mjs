@@ -7,8 +7,9 @@
 //
 // Uso: SUPABASE_PROJECT_ID=<ref> node scripts/smoke-edge-functions.mjs
 // 404 = função não existe no projeto (deploy não rodou) → falha.
-// Qualquer outro status (200/204/400/401/403/405) = função existe e respondeu → passa. Este script
-// não valida autenticação/lógica de negócio, só que o deploy aconteceu.
+// 5xx = blob existe, mas não inicializou/respondeu corretamente → falha.
+// 200/204/400/401/403/405 = função existe e respondeu → passa. Este script não valida a lógica
+// de negócio, somente disponibilidade básica e bootstrap do runtime.
 
 import { readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
@@ -44,7 +45,7 @@ async function probeOnce(name) {
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(url, { method: "OPTIONS", signal: controller.signal });
-    return { name, status: res.status, ok: res.status !== 404 };
+    return { name, status: res.status, ok: res.status !== 404 && res.status < 500 };
   } catch (e) {
     return { name, status: `erro de rede (${e.message})`, ok: false };
   } finally {
@@ -77,7 +78,7 @@ for (const r of results) {
 }
 
 if (failed.length > 0) {
-  console.error(`\n✗ smoke-edge-functions: ${failed.length}/${functions.length} função(ões) não deployada(s) (404).`);
+  console.error(`\n✗ smoke-edge-functions: ${failed.length}/${functions.length} função(ões) indisponível(is) (404/5xx).`);
   process.exit(1);
 }
 
