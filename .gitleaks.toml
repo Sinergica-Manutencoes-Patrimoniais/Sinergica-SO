@@ -4,8 +4,9 @@ title = "gitleaks config — Sinérgica SO"
 useDefault = true
 
 [allowlist]
-description = "Vendored — não é código do projeto (nunca editado, ver AGENTS.md). Falso positivo confirmado: qa-security-checklist.md:492 é um exemplo ilustrativo de código no próprio checklist do Triviaiox ('sk-live-abc123xyz789'), não um secret real."
+description = "Vendored e lockfiles gerados. deno.lock contém hashes SHA-256 de módulos remotos que podem coincidir com generic-api-key; não contém credenciais."
 paths = [
   '''\.triviaiox-core/''',
   '''\.triviaiox/''',
+  '''^deno\.lock$''',
 ]
