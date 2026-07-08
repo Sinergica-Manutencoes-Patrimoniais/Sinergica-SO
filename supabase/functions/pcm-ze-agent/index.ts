@@ -5,14 +5,19 @@ import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
+import { responderEvolution } from "../_shared/evolution.ts";
 
 const FN = "pcm-ze-agent";
 
 const InputSchema = z.object({
   queueKey: z.string().optional(),
+  // E02-S01: "Responder com IA agora" (Inbox humano) — ignora o filtro normal de
+  // status='pending'/wait_until e o check de pausa por-conversa. Exige queueKey.
+  forcar: z.boolean().optional(),
 });
 
 type ModoZe = "off" | "monitor" | "active";
+type ModoConversa = "auto" | "pausado";
 
 interface QueueItem {
   id: string;
@@ -43,10 +48,10 @@ serve(async (req) => {
     if (!url || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
     const db = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
-    const items = await buscarPendencias(db, input.queueKey);
+    const items = await buscarPendencias(db, input.queueKey, input.forcar);
     const results = [];
     for (const item of items) {
-      results.push(await processarItem(db, item));
+      results.push(await processarItem(db, item, input.forcar ?? false));
     }
 
     return json(200, { ok: true, processed: results.length, results }, cors);
@@ -58,7 +63,23 @@ serve(async (req) => {
   }
 });
 
-async function buscarPendencias(db: ReturnType<typeof createClient>, queueKey?: string): Promise<QueueItem[]> {
+async function buscarPendencias(db: ReturnType<typeof createClient>, queueKey?: string, forcar?: boolean): Promise<QueueItem[]> {
+  // E02-S01 (forcar): "Responder com IA agora" processa a janela atual do queueKey
+  // independente de status/wait_until — pega o item mais recente daquela conversa, seja qual for
+  // seu estado. Exige queueKey (não faz sentido "forçar" sem saber qual conversa).
+  if (forcar) {
+    if (!queueKey) throw new HttpError(400, "forcar exige queueKey");
+    const { data, error } = await db
+      .schema("atendimento")
+      .from("wa_queue")
+      .select("id,queue_key")
+      .eq("queue_key", queueKey)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (error) throw error;
+    return (data ?? []) as QueueItem[];
+  }
+
   let query = db
     .schema("atendimento")
     .from("wa_queue")
@@ -73,16 +94,15 @@ async function buscarPendencias(db: ReturnType<typeof createClient>, queueKey?: 
   return (data ?? []) as QueueItem[];
 }
 
-async function processarItem(db: ReturnType<typeof createClient>, item: QueueItem): Promise<Record<string, unknown>> {
+async function processarItem(db: ReturnType<typeof createClient>, item: QueueItem, forcar = false): Promise<Record<string, unknown>> {
   const now = new Date().toISOString();
-  const { data: locked, error: lockError } = await db
+  let lockQuery = db
     .schema("atendimento")
     .from("wa_queue")
     .update({ status: "processing", error_message: null })
-    .eq("id", item.id)
-    .eq("status", "pending")
-    .select("id")
-    .maybeSingle();
+    .eq("id", item.id);
+  if (!forcar) lockQuery = lockQuery.eq("status", "pending");
+  const { data: locked, error: lockError } = await lockQuery.select("id").maybeSingle();
   if (lockError) throw lockError;
   if (!locked) return { queueId: item.id, status: "already_claimed" };
 
@@ -92,14 +112,26 @@ async function processarItem(db: ReturnType<typeof createClient>, item: QueueIte
     const messages = await buscarMensagens(db, instanceId, remoteJid);
     const contexto = messages.map((m) => m.content).filter((c): c is string => Boolean(c?.trim())).join("\n");
 
-    if (!config || !deveAcionarZe(contexto, config.modo, config.bot_jid)) {
+    if (!config) {
       await finalizarFila(db, item.id, "skipped", now);
       return { queueId: item.id, status: "skipped" };
+    }
+
+    if (!forcar) {
+      // E02-S01: pausa POR CONVERSA (humano assumiu) — distinta de config.modo, que é por
+      // condomínio inteiro. 'pausado' vira 'off' só pra esta conversa.
+      const conversaModo = await buscarModoConversa(db, instanceId, remoteJid);
+      const modoEfetivo = conversaModo === "pausado" ? "off" : config.modo;
+      if (!deveAcionarZe(contexto, modoEfetivo, config.bot_jid)) {
+        await finalizarFila(db, item.id, "skipped", now);
+        return { queueId: item.id, status: "skipped" };
+      }
     }
 
     const chamado = await extrairChamadoViaOpenRouter(contexto, config.client_id, remoteJid, messages.at(-1)?.sender_jid ?? undefined);
     if (!chamado.pronto) {
       await responderEvolution(instanceId, remoteJid, chamado.pergunta);
+      await registrarMensagemZe(db, instanceId, remoteJid, chamado.pergunta);
       await finalizarFila(db, item.id, "done", now);
       return { queueId: item.id, status: "asked" };
     }
@@ -126,8 +158,12 @@ async function processarItem(db: ReturnType<typeof createClient>, item: QueueIte
       .single();
     if (osError) throw osError;
 
-    await responderEvolution(instanceId, remoteJid, `Chamado ${os.numero} aberto. Vou acompanhar por aqui.`);
+    const confirmacao = `Chamado ${os.numero} aberto. Vou acompanhar por aqui.`;
+    await responderEvolution(instanceId, remoteJid, confirmacao);
+    await registrarMensagemZe(db, instanceId, remoteJid, confirmacao);
     await db.schema("atendimento").from("wa_messages").update({ replied_at: now }).eq("remote_jid", remoteJid).is("replied_at", null);
+    // E02-S01: liga a OS criada de volta à conversa, pro Inbox humano exibir o deep-link.
+    await db.schema("atendimento").from("conversas").update({ ordem_servico_id: os.id }).eq("instance_id", instanceId).eq("remote_jid", remoteJid);
     await finalizarFila(db, item.id, "done", now);
     return { queueId: item.id, status: "done", osId: os.id, numero: os.numero };
   } catch (e) {
@@ -168,6 +204,49 @@ async function buscarMensagens(db: ReturnType<typeof createClient>, instanceId: 
     .limit(20);
   if (error) throw error;
   return ((data ?? []) as WaMessage[]).reverse();
+}
+
+/** E02-S01: pausa por-conversa, distinta de config_ze.modo (por condomínio). `null` = conversa
+ * ainda não existe em atendimento.conversas (não deveria acontecer — o webhook sempre cria antes
+ * de disparar este agente — mas não falha o fluxo se faltar). */
+async function buscarModoConversa(db: ReturnType<typeof createClient>, instanceId: string, remoteJid: string): Promise<ModoConversa | null> {
+  const { data, error } = await db
+    .schema("atendimento")
+    .from("conversas")
+    .select("modo")
+    .eq("instance_id", instanceId)
+    .eq("remote_jid", remoteJid)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.modo as ModoConversa | undefined) ?? null;
+}
+
+/** E02-S01: espelha uma resposta do Zé em atendimento.mensagens (remetente_tipo='ze'), pro Inbox
+ * humano exibir a conversa inteira. Só chamado depois de `responderEvolution` ter tido sucesso
+ * (se ela lançar, a exceção propaga antes de chegar aqui — nenhuma mensagem "fantasma" é gravada
+ * pra um envio que falhou). Sem lançar se a conversa ainda não existir (mesma postura defensiva
+ * de `buscarModoConversa`). */
+async function registrarMensagemZe(db: ReturnType<typeof createClient>, instanceId: string, remoteJid: string, texto: string): Promise<void> {
+  const { data: conversa, error } = await db
+    .schema("atendimento")
+    .from("conversas")
+    .select("id")
+    .eq("instance_id", instanceId)
+    .eq("remote_jid", remoteJid)
+    .maybeSingle();
+  if (error) throw error;
+  if (!conversa) return;
+  const { error: insertError } = await db
+    .schema("atendimento")
+    .from("mensagens")
+    .insert({
+      conversa_id: conversa.id,
+      direcao: "saida",
+      remetente_tipo: "ze",
+      conteudo: texto,
+      status_entrega: "enviado",
+    });
+  if (insertError) throw insertError;
 }
 
 function deveAcionarZe(content: string, modo: ModoZe, botJid: string | null): boolean {
@@ -257,19 +336,6 @@ async function systemUserId(_db: ReturnType<typeof createClient>): Promise<strin
   const userId = Deno.env.get("ZE_SYSTEM_USER_ID");
   if (!userId) throw new Error("ZE_SYSTEM_USER_ID ausente");
   return userId;
-}
-
-async function responderEvolution(instanceId: string, remoteJid: string, text: string): Promise<void> {
-  const baseUrl = Deno.env.get("EVOLUTION_API_URL") ?? "";
-  const apiKey = Deno.env.get("EVOLUTION_API_KEY") ?? "";
-  if (!baseUrl || !apiKey) throw new Error("EVOLUTION_API_URL/EVOLUTION_API_KEY ausentes");
-  const normalizedBase = baseUrl.replace(/\/$/, "");
-  const res = await fetch(`${normalizedBase}/message/sendText/${encodeURIComponent(instanceId)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", apikey: apiKey },
-    body: JSON.stringify({ number: remoteJid, text }),
-  });
-  if (!res.ok) throw new Error(`Evolution sendText falhou: ${res.status}`);
 }
 
 async function finalizarFila(db: ReturnType<typeof createClient>, queueId: string, status: "done" | "skipped", processedAt: string): Promise<void> {

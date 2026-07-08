@@ -10,7 +10,77 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-07 (sessão Claude) — **PR #30 aberto, CI verde, e E01-S34
+**Última atualização:** 2026-07-07 (sessão Claude) — **Nova épica E02 aberta: Atendimento (Inbox +
+Zé multi-agente). E02-S01 (fundação) + E02-S02 (Inbox) implementadas localmente.**
+Lucas pediu para portar o módulo de Atendimento pronto de um projeto irmão (`heziomos-main`) para
+o Sinérgica-SO, adaptado ao design system. Investigação (Plan Mode) mostrou que não é uma tela —
+são 3 áreas grandes (Dashboard/Inbox/Config, ~15.700 linhas na origem, schema `crm` dedicado).
+Lucas confirmou querer as 3 áreas e todos os canais (WhatsApp+Instagram+Messenger), com o Agente
+Zé (já em produção, `E01-S02`) virando "um agente dentro da estrutura de atendimento" em vez de um
+fluxo paralelo. Dado o tamanho, especifiquei o épico inteiro (8 stories, plano completo salvo em
+`~/.claude/plans/nesse-projeto-tem-o-lively-creek.md`) mas só implementei as 2 primeiras agora —
+S03 a S08 ficam no ROADMAP como "Planejado", com decisões de produto pendentes documentadas story a
+story (ex.: S04 multi-canal precisa perguntar se o Zé deve responder Instagram/Messenger; S07/S08
+podem nem ser escopo de Atendimento, e sim de Comercial).
+
+**E02-S01 (fundação):** migration `0039_E02-S01_atendimento_conversas_mensagens.sql` cria
+`atendimento.conversas`/`atendimento.mensagens` (não reaproveita `wa_messages`/`wa_queue` — ciclo
+de vida diferente, aquelas são log bruto/fila efêmera) com RLS FORCE módulo `atendimento` e RPC
+`atendimento.fn_registrar_mensagem_entrada` (upsert de conversa + insert idempotente de mensagem +
+incremento de `nao_lidas`, tudo atômico — evitar isso numa RPC única criaria dupla contagem em
+toda reentrega de rede do Evolution, já que o dedupe por `wa_message_id` só existe dentro dela).
+`_shared/evolution.ts` extrai `responderEvolution` de `pcm-ze-agent` (reuso). `pcm-whatsapp-
+webhook` ganhou uma chamada aditiva a essa RPC logo após o upsert existente em `wa_messages` (zero
+mudança no caminho antigo). `pcm-ze-agent` ganhou: checagem de `conversas.modo` (pausa o Zé numa
+conversa específica sem mexer em `config_ze`, que é por condomínio inteiro), espelho de toda
+resposta em `mensagens` (`remetente_tipo='ze'`), link de `ordem_servico_id` após criar a OS, e
+campo `forcar?: boolean` no `InputSchema` (aciona o Zé fora da janela normal de debounce — usado
+pelo botão "Responder com IA agora" do Inbox). Edge Function nova `atendimento-whatsapp-envio`
+(`enviar`/`assumir`/`devolver`, via `userClient` — anon key + JWT do chamador, RLS decide
+autorização) grava e envia mensagem humana, marcando `status_entrega` real do Evolution sem
+derrubar a função em caso de falha de envio. pgTAP: `atendimento_conversas_rls.test.sql`,
+`atendimento_mensagens_rls.test.sql`, `atendimento_registrar_mensagem_rpc.test.sql` (prova
+idempotência explicitamente).
+
+**E02-S02 (Inbox):** feature nova `apps/web/src/features/atendimento/` completa (domain/
+application/infrastructure/components/pages, DDD por feature igual a `features/pcm`). Layout 3
+colunas (lista/chat/perfil) com os tokens já existentes do design system (sem shadcn/Radix — não
+existe lib de componentes compartilhada neste projeto). Polling manual (`useEffect`+
+`setInterval`, sem React Query): lista a cada 5s, mensagens da conversa aberta a cada 3s, pausado
+via `document.visibilitychange`. Toggle IA/humano (assumir/devolver) e "Responder com IA agora"
+chamam a Edge Function/`pcm-ze-agent` de S01. `HomePage.tsx` ganhou `AtendimentoView`/
+`ATENDIMENTO_NAV` (1 item, "Inbox") — módulo `atendimento` já existia em `MODULOS`/gate de
+permissão desde antes, só caía no fallback `EmConstrucao`.
+
+Gates locais verdes: `lint:migrations` (39 migrations), `lint`, `typecheck`, `test` (175 pass/9
+skip), `build`, `arch:check`, `audit:esteira` (184 docs), `eval:spec`. Deno CLI/Docker ausentes —
+mesma ressalva de toda a integração Auvo/Zé desde `E01-S09`: os testes Deno das Edge Functions
+novas/editadas não foram executados, e nenhum teste manual em browser com mensagem real via
+Evolution foi feito ainda (pendente, marcado como "pendente" em `specs/E02-S02.../tasks.md`).
+Divergências de spec documentadas (não silenciosas) em `specs/E02-S01-atendimento-fundacao/
+tasks.md`: a RPC de S01 e a consolidação de `enviar`/`assumir`/`devolver` numa única Edge Function
+não estavam no design original, ambas por razões técnicas explicadas ali.
+
+**Commitado, NÃO pushado** — por instrução explícita do Lucas nesta sessão: "o commit se você já
+testou pode seguir, só o push que precisa confirmar se vou querer outras coisas". Aguardando
+confirmação separada antes de `git push` (mesma branch `feat/E01-S22-motor-sync-auvo-write`, que já
+está `ahead 1` do remoto por `E01-S34`).
+
+**Bloqueio de processo (não resolvido, herdado de sessões anteriores):** os mesmos 5 arquivos de
+infra do `graphify` (`.claude/settings.json`, `biome.json`, `scripts/audit-esteira.mjs`,
+`AGENTS.md`, `CLAUDE.md`) seguem modificados e não commitados, e agora também `.codex/hooks.json`
+(novo, não rastreado) e `graphify-out/` inteiro (cache/relatórios gerados, centenas de arquivos) —
+nenhum desses é do escopo de E02-S01/S02, não foram tocados nem staged.
+
+**Próximo passo:** pedir ao Lucas confirmação para `git push` desta branch; depois do push, rodar
+`pnpm run ci:local` real no CI (Deno/pgTAP); testar em browser com `.env.local` + mensagem real via
+Evolution (dev server local, nunca contra o Netlify de produção). Se aprovado, seguir para
+`E02-S03` (Dashboard) só depois de S01+S02 estarem em produção com dado real (métricas vazias não
+validam nada).
+
+---
+
+**Última atualização anterior:** 2026-07-07 (sessão Claude) — **PR #30 aberto, CI verde, e E01-S34
 (Reconciliação Auvo→PCM) aberta e implementada localmente em cima dele.**
 Lucas testou o PR #30 num deploy preview e achou 4 problemas: (1) criar funcionário deu "Failed to
 send a request to the Edge Function", (2) Tickets deu o mesmo erro, (3) OS abertas direto no Auvo

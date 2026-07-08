@@ -61,6 +61,10 @@ serve(async (req) => {
     );
     if (insertMessageError) throw insertMessageError;
 
+    // E02-S01: aggregate voltado a humano (Inbox) — existe/atualiza mesmo com config_ze
+    // desligada/ausente, senão a conversa nunca apareceria pro humano ver.
+    await registrarConversaEMensagem(db, instanceId, message);
+
     const waitUntil = new Date(Date.now() + 3000).toISOString();
     const { data: pending, error: pendingError } = await db
       .schema("atendimento")
@@ -127,6 +131,7 @@ function extractMessage(payload: Record<string, unknown>): {
   messageId: string | null;
   content: string | null;
   receivedAt: string | null;
+  contactName: string | null;
 } {
   const data = asObject(payload.data) ?? asObject(payload.message) ?? payload;
   const key = asObject(data.key);
@@ -141,7 +146,28 @@ function extractMessage(payload: Record<string, unknown>): {
     messageId: firstString([data.messageId, data.id, key?.id]),
     content,
     receivedAt: toIso(data.messageTimestamp ?? data.timestamp ?? payload.date_time),
+    // E02-S01: nome de exibição do contato/grupo — só usado como cache pra lista do Inbox
+    // (nunca bloqueia o fluxo se ausente). Shape de entrega não confirmado, extração defensiva.
+    contactName: firstString([data.pushName, payload.pushName, data.notifyName]),
   };
+}
+
+/** E02-S01: grava/atualiza atendimento.conversas e insere a mensagem de entrada via RPC atômica
+ * (idempotente por wa_message_id, incrementa nao_lidas sem race condition). Roda mesmo com
+ * config_ze desligada/ausente — senão a conversa nunca apareceria pro Inbox humano ver. */
+async function registrarConversaEMensagem(
+  db: ReturnType<typeof createClient>,
+  instanceId: string,
+  message: ReturnType<typeof extractMessage>,
+): Promise<void> {
+  const { error } = await db.schema("atendimento").rpc("fn_registrar_mensagem_entrada", {
+    p_instance_id: instanceId,
+    p_remote_jid: message.remoteJid,
+    p_contato_nome: message.contactName,
+    p_conteudo: message.content,
+    p_wa_message_id: message.messageId,
+  });
+  if (error) throw error;
 }
 
 function scheduleAgent(url: string, serviceKey: string, queueKey: string): void {

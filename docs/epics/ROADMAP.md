@@ -16,7 +16,7 @@ alwaysApply: true
 |----|-------------------|--------|-------------|
 | E00 | Shell & Infra (autenticação, layout, deploy) | Em andamento | — |
 | E01 | PCM · Operação | Planejado | — |
-| E02 | Atendimento · Zé | Planejado | — |
+| E02 | Atendimento · Zé | Em andamento | Claude (sessão Lucas) |
 | E03 | Comercial | Planejado | — |
 | E04 | Financeiro | Planejado | — |
 | E05 | Operação · Estoque | Planejado | — |
@@ -86,7 +86,23 @@ alwaysApply: true
 | E01-S34 | Reconciliação Auvo→PCM — liga o `pg_cron` real das 9 entidades com `cronSchedule` (era metadado morto desde E01-S23), adiciona cron em Tickets, webhook de Task cria OS quando não acha local + import de reconciliação (backfill) | [product](../../specs/E01-S34-reconciliacao-sync-auvo-pcm/product.md) · [design](../../specs/E01-S34-reconciliacao-sync-auvo-pcm/design.md) · [spec](../../specs/E01-S34-reconciliacao-sync-auvo-pcm/spec.md) · [tasks](../../specs/E01-S34-reconciliacao-sync-auvo-pcm/tasks.md) | Achado durante teste manual do PR #30 (2026-07-07): OS abertas direto no Auvo nunca apareciam no PCM; investigação revelou que o cron do motor genérico nunca foi ligado para 9 entidades. Implementada localmente — migrations `0037`/`0038`, `_shared/auvo/os-from-task.ts` compartilhado, `pcm-auvo-webhook` cria OS quando não acha local, nova Edge Function `pcm-auvo-tasks-import` | Claude (sessão Lucas) | ⏳ (AC implementados; gate Deno/DB/browser pendente) |
 
 ### E02 — Atendimento · Zé
-*Stories serão abertas quando E01-S02 iniciar (dependência de design).*
+E01-S02 (Agente Zé) já implementada — épica destravada. Plano completo da épica (8 stories,
+S01-S08) em `~/.claude/plans/nesse-projeto-tem-o-lively-creek.md`: porta o módulo de Atendimento
+do projeto `heziomos-main` (Inbox de conversas + Dashboard + Config), adaptado ao design system
+do Sinérgica-SO, com o Agente Zé virando "um agente dentro da estrutura de atendimento" em vez de
+um fluxo paralelo. S01+S02 implementadas nesta leva; S03-S08 especificadas no plano, aguardando
+priorização (algumas com decisão de produto pendente antes de abrir, ver plano).
+
+| Story ID | Descrição | Spec | Status | Owner | AC verdes |
+|----------|-----------|------|--------|-------|-----------|
+| E02-S01 | Fundação: `atendimento.conversas`/`atendimento.mensagens` + Zé integrado como agente do Inbox (webhook grava conversa/mensagem, ze-agent respeita pausa por-conversa, Edge Function de envio humano) | [product](../../specs/E02-S01-atendimento-fundacao/product.md) · [design](../../specs/E02-S01-atendimento-fundacao/design.md) · [spec](../../specs/E02-S01-atendimento-fundacao/spec.md) · [tasks](../../specs/E02-S01-atendimento-fundacao/tasks.md) | Implementada localmente | Claude (sessão Lucas) | ⏳ |
+| E02-S02 | Inbox de Conversas (UI, WhatsApp-only) — lista + chat + perfil do contato, toggle IA/humano, dentro do módulo Atendimento | [product](../../specs/E02-S02-atendimento-inbox/product.md) · [design](../../specs/E02-S02-atendimento-inbox/design.md) · [spec](../../specs/E02-S02-atendimento-inbox/spec.md) · [tasks](../../specs/E02-S02-atendimento-inbox/tasks.md) | Implementada localmente | Claude (sessão Lucas) | ⏳ |
+| E02-S03 | Dashboard de Atendimento (KPIs/SLA/filas) | — | Planejado (especificada no plano da épica, sem pasta `specs/` própria ainda) | — | — |
+| E02-S04 | Multi-canal: Instagram + Messenger via Meta Graph API | — | Planejado — precisa de decisão de produto (Zé multi-canal ou só Inbox humano?) antes de abrir | — | — |
+| E02-S05 | Config: canais + templates + tags | — | Planejado | — | — |
+| E02-S06 | Config: IA + Personas + Base de Conhecimento | — | Planejado — decisão de produto pendente (1 persona vs. múltiplas) | — | — |
+| E02-S07 | Config: Flow-builder visual (`@xyflow/react`) | — | Planejado — **não abrir sem validar se faz sentido pro caso de uso antes** (ver plano) | — | — |
+| E02-S08 | Config: Lead scoring + Clusters | — | Planejado — **pode ser escopo do épico E03/Comercial, não de Atendimento** (ver plano) | — | — |
 
 ### E03 — Comercial
 *Aguarda diagnóstico do mês 1.*
