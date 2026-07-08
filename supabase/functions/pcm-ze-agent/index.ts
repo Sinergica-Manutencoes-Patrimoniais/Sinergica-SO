@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
 import { responderEvolution } from "../_shared/evolution.ts";
@@ -63,7 +64,7 @@ serve(async (req) => {
   }
 });
 
-async function buscarPendencias(db: ReturnType<typeof createClient>, queueKey?: string, forcar?: boolean): Promise<QueueItem[]> {
+async function buscarPendencias(db: UntypedSupabaseClient, queueKey?: string, forcar?: boolean): Promise<QueueItem[]> {
   // E02-S01 (forcar): "Responder com IA agora" processa a janela atual do queueKey
   // independente de status/wait_until — pega o item mais recente daquela conversa, seja qual for
   // seu estado. Exige queueKey (não faz sentido "forçar" sem saber qual conversa).
@@ -94,7 +95,7 @@ async function buscarPendencias(db: ReturnType<typeof createClient>, queueKey?: 
   return (data ?? []) as QueueItem[];
 }
 
-async function processarItem(db: ReturnType<typeof createClient>, item: QueueItem, forcar = false): Promise<Record<string, unknown>> {
+async function processarItem(db: UntypedSupabaseClient, item: QueueItem, forcar = false): Promise<Record<string, unknown>> {
   const now = new Date().toISOString();
   let lockQuery = db
     .schema("atendimento")
@@ -137,7 +138,7 @@ async function processarItem(db: ReturnType<typeof createClient>, item: QueueIte
 }
 
 async function processarChamados(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   item: QueueItem,
   instanceId: string,
   remoteJid: string,
@@ -159,7 +160,24 @@ async function processarChamados(
   }
 
   const persona = await buscarPersona(db, "chamados");
-  const chamado = await extrairChamadoViaOpenRouter(persona.prompt_sistema, contexto, config.client_id, remoteJid, messages.at(-1)?.sender_jid ?? undefined);
+  if (!personaDisponivelAgora(persona, new Date())) {
+    await finalizarFila(db, item.id, "skipped", now);
+    return { queueId: item.id, status: "outside_service_window" };
+  }
+  if (await deveTransferirParaHumano(db, persona, instanceId, remoteJid, contexto)) {
+    await finalizarFila(db, item.id, "skipped", now);
+    return { queueId: item.id, status: "transferred" };
+  }
+  const conhecimento = persona.rag_enabled
+    ? await buscarConhecimentoRelevante(db, persona.id, contexto)
+    : "";
+  const chamado = await extrairChamadoViaOpenRouter(
+    [persona.prompt_sistema, conhecimento].filter(Boolean).join("\n\n"),
+    contexto,
+    config.client_id,
+    remoteJid,
+    messages.at(-1)?.sender_jid ?? undefined,
+  );
   if (!chamado.pronto) {
     await responderEvolution(instanceId, remoteJid, chamado.pergunta);
     await registrarMensagemAgente(db, instanceId, remoteJid, chamado.pergunta, "ze");
@@ -204,7 +222,7 @@ async function processarChamados(
  * comercial assumir. Reaproveita a mesma fila/lock/debounce de wa_queue do Zé — só o "o que fazer
  * quando pronto" muda (lead em vez de OS). */
 async function processarComercial(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   item: QueueItem,
   instanceId: string,
   remoteJid: string,
@@ -226,14 +244,36 @@ async function processarComercial(
   }
 
   const persona = await buscarPersonaPorId(db, personaId);
-  const passos = await buscarFluxoAtivo(db, personaId);
+  if (!personaDisponivelAgora(persona, new Date())) {
+    await finalizarFila(db, item.id, "skipped", now);
+    return { queueId: item.id, status: "outside_service_window" };
+  }
+  if (await deveTransferirParaHumano(db, persona, instanceId, remoteJid, contexto)) {
+    await finalizarFila(db, item.id, "skipped", now);
+    return { queueId: item.id, status: "transferred" };
+  }
+  const conhecimento = persona.rag_enabled
+    ? await buscarConhecimentoRelevante(db, personaId, contexto)
+    : "";
+  const fluxo = await buscarFluxoAtivo(db, personaId);
+  const passos = fluxo.passos;
   const lead = await extrairLeadViaOpenRouter(
     persona.prompt_sistema,
-    persona.base_conhecimento,
+    [persona.base_conhecimento, conhecimento].filter(Boolean).join("\n\n") || null,
     passos,
     contexto,
     messages.at(-1)?.sender_jid ?? undefined,
   );
+  const conversaExecucao = await buscarConversa(db, instanceId, remoteJid);
+  if (fluxo.fluxoId && conversaExecucao?.id) {
+    await db.schema("atendimento").from("fluxo_logs").insert({
+      fluxo_id: fluxo.fluxoId,
+      conversa_id: conversaExecucao.id,
+      nos_percorridos: passos.map((passo) => passo.id ?? passo.campo),
+      entrada: { contexto: contexto.slice(0, 4000) },
+      saida: lead,
+    });
+  }
 
   if (!lead.pronto) {
     await responderEvolution(instanceId, remoteJid, lead.pergunta);
@@ -243,6 +283,15 @@ async function processarComercial(
   }
 
   const conversa = await buscarConversa(db, instanceId, remoteJid);
+  const leadTier = lead.score >= 80 ? "A" : lead.score >= 60 ? "B" : lead.score >= 40 ? "C" : "D";
+  const { data: clusterNome, error: clusterError } = await db
+    .schema("atendimento")
+    .rpc("fn_classificar_cluster", {
+      p_lead_tier: leadTier,
+      p_segmento: null,
+      p_subsegmento: null,
+    });
+  if (clusterError) throw clusterError;
   const { data: leadRow, error: leadError } = await db
     .schema("comercial")
     .from("leads")
@@ -254,6 +303,8 @@ async function processarComercial(
       origem_ref: remoteJid,
       status: "qualificado",
       score: lead.score,
+      lead_tier: leadTier,
+      cluster_nome: (clusterNome as string | null) ?? null,
       resumo: lead.resumo,
       conversa_id: conversa?.id ?? null,
       contato_id: conversa?.contatoId ?? null,
@@ -291,7 +342,7 @@ function splitQueueKey(queueKey: string): [string, string] {
   return [instanceId, rest.join(":")];
 }
 
-async function buscarConfig(db: ReturnType<typeof createClient>, remoteJid: string) {
+async function buscarConfig(db: UntypedSupabaseClient, remoteJid: string) {
   const { data, error } = await db
     .schema("atendimento")
     .from("config_ze")
@@ -302,7 +353,7 @@ async function buscarConfig(db: ReturnType<typeof createClient>, remoteJid: stri
   return data as { client_id: string; modo: ModoZe; bot_jid: string | null } | null;
 }
 
-async function buscarMensagens(db: ReturnType<typeof createClient>, instanceId: string, remoteJid: string): Promise<WaMessage[]> {
+async function buscarMensagens(db: UntypedSupabaseClient, instanceId: string, remoteJid: string): Promise<WaMessage[]> {
   const { data, error } = await db
     .schema("atendimento")
     .from("wa_messages")
@@ -318,7 +369,7 @@ async function buscarMensagens(db: ReturnType<typeof createClient>, instanceId: 
 /** E02-S01: pausa por-conversa, distinta de config_ze.modo (por condomínio). `null` = conversa
  * ainda não existe em atendimento.conversas (não deveria acontecer — o webhook sempre cria antes
  * de disparar este agente — mas não falha o fluxo se faltar). */
-async function buscarModoConversa(db: ReturnType<typeof createClient>, instanceId: string, remoteJid: string): Promise<ModoConversa | null> {
+async function buscarModoConversa(db: UntypedSupabaseClient, instanceId: string, remoteJid: string): Promise<ModoConversa | null> {
   const { data, error } = await db
     .schema("atendimento")
     .from("conversas")
@@ -330,13 +381,13 @@ async function buscarModoConversa(db: ReturnType<typeof createClient>, instanceI
   return (data?.modo as ModoConversa | undefined) ?? null;
 }
 
-async function buscarConversaId(db: ReturnType<typeof createClient>, instanceId: string, remoteJid: string): Promise<string | null> {
+async function buscarConversaId(db: UntypedSupabaseClient, instanceId: string, remoteJid: string): Promise<string | null> {
   const conversa = await buscarConversa(db, instanceId, remoteJid);
   return conversa?.id ?? null;
 }
 
 async function buscarConversa(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   instanceId: string,
   remoteJid: string,
 ): Promise<{ id: string; contatoId: string | null } | null> {
@@ -359,7 +410,7 @@ async function buscarConversa(
  * "fantasma" é gravada pra um envio que falhou). Sem lançar se a conversa ainda não existir (mesma
  * postura defensiva de `buscarModoConversa`). */
 async function registrarMensagemAgente(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   instanceId: string,
   remoteJid: string,
   texto: string,
@@ -392,27 +443,27 @@ function deveAcionarZe(content: string, modo: ModoZe, botJid: string | null): bo
  * (migration 0041 não aplicada, ou linha apagada via UI), falha alto e claro em vez de divergir
  * silenciosamente de uma cópia hard-coded duplicada. */
 async function buscarPersona(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   tipo: "chamados" | "comercial",
-): Promise<{ id: string; prompt_sistema: string; base_conhecimento: string | null }> {
+): Promise<PersonaRuntime> {
   const { data, error } = await db
     .schema("atendimento")
     .from("personas")
-    .select("id,prompt_sistema,base_conhecimento")
+    .select("id,prompt_sistema,base_conhecimento,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,palavras_transferencia")
     .eq("tipo", tipo)
     .eq("ativo", true)
     .limit(1)
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new HttpError(500, `Nenhuma persona ativa do tipo '${tipo}' configurada`);
-  return data as { id: string; prompt_sistema: string; base_conhecimento: string | null };
+  return data as PersonaRuntime;
 }
 
 /** E02-S08: mapeia uma instância WhatsApp dedicada (config em atendimento.instancias_agente,
  * E02-S06) pra uma persona — usado quando a mensagem não bate com nenhum config_ze.group_jid
  * conhecido (contato novo, não é síndico de condomínio já cliente). */
 async function buscarInstanciaAgente(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   instanceId: string,
 ): Promise<{ personaId: string } | null> {
   const { data, error } = await db
@@ -427,41 +478,126 @@ async function buscarInstanciaAgente(
 }
 
 async function buscarPersonaPorId(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   id: string,
-): Promise<{ prompt_sistema: string; base_conhecimento: string | null }> {
+): Promise<PersonaRuntime> {
   const { data, error } = await db
     .schema("atendimento")
     .from("personas")
-    .select("prompt_sistema,base_conhecimento")
+    .select("id,prompt_sistema,base_conhecimento,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,palavras_transferencia")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new HttpError(500, `Persona '${id}' não encontrada`);
-  return data as { prompt_sistema: string; base_conhecimento: string | null };
+  return data as PersonaRuntime;
+}
+
+interface PersonaRuntime {
+  id: string;
+  prompt_sistema: string;
+  base_conhecimento: string | null;
+  janela_inicio: string | null;
+  janela_fim: string | null;
+  janela_dias: number[];
+  rag_enabled: boolean;
+  limite_diario_mensagens: number | null;
+  palavras_transferencia: string[];
+}
+
+function personaDisponivelAgora(persona: PersonaRuntime, agora: Date): boolean {
+  if (!persona.janela_dias?.includes(agora.getDay())) return false;
+  if (!persona.janela_inicio || !persona.janela_fim) return true;
+  const atual = `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`;
+  return atual >= persona.janela_inicio.slice(0, 5) && atual <= persona.janela_fim.slice(0, 5);
+}
+
+async function buscarConhecimentoRelevante(
+  db: UntypedSupabaseClient,
+  personaId: string,
+  pergunta: string,
+): Promise<string> {
+  const { data, error } = await db
+    .schema("atendimento")
+    .rpc("fn_buscar_conhecimento_relevante", {
+      p_persona_id: personaId,
+      p_pergunta: pergunta.slice(-4000),
+      p_limit: 5,
+    });
+  if (error) throw error;
+  const entradas = (data ?? []) as Array<{ titulo: string; conteudo: string }>;
+  return entradas.length
+    ? `Conhecimento relevante:\n${entradas.map((item) => `- ${item.titulo}: ${item.conteudo}`).join("\n")}`
+    : "";
+}
+
+async function deveTransferirParaHumano(
+  db: UntypedSupabaseClient,
+  persona: PersonaRuntime,
+  instanceId: string,
+  remoteJid: string,
+  contexto: string,
+): Promise<boolean> {
+  const porPalavra = (persona.palavras_transferencia ?? []).some((palavra) =>
+    contexto.toLocaleLowerCase("pt-BR").includes(palavra.toLocaleLowerCase("pt-BR")),
+  );
+  const conversa = await buscarConversa(db, instanceId, remoteJid);
+  let porLimite = false;
+  if (conversa?.id && persona.limite_diario_mensagens !== null) {
+    const inicio = new Date();
+    inicio.setHours(0, 0, 0, 0);
+    const { count, error } = await db
+      .schema("atendimento")
+      .from("mensagens")
+      .select("id", { count: "exact", head: true })
+      .eq("conversa_id", conversa.id)
+      .in("remetente_tipo", ["ze", "agente"])
+      .gte("created_at", inicio.toISOString());
+    if (error) throw error;
+    porLimite = (count ?? 0) >= persona.limite_diario_mensagens;
+  }
+  if ((porPalavra || porLimite) && conversa?.id) {
+    await db
+      .schema("atendimento")
+      .from("conversas")
+      .update({ modo: "pausado" })
+      .eq("id", conversa.id);
+  }
+  return porPalavra || porLimite;
 }
 
 interface PassoFluxo {
+  id?: string;
   campo: string;
   pergunta: string;
   obrigatorio: boolean;
   ordem: number;
+  tipo?: "pergunta" | "decisao";
+  condicao?: string;
+  proximoIds?: string[];
 }
 
 /** E02-S07/E02-S08: roteiro de qualificação (checklist sequencial, não árvore de decisão — ver
  * `specs/E02-S07-atendimento-flow-builder/product.md`) da persona, se houver um configurado.
  * `[]` quando não há fluxo ativo — o agente extrai livremente, sem checklist guiado. */
-async function buscarFluxoAtivo(db: ReturnType<typeof createClient>, personaId: string): Promise<PassoFluxo[]> {
+async function buscarFluxoAtivo(
+  db: UntypedSupabaseClient,
+  personaId: string,
+): Promise<{ fluxoId: string | null; passos: PassoFluxo[] }> {
   const { data, error } = await db
     .schema("atendimento")
     .from("fluxos")
-    .select("definicao")
+    .select("id,definicao")
     .eq("persona_id", personaId)
     .eq("ativo", true)
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  return ((data?.definicao as PassoFluxo[] | undefined) ?? []).sort((a, b) => a.ordem - b.ordem);
+  return {
+    fluxoId: (data?.id as string | undefined) ?? null,
+    passos: ((data?.definicao as PassoFluxo[] | undefined) ?? []).sort(
+      (a, b) => a.ordem - b.ordem,
+    ),
+  };
 }
 
 async function extrairChamadoViaOpenRouter(
@@ -544,7 +680,14 @@ async function extrairLeadViaOpenRouter(
   if (baseConhecimento) partesPrompt.push(`Base de conhecimento:\n${baseConhecimento}`);
   if (passos.length > 0) {
     const checklist = passos
-      .map((p, i) => `${i + 1}. ${p.campo}${p.obrigatorio ? " (obrigatório)" : ""}: ${p.pergunta}`)
+      .map(
+        (p, i) =>
+          `${i + 1}. ${p.campo}${p.obrigatorio ? " (obrigatório)" : ""}: ${p.pergunta}` +
+          (p.condicao ? ` [seguir quando: ${p.condicao}]` : "") +
+          ((p.proximoIds?.length ?? 0) > 1
+            ? ` [ramifica para: ${p.proximoIds?.join(", ")}]`
+            : ""),
+      )
       .join("; ");
     partesPrompt.push(`Colete estas informações antes de finalizar (adapte a pergunta ao que já foi dito, não repita o que o contato já respondeu): ${checklist}`);
   }
@@ -592,7 +735,7 @@ function normalizePrioridade(value: unknown): "baixa" | "normal" | "media" | "al
   return value === "baixa" || value === "media" || value === "alta" || value === "critica" ? value : "normal";
 }
 
-async function proximoNumeroChamado(db: ReturnType<typeof createClient>): Promise<string> {
+async function proximoNumeroChamado(db: UntypedSupabaseClient): Promise<string> {
   const { count, error } = await db
     .schema("pcm")
     .from("ordens_servico")
@@ -601,13 +744,13 @@ async function proximoNumeroChamado(db: ReturnType<typeof createClient>): Promis
   return `CH-${String((count ?? 0) + 1).padStart(3, "0")}`;
 }
 
-async function systemUserId(_db: ReturnType<typeof createClient>): Promise<string> {
+async function systemUserId(_db: UntypedSupabaseClient): Promise<string> {
   const userId = Deno.env.get("ZE_SYSTEM_USER_ID");
   if (!userId) throw new Error("ZE_SYSTEM_USER_ID ausente");
   return userId;
 }
 
-async function finalizarFila(db: ReturnType<typeof createClient>, queueId: string, status: "done" | "skipped", processedAt: string): Promise<void> {
+async function finalizarFila(db: UntypedSupabaseClient, queueId: string, status: "done" | "skipped", processedAt: string): Promise<void> {
   const { error } = await db
     .schema("atendimento")
     .from("wa_queue")

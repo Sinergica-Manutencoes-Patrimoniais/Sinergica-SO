@@ -1,9 +1,13 @@
 import { Bot, MessageCircle, RefreshCw, Send, UserCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type { WaTemplateItem } from "../domain/canais-externos";
 import { canalSuportaIa, labelCanal } from "../domain/conversas";
 import type { ConversaItem } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
+import type { MensagemRicaInput } from "../domain/mensagens";
+import type { TagItem } from "../domain/tags";
 import { MensagemBubble } from "./MensagemBubble";
+import { RichComposer } from "./RichComposer";
 
 export function ConversaChat({
   conversa,
@@ -13,6 +17,10 @@ export function ConversaChat({
   onAssumir,
   onDevolver,
   onAcionarIa,
+  templates,
+  tagsDisponiveis,
+  onEnviarRico,
+  onAtualizarTags,
 }: {
   conversa: ConversaItem | null;
   mensagens: MensagemItem[];
@@ -21,6 +29,10 @@ export function ConversaChat({
   onAssumir: () => Promise<void>;
   onDevolver: () => Promise<void>;
   onAcionarIa: () => Promise<void>;
+  templates: WaTemplateItem[];
+  tagsDisponiveis: TagItem[];
+  onEnviarRico: (input: MensagemRicaInput) => Promise<void>;
+  onAtualizarTags: (tags: string[]) => Promise<void>;
 }) {
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -83,6 +95,42 @@ export function ConversaChat({
                 ? "Atendimento assumido — Zé pausado nesta conversa"
                 : "Agente Zé ativo"}
           </p>
+          <div className="mt-1 flex flex-wrap gap-1">
+            <span className="rounded-full bg-line-soft px-2 py-0.5 text-[10px] font-semibold text-ink-2">
+              {labelCanal(conversa.canal)}
+            </span>
+            {conversa.tags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                disabled={!temEscrita}
+                onClick={() => onAtualizarTags(conversa.tags.filter((item) => item !== tag))}
+                className="rounded-full bg-orange-soft px-2 py-0.5 text-[10px] text-ink-2"
+                title="Remover tag"
+              >
+                {tag} ×
+              </button>
+            ))}
+            {temEscrita && (
+              <select
+                value=""
+                onChange={(event) => {
+                  if (event.target.value)
+                    void onAtualizarTags([...conversa.tags, event.target.value]);
+                }}
+                className="rounded border border-line bg-card text-[10px]"
+              >
+                <option value="">+ tag</option>
+                {tagsDisponiveis
+                  .filter((tag) => tag.ativo && !conversa.tags.includes(tag.nome))
+                  .map((tag) => (
+                    <option key={tag.id} value={tag.nome}>
+                      {tag.nome}
+                    </option>
+                  ))}
+              </select>
+            )}
+          </div>
         </div>
         {temEscrita && (
           <div className="flex shrink-0 gap-2">
@@ -139,6 +187,14 @@ export function ConversaChat({
         <div className="mx-4 mb-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
           {erro}
         </div>
+      )}
+
+      {temEscrita && (
+        <RichComposer
+          templates={templates}
+          disabled={conversa.canal !== "whatsapp"}
+          onEnviar={onEnviarRico}
+        />
       )}
 
       {temEscrita && (

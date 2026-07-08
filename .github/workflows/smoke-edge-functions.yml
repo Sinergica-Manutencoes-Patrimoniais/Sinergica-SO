@@ -1,0 +1,44 @@
+# Smoke-test pós-deploy das Edge Functions (E01-S35, AC-5/AC-6) — não deploya nada, só VERIFICA
+# que o deploy da GitHub Integration nativa (Dashboard → Settings → Integrations → GitHub →
+# "Deploy to production") realmente aconteceu. Nasce do incidente em que o time assumiu que o
+# deploy rodava "pelo git" e não rodava — 404 só apareceu na cara do usuário. Este workflow fecha
+# o loop de feedback: deploy quebrado vira CI vermelho, não silêncio.
+#
+# Roda depois do push em main (dá tempo do deploy nativo já ter iniciado). O script tem retry com
+# backoff (scripts/smoke-edge-functions.mjs) para tolerar o delay normal de propagação.
+#
+# Requer o secret SUPABASE_PROJECT_ID (mesmo já usado por deploy.yml/sync-secrets.yml).
+
+name: Smoke-test Edge Functions (pós-deploy)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/**"
+      - "supabase/config.toml"
+      - ".github/workflows/smoke-edge-functions.yml"
+  workflow_dispatch: # rodar sob demanda após um deploy manual
+
+concurrency:
+  group: smoke-edge-functions-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar secret
+        run: test -n "$SUPABASE_PROJECT_ID" || { echo "::error::SUPABASE_PROJECT_ID ausente — configure em Settings → Secrets and variables → Actions."; exit 1; }
+        env:
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+      - name: Aguardar propagação inicial do deploy nativo
+        run: sleep 30
+
+      - name: Pingar cada função declarada (falha em 404 = deploy não aconteceu)
+        run: node scripts/smoke-edge-functions.mjs
+        env:
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}

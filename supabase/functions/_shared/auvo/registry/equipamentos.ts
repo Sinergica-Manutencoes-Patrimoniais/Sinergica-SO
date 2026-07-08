@@ -43,7 +43,7 @@ export const equipamentosDescriptor: AuvoEntityDescriptor<AuvoEquipment, Equipam
       location: row.localizacao,
       note: row.observacoes,
       active: row.ativo ?? true,
-    });
+    }) as AuvoEquipment;
   },
   fromAuvo(auvo) {
     const auvoId = auvo.id ?? auvo.equipmentId;

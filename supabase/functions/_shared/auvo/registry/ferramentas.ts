@@ -43,7 +43,7 @@ export const ferramentasDescriptor: AuvoEntityDescriptor<AuvoProduct, Ferramenta
       unitaryValue: row.valor_unitario,
       unitaryCost: row.custo_unitario,
       active: row.ativo ?? true,
-    });
+    }) as AuvoProduct;
   },
   fromAuvo(auvo) {
     const auvoId = auvo.id ?? auvo.productId;

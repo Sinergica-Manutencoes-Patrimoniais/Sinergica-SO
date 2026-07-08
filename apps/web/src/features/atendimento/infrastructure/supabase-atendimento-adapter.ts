@@ -8,6 +8,7 @@ import type {
 } from "../application/atendimento-gateway";
 import type { CanalConversa, ConversaItem, StatusConversa } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
+import type { MensagemRicaInput } from "../domain/mensagens";
 
 interface ConversaRow {
   id: string;
@@ -36,12 +37,17 @@ interface MensagemRow {
   status_entrega: "enviando" | "enviado" | "erro" | null;
   erro_detalhe: string | null;
   created_at: string;
+  tipo_conteudo: MensagemItem["tipoConteudo"];
+  midia_url: string | null;
+  midia_nome: string | null;
+  midia_mime: string | null;
+  payload: Record<string, unknown>;
 }
 
 const CONVERSA_COLS =
   "id,client_id,contato_nome,canal,status,modo,atribuido_a,nao_lidas,ultima_mensagem_preview,ultima_mensagem_em,ordem_servico_id,tags,instance_id,remote_jid" as const;
 const MENSAGEM_COLS =
-  "id,conversa_id,direcao,remetente_tipo,remetente_id,conteudo,status_entrega,erro_detalhe,created_at" as const;
+  "id,conversa_id,direcao,remetente_tipo,remetente_id,conteudo,status_entrega,erro_detalhe,created_at,tipo_conteudo,midia_url,midia_nome,midia_mime,payload" as const;
 
 function mapConversa(row: ConversaRow, clientesMap: Map<string, string>): ConversaItem {
   return {
@@ -72,6 +78,11 @@ function mapMensagem(row: MensagemRow): MensagemItem {
     statusEntrega: row.status_entrega,
     erroDetalhe: row.erro_detalhe,
     createdAt: row.created_at,
+    tipoConteudo: row.tipo_conteudo,
+    midiaUrl: row.midia_url,
+    midiaNome: row.midia_nome,
+    midiaMime: row.midia_mime,
+    payload: row.payload ?? {},
   };
 }
 
@@ -127,7 +138,16 @@ export const supabaseAtendimentoAdapter: AtendimentoGateway = {
       .eq("conversa_id", conversaId)
       .order("created_at", { ascending: true });
     if (error) throw error;
-    return ((data ?? []) as MensagemRow[]).map(mapMensagem);
+    return Promise.all(
+      ((data ?? []) as MensagemRow[]).map(async (row) => {
+        const mensagem = mapMensagem(row);
+        if (!row.midia_url) return mensagem;
+        const { data: signed } = await supabase.storage
+          .from("atendimento-midias")
+          .createSignedUrl(row.midia_url, 3600);
+        return { ...mensagem, midiaUrl: signed?.signedUrl ?? null };
+      }),
+    );
   },
 
   async enviarMensagem(input: EnviarMensagemCommand) {
@@ -177,6 +197,61 @@ export const supabaseAtendimentoAdapter: AtendimentoGateway = {
     const { error } = await supabase.functions.invoke("pcm-ze-agent", {
       body: { queueKey, forcar: true },
     });
+    if (error) throw error;
+  },
+
+  async enviarMensagemRica(input: MensagemRicaInput & { conversaId: string }) {
+    let midiaPath: string | null = null;
+    let midiaUrl: string | null = null;
+    if (input.arquivo) {
+      midiaPath = `${input.conversaId}/${crypto.randomUUID()}-${input.arquivo.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("atendimento-midias")
+        .upload(midiaPath, input.arquivo, { contentType: input.arquivo.type });
+      if (uploadError) throw uploadError;
+      const { data, error: signError } = await supabase.storage
+        .from("atendimento-midias")
+        .createSignedUrl(midiaPath, 3600);
+      if (signError) throw signError;
+      midiaUrl = data.signedUrl;
+    }
+    const { data: resultado, error } = await supabase.functions.invoke<{
+      mensagemId?: string;
+      erro?: string;
+    }>("atendimento-whatsapp-envio", {
+      body: {
+        conversaId: input.conversaId,
+        acao: "enviar_rico",
+        tipo: input.tipo,
+        texto: input.texto,
+        midiaPath,
+        midiaUrl,
+        midiaNome: input.arquivo?.name,
+        midiaMime: input.arquivo?.type,
+        templateNome: input.templateNome,
+        templateIdioma: input.templateIdioma,
+        parametros: input.parametros,
+        botoes: input.botoes,
+      },
+    });
+    if (error) throw error;
+    if (!resultado?.mensagemId) throw new Error(resultado?.erro ?? "Falha ao enviar conteúdo.");
+    const { data, error: selectError } = await supabase
+      .schema("atendimento")
+      .from("mensagens")
+      .select(MENSAGEM_COLS)
+      .eq("id", resultado.mensagemId)
+      .single();
+    if (selectError) throw selectError;
+    return mapMensagem(data as MensagemRow);
+  },
+
+  async atualizarTags(conversaId, tags) {
+    const { error } = await supabase
+      .schema("atendimento")
+      .from("conversas")
+      .update({ tags })
+      .eq("id", conversaId);
     if (error) throw error;
   },
 };

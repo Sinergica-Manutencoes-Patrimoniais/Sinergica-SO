@@ -29,6 +29,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
 import { AuvoApiError, auvoGet } from "../_shared/auvo/client.ts";
@@ -247,7 +248,7 @@ function safeErrorDetail(e: unknown): string {
     .slice(0, 300);
 }
 
-async function obterUsuarioSistema(db: ReturnType<typeof createClient>): Promise<string> {
+async function obterUsuarioSistema(db: UntypedSupabaseClient): Promise<string> {
   const { data, error } = await db
     .schema("config")
     .from("usuarios")

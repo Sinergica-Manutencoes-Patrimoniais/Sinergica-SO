@@ -6,7 +6,7 @@
 // PCM (`pcm.clientes.auvo_id`), a tarefa é pulada (devolve `null`, nunca lança) — o import de
 // reconciliação a pega depois, quando o cliente já estiver sincronizado.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { UntypedSupabaseClient } from "../supabase.ts";
 
 export type OsStatus = "solicitacao" | "em_execucao" | "finalizado" | "cancelado";
 
@@ -25,7 +25,7 @@ export interface OsCriada {
 /** Resolve `pcm.clientes.id` a partir do `customerId` (auvo_id) da tarefa. `null` = cliente ainda
  * não sincronizado no PCM — não é erro, é um estado esperado (AC-4). */
 export async function resolverClienteIdPorAuvoId(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   customerId: number,
 ): Promise<string | null> {
   const { data, error } = await db
@@ -41,7 +41,7 @@ export async function resolverClienteIdPorAuvoId(
 
 /** Mesma lógica de `pcm-ze-agent` (`proximoNumeroChamado`) — `count()` tem race condition
  * conhecida sob concorrência real, mesma dívida já documentada e aceita nesse padrão (E01-S02). */
-export async function proximoNumeroOs(db: ReturnType<typeof createClient>): Promise<string> {
+export async function proximoNumeroOs(db: UntypedSupabaseClient): Promise<string> {
   const { count, error } = await db
     .schema("pcm")
     .from("ordens_servico")
@@ -53,7 +53,7 @@ export async function proximoNumeroOs(db: ReturnType<typeof createClient>): Prom
 /** Mesmo padrão de `pcm-auvo-customers-import` (`obterUsuarioSistema`): primeiro
  * superadmin/supervisor ativo, usado como `created_by` para registros que o próprio Auvo origina
  * (não têm um usuário PCM real por trás). */
-export async function obterUsuarioSistema(db: ReturnType<typeof createClient>): Promise<string> {
+export async function obterUsuarioSistema(db: UntypedSupabaseClient): Promise<string> {
   const { data, error } = await db
     .schema("config")
     .from("usuarios")
@@ -74,7 +74,7 @@ export async function obterUsuarioSistema(db: ReturnType<typeof createClient>): 
 /** Cria a OS a partir de uma tarefa Auvo sem `auvo_task_id` local correspondente. Devolve `null`
  * (sem lançar) quando o cliente ainda não está sincronizado — AC-4: nunca quebra o chamador. */
 export async function criarOsDaTarefa(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   input: CriarOsDaTarefaInput,
 ): Promise<OsCriada | null> {
   const clienteId = await resolverClienteIdPorAuvoId(db, input.customerId);

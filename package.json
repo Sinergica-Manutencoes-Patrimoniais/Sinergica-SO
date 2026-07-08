@@ -15,6 +15,7 @@
     "test": "turbo run test",
     "audit:esteira": "node scripts/audit-esteira.mjs",
     "eval:spec": "node scripts/eval-spec-fidelity.mjs",
+    "check:edge-functions": "node --test scripts/check-edge-functions.test.mjs && node scripts/check-edge-functions.mjs",
     "audit:deps": "pnpm audit --prod --audit-level=high",
     "arch:check": "depcruise apps/web/src --config .dependency-cruiser.cjs",
     "lint:migrations": "node scripts/lint-migrations.mjs",

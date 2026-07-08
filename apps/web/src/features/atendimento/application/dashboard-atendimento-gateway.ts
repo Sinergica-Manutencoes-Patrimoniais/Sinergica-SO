@@ -1,5 +1,5 @@
-import type { AutonomiaIa } from "../domain/dashboard-atendimento";
+import type { PeriodoDashboard, SnapshotAtendimentoRaw } from "../domain/dashboard-atendimento";
 
 export interface DashboardAtendimentoGateway {
-  contarAutonomiaIa(): Promise<AutonomiaIa>;
+  obterSnapshot(periodo: PeriodoDashboard): Promise<SnapshotAtendimentoRaw>;
 }

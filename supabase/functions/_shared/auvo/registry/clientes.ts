@@ -46,7 +46,7 @@ export const clientesDescriptor: AuvoEntityDescriptor<AuvoCustomer, ClienteRow> 
       email: row.contato_email ? [row.contato_email] : undefined,
       note: row.observacoes,
       contacts: contato ? [contato] : undefined,
-    });
+    }) as AuvoCustomer;
   },
   fromAuvo(auvo) {
     const contato = auvo.contacts?.[0];
@@ -68,7 +68,7 @@ function contatoPrincipal(row: ClienteRow): { name?: string; phoneNumber?: strin
     name: row.contato_nome,
     phoneNumber: row.contato_telefone,
     email: row.contato_email,
-  });
+  }) as { name?: string; phoneNumber?: string; email?: string };
   return Object.keys(contato).length > 0 ? contato : null;
 }
 

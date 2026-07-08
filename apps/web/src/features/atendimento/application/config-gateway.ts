@@ -4,7 +4,13 @@ import type {
   ConfigCanalValidado,
 } from "../domain/config-canal";
 import type { InstanciaAgenteFormData, InstanciaAgenteItem } from "../domain/instancias-agente";
-import type { PersonaFormData, PersonaItem, PersonaValidado } from "../domain/personas";
+import type { ConfigOperacaoValidado } from "../domain/operacao";
+import type {
+  ConfigIaValidado,
+  PersonaFormData,
+  PersonaItem,
+  PersonaValidado,
+} from "../domain/personas";
 import type { TagFormData, TagItem } from "../domain/tags";
 
 export interface ClienteOpcao {
@@ -66,6 +72,16 @@ export interface DesativarInstanciaAgenteCommand {
   userId: string;
 }
 
+export interface SalvarConfigIaGatewayInput extends ConfigIaValidado {
+  personaId: string;
+  userId: string;
+}
+
+export interface SalvarConfigOperacaoGatewayInput extends ConfigOperacaoValidado {
+  personaId: string;
+  userId: string;
+}
+
 export interface ConfigGateway {
   listarClientes(): Promise<ClienteOpcao[]>;
   listarTags(): Promise<TagItem[]>;
@@ -78,6 +94,8 @@ export interface ConfigGateway {
   criarPersona(input: CriarPersonaGatewayInput): Promise<PersonaItem>;
   editarPersona(input: EditarPersonaGatewayInput): Promise<PersonaItem>;
   desativarPersona(input: DesativarPersonaCommand): Promise<void>;
+  salvarConfigIa(input: SalvarConfigIaGatewayInput): Promise<PersonaItem>;
+  salvarConfigOperacao(input: SalvarConfigOperacaoGatewayInput): Promise<PersonaItem>;
   listarInstanciasAgente(): Promise<InstanciaAgenteItem[]>;
   criarInstanciaAgente(input: CriarInstanciaAgenteCommand): Promise<InstanciaAgenteItem>;
   desativarInstanciaAgente(input: DesativarInstanciaAgenteCommand): Promise<void>;

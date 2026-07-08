@@ -12,6 +12,7 @@ const IGNORE_DIRS = new Set([
   "node_modules", ".git", "dist", "coverage",
   ".triviaiox-core", ".triviaiox", ".claude/skills/_disabled",
   ".cursor", ".gemini", ".windsurf",
+  "graphify-out",
   // Triviaiox agent files use their own format (not SDD frontmatter)
   "TRIVIAIOX", ".codex",
   // Definições de subagente (.claude/agents) e auto-memory (.claude/agent-memory) — geradas/

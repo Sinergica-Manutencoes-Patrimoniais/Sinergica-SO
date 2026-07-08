@@ -61,6 +61,7 @@ function fakeDb(origem: Record<string, unknown> | null): OutboxRowDb & { patches
       patches.push({ table, rowId, patch });
       return Promise.resolve();
     },
+    upsertEntityStatus: () => Promise.resolve(),
   };
 }
 

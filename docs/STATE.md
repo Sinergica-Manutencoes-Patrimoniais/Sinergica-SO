@@ -10,7 +10,185 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-08 (sessão Codex) — **E02-S08 (Base única de Contatos e Timeline)
+**Última atualização:** 2026-07-08 (sessão Lucas/Codex, release) — **E00-S11 e
+E02-S10..S21 fechadas em código; publicação em andamento.**
+
+Reconciliação AC→implementação concluída. Além de S19–S21, foram ligados ao runtime: métricas/CSAT
+server-side e painel completo (S10–S12), identidade/janela e regras operacionais do agente
+(S13–S14), RAG real (S15), canais/webhook/envio Meta e templates (S16), automações IG + opt-outs
+(S17) e scoring/clusters persistidos no lead (S18). E00-S11 agora inclui saúde de pull/push, badge
+PCM, cron observável, pgTAP e gate sem allowlist; a Edge Function ausente
+`importar-relatorio-pdf` também foi implementada.
+
+Gates locais verdes: lint, typecheck, 268 testes web, build, arquitetura, auditoria SDD,
+67 migrations/Squawk, consistência de 23 Edge Functions, typecheck Deno de todas as funções e
+90 testes Deno. O teste Deno achou e permitiu corrigir um bug pré-existente no sync de
+equipamentos: uma variável local sombreava a função de resolução do cliente. O pgTAP completo
+depende do job Docker do GitHub Actions porque esta máquina não possui Docker.
+
+Pendências externas que código não consegue inventar:
+- Meta está pronto para deploy, mas a conta ainda não forneceu `META_ACCESS_TOKEN` e
+  `META_APP_SECRET`; o workflow de secrets agora preserva valores remotos quando um GitHub secret
+  estiver ausente.
+- E01-S36 continua em dry-run para writes genéricos Auvo. Leitura real confirmou vários endpoints,
+  mas `/productcategories` e `/services` não existem no contrato v2 usado pela conta e `/tickets`
+  exige filtro. Nenhum `writeEnabled` foi ligado contra dados reais sem um sandbox/registro de
+  teste autorizado.
+- UAT real de Evolution/Meta e formatos de mídia continua após deploy.
+
+---
+
+**Atualização anterior:** 2026-07-08 (sessão Lucas/Codex, continuação) — **E02-S20 e E02-S21
+implementadas localmente.**
+
+E02-S20: `FlowBuilderCanvas` agora cria/remove arestas ramificadas, o domínio bloqueia ciclos e nós
+órfãos, fluxos lineares antigos continuam implícitos por `ordem`, recipes são copiadas (sem
+referência viva), e `pcm-ze-agent` inclui condições/ramificações no prompt e grava
+`atendimento.fluxo_logs` por conversa. Migration `0062` cria recipes/logs e RLS.
+
+E02-S21: mensagens ganharam tipos áudio/mídia/template/interativa e payload estruturado; bucket
+privado `atendimento-midias`; gravação via MediaRecorder com fallback para anexo; envio rico passa
+pela Edge Function autenticada e pelos endpoints Evolution; timeline mostra áudio/imagem/anexo,
+templates e botões. O webhook extrai respostas de botão/lista. Badge de canal e edição de tags
+foram incorporados ao chat.
+
+Gates de código: lint/typecheck/test/build/arquitetura/migrations/esteira. PgTAP foi escrito em
+`atendimento_fluxos_grafo.test.sql` e `atendimento_inbox_rico.test.sql`, mas depende do Supabase
+local/CI. UAT com a versão real da Evolution continua obrigatório para confirmar os formatos
+`sendMedia`, `sendTemplate` e `sendButtons`.
+
+---
+
+**Última atualização:** 2026-07-08 (sessão Lucas/Codex) — **Claude parou no início da E02-S19;
+E02-S19 concluída localmente até o limite do ambiente.**
+
+Retomada reconstruída pelo worktree: a E02-S19 tinha somente `spec.md`, `tasks.md` e as migrations
+`0060/0061` iniciadas; aplicação, integração, UI, testes e handoff ainda não existiam. Foi
+implementada a aba **Evolution** com criação de instância, QR transitório, consulta de status real,
+número vinculado, reconexão e logout. A nova Edge Function autenticada
+`atendimento-evolution` é a única que acessa `EVOLUTION_API_URL`/`EVOLUTION_API_KEY`; o segredo
+nunca chega ao browser. O front ganhou domínio/use-cases/gateway/adapter e `EvolutionTab`.
+`atendimento.canais_externos` foi reutilizada com `tipo='evolution'`, `numero_vinculado` e índice
+único parcial por Instance ID ativa.
+
+O roteamento não foi migrado nem reescrito: `atendimento.instancias_agente` continua sendo o vínculo
+Instance ID→persona e `config_ze.group_jid/bot_jid` continua sendo a configuração por cliente.
+O pgTAP `atendimento_evolution_rls.test.sql` prova a RLS, unicidade e compatibilidade desse vínculo,
+mas não rodou: o Postgres local do Supabase não está ativo em `127.0.0.1:54322`. Deno CLI também
+segue ausente, então a Edge Function/QR não foram exercitados contra uma Evolution real.
+
+Gates verdes executados individualmente: `lint`, `typecheck`, `test` (263 pass/9 skip), `build`,
+`arch:check`, `audit:esteira`, `eval:spec`, `lint:migrations`, `check:edge-functions`. O
+`ci:local` foi invocado, mas o hook pre-push pulou jobs porque as mudanças ainda não estão em
+commits; por isso os comandos foram rodados diretamente. Próximo passo obrigatório antes de
+declarar os AC totalmente aceitos: subir Supabase local/CI para pgTAP e fazer UAT com secrets
+Evolution válidos (criar → ler QR → conectar → conferir número → desconectar/reconectar).
+
+Observação de retomada: o mesmo worktree contém implementação não commitada de E02-S10..S18 feita
+antes da interrupção do Claude, mas os `tasks.md`/ROADMAP dessas stories ainda dizem `todo`/
+“não implementada”. Não foram declaradas concluídas nesta sessão sem uma reconciliação AC por AC.
+
+---
+
+**Última atualização:** 2026-07-08 (sessão Lucas/Claude, parte 2) — **Frente A (Auvo-sync) implementada:
+E00-S11 + E01-S35 + E01-S36 (parcial) + E01-S37.**
+
+Branch `docs/E00-stories-auvo-atendimento-fixes` (mesma da parte 1, ver entrada anterior — ainda não commitado).
+
+**O que mudou de verdade nesta parte:**
+- **E00-S11 (guarda-corpos):** `scripts/check-edge-functions.mjs` — gate que falha se uma pasta em
+  `supabase/functions/` não estiver declarada em `config.toml`, ou se um `functions.invoke("literal")`
+  do front apontar pra função inexistente/não declarada. Ligado em `ci:local`/lefthook/`ci.yml`. **Achou
+  um bug real pré-existente, não relacionado a Auvo:** `importar-relatorio-pdf` (Laudos SPDA, E01-S19) é
+  invocada pela UI mas a Edge Function nunca foi criada — mesmo padrão de 404 silencioso, feature
+  diferente. Documentado como gap conhecido no próprio script (visível, não escondido); precisa de story
+  própria, não foi corrigido aqui (fora de escopo, exigiria inventar lógica de geração de PDF sem contexto).
+  Migration `0050`: tabela `pcm.auvo_entity_status` + view `pcm.auvo_sync_health` (saúde de sync por
+  entidade — write_enabled, último push ok/erro); `pcm-auvo-push` agora grava nela a cada drain.
+- **E01-S35 (deploy):** raiz do 404 confirmada — `supabase/config.toml` não declarava NENHUMA função.
+  Todas as 18 funções reais agora declaradas com `verify_jwt` correto (só os 2 webhooks externos — Auvo,
+  WhatsApp — são `false`, validam por HMAC próprio). Novo workflow `smoke-edge-functions.yml` +
+  `scripts/smoke-edge-functions.mjs`: pinga cada função pós-push em `main`, retry com backoff, falha o CI
+  se alguma responder 404. Runbook `runbooks/deploy-edge-functions.md` com o mecanismo canônico (native
+  Supabase↔GitHub integration) e a lista de secrets. **Continua exigindo ação manual do Lucas:** confirmar
+  a integração nativa está ligada no dashboard, setar `SUPABASE_PROJECT_ID` nos secrets do Actions, rodar
+  `pcm-auvo-webhooks-register` uma vez pós-deploy.
+- **E01-S36 (write instantâneo) — PARCIAL, decisão consciente:** migration `0051` faz a trigger
+  `fn_auvo_enqueue()` disparar `pcm-auvo-push` via `pg_net` IMEDIATAMENTE após cada enqueue (mesmo padrão
+  `pg_net`+Vault de `0011`/`0037`/`0038`, sem secret novo) — Opção B do design, não a A recomendada
+  originalmente (SPEC_DEVIATION registrado: cobre toda escrita, não só a do front, com uma mudança
+  central). Cron de 1 min vira só fallback. **`writeEnabled` NÃO foi flipado para nenhuma das 13
+  entidades** — verificar o mapeamento de campos contra a API Auvo real é pré-requisito da spec (AC-4) e
+  esta sessão não tinha credenciais/acesso pra isso (só um login de UI do Auvo, dado pelo Lucas, que não
+  serve pra validar contrato de API). Flipar sem verificar arriscaria gravar dado malformado na conta de
+  produção real (condomínios/funcionários reais) — ação externa de alto risco. Ficou documentado como
+  bloqueio explícito em `tasks.md`, não como silêncio. **Efeito prático:** o cadastro de funcionário
+  (CREATE) já propagava por um caminho síncrono separado (`pcm-auvo-users-create`, não afetado por
+  `writeEnabled`) — isso deve voltar a funcionar assim que E01-S35 for ativado em produção. Edit/desativar
+  de funcionário e as outras 12 entidades continuam em dry-run até alguém com acesso à API Auvo real
+  verificar e flipar.
+- **E01-S37 (botão sync):** nova Edge Function `pcm-auvo-sync-all` (orquestra pull de cada entidade do
+  registry + `pcm-auvo-tasks-import`, erro isolado por etapa — uma entidade falhando não aborta as
+  demais). Botão "Sincronizar Auvo" em `PcmDashboardPage.tsx`, ao lado do "Atualizar" já existente (que
+  continua só relendo cache local, sem chamar o Auvo). Mostra progresso e "sincronizado às HH:mm" ou a
+  lista de etapas que falharam.
+
+**Gates locais rodados e verdes nesta parte:** `lint:migrations` (51 migrations + Squawk), `typecheck`
+(web), `test` (216 pass/9 skip), `build` (web), `arch:check` (0 violações), `audit:esteira` (241 docs),
+`eval:spec`, `validate-mermaid`, `check:edge-functions` (novo). **Não executado:** `biome`/lint (binário
+quebrado neste ambiente — `biome --version` já falha com "Linter process terminated abnormally", parece
+problema de ambiente, não do código; sinalizar para o CI real confirmar). Deno/pgTAP — mesma ressalva de
+sempre (sem Deno CLI/Docker aqui).
+
+**Próximo passo:** Frente B (Atendimento, E02-S10+) ainda não implementada, só especificada (ver entrada
+anterior). Nesta Frente A: falta a verificação de mapeamento Auvo real (E01-S36 task 2) e as ações manuais
+de E01-S35 (secrets, ativar integração, registrar webhooks) antes de qualquer teste end-to-end em
+staging/dev real.
+
+---
+
+**Última atualização anterior:** 2026-07-08 (sessão Lucas/Claude) — **Diagnóstico de runtime + 16 stories novas
+escritas (spec+tasks) para correção Auvo-sync e paridade total do Atendimento com o heziomos.**
+
+Branch `docs/E00-stories-auvo-atendimento-fixes`. Nenhum código de feature implementado — só artefatos
+SDD, para outro modelo executar segundo o plano `~/.claude/plans/foi-entregue-uma-serie-generic-owl.md`.
+
+**Diagnóstico (por leitura de código, sem testar prod — memória proíbe testar Netlify público):**
+1. **Auvo↔PCM quebrado em runtime.** Nenhuma Edge Function deployada — `supabase/config.toml` não
+   declara nenhuma `[functions.*]` e o trigger de push do `.github/workflows/deploy.yml` está
+   comentado → toda `functions.invoke` da UI dá 404 (`pcm-auvo-tickets-referencia` na tela Tickets,
+   `pcm-auvo-users-create` no cadastro de funcionário). Write path genérico é dry-run permanente
+   (`writeEnabled:false` em todos os descriptors de `_shared/auvo/registry/*.ts`). Botão "Atualizar"
+   (`PcmDashboardPage.tsx`) só relê tabelas cache `pcm.*`, nunca puxa do Auvo. Reconciliação
+   Auvo→PCM (E01-S34) só roda em cron 05:00 + webhook, não alcançável pela UI.
+2. **Atendimento longe do heziomos.** 5 abas de config (Canal/Tags/Personas/Agentes/Fluxos) vs 15;
+   painel ~3 widgets vs painel operacional completo. Heziomos (`features/crm/`) calcula métricas
+   server-side (edge `crm-atendimento-metrics`, foge do cap de 1000 linhas).
+
+**Decisões do Lucas:** frentes A (Auvo) e B (Atendimento) em paralelo, owners distintos; paridade
+**total idêntica** com o heziomos; botão global "Sincronizar Auvo" (pull on-demand) + writes instantâneos.
+
+**Stories criadas (owner `—`, disponíveis para pegar; nenhuma implementada):**
+- **Frente A (E01, sessão A):** `E01-S35` deploy edge functions+secrets+smoke-test (⚠️ bloqueia tudo)
+  → `E01-S36` write path instantâneo → `E01-S37` botão global Sincronizar Auvo.
+- **Frente C anti-regressão (E00):** `E00-S11` gate CI de consistência de edge functions + view
+  `pcm.auvo_sync_health` (fecha o buraco do "deploy via git que nunca rodava"; feita junto de E01-S35).
+- **Frente B (E02, sessão B):** `E02-S10` métricas server-side → `E02-S11` painel completo → `E02-S12`
+  widgets avançados; `E02-S13..S21` = 9 stories das abas de config faltantes (IA, Operação, Conhecimento/RAG,
+  canais Meta, Coment.IG/Opt-outs, Scoring/Clusters, Evolution, Fluxos node-graph, Inbox rico).
+
+**Próximo passo:** outro modelo pega uma story (marca owner no ROADMAP), cria `design.md`/ADR onde o tier
+pedir (E01-S35/S36, E02-S10), implementa. **Pré-requisitos manuais do Lucas (não codificáveis):** setar
+secrets Auvo (`AUVO_API_KEY`/`AUVO_USER_TOKEN`, Vault `auvo_trigger_*`) + tokens Meta; validar o mapeamento
+de campos da API Auvo contra a API real antes de ligar `writeEnabled` (aviso em `client.ts`).
+
+**Fora de commit hoje (não-feature):** tooling (`.claude/settings.json`, `AGENTS.md`, `CLAUDE.md`,
+`biome.json`, `audit-esteira.mjs`, `.codex/hooks.json`) + `graphify-out/` (cache gerado → deve entrar no
+`.gitignore`). Toda a feature E01-S22→E02-S08 já está commitada/mergeada em `main`.
+
+---
+
+**Última atualização anterior:** 2026-07-08 (sessão Codex) — **E02-S08 (Base única de Contatos e Timeline)
 implementada localmente como pré-requisito do agente comercial.**
 Lucas aprovou aproveitar a parte de CRM do HeziomOS que realmente importa agora: uma base única de
 contatos/clientes/leads com histórico. Criei `specs/E02-S08-relacionamento-contatos/` (`product`,

@@ -15,6 +15,8 @@ function fakeGateway(overrides: Partial<AtendimentoGateway> = {}): AtendimentoGa
     devolverAoZe: vi.fn().mockResolvedValue(undefined),
     marcarComoLida: vi.fn().mockResolvedValue(undefined),
     acionarZeAgora: vi.fn().mockResolvedValue(undefined),
+    enviarMensagemRica: vi.fn(),
+    atualizarTags: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }

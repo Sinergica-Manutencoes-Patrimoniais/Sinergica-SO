@@ -26,6 +26,43 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
           </div>
         )}
         <p className="whitespace-pre-wrap break-words">{mensagem.conteudo}</p>
+        {mensagem.tipoConteudo === "audio" && mensagem.midiaUrl && (
+          <audio controls src={mensagem.midiaUrl} className="mt-2 max-w-full">
+            <track kind="captions" />
+          </audio>
+        )}
+        {mensagem.tipoConteudo === "midia" &&
+          mensagem.midiaUrl &&
+          (mensagem.midiaMime?.startsWith("image/") ? (
+            <img
+              src={mensagem.midiaUrl}
+              alt={mensagem.midiaNome ?? "Imagem enviada"}
+              className="mt-2 max-h-72 rounded"
+            />
+          ) : (
+            <a
+              href={mensagem.midiaUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 block underline"
+            >
+              {mensagem.midiaNome ?? "Abrir anexo"}
+            </a>
+          ))}
+        {mensagem.tipoConteudo === "template" && (
+          <p className="mt-1 text-xs opacity-75">
+            Template · {String(mensagem.payload.templateNome ?? "")}
+          </p>
+        )}
+        {mensagem.tipoConteudo === "interativa" && Array.isArray(mensagem.payload.botoes) && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {(mensagem.payload.botoes as string[]).map((botao) => (
+              <span key={botao} className="rounded border border-current px-2 py-1 text-xs">
+                {botao}
+              </span>
+            ))}
+          </div>
+        )}
         {mensagem.statusEntrega === "erro" && (
           <p className="mt-1 flex items-center gap-1 text-xs text-[#A23B25]">
             <AlertTriangle className="h-3 w-3" />

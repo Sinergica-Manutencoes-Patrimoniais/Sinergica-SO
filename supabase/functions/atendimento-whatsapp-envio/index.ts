@@ -12,14 +12,25 @@ import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { HttpError, requireAuth } from "../_shared/auth.ts";
-import { responderEvolution } from "../_shared/evolution.ts";
+import { enviarEvolution, responderEvolution } from "../_shared/evolution.ts";
+import { enviarMeta, metaRequest } from "../_shared/meta.ts";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 
 const FN = "atendimento-whatsapp-envio";
 
 const InputSchema = z.object({
   conversaId: z.string().uuid(),
-  acao: z.enum(["enviar", "assumir", "devolver"]),
+  acao: z.enum(["enviar", "enviar_rico", "assumir", "devolver"]),
   texto: z.string().min(1).max(4000).optional(),
+  tipo: z.enum(["audio", "midia", "template", "interativa"]).optional(),
+  midiaPath: z.string().max(1000).nullable().optional(),
+  midiaUrl: z.string().url().nullable().optional(),
+  midiaNome: z.string().max(255).optional(),
+  midiaMime: z.string().max(120).optional(),
+  templateNome: z.string().max(255).optional(),
+  templateIdioma: z.string().max(20).optional(),
+  parametros: z.array(z.string().max(500)).max(20).optional(),
+  botoes: z.array(z.string().min(1).max(80)).min(1).max(3).optional(),
 });
 
 serve(async (req) => {
@@ -37,6 +48,9 @@ serve(async (req) => {
     if (input.acao === "enviar" && !input.texto?.trim()) {
       throw new HttpError(400, "texto é obrigatório para acao='enviar'");
     }
+    if (input.acao === "enviar_rico" && !input.tipo) {
+      throw new HttpError(400, "tipo é obrigatório para envio rico");
+    }
 
     const token = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
     const url = Deno.env.get("SUPABASE_URL") ?? "";
@@ -49,7 +63,7 @@ serve(async (req) => {
     const { data: conversa, error: conversaError } = await userClient
       .schema("atendimento")
       .from("conversas")
-      .select("id,instance_id,remote_jid")
+      .select("id,instance_id,remote_jid,canal,provedor,contato_id")
       .eq("id", input.conversaId)
       .maybeSingle();
     if (conversaError) throw conversaError;
@@ -69,8 +83,27 @@ serve(async (req) => {
       return json(200, { ok: true }, cors);
     }
 
-    // acao === "enviar"
-    const texto = input.texto?.trim() ?? "";
+    if (conversa.contato_id) {
+      const { count, error: optOutError } = await userClient
+        .schema("atendimento")
+        .from("opt_outs")
+        .select("id", { count: "exact", head: true })
+        .eq("contato_id", conversa.contato_id)
+        .in("canal", [conversa.canal, "todos"]);
+      if (optOutError) throw optOutError;
+      if ((count ?? 0) > 0) throw new HttpError(409, "Contato está em opt-out para este canal");
+    }
+
+    // acao === "enviar" | "enviar_rico"
+    const texto =
+      input.texto?.trim() ??
+      (input.tipo === "template" ? `Template: ${input.templateNome ?? ""}` : input.midiaNome ?? "");
+    const payloadRico = {
+      templateNome: input.templateNome,
+      templateIdioma: input.templateIdioma,
+      parametros: input.parametros,
+      botoes: input.botoes,
+    };
     const { data: mensagem, error: insertError } = await userClient
       .schema("atendimento")
       .from("mensagens")
@@ -80,6 +113,11 @@ serve(async (req) => {
         remetente_tipo: "humano",
         remetente_id: userId,
         conteudo: texto,
+        tipo_conteudo: input.acao === "enviar_rico" ? input.tipo : "texto",
+        midia_url: input.midiaPath,
+        midia_nome: input.midiaNome,
+        midia_mime: input.midiaMime,
+        payload: input.acao === "enviar_rico" ? payloadRico : {},
         status_entrega: "enviando",
       })
       .select("id")
@@ -87,7 +125,53 @@ serve(async (req) => {
     if (insertError) throw insertError;
 
     try {
-      await responderEvolution(conversa.instance_id as string, conversa.remote_jid as string, texto);
+      if (input.acao === "enviar" && conversa.provedor === "meta") {
+        await enviarMeta(
+          conversa.canal === "whatsapp" ? "meta_wa" : conversa.canal,
+          conversa.instance_id as string,
+          conversa.remote_jid as string,
+          texto,
+        );
+      } else if (input.acao === "enviar") {
+        await responderEvolution(conversa.instance_id as string, conversa.remote_jid as string, texto);
+      } else if (conversa.provedor === "meta") {
+        await enviarRicoMeta(
+          conversa.instance_id as string,
+          conversa.remote_jid as string,
+          input,
+        );
+      } else if (input.tipo === "audio" || input.tipo === "midia") {
+        await enviarEvolution(conversa.instance_id as string, "sendMedia", {
+          number: conversa.remote_jid,
+          mediatype:
+            input.tipo === "audio"
+              ? "audio"
+              : input.midiaMime?.startsWith("image/")
+                ? "image"
+                : "document",
+          media: input.midiaUrl,
+          fileName: input.midiaNome,
+          caption: input.texto ?? "",
+        });
+      } else if (input.tipo === "template") {
+        await enviarEvolution(conversa.instance_id as string, "sendTemplate", {
+          number: conversa.remote_jid,
+          name: input.templateNome,
+          language: input.templateIdioma ?? "pt_BR",
+          components: [{ type: "body", parameters: (input.parametros ?? []).map((text) => ({ type: "text", text })) }],
+        });
+      } else {
+        await enviarEvolution(conversa.instance_id as string, "sendButtons", {
+          number: conversa.remote_jid,
+          title: input.texto,
+          description: input.texto,
+          buttons: (input.botoes ?? []).map((displayText, index) => ({
+            type: "reply",
+            displayText,
+            id: `reply-${index + 1}`,
+          })),
+        });
+      }
     } catch (e) {
       await userClient
         .schema("atendimento")
@@ -119,8 +203,72 @@ serve(async (req) => {
   }
 });
 
+async function enviarRicoMeta(
+  accountId: string,
+  recipientId: string,
+  input: z.infer<typeof InputSchema>,
+) {
+  if (input.tipo === "template") {
+    await metaRequest(`${encodeURIComponent(accountId)}/messages`, {
+      method: "POST",
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: recipientId.replace(/\D/g, ""),
+        type: "template",
+        template: {
+          name: input.templateNome,
+          language: { code: input.templateIdioma ?? "pt_BR" },
+          components: [
+            {
+              type: "body",
+              parameters: (input.parametros ?? []).map((text) => ({ type: "text", text })),
+            },
+          ],
+        },
+      }),
+    });
+    return;
+  }
+  if (input.tipo === "interativa") {
+    await metaRequest(`${encodeURIComponent(accountId)}/messages`, {
+      method: "POST",
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: recipientId.replace(/\D/g, ""),
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: { text: input.texto },
+          action: {
+            buttons: (input.botoes ?? []).map((title, index) => ({
+              type: "reply",
+              reply: { id: `reply-${index + 1}`, title },
+            })),
+          },
+        },
+      }),
+    });
+    return;
+  }
+  const mediaType =
+    input.tipo === "audio" ? "audio" : input.midiaMime?.startsWith("image/") ? "image" : "document";
+  await metaRequest(`${encodeURIComponent(accountId)}/messages`, {
+    method: "POST",
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: recipientId.replace(/\D/g, ""),
+      type: mediaType,
+      [mediaType]: {
+        link: input.midiaUrl,
+        filename: mediaType === "document" ? input.midiaNome : undefined,
+        caption: input.texto,
+      },
+    }),
+  });
+}
+
 async function atualizarConversa(
-  userClient: ReturnType<typeof createClient>,
+  userClient: UntypedSupabaseClient,
   conversaId: string,
   patch: Record<string, unknown>,
 ): Promise<void> {
@@ -138,6 +286,7 @@ function problem(status: number, detail: string, reqId: string, cors: Record<str
     401: "Unauthorized",
     404: "Not Found",
     405: "Method Not Allowed",
+    409: "Conflict",
     422: "Unprocessable Entity",
     500: "Internal Server Error",
   };

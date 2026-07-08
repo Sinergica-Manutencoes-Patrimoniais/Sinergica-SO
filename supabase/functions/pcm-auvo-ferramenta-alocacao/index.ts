@@ -3,6 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
 import { AuvoApiError, auvoPut } from "../_shared/auvo/client.ts";
@@ -109,7 +110,7 @@ function validar(raw: unknown): Required<Input> {
   };
 }
 
-async function resolverFerramenta(db: ReturnType<typeof createClient>, input: Required<Input>): Promise<FerramentaRow> {
+async function resolverFerramenta(db: UntypedSupabaseClient, input: Required<Input>): Promise<FerramentaRow> {
   let query = db.schema("pcm").from("ferramentas").select("id,auvo_id,quantidade_total").is("deleted_at", null);
   query = input.ferramentaId ? query.eq("id", input.ferramentaId) : query.eq("auvo_id", input.ferramentaAuvoId);
   const { data, error } = await query.maybeSingle();
@@ -119,7 +120,7 @@ async function resolverFerramenta(db: ReturnType<typeof createClient>, input: Re
 }
 
 async function validarQuantidadeTotal(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   ferramenta: FerramentaRow,
   tecnicoAuvoId: number,
   quantidade: number,

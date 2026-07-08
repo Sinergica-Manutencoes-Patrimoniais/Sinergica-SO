@@ -27,7 +27,7 @@ export function resolveWebhookDispatch<TAuvo, TRow extends Record<string, unknow
         auvo_id: auvoId,
         ativo: false,
         deleted_at: new Date().toISOString(),
-      } as Partial<TRow>,
+      } as unknown as Partial<TRow>,
     };
   }
 

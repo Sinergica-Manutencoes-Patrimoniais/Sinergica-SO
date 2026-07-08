@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError } from "../_shared/auth.ts";
 import { constantTimeEqual } from "../_shared/crypto.ts";
@@ -137,7 +138,18 @@ function extractMessage(payload: Record<string, unknown>): {
   const key = asObject(data.key);
   const message = asObject(data.message);
   const content =
-    firstString([data.conversation, data.text, data.body, data.messageText, message?.conversation, asObject(message?.extendedTextMessage)?.text]) ??
+    firstString([
+      data.conversation,
+      data.text,
+      data.body,
+      data.messageText,
+      message?.conversation,
+      asObject(message?.extendedTextMessage)?.text,
+      asObject(message?.buttonsResponseMessage)?.selectedDisplayText,
+      asObject(message?.buttonsResponseMessage)?.selectedButtonId,
+      asObject(message?.listResponseMessage)?.title,
+      asObject(asObject(message?.listResponseMessage)?.singleSelectReply)?.selectedRowId,
+    ]) ??
     "";
   return {
     instanceId: firstString([payload.instance, payload.instanceId, data.instanceId]),
@@ -156,7 +168,7 @@ function extractMessage(payload: Record<string, unknown>): {
  * (idempotente por wa_message_id, incrementa nao_lidas sem race condition). Roda mesmo com
  * config_ze desligada/ausente — senão a conversa nunca apareceria pro Inbox humano ver. */
 async function registrarConversaEMensagem(
-  db: ReturnType<typeof createClient>,
+  db: UntypedSupabaseClient,
   instanceId: string,
   message: ReturnType<typeof extractMessage>,
 ): Promise<void> {

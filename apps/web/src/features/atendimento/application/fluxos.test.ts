@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { criarFluxo } from "./criar-fluxo";
 import { desativarFluxo } from "./desativar-fluxo";
 import type { FluxoGateway } from "./fluxo-gateway";
+import { criarFluxoDeRecipe } from "./fluxos-avancados";
 import { listarFluxos } from "./listar-fluxos";
 import { salvarPassosFluxo } from "./salvar-passos-fluxo";
 
@@ -23,6 +24,8 @@ function fakeGateway(overrides: Partial<FluxoGateway> = {}): FluxoGateway {
       ativo: true,
     }),
     desativarFluxo: vi.fn().mockResolvedValue(undefined),
+    listarRecipes: vi.fn().mockResolvedValue([]),
+    listarLogs: vi.fn().mockResolvedValue([]),
     ...overrides,
   };
 }
@@ -48,6 +51,43 @@ describe("criarFluxo", () => {
       personaId: "persona-1",
       userId: "user-1",
     });
+  });
+});
+
+describe("criarFluxoDeRecipe", () => {
+  it("copia a definição para o novo fluxo", async () => {
+    const gateway = fakeGateway({
+      listarRecipes: vi.fn().mockResolvedValue([
+        {
+          id: "recipe-1",
+          nome: "Qualificação",
+          descricao: "",
+          definicao: [
+            {
+              id: "original",
+              campo: "nome",
+              pergunta: "Seu nome?",
+              obrigatorio: true,
+              ordem: 0,
+              x: 0,
+              y: 0,
+            },
+          ],
+        },
+      ]),
+    });
+    await criarFluxoDeRecipe(gateway, {
+      recipeId: "recipe-1",
+      nome: "Meu fluxo",
+      personaId: "persona-1",
+      userId: "user-1",
+    });
+    expect(gateway.criarFluxo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nome: "Meu fluxo",
+        definicao: [expect.objectContaining({ campo: "nome" })],
+      }),
+    );
   });
 });
 

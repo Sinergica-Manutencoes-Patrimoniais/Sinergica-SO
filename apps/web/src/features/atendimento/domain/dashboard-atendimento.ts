@@ -1,112 +1,144 @@
-import type { ConversaItem } from "./conversas";
+export type PeriodoDashboard = "hoje" | "7d" | "30d";
 
-export interface KpiAtendimento {
+/** Forma crua devolvida pela RPC `atendimento.fn_metrics_snapshot` (via Edge Function
+ * `atendimento-metrics`, E02-S10) — agregação já feita em SQL, sem cap de 1000 linhas. */
+export interface SnapshotAtendimentoRaw {
+  periodo: PeriodoDashboard;
+  filaSemAtendente: number;
+  abertas: number;
+  naoLidas: number;
+  maisAntigaNaFilaSegundos: number | null;
+  abertasHoje: number;
+  abertasOntem: number;
+  aging: { faixa: string; total: number }[];
+  frtMedioSegundos: number | null;
+  mixCanal: { canal: string; total: number }[];
+  mixModo: { modo: string; total: number }[];
+  autonomiaZe: number;
+  autonomiaHumano: number;
+  escalonadoTotal: number;
+  encerradasTotal: number;
+  encerradasSemHumano: number;
+  csatMedia: number | null;
+  csatRespostas: number;
+  /** Séries por período (E02-S12) — mesma RPC, adicional aditivo. */
+  volumeDiario: { dia: string; entrada: number; saida: number }[];
+  slaDentroMetaPct: number | null;
+  heatmapHora: { diaSemana: number; hora: number; total: number }[];
+  throughput: { userId: string; nome: string; enviadas: number }[];
+  cargaAtendente: { userId: string; nome: string; abertas: number }[];
+}
+
+export interface AgingFaixa {
+  faixa: "0-1h" | "1-4h" | "4-24h" | "+24h";
+  total: number;
+}
+
+export interface MixItem {
   label: string;
-  valor: string;
-  sub: string;
-  trend: "up" | "down" | "neutro";
-}
-
-export interface MixCanalResumo {
-  canal: string;
   total: number;
 }
 
-export interface TagResumo {
-  nome: string;
-  total: number;
+/** View-model do painel — derivações (percentuais, labels formatadas) sobre o snapshot cru.
+ * Pura, testável com um `SnapshotAtendimentoRaw` sintético (ver design.md → Qualidade). */
+export interface PainelAtendimento {
+  periodo: PeriodoDashboard;
+  filaSemAtendente: number;
+  conversasAbertas: number;
+  naoLidas: number;
+  maisAntigaNaFilaLabel: string;
+  frtMedioLabel: string;
+  abertasHoje: number;
+  abertasHojeDeltaPct: number | null;
+  aging: AgingFaixa[];
+  mixCanal: MixItem[];
+  autonomiaPct: number | null;
+  autonomiaZe: number;
+  autonomiaHumano: number;
+  escalonadoTotal: number;
+  escalonadoPct: number | null;
+  deflexaoPct: number | null;
+  /** Sem tabela de pesquisa/CSAT no schema ainda — sempre null/0 (ver migration 0052, não inventado). */
+  csat: { media: number | null; respostas: number };
 }
 
-export interface AutonomiaIa {
-  ze: number;
-  humano: number;
+const AGING_ORDEM: AgingFaixa["faixa"][] = ["0-1h", "1-4h", "4-24h", "+24h"];
+
+function pct(numerador: number, denominador: number): number | null {
+  if (denominador <= 0) return null;
+  return Math.round((numerador / denominador) * 100);
 }
 
-export interface DashboardAtendimentoResumo {
-  kpis: KpiAtendimento[];
-  mixCanais: MixCanalResumo[];
-  topTags: TagResumo[];
+function formatarDuracao(segundos: number | null): string {
+  if (segundos === null || !Number.isFinite(segundos) || segundos < 0) return "—";
+  const totalMinutos = Math.round(segundos / 60);
+  const horas = Math.floor(totalMinutos / 60);
+  const minutos = totalMinutos % 60;
+  if (horas === 0) return `${minutos}m`;
+  return `${horas}h ${minutos}m`;
 }
 
-function horasDesde(dataIso: string | null, agora: Date): number | null {
-  if (!dataIso) return null;
-  const data = new Date(dataIso);
-  if (!Number.isFinite(data.getTime())) return null;
-  return (agora.getTime() - data.getTime()) / (1000 * 60 * 60);
-}
+export function montarPainelAtendimento(raw: SnapshotAtendimentoRaw): PainelAtendimento {
+  const aging = AGING_ORDEM.map((faixa) => ({
+    faixa,
+    total: raw.aging.find((a) => a.faixa === faixa)?.total ?? 0,
+  }));
 
-export function montarDashboardAtendimento(
-  conversas: readonly ConversaItem[],
-  autonomiaIa: AutonomiaIa,
-  agora = new Date(),
-): DashboardAtendimentoResumo {
-  const abertas = conversas.filter((c) => c.status === "aberta");
-  const naoLidas = abertas.reduce((total, c) => total + c.naoLidas, 0);
-  const assumidasPorHumano = abertas.filter((c) => c.modo === "pausado").length;
-  const semClienteVinculado = abertas.filter((c) => c.clientId === null).length;
-  const paradas24h = abertas.filter((c) => {
-    const horas = horasDesde(c.ultimaMensagemEm, agora);
-    return horas !== null && horas >= 24;
-  }).length;
-
-  const totalMensagensSaida = autonomiaIa.ze + autonomiaIa.humano;
-  const autonomiaPercentual =
-    totalMensagensSaida === 0 ? null : Math.round((autonomiaIa.ze / totalMensagensSaida) * 100);
-
-  const mixCanaisMap = new Map<string, number>();
-  for (const conversa of conversas) {
-    mixCanaisMap.set(conversa.canal, (mixCanaisMap.get(conversa.canal) ?? 0) + 1);
-  }
-  const mixCanais = [...mixCanaisMap.entries()]
-    .map(([canal, total]) => ({ canal, total }))
+  const mixCanal = [...raw.mixCanal]
+    .map((m) => ({ label: m.canal, total: m.total }))
     .sort((a, b) => b.total - a.total);
 
-  const tagsMap = new Map<string, number>();
-  for (const conversa of conversas) {
-    for (const tag of conversa.tags) tagsMap.set(tag, (tagsMap.get(tag) ?? 0) + 1);
-  }
-  const topTags = [...tagsMap.entries()]
-    .map(([nome, total]) => ({ nome, total }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 5);
+  const totalAutonomia = raw.autonomiaZe + raw.autonomiaHumano;
 
   return {
-    kpis: [
-      {
-        label: "Conversas abertas",
-        valor: String(abertas.length),
-        sub: `${naoLidas} não lidas`,
-        trend: naoLidas > 0 ? "down" : "neutro",
-      },
-      {
-        label: "Assumidas por humano",
-        valor: String(assumidasPorHumano),
-        sub: `${abertas.length - assumidasPorHumano} com Zé ativo`,
-        trend: "neutro",
-      },
-      {
-        label: "Paradas há 24h+",
-        valor: String(paradas24h),
-        sub: paradas24h > 0 ? "sem resposta recente" : "fila em dia",
-        trend: paradas24h > 0 ? "down" : "up",
-      },
-      {
-        label: "Sem cliente vinculado",
-        valor: String(semClienteVinculado),
-        sub: "contato ainda não sincronizado",
-        trend: semClienteVinculado > 0 ? "down" : "neutro",
-      },
-      {
-        label: "Autonomia da IA",
-        valor: autonomiaPercentual === null ? "—" : `${autonomiaPercentual}%`,
-        sub:
-          totalMensagensSaida === 0
-            ? "sem mensagens enviadas ainda"
-            : `${autonomiaIa.ze}/${totalMensagensSaida} respostas do Zé`,
-        trend: autonomiaPercentual !== null && autonomiaPercentual >= 50 ? "up" : "neutro",
-      },
-    ],
-    mixCanais,
-    topTags,
+    periodo: raw.periodo,
+    filaSemAtendente: raw.filaSemAtendente,
+    conversasAbertas: raw.abertas,
+    naoLidas: raw.naoLidas,
+    maisAntigaNaFilaLabel: formatarDuracao(raw.maisAntigaNaFilaSegundos),
+    frtMedioLabel: formatarDuracao(raw.frtMedioSegundos),
+    abertasHoje: raw.abertasHoje,
+    abertasHojeDeltaPct: pct(raw.abertasHoje - raw.abertasOntem, raw.abertasOntem),
+    aging,
+    mixCanal,
+    autonomiaPct: pct(raw.autonomiaZe, totalAutonomia),
+    autonomiaZe: raw.autonomiaZe,
+    autonomiaHumano: raw.autonomiaHumano,
+    escalonadoTotal: raw.escalonadoTotal,
+    escalonadoPct: pct(raw.escalonadoTotal, raw.abertas),
+    deflexaoPct: pct(raw.encerradasSemHumano, raw.encerradasTotal),
+    csat: { media: raw.csatMedia, respostas: raw.csatRespostas },
+  };
+}
+
+export interface VolumeDia {
+  dia: string;
+  entrada: number;
+  saida: number;
+}
+
+export interface HeatmapCelula {
+  diaSemana: number;
+  hora: number;
+  total: number;
+}
+
+/** View-model dos widgets analíticos avançados (E02-S12) — mesma fonte (`SnapshotAtendimentoRaw`),
+ * pura/testável separadamente do painel base (E02-S11). */
+export interface WidgetsAtendimento {
+  volumeDiario: VolumeDia[];
+  slaDentroMetaPct: number | null;
+  heatmapHora: HeatmapCelula[];
+  throughput: { nome: string; enviadas: number }[];
+  cargaAtendente: { nome: string; abertas: number }[];
+}
+
+export function montarWidgetsAtendimento(raw: SnapshotAtendimentoRaw): WidgetsAtendimento {
+  return {
+    volumeDiario: raw.volumeDiario,
+    slaDentroMetaPct: raw.slaDentroMetaPct,
+    heatmapHora: raw.heatmapHora,
+    throughput: raw.throughput.map((t) => ({ nome: t.nome, enviadas: t.enviadas })),
+    cargaAtendente: raw.cargaAtendente.map((c) => ({ nome: c.nome, abertas: c.abertas })),
   };
 }

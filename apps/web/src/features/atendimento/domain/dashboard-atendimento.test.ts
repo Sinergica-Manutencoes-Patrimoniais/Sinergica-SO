@@ -1,75 +1,151 @@
 import { describe, expect, it } from "vitest";
-import type { ConversaItem } from "./conversas";
-import { montarDashboardAtendimento } from "./dashboard-atendimento";
+import { montarPainelAtendimento, montarWidgetsAtendimento } from "./dashboard-atendimento";
+import type { SnapshotAtendimentoRaw } from "./dashboard-atendimento";
 
-function fakeConversa(overrides: Partial<ConversaItem> = {}): ConversaItem {
+function fakeSnapshot(overrides: Partial<SnapshotAtendimentoRaw> = {}): SnapshotAtendimentoRaw {
   return {
-    id: "conv-1",
-    clientId: "cli-1",
-    clienteNome: "Condomínio Alpha",
-    contatoNome: "Síndico João",
-    canal: "whatsapp",
-    status: "aberta",
-    modo: "auto",
-    atribuidoA: null,
+    periodo: "hoje",
+    filaSemAtendente: 0,
+    abertas: 0,
     naoLidas: 0,
-    ultimaMensagemPreview: "vazamento no 3º andar",
-    ultimaMensagemEm: "2026-07-07T10:00:00.000Z",
-    ordemServicoId: null,
-    tags: [],
+    maisAntigaNaFilaSegundos: null,
+    abertasHoje: 0,
+    abertasOntem: 0,
+    aging: [],
+    frtMedioSegundos: null,
+    mixCanal: [],
+    mixModo: [],
+    autonomiaZe: 0,
+    autonomiaHumano: 0,
+    escalonadoTotal: 0,
+    encerradasTotal: 0,
+    encerradasSemHumano: 0,
+    csatMedia: null,
+    csatRespostas: 0,
+    volumeDiario: [],
+    slaDentroMetaPct: null,
+    heatmapHora: [],
+    throughput: [],
+    cargaAtendente: [],
     ...overrides,
   };
 }
 
-const AGORA = new Date("2026-07-07T12:00:00.000Z");
-
-describe("montarDashboardAtendimento", () => {
-  it("conta conversas abertas, não lidas e assumidas por humano", () => {
-    const conversas = [
-      fakeConversa({ id: "c1", naoLidas: 3 }),
-      fakeConversa({ id: "c2", modo: "pausado", naoLidas: 0 }),
-      fakeConversa({ id: "c3", status: "encerrada", naoLidas: 5 }),
-    ];
-    const resumo = montarDashboardAtendimento(conversas, { ze: 0, humano: 0 }, AGORA);
-    const abertas = resumo.kpis.find((k) => k.label === "Conversas abertas");
-    expect(abertas?.valor).toBe("2");
-    expect(abertas?.sub).toBe("3 não lidas");
-    const assumidas = resumo.kpis.find((k) => k.label === "Assumidas por humano");
-    expect(assumidas?.valor).toBe("1");
+describe("montarPainelAtendimento", () => {
+  it("repassa contagens de fila direto do snapshot", () => {
+    const painel = montarPainelAtendimento(
+      fakeSnapshot({ filaSemAtendente: 220, abertas: 419, naoLidas: 13 }),
+    );
+    expect(painel.filaSemAtendente).toBe(220);
+    expect(painel.conversasAbertas).toBe(419);
+    expect(painel.naoLidas).toBe(13);
   });
 
-  it("marca conversas abertas paradas há 24h+ como aging", () => {
-    const conversas = [
-      fakeConversa({ id: "c1", ultimaMensagemEm: "2026-07-06T10:00:00.000Z" }),
-      fakeConversa({ id: "c2", ultimaMensagemEm: "2026-07-07T11:00:00.000Z" }),
-    ];
-    const resumo = montarDashboardAtendimento(conversas, { ze: 0, humano: 0 }, AGORA);
-    expect(resumo.kpis.find((k) => k.label === "Paradas há 24h+")?.valor).toBe("1");
+  it("formata duração em horas e minutos", () => {
+    const painel = montarPainelAtendimento(
+      fakeSnapshot({ maisAntigaNaFilaSegundos: 20 * 3600 + 10 * 60 }),
+    );
+    expect(painel.maisAntigaNaFilaLabel).toBe("20h 10m");
   });
 
-  it("calcula autonomia da IA a partir das mensagens de saída", () => {
-    const resumo = montarDashboardAtendimento([], { ze: 8, humano: 2 }, AGORA);
-    const autonomia = resumo.kpis.find((k) => k.label === "Autonomia da IA");
-    expect(autonomia?.valor).toBe("80%");
-    expect(autonomia?.sub).toBe("8/10 respostas do Zé");
+  it("formata duração só em minutos quando menor que 1h", () => {
+    const painel = montarPainelAtendimento(fakeSnapshot({ frtMedioSegundos: 16 * 60 + 43 }));
+    expect(painel.frtMedioLabel).toBe("17m"); // arredonda pro minuto mais próximo
   });
 
-  it("sem mensagens de saída mostra traço em vez de dividir por zero", () => {
-    const resumo = montarDashboardAtendimento([], { ze: 0, humano: 0 }, AGORA);
-    expect(resumo.kpis.find((k) => k.label === "Autonomia da IA")?.valor).toBe("—");
+  it("duração ausente vira traço, não erro", () => {
+    const painel = montarPainelAtendimento(fakeSnapshot());
+    expect(painel.maisAntigaNaFilaLabel).toBe("—");
+    expect(painel.frtMedioLabel).toBe("—");
   });
 
-  it("agrupa mix de canais e top tags", () => {
-    const conversas = [
-      fakeConversa({ id: "c1", canal: "whatsapp", tags: ["urgente"] }),
-      fakeConversa({ id: "c2", canal: "whatsapp", tags: ["urgente", "orcamento"] }),
-      fakeConversa({ id: "c3", canal: "instagram", tags: [] }),
-    ];
-    const resumo = montarDashboardAtendimento(conversas, { ze: 0, humano: 0 }, AGORA);
-    expect(resumo.mixCanais).toEqual([
-      { canal: "whatsapp", total: 2 },
-      { canal: "instagram", total: 1 },
+  it("calcula delta de abertas hoje vs ontem", () => {
+    const painel = montarPainelAtendimento(fakeSnapshot({ abertasHoje: 104, abertasOntem: 159 }));
+    expect(painel.abertasHojeDeltaPct).toBe(-35);
+  });
+
+  it("delta sem base ontem não divide por zero", () => {
+    const painel = montarPainelAtendimento(fakeSnapshot({ abertasHoje: 5, abertasOntem: 0 }));
+    expect(painel.abertasHojeDeltaPct).toBeNull();
+  });
+
+  it("preenche buckets de aging ausentes com zero, em ordem fixa", () => {
+    const painel = montarPainelAtendimento(fakeSnapshot({ aging: [{ faixa: "4-24h", total: 1 }] }));
+    expect(painel.aging).toEqual([
+      { faixa: "0-1h", total: 0 },
+      { faixa: "1-4h", total: 0 },
+      { faixa: "4-24h", total: 1 },
+      { faixa: "+24h", total: 0 },
     ]);
-    expect(resumo.topTags[0]).toEqual({ nome: "urgente", total: 2 });
+  });
+
+  it("calcula autonomia da IA e trata zero mensagens sem dividir por zero", () => {
+    const comMensagens = montarPainelAtendimento(
+      fakeSnapshot({ autonomiaZe: 242, autonomiaHumano: 177 }),
+    );
+    expect(comMensagens.autonomiaPct).toBe(58);
+
+    const semMensagens = montarPainelAtendimento(fakeSnapshot());
+    expect(semMensagens.autonomiaPct).toBeNull();
+  });
+
+  it("calcula % de escalonamento e deflexão", () => {
+    const painel = montarPainelAtendimento(
+      fakeSnapshot({
+        escalonadoTotal: 30,
+        abertas: 419,
+        encerradasTotal: 124,
+        encerradasSemHumano: 0,
+        csatMedia: null,
+        csatRespostas: 0,
+      }),
+    );
+    expect(painel.escalonadoPct).toBe(7);
+    expect(painel.deflexaoPct).toBe(0);
+  });
+
+  it("mix de canal ordenado por total decrescente", () => {
+    const painel = montarPainelAtendimento(
+      fakeSnapshot({
+        mixCanal: [
+          { canal: "instagram", total: 5 },
+          { canal: "whatsapp", total: 40 },
+        ],
+      }),
+    );
+    expect(painel.mixCanal).toEqual([
+      { label: "whatsapp", total: 40 },
+      { label: "instagram", total: 5 },
+    ]);
+  });
+
+  it("CSAT sempre null/0 — sem tabela de pesquisa no schema ainda", () => {
+    const painel = montarPainelAtendimento(fakeSnapshot());
+    expect(painel.csat).toEqual({ media: null, respostas: 0 });
+  });
+});
+
+describe("montarWidgetsAtendimento", () => {
+  it("repassa a série de volume diário direto do snapshot", () => {
+    const widgets = montarWidgetsAtendimento(
+      fakeSnapshot({ volumeDiario: [{ dia: "2026-07-07", entrada: 10, saida: 8 }] }),
+    );
+    expect(widgets.volumeDiario).toEqual([{ dia: "2026-07-07", entrada: 10, saida: 8 }]);
+  });
+
+  it("repassa % dentro da meta de SLA", () => {
+    const widgets = montarWidgetsAtendimento(fakeSnapshot({ slaDentroMetaPct: 92 }));
+    expect(widgets.slaDentroMetaPct).toBe(92);
+  });
+
+  it("mapeia throughput e carga por atendente só com nome+total (sem vazar userId pra UI)", () => {
+    const widgets = montarWidgetsAtendimento(
+      fakeSnapshot({
+        throughput: [{ userId: "u1", nome: "Ana", enviadas: 40 }],
+        cargaAtendente: [{ userId: "u1", nome: "Ana", abertas: 5 }],
+      }),
+    );
+    expect(widgets.throughput).toEqual([{ nome: "Ana", enviadas: 40 }]);
+    expect(widgets.cargaAtendente).toEqual([{ nome: "Ana", abertas: 5 }]);
   });
 });
