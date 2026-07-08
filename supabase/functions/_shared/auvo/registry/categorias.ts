@@ -16,11 +16,18 @@ function criarCategoriaDescriptor(
   key: "produto_categorias" | "equipamento_categorias",
   auvoBasePath: "/productcategories" | "/equipmentcategories",
 ): AuvoEntityDescriptor<AuvoCategoria, CategoriaRow> {
+  // `/productcategories` (produto_categorias) confirmado 404 direto na API real (2026-07-08),
+  // mesmo testando o casing exato do doc oficial ("/productCategories") — a conta Auvo
+  // provavelmente não tem o módulo de Catálogo/Produtos habilitado no plano
+  // (equipmentcategories, mesma forma de endpoint, funciona normalmente). Sem cron pra não
+  // poluir a saúde de sync com erro permanente e irrecuperável por código; decisão de negócio
+  // (confirmar/ativar o módulo junto ao Auvo) é do Lucas — ver STATE.md.
+  const semCron = key === "produto_categorias";
   return {
     key,
     auvoBasePath,
     pcmTable: key,
-    cronSchedule: "0 6 * * *",
+    ...(semCron ? {} : { cronSchedule: "0 6 * * *" }),
     writeEnabled: false,
     deleteStrategy: "hard-delete",
     toAuvo(row) {

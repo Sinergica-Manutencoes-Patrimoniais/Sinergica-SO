@@ -15,7 +15,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
-import { AuvoApiError, auvoGet } from "../_shared/auvo/client.ts";
+import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 import { criarOsDaTarefa, type OsStatus } from "../_shared/auvo/os-from-task.ts";
 
@@ -60,12 +60,27 @@ if (import.meta.main) serve(async (req) => {
     if (!url || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
     const db = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
+    // `GET /tasks` EXIGE startDate/endDate (via paramFilter) quando customerId não é informado —
+    // confirmado direto na API real (400 "Start date and end date are required when customerId is
+    // not provided", errorCode 168). Reconciliação varre TODAS as tarefas, não uma por cliente, então
+    // usa uma janela ampla (10 anos passado a 2 anos futuro) em vez de customerId. Ver
+    // specs/E01-S34.../design.md — achado durante teste manual com credenciais reais (2026-07-08).
+    const agora = new Date();
+    const inicio = new Date(agora);
+    inicio.setFullYear(inicio.getFullYear() - 10);
+    const fim = new Date(agora);
+    fim.setFullYear(fim.getFullYear() + 2);
+    const paramFilter = buildParamFilter({
+      StartDate: inicio.toISOString().slice(0, 19),
+      EndDate: fim.toISOString().slice(0, 19),
+    });
+
     // Pagina TODAS as páginas de `GET /tasks` (se qualquer página falhar, propaga → catch →
     // nenhuma escrita no banco, mesma guarda de `pcm-auvo-customers-import`).
     const tarefas = await auvoPaginate<AuvoTask>(
       (pageNumber, pageSize) =>
         auvoGet<AuvoTasksResponse>(
-          `/tasks?page=${pageNumber}&pageSize=${pageSize}&order=asc`,
+          `/tasks?${paramFilter}&page=${pageNumber}&pageSize=${pageSize}&order=asc`,
         ).then((r) => {
           if (Array.isArray(r?.result)) return r.result;
           if (Array.isArray(r?.result?.entityList)) return r.result.entityList;

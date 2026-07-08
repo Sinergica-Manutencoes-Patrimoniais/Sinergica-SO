@@ -4,7 +4,9 @@ import { decimalParaCentavos, servicosDescriptor } from "./servicos.ts";
 Deno.test("servicosDescriptor — usa externalCode e auvo_id GUID/string", () => {
   assertEquals(servicosDescriptor.auvoBasePath, "/services");
   assertEquals(servicosDescriptor.externalIdField, "externalCode");
-  assertEquals(servicosDescriptor.cronSchedule, "0 */6 * * *");
+  // Sem cronSchedule de propósito — /services confirmado 404 na API real (2026-07-08), provável
+  // módulo não habilitado no plano Auvo da conta. Ver comentário no descriptor.
+  assertEquals(servicosDescriptor.cronSchedule, undefined);
 
   assertEquals(
     servicosDescriptor.toAuvo({

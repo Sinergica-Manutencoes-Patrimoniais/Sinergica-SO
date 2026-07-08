@@ -7,7 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
-import { AuvoApiError, auvoGet } from "../_shared/auvo/client.ts";
+import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 import { getDescriptor } from "../_shared/auvo/registry/index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
@@ -56,10 +56,13 @@ serve(async (req) => {
     healthDb = db;
     healthEntity = descriptor.key;
 
+    // Alguns recursos (ex.: Tickets) exigem paramFilter (StartDate/EndDate) pra listar — sem ele,
+    // Auvo responde 400. Ver descriptor.listParamFilter (types.ts) e o achado real em tickets.ts.
+    const filtro = descriptor.listParamFilter ? `${buildParamFilter(descriptor.listParamFilter())}&` : "";
     const records = await auvoPaginate<Record<string, unknown>>(
       (pageNumber, pageSize) =>
         auvoGet<AuvoListResponse<Record<string, unknown>>>(
-          `${descriptor.auvoBasePath}?page=${pageNumber}&pageSize=${pageSize}&order=asc`,
+          `${descriptor.auvoBasePath}?${filtro}page=${pageNumber}&pageSize=${pageSize}&order=asc`,
         ).then(extractEntityList),
       { pageSize: DEFAULT_PAGE_SIZE },
     );
