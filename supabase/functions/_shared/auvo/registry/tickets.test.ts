@@ -7,6 +7,10 @@ Deno.test("ticketsDescriptor — webhook em tempo real, sem DELETE", () => {
   assertEquals(ticketsDescriptor.deleteStrategy, "unsupported");
 });
 
+Deno.test("ticketsDescriptor — E01-S34: cron horário como rede de segurança do webhook", () => {
+  assertEquals(ticketsDescriptor.cronSchedule, "0 * * * *");
+});
+
 Deno.test("ticketsDescriptor — toAuvo (create) inclui todos os campos suportados", () => {
   assertEquals(
     ticketsDescriptor.toAuvo({

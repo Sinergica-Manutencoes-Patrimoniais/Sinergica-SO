@@ -10,7 +10,226 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-07 (sessão Claude) — **Revisão adversarial de E01-S22 a S32 +
+**Última atualização:** 2026-07-08 (sessão Codex) — **E02-S08 (Base única de Contatos e Timeline)
+implementada localmente como pré-requisito do agente comercial.**
+Lucas aprovou aproveitar a parte de CRM do HeziomOS que realmente importa agora: uma base única de
+contatos/clientes/leads com histórico. Criei `specs/E02-S08-relacionamento-contatos/` (`product`,
+`domain`, `design`, `spec`, `tasks`) e ADR `docs/adr/0007-base-unica-contatos-relacionamento.md`.
+Decisão: `relacionamento.contatos` é pessoa/canal; `pcm.clientes` continua sendo condomínio/cliente
+operacional; `comercial.leads` continua sendo oportunidade; `atendimento.conversas` continua sendo
+o histórico de chat.
+
+Implementação: migrations `0047`/`0048` criam schema `relacionamento`, tabelas
+`contatos`/`identidades_contato`/`vinculos`, RLS por módulo (`pcm`/`atendimento`/`comercial`),
+`atendimento.conversas.contato_id`, `atendimento.conversas.lead_id`,
+`comercial.leads.contato_id`, RPC `relacionamento.fn_upsert_contato_whatsapp` e RPC
+`relacionamento.get_timeline_contato`. A RPC existente
+`atendimento.fn_registrar_mensagem_entrada` foi substituída de forma compatível para resolver/criar
+contato por WhatsApp automaticamente. `pcm-ze-agent` agora grava `contato_id` no lead comercial,
+atualiza `conversas.lead_id` e cria vínculo `contato -> comercial_lead`. `supabase/config.toml`
+expõe o schema `relacionamento` localmente. pgTAP novo:
+`supabase/tests/relacionamento_contatos_timeline.test.sql`.
+
+Gates locais verdes: `ci:local` completo (216 pass/9 skip), `lint:migrations` (48 migrations +
+Squawk), `lint`, `typecheck`, teste focado de Atendimento (57 pass), `build`, `arch:check`,
+`audit:esteira` (205 docs), `eval:spec`. PgTAP real (`relacionamento_contatos_timeline.test.sql`)
+ainda depende de Docker/CI.
+
+---
+
+**Última atualização anterior:** 2026-07-08 (sessão Codex) — **E02-S04 (Inbox multi-canal humano)
+implementada localmente para fechar o intervalo E02-S01..S07 com artefatos SDD.**
+Lucas pediu "mete marcha" no épico E02-S01 até E02-S07. Auditoria inicial: S01/S02/S03/S05/S06/S07
+já tinham artefatos e código local; S04 estava no ROADMAP sem `product.md`/`spec.md`/`tasks.md`.
+S04 criada como tier Pequeno: `specs/E02-S04-atendimento-multicanal/`. Decisão preservada do
+ROADMAP: Instagram/Messenger entram no Inbox humano, **sem IA**.
+
+Implementação S04: migrations `0044_E02-S04_atendimento_multicanal.sql` e
+`0046_E02-S04_validar_constraint_multicanal.sql` expandem e validam o check de
+`atendimento.conversas.canal` de
+`whatsapp` para `whatsapp|instagram|messenger` no padrão anti-lock do repo (`NOT VALID` + validação
+separada). `domain/conversas.ts` ganhou `labelCanal` e `canalSuportaIa` com testes; UI do Inbox
+passa a exibir badge de canal e esconde "Responder com IA agora"/"Devolver ao Zé" fora do WhatsApp;
+`supabase-atendimento-adapter` também bloqueia `acionarZeAgora` se `canal!='whatsapp'`. Integração
+real Meta Graph API/webhook/envio ficou explicitamente fora de escopo para não fingir um canal
+operacional sem contrato/credenciais. Como `lint:migrations` varre todas as migrations, também
+ajustei `0043_E02-S08_agente_comercial.sql` para usar `NOT VALID` e criei
+`0045_E02-S08_validar_constraints_agente_comercial.sql`.
+
+Gates locais verdes: `ci:local` completo (216 pass/9 skip), `lint:migrations` (46 migrations +
+Squawk), `lint`, `typecheck`, teste focado de Atendimento (57 pass), `build`, `arch:check`,
+`audit:esteira` (199 docs), `eval:spec`. Teste manual em browser com dado real multi-canal segue
+pendente, como nas demais stories E02.
+
+---
+
+**Última atualização anterior:** 2026-07-07 (sessão Claude) — **E02-S05 (Config: canais + tags) implementada
+localmente, seguindo o ciclo formal de agentes Triviaiox (@pm→@sm→@dev→@qa→@devops) a pedido do
+Lucas.**
+Depois de fechar S01+S02, Lucas pediu para prosseguir o épico E02 pelos agentes especialistas; como
+várias stories restantes (S04/S06/S07/S08) tinham decisão de produto em aberto, perguntei por onde
+começar — Lucas escolheu S05 (menor ambiguidade). @pm resolveu 2 decisões de escopo antes de
+qualquer código (registradas em `product.md`): (1) tags viram catálogo próprio
+(`atendimento.tags`, nome+ativo, unique case-insensitive — mesmo padrão de
+`pcm.segmentos`/`palavras_chave`), não string livre, pra evitar duplicidade por digitação; (2)
+"templates" (do título original da story no ROADMAP) saiu de escopo — é conceito da API oficial
+WhatsApp Business/Meta, não se aplica ao Evolution API usado hoje; volta a fazer sentido só quando
+`E02-S04` (Instagram/Messenger via Meta) existir. Story renomeada para "Config: canais + tags".
+
+Migration `0040_E02-S05_atendimento_tags.sql`: tabela `atendimento.tags` com RLS FORCE (mesmo
+padrão módulo `atendimento`), sem coluna de cor (YAGNI — nada no requisito justifica), sem `DELETE`
+(só `ativo=false`, pra não quebrar histórico de conversas que já usam uma tag desativada). Form de
+canal usa `atendimento.config_ze` já existente desde `E00-S00` — sem migration nova, só
+insert-ou-update explícito por `client_id` no adapter (evitei `upsert()` puro porque sobrescreveria
+`created_by NOT NULL` do registro original a cada edição). Feature nova dentro de
+`features/atendimento/`: `domain/{tags,config-canal}.ts`, `application/config-gateway.ts` + 6 casos
+de uso, `infrastructure/supabase-config-adapter.ts`, `components/{TagsList,ConfigCanalForm}.tsx`,
+`pages/AtendimentoConfigPage.tsx` (2 abas). `HomePage.tsx` ganhou o item "Config" em
+`ATENDIMENTO_NAV` (`AtendimentoView` agora `"inbox" | "config"`).
+
+Gates locais verdes: `lint:migrations` (40 migrations), `lint`, `typecheck`, `test` (186 pass/9
+skip), `build`, `arch:check`, `audit:esteira` (187 docs), `eval:spec`, `pnpm run ci:local` (mirror
+completo do lefthook pre-push, todas as 9 checagens passando). Sem Edge Function nova nesta story
+(CRUD direto via RLS) — não há gap de Deno CLI/Docker aqui, só o pgTAP (`atendimento_tags_rls.
+test.sql`) que segue não executado por falta de Docker, mesma ressalva de sempre. Teste manual em
+browser ainda pendente.
+
+**Commitado, NÃO pushado** — mesma instrução permanente do Lucas nesta sessão: push só com
+confirmação explícita separada.
+
+**Próximo passo:** pedir confirmação para `git push`; depois, seguir o épico E02 pelos agentes
+especialistas nas próximas stories que Lucas priorizar (S06 tem decisão de produto pendente — 1
+persona vs. múltiplas; S04 precisa perguntar se o Zé deve responder Instagram/Messenger; S03
+depende de S01+S02 em produção com dado real).
+
+---
+
+**Última atualização anterior:** 2026-07-07 (sessão Claude) — **Nova épica E02 aberta: Atendimento (Inbox +
+Zé multi-agente). E02-S01 (fundação) + E02-S02 (Inbox) implementadas localmente.**
+Lucas pediu para portar o módulo de Atendimento pronto de um projeto irmão (`heziomos-main`) para
+o Sinérgica-SO, adaptado ao design system. Investigação (Plan Mode) mostrou que não é uma tela —
+são 3 áreas grandes (Dashboard/Inbox/Config, ~15.700 linhas na origem, schema `crm` dedicado).
+Lucas confirmou querer as 3 áreas e todos os canais (WhatsApp+Instagram+Messenger), com o Agente
+Zé (já em produção, `E01-S02`) virando "um agente dentro da estrutura de atendimento" em vez de um
+fluxo paralelo. Dado o tamanho, especifiquei o épico inteiro (8 stories, plano completo salvo em
+`~/.claude/plans/nesse-projeto-tem-o-lively-creek.md`) mas só implementei as 2 primeiras agora —
+S03 a S08 ficam no ROADMAP como "Planejado", com decisões de produto pendentes documentadas story a
+story (ex.: S04 multi-canal precisa perguntar se o Zé deve responder Instagram/Messenger; S07/S08
+podem nem ser escopo de Atendimento, e sim de Comercial).
+
+**E02-S01 (fundação):** migration `0039_E02-S01_atendimento_conversas_mensagens.sql` cria
+`atendimento.conversas`/`atendimento.mensagens` (não reaproveita `wa_messages`/`wa_queue` — ciclo
+de vida diferente, aquelas são log bruto/fila efêmera) com RLS FORCE módulo `atendimento` e RPC
+`atendimento.fn_registrar_mensagem_entrada` (upsert de conversa + insert idempotente de mensagem +
+incremento de `nao_lidas`, tudo atômico — evitar isso numa RPC única criaria dupla contagem em
+toda reentrega de rede do Evolution, já que o dedupe por `wa_message_id` só existe dentro dela).
+`_shared/evolution.ts` extrai `responderEvolution` de `pcm-ze-agent` (reuso). `pcm-whatsapp-
+webhook` ganhou uma chamada aditiva a essa RPC logo após o upsert existente em `wa_messages` (zero
+mudança no caminho antigo). `pcm-ze-agent` ganhou: checagem de `conversas.modo` (pausa o Zé numa
+conversa específica sem mexer em `config_ze`, que é por condomínio inteiro), espelho de toda
+resposta em `mensagens` (`remetente_tipo='ze'`), link de `ordem_servico_id` após criar a OS, e
+campo `forcar?: boolean` no `InputSchema` (aciona o Zé fora da janela normal de debounce — usado
+pelo botão "Responder com IA agora" do Inbox). Edge Function nova `atendimento-whatsapp-envio`
+(`enviar`/`assumir`/`devolver`, via `userClient` — anon key + JWT do chamador, RLS decide
+autorização) grava e envia mensagem humana, marcando `status_entrega` real do Evolution sem
+derrubar a função em caso de falha de envio. pgTAP: `atendimento_conversas_rls.test.sql`,
+`atendimento_mensagens_rls.test.sql`, `atendimento_registrar_mensagem_rpc.test.sql` (prova
+idempotência explicitamente).
+
+**E02-S02 (Inbox):** feature nova `apps/web/src/features/atendimento/` completa (domain/
+application/infrastructure/components/pages, DDD por feature igual a `features/pcm`). Layout 3
+colunas (lista/chat/perfil) com os tokens já existentes do design system (sem shadcn/Radix — não
+existe lib de componentes compartilhada neste projeto). Polling manual (`useEffect`+
+`setInterval`, sem React Query): lista a cada 5s, mensagens da conversa aberta a cada 3s, pausado
+via `document.visibilitychange`. Toggle IA/humano (assumir/devolver) e "Responder com IA agora"
+chamam a Edge Function/`pcm-ze-agent` de S01. `HomePage.tsx` ganhou `AtendimentoView`/
+`ATENDIMENTO_NAV` (1 item, "Inbox") — módulo `atendimento` já existia em `MODULOS`/gate de
+permissão desde antes, só caía no fallback `EmConstrucao`.
+
+Gates locais verdes: `lint:migrations` (39 migrations), `lint`, `typecheck`, `test` (175 pass/9
+skip), `build`, `arch:check`, `audit:esteira` (184 docs), `eval:spec`. Deno CLI/Docker ausentes —
+mesma ressalva de toda a integração Auvo/Zé desde `E01-S09`: os testes Deno das Edge Functions
+novas/editadas não foram executados, e nenhum teste manual em browser com mensagem real via
+Evolution foi feito ainda (pendente, marcado como "pendente" em `specs/E02-S02.../tasks.md`).
+Divergências de spec documentadas (não silenciosas) em `specs/E02-S01-atendimento-fundacao/
+tasks.md`: a RPC de S01 e a consolidação de `enviar`/`assumir`/`devolver` numa única Edge Function
+não estavam no design original, ambas por razões técnicas explicadas ali.
+
+**Commitado, NÃO pushado** — por instrução explícita do Lucas nesta sessão: "o commit se você já
+testou pode seguir, só o push que precisa confirmar se vou querer outras coisas". Aguardando
+confirmação separada antes de `git push` (mesma branch `feat/E01-S22-motor-sync-auvo-write`, que já
+está `ahead 1` do remoto por `E01-S34`).
+
+**Bloqueio de processo (não resolvido, herdado de sessões anteriores):** os mesmos 5 arquivos de
+infra do `graphify` (`.claude/settings.json`, `biome.json`, `scripts/audit-esteira.mjs`,
+`AGENTS.md`, `CLAUDE.md`) seguem modificados e não commitados, e agora também `.codex/hooks.json`
+(novo, não rastreado) e `graphify-out/` inteiro (cache/relatórios gerados, centenas de arquivos) —
+nenhum desses é do escopo de E02-S01/S02, não foram tocados nem staged.
+
+**Próximo passo:** pedir ao Lucas confirmação para `git push` desta branch; depois do push, rodar
+`pnpm run ci:local` real no CI (Deno/pgTAP); testar em browser com `.env.local` + mensagem real via
+Evolution (dev server local, nunca contra o Netlify de produção). Se aprovado, seguir para
+`E02-S03` (Dashboard) só depois de S01+S02 estarem em produção com dado real (métricas vazias não
+validam nada).
+
+---
+
+**Última atualização anterior:** 2026-07-07 (sessão Claude) — **PR #30 aberto, CI verde, e E01-S34
+(Reconciliação Auvo→PCM) aberta e implementada localmente em cima dele.**
+Lucas testou o PR #30 num deploy preview e achou 4 problemas: (1) criar funcionário deu "Failed to
+send a request to the Edge Function", (2) Tickets deu o mesmo erro, (3) OS abertas direto no Auvo
+não aparecem no PCM, (4) o Dashboard reflete essa mesma falta de dado. Investigação: (1)/(2) eram
+esperados — `pcm-auvo-users-create`/`pcm-auvo-tickets-referencia` são funções novas desta PR, só
+vão pro Supabase real no merge (integração nativa Supabase↔GitHub, confirmado via curl → 404 nas
+duas). (3)/(4) revelaram um achado bem maior: **9 dos 12 descriptors do motor genérico declaravam
+`cronSchedule`, mas nenhuma migration desde `E01-S23` jamais criou o `pg_cron` que chama
+`pcm-auvo-pull`** — metadado morto, zero sincronização Auvo→PCM real para essas 9 entidades (nem
+webhook, que a maioria não suporta, nem cron, que nunca foi ligado). E o webhook de OS/Task (desde
+`E01-S10`) só faz `UPDATE` numa OS já existente por `auvo_task_id`, nunca `INSERT` — tarefa nova
+criada direto no Auvo nunca vira OS no PCM.
+
+Aberta `E01-S34` (tier arquitetural, `product.md`/`design.md`/`spec.md`/`tasks.md` completos) pra
+fechar isso: migration `0037` liga 3 `pg_cron` reais (diário 6 entidades de catálogo, 6h 3
+entidades operacionais, horário Tickets) chamando `pcm.fn_invoke_auvo_pull` (nova RPC, espaça as
+chamadas com `pg_sleep(2)` pra não rajar o Auvo); `_shared/auvo/os-from-task.ts` (novo, compartilhado)
+resolve `client_id` via `pcm.clientes.auvo_id` e cria a OS (`origem='auvo'`, `categoria='corretiva'`
+AUTO-DECISION, `numero` via mesma lógica de `pcm-ze-agent`); `pcm-auvo-webhook` passa a criar OS no
+branch `if (!os)` em vez de só ignorar (zero mudança no caminho de OS já conhecida — só
+reindentação, revisão manual linha a linha feita); nova Edge Function `pcm-auvo-tasks-import`
+(migration `0038`, cron diário 05:00 UTC) faz backfill de tarefas antigas sem soft-delete (OS é
+dado operacional, não se apaga sozinho). Limitação consciente documentada: o primeiro evento de uma
+tarefa genuinamente nova com `taskStatus=1`("Aberta") sozinho não cria OS em tempo real — a ordem de
+checagem existente no webhook (`targetStatus==null` ignora antes de resolver a OS) não foi
+reordenada pra não arriscar regressão em código de produção ativo desde `E01-S10`; fica coberto pelo
+import diário, não é lacuna sem cobertura. Gates locais verdes: `lint:migrations` (38 migrations),
+`lint`/`typecheck`/`build`/`arch:check` (cobrem só `apps/web` — `supabase/functions/**` está fora
+do escopo do biome/tsc deste monorepo), `test` (164 pass/9 skip), `audit:esteira` (176 docs),
+`eval:spec`. Deno CLI/Docker ausentes — os testes Deno novos (`os-from-task.test.ts`,
+`pcm-auvo-tasks-import/index.test.ts`, `tickets.test.ts` atualizado) foram escritos mas não
+executados; confirmar no CI antes do merge.
+
+**Sobre o PR #30 em si:** commitado e pusheado (5 commits), CI 100% verde
+(`qualidade`/`migrations`/`db-tests` todos `pass`) — achado e corrigido nesse processo um `GRANT`
+faltante no pgTAP de outbox (`E01-S22`, nunca tinha rodado de verdade antes, primeira vez que o
+pgTAP roda contra Postgres real via CI nesta épica inteira). Também ajustado, a pedido do Lucas, o
+hook `.claude/hooks/enforce-git-push-authority.sh`: era `deny` incondicional (criado numa sessão
+anterior porque um agente fazia push a cada commit sem perguntar); virou `ask` — sempre pede
+confirmação explícita antes de qualquer `git push`, nunca bloqueia nem libera sozinho.
+
+**Bloqueio de processo (não resolvido, herdado da atualização anterior):** 5 arquivos de infra do
+`graphify` (`.claude/settings.json`, `biome.json`, `scripts/audit-esteira.mjs`, `AGENTS.md`,
+`CLAUDE.md`) seguem modificados e não commitados — o classificador de auto-modo bloqueou esse
+commit por ser "auto-modificação de config não pedida explicitamente". Revisar/commitar manualmente
+se for intencional.
+
+**Próximo passo:** commitar e pushear E01-S34 em cima do PR #30 (mesma branch); aguardar CI;
+depois do merge, confirmar manualmente que `pcm-auvo-tasks-import`/`pcm-auvo-tickets-referencia`/
+`pcm-auvo-users-create` foram deployadas e que os 3 `pg_cron` novos aparecem em
+`select * from cron.job where jobname like 'pcm_auvo%'`; testar em browser de novo com dado real.
+
+---
+
+**Última atualização anterior:** 2026-07-07 (sessão Claude) — **Revisão adversarial de E01-S22 a S32 +
 correções + E01-S33 (Tickets) implementada localmente. Épica E01-S22..S33 fecha aqui.**
 Usuário pediu revisão completa de qualidade/conformidade do que o Codex implementou nas retomadas
 anteriores (S22-S32). Rodei os gates eu mesma (não confiei no que STATE.md alegava) e 3 revisões

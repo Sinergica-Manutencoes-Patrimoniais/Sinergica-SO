@@ -16,7 +16,7 @@ alwaysApply: true
 |----|-------------------|--------|-------------|
 | E00 | Shell & Infra (autenticação, layout, deploy) | Em andamento | — |
 | E01 | PCM · Operação | Planejado | — |
-| E02 | Atendimento · Zé | Planejado | — |
+| E02 | Atendimento · Zé | Em andamento | Claude (sessão Lucas) |
 | E03 | Comercial | Planejado | — |
 | E04 | Financeiro | Planejado | — |
 | E05 | Operação · Estoque | Planejado | — |
@@ -83,9 +83,39 @@ alwaysApply: true
 | E01-S31 | Serviços (cron) | [spec](../../specs/E01-S31-servicos/spec.md) · [tasks](../../specs/E01-S31-servicos/tasks.md) | Implementada localmente — `pcm.servicos` com `auvo_id text`/GUID, preço em centavos, descriptor `/services` com `externalIdField:'externalCode'`, cron 6h e página “Serviços” no PCM; pgTAP/Deno escritos, mas Deno CLI/Docker ausentes neste ambiente | Codex | ✅ local |
 | E01-S32 | Equipes/Teams (cron) | [spec](../../specs/E01-S32-equipes/spec.md) · [tasks](../../specs/E01-S32-equipes/tasks.md) | Implementada localmente — `pcm.equipes`, descriptor `/teams` com `supportsUpdate:false` e `deleteStrategy:'unsupported'`, seleção de participantes/gestores por `auvo_user_id` e página “Equipes” com aviso permanente de edição/exclusão só local; pgTAP/Deno escritos, mas Deno CLI/Docker ausentes neste ambiente | Codex | ✅ local |
 | E01-S33 | Tickets (webhook Ticket) | [spec](../../specs/E01-S33-tickets/spec.md) · [tasks](../../specs/E01-S33-tickets/tasks.md) | Implementada localmente — `pcm.tickets`, descriptor `/tickets` com `webhookEntity:62`, `deleteStrategy:'unsupported'`, `toAuvoUpdate` restrito a `statusId` (campo aditivo novo no `AuvoEntityDescriptor`); Edge Function `pcm-auvo-tickets-referencia` para as listas `request-type`/`status`; página "Tickets" em OPERAÇÃO | Claude (sessão Lucas) | ⏳ (AC implementados; gate Deno/DB/browser pendente) |
+| E01-S34 | Reconciliação Auvo→PCM — liga o `pg_cron` real das 9 entidades com `cronSchedule` (era metadado morto desde E01-S23), adiciona cron em Tickets, webhook de Task cria OS quando não acha local + import de reconciliação (backfill) | [product](../../specs/E01-S34-reconciliacao-sync-auvo-pcm/product.md) · [design](../../specs/E01-S34-reconciliacao-sync-auvo-pcm/design.md) · [spec](../../specs/E01-S34-reconciliacao-sync-auvo-pcm/spec.md) · [tasks](../../specs/E01-S34-reconciliacao-sync-auvo-pcm/tasks.md) | Achado durante teste manual do PR #30 (2026-07-07): OS abertas direto no Auvo nunca apareciam no PCM; investigação revelou que o cron do motor genérico nunca foi ligado para 9 entidades. Implementada localmente — migrations `0037`/`0038`, `_shared/auvo/os-from-task.ts` compartilhado, `pcm-auvo-webhook` cria OS quando não acha local, nova Edge Function `pcm-auvo-tasks-import` | Claude (sessão Lucas) | ⏳ (AC implementados; gate Deno/DB/browser pendente) |
 
 ### E02 — Atendimento · Zé
-*Stories serão abertas quando E01-S02 iniciar (dependência de design).*
+E01-S02 (Agente Zé) já implementada — épica destravada. Plano completo da épica (8 stories,
+S01-S08) em `~/.claude/plans/nesse-projeto-tem-o-lively-creek.md`: porta o módulo de Atendimento
+do projeto `heziomos-main` (Inbox de conversas + Dashboard + Config), adaptado ao design system
+do Sinérgica-SO, com o Agente Zé virando "um agente dentro da estrutura de atendimento" em vez de
+um fluxo paralelo. S01+S02+S05 implementadas.
+
+**Re-escopo de S06/S07/S08 (2026-07-07, decisão do Lucas):** a plataforma será usada por **times
+internos diferentes da Sinérgica** (não multi-tenant externo) com **agentes de IA distintos por
+time, cada um com prompt/persona e base de conhecimento próprios** — o Zé (persona "chamados",
+PCM) é o primeiro; um **agente comercial** (persona "comercial") atende contato NOVO (não é
+síndico de condomínio já cliente) chegando por uma **instância WhatsApp separada**, qualifica o
+contato (orçamento/urgência/tipo de serviço) e cria `comercial.leads` já com score/resumo pra um
+humano assumir. Isso vira `atendimento.personas` (schema multi-persona) em S06; o roteiro de
+perguntas de qualificação do agente comercial é editável visualmente em S07 (flow-builder,
+`atendimento.fluxos`, `@xyflow/react` — mantido por decisão explícita do Lucas mesmo com a
+ressalva de escopo estreito registrada antes); S08 é o próprio agente comercial rodando esse
+fluxo e gravando o score em `comercial.leads`. Tudo dentro de E02 (Inbox compartilhado com o Zé,
+mesma tabela `atendimento.conversas`/`mensagens`), não abre o épico E03/Comercial.
+
+| Story ID | Descrição | Spec | Status | Owner | AC verdes |
+|----------|-----------|------|--------|-------|-----------|
+| E02-S01 | Fundação: `atendimento.conversas`/`atendimento.mensagens` + Zé integrado como agente do Inbox (webhook grava conversa/mensagem, ze-agent respeita pausa por-conversa, Edge Function de envio humano) | [product](../../specs/E02-S01-atendimento-fundacao/product.md) · [design](../../specs/E02-S01-atendimento-fundacao/design.md) · [spec](../../specs/E02-S01-atendimento-fundacao/spec.md) · [tasks](../../specs/E02-S01-atendimento-fundacao/tasks.md) | Implementada localmente | Claude (sessão Lucas) | ⏳ |
+| E02-S02 | Inbox de Conversas (UI, WhatsApp-only) — lista + chat + perfil do contato, toggle IA/humano, dentro do módulo Atendimento | [product](../../specs/E02-S02-atendimento-inbox/product.md) · [design](../../specs/E02-S02-atendimento-inbox/design.md) · [spec](../../specs/E02-S02-atendimento-inbox/spec.md) · [tasks](../../specs/E02-S02-atendimento-inbox/tasks.md) | Implementada localmente | Claude (sessão Lucas) | ⏳ |
+| E02-S03 | Dashboard de Atendimento (KPIs/SLA/filas) | [product](../../specs/E02-S03-atendimento-dashboard/product.md) · [spec](../../specs/E02-S03-atendimento-dashboard/spec.md) · [tasks](../../specs/E02-S03-atendimento-dashboard/tasks.md) | Implementada localmente | Claude (sessão Lucas) | ⏳ |
+| E02-S04 | Multi-canal: Instagram + Messenger — Inbox humano, sem IA (decisão do Lucas) | [product](../../specs/E02-S04-atendimento-multicanal/product.md) · [spec](../../specs/E02-S04-atendimento-multicanal/spec.md) · [tasks](../../specs/E02-S04-atendimento-multicanal/tasks.md) | Implementada localmente — modelo/UX preparados para Instagram/Messenger; integração real Meta fora de escopo | Codex | ⏳ |
+| E02-S05 | Config: canais + tags | [product](../../specs/E02-S05-atendimento-config-canais-tags/product.md) · [spec](../../specs/E02-S05-atendimento-config-canais-tags/spec.md) · [tasks](../../specs/E02-S05-atendimento-config-canais-tags/tasks.md) | Implementada localmente — `atendimento.tags` (catálogo simples, unique case-insensitive), form sobre `config_ze` existente (upsert por `client_id`), aba "Config" no módulo Atendimento; "templates" descopado (não se aplica ao Evolution API) | Claude (sessão Lucas) | ⏳ (AC implementados; teste manual em browser pendente) |
+| E02-S06 | Config: IA + Personas + Base de Conhecimento — `atendimento.personas` multi-persona (chamados/comercial), Zé passa a ler o prompt daqui | [product](../../specs/E02-S06-atendimento-personas/product.md) · [spec](../../specs/E02-S06-atendimento-personas/spec.md) · [tasks](../../specs/E02-S06-atendimento-personas/tasks.md) | Implementada localmente | Claude (sessão Lucas) | ⏳ |
+| E02-S07 | Config: Flow-builder visual (`@xyflow/react`) — roteiro de qualificação do agente comercial | [product](../../specs/E02-S07-atendimento-flow-builder/product.md) · [spec](../../specs/E02-S07-atendimento-flow-builder/spec.md) · [tasks](../../specs/E02-S07-atendimento-flow-builder/tasks.md) | Implementada localmente — decisão do Lucas de construir mesmo com escopo estreito do Zé (o agente comercial de S08 é quem consome o fluxo) | Claude (sessão Lucas) | ⏳ |
+| E02-S08 | Base única de Contatos e Timeline de Relacionamento — contato/identidade/vínculo transversal para Atendimento, PCM e Comercial | [product](../../specs/E02-S08-relacionamento-contatos/product.md) · [domain](../../specs/E02-S08-relacionamento-contatos/domain.md) · [design](../../specs/E02-S08-relacionamento-contatos/design.md) · [spec](../../specs/E02-S08-relacionamento-contatos/spec.md) · [tasks](../../specs/E02-S08-relacionamento-contatos/tasks.md) · [ADR-0007](../adr/0007-base-unica-contatos-relacionamento.md) | Implementada localmente — schema `relacionamento`, `contato_id` em conversa/lead e RPC de timeline | Codex | ⏳ |
+| E02-S09 | Agente comercial — qualifica contato novo via instância WhatsApp separada, cria `comercial.leads` com score/resumo ligado a `relacionamento.contatos` | — | Em andamento — depende de E02-S08; confirmado como escopo de Atendimento (não Comercial/E03) pelo Lucas | Claude (sessão Lucas) | — |
 
 ### E03 — Comercial
 *Aguarda diagnóstico do mês 1.*

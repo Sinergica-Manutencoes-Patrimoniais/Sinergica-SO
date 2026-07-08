@@ -16,6 +16,7 @@ import {
   LayoutGrid,
   LogOut,
   Megaphone,
+  MessageCircle,
   Moon,
   Package,
   Settings,
@@ -31,6 +32,9 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
+import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
+import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
+import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { GruposPage } from "../features/config/pages/GruposPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
@@ -81,6 +85,10 @@ interface ModuloTab {
   descricao: string;
 }
 
+// Sub-navegação interna do Atendimento (E02-S02/S03/S05) — mesmo padrão useState de abas, sem lib
+// de rotas.
+type AtendimentoView = "dashboard" | "inbox" | "config";
+
 // Sub-navegação interna do PCM (mesmo padrão useState de abas do resto do app — sem lib de rotas).
 // "dashboard" = tela mock atual; "clientes" = lista mínima → Visão 360 (Task 18/E01-S12).
 type PcmView =
@@ -117,6 +125,17 @@ interface NavItem {
 interface NavGroup {
   titulo: string;
   items: NavItem[];
+}
+
+interface AtendimentoNavItem {
+  label: string;
+  icon: LucideIcon;
+  view: AtendimentoView;
+}
+
+interface AtendimentoNavGroup {
+  titulo: string;
+  items: AtendimentoNavItem[];
 }
 
 // ─── dados ───────────────────────────────────────────────────────────────────
@@ -187,6 +206,17 @@ const MODULOS: ModuloTab[] = [
 const CONFIG_NAV: Array<{ id: "grupos" | "usuarios"; label: string; icon: LucideIcon }> = [
   { id: "grupos", label: "Grupos", icon: Users },
   { id: "usuarios", label: "Usuários", icon: UserCog },
+];
+
+const ATENDIMENTO_NAV: AtendimentoNavGroup[] = [
+  {
+    titulo: "ATENDIMENTO",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
+      { label: "Inbox", icon: MessageCircle, view: "inbox" },
+      { label: "Config", icon: Settings, view: "config" },
+    ],
+  },
 ];
 
 const PCM_NAV: NavGroup[] = [
@@ -405,6 +435,8 @@ export function HomePage() {
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
   const [configTab, setConfigTab] = useState<"grupos" | "usuarios">("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Sub-navegação do Atendimento (E02-S02) — só "inbox" por enquanto (E02-S03+ adiciona mais).
+  const [atendimentoView, setAtendimentoView] = useState<AtendimentoView>("inbox");
   // Sub-navegação do PCM (Task 18/E01-S12) — mesmo padrão useState de abas, sem lib de rotas.
   const [pcmView, setPcmView] = useState<PcmView>("dashboard");
   const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
@@ -541,6 +573,36 @@ export function HomePage() {
                       type="button"
                       title={item.label}
                       onClick={view ? () => irParaPcmView(view) : undefined}
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
+                        isActive
+                          ? "border-orange bg-white/[0.07] text-white font-medium"
+                          : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                      {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            ))
+          ) : activeModulo === "atendimento" ? (
+            ATENDIMENTO_NAV.map((group) => (
+              <div key={group.titulo}>
+                {!sidebarCollapsed && (
+                  <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                    {group.titulo}
+                  </p>
+                )}
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = item.view === atendimentoView;
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      title={item.label}
+                      onClick={() => setAtendimentoView(item.view)}
                       className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
                         isActive
                           ? "border-orange bg-white/[0.07] text-white font-medium"
@@ -750,6 +812,14 @@ export function HomePage() {
             ) : (
               <UsuariosPage />
             )
+          ) : activeModulo === "atendimento" ? (
+            atendimentoView === "dashboard" ? (
+              <AtendimentoDashboardPage />
+            ) : atendimentoView === "inbox" ? (
+              <AtendimentoInboxPage />
+            ) : atendimentoView === "config" ? (
+              <AtendimentoConfigPage />
+            ) : null
           ) : modulo ? (
             <EmConstrucao modulo={modulo} />
           ) : null}

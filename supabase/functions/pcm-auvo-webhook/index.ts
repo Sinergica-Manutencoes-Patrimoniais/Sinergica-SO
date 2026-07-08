@@ -26,6 +26,7 @@ import { validateAuvoSignature } from "../_shared/auvo/verify-signature.ts";
 import { byWebhookEntity } from "../_shared/auvo/registry/index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
 import { resolveWebhookDispatch } from "../_shared/auvo/webhook-dispatch.ts";
+import { criarOsDaTarefa } from "../_shared/auvo/os-from-task.ts";
 
 const FN = "pcm-auvo-webhook";
 
@@ -175,7 +176,7 @@ serve(async (req) => {
     const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
     // 9) Resolve a OS pelo auvo_task_id — AC-6: taskId desconhecido nunca derruba o endpoint.
-    const { data: os, error: osError } = await db
+    const { data: osExistente, error: osError } = await db
       .schema("pcm")
       .from("ordens_servico")
       .select("id, status, categoria, auvo_task_id")
@@ -183,36 +184,56 @@ serve(async (req) => {
       .maybeSingle();
     if (osError) throw osError;
 
-    if (!os) {
-      console.warn(JSON.stringify({ ...logBase, nivel: "warn", msg: "auvo_task_id sem OS correspondente — ignorado (AC-6)", taskId }));
-      return json(200, { ok: true, ignored: true, reason: "unknown_task_id", taskId }, cors);
+    let os: { id: string; status: string; categoria: string };
+    let transicionou: boolean;
+    let criadaAgora = false;
+
+    if (!osExistente) {
+      // E01-S34: tarefa nova criada direto no Auvo (sem OS local ainda) — tenta criar em vez de
+      // só ignorar (AC-3/AC-4). Zero mudança no caminho de OS já conhecida abaixo (AC-6).
+      const customerId = extractCustomerId(evento);
+      if (customerId == null) {
+        console.warn(JSON.stringify({ ...logBase, nivel: "warn", msg: "auvo_task_id sem OS correspondente e sem customerId no payload — ignorado", taskId }));
+        return json(200, { ok: true, ignored: true, reason: "unknown_task_id_no_customer", taskId }, cors);
+      }
+      const titulo = extractTitle(evento, taskId);
+      const criada = await criarOsDaTarefa(db, { taskId, titulo, customerId, status: targetStatus });
+      if (!criada) {
+        console.warn(JSON.stringify({ ...logBase, nivel: "warn", msg: "tarefa nova do Auvo, mas cliente ainda não sincronizado no PCM — ignorado (AC-4, pego depois pelo import de reconciliação)", taskId, customerId }));
+        return json(200, { ok: true, ignored: true, reason: "customer_not_synced", taskId, customerId }, cors);
+      }
+      os = { id: criada.id, status: criada.status, categoria: "corretiva" };
+      transicionou = true;
+      criadaAgora = true;
+      console.log(JSON.stringify({ ...logBase, nivel: "info", msg: "OS criada a partir de tarefa Auvo desconhecida (AC-3)", osId: os.id, taskId, status: targetStatus }));
+    } else {
+      // 10) AC-5: UPDATE idempotente — só transiciona se a OS não estiver já no status alvo. Uma
+      // reentrega do mesmo evento (retry de rede do Auvo) não gera erro, só confirma (0 linhas
+      // afetadas = já estava no estado certo, tratado como sucesso, não como falha).
+      const { data: updated, error: updateError } = await db
+        .schema("pcm")
+        .from("ordens_servico")
+        .update({ status: targetStatus, updated_at: new Date().toISOString() })
+        .eq("auvo_task_id", taskId)
+        .neq("status", targetStatus)
+        .select("id")
+        .maybeSingle();
+      if (updateError) throw updateError;
+
+      os = osExistente;
+      transicionou = updated != null;
+      console.log(
+        JSON.stringify({
+          ...logBase,
+          nivel: "info",
+          msg: transicionou ? "OS transicionada" : "OS já estava no status alvo (idempotente, no-op)",
+          osId: os.id,
+          taskId,
+          statusAnterior: osExistente.status,
+          statusAlvo: targetStatus,
+        }),
+      );
     }
-
-    // 10) AC-5: UPDATE idempotente — só transiciona se a OS não estiver já no status alvo. Uma
-    // reentrega do mesmo evento (retry de rede do Auvo) não gera erro, só confirma (0 linhas
-    // afetadas = já estava no estado certo, tratado como sucesso, não como falha).
-    const { data: updated, error: updateError } = await db
-      .schema("pcm")
-      .from("ordens_servico")
-      .update({ status: targetStatus, updated_at: new Date().toISOString() })
-      .eq("auvo_task_id", taskId)
-      .neq("status", targetStatus)
-      .select("id")
-      .maybeSingle();
-    if (updateError) throw updateError;
-
-    const transicionou = updated != null;
-    console.log(
-      JSON.stringify({
-        ...logBase,
-        nivel: "info",
-        msg: transicionou ? "OS transicionada" : "OS já estava no status alvo (idempotente, no-op)",
-        osId: os.id,
-        taskId,
-        statusAnterior: os.status,
-        statusAlvo: targetStatus,
-      }),
-    );
 
     // E01-S15: captura rica do webhook. Não copia anexos/fotos para Storage; guarda metadados,
     // URLs/referências do Auvo quando existirem, e sempre preserva o payload bruto.
@@ -256,7 +277,7 @@ serve(async (req) => {
       );
     }
 
-    return json(200, { ok: true, osId: os.id, taskId, status: targetStatus, transitioned: transicionou }, cors);
+    return json(200, { ok: true, osId: os.id, taskId, status: targetStatus, transitioned: transicionou, created: criadaAgora }, cors);
   } catch (e) {
     if (e instanceof HttpError) return problem(e.status, e.message, reqId, cors);
     console.error(JSON.stringify({ ...logBase, nivel: "error", msg: "erro inesperado", detail: String(e) }));
@@ -283,6 +304,30 @@ function extractTaskStatus(evento: Record<string, unknown>): number | null {
     if (typeof c === "string" && /^\d+$/.test(c)) return Number(c);
   }
   return null;
+}
+
+/** E01-S34: extrai o `customerId` do Auvo do payload do evento (defensivo — shape de entrega não
+ * confirmado, mesmo espírito de `extractEquipmentId`). `null` = payload não trouxe cliente, tarefa
+ * fica ignorada (AC-3 exige customerId pra resolver `client_id`). */
+function extractCustomerId(evento: Record<string, unknown>): number | null {
+  const candidatos = [
+    evento.customerId,
+    evento.customer_id,
+    valueAtPath(evento, ["customer", "id"]),
+    valueAtPath(evento, ["cliente", "id"]),
+    valueAtPath(evento, ["task", "customerId"]),
+    valueAtPath(evento, ["result", "customerId"]),
+  ];
+  return firstNumber(candidatos);
+}
+
+/** E01-S34: título da OS nova — defensivo quanto ao nome do campo; fallback sempre não-vazio
+ * porque `pcm.ordens_servico.titulo` é `NOT NULL`. */
+function extractTitle(evento: Record<string, unknown>, taskId: number): string {
+  const candidatos = [
+    deepFind(evento, ["title", "titulo", "description", "descricao", "taskTitle", "name"]),
+  ];
+  return firstString(candidatos) ?? `Tarefa Auvo ${taskId}`;
 }
 
 function extractEquipmentId(evento: Record<string, unknown>): number | null {
