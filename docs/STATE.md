@@ -10,7 +10,48 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-07 (sessão Claude) — **Nova épica E02 aberta: Atendimento (Inbox +
+**Última atualização:** 2026-07-07 (sessão Claude) — **E02-S05 (Config: canais + tags) implementada
+localmente, seguindo o ciclo formal de agentes Triviaiox (@pm→@sm→@dev→@qa→@devops) a pedido do
+Lucas.**
+Depois de fechar S01+S02, Lucas pediu para prosseguir o épico E02 pelos agentes especialistas; como
+várias stories restantes (S04/S06/S07/S08) tinham decisão de produto em aberto, perguntei por onde
+começar — Lucas escolheu S05 (menor ambiguidade). @pm resolveu 2 decisões de escopo antes de
+qualquer código (registradas em `product.md`): (1) tags viram catálogo próprio
+(`atendimento.tags`, nome+ativo, unique case-insensitive — mesmo padrão de
+`pcm.segmentos`/`palavras_chave`), não string livre, pra evitar duplicidade por digitação; (2)
+"templates" (do título original da story no ROADMAP) saiu de escopo — é conceito da API oficial
+WhatsApp Business/Meta, não se aplica ao Evolution API usado hoje; volta a fazer sentido só quando
+`E02-S04` (Instagram/Messenger via Meta) existir. Story renomeada para "Config: canais + tags".
+
+Migration `0040_E02-S05_atendimento_tags.sql`: tabela `atendimento.tags` com RLS FORCE (mesmo
+padrão módulo `atendimento`), sem coluna de cor (YAGNI — nada no requisito justifica), sem `DELETE`
+(só `ativo=false`, pra não quebrar histórico de conversas que já usam uma tag desativada). Form de
+canal usa `atendimento.config_ze` já existente desde `E00-S00` — sem migration nova, só
+insert-ou-update explícito por `client_id` no adapter (evitei `upsert()` puro porque sobrescreveria
+`created_by NOT NULL` do registro original a cada edição). Feature nova dentro de
+`features/atendimento/`: `domain/{tags,config-canal}.ts`, `application/config-gateway.ts` + 6 casos
+de uso, `infrastructure/supabase-config-adapter.ts`, `components/{TagsList,ConfigCanalForm}.tsx`,
+`pages/AtendimentoConfigPage.tsx` (2 abas). `HomePage.tsx` ganhou o item "Config" em
+`ATENDIMENTO_NAV` (`AtendimentoView` agora `"inbox" | "config"`).
+
+Gates locais verdes: `lint:migrations` (40 migrations), `lint`, `typecheck`, `test` (186 pass/9
+skip), `build`, `arch:check`, `audit:esteira` (187 docs), `eval:spec`, `pnpm run ci:local` (mirror
+completo do lefthook pre-push, todas as 9 checagens passando). Sem Edge Function nova nesta story
+(CRUD direto via RLS) — não há gap de Deno CLI/Docker aqui, só o pgTAP (`atendimento_tags_rls.
+test.sql`) que segue não executado por falta de Docker, mesma ressalva de sempre. Teste manual em
+browser ainda pendente.
+
+**Commitado, NÃO pushado** — mesma instrução permanente do Lucas nesta sessão: push só com
+confirmação explícita separada.
+
+**Próximo passo:** pedir confirmação para `git push`; depois, seguir o épico E02 pelos agentes
+especialistas nas próximas stories que Lucas priorizar (S06 tem decisão de produto pendente — 1
+persona vs. múltiplas; S04 precisa perguntar se o Zé deve responder Instagram/Messenger; S03
+depende de S01+S02 em produção com dado real).
+
+---
+
+**Última atualização anterior:** 2026-07-07 (sessão Claude) — **Nova épica E02 aberta: Atendimento (Inbox +
 Zé multi-agente). E02-S01 (fundação) + E02-S02 (Inbox) implementadas localmente.**
 Lucas pediu para portar o módulo de Atendimento pronto de um projeto irmão (`heziomos-main`) para
 o Sinérgica-SO, adaptado ao design system. Investigação (Plan Mode) mostrou que não é uma tela —
