@@ -6,13 +6,14 @@ import type {
   EnviarMensagemCommand,
   MarcarConversaLidaCommand,
 } from "../application/atendimento-gateway";
-import type { ConversaItem, StatusConversa } from "../domain/conversas";
+import type { CanalConversa, ConversaItem, StatusConversa } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
 
 interface ConversaRow {
   id: string;
   client_id: string | null;
   contato_nome: string | null;
+  canal: CanalConversa;
   status: StatusConversa;
   modo: "auto" | "pausado";
   atribuido_a: string | null;
@@ -29,7 +30,7 @@ interface MensagemRow {
   id: string;
   conversa_id: string;
   direcao: "entrada" | "saida";
-  remetente_tipo: "cliente" | "ze" | "humano";
+  remetente_tipo: "cliente" | "ze" | "humano" | "agente";
   remetente_id: string | null;
   conteudo: string | null;
   status_entrega: "enviando" | "enviado" | "erro" | null;
@@ -38,7 +39,7 @@ interface MensagemRow {
 }
 
 const CONVERSA_COLS =
-  "id,client_id,contato_nome,status,modo,atribuido_a,nao_lidas,ultima_mensagem_preview,ultima_mensagem_em,ordem_servico_id,tags,instance_id,remote_jid" as const;
+  "id,client_id,contato_nome,canal,status,modo,atribuido_a,nao_lidas,ultima_mensagem_preview,ultima_mensagem_em,ordem_servico_id,tags,instance_id,remote_jid" as const;
 const MENSAGEM_COLS =
   "id,conversa_id,direcao,remetente_tipo,remetente_id,conteudo,status_entrega,erro_detalhe,created_at" as const;
 
@@ -48,6 +49,7 @@ function mapConversa(row: ConversaRow, clientesMap: Map<string, string>): Conver
     clientId: row.client_id,
     clienteNome: row.client_id ? (clientesMap.get(row.client_id) ?? null) : null,
     contatoNome: row.contato_nome,
+    canal: row.canal,
     status: row.status,
     modo: row.modo,
     atribuidoA: row.atribuido_a,
@@ -165,10 +167,12 @@ export const supabaseAtendimentoAdapter: AtendimentoGateway = {
     const { data: conversa, error: conversaError } = await supabase
       .schema("atendimento")
       .from("conversas")
-      .select("instance_id,remote_jid")
+      .select("instance_id,remote_jid,canal")
       .eq("id", input.conversaId)
       .single();
     if (conversaError) throw conversaError;
+    if (conversa.canal !== "whatsapp")
+      throw new Error("Resposta com IA está disponível apenas para conversas de WhatsApp.");
     const queueKey = `${conversa.instance_id}:${conversa.remote_jid}`;
     const { error } = await supabase.functions.invoke("pcm-ze-agent", {
       body: { queueKey, forcar: true },

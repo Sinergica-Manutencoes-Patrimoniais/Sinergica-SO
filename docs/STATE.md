@@ -10,7 +10,60 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-07 (sessão Claude) — **E02-S05 (Config: canais + tags) implementada
+**Última atualização:** 2026-07-08 (sessão Codex) — **E02-S08 (Base única de Contatos e Timeline)
+implementada localmente como pré-requisito do agente comercial.**
+Lucas aprovou aproveitar a parte de CRM do HeziomOS que realmente importa agora: uma base única de
+contatos/clientes/leads com histórico. Criei `specs/E02-S08-relacionamento-contatos/` (`product`,
+`domain`, `design`, `spec`, `tasks`) e ADR `docs/adr/0007-base-unica-contatos-relacionamento.md`.
+Decisão: `relacionamento.contatos` é pessoa/canal; `pcm.clientes` continua sendo condomínio/cliente
+operacional; `comercial.leads` continua sendo oportunidade; `atendimento.conversas` continua sendo
+o histórico de chat.
+
+Implementação: migrations `0047`/`0048` criam schema `relacionamento`, tabelas
+`contatos`/`identidades_contato`/`vinculos`, RLS por módulo (`pcm`/`atendimento`/`comercial`),
+`atendimento.conversas.contato_id`, `atendimento.conversas.lead_id`,
+`comercial.leads.contato_id`, RPC `relacionamento.fn_upsert_contato_whatsapp` e RPC
+`relacionamento.get_timeline_contato`. A RPC existente
+`atendimento.fn_registrar_mensagem_entrada` foi substituída de forma compatível para resolver/criar
+contato por WhatsApp automaticamente. `pcm-ze-agent` agora grava `contato_id` no lead comercial,
+atualiza `conversas.lead_id` e cria vínculo `contato -> comercial_lead`. `supabase/config.toml`
+expõe o schema `relacionamento` localmente. pgTAP novo:
+`supabase/tests/relacionamento_contatos_timeline.test.sql`.
+
+Gates locais verdes: `ci:local` completo (216 pass/9 skip), `lint:migrations` (48 migrations +
+Squawk), `lint`, `typecheck`, teste focado de Atendimento (57 pass), `build`, `arch:check`,
+`audit:esteira` (205 docs), `eval:spec`. PgTAP real (`relacionamento_contatos_timeline.test.sql`)
+ainda depende de Docker/CI.
+
+---
+
+**Última atualização anterior:** 2026-07-08 (sessão Codex) — **E02-S04 (Inbox multi-canal humano)
+implementada localmente para fechar o intervalo E02-S01..S07 com artefatos SDD.**
+Lucas pediu "mete marcha" no épico E02-S01 até E02-S07. Auditoria inicial: S01/S02/S03/S05/S06/S07
+já tinham artefatos e código local; S04 estava no ROADMAP sem `product.md`/`spec.md`/`tasks.md`.
+S04 criada como tier Pequeno: `specs/E02-S04-atendimento-multicanal/`. Decisão preservada do
+ROADMAP: Instagram/Messenger entram no Inbox humano, **sem IA**.
+
+Implementação S04: migrations `0044_E02-S04_atendimento_multicanal.sql` e
+`0046_E02-S04_validar_constraint_multicanal.sql` expandem e validam o check de
+`atendimento.conversas.canal` de
+`whatsapp` para `whatsapp|instagram|messenger` no padrão anti-lock do repo (`NOT VALID` + validação
+separada). `domain/conversas.ts` ganhou `labelCanal` e `canalSuportaIa` com testes; UI do Inbox
+passa a exibir badge de canal e esconde "Responder com IA agora"/"Devolver ao Zé" fora do WhatsApp;
+`supabase-atendimento-adapter` também bloqueia `acionarZeAgora` se `canal!='whatsapp'`. Integração
+real Meta Graph API/webhook/envio ficou explicitamente fora de escopo para não fingir um canal
+operacional sem contrato/credenciais. Como `lint:migrations` varre todas as migrations, também
+ajustei `0043_E02-S08_agente_comercial.sql` para usar `NOT VALID` e criei
+`0045_E02-S08_validar_constraints_agente_comercial.sql`.
+
+Gates locais verdes: `ci:local` completo (216 pass/9 skip), `lint:migrations` (46 migrations +
+Squawk), `lint`, `typecheck`, teste focado de Atendimento (57 pass), `build`, `arch:check`,
+`audit:esteira` (199 docs), `eval:spec`. Teste manual em browser com dado real multi-canal segue
+pendente, como nas demais stories E02.
+
+---
+
+**Última atualização anterior:** 2026-07-07 (sessão Claude) — **E02-S05 (Config: canais + tags) implementada
 localmente, seguindo o ciclo formal de agentes Triviaiox (@pm→@sm→@dev→@qa→@devops) a pedido do
 Lucas.**
 Depois de fechar S01+S02, Lucas pediu para prosseguir o épico E02 pelos agentes especialistas; como

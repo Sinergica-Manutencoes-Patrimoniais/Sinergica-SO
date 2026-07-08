@@ -1,6 +1,6 @@
 import { MessageCircle, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { filtrarConversas } from "../domain/conversas";
+import { canalSuportaIa, filtrarConversas, labelCanal } from "../domain/conversas";
 import type { ConversaItem } from "../domain/conversas";
 
 export function ConversaLista({
@@ -62,14 +62,23 @@ export function ConversaLista({
                 {conversa.ultimaMensagemPreview ?? "sem mensagens"}
               </p>
               <div className="flex items-center gap-2">
+                <span className="rounded-full bg-[#EFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#5A6175]">
+                  {labelCanal(conversa.canal)}
+                </span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                    conversa.modo === "pausado"
-                      ? "bg-[#FDF1DF] text-[#B26A00]"
-                      : "bg-[#E7F6EC] text-[#1E8E45]"
+                    !canalSuportaIa(conversa.canal)
+                      ? "bg-[#EEF2FF] text-[#4056A1]"
+                      : conversa.modo === "pausado"
+                        ? "bg-[#FDF1DF] text-[#B26A00]"
+                        : "bg-[#E7F6EC] text-[#1E8E45]"
                   }`}
                 >
-                  {conversa.modo === "pausado" ? "Assumida" : "Zé ativo"}
+                  {!canalSuportaIa(conversa.canal)
+                    ? "Humano"
+                    : conversa.modo === "pausado"
+                      ? "Assumida"
+                      : "Zé ativo"}
                 </span>
                 {!conversa.clienteNome && (
                   <span className="rounded-full bg-[#EFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#5A6175]">

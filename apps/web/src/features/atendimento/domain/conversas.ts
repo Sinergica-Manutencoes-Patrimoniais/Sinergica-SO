@@ -1,11 +1,19 @@
 export type StatusConversa = "aberta" | "pendente" | "encerrada";
 export type ModoConversa = "auto" | "pausado";
+export type CanalConversa = "whatsapp" | "instagram" | "messenger";
+
+const CANAL_LABELS: Record<CanalConversa, string> = {
+  whatsapp: "WhatsApp",
+  instagram: "Instagram",
+  messenger: "Messenger",
+};
 
 export interface ConversaItem {
   id: string;
   clientId: string | null;
   clienteNome: string | null;
   contatoNome: string | null;
+  canal: CanalConversa;
   status: StatusConversa;
   modo: ModoConversa;
   atribuidoA: string | null;
@@ -43,4 +51,12 @@ function normalizar(valor: string): string {
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
     .trim();
+}
+
+export function labelCanal(canal: CanalConversa): string {
+  return CANAL_LABELS[canal];
+}
+
+export function canalSuportaIa(canal: CanalConversa): boolean {
+  return canal === "whatsapp";
 }

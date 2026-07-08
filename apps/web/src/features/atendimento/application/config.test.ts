@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { buscarConfigCanal } from "./buscar-config-canal";
 import type { ConfigGateway } from "./config-gateway";
+import { criarInstanciaAgente } from "./criar-instancia-agente";
+import { criarPersona } from "./criar-persona";
 import { criarTag } from "./criar-tag";
+import { desativarInstanciaAgente } from "./desativar-instancia-agente";
+import { desativarPersona } from "./desativar-persona";
 import { desativarTag } from "./desativar-tag";
+import { editarPersona } from "./editar-persona";
 import { editarTag } from "./editar-tag";
 import { salvarConfigCanal } from "./salvar-config-canal";
 
@@ -21,6 +26,33 @@ function fakeGateway(overrides: Partial<ConfigGateway> = {}): ConfigGateway {
       groupJid: null,
       botJid: null,
     }),
+    listarPersonas: vi.fn().mockResolvedValue([]),
+    criarPersona: vi.fn().mockResolvedValue({
+      id: "persona-1",
+      nome: "Zé",
+      tipo: "chamados",
+      promptSistema: "Você é o Zé",
+      baseConhecimento: null,
+      ativo: true,
+    }),
+    editarPersona: vi.fn().mockResolvedValue({
+      id: "persona-1",
+      nome: "Zé",
+      tipo: "chamados",
+      promptSistema: "Você é o Zé",
+      baseConhecimento: null,
+      ativo: true,
+    }),
+    desativarPersona: vi.fn().mockResolvedValue(undefined),
+    listarInstanciasAgente: vi.fn().mockResolvedValue([]),
+    criarInstanciaAgente: vi.fn().mockResolvedValue({
+      id: "inst-1",
+      instanceId: "inst-comercial",
+      personaId: "persona-1",
+      personaNome: "Comercial",
+      ativo: true,
+    }),
+    desativarInstanciaAgente: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -86,5 +118,65 @@ describe("buscarConfigCanal / salvarConfigCanal", () => {
       botJid: null,
       userId: "user-1",
     });
+  });
+});
+
+describe("criarPersona / editarPersona / desativarPersona", () => {
+  it("valida e delega criarPersona com base de conhecimento normalizada", async () => {
+    const gateway = fakeGateway();
+    await criarPersona(gateway, {
+      nome: "Zé",
+      tipo: "chamados",
+      promptSistema: "Você é o Zé",
+      baseConhecimento: "  ",
+      userId: "user-1",
+    });
+    expect(gateway.criarPersona).toHaveBeenCalledWith({
+      nome: "Zé",
+      tipo: "chamados",
+      promptSistema: "Você é o Zé",
+      baseConhecimento: null,
+      userId: "user-1",
+    });
+  });
+
+  it("exige id antes de editar/desativar", () => {
+    const gateway = fakeGateway();
+    expect(() =>
+      editarPersona(gateway, {
+        id: "",
+        nome: "Zé",
+        tipo: "chamados",
+        promptSistema: "x",
+        baseConhecimento: "",
+        userId: "user-1",
+      }),
+    ).toThrow("Persona é obrigatória.");
+    expect(() => desativarPersona(gateway, { id: "", userId: "user-1" })).toThrow(
+      "Persona é obrigatória.",
+    );
+  });
+});
+
+describe("criarInstanciaAgente / desativarInstanciaAgente", () => {
+  it("valida e delega criarInstanciaAgente", async () => {
+    const gateway = fakeGateway();
+    await criarInstanciaAgente(gateway, {
+      instanceId: "inst-comercial",
+      personaId: "persona-1",
+      userId: "user-1",
+    });
+    expect(gateway.criarInstanciaAgente).toHaveBeenCalledWith({
+      instanceId: "inst-comercial",
+      personaId: "persona-1",
+      userId: "user-1",
+    });
+  });
+
+  it("exige id antes de desativar", () => {
+    const gateway = fakeGateway();
+    expect(() => desativarInstanciaAgente(gateway, { id: "", userId: "user-1" })).toThrow(
+      "Instância é obrigatória.",
+    );
   });
 });

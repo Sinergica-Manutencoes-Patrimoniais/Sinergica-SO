@@ -33,6 +33,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
+import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
 import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { GruposPage } from "../features/config/pages/GruposPage";
@@ -84,9 +85,9 @@ interface ModuloTab {
   descricao: string;
 }
 
-// Sub-navegação interna do Atendimento (E02-S02/S05) — mesmo padrão useState de abas, sem lib de
-// rotas. "dashboard" entra em story futura (E02-S03).
-type AtendimentoView = "inbox" | "config";
+// Sub-navegação interna do Atendimento (E02-S02/S03/S05) — mesmo padrão useState de abas, sem lib
+// de rotas.
+type AtendimentoView = "dashboard" | "inbox" | "config";
 
 // Sub-navegação interna do PCM (mesmo padrão useState de abas do resto do app — sem lib de rotas).
 // "dashboard" = tela mock atual; "clientes" = lista mínima → Visão 360 (Task 18/E01-S12).
@@ -211,6 +212,7 @@ const ATENDIMENTO_NAV: AtendimentoNavGroup[] = [
   {
     titulo: "ATENDIMENTO",
     items: [
+      { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
       { label: "Inbox", icon: MessageCircle, view: "inbox" },
       { label: "Config", icon: Settings, view: "config" },
     ],
@@ -811,7 +813,9 @@ export function HomePage() {
               <UsuariosPage />
             )
           ) : activeModulo === "atendimento" ? (
-            atendimentoView === "inbox" ? (
+            atendimentoView === "dashboard" ? (
+              <AtendimentoDashboardPage />
+            ) : atendimentoView === "inbox" ? (
               <AtendimentoInboxPage />
             ) : atendimentoView === "config" ? (
               <AtendimentoConfigPage />

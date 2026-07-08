@@ -15,7 +15,7 @@ port = 54321
 # query a uma tabela fora de `public` falha. O MESMO ajuste precisa ser feito manualmente no
 # projeto hospedado (Dashboard → Settings → API → Exposed schemas) — não é aplicado por
 # migration. Ver spec.md desta story (E00-S05) e o runbook de provisionamento.
-schemas = ["public", "graphql_public", "pcm", "atendimento", "comercial", "config"]
+schemas = ["public", "graphql_public", "pcm", "atendimento", "comercial", "relacionamento", "config"]
 # Extra schemas to add to the search_path of every request.
 extra_search_path = ["public", "extensions"]
 # The maximum number of rows returns from a view, table, or stored procedure. Limits payload size

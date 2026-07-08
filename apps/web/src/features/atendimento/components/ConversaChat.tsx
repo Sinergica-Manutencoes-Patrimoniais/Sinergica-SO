@@ -1,5 +1,6 @@
 import { Bot, MessageCircle, RefreshCw, Send, UserCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { canalSuportaIa, labelCanal } from "../domain/conversas";
 import type { ConversaItem } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
 import { MensagemBubble } from "./MensagemBubble";
@@ -40,6 +41,8 @@ export function ConversaChat({
     );
   }
 
+  const suportaIa = canalSuportaIa(conversa.canal);
+
   async function enviar() {
     if (!texto.trim()) return;
     try {
@@ -74,14 +77,20 @@ export function ConversaChat({
             {conversa.clienteNome ?? conversa.contatoNome ?? "Contato sem nome"}
           </p>
           <p className="text-xs text-ink-3">
-            {conversa.modo === "pausado"
-              ? "Atendimento assumido — Zé pausado nesta conversa"
-              : "Agente Zé ativo"}
+            {!suportaIa
+              ? `${labelCanal(conversa.canal)} · atendimento humano`
+              : conversa.modo === "pausado"
+                ? "Atendimento assumido — Zé pausado nesta conversa"
+                : "Agente Zé ativo"}
           </p>
         </div>
         {temEscrita && (
           <div className="flex shrink-0 gap-2">
-            {conversa.modo === "auto" ? (
+            {!suportaIa ? (
+              <span className="inline-flex h-8 items-center rounded-[6px] border border-line bg-line-soft px-2.5 text-xs font-semibold text-ink-3">
+                IA indisponível
+              </span>
+            ) : conversa.modo === "auto" ? (
               <button
                 type="button"
                 disabled={acao !== null}
@@ -102,15 +111,17 @@ export function ConversaChat({
                 Devolver ao Zé
               </button>
             )}
-            <button
-              type="button"
-              disabled={acao !== null}
-              onClick={() => executarAcao("ia", onAcionarIa)}
-              className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Responder com IA agora
-            </button>
+            {suportaIa && (
+              <button
+                type="button"
+                disabled={acao !== null}
+                onClick={() => executarAcao("ia", onAcionarIa)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Responder com IA agora
+              </button>
+            )}
           </div>
         )}
       </div>

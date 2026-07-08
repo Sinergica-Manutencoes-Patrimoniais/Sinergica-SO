@@ -1,5 +1,5 @@
 export type DirecaoMensagem = "entrada" | "saida";
-export type RemetenteTipo = "cliente" | "ze" | "humano";
+export type RemetenteTipo = "cliente" | "ze" | "humano" | "agente";
 export type StatusEntregaMensagem = "enviando" | "enviado" | "erro";
 
 export interface MensagemItem {

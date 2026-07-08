@@ -3,20 +3,20 @@ import type { MensagemItem } from "../domain/mensagens";
 
 export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
   const minha = mensagem.direcao === "saida";
-  const cor =
-    mensagem.remetenteTipo === "ze"
-      ? "bg-orange-soft text-ink border border-orange/30"
-      : minha
-        ? "bg-orange text-white"
-        : "bg-line-soft text-ink";
+  const deAgente = mensagem.remetenteTipo === "ze" || mensagem.remetenteTipo === "agente";
+  const cor = deAgente
+    ? "bg-orange-soft text-ink border border-orange/30"
+    : minha
+      ? "bg-orange text-white"
+      : "bg-line-soft text-ink";
 
   return (
     <div className={`flex ${minha ? "justify-end" : "justify-start"}`}>
       <div className={`max-w-[75%] rounded-[8px] px-3 py-2 text-sm ${cor}`}>
-        {mensagem.remetenteTipo === "ze" && (
+        {deAgente && (
           <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] opacity-70">
             <Bot className="h-3 w-3" />
-            Agente Zé
+            {mensagem.remetenteTipo === "ze" ? "Agente Zé" : "Agente"}
           </div>
         )}
         {mensagem.remetenteTipo === "humano" && minha && (
