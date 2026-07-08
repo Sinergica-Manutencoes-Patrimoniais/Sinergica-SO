@@ -16,7 +16,7 @@ select has_column('atendimento', 'personas', 'janela_fim', 'persona guarda fim d
 select has_column('atendimento', 'personas', 'janela_dias', 'persona guarda dias da janela');
 
 -- E02-S14 — operação, lições e especialistas.
-select has_column('atendimento', 'personas', 'limite_mensagens_dia', 'persona guarda limite diario');
+select has_column('atendimento', 'personas', 'limite_diario_mensagens', 'persona guarda limite diario');
 select has_column('atendimento', 'personas', 'palavras_transferencia', 'persona guarda gatilhos de transferencia');
 select has_table('atendimento', 'persona_licoes', 'licoes operacionais existem');
 select has_table('atendimento', 'persona_especialistas', 'especialistas existem');
