@@ -56,3 +56,20 @@ Deno.test("runSyncAll — lista de entidades vazia só roda tasks-import", async
   assertEquals(resultado.ok, true);
   assertEquals(chamadas, ["pcm-auvo-tasks-import"]);
 });
+
+Deno.test("runSyncAll — repassa tasksImportBody pro tasks-import (backfill em fatias)", async () => {
+  const chamadas: Array<{ path: string; body?: unknown }> = [];
+  const caller: Caller = (path, body) => {
+    chamadas.push({ path, body });
+    return Promise.resolve({ ok: true });
+  };
+
+  await runSyncAll([], caller, { startDate: "2026-01-01T00:00:00", endDate: "2026-01-15T00:00:00" });
+
+  assertEquals(chamadas, [
+    {
+      path: "pcm-auvo-tasks-import",
+      body: { startDate: "2026-01-01T00:00:00", endDate: "2026-01-15T00:00:00" },
+    },
+  ]);
+});

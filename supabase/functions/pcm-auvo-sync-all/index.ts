@@ -41,7 +41,11 @@ export type Caller = (path: string, body?: unknown) => Promise<unknown>;
  * `tasks-import` continua depois de TODOS os pulls terminarem: ele resolve o cliente de cada
  * tarefa em `pcm.clientes` em lote, e precisa que `pull:clientes` já tenha rodado.
  */
-export async function runSyncAll(entities: string[], call: Caller): Promise<{ ok: boolean; results: StepResult[] }> {
+export async function runSyncAll(
+  entities: string[],
+  call: Caller,
+  tasksImportBody?: Record<string, unknown>,
+): Promise<{ ok: boolean; results: StepResult[] }> {
   const pullResults = await Promise.all(
     entities.map(async (entity): Promise<StepResult> => {
       try {
@@ -55,7 +59,7 @@ export async function runSyncAll(entities: string[], call: Caller): Promise<{ ok
 
   let taskImportResult: StepResult;
   try {
-    const detail = await call("pcm-auvo-tasks-import");
+    const detail = await call("pcm-auvo-tasks-import", tasksImportBody);
     taskImportResult = { step: "tasks-import", ok: true, detail };
   } catch (e) {
     taskImportResult = { step: "tasks-import", ok: false, error: e instanceof Error ? e.message : String(e) };
@@ -82,6 +86,15 @@ function makeSupabaseCaller(url: string, serviceKey: string): Caller {
     }
     return payload;
   };
+}
+
+interface SyncAllRequestBody {
+  /** Pula os pulls de entidade e roda só `tasks-import` — usado pelo script de backfill histórico
+   * pra rodar em fatias de data sem repetir os pulls das outras 13 entidades a cada fatia. */
+  skipPulls?: boolean;
+  /** Repassado como corpo de `pcm-auvo-tasks-import` — override pontual da janela padrão pequena,
+   * pro backfill histórico em fatias (script pontual, não repetível/agendado). */
+  tasksImportRange?: { startDate?: string; endDate?: string };
 }
 
 function claimsFrom(req: Request): { user_role?: string; user_modulos?: Record<string, string> } {
@@ -116,8 +129,9 @@ if (import.meta.main) serve(async (req) => {
     const serviceKey = getSupabaseServiceKey();
     if (!url || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
 
-    const entities = listEntities();
-    const resultado = await runSyncAll(entities, makeSupabaseCaller(url, serviceKey));
+    const body = (await req.json().catch(() => ({}))) as SyncAllRequestBody;
+    const entities = body.skipPulls ? [] : listEntities();
+    const resultado = await runSyncAll(entities, makeSupabaseCaller(url, serviceKey), body.tasksImportRange);
 
     console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, msg: "sync-all concluído", ok: resultado.ok, etapas: resultado.results.length }));
     return json(200, { ...resultado, syncedAt: now }, cors);
