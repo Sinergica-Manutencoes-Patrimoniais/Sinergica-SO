@@ -40,8 +40,17 @@ const AUVO_TASK_STATUS_FINALIZADA = 5;
 const AUVO_TASK_STATUS_EM_ANDAMENTO = new Set([2, 3, 4]);
 
 interface AuvoTask {
+  // Confirmado direto na API real (2026-07-09): o campo chama-se `taskID` (maiúsculo), não
+  // `id`/`taskId` como este código assumia desde sempre — extractTaskId devolvia null pra TODA
+  // tarefa, então 100% caía em "ignorada" e nenhuma OS nunca foi criada por aqui. Causa raiz real
+  // do problema original ("tarefas do Auvo não viram OS"), não só o paramFilter/janela.
+  taskID?: number;
   id?: number;
   taskId?: number;
+  // `taskTypeDescription` é o campo com texto humano de verdade na resposta real (ex.: "INÍCIO
+  // VISITA"); `title`/`description`/`taskTitle` não existem no payload real — mantidos como
+  // fallback caso algum tipo de tarefa os traga.
+  taskTypeDescription?: string;
   title?: string;
   description?: string;
   taskTitle?: string;
@@ -160,7 +169,7 @@ if (import.meta.main) serve(async (req) => {
         console.warn(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "tarefa Auvo sem customerId — ignorada", taskId }));
         continue;
       }
-      const titulo = tarefa.title ?? tarefa.taskTitle ?? tarefa.description ?? `Tarefa Auvo ${taskId}`;
+      const titulo = tarefa.taskTypeDescription ?? tarefa.title ?? tarefa.taskTitle ?? tarefa.description ?? `Tarefa Auvo ${taskId}`;
       const status = mapTaskStatusToOsStatus(tarefa.taskStatus ?? tarefa.status);
       candidatas.push({ taskId, customerId, titulo, status });
     }
@@ -215,7 +224,7 @@ if (import.meta.main) serve(async (req) => {
 });
 
 export function extractTaskId(tarefa: AuvoTask): number | null {
-  const candidato = tarefa.id ?? tarefa.taskId;
+  const candidato = tarefa.taskID ?? tarefa.id ?? tarefa.taskId;
   return typeof candidato === "number" && Number.isFinite(candidato) ? candidato : null;
 }
 

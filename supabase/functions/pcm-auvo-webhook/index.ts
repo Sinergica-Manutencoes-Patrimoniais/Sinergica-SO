@@ -287,9 +287,12 @@ serve(async (req) => {
 });
 
 /** Extrai o `taskId` do Auvo do payload do evento, tentando os nomes de campo plausíveis (shape
- * de entrega do webhook não confirmado neste ambiente — ver nota no topo do arquivo). */
+ * de entrega do webhook não confirmado neste ambiente — ver nota no topo do arquivo).
+ * `taskID` (maiúsculo) é o campo confirmado direto na API real de listagem (GET /tasks,
+ * 2026-07-09) — `id`/`taskId` nunca existiram lá; mantidos aqui só como fallback defensivo caso o
+ * shape de entrega do webhook difira do de listagem. */
 function extractTaskId(evento: Record<string, unknown>): number | null {
-  const candidatos = [evento.id, evento.taskId, evento.entityId];
+  const candidatos = [evento.taskID, evento.id, evento.taskId, evento.entityId];
   for (const c of candidatos) {
     if (typeof c === "number" && Number.isFinite(c)) return c;
     if (typeof c === "string" && /^\d+$/.test(c)) return Number(c);
@@ -326,7 +329,15 @@ function extractCustomerId(evento: Record<string, unknown>): number | null {
  * porque `pcm.ordens_servico.titulo` é `NOT NULL`. */
 function extractTitle(evento: Record<string, unknown>, taskId: number): string {
   const candidatos = [
-    deepFind(evento, ["title", "titulo", "description", "descricao", "taskTitle", "name"]),
+    deepFind(evento, [
+      "taskTypeDescription",
+      "title",
+      "titulo",
+      "description",
+      "descricao",
+      "taskTitle",
+      "name",
+    ]),
   ];
   return firstString(candidatos) ?? `Tarefa Auvo ${taskId}`;
 }
