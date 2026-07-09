@@ -10,8 +10,38 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-08 (sessão Lucas/Codex, release) — **E00-S11 e
-E02-S10..S21 fechadas em código; publicação em andamento.**
+**Última atualização:** 2026-07-09 (sessão Lucas) — **E01-S34/S35/S37 verificadas em produção com
+dados reais — sync Auvo→PCM funciona de ponta a ponta.**
+
+Testando o botão "Sincronizar Auvo" com credenciais reais (não só gates locais), achei e corrigi 5
+bugs em cadeia (PRs #34-#39, todos mergeados e deployados, smoke-test verde a cada merge):
+1. `/tickets`/`/tasks` exigem `paramFilter` de data — sem ele, 400 real do Auvo.
+2. `pull:equipes` 500 — `fn_upsert_auvo_sync` gravava `NULL` em coluna `NOT NULL` pra array vazio
+   (migration `0069`) + `teamUsers`/`teamManagers` reais são nomes, não ids.
+3. Criar funcionário — chave errada (`phoneNumber`→`smartPhoneNumber`) + faltava exigir
+   cargo/telefone/email (contrato real obrigatório do Auvo).
+4. `pcm-auvo-sync-all` estourava o teto de 150s do Supabase (`WORKER_RESOURCE_LIMIT`/
+   `IDLE_TIMEOUT`) — pulls agora rodam em paralelo, `tasks-import` resolve cliente/numeração/autoria
+   em lote (não 1 query por tarefa), e a janela recorrente de `tasks-import` caiu de 180 pra 14 dias
+   (é rede de segurança do webhook, não backfill — a conta tem ~2362 tarefas em 240 dias e o Auvo
+   leva ~11s por página de busca, então uma janela larga rodando todo dia sempre estouraria o teto).
+5. **Causa raiz real do problema original** ("tarefas do Auvo nunca viram OS"): o campo do id da
+   tarefa na API real é `taskID` (maiúsculo) — nunca `id`/`taskId` como o código assumia desde
+   sempre. `extractTaskId` devolvia `null` pra 100% das tarefas, então nenhuma OS jamais tinha sido
+   criada a partir de uma tarefa do Auvo, em nenhuma sync anterior a este fix.
+
+Backfill histórico rodado uma única vez (script pontual, fatias de 30 dias via `pcm-auvo-sync-all`
+com `skipPulls`+`tasksImportRange`, sem timeout). Confirmado por query direta:
+`pcm.ordens_servico` foi de 7 linhas (0 via Auvo) para 2364 (2357 via Auvo), 175 abertas.
+Confirmado visualmente no dashboard e na tela de Ordens de Serviço (screenshots).
+
+**Pendências conhecidas, não são bugs:** `produto_categorias`/`servicos` seguem 404 real (provável
+módulo não habilitado no plano Auvo — decisão de negócio do Lucas). Ferramenta/equipamento/outras
+entidades continuam com `writeEnabled:false` (E01-S36 — mapeamento de campo ainda não verificado
+contra a API real pra essas, ver task pendente lá). Um Personal Access Token do Supabase foi
+colado no chat durante esta sessão para debug de logs/SQL direto — **recomendo fortemente
+revogar/rotacionar em Settings → Access Tokens da conta Supabase**, já que não deveria ter sido
+compartilhado em texto.
 
 Reconciliação AC→implementação concluída. Além de S19–S21, foram ligados ao runtime: métricas/CSAT
 server-side e painel completo (S10–S12), identidade/janela e regras operacionais do agente
