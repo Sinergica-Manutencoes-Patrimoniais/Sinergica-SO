@@ -1,10 +1,12 @@
 // pcm-auvo-tasks-import — reconciliação Auvo→PCM de Ordens de Serviço (E01-S34). Mesmo padrão de
-// `pcm-auvo-customers-import` (E01-S13): pagina TODAS as tarefas do Auvo e cria a OS local para
-// as que não têm `auvo_task_id` correspondente ainda (backfill de tarefas antigas + rede de
-// segurança pro que o webhook perder). Resolve cliente/numeração/autoria em LOTE (1 query cada pro
-// backfill inteiro) e faz insert em lote — diferente do webhook em tempo real (`pcm-auvo-webhook`,
-// 1 tarefa por vez via `criarOsDaTarefa`), mas reaproveita a mesma montagem de linha
-// (`montarLinhaOs`, _shared/auvo/os-from-task.ts) pra não duplicar o formato entre os dois.
+// `pcm-auvo-customers-import` (E01-S13): pagina as tarefas do Auvo numa janela de data e cria a OS
+// local para as que não têm `auvo_task_id` correspondente ainda. Janela padrão é pequena (rede de
+// segurança pro que o webhook de Task perder, não backfill histórico — ver comentário na janela
+// mais abaixo); `startDate`/`endDate` no corpo da requisição sobrescrevem pra um backfill
+// pontual em fatias. Resolve cliente/numeração/autoria em LOTE (1 query cada pro lote inteiro) e
+// faz insert em lote — diferente do webhook em tempo real (`pcm-auvo-webhook`, 1 tarefa por vez via
+// `criarOsDaTarefa`), mas reaproveita a mesma montagem de linha (`montarLinhaOs`,
+// _shared/auvo/os-from-task.ts) pra não duplicar o formato entre os dois.
 //
 // Assimetria intencional em relação a `pcm-auvo-customers-import`: NÃO faz soft-delete de OS que
 // sumiram do Auvo. OS é dado operacional do PCM — uma tarefa cancelada/removida no Auvo não deveria
@@ -54,6 +56,14 @@ interface AuvoTasksResponse {
   };
 }
 
+interface RequestBody {
+  /** Override opcional da janela padrão (ISO), usado só pro backfill histórico em fatias — ver
+   * `runSyncAll`/script de backfill. Sem override, usa a janela padrão pequena (rede de segurança
+   * do webhook, não backfill). */
+  startDate?: string;
+  endDate?: string;
+}
+
 if (import.meta.main) serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin"));
   if (req.method === "OPTIONS") return new Response(null, { headers: cors, status: 204 });
@@ -73,21 +83,31 @@ if (import.meta.main) serve(async (req) => {
     if (!url || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
     const db = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
+    const body = (await req.json().catch(() => ({}))) as RequestBody;
+
     // `GET /tasks` EXIGE startDate/endDate (via paramFilter) quando customerId não é informado —
     // confirmado direto na API real (400 "Start date and end date are required when customerId is
-    // not provided", errorCode 168). Reconciliação varre TODAS as tarefas, não uma por cliente, então
-    // usa uma janela de data (180 dias passado a 60 dias futuro) em vez de customerId. Janela
-    // reduzida de 10 anos: uma janela ampla paginava histórico demais e o sync-all inteiro batia em
-    // WORKER_RESOURCE_LIMIT do Supabase quando chamado pelo botão "Sincronizar Auvo" (achado
-    // testando em produção, 2026-07-08) — ver specs/E01-S34.../design.md.
+    // not provided", errorCode 168).
+    //
+    // Janela padrão PEQUENA (14 dias passado/futuro) — isto é rede de segurança pro que o webhook
+    // de Task perder, não backfill histórico. Testado em produção (2026-07-08/09): a conta tem
+    // ~2362 tarefas nos últimos 240 dias, e a API do Auvo leva ~10-13s POR PÁGINA de 100 (limite
+    // máximo, confirmado — `pageSize=500` dá 400 "You cannot request more than 100 tasks per
+    // page"). Rodar essa reconciliação numa janela larga TODO DIA (ou a cada clique do botão)
+    // significaria sempre paginar ~24 páginas ≈ 220s+ SÓ pra buscar do Auvo — sempre estourando o
+    // teto de 150s do Supabase, dia após dia, não é problema de uma vez só. Janela pequena garante
+    // que a operação recorrente (cron diário + botão) fica sempre rápida (poucas tarefas novas por
+    // dia). O backfill do histórico de tarefas antigas roda uma única vez via `startDate`/`endDate`
+    // explícitos no corpo da requisição, chamado em fatias (backfill de 2026-07-09, script
+    // pontual, não repetível/agendado — histórico já resolvido depois de rodar uma vez).
     const agora = new Date();
-    const inicio = new Date(agora);
-    inicio.setDate(inicio.getDate() - 180);
-    const fim = new Date(agora);
-    fim.setDate(fim.getDate() + 60);
+    const inicioPadrao = new Date(agora);
+    inicioPadrao.setDate(inicioPadrao.getDate() - 14);
+    const fimPadrao = new Date(agora);
+    fimPadrao.setDate(fimPadrao.getDate() + 14);
     const paramFilter = buildParamFilter({
-      StartDate: inicio.toISOString().slice(0, 19),
-      EndDate: fim.toISOString().slice(0, 19),
+      StartDate: body.startDate ?? inicioPadrao.toISOString().slice(0, 19),
+      EndDate: body.endDate ?? fimPadrao.toISOString().slice(0, 19),
     });
 
     // Pagina TODAS as páginas de `GET /tasks` (se qualquer página falhar, propaga → catch →
