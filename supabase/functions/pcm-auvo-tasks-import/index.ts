@@ -1,8 +1,10 @@
 // pcm-auvo-tasks-import — reconciliação Auvo→PCM de Ordens de Serviço (E01-S34). Mesmo padrão de
 // `pcm-auvo-customers-import` (E01-S13): pagina TODAS as tarefas do Auvo e cria a OS local para
 // as que não têm `auvo_task_id` correspondente ainda (backfill de tarefas antigas + rede de
-// segurança pro que o webhook perder). Reaproveita `criarOsDaTarefa` (_shared/auvo/os-from-task.ts)
-// — mesma lógica do webhook em tempo real, nenhuma duplicação.
+// segurança pro que o webhook perder). Resolve cliente/numeração/autoria em LOTE (1 query cada pro
+// backfill inteiro) e faz insert em lote — diferente do webhook em tempo real (`pcm-auvo-webhook`,
+// 1 tarefa por vez via `criarOsDaTarefa`), mas reaproveita a mesma montagem de linha
+// (`montarLinhaOs`, _shared/auvo/os-from-task.ts) pra não duplicar o formato entre os dois.
 //
 // Assimetria intencional em relação a `pcm-auvo-customers-import`: NÃO faz soft-delete de OS que
 // sumiram do Auvo. OS é dado operacional do PCM — uma tarefa cancelada/removida no Auvo não deveria
@@ -17,7 +19,18 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
 import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
-import { criarOsDaTarefa, type OsStatus } from "../_shared/auvo/os-from-task.ts";
+import {
+  contarOsExistentes,
+  formatarNumeroOs,
+  montarLinhaOs,
+  obterUsuarioSistema,
+  type OsStatus,
+  resolverClienteIdsPorAuvoIds,
+} from "../_shared/auvo/os-from-task.ts";
+
+/** Máximo de linhas por `insert()` em lote — payload único grande demais é tão arriscado quanto
+ * 1 round-trip por linha; fatiar mantém os dois lados saudáveis mesmo num backfill grande. */
+const TAMANHO_LOTE_INSERT = 200;
 
 const FN = "pcm-auvo-tasks-import";
 
@@ -107,9 +120,14 @@ if (import.meta.main) serve(async (req) => {
       }
     }
 
-    let criadas = 0;
-    let semCliente = 0;
+    // Classifica cada tarefa SEM I/O primeiro (mesmos 2 motivos de "ignorada" de antes: taskId
+    // ausente/já existe, ou sem customerId) — só depois disso resolve cliente/numeração/autoria em
+    // lote (1 query cada pro backfill inteiro, não 1 por tarefa). Antes disso era criarOsDaTarefa
+    // por tarefa — 3 idas ao banco sequenciais cada — e um backfill de centenas de tarefas sozinho
+    // já estourava o limite de 150s do Supabase quando chamado pelo botão "Sincronizar Auvo"
+    // (achado testando em produção, 2026-07-08).
     let ignoradas = 0;
+    const candidatas: Array<{ taskId: number; customerId: number; titulo: string; status: OsStatus }> = [];
     for (const tarefa of tarefas) {
       const taskId = extractTaskId(tarefa);
       if (taskId == null || existentes.has(taskId)) {
@@ -124,13 +142,42 @@ if (import.meta.main) serve(async (req) => {
       }
       const titulo = tarefa.title ?? tarefa.taskTitle ?? tarefa.description ?? `Tarefa Auvo ${taskId}`;
       const status = mapTaskStatusToOsStatus(tarefa.taskStatus ?? tarefa.status);
-      const criada = await criarOsDaTarefa(db, { taskId, titulo, customerId, status });
-      if (!criada) {
-        semCliente++;
-        console.warn(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "cliente ainda não sincronizado no PCM — tarefa pulada, tenta de novo na próxima rodada", taskId, customerId }));
-        continue;
+      candidatas.push({ taskId, customerId, titulo, status });
+    }
+
+    let criadas = 0;
+    let semCliente = 0;
+    if (candidatas.length > 0) {
+      const [clienteIdsPorAuvoId, baseCount, systemUserId] = await Promise.all([
+        resolverClienteIdsPorAuvoIds(db, candidatas.map((c) => c.customerId)),
+        contarOsExistentes(db),
+        obterUsuarioSistema(db),
+      ]);
+
+      const linhas: Array<Record<string, unknown>> = [];
+      let sequencial = baseCount;
+      for (const c of candidatas) {
+        const clienteId = clienteIdsPorAuvoId.get(c.customerId);
+        if (!clienteId) {
+          semCliente++;
+          console.warn(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "cliente ainda não sincronizado no PCM — tarefa pulada, tenta de novo na próxima rodada", taskId: c.taskId, customerId: c.customerId }));
+          continue;
+        }
+        sequencial++;
+        linhas.push(
+          montarLinhaOs(
+            { taskId: c.taskId, titulo: c.titulo, customerId: c.customerId, status: c.status },
+            { clienteId, numero: formatarNumeroOs(sequencial), systemUserId },
+          ),
+        );
       }
-      criadas++;
+
+      for (let i = 0; i < linhas.length; i += TAMANHO_LOTE_INSERT) {
+        const lote = linhas.slice(i, i + TAMANHO_LOTE_INSERT);
+        const { error } = await db.schema("pcm").from("ordens_servico").insert(lote);
+        if (error) throw error;
+        criadas += lote.length;
+      }
     }
 
     const resultado = { pulled: tarefas.length, criadas, semCliente, ignoradas };

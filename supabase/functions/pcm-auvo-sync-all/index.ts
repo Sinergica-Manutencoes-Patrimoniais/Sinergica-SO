@@ -38,8 +38,8 @@ export type Caller = (path: string, body?: unknown) => Promise<unknown>;
  * `pcm-auvo-sync-all` bater em WORKER_RESOURCE_LIMIT do Supabase (achado testando o botão
  * "Sincronizar Auvo" em produção, 2026-07-08 — reduzir a janela de tickets/tasks não mudou nada,
  * porque o gargalo real era a soma serial das 13 chamadas, não o volume de nenhuma delas). Só
- * `tasks-import` continua depois de TODOS os pulls terminarem: ele consulta `pcm.clientes` pra
- * achar o cliente da tarefa (`criarOsDaTarefa`), e precisa que `pull:clientes` já tenha rodado.
+ * `tasks-import` continua depois de TODOS os pulls terminarem: ele resolve o cliente de cada
+ * tarefa em `pcm.clientes` em lote, e precisa que `pull:clientes` já tenha rodado.
  */
 export async function runSyncAll(entities: string[], call: Caller): Promise<{ ok: boolean; results: StepResult[] }> {
   const pullResults = await Promise.all(
