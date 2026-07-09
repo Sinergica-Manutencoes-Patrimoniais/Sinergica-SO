@@ -27,3 +27,55 @@ Deno.test("montarDetalhes — E01-S38: só inclui chaves presentes, nunca invent
   );
   assertEquals(montarDetalhes({}), {});
 });
+
+Deno.test("montarDetalhes — E01-S38: captura todo o dado rico da tarefa (produtos, serviços, assinatura, etc.)", () => {
+  // Payload real (2026-07-09), sem attachments/produtos/serviços preenchidos, pra confirmar que
+  // arrays vazios não entram (só o que tem conteúdo real).
+  assertEquals(
+    montarDetalhes({
+      address: "Avenida Doutor Manoel Afonso Ferreira, 400",
+      latitude: -22.90857,
+      longitude: -47.03647,
+      priority: 3,
+      userToName: "Davi Guedes",
+      customerDescription: "H2 Sports Bar & Poker",
+      orientation: "Início visita ",
+      report: "Relato do técnico",
+      pendency: "Peça em falta",
+      duration: "00:05:10",
+      durationDecimal: 0.086,
+      expense: "0,00",
+      signatureUrl: "https://auvo-producao.s3.amazonaws.com/anexos_tarefas/x.png",
+      signatureName: "Adamar",
+      attachments: [],
+      products: [{ id: 1, nome: "Filtro" }],
+      services: [],
+      additionalCosts: [],
+      summary: { totalProducts: 1, totalValue: 50 },
+      ticketId: 42,
+      ticketTitle: "Chamado central",
+      taskUrl: "https://app.auvo.com.br/informacoes/tarefa/x",
+    }),
+    {
+      address: "Avenida Doutor Manoel Afonso Ferreira, 400",
+      latitude: -22.90857,
+      longitude: -47.03647,
+      priority: 3,
+      tecnicoNomeAuvo: "Davi Guedes",
+      clienteNomeAuvo: "H2 Sports Bar & Poker",
+      orientacao: "Início visita ",
+      relato: "Relato do técnico",
+      pendencia: "Peça em falta",
+      duracao: "00:05:10",
+      duracaoHoras: 0.086,
+      despesa: "0,00",
+      assinaturaUrl: "https://auvo-producao.s3.amazonaws.com/anexos_tarefas/x.png",
+      assinaturaNome: "Adamar",
+      produtos: [{ id: 1, nome: "Filtro" }],
+      resumo: { totalProducts: 1, totalValue: 50 },
+      ticketId: 42,
+      ticketTitulo: "Chamado central",
+      taskUrl: "https://app.auvo.com.br/informacoes/tarefa/x",
+    },
+  );
+});
