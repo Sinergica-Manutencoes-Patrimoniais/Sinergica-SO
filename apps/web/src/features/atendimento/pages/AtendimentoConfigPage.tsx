@@ -177,63 +177,93 @@ export function AtendimentoConfigPage() {
   const carregarBase = useCallback(async () => {
     setCarregando(true);
     setErro(null);
-    try {
-      const [
-        listaClientes,
-        listaTags,
-        listaPersonas,
-        listaInstancias,
-        listaFluxos,
-        listaConhecimento,
-        listaMetaWa,
-        listaInstagram,
-        listaMessenger,
-        listaTemplates,
-        listaIgAutomations,
-        listaOptOuts,
-        scoringConfigCarregado,
-        listaClusters,
-        listaEvolution,
-        listaRecipes,
-      ] = await Promise.all([
-        listarClientesConfig(supabaseConfigAdapter),
-        listarTags(supabaseConfigAdapter),
-        listarPersonas(supabaseConfigAdapter),
-        listarInstanciasAgente(supabaseConfigAdapter),
-        listarFluxos(supabaseFluxoAdapter),
-        listarConhecimentoEntradas(supabaseConhecimentoAdapter),
-        listarCanaisExternos(supabaseCanaisExternosAdapter, "meta_wa"),
-        listarCanaisExternos(supabaseCanaisExternosAdapter, "instagram"),
-        listarCanaisExternos(supabaseCanaisExternosAdapter, "messenger"),
-        listarWaTemplates(supabaseCanaisExternosAdapter),
-        listarIgAutomations(supabaseAutomacaoAdapter),
-        listarOptOuts(supabaseAutomacaoAdapter),
-        buscarLeadScoringConfig(supabaseScoringClustersAdapter),
-        listarClusterRegras(supabaseScoringClustersAdapter),
-        listarEvolution(supabaseEvolutionAdapter),
-        listarFluxoRecipes(supabaseFluxoAdapter),
-      ]);
-      setClientes(listaClientes);
-      setTags(listaTags);
-      setPersonas(listaPersonas);
-      setInstanciasAgente(listaInstancias);
-      setFluxos(listaFluxos);
-      setConhecimentoEntradas(listaConhecimento);
-      setCanaisMetaWa(listaMetaWa);
-      setCanaisInstagram(listaInstagram);
-      setCanaisMessenger(listaMessenger);
-      setWaTemplates(listaTemplates);
-      setIgAutomations(listaIgAutomations);
-      setOptOuts(listaOptOuts);
-      setScoringConfig(scoringConfigCarregado);
-      setClusters(listaClusters);
-      setEvolutionInstancias(listaEvolution);
-      setFluxoRecipes(listaRecipes);
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível carregar a config.");
-    } finally {
-      setCarregando(false);
+    // Promise.allSettled (não Promise.all): uma integração externa lenta/fora do ar (ex.: Evolution)
+    // não pode derrubar as outras 16 abas — cada seção usa o que carregou e ignora só a sua falha.
+    // Achado durante teste manual (E00-S11/rodada de verificação): antes disso, listarEvolution
+    // sozinho falhando (CORS local, ou Evolution real fora do ar) travava a página inteira.
+    const [
+      clientesR,
+      tagsR,
+      personasR,
+      instanciasR,
+      fluxosR,
+      conhecimentoR,
+      metaWaR,
+      instagramR,
+      messengerR,
+      templatesR,
+      igAutomationsR,
+      optOutsR,
+      scoringR,
+      clustersR,
+      evolutionR,
+      recipesR,
+    ] = await Promise.allSettled([
+      listarClientesConfig(supabaseConfigAdapter),
+      listarTags(supabaseConfigAdapter),
+      listarPersonas(supabaseConfigAdapter),
+      listarInstanciasAgente(supabaseConfigAdapter),
+      listarFluxos(supabaseFluxoAdapter),
+      listarConhecimentoEntradas(supabaseConhecimentoAdapter),
+      listarCanaisExternos(supabaseCanaisExternosAdapter, "meta_wa"),
+      listarCanaisExternos(supabaseCanaisExternosAdapter, "instagram"),
+      listarCanaisExternos(supabaseCanaisExternosAdapter, "messenger"),
+      listarWaTemplates(supabaseCanaisExternosAdapter),
+      listarIgAutomations(supabaseAutomacaoAdapter),
+      listarOptOuts(supabaseAutomacaoAdapter),
+      buscarLeadScoringConfig(supabaseScoringClustersAdapter),
+      listarClusterRegras(supabaseScoringClustersAdapter),
+      listarEvolution(supabaseEvolutionAdapter),
+      listarFluxoRecipes(supabaseFluxoAdapter),
+    ]);
+
+    if (clientesR.status === "fulfilled") setClientes(clientesR.value);
+    if (tagsR.status === "fulfilled") setTags(tagsR.value);
+    if (personasR.status === "fulfilled") setPersonas(personasR.value);
+    if (instanciasR.status === "fulfilled") setInstanciasAgente(instanciasR.value);
+    if (fluxosR.status === "fulfilled") setFluxos(fluxosR.value);
+    if (conhecimentoR.status === "fulfilled") setConhecimentoEntradas(conhecimentoR.value);
+    if (metaWaR.status === "fulfilled") setCanaisMetaWa(metaWaR.value);
+    if (instagramR.status === "fulfilled") setCanaisInstagram(instagramR.value);
+    if (messengerR.status === "fulfilled") setCanaisMessenger(messengerR.value);
+    if (templatesR.status === "fulfilled") setWaTemplates(templatesR.value);
+    if (igAutomationsR.status === "fulfilled") setIgAutomations(igAutomationsR.value);
+    if (optOutsR.status === "fulfilled") setOptOuts(optOutsR.value);
+    if (scoringR.status === "fulfilled") setScoringConfig(scoringR.value);
+    if (clustersR.status === "fulfilled") setClusters(clustersR.value);
+    if (evolutionR.status === "fulfilled") setEvolutionInstancias(evolutionR.value);
+    if (recipesR.status === "fulfilled") setFluxoRecipes(recipesR.value);
+
+    const falhas = [
+      clientesR,
+      tagsR,
+      personasR,
+      instanciasR,
+      fluxosR,
+      conhecimentoR,
+      metaWaR,
+      instagramR,
+      messengerR,
+      templatesR,
+      igAutomationsR,
+      optOutsR,
+      scoringR,
+      clustersR,
+      evolutionR,
+      recipesR,
+    ].filter((r): r is PromiseRejectedResult => r.status === "rejected");
+    if (falhas.length > 0) {
+      console.error(
+        "Falha ao carregar parte da config de Atendimento (seções afetadas mostram vazio, resto continua usável):",
+        falhas.map((f) => (f.reason instanceof Error ? f.reason.message : String(f.reason))),
+      );
     }
+    // Só bloqueia a página inteira se TODAS as seções falharem (ex.: sem permissão/rede fora) —
+    // uma falha isolada (ex.: só Evolution) não deve impedir editar Tags/Personas/Scoring/etc.
+    if (falhas.length === 16) {
+      setErro("Não foi possível carregar a config.");
+    }
+    setCarregando(false);
   }, []);
 
   useEffect(() => {

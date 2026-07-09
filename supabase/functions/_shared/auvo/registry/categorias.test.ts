@@ -4,6 +4,9 @@ import { equipamentoCategoriasDescriptor, produtoCategoriasDescriptor } from "./
 Deno.test("produtoCategoriasDescriptor — mapeia description e hard-delete", () => {
   assertEquals(produtoCategoriasDescriptor.auvoBasePath, "/productcategories");
   assertEquals(produtoCategoriasDescriptor.deleteStrategy, "hard-delete");
+  // Sem cronSchedule de propósito — /productcategories confirmado 404 na API real (2026-07-08),
+  // provável módulo não habilitado no plano Auvo da conta (equipmentcategories funciona normal).
+  assertEquals(produtoCategoriasDescriptor.cronSchedule, undefined);
   assertEquals(produtoCategoriasDescriptor.toAuvo({ id: "c1", nome: "Ferramentas" }), {
     description: "Ferramentas",
   });
@@ -15,6 +18,7 @@ Deno.test("produtoCategoriasDescriptor — mapeia description e hard-delete", ()
 Deno.test("equipamentoCategoriasDescriptor — mapeia description e hard-delete", () => {
   assertEquals(equipamentoCategoriasDescriptor.auvoBasePath, "/equipmentcategories");
   assertEquals(equipamentoCategoriasDescriptor.deleteStrategy, "hard-delete");
+  assertEquals(equipamentoCategoriasDescriptor.cronSchedule, "0 6 * * *");
   assertEquals(equipamentoCategoriasDescriptor.toAuvo({ id: "c2", nome: "Climatização" }), {
     description: "Climatização",
   });

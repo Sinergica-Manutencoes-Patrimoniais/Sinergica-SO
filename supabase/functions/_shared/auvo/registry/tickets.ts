@@ -36,6 +36,20 @@ export const ticketsDescriptor: AuvoEntityDescriptor<AuvoTicket, TicketRow> = {
   cronSchedule: "0 * * * *",
   writeEnabled: false,
   deleteStrategy: "unsupported",
+  // Confirmado contra a API real (2026-07-08): GET /tickets exige StartDate/EndDate, senão 400
+  // "Invalid Date". Janela ampla (10 anos passado a 2 anos futuro) — poller varre TODOS os
+  // tickets, não um cliente específico, então usa data em vez de customerId.
+  listParamFilter() {
+    const agora = new Date();
+    const inicio = new Date(agora);
+    inicio.setFullYear(inicio.getFullYear() - 10);
+    const fim = new Date(agora);
+    fim.setFullYear(fim.getFullYear() + 2);
+    return {
+      StartDate: inicio.toISOString().slice(0, 19),
+      EndDate: fim.toISOString().slice(0, 19),
+    };
+  },
   toAuvo(row) {
     return limparVazios({
       title: row.titulo,

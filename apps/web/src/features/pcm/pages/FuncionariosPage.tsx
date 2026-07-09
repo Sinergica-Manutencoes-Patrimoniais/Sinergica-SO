@@ -359,13 +359,21 @@ function FuncionarioModal({
             value={dados.equipe ?? ""}
             onChange={(v) => setCampo("equipe", v)}
           />
-          <Field label="Cargo" value={dados.cargo ?? ""} onChange={(v) => setCampo("cargo", v)} />
           <Field
-            label="Telefone"
+            label={funcionario ? "Cargo" : "Cargo *"}
+            value={dados.cargo ?? ""}
+            onChange={(v) => setCampo("cargo", v)}
+          />
+          <Field
+            label={funcionario ? "Telefone" : "Telefone *"}
             value={dados.telefone ?? ""}
             onChange={(v) => setCampo("telefone", v)}
           />
-          <Field label="E-mail" value={dados.email ?? ""} onChange={(v) => setCampo("email", v)} />
+          <Field
+            label={funcionario ? "E-mail" : "E-mail *"}
+            value={dados.email ?? ""}
+            onChange={(v) => setCampo("email", v)}
+          />
           {erro && (
             <div className="md:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
               {erro}

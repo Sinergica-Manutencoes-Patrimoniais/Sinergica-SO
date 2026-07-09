@@ -23,7 +23,10 @@ export const servicosDescriptor: AuvoEntityDescriptor<AuvoService, ServicoRow> =
   key: "servicos",
   auvoBasePath: "/services",
   pcmTable: "servicos",
-  cronSchedule: "0 */6 * * *",
+  // Sem cronSchedule DE PROPÓSITO: `/services` confirmado 404 direto na API real (2026-07-08),
+  // mesmo path do doc oficial — a conta Auvo provavelmente não tem o módulo de Serviços habilitado
+  // no plano. Não é bug de código; não repetir cron pra não gerar erro permanente na saúde de
+  // sync. Decisão de negócio (confirmar/ativar o módulo junto ao Auvo) é do Lucas — ver STATE.md.
   writeEnabled: false,
   deleteStrategy: "soft-patch",
   externalIdField: "externalCode",

@@ -79,6 +79,15 @@ export interface AuvoEntityDescriptor<TAuvo, TRow> {
    * `externalId`. */
   readonly externalIdField?: string;
 
+  /**
+   * `paramFilter` obrigatório para o `GET` de listagem deste recurso (usado por `pcm-auvo-pull`).
+   * Confirmado contra a API real (2026-07-08): `GET /tickets` exige `StartDate`/`EndDate` — sem
+   * eles, 400 "Invalid Date"/"Start date and end date are required when customerId is not
+   * provided". Função (não objeto estático) porque a janela é relativa a "agora" — recalculada a
+   * cada chamada do poller. Ausente = nenhum paramFilter é enviado (comportamento padrão).
+   */
+  readonly listParamFilter?: () => Record<string, unknown>;
+
   /** Traduz uma linha PCM para o payload que a API Auvo espera em `POST`/`PUT`/`PATCH`. */
   toAuvo(row: TRow): TAuvo;
 

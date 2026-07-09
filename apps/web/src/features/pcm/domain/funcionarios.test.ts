@@ -33,4 +33,29 @@ describe("funcionarios", () => {
       }),
     ).toThrow("Senha deve ter até 14 caracteres.");
   });
+
+  it("criação exige cargo, telefone e email — obrigatórios pelo Auvo (`/users`)", () => {
+    const base = {
+      nome: "Técnica",
+      login: "tecnica",
+      password: "senha123",
+      culture: "pt-BR",
+      userType: 1 as const,
+    };
+    expect(() => validarCriacaoFuncionario(base)).toThrow("Cargo é obrigatório");
+    expect(() => validarCriacaoFuncionario({ ...base, cargo: "Campo" })).toThrow(
+      "Telefone é obrigatório",
+    );
+    expect(() =>
+      validarCriacaoFuncionario({ ...base, cargo: "Campo", telefone: "11999999999" }),
+    ).toThrow("E-mail é obrigatório");
+    expect(
+      validarCriacaoFuncionario({
+        ...base,
+        cargo: "Campo",
+        telefone: "11999999999",
+        email: "tecnica@sinergica.com",
+      }),
+    ).toMatchObject({ cargo: "Campo", telefone: "11999999999", email: "tecnica@sinergica.com" });
+  });
 });

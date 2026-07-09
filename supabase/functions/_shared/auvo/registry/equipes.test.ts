@@ -22,18 +22,22 @@ Deno.test("equipesDescriptor — cria teams e bloqueia update/delete no Auvo", (
   );
 });
 
-Deno.test("equipesDescriptor — inbound normaliza participantes", () => {
+Deno.test("equipesDescriptor — inbound: teamUsers/teamManagers reais são nomes, não ids — arrays ficam vazios", () => {
+  // Confirmado direto na API real (2026-07-08): GET /teams devolve teamUsers/teamManagers como
+  // arrays de nome (string), não participants/managers com ids numéricos. Ver migration 0069:
+  // esse mismatch fazia fromAuvo produzir array vazio, e fn_upsert_auvo_sync gravava NULL numa
+  // coluna NOT NULL, causando 500 em todo pull:equipes.
   assertEquals(
     equipesDescriptor.fromAuvo({
       id: 77,
       description: "Plantão",
-      participants: [1, 2],
-      managers: [3],
+      teamUsers: ["Eng. Fabrício Medeiros", "Weslei Costa"],
+      teamManagers: [],
     }),
     {
       nome: "Plantão",
-      participantes_auvo_ids: [1, 2],
-      gestores_auvo_ids: [3],
+      participantes_auvo_ids: [],
+      gestores_auvo_ids: [],
       ativo: true,
     },
   );

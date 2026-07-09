@@ -53,6 +53,14 @@ export function validarCriacaoFuncionario(
   if (!login) throw new Error("Login é obrigatório.");
   if (!password) throw new Error("Senha é obrigatória.");
   if (password.length > 14) throw new Error("Senha deve ter até 14 caracteres.");
+  // Auvo `/users` exige jobPosition/smartPhoneNumber/email — sem eles a criação falha só do lado
+  // do Auvo com erro genérico (confirmado contra a doc oficial da API, 2026-07-08).
+  if (!base.cargo)
+    throw new Error("Cargo é obrigatório para criar funcionário (exigido pelo Auvo).");
+  if (!base.telefone)
+    throw new Error("Telefone é obrigatório para criar funcionário (exigido pelo Auvo).");
+  if (!base.email)
+    throw new Error("E-mail é obrigatório para criar funcionário (exigido pelo Auvo).");
   return { ...base, login, password };
 }
 
