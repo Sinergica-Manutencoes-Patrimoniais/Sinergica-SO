@@ -63,13 +63,15 @@ if (import.meta.main) serve(async (req) => {
     // `GET /tasks` EXIGE startDate/endDate (via paramFilter) quando customerId não é informado —
     // confirmado direto na API real (400 "Start date and end date are required when customerId is
     // not provided", errorCode 168). Reconciliação varre TODAS as tarefas, não uma por cliente, então
-    // usa uma janela ampla (10 anos passado a 2 anos futuro) em vez de customerId. Ver
-    // specs/E01-S34.../design.md — achado durante teste manual com credenciais reais (2026-07-08).
+    // usa uma janela de data (180 dias passado a 60 dias futuro) em vez de customerId. Janela
+    // reduzida de 10 anos: uma janela ampla paginava histórico demais e o sync-all inteiro batia em
+    // WORKER_RESOURCE_LIMIT do Supabase quando chamado pelo botão "Sincronizar Auvo" (achado
+    // testando em produção, 2026-07-08) — ver specs/E01-S34.../design.md.
     const agora = new Date();
     const inicio = new Date(agora);
-    inicio.setFullYear(inicio.getFullYear() - 10);
+    inicio.setDate(inicio.getDate() - 180);
     const fim = new Date(agora);
-    fim.setFullYear(fim.getFullYear() + 2);
+    fim.setDate(fim.getDate() + 60);
     const paramFilter = buildParamFilter({
       StartDate: inicio.toISOString().slice(0, 19),
       EndDate: fim.toISOString().slice(0, 19),

@@ -37,14 +37,17 @@ export const ticketsDescriptor: AuvoEntityDescriptor<AuvoTicket, TicketRow> = {
   writeEnabled: false,
   deleteStrategy: "unsupported",
   // Confirmado contra a API real (2026-07-08): GET /tickets exige StartDate/EndDate, senão 400
-  // "Invalid Date". Janela ampla (10 anos passado a 2 anos futuro) — poller varre TODOS os
-  // tickets, não um cliente específico, então usa data em vez de customerId.
+  // "Invalid Date". Janela de 180 dias passado a 60 dias futuro — cobre qualquer ticket
+  // operacionalmente relevante (aberto há meses, não anos) sem estourar o tempo/CPU da Edge
+  // Function no botão manual "Sincronizar Auvo": uma janela de 10 anos paginava tantos registros
+  // que o sync-all inteiro batia em WORKER_RESOURCE_LIMIT do Supabase (achado testando em
+  // produção, 2026-07-08). O cron horário cobre a reconciliação contínua fora dessa janela.
   listParamFilter() {
     const agora = new Date();
     const inicio = new Date(agora);
-    inicio.setFullYear(inicio.getFullYear() - 10);
+    inicio.setDate(inicio.getDate() - 180);
     const fim = new Date(agora);
-    fim.setFullYear(fim.getFullYear() + 2);
+    fim.setDate(fim.getDate() + 60);
     return {
       StartDate: inicio.toISOString().slice(0, 19),
       EndDate: fim.toISOString().slice(0, 19),

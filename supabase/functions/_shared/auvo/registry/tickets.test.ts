@@ -11,21 +11,24 @@ Deno.test("ticketsDescriptor — E01-S34: cron horário como rede de segurança 
   assertEquals(ticketsDescriptor.cronSchedule, "0 * * * *");
 });
 
-Deno.test("ticketsDescriptor — listParamFilter cobre janela ampla (10 anos passado a 2 futuro)", () => {
+Deno.test("ticketsDescriptor — listParamFilter cobre janela de 180 dias passado a 60 dias futuro", () => {
   // Confirmado direto na API real (2026-07-08): GET /tickets sem StartDate/EndDate dá 400
-  // "Invalid Date". pcm-auvo-pull usa este filtro pra toda listagem deste recurso.
+  // "Invalid Date". pcm-auvo-pull usa este filtro pra toda listagem deste recurso. Janela reduzida
+  // de 10 anos pra 180/60 dias depois que a janela ampla estourou WORKER_RESOURCE_LIMIT do
+  // Supabase no botão "Sincronizar Auvo" (paginação de anos de histórico é lenta demais pra uma
+  // chamada síncrona da UI) — ver tasks-import pelo mesmo motivo.
   const filtro = ticketsDescriptor.listParamFilter?.();
   const inicio = new Date(String(filtro?.StartDate));
   const fim = new Date(String(filtro?.EndDate));
   const agora = new Date();
-  const dezAnosAtras = new Date(agora);
-  dezAnosAtras.setFullYear(dezAnosAtras.getFullYear() - 10);
-  const doisAnosNoFuturo = new Date(agora);
-  doisAnosNoFuturo.setFullYear(doisAnosNoFuturo.getFullYear() + 2);
+  const centoOitentaDiasAtras = new Date(agora);
+  centoOitentaDiasAtras.setDate(centoOitentaDiasAtras.getDate() - 180);
+  const sessentaDiasNoFuturo = new Date(agora);
+  sessentaDiasNoFuturo.setDate(sessentaDiasNoFuturo.getDate() + 60);
   // Tolerância de 1 dia (execução do teste não é instantânea ao cálculo do descriptor).
   const UM_DIA_MS = 24 * 60 * 60 * 1000;
-  assertEquals(Math.abs(inicio.getTime() - dezAnosAtras.getTime()) < UM_DIA_MS, true);
-  assertEquals(Math.abs(fim.getTime() - doisAnosNoFuturo.getTime()) < UM_DIA_MS, true);
+  assertEquals(Math.abs(inicio.getTime() - centoOitentaDiasAtras.getTime()) < UM_DIA_MS, true);
+  assertEquals(Math.abs(fim.getTime() - sessentaDiasNoFuturo.getTime()) < UM_DIA_MS, true);
 });
 
 Deno.test("ticketsDescriptor — toAuvo (create) inclui todos os campos suportados", () => {
