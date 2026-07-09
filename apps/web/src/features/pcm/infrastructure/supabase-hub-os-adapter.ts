@@ -7,6 +7,11 @@ interface ClienteRow {
   nome: string;
 }
 
+interface FuncionarioRow {
+  id: string;
+  nome: string;
+}
+
 interface OrdemRow {
   id: string;
   client_id: string;
@@ -28,12 +33,21 @@ interface OrdemRow {
   auvo_sync_error: string | null;
   created_at: string;
   updated_at: string | null;
+  tecnico_funcionario_id: string | null;
+  data_agendada: string | null;
+  check_in_at: string | null;
+  check_out_at: string | null;
+  auvo_detalhes: Record<string, unknown> | null;
 }
 
 const COLUNAS_OS =
-  "id,client_id,numero,titulo,descricao,categoria,status,prioridade,gravidade,urgencia,tendencia,score_pcm,local_descricao,solicitante,origem,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,updated_at" as const;
+  "id,client_id,numero,titulo,descricao,categoria,status,prioridade,gravidade,urgencia,tendencia,score_pcm,local_descricao,solicitante,origem,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,updated_at,tecnico_funcionario_id,data_agendada,check_in_at,check_out_at,auvo_detalhes" as const;
 
-function mapearOrdem(row: OrdemRow, clientes: Map<string, string>): OrdemServicoOperacional {
+function mapearOrdem(
+  row: OrdemRow,
+  clientes: Map<string, string>,
+  funcionarios: Map<string, string>,
+): OrdemServicoOperacional {
   return {
     id: row.id,
     numero: row.numero,
@@ -50,6 +64,14 @@ function mapearOrdem(row: OrdemRow, clientes: Map<string, string>): OrdemServico
     auvoSyncStatus: row.auvo_sync_status,
     auvoSyncError: row.auvo_sync_error,
     createdAt: row.created_at,
+    tecnicoFuncionarioId: row.tecnico_funcionario_id,
+    tecnicoNome: row.tecnico_funcionario_id
+      ? (funcionarios.get(row.tecnico_funcionario_id) ?? null)
+      : null,
+    dataAgendada: row.data_agendada,
+    checkInAt: row.check_in_at,
+    checkOutAt: row.check_out_at,
+    detalhes: row.auvo_detalhes,
   };
 }
 
@@ -98,6 +120,18 @@ async function clientesPorId(): Promise<Map<string, string>> {
   return new Map(((data ?? []) as ClienteRow[]).map((cliente) => [cliente.id, cliente.nome]));
 }
 
+async function funcionariosPorId(): Promise<Map<string, string>> {
+  const { data, error } = await supabase
+    .schema("pcm")
+    .from("funcionarios")
+    .select("id,nome")
+    .is("deleted_at", null);
+  if (error) throw error;
+  return new Map(
+    ((data ?? []) as FuncionarioRow[]).map((funcionario) => [funcionario.id, funcionario.nome]),
+  );
+}
+
 async function buscarOrdem(id: string): Promise<OrdemRow> {
   const { data, error } = await supabase
     .schema("pcm")
@@ -112,8 +146,12 @@ async function buscarOrdem(id: string): Promise<OrdemRow> {
 
 export const supabaseHubOsAdapter: HubOsGateway = {
   async listarOrdensServico(): Promise<OrdemServicoOperacional[]> {
-    const [clientes, ordens] = await Promise.all([clientesPorId(), buscarTodasOrdens()]);
-    return ordens.map((row) => mapearOrdem(row, clientes));
+    const [clientes, funcionarios, ordens] = await Promise.all([
+      clientesPorId(),
+      funcionariosPorId(),
+      buscarTodasOrdens(),
+    ]);
+    return ordens.map((row) => mapearOrdem(row, clientes, funcionarios));
   },
 
   async alterarStatus(input: AlterarStatusOsInput): Promise<OrdemServicoOperacional> {
@@ -131,7 +169,7 @@ export const supabaseHubOsAdapter: HubOsGateway = {
       .single();
 
     if (error) throw error;
-    const clientes = await clientesPorId();
-    return mapearOrdem((data ?? (await buscarOrdem(input.id))) as OrdemRow, clientes);
+    const [clientes, funcionarios] = await Promise.all([clientesPorId(), funcionariosPorId()]);
+    return mapearOrdem((data ?? (await buscarOrdem(input.id))) as OrdemRow, clientes, funcionarios);
   },
 };

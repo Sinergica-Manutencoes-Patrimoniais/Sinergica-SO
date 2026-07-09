@@ -37,19 +37,34 @@ antes de migrar (CLAUDE.md).
 
 ## Decisão
 
-### Colunas novas em `pcm.ordens_servico`
+**Padrão (definido com Lucas 2026-07-09): colunas próprias só pro que filtra/ordena/agrupa nas 3
+visões; todo o resto (dado rico da tarefa que só é EXIBIDO, nunca usado em `WHERE`/`ORDER BY`/
+`GROUP BY`) vai num `jsonb` único.** Evita migration nova cada vez que alguém quiser mostrar mais um
+campo do Auvo no card — só ajusta o parse no frontend.
+
+### Colunas novas em `pcm.ordens_servico` (filtro/ordenação/agrupamento)
 
 | Coluna | Tipo | Origem Auvo | Uso |
 |---|---|---|---|
 | `tecnico_auvo_user_id` | `bigint` | `idUserTo` | rastreio bruto, funciona mesmo se funcionário ainda não sincronizado |
-| `tecnico_funcionario_id` | `uuid references pcm.funcionarios` | resolvido via `auvo_user_id` (mesmo padrão de `resolverClienteIdsPorAuvoIds`) | timeline agrupa por aqui |
-| `data_agendada` | `timestamptz` | `taskDate` | calendário |
-| `check_in_at` | `timestamptz` | `checkInDate` | timeline (início real do trabalho) |
-| `check_out_at` | `timestamptz` | `checkOutDate` | timeline (fim real do trabalho) |
-| `endereco_visita` | `text` | `address` | contexto no card/timeline (sem lat/long — mapa fica de fora, ver Non-goals) |
+| `tecnico_funcionario_id` | `uuid references pcm.funcionarios` | resolvido via `auvo_user_id` (mesmo padrão de `resolverClienteIdsPorAuvoIds`) | timeline **agrupa** por aqui |
+| `data_agendada` | `timestamptz` | `taskDate` | calendário **posiciona** por aqui |
+| `check_in_at` | `timestamptz` | `checkInDate` | timeline **posiciona** a barra (início) |
+| `check_out_at` | `timestamptz` | `checkOutDate` | timeline **posiciona** a barra (fim) |
 
-Todas nullable — OS manual (não vinda do Auvo) simplesmente não preenche. `NOT VALID` não se
-aplica (são colunas novas, não constraints em coluna existente).
+Todas nullable — OS manual (não vinda do Auvo) simplesmente não preenche.
+
+### `auvo_detalhes jsonb` — todo o resto, só exibição
+
+Um campo só, guarda `address`, `latitude`, `longitude`, `priority` (escala 0-3 do Auvo). Implementado
+via `montarDetalhes()` (tasks-import) e `extractDetalhes()` (webhook) — só inclui chaves presentes
+no payload real, nunca inventa default. Frontend lê (`OrdemServicoOperacional.detalhes`) e decide
+o que exibir; campo novo do Auvo amanhã não pede migration.
+
+`NOT VALID` não se aplica às colunas simples (são colunas novas, não constraints em coluna
+existente); a FK de `tecnico_funcionario_id` usa `NOT VALID` + `VALIDATE CONSTRAINT` em migration
+separada (`0070`/`0071`) — Squawk trava até FK em coluna nova (`ADD COLUMN ... REFERENCES` sozinho
+já pede lock de validação).
 
 ### Resolução do técnico
 
@@ -92,5 +107,6 @@ Abas dentro da página existente (`Lista` já existe, viram `Lista | Kanban | Ti
 
 ## Migração
 
-Próximo número: verificar `supabase/migrations/` no momento da implementação (pode ter mudado desde
-a escrita deste design). Formato `NNNN_E01-S38_enriquece_ordens_servico_auvo.sql`.
+`0070_E01-S38_enriquece_ordens_servico_auvo.sql` (colunas + FK `NOT VALID`) +
+`0071_E01-S38_validar_fk_tecnico_ordens_servico.sql` (`VALIDATE CONSTRAINT`, mesmo padrão de
+0004/0005, 0006/0007, 0043/0045).

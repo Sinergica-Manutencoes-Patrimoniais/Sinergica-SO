@@ -8,16 +8,16 @@ alwaysApply: false
 
 | # | Tarefa | AC | Status |
 |---|--------|----|--------|
-| 1 | Migration `NNNN_E01-S38_enriquece_ordens_servico_auvo.sql` — 6 colunas novas nullable em `pcm.ordens_servico` | AC-1..3 | pendente |
-| 2 | `os-from-task.ts` — `montarLinhaOs`/`OsRowParams` ganham os campos novos; `resolverClienteIdsPorAuvoIds`-like para técnico (`resolverFuncionarioIdsPorAuvoIds`) | AC-1, AC-2 | pendente |
-| 3 | `pcm-auvo-tasks-import/index.ts` — extrai `idUserTo`/`taskDate`/`checkInDate`/`checkOutDate`/`address` da tarefa e passa pro insert em lote | AC-1, AC-2 | pendente |
-| 4 | `pcm-auvo-webhook/index.ts` — mesma extração pro caminho de 1 tarefa (evento em tempo real) | AC-1, AC-2 | pendente |
-| 5 | `OrdemServicoOperacional` (domain) + `hub-os-adapter.ts` — expõe os campos novos na leitura | AC-4..8 | pendente |
-| 6 | Aba **Kanban** — colunas por status, mudança via `alterarStatus` | AC-4, AC-5 | pendente |
-| 7 | Aba **Timeline por técnico** — agrupamento + posicionamento por check-in/check-out/data agendada | AC-6, AC-7 | pendente |
-| 8 | Aba **Calendário** — mês/semana por `data_agendada` | AC-8 | pendente |
-| 9 | Testes de domínio (mapeamento dos campos novos, agrupamento da timeline, filtragem do calendário) | todos | pendente |
-| 10 | Gates (`pnpm run ci:local`) + teste manual em browser (dev server) | todos | pendente |
+| 1 | Migration `0070`/`0071` — colunas novas nullable em `pcm.ordens_servico` (técnico/data/check-in-out) + `auvo_detalhes` jsonb (decisão final: filtro/ordenação vira coluna, resto vira json) | AC-1..3 | ✅ |
+| 2 | `os-from-task.ts` — `montarLinhaOs`/`OsRowParams`/`CriarOsDaTarefaInput` ganham os campos novos; `resolverFuncionarioIdPorAuvoId`/`resolverFuncionarioIdsPorAuvoIds` (mesmo padrão de cliente) | AC-1, AC-2 | ✅ |
+| 3 | `pcm-auvo-tasks-import/index.ts` — extrai `idUserTo`/`taskDate`/`checkInDate`/`checkOutDate`/`address`/`latitude`/`longitude`/`priority`, resolve técnico em lote, monta `auvo_detalhes` (`montarDetalhes`) | AC-1, AC-2 | ✅ |
+| 4 | `pcm-auvo-webhook/index.ts` — mesma extração pro caminho de 1 tarefa (criação + refresh em OS já existente, não só no create) | AC-1, AC-2 | ✅ |
+| 5 | `OrdemServicoOperacional` (domain) + `hub-os-adapter.ts` — expõe os campos novos na leitura, join de nome do técnico | AC-4..8 | ✅ |
+| 6 | Aba **Kanban** (`OsKanbanView.tsx`) — colunas por status, mudança via seletor por card (não drag-and-drop — mesmo resultado, menor risco) | AC-4, AC-5 | ✅ |
+| 7 | Aba **Timeline por técnico** (`OsTimelineView.tsx`) — trilha de 24h por dia selecionado, barra por check-in/check-out, ponto por data agendada | AC-6, AC-7 | ✅ |
+| 8 | Aba **Calendário** (`OsCalendarioView.tsx`) — grade de mês (42 dias), chips por `data_agendada` | AC-8 | ✅ |
+| 9 | Testes de domínio (`agruparPorTecnico`, `ordensNoDia`, `gerarDiasDoMes`) + testes Deno (`montarLinhaOs` com campos novos, `resolverFuncionarioIdsPorAuvoIds`, `montarDetalhes`) | todos | ✅ |
+| 10 | Gates (`pnpm run ci:local`) + teste manual em browser (dev server) | todos | ⏳ (gates locais verdes exceto lint local por falta de memória do sistema; teste em browser pendente até migration deployar) |
 
-**Pré-requisito:** `design.md` aprovado por Lucas antes da task 1 (schema change em tabela com 2364
-linhas de produção — tier arquitetural, CLAUDE.md).
+**Follow-up não bloqueante:** backfill retroativo das 2364 OS já existentes antes desta story (ficam
+com as colunas novas `NULL` até rodar um script pontual, mesmo padrão do backfill de E01-S34).

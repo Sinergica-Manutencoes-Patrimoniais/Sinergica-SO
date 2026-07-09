@@ -26,6 +26,13 @@ export interface OrdemServicoOperacional {
   auvoSyncStatus: string | null;
   auvoSyncError: string | null;
   createdAt: string;
+  /** E01-S38: dado rico da tarefa Auvo (Kanban/timeline/calendário) — null em OS manual. */
+  tecnicoFuncionarioId: string | null;
+  tecnicoNome: string | null;
+  dataAgendada: string | null;
+  checkInAt: string | null;
+  checkOutAt: string | null;
+  detalhes: Record<string, unknown> | null;
 }
 
 export interface KpisOrdensServico {
@@ -93,6 +100,64 @@ export function filtrarBacklogGut<
   T extends { status: string; scorePcm: number; createdAt: string },
 >(ordens: readonly T[]): T[] {
   return ordenarBacklogGut(ordens.filter((ordem) => ehOsAberta(ordem.status)));
+}
+
+export interface GrupoTecnico {
+  tecnicoId: string | null;
+  tecnicoNome: string;
+  ordens: OrdemServicoOperacional[];
+}
+
+/** E01-S38: agrupa por técnico pra timeline — "Sem técnico" sempre por último, os demais em
+ * ordem alfabética. OS sem `tecnicoFuncionarioId` (não resolvido ou OS manual) cai no grupo
+ * "Sem técnico". */
+export function agruparPorTecnico(ordens: readonly OrdemServicoOperacional[]): GrupoTecnico[] {
+  const grupos = new Map<string, GrupoTecnico>();
+  for (const ordem of ordens) {
+    const chave = ordem.tecnicoFuncionarioId ?? "__sem_tecnico__";
+    const nome = ordem.tecnicoFuncionarioId ? (ordem.tecnicoNome ?? "Técnico") : "Sem técnico";
+    if (!grupos.has(chave))
+      grupos.set(chave, { tecnicoId: ordem.tecnicoFuncionarioId, tecnicoNome: nome, ordens: [] });
+    grupos.get(chave)?.ordens.push(ordem);
+  }
+  return [...grupos.values()].sort((a, b) => {
+    if (a.tecnicoId == null) return 1;
+    if (b.tecnicoId == null) return -1;
+    return a.tecnicoNome.localeCompare(b.tecnicoNome);
+  });
+}
+
+function paraDiaIso(dataIso: string | null): string | null {
+  if (!dataIso) return null;
+  const data = new Date(dataIso);
+  if (Number.isNaN(data.getTime())) return null;
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+}
+
+/** E01-S38: OS cuja `dataAgendada` cai no dia informado (`YYYY-MM-DD`, fuso local do navegador —
+ * calendário é uma visão de agenda, não precisa de UTC estrito). */
+export function ordensNoDia(
+  ordens: readonly OrdemServicoOperacional[],
+  diaIso: string,
+): OrdemServicoOperacional[] {
+  return ordens.filter((ordem) => paraDiaIso(ordem.dataAgendada) === diaIso);
+}
+
+/** E01-S38: grade de 6 semanas (42 dias) pro mês do calendário, começando no domingo anterior (ou
+ * igual) ao dia 1 — inclui dias de meses adjacentes pra completar as semanas. */
+export function gerarDiasDoMes(ano: number, mes: number): Date[] {
+  const primeiroDia = new Date(ano, mes, 1);
+  const inicio = new Date(primeiroDia);
+  inicio.setDate(inicio.getDate() - primeiroDia.getDay());
+  return Array.from({ length: 42 }, (_, indice) => {
+    const dia = new Date(inicio);
+    dia.setDate(inicio.getDate() + indice);
+    return dia;
+  });
+}
+
+export function formatarDiaIso(data: Date): string {
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
 }
 
 export function calcularKpisOrdens(ordens: readonly OrdemServicoOperacional[]): KpisOrdensServico {

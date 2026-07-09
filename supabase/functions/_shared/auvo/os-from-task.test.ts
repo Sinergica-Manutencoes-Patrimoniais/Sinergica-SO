@@ -5,6 +5,7 @@ import {
   formatarNumeroOs,
   montarLinhaOs,
   resolverClienteIdsPorAuvoIds,
+  resolverFuncionarioIdsPorAuvoIds,
 } from "./os-from-task.ts";
 
 interface Call {
@@ -19,6 +20,8 @@ interface Call {
 function fakeDb(fixtures: {
   cliente?: { id: string } | null;
   clientesBatch?: Array<{ id: string; auvo_id: number }>;
+  funcionario?: { id: string } | null;
+  funcionariosBatch?: Array<{ id: string; auvo_user_id: number }>;
   osCount?: number;
   usuarioSistema?: { user_id: string } | null;
   osInseridaId?: string;
@@ -40,6 +43,21 @@ function fakeDb(fixtures: {
                 }),
                 in: () => ({
                   is: () => Promise.resolve({ data: fixtures.clientesBatch ?? [], error: null }),
+                }),
+              }),
+            };
+          }
+          if (table === "funcionarios") {
+            return {
+              select: () => ({
+                eq: () => ({
+                  is: () => ({
+                    maybeSingle: () =>
+                      Promise.resolve({ data: fixtures.funcionario ?? null, error: null }),
+                  }),
+                }),
+                in: () => ({
+                  is: () => Promise.resolve({ data: fixtures.funcionariosBatch ?? [], error: null }),
                 }),
               }),
             };
@@ -146,9 +164,82 @@ Deno.test("montarLinhaOs — monta a linha sem I/O, mesmo formato de criarOsDaTa
     auvo_task_id: 999,
     auvo_sync_status: "synced",
     created_by: "user-sistema-1",
+    tecnico_auvo_user_id: null,
+    tecnico_funcionario_id: null,
+    data_agendada: null,
+    check_in_at: null,
+    check_out_at: null,
+    auvo_detalhes: null,
   });
   assertEquals(typeof auvo_synced_at, "string");
   assertEquals(Number.isNaN(Date.parse(auvo_synced_at as string)), false);
+});
+
+Deno.test("montarLinhaOs — E01-S38: inclui técnico/data agendada/check-in-out/detalhes quando presentes", () => {
+  const linha = montarLinhaOs(
+    {
+      taskId: 999,
+      titulo: "Vazamento",
+      customerId: 501,
+      status: "em_execucao",
+      tecnicoAuvoUserId: 153005,
+      dataAgendada: "2026-06-25T08:00:00",
+      checkInAt: "2026-06-25T07:49:38",
+      checkOutAt: "2026-06-25T07:54:48",
+      detalhes: { address: "Rua Exemplo, 123", priority: 3 },
+    },
+    {
+      clienteId: "cliente-1",
+      numero: "CH-007",
+      systemUserId: "user-sistema-1",
+      tecnicoFuncionarioId: "funcionario-1",
+    },
+  );
+  assertEquals(linha.tecnico_auvo_user_id, 153005);
+  assertEquals(linha.tecnico_funcionario_id, "funcionario-1");
+  assertEquals(linha.data_agendada, "2026-06-25T08:00:00");
+  assertEquals(linha.check_in_at, "2026-06-25T07:49:38");
+  assertEquals(linha.check_out_at, "2026-06-25T07:54:48");
+  assertEquals(linha.auvo_detalhes, { address: "Rua Exemplo, 123", priority: 3 });
+});
+
+Deno.test("resolverFuncionarioIdsPorAuvoIds — resolve em lote e dedup, sem query pra lista vazia", async () => {
+  const db = fakeDb({
+    funcionariosBatch: [
+      { id: "funcionario-1", auvo_user_id: 153005 },
+      { id: "funcionario-2", auvo_user_id: 152741 },
+    ],
+  });
+  const mapa = await resolverFuncionarioIdsPorAuvoIds(db as never, [153005, 153005, 152741]);
+  assertEquals(mapa.get(153005), "funcionario-1");
+  assertEquals(mapa.get(152741), "funcionario-2");
+  assertEquals(mapa.size, 2);
+
+  const mapaVazio = await resolverFuncionarioIdsPorAuvoIds(db as never, []);
+  assertEquals(mapaVazio.size, 0);
+});
+
+Deno.test("criarOsDaTarefa — E01-S38: resolve técnico quando tecnicoAuvoUserId presente", async () => {
+  const db = fakeDb({
+    cliente: { id: "cliente-1" },
+    funcionario: { id: "funcionario-1" },
+    osCount: 6,
+    usuarioSistema: { user_id: "user-sistema-1" },
+    osInseridaId: "os-nova-1",
+  });
+  const resultado = await criarOsDaTarefa(db as never, {
+    taskId: 999,
+    titulo: "Vazamento na caixa d'água",
+    customerId: 501,
+    status: "solicitacao",
+    tecnicoAuvoUserId: 153005,
+  });
+  assertEquals(resultado, { id: "os-nova-1", status: "solicitacao" });
+  const insertCall = db.calls.find((c) => c.method === "insert");
+  assertEquals(
+    (insertCall?.args[0] as Record<string, unknown>).tecnico_funcionario_id,
+    "funcionario-1",
+  );
 });
 
 Deno.test("resolverClienteIdsPorAuvoIds — resolve em lote e dedup, sem query pra lista vazia", async () => {

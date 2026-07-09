@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { calcularKpisOrdens, filtrarBacklogGut, ordenarBacklogGut } from "./ordens-servico";
+import {
+  agruparPorTecnico,
+  calcularKpisOrdens,
+  filtrarBacklogGut,
+  formatarDiaIso,
+  gerarDiasDoMes,
+  ordenarBacklogGut,
+  ordensNoDia,
+} from "./ordens-servico";
 
 const base = {
   id: "os",
@@ -14,6 +22,12 @@ const base = {
   auvoTaskId: null,
   auvoSyncStatus: null,
   auvoSyncError: null,
+  tecnicoFuncionarioId: null,
+  tecnicoNome: null,
+  dataAgendada: null,
+  checkInAt: null,
+  checkOutAt: null,
+  detalhes: null,
 };
 
 describe("ordens-servico", () => {
@@ -59,5 +73,38 @@ describe("ordens-servico", () => {
       finalizadas: 1,
       criticas: 1,
     });
+  });
+
+  it("agrupa por técnico — 'Sem técnico' sempre por último", () => {
+    const grupos = agruparPorTecnico([
+      { ...base, id: "1", tecnicoFuncionarioId: "tec-2", tecnicoNome: "Weslei" },
+      { ...base, id: "2", tecnicoFuncionarioId: null },
+      { ...base, id: "3", tecnicoFuncionarioId: "tec-1", tecnicoNome: "Fabrício" },
+      { ...base, id: "4", tecnicoFuncionarioId: "tec-1", tecnicoNome: "Fabrício" },
+    ] as never);
+
+    expect(grupos.map((g) => g.tecnicoNome)).toEqual(["Fabrício", "Weslei", "Sem técnico"]);
+    expect(grupos[0]?.ordens.map((o) => o.id)).toEqual(["3", "4"]);
+    expect(grupos[2]?.ordens.map((o) => o.id)).toEqual(["2"]);
+  });
+
+  it("ordensNoDia — filtra por dataAgendada no dia informado", () => {
+    const ordens = [
+      { ...base, id: "1", dataAgendada: "2026-06-25T08:00:00" },
+      { ...base, id: "2", dataAgendada: "2026-06-25T18:30:00" },
+      { ...base, id: "3", dataAgendada: "2026-06-26T08:00:00" },
+      { ...base, id: "4", dataAgendada: null },
+    ] as never;
+
+    expect(ordensNoDia(ordens, "2026-06-25").map((o: { id: string }) => o.id)).toEqual(["1", "2"]);
+  });
+
+  it("gerarDiasDoMes — grade de 42 dias (6 semanas) começando no domingo", () => {
+    const dias = gerarDiasDoMes(2026, 5); // junho/2026 (mês 0-indexado)
+    expect(dias).toHaveLength(42);
+    const primeiroDia = dias[0];
+    if (!primeiroDia) throw new Error("gerarDiasDoMes devolveu array vazio");
+    expect(primeiroDia.getDay()).toBe(0);
+    expect(formatarDiaIso(primeiroDia)).toBe("2026-05-31");
   });
 });

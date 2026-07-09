@@ -28,6 +28,7 @@ import {
   obterUsuarioSistema,
   type OsStatus,
   resolverClienteIdsPorAuvoIds,
+  resolverFuncionarioIdsPorAuvoIds,
 } from "../_shared/auvo/os-from-task.ts";
 
 /** Máximo de linhas por `insert()` em lote — payload único grande demais é tão arriscado quanto
@@ -57,6 +58,17 @@ interface AuvoTask {
   customerId?: number;
   taskStatus?: number;
   status?: number;
+  // E01-S38: dado rico da tarefa — confirmado direto na API real (2026-07-09). `idUserTo` é o
+  // técnico responsável (timeline agrupa por ele); `taskDate`/`checkInDate`/`checkOutDate`
+  // posicionam a OS no calendário/timeline; o resto vai em `auvo_detalhes` (jsonb), só exibição.
+  idUserTo?: number;
+  taskDate?: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  priority?: number;
 }
 
 interface AuvoTasksResponse {
@@ -156,7 +168,17 @@ if (import.meta.main) serve(async (req) => {
     // já estourava o limite de 150s do Supabase quando chamado pelo botão "Sincronizar Auvo"
     // (achado testando em produção, 2026-07-08).
     let ignoradas = 0;
-    const candidatas: Array<{ taskId: number; customerId: number; titulo: string; status: OsStatus }> = [];
+    const candidatas: Array<{
+      taskId: number;
+      customerId: number;
+      titulo: string;
+      status: OsStatus;
+      tecnicoAuvoUserId: number | null;
+      dataAgendada: string | null;
+      checkInAt: string | null;
+      checkOutAt: string | null;
+      detalhes: Record<string, unknown>;
+    }> = [];
     for (const tarefa of tarefas) {
       const taskId = extractTaskId(tarefa);
       if (taskId == null || existentes.has(taskId)) {
@@ -171,14 +193,28 @@ if (import.meta.main) serve(async (req) => {
       }
       const titulo = tarefa.taskTypeDescription ?? tarefa.title ?? tarefa.taskTitle ?? tarefa.description ?? `Tarefa Auvo ${taskId}`;
       const status = mapTaskStatusToOsStatus(tarefa.taskStatus ?? tarefa.status);
-      candidatas.push({ taskId, customerId, titulo, status });
+      candidatas.push({
+        taskId,
+        customerId,
+        titulo,
+        status,
+        tecnicoAuvoUserId: tarefa.idUserTo ?? null,
+        dataAgendada: tarefa.taskDate ?? null,
+        checkInAt: tarefa.checkInDate ?? null,
+        checkOutAt: tarefa.checkOutDate ?? null,
+        detalhes: montarDetalhes(tarefa),
+      });
     }
 
     let criadas = 0;
     let semCliente = 0;
     if (candidatas.length > 0) {
-      const [clienteIdsPorAuvoId, baseCount, systemUserId] = await Promise.all([
+      const tecnicoAuvoUserIds = candidatas
+        .map((c) => c.tecnicoAuvoUserId)
+        .filter((id): id is number => id != null);
+      const [clienteIdsPorAuvoId, funcionarioIdsPorAuvoId, baseCount, systemUserId] = await Promise.all([
         resolverClienteIdsPorAuvoIds(db, candidatas.map((c) => c.customerId)),
+        resolverFuncionarioIdsPorAuvoIds(db, tecnicoAuvoUserIds),
         contarOsExistentes(db),
         obterUsuarioSistema(db),
       ]);
@@ -193,10 +229,23 @@ if (import.meta.main) serve(async (req) => {
           continue;
         }
         sequencial++;
+        const tecnicoFuncionarioId = c.tecnicoAuvoUserId != null
+          ? funcionarioIdsPorAuvoId.get(c.tecnicoAuvoUserId) ?? null
+          : null;
         linhas.push(
           montarLinhaOs(
-            { taskId: c.taskId, titulo: c.titulo, customerId: c.customerId, status: c.status },
-            { clienteId, numero: formatarNumeroOs(sequencial), systemUserId },
+            {
+              taskId: c.taskId,
+              titulo: c.titulo,
+              customerId: c.customerId,
+              status: c.status,
+              tecnicoAuvoUserId: c.tecnicoAuvoUserId,
+              dataAgendada: c.dataAgendada,
+              checkInAt: c.checkInAt,
+              checkOutAt: c.checkOutAt,
+              detalhes: c.detalhes,
+            },
+            { clienteId, numero: formatarNumeroOs(sequencial), systemUserId, tecnicoFuncionarioId },
           ),
         );
       }
@@ -222,6 +271,17 @@ if (import.meta.main) serve(async (req) => {
     return problem(500, "Erro interno", reqId, cors);
   }
 });
+
+/** Dado rico da tarefa que só serve pra exibição (nunca WHERE/ORDER BY/GROUP BY) — vai em
+ * `auvo_detalhes` (jsonb). Só inclui chaves presentes no payload real, sem inventar default. */
+export function montarDetalhes(tarefa: AuvoTask): Record<string, unknown> {
+  const detalhes: Record<string, unknown> = {};
+  if (tarefa.address != null) detalhes.address = tarefa.address;
+  if (tarefa.latitude != null) detalhes.latitude = tarefa.latitude;
+  if (tarefa.longitude != null) detalhes.longitude = tarefa.longitude;
+  if (tarefa.priority != null) detalhes.priority = tarefa.priority;
+  return detalhes;
+}
 
 export function extractTaskId(tarefa: AuvoTask): number | null {
   const candidato = tarefa.taskID ?? tarefa.id ?? tarefa.taskId;

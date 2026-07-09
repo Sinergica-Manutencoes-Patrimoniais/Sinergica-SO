@@ -27,7 +27,7 @@ import { validateAuvoSignature } from "../_shared/auvo/verify-signature.ts";
 import { byWebhookEntity } from "../_shared/auvo/registry/index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
 import { resolveWebhookDispatch } from "../_shared/auvo/webhook-dispatch.ts";
-import { criarOsDaTarefa } from "../_shared/auvo/os-from-task.ts";
+import { criarOsDaTarefa, resolverFuncionarioIdPorAuvoId } from "../_shared/auvo/os-from-task.ts";
 
 const FN = "pcm-auvo-webhook";
 
@@ -198,7 +198,17 @@ serve(async (req) => {
         return json(200, { ok: true, ignored: true, reason: "unknown_task_id_no_customer", taskId }, cors);
       }
       const titulo = extractTitle(evento, taskId);
-      const criada = await criarOsDaTarefa(db, { taskId, titulo, customerId, status: targetStatus });
+      const criada = await criarOsDaTarefa(db, {
+        taskId,
+        titulo,
+        customerId,
+        status: targetStatus,
+        tecnicoAuvoUserId: extractTecnicoAuvoUserId(evento),
+        dataAgendada: extractDataAgendada(evento),
+        checkInAt: extractCheckIn(evento),
+        checkOutAt: extractCheckOut(evento),
+        detalhes: extractDetalhes(evento),
+      });
       if (!criada) {
         console.warn(JSON.stringify({ ...logBase, nivel: "warn", msg: "tarefa nova do Auvo, mas cliente ainda não sincronizado no PCM — ignorado (AC-4, pego depois pelo import de reconciliação)", taskId, customerId }));
         return json(200, { ok: true, ignored: true, reason: "customer_not_synced", taskId, customerId }, cors);
@@ -234,6 +244,28 @@ serve(async (req) => {
           statusAlvo: targetStatus,
         }),
       );
+
+      // E01-S38: atualiza técnico/data agendada/check-in-out/detalhes a cada evento, sem depender
+      // da transição de status acima — nosso status (em_execucao) agrega várias transições reais
+      // do Auvo (deslocamento/check-in/check-out), então o check-in podia nunca ser gravado se
+      // só atualizasse junto do status.
+      const tecnicoAuvoUserId = extractTecnicoAuvoUserId(evento);
+      const detalhesEvento = extractDetalhes(evento);
+      const { error: detalhesError } = await db
+        .schema("pcm")
+        .from("ordens_servico")
+        .update({
+          tecnico_auvo_user_id: tecnicoAuvoUserId,
+          tecnico_funcionario_id: tecnicoAuvoUserId != null
+            ? await resolverFuncionarioIdPorAuvoId(db, tecnicoAuvoUserId)
+            : null,
+          data_agendada: extractDataAgendada(evento),
+          check_in_at: extractCheckIn(evento),
+          check_out_at: extractCheckOut(evento),
+          auvo_detalhes: Object.keys(detalhesEvento).length > 0 ? detalhesEvento : null,
+        })
+        .eq("auvo_task_id", taskId);
+      if (detalhesError) throw detalhesError;
     }
 
     // E01-S15: captura rica do webhook. Não copia anexos/fotos para Storage; guarda metadados,
@@ -340,6 +372,41 @@ function extractTitle(evento: Record<string, unknown>, taskId: number): string {
     ]),
   ];
   return firstString(candidatos) ?? `Tarefa Auvo ${taskId}`;
+}
+
+/** E01-S38: dado rico da tarefa pro Kanban/timeline/calendário — mesmo espírito defensivo dos
+ * extractors acima. `idUserTo`/`taskDate`/`checkInDate`/`checkOutDate` confirmados direto na API
+ * real de listagem (GET /tasks, 2026-07-09); mantidos nomes alternativos como fallback caso o
+ * shape de ENTREGA do webhook difira do de listagem (nunca confirmado neste ambiente). */
+function extractTecnicoAuvoUserId(evento: Record<string, unknown>): number | null {
+  return firstNumber([
+    deepFind(evento, ["idUserTo", "userToId", "technicianId", "assignedUserId"]),
+  ]);
+}
+
+function extractDataAgendada(evento: Record<string, unknown>): string | null {
+  return firstIsoString([deepFind(evento, ["taskDate", "scheduledDate", "dataAgendada"])]);
+}
+
+function extractCheckIn(evento: Record<string, unknown>): string | null {
+  return firstIsoString([deepFind(evento, ["checkInDate", "checkInAt", "checkin_em"])]);
+}
+
+function extractCheckOut(evento: Record<string, unknown>): string | null {
+  return firstIsoString([deepFind(evento, ["checkOutDate", "checkOutAt", "checkout_em"])]);
+}
+
+function extractDetalhes(evento: Record<string, unknown>): Record<string, unknown> {
+  const detalhes: Record<string, unknown> = {};
+  const address = firstString([deepFind(evento, ["address", "endereco"])]);
+  const latitude = firstNumber([deepFind(evento, ["latitude"])]);
+  const longitude = firstNumber([deepFind(evento, ["longitude"])]);
+  const priority = firstNumber([deepFind(evento, ["priority", "prioridade"])]);
+  if (address != null) detalhes.address = address;
+  if (latitude != null) detalhes.latitude = latitude;
+  if (longitude != null) detalhes.longitude = longitude;
+  if (priority != null) detalhes.priority = priority;
+  return detalhes;
 }
 
 function extractEquipmentId(evento: Record<string, unknown>): number | null {

@@ -19,6 +19,12 @@ const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional
   auvoSyncStatus: null,
   auvoSyncError: null,
   createdAt: "2026-07-04T12:00:00Z",
+  tecnicoFuncionarioId: null,
+  tecnicoNome: null,
+  dataAgendada: null,
+  checkInAt: null,
+  checkOutAt: null,
+  detalhes: null,
   ...patch,
 });
 
