@@ -60,8 +60,10 @@ interface AuvoTask {
   status?: number;
   // E01-S38: dado rico da tarefa — confirmado direto na API real (2026-07-09). `idUserTo` é o
   // técnico responsável (timeline agrupa por ele); `taskDate`/`checkInDate`/`checkOutDate`
-  // posicionam a OS no calendário/timeline; o resto vai em `auvo_detalhes` (jsonb), só exibição.
+  // posicionam a OS no calendário/timeline; o resto vai em `auvo_detalhes` (jsonb), só exibição —
+  // "traga todas as informações e detalhes das tarefas" (Lucas, 2026-07-09).
   idUserTo?: number;
+  userToName?: string;
   taskDate?: string;
   checkInDate?: string;
   checkOutDate?: string;
@@ -69,6 +71,23 @@ interface AuvoTask {
   latitude?: number;
   longitude?: number;
   priority?: number;
+  orientation?: string;
+  report?: string;
+  pendency?: string;
+  duration?: string;
+  durationDecimal?: number;
+  expense?: string;
+  signatureUrl?: string;
+  signatureName?: string;
+  attachments?: unknown[];
+  products?: unknown[];
+  services?: unknown[];
+  additionalCosts?: unknown[];
+  summary?: Record<string, unknown>;
+  ticketId?: number;
+  ticketTitle?: string;
+  customerDescription?: string;
+  taskUrl?: string;
 }
 
 interface AuvoTasksResponse {
@@ -161,16 +180,17 @@ if (import.meta.main) serve(async (req) => {
       }
     }
 
-    // Classifica cada tarefa SEM I/O primeiro (mesmos 2 motivos de "ignorada" de antes: taskId
-    // ausente/já existe, ou sem customerId) — só depois disso resolve cliente/numeração/autoria em
-    // lote (1 query cada pro backfill inteiro, não 1 por tarefa). Antes disso era criarOsDaTarefa
-    // por tarefa — 3 idas ao banco sequenciais cada — e um backfill de centenas de tarefas sozinho
-    // já estourava o limite de 150s do Supabase quando chamado pelo botão "Sincronizar Auvo"
-    // (achado testando em produção, 2026-07-08).
+    // Classifica cada tarefa SEM I/O primeiro (taskId ausente é o único motivo de "ignorada" puro
+    // agora — tarefa já existente vira ENRIQUECIMENTO, não é mais pulada sem revisitar; E01-S38,
+    // achado ao rodar o backfill retroativo: tasks-import só inseria tarefa nova, então as OS já
+    // existentes nunca ganhavam técnico/data/check-in-out mesmo depois da migration). Só depois
+    // resolve cliente/técnico/numeração/autoria em LOTE (1 query cada pro lote inteiro, não 1 por
+    // tarefa) — motivo já documentado em E01-S34 (estourava 150s do Supabase 1 por 1).
     let ignoradas = 0;
-    const candidatas: Array<{
+    const comTaskId: Array<{
       taskId: number;
-      customerId: number;
+      jaExiste: boolean;
+      customerId: number | null;
       titulo: string;
       status: OsStatus;
       tecnicoAuvoUserId: number | null;
@@ -181,23 +201,16 @@ if (import.meta.main) serve(async (req) => {
     }> = [];
     for (const tarefa of tarefas) {
       const taskId = extractTaskId(tarefa);
-      if (taskId == null || existentes.has(taskId)) {
+      if (taskId == null) {
         ignoradas++;
         continue;
       }
-      const customerId = tarefa.customerId;
-      if (customerId == null) {
-        ignoradas++;
-        console.warn(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "tarefa Auvo sem customerId — ignorada", taskId }));
-        continue;
-      }
-      const titulo = tarefa.taskTypeDescription ?? tarefa.title ?? tarefa.taskTitle ?? tarefa.description ?? `Tarefa Auvo ${taskId}`;
-      const status = mapTaskStatusToOsStatus(tarefa.taskStatus ?? tarefa.status);
-      candidatas.push({
+      comTaskId.push({
         taskId,
-        customerId,
-        titulo,
-        status,
+        jaExiste: existentes.has(taskId),
+        customerId: tarefa.customerId ?? null,
+        titulo: tarefa.taskTypeDescription ?? tarefa.title ?? tarefa.taskTitle ?? tarefa.description ?? `Tarefa Auvo ${taskId}`,
+        status: mapTaskStatusToOsStatus(tarefa.taskStatus ?? tarefa.status),
         tecnicoAuvoUserId: tarefa.idUserTo ?? null,
         dataAgendada: tarefa.taskDate ?? null,
         checkInAt: tarefa.checkInDate ?? null,
@@ -206,22 +219,36 @@ if (import.meta.main) serve(async (req) => {
       });
     }
 
+    const candidatas = comTaskId.filter((t) => !t.jaExiste);
+    const paraEnriquecer = comTaskId.filter((t) => t.jaExiste);
+
+    const tecnicoAuvoUserIds = comTaskId
+      .map((t) => t.tecnicoAuvoUserId)
+      .filter((id): id is number => id != null);
+    const funcionarioIdsPorAuvoId = await resolverFuncionarioIdsPorAuvoIds(db, tecnicoAuvoUserIds);
+
     let criadas = 0;
     let semCliente = 0;
     if (candidatas.length > 0) {
-      const tecnicoAuvoUserIds = candidatas
-        .map((c) => c.tecnicoAuvoUserId)
-        .filter((id): id is number => id != null);
-      const [clienteIdsPorAuvoId, funcionarioIdsPorAuvoId, baseCount, systemUserId] = await Promise.all([
-        resolverClienteIdsPorAuvoIds(db, candidatas.map((c) => c.customerId)),
-        resolverFuncionarioIdsPorAuvoIds(db, tecnicoAuvoUserIds),
+      const candidatasComCliente = candidatas.filter(
+        (c): c is typeof c & { customerId: number } => c.customerId != null,
+      );
+      for (const c of candidatas) {
+        if (c.customerId == null) {
+          ignoradas++;
+          console.warn(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "tarefa Auvo sem customerId — ignorada", taskId: c.taskId }));
+        }
+      }
+
+      const [clienteIdsPorAuvoId, baseCount, systemUserId] = await Promise.all([
+        resolverClienteIdsPorAuvoIds(db, candidatasComCliente.map((c) => c.customerId)),
         contarOsExistentes(db),
         obterUsuarioSistema(db),
       ]);
 
       const linhas: Array<Record<string, unknown>> = [];
       let sequencial = baseCount;
-      for (const c of candidatas) {
+      for (const c of candidatasComCliente) {
         const clienteId = clienteIdsPorAuvoId.get(c.customerId);
         if (!clienteId) {
           semCliente++;
@@ -258,7 +285,32 @@ if (import.meta.main) serve(async (req) => {
       }
     }
 
-    const resultado = { pulled: tarefas.length, criadas, semCliente, ignoradas };
+    // E01-S38: enriquece as OS que JÁ existem (não recria, não mexe em status/título/cliente) —
+    // 1 RPC pro lote inteiro (`fn_enriquecer_os_em_lote`, migration 0072), não 1 UPDATE por linha.
+    let enriquecidas = 0;
+    if (paraEnriquecer.length > 0) {
+      const atualizacoes = paraEnriquecer.map((t) => ({
+        auvo_task_id: t.taskId,
+        tecnico_auvo_user_id: t.tecnicoAuvoUserId,
+        tecnico_funcionario_id: t.tecnicoAuvoUserId != null
+          ? funcionarioIdsPorAuvoId.get(t.tecnicoAuvoUserId) ?? null
+          : null,
+        data_agendada: t.dataAgendada,
+        check_in_at: t.checkInAt,
+        check_out_at: t.checkOutAt,
+        auvo_detalhes: t.detalhes,
+      }));
+      for (let i = 0; i < atualizacoes.length; i += TAMANHO_LOTE_INSERT) {
+        const lote = atualizacoes.slice(i, i + TAMANHO_LOTE_INSERT);
+        const { data, error } = await db.schema("pcm").rpc("fn_enriquecer_os_em_lote", {
+          p_atualizacoes: lote,
+        });
+        if (error) throw error;
+        enriquecidas += Number(data ?? 0);
+      }
+    }
+
+    const resultado = { pulled: tarefas.length, criadas, enriquecidas, semCliente, ignoradas };
     console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, msg: "import de reconciliação concluído", ...resultado }));
     return json(200, resultado, cors);
   } catch (e) {
@@ -273,13 +325,40 @@ if (import.meta.main) serve(async (req) => {
 });
 
 /** Dado rico da tarefa que só serve pra exibição (nunca WHERE/ORDER BY/GROUP BY) — vai em
- * `auvo_detalhes` (jsonb). Só inclui chaves presentes no payload real, sem inventar default. */
+ * `auvo_detalhes` (jsonb). Só inclui chaves presentes/não-vazias no payload real, sem inventar
+ * default — "traga todas as informações e detalhes das tarefas" (Lucas, 2026-07-09). */
 export function montarDetalhes(tarefa: AuvoTask): Record<string, unknown> {
   const detalhes: Record<string, unknown> = {};
-  if (tarefa.address != null) detalhes.address = tarefa.address;
+  if (tarefa.address) detalhes.address = tarefa.address;
   if (tarefa.latitude != null) detalhes.latitude = tarefa.latitude;
   if (tarefa.longitude != null) detalhes.longitude = tarefa.longitude;
   if (tarefa.priority != null) detalhes.priority = tarefa.priority;
+  if (tarefa.userToName) detalhes.tecnicoNomeAuvo = tarefa.userToName;
+  if (tarefa.customerDescription) detalhes.clienteNomeAuvo = tarefa.customerDescription;
+  if (tarefa.orientation) detalhes.orientacao = tarefa.orientation;
+  if (tarefa.report) detalhes.relato = tarefa.report;
+  if (tarefa.pendency) detalhes.pendencia = tarefa.pendency;
+  if (tarefa.duration) detalhes.duracao = tarefa.duration;
+  if (tarefa.durationDecimal != null) detalhes.duracaoHoras = tarefa.durationDecimal;
+  if (tarefa.expense) detalhes.despesa = tarefa.expense;
+  if (tarefa.signatureUrl) detalhes.assinaturaUrl = tarefa.signatureUrl;
+  if (tarefa.signatureName) detalhes.assinaturaNome = tarefa.signatureName;
+  if (Array.isArray(tarefa.attachments) && tarefa.attachments.length > 0) {
+    detalhes.anexos = tarefa.attachments;
+  }
+  if (Array.isArray(tarefa.products) && tarefa.products.length > 0) {
+    detalhes.produtos = tarefa.products;
+  }
+  if (Array.isArray(tarefa.services) && tarefa.services.length > 0) {
+    detalhes.servicos = tarefa.services;
+  }
+  if (Array.isArray(tarefa.additionalCosts) && tarefa.additionalCosts.length > 0) {
+    detalhes.custosAdicionais = tarefa.additionalCosts;
+  }
+  if (tarefa.summary) detalhes.resumo = tarefa.summary;
+  if (tarefa.ticketId) detalhes.ticketId = tarefa.ticketId;
+  if (tarefa.ticketTitle) detalhes.ticketTitulo = tarefa.ticketTitle;
+  if (tarefa.taskUrl) detalhes.taskUrl = tarefa.taskUrl;
   return detalhes;
 }
 

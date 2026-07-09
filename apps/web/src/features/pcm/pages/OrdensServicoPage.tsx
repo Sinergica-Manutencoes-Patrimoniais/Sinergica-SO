@@ -422,6 +422,10 @@ function DetalheOs({
           </div>
         )}
 
+        {selecionada.detalhes && Object.keys(selecionada.detalhes).length > 0 && (
+          <DetalhesTarefaAuvo detalhes={selecionada.detalhes} />
+        )}
+
         {temEscrita && (
           <div className="rounded-[8px] border border-line bg-paper p-3">
             <label
@@ -451,6 +455,160 @@ function DetalheOs({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/** E01-S38: renderiza `detalhes` (jsonb, dado rico da tarefa Auvo só pra exibição — endereço,
+ * produtos/serviços usados, assinatura, anexos, etc.). Campo novo do Auvo amanhã só precisa
+ * aparecer aqui, sem migration. */
+function DetalhesTarefaAuvo({ detalhes }: { detalhes: Record<string, unknown> }) {
+  const texto = (chave: string) =>
+    typeof detalhes[chave] === "string" ? (detalhes[chave] as string) : null;
+  const numero = (chave: string) =>
+    typeof detalhes[chave] === "number" ? (detalhes[chave] as number) : null;
+  const lista = (chave: string) =>
+    Array.isArray(detalhes[chave]) ? (detalhes[chave] as unknown[]) : null;
+
+  const endereco = texto("address");
+  const lat = numero("latitude");
+  const lon = numero("longitude");
+  const tecnicoNomeAuvo = texto("tecnicoNomeAuvo");
+  const orientacao = texto("orientacao");
+  const relato = texto("relato");
+  const pendencia = texto("pendencia");
+  const duracao = texto("duracao");
+  const despesa = texto("despesa");
+  const assinaturaNome = texto("assinaturaNome");
+  const assinaturaUrl = texto("assinaturaUrl");
+  const produtos = lista("produtos");
+  const servicos = lista("servicos");
+  const custosAdicionais = lista("custosAdicionais");
+  const ticketId = numero("ticketId");
+  const ticketTitulo = texto("ticketTitulo");
+  const taskUrl = texto("taskUrl");
+
+  return (
+    <div className="rounded-[8px] border border-line bg-paper p-3 space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+        Detalhes da tarefa Auvo
+      </p>
+
+      {(endereco || tecnicoNomeAuvo) && (
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          {endereco && (
+            <div className="col-span-2">
+              <p className="text-[10px] uppercase tracking-wider text-ink-3">Endereço</p>
+              <p className="text-ink-2">
+                {endereco}
+                {lat != null && lon != null && (
+                  <a
+                    href={`https://www.google.com/maps?q=${lat},${lon}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ml-2 text-xs font-semibold text-orange"
+                  >
+                    ver no mapa
+                  </a>
+                )}
+              </p>
+            </div>
+          )}
+          {tecnicoNomeAuvo && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-ink-3">Técnico (Auvo)</p>
+              <p className="text-ink-2">{tecnicoNomeAuvo}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {(orientacao || relato || pendencia) && (
+        <div className="space-y-2 text-sm">
+          {orientacao && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-ink-3">Orientação</p>
+              <p className="text-ink-2">{orientacao}</p>
+            </div>
+          )}
+          {relato && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-ink-3">Relato do técnico</p>
+              <p className="text-ink-2">{relato}</p>
+            </div>
+          )}
+          {pendencia && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-ink-3">Pendência</p>
+              <p className="text-ink-2">{pendencia}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {(duracao || despesa) && (
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          {duracao && <Info label="Duração" value={duracao} />}
+          {despesa && <Info label="Despesa" value={despesa} />}
+        </div>
+      )}
+
+      {produtos?.length || servicos?.length || custosAdicionais?.length ? (
+        <div className="text-sm">
+          <p className="text-[10px] uppercase tracking-wider text-ink-3">
+            Produtos/serviços usados
+          </p>
+          <p className="text-ink-2">
+            {[
+              produtos?.length ? `${produtos.length} produto(s)` : null,
+              servicos?.length ? `${servicos.length} serviço(s)` : null,
+              custosAdicionais?.length ? `${custosAdicionais.length} custo(s) adicional(is)` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </div>
+      ) : null}
+
+      {(assinaturaNome || assinaturaUrl) && (
+        <div className="text-sm">
+          <p className="text-[10px] uppercase tracking-wider text-ink-3">Assinatura</p>
+          <p className="text-ink-2">
+            {assinaturaNome ?? "Sem nome"}
+            {assinaturaUrl && (
+              <a
+                href={assinaturaUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-2 text-xs font-semibold text-orange"
+              >
+                ver imagem
+              </a>
+            )}
+          </p>
+        </div>
+      )}
+
+      {ticketId != null && (
+        <div className="text-sm">
+          <p className="text-[10px] uppercase tracking-wider text-ink-3">Ticket vinculado</p>
+          <p className="text-ink-2">
+            #{ticketId}
+            {ticketTitulo ? ` · ${ticketTitulo}` : ""}
+          </p>
+        </div>
+      )}
+
+      {taskUrl && (
+        <a
+          href={taskUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block text-xs font-semibold text-orange"
+        >
+          Ver tarefa completa no Auvo →
+        </a>
+      )}
     </div>
   );
 }
