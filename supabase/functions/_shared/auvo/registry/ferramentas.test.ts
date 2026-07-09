@@ -51,3 +51,31 @@ Deno.test("ferramentasDescriptor — inbound preserva employeesStock como dado a
     },
   );
 });
+
+Deno.test("ferramentasDescriptor — inbound real: unitaryValue/unitaryCost vêm como string em moeda", () => {
+  // Confirmado direto na API real (2026-07-09): GET /products devolve `"$0.00"` (string), não
+  // number — valor_unitario/custo_unitario sempre viravam null antes desse fix.
+  assertEquals(
+    ferramentasDescriptor.fromAuvo({
+      id: 7304387,
+      name: "Teste Martelo",
+      categoryId: 0,
+      totalStock: 0,
+      minimumStock: 0,
+      active: true,
+      unitaryValue: "$129.90",
+      unitaryCost: "$0.00",
+    }),
+    {
+      nome: "Teste Martelo",
+      descricao: null,
+      auvo_category_id: 0,
+      quantidade_total: 0,
+      quantidade_minima: 0,
+      valor_unitario: 129.9,
+      custo_unitario: 0,
+      ativo: true,
+      employees_stock: undefined,
+    },
+  );
+});

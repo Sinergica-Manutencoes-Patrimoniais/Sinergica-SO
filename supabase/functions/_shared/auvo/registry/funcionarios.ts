@@ -18,10 +18,17 @@ export interface AuvoUser {
   name?: string;
   team?: string;
   jobPosition?: string;
+  // Confirmado direto na API real (2026-07-09): GET /users devolve `smartPhoneNumber`, não
+  // `phoneNumber` — este código gravava telefone sempre null pra todo funcionário sincronizado.
+  // `phoneNumber` mantido como fallback (é o que POST /users aceita na criação, `toAuvo` abaixo).
+  smartPhoneNumber?: string;
   phoneNumber?: string;
   email?: string;
   culture?: string;
-  userType?: number | { id?: number; description?: string };
+  // Confirmado direto na API real: o objeto vem como `{ userTypeId, description }`, não `{ id,
+  // description }` — userTypeId() abaixo checava a chave errada, então user_type sempre caía no
+  // fallback `1`, nunca refletindo o tipo real quando vinha como objeto.
+  userType?: number | { userTypeId?: number; id?: number; description?: string };
   unavailableForTasks?: boolean;
 }
 
@@ -51,7 +58,7 @@ export const funcionariosDescriptor: AuvoEntityDescriptor<AuvoUser, FuncionarioR
       nome: textoOuFallback(auvo.name, `Funcionário ${auvoId ?? ""}`.trim()),
       equipe: textoOuNull(auvo.team),
       cargo: textoOuNull(auvo.jobPosition),
-      telefone: textoOuNull(auvo.phoneNumber),
+      telefone: textoOuNull(auvo.smartPhoneNumber ?? auvo.phoneNumber),
       email: textoOuNull(auvo.email),
       culture: textoOuFallback(auvo.culture, "pt-BR"),
       user_type: userTypeId(auvo.userType) ?? 1,
@@ -62,7 +69,9 @@ export const funcionariosDescriptor: AuvoEntityDescriptor<AuvoUser, FuncionarioR
 
 function userTypeId(userType: AuvoUser["userType"]): number | null {
   if (typeof userType === "number") return userType;
-  if (typeof userType === "object" && userType?.id != null) return userType.id;
+  if (typeof userType === "object" && userType != null) {
+    return userType.userTypeId ?? userType.id ?? null;
+  }
   return null;
 }
 
