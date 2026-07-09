@@ -49,9 +49,13 @@ serve(async (req) => {
       password: input.password,
       culture: input.culture,
       userType: input.userType,
-      jobPosition: input.cargo ?? undefined,
-      phoneNumber: input.telefone ?? undefined,
-      email: input.email ?? undefined,
+      jobPosition: input.cargo,
+      // Confirmado contra a doc oficial da API (2026-07-08): o campo chama-se `smartPhoneNumber`,
+      // não `phoneNumber` — chave errada fazia o Auvo nunca receber o telefone e rejeitar a
+      // criação (campo obrigatório), o que aparecia pro usuário como "erro de edge function"
+      // genérico.
+      smartPhoneNumber: input.telefone,
+      email: input.email,
     });
     const auvoId = criado.result?.id ?? criado.result?.userID;
     if (auvoId == null) throw new HttpError(502, "Auvo criou usuário sem id na resposta");
@@ -93,10 +97,18 @@ function validar(raw: unknown): Required<Input> {
   const password = texto(input.password);
   const culture = texto(input.culture) || "pt-BR";
   const userType = input.userType ?? 1;
+  const cargo = texto(input.cargo);
+  const telefone = texto(input.telefone);
+  const email = texto(input.email);
   if (!nome) throw new HttpError(400, "Nome é obrigatório");
   if (!login) throw new HttpError(400, "Login é obrigatório");
   if (!password || password.length > 14) throw new HttpError(400, "Senha é obrigatória e deve ter até 14 caracteres");
   if (![1, 2, 3].includes(userType)) throw new HttpError(400, "Tipo de usuário inválido");
+  // cargo/telefone/email são obrigatórios na criação (`jobPosition`/`smartPhoneNumber`/`email`) na
+  // doc oficial da API Auvo — sem eles o Auvo rejeitava e o erro chegava genérico na UI.
+  if (!cargo) throw new HttpError(400, "Cargo é obrigatório (exigido pelo Auvo)");
+  if (!telefone) throw new HttpError(400, "Telefone é obrigatório (exigido pelo Auvo)");
+  if (!email) throw new HttpError(400, "E-mail é obrigatório (exigido pelo Auvo)");
   return {
     nome,
     login,
@@ -104,9 +116,9 @@ function validar(raw: unknown): Required<Input> {
     culture,
     userType,
     equipe: texto(input.equipe),
-    cargo: texto(input.cargo),
-    telefone: texto(input.telefone),
-    email: texto(input.email),
+    cargo,
+    telefone,
+    email,
   };
 }
 
