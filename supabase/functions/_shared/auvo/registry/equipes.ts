@@ -12,12 +12,15 @@ export interface AuvoTeam {
   id?: number;
   teamId?: number;
   description?: string;
-  // Confirmado direto na API real (2026-07-08): GET /teams devolve nomes (string), não ids
-  // numéricos, e sob estas chaves — não `participants`/`managers` como o descriptor assumia antes
-  // (causa raiz do 500 em pull:equipes, ver migration 0069). Sem endpoint de detalhe/lookup por
-  // nome, não dá pra resolver com segurança para auvo_user_id sem risco de casar pessoa errada
-  // por nome duplicado/typo — por isso os arrays ficam vazios até existir uma forma confiável de
-  // resolução (ver STATE.md).
+  // Escrita (POST /teams): shape nunca verificado contra a API real — writeEnabled:false, toAuvo
+  // não roda em produção ainda. Mantido como estava até alguém validar (ver client.ts).
+  participants?: number[];
+  managers?: number[];
+  // Leitura (GET /teams): confirmado direto na API real (2026-07-08) — devolve nomes (string), não
+  // ids numéricos, e sob estas chaves (causa raiz do 500 em pull:equipes, ver migration 0069). Sem
+  // endpoint de detalhe/lookup por nome, não dá pra resolver com segurança para auvo_user_id sem
+  // risco de casar pessoa errada por nome duplicado/typo — por isso os arrays ficam vazios até
+  // existir uma forma confiável de resolução (ver STATE.md).
   teamUsers?: string[];
   teamManagers?: string[];
   active?: boolean;
