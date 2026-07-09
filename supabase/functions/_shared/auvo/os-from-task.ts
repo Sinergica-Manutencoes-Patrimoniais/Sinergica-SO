@@ -39,15 +39,46 @@ export async function resolverClienteIdPorAuvoId(
   return (data?.id as string | undefined) ?? null;
 }
 
-/** Mesma lógica de `pcm-ze-agent` (`proximoNumeroChamado`) — `count()` tem race condition
- * conhecida sob concorrência real, mesma dívida já documentada e aceita nesse padrão (E01-S02). */
-export async function proximoNumeroOs(db: UntypedSupabaseClient): Promise<string> {
+/** Mesma resolução acima, em lote — 1 query pra N customerIds em vez de N queries. Usado pelo
+ * backfill (`pcm-auvo-tasks-import`), que processa muitas tarefas de uma vez; o webhook (evento
+ * único) segue usando `resolverClienteIdPorAuvoId`. */
+export async function resolverClienteIdsPorAuvoIds(
+  db: UntypedSupabaseClient,
+  customerIds: number[],
+): Promise<Map<number, string>> {
+  const unicos = [...new Set(customerIds)];
+  const mapa = new Map<number, string>();
+  if (unicos.length === 0) return mapa;
+  const { data, error } = await db
+    .schema("pcm")
+    .from("clientes")
+    .select("id,auvo_id")
+    .in("auvo_id", unicos)
+    .is("deleted_at", null);
+  if (error) throw error;
+  for (const row of data ?? []) {
+    if (row.auvo_id != null) mapa.set(row.auvo_id as number, row.id as string);
+  }
+  return mapa;
+}
+
+export async function contarOsExistentes(db: UntypedSupabaseClient): Promise<number> {
   const { count, error } = await db
     .schema("pcm")
     .from("ordens_servico")
     .select("id", { count: "exact", head: true });
   if (error) throw error;
-  return `CH-${String((count ?? 0) + 1).padStart(3, "0")}`;
+  return count ?? 0;
+}
+
+export function formatarNumeroOs(sequencial: number): string {
+  return `CH-${String(sequencial).padStart(3, "0")}`;
+}
+
+/** Mesma lógica de `pcm-ze-agent` (`proximoNumeroChamado`) — `count()` tem race condition
+ * conhecida sob concorrência real, mesma dívida já documentada e aceita nesse padrão (E01-S02). */
+export async function proximoNumeroOs(db: UntypedSupabaseClient): Promise<string> {
+  return formatarNumeroOs((await contarOsExistentes(db)) + 1);
 }
 
 /** Mesmo padrão de `pcm-auvo-customers-import` (`obterUsuarioSistema`): primeiro
@@ -71,6 +102,34 @@ export async function obterUsuarioSistema(db: UntypedSupabaseClient): Promise<st
   return data.user_id as string;
 }
 
+export interface OsRowParams {
+  clienteId: string;
+  numero: string;
+  systemUserId: string;
+}
+
+/** Monta a linha de `pcm.ordens_servico` a partir de uma tarefa Auvo — pura, sem I/O. Compartilhada
+ * entre `criarOsDaTarefa` (webhook, 1 tarefa por vez) e o insert em lote do backfill
+ * (`pcm-auvo-tasks-import`), pra não duplicar o formato da linha entre os dois caminhos. */
+export function montarLinhaOs(
+  input: CriarOsDaTarefaInput,
+  params: OsRowParams,
+): Record<string, unknown> {
+  return {
+    client_id: params.clienteId,
+    numero: params.numero,
+    titulo: input.titulo,
+    categoria: "corretiva", // AUTO-DECISION: Auvo não tem campo equivalente a categoria do PCM — ver design.md
+    status: input.status,
+    origem: "auvo",
+    origem_ref_id: String(input.taskId),
+    auvo_task_id: input.taskId,
+    auvo_sync_status: "synced",
+    auvo_synced_at: new Date().toISOString(),
+    created_by: params.systemUserId,
+  };
+}
+
 /** Cria a OS a partir de uma tarefa Auvo sem `auvo_task_id` local correspondente. Devolve `null`
  * (sem lançar) quando o cliente ainda não está sincronizado — AC-4: nunca quebra o chamador. */
 export async function criarOsDaTarefa(
@@ -85,19 +144,7 @@ export async function criarOsDaTarefa(
   const { data, error } = await db
     .schema("pcm")
     .from("ordens_servico")
-    .insert({
-      client_id: clienteId,
-      numero,
-      titulo: input.titulo,
-      categoria: "corretiva", // AUTO-DECISION: Auvo não tem campo equivalente a categoria do PCM — ver design.md
-      status: input.status,
-      origem: "auvo",
-      origem_ref_id: String(input.taskId),
-      auvo_task_id: input.taskId,
-      auvo_sync_status: "synced",
-      auvo_synced_at: new Date().toISOString(),
-      created_by: systemUserId,
-    })
+    .insert(montarLinhaOs(input, { clienteId, numero, systemUserId }))
     .select("id")
     .single();
   if (error) throw error;
