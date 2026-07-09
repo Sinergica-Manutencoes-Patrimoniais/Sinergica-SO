@@ -18,8 +18,12 @@ export interface AuvoProduct {
   name?: string;
   description?: string;
   categoryId?: number;
-  unitaryValue?: number;
-  unitaryCost?: number;
+  // Confirmado direto na API real (2026-07-09): GET /products devolve `unitaryValue`/
+  // `unitaryCost` como STRING formatada em moeda (ex.: `"$0.00"`), não number — `numeroOuNull`
+  // exigia `typeof === "number"` e sempre gravava null, descartando o preço real. `precoOuNull`
+  // abaixo aceita os dois formatos.
+  unitaryValue?: number | string;
+  unitaryCost?: number | string;
   minimumStock?: number;
   totalStock?: number;
   active?: boolean;
@@ -53,8 +57,8 @@ export const ferramentasDescriptor: AuvoEntityDescriptor<AuvoProduct, Ferramenta
       auvo_category_id: numeroOuNull(auvo.categoryId),
       quantidade_total: Math.max(0, inteiroOuZero(auvo.totalStock)),
       quantidade_minima: Math.max(0, inteiroOuZero(auvo.minimumStock)),
-      valor_unitario: numeroOuNull(auvo.unitaryValue),
-      custo_unitario: numeroOuNull(auvo.unitaryCost),
+      valor_unitario: precoOuNull(auvo.unitaryValue),
+      custo_unitario: precoOuNull(auvo.unitaryCost),
       ativo: auvo.active !== false,
       employees_stock: Array.isArray(auvo.employeesStock) ? auvo.employeesStock : undefined,
     };
@@ -81,6 +85,17 @@ function textoOuNull(value: unknown): string | null {
 
 function numeroOuNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/** `unitaryValue`/`unitaryCost` reais vêm formatados em moeda (ex.: `"$0.00"`) — remove tudo que
+ * não é dígito/ponto antes de converter. */
+function precoOuNull(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const numero = Number.parseFloat(value.replace(/[^\d.]/g, ""));
+    return Number.isFinite(numero) ? numero : null;
+  }
+  return null;
 }
 
 function inteiroOuZero(value: unknown): number {

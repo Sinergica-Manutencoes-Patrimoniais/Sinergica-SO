@@ -52,3 +52,31 @@ Deno.test("funcionariosDescriptor — inbound atualiza auvo_user_id e disponibil
     },
   );
 });
+
+Deno.test("funcionariosDescriptor — inbound real: smartPhoneNumber e userType.userTypeId", () => {
+  // Confirmado direto na API real (2026-07-09): GET /users devolve `smartPhoneNumber` (não
+  // `phoneNumber`) e `userType` como `{ userTypeId, description }` (não `{ id, description }`) —
+  // telefone/user_type sempre ficavam vazios/errados antes desse fix.
+  assertEquals(
+    funcionariosDescriptor.fromAuvo({
+      userID: 153005,
+      name: "Davi Guedes",
+      smartPhoneNumber: "19982268457",
+      jobPosition: "Oficial de Manutenção",
+      culture: "pt-BR",
+      userType: { userTypeId: 1, description: "User" },
+      unavailableForTasks: false,
+    }),
+    {
+      auvo_user_id: 153005,
+      nome: "Davi Guedes",
+      equipe: null,
+      cargo: "Oficial de Manutenção",
+      telefone: "19982268457",
+      email: null,
+      culture: "pt-BR",
+      user_type: 1,
+      ativo: true,
+    },
+  );
+});
