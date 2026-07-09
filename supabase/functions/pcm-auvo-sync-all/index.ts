@@ -32,26 +32,36 @@ export type Caller = (path: string, body?: unknown) => Promise<unknown>;
 /**
  * Roda o pull de cada entidade + o import de tarefas, isolando falha por etapa (AC-3). Pura o
  * suficiente para testar com um `Caller` stub — não depende de fetch real nem de env vars.
+ *
+ * Pulls em paralelo (Promise.all), não em série: cada entidade é uma invocação de Edge Function
+ * própria (login Auvo + fetch), e encadear 13+ delas sequencialmente somava tempo suficiente pra
+ * `pcm-auvo-sync-all` bater em WORKER_RESOURCE_LIMIT do Supabase (achado testando o botão
+ * "Sincronizar Auvo" em produção, 2026-07-08 — reduzir a janela de tickets/tasks não mudou nada,
+ * porque o gargalo real era a soma serial das 13 chamadas, não o volume de nenhuma delas). Só
+ * `tasks-import` continua depois de TODOS os pulls terminarem: ele consulta `pcm.clientes` pra
+ * achar o cliente da tarefa (`criarOsDaTarefa`), e precisa que `pull:clientes` já tenha rodado.
  */
 export async function runSyncAll(entities: string[], call: Caller): Promise<{ ok: boolean; results: StepResult[] }> {
-  const results: StepResult[] = [];
+  const pullResults = await Promise.all(
+    entities.map(async (entity): Promise<StepResult> => {
+      try {
+        const detail = await call("pcm-auvo-pull", { entity });
+        return { step: `pull:${entity}`, ok: true, detail };
+      } catch (e) {
+        return { step: `pull:${entity}`, ok: false, error: e instanceof Error ? e.message : String(e) };
+      }
+    }),
+  );
 
-  for (const entity of entities) {
-    try {
-      const detail = await call("pcm-auvo-pull", { entity });
-      results.push({ step: `pull:${entity}`, ok: true, detail });
-    } catch (e) {
-      results.push({ step: `pull:${entity}`, ok: false, error: e instanceof Error ? e.message : String(e) });
-    }
-  }
-
+  let taskImportResult: StepResult;
   try {
     const detail = await call("pcm-auvo-tasks-import");
-    results.push({ step: "tasks-import", ok: true, detail });
+    taskImportResult = { step: "tasks-import", ok: true, detail };
   } catch (e) {
-    results.push({ step: "tasks-import", ok: false, error: e instanceof Error ? e.message : String(e) });
+    taskImportResult = { step: "tasks-import", ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 
+  const results = [...pullResults, taskImportResult];
   return { ok: results.every((r) => r.ok), results };
 }
 
