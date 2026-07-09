@@ -15,6 +15,13 @@ export interface CriarOsDaTarefaInput {
   titulo: string;
   customerId: number;
   status: OsStatus;
+  /** E01-S38: dado rico da tarefa Auvo (técnico, data agendada, check-in/check-out, detalhes) —
+   * opcional pra não quebrar chamadores existentes; ausente = todas as colunas novas ficam null. */
+  tecnicoAuvoUserId?: number | null;
+  dataAgendada?: string | null;
+  checkInAt?: string | null;
+  checkOutAt?: string | null;
+  detalhes?: Record<string, unknown> | null;
 }
 
 export interface OsCriada {
@@ -58,6 +65,45 @@ export async function resolverClienteIdsPorAuvoIds(
   if (error) throw error;
   for (const row of data ?? []) {
     if (row.auvo_id != null) mapa.set(row.auvo_id as number, row.id as string);
+  }
+  return mapa;
+}
+
+/** Resolve `pcm.funcionarios.id` a partir do `auvoUserId` (técnico responsável da tarefa). `null`
+ * = técnico ainda não sincronizado no PCM — não bloqueia a criação da OS (mesma tolerância de
+ * `resolverClienteIdPorAuvoId`, mas aqui é opcional: OS nasce sem técnico resolvido). */
+export async function resolverFuncionarioIdPorAuvoId(
+  db: UntypedSupabaseClient,
+  auvoUserId: number,
+): Promise<string | null> {
+  const { data, error } = await db
+    .schema("pcm")
+    .from("funcionarios")
+    .select("id")
+    .eq("auvo_user_id", auvoUserId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.id as string | undefined) ?? null;
+}
+
+/** Mesma resolução acima, em lote — 1 query pra N auvoUserIds. Usado pelo backfill. */
+export async function resolverFuncionarioIdsPorAuvoIds(
+  db: UntypedSupabaseClient,
+  auvoUserIds: number[],
+): Promise<Map<number, string>> {
+  const unicos = [...new Set(auvoUserIds)];
+  const mapa = new Map<number, string>();
+  if (unicos.length === 0) return mapa;
+  const { data, error } = await db
+    .schema("pcm")
+    .from("funcionarios")
+    .select("id,auvo_user_id")
+    .in("auvo_user_id", unicos)
+    .is("deleted_at", null);
+  if (error) throw error;
+  for (const row of data ?? []) {
+    if (row.auvo_user_id != null) mapa.set(row.auvo_user_id as number, row.id as string);
   }
   return mapa;
 }
@@ -106,6 +152,8 @@ export interface OsRowParams {
   clienteId: string;
   numero: string;
   systemUserId: string;
+  /** E01-S38: null quando o técnico ainda não está sincronizado no PCM (não bloqueia a OS). */
+  tecnicoFuncionarioId?: string | null;
 }
 
 /** Monta a linha de `pcm.ordens_servico` a partir de uma tarefa Auvo — pura, sem I/O. Compartilhada
@@ -127,6 +175,12 @@ export function montarLinhaOs(
     auvo_sync_status: "synced",
     auvo_synced_at: new Date().toISOString(),
     created_by: params.systemUserId,
+    tecnico_auvo_user_id: input.tecnicoAuvoUserId ?? null,
+    tecnico_funcionario_id: params.tecnicoFuncionarioId ?? null,
+    data_agendada: input.dataAgendada ?? null,
+    check_in_at: input.checkInAt ?? null,
+    check_out_at: input.checkOutAt ?? null,
+    auvo_detalhes: input.detalhes ?? null,
   };
 }
 
@@ -139,12 +193,18 @@ export async function criarOsDaTarefa(
   const clienteId = await resolverClienteIdPorAuvoId(db, input.customerId);
   if (!clienteId) return null;
 
-  const [numero, systemUserId] = await Promise.all([proximoNumeroOs(db), obterUsuarioSistema(db)]);
+  const [numero, systemUserId, tecnicoFuncionarioId] = await Promise.all([
+    proximoNumeroOs(db),
+    obterUsuarioSistema(db),
+    input.tecnicoAuvoUserId != null
+      ? resolverFuncionarioIdPorAuvoId(db, input.tecnicoAuvoUserId)
+      : Promise.resolve(null),
+  ]);
 
   const { data, error } = await db
     .schema("pcm")
     .from("ordens_servico")
-    .insert(montarLinhaOs(input, { clienteId, numero, systemUserId }))
+    .insert(montarLinhaOs(input, { clienteId, numero, systemUserId, tecnicoFuncionarioId }))
     .select("id")
     .single();
   if (error) throw error;
