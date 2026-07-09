@@ -53,6 +53,41 @@ function mapearOrdem(row: OrdemRow, clientes: Map<string, string>): OrdemServico
   };
 }
 
+/** PostgREST tem um teto de linhas por requisição (`db-max-rows`, tipicamente 1000) —
+ * `.limit(200)` sozinho já cortava a lista bem antes disso. Pagina via `.range()` até esgotar ou
+ * até `LIMITE_PAGINAS` (segurança), reunindo tudo. Achado testando em produção (2026-07-09): com
+ * ~2364 OS reais pós-backfill, `limit(200)` fazia os KPIs (Total/Abertas/Execução) mentirem —
+ * eram calculados em cima só das 200 mais recentes, não do total real. Correção provisória: busca
+ * tudo. Agregação de verdade 100% server-side (count por status) fica pro redesign do Kanban, que
+ * já vai mudar como esta tela carrega dado. */
+const TAMANHO_PAGINA = 1000;
+const LIMITE_PAGINAS = 10;
+
+async function buscarTodasOrdens(): Promise<OrdemRow[]> {
+  const todas: OrdemRow[] = [];
+  for (let pagina = 0; pagina < LIMITE_PAGINAS; pagina++) {
+    const inicio = pagina * TAMANHO_PAGINA;
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select(COLUNAS_OS)
+      .is("deleted_at", null)
+      // Desempate por `id` obrigatório: os inserts em lote do backfill (2026-07-09) gravam
+      // centenas de linhas com o MESMO `created_at` (uma única transação, `now()` é fixo por
+      // statement) — paginar por `.range()` só em `created_at` é instável entre requisições
+      // quando há empate (a mesma linha pode cair em duas páginas, causando id duplicado na
+      // lista/keys React duplicadas). `id` é único, garante ordem determinística.
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(inicio, inicio + TAMANHO_PAGINA - 1);
+    if (error) throw error;
+    const lote = (data ?? []) as OrdemRow[];
+    todas.push(...lote);
+    if (lote.length < TAMANHO_PAGINA) break;
+  }
+  return todas;
+}
+
 async function clientesPorId(): Promise<Map<string, string>> {
   const { data, error } = await supabase
     .schema("pcm")
@@ -77,19 +112,8 @@ async function buscarOrdem(id: string): Promise<OrdemRow> {
 
 export const supabaseHubOsAdapter: HubOsGateway = {
   async listarOrdensServico(): Promise<OrdemServicoOperacional[]> {
-    const [clientes, { data, error }] = await Promise.all([
-      clientesPorId(),
-      supabase
-        .schema("pcm")
-        .from("ordens_servico")
-        .select(COLUNAS_OS)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(200),
-    ]);
-
-    if (error) throw error;
-    return ((data ?? []) as OrdemRow[]).map((row) => mapearOrdem(row, clientes));
+    const [clientes, ordens] = await Promise.all([clientesPorId(), buscarTodasOrdens()]);
+    return ordens.map((row) => mapearOrdem(row, clientes));
   },
 
   async alterarStatus(input: AlterarStatusOsInput): Promise<OrdemServicoOperacional> {
