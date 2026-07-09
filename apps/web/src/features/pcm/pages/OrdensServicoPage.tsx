@@ -1,8 +1,11 @@
-import { ClipboardList, RefreshCw } from "lucide-react";
+import { Calendar, ClipboardList, Clock3, Kanban, List, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { alterarStatusOrdemServico, listarOrdensServico } from "../application/hub-os";
+import { OsCalendarioView } from "../components/OsCalendarioView";
+import { OsKanbanView } from "../components/OsKanbanView";
+import { OsTimelineView } from "../components/OsTimelineView";
 import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
@@ -13,6 +16,15 @@ import {
   statusOsColor,
 } from "../domain/ordens-servico";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
+
+type Visao = "lista" | "kanban" | "timeline" | "calendario";
+
+const VISOES: Array<{ value: Visao; label: string; Icone: typeof List }> = [
+  { value: "lista", label: "Lista", Icone: List },
+  { value: "kanban", label: "Kanban", Icone: Kanban },
+  { value: "timeline", label: "Timeline", Icone: Clock3 },
+  { value: "calendario", label: "Calendário", Icone: Calendar },
+];
 
 type Estado =
   | { fase: "carregando" }
@@ -30,6 +42,7 @@ export function OrdensServicoPage({
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
+  const [visao, setVisao] = useState<Visao>("lista");
   const [statusFiltro, setStatusFiltro] = useState<string>("todas");
   const [busca, setBusca] = useState("");
   const [salvando, setSalvando] = useState(false);
@@ -85,13 +98,13 @@ export function OrdensServicoPage({
     [estado],
   );
 
-  async function onAlterarStatus(status: StatusOrdemServico) {
-    if (!user || !selecionada) return;
+  async function onAlterarStatusDe(id: string, status: StatusOrdemServico) {
+    if (!user) return;
     setSalvando(true);
     setErroAcao(null);
     try {
       const atualizada = await alterarStatusOrdemServico(supabaseHubOsAdapter, {
-        id: selecionada.id,
+        id,
         status,
         updatedBy: user.id,
       });
@@ -108,6 +121,11 @@ export function OrdensServicoPage({
     } finally {
       setSalvando(false);
     }
+  }
+
+  function onAlterarStatus(status: StatusOrdemServico) {
+    if (!selecionada) return;
+    return onAlterarStatusDe(selecionada.id, status);
   }
 
   if (permissoesCarregando) {
@@ -194,147 +212,131 @@ export function OrdensServicoPage({
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(520px,1fr)_420px] gap-4">
-        <section className="bg-card rounded-[10px] border border-line overflow-hidden">
-          <div className="px-5 py-4 border-b border-line-soft grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input
-              className="input md:col-span-2"
-              placeholder="Buscar por número, cliente ou título"
-              value={busca}
-              onChange={(event) => setBusca(event.target.value)}
-            />
-            <select
-              className="input"
-              value={statusFiltro}
-              onChange={(event) => setStatusFiltro(event.target.value)}
-            >
-              <option value="todas">Todos os status</option>
-              {STATUS_OS.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="divide-y divide-line-soft">
-            {ordensFiltradas.length === 0 ? (
-              <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS encontrada.</div>
-            ) : (
-              ordensFiltradas.map((ordem) => (
-                <button
-                  key={ordem.id}
-                  type="button"
-                  onClick={() => setSelecionadaId(ordem.id)}
-                  className={`w-full px-5 py-4 text-left hover:bg-line-soft ${
-                    ordem.id === selecionadaId ? "bg-line-soft" : ""
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-brand tabular-nums text-ink-3">
-                      {ordem.numero}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
-                    >
-                      {rotuloStatusOs(ordem.status)}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
-                    >
-                      {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold text-ink">{ordem.titulo}</p>
-                  <p className="mt-1 text-xs text-ink-3">
-                    {ordem.clienteNome} · {ordem.categoria} · score {ordem.scorePcm}
-                  </p>
-                </button>
-              ))
-            )}
-          </div>
-        </section>
-
-        <section className="bg-card rounded-[10px] border border-line min-h-[520px]">
-          {selecionada ? (
-            <div>
-              <div className="px-5 py-4 border-b border-line-soft">
-                <p className="text-xs font-brand tabular-nums text-ink-3">{selecionada.numero}</p>
-                <h3 className="mt-1 text-lg font-semibold text-ink">{selecionada.titulo}</h3>
-                <p className="mt-1 text-sm text-ink-3">{selecionada.clienteNome}</p>
-              </div>
-
-              <div className="p-5 space-y-4">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <Info label="Status" value={rotuloStatusOs(selecionada.status)} />
-                  <Info
-                    label="Prioridade"
-                    value={PRIORIDADE_LABEL[selecionada.prioridade] ?? selecionada.prioridade}
-                  />
-                  <Info label="Categoria" value={selecionada.categoria} />
-                  <Info label="Score GUT" value={String(selecionada.scorePcm)} />
-                  <Info
-                    label="Fatores"
-                    value={`${selecionada.gravidade ?? 1} · ${selecionada.urgencia ?? 1} · ${
-                      selecionada.tendencia ?? 1
-                    }`}
-                  />
-                  <Info
-                    label="Auvo"
-                    value={
-                      selecionada.auvoTaskId
-                        ? `Task ${selecionada.auvoTaskId}`
-                        : selecionada.auvoSyncStatus || "Sem task"
-                    }
-                  />
-                </div>
-
-                {selecionada.auvoSyncError && (
-                  <div className="rounded-[8px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#A12D24]">
-                      Erro Auvo
-                    </p>
-                    <p className="mt-1 text-sm text-[#7A241D]">{selecionada.auvoSyncError}</p>
-                  </div>
-                )}
-
-                {temEscrita && (
-                  <div className="rounded-[8px] border border-line bg-paper p-3">
-                    <label
-                      htmlFor="status-os-operacional"
-                      className="text-xs font-semibold uppercase tracking-wider text-ink-3"
-                    >
-                      Alterar status
-                    </label>
-                    <div className="mt-2 flex gap-2">
-                      <select
-                        id="status-os-operacional"
-                        className="input flex-1"
-                        value={selecionada.status}
-                        disabled={salvando}
-                        onChange={(event) =>
-                          onAlterarStatus(event.target.value as StatusOrdemServico)
-                        }
-                      >
-                        {STATUS_OS.map((status) => (
-                          <option key={status.value} value={status.value}>
-                            {status.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <p className="mt-2 text-xs text-ink-3">
-                      Planejamento dispara o gatilho Auvo já existente quando aplicável.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="p-8 text-sm text-ink-3">Selecione uma OS.</div>
-          )}
-        </section>
+      <div className="flex items-center gap-1 border-b border-line-soft">
+        {VISOES.map(({ value, label, Icone }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setVisao(value)}
+            className={`inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold ${
+              visao === value
+                ? "border-orange text-ink"
+                : "border-transparent text-ink-3 hover:text-ink-2"
+            }`}
+          >
+            <Icone className="h-4 w-4" />
+            {label}
+          </button>
+        ))}
       </div>
+
+      {visao !== "lista" && (
+        <div className="bg-card rounded-[10px] border border-line p-4">
+          {visao === "kanban" && (
+            <OsKanbanView
+              ordens={ordensFiltradas}
+              temEscrita={temEscrita}
+              salvando={salvando}
+              onAlterarStatus={(id, status) => onAlterarStatusDe(id, status)}
+              onSelecionar={setSelecionadaId}
+            />
+          )}
+          {visao === "timeline" && (
+            <OsTimelineView ordens={ordensFiltradas} onSelecionar={setSelecionadaId} />
+          )}
+          {visao === "calendario" && (
+            <OsCalendarioView ordens={ordensFiltradas} onSelecionar={setSelecionadaId} />
+          )}
+        </div>
+      )}
+
+      {visao !== "lista" && selecionada && (
+        <section className="bg-card rounded-[10px] border border-line">
+          <DetalheOs
+            selecionada={selecionada}
+            temEscrita={temEscrita}
+            salvando={salvando}
+            onAlterarStatus={onAlterarStatus}
+          />
+        </section>
+      )}
+
+      {visao === "lista" && (
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(520px,1fr)_420px] gap-4">
+          <section className="bg-card rounded-[10px] border border-line overflow-hidden">
+            <div className="px-5 py-4 border-b border-line-soft grid grid-cols-1 md:grid-cols-3 gap-3">
+              <input
+                className="input md:col-span-2"
+                placeholder="Buscar por número, cliente ou título"
+                value={busca}
+                onChange={(event) => setBusca(event.target.value)}
+              />
+              <select
+                className="input"
+                value={statusFiltro}
+                onChange={(event) => setStatusFiltro(event.target.value)}
+              >
+                <option value="todas">Todos os status</option>
+                {STATUS_OS.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="divide-y divide-line-soft">
+              {ordensFiltradas.length === 0 ? (
+                <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS encontrada.</div>
+              ) : (
+                ordensFiltradas.map((ordem) => (
+                  <button
+                    key={ordem.id}
+                    type="button"
+                    onClick={() => setSelecionadaId(ordem.id)}
+                    className={`w-full px-5 py-4 text-left hover:bg-line-soft ${
+                      ordem.id === selecionadaId ? "bg-line-soft" : ""
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-brand tabular-nums text-ink-3">
+                        {ordem.numero}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
+                      >
+                        {rotuloStatusOs(ordem.status)}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                      >
+                        {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm font-semibold text-ink">{ordem.titulo}</p>
+                    <p className="mt-1 text-xs text-ink-3">
+                      {ordem.clienteNome} · {ordem.categoria} · score {ordem.scorePcm}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="bg-card rounded-[10px] border border-line min-h-[520px]">
+            {selecionada ? (
+              <DetalheOs
+                selecionada={selecionada}
+                temEscrita={temEscrita}
+                salvando={salvando}
+                onAlterarStatus={onAlterarStatus}
+              />
+            ) : (
+              <div className="p-8 text-sm text-ink-3">Selecione uma OS.</div>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }
@@ -344,6 +346,111 @@ function Info({ label, value }: { label: string; value: string }) {
     <div className="rounded-[8px] border border-line bg-paper px-3 py-2">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-1 font-medium text-ink">{value}</p>
+    </div>
+  );
+}
+
+function DetalheOs({
+  selecionada,
+  temEscrita,
+  salvando,
+  onAlterarStatus,
+}: {
+  selecionada: OrdemServicoOperacional;
+  temEscrita: boolean;
+  salvando: boolean;
+  onAlterarStatus: (status: StatusOrdemServico) => void;
+}) {
+  return (
+    <div>
+      <div className="px-5 py-4 border-b border-line-soft">
+        <p className="text-xs font-brand tabular-nums text-ink-3">{selecionada.numero}</p>
+        <h3 className="mt-1 text-lg font-semibold text-ink">{selecionada.titulo}</h3>
+        <p className="mt-1 text-sm text-ink-3">{selecionada.clienteNome}</p>
+      </div>
+
+      <div className="p-5 space-y-4">
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <Info label="Status" value={rotuloStatusOs(selecionada.status)} />
+          <Info
+            label="Prioridade"
+            value={PRIORIDADE_LABEL[selecionada.prioridade] ?? selecionada.prioridade}
+          />
+          <Info label="Categoria" value={selecionada.categoria} />
+          <Info label="Score GUT" value={String(selecionada.scorePcm)} />
+          <Info
+            label="Fatores"
+            value={`${selecionada.gravidade ?? 1} · ${selecionada.urgencia ?? 1} · ${
+              selecionada.tendencia ?? 1
+            }`}
+          />
+          <Info
+            label="Auvo"
+            value={
+              selecionada.auvoTaskId
+                ? `Task ${selecionada.auvoTaskId}`
+                : selecionada.auvoSyncStatus || "Sem task"
+            }
+          />
+          {selecionada.tecnicoNome && <Info label="Técnico" value={selecionada.tecnicoNome} />}
+          {selecionada.dataAgendada && (
+            <Info
+              label="Agendada"
+              value={new Date(selecionada.dataAgendada).toLocaleString("pt-BR")}
+            />
+          )}
+          {selecionada.checkInAt && (
+            <Info
+              label="Check-in"
+              value={new Date(selecionada.checkInAt).toLocaleString("pt-BR")}
+            />
+          )}
+          {selecionada.checkOutAt && (
+            <Info
+              label="Check-out"
+              value={new Date(selecionada.checkOutAt).toLocaleString("pt-BR")}
+            />
+          )}
+        </div>
+
+        {selecionada.auvoSyncError && (
+          <div className="rounded-[8px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#A12D24]">
+              Erro Auvo
+            </p>
+            <p className="mt-1 text-sm text-[#7A241D]">{selecionada.auvoSyncError}</p>
+          </div>
+        )}
+
+        {temEscrita && (
+          <div className="rounded-[8px] border border-line bg-paper p-3">
+            <label
+              htmlFor="status-os-operacional"
+              className="text-xs font-semibold uppercase tracking-wider text-ink-3"
+            >
+              Alterar status
+            </label>
+            <div className="mt-2 flex gap-2">
+              <select
+                id="status-os-operacional"
+                className="input flex-1"
+                value={selecionada.status}
+                disabled={salvando}
+                onChange={(event) => onAlterarStatus(event.target.value as StatusOrdemServico)}
+              >
+                {STATUS_OS.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p className="mt-2 text-xs text-ink-3">
+              Planejamento dispara o gatilho Auvo já existente quando aplicável.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
