@@ -19,6 +19,14 @@ export interface ClienteHeader {
   contatoTelefone?: string | null;
   contatoEmail?: string | null;
   observacoes?: string | null;
+  /** E01-S51: dado rico do Auvo só pra exibição (hoje: `contacts[]` completo). */
+  detalhes?: Record<string, unknown> | null;
+}
+
+/** Grupo de clientes (E01-S27) associado a este cliente — E01-S51 (card Grupos na 360). */
+export interface GrupoClienteResumo {
+  id: string;
+  nome: string;
 }
 
 /**
@@ -163,6 +171,8 @@ export interface Cliente360Gateway {
   listarEventosCliente(id: string): Promise<Cliente360Evento[]>;
   /** Resumo operacional de qualidade do cliente. */
   listarQualidadeCliente(id: string): Promise<QualidadeClienteResumo>;
+  /** Grupos de clientes (E01-S27) que incluem este cliente — E01-S51. */
+  listarGruposCliente(id: string): Promise<GrupoClienteResumo[]>;
   criarCliente?(input: ClienteCommand): Promise<ClienteHeader>;
   editarCliente?(input: EditarClienteCommand): Promise<ClienteHeader>;
   excluirCliente?(input: ExcluirClienteCommand): Promise<void>;

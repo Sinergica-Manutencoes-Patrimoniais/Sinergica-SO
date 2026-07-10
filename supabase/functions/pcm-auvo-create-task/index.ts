@@ -54,7 +54,7 @@ serve(async (req) => {
     const { data: os, error: osError } = await db
       .schema("pcm")
       .from("ordens_servico")
-      .select("id, client_id, categoria, prioridade, titulo, descricao, auvo_task_id")
+      .select("id, client_id, categoria, prioridade, titulo, descricao, auvo_task_id, tipo_tarefa_id")
       .eq("id", input.osId)
       .maybeSingle();
 
@@ -66,8 +66,25 @@ serve(async (req) => {
       return json(200, { ok: true, taskId: os.auvo_task_id, created: false }, cors);
     }
 
-    // AC-7: categoria sem taskTypeId mapeado — falha explícita, NENHUMA chamada POST /tasks.
-    const taskTypeId = resolveAuvoTaskTypeId(os.categoria);
+    // E01-S40: prefere o tipo de tarefa escolhido na criação da OS (tipo_tarefa_id →
+    // pcm.tipos_tarefa.auvo_id); cai pro mapa hardcoded por categoria quando não houver escolha
+    // ou o tipo escolhido ainda não tiver auvo_id confirmado (sync do Auvo pendente).
+    let taskTypeId: number | undefined;
+    if (os.tipo_tarefa_id) {
+      const { data: tipoTarefa, error: tipoTarefaError } = await db
+        .schema("pcm")
+        .from("tipos_tarefa")
+        .select("auvo_id")
+        .eq("id", os.tipo_tarefa_id)
+        .maybeSingle();
+      if (tipoTarefaError) throw tipoTarefaError;
+      taskTypeId = tipoTarefa?.auvo_id ?? undefined;
+    }
+    if (taskTypeId === undefined) {
+      taskTypeId = resolveAuvoTaskTypeId(os.categoria);
+    }
+
+    // AC-7: nem tipo de tarefa nem categoria resolveram — falha explícita, NENHUMA chamada POST /tasks.
     if (taskTypeId === undefined) {
       await markFailed(db, input.osId, `taskTypeId não configurado para categoria ${os.categoria}`);
       return json(200, { ok: false, reason: "taskTypeId_not_mapped", categoria: os.categoria }, cors);

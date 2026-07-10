@@ -10,6 +10,7 @@ import {
   listarCategoriasFerramenta,
   listarFerramentas,
 } from "../application/ferramentas";
+import { BannerEscritaAuvoPendente } from "../components/BannerEscritaAuvoPendente";
 import type {
   FerramentaCategoriaOpcao,
   FerramentaFormData,
@@ -113,6 +114,7 @@ export function FerramentasPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <BannerEscritaAuvoPendente entidade="ferramentas" />
       <section className="rounded-[8px] border border-line bg-card p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>

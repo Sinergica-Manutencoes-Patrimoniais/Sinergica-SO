@@ -11,9 +11,16 @@ export interface TecnicoOpcao {
   auvoUserId: number;
 }
 
+export interface TipoTarefaOpcao {
+  id: string;
+  nome: string;
+  auvoId: number | null;
+}
+
 export interface DadosAberturaOs {
   clientes: ClienteOpcao[];
   tecnicos: TecnicoOpcao[];
+  tiposTarefa: TipoTarefaOpcao[];
 }
 
 export interface CriarOrdemServicoInput {
@@ -29,7 +36,7 @@ export interface CriarOrdemServicoInput {
   solicitante: string | null;
   origem: OrigemOs;
   tecnicoId: string | null;
-  tipoAuvo: string;
+  tipoTarefaId: string;
   dataPrevista: string | null;
   createdBy: string;
 }

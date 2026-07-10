@@ -20,7 +20,7 @@ Deno.test("funcionariosDescriptor — mapeia /users sem credenciais em PATCH", (
     {
       name: "Técnica Campo",
       jobPosition: "Técnica",
-      phoneNumber: "11999990000",
+      smartPhoneNumber: "11999990000",
       email: "tecnica@example.com",
       culture: "pt-BR",
       userType: 1,

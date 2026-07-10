@@ -2,11 +2,13 @@ import { RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { Tooltip } from "../../../components/ui/Tooltip";
 import { listarBacklogGut, planejarOrdemServico } from "../application/hub-os";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
   prioridadeColor,
+  resumoTooltipOrdem,
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
@@ -140,49 +142,50 @@ export function BacklogGutPage() {
             <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS aberta no backlog.</div>
           ) : (
             estado.ordens.map((ordem, index) => (
-              <div
-                key={ordem.id}
-                className="px-5 py-4 flex flex-col gap-3 lg:flex-row lg:items-center"
-              >
-                <div className="flex items-center gap-3 lg:w-20">
-                  <span className="text-2xl font-bold text-line font-brand">{index + 1}</span>
-                  <span className="text-xs font-brand tabular-nums text-ink-3">{ordem.numero}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
-                    >
-                      {rotuloStatusOs(ordem.status)}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
-                    >
-                      {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
+              <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)}>
+                <div className="px-5 py-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+                  <div className="flex items-center gap-3 lg:w-20">
+                    <span className="text-2xl font-bold text-line font-brand">{index + 1}</span>
+                    <span className="text-xs font-brand tabular-nums text-ink-3">
+                      {ordem.numero}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm font-semibold text-ink">{ordem.titulo}</p>
-                  <p className="mt-1 text-xs text-ink-3">
-                    {ordem.clienteNome} · {ordem.categoria}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
+                      >
+                        {rotuloStatusOs(ordem.status)}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                      >
+                        {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm font-semibold text-ink">{ordem.titulo}</p>
+                    <p className="mt-1 text-xs text-ink-3">
+                      {ordem.clienteNome} · {ordem.categoria}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 lg:w-72">
+                    <Metric label="G" value={ordem.gravidade ?? 1} />
+                    <Metric label="U" value={ordem.urgencia ?? 1} />
+                    <Metric label="T" value={ordem.tendencia ?? 1} />
+                    <Metric label="Score" value={ordem.scorePcm} />
+                  </div>
+                  {temEscrita && ordem.status !== "planejamento" && (
+                    <button
+                      type="button"
+                      onClick={() => onPlanejar(ordem)}
+                      disabled={salvandoId === ordem.id}
+                      className="inline-flex items-center justify-center rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                    >
+                      Planejar
+                    </button>
+                  )}
                 </div>
-                <div className="grid grid-cols-4 gap-2 lg:w-72">
-                  <Metric label="G" value={ordem.gravidade ?? 1} />
-                  <Metric label="U" value={ordem.urgencia ?? 1} />
-                  <Metric label="T" value={ordem.tendencia ?? 1} />
-                  <Metric label="Score" value={ordem.scorePcm} />
-                </div>
-                {temEscrita && ordem.status !== "planejamento" && (
-                  <button
-                    type="button"
-                    onClick={() => onPlanejar(ordem)}
-                    disabled={salvandoId === ordem.id}
-                    className="inline-flex items-center justify-center rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
-                  >
-                    Planejar
-                  </button>
-                )}
-              </div>
+              </Tooltip>
             ))
           )}
         </div>

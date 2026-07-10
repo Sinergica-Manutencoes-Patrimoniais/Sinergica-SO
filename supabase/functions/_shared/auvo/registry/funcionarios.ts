@@ -19,8 +19,9 @@ export interface AuvoUser {
   team?: string;
   jobPosition?: string;
   // Confirmado direto na API real (2026-07-09): GET /users devolve `smartPhoneNumber`, não
-  // `phoneNumber` — este código gravava telefone sempre null pra todo funcionário sincronizado.
-  // `phoneNumber` mantido como fallback (é o que POST /users aceita na criação, `toAuvo` abaixo).
+  // `phoneNumber`. POST /users (criação, `pcm-auvo-users-create`) também usa `smartPhoneNumber`
+  // — confirmado contra a doc oficial (2026-07-08). `toAuvo` abaixo usa o mesmo campo; `phoneNumber`
+  // só fica como fallback de leitura (payloads antigos/parciais que ainda usem o nome errado).
   smartPhoneNumber?: string;
   phoneNumber?: string;
   email?: string;
@@ -46,7 +47,7 @@ export const funcionariosDescriptor: AuvoEntityDescriptor<AuvoUser, FuncionarioR
       culture: row.culture ?? "pt-BR",
       userType: row.user_type ?? 1,
       jobPosition: row.cargo,
-      phoneNumber: row.telefone,
+      smartPhoneNumber: row.telefone,
       email: row.email,
       unavailableForTasks: row.ativo === false,
     }) as AuvoUser;

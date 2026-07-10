@@ -1,5 +1,11 @@
+import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/ordens-servico";
-import { PRIORIDADE_LABEL, STATUS_OS, prioridadeColor } from "../domain/ordens-servico";
+import {
+  PRIORIDADE_LABEL,
+  STATUS_OS,
+  prioridadeColor,
+  resumoTooltipOrdem,
+} from "../domain/ordens-servico";
 
 /** E01-S38 — AC-4/AC-5: uma coluna por status, card muda de coluna via seletor de status (em vez
  * de drag-and-drop — mesmo resultado, menor risco/esforço; reaproveita `alterarStatus` já
@@ -10,12 +16,16 @@ export function OsKanbanView({
   salvando,
   onAlterarStatus,
   onSelecionar,
+  selecionados,
+  onToggleSelecionado,
 }: {
   ordens: OrdemServicoOperacional[];
   temEscrita: boolean;
   salvando: boolean;
   onAlterarStatus: (id: string, status: StatusOrdemServico) => void;
   onSelecionar: (id: string) => void;
+  selecionados?: Set<string>;
+  onToggleSelecionado?: (id: string) => void;
 }) {
   return (
     <div className="flex gap-3 overflow-x-auto pb-2">
@@ -43,27 +53,40 @@ export function OsKanbanView({
                     key={ordem.id}
                     className="rounded-[6px] border border-line bg-card p-3 hover:border-ink-3"
                   >
-                    <button
-                      type="button"
-                      onClick={() => onSelecionar(ordem.id)}
-                      className="w-full text-left"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-brand tabular-nums text-ink-3">
-                          {ordem.numero}
-                        </span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
-                        >
-                          {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
-                        </span>
-                      </div>
-                      <p className="mt-1.5 text-sm font-semibold text-ink">{ordem.titulo}</p>
-                      <p className="mt-1 text-xs text-ink-3">{ordem.clienteNome}</p>
-                      {ordem.tecnicoNome && (
-                        <p className="mt-1 text-[11px] text-ink-3">Técnico: {ordem.tecnicoNome}</p>
-                      )}
-                    </button>
+                    {temEscrita && onToggleSelecionado && (
+                      <input
+                        type="checkbox"
+                        checked={selecionados?.has(ordem.id) ?? false}
+                        onChange={() => onToggleSelecionado(ordem.id)}
+                        aria-label={`Selecionar ${ordem.numero}`}
+                        className="mb-1.5 h-4 w-4 accent-orange"
+                      />
+                    )}
+                    <Tooltip content={resumoTooltipOrdem(ordem)}>
+                      <button
+                        type="button"
+                        onClick={() => onSelecionar(ordem.id)}
+                        className="w-full text-left"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-brand tabular-nums text-ink-3">
+                            {ordem.numero}
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                          >
+                            {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
+                          </span>
+                        </div>
+                        <p className="mt-1.5 text-sm font-semibold text-ink">{ordem.titulo}</p>
+                        <p className="mt-1 text-xs text-ink-3">{ordem.clienteNome}</p>
+                        {ordem.tecnicoNome && (
+                          <p className="mt-1 text-[11px] text-ink-3">
+                            Técnico: {ordem.tecnicoNome}
+                          </p>
+                        )}
+                      </button>
+                    </Tooltip>
                     {temEscrita && (
                       <select
                         className="input mt-2 h-7 w-full text-xs"

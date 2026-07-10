@@ -14,6 +14,7 @@ export interface OrdemServicoOperacional {
   id: string;
   numero: string;
   titulo: string;
+  descricao: string | null;
   clienteNome: string;
   categoria: string;
   status: string;
@@ -158,6 +159,67 @@ export function gerarDiasDoMes(ano: number, mes: number): Date[] {
 
 export function formatarDiaIso(data: Date): string {
   return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+}
+
+/** E01-S41: texto compacto pro tooltip de hover — descrição + os campos de `detalhes` mais úteis
+ * pra reconhecer a tarefa sem abrir o painel. `null` quando não há nada pra mostrar (tooltip não
+ * aparece nesse caso). */
+export function resumoTooltipOrdem(ordem: OrdemServicoOperacional): string | null {
+  const detalhes = ordem.detalhes ?? {};
+  const texto = (chave: string) =>
+    typeof detalhes[chave] === "string" ? (detalhes[chave] as string) : null;
+  const linhas = [
+    ordem.descricao?.trim() || null,
+    texto("address") ? `Endereço: ${texto("address")}` : null,
+    texto("orientacao") ? `Orientação: ${texto("orientacao")}` : null,
+    texto("relato") ? `Relato: ${texto("relato")}` : null,
+  ].filter((linha): linha is string => Boolean(linha));
+  return linhas.length > 0 ? linhas.join("\n") : null;
+}
+
+export interface FiltrosOrdens {
+  busca: string;
+  status: string;
+  tecnicoFuncionarioId: string;
+  categoria: string;
+  dataInicio: string | null;
+  dataFim: string | null;
+}
+
+export const FILTROS_ORDENS_VAZIO: FiltrosOrdens = {
+  busca: "",
+  status: "todas",
+  tecnicoFuncionarioId: "todos",
+  categoria: "todas",
+  dataInicio: null,
+  dataFim: null,
+};
+
+/** E01-S42: combina busca/status/técnico/categoria/intervalo de data (E lógico entre todos os
+ * filtros preenchidos). Pura pra ser testável sem montar a página. */
+export function filtrarOrdens(
+  ordens: readonly OrdemServicoOperacional[],
+  filtros: FiltrosOrdens,
+): OrdemServicoOperacional[] {
+  const termo = filtros.busca.trim().toLowerCase();
+  return ordens.filter((ordem) => {
+    const passaBusca =
+      termo.length === 0 ||
+      ordem.numero.toLowerCase().includes(termo) ||
+      ordem.titulo.toLowerCase().includes(termo) ||
+      ordem.clienteNome.toLowerCase().includes(termo);
+    const passaStatus = filtros.status === "todas" || ordem.status === filtros.status;
+    const passaTecnico =
+      filtros.tecnicoFuncionarioId === "todos" ||
+      ordem.tecnicoFuncionarioId === filtros.tecnicoFuncionarioId;
+    const passaCategoria = filtros.categoria === "todas" || ordem.categoria === filtros.categoria;
+    const dataOrdem = ordem.createdAt.slice(0, 10);
+    const passaDataInicio = !filtros.dataInicio || dataOrdem >= filtros.dataInicio;
+    const passaDataFim = !filtros.dataFim || dataOrdem <= filtros.dataFim;
+    return (
+      passaBusca && passaStatus && passaTecnico && passaCategoria && passaDataInicio && passaDataFim
+    );
+  });
 }
 
 export function calcularKpisOrdens(ordens: readonly OrdemServicoOperacional[]): KpisOrdensServico {

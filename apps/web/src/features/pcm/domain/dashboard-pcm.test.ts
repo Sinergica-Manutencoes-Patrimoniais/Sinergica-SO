@@ -7,6 +7,7 @@ const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional
   id: "os",
   numero: "CH-001",
   titulo: "OS",
+  descricao: null,
   clienteNome: "Cliente",
   categoria: "corretiva",
   status: "solicitacao",

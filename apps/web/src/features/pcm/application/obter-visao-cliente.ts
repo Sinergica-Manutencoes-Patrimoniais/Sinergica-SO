@@ -4,6 +4,7 @@ import type {
   Cliente360Gateway,
   Cliente360Metricas,
   ClienteHeader,
+  GrupoClienteResumo,
   OrdemServicoResumo,
   QualidadeClienteResumo,
   ResultadoEquipamentos,
@@ -24,6 +25,7 @@ export type VisaoCliente =
       historico: OrdemServicoResumo[];
       equipamentos: ResultadoEquipamentos;
       qualidade: QualidadeClienteResumo;
+      grupos: GrupoClienteResumo[];
     };
 
 /**
@@ -48,12 +50,13 @@ export async function obterVisaoCliente(
   const cliente = await gateway.buscarCliente(clienteId);
   if (cliente === null) return { tipo: "nao_encontrado" };
 
-  const [backlog, historico, equipamentos, eventos, qualidade] = await Promise.all([
+  const [backlog, historico, equipamentos, eventos, qualidade, grupos] = await Promise.all([
     gateway.listarBacklogCliente(clienteId),
     gateway.listarHistoricoCliente(clienteId),
     carregarEquipamentos(gateway, clienteId, cliente.auvoId),
     carregarEventos(gateway, clienteId),
     carregarQualidade(gateway, clienteId),
+    carregarGrupos(gateway, clienteId),
   ]);
 
   return {
@@ -65,7 +68,20 @@ export async function obterVisaoCliente(
     historico,
     equipamentos,
     qualidade,
+    grupos,
   };
+}
+
+/** E01-S51: isolado como equipamentos/qualidade — falha não derruba o resto da página. */
+async function carregarGrupos(
+  gateway: Cliente360Gateway,
+  clienteId: string,
+): Promise<GrupoClienteResumo[]> {
+  try {
+    return await gateway.listarGruposCliente(clienteId);
+  } catch {
+    return [];
+  }
 }
 
 /**

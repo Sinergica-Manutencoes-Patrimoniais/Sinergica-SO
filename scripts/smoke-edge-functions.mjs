@@ -18,6 +18,13 @@ const ROOT = resolve(process.argv[2] || ".");
 const CONFIG_TOML = join(ROOT, "supabase", "config.toml");
 const PROJECT_ID = process.env.SUPABASE_PROJECT_ID;
 const TIMEOUT_MS = 10_000;
+// E01-S48: "Failed to send a request to the Edge Function" na tela de Tickets é o texto genérico
+// que o supabase-js mostra quando o fetch falha no browser por CORS (não quando a function
+// responde erro em JSON) — se o domínio de produção não estiver em CORS_ALLOWED_ORIGINS, a
+// function funciona perfeitamente e o usuário vê esse erro genérico mesmo assim. Checagem própria
+// aqui pega essa classe de regressão antes de virar reclamação de usuário.
+const PROD_ORIGIN = process.env.PROD_ORIGIN ?? "https://so-sinergica.netlify.app";
+const CORS_PROBE_FUNCTION = "pcm-auvo-tickets-referencia";
 // A GitHub Integration nativa do Supabase deploya de forma assíncrona ao merge — o push que
 // dispara este workflow pode chegar antes do deploy terminar. Retry com backoff evita falso
 // positivo (função real, deploy só ainda não propagou).
@@ -62,6 +69,27 @@ async function probe(name) {
   return result;
 }
 
+/** E01-S48 AC: falha se `Access-Control-Allow-Origin` não ecoar o domínio de produção pra uma
+ * requisição vinda dele — sintoma exato do "Failed to send a request to the Edge Function". */
+async function probeCors(name, origin) {
+  const url = `https://${PROJECT_ID}.supabase.co/functions/v1/${name}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      method: "OPTIONS",
+      headers: { Origin: origin },
+      signal: controller.signal,
+    });
+    const allowOrigin = res.headers.get("Access-Control-Allow-Origin");
+    return { name, origin, allowOrigin, ok: allowOrigin === origin };
+  } catch (e) {
+    return { name, origin, allowOrigin: `erro de rede (${e.message})`, ok: false };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 const tomlText = readFileSync(CONFIG_TOML, "utf8");
 const functions = parseDeclaredFunctions(tomlText);
 
@@ -77,8 +105,23 @@ for (const r of results) {
   console.log(`${r.ok ? "✓" : "✗"} ${r.name} — ${r.status}`);
 }
 
+let corsResult = null;
+if (functions.includes(CORS_PROBE_FUNCTION)) {
+  corsResult = await probeCors(CORS_PROBE_FUNCTION, PROD_ORIGIN);
+  console.log(
+    `${corsResult.ok ? "✓" : "✗"} CORS ${CORS_PROBE_FUNCTION} — Origin ${PROD_ORIGIN} → Access-Control-Allow-Origin: ${corsResult.allowOrigin}`,
+  );
+}
+
 if (failed.length > 0) {
   console.error(`\n✗ smoke-edge-functions: ${failed.length}/${functions.length} função(ões) indisponível(is) (404/5xx).`);
+  process.exit(1);
+}
+
+if (corsResult && !corsResult.ok) {
+  console.error(
+    `\n✗ smoke-edge-functions: CORS_ALLOWED_ORIGINS não inclui ${PROD_ORIGIN} — o front de produção veria "Failed to send a request to the Edge Function" mesmo com a function saudável.`,
+  );
   process.exit(1);
 }
 

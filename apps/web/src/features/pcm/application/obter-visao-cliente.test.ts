@@ -45,6 +45,7 @@ function gatewayMock(overrides: Partial<Cliente360Gateway> = {}): Cliente360Gate
       },
     ]),
     listarQualidadeCliente: vi.fn(async () => ({ inspecoes: [], laudos: [] })),
+    listarGruposCliente: vi.fn(async () => []),
     ...overrides,
   };
 }
@@ -159,5 +160,33 @@ describe("obterVisaoCliente", () => {
     await obterVisaoCliente(gateway, "c1");
 
     expect(equip).toHaveBeenCalledWith("c1", 4242);
+  });
+
+  // E01-S51: grupos isolados como equipamentos/qualidade — falha degrada pra [], não derruba o resto.
+  it("E01-S51: erro em listarGruposCliente degrada pra [], sem derrubar o resto", async () => {
+    const gateway = gatewayMock({
+      listarGruposCliente: vi.fn(async () => {
+        throw new Error("falha ao buscar grupos");
+      }),
+    });
+
+    const resultado = await obterVisaoCliente(gateway, "c1");
+
+    expect(resultado.tipo).toBe("ok");
+    if (resultado.tipo !== "ok") throw new Error("esperava ok");
+    expect(resultado.grupos).toEqual([]);
+    expect(resultado.backlog).toHaveLength(1);
+  });
+
+  it("E01-S51: repassa grupos do gateway intactos", async () => {
+    const gateway = gatewayMock({
+      listarGruposCliente: vi.fn(async () => [{ id: "g1", nome: "Zona Norte" }]),
+    });
+
+    const resultado = await obterVisaoCliente(gateway, "c1");
+
+    expect(resultado.tipo).toBe("ok");
+    if (resultado.tipo !== "ok") throw new Error("esperava ok");
+    expect(resultado.grupos).toEqual([{ id: "g1", nome: "Zona Norte" }]);
   });
 });

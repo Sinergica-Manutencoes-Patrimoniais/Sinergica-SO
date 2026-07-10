@@ -7,12 +7,7 @@ import type {
 } from "../application/ordem-servico-gateway";
 
 function montarDescricao(input: CriarOrdemServicoInput): string | null {
-  const blocos = [
-    input.descricao?.trim(),
-    input.tipoAuvo ? `Tipo Auvo sugerido/selecionado: ${input.tipoAuvo}` : null,
-    input.tecnicoId ? `Técnico selecionado: ${input.tecnicoId}` : null,
-    input.dataPrevista ? `Data prevista: ${input.dataPrevista}` : null,
-  ].filter(Boolean);
+  const blocos = [input.descricao?.trim()].filter(Boolean);
   return blocos.length > 0 ? blocos.join("\n\n") : null;
 }
 
@@ -27,28 +22,39 @@ async function proximoNumero(): Promise<string> {
 
 export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
   async carregarDadosAbertura(): Promise<DadosAberturaOs> {
-    const [{ data: clientes, error: clientesError }, { data: tecnicos, error: tecnicosError }] =
-      await Promise.all([
-        supabase
-          .schema("pcm")
-          .from("clientes")
-          .select("id,nome")
-          .eq("ativo", true)
-          .is("deleted_at", null)
-          .order("nome", { ascending: true }),
-        supabase
-          .schema("pcm")
-          .from("funcionarios")
-          .select("id,nome,auvo_user_id")
-          .eq("ativo", true)
-          .is("deleted_at", null)
-          .order("nome", { ascending: true }),
-      ]);
+    const [
+      { data: clientes, error: clientesError },
+      { data: tecnicos, error: tecnicosError },
+      { data: tiposTarefa, error: tiposTarefaError },
+    ] = await Promise.all([
+      supabase
+        .schema("pcm")
+        .from("clientes")
+        .select("id,nome")
+        .eq("ativo", true)
+        .is("deleted_at", null)
+        .order("nome", { ascending: true }),
+      supabase
+        .schema("pcm")
+        .from("funcionarios")
+        .select("id,nome,auvo_user_id")
+        .eq("ativo", true)
+        .is("deleted_at", null)
+        .order("nome", { ascending: true }),
+      supabase
+        .schema("pcm")
+        .from("tipos_tarefa")
+        .select("id,nome,auvo_id")
+        .eq("ativo", true)
+        .is("deleted_at", null)
+        .order("nome", { ascending: true }),
+    ]);
 
     if (clientesError) throw clientesError;
     if (tecnicosError && tecnicosError.code !== "PGRST205" && tecnicosError.code !== "42P01") {
       throw tecnicosError;
     }
+    if (tiposTarefaError) throw tiposTarefaError;
 
     return {
       clientes: (clientes ?? []).map((c) => ({ id: c.id as string, nome: c.nome as string })),
@@ -56,6 +62,11 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         id: t.id as string,
         nome: t.nome as string,
         auvoUserId: t.auvo_user_id as number,
+      })),
+      tiposTarefa: (tiposTarefa ?? []).map((t) => ({
+        id: t.id as string,
+        nome: t.nome as string,
+        auvoId: t.auvo_id as number | null,
       })),
     };
   },
@@ -80,6 +91,9 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         solicitante: input.solicitante,
         origem: input.origem,
         created_by: input.createdBy,
+        tipo_tarefa_id: input.tipoTarefaId,
+        tecnico_funcionario_id: input.tecnicoId,
+        data_agendada: input.dataPrevista,
       })
       .select("id,numero")
       .single();

@@ -16,5 +16,6 @@ export async function abrirOrdemServico(
   const titulo = input.titulo.trim();
   if (!input.clientId) throw new Error("Cliente é obrigatório.");
   if (!titulo) throw new Error("Título é obrigatório.");
+  if (!input.tipoTarefaId) throw new Error("Tipo de tarefa é obrigatório.");
   return gateway.criarOrdemServico({ ...input, titulo });
 }

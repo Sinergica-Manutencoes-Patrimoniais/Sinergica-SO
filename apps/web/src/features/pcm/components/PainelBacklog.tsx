@@ -23,7 +23,13 @@ function faixaSegura(score: number): PrioridadeBacklog {
   return classificarPrioridade(score);
 }
 
-export function PainelBacklog({ ordens }: { ordens: OrdemServicoResumo[] }) {
+export function PainelBacklog({
+  ordens,
+  onSelecionar,
+}: {
+  ordens: OrdemServicoResumo[];
+  onSelecionar?: (id: string) => void;
+}) {
   return (
     <div className="bg-card rounded-[10px] border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
@@ -38,7 +44,13 @@ export function PainelBacklog({ ordens }: { ordens: OrdemServicoResumo[] }) {
           {ordens.map((os) => {
             const prio = PRIO_MAP[faixaSegura(os.scorePcm)];
             return (
-              <div key={os.id} className="px-5 py-3.5 flex items-center gap-3">
+              <button
+                key={os.id}
+                type="button"
+                onClick={onSelecionar ? () => onSelecionar(os.id) : undefined}
+                disabled={!onSelecionar}
+                className="w-full px-5 py-3.5 flex items-center gap-3 text-left hover:bg-line-soft disabled:cursor-default disabled:hover:bg-transparent"
+              >
                 <span className="text-xs font-brand tabular-nums text-ink-3 w-16 shrink-0">
                   {os.numero}
                 </span>
@@ -56,7 +68,7 @@ export function PainelBacklog({ ordens }: { ordens: OrdemServicoResumo[] }) {
                     score {os.scorePcm}
                   </span>
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>

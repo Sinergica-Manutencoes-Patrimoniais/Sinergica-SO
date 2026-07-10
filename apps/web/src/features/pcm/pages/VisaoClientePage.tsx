@@ -14,6 +14,7 @@ import {
   Layers,
   MessageCircle,
   Package,
+  Pencil,
   RefreshCw,
   ShieldCheck,
   TrendingUp,
@@ -21,16 +22,21 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import type {
   Cliente360Evento,
   Cliente360Metricas,
   ClienteHeader,
+  GrupoClienteResumo,
+  OrdemServicoResumo,
   QualidadeClienteResumo,
   ResultadoEquipamentos,
 } from "../application/cliente-360-gateway";
+import { editarCliente } from "../application/clientes-crud";
 import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao-cliente";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
+import { ClienteFormModal } from "../components/ClienteFormModal";
 import { ClienteNaoEncontrado } from "../components/ClienteNaoEncontrado";
 import { PainelBacklog } from "../components/PainelBacklog";
 import { PainelEquipamentos } from "../components/PainelEquipamentos";
@@ -54,14 +60,23 @@ const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   { id: "comunicacao", label: "Comunicação", icon: MessageCircle },
 ];
 
-export function VisaoClientePage({ clienteId }: { clienteId: string }) {
+export function VisaoClientePage({
+  clienteId,
+  onAbrirOs,
+}: {
+  clienteId: string;
+  onAbrirOs?: (osId: string) => void;
+}) {
+  const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [aba, setAba] = useState<Aba360>("resumo");
+  const [editandoCadastro, setEditandoCadastro] = useState(false);
 
   // AC-1: só carrega/renderiza o conteúdo com leitura no módulo pcm (mesma checagem das demais
   // telas do PCM; superadmin já é bypass dentro de podeAcessarModulo). Sem permissão nova.
   const temAcesso = podeAcessar("pcm", "leitura");
+  const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
@@ -120,12 +135,33 @@ export function VisaoClientePage({ clienteId }: { clienteId: string }) {
     return <ClienteNaoEncontrado />;
   }
 
-  const { cliente, metricas, eventos, backlog, historico, equipamentos, qualidade } = estado.visao;
+  const { cliente, metricas, eventos, backlog, historico, equipamentos, qualidade, grupos } =
+    estado.visao;
 
   return (
     <div className="flex flex-col gap-5">
       <CabecalhoCliente cliente={cliente} />
-      <PainelCadastroAuvo cliente={cliente} />
+      <PainelCadastroAuvo
+        cliente={cliente}
+        temEscrita={temEscrita}
+        onEditar={() => setEditandoCadastro(true)}
+      />
+      {editandoCadastro && (
+        <ClienteFormModal
+          cliente={cliente}
+          onCancel={() => setEditandoCadastro(false)}
+          onSalvar={async (dados) => {
+            if (!user) return;
+            await editarCliente(supabaseCliente360Adapter, {
+              ...dados,
+              id: cliente.id,
+              userId: user.id,
+            });
+            setEditandoCadastro(false);
+            await carregar();
+          }}
+        />
+      )}
 
       <div className="border-b border-line-soft overflow-x-auto">
         <div className="flex min-w-max gap-2">
@@ -151,19 +187,22 @@ export function VisaoClientePage({ clienteId }: { clienteId: string }) {
 
       {aba === "resumo" && (
         <Resumo360
+          cliente={cliente}
           metricas={metricas}
           eventos={eventos}
           equipamentos={equipamentos}
           qualidade={qualidade}
+          grupos={grupos}
+          onAbrirOs={onAbrirOs}
         />
       )}
 
-      {aba === "timeline" && <TimelineCliente eventos={eventos} />}
+      {aba === "timeline" && <TimelineCliente eventos={eventos} onAbrirOs={onAbrirOs} />}
 
       {aba === "os" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <PainelBacklog ordens={backlog} />
-          <PainelHistorico ordens={historico} />
+          <PainelBacklog ordens={backlog} onSelecionar={onAbrirOs} />
+          <PainelHistorico ordens={historico} onSelecionar={onAbrirOs} />
         </div>
       )}
 
@@ -171,7 +210,9 @@ export function VisaoClientePage({ clienteId }: { clienteId: string }) {
 
       {aba === "ativos" && <PainelEquipamentos equipamentos={equipamentos} />}
 
-      {aba === "financeiro" && <PainelPlanejado titulo="Financeiro" />}
+      {aba === "financeiro" && (
+        <PainelFinanceiro cliente={cliente} backlog={backlog} historico={historico} />
+      )}
 
       {aba === "comunicacao" && <PainelComunicacao cliente={cliente} eventos={eventos} />}
     </div>
@@ -179,15 +220,21 @@ export function VisaoClientePage({ clienteId }: { clienteId: string }) {
 }
 
 function Resumo360({
+  cliente,
   metricas,
   eventos,
   equipamentos,
   qualidade,
+  grupos,
+  onAbrirOs,
 }: {
+  cliente: ClienteHeader;
   metricas: Cliente360Metricas;
   eventos: Cliente360Evento[];
   equipamentos: ResultadoEquipamentos;
   qualidade: QualidadeClienteResumo;
+  grupos: GrupoClienteResumo[];
+  onAbrirOs?: (osId: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -206,11 +253,86 @@ function Resumo360({
         />
       </div>
 
+      {/* E01-S51: "liga alguém, quem é essa pessoa" — contatos múltiplos + grupos, hoje só o
+       * contato principal aparecia (em Comunicação) e grupos não apareciam em lugar nenhum. */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <PainelContatos cliente={cliente} />
+        <PainelGrupos grupos={grupos} />
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
-        <TimelineCliente eventos={eventos} compacta />
+        <TimelineCliente eventos={eventos} compacta onAbrirOs={onAbrirOs} />
         <ResumoOperacional equipamentos={equipamentos} qualidade={qualidade} />
       </div>
     </div>
+  );
+}
+
+interface ContatoAuvo {
+  name?: string;
+  phoneNumber?: string;
+  email?: string;
+}
+
+function PainelContatos({ cliente }: { cliente: ClienteHeader }) {
+  const contatos = Array.isArray(cliente.detalhes?.contacts)
+    ? (cliente.detalhes?.contacts as ContatoAuvo[])
+    : [];
+
+  return (
+    <section className="rounded-[8px] border border-line bg-card">
+      <div className="border-b border-line-soft px-5 py-4">
+        <h3 className="text-sm font-semibold text-ink">Contatos</h3>
+        <p className="mt-0.5 text-xs text-ink-3">Todos os contatos cadastrados no Auvo</p>
+      </div>
+      {contatos.length === 0 ? (
+        <div className="px-5 py-6 text-center text-sm text-ink-3">
+          {cliente.contatoNome || cliente.contatoTelefone || cliente.contatoEmail
+            ? "Só o contato principal está sincronizado (ver Comunicação)."
+            : "Nenhum contato cadastrado."}
+        </div>
+      ) : (
+        <div className="divide-y divide-line-soft">
+          {contatos.map((contato, index) => (
+            <div key={`${contato.name ?? "contato"}-${index}`} className="px-5 py-3">
+              <p className="text-sm font-medium text-ink">{contato.name ?? "Sem nome"}</p>
+              <p className="mt-0.5 text-xs text-ink-3">
+                {[contato.phoneNumber, contato.email].filter(Boolean).join(" · ") || "Sem contato"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PainelGrupos({ grupos }: { grupos: GrupoClienteResumo[] }) {
+  return (
+    <section className="rounded-[8px] border border-line bg-card">
+      <div className="border-b border-line-soft px-5 py-4">
+        <h3 className="text-sm font-semibold text-ink">Grupos</h3>
+        <p className="mt-0.5 text-xs text-ink-3">
+          Grupos de clientes (PCM) que incluem este cliente
+        </p>
+      </div>
+      <div className="p-5">
+        {grupos.length === 0 ? (
+          <p className="text-sm text-ink-3">Não pertence a nenhum grupo.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {grupos.map((grupo) => (
+              <span
+                key={grupo.id}
+                className="rounded-full bg-line-soft px-3 py-1 text-xs font-semibold text-ink-2"
+              >
+                {grupo.nome}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -234,7 +356,15 @@ function MetricCard({
   );
 }
 
-function PainelCadastroAuvo({ cliente }: { cliente: ClienteHeader }) {
+function PainelCadastroAuvo({
+  cliente,
+  temEscrita,
+  onEditar,
+}: {
+  cliente: ClienteHeader;
+  temEscrita: boolean;
+  onEditar: () => void;
+}) {
   const itens = [
     { label: "Vínculo Auvo", ok: cliente.auvoId !== null },
     { label: "Endereço", ok: Boolean(cliente.endereco || cliente.cidade || cliente.estado) },
@@ -253,14 +383,25 @@ function PainelCadastroAuvo({ cliente }: { cliente: ClienteHeader }) {
         <div>
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-orange" />
-            <h3 className="text-sm font-semibold text-ink">Cadastro governado pelo Auvo</h3>
+            <h3 className="text-sm font-semibold text-ink">Cadastro sincronizado do Auvo</h3>
           </div>
           <p className="mt-1 text-xs text-ink-3">
-            O OS consome o cache sincronizado; alterações cadastrais devem nascer no Auvo e voltar
-            no próximo import.
+            Edição local abaixo grava só no PCM. Sincronização automática de volta pro Auvo ainda
+            não está habilitada pra clientes (mapeamento de escrita em verificação, ver E01-S47) — a
+            próxima importação do Auvo pode sobrescrever o que for editado só aqui.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {temEscrita && (
+            <button
+              type="button"
+              onClick={onEditar}
+              className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            >
+              <Pencil className="h-4 w-4" />
+              Editar cadastro (local)
+            </button>
+          )}
           <button
             type="button"
             onClick={copiarAuvoId}
@@ -302,9 +443,11 @@ function PainelCadastroAuvo({ cliente }: { cliente: ClienteHeader }) {
 function TimelineCliente({
   eventos,
   compacta = false,
+  onAbrirOs,
 }: {
   eventos: Cliente360Evento[];
   compacta?: boolean;
+  onAbrirOs?: (osId: string) => void;
 }) {
   const [filtro, setFiltro] = useState<Cliente360Evento["tipo"] | "todos">("todos");
   const eventosFiltrados =
@@ -351,26 +494,46 @@ function TimelineCliente({
       ) : (
         <div className="px-5 py-4">
           <div className="relative space-y-4 before:absolute before:left-[15px] before:top-2 before:h-[calc(100%-16px)] before:w-px before:bg-line-soft">
-            {eventosVisiveis.map((evento) => (
-              <div key={evento.id} className="relative flex gap-3">
-                <span
-                  className={`z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-card ${corEvento(evento.criticidade)}`}
-                >
-                  <EventoIcone tipo={evento.tipo} />
-                </span>
-                <div className="min-w-0 flex-1 pb-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="truncate text-sm font-medium text-ink">{evento.titulo}</p>
-                    <span className="shrink-0 text-xs tabular-nums text-ink-3">
-                      {formatarData(evento.data)}
-                    </span>
+            {eventosVisiveis.map((evento) => {
+              const clicavel = evento.tipo === "os" && Boolean(onAbrirOs);
+              const conteudo = (
+                <>
+                  <span
+                    className={`z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-card ${corEvento(evento.criticidade)}`}
+                  >
+                    <EventoIcone tipo={evento.tipo} />
+                  </span>
+                  <div className="min-w-0 flex-1 pb-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="truncate text-sm font-medium text-ink">{evento.titulo}</p>
+                      <span className="shrink-0 text-xs tabular-nums text-ink-3">
+                        {formatarData(evento.data)}
+                      </span>
+                    </div>
+                    {evento.subtitulo && (
+                      <p className="mt-0.5 line-clamp-2 text-xs text-ink-3">{evento.subtitulo}</p>
+                    )}
                   </div>
-                  {evento.subtitulo && (
-                    <p className="mt-0.5 line-clamp-2 text-xs text-ink-3">{evento.subtitulo}</p>
-                  )}
+                </>
+              );
+              if (clicavel) {
+                return (
+                  <button
+                    key={evento.id}
+                    type="button"
+                    onClick={() => onAbrirOs?.(evento.id.replace(/^os-/, ""))}
+                    className="relative flex w-full gap-3 text-left hover:opacity-80"
+                  >
+                    {conteudo}
+                  </button>
+                );
+              }
+              return (
+                <div key={evento.id} className="relative flex gap-3">
+                  {conteudo}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {compacta && eventosFiltrados.length > eventosVisiveis.length && (
             <div className="mt-3 border-t border-line-soft pt-3 text-xs text-ink-3">
@@ -536,14 +699,78 @@ function PainelComunicacao({
   );
 }
 
-function PainelPlanejado({ titulo }: { titulo: string }) {
+const STATUS_COMERCIAL_LABEL_360: Record<string, string> = {
+  ativo: "Ativo",
+  inativo: "Inativo",
+  prospecto: "Prospecto",
+};
+
+/** E01-S51: substitui o placeholder por um proxy operacional honesto — `status_comercial` (coluna
+ * local já existe) + OS por categoria nos últimos 12 meses (dado 100% local, já carregado pela
+ * 360). Não inventa contrato/faturamento: `pcm.servicos` não tem vínculo com `ordens_servico` nem
+ * cliente hoje, então esse dado real não existe — dito explicitamente na tela em vez de omitido. */
+function PainelFinanceiro({
+  cliente,
+  backlog,
+  historico,
+}: {
+  cliente: ClienteHeader;
+  backlog: OrdemServicoResumo[];
+  historico: OrdemServicoResumo[];
+}) {
+  const dozeMesesAtras = new Date();
+  dozeMesesAtras.setFullYear(dozeMesesAtras.getFullYear() - 1);
+  const corte = dozeMesesAtras.toISOString();
+
+  const porCategoria = new Map<string, number>();
+  for (const os of [...backlog, ...historico]) {
+    if (os.createdAt && os.createdAt < corte) continue;
+    porCategoria.set(os.categoria, (porCategoria.get(os.categoria) ?? 0) + 1);
+  }
+  const categorias = [...porCategoria.entries()].sort((a, b) => b[1] - a[1]);
+
   return (
-    <section className="rounded-[8px] border border-dashed border-line bg-card px-5 py-8 text-center">
-      <h3 className="text-sm font-semibold text-ink">{titulo}</h3>
-      <p className="mt-1 text-sm text-ink-3">
-        Dados contratuais e financeiros ainda não têm fonte canônica no OS.
-      </p>
-    </section>
+    <div className="flex flex-col gap-4">
+      <section className="rounded-[8px] border border-line bg-card p-5">
+        <h3 className="text-sm font-semibold text-ink">Status comercial</h3>
+        <p className="mt-2 inline-flex rounded-full bg-line-soft px-3 py-1 text-sm font-semibold text-ink-2">
+          {cliente.statusComercial
+            ? (STATUS_COMERCIAL_LABEL_360[cliente.statusComercial] ?? cliente.statusComercial)
+            : "Não informado"}
+        </p>
+      </section>
+
+      <section className="rounded-[8px] border border-line bg-card">
+        <div className="border-b border-line-soft px-5 py-4">
+          <h3 className="text-sm font-semibold text-ink">OS por categoria — últimos 12 meses</h3>
+          <p className="mt-0.5 text-xs text-ink-3">
+            Volume de atendimento por tipo de serviço (baseado nas 50 OS mais recentes) — não é
+            faturamento
+          </p>
+        </div>
+        {categorias.length === 0 ? (
+          <div className="px-5 py-8 text-center text-sm text-ink-3">
+            Nenhuma OS nos últimos 12 meses.
+          </div>
+        ) : (
+          <div className="divide-y divide-line-soft">
+            {categorias.map(([categoria, total]) => (
+              <div key={categoria} className="flex items-center justify-between px-5 py-3">
+                <span className="text-sm capitalize text-ink-2">{categoria}</span>
+                <span className="text-sm font-semibold tabular-nums text-ink">{total}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-[8px] border border-dashed border-line bg-card px-5 py-6 text-center">
+        <p className="text-sm text-ink-3">
+          Contrato, faturamento e inadimplência ainda não têm dado real vinculado ao cliente — o
+          catálogo de preços não está ligado às OS. Sai do ar assim que o módulo Financeiro existir.
+        </p>
+      </section>
+    </div>
   );
 }
 

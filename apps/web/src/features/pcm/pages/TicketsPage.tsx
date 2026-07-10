@@ -20,6 +20,20 @@ import type {
 } from "../domain/tickets";
 import { supabaseTicketsAdapter } from "../infrastructure/supabase-tickets-adapter";
 
+/** E01-S48: `supabase-js` lança `FunctionsFetchError` com a mensagem genérica "Failed to send a
+ * request to the Edge Function" quando o `fetch` falha no browser — tipicamente CORS bloqueando a
+ * resposta (domínio fora de `CORS_ALLOWED_ORIGINS`), não a function em si com problema. Troca por
+ * uma mensagem que não faz o usuário achar que é bug de negócio. */
+function mensagemErroCarregarTickets(error: unknown): string {
+  const generico =
+    error instanceof Error &&
+    (error.name === "FunctionsFetchError" || error.message.includes("Failed to send a request"));
+  if (generico) {
+    return "Não foi possível conectar ao servidor (rede/CORS). Recarregue a página; se persistir, contate o suporte.";
+  }
+  return error instanceof Error ? error.message : "Falha ao carregar tickets.";
+}
+
 type Estado =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
@@ -54,10 +68,7 @@ export function TicketsPage() {
       ]);
       setEstado({ fase: "pronto", tickets, clientes, equipes, requestTypes, status });
     } catch (error) {
-      setEstado({
-        fase: "erro",
-        mensagem: error instanceof Error ? error.message : "Falha ao carregar tickets.",
-      });
+      setEstado({ fase: "erro", mensagem: mensagemErroCarregarTickets(error) });
     }
   }, []);
 

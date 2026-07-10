@@ -1,7 +1,13 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
-import { formatarDiaIso, gerarDiasDoMes, ordensNoDia } from "../domain/ordens-servico";
+import {
+  formatarDiaIso,
+  gerarDiasDoMes,
+  ordensNoDia,
+  resumoTooltipOrdem,
+} from "../domain/ordens-servico";
 
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const MAX_CHIPS_POR_DIA = 3;
@@ -93,17 +99,23 @@ export function OsCalendarioView({
                 {dia.getDate()}
               </p>
               <div className="mt-1 flex flex-col gap-0.5">
-                {ordensDoDia.slice(0, MAX_CHIPS_POR_DIA).map((ordem) => (
-                  <button
-                    key={ordem.id}
-                    type="button"
-                    onClick={() => onSelecionar(ordem.id)}
-                    title={`${ordem.numero} · ${ordem.titulo}`}
-                    className="truncate rounded-[3px] bg-line-soft px-1 py-0.5 text-left text-[10px] font-semibold text-ink-2 hover:bg-navy hover:text-white"
-                  >
-                    {ordem.numero}
-                  </button>
-                ))}
+                {ordensDoDia.slice(0, MAX_CHIPS_POR_DIA).map((ordem) => {
+                  const resumo = resumoTooltipOrdem(ordem);
+                  return (
+                    <Tooltip
+                      key={ordem.id}
+                      content={`${ordem.numero} · ${ordem.titulo}${resumo ? `\n${resumo}` : ""}`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => onSelecionar(ordem.id)}
+                        className="w-full truncate rounded-[3px] bg-line-soft px-1 py-0.5 text-left text-[10px] font-semibold text-ink-2 hover:bg-navy hover:text-white"
+                      >
+                        {ordem.numero}
+                      </button>
+                    </Tooltip>
+                  );
+                })}
                 {ordensDoDia.length > MAX_CHIPS_POR_DIA && (
                   <p className="text-[10px] text-ink-3">
                     +{ordensDoDia.length - MAX_CHIPS_POR_DIA} mais

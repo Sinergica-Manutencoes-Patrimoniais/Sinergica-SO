@@ -37,37 +37,6 @@ export const ORIGENS_OS: OpcaoSelect<OrigemOs>[] = [
   { value: "portal", label: "Área do Cliente" },
 ];
 
-export const TIPOS_AUVO: OpcaoSelect[] = [
-  { value: "manutencao", label: "Manutenção" },
-  { value: "corretiva", label: "Corretiva" },
-  { value: "preventiva", label: "Preventiva" },
-  { value: "ar-condicionado", label: "Ar-Condicionado" },
-  { value: "bomba", label: "Bomba" },
-  { value: "quadro-eletrico", label: "Quadro Elétrico" },
-  { value: "luminaria", label: "Luminária" },
-  { value: "porta-portao", label: "Porta / Portão" },
-  { value: "extintor", label: "Extintor" },
-  { value: "hidrante", label: "Hidrante" },
-  { value: "ronda-semanal", label: "BRP Ronda Semanal" },
-  { value: "ronda-diaria", label: "Luggo Ronda Diária" },
-  { value: "tennessee-ronda", label: "Tennessee Ronda" },
-  { value: "levantamento", label: "Levantamento de Serviço" },
-  { value: "emergencial", label: "Atendimento Emergencial" },
-];
-
-const TIPO_POR_CATEGORIA: Record<CategoriaOs, string> = {
-  corretiva: "corretiva",
-  preventiva: "preventiva",
-  melhoria: "levantamento",
-  inspecao: "manutencao",
-  emergencial: "emergencial",
-  outro: "manutencao",
-};
-
-export function sugerirTipoAuvo(categoria: CategoriaOs): string {
-  return TIPO_POR_CATEGORIA[categoria];
-}
-
 export function sugerirPrioridadePorGut(
   gravidade: number,
   urgencia: number,

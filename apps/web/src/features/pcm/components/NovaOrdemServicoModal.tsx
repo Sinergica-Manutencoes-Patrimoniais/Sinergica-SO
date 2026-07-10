@@ -8,10 +8,8 @@ import {
   type CategoriaOs,
   ORIGENS_OS,
   type OrigemOs,
-  TIPOS_AUVO,
   prioridadeParaOs,
   sugerirPrioridadePorGut,
-  sugerirTipoAuvo,
 } from "../domain/abertura-os";
 import { type PrioridadeBacklog, calcularScoreGut } from "../domain/priorizacao-backlog";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
@@ -31,7 +29,7 @@ interface FormState {
   descricao: string;
   categoria: CategoriaOs;
   prioridade: PrioridadeBacklog;
-  tipoAuvo: string;
+  tipoTarefaId: string;
   origem: OrigemOs;
   tecnicoId: string;
   localDescricao: string;
@@ -50,7 +48,7 @@ const FORM_INICIAL: FormState = {
   descricao: "",
   categoria: "corretiva",
   prioridade: "media",
-  tipoAuvo: "corretiva",
+  tipoTarefaId: "",
   origem: "solicitacao_cliente",
   tecnicoId: "",
   localDescricao: "",
@@ -70,13 +68,16 @@ export function NovaOrdemServicoModal({
   onCriada: (numero: string) => void;
 }) {
   const { user } = useAuth();
-  const [dados, setDados] = useState<DadosAberturaOs>({ clientes: [], tecnicos: [] });
+  const [dados, setDados] = useState<DadosAberturaOs>({
+    clientes: [],
+    tecnicos: [],
+    tiposTarefa: [],
+  });
   const [form, setForm] = useState<FormState>(FORM_INICIAL);
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [prioridadeManual, setPrioridadeManual] = useState(false);
-  const [tipoManual, setTipoManual] = useState(false);
 
   const score = useMemo(
     () => calcularScoreGut(form.gravidade, form.urgencia, form.tendencia),
@@ -86,7 +87,6 @@ export function NovaOrdemServicoModal({
     () => sugerirPrioridadePorGut(form.gravidade, form.urgencia, form.tendencia),
     [form.gravidade, form.urgencia, form.tendencia],
   );
-  const tipoSugerido = useMemo(() => sugerirTipoAuvo(form.categoria), [form.categoria]);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -94,9 +94,13 @@ export function NovaOrdemServicoModal({
     try {
       const resultado = await carregarDadosAberturaOs(supabaseOrdemServicoAdapter);
       setDados(resultado);
-      setForm((f) => ({ ...f, clientId: f.clientId || resultado.clientes[0]?.id || "" }));
+      setForm((f) => ({
+        ...f,
+        clientId: f.clientId || resultado.clientes[0]?.id || "",
+        tipoTarefaId: f.tipoTarefaId || resultado.tiposTarefa[0]?.id || "",
+      }));
     } catch {
-      setErro("Não foi possível carregar clientes e técnicos.");
+      setErro("Não foi possível carregar clientes, técnicos e tipos de tarefa.");
     } finally {
       setCarregando(false);
     }
@@ -110,12 +114,9 @@ export function NovaOrdemServicoModal({
     if (!prioridadeManual) setForm((f) => ({ ...f, prioridade: prioridadeSugerida }));
   }, [prioridadeManual, prioridadeSugerida]);
 
-  useEffect(() => {
-    if (!tipoManual) setForm((f) => ({ ...f, tipoAuvo: tipoSugerido }));
-  }, [tipoManual, tipoSugerido]);
-
   if (!aberto) return null;
   const semClientes = dados.clientes.length === 0;
+  const semTiposTarefa = dados.tiposTarefa.length === 0;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -139,7 +140,7 @@ export function NovaOrdemServicoModal({
         solicitante: form.solicitante || null,
         origem: form.origem,
         tecnicoId: form.tecnicoId || null,
-        tipoAuvo: form.tipoAuvo,
+        tipoTarefaId: form.tipoTarefaId,
         dataPrevista: form.dataPrevista || null,
         createdBy: user.id,
       });
@@ -147,7 +148,6 @@ export function NovaOrdemServicoModal({
       onFechar();
       setForm(FORM_INICIAL);
       setPrioridadeManual(false);
-      setTipoManual(false);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível criar a OS.");
     } finally {
@@ -255,10 +255,9 @@ export function NovaOrdemServicoModal({
             <Field label="Categoria">
               <select
                 value={form.categoria}
-                onChange={(e) => {
-                  setTipoManual(false);
-                  setForm((f) => ({ ...f, categoria: e.target.value as CategoriaOs }));
-                }}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, categoria: e.target.value as CategoriaOs }))
+                }
                 className="input"
               >
                 {CATEGORIAS_OS.map((categoria) => (
@@ -310,24 +309,26 @@ export function NovaOrdemServicoModal({
               />
             </div>
 
-            <Field label="Tipo de tarefa Auvo">
-              <select
-                value={form.tipoAuvo}
-                onChange={(e) => {
-                  setTipoManual(true);
-                  setForm((f) => ({ ...f, tipoAuvo: e.target.value }));
-                }}
-                className="input"
-              >
-                {TIPOS_AUVO.map((tipo) => (
-                  <option key={tipo.value} value={tipo.value}>
-                    {tipo.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-[11px] text-ink-3 mt-1">
-                Sugestão: {TIPOS_AUVO.find((t) => t.value === tipoSugerido)?.label ?? tipoSugerido}
-              </p>
+            <Field label="Tipo de tarefa *">
+              {semTiposTarefa ? (
+                <p className="text-xs text-ink-3">
+                  Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa
+                  antes de abrir uma OS.
+                </p>
+              ) : (
+                <select
+                  value={form.tipoTarefaId}
+                  onChange={(e) => setForm((f) => ({ ...f, tipoTarefaId: e.target.value }))}
+                  className="input"
+                  required
+                >
+                  {dados.tiposTarefa.map((tipo) => (
+                    <option key={tipo.id} value={tipo.id}>
+                      {tipo.nome}
+                    </option>
+                  ))}
+                </select>
+              )}
             </Field>
 
             <Field label="Técnico responsável">
@@ -375,7 +376,7 @@ export function NovaOrdemServicoModal({
           </button>
           <button
             type="submit"
-            disabled={salvando || carregando || semClientes}
+            disabled={salvando || carregando || semClientes || semTiposTarefa}
             className="px-4 py-2 rounded-[6px] bg-navy text-white text-sm font-semibold hover:bg-navy-deep disabled:opacity-60"
           >
             {salvando ? "Criando..." : "Criar OS"}
