@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { sugerirPrioridadePorGut, sugerirTipoAuvo } from "./abertura-os";
+import { sugerirPrioridadePorGut } from "./abertura-os";
 
 describe("abertura manual de OS", () => {
-  it("AC-3: sugere tipo Auvo pela categoria", () => {
-    expect(sugerirTipoAuvo("corretiva")).toBe("corretiva");
-    expect(sugerirTipoAuvo("preventiva")).toBe("preventiva");
-    expect(sugerirTipoAuvo("melhoria")).toBe("levantamento");
-    expect(sugerirTipoAuvo("emergencial")).toBe("emergencial");
-  });
-
   it("AC-3: sugere prioridade por score GUT", () => {
     expect(sugerirPrioridadePorGut(5, 5, 5)).toBe("critica");
     expect(sugerirPrioridadePorGut(4, 4, 4)).toBe("alta");

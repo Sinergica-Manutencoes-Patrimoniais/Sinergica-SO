@@ -7,7 +7,13 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
   cancelado: { label: "Cancelado", cls: "bg-[#FBEAEA] text-[#C5362B]" },
 };
 
-export function PainelHistorico({ ordens }: { ordens: OrdemServicoResumo[] }) {
+export function PainelHistorico({
+  ordens,
+  onSelecionar,
+}: {
+  ordens: OrdemServicoResumo[];
+  onSelecionar?: (id: string) => void;
+}) {
   return (
     <div className="bg-card rounded-[10px] border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
@@ -27,7 +33,13 @@ export function PainelHistorico({ ordens }: { ordens: OrdemServicoResumo[] }) {
               cls: "bg-[#EFF1F4] text-[#5A6175]",
             };
             return (
-              <div key={os.id} className="px-5 py-3.5 flex items-center gap-3">
+              <button
+                key={os.id}
+                type="button"
+                onClick={onSelecionar ? () => onSelecionar(os.id) : undefined}
+                disabled={!onSelecionar}
+                className="w-full px-5 py-3.5 flex items-center gap-3 text-left hover:bg-line-soft disabled:cursor-default disabled:hover:bg-transparent"
+              >
                 <span className="text-xs font-brand tabular-nums text-ink-3 w-16 shrink-0">
                   {os.numero}
                 </span>
@@ -40,7 +52,7 @@ export function PainelHistorico({ ordens }: { ordens: OrdemServicoResumo[] }) {
                 >
                   {status.label}
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>

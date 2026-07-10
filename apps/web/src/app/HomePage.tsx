@@ -443,10 +443,37 @@ export function HomePage() {
   const [novaOsAberta, setNovaOsAberta] = useState(false);
   const [feedbackOs, setFeedbackOs] = useState<string | null>(null);
   const [pcmRefreshKey, setPcmRefreshKey] = useState(0);
+  // E01-S49: deep-link do cliente-360 pra uma OS específica — guarda de onde veio pra oferecer
+  // "voltar ao cliente" sem precisar de router. `seq` força o efeito em `OrdensServicoPage` a
+  // reagir mesmo clicando duas vezes seguidas na MESMA OS (osId igual não mudaria de valor).
+  const [osDeepLink, setOsDeepLink] = useState<{
+    osId: string;
+    origemClienteId: string;
+    seq: number;
+  } | null>(null);
 
   function irParaPcmView(view: PcmView) {
     setPcmView(view);
     setClienteSelecionado(null); // ao trocar de sub-tela, sai da Visão 360 de um cliente específico
+    setOsDeepLink(null);
+  }
+
+  function abrirOsDoCliente(osId: string) {
+    if (clienteSelecionado) {
+      setOsDeepLink((atual) => ({
+        osId,
+        origemClienteId: clienteSelecionado,
+        seq: (atual?.seq ?? 0) + 1,
+      }));
+    }
+    setPcmView("ordens");
+  }
+
+  function voltarAoClienteDoDeepLink() {
+    if (!osDeepLink) return;
+    setClienteSelecionado(osDeepLink.origemClienteId);
+    setPcmView("clientes");
+    setOsDeepLink(null);
   }
 
   // AC-4: superadmin sempre vê tudo (claim user_modulos vem vazio pra ele — bypass, igual RLS);
@@ -746,7 +773,7 @@ export function HomePage() {
                     <ChevronLeft className="w-4 h-4" strokeWidth={2} />
                     Voltar para clientes
                   </button>
-                  <VisaoClientePage clienteId={clienteSelecionado} />
+                  <VisaoClientePage clienteId={clienteSelecionado} onAbrirOs={abrirOsDoCliente} />
                 </div>
               ) : (
                 <ListaClientesPage onSelecionar={setClienteSelecionado} />
@@ -784,10 +811,25 @@ export function HomePage() {
             ) : pcmView === "pmoc" ? (
               <PmocPage />
             ) : pcmView === "ordens" ? (
-              <OrdensServicoPage
-                refreshKey={pcmRefreshKey}
-                onNovaOs={() => setNovaOsAberta(true)}
-              />
+              <div className="flex flex-col gap-4">
+                {osDeepLink && (
+                  <button
+                    type="button"
+                    onClick={voltarAoClienteDoDeepLink}
+                    className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-orange hover:text-orange-deep cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" strokeWidth={2} />
+                    Voltar ao cliente
+                  </button>
+                )}
+                <OrdensServicoPage
+                  refreshKey={pcmRefreshKey}
+                  onNovaOs={() => setNovaOsAberta(true)}
+                  osIdInicialToken={
+                    osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
+                  }
+                />
+              </div>
             ) : pcmView === "backlog" ? (
               <BacklogGutPage />
             ) : (

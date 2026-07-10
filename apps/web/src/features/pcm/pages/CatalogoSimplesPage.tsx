@@ -8,6 +8,7 @@ import {
   excluirCatalogoSimples,
   listarCatalogoSimples,
 } from "../application/catalogos-simples";
+import { BannerEscritaAuvoPendente } from "../components/BannerEscritaAuvoPendente";
 import type { CatalogoSimplesItem, CatalogoSimplesTipo } from "../domain/catalogos-simples";
 import { campoCatalogoSimples, labelCatalogoSimples } from "../domain/catalogos-simples";
 import { syncStatusLabel } from "../domain/tipos-tarefa";
@@ -165,6 +166,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <BannerEscritaAuvoPendente entidade={titulo.toLowerCase()} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-ink">{titulo}</h2>

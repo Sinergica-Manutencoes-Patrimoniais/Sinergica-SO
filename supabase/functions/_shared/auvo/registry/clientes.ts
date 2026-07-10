@@ -10,6 +10,7 @@ export interface ClienteRow extends Record<string, unknown> {
   contato_telefone?: string | null;
   contato_email?: string | null;
   observacoes?: string | null;
+  detalhes?: Record<string, unknown>;
 }
 
 export interface AuvoCustomer {
@@ -50,6 +51,7 @@ export const clientesDescriptor: AuvoEntityDescriptor<AuvoCustomer, ClienteRow> 
   },
   fromAuvo(auvo) {
     const contato = auvo.contacts?.[0];
+    const temContatos = Array.isArray(auvo.contacts) && auvo.contacts.length > 0;
     return {
       nome: textoOuFallback(auvo.name ?? auvo.description ?? auvo.legalName, `Cliente ${auvo.id ?? ""}`.trim()),
       cnpj: textoOuNull(auvo.cpfCnpj),
@@ -59,6 +61,10 @@ export const clientesDescriptor: AuvoEntityDescriptor<AuvoCustomer, ClienteRow> 
       contato_telefone: textoOuNull(contato?.phoneNumber ?? auvo.phoneNumber?.[0]),
       contato_email: textoOuNull(contato?.email ?? auvo.email?.[0]),
       observacoes: textoOuNull(auvo.note),
+      // E01-S51: guarda o array completo de contatos (contacts[0] já vira contato_nome/telefone/
+      // email acima) — múltiplos contatos por condomínio (síndico, zelador, administradora) hoje
+      // são descartados. Só campo já confirmado (`contacts`), sem nome novo especulativo.
+      ...(temContatos ? { detalhes: { contacts: auvo.contacts } } : {}),
     };
   },
 };

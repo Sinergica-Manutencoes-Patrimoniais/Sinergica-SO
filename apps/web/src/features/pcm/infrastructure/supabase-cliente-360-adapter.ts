@@ -11,6 +11,7 @@ import type {
   ClienteResumo,
   EditarClienteCommand,
   ExcluirClienteCommand,
+  GrupoClienteResumo,
   OrdemServicoResumo,
   QualidadeClienteResumo,
   ResultadoEquipamentos,
@@ -52,6 +53,12 @@ interface ClienteRow {
   contato_email: string | null;
   observacoes: string | null;
   updated_at: string | null;
+  detalhes?: Record<string, unknown> | null;
+}
+
+interface GrupoClienteRow {
+  id: string;
+  nome: string;
 }
 
 interface InspecaoEventoRow {
@@ -150,6 +157,7 @@ function mapearCliente(row: ClienteRow): ClienteHeader {
     contatoTelefone: row.contato_telefone,
     contatoEmail: row.contato_email,
     observacoes: row.observacoes,
+    detalhes: row.detalhes ?? null,
   };
 }
 
@@ -375,7 +383,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       .schema("pcm")
       .from("clientes")
       .select(
-        "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes",
+        "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,detalhes",
       )
       .eq("id", id)
       .is("deleted_at", null)
@@ -623,5 +631,18 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         nivelProtecao: laudo.nivel_protecao,
       })),
     };
+  },
+
+  /** E01-S51: grupos (E01-S27, `pcm.cliente_grupos.cliente_ids uuid[]`) que incluem este cliente. */
+  async listarGruposCliente(id): Promise<GrupoClienteResumo[]> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("cliente_grupos")
+      .select("id,nome")
+      .is("deleted_at", null)
+      .contains("cliente_ids", [id])
+      .order("nome", { ascending: true });
+    if (error) throw error;
+    return ((data ?? []) as GrupoClienteRow[]).map((grupo) => ({ id: grupo.id, nome: grupo.nome }));
   },
 };

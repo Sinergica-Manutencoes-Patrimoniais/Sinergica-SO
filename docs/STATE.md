@@ -10,7 +10,69 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-09 (sessão Lucas) — **E01-S34/S35/S37 verificadas em produção com
+**Última atualização:** 2026-07-09 (sessão Lucas) — **Lote de 12 stories (E01-S39 a S51, exceto S44)
+respondendo ao feedback de teste manual do Lucas sobre Kanban/Timeline/Calendário/cliente-360.**
+
+Lucas testou a UI manualmente e mandou 8 pontos de feedback (tipos de tarefa incompletos, sem
+tooltip, sem filtro/lote em OS, dúvida sobre `CH-XXXX`, ferramenta/categoria/funcionário não
+refletem no Auvo, erro de CORS em Tickets, itens do cliente-360 não clicáveis, sem edição de
+cliente pela 360, pedido de proposta pra 360 mais rica). Plano completo em
+`~/.claude/plans/foi-entregue-uma-serie-generic-owl.md`. Implementadas 11 stories (S39-S43, S45-S51;
+S44 documentada e adiada por escolha técnica — volume ainda não justifica paginação server-side):
+- **S39/S40**: modal de Nova OS lê `pcm.tipos_tarefa` real (não mais 15 strings hardcoded);
+  `tipo_tarefa_id` estruturado (migrations `0073`/`0074`, ainda não aplicadas em produção) +
+  `pcm-auvo-create-task` resolve `taskTypeId` real com fallback de categoria.
+- **S41**: `Tooltip` reutilizável (`components/ui/Tooltip.tsx`) nas 4 telas de OS; achado de bônus —
+  `OrdemServicoOperacional.descricao` nunca tinha sido exposta à UI, apesar de existir na tabela
+  desde sempre.
+- **S42/S43**: filtros (técnico/categoria/data, KPIs recalculam sobre filtrado — decisão do Lucas) +
+  seleção múltipla/ação em lote de status.
+- **S45**: funcionário — bug já corrigido em sessão anterior (commit `6408b3a`), só fechamento.
+- **S46/S47**: banner de transparência onde `writeEnabled:false`; **tentativa de habilitar escrita
+  real bloqueada** — esta sessão não tinha `AUVO_API_KEY`/`AUVO_USER_TOKEN` no ambiente nem acesso
+  ao dashboard Supabase pra testar PATCH real sem risco à conta de produção do cliente. Fez auditoria
+  cruzada em vez de teste ao vivo e achou 1 bug real: `funcionarios.ts` `toAuvo()` mandava
+  `phoneNumber`, mas o endpoint de criação que já roda em produção usa `smartPhoneNumber` (campo
+  confirmado em sessão anterior) — corrigido. `writeEnabled` continua `false` em todas as entidades.
+- **S48**: `smoke-edge-functions.mjs` ganhou checagem de CORS contra `pcm-auvo-tickets-referencia`;
+  `cors.ts` loga Origin desconhecido. Lucas precisa confirmar `CORS_ALLOWED_ORIGINS` no dashboard.
+- **S49/S50**: deep-link cliente-360→OS (Backlog/Histórico/Timeline clicáveis); edição de cliente
+  direto na 360 (`ClienteFormModal` extraído de `ListaClientesPage.tsx`).
+- **S51**: `pcm.clientes.detalhes jsonb` (migration `0075`, não aplicada ainda) + cards
+  Contatos/Grupos na 360 + aba Financeiro honesta (status comercial + OS por categoria). **Escopo
+  cortado** — mesma causa da S47: sem acesso à API real, não populou cidade/estado/cep/coordenadas
+  (nome de campo Auvo não confirmado) pra não inventar.
+
+Gates locais verdes: typecheck (5 pacotes), 287 testes web (278 pass, 9 skip — 2 novos testes de
+`obterVisaoCliente`/grupos, mais os das novas stories), build, `arch:check` (0 violações),
+`lint:migrations` (75 migrations, Squawk limpo), `check:edge-functions` (23 funções, 8 invokes).
+Biome full-tree deu OOM local (mesmo problema documentado em sessões anteriores, pressão de memória
+do sistema, não do código) — não bloqueante, pre-commit hook corrige formatação nos arquivos
+staged automaticamente no commit.
+
+**Adendo (mesma sessão, pedido explícito do Lucas):** implementada a E01-S44 (agregação server-side
+de OS), que tinha ficado só documentada/adiada no lote acima. Migration `0076` (RPC
+`fn_kpis_ordens_servico`, `security invoker`) substitui o `reduce()` em JS pelos 6 KPIs; filtros de
+status/técnico/categoria/data agora vão pro `WHERE` da query em vez de baixar tudo e filtrar depois
+(busca livre por nome de cliente continua client-side, de propósito — só existe após o JOIN em
+memória). Achado durante a implementação: os dois efeitos de carga de `OrdensServicoPage.tsx`
+duplicariam o fetch a cada troca de filtro (já que `carregar` passou a mudar de identidade a cada
+filtro novo) — corrigido com uma ref detectando mudança real de `refreshKey` antes de disparar.
+Gates verdes (typecheck, 109 testes pcm, build, arch:check, lint:migrations 76 migrations,
+check:edge-functions).
+
+**Pendências não-codificáveis desta rodada (Lucas):**
+1. Aplicar migrations `0073`/`0074`/`0075`/`0076` em produção antes/junto do deploy.
+2. Confirmar `CORS_ALLOWED_ORIGINS` inclui o domínio Netlify de produção (S48).
+3. Decidir se/quando destravar acesso à API Auvo real (chave em ambiente de outra sessão, ou testar
+   ao vivo com o Lucas presente) pra completar S47 (flipar `writeEnabled`) e S51 (cidade/estado/cep,
+   coordenadas).
+4. Reprodução manual em browser real de todas as 11 stories antes de considerar 100% fechado — só
+   gates de código rodaram nesta sessão, sem Playwright contra dev server desta vez.
+
+---
+
+**Atualização anterior:** 2026-07-09 (sessão Lucas) — **E01-S34/S35/S37 verificadas em produção com
 dados reais — sync Auvo→PCM funciona de ponta a ponta.**
 
 Testando o botão "Sincronizar Auvo" com credenciais reais (não só gates locais), achei e corrigi 5

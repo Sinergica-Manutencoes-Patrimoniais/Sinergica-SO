@@ -1,6 +1,19 @@
 import { supabase } from "../../../lib/supabase-client";
-import type { AlterarStatusOsInput, HubOsGateway } from "../application/hub-os-gateway";
-import type { OrdemServicoOperacional } from "../domain/ordens-servico";
+import type {
+  AlterarStatusOsInput,
+  FiltrosServidorOrdens,
+  HubOsGateway,
+} from "../application/hub-os-gateway";
+import type { KpisOrdensServico, OrdemServicoOperacional } from "../domain/ordens-servico";
+
+interface KpiRpcRow {
+  total: number | string;
+  abertas: number | string;
+  em_planejamento: number | string;
+  em_execucao: number | string;
+  finalizadas: number | string;
+  criticas: number | string;
+}
 
 interface ClienteRow {
   id: string;
@@ -52,6 +65,7 @@ function mapearOrdem(
     id: row.id,
     numero: row.numero,
     titulo: row.titulo,
+    descricao: row.descricao,
     clienteNome: clientes.get(row.client_id) ?? "Cliente não identificado",
     categoria: row.categoria,
     status: row.status,
@@ -79,21 +93,33 @@ function mapearOrdem(
  * `.limit(200)` sozinho já cortava a lista bem antes disso. Pagina via `.range()` até esgotar ou
  * até `LIMITE_PAGINAS` (segurança), reunindo tudo. Achado testando em produção (2026-07-09): com
  * ~2364 OS reais pós-backfill, `limit(200)` fazia os KPIs (Total/Abertas/Execução) mentirem —
- * eram calculados em cima só das 200 mais recentes, não do total real. Correção provisória: busca
- * tudo. Agregação de verdade 100% server-side (count por status) fica pro redesign do Kanban, que
- * já vai mudar como esta tela carrega dado. */
+ * eram calculados em cima só das 200 mais recentes, não do total real.
+ *
+ * E01-S44: os filtros de status/técnico/categoria/data (E01-S42) agora são empurrados pro `WHERE`
+ * aqui, em vez de buscar tudo e filtrar depois em JS — a paginação acima só entra em jogo se o
+ * conjunto FILTRADO ainda for grande (raro). KPIs de verdade (sem baixar OS nenhuma) vêm da RPC
+ * `fn_kpis_ordens_servico` (`contarKpis`, abaixo). Busca livre (nome de cliente) continua fora
+ * daqui — só existe depois do JOIN em memória, refinada no client (`filtrarOrdens`). */
 const TAMANHO_PAGINA = 1000;
 const LIMITE_PAGINAS = 10;
 
-async function buscarTodasOrdens(): Promise<OrdemRow[]> {
+async function buscarTodasOrdens(filtros?: FiltrosServidorOrdens): Promise<OrdemRow[]> {
   const todas: OrdemRow[] = [];
   for (let pagina = 0; pagina < LIMITE_PAGINAS; pagina++) {
     const inicio = pagina * TAMANHO_PAGINA;
-    const { data, error } = await supabase
+    let query = supabase
       .schema("pcm")
       .from("ordens_servico")
       .select(COLUNAS_OS)
-      .is("deleted_at", null)
+      .is("deleted_at", null);
+    if (filtros?.status) query = query.eq("status", filtros.status);
+    if (filtros?.tecnicoFuncionarioId) {
+      query = query.eq("tecnico_funcionario_id", filtros.tecnicoFuncionarioId);
+    }
+    if (filtros?.categoria) query = query.eq("categoria", filtros.categoria);
+    if (filtros?.dataInicio) query = query.gte("created_at", filtros.dataInicio);
+    if (filtros?.dataFim) query = query.lte("created_at", `${filtros.dataFim}T23:59:59.999`);
+    const { data, error } = await query
       // Desempate por `id` obrigatório: os inserts em lote do backfill (2026-07-09) gravam
       // centenas de linhas com o MESMO `created_at` (uma única transação, `now()` é fixo por
       // statement) — paginar por `.range()` só em `created_at` é instável entre requisições
@@ -145,13 +171,34 @@ async function buscarOrdem(id: string): Promise<OrdemRow> {
 }
 
 export const supabaseHubOsAdapter: HubOsGateway = {
-  async listarOrdensServico(): Promise<OrdemServicoOperacional[]> {
+  async listarOrdensServico(filtros?: FiltrosServidorOrdens): Promise<OrdemServicoOperacional[]> {
     const [clientes, funcionarios, ordens] = await Promise.all([
       clientesPorId(),
       funcionariosPorId(),
-      buscarTodasOrdens(),
+      buscarTodasOrdens(filtros),
     ]);
     return ordens.map((row) => mapearOrdem(row, clientes, funcionarios));
+  },
+
+  /** E01-S44: RPC agregada — não baixa nenhuma OS pra calcular os 6 KPIs. */
+  async contarKpis(filtros?: FiltrosServidorOrdens): Promise<KpisOrdensServico> {
+    const { data, error } = await supabase.schema("pcm").rpc("fn_kpis_ordens_servico", {
+      p_status: filtros?.status ?? null,
+      p_tecnico_funcionario_id: filtros?.tecnicoFuncionarioId ?? null,
+      p_categoria: filtros?.categoria ?? null,
+      p_data_inicio: filtros?.dataInicio ?? null,
+      p_data_fim: filtros?.dataFim ?? null,
+    });
+    if (error) throw error;
+    const linha = (data as KpiRpcRow[] | null)?.[0];
+    return {
+      total: Number(linha?.total ?? 0),
+      abertas: Number(linha?.abertas ?? 0),
+      emPlanejamento: Number(linha?.em_planejamento ?? 0),
+      emExecucao: Number(linha?.em_execucao ?? 0),
+      finalizadas: Number(linha?.finalizadas ?? 0),
+      criticas: Number(linha?.criticas ?? 0),
+    };
   },
 
   async alterarStatus(input: AlterarStatusOsInput): Promise<OrdemServicoOperacional> {

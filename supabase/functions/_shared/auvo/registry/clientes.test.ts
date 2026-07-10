@@ -54,3 +54,21 @@ Deno.test("clientesDescriptor — inbound usa campos reais do Customer", () => {
     },
   );
 });
+
+Deno.test("clientesDescriptor — E01-S51: guarda contacts[] completo em detalhes quando presente", () => {
+  const contacts = [
+    { name: "Síndico", phoneNumber: "11999990000", email: "sindico@example.com" },
+    { name: "Zelador", phoneNumber: "11988880000" },
+  ];
+  const resultado = clientesDescriptor.fromAuvo({
+    id: 77,
+    name: "Cliente Auvo",
+    contacts,
+  });
+  assertEquals(resultado.detalhes, { contacts });
+});
+
+Deno.test("clientesDescriptor — sem contacts não inclui detalhes", () => {
+  const resultado = clientesDescriptor.fromAuvo({ id: 77, name: "Cliente Auvo" });
+  assertEquals("detalhes" in resultado, false);
+});

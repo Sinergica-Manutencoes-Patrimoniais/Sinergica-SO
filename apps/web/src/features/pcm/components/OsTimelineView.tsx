@@ -1,7 +1,8 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
-import { agruparPorTecnico, formatarDiaIso } from "../domain/ordens-servico";
+import { agruparPorTecnico, formatarDiaIso, resumoTooltipOrdem } from "../domain/ordens-servico";
 
 const HORAS_DO_DIA = 24;
 const HORAS = Array.from({ length: HORAS_DO_DIA }, (_, hora) => hora);
@@ -125,6 +126,7 @@ export function OsTimelineView({
               </div>
               <div className="relative flex-1 py-3" style={{ minHeight: "3rem" }}>
                 {grupo.ordens.map((ordem) => {
+                  const resumo = resumoTooltipOrdem(ordem);
                   const inicio = ordem.checkInAt ? horaDoDado(ordem.checkInAt, dia) : null;
                   const fim = ordem.checkOutAt ? horaDoDado(ordem.checkOutAt, dia) : null;
                   if (inicio == null) {
@@ -133,32 +135,39 @@ export function OsTimelineView({
                       : null;
                     if (pontoHora == null) return null;
                     return (
-                      <button
+                      <Tooltip
                         key={ordem.id}
-                        type="button"
-                        onClick={() => onSelecionar(ordem.id)}
-                        title={`${ordem.numero} · ${ordem.titulo} · agendada ${pontoHora.toFixed(0)}h`}
-                        className="absolute top-3 h-3 w-3 -translate-x-1/2 rounded-full bg-orange"
-                        style={{ left: `${(pontoHora / HORAS_DO_DIA) * 100}%` }}
-                      />
+                        content={`${ordem.numero} · ${ordem.titulo} · agendada ${pontoHora.toFixed(0)}h${resumo ? `\n${resumo}` : ""}`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => onSelecionar(ordem.id)}
+                          aria-label={`${ordem.numero} · ${ordem.titulo} · agendada ${pontoHora.toFixed(0)}h`}
+                          className="absolute top-3 h-3 w-3 -translate-x-1/2 rounded-full bg-orange"
+                          style={{ left: `${(pontoHora / HORAS_DO_DIA) * 100}%` }}
+                        />
+                      </Tooltip>
                     );
                   }
                   const larguraHoras = Math.max((fim ?? inicio + 0.5) - inicio, 0.5);
                   return (
-                    <button
+                    <Tooltip
                       key={ordem.id}
-                      type="button"
-                      onClick={() => onSelecionar(ordem.id)}
-                      title={`${ordem.numero} · ${ordem.titulo}`}
-                      className="absolute top-2 flex h-8 items-center overflow-hidden rounded-[4px] bg-navy px-2 text-[11px] font-semibold text-white"
-                      style={{
-                        left: `${(inicio / HORAS_DO_DIA) * 100}%`,
-                        width: `${(larguraHoras / HORAS_DO_DIA) * 100}%`,
-                        minWidth: "3rem",
-                      }}
+                      content={`${ordem.numero} · ${ordem.titulo}${resumo ? `\n${resumo}` : ""}`}
                     >
-                      {ordem.numero}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => onSelecionar(ordem.id)}
+                        className="absolute top-2 flex h-8 items-center overflow-hidden rounded-[4px] bg-navy px-2 text-[11px] font-semibold text-white"
+                        style={{
+                          left: `${(inicio / HORAS_DO_DIA) * 100}%`,
+                          width: `${(larguraHoras / HORAS_DO_DIA) * 100}%`,
+                          minWidth: "3rem",
+                        }}
+                      >
+                        {ordem.numero}
+                      </button>
+                    </Tooltip>
                   );
                 })}
               </div>

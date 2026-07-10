@@ -1,17 +1,33 @@
 import { Calendar, ClipboardList, Clock3, Kanban, List, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { alterarStatusOrdemServico, listarOrdensServico } from "../application/hub-os";
+import { Tooltip } from "../../../components/ui/Tooltip";
+import {
+  alterarStatusEmLote,
+  alterarStatusOrdemServico,
+  contarKpisOrdens,
+  listarOrdensServico,
+} from "../application/hub-os";
+import type { FiltrosServidorOrdens } from "../application/hub-os-gateway";
 import { OsCalendarioView } from "../components/OsCalendarioView";
 import { OsKanbanView } from "../components/OsKanbanView";
 import { OsTimelineView } from "../components/OsTimelineView";
-import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/ordens-servico";
+import { CATEGORIAS_OS } from "../domain/abertura-os";
+import type {
+  FiltrosOrdens,
+  KpisOrdensServico,
+  OrdemServicoOperacional,
+  StatusOrdemServico,
+} from "../domain/ordens-servico";
 import {
+  FILTROS_ORDENS_VAZIO,
   PRIORIDADE_LABEL,
   STATUS_OS,
   calcularKpisOrdens,
+  filtrarOrdens,
   prioridadeColor,
+  resumoTooltipOrdem,
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
@@ -34,69 +50,186 @@ type Estado =
 export function OrdensServicoPage({
   refreshKey = 0,
   onNovaOs,
+  osIdInicialToken,
 }: {
   refreshKey?: number;
   onNovaOs: () => void;
+  /** Formato `${osId}::${seq}` (E01-S49) — `seq` muda a cada clique no cliente-360, mesmo pra
+   * mesma OS, forçando o efeito abaixo a reagir mesmo quando o id não muda de valor. */
+  osIdInicialToken?: string;
 }) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
   const [visao, setVisao] = useState<Visao>("lista");
-  const [statusFiltro, setStatusFiltro] = useState<string>("todas");
-  const [busca, setBusca] = useState("");
+  const [filtros, setFiltros] = useState<FiltrosOrdens>(FILTROS_ORDENS_VAZIO);
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [recarregando, setRecarregando] = useState(false);
+  const [kpisServidor, setKpisServidor] = useState<KpisOrdensServico | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
 
+  // E01-S44: status/técnico/categoria/data são empurrados pro WHERE do servidor (não busca livre —
+  // depende do nome do cliente, só existe depois do JOIN em memória). Sentinelas "todas"/"todos"
+  // viram `undefined` (sem filtro).
+  const filtrosServidor = useMemo<FiltrosServidorOrdens>(
+    () => ({
+      status: filtros.status !== "todas" ? filtros.status : undefined,
+      tecnicoFuncionarioId:
+        filtros.tecnicoFuncionarioId !== "todos" ? filtros.tecnicoFuncionarioId : undefined,
+      categoria: filtros.categoria !== "todas" ? filtros.categoria : undefined,
+      dataInicio: filtros.dataInicio,
+      dataFim: filtros.dataFim,
+    }),
+    [
+      filtros.status,
+      filtros.tecnicoFuncionarioId,
+      filtros.categoria,
+      filtros.dataInicio,
+      filtros.dataFim,
+    ],
+  );
+
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    // Só mostra o spinner de página inteira na primeira carga — refetch por filtro mantém a tela
+    // (filtros/KPIs/abas) visível, só acende `recarregando` (sem isso, trocar um select apagava a
+    // tela toda a cada clique).
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
+    setRecarregando(true);
     setErroAcao(null);
+    setSelecionados(new Set());
     try {
-      const ordens = await listarOrdensServico(supabaseHubOsAdapter);
+      const [ordens, kpis] = await Promise.all([
+        listarOrdensServico(supabaseHubOsAdapter, filtrosServidor),
+        contarKpisOrdens(supabaseHubOsAdapter, filtrosServidor),
+      ]);
       setEstado({ fase: "pronto", ordens });
+      setKpisServidor(kpis);
       setSelecionadaId((atual) => atual ?? ordens[0]?.id ?? null);
     } catch (error) {
       setEstado({
         fase: "erro",
         mensagem: error instanceof Error ? error.message : "Não foi possível carregar OS.",
       });
+    } finally {
+      setRecarregando(false);
     }
-  }, []);
+  }, [filtrosServidor]);
 
   useEffect(() => {
     if (!permissoesCarregando && temLeitura) carregar();
   }, [permissoesCarregando, temLeitura, carregar]);
 
+  // E01-S44: `carregar` agora muda de identidade a cada troca de filtro (server-side), então este
+  // efeito NÃO pode reagir a `carregar` mudar — só a `refreshKey` mudar de verdade (senão duplica o
+  // fetch: o efeito acima já dispara pela troca de filtro). `refreshKeyAnteriorRef` detecta a
+  // mudança real, independente de `carregar` ter sido recriado por outro motivo.
+  const refreshKeyAnteriorRef = useRef(refreshKey);
   useEffect(() => {
+    if (refreshKey === refreshKeyAnteriorRef.current) return;
+    refreshKeyAnteriorRef.current = refreshKey;
     if (refreshKey > 0 && !permissoesCarregando && temLeitura) carregar();
   }, [refreshKey, permissoesCarregando, temLeitura, carregar]);
 
+  // E01-S49: deep-link vindo do cliente-360 — abre o painel de detalhe dessa OS específica
+  // independente do filtro ativo (`selecionada` busca no array completo, não no filtrado).
+  useEffect(() => {
+    const osId = osIdInicialToken?.split("::")[0];
+    if (osId) setSelecionadaId(osId);
+  }, [osIdInicialToken]);
+
   const ordensFiltradas = useMemo(() => {
     if (estado.fase !== "pronto") return [];
-    const termo = busca.trim().toLowerCase();
-    return estado.ordens.filter((ordem) => {
-      const passaStatus = statusFiltro === "todas" || ordem.status === statusFiltro;
-      const passaBusca =
-        termo.length === 0 ||
-        ordem.numero.toLowerCase().includes(termo) ||
-        ordem.titulo.toLowerCase().includes(termo) ||
-        ordem.clienteNome.toLowerCase().includes(termo);
-      return passaStatus && passaBusca;
-    });
-  }, [estado, busca, statusFiltro]);
+    return filtrarOrdens(estado.ordens, filtros);
+  }, [estado, filtros]);
+
+  const tecnicosDisponiveis = useMemo(() => {
+    if (estado.fase !== "pronto") return [];
+    const porId = new Map<string, string>();
+    for (const ordem of estado.ordens) {
+      if (ordem.tecnicoFuncionarioId) {
+        porId.set(ordem.tecnicoFuncionarioId, ordem.tecnicoNome ?? "Técnico");
+      }
+    }
+    return [...porId.entries()]
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [estado]);
 
   const selecionada = useMemo(() => {
     if (estado.fase !== "pronto") return null;
     return estado.ordens.find((ordem) => ordem.id === selecionadaId) ?? null;
   }, [estado, selecionadaId]);
 
-  const kpis = useMemo(
-    () => (estado.fase === "pronto" ? calcularKpisOrdens(estado.ordens) : null),
-    [estado],
-  );
+  // E01-S44: com busca livre ativa, os KPIs do servidor não sabem do refinamento por nome de
+  // cliente (só existe em memória) — cai pro cálculo client-side sobre o que já está carregado,
+  // pra continuar batendo com a lista visível (mesma garantia da E01-S42).
+  const kpis = useMemo(() => {
+    if (filtros.busca.trim().length > 0) return calcularKpisOrdens(ordensFiltradas);
+    return kpisServidor ?? calcularKpisOrdens(ordensFiltradas);
+  }, [filtros.busca, ordensFiltradas, kpisServidor]);
+
+  function limparFiltros() {
+    setFiltros(FILTROS_ORDENS_VAZIO);
+  }
+
+  function onMudarVisao(proxima: Visao) {
+    setVisao(proxima);
+    setSelecionados(new Set());
+  }
+
+  function onToggleSelecionado(id: string) {
+    setSelecionados((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(id)) {
+        proximo.delete(id);
+      } else {
+        proximo.add(id);
+      }
+      return proximo;
+    });
+  }
+
+  async function onAplicarStatusLote(status: StatusOrdemServico) {
+    if (!user || selecionados.size === 0) return;
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      const resultado = await alterarStatusEmLote(
+        supabaseHubOsAdapter,
+        [...selecionados],
+        status,
+        user.id,
+      );
+      if (estado.fase === "pronto") {
+        const sucesso = new Set(resultado.sucesso);
+        setEstado({
+          fase: "pronto",
+          ordens: estado.ordens.map((ordem) =>
+            sucesso.has(ordem.id) ? { ...ordem, status } : ordem,
+          ),
+        });
+      }
+      if (resultado.falhas.length > 0) {
+        setSelecionados(new Set(resultado.falhas.map((f) => f.id)));
+        setErroAcao(
+          `${resultado.falhas.length} OS não atualizada(s): ${resultado.falhas
+            .map((f) => `${f.id} (${f.erro})`)
+            .join(", ")}`,
+        );
+      } else {
+        setSelecionados(new Set());
+      }
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível aplicar em lote.");
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   async function onAlterarStatusDe(id: string, status: StatusOrdemServico) {
     if (!user) return;
@@ -165,10 +298,12 @@ export function OrdensServicoPage({
           <p className="text-sm text-ink-3">Fila operacional do PCM com status e sync Auvo</p>
         </div>
         <div className="flex items-center gap-2">
+          {recarregando && <span className="text-xs text-ink-3">Atualizando…</span>}
           <button
             type="button"
             onClick={carregar}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            disabled={recarregando}
+            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
           >
             <RefreshCw className="h-4 w-4" />
             Atualizar
@@ -217,7 +352,7 @@ export function OrdensServicoPage({
           <button
             key={value}
             type="button"
-            onClick={() => setVisao(value)}
+            onClick={() => onMudarVisao(value)}
             className={`inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold ${
               visao === value
                 ? "border-orange text-ink"
@@ -230,6 +365,108 @@ export function OrdensServicoPage({
         ))}
       </div>
 
+      <div className="bg-card rounded-[10px] border border-line p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
+        <input
+          className="input md:col-span-2"
+          placeholder="Buscar por número, cliente ou título"
+          value={filtros.busca}
+          onChange={(event) => setFiltros((f) => ({ ...f, busca: event.target.value }))}
+        />
+        <select
+          className="input"
+          value={filtros.status}
+          onChange={(event) => setFiltros((f) => ({ ...f, status: event.target.value }))}
+        >
+          <option value="todas">Todos os status</option>
+          {STATUS_OS.map((status) => (
+            <option key={status.value} value={status.value}>
+              {status.label}
+            </option>
+          ))}
+        </select>
+        <select
+          className="input"
+          value={filtros.tecnicoFuncionarioId}
+          onChange={(event) =>
+            setFiltros((f) => ({ ...f, tecnicoFuncionarioId: event.target.value }))
+          }
+        >
+          <option value="todos">Todos os técnicos</option>
+          {tecnicosDisponiveis.map((tecnico) => (
+            <option key={tecnico.id} value={tecnico.id}>
+              {tecnico.nome}
+            </option>
+          ))}
+        </select>
+        <select
+          className="input"
+          value={filtros.categoria}
+          onChange={(event) => setFiltros((f) => ({ ...f, categoria: event.target.value }))}
+        >
+          <option value="todas">Todas as categorias</option>
+          {CATEGORIAS_OS.map((categoria) => (
+            <option key={categoria.value} value={categoria.value}>
+              {categoria.label}
+            </option>
+          ))}
+        </select>
+        <div className="flex items-center gap-1.5">
+          <input
+            type="date"
+            className="input"
+            value={filtros.dataInicio ?? ""}
+            onChange={(event) =>
+              setFiltros((f) => ({ ...f, dataInicio: event.target.value || null }))
+            }
+            aria-label="Data inicial"
+          />
+          <input
+            type="date"
+            className="input"
+            value={filtros.dataFim ?? ""}
+            onChange={(event) => setFiltros((f) => ({ ...f, dataFim: event.target.value || null }))}
+            aria-label="Data final"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={limparFiltros}
+          className="md:col-span-6 justify-self-start text-xs font-semibold text-ink-3 hover:text-orange"
+        >
+          Limpar filtros
+        </button>
+      </div>
+
+      {temEscrita && selecionados.size > 0 && (visao === "lista" || visao === "kanban") && (
+        <div className="flex flex-wrap items-center gap-3 rounded-[10px] border border-orange bg-orange-soft px-4 py-3">
+          <p className="text-sm font-semibold text-[#7A3F00]">
+            {selecionados.size} selecionada{selecionados.size > 1 ? "s" : ""}
+          </p>
+          <select
+            className="input h-8 w-auto text-xs"
+            disabled={salvando}
+            value=""
+            onChange={(event) => {
+              if (event.target.value) onAplicarStatusLote(event.target.value as StatusOrdemServico);
+            }}
+          >
+            <option value="">Aplicar status a todas…</option>
+            {STATUS_OS.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setSelecionados(new Set())}
+            className="text-xs font-semibold text-[#7A3F00] hover:underline"
+          >
+            Limpar seleção
+          </button>
+        </div>
+      )}
+
       {visao !== "lista" && (
         <div className="bg-card rounded-[10px] border border-line p-4">
           {visao === "kanban" && (
@@ -239,6 +476,8 @@ export function OrdensServicoPage({
               salvando={salvando}
               onAlterarStatus={(id, status) => onAlterarStatusDe(id, status)}
               onSelecionar={setSelecionadaId}
+              selecionados={selecionados}
+              onToggleSelecionado={onToggleSelecionado}
             />
           )}
           {visao === "timeline" && (
@@ -264,60 +503,51 @@ export function OrdensServicoPage({
       {visao === "lista" && (
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(520px,1fr)_420px] gap-4">
           <section className="bg-card rounded-[10px] border border-line overflow-hidden">
-            <div className="px-5 py-4 border-b border-line-soft grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input
-                className="input md:col-span-2"
-                placeholder="Buscar por número, cliente ou título"
-                value={busca}
-                onChange={(event) => setBusca(event.target.value)}
-              />
-              <select
-                className="input"
-                value={statusFiltro}
-                onChange={(event) => setStatusFiltro(event.target.value)}
-              >
-                <option value="todas">Todos os status</option>
-                {STATUS_OS.map((status) => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             <div className="divide-y divide-line-soft">
               {ordensFiltradas.length === 0 ? (
                 <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS encontrada.</div>
               ) : (
                 ordensFiltradas.map((ordem) => (
-                  <button
-                    key={ordem.id}
-                    type="button"
-                    onClick={() => setSelecionadaId(ordem.id)}
-                    className={`w-full px-5 py-4 text-left hover:bg-line-soft ${
-                      ordem.id === selecionadaId ? "bg-line-soft" : ""
-                    }`}
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-brand tabular-nums text-ink-3">
-                        {ordem.numero}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
+                  <div key={ordem.id} className="flex items-center gap-2 pl-3">
+                    {temEscrita && (
+                      <input
+                        type="checkbox"
+                        checked={selecionados.has(ordem.id)}
+                        onChange={() => onToggleSelecionado(ordem.id)}
+                        aria-label={`Selecionar ${ordem.numero}`}
+                        className="h-4 w-4 shrink-0 accent-orange"
+                      />
+                    )}
+                    <Tooltip content={resumoTooltipOrdem(ordem)}>
+                      <button
+                        type="button"
+                        onClick={() => setSelecionadaId(ordem.id)}
+                        className={`w-full px-2 py-4 text-left hover:bg-line-soft ${
+                          ordem.id === selecionadaId ? "bg-line-soft" : ""
+                        }`}
                       >
-                        {rotuloStatusOs(ordem.status)}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
-                      >
-                        {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm font-semibold text-ink">{ordem.titulo}</p>
-                    <p className="mt-1 text-xs text-ink-3">
-                      {ordem.clienteNome} · {ordem.categoria} · score {ordem.scorePcm}
-                    </p>
-                  </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-brand tabular-nums text-ink-3">
+                            {ordem.numero}
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
+                          >
+                            {rotuloStatusOs(ordem.status)}
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                          >
+                            {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm font-semibold text-ink">{ordem.titulo}</p>
+                        <p className="mt-1 text-xs text-ink-3">
+                          {ordem.clienteNome} · {ordem.categoria} · score {ordem.scorePcm}
+                        </p>
+                      </button>
+                    </Tooltip>
+                  </div>
                 ))
               )}
             </div>
@@ -364,7 +594,9 @@ function DetalheOs({
   return (
     <div>
       <div className="px-5 py-4 border-b border-line-soft">
-        <p className="text-xs font-brand tabular-nums text-ink-3">{selecionada.numero}</p>
+        <Tooltip content="Numeração interna do PCM (Chamado) — não é o ticket/task do Auvo.">
+          <p className="inline text-xs font-brand tabular-nums text-ink-3">{selecionada.numero}</p>
+        </Tooltip>
         <h3 className="mt-1 text-lg font-semibold text-ink">{selecionada.titulo}</h3>
         <p className="mt-1 text-sm text-ink-3">{selecionada.clienteNome}</p>
       </div>

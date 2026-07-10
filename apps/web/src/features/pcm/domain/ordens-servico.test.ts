@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  FILTROS_ORDENS_VAZIO,
   agruparPorTecnico,
   calcularKpisOrdens,
   filtrarBacklogGut,
+  filtrarOrdens,
   formatarDiaIso,
   gerarDiasDoMes,
   ordenarBacklogGut,
@@ -13,6 +15,7 @@ const base = {
   id: "os",
   numero: "CH-001",
   titulo: "Teste",
+  descricao: null,
   clienteNome: "Cliente",
   categoria: "corretiva",
   prioridade: "media",
@@ -97,6 +100,81 @@ describe("ordens-servico", () => {
     ] as never;
 
     expect(ordensNoDia(ordens, "2026-06-25").map((o: { id: string }) => o.id)).toEqual(["1", "2"]);
+  });
+
+  it("E01-S42: filtrarOrdens — cada filtro isolado", () => {
+    const ordens = [
+      {
+        ...base,
+        id: "1",
+        status: "solicitacao",
+        categoria: "corretiva",
+        tecnicoFuncionarioId: "tec-1",
+        createdAt: "2026-07-01T10:00:00Z",
+      },
+      {
+        ...base,
+        id: "2",
+        status: "planejamento",
+        categoria: "preventiva",
+        tecnicoFuncionarioId: "tec-2",
+        createdAt: "2026-07-05T10:00:00Z",
+      },
+    ] as never;
+
+    expect(
+      filtrarOrdens(ordens, { ...FILTROS_ORDENS_VAZIO, status: "planejamento" }).map(
+        (o: { id: string }) => o.id,
+      ),
+    ).toEqual(["2"]);
+    expect(
+      filtrarOrdens(ordens, { ...FILTROS_ORDENS_VAZIO, categoria: "corretiva" }).map(
+        (o: { id: string }) => o.id,
+      ),
+    ).toEqual(["1"]);
+    expect(
+      filtrarOrdens(ordens, {
+        ...FILTROS_ORDENS_VAZIO,
+        tecnicoFuncionarioId: "tec-2",
+      }).map((o: { id: string }) => o.id),
+    ).toEqual(["2"]);
+    expect(
+      filtrarOrdens(ordens, { ...FILTROS_ORDENS_VAZIO, dataInicio: "2026-07-03" }).map(
+        (o: { id: string }) => o.id,
+      ),
+    ).toEqual(["2"]);
+  });
+
+  it("E01-S42: filtrarOrdens — combina todos os filtros (E lógico)", () => {
+    const ordens = [
+      {
+        ...base,
+        id: "1",
+        numero: "CH-001",
+        status: "planejamento",
+        categoria: "corretiva",
+        tecnicoFuncionarioId: "tec-1",
+        createdAt: "2026-07-01T10:00:00Z",
+      },
+      {
+        ...base,
+        id: "2",
+        numero: "CH-002",
+        status: "planejamento",
+        categoria: "corretiva",
+        tecnicoFuncionarioId: "tec-2",
+        createdAt: "2026-07-01T10:00:00Z",
+      },
+    ] as never;
+
+    expect(
+      filtrarOrdens(ordens, {
+        ...FILTROS_ORDENS_VAZIO,
+        status: "planejamento",
+        categoria: "corretiva",
+        tecnicoFuncionarioId: "tec-1",
+      }).map((o: { id: string }) => o.id),
+    ).toEqual(["1"]);
   });
 
   it("gerarDiasDoMes — grade de 42 dias (6 semanas) começando no domingo", () => {
