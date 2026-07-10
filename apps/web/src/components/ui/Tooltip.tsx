@@ -37,7 +37,10 @@ export function Tooltip({ content, children }: { content: string | null; childre
       {content && posicao && (
         <div
           role="tooltip"
-          className="fixed z-[100] max-w-xs whitespace-pre-line rounded-[6px] border border-line bg-ink px-3 py-2 text-xs text-white shadow-lg"
+          // `ink` é token de TEXTO (inverte entre claro/escuro — viraria branco sobre branco no
+          // tema escuro). `navy` é a cor institucional, sempre escura nos dois temas — o par certo
+          // pra usar como fundo com texto branco por cima.
+          className="fixed z-[100] max-w-xs whitespace-pre-line rounded-[6px] border border-navy-line bg-navy px-3 py-2 text-xs text-white shadow-lg"
           style={{ top: posicao.top, left: posicao.left }}
         >
           {content}

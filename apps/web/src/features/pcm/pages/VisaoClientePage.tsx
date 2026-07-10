@@ -513,6 +513,14 @@ function TimelineCliente({
                     {evento.subtitulo && (
                       <p className="mt-0.5 line-clamp-2 text-xs text-ink-3">{evento.subtitulo}</p>
                     )}
+                    {evento.tecnicoNome && (
+                      <p className="mt-0.5 text-[11px] font-medium text-ink-2">
+                        Técnico: {evento.tecnicoNome}
+                      </p>
+                    )}
+                    {evento.descricao && (
+                      <p className="mt-0.5 line-clamp-2 text-xs text-ink-3">{evento.descricao}</p>
+                    )}
                   </div>
                 </>
               );

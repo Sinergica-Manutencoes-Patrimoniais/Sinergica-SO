@@ -23,6 +23,7 @@ interface OrdemServicoRow {
   id: string;
   numero: string;
   titulo: string;
+  descricao: string | null;
   categoria: string;
   status: string;
   score_pcm: number;
@@ -34,6 +35,12 @@ interface OrdemServicoRow {
   local_descricao: string | null;
   solicitante: string | null;
   created_at: string;
+  tecnico_funcionario_id: string | null;
+}
+
+interface FuncionarioRow {
+  id: string;
+  nome: string;
 }
 
 interface ClienteRow {
@@ -95,7 +102,7 @@ interface EquipamentoClienteListaRow {
 }
 
 const COLUNAS_OS =
-  "id,numero,titulo,categoria,status,score_pcm,gravidade,urgencia,tendencia,auvo_sync_status,auvo_synced_at,local_descricao,solicitante,created_at" as const;
+  "id,numero,titulo,descricao,categoria,status,score_pcm,gravidade,urgencia,tendencia,auvo_sync_status,auvo_synced_at,local_descricao,solicitante,created_at,tecnico_funcionario_id" as const;
 
 // Lista de status de histórico como literal PostgREST — derivada da fonte única do domínio, nunca
 // redigitada aqui (mantém `('finalizado','cancelado')` num só lugar).
@@ -121,11 +128,12 @@ function mapearClienteCommand(input: ClienteCommand | EditarClienteCommand) {
   };
 }
 
-function mapearOs(row: OrdemServicoRow): OrdemServicoResumo {
+function mapearOs(row: OrdemServicoRow, funcionarios: Map<string, string>): OrdemServicoResumo {
   return {
     id: row.id,
     numero: row.numero,
     titulo: row.titulo,
+    descricao: row.descricao,
     categoria: row.categoria,
     status: row.status,
     scorePcm: row.score_pcm,
@@ -137,6 +145,10 @@ function mapearOs(row: OrdemServicoRow): OrdemServicoResumo {
     localDescricao: row.local_descricao,
     solicitante: row.solicitante,
     createdAt: row.created_at,
+    tecnicoFuncionarioId: row.tecnico_funcionario_id,
+    tecnicoNome: row.tecnico_funcionario_id
+      ? (funcionarios.get(row.tecnico_funcionario_id) ?? null)
+      : null,
   };
 }
 
@@ -163,6 +175,20 @@ function mapearCliente(row: ClienteRow): ClienteHeader {
 
 function ordenarEventos(eventos: Cliente360Evento[]): Cliente360Evento[] {
   return eventos.sort((a, b) => b.data.localeCompare(a.data)).slice(0, 12);
+}
+
+/** Resolve nome do técnico responsável — mesmo padrão de `supabase-hub-os-adapter.ts`. Ponto 4 do
+ * feedback (2026-07-10): quem acessa a 360 (ex.: Fabrício) precisa ver quem atendeu, não só a OS. */
+async function funcionariosPorId(): Promise<Map<string, string>> {
+  const { data, error } = await supabase
+    .schema("pcm")
+    .from("funcionarios")
+    .select("id,nome")
+    .is("deleted_at", null);
+  if (error) throw error;
+  return new Map(
+    ((data ?? []) as FuncionarioRow[]).map((funcionario) => [funcionario.id, funcionario.nome]),
+  );
 }
 
 function erroColunaAusente(error: { code?: string; message?: string } | null): boolean {
@@ -415,17 +441,20 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
   async listarBacklogCliente(id): Promise<OrdemServicoResumo[]> {
     // AC-3: OS em aberto (status NOT IN histórico), ordenadas por score_pcm desc no servidor,
     // desempate determinístico por created_at desc. Sem sort no client.
-    const { data, error } = await supabase
-      .schema("pcm")
-      .from("ordens_servico")
-      .select(COLUNAS_OS)
-      .eq("client_id", id)
-      .is("deleted_at", null)
-      .not("status", "in", STATUS_HISTORICO_LISTA)
-      .order("score_pcm", { ascending: false })
-      .order("created_at", { ascending: false });
+    const [{ data, error }, funcionarios] = await Promise.all([
+      supabase
+        .schema("pcm")
+        .from("ordens_servico")
+        .select(COLUNAS_OS)
+        .eq("client_id", id)
+        .is("deleted_at", null)
+        .not("status", "in", STATUS_HISTORICO_LISTA)
+        .order("score_pcm", { ascending: false })
+        .order("created_at", { ascending: false }),
+      funcionariosPorId(),
+    ]);
     if (error) throw error;
-    return (data ?? []).map((row) => mapearOs(row as OrdemServicoRow));
+    return (data ?? []).map((row) => mapearOs(row as OrdemServicoRow, funcionarios));
   },
 
   async listarHistoricoCliente(id): Promise<OrdemServicoResumo[]> {
@@ -433,18 +462,21 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     // LAST, created_at DESC — o nullsFirst:false empurra os não-sincronizados para o fim, sem
     // coalesce manual. limit(50): a spec permite paginar o histórico (o backlog é que nunca pode
     // ser cortado); 50 é ponto de partida, ajustável (AUTO-DECISION, não é decisão de produto).
-    const { data, error } = await supabase
-      .schema("pcm")
-      .from("ordens_servico")
-      .select(COLUNAS_OS)
-      .eq("client_id", id)
-      .is("deleted_at", null)
-      .in("status", [...STATUS_HISTORICO])
-      .order("auvo_synced_at", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false })
-      .limit(50);
+    const [{ data, error }, funcionarios] = await Promise.all([
+      supabase
+        .schema("pcm")
+        .from("ordens_servico")
+        .select(COLUNAS_OS)
+        .eq("client_id", id)
+        .is("deleted_at", null)
+        .in("status", [...STATUS_HISTORICO])
+        .order("auvo_synced_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(50),
+      funcionariosPorId(),
+    ]);
     if (error) throw error;
-    return (data ?? []).map((row) => mapearOs(row as OrdemServicoRow));
+    return (data ?? []).map((row) => mapearOs(row as OrdemServicoRow, funcionarios));
   },
 
   async listarEquipamentosCliente(_clienteId, auvoId): Promise<ResultadoEquipamentos> {
@@ -474,7 +506,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
   },
 
   async listarEventosCliente(id): Promise<Cliente360Evento[]> {
-    const [cliente, os, inspecoes, laudos] = await Promise.all([
+    const [cliente, os, inspecoes, laudos, funcionarios] = await Promise.all([
       supabase
         .schema("pcm")
         .from("clientes")
@@ -506,6 +538,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         .is("deleted_at", null)
         .order("data_vistoria", { ascending: false })
         .limit(5),
+      funcionariosPorId(),
     ]);
 
     if (cliente.error) throw cliente.error;
@@ -513,6 +546,9 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     if (inspecoes.error) throw inspecoes.error;
     if (laudos.error) throw laudos.error;
 
+    // Ponto 4 do feedback (2026-07-10): quem acessa a 360 durante uma ligação do cliente precisa
+    // ver, sem clicar em mais nada, quem atendeu (técnico) e o que foi feito (descrição) — não só
+    // a categoria. `tecnicoNome`/`descricao` viajam separados do `subtitulo` pra render estruturado.
     const eventosOs = ((os.data ?? []) as OrdemServicoRow[]).map((ordem) => ({
       id: `os-${ordem.id}`,
       tipo: "os" as const,
@@ -526,6 +562,10 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         : ordem.score_pcm >= 80
           ? ("critica" as const)
           : ("atencao" as const),
+      tecnicoNome: ordem.tecnico_funcionario_id
+        ? (funcionarios.get(ordem.tecnico_funcionario_id) ?? null)
+        : null,
+      descricao: ordem.descricao,
     }));
 
     const eventosInspecao = ((inspecoes.data ?? []) as InspecaoEventoRow[]).map((inspecao) => ({
