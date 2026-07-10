@@ -76,6 +76,10 @@ export interface OrdemServicoResumo {
   auvoSyncedAt?: string | null;
   localDescricao?: string | null;
   solicitante?: string | null;
+  /** Ponto 4 do feedback (2026-07-10): descrição/técnico visíveis na 360 sem precisar abrir a OS. */
+  descricao?: string | null;
+  tecnicoFuncionarioId?: string | null;
+  tecnicoNome?: string | null;
 }
 
 /** Equipamento vinculado ao cliente, vindo do cache plano do Auvo (E01-S11) — AC-6. */
@@ -107,6 +111,9 @@ export interface Cliente360Evento {
   subtitulo: string | null;
   data: string;
   criticidade?: "neutra" | "atencao" | "critica" | "sucesso";
+  /** Ponto 4 do feedback (2026-07-10) — só populado em eventos `tipo === "os"`. */
+  tecnicoNome?: string | null;
+  descricao?: string | null;
 }
 
 export interface QualidadeClienteResumo {

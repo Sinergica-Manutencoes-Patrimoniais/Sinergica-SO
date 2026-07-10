@@ -23,7 +23,6 @@ import {
   Snowflake,
   Sun,
   Ticket,
-  TrendingUp,
   UserCircle,
   UserCog,
   Users,
@@ -172,22 +171,11 @@ const MODULOS: ModuloTab[] = [
     descricao: "Faturamento, recebíveis, margem por contrato e alertas de inadimplência.",
   },
   {
-    id: "operacao",
-    label: "Estoque",
-    icon: Package,
-    descricao: "Catálogo de materiais, consumo via Auvo e controle de estoque.",
-  },
-  {
     id: "marketing",
     label: "Marketing",
     icon: Megaphone,
-    descricao: "Calendário editorial e geração de conteúdo com IA.",
-  },
-  {
-    id: "growth",
-    label: "Growth",
-    icon: TrendingUp,
-    descricao: "Leads, campanhas Meta/Google, atribuição e painel de ROAS.",
+    descricao:
+      "Calendário editorial, geração de conteúdo com IA, leads e campanhas de aquisição (Growth).",
   },
   {
     id: "gestao",
@@ -306,25 +294,11 @@ const DASHBOARD_GERAL: ModuloResumo[] = [
     alerta: "1 contrato",
   },
   {
-    moduloId: "operacao",
-    kpis: [
-      { label: "Itens críticos", valor: "2" },
-      { label: "Pedidos pend.", valor: "4" },
-    ],
-    alerta: "2 itens",
-  },
-  {
     moduloId: "marketing",
     kpis: [
       { label: "Publicações/sem.", valor: "3" },
       { label: "Alcance", valor: "1.2k" },
-    ],
-  },
-  {
-    moduloId: "growth",
-    kpis: [
       { label: "Leads (mês)", valor: "12" },
-      { label: "Conversão", valor: "18%" },
     ],
   },
   {

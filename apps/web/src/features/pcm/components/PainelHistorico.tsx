@@ -1,5 +1,6 @@
 // AC-4 (histórico de OS concluídas/canceladas, status refletindo a sincronização do Auvo) e
 // AC-5 (estado vazio). Read-only — sem nenhuma ação de mutação.
+import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
@@ -33,26 +34,30 @@ export function PainelHistorico({
               cls: "bg-[#EFF1F4] text-[#5A6175]",
             };
             return (
-              <button
-                key={os.id}
-                type="button"
-                onClick={onSelecionar ? () => onSelecionar(os.id) : undefined}
-                disabled={!onSelecionar}
-                className="w-full px-5 py-3.5 flex items-center gap-3 text-left hover:bg-line-soft disabled:cursor-default disabled:hover:bg-transparent"
-              >
-                <span className="text-xs font-brand tabular-nums text-ink-3 w-16 shrink-0">
-                  {os.numero}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-ink truncate">{os.titulo}</p>
-                  <p className="text-xs text-ink-3 truncate capitalize">{os.categoria}</p>
-                </div>
-                <span
-                  className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${status.cls}`}
+              <Tooltip key={os.id} content={os.descricao ?? null}>
+                <button
+                  type="button"
+                  onClick={onSelecionar ? () => onSelecionar(os.id) : undefined}
+                  disabled={!onSelecionar}
+                  className="w-full px-5 py-3.5 flex items-center gap-3 text-left hover:bg-line-soft disabled:cursor-default disabled:hover:bg-transparent"
                 >
-                  {status.label}
-                </span>
-              </button>
+                  <span className="text-xs font-brand tabular-nums text-ink-3 w-16 shrink-0">
+                    {os.numero}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-ink truncate">{os.titulo}</p>
+                    <p className="text-xs text-ink-3 truncate capitalize">
+                      {os.categoria}
+                      {os.tecnicoNome ? ` · Técnico: ${os.tecnicoNome}` : ""}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${status.cls}`}
+                  >
+                    {status.label}
+                  </span>
+                </button>
+              </Tooltip>
             );
           })}
         </div>
