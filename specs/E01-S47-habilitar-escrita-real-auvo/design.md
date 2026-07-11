@@ -12,12 +12,11 @@ alwaysApply: true
 
 ## O que mudou entre a pergunta e a execução
 
-Reconferi antes de agir: as sessões recentes desta épica validaram a API real **através das Edge
-Functions já deployadas** (curl/Playwright contra `pcm-auvo-*` no Supabase, que carregam
+Antes da retomada, as sessões recentes desta épica validaram a API real **através das Edge Functions já
+deployadas** (curl/Playwright contra `pcm-auvo-*` no Supabase, que carregam
 `AUVO_API_KEY`/`AUVO_USER_TOKEN` como secret do lado do servidor) — nunca com uma chave Auvo direto no
-shell desta sessão. **Esta sessão não tem `AUVO_API_KEY`/`AUVO_USER_TOKEN` no ambiente local** (confirmado
-por `env | grep -i auvo`, vazio) e não tenho acesso interativo ao dashboard Supabase pra invocar as
-functions com um payload de teste isolado sem que ele reflita de verdade na conta Auvo do cliente.
+shell daquela sessão. Em 2026-07-10, a credencial foi localizada em `.env.local` e a autenticação direta
+funcionou; o novo bloqueio é a capacidade máxima de usuários da conta, documentada na evidência abaixo.
 
 Isso muda o que é seguro fazer nesta rodada:
 - **Auditoria de contrato por leitura de código** (comparar `toAuvo()`/`toAuvoUpdate()` de cada registry
@@ -76,6 +75,32 @@ segurança:
 Isso não é uma regressão do que o Lucas pediu — é reportar, com uma auditoria real feita e um bug real já
 corrigido, por que a parte de "testar contra a API real" não pôde ser concluída nesta sessão específica
 (faltou credencial no ambiente, não faltou tentativa).
+
+## Evidência de contrato real — 2026-07-10 (Codex)
+
+- `GET /login` autenticou com sucesso e `GET /users` respondeu `200`. A lista real vem em
+  `result.entityList`; a amostra contém `userID`, `name`, `smartPhoneNumber`, `jobPosition`, `email`,
+  `userType` e `unavailableForTasks`, confirmando o mapeamento de leitura já adotado.
+- O OpenAPI oficial confirma que `smartPhoneNumber` aceita apenas dígitos e que a atualização é
+  `PUT /users` com `id` e payload completo — não `PATCH /users/{id}`. Isso precisa ser refletido no
+  motor antes de habilitar `funcionarios`.
+- A criação reversível exigida para fechar o contrato não pôde iniciar: `POST /users` retornou `400`
+  com `errorCode: 56`, "The account has reached it's maximum users limit". Nenhum `id` foi devolvido,
+  portanto nenhum registro de teste ficou pendente de desativação.
+
+**Bloqueio:** liberar uma licença temporária no Auvo ou indicar um usuário de teste já existente e
+expressamente autorizado para um ciclo controlado de edição → leitura → reversão. Sem uma dessas
+condições, `writeEnabled` permanece `false` e as demais entidades não são promovidas por inferência.
+
+## Contrato vivo ampliado — 2026-07-11
+
+O teste controlado executado pelo Lucas confirmou POST → GET → PATCH → DELETE para clientes,
+equipamentos, categorias de equipamento, segmentos, palavras-chave e ferramentas. Grupos de cliente
+criam com o ID em `result.clientGroupSearchReturn.id`. Ferramentas aceitam preço decimal no PATCH,
+mas o POST multiplica o valor por dez; por isso o payload de criação não leva preço. Tipos de tarefa
+retornam 200 no PATCH sem persistir `description`, logo update é explicitamente local. DELETE de
+categoria de equipamento retorna 204 mas o registro segue no GET; delete remoto é `unsupported`.
+Funcionário e ticket permanecem fora do flip; serviços e categorias de produto continuam 404.
 
 ## Rastreabilidade
 - Plano: `~/.claude/plans/foi-entregue-uma-serie-generic-owl.md`

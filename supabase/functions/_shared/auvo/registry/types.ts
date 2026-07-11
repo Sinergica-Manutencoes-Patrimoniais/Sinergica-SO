@@ -79,6 +79,10 @@ export interface AuvoEntityDescriptor<TAuvo, TRow> {
    * `externalId`. */
   readonly externalIdField?: string;
 
+  /** Extrai o identificador da resposta de criação quando o endpoint não devolve
+   * `result.id` (ex.: `/customergroups` → `result.clientGroupSearchReturn.id`). */
+  readonly extractCreatedAuvoId?: (response: unknown) => number | null;
+
   /**
    * `paramFilter` obrigatório para o `GET` de listagem deste recurso (usado por `pcm-auvo-pull`).
    * Confirmado contra a API real (2026-07-08): `GET /tickets` exige `StartDate`/`EndDate` — sem

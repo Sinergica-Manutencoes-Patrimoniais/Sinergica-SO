@@ -10,7 +10,137 @@ alwaysApply: true
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
 
-**Última atualização:** 2026-07-09 (sessão Lucas) — **Lote de 12 stories (E01-S39 a S51, exceto S44)
+**Atualização:** 2026-07-11 (Codex) — **E01-S47 retomada após teste de contrato vivo executado pelo
+Lucas.** Aprovados e habilitados no registry: clientes, equipamentos, grupos de clientes, categorias
+de equipamento, segmentos, palavras-chave, tipos de tarefa e ferramentas. O push agora extrai o ID
+aninhado de `/customergroups`; ferramenta omite preço em POST (a API gravou ×10) e o envia apenas em
+PATCH; tipo de tarefa tem `supportsUpdate:false` porque PATCH retornou 200 sem aplicar alteração;
+categoria de equipamento usa delete local porque DELETE 204 não a removeu no GET. Banners de
+ferramentas/catálogos aprovados foram removidos; a 360 de cliente passou a informar escrita real.
+Não habilitados: funcionários (limite de licença; PATCH no-op), tickets sem registros, serviços e
+produto-categorias (404). Limpeza adicional: DELETE do grupo de teste `170491` retornou 204; GET
+individual não é aceito (405). Categoria de teste `56029` segue retornando após DELETE 204, conforme
+limitação documentada. Gates Node/TS verdes; Deno/CI ainda pendentes.
+
+**Última atualização:** 2026-07-11 (sessão Lucas/Claude) — **Revisão do handoff Codex (E01-S52..S58) +
+diagnóstico dos endpoints com a API real + 4 correções.**
+
+1. **Diagnóstico com credencial real (probes read-only, curl):** `GET /gps` = **500 em todas as
+   variações de filtro** (sem filtro, `getLastKnowPosition`, datas, `userId`+datas) — não é o nosso
+   filtro, é server-side; `/expenses` = **500** (não 404) com e sem filtro, enquanto
+   `/expensetypes` = **200 com dado real** (shape confirmado); `/satisfactionsurveys` = **500 até com
+   `taskId` real e válido** (sem filtro dá 400 "paramFilter.TaskId — Task not found", ou seja o
+   endpoint existe e valida input, mas quebra na consulta); `/questionnaires` = **200 com dado real**
+   (shape raiz confirmado: `id`/`description`/`header`/`footer`/`questions[]`; **não existe campo
+   `active`** — o `ativo` local fica sempre true, inofensivo). **Ação humana (Lucas): abrir chamado
+   no suporte Auvo** para gps/expenses/satisfactionsurveys citando os 500 — três recursos do plano
+   com API quebrada server-side.
+2. **Bug real corrigido:** os 4 testes Deno existentes de `pcm-auvo-sync-all/index.test.ts`
+   quebrariam no CI — o Codex adicionou 5 etapas novas ao `runSyncAll` e as asserções ainda
+   esperavam 3/4 steps e a lista antiga de chamadas. Testes reescritos para o contrato novo
+   (+1 teste de falha isolada das etapas novas).
+3. **Correções de revisão:** `PainelDadosOperacionaisAuvo` distinguia... nada — erro real de banco
+   também virava "aguardando sincronização" (mesmo fallback perigoso vetado pelo @qa na E01-S12);
+   agora tem estado de erro próprio no padrão visual de erro do repo. Soma de despesas ganhou janela
+   de 31 dias (mesma do pull) em vez de baixar a tabela inteira (anti-padrão que a E01-S44 acabou de
+   eliminar). `pcm-auvo-support-pull` (satisfactions) ganhou limite 20 OS + orçamento de 45s por
+   rodada — laço de 1 GET/OS contra API que responde ~11s/página estouraria o teto de 150s do worker
+   (lição do E01-S37). Testes Deno novos para `extractDeletedTaskIds` e `mapGps`.
+4. **Revisão das migrations 0077–0081: aprovadas.** `0077` substitui a trigger function de status de
+   forma aditiva (origem/metadata via `set_config`, mesmo corpo do 0020 no resto); exclusão de
+   regressão cobre todos os status terminais reais (não existe `faturado` no domínio). RLS
+   FORCE/grants no padrão do repo nas 4 tabelas novas. Purge de GPS roda dentro do próprio pull.
+5. Gates locais verdes após as correções: typecheck, 280 web tests, build, `arch:check`,
+   `check:edge-functions` (26 funções). Deno/pgTAP seguem dependentes do CI (sem Deno CLI/Docker
+   nesta máquina). Nada commitado (branch `feat/E01-S47-escrita-real-auvo`).
+6. **Ressalva registrada (não corrigível sem endpoint):** formato/timezone de `positionDate` do GPS
+   não observável enquanto o endpoint devolve 500 — se vier sem timezone (hora local BR), a
+   conversão atual desloca 3h; confirmar no primeiro payload real.
+
+---
+
+**Handoff:** 2026-07-11 (Codex → Claude) — trabalho na branch local
+`feat/E01-S47-escrita-real-auvo`, sem commit/push. **Backend/migrations já criados no worktree por
+Codex, mas precisam de revisão Deno/DB antes de aplicar:** `0077_E01-S58_reconciliacao_tarefas_excluidas.sql`
+(RPC que cancela OS de task excluída e evento `auvo_deleted_task`), `0078_E01-S52_gps_posicoes.sql`,
+`0079_E01-S54_despesas_auvo.sql`, `0080_E01-S55_satisfacao_auvo.sql`,
+`0081_E01-S56_questionarios_auvo.sql`; e Edge Functions `pcm-auvo-deleted-tasks-sync`,
+`pcm-auvo-gps-pull`, `pcm-auvo-support-pull`, declaradas em `supabase/config.toml` e chamadas pelo
+`pcm-auvo-sync-all`. **Frontend entregue:** `PainelDadosOperacionaisAuvo.tsx`, plugado no dashboard
+PCM; lê as quatro novas tabelas, mostra dados quando houver e aviso honesto enquanto migration/pull
+não estiver ativo. Ainda faltam UI detalhada em OS/Cliente-360, preventivo e tarefa rica.
+
+**Verificações:** `lint:migrations` (81 migrations), `check:edge-functions`, typecheck e web tests
+(280 pass/9 skip) verdes; Deno continua ausente. `graphify update .` executado em 2026-07-11.
+
+**Contratos/bloqueios reais:** autenticação Auvo funciona. `GET /tasks/GetDeletedTasks` funcionou
+com `paramFilter.startDate/endDate` e confirmou `taskID`. `GET /gps` retorna 500, `/expenses` 404,
+e `/satisfactionsurveys` 500 mesmo com `taskId` real; investigar entitlement/bug com Auvo antes de
+declarar os pulls aceitos. E01-S47 segue sem `writeEnabled:true`: `POST /users` falha com
+`errorCode:56` (limite de licenças) e o OpenAPI exige `PUT /users` completo (login/senha não são
+persistidos pelo PCM). E01-S53 tem `design.md` + ADR-0008 escolhendo service orders recorrentes,
+mas não tem migration/write path por faltar teste de contrato; E01-S57 só tem gerador puro de
+contexto/produtos em `contexto-tarefa-auvo.ts` + teste.
+
+**Próximo passo para Claude:** revisar/rodar Deno e pgTAP das Functions/migrations novas, validar os
+curls com o Auvo/suporte, aplicar migrations em ambiente apropriado e então conectar UI detalhada de
+despesas/satisfação/questionários e a correlação real de preventivo/tarefa rica. Não habilitar
+`writeEnabled` sem teste controlado/reversível por entidade.
+
+**Atualização:** 2026-07-10 (Codex, continuação) — a pedido do Lucas, iniciada implementação sem
+teste de escrita do E01-S47 (a conta Auvo não tem licença para o usuário temporário). Entregue no
+worktree: migrations `0077`–`0081`; Edge Functions `pcm-auvo-deleted-tasks-sync`,
+`pcm-auvo-gps-pull` e `pcm-auvo-support-pull`; novas etapas isoladas no `pcm-auvo-sync-all`; e
+gerador/teste de contexto da tarefa rica. `lint:migrations`, `check:edge-functions`, `typecheck`
+e o teste unitário novo passaram. **Não declarar concluído ainda:** o ambiente segue sem Deno, GPS
+retorna 500, despesas 404 e satisfação 500 pela API real da conta; as telas/consultas de UI ainda
+não foram conectadas; E01-S47 continua sem `writeEnabled:true` porque o contrato de update de
+usuário exige `PUT /users` completo e o PCM não persiste login/senha. E01-S53 recebeu design +
+ADR-0008 (PCM dono do plano; service order recorrente), mas migration/write path aguardam teste de
+contrato para não inventar a correlação da recorrência.
+
+**Atualização:** 2026-07-10 (Codex) — **E01-S47 bloqueada externamente ao executar o primeiro teste
+de contrato real.** As credenciais em `.env.local` autenticam (`GET /login` e `GET /users` = 200) e
+confirmaram a estrutura de usuários (`result.entityList`, `userID`, `smartPhoneNumber`,
+`jobPosition`, `unavailableForTasks`). Porém `POST /users` para um registro temporário reversível
+retornou `400`, `errorCode: 56`, "The account has reached it's maximum users limit". Nenhum usuário
+foi criado, logo não há limpeza pendente. O OpenAPI oficial também confirmou que atualização de
+usuário é `PUT /users` com `id` e payload completo, não `PATCH /users/{id}` — adaptar o motor é
+pré-requisito depois que houver teste viável. **Não flipar `writeEnabled` nem avançar para outra
+entidade:** liberar uma licença temporária no Auvo ou indicar um usuário de teste existente,
+expressamente autorizado para edição → GET → reversão. E01-S47 agora tem `spec.md` e `tasks.md`
+para manter o bloqueio rastreável. Branch local: `feat/E01-S47-escrita-real-auvo`; nada commitado
+nem enviado.
+
+**Última atualização:** 2026-07-10 (sessão Lucas) — **Auditoria API Auvo × PCM + ESCOPO-MESTRE v1.2 +
+7 stories novas (E01-S52..S58). Só artefatos SDD/docs — nenhum código de feature.**
+
+1. **ESCOPO-MESTRE.md v1.2:** estado real de entrega marcado (§5 maturidade, §6.1/§6.2 status,
+   §7 estado real da integração, §10 fases) + nova §14 com 7 propostas para o dia a dia do
+   Fabrício (F1 briefing diário, F2 radar de execução, F3 carteira de laudos→receita, F4 fila de
+   revisão do RT, F5 esforço real por tipo, F6 auditoria por amostragem, F7 semáforo de clientes).
+2. **Auditoria Auvo (`docs/AUDITORIA-AUVO-API.md`):** inventário dos 142 endpoints do OpenAPI
+   oficial (`developer.auvo.com.br/_spec/openapi/api-reference.yaml`) cruzado com o registry (13
+   descriptors + tasks) + navegação autenticada na conta real (Playwright headless, read-only,
+   login de UI fornecido pelo Lucas). Achados-chave: **GPS ativo** (5 técnicos, alta precisão,
+   relatório Monitoramento) e não consumido; **Ordens de Serviço/"Projetos" e Orçamentos vazios**
+   (0 registros — módulos existem, nunca usados: PCM pode nascer dono do preventivo via
+   `/serviceorders` com recorrência nativa; orçamento nasce no OS/E03, não espelhar);
+   **pesquisa de satisfação nunca ativada** (0 respostas); despesas (`/expenses`) e questionários
+   (`/questionnaires`) sem espelho; km rodado/apontamento de horas **sem endpoint público** (só
+   relatório de UI). "Serviços" existe na UI da conta — o 404 da API pode ser permissão do token,
+   reverificar.
+3. **Stories criadas (spec.md+tasks.md, owner livre):** E01-S52 GPS · E01-S53 preventivo
+   recorrente (tier arquitetural, design antes) · E01-S54 despesas/custo real · E01-S55
+   satisfação · E01-S56 questionários · E01-S57 criação de tarefa rica · E01-S58 reconciliação de
+   tarefas excluídas. **Pré-requisito transversal: credencial de API Auvo**
+   (`AUVO_API_KEY`/`AUVO_USER_TOKEN`) para verificar contrato real antes de qualquer migration —
+   mesma lição do `taskID`/`smartPhoneNumber`.
+4. Nada commitado nesta sessão (docs + specs no working tree; commit/branch/PR a pedido do Lucas).
+
+---
+
+**Atualização anterior:** 2026-07-09 (sessão Lucas) — **Lote de 12 stories (E01-S39 a S51, exceto S44)
 respondendo ao feedback de teste manual do Lucas sobre Kanban/Timeline/Calendário/cliente-360.**
 
 Lucas testou a UI manualmente e mandou 8 pontos de feedback (tipos de tarefa incompletos, sem

@@ -54,6 +54,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
   const campo = campoCatalogoSimples(tipo);
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
+  const escritaAuvoAtiva = tipo !== "produto_categorias";
 
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
@@ -166,7 +167,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <BannerEscritaAuvoPendente entidade={titulo.toLowerCase()} />
+      {!escritaAuvoAtiva && <BannerEscritaAuvoPendente entidade={titulo.toLowerCase()} />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-ink">{titulo}</h2>

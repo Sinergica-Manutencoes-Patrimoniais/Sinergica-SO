@@ -129,11 +129,13 @@ export async function processOutboxRow(
     // Idempotência por ADR-0001 — nome do campo varia por recurso (a maioria usa `externalId`,
     // `Services` usa `externalCode`, confirmado no catálogo). Nunca hardcodar o nome do campo.
     const externalIdField = descriptor.externalIdField ?? "externalId";
-    const criado = await auvoPost<{ result: { id: number } }>(descriptor.auvoBasePath, {
+    const criado = await auvoPost<unknown>(descriptor.auvoBasePath, {
       ...descriptor.toAuvo(origem),
       [externalIdField]: row.row_id,
     });
-    auvoId = criado.result.id;
+    const createdAuvoId = descriptor.extractCreatedAuvoId?.(criado) ?? extractCreatedAuvoId(criado);
+    if (createdAuvoId == null) throw new Error(`Auvo criou ${descriptor.key} sem id na resposta`);
+    auvoId = createdAuvoId;
   }
 
   await db.applyAuvoSync(descriptor.pcmTable, row.row_id, {
@@ -144,6 +146,11 @@ export async function processOutboxRow(
   });
 
   return { ok: true };
+}
+
+function extractCreatedAuvoId(response: unknown): number | null {
+  const result = (response as { result?: { id?: unknown } } | null)?.result;
+  return typeof result?.id === "number" && Number.isFinite(result.id) ? result.id : null;
 }
 
 function makeSupabaseOutboxRowDb(db: UntypedSupabaseClient): OutboxRowDb {

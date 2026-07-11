@@ -65,7 +65,28 @@ export async function runSyncAll(
     taskImportResult = { step: "tasks-import", ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 
-  const results = [...pullResults, taskImportResult];
+  let deletedTasksResult: StepResult;
+  try {
+    const detail = await call("pcm-auvo-deleted-tasks-sync", tasksImportBody);
+    deletedTasksResult = { step: "deleted-tasks", ok: true, detail };
+  } catch (e) {
+    deletedTasksResult = { step: "deleted-tasks", ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+
+  let gpsResult: StepResult;
+  try {
+    const detail = await call("pcm-auvo-gps-pull");
+    gpsResult = { step: "gps", ok: true, detail };
+  } catch (e) {
+    gpsResult = { step: "gps", ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+
+  const supportResults = await Promise.all((["questionnaires", "expenses", "satisfactions"] as const).map(async (resource): Promise<StepResult> => {
+    try { return { step: resource, ok: true, detail: await call("pcm-auvo-support-pull", { resource }) }; }
+    catch (e) { return { step: resource, ok: false, error: e instanceof Error ? e.message : String(e) }; }
+  }));
+
+  const results = [...pullResults, taskImportResult, deletedTasksResult, gpsResult, ...supportResults];
   return { ok: results.every((r) => r.ok), results };
 }
 

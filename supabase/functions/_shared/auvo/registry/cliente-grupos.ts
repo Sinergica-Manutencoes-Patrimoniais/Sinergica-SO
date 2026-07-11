@@ -19,9 +19,13 @@ export const clienteGruposDescriptor: AuvoEntityDescriptor<AuvoCustomerGroup, Cl
   auvoBasePath: "/customergroups",
   pcmTable: "cliente_grupos",
   cronSchedule: "0 6 * * *",
-  writeEnabled: false,
+  writeEnabled: true,
   deleteStrategy: "hard-delete",
   supportsUpdate: false,
+  extractCreatedAuvoId(response) {
+    const id = (response as { result?: { clientGroupSearchReturn?: { id?: unknown } } })?.result?.clientGroupSearchReturn?.id;
+    return typeof id === "number" && Number.isFinite(id) ? id : null;
+  },
   toAuvo(row) {
     return {
       description: row.nome,

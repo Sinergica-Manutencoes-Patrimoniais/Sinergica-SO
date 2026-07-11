@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { sincronizarAuvo } from "../application/sincronizar-auvo";
+import { PainelDadosOperacionaisAuvo } from "../components/PainelDadosOperacionaisAuvo";
 import { montarDashboardPcm } from "../domain/dashboard-pcm";
 import type { DashboardPcmResumo, KpiDashboardPcm } from "../domain/dashboard-pcm";
 import {
@@ -194,6 +195,7 @@ export function PcmDashboardPage({
 
       {dashboard.auvo && <PainelAuvo dashboard={dashboard.auvo} />}
       {dashboard.auvo && <PainelCampoAuvo dashboard={dashboard.auvo} />}
+      <PainelDadosOperacionaisAuvo />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-card rounded-[10px] border border-line">

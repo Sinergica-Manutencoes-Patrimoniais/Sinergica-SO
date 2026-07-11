@@ -440,6 +440,15 @@ verify_jwt = true
 verify_jwt = true
 [functions.pcm-auvo-tasks-import]
 verify_jwt = true
+
+[functions.pcm-auvo-deleted-tasks-sync]
+verify_jwt = true
+
+[functions.pcm-auvo-gps-pull]
+verify_jwt = true
+
+[functions.pcm-auvo-support-pull]
+verify_jwt = true
 [functions.pcm-auvo-tickets-referencia]
 verify_jwt = true
 [functions.pcm-auvo-users-create]

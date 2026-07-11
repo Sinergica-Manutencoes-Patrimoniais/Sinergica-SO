@@ -386,9 +386,8 @@ function PainelCadastroAuvo({
             <h3 className="text-sm font-semibold text-ink">Cadastro sincronizado do Auvo</h3>
           </div>
           <p className="mt-1 text-xs text-ink-3">
-            Edição local abaixo grava só no PCM. Sincronização automática de volta pro Auvo ainda
-            não está habilitada pra clientes (mapeamento de escrita em verificação, ver E01-S47) — a
-            próxima importação do Auvo pode sobrescrever o que for editado só aqui.
+            Edições feitas aqui são enviadas ao Auvo automaticamente. Se a sincronização falhar, o
+            status da OS e a saúde do sync no dashboard indicam a pendência para nova tentativa.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -399,7 +398,7 @@ function PainelCadastroAuvo({
               className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
               <Pencil className="h-4 w-4" />
-              Editar cadastro (local)
+              Editar cadastro
             </button>
           )}
           <button
