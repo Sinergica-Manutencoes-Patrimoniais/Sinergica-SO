@@ -35,9 +35,20 @@ export const ferramentasDescriptor: AuvoEntityDescriptor<AuvoProduct, Ferramenta
   auvoBasePath: "/products",
   pcmTable: "ferramentas",
   cronSchedule: "0 */6 * * *",
-  writeEnabled: false,
+  writeEnabled: true,
   deleteStrategy: "soft-patch",
   toAuvo(row) {
+    return limparVazios({
+      name: row.nome,
+      description: row.descricao ?? row.nome,
+      categoryId: row.auvo_category_id,
+      totalStock: row.quantidade_total ?? 0,
+      minimumStock: row.quantidade_minima ?? 0,
+      active: row.ativo ?? true,
+    }) as AuvoProduct;
+  },
+  // POST multiplicou os preços por 10 no contrato real; PATCH aceita decimal corretamente.
+  toAuvoUpdate(row) {
     return limparVazios({
       name: row.nome,
       description: row.descricao ?? row.nome,

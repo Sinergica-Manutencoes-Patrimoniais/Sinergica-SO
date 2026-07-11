@@ -30,7 +30,7 @@ export const equipamentosDescriptor: AuvoEntityDescriptor<AuvoEquipment, Equipam
   auvoBasePath: "/equipments",
   pcmTable: "equipamentos",
   webhookEntity: 27,
-  writeEnabled: false,
+  writeEnabled: true,
   deleteStrategy: "soft-patch",
   toAuvo(row) {
     return limparVazios({

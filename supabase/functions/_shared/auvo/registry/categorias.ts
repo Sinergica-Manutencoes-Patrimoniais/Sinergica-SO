@@ -28,8 +28,10 @@ function criarCategoriaDescriptor(
     auvoBasePath,
     pcmTable: key,
     ...(semCron ? {} : { cronSchedule: "0 6 * * *" }),
-    writeEnabled: false,
-    deleteStrategy: "hard-delete",
+    writeEnabled: key === "equipamento_categorias",
+    // DELETE respondeu 204 mas o GET ainda devolveu o registro no teste vivo; não prometer
+    // exclusão remota até o Auvo esclarecer a semântica.
+    deleteStrategy: key === "equipamento_categorias" ? "unsupported" : "hard-delete",
     toAuvo(row) {
       return { description: row.nome };
     },

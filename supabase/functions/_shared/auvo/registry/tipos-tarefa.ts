@@ -33,7 +33,10 @@ export const tiposTarefaDescriptor: AuvoEntityDescriptor<AuvoTaskType, TipoTaref
   auvoBasePath: "/tasktypes",
   pcmTable: "tipos_tarefa",
   cronSchedule: "0 6 * * *",
-  writeEnabled: false,
+  writeEnabled: true,
+  // PATCH respondeu 200 mas ignorou description no teste de contrato; create/delete são válidos,
+  // porém edição continua local até o Auvo disponibilizar um update efetivo.
+  supportsUpdate: false,
   toAuvo(row) {
     return {
       description: row.nome,

@@ -33,7 +33,7 @@ export const clientesDescriptor: AuvoEntityDescriptor<AuvoCustomer, ClienteRow> 
   auvoBasePath: "/customers",
   pcmTable: "clientes",
   webhookEntity: 7,
-  writeEnabled: false,
+  writeEnabled: true,
   deleteStrategy: "soft-patch",
   toAuvo(row) {
     const contato = contatoPrincipal(row);

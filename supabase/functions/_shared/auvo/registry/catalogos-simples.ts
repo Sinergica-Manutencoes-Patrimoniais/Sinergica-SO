@@ -20,7 +20,7 @@ function criarCatalogoSimplesDescriptor(
     auvoBasePath,
     pcmTable: key,
     cronSchedule: "0 6 * * *",
-    writeEnabled: false,
+    writeEnabled: true,
     deleteStrategy: "hard-delete",
     toAuvo(row) {
       return { description: row.descricao };
