@@ -14,3 +14,7 @@ gitleaks
 
 # Marcador de story ativa (local por sessão, não vai para o repo)
 .current-story
+
+# Cache gerado do graphify (grafo de conhecimento) — regenerável via `graphify update .`
+graphify-out/
+apps/web/graphify-out/

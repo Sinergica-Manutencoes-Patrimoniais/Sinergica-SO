@@ -27,11 +27,39 @@
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
-        "hooks": [{ "type": "command", "command": "node scripts/check-story.mjs" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/check-story.mjs"
+          }
+        ]
       },
       {
         "matcher": "Bash",
-        "hooks": [{ "type": "command", "command": ".claude/hooks/enforce-git-push-authority.sh" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/enforce-git-push-authority.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "graphify hook-guard search"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "graphify hook-guard read"
+          }
+        ]
       }
     ]
   }
