@@ -89,6 +89,12 @@ export function ehOsAberta(status: string): boolean {
   return !ehOsHistorica(status);
 }
 
+/** E01-S61 — AC-4: soltar o card na própria coluna de origem não deve disparar alteração de
+ * status (evita PATCH/evento vazio no outbox Auvo). */
+export function deveAlterarStatusPorDrop(statusOrigem: string, statusDestino: string): boolean {
+  return statusOrigem !== statusDestino;
+}
+
 export function ordenarBacklogGut<T extends { scorePcm: number; createdAt: string }>(
   ordens: readonly T[],
 ): T[] {

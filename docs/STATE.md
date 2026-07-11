@@ -6,6 +6,34 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+**Atualização:** 2026-07-11 (sessão Lucas/Claude) — **E01-S61: Kanban ganha drag-and-drop de
+verdade (achado do Fabrício testando o PCM).**
+
+Fabrício/Lucas notaram que os cards do Kanban não se movem entre colunas — investigação mostrou
+que não é bug de dado: a E01-S38 implementou mudança de status via `<select>` no rodapé do card
+(decisão documentada, menor risco/esforço), nunca teve drag-and-drop. Quem vê colunas de Kanban
+espera arrastar; a ausência disso lê como "não funciona".
+
+Implementado HTML5 Drag and Drop nativo (sem lib nova) em `OsKanbanView.tsx`: card vira
+`draggable` (só com `temEscrita`, desabilitado durante `salvando`), coluna recebe `onDragOver`/
+`onDrop` chamando o mesmo `onAlterarStatus` que o `<select>` já usava — nenhum caminho novo de
+escrita, reaproveita idempotência/outbox existentes. Nova função pura `deveAlterarStatusPorDrop`
+em `ordens-servico.ts` evita disparo redundante quando o drop é na própria coluna. `<select>`
+continua funcionando (teclado, leitor de tela, mobile sem drag por toque).
+
+Gates verdes: typecheck, 289 testes (era 288 +1), build, `arch:check` (0 violações),
+`audit:esteira` (302 docs OK). Lint full-tree deu OOM (pressão de memória da máquina no momento —
+confirmado via `vm_stat`, ~81MB livre — mesmo problema documentado em várias sessões anteriores,
+não é o código). **Validação visual em browser não foi feita nesta sessão**: o dev server local
+ainda autentica contra o Supabase de produção real (sem bypass de auth desde E00-S05) e eu não
+tinha credencial autorizada pra usar — revisei o código linha a linha em vez de simular. Pendência
+explícita: Lucas/Fabrício testar arrastar um card de verdade no browser antes de fechar o AC-2.
+
+Nada commitado ainda desta story (aguardando decisão de branch/commit).
+
+---
+
+
 **Atualização:** 2026-07-11 (sessão Lucas/Claude) — **PR #49 (E01-S60) deixado redondo antes da
 aprovação: tooling versionado + pendência de CORS verificada e fechada.**
 

@@ -3,6 +3,7 @@ import {
   FILTROS_ORDENS_VAZIO,
   agruparPorTecnico,
   calcularKpisOrdens,
+  deveAlterarStatusPorDrop,
   filtrarBacklogGut,
   filtrarOrdens,
   formatarDiaIso,
@@ -201,5 +202,11 @@ describe("ordens-servico", () => {
     expect(resumo).toContain("Cliente: Cliente");
     expect(resumo).toContain("Técnico: Fabrício");
     expect(resumo).toContain("Trocar o disjuntor");
+  });
+
+  it("deveAlterarStatusPorDrop — E01-S61: só dispara quando origem e destino diferem", () => {
+    expect(deveAlterarStatusPorDrop("planejamento", "em_execucao")).toBe(true);
+    expect(deveAlterarStatusPorDrop("planejamento", "planejamento")).toBe(false);
+    expect(deveAlterarStatusPorDrop("finalizado", "cancelado")).toBe(true);
   });
 });
