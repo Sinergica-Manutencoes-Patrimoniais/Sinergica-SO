@@ -37,74 +37,103 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo / Brand */}
-        <div className="text-center mb-8">
-          <img
-            src="/logos/logo-horizontal-positivo.png"
-            alt="Sinérgica Manutenções Patrimoniais"
-            className="mx-auto h-14 object-contain mb-2"
-          />
-          <p className="text-sm text-ink-3 mt-1">Sistema Operacional</p>
+    <main className="grid min-h-screen bg-paper lg:grid-cols-[minmax(320px,0.9fr)_1.1fr]">
+      <section className="relative hidden overflow-hidden bg-navy-deep p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
+        <div className="absolute -right-28 -top-28 h-80 w-80 rounded-full border border-white/10" />
+        <div className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-orange/10 blur-3xl" />
+        <img
+          src="/logos/logo-horizontal-branco.png"
+          alt="Sinérgica Manutenções Patrimoniais"
+          className="relative h-9 w-fit object-contain"
+        />
+        <div className="relative max-w-lg">
+          <p className="font-brand text-[11px] font-semibold uppercase tracking-[0.22em] text-orange">
+            Sistema Operacional
+          </p>
+          <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.035em] xl:text-4xl">
+            Operação, atendimento e gestão em um só lugar.
+          </h1>
+          <p className="mt-4 max-w-md text-sm leading-7 text-[#B9C1D8]">
+            Informação operacional clara para a equipe decidir mais rápido e executar melhor.
+          </p>
         </div>
+        <p className="relative text-xs text-[#8792B2]">Sinérgica Manutenções Patrimoniais</p>
+      </section>
 
-        {/* Card */}
-        <div className="bg-card rounded-2xl border border-line p-8">
-          <h2 className="text-lg font-semibold text-ink mb-1">Entrar na sua conta</h2>
-          <p className="text-sm text-ink-3 mb-6">Acesso restrito à equipe Sinérgica.</p>
+      <section className="flex min-h-screen items-center justify-center p-4 sm:p-8">
+        <div className="w-full max-w-sm">
+          <div className="mb-7 lg:hidden">
+            <img
+              src="/logos/logo-horizontal-positivo.png"
+              alt="Sinérgica Manutenções Patrimoniais"
+              className="h-11 object-contain"
+            />
+            <p className="mt-2 text-xs text-ink-3">Sistema Operacional</p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-ink-2 mb-1.5">
-                E-mail
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@sinergica.com.br"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink placeholder-ink-4 text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
-              />
-            </div>
+          <div className="surface-card p-5 sm:p-6">
+            <p className="font-brand text-[10px] font-semibold uppercase tracking-[0.18em] text-orange">
+              Área segura
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-ink">
+              Bem-vindo de volta
+            </h2>
+            <p className="mb-5 mt-1 text-xs leading-relaxed text-ink-3">
+              Entre com as credenciais da sua conta Sinérgica.
+            </p>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-ink-2 mb-1.5">
-                Senha
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink placeholder-ink-4 text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
-              />
-            </div>
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              <div>
+                <label htmlFor="email" className="mb-1.5 block text-xs font-semibold text-ink-2">
+                  E-mail
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="voce@sinergica.com.br"
+                  className="input"
+                />
+              </div>
 
-            {error && (
-              <p className="text-sm text-[#C5362B] bg-[#FCEAE8] border border-[#F2C4C0] rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
+              <div>
+                <label htmlFor="password" className="mb-1.5 block text-xs font-semibold text-ink-2">
+                  Senha
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="input"
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 px-4 bg-orange hover:bg-orange-deep disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition shadow-[0_2px_0_0_#C5590C] hover:shadow-none focus:outline-none focus:ring-2 focus:ring-orange/30 focus:ring-offset-2 cursor-pointer"
-            >
-              {loading ? "Entrando…" : "Entrar"}
-            </button>
-          </form>
+              {error && (
+                <p className="status-error" role="alert">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-accent mt-1 w-full shadow-[0_2px_0_0_#C5590C] hover:translate-y-px hover:shadow-none"
+              >
+                {loading ? "Entrando…" : "Entrar"}
+              </button>
+            </form>
+          </div>
+
+          <p className="mt-5 text-center text-[11px] text-ink-3">
+            Acesso restrito · Ambiente monitorado
+          </p>
         </div>
-
-        <p className="text-center text-xs text-ink-3 mt-6">
-          Sinérgica SO · Padrão SO v2 · Trívia Studio
-        </p>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

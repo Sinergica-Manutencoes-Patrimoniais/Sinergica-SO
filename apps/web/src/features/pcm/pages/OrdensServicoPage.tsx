@@ -303,7 +303,7 @@ export function OrdensServicoPage({
             type="button"
             onClick={carregar}
             disabled={recarregando}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
           >
             <RefreshCw className="h-4 w-4" />
             Atualizar
@@ -312,7 +312,7 @@ export function OrdensServicoPage({
             <button
               type="button"
               onClick={onNovaOs}
-              className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+              className="inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
             >
               <ClipboardList className="h-4 w-4" />
               Nova OS
@@ -328,7 +328,7 @@ export function OrdensServicoPage({
       )}
 
       {kpis && (
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-6">
           {[
             ["Total", kpis.total],
             ["Abertas", kpis.abertas],
@@ -337,11 +337,11 @@ export function OrdensServicoPage({
             ["Finalizadas", kpis.finalizadas],
             ["Críticas", kpis.criticas],
           ].map(([label, valor]) => (
-            <div key={label} className="rounded-[8px] border border-line bg-card px-4 py-3">
+            <div key={label} className="rounded-[8px] border border-line bg-card px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
                 {label}
               </p>
-              <p className="mt-1 text-2xl font-bold text-ink">{valor}</p>
+              <p className="mt-0.5 text-xl font-bold leading-none text-ink">{valor}</p>
             </div>
           ))}
         </div>
@@ -353,7 +353,7 @@ export function OrdensServicoPage({
             key={value}
             type="button"
             onClick={() => onMudarVisao(value)}
-            className={`inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold ${
+            className={`inline-flex items-center gap-1.5 border-b-2 px-2.5 py-1.5 text-xs font-semibold ${
               visao === value
                 ? "border-orange text-ink"
                 : "border-transparent text-ink-3 hover:text-ink-2"
@@ -365,7 +365,7 @@ export function OrdensServicoPage({
         ))}
       </div>
 
-      <div className="bg-card rounded-[10px] border border-line p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 gap-2 rounded-[10px] border border-line bg-card p-3 md:grid-cols-6">
         <input
           className="input md:col-span-2"
           placeholder="Buscar por número, cliente ou título"
@@ -501,14 +501,30 @@ export function OrdensServicoPage({
       )}
 
       {visao === "lista" && (
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(520px,1fr)_420px] gap-4">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(520px,1fr)_380px]">
           <section className="bg-card rounded-[10px] border border-line overflow-hidden">
+            <div className="flex items-center justify-between border-b border-line-soft bg-paper px-4 py-2.5">
+              <div>
+                <h3 className="text-xs font-semibold text-ink">Fila de ordens</h3>
+                <p className="text-[11px] text-ink-3">Selecione uma OS para ver o resumo</p>
+              </div>
+              <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink-2">
+                {ordensFiltradas.length}
+              </span>
+            </div>
             <div className="divide-y divide-line-soft">
               {ordensFiltradas.length === 0 ? (
                 <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS encontrada.</div>
               ) : (
                 ordensFiltradas.map((ordem) => (
-                  <div key={ordem.id} className="flex items-center gap-2 pl-3">
+                  <div
+                    key={ordem.id}
+                    className={`flex items-center gap-2 border-l-2 pl-2 ${
+                      ordem.id === selecionadaId
+                        ? "border-orange bg-line-soft"
+                        : "border-transparent"
+                    }`}
+                  >
                     {temEscrita && (
                       <input
                         type="checkbox"
@@ -518,13 +534,12 @@ export function OrdensServicoPage({
                         className="h-4 w-4 shrink-0 accent-orange"
                       />
                     )}
-                    <Tooltip content={resumoTooltipOrdem(ordem)}>
+                    <Tooltip content={resumoTooltipOrdem(ordem)} className="min-w-0 flex-1">
                       <button
                         type="button"
                         onClick={() => setSelecionadaId(ordem.id)}
-                        className={`w-full px-2 py-4 text-left hover:bg-line-soft ${
-                          ordem.id === selecionadaId ? "bg-line-soft" : ""
-                        }`}
+                        aria-pressed={ordem.id === selecionadaId}
+                        className="w-full px-2 py-2.5 text-left hover:bg-line-soft"
                       >
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-xs font-brand tabular-nums text-ink-3">
@@ -541,9 +556,10 @@ export function OrdensServicoPage({
                             {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                           </span>
                         </div>
-                        <p className="mt-2 text-sm font-semibold text-ink">{ordem.titulo}</p>
+                        <p className="mt-1.5 text-sm font-semibold text-ink">{ordem.titulo}</p>
                         <p className="mt-1 text-xs text-ink-3">
-                          {ordem.clienteNome} · {ordem.categoria} · score {ordem.scorePcm}
+                          {ordem.clienteNome} · {ordem.categoria} ·{" "}
+                          {ordem.tecnicoNome ?? "sem técnico"}
                         </p>
                       </button>
                     </Tooltip>
@@ -553,7 +569,7 @@ export function OrdensServicoPage({
             </div>
           </section>
 
-          <section className="bg-card rounded-[10px] border border-line min-h-[520px]">
+          <section className="self-start rounded-[10px] border border-line bg-card">
             {selecionada ? (
               <DetalheOs
                 selecionada={selecionada}
@@ -573,9 +589,9 @@ export function OrdensServicoPage({
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[8px] border border-line bg-paper px-3 py-2">
+    <div className="rounded-[7px] border border-line bg-paper px-2.5 py-2">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
-      <p className="mt-1 font-medium text-ink">{value}</p>
+      <p className="mt-0.5 text-xs font-medium text-ink">{value}</p>
     </div>
   );
 }
@@ -593,16 +609,24 @@ function DetalheOs({
 }) {
   return (
     <div>
-      <div className="px-5 py-4 border-b border-line-soft">
+      <div className="border-b border-line-soft px-4 py-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+          Resumo da OS
+        </p>
         <Tooltip content="Numeração interna do PCM (Chamado) — não é o ticket/task do Auvo.">
-          <p className="inline text-xs font-brand tabular-nums text-ink-3">{selecionada.numero}</p>
+          <p className="mt-1 inline-block text-xs font-brand tabular-nums text-ink-3">
+            {selecionada.numero}
+          </p>
         </Tooltip>
-        <h3 className="mt-1 text-lg font-semibold text-ink">{selecionada.titulo}</h3>
-        <p className="mt-1 text-sm text-ink-3">{selecionada.clienteNome}</p>
+        <h3 className="mt-1 text-base font-semibold text-ink">{selecionada.titulo}</h3>
+        <p className="mt-0.5 text-xs text-ink-3">{selecionada.clienteNome}</p>
+        <p className="mt-2 text-xs leading-relaxed text-ink-2">
+          {selecionada.descricao?.trim() || "Sem descrição informada para esta OS."}
+        </p>
       </div>
 
-      <div className="p-5 space-y-4">
-        <div className="grid grid-cols-2 gap-3 text-sm">
+      <div className="space-y-3 p-4">
+        <div className="grid grid-cols-2 gap-2 text-sm">
           <Info label="Status" value={rotuloStatusOs(selecionada.status)} />
           <Info
             label="Prioridade"
@@ -624,7 +648,15 @@ function DetalheOs({
                 : selecionada.auvoSyncStatus || "Sem task"
             }
           />
-          {selecionada.tecnicoNome && <Info label="Técnico" value={selecionada.tecnicoNome} />}
+          <Info
+            label="Técnico"
+            value={
+              selecionada.tecnicoNome ??
+              (typeof selecionada.detalhes?.tecnicoNomeAuvo === "string"
+                ? selecionada.detalhes.tecnicoNomeAuvo
+                : "Não atribuído")
+            }
+          />
           {selecionada.dataAgendada && (
             <Info
               label="Agendada"
@@ -659,7 +691,7 @@ function DetalheOs({
         )}
 
         {temEscrita && (
-          <div className="rounded-[8px] border border-line bg-paper p-3">
+          <div className="rounded-[8px] border border-line bg-paper p-2.5">
             <label
               htmlFor="status-os-operacional"
               className="text-xs font-semibold uppercase tracking-wider text-ink-3"

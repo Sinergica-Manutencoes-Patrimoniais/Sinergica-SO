@@ -22,6 +22,14 @@ const PERIODOS: { valor: PeriodoDashboard; label: string }[] = [
   { valor: "30d", label: "30 dias" },
 ];
 
+function mensagemErroDashboard(error: unknown): string {
+  const mensagem = error instanceof Error ? error.message : "";
+  if (/failed to send a request|edge function|network|fetch/i.test(mensagem)) {
+    return "Não foi possível conectar ao serviço de métricas. Verifique a conexão e tente novamente.";
+  }
+  return mensagem || "Não foi possível carregar o dashboard.";
+}
+
 export function AtendimentoDashboardPage() {
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [periodo, setPeriodo] = useState<PeriodoDashboard>("7d");
@@ -41,7 +49,7 @@ export function AtendimentoDashboardPage() {
     } catch (error) {
       setEstado({
         fase: "erro",
-        mensagem: error instanceof Error ? error.message : "Não foi possível carregar o dashboard.",
+        mensagem: mensagemErroDashboard(error),
       });
     }
   }, []);
@@ -70,11 +78,7 @@ export function AtendimentoDashboardPage() {
       <div className="rounded-[10px] border border-line bg-card p-8 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Dashboard indisponível</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button
-          type="button"
-          onClick={() => carregar(periodo)}
-          className="mt-4 inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-        >
+        <button type="button" onClick={() => carregar(periodo)} className="mt-4 btn-secondary">
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
         </button>
@@ -85,7 +89,7 @@ export function AtendimentoDashboardPage() {
   const { painel, widgets } = estado;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="page-stack">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-ink">Atendimento</h2>
@@ -93,14 +97,14 @@ export function AtendimentoDashboardPage() {
             Visão operacional — fila, tempo de resposta, tendência, canais, IA e equipe.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-[6px] border border-line p-0.5">
             {PERIODOS.map((p) => (
               <button
                 key={p.valor}
                 type="button"
                 onClick={() => setPeriodo(p.valor)}
-                className={`rounded-[4px] px-3 py-1.5 text-sm font-semibold ${
+                className={`rounded-[4px] px-2.5 py-1 text-xs font-semibold ${
                   periodo === p.valor ? "bg-navy text-white" : "text-ink-2 hover:bg-line-soft"
                 }`}
               >
@@ -108,11 +112,7 @@ export function AtendimentoDashboardPage() {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => carregar(periodo)}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+          <button type="button" onClick={() => carregar(periodo)} className="btn-secondary">
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </button>
@@ -121,17 +121,17 @@ export function AtendimentoDashboardPage() {
 
       <KpiStrip painel={painel} />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <QueueHealthCard aging={painel.aging} />
         <AiHealthCard painel={painel} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <ChannelMixCard mixCanal={painel.mixCanal} />
         <CsatCard csat={painel.csat} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <VolumeTrendCard volumeDiario={widgets.volumeDiario} />
         <SlaDeliveryCard
           slaDentroMetaPct={widgets.slaDentroMetaPct}
@@ -141,7 +141,7 @@ export function AtendimentoDashboardPage() {
 
       <HourlyHeatmapCard heatmap={widgets.heatmapHora} />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <RankingCard
           titulo="Throughput"
           subtitulo="Mensagens enviadas por atendente no período"
@@ -166,7 +166,7 @@ function KpiStrip({ painel }: { painel: PainelAtendimento }) {
       : `${painel.abertasHojeDeltaPct > 0 ? "+" : ""}${painel.abertasHojeDeltaPct}% vs ontem`;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6">
       <Kpi
         label="Fila sem atendente"
         valor={painel.filaSemAtendente}
@@ -206,14 +206,14 @@ function Kpi({
 }: { label: string; valor: string | number; sub: string; alerta?: boolean }) {
   return (
     <div
-      className={`rounded-[6px] border p-4 ${alerta ? "border-[#F0C6B8] bg-[#FDF1EE]" : "border-line bg-card"}`}
+      className={`rounded-[8px] border px-3 py-2.5 shadow-[0_1px_2px_rgba(20,28,54,0.03)] ${alerta ? "border-[#F0C6B8] bg-[#FDF1EE]" : "border-line bg-card"}`}
     >
       <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
         {alerta && <AlertTriangle className="h-3 w-3 text-[#C5362B]" />}
         {label}
       </div>
       <p
-        className={`font-brand mt-1.5 text-2xl font-bold leading-none tabular-nums ${alerta ? "text-[#C5362B]" : "text-ink"}`}
+        className={`mt-1 font-brand text-xl font-bold leading-none tabular-nums ${alerta ? "text-[#C5362B]" : "text-ink"}`}
       >
         {valor}
       </p>
@@ -231,7 +231,7 @@ function QueueHealthCard({ aging }: { aging: PainelAtendimento["aging"] }) {
     "+24h": "bg-[#C5362B]",
   };
   return (
-    <section className="rounded-[10px] border border-line bg-card p-5">
+    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">Saúde da fila — tempo de espera</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Conversas abertas não lidas, por quanto tempo aguardam resposta.
@@ -260,7 +260,7 @@ function AiHealthCard({ painel }: { painel: PainelAtendimento }) {
   const total = painel.autonomiaZe + painel.autonomiaHumano;
   const iaPct = painel.autonomiaPct ?? 0;
   return (
-    <section className="rounded-[10px] border border-line bg-card p-5">
+    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">IA — autonomia e escalonamento</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Modo das conversas abertas e quanto passa para humano.
@@ -301,7 +301,7 @@ function AiHealthCard({ painel }: { painel: PainelAtendimento }) {
 function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] }) {
   const max = Math.max(...mixCanal.map((m) => m.total), 1);
   return (
-    <section className="rounded-[10px] border border-line bg-card p-5">
+    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">Mix de canal</h3>
       <p className="mt-0.5 text-xs text-ink-3">De onde vem a demanda no período.</p>
       {mixCanal.length === 0 ? (
@@ -332,7 +332,7 @@ function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] 
 
 function CsatCard({ csat }: { csat: PainelAtendimento["csat"] }) {
   return (
-    <section className="rounded-[10px] border border-line bg-card p-5">
+    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">Satisfação (CSAT)</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Notas de pesquisas ligadas ao atendimento no período.
@@ -349,7 +349,7 @@ function CsatCard({ csat }: { csat: PainelAtendimento["csat"] }) {
 function VolumeTrendCard({ volumeDiario }: { volumeDiario: WidgetsAtendimento["volumeDiario"] }) {
   const max = Math.max(...volumeDiario.flatMap((v) => [v.entrada, v.saida]), 1);
   return (
-    <section className="rounded-[10px] border border-line bg-card p-5">
+    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">Volume por dia</h3>
       <p className="mt-0.5 text-xs text-ink-3">Mensagens recebidas vs enviadas no período.</p>
       {volumeDiario.length === 0 ? (
@@ -403,7 +403,7 @@ function SlaDeliveryCard({
   const cor = pct >= 90 ? "text-[#1E8E45]" : pct >= 70 ? "text-[#B26A00]" : "text-[#C5362B]";
   const corBarra = pct >= 90 ? "bg-[#1E8E45]" : pct >= 70 ? "bg-[#B26A00]" : "bg-[#C5362B]";
   return (
-    <section className="rounded-[10px] border border-line bg-card p-5">
+    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">SLA & entrega</h3>
       <p className="mt-0.5 text-xs text-ink-3">1ª resposta dentro da meta de 5 minutos.</p>
       <p className={`font-brand mt-3 text-3xl font-bold ${cor}`}>
@@ -427,7 +427,7 @@ function HourlyHeatmapCard({ heatmap }: { heatmap: HeatmapCelula[] }) {
   const max = Math.max(...heatmap.map((h) => h.total), 1);
   const porCelula = new Map(heatmap.map((h) => [`${h.diaSemana}-${h.hora}`, h.total]));
   return (
-    <section className="rounded-[10px] border border-line bg-card p-5">
+    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">Pico por hora</h3>
       <p className="mt-0.5 text-xs text-ink-3">Mensagens recebidas por dia da semana e hora.</p>
       <div className="mt-4 overflow-x-auto">
@@ -477,7 +477,7 @@ function RankingCard({
 }) {
   const max = Math.max(...itens.map((i) => i.total), 1);
   return (
-    <section className="rounded-[10px] border border-line bg-card p-5">
+    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">{titulo}</h3>
       <p className="mt-0.5 text-xs text-ink-3">{subtitulo}</p>
       {itens.length === 0 ? (

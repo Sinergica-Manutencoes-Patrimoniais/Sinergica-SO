@@ -272,7 +272,7 @@ export function InspecoesPage() {
       <section className="rounded-[10px] border border-line bg-card p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-ink">Relatórios de Inspeção</h2>
+            <h2 className="text-base font-semibold text-ink">Relatórios de Inspeção</h2>
             <p className="mt-1 text-sm text-ink-3">Vistoria predial mobile com análise por IA</p>
           </div>
           <button
@@ -379,7 +379,7 @@ export function InspecoesPage() {
       <section className="min-h-[680px] rounded-[10px] border border-line bg-card">
         {inspecaoSelecionada ? (
           <div className="flex min-h-[680px] flex-col">
-            <div className="sticky top-0 z-10 rounded-t-[10px] bg-navy px-5 py-4 text-white shadow-sm">
+            <div className="sticky top-0 z-10 rounded-t-[10px] bg-navy px-4 py-3 text-white shadow-sm">
               <div className="flex items-start gap-3">
                 <button
                   type="button"
@@ -1102,13 +1102,13 @@ function ModalBase({
   size?: "md" | "lg";
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
+    <div className="modal-backdrop">
       <div
         className={`max-h-[92vh] w-full overflow-hidden rounded-[10px] bg-card shadow-2xl ${
           size === "lg" ? "max-w-4xl" : "max-w-2xl"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-line-soft px-5 py-4">
+        <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">{title}</h3>
           <button
             type="button"
@@ -1118,7 +1118,7 @@ function ModalBase({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="max-h-[calc(92vh-64px)] overflow-y-auto p-5">{children}</div>
+        <div className="max-h-[calc(92vh-64px)] overflow-y-auto p-4">{children}</div>
       </div>
     </div>
   );
@@ -1137,7 +1137,7 @@ function BottomSheet({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45">
       <button type="button" className="absolute inset-0" onClick={onClose} aria-label="Fechar" />
       <div className="relative max-h-[88vh] w-full overflow-y-auto rounded-t-[14px] bg-card shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center gap-3 bg-navy px-5 py-4 text-white">
+        <div className="sticky top-0 z-10 flex items-center gap-3 bg-navy px-4 py-3 text-white">
           <button
             type="button"
             onClick={onClose}
@@ -1147,7 +1147,7 @@ function BottomSheet({
           </button>
           <h3 className="text-sm font-semibold">{title}</h3>
         </div>
-        <div className="space-y-4 p-5">{children}</div>
+        <div className="space-y-4 p-4">{children}</div>
       </div>
     </div>
   );

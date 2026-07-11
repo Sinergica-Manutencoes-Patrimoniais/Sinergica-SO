@@ -28,7 +28,7 @@ alwaysApply: false
 ## Dívidas do Sinérgica SO (atuais)
 | ID | Descrição | Risco / impacto | Prio | Plano de correção | Status |
 |----|-----------|-----------------|------|-------------------|--------|
-| SEC-001 | Projeto Supabase ainda não provisionado — RLS/FORCE não verificada em prod | acesso indevido | P0 | provisionar no Mês 2 e aplicar `0001_schemas_dominio.sql` | aberto |
+| SEC-001 | ~~Projeto Supabase ainda não provisionado~~ — desatualizado: projeto está em produção desde E00-S05 (hook JWT + schemas expostos confirmados via Management API), 83 migrations aplicadas, todas com `FORCE ROW LEVEL SECURITY` por convenção do `lint:migrations`/Squawk. RLS FORCE não foi reconfirmada por query direta ao Postgres de produção nesta sessão (sem acesso ao dashboard) | acesso indevido se a convenção falhar numa migration | P1 | rodar `select relname from pg_class where relforcerowsecurity = false and relnamespace in (select oid from pg_namespace where nspname in ('pcm','atendimento','comercial','relacionamento','config'))` contra prod e confirmar 0 linhas | reavaliar (era P0/"aberto" por premissa desatualizada) |
 | SEC-002 | Security headers (CSP, X-Frame-Options, HSTS) não configurados | clickjacking/XSS | P1 | configurar `netlify.toml` (headers) no Mês 2 | aberto |
 | SEC-003 | Rate limiting não implementado nas Edge Functions públicas | abuso/DoS | P2 | usar `_shared/cors.ts` pattern com rate-limit header | aberto |
 

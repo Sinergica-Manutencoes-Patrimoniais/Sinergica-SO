@@ -6,9 +6,109 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+**Atualização:** 2026-07-11 (sessão Lucas/Claude) — **PR #49 (E01-S60) deixado redondo antes da
+aprovação: tooling versionado + pendência de CORS verificada e fechada.**
+
+1. **Os 6 arquivos de tooling que ficavam eternamente "uncommitted" em toda sessão anterior foram
+   resolvidos, não mais adiados.** `.claude/settings.json`/`.codex/hooks.json` tinham hooks do
+   graphify com path absoluto (`/Users/lucasazevedo/.local/bin/graphify`) — quebraria em qualquer
+   outra máquina/CI; trocado para `graphify` puro (confirmado que resolve via PATH).
+   `AGENTS.md`/`CLAUDE.md` ganharam a seção graphify (instruções condicionais, sem path pessoal) —
+   commitados. `graphify-out/`/`apps/web/graphify-out/` (114MB de cache gerado) entraram no
+   `.gitignore` em vez de aparecer como untracked toda sessão. Working tree 100% limpo depois disso
+   (`git status --porcelain` vazio). 2 commits novos na branch `feat/E01-S60-acabamento-visual-v1`:
+   `chore(E00-S00): versiona skills SDD locais (.agents/skills)` e
+   `chore(E00-S00): versiona tooling do graphify e ignora o cache gerado`.
+2. **Pendência de CORS (E01-S48) verificada e fechada — não era mais pendência, só faltava
+   confirmar.** Rodei `SUPABASE_PROJECT_ID=nudannsrfvjggoergvyn node scripts/smoke-edge-functions.mjs`
+   contra o projeto real: as 26 funções respondem, e o probe de CORS embutido (contra
+   `pcm-auvo-tickets-referencia`) confirmou `Access-Control-Allow-Origin:
+   https://so-sinergica.netlify.app` ecoado corretamente pro Origin de produção. Fiz também um
+   `curl -X OPTIONS` direto contra `atendimento-metrics` (a função por trás do dashboard de
+   Atendimento, que tinha o erro relatado na E01-S60) com o mesmo Origin — mesmo resultado, header
+   ecoado certo. **`CORS_ALLOWED_ORIGINS` já inclui o domínio de produção; não há ação pendente.**
+   O erro visto em `localhost` durante o QA da E01-S60 é esperado e correto (localhost não deve
+   estar na allowlist de produção).
+3. PR #49 fica pronto para aprovação — sem pendências de código ou infra conhecidas.
+
+---
+
+
 > Memória de trabalho **entre sessões** (humanos e agentes). É **volátil**: atualizada o tempo
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
+
+**Atualização:** 2026-07-11 (sessão Lucas/Claude) — **E01-S60 verificada e fechada; SEC-001
+corrigido (estava desatualizado).**
+
+Codex chegou ao fim dos gates e passou a bola. Reexecutei os gates eu mesma (não confiei só no
+relato): `typecheck`, `test` (288 pass/9 skip), `build`, `arch:check` (0 violações),
+`check:edge-functions` (26 funções), `lint:migrations` (83 migrations + Squawk),
+`pnpm audit --prod --audit-level=high` (0 vulnerabilidades) — todos verdes de forma independente.
+`lint` full-tree deu OOM (mesmo problema documentado há várias sessões, pressão de memória da
+máquina, não do código) — rodei `biome check` só nos 42 arquivos tocados por esta story: limpo.
+`audit:esteira` segue vermelho só pelos 6 arquivos pré-existentes de `.agents/skills/*` sem
+`alwaysApply` — tooling não relacionado a esta story, mesmo achado de sessões anteriores.
+
+Spot-check adversarial no ponto mais arriscado (o bug de drawer que a revisão do Codex já tinha
+achado e corrigido): `sidebarCompacta = sidebarCollapsed && !mobileSidebarOpen` em `HomePage.tsx`
+força o drawer mobile a abrir sempre expandido, independente do estado "recolhida" do desktop —
+correto. Shell é `h-screen overflow-hidden` (scroll só no conteúdo interno), então não há o bug
+clássico de body-scroll atrás do drawer.
+
+**Ressalva do dashboard de Atendimento não conectar via localhost: investigada e confirmada como
+config, não bug.** `_shared/cors.ts` só ecoa `Access-Control-Allow-Origin` para origem presente em
+`CORS_ALLOWED_ORIGINS` (secret do Supabase) — mesma causa documentada na E01-S48 (Tickets).
+`localhost` normalmente não está na allowlist de produção; o browser bloqueia a resposta e o
+`supabase-js` devolve "Failed to send a request", que a UI já trata com mensagem amigável
+(`mensagemErroDashboard`, coberto por `visual-v1.test.ts`). Nada a corrigir em código — validar no
+domínio publicado, como já indicado.
+
+**SEC-001 corrigido:** estava desatualizado dizendo "Supabase não provisionado" — o projeto está
+em produção desde E00-S05, com 2.357+ OS sincronizadas do Auvo e 83 migrations aplicadas. Rebaixado
+de P0/"aberto" pra P1/"reavaliar", com a query SQL exata pra reconfirmar RLS FORCE em produção
+quando alguém tiver acesso ao dashboard.
+
+**Não commitado.** Branch atual é `codex/fix-auvo-funcionarios-pull` (nome não segue a convenção
+`feat/E01-S60-...` — tem 1 commit já ahead de main, `bb8890e fix(E01-S47)`, não relacionado a esta
+story, mais todo o trabalho visual desta story ainda em working tree). Por instrução permanente do
+projeto, commit só acontece quando pedido explicitamente — aguardando confirmação do Lucas antes de
+commitar/abrir branch própria e nunca fazendo push direto pra main.
+
+---
+
+**Atualização anterior:** 2026-07-11 (Codex) — **E01-S60, acabamento visual transversal da V1,
+implementada localmente com QA autenticado.** Foi criada uma camada de primitives CSS para botões,
+superfícies, estados, modais, foco e densidade. Login ganhou composição institucional responsiva;
+Home ganhou cartões mais compactos; a sidebar virou drawer móvel com overlay e fechamento após
+navegação; o conteúdo usa 100% da largura em viewport estreita. Cadastros, tabelas, detalhes e
+modais PCM foram compactados; Configurações ganhou estados vazios orientativos; Atendimento ganhou
+KPIs/cards densos, abas compactas e Inbox que alterna lista/chat no mobile. Erros técnicos de rede
+do dashboard de Atendimento agora viram mensagem amigável. Smoke real com a conta fornecida pelo
+Lucas cobriu Home, dashboard PCM, Clientes, Configurações, Inbox e Config Atendimento em 1280 px e
+390×844: `body overflow = 0`, main = 390 px, drawer = 256 px; tema escuro também validado. Sinais
+Auvo apareceram com dados reais (2.185 execuções, 268 anexos, 22 relatos, 2.150 assinaturas e 2.182
+com horas). Nenhuma biblioteca nova foi adicionada; bundle JS permaneceu praticamente estável.
+Testes web: 288 pass, 9 skip. A revisão adversarial encontrou e corrigiu o drawer móvel herdando a
+sidebar recolhida do desktop; teste estrutural e smoke desktop→mobile cobrem a regressão. Ressalvas:
+dashboard Atendimento não conecta à Edge Function a partir
+de localhost (mensagem tratada) e a config parcial registrou dois erros no console; verificar no
+domínio publicado. CI real/publicação ainda pendentes.
+
+**Atualização:** 2026-07-11 (Codex) — **E01-S59, refino de densidade operacional PCM,
+implementada localmente.** Shell, inputs, botões, filtros e cartões foram compactados; a lista de OS
+agora ocupa a coluna inteira, tem título/contagem e seleção explícita; o resumo lateral elimina o
+vazio e mostra descrição, cliente e técnico. Top Backlog e Ordens Recentes ganharam contexto na
+linha e tooltip. O bloco “Sinais de campo Auvo” deixou de depender apenas da tabela de webhook:
+consolida por OS `pcm.auvo_task_snapshots` e evidências já trazidas pelo pull em
+`pcm.ordens_servico.auvo_detalhes` (execução, anexos, relatos, assinaturas, peças e horas), sem
+duplicar a mesma OS. Consulta read-only em produção confirmou snapshots vazios, mas 2.349 OS com
+detalhes, 268 com anexos, 2.177 com duração e 2.181 com checkout — portanto os zeros eram um bug de
+fonte, não ausência de execução. Testes web (282 pass, 9 skip), build, typecheck, lint, arquitetura e
+fidelidade verdes. O `ci:local` só ficou vermelho no `audit:esteira`: seis skills preexistentes em
+`.agents/skills/` não têm `alwaysApply`; esses arquivos não fazem parte da E01-S59 e foram
+preservados. QA visual local autenticado não foi possível porque o browser abriu na tela de login;
+validar a aparência final na sessão autenticada de produção após publicação.
 
 **Atualização:** 2026-07-11 (Codex) — **E01-S47 retomada após teste de contrato vivo executado pelo
 Lucas.** Aprovados e habilitados no registry: clientes, equipamentos, grupos de clientes, categorias

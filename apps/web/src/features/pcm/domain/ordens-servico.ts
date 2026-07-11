@@ -168,13 +168,17 @@ export function resumoTooltipOrdem(ordem: OrdemServicoOperacional): string | nul
   const detalhes = ordem.detalhes ?? {};
   const texto = (chave: string) =>
     typeof detalhes[chave] === "string" ? (detalhes[chave] as string) : null;
+  const tecnico = ordem.tecnicoNome ?? texto("tecnicoNomeAuvo") ?? "não atribuído";
   const linhas = [
+    `${ordem.numero} · ${rotuloStatusOs(ordem.status)} · ${PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}`,
+    `Cliente: ${ordem.clienteNome}`,
+    `Categoria: ${ordem.categoria} · Técnico: ${tecnico}`,
     ordem.descricao?.trim() || null,
     texto("address") ? `Endereço: ${texto("address")}` : null,
     texto("orientacao") ? `Orientação: ${texto("orientacao")}` : null,
     texto("relato") ? `Relato: ${texto("relato")}` : null,
   ].filter((linha): linha is string => Boolean(linha));
-  return linhas.length > 0 ? linhas.join("\n") : null;
+  return linhas.join("\n");
 }
 
 export interface FiltrosOrdens {

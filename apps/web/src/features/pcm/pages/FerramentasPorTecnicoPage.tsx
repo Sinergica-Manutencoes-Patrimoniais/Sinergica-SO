@@ -102,10 +102,10 @@ export function FerramentasPorTecnicoPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-5">
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-ink">Ferramentas por Técnico</h3>
+            <h3 className="text-base font-semibold text-ink">Ferramentas por Técnico</h3>
             <p className="mt-0.5 text-sm text-ink-3">
               Alocação operacional sincronizada com o estoque por funcionário do Auvo
             </p>

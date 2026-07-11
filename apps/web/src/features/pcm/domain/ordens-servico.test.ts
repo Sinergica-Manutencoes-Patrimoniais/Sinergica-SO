@@ -9,6 +9,7 @@ import {
   gerarDiasDoMes,
   ordenarBacklogGut,
   ordensNoDia,
+  resumoTooltipOrdem,
 } from "./ordens-servico";
 
 const base = {
@@ -184,5 +185,21 @@ describe("ordens-servico", () => {
     if (!primeiroDia) throw new Error("gerarDiasDoMes devolveu array vazio");
     expect(primeiroDia.getDay()).toBe(0);
     expect(formatarDiaIso(primeiroDia)).toBe("2026-05-31");
+  });
+
+  it("E01-S59: tooltip resume identidade, técnico e descrição", () => {
+    const resumo = resumoTooltipOrdem({
+      ...base,
+      status: "planejamento",
+      scorePcm: 27,
+      createdAt: "2026-07-04",
+      descricao: "Trocar o disjuntor",
+      tecnicoNome: "Fabrício",
+    });
+
+    expect(resumo).toContain("CH-001 · Planejamento · Média");
+    expect(resumo).toContain("Cliente: Cliente");
+    expect(resumo).toContain("Técnico: Fabrício");
+    expect(resumo).toContain("Trocar o disjuntor");
   });
 });

@@ -138,10 +138,10 @@ export function TicketsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-5">
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-ink">Tickets</h3>
+            <h3 className="text-base font-semibold text-ink">Tickets</h3>
             <p className="mt-0.5 text-sm text-ink-3">
               Chamados de central de atendimento do Auvo — diferente da OS do PCM
             </p>
@@ -289,15 +289,15 @@ function NovoTicketModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+    <div className="modal-backdrop">
       <div className="w-full max-w-xl rounded-[8px] border border-line bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Novo ticket</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto p-5">
+        <div className="max-h-[70vh] overflow-y-auto p-4">
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Título *</span>
             <input
@@ -411,7 +411,7 @@ function NovoTicketModal({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-5 py-4">
+        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
           <button
             type="button"
             onClick={onCancel}

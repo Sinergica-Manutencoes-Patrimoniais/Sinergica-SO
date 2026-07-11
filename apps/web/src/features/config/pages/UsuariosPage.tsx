@@ -1,3 +1,4 @@
+import { UserRoundCog } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import type { UsuarioConfig } from "../application/config-gateway";
@@ -205,35 +206,36 @@ export function UsuariosPage() {
   const editandoUsuario = editandoId ? usuarios.find((u) => u.userId === editandoId) : null;
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+    <div className="page-stack">
+      <div className="page-header">
         <div>
-          <h2 className="text-lg font-semibold text-ink">Usuários</h2>
-          <p className="text-sm text-ink-3 mt-0.5">Contas com acesso ao Sinérgica SO.</p>
+          <h2 className="page-title">Usuários</h2>
+          <p className="page-subtitle">Contas com acesso ao Sinérgica SO.</p>
         </div>
-        <button
-          type="button"
-          onClick={abrirCriacao}
-          className="text-sm font-semibold text-white bg-orange hover:bg-orange-deep rounded-lg px-4 py-2 transition cursor-pointer"
-        >
+        <button type="button" onClick={abrirCriacao} className="btn-accent">
           Novo usuário
         </button>
       </div>
 
-      {erro && (
-        <p className="text-sm text-[#C5362B] bg-[#FCEAE8] border border-[#F2C4C0] rounded-lg px-3 py-2">
-          {erro}
-        </p>
-      )}
+      {erro && <p className="status-error">{erro}</p>}
 
       {carregando ? (
-        <p className="text-sm text-ink-3">Carregando…</p>
+        <div
+          className="surface-card h-24 animate-pulse bg-line-soft"
+          aria-label="Carregando usuários"
+        />
       ) : usuarios.length === 0 ? (
-        <p className="text-sm text-ink-3">Nenhum usuário cadastrado ainda.</p>
+        <div className="empty-state">
+          <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-line-soft text-ink-3">
+            <UserRoundCog className="h-5 w-5" />
+          </span>
+          <p className="font-semibold text-ink-2">Nenhum usuário cadastrado</p>
+          <p className="mt-1 max-w-sm">Adicione a primeira conta e defina seu nível de acesso.</p>
+        </div>
       ) : (
-        <div className="bg-card rounded-[10px] border border-line divide-y divide-line-soft">
+        <div className="surface-card divide-y divide-line-soft">
           {usuarios.map((usuario) => (
-            <div key={usuario.userId} className="px-5 py-3.5 flex items-center gap-3">
+            <div key={usuario.userId} className="flex items-center gap-3 px-4 py-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-ink truncate">{usuario.nome}</p>
@@ -260,8 +262,8 @@ export function UsuariosPage() {
       )}
 
       {criando && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-2xl border border-line w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 flex flex-col gap-4">
+        <div className="modal-backdrop">
+          <div className="modal-panel max-w-lg p-4 sm:p-5 flex flex-col gap-4">
             <h3 className="text-base font-semibold text-ink">Novo usuário</h3>
 
             <div className="grid grid-cols-2 gap-3">
@@ -276,7 +278,7 @@ export function UsuariosPage() {
                   id="usuario-nome"
                   value={form.nome}
                   onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
+                  className="input"
                 />
               </div>
               <div className="col-span-2">
@@ -291,7 +293,7 @@ export function UsuariosPage() {
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
+                  className="input"
                 />
               </div>
               <div>
@@ -307,7 +309,7 @@ export function UsuariosPage() {
                   value={form.senha}
                   onChange={(e) => setForm((f) => ({ ...f, senha: e.target.value }))}
                   placeholder="mín. 8 caracteres"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
+                  className="input"
                 />
               </div>
               <div>
@@ -321,7 +323,7 @@ export function UsuariosPage() {
                   id="usuario-papel"
                   value={form.papel}
                   onChange={(e) => setForm((f) => ({ ...f, papel: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
+                  className="input"
                 >
                   {papeisDisponiveis.map((p) => (
                     <option key={p.value} value={p.value}>
@@ -359,7 +361,7 @@ export function UsuariosPage() {
                 <select
                   value={form.grupoId}
                   onChange={(e) => setForm((f) => ({ ...f, grupoId: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
+                  className="input"
                 >
                   <option value="">Selecione um grupo…</option>
                   {grupos.map((g) => (
@@ -376,25 +378,17 @@ export function UsuariosPage() {
               )}
             </div>
 
-            {erroForm && (
-              <p className="text-sm text-[#C5362B] bg-[#FCEAE8] border border-[#F2C4C0] rounded-lg px-3 py-2">
-                {erroForm}
-              </p>
-            )}
+            {erroForm && <p className="status-error">{erroForm}</p>}
 
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setCriando(false)}
-                className="text-sm font-medium text-ink-3 hover:text-ink px-4 py-2 cursor-pointer"
-              >
+              <button type="button" onClick={() => setCriando(false)} className="btn-secondary">
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={salvarCriacao}
                 disabled={salvando}
-                className="text-sm font-semibold text-white bg-orange hover:bg-orange-deep disabled:opacity-60 rounded-lg px-4 py-2 transition cursor-pointer"
+                className="btn-accent"
               >
                 {salvando ? "Criando…" : "Criar usuário"}
               </button>
@@ -404,8 +398,8 @@ export function UsuariosPage() {
       )}
 
       {editandoId && formModo && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-2xl border border-line w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 flex flex-col gap-4">
+        <div className="modal-backdrop">
+          <div className="modal-panel max-w-lg p-4 sm:p-5 flex flex-col gap-4">
             <h3 className="text-base font-semibold text-ink">
               Trocar permissão — {editandoUsuario?.nome ?? ""}
             </h3>
@@ -435,7 +429,7 @@ export function UsuariosPage() {
               <select
                 value={formModo.grupoId}
                 onChange={(e) => setFormModo((f) => (f ? { ...f, grupoId: e.target.value } : f))}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-line text-ink text-sm bg-card focus:outline-none focus:ring-2 focus:ring-orange/20 focus:border-orange transition"
+                className="input"
               >
                 <option value="">Selecione um grupo…</option>
                 {grupos.map((g) => (
@@ -451,25 +445,17 @@ export function UsuariosPage() {
               />
             )}
 
-            {erroModo && (
-              <p className="text-sm text-[#C5362B] bg-[#FCEAE8] border border-[#F2C4C0] rounded-lg px-3 py-2">
-                {erroModo}
-              </p>
-            )}
+            {erroModo && <p className="status-error">{erroModo}</p>}
 
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={fecharTrocaModo}
-                className="text-sm font-medium text-ink-3 hover:text-ink px-4 py-2 cursor-pointer"
-              >
+              <button type="button" onClick={fecharTrocaModo} className="btn-secondary">
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={salvarModo}
                 disabled={salvandoModo}
-                className="text-sm font-semibold text-white bg-orange hover:bg-orange-deep disabled:opacity-60 rounded-lg px-4 py-2 transition cursor-pointer"
+                className="btn-accent"
               >
                 {salvandoModo ? "Salvando…" : "Salvar"}
               </button>

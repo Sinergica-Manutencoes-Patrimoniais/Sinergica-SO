@@ -107,11 +107,7 @@ export function BacklogGutPage() {
             OS abertas priorizadas por gravidade, urgência e tendência
           </p>
         </div>
-        <button
-          type="button"
-          onClick={carregar}
-          className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-        >
+        <button type="button" onClick={carregar} className="btn-secondary">
           <RefreshCw className="h-4 w-4" />
           Atualizar
         </button>
@@ -132,7 +128,7 @@ export function BacklogGutPage() {
       )}
 
       <section className="bg-card rounded-[10px] border border-line overflow-hidden">
-        <div className="px-5 py-4 border-b border-line-soft">
+        <div className="px-4 py-3 border-b border-line-soft">
           <h3 className="text-sm font-semibold text-ink">Fila priorizada</h3>
           <p className="text-xs text-ink-3 mt-0.5">Maior score aparece primeiro</p>
         </div>
@@ -143,9 +139,9 @@ export function BacklogGutPage() {
           ) : (
             estado.ordens.map((ordem, index) => (
               <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)}>
-                <div className="px-5 py-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="px-4 py-3 flex flex-col gap-3 lg:flex-row lg:items-center">
                   <div className="flex items-center gap-3 lg:w-20">
-                    <span className="text-2xl font-bold text-line font-brand">{index + 1}</span>
+                    <span className="text-xl font-bold text-line font-brand">{index + 1}</span>
                     <span className="text-xs font-brand tabular-nums text-ink-3">
                       {ordem.numero}
                     </span>
@@ -198,7 +194,7 @@ function Resumo({ label, valor }: { label: string; valor: number }) {
   return (
     <div className="rounded-[8px] border border-line bg-card px-4 py-3">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-ink">{valor}</p>
+      <p className="mt-1 text-xl font-bold text-ink">{valor}</p>
     </div>
   );
 }

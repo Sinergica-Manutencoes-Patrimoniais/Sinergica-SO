@@ -1,13 +1,16 @@
 ---
 name: ESCOPO-MESTRE
-description: Documento mestre de escopo do Sinérgica SO (produto) — dores do setor, 11 módulos, features com motivador, roadmap e checklist de aprovação. Puxe ao planejar qualquer módulo ou alinhar escopo com o cliente.
+description: Documento mestre de escopo do Sinérgica SO (produto) — dores do setor, 11 módulos, features com motivador, estado de entrega (v1.2), roadmap, checklist de aprovação e propostas novas para o dia a dia do dono (§14). Puxe ao planejar qualquer módulo ou alinhar escopo com o cliente.
 alwaysApply: false
 ---
 
 # Sinérgica SO — Documento Mestre de Escopo
 
 > **Projeto:** Sinérgica SO · **Cliente:** Sinérgica Manutenções Patrimoniais · **Autor:** Trívia Studio
-> **Versão:** 1.1 · **Status:** escopo de referência (vivo) · **Para avaliação de:** Fabrício Medeiros
+> **Versão:** 1.2 · **Status:** escopo de referência (vivo) · **Para avaliação de:** Fabrício Medeiros
+> **Novidades da v1.2 (10-07-2026):** estado real de entrega marcado ao longo do documento (integração
+> Auvo em produção, PCM operacional, Atendimento construído — ver §5, §6.1, §7 e §10) e nova
+> **§14 — Propostas para o dia a dia do dono/engenheiro-chefe** (7 features novas, checklist próprio).
 
 > **Propósito.** Escopar, de ponta a ponta, o sistema operacional da Sinérgica: as dores do mercado de
 > manutenção predial e climatização, a visão de produto, os módulos, suas regras de negócio, a
@@ -17,7 +20,7 @@ alwaysApply: false
 > 📋 **Para aprovar o escopo:** vá à **§13 — Checklist de Aprovação**. Marque cada feature como OK ou
 > registre uma consideração. Use o corpo do documento (§1–§12) como contexto de cada item. As
 > **decisões de produto (§11)** também precisam do seu direcionamento — cada uma já vem com a nossa
-> recomendação.
+> recomendação. As **propostas novas da v1.2 (§14)** têm checklist próprio ao final delas.
 
 ---
 
@@ -35,6 +38,14 @@ para falar de um condomínio, o gestor abre quatro lugares.
 **A aposta.** O ativo mais valioso de uma empresa de manutenção é a **memória da operação** (quem fez o
 quê, em qual equipamento, quando, por quê, quanto custou). Hoje está fragmentada. O OS a unifica numa
 base única — e dela passam a fluir decisões, faturamento, prestação de contas e inteligência.
+
+**Onde estamos (10-07-2026).** O OS saiu do papel: o **PCM já opera em produção** integrado ao Auvo —
+2.357 ordens de serviço históricas importadas, sincronização contínua (webhook + cron + botão
+"Sincronizar Auvo"), OS com técnico/agenda/check-in/check-out reais, visões Kanban, timeline por
+técnico e calendário, Visão 360 do cliente, backlog GUT, laudos SPDA e abertura de chamado pelo Zé
+(WhatsApp). O módulo de **Atendimento** foi construído (inbox multi-canal, personas de IA, painel de
+métricas) e aguarda a ativação dos canais Meta. A **escrita PCM→Auvo** tem o motor pronto, mas roda em
+modo seguro (dry-run) até a verificação final do contrato da API — detalhe em §7.
 
 **Os 11 módulos:**
 
@@ -62,7 +73,7 @@ prazo que o sistema cuida — raro nos concorrentes — e uma camada de **inteli
 preditiva) que a maioria não tem.
 
 **O que precisa do Fabrício para começar:** 15 decisões de produto em §11 — cada uma já vem com a nossa
-recomendação para acelerar o "OK".
+recomendação para acelerar o "OK" — e as **7 propostas novas da §14** (dia a dia do dono/engenheiro-chefe).
 
 ---
 
@@ -94,6 +105,7 @@ recomendação para acelerar o "OK".
 11. [Decisões em Aberto — Roteiro de Entrevista](#11-decisões-em-aberto--roteiro-de-entrevista-com-o-fabrício)
 12. [Glossário](#12-glossário-rápido)
 13. [✅ Checklist de Aprovação do Escopo](#13--checklist-de-aprovação-do-escopo) *(para o Fabrício)*
+14. [🚀 Propostas Novas v1.2 — Dia a Dia do Dono/Engenheiro-Chefe](#14--propostas-novas-v12--dia-a-dia-do-donoengenheiro-chefe) *(novo)*
 
 ---
 
@@ -241,19 +253,19 @@ em *Mapeamento Auvo x PCM como Hub (29-06-2026)*.
 
 ## 5. Mapa de Módulos
 
-| # | Módulo | Papel no negócio | Maturidade hoje |
-|---|--------|------------------|-----------------|
-| 1 | **PCM / Operação** | Espinha dorsal — o ciclo de vida da manutenção | Evolução de software existente |
-| 2 | **Atendimento (Agentes de IA)** | Porta de entrada e relacionamento automatizado | Parcial (Zé existe) |
-| 3 | **Comercial (CRM)** | Funil: prospect → proposta → contrato | Parcial (propostas existem) |
-| 4 | **Operação & Estoque** | Peças, custo de material, suprimento + **ferramentas e kits** | Novo |
+| # | Módulo | Papel no negócio | Maturidade (jul/2026) |
+|---|--------|------------------|-----------------------|
+| 1 | **PCM / Operação** | Espinha dorsal — o ciclo de vida da manutenção | **Em produção** — integração Auvo ativa (leitura), 2.357 OS históricas, Kanban/timeline/calendário, Visão 360 (ver §6.1) |
+| 2 | **Atendimento (Agentes de IA)** | Porta de entrada e relacionamento automatizado | **Construído** — Inbox, painel de métricas, personas de IA, flow-builder; ativação dos canais Meta pendente |
+| 3 | **Comercial (CRM)** | Funil: prospect → proposta → contrato | Parcial — leads + agente comercial de qualificação em construção; propostas a migrar |
+| 4 | **Operação & Estoque** | Peças, custo de material, suprimento + **ferramentas e kits** | Parcial — ferramentas do Auvo sincronizadas + alocação por técnico; peças/estoque novo |
 | 5 | **Financeiro** | Caixa, faturamento, rentabilidade | Novo |
 | 6 | **Marketing** | Geração de demanda (conteúdo) | Novo |
 | 7 | **Growth** | Inteligência de anúncios | Novo |
 | 8 | **Gestão (Cockpit)** | Visão executiva e indicadores | Novo |
 | 9 | **Área do Cliente** | Transparência e prestação de contas | Novo |
-| 10 | **Dados (Base Única)** | Fundação — fonte única que alimenta a IA | Arquitetural |
-| 11 | **Inteligência & Roteirização** | Camada que transforma a base em decisão (roteirização Google Maps, preditiva) | Novo |
+| 10 | **Dados (Base Única)** | Fundação — fonte única que alimenta a IA | **Fundação em produção** — Supabase, schemas por domínio, RLS, base única de contatos |
+| 11 | **Inteligência & Roteirização** | Camada que transforma a base em decisão (roteirização Google Maps, preditiva) | Novo — dado de base (agenda, check-in/out, endereço) já sendo capturado |
 
 ---
 
@@ -273,6 +285,16 @@ Auvo) e tem suas **contas prestadas**. Se o PCM for bom, todo o resto do OS tem 
 > um trabalho manual, (b) evita um esquecimento caro, ou (c) dá um poder de decisão que hoje não
 > existe. As features-marco vêm com **Hoje → Com o OS → Poder → Valor** para deixar explícito o que
 > muda na operação.
+
+> **Status (jul/2026): em produção.** Já entregue e verificado com dado real: sincronização
+> Auvo↔PCM de leitura (13 entidades de cadastro/operação + tarefas), importação do histórico
+> (2.357 OS), OS enriquecida com técnico/data agendada/check-in/check-out/endereço, visões
+> Kanban + timeline por técnico + calendário (com filtros, ação em lote e tooltip de detalhes),
+> Visão 360 do cliente (com edição de cadastro, contatos, grupos e link direto para a OS), backlog
+> GUT, abertura manual de OS com tipos de tarefa reais do Auvo, inspeções + laudo SPDA, tickets,
+> ferramentas por técnico e espelho de funcionários/equipes/segmentos/categorias.
+> **Próximos desta seção:** preventivo/PMOC, cronograma & visitas, relatórios automáticos,
+> garantia, contrato previsto×realizado e onboarding de contrato.
 
 #### 🔒 Paridade com o PCM v2 — base obrigatória (não regredir) + o que o OS acrescenta
 > Auditamos o **código inteiro** do PCM v2 (12 módulos, 28 tabelas, 24 edge functions). O OS deve
@@ -476,11 +498,21 @@ O contrato (cláusula 3.1.2) prevê **múltiplos agentes de IA**, não só o Zé
 
 | Agente | Papel | Canal | Status |
 |--------|-------|-------|--------|
-| **Zé (Operacional)** | Abre/atualiza chamados de manutenção dos clientes ativos | WhatsApp (grupos/DM) | Existe — em evolução |
-| **SDR (Qualificação)** | Recebe e qualifica leads no topo do funil | WhatsApp / web / social — *a definir* | A escopar |
+| **Zé (Operacional)** | Abre/atualiza chamados de manutenção dos clientes ativos | WhatsApp (grupos/DM) | Em produção — vira persona dentro do Atendimento |
+| **SDR (Qualificação)** | Recebe e qualifica leads no topo do funil | WhatsApp (instância separada) | **Em construção** — virou o "agente comercial" |
 | **Closer (Vendas)** | Conduz a proposta, tira dúvidas, acelera o fechamento | WhatsApp / e-mail — *a definir* | A escopar |
 | **CS (Pós-venda)** | Acompanha satisfação, antecipa churn, coleta NPS | WhatsApp / portal — *a definir* | A escopar |
 | **Apoio ao Técnico** | Responde dúvida técnica, ajuda diagnóstico por foto, procedimento/norma | *Canal a definir (WhatsApp do técnico? dentro do OS?)* | A escopar (dor T2 e cláusula 3.1.5) |
+
+> **Status (jul/2026):** a infraestrutura de atendimento foi construída além do previsto nesta seção:
+> **Inbox de conversas** (WhatsApp operante; Instagram/Messenger preparados, sem IA por decisão),
+> **painel operacional** com métricas server-side (fila, tempo de primeira resposta, autonomia da IA,
+> CSAT), **personas múltiplas de IA** — cada time interno com seu agente, prompt e base de
+> conhecimento (RAG) próprios, sendo o Zé a primeira —, **flow-builder visual** do roteiro de
+> qualificação e o **agente comercial** em implementação (qualifica contato novo por instância
+> WhatsApp separada e cria o lead com score no Comercial). "Templates" de WhatsApp saíram do escopo
+> enquanto o canal for Evolution API (conceito da API oficial Meta); a ativação dos canais Meta
+> aguarda os tokens da conta.
 
 **Zé — regras já desenhadas:**
 - Detecção determinística de menção **antes** do LLM (regex `\bz[eé]\b` ou `@bot`).
@@ -775,8 +807,9 @@ Uma caixa de busca que encontra cliente, OS, equipamento, contrato ou documento 
 
 Resumo (detalhe completo em *Mapeamento Auvo x PCM como Hub (29-06-2026)*):
 
-- **PCM → Auvo (escrita):** cria/atualiza cliente, equipamento, tarefa, preventivo (Service Order),
-  orçamento, NF, conta a receber. Cobertura total da API.
+- **PCM → Auvo (escrita):** cria/atualiza cliente, equipamento, tarefa, preventivo (Service Order) e
+  demais cadastros de Operação. **Escopo reduzido por decisão (jul/2026):** o Financeiro do Auvo
+  (orçamento, NF, conta a receber) foi descartado — o ciclo financeiro será do próprio OS (§6.5).
 - **Auvo → PCM (webhook):** só 6 entidades (User, Task, Customer, Equipment, Invoice, Ticket).
   Webhook é "magro" → ao receber, o PCM faz `GET` para puxar o detalhe (foto, checklist, peça).
 - **Auvo → PCM (polling):** o que não tem webhook — preventivo recorrente, checklist, GPS, orçamento,
@@ -785,6 +818,23 @@ Resumo (detalhe completo em *Mapeamento Auvo x PCM como Hub (29-06-2026)*):
 - **Cuidados críticos:** segurança do webhook (7 camadas — token na URL, reconsulta GET, idempotência,
   só-enfileirar, rate-limit, não-logar-segredo, rotação); eco/loop (idempotência por `externalId`);
   token expira 30 min; rate limit 400 req/min/IP compartilhado.
+
+**Estado real da integração (jul/2026)** — verificado contra a conta Auvo de produção:
+- **Auvo → PCM (leitura): em produção.** Motor genérico de sync com 13 entidades (clientes, grupos de
+  clientes, funcionários, equipes, equipamentos, ferramentas/produtos, tipos de tarefa, segmentos,
+  palavras-chave, categorias de produto/equipamento, serviços, tickets) + tarefas. Três caminhos:
+  webhook, cron e o botão global **"Sincronizar Auvo"** (pull on-demand). Histórico importado:
+  **2.357 OS** vindas de tarefas do Auvo.
+- **Tarefa devolve dado rico e o PCM captura:** técnico, data agendada, check-in/check-out, endereço,
+  questionário/checklist e anexos — é a base das visões Kanban/timeline/calendário e da inteligência (§6.11).
+- **PCM → Auvo (escrita): motor pronto, em modo seguro (dry-run).** Outbox transacional + push
+  instantâneo já implementados; a escrita fica desligada por entidade até a verificação campo a campo
+  do contrato real — a API real diverge da documentação em vários pontos já encontrados (ex.: id de
+  tarefa é `taskID`, telefone de usuário é `smartPhoneNumber`, preço de produto vem como string
+  monetária). Criação de funcionário já propaga por caminho dedicado verificado.
+- **Limites do plano Auvo da conta:** os endpoints de serviços e categorias de produto retornam 404
+  (módulo aparentemente não habilitado no plano); a busca de tarefas é lenta (~11 s/página) — as
+  janelas de sincronização foram dimensionadas para isso.
 
 ---
 
@@ -835,9 +885,17 @@ PCM (Visão 360, clientes, ativos, backlog GUT, OS Kanban) + integração Auvo f
 sync cliente/equipamento, webhook seguro) + Agente Zé (abertura de chamado). **Entrega:** abrir OS no
 OS → vira tarefa no Auvo → técnico executa → volta sozinho.
 
+> **Status jul/2026: ✅ entregue no essencial.** Sync Auvo em produção (leitura verificada com dado
+> real; escrita em modo seguro até a verificação final do contrato — ver §7), Visão 360, backlog GUT,
+> OS em Kanban/timeline/calendário e Zé operando.
+
 ### Fase 2 — Fechar o operacional + comercial
 Visitas/cronograma, inspeção com IA, calendário preventivo/PMOC, relatórios diário/mensal; CRM
 (funil + propostas migradas); Estoque (consumo por OS); polling Auvo (preventivo, GPS, checklist).
+
+> **Status jul/2026: em andamento (parcialmente antecipada).** Inspeções + laudo SPDA e o Atendimento
+> avançado (Inbox, personas, painel de métricas — itens que eram da Fase 4) já construídos;
+> preventivo/PMOC, cronograma & visitas e relatórios automáticos são os próximos passos naturais.
 
 ### Fase 3 — Ciclo financeiro
 Custo por OS, rentabilidade, contas a receber, faturamento; depois contas a pagar, fluxo de caixa,
@@ -1148,3 +1206,87 @@ Marque as que você consegue decidir agora; o resto a gente fecha na conversa.
 - **Aprovado para iniciar pelo PCM (M1)?**  ☐ Sim   ☐ Sim, com ajustes   ☐ Preciso rever
 - **Data da avaliação:** ____ / ____ / ______
 - **Próximo passo combinado:** ______________________________________________________________
+
+---
+
+## 14. 🚀 Propostas Novas v1.2 — Dia a Dia do Dono/Engenheiro-Chefe
+
+> **De onde vêm.** Com a integração Auvo rodando em produção, o OS passou a capturar dado que antes
+> se perdia: técnico, agenda, check-in/check-out, endereço, questionário e anexos de cada tarefa.
+> As propostas abaixo transformam esse dado — que já entra sozinho, sem digitação nova — em apoio
+> direto ao dia a dia de quem é, ao mesmo tempo, **dono** (precisa enxergar a operação sem
+> microgerenciar) e **engenheiro-chefe / responsável técnico** (assina laudo, responde pelo CREA e
+> pela qualidade do que sai com a marca da Sinérgica). Nenhuma delas muda o trabalho do técnico em
+> campo — o app continua sendo o Auvo.
+
+### F1 — "Hoje": o briefing diário do dono ⭐
+Uma tela (e um resumo matinal no WhatsApp) que abre o dia em 2 minutos: quem está em campo e em qual
+cliente, a agenda do dia por técnico, o que ficou de ontem sem concluir, orçamentos aguardando
+aprovação e laudos/preventivos vencendo nos próximos dias.
+- **Hoje:** o dia começa perguntando no grupo "quem está aonde?" e abrindo o Auvo tarefa por tarefa.
+- **Com o OS:** o quadro do dia pronto às 7h, no bolso.
+- **Dado necessário:** agenda + técnico + check-in/out por OS — **já capturado**, nada novo a coletar
+  (a posição GPS do Auvo pode enriquecer o "quem está onde" depois, via polling — §7).
+- **Diferença para o Cockpit (§6.8):** o Cockpit é a leitura executiva (semana/mês/margem); o "Hoje"
+  é operacional — o primeiro café do dia do dono.
+
+### F2 — Radar de execução (gestão por exceção)
+Alertas durante o dia, na Central de Alertas (§6.12) e/ou no WhatsApp do gestor:
+- OS agendada **sem check-in** após X minutos da hora marcada;
+- **visita suspeita de curta** (check-out − check-in abaixo do mínimo esperado para o tipo de serviço);
+- OS concluída **sem foto ou sem checklist** respondido.
+
+**Valor:** o dono para de varrer o Auvo — o sistema o chama só quando algo foge do padrão. É a dor L5
+resolvida com o dado de check-in/out que já flui hoje.
+
+### F3 — Carteira de laudos & vencimentos → receita ⭐
+A agenda de validade dos laudos por cliente (SPDA anual, PMOC, análise de água…) com alerta em
+90/60/30 dias — e, com o vencimento se aproximando, o sistema **gera a proposta de renovação
+pré-preenchida no funil comercial**.
+- **Por que é grande:** para uma operação que vive de vistoria de para-raios e laudo, a renovação de
+  laudo é a receita mais previsível que existe — e hoje depende de alguém lembrar. Transforma a
+  conformidade (§9) de obrigação em **máquina de receita recorrente**. Nenhum concorrente local faz.
+
+### F4 — Fila de revisão do Responsável Técnico
+Todo laudo e inspeção passa por um estado "aguardando revisão do engenheiro" antes de ir ao cliente:
+o Fabrício aprova ou devolve com comentário, pelo celular; a aprovação fica registrada (assinatura
+com hash — mecanismo que o laudo SPDA já tem).
+- **Valor:** protege a ART/CREA de quem assina, padroniza a qualidade do que sai com a marca da
+  Sinérgica e tira o "revisar laudo" do WhatsApp/e-mail — sem transformar o engenheiro em gargalo
+  invisível.
+
+### F5 — Esforço real por tipo de serviço
+Check-in/check-out real cruzado com o tipo de tarefa → tempo médio real por serviço (e por técnico).
+- **Alimenta três coisas de uma vez:** a precificação (o motor comercial para de chutar horas), o
+  radar de anomalia (F2 ganha régua real de "visita curta") e a estimativa de esforço por IA, que
+  passa a **aprender com o realizado** (já prevista na paridade v2, §6.1).
+- **Custo de captura: zero** — o dado já entra em cada OS sincronizada.
+
+### F6 — Auditoria de qualidade por amostragem
+Toda semana o sistema separa uma amostra das OS concluídas (ponderada por criticidade e cliente) e
+monta uma fila de revisão: fotos antes/depois, checklist respondido, tempo gasto. Achado vira item de
+backlog ou feedback ao técnico.
+- **Valor:** o engenheiro-chefe audita a operação inteira em ~20 min/semana, com método — em vez de
+  descobrir problema de qualidade quando o síndico reclama.
+
+### F7 — Semáforo de clientes ("quem precisa de mim esta semana")
+Ranking dos condomínios por risco composto: backlog crítico acumulado, preventivo atrasado, laudo
+vencendo, chamado antigo aberto, sinal de insatisfação.
+- **Valor:** a Visão 360 mostra **um** cliente por vez; o semáforo diz **qual** abrir primeiro. É o
+  primeiro passo concreto da antecipação de churn (§6.11), com dado que já existe.
+
+### Sugestão de priorização
+- **Quick wins (dado já capturado, sem coleta nova):** F1 → F2 → F5.
+- **Coração do negócio de laudos:** F3 e F4 (junto do painel de conformidade, §9).
+- **Fases seguintes:** F6 e F7 (pedem volume de histórico e o funil comercial ativo).
+
+### MF · Checklist de aprovação (propostas v1.2)
+- [ ] **F1 — "Hoje" (briefing diário do dono)** — tela + resumo matinal no WhatsApp.
+- [ ] **F2 — Radar de execução** — alerta de check-in ausente, visita curta, OS sem foto/checklist.
+- [ ] **F3 — Carteira de laudos & vencimentos** — laudo vencendo vira proposta de renovação no funil.
+- [ ] **F4 — Fila de revisão do Responsável Técnico** — laudo só sai depois do seu OK registrado.
+- [ ] **F5 — Esforço real por tipo de serviço** — tempo real alimenta preço, anomalia e IA.
+- [ ] **F6 — Auditoria de qualidade por amostragem** — revisão semanal guiada das OS concluídas.
+- [ ] **F7 — Semáforo de clientes** — ranking de risco para decidir onde agir primeiro.
+
+> 💬 **Considerações (§14):** _____________________________________________________________

@@ -494,11 +494,7 @@ export function NovoLaudoSpdaModal({
               Salvar laudo
             </button>
             {etapaIndex < ETAPAS.length - 1 ? (
-              <button
-                type="button"
-                onClick={avancar}
-                className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
-              >
+              <button type="button" onClick={avancar} className="btn-primary">
                 Continuar
                 <ArrowRight className="h-4 w-4" />
               </button>

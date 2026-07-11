@@ -195,25 +195,44 @@ export function AtendimentoInboxPage() {
   }
 
   return (
-    <div className="grid h-[calc(100vh-160px)] grid-cols-1 gap-4 xl:grid-cols-[320px_1fr_280px]">
-      <ConversaLista
-        conversas={conversas}
-        conversaSelecionadaId={conversaSelecionadaId}
-        onSelecionar={selecionarConversa}
-      />
-      <ConversaChat
-        conversa={conversaSelecionada}
-        mensagens={mensagens}
-        temEscrita={temEscrita}
-        onEnviar={handleEnviar}
-        onAssumir={handleAssumir}
-        onDevolver={handleDevolver}
-        onAcionarIa={handleAcionarIa}
-        templates={templates}
-        tagsDisponiveis={tags}
-        onEnviarRico={handleEnviarRico}
-        onAtualizarTags={handleAtualizarTags}
-      />
+    <div
+      className={`grid h-[calc(100vh-138px)] min-h-0 grid-cols-1 gap-3 ${
+        conversaSelecionada ? "xl:grid-cols-[300px_1fr_260px]" : "xl:grid-cols-[300px_1fr]"
+      }`}
+    >
+      <div className={`${conversaSelecionada ? "hidden xl:block" : "min-h-0"}`}>
+        <ConversaLista
+          conversas={conversas}
+          conversaSelecionadaId={conversaSelecionadaId}
+          onSelecionar={selecionarConversa}
+        />
+      </div>
+      <div className={`${conversaSelecionada ? "flex min-h-0 flex-col" : "hidden xl:block"}`}>
+        {conversaSelecionada && (
+          <button
+            type="button"
+            onClick={() => setConversaSelecionadaId(null)}
+            className="btn-secondary mb-2 self-start xl:hidden"
+          >
+            Voltar às conversas
+          </button>
+        )}
+        <div className="min-h-0 flex-1">
+          <ConversaChat
+            conversa={conversaSelecionada}
+            mensagens={mensagens}
+            temEscrita={temEscrita}
+            onEnviar={handleEnviar}
+            onAssumir={handleAssumir}
+            onDevolver={handleDevolver}
+            onAcionarIa={handleAcionarIa}
+            templates={templates}
+            tagsDisponiveis={tags}
+            onEnviarRico={handleEnviarRico}
+            onAtualizarTags={handleAtualizarTags}
+          />
+        </div>
+      </div>
       <ConversaPerfil conversa={conversaSelecionada} />
     </div>
   );

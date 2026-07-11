@@ -136,7 +136,7 @@ serve(async (req) => {
     if (healthDb && healthEntity) {
       await registrarSaudePull(healthDb, healthEntity, {
         last_error_at: new Date().toISOString(),
-        last_error: (e instanceof Error ? e.message : String(e)).slice(0, 2000),
+      last_error: descricaoErro(e).slice(0, 2000),
       });
     }
     if (e instanceof HttpError) return problem(e.status, e.message, reqId, cors);
@@ -144,7 +144,7 @@ serve(async (req) => {
       console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "falha Auvo", status: e.status, requestId: e.requestId }));
       return problem(502, `Auvo indisponível ou erro: ${e.message}`, reqId, cors);
     }
-    console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "erro inesperado", detail: String(e) }));
+    console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "erro inesperado", detail: descricaoErro(e) }));
     return problem(500, "Erro interno", reqId, cors);
   }
 });
@@ -163,6 +163,22 @@ async function registrarSaudePull(
       { onConflict: "entity" },
     );
   if (error) console.error(JSON.stringify({ nivel: "error", fn: FN, msg: "falha ao registrar saúde do pull", entity }));
+}
+
+/** PostgREST devolve erros como objeto plano, não como `Error`; `String(e)` os reduz a
+ * "[object Object]" e impede o diagnóstico operacional do pull. */
+function descricaoErro(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    const postgrest = error as Record<string, unknown>;
+    return JSON.stringify({
+      code: postgrest.code,
+      details: postgrest.details,
+      hint: postgrest.hint,
+      message: postgrest.message,
+    });
+  }
+  return String(error);
 }
 
 function extractEntityList<T>(response: AuvoListResponse<T>): T[] {
