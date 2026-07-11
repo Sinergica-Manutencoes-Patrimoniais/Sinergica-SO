@@ -6,6 +6,34 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+**Atualização:** 2026-07-11 (sessão Lucas/Claude) — **PR #49 (E01-S60) deixado redondo antes da
+aprovação: tooling versionado + pendência de CORS verificada e fechada.**
+
+1. **Os 6 arquivos de tooling que ficavam eternamente "uncommitted" em toda sessão anterior foram
+   resolvidos, não mais adiados.** `.claude/settings.json`/`.codex/hooks.json` tinham hooks do
+   graphify com path absoluto (`/Users/lucasazevedo/.local/bin/graphify`) — quebraria em qualquer
+   outra máquina/CI; trocado para `graphify` puro (confirmado que resolve via PATH).
+   `AGENTS.md`/`CLAUDE.md` ganharam a seção graphify (instruções condicionais, sem path pessoal) —
+   commitados. `graphify-out/`/`apps/web/graphify-out/` (114MB de cache gerado) entraram no
+   `.gitignore` em vez de aparecer como untracked toda sessão. Working tree 100% limpo depois disso
+   (`git status --porcelain` vazio). 2 commits novos na branch `feat/E01-S60-acabamento-visual-v1`:
+   `chore(E00-S00): versiona skills SDD locais (.agents/skills)` e
+   `chore(E00-S00): versiona tooling do graphify e ignora o cache gerado`.
+2. **Pendência de CORS (E01-S48) verificada e fechada — não era mais pendência, só faltava
+   confirmar.** Rodei `SUPABASE_PROJECT_ID=nudannsrfvjggoergvyn node scripts/smoke-edge-functions.mjs`
+   contra o projeto real: as 26 funções respondem, e o probe de CORS embutido (contra
+   `pcm-auvo-tickets-referencia`) confirmou `Access-Control-Allow-Origin:
+   https://so-sinergica.netlify.app` ecoado corretamente pro Origin de produção. Fiz também um
+   `curl -X OPTIONS` direto contra `atendimento-metrics` (a função por trás do dashboard de
+   Atendimento, que tinha o erro relatado na E01-S60) com o mesmo Origin — mesmo resultado, header
+   ecoado certo. **`CORS_ALLOWED_ORIGINS` já inclui o domínio de produção; não há ação pendente.**
+   O erro visto em `localhost` durante o QA da E01-S60 é esperado e correto (localhost não deve
+   estar na allowlist de produção).
+3. PR #49 fica pronto para aprovação — sem pendências de código ou infra conhecidas.
+
+---
+
+
 > Memória de trabalho **entre sessões** (humanos e agentes). É **volátil**: atualizada o tempo
 > todo. Diferente do **ADR** (decisão durável e imutável). Decisão estrutural → ADR; estado do
 > trabalho → aqui. Atualize ao **pausar/encerrar**; leia ao **retomar**. Use a skill `/handoff`.
