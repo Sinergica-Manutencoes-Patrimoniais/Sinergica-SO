@@ -1,15 +1,19 @@
+import { type DragEvent, useState } from "react";
 import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
   STATUS_OS,
+  deveAlterarStatusPorDrop,
   prioridadeColor,
   resumoTooltipOrdem,
 } from "../domain/ordens-servico";
 
-/** E01-S38 — AC-4/AC-5: uma coluna por status, card muda de coluna via seletor de status (em vez
- * de drag-and-drop — mesmo resultado, menor risco/esforço; reaproveita `alterarStatus` já
- * existente na página). */
+const DRAG_MIME = "application/x-sinergica-os-id";
+
+/** E01-S38 — uma coluna por status; E01-S61 adiciona arrastar-e-soltar (HTML5 DnD nativo, sem
+ * biblioteca nova) reaproveitando o mesmo `onAlterarStatus` do seletor — o `<select>` continua
+ * disponível como alternativa acessível (teclado, leitor de tela, mobile sem drag por toque). */
 export function OsKanbanView({
   ordens,
   temEscrita,
@@ -27,6 +31,17 @@ export function OsKanbanView({
   selecionados?: Set<string>;
   onToggleSelecionado?: (id: string) => void;
 }) {
+  const [colunaAlvo, setColunaAlvo] = useState<StatusOrdemServico | null>(null);
+
+  function onDropNaColuna(destino: StatusOrdemServico, event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setColunaAlvo(null);
+    const id = event.dataTransfer.getData(DRAG_MIME);
+    const ordem = ordens.find((item) => item.id === id);
+    if (!ordem || !deveAlterarStatusPorDrop(ordem.status, destino)) return;
+    onAlterarStatus(id, destino);
+  }
+
   return (
     <div className="flex gap-3 overflow-x-auto pb-2">
       {STATUS_OS.map((coluna) => {
@@ -34,7 +49,16 @@ export function OsKanbanView({
         return (
           <div
             key={coluna.value}
-            className="flex w-72 shrink-0 flex-col rounded-[8px] border border-line bg-paper"
+            onDragOver={(event) => {
+              if (!temEscrita) return;
+              event.preventDefault();
+              if (colunaAlvo !== coluna.value) setColunaAlvo(coluna.value);
+            }}
+            onDragLeave={() => setColunaAlvo((atual) => (atual === coluna.value ? null : atual))}
+            onDrop={(event) => temEscrita && onDropNaColuna(coluna.value, event)}
+            className={`flex w-72 shrink-0 flex-col rounded-[8px] border bg-paper transition-colors ${
+              colunaAlvo === coluna.value ? "border-orange bg-orange-soft/40" : "border-line"
+            }`}
           >
             <div className="flex items-center justify-between border-b border-line-soft px-3 py-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">
@@ -51,7 +75,14 @@ export function OsKanbanView({
                 ordensDaColuna.map((ordem) => (
                   <div
                     key={ordem.id}
-                    className="rounded-[6px] border border-line bg-card p-3 hover:border-ink-3"
+                    draggable={temEscrita && !salvando}
+                    onDragStart={(event) => {
+                      event.dataTransfer.setData(DRAG_MIME, ordem.id);
+                      event.dataTransfer.effectAllowed = "move";
+                    }}
+                    className={`rounded-[6px] border border-line bg-card p-3 hover:border-ink-3 ${
+                      temEscrita && !salvando ? "cursor-grab active:cursor-grabbing" : ""
+                    }`}
                   >
                     {temEscrita && onToggleSelecionado && (
                       <input
