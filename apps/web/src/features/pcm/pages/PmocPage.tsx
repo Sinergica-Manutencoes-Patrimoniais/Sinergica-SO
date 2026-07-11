@@ -250,11 +250,7 @@ export function PmocPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={carregar}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+          <button type="button" onClick={carregar} className="btn-secondary">
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </button>
@@ -262,7 +258,7 @@ export function PmocPage() {
             <button
               type="button"
               onClick={() => setModalAtivo("novo-pmoc")}
-              className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+              className="btn-primary"
             >
               <Plus className="h-4 w-4" />
               Novo PMOC
@@ -289,7 +285,7 @@ export function PmocPage() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_1fr]">
         <section className="rounded-[10px] border border-line bg-card">
-          <div className="border-b border-line-soft px-5 py-4">
+          <div className="border-b border-line-soft px-4 py-3">
             <h3 className="text-sm font-semibold text-ink">Contratos PMOC</h3>
             <p className="mt-0.5 text-xs text-ink-3">{estado.contratos.length} registros</p>
           </div>
@@ -304,7 +300,7 @@ export function PmocPage() {
                   key={contrato.id}
                   type="button"
                   onClick={() => setSelecionadoId(contrato.id)}
-                  className={`w-full px-5 py-4 text-left transition-colors hover:bg-line-soft ${
+                  className={`w-full px-4 py-3 text-left transition-colors hover:bg-line-soft ${
                     selecionadoId === contrato.id ? "bg-orange-soft/35" : ""
                   }`}
                 >
@@ -420,7 +416,7 @@ function DetalhePmoc({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
@@ -631,7 +627,7 @@ function Kpi({
         <Icon className={`h-4 w-4 ${danger && value > 0 ? "text-orange" : "text-ink-3"}`} />
       </div>
       <p
-        className={`mt-2 font-brand text-2xl font-bold ${danger && value > 0 ? "text-orange" : "text-ink"}`}
+        className={`mt-2 font-brand text-xl font-bold ${danger && value > 0 ? "text-orange" : "text-ink"}`}
       >
         {value}
       </p>
@@ -1096,11 +1092,11 @@ function ModalBase({
   size?: "md" | "lg";
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
+    <div className="modal-backdrop">
       <div
         className={`max-h-[92vh] w-full overflow-hidden rounded-[10px] bg-card shadow-xl ${size === "lg" ? "max-w-5xl" : "max-w-2xl"}`}
       >
-        <div className="flex items-center justify-between border-b border-line-soft px-5 py-4">
+        <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">{title}</h3>
           <button
             type="button"
@@ -1110,7 +1106,7 @@ function ModalBase({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="max-h-[calc(92vh-64px)] overflow-y-auto p-5">{children}</div>
+        <div className="max-h-[calc(92vh-64px)] overflow-y-auto p-4">{children}</div>
       </div>
     </div>
   );

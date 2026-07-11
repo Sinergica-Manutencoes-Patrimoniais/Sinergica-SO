@@ -39,13 +39,115 @@ export interface DashboardPcmAuvoResumo {
 }
 
 export interface DashboardPcmAuvoCampoResumo {
-  snapshotsRecebidos: number;
-  snapshotsComAnexos: number;
+  execucoesRegistradas: number;
+  anexosRegistrados: number;
+  relatosRegistrados: number;
+  assinaturasRegistradas: number;
   checklistsRecebidos: number;
   pecasRegistradas: number;
   controlesHoras: number;
   osComEquipamentoVinculado: number;
   ultimaExecucaoCampo: string | null;
+}
+
+export interface CampoAuvoSnapshot {
+  ordemServicoId: string | null;
+  anexos: unknown;
+  checklist: unknown;
+  pecasConsumidas: unknown;
+  controleHoras: unknown;
+  checkinEm: string | null;
+  concluidaEm: string | null;
+  recebidoEm: string | null;
+}
+
+export interface CampoAuvoOrdem {
+  id: string;
+  detalhes: Record<string, unknown> | null;
+  checkInAt: string | null;
+  checkOutAt: string | null;
+}
+
+function temConteudo(valor: unknown): boolean {
+  if (Array.isArray(valor)) return valor.length > 0;
+  if (valor && typeof valor === "object") return Object.keys(valor).length > 0;
+  if (typeof valor === "string") return valor.trim().length > 0;
+  return false;
+}
+
+function numeroPositivo(valor: unknown): boolean {
+  const numero = typeof valor === "number" ? valor : Number(valor);
+  return Number.isFinite(numero) && numero > 0;
+}
+
+function maiorDataIso(datas: Array<string | null | undefined>): string | null {
+  return (
+    datas.filter((data): data is string => Boolean(data)).sort((a, b) => b.localeCompare(a))[0] ??
+    null
+  );
+}
+
+/** Consolida evidências da fonte incremental (webhook) e do histórico trazido pelo pull. Os sets
+ * usam o id da OS para que a mesma execução não seja contada duas vezes nas duas fontes. */
+export function consolidarSinaisCampoAuvo(
+  snapshots: readonly CampoAuvoSnapshot[],
+  ordens: readonly CampoAuvoOrdem[],
+  osComEquipamentoIds: readonly string[],
+): DashboardPcmAuvoCampoResumo {
+  const execucoes = new Set<string>();
+  const anexos = new Set<string>();
+  const checklists = new Set<string>();
+  const pecas = new Set<string>();
+  const horas = new Set<string>();
+  const relatos = new Set<string>();
+  const assinaturas = new Set<string>();
+  const datas: Array<string | null> = [];
+
+  snapshots.forEach((snapshot, indice) => {
+    const chave = snapshot.ordemServicoId ?? `snapshot:${indice}`;
+    execucoes.add(chave);
+    if (temConteudo(snapshot.anexos)) anexos.add(chave);
+    if (temConteudo(snapshot.checklist)) checklists.add(chave);
+    if (temConteudo(snapshot.pecasConsumidas)) pecas.add(chave);
+    if (temConteudo(snapshot.controleHoras)) horas.add(chave);
+    datas.push(snapshot.concluidaEm, snapshot.checkinEm, snapshot.recebidoEm);
+  });
+
+  for (const ordem of ordens) {
+    const detalhes = ordem.detalhes ?? {};
+    const temAnexos = temConteudo(detalhes.anexos);
+    const temRelato = temConteudo(detalhes.relato);
+    const temAssinatura = temConteudo(detalhes.assinaturaUrl);
+    const temPecas = temConteudo(detalhes.produtos);
+    const temHoras = numeroPositivo(detalhes.duracaoHoras) || Boolean(ordem.checkOutAt);
+    const temExecucao =
+      Boolean(ordem.checkInAt || ordem.checkOutAt) ||
+      temHoras ||
+      temAnexos ||
+      temRelato ||
+      temAssinatura ||
+      temPecas;
+
+    if (temExecucao) execucoes.add(ordem.id);
+    if (temAnexos) anexos.add(ordem.id);
+    if (temRelato) relatos.add(ordem.id);
+    if (temAssinatura) assinaturas.add(ordem.id);
+    if (temPecas) pecas.add(ordem.id);
+    if (temHoras) horas.add(ordem.id);
+    datas.push(ordem.checkOutAt, ordem.checkInAt);
+  }
+
+  return {
+    execucoesRegistradas: execucoes.size,
+    anexosRegistrados: anexos.size,
+    relatosRegistrados: relatos.size,
+    assinaturasRegistradas: assinaturas.size,
+    checklistsRecebidos: checklists.size,
+    pecasRegistradas: pecas.size,
+    controlesHoras: horas.size,
+    osComEquipamentoVinculado: new Set(osComEquipamentoIds).size,
+    ultimaExecucaoCampo: maiorDataIso(datas),
+  };
 }
 
 function inicioDoMes(data: Date): Date {

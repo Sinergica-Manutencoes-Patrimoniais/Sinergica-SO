@@ -121,10 +121,10 @@ export function ClienteGruposPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-5">
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-ink">Grupos de Clientes</h3>
+            <h3 className="text-base font-semibold text-ink">Grupos de Clientes</h3>
             <p className="mt-0.5 text-sm text-ink-3">
               Grupos criados com clientes já sincronizados no Auvo
             </p>
@@ -282,9 +282,9 @@ function GrupoModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+    <div className="modal-backdrop">
       <div className="w-full max-w-2xl rounded-[8px] border border-line bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {grupo ? "Renomear grupo" : "Novo grupo de clientes"}
           </h3>
@@ -292,7 +292,7 @@ function GrupoModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto p-5">
+        <div className="max-h-[70vh] overflow-y-auto p-4">
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
             <input
@@ -334,7 +334,7 @@ function GrupoModal({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-5 py-4">
+        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
           <button
             type="button"
             onClick={onCancel}

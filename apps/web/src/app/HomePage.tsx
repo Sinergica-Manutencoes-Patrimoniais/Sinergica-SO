@@ -16,6 +16,7 @@ import {
   LayoutGrid,
   LogOut,
   Megaphone,
+  Menu,
   MessageCircle,
   Moon,
   Package,
@@ -27,6 +28,7 @@ import {
   UserCog,
   Users,
   Wrench,
+  X,
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -346,7 +348,7 @@ function DashboardGeral({
   onSelect: (id: ModuloId) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {resumos.map((resumo) => {
         const modulo = MODULOS.find((m) => m.id === resumo.moduloId);
         if (!modulo) return null;
@@ -354,10 +356,10 @@ function DashboardGeral({
         return (
           <div
             key={resumo.moduloId}
-            className="bg-card rounded-[10px] border border-line overflow-hidden flex flex-col"
+            className="group flex min-h-44 flex-col overflow-hidden rounded-[10px] border border-line bg-card shadow-[0_1px_2px_rgba(20,28,54,0.04)] transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-[0_10px_26px_rgba(20,28,54,0.08)]"
           >
             {/* Header */}
-            <div className="bg-navy px-4 py-3 flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 bg-navy px-3.5 py-2.5">
               <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0">
                 <Icon className="w-4 h-4 text-white" strokeWidth={1.8} />
               </div>
@@ -372,11 +374,11 @@ function DashboardGeral({
             </div>
 
             {/* KPIs */}
-            <div className="px-4 py-3 flex flex-col gap-2.5 flex-1">
+            <div className="flex flex-1 flex-col gap-2 px-3.5 py-3">
               {resumo.kpis.map((kpi) => (
                 <div key={kpi.label} className="flex items-baseline justify-between gap-2">
                   <span className="text-xs text-ink-3 truncate">{kpi.label}</span>
-                  <span className="text-lg font-bold font-brand text-ink tabular-nums shrink-0">
+                  <span className="shrink-0 font-brand text-base font-bold tabular-nums text-ink">
                     {kpi.valor}
                   </span>
                 </div>
@@ -384,11 +386,11 @@ function DashboardGeral({
             </div>
 
             {/* Footer */}
-            <div className="px-4 pb-4">
+            <div className="px-3.5 pb-3">
               <button
                 type="button"
                 onClick={() => onSelect(resumo.moduloId)}
-                className="w-full text-center text-xs font-semibold text-orange hover:text-orange-deep transition-colors cursor-pointer py-1"
+                className="w-full cursor-pointer rounded-[5px] py-1.5 text-center text-xs font-semibold text-orange transition-colors hover:bg-orange-soft hover:text-orange-deep"
               >
                 Ver módulo →
               </button>
@@ -409,6 +411,7 @@ export function HomePage() {
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
   const [configTab, setConfigTab] = useState<"grupos" | "usuarios">("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   // Sub-navegação do Atendimento (E02-S02) — só "inbox" por enquanto (E02-S03+ adiciona mais).
   const [atendimentoView, setAtendimentoView] = useState<AtendimentoView>("inbox");
   // Sub-navegação do PCM (Task 18/E01-S12) — mesmo padrão useState de abas, sem lib de rotas.
@@ -425,6 +428,11 @@ export function HomePage() {
     origemClienteId: string;
     seq: number;
   } | null>(null);
+
+  function navegarModulo(area: AreaAtiva) {
+    setActiveModulo(area);
+    setMobileSidebarOpen(false);
+  }
 
   function irParaPcmView(view: PcmView) {
     setPcmView(view);
@@ -476,37 +484,56 @@ export function HomePage() {
       : activeModulo === "config"
         ? "Sinérgica Manutenções · Configurações"
         : `Sinérgica Manutenções · ${modulo?.label ?? ""}`;
+  const sidebarCompacta = sidebarCollapsed && !mobileSidebarOpen;
 
   return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-paper">
+      {mobileSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Fechar menu"
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-navy-deep/55 backdrop-blur-[2px] lg:hidden"
+        />
+      )}
       {/* ── Sidebar ──────────────────────────────────────────── */}
       <aside
-        className={`${sidebarCollapsed ? "w-14" : "w-56"} shrink-0 bg-navy-deep border-r border-navy-line flex flex-col transition-[width] duration-200 ease-in-out overflow-hidden`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col overflow-hidden border-r border-navy-line bg-navy-deep shadow-2xl transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${
+          mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } ${sidebarCollapsed ? "lg:w-14" : "lg:w-56"}`}
       >
         {/* Brand */}
-        <div
-          className={`px-3 py-4 border-b border-navy-line flex items-center ${sidebarCollapsed ? "justify-center" : ""}`}
-        >
-          {sidebarCollapsed ? (
-            <img
-              src="/logos/logo-simbolo-laranja.png"
-              alt="Sinérgica"
-              className="w-8 h-8 object-contain shrink-0"
-            />
-          ) : (
-            <img
-              src="/logos/logo-horizontal-branco.png"
-              alt="Sinérgica"
-              className="h-7 object-contain"
-            />
-          )}
+        <div className="flex min-h-14 items-center border-b border-navy-line px-3 py-3">
+          <div className={`flex flex-1 items-center ${sidebarCompacta ? "lg:justify-center" : ""}`}>
+            {sidebarCompacta ? (
+              <img
+                src="/logos/logo-simbolo-laranja.png"
+                alt="Sinérgica"
+                className="w-8 h-8 object-contain shrink-0"
+              />
+            ) : (
+              <img
+                src="/logos/logo-horizontal-branco.png"
+                alt="Sinérgica"
+                className="h-7 object-contain"
+              />
+            )}
+          </div>
+          <button
+            type="button"
+            aria-label="Fechar menu"
+            onClick={() => setMobileSidebarOpen(false)}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] text-[#A8B0CC] hover:bg-white/[0.07] hover:text-white lg:hidden"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Nav groups */}
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
           {activeModulo === "inicio" ? (
             <div>
-              {!sidebarCollapsed && (
+              {!sidebarCompacta && (
                 <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
                   MÓDULOS
                 </p>
@@ -518,18 +545,18 @@ export function HomePage() {
                     key={m.id}
                     type="button"
                     title={m.label}
-                    onClick={() => setActiveModulo(m.id)}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white ${sidebarCollapsed ? "justify-center" : ""}`}
+                    onClick={() => navegarModulo(m.id)}
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white ${sidebarCompacta ? "justify-center" : ""}`}
                   >
                     <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                    {!sidebarCollapsed && <span className="truncate">{m.label}</span>}
+                    {!sidebarCompacta && <span className="truncate">{m.label}</span>}
                   </button>
                 );
               })}
             </div>
           ) : activeModulo === "config" ? (
             <div>
-              {!sidebarCollapsed && (
+              {!sidebarCompacta && (
                 <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
                   CONFIGURAÇÕES
                 </p>
@@ -542,15 +569,18 @@ export function HomePage() {
                     key={item.id}
                     type="button"
                     title={item.label}
-                    onClick={() => setConfigTab(item.id)}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
+                    onClick={() => {
+                      setConfigTab(item.id);
+                      setMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                       isActive
                         ? "border-orange bg-white/[0.07] text-white font-medium"
                         : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                    {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                    {!sidebarCompacta && <span className="truncate">{item.label}</span>}
                   </button>
                 );
               })}
@@ -558,7 +588,7 @@ export function HomePage() {
           ) : activeModulo === "pcm" ? (
             PCM_NAV.map((group) => (
               <div key={group.titulo}>
-                {!sidebarCollapsed && (
+                {!sidebarCompacta && (
                   <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
                     {group.titulo}
                   </p>
@@ -574,14 +604,14 @@ export function HomePage() {
                       type="button"
                       title={item.label}
                       onClick={view ? () => irParaPcmView(view) : undefined}
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                         isActive
                           ? "border-orange bg-white/[0.07] text-white font-medium"
                           : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
                       }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                      {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                      {!sidebarCompacta && <span className="truncate">{item.label}</span>}
                     </button>
                   );
                 })}
@@ -590,7 +620,7 @@ export function HomePage() {
           ) : activeModulo === "atendimento" ? (
             ATENDIMENTO_NAV.map((group) => (
               <div key={group.titulo}>
-                {!sidebarCollapsed && (
+                {!sidebarCompacta && (
                   <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
                     {group.titulo}
                   </p>
@@ -603,22 +633,25 @@ export function HomePage() {
                       key={item.label}
                       type="button"
                       title={item.label}
-                      onClick={() => setAtendimentoView(item.view)}
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
+                      onClick={() => {
+                        setAtendimentoView(item.view);
+                        setMobileSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                         isActive
                           ? "border-orange bg-white/[0.07] text-white font-medium"
                           : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
                       }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                      {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                      {!sidebarCompacta && <span className="truncate">{item.label}</span>}
                     </button>
                   );
                 })}
               </div>
             ))
           ) : (
-            !sidebarCollapsed && (
+            !sidebarCompacta && (
               <div className="px-2 pt-4 text-center">
                 <p className="text-xs text-[#A8B0CC]">
                   Navegação disponível quando o módulo for construído.
@@ -634,9 +667,9 @@ export function HomePage() {
             type="button"
             title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCollapsed ? "justify-center" : ""}`}
+            className={`hidden w-full items-center gap-2.5 rounded-[4px] border-l-2 border-transparent px-2 py-1.5 text-sm text-[#A8B0CC] transition-colors hover:bg-white/[0.04] hover:text-white lg:flex ${sidebarCompacta ? "justify-center" : ""}`}
           >
-            {sidebarCollapsed ? (
+            {sidebarCompacta ? (
               <ChevronRight className="w-4 h-4 shrink-0" strokeWidth={1.8} />
             ) : (
               <>
@@ -649,25 +682,25 @@ export function HomePage() {
             <button
               type="button"
               title="Configurações"
-              onClick={() => setActiveModulo("config")}
-              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCollapsed ? "justify-center" : ""} ${
+              onClick={() => navegarModulo("config")}
+              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                 activeModulo === "config"
                   ? "border-orange bg-white/[0.07] text-white font-medium"
                   : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
               }`}
             >
               <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-              {!sidebarCollapsed && <span>Configurações</span>}
+              {!sidebarCompacta && <span>Configurações</span>}
             </button>
           )}
           <button
             type="button"
             title="Sair"
             onClick={logout}
-            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCollapsed ? "justify-center" : ""}`}
+            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCompacta ? "justify-center" : ""}`}
           >
             <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-            {!sidebarCollapsed && <span>Sair</span>}
+            {!sidebarCompacta && <span>Sair</span>}
           </button>
         </div>
       </aside>
@@ -676,7 +709,15 @@ export function HomePage() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar com abas */}
         <header className="bg-card border-b border-line shrink-0">
-          <div className="flex items-center gap-1 px-4 overflow-x-auto no-scrollbar">
+          <div className="flex min-h-12 items-center gap-1 overflow-x-auto px-3 no-scrollbar sm:px-4">
+            <button
+              type="button"
+              aria-label="Abrir menu"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="sticky left-0 z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] border border-line bg-card text-ink-2 hover:bg-line-soft lg:hidden"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
             {MODULOS.filter((m) => podeVerModulo(m.id)).map((m) => {
               const Icon = m.icon;
               const isActive = m.id === activeModulo;
@@ -684,8 +725,8 @@ export function HomePage() {
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => setActiveModulo(m.id)}
-                  className={`flex items-center gap-1.5 px-3.5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors cursor-pointer shrink-0 ${
+                  onClick={() => navegarModulo(m.id)}
+                  className={`flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 px-2.5 py-3 text-xs font-medium transition-colors sm:px-3.5 sm:text-sm ${
                     isActive
                       ? "border-orange text-navy"
                       : "border-transparent text-ink-3 hover:text-ink hover:border-line"
@@ -723,16 +764,16 @@ export function HomePage() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5">
           {/* Greeting */}
-          <div className="mb-6">
-            <h1 className="text-xl font-bold text-ink">Olá, {firstName}! 👋</h1>
+          <div className="mb-4">
+            <h1 className="text-lg font-bold text-ink">Olá, {firstName}! 👋</h1>
             <p className="text-sm text-ink-3 mt-0.5">{greetingSub}</p>
           </div>
 
           {/* Conteúdo por módulo */}
           {activeModulo === "inicio" ? (
-            <DashboardGeral resumos={dashboardVisivel} onSelect={setActiveModulo} />
+            <DashboardGeral resumos={dashboardVisivel} onSelect={navegarModulo} />
           ) : activeModulo === "pcm" ? (
             pcmView === "clientes" ? (
               clienteSelecionado ? (

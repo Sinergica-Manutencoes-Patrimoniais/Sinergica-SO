@@ -5,7 +5,15 @@ const DELAY_MS = 300;
 /** Tooltip de hover/foco reutilizável — CSS puro, sem lib de posicionamento. Posiciona por
  * `getBoundingClientRect()` + `position: fixed` (não recorta em containers com `overflow-x/y-auto`
  * como as colunas do Kanban). `content` vazio/null não renderiza nada (E01-S41). */
-export function Tooltip({ content, children }: { content: string | null; children: ReactNode }) {
+export function Tooltip({
+  content,
+  children,
+  className = "block",
+}: {
+  content: string | null;
+  children: ReactNode;
+  className?: string;
+}) {
   const [posicao, setPosicao] = useState<{ top: number; left: number } | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLSpanElement>(null);
@@ -27,7 +35,7 @@ export function Tooltip({ content, children }: { content: string | null; childre
   return (
     <span
       ref={wrapperRef}
-      className="block"
+      className={className}
       onMouseEnter={agendarAbrir}
       onMouseLeave={fechar}
       onFocus={agendarAbrir}

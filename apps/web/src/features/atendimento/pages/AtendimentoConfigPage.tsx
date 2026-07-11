@@ -581,12 +581,12 @@ export function AtendimentoConfigPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex gap-2 overflow-x-auto border-b border-line">
+    <div className="page-stack">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto rounded-[8px] border border-line bg-card px-1.5 pt-1.5 shadow-[0_1px_2px_rgba(20,28,54,0.03)]">
         <button
           type="button"
           onClick={() => setAba("ia")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "ia" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -595,7 +595,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("operacao")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "operacao" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -604,7 +604,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("conhecimento")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "conhecimento"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -615,7 +615,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("meta-wa")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "meta-wa" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -624,7 +624,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("wa-templates")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "wa-templates"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -635,7 +635,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("instagram")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "instagram"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -646,7 +646,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("messenger")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "messenger"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -657,7 +657,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("ig-comments")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "ig-comments"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -668,7 +668,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("optouts")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "optouts" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -677,7 +677,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("scoring")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "scoring" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -686,7 +686,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("clusters")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "clusters" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -695,7 +695,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("evolution")}
-          className={`shrink-0 px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "evolution"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -706,7 +706,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("canal")}
-          className={`px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "canal" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -715,7 +715,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("tags")}
-          className={`px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "tags" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -724,7 +724,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("personas")}
-          className={`px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "personas" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -733,7 +733,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("agentes")}
-          className={`px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "agentes" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -742,7 +742,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("fluxos")}
-          className={`px-4 py-2 text-sm font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
             aba === "fluxos" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >

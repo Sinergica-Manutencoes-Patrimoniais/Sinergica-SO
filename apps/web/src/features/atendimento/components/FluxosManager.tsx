@@ -101,11 +101,7 @@ export function FluxosManager({
             </p>
           </div>
           {temEscrita && !criando && (
-            <button
-              type="button"
-              onClick={() => setCriando(true)}
-              className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
-            >
+            <button type="button" onClick={() => setCriando(true)} className="btn-primary">
               <Plus className="h-4 w-4" />
               Novo fluxo
             </button>
@@ -220,7 +216,7 @@ export function FluxosManager({
                 <button
                   type="button"
                   onClick={() => setPassosLocais([...passosLocais, novoPasso(passosLocais)])}
-                  className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                  className="btn-secondary"
                 >
                   <Plus className="h-4 w-4" />
                   Adicionar passo

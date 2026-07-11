@@ -281,7 +281,7 @@ function PainelContatos({ cliente }: { cliente: ClienteHeader }) {
 
   return (
     <section className="rounded-[8px] border border-line bg-card">
-      <div className="border-b border-line-soft px-5 py-4">
+      <div className="border-b border-line-soft px-4 py-3">
         <h3 className="text-sm font-semibold text-ink">Contatos</h3>
         <p className="mt-0.5 text-xs text-ink-3">Todos os contatos cadastrados no Auvo</p>
       </div>
@@ -310,13 +310,13 @@ function PainelContatos({ cliente }: { cliente: ClienteHeader }) {
 function PainelGrupos({ grupos }: { grupos: GrupoClienteResumo[] }) {
   return (
     <section className="rounded-[8px] border border-line bg-card">
-      <div className="border-b border-line-soft px-5 py-4">
+      <div className="border-b border-line-soft px-4 py-3">
         <h3 className="text-sm font-semibold text-ink">Grupos</h3>
         <p className="mt-0.5 text-xs text-ink-3">
           Grupos de clientes (PCM) que incluem este cliente
         </p>
       </div>
-      <div className="p-5">
+      <div className="p-4">
         {grupos.length === 0 ? (
           <p className="text-sm text-ink-3">Não pertence a nenhum grupo.</p>
         ) : (
@@ -378,7 +378,7 @@ function PainelCadastroAuvo({
   }
 
   return (
-    <section className="rounded-[8px] border border-line bg-card px-5 py-4">
+    <section className="rounded-[8px] border border-line bg-card px-4 py-3">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -392,11 +392,7 @@ function PainelCadastroAuvo({
         </div>
         <div className="flex flex-wrap gap-2">
           {temEscrita && (
-            <button
-              type="button"
-              onClick={onEditar}
-              className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-            >
+            <button type="button" onClick={onEditar} className="btn-secondary">
               <Pencil className="h-4 w-4" />
               Editar cadastro
             </button>
@@ -405,7 +401,7 @@ function PainelCadastroAuvo({
             type="button"
             onClick={copiarAuvoId}
             disabled={cliente.auvoId === null}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:cursor-not-allowed disabled:opacity-45"
+            className="btn-secondary disabled:cursor-not-allowed disabled:opacity-45"
           >
             <Copy className="h-4 w-4" />
             Copiar ID Auvo
@@ -455,7 +451,7 @@ function TimelineCliente({
 
   return (
     <section className="rounded-[8px] border border-line bg-card">
-      <div className="border-b border-line-soft px-5 py-4">
+      <div className="border-b border-line-soft px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold text-ink">
@@ -491,7 +487,7 @@ function TimelineCliente({
           Nenhum evento para o filtro selecionado.
         </div>
       ) : (
-        <div className="px-5 py-4">
+        <div className="px-4 py-3">
           <div className="relative space-y-4 before:absolute before:left-[15px] before:top-2 before:h-[calc(100%-16px)] before:w-px before:bg-line-soft">
             {eventosVisiveis.map((evento) => {
               const clicavel = evento.tipo === "os" && Boolean(onAbrirOs);
@@ -585,7 +581,7 @@ function ResumoOperacional({
     qualidade.laudos.filter((laudo) => !["concluido", "assinado"].includes(laudo.status)).length;
 
   return (
-    <section className="rounded-[8px] border border-line bg-card p-5">
+    <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">Operação</h3>
       <div className="mt-4 grid gap-3">
         <ResumoLinha
@@ -627,7 +623,7 @@ function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <section className="rounded-[8px] border border-line bg-card">
-        <div className="border-b border-line-soft px-5 py-4">
+        <div className="border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">Inspeções</h3>
         </div>
         {qualidade.inspecoes.length === 0 ? (
@@ -653,7 +649,7 @@ function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
       </section>
 
       <section className="rounded-[8px] border border-line bg-card">
-        <div className="border-b border-line-soft px-5 py-4">
+        <div className="border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">Laudos SPDA</h3>
         </div>
         {qualidade.laudos.length === 0 ? (
@@ -690,7 +686,7 @@ function PainelComunicacao({
 }) {
   const comunicacao = eventos.filter((evento) => evento.tipo === "whatsapp");
   return (
-    <section className="rounded-[8px] border border-line bg-card p-5">
+    <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">Comunicação</h3>
       <div className="mt-4 grid gap-3 text-sm">
         <ResumoLinha label="Telefone" value={cliente.contatoTelefone ?? "Não informado"} />
@@ -738,7 +734,7 @@ function PainelFinanceiro({
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-5">
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <h3 className="text-sm font-semibold text-ink">Status comercial</h3>
         <p className="mt-2 inline-flex rounded-full bg-line-soft px-3 py-1 text-sm font-semibold text-ink-2">
           {cliente.statusComercial
@@ -748,7 +744,7 @@ function PainelFinanceiro({
       </section>
 
       <section className="rounded-[8px] border border-line bg-card">
-        <div className="border-b border-line-soft px-5 py-4">
+        <div className="border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">OS por categoria — últimos 12 meses</h3>
           <p className="mt-0.5 text-xs text-ink-3">
             Volume de atendimento por tipo de serviço (baseado nas 50 OS mais recentes) — não é

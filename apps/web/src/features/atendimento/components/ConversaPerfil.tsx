@@ -3,7 +3,7 @@ import type { ConversaItem } from "../domain/conversas";
 
 export function ConversaPerfil({ conversa }: { conversa: ConversaItem | null }) {
   if (!conversa) {
-    return <div className="hidden h-full rounded-[8px] border border-line bg-card xl:block" />;
+    return null;
   }
 
   return (

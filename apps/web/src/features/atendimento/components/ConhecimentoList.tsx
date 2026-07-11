@@ -143,7 +143,7 @@ export function ConhecimentoList({
       )}
 
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="modal-backdrop">
           <div className="w-full max-w-lg rounded-[10px] bg-card p-5 shadow-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-ink">

@@ -58,7 +58,7 @@ export function ClienteFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+    <div className="modal-backdrop">
       <div className="w-full max-w-3xl rounded-[8px] border border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <h3 className="text-base font-semibold text-ink">

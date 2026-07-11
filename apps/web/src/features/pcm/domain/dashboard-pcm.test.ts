@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { InspecaoResumo } from "../application/qualidade-gateway";
-import { montarDashboardPcm } from "./dashboard-pcm";
+import { consolidarSinaisCampoAuvo, montarDashboardPcm } from "./dashboard-pcm";
 import type { OrdemServicoOperacional } from "./ordens-servico";
 
 const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional => ({
@@ -81,8 +81,10 @@ describe("dashboard-pcm", () => {
         ultimaAtualizacao: "2026-07-04T12:00:00Z",
         topClientesEquipamentos: [{ auvoId: 100, nome: "Cliente", total: 6 }],
         campo: {
-          snapshotsRecebidos: 4,
-          snapshotsComAnexos: 3,
+          execucoesRegistradas: 4,
+          anexosRegistrados: 3,
+          relatosRegistrados: 1,
+          assinaturasRegistradas: 2,
           checklistsRecebidos: 2,
           pecasRegistradas: 1,
           controlesHoras: 2,
@@ -101,5 +103,64 @@ describe("dashboard-pcm", () => {
     expect(dashboard.auvo?.campo.checklistsRecebidos).toBe(2);
     expect(dashboard.ordensRecentes.map((ordem) => ordem.id)).toEqual(["b", "a", "c"]);
     expect(dashboard.topBacklog.map((ordem) => ordem.id)).toEqual(["b", "a"]);
+  });
+
+  it("consolida sinais de pull e webhook por OS sem duplicar", () => {
+    const campo = consolidarSinaisCampoAuvo(
+      [
+        {
+          ordemServicoId: "os-1",
+          anexos: [{ id: 1 }],
+          checklist: [{ id: 1 }],
+          pecasConsumidas: [],
+          controleHoras: {},
+          checkinEm: "2026-07-10T09:00:00Z",
+          concluidaEm: null,
+          recebidoEm: "2026-07-10T09:01:00Z",
+        },
+        {
+          ordemServicoId: null,
+          anexos: [],
+          checklist: [],
+          pecasConsumidas: [{ id: 2 }],
+          controleHoras: { total: 1 },
+          checkinEm: null,
+          concluidaEm: "2026-07-10T11:00:00Z",
+          recebidoEm: null,
+        },
+      ],
+      [
+        {
+          id: "os-1",
+          detalhes: {
+            anexos: [{ id: 1 }],
+            relato: "Executado",
+            assinaturaUrl: "https://arquivo",
+            duracaoHoras: 2,
+          },
+          checkInAt: "2026-07-10T09:00:00Z",
+          checkOutAt: "2026-07-10T10:00:00Z",
+        },
+        {
+          id: "os-2",
+          detalhes: { duracaoHoras: "0", produtos: [] },
+          checkInAt: null,
+          checkOutAt: null,
+        },
+      ],
+      ["os-1", "os-1"],
+    );
+
+    expect(campo).toEqual({
+      execucoesRegistradas: 2,
+      anexosRegistrados: 1,
+      relatosRegistrados: 1,
+      assinaturasRegistradas: 1,
+      checklistsRecebidos: 1,
+      pecasRegistradas: 1,
+      controlesHoras: 2,
+      osComEquipamentoVinculado: 1,
+      ultimaExecucaoCampo: "2026-07-10T11:00:00Z",
+    });
   });
 });

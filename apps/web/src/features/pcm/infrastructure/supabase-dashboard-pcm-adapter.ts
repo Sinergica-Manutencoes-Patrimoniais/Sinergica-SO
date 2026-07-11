@@ -1,5 +1,10 @@
 import { supabase } from "../../../lib/supabase-client";
-import type { ClienteEquipamentosAuvo, DashboardPcmAuvoResumo } from "../domain/dashboard-pcm";
+import {
+  type ClienteEquipamentosAuvo,
+  type DashboardPcmAuvoResumo,
+  consolidarSinaisCampoAuvo,
+} from "../domain/dashboard-pcm";
+import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 
 interface ClienteAuvoRow {
   nome: string;
@@ -26,6 +31,7 @@ interface EquipamentoAuvoRow {
 }
 
 interface AuvoTaskSnapshotRow {
+  ordem_servico_id: string | null;
   anexos: unknown;
   checklist: unknown;
   pecas_consumidas: unknown;
@@ -55,12 +61,6 @@ function maxIso(datas: Array<string | null | undefined>): string | null {
     .filter((data): data is string => Boolean(data))
     .sort((a, b) => b.localeCompare(a));
   return ordenadas[0] ?? null;
-}
-
-function temConteudoJson(valor: unknown): boolean {
-  if (Array.isArray(valor)) return valor.length > 0;
-  if (valor && typeof valor === "object") return Object.keys(valor).length > 0;
-  return false;
 }
 
 function isTabelaCampoAusente(error: { code?: string; message?: string } | null): boolean {
@@ -134,7 +134,9 @@ export const supabaseDashboardPcmAdapter = {
     }));
   },
 
-  async obterResumoAuvo(): Promise<DashboardPcmAuvoResumo> {
+  async obterResumoAuvo(
+    ordens: readonly OrdemServicoOperacional[] = [],
+  ): Promise<DashboardPcmAuvoResumo> {
     const [clientes, tecnicos, equipamentos, snapshots, osEquipamentos] = await Promise.all([
       supabase
         .schema("pcm")
@@ -150,7 +152,7 @@ export const supabaseDashboardPcmAdapter = {
         .schema("pcm")
         .from("auvo_task_snapshots")
         .select(
-          "anexos,checklist,pecas_consumidas,controle_horas,checkin_em,concluida_em,last_webhook_received_at",
+          "ordem_servico_id,anexos,checklist,pecas_consumidas,controle_horas,checkin_em,concluida_em,last_webhook_received_at",
         ),
       supabase.schema("pcm").from("os_equipamentos_auvo").select("ordem_servico_id"),
     ]);
@@ -205,27 +207,25 @@ export const supabaseDashboardPcmAdapter = {
         ...snapshotsRows.map((snapshot) => snapshot.last_webhook_received_at),
       ]),
       topClientesEquipamentos: topClientesPorEquipamento(clientesAtivos, equipamentosAtivos),
-      campo: {
-        snapshotsRecebidos: snapshotsRows.length,
-        snapshotsComAnexos: snapshotsRows.filter((snapshot) => temConteudoJson(snapshot.anexos))
-          .length,
-        checklistsRecebidos: snapshotsRows.filter((snapshot) => temConteudoJson(snapshot.checklist))
-          .length,
-        pecasRegistradas: snapshotsRows.filter((snapshot) =>
-          temConteudoJson(snapshot.pecas_consumidas),
-        ).length,
-        controlesHoras: snapshotsRows.filter((snapshot) => temConteudoJson(snapshot.controle_horas))
-          .length,
-        osComEquipamentoVinculado: new Set(osEquipamentosRows.map((item) => item.ordem_servico_id))
-          .size,
-        ultimaExecucaoCampo: maxIso(
-          snapshotsRows.flatMap((snapshot) => [
-            snapshot.concluida_em,
-            snapshot.checkin_em,
-            snapshot.last_webhook_received_at,
-          ]),
-        ),
-      },
+      campo: consolidarSinaisCampoAuvo(
+        snapshotsRows.map((snapshot) => ({
+          ordemServicoId: snapshot.ordem_servico_id,
+          anexos: snapshot.anexos,
+          checklist: snapshot.checklist,
+          pecasConsumidas: snapshot.pecas_consumidas,
+          controleHoras: snapshot.controle_horas,
+          checkinEm: snapshot.checkin_em,
+          concluidaEm: snapshot.concluida_em,
+          recebidoEm: snapshot.last_webhook_received_at,
+        })),
+        ordens.map((ordem) => ({
+          id: ordem.id,
+          detalhes: ordem.detalhes,
+          checkInAt: ordem.checkInAt,
+          checkOutAt: ordem.checkOutAt,
+        })),
+        osEquipamentosRows.map((item) => item.ordem_servico_id),
+      ),
     };
   },
 };

@@ -113,10 +113,10 @@ export function FerramentasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-5">
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-ink">Ferramentas</h3>
+            <h3 className="text-base font-semibold text-ink">Ferramentas</h3>
             <p className="mt-0.5 text-sm text-ink-3">
               Produtos Auvo tratados como ferramentas e kits operacionais
             </p>
@@ -248,9 +248,9 @@ function FerramentaModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+    <div className="modal-backdrop">
       <div className="w-full max-w-2xl rounded-[8px] border border-line bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {ferramenta ? "Editar ferramenta" : "Nova ferramenta"}
           </h3>
@@ -258,7 +258,7 @@ function FerramentaModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-3 p-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
           <Field
             label="Nome *"
             value={dados.nome}
@@ -303,7 +303,7 @@ function FerramentaModal({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-5 py-4">
+        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
           <button
             type="button"
             onClick={onCancel}

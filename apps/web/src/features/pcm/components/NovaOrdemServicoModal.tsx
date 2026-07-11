@@ -156,7 +156,7 @@ export function NovaOrdemServicoModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4">
+    <div className="modal-backdrop">
       <form
         onSubmit={submit}
         className="w-full max-w-4xl max-h-[92vh] overflow-hidden bg-card rounded-[10px] border border-line shadow-xl flex flex-col"

@@ -170,11 +170,7 @@ export function LaudosSpdaPage() {
           <p className="text-sm text-ink-3">Vistoria, pontos de medição e conclusão técnica</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={carregar}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+          <button type="button" onClick={carregar} className="btn-secondary">
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </button>
@@ -183,7 +179,7 @@ export function LaudosSpdaPage() {
               type="button"
               onClick={() => setModalAberto(true)}
               disabled={semClientes}
-              className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+              className="btn-primary disabled:opacity-60"
             >
               <Plus className="h-4 w-4" />
               Novo laudo
@@ -207,7 +203,7 @@ export function LaudosSpdaPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4">
         <section className="bg-card rounded-[10px] border border-line overflow-hidden">
-          <div className="px-5 py-4 border-b border-line-soft">
+          <div className="px-4 py-3 border-b border-line-soft">
             <h3 className="text-sm font-semibold text-ink">Laudos</h3>
             <p className="text-xs text-ink-3 mt-0.5">{estado.laudos.length} registros recentes</p>
           </div>
@@ -220,7 +216,7 @@ export function LaudosSpdaPage() {
                   key={laudo.id}
                   type="button"
                   onClick={() => setSelecionadoId(laudo.id)}
-                  className={`w-full px-5 py-4 text-left hover:bg-line-soft ${
+                  className={`w-full px-4 py-3 text-left hover:bg-line-soft ${
                     laudo.id === selecionadoId ? "bg-line-soft" : ""
                   }`}
                 >
@@ -248,11 +244,11 @@ export function LaudosSpdaPage() {
         <section className="bg-card rounded-[10px] border border-line min-h-[520px]">
           {laudoSelecionado ? (
             <div>
-              <div className="px-5 py-4 border-b border-line-soft">
+              <div className="px-4 py-3 border-b border-line-soft">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-xs text-ink-3">{laudoSelecionado.clienteNome}</p>
-                    <h3 className="text-lg font-semibold text-ink">{laudoSelecionado.numero}</h3>
+                    <h3 className="text-base font-semibold text-ink">{laudoSelecionado.numero}</h3>
                     <p className="text-xs text-ink-3 mt-1">
                       {laudoSelecionado.dataVistoria}
                       {laudoSelecionado.responsavelTecnico
@@ -267,7 +263,7 @@ export function LaudosSpdaPage() {
                         Pontos medidos
                       </span>
                     </div>
-                    <p className="mt-1 text-2xl font-bold text-ink">{pontos.length}</p>
+                    <p className="mt-1 text-xl font-bold text-ink">{pontos.length}</p>
                   </div>
                 </div>
                 <p className="mt-4 rounded-[6px] bg-paper px-3 py-2 text-sm text-ink-2">
@@ -276,7 +272,7 @@ export function LaudosSpdaPage() {
               </div>
 
               {temEscrita && (
-                <div className="p-5 border-b border-line-soft">
+                <div className="p-4 border-b border-line-soft">
                   <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
                     <input
                       className="input"
@@ -356,7 +352,7 @@ export function LaudosSpdaPage() {
                   </div>
                 ) : (
                   pontos.map((ponto) => (
-                    <div key={ponto.id} className="px-5 py-4">
+                    <div key={ponto.id} className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-bold text-ink tabular-nums">
                           Ponto {ponto.numeroPonto}

@@ -73,7 +73,7 @@ export function TagsList({
           <button
             type="button"
             onClick={() => abrirModal({ modo: "criar" })}
-            className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+            className="btn-primary"
           >
             <Plus className="h-4 w-4" />
             Nova tag
@@ -134,7 +134,7 @@ export function TagsList({
       </div>
 
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+        <div className="modal-backdrop">
           <div className="w-full max-w-md rounded-[10px] border border-line bg-card shadow-xl">
             <div className="flex items-center justify-between border-b border-line-soft px-5 py-4">
               <h3 className="text-base font-semibold text-ink">

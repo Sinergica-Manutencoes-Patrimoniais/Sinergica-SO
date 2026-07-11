@@ -106,10 +106,10 @@ export function EquipesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-5">
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-ink">Equipes</h3>
+            <h3 className="text-base font-semibold text-ink">Equipes</h3>
             <p className="mt-0.5 text-sm text-ink-3">
               Criação sincronizada com Auvo /teams; edição e exclusão ficam apenas no PCM
             </p>
@@ -246,9 +246,9 @@ function EquipeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+    <div className="modal-backdrop">
       <div className="w-full max-w-2xl rounded-[8px] border border-line bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {equipe ? "Editar equipe local" : "Nova equipe"}
           </h3>
@@ -256,7 +256,7 @@ function EquipeModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto p-5">
+        <div className="max-h-[70vh] overflow-y-auto p-4">
           {equipe?.auvoId && (
             <div className="mb-3 rounded-[6px] border border-[#F4D28C] bg-[#FFF8E8] px-3 py-2 text-sm text-[#7A4D00]">
               Esta edição será apenas local no PCM.
@@ -288,7 +288,7 @@ function EquipeModal({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-5 py-4">
+        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
           <button
             type="button"
             onClick={onCancel}

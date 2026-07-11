@@ -174,11 +174,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
           <p className="text-sm text-ink-3">Catálogo simples sincronizado com o Auvo</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={carregar}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+          <button type="button" onClick={carregar} className="btn-secondary">
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </button>
@@ -186,7 +182,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
             <button
               type="button"
               onClick={() => abrirModal({ modo: "criar" })}
-              className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+              className="btn-primary"
             >
               <Plus className="h-4 w-4" />
               Novo
@@ -202,7 +198,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
       )}
 
       <section className="rounded-[10px] border border-line bg-card">
-        <div className="border-b border-line-soft px-5 py-4">
+        <div className="border-b border-line-soft px-4 py-3">
           <input
             className="input"
             placeholder={`Buscar por ${campo.toLowerCase()}`}
@@ -220,7 +216,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
             itensFiltrados.map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-[1fr_180px_96px] md:items-center"
+                className="grid grid-cols-1 gap-3 px-4 py-3 md:grid-cols-[1fr_180px_96px] md:items-center"
               >
                 <div>
                   <p className="font-semibold text-ink">{item.descricao}</p>
@@ -261,9 +257,9 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
       </section>
 
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+        <div className="modal-backdrop">
           <div className="w-full max-w-lg rounded-[10px] border border-line bg-card shadow-xl">
-            <div className="flex items-center justify-between border-b border-line-soft px-5 py-4">
+            <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
               <h3 className="text-base font-semibold text-ink">
                 {modal.modo === "criar" ? `Novo ${titulo}` : `Editar ${titulo}`}
               </h3>
@@ -278,7 +274,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
             </div>
 
             <form
-              className="space-y-4 px-5 py-4"
+              className="space-y-4 px-4 py-3"
               onSubmit={(event) => {
                 event.preventDefault();
                 void onSalvar();
