@@ -1,5 +1,10 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { extractTaskId, mapTaskStatusToOsStatus, montarDetalhes } from "./index.ts";
+import {
+  calcularInicioJanelaDeCursor,
+  extractTaskId,
+  mapTaskStatusToOsStatus,
+  montarDetalhes,
+} from "./index.ts";
 
 Deno.test("extractTaskId — taskID é o campo real confirmado na API, id/taskId são fallback", () => {
   // Confirmado direto na API real (2026-07-09): GET /tasks devolve `taskID` (maiúsculo) — sem
@@ -8,6 +13,26 @@ Deno.test("extractTaskId — taskID é o campo real confirmado na API, id/taskId
   assertEquals(extractTaskId({ id: 123 }), 123);
   assertEquals(extractTaskId({ taskId: 456 }), 456);
   assertEquals(extractTaskId({}), null);
+});
+
+Deno.test("calcularInicioJanelaDeCursor — E01-S67: cursor presente usa (cursor - 3 dias de overlap)", () => {
+  const agora = new Date("2026-07-13T12:00:00Z");
+  const cursor = "2026-07-10T08:00:00.000Z"; // 3 dias atrás de "agora"
+  const inicio = calcularInicioJanelaDeCursor(cursor, agora);
+  assertEquals(inicio.toISOString(), "2026-07-07T08:00:00.000Z");
+});
+
+Deno.test("calcularInicioJanelaDeCursor — cursor recente (rodando de hora em hora) fica bem próximo de agora", () => {
+  const agora = new Date("2026-07-13T12:00:00Z");
+  const cursor = "2026-07-13T11:00:00.000Z"; // 1h atrás — cron horário
+  const inicio = calcularInicioJanelaDeCursor(cursor, agora);
+  assertEquals(inicio.toISOString(), "2026-07-10T11:00:00.000Z"); // cursor - 3 dias, não "agora - 3 dias"
+});
+
+Deno.test("calcularInicioJanelaDeCursor — sem cursor (bootstrap) cai no fallback fixo de 14 dias", () => {
+  const agora = new Date("2026-07-13T12:00:00Z");
+  const inicio = calcularInicioJanelaDeCursor(null, agora);
+  assertEquals(inicio.toISOString(), "2026-06-29T12:00:00.000Z");
 });
 
 Deno.test("mapTaskStatusToOsStatus — mapeia taskStatus Auvo pro status inicial da OS", () => {

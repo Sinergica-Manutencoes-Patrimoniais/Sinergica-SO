@@ -18,6 +18,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
 import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
@@ -30,6 +31,12 @@ import {
   resolverClienteIdsPorAuvoIds,
   resolverFuncionarioIdsPorAuvoIds,
 } from "../_shared/auvo/os-from-task.ts";
+
+/** Sobreposição de segurança do cursor incremental (E01-S67) — cobre tarefa retroagendada/
+ * lançada com atraso no Auvo, que teria ficado fora de uma janela sem margem. */
+const OVERLAP_DIAS_CURSOR = 3;
+/** Janela de fallback quando não há nenhuma tarefa sincronizada ainda (bootstrap). */
+const FALLBACK_DIAS_PASSADO = 14;
 
 /** Máximo de linhas por `insert()` em lote — payload único grande demais é tão arriscado quanto
  * 1 round-trip por linha; fatiar mantém os dois lados saudáveis mesmo num backfill grande. */
@@ -129,24 +136,24 @@ if (import.meta.main) serve(async (req) => {
     // confirmado direto na API real (400 "Start date and end date are required when customerId is
     // not provided", errorCode 168).
     //
-    // Janela padrão PEQUENA (14 dias passado/futuro) — isto é rede de segurança pro que o webhook
-    // de Task perder, não backfill histórico. Testado em produção (2026-07-08/09): a conta tem
-    // ~2362 tarefas nos últimos 240 dias, e a API do Auvo leva ~10-13s POR PÁGINA de 100 (limite
-    // máximo, confirmado — `pageSize=500` dá 400 "You cannot request more than 100 tasks per
-    // page"). Rodar essa reconciliação numa janela larga TODO DIA (ou a cada clique do botão)
-    // significaria sempre paginar ~24 páginas ≈ 220s+ SÓ pra buscar do Auvo — sempre estourando o
-    // teto de 150s do Supabase, dia após dia, não é problema de uma vez só. Janela pequena garante
-    // que a operação recorrente (cron diário + botão) fica sempre rápida (poucas tarefas novas por
-    // dia). O backfill do histórico de tarefas antigas roda uma única vez via `startDate`/`endDate`
-    // explícitos no corpo da requisição, chamado em fatias (backfill de 2026-07-09, script
-    // pontual, não repetível/agendado — histórico já resolvido depois de rodar uma vez).
+    // E01-S67: StartDate por CURSOR incremental (MAX(data_agendada) das OS já sincronizadas do
+    // Auvo, menos 3 dias de sobreposição de segurança) em vez de janela fixa. Antes disso a janela
+    // era sempre -14/+14 dias fixos, reprocessando dado que na maior parte das vezes já estava
+    // sincronizado — mesma classe de causa raiz do incidente E01-S62 (`pull:tickets` com janela
+    // fixa grande). Cursor incremental faz o custo por execução cair pra "poucos dias desde a
+    // última rodada" em operação normal, o que torna seguro rodar de hora em hora (migration 0084)
+    // em vez de só 1x/dia. Ver `specs/E01-S67-sync-incremental-background/design.md`.
+    //
+    // Overlap de 3 dias cobre tarefa retroagendada/lançada com atraso pelo técnico (o cursor já
+    // teria avançado além dela numa rodada anterior sem essa margem). Fallback pra janela fixa
+    // antiga (-14 dias) só no bootstrap (nenhuma tarefa sincronizada ainda) — sem regressão nesse
+    // caso. EndDate continua fixo (+14 dias) — forward window já era pequeno, não muda.
     const agora = new Date();
-    const inicioPadrao = new Date(agora);
-    inicioPadrao.setDate(inicioPadrao.getDate() - 14);
     const fimPadrao = new Date(agora);
     fimPadrao.setDate(fimPadrao.getDate() + 14);
+    const startDate = body.startDate ?? (await calcularInicioJanela(db, agora)).toISOString().slice(0, 19);
     const paramFilter = buildParamFilter({
-      StartDate: body.startDate ?? inicioPadrao.toISOString().slice(0, 19),
+      StartDate: startDate,
       EndDate: body.endDate ?? fimPadrao.toISOString().slice(0, 19),
     });
 
@@ -360,6 +367,40 @@ export function montarDetalhes(tarefa: AuvoTask): Record<string, unknown> {
   if (tarefa.ticketTitle) detalhes.ticketTitulo = tarefa.ticketTitle;
   if (tarefa.taskUrl) detalhes.taskUrl = tarefa.taskUrl;
   return detalhes;
+}
+
+/** Busca `MAX(data_agendada)` das OS já sincronizadas do Auvo — o cursor incremental. `null` no
+ * bootstrap (nenhuma tarefa sincronizada ainda), quem chama decide o fallback. */
+async function buscarCursorMaxDataAgendada(db: UntypedSupabaseClient): Promise<string | null> {
+  const { data, error } = await db
+    .schema("pcm")
+    .from("ordens_servico")
+    .select("data_agendada")
+    .not("auvo_task_id", "is", null)
+    .not("data_agendada", "is", null)
+    .order("data_agendada", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.data_agendada as string | undefined) ?? null;
+}
+
+/** Função pura: dado o cursor (string ISO ou null) e "agora", calcula o `StartDate` da janela.
+ * `null` (bootstrap) cai no fallback fixo antigo; cursor presente usa `cursor - overlap`. */
+export function calcularInicioJanelaDeCursor(cursorMax: string | null, agora: Date): Date {
+  if (cursorMax == null) {
+    const inicio = new Date(agora);
+    inicio.setDate(inicio.getDate() - FALLBACK_DIAS_PASSADO);
+    return inicio;
+  }
+  const inicio = new Date(cursorMax);
+  inicio.setDate(inicio.getDate() - OVERLAP_DIAS_CURSOR);
+  return inicio;
+}
+
+async function calcularInicioJanela(db: UntypedSupabaseClient, agora: Date): Promise<Date> {
+  const cursorMax = await buscarCursorMaxDataAgendada(db);
+  return calcularInicioJanelaDeCursor(cursorMax, agora);
 }
 
 export function extractTaskId(tarefa: AuvoTask): number | null {
