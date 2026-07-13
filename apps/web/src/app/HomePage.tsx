@@ -20,10 +20,14 @@ import {
   MessageCircle,
   Moon,
   Package,
+  PieChart,
   Settings,
   Snowflake,
   Sun,
   Ticket,
+  TrendingDown,
+  TrendingUp,
+  Upload,
   UserCircle,
   UserCog,
   Users,
@@ -39,6 +43,8 @@ import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoI
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { GruposPage } from "../features/config/pages/GruposPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
+import type { FinanceiroView } from "../features/financeiro/mock/FinanceiroMockRouter";
+import { FinanceiroMockRouter } from "../features/financeiro/mock/FinanceiroMockRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
 import { BacklogGutPage } from "../features/pcm/pages/BacklogGutPage";
 import {
@@ -139,6 +145,19 @@ interface AtendimentoNavGroup {
   items: AtendimentoNavItem[];
 }
 
+// Sub-navegação do Financeiro — E04-S01..S06 (specs/E04-S01-fundacao-financeiro/), protótipo
+// navegável com dados fictícios (features/financeiro/mock/). Mesmo padrão useState de abas.
+interface FinanceiroNavItem {
+  label: string;
+  icon: LucideIcon;
+  view: FinanceiroView;
+}
+
+interface FinanceiroNavGroup {
+  titulo: string;
+  items: FinanceiroNavItem[];
+}
+
 // ─── dados ───────────────────────────────────────────────────────────────────
 
 const MODULOS: ModuloTab[] = [
@@ -205,6 +224,37 @@ const ATENDIMENTO_NAV: AtendimentoNavGroup[] = [
       { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
       { label: "Inbox", icon: MessageCircle, view: "inbox" },
       { label: "Config", icon: Settings, view: "config" },
+    ],
+  },
+];
+
+const FINANCEIRO_NAV: FinanceiroNavGroup[] = [
+  {
+    titulo: "VISÃO GERAL",
+    items: [{ label: "Dashboard", icon: LayoutDashboard, view: "dashboard" }],
+  },
+  {
+    titulo: "CAIXA",
+    items: [
+      { label: "Lançamentos", icon: ClipboardList, view: "lancamentos" },
+      { label: "Categorias", icon: LayoutGrid, view: "categorias" },
+      { label: "Contas Bancárias", icon: Building2, view: "contas" },
+      { label: "Importar Extrato", icon: Upload, view: "ofx" },
+    ],
+  },
+  {
+    titulo: "RECEBIMENTOS",
+    items: [
+      { label: "Contas a Receber", icon: TrendingUp, view: "receber" },
+      { label: "Contratos", icon: FileText, view: "contratos" },
+    ],
+  },
+  { titulo: "PAGAMENTOS", items: [{ label: "Contas a Pagar", icon: TrendingDown, view: "pagar" }] },
+  {
+    titulo: "RENTABILIDADE",
+    items: [
+      { label: "Rentabilidade", icon: PieChart, view: "rentabilidade" },
+      { label: "Custos de Pessoal", icon: UserCog, view: "pessoal" },
     ],
   },
 ];
@@ -416,6 +466,8 @@ export function HomePage() {
   const [atendimentoView, setAtendimentoView] = useState<AtendimentoView>("inbox");
   // Sub-navegação do PCM (Task 18/E01-S12) — mesmo padrão useState de abas, sem lib de rotas.
   const [pcmView, setPcmView] = useState<PcmView>("dashboard");
+  // Sub-navegação do Financeiro (protótipo navegável, dados fictícios — features/financeiro/mock/).
+  const [financeiroView, setFinanceiroView] = useState<FinanceiroView>("dashboard");
   const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
   const [novaOsAberta, setNovaOsAberta] = useState(false);
   const [feedbackOs, setFeedbackOs] = useState<string | null>(null);
@@ -635,6 +687,39 @@ export function HomePage() {
                       title={item.label}
                       onClick={() => {
                         setAtendimentoView(item.view);
+                        setMobileSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                        isActive
+                          ? "border-orange bg-white/[0.07] text-white font-medium"
+                          : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                      {!sidebarCompacta && <span className="truncate">{item.label}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            ))
+          ) : activeModulo === "financeiro" ? (
+            FINANCEIRO_NAV.map((group) => (
+              <div key={group.titulo}>
+                {!sidebarCompacta && (
+                  <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                    {group.titulo}
+                  </p>
+                )}
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = item.view === financeiroView;
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      title={item.label}
+                      onClick={() => {
+                        setFinanceiroView(item.view);
                         setMobileSidebarOpen(false);
                       }}
                       className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
@@ -877,6 +962,8 @@ export function HomePage() {
             ) : atendimentoView === "config" ? (
               <AtendimentoConfigPage />
             ) : null
+          ) : activeModulo === "financeiro" ? (
+            <FinanceiroMockRouter view={financeiroView} />
           ) : modulo ? (
             <EmConstrucao modulo={modulo} />
           ) : null}
