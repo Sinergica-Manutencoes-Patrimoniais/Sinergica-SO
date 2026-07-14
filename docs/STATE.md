@@ -10,7 +10,46 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S66 (kits de ferramentas) implementada
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S69 (OS clicável/editável) implementada
+localmente, todos os gates Node verdes.** 8ª story da leva (S68→S71→S70→S63→S64→S65→S66→S69), tudo
+na mesma branch. Só S68/S71 pushadas (PR #52); as outras 6 locais aguardando liberação.
+
+- `application/editar-ordem-servico.ts` (novo) + `EditarOrdemServicoInput` no gateway — só os
+  campos que fazem sentido editar (título/descrição/categoria/prioridade/GUT/técnico/data prevista;
+  sem cliente/origem/solicitante/tipo de tarefa, que não mudam depois de aberta). Adapter ganha
+  `.editarOrdemServico()` via `.update()` — RLS já cobria (mesma policy `ordens_servico_update` que
+  já permitia mudar status), sem migration.
+- `NovaOrdemServicoModal.tsx` vira criar+editar: prop `ordem?` opcional. Achado ao implementar: a
+  sugestão automática de prioridade por GUT (`useEffect` que roda toda vez que `gravidade/urgencia/
+  tendencia` mudam) ia SOBRESCREVER a prioridade real da OS assim que o modal abrisse em edição —
+  corrigido setando `prioridadeManual=true` no mesmo efeito que pré-preenche o form.
+- **Decisão de escopo que simplificou a implementação inteira:** a spec original (tasks 3 e 5)
+  pedia mexer em `OsKanbanView.tsx` E na Lista de `OrdensServicoPage.tsx` separadamente pra abrir o
+  modal. Não foi preciso — o card do Kanban já chama `onSelecionar` (desde E01-S38), que já revela
+  `DetalheOs` como painel lateral, e `DetalheOs` é o MESMO componente renderizado tanto pro Kanban/
+  Timeline/Calendário quanto pra Lista (2 call sites, 1 componente). Bastar um botão "Editar" no
+  cabeçalho do `DetalheOs` cobriu Kanban+Timeline+Calendário+Lista de uma vez só, sem tocar no
+  Kanban (zero risco de conflitar com o drag-and-drop da E01-S61).
+- `BacklogGutPage.tsx`: linha ganhou `onClick` (abre o modal, estado local `editando`); botão
+  "Planejar" ganhou `event.stopPropagation()` pra não abrir o modal junto; linha agora mostra
+  descrição (2 linhas), técnico e data prevista — dado que já vinha em `OrdemServicoOperacional`,
+  sem query nova.
+
+Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (332 passando), `build`,
+`arch:check`, `check:edge-functions`, `audit:esteira`, `eval:spec`, `validate-mermaid`.
+
+**Não verificado:** clique durante drag não deveria abrir modal (não se aplica mais — Kanban não
+foi tocado, continua só `onSelecionar`); leitura não edita (botão "Editar" já é gated por
+`temEscrita`, mas não testado em browser); UI geral não verificada (sem Playwright neste ambiente).
+
+**Próximo passo:** commitar E01-S69 (local). Depois E01-S72 (apontamento de horas) → E01-S73
+(inspeções ABNT NBR 16747, **arquitetural — precisa `design.md` aprovado antes de codar**, não
+pular esse gate) → E01-S74 (serviço→Auvo, bloqueado por teste de contrato externo). Tudo local até
+Lucas liberar push; mesma branch/PR #52 quando liberar, um commit por story.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S66 (kits de ferramentas) implementada
 localmente, todos os gates Node verdes. Fecha as 4 stories de Ferramentas (S63-S66) do feedback do
 Fabrício.** 7ª story da leva (S68→S71→S70→S63→S64→S65→S66), tudo na mesma branch. Só S68/S71
 pushadas (PR #52); as outras 5 locais aguardando liberação.

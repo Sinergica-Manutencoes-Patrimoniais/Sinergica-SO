@@ -11,6 +11,7 @@ import {
 } from "../application/hub-os";
 import type { FiltrosServidorOrdens } from "../application/hub-os-gateway";
 import { DetalhesTarefaAuvo } from "../components/DetalhesTarefaAuvo";
+import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import { OsCalendarioView } from "../components/OsCalendarioView";
 import { OsKanbanView } from "../components/OsKanbanView";
 import { OsTimelineView } from "../components/OsTimelineView";
@@ -70,6 +71,7 @@ export function OrdensServicoPage({
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [recarregando, setRecarregando] = useState(false);
   const [kpisServidor, setKpisServidor] = useState<KpisOrdensServico | null>(null);
+  const [editando, setEditando] = useState(false);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -497,6 +499,7 @@ export function OrdensServicoPage({
             temEscrita={temEscrita}
             salvando={salvando}
             onAlterarStatus={onAlterarStatus}
+            onEditar={() => setEditando(true)}
           />
         </section>
       )}
@@ -577,12 +580,25 @@ export function OrdensServicoPage({
                 temEscrita={temEscrita}
                 salvando={salvando}
                 onAlterarStatus={onAlterarStatus}
+                onEditar={() => setEditando(true)}
               />
             ) : (
               <div className="p-8 text-sm text-ink-3">Selecione uma OS.</div>
             )}
           </section>
         </div>
+      )}
+
+      {editando && selecionada && (
+        <NovaOrdemServicoModal
+          aberto={editando}
+          ordem={selecionada}
+          onFechar={() => setEditando(false)}
+          onEditada={() => {
+            setEditando(false);
+            carregar();
+          }}
+        />
       )}
     </div>
   );
@@ -602,18 +618,31 @@ function DetalheOs({
   temEscrita,
   salvando,
   onAlterarStatus,
+  onEditar,
 }: {
   selecionada: OrdemServicoOperacional;
   temEscrita: boolean;
   salvando: boolean;
   onAlterarStatus: (status: StatusOrdemServico) => void;
+  onEditar: () => void;
 }) {
   return (
     <div>
       <div className="border-b border-line-soft px-4 py-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
-          Resumo da OS
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+            Resumo da OS
+          </p>
+          {temEscrita && (
+            <button
+              type="button"
+              onClick={onEditar}
+              className="text-xs font-semibold text-orange hover:text-orange-deep"
+            >
+              Editar
+            </button>
+          )}
+        </div>
         <Tooltip content="Numeração interna do PCM (Chamado) — não é o ticket/task do Auvo.">
           <p className="mt-1 inline-block text-xs font-brand tabular-nums text-ink-3">
             {selecionada.numero}

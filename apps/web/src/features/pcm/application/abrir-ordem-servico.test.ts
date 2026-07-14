@@ -24,6 +24,7 @@ function gatewayMock(): OrdemServicoGateway {
   return {
     carregarDadosAbertura: vi.fn(async () => ({ clientes: [], tecnicos: [], tiposTarefa: [] })),
     criarOrdemServico: vi.fn(async () => ({ id: "os1", numero: "CH-001" })),
+    editarOrdemServico: vi.fn(async () => undefined),
   };
 }
 

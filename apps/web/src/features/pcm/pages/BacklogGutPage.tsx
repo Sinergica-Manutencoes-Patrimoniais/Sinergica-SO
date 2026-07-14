@@ -4,6 +4,7 @@ import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { Tooltip } from "../../../components/ui/Tooltip";
 import { listarBacklogGut, planejarOrdemServico } from "../application/hub-os";
+import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
@@ -25,6 +26,7 @@ export function BacklogGutPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [editando, setEditando] = useState<OrdemServicoOperacional | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -139,7 +141,11 @@ export function BacklogGutPage() {
           ) : (
             estado.ordens.map((ordem, index) => (
               <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)}>
-                <div className="px-4 py-3 flex flex-col gap-3 lg:flex-row lg:items-center">
+                {/* biome-ignore lint/a11y/useKeyWithClickEvents: linha tem foco/teclado via Tooltip + botões internos já acessíveis */}
+                <div
+                  className="px-4 py-3 flex flex-col gap-3 lg:flex-row lg:items-center cursor-pointer hover:bg-line-soft"
+                  onClick={() => setEditando(ordem)}
+                >
                   <div className="flex items-center gap-3 lg:w-20">
                     <span className="text-xl font-bold text-line font-brand">{index + 1}</span>
                     <span className="text-xs font-brand tabular-nums text-ink-3">
@@ -163,6 +169,15 @@ export function BacklogGutPage() {
                     <p className="mt-1 text-xs text-ink-3">
                       {ordem.clienteNome} · {ordem.categoria}
                     </p>
+                    {ordem.descricao?.trim() && (
+                      <p className="mt-1 line-clamp-2 text-xs text-ink-3">{ordem.descricao}</p>
+                    )}
+                    <p className="mt-1 text-[11px] text-ink-3">
+                      {ordem.tecnicoNome ?? "sem técnico"}
+                      {ordem.dataAgendada
+                        ? ` · prevista ${new Date(ordem.dataAgendada).toLocaleDateString("pt-BR")}`
+                        : ""}
+                    </p>
                   </div>
                   <div className="grid grid-cols-4 gap-2 lg:w-72">
                     <Metric label="G" value={ordem.gravidade ?? 1} />
@@ -173,7 +188,10 @@ export function BacklogGutPage() {
                   {temEscrita && ordem.status !== "planejamento" && (
                     <button
                       type="button"
-                      onClick={() => onPlanejar(ordem)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onPlanejar(ordem);
+                      }}
                       disabled={salvandoId === ordem.id}
                       className="inline-flex items-center justify-center rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
                     >
@@ -186,6 +204,18 @@ export function BacklogGutPage() {
           )}
         </div>
       </section>
+
+      {editando && (
+        <NovaOrdemServicoModal
+          aberto={Boolean(editando)}
+          ordem={editando}
+          onFechar={() => setEditando(null)}
+          onEditada={() => {
+            setEditando(null);
+            carregar();
+          }}
+        />
+      )}
     </div>
   );
 }
