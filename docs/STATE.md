@@ -10,10 +10,48 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S63 (Ferramentas: unidades individuais +
-histórico) implementada localmente, todos os gates Node verdes.** Segue E01-S68 (`e9f58ec`), E01-S71
-(`7e84430`) e E01-S70 (`c37c4f4`) — as 3 primeiras pushadas pro PR #52; **E01-S70 e esta (E01-S63)
-ainda só locais** (Lucas pediu pra segurar push nesta sessão, ver nota abaixo).
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S64 (reserva de ferramenta por período)
+implementada localmente, todos os gates Node verdes.** Segue E01-S68 (`e9f58ec`), E01-S71 (`7e84430`)
+pushadas pro PR #52; E01-S70 (`c37c4f4`), E01-S63 (`2f4b22b`) e esta (E01-S64) **só locais** —
+Lucas pediu pra segurar push nesta sessão (ver nota abaixo).
+
+- Migration `0087`: `pcm.ferramenta_reservas` (unidade opcional = "qualquer disponível", período,
+  status `pendente/efetivada/cancelada`). Trigger `fn_validar_reserva_ferramenta` rejeita conflito
+  de intervalo só pra reserva de UNIDADE ESPECÍFICA — **decisão**: usar trigger em vez de exclusion
+  constraint/GiST (`EXCLUDE USING gist`), porque isso exigiria a extensão `btree_gist`, nunca usada
+  neste repo, e não dá pra confirmar daqui se está disponível/habilitada no Supabase de produção.
+  Trigger é mais simples e não introduz dependência nova.
+- `domain/ferramenta-reservas.ts` (novo): sobreposição de intervalo pra unidade específica;
+  validação "pior caso" pra reserva genérica (conta reservas já sobrepondo o período vs. unidades
+  ativas da ferramenta — se empatar, rejeita, mesmo que na prática pudesse dar certo; conservador
+  de propósito). 12 testes.
+- `application/ferramenta-reservas{-gateway}.ts` + adapter: **efetivar** orquestra 2 coisas —
+  chama `atribuirUnidadeFerramenta` (E01-S63) pra criar a movimentação de atribuição de verdade, e
+  só depois marca a reserva como `efetivada`. Cancelar é UPDATE simples (reserva não é append-only
+  como `ferramenta_movimentacoes` — muda de status via RLS update normal).
+- UI: seção "Reservas" nova em `FerramentasPage.tsx` — form (ferramenta→unidade opcional→
+  técnico→datas), agenda ordenada por data (só pendentes, `ordenarAgendaReservas`), Efetivar (modal
+  escolhe a unidade se a reserva era genérica) e Cancelar por linha.
+- pgTAP `ferramenta_reservas_rls.test.sql` (novo, 7 asserts): leitura bloqueada, reserva nasce
+  pendente, conflito de intervalo mesma unidade rejeitado (P0001), sem sobreposição aceita,
+  cancelar/efetivar via UPDATE funcionam. Escrito, não executado — sem Docker local.
+
+Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (317 passando), `build`,
+`arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`,
+`validate-mermaid`.
+
+**Não verificado:** pgTAP não roda local (sem Docker); UI não verificada em browser (sem
+Playwright neste ambiente).
+
+**Próximo passo:** commitar E01-S64 (local). Depois E01-S65 (cadastro rico, independente) → E01-S66
+(kits, depende de S63 ✓) → E01-S69 (OS editável) → E01-S72 (horas) → E01-S73 (inspeções,
+arquitetural — precisa design.md) → E01-S74 (serviço Auvo). Tudo local até Lucas liberar push;
+mesma branch/PR #52 quando liberar, um commit por story.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S63 (Ferramentas: unidades
+individuais + histórico) implementada localmente, todos os gates Node verdes.**
 
 - Migration `0086`: `pcm.ferramenta_unidades` (código `FER-NNNN` via sequência global, nunca
   reaproveitado) + `pcm.ferramenta_movimentacoes` (append-only de verdade — sem policy de

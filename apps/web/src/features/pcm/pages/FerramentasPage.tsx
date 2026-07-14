@@ -4,6 +4,12 @@ import type { ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import {
+  cancelarReservaFerramenta,
+  criarReservaFerramenta,
+  efetivarReservaFerramenta,
+  listarReservasFerramenta,
+} from "../application/ferramenta-reservas";
+import {
   baixarUnidadeFerramenta,
   gerarUnidadesFerramenta,
   listarUnidadesFerramenta,
@@ -15,12 +21,15 @@ import {
   listarCategoriasFerramenta,
   listarFerramentas,
 } from "../application/ferramentas";
+import { type FerramentaReservaItem, ordenarAgendaReservas } from "../domain/ferramenta-reservas";
 import { type FerramentaUnidadeItem, rotuloStatusUnidade } from "../domain/ferramenta-unidades";
 import type {
   FerramentaCategoriaOpcao,
   FerramentaFormData,
   FerramentaItem,
+  FuncionarioFerramentaOpcao,
 } from "../domain/ferramentas";
+import { supabaseFerramentaReservasAdapter } from "../infrastructure/supabase-ferramenta-reservas-adapter";
 import { supabaseFerramentaUnidadesAdapter } from "../infrastructure/supabase-ferramenta-unidades-adapter";
 import { supabaseFerramentasAdapter } from "../infrastructure/supabase-ferramentas-adapter";
 
@@ -32,6 +41,8 @@ type Estado =
       ferramentas: FerramentaItem[];
       categorias: FerramentaCategoriaOpcao[];
       unidades: FerramentaUnidadeItem[];
+      funcionarios: FuncionarioFerramentaOpcao[];
+      reservas: FerramentaReservaItem[];
     };
 
 type Modal =
@@ -47,6 +58,15 @@ export function FerramentasPage() {
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [expandida, setExpandida] = useState<string | null>(null);
   const [baixando, setBaixando] = useState<FerramentaUnidadeItem | null>(null);
+  const [reservaForm, setReservaForm] = useState({
+    ferramentaId: "",
+    unidadeId: "",
+    funcionarioId: "",
+    dataInicio: "",
+    dataFim: "",
+  });
+  const [salvandoReserva, setSalvandoReserva] = useState(false);
+  const [efetivando, setEfetivando] = useState<FerramentaReservaItem | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -54,12 +74,14 @@ export function FerramentasPage() {
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
     try {
-      const [ferramentas, categorias, unidades] = await Promise.all([
+      const [ferramentas, categorias, unidades, funcionarios, reservas] = await Promise.all([
         listarFerramentas(supabaseFerramentasAdapter),
         listarCategoriasFerramenta(supabaseFerramentasAdapter),
         listarUnidadesFerramenta(supabaseFerramentaUnidadesAdapter),
+        supabaseFerramentasAdapter.listarFuncionarios(),
+        listarReservasFerramenta(supabaseFerramentaReservasAdapter),
       ]);
-      setEstado({ fase: "pronto", ferramentas, categorias, unidades });
+      setEstado({ fase: "pronto", ferramentas, categorias, unidades, funcionarios, reservas });
     } catch (error) {
       setEstado({
         fase: "erro",
@@ -122,6 +144,67 @@ export function FerramentasPage() {
       userId: user.id,
     });
     setBaixando(null);
+    await carregar();
+  }
+
+  async function criarReserva() {
+    if (!user) return;
+    try {
+      setSalvandoReserva(true);
+      setErroAcao(null);
+      await criarReservaFerramenta(
+        supabaseFerramentaReservasAdapter,
+        supabaseFerramentaUnidadesAdapter,
+        {
+          ferramentaId: reservaForm.ferramentaId,
+          unidadeId: reservaForm.unidadeId || null,
+          funcionarioId: reservaForm.funcionarioId,
+          dataInicio: reservaForm.dataInicio,
+          dataFim: reservaForm.dataFim || null,
+          userId: user.id,
+        },
+      );
+      setReservaForm({
+        ferramentaId: "",
+        unidadeId: "",
+        funcionarioId: "",
+        dataInicio: "",
+        dataFim: "",
+      });
+      await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível criar a reserva.");
+    } finally {
+      setSalvandoReserva(false);
+    }
+  }
+
+  async function cancelarReserva(reserva: FerramentaReservaItem) {
+    if (!user || !confirm(`Cancelar a reserva de ${reserva.funcionarioNome}?`)) return;
+    try {
+      setErroAcao(null);
+      await cancelarReservaFerramenta(supabaseFerramentaReservasAdapter, {
+        reservaId: reserva.id,
+        userId: user.id,
+      });
+      await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível cancelar a reserva.");
+    }
+  }
+
+  async function confirmarEfetivar(unidadeId: string) {
+    if (!user || !efetivando) return;
+    await efetivarReservaFerramenta(
+      supabaseFerramentaReservasAdapter,
+      supabaseFerramentaUnidadesAdapter,
+      {
+        reservaId: efetivando.id,
+        unidadeId,
+        userId: user.id,
+      },
+    );
+    setEfetivando(null);
     await carregar();
   }
 
@@ -209,6 +292,129 @@ export function FerramentasPage() {
         </div>
       )}
 
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+        <h3 className="text-base font-semibold text-ink">Reservas</h3>
+        <p className="mt-0.5 text-sm text-ink-3">
+          Reserva uma unidade (ou "qualquer disponível") pra um técnico num período — sem mover a
+          ferramenta ainda
+        </p>
+        {temEscrita && (
+          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-[minmax(160px,1fr)_minmax(140px,1fr)_minmax(160px,1fr)_120px_120px_auto]">
+            <select
+              value={reservaForm.ferramentaId}
+              onChange={(event) =>
+                setReservaForm((a) => ({ ...a, ferramentaId: event.target.value, unidadeId: "" }))
+              }
+              className="input h-9"
+            >
+              <option value="">Ferramenta</option>
+              {estado.ferramentas.map((ferramenta) => (
+                <option key={ferramenta.id} value={ferramenta.id}>
+                  {ferramenta.nome}
+                </option>
+              ))}
+            </select>
+            <select
+              value={reservaForm.unidadeId}
+              onChange={(event) => setReservaForm((a) => ({ ...a, unidadeId: event.target.value }))}
+              disabled={!reservaForm.ferramentaId}
+              className="input h-9"
+            >
+              <option value="">Qualquer disponível</option>
+              {estado.unidades
+                .filter(
+                  (u) => u.ferramentaId === reservaForm.ferramentaId && u.status !== "baixada",
+                )
+                .map((unidade) => (
+                  <option key={unidade.id} value={unidade.id}>
+                    {unidade.codigo}
+                  </option>
+                ))}
+            </select>
+            <select
+              value={reservaForm.funcionarioId}
+              onChange={(event) =>
+                setReservaForm((a) => ({ ...a, funcionarioId: event.target.value }))
+              }
+              className="input h-9"
+            >
+              <option value="">Técnico</option>
+              {estado.funcionarios.map((funcionario) => (
+                <option key={funcionario.id} value={funcionario.id}>
+                  {funcionario.nome}
+                </option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={reservaForm.dataInicio}
+              onChange={(event) =>
+                setReservaForm((a) => ({ ...a, dataInicio: event.target.value }))
+              }
+              className="input h-9"
+            />
+            <input
+              type="date"
+              value={reservaForm.dataFim}
+              placeholder="fim (opcional)"
+              onChange={(event) => setReservaForm((a) => ({ ...a, dataFim: event.target.value }))}
+              className="input h-9"
+            />
+            <button
+              type="button"
+              onClick={criarReserva}
+              disabled={
+                salvandoReserva ||
+                !reservaForm.ferramentaId ||
+                !reservaForm.funcionarioId ||
+                !reservaForm.dataInicio
+              }
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            >
+              Reservar
+            </button>
+          </div>
+        )}
+
+        {ordenarAgendaReservas(estado.reservas).length === 0 ? (
+          <p className="mt-4 text-sm text-ink-3">Sem reservas pendentes.</p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {ordenarAgendaReservas(estado.reservas).map((reserva) => (
+              <li
+                key={reserva.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-[6px] border border-line-soft bg-paper px-3 py-2 text-sm"
+              >
+                <span className="text-ink-2">
+                  {reserva.ferramentaNome}{" "}
+                  {reserva.unidadeCodigo ? `(${reserva.unidadeCodigo})` : "(qualquer unidade)"} ·{" "}
+                  {reserva.funcionarioNome} · {reserva.dataInicio}
+                  {reserva.dataFim !== reserva.dataInicio ? ` a ${reserva.dataFim}` : ""}
+                </span>
+                {temEscrita && (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEfetivando(reserva)}
+                      className="text-xs font-semibold text-orange hover:text-orange-deep"
+                    >
+                      Efetivar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => cancelarReserva(reserva)}
+                      className="text-xs font-semibold text-[#A23B25] hover:underline"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       {modal && (
         <FerramentaModal
           ferramenta={modal.modo === "editar" ? modal.ferramenta : undefined}
@@ -225,6 +431,97 @@ export function FerramentasPage() {
           onConfirmar={confirmarBaixa}
         />
       )}
+
+      {efetivando && (
+        <EfetivarReservaModal
+          reserva={efetivando}
+          unidadesDisponiveis={estado.unidades.filter(
+            (u) => u.ferramentaId === efetivando.ferramentaId && u.status === "disponivel",
+          )}
+          onCancel={() => setEfetivando(null)}
+          onConfirmar={confirmarEfetivar}
+        />
+      )}
+    </div>
+  );
+}
+
+function EfetivarReservaModal({
+  reserva,
+  unidadesDisponiveis,
+  onCancel,
+  onConfirmar,
+}: {
+  reserva: FerramentaReservaItem;
+  unidadesDisponiveis: FerramentaUnidadeItem[];
+  onCancel: () => void;
+  onConfirmar: (unidadeId: string) => Promise<void>;
+}) {
+  const [unidadeId, setUnidadeId] = useState(reserva.unidadeId ?? "");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function confirmar() {
+    try {
+      setSalvando(true);
+      setErro(null);
+      await onConfirmar(unidadeId);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível efetivar a reserva.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+        <div className="border-b border-line px-4 py-3">
+          <h3 className="text-base font-semibold text-ink">Efetivar reserva</h3>
+          <p className="text-xs text-ink-3">
+            {reserva.ferramentaNome} · {reserva.funcionarioNome}
+          </p>
+        </div>
+        <div className="space-y-3 p-4">
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-3">Unidade</span>
+            <select
+              value={unidadeId}
+              onChange={(event) => setUnidadeId(event.target.value)}
+              className="input w-full"
+            >
+              <option value="">Escolha a unidade</option>
+              {unidadesDisponiveis.map((unidade) => (
+                <option key={unidade.id} value={unidade.id}>
+                  {unidade.codigo}
+                </option>
+              ))}
+            </select>
+          </label>
+          {erro && (
+            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+              {erro}
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={confirmar}
+            disabled={salvando || !unidadeId}
+            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+          >
+            {salvando ? "Salvando..." : "Efetivar (atribuir agora)"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
