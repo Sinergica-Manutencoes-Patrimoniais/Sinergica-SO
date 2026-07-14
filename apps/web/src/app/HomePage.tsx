@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BookOpen,
   Bot,
   Briefcase,
   Building2,
@@ -45,6 +46,8 @@ import { GruposPage } from "../features/config/pages/GruposPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
 import type { FinanceiroView } from "../features/financeiro/mock/FinanceiroMockRouter";
 import { FinanceiroMockRouter } from "../features/financeiro/mock/FinanceiroMockRouter";
+import type { GuiaView } from "../features/guia/GuiaRouter";
+import { GuiaRouter } from "../features/guia/GuiaRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
 import { BacklogGutPage } from "../features/pcm/pages/BacklogGutPage";
 import {
@@ -79,7 +82,9 @@ type ModuloId = "inicio" | ModuloNegocioId;
 
 // "config" não é módulo de negócio (não tem permissão por módulo) — é a área administrativa,
 // visível só por papel (superadmin/supervisor), não por config.minhas_permissoes.
-type AreaAtiva = ModuloId | "config";
+// "guia" também não é módulo permissionável — documentação visível a qualquer usuário logado,
+// igual "config" (mas sem exigir papel administrativo).
+type AreaAtiva = ModuloId | "config" | "guia";
 
 function isModuloNegocio(id: ModuloId): id is ModuloNegocioId {
   return id !== "inicio";
@@ -156,6 +161,14 @@ interface FinanceiroNavItem {
 interface FinanceiroNavGroup {
   titulo: string;
   items: FinanceiroNavItem[];
+}
+
+// Sub-navegação do Guia do SO — documentação de onboarding (features/guia/), último item da
+// barra de módulos. Mesmo padrão useState de abas.
+interface GuiaNavItem {
+  label: string;
+  icon: LucideIcon;
+  view: GuiaView;
 }
 
 // ─── dados ───────────────────────────────────────────────────────────────────
@@ -257,6 +270,18 @@ const FINANCEIRO_NAV: FinanceiroNavGroup[] = [
       { label: "Custos de Pessoal", icon: UserCog, view: "pessoal" },
     ],
   },
+];
+
+const GUIA_NAV: GuiaNavItem[] = [
+  { label: "Visão geral", icon: BookOpen, view: "visao-geral" },
+  { label: "PCM · Operação", icon: HardHat, view: "pcm" },
+  { label: "Atendimento · Zé", icon: Bot, view: "atendimento" },
+  { label: "Comercial", icon: Briefcase, view: "comercial" },
+  { label: "Financeiro", icon: BarChart3, view: "financeiro" },
+  { label: "Marketing", icon: Megaphone, view: "marketing" },
+  { label: "Cockpit", icon: LayoutDashboard, view: "cockpit" },
+  { label: "Área do Cliente", icon: UserCircle, view: "area-cliente" },
+  { label: "Papéis e permissões", icon: Users, view: "papeis" },
 ];
 
 const PCM_NAV: NavGroup[] = [
@@ -468,6 +493,8 @@ export function HomePage() {
   const [pcmView, setPcmView] = useState<PcmView>("dashboard");
   // Sub-navegação do Financeiro (protótipo navegável, dados fictícios — features/financeiro/mock/).
   const [financeiroView, setFinanceiroView] = useState<FinanceiroView>("dashboard");
+  // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
+  const [guiaView, setGuiaView] = useState<GuiaView>("visao-geral");
   const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
   const [novaOsAberta, setNovaOsAberta] = useState(false);
   const [feedbackOs, setFeedbackOs] = useState<string | null>(null);
@@ -735,6 +762,37 @@ export function HomePage() {
                 })}
               </div>
             ))
+          ) : activeModulo === "guia" ? (
+            <div>
+              {!sidebarCompacta && (
+                <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                  GUIA DO SO
+                </p>
+              )}
+              {GUIA_NAV.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.view === guiaView;
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    title={item.label}
+                    onClick={() => {
+                      setGuiaView(item.view);
+                      setMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                      isActive
+                        ? "border-orange bg-white/[0.07] text-white font-medium"
+                        : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                    {!sidebarCompacta && <span className="truncate">{item.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
           ) : (
             !sidebarCompacta && (
               <div className="px-2 pt-4 text-center">
@@ -825,6 +883,25 @@ export function HomePage() {
                 </button>
               );
             })}
+
+            {/* Guia do SO — documentação de onboarding, sempre visível, sem gate de permissão de
+                módulo (igual "config", mas sem exigir papel administrativo). Fica por último,
+                depois de Área do Cliente. */}
+            <button
+              type="button"
+              onClick={() => navegarModulo("guia")}
+              className={`flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 px-2.5 py-3 text-xs font-medium transition-colors sm:px-3.5 sm:text-sm ${
+                activeModulo === "guia"
+                  ? "border-orange text-navy"
+                  : "border-transparent text-ink-3 hover:text-ink hover:border-line"
+              }`}
+            >
+              <BookOpen
+                className={`w-4 h-4 ${activeModulo === "guia" ? "text-orange" : ""}`}
+                strokeWidth={activeModulo === "guia" ? 2 : 1.8}
+              />
+              Guia do SO
+            </button>
 
             {/* Avatar no canto */}
             <div className="ml-auto pl-4 flex items-center gap-2 shrink-0">
@@ -964,6 +1041,8 @@ export function HomePage() {
             ) : null
           ) : activeModulo === "financeiro" ? (
             <FinanceiroMockRouter view={financeiroView} />
+          ) : activeModulo === "guia" ? (
+            <GuiaRouter view={guiaView} />
           ) : modulo ? (
             <EmConstrucao modulo={modulo} />
           ) : null}
