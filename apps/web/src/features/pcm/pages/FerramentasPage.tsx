@@ -23,6 +23,7 @@ import {
 } from "../application/ferramentas";
 import { type FerramentaReservaItem, ordenarAgendaReservas } from "../domain/ferramenta-reservas";
 import { type FerramentaUnidadeItem, rotuloStatusUnidade } from "../domain/ferramenta-unidades";
+import { validarFerramentaInline } from "../domain/ferramentas";
 import type {
   FerramentaCategoriaOpcao,
   FerramentaFormData,
@@ -549,11 +550,26 @@ function FerramentaCard({
   return (
     <div className="rounded-[8px] border border-line bg-card p-4">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h4 className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</h4>
-          <p className="mt-1 text-xs text-ink-3">
-            Auvo {ferramenta.auvoId ?? "-"} · {ferramenta.categoriaNome ?? "sem categoria"}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          {ferramenta.imagemUrl ? (
+            <img
+              src={ferramenta.imagemUrl}
+              alt={ferramenta.nome}
+              className="h-12 w-12 shrink-0 rounded-[6px] border border-line object-cover"
+            />
+          ) : (
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[6px] border border-line bg-line-soft">
+              <Wrench className="h-5 w-5 text-ink-3" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h4 className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</h4>
+            <p className="mt-1 text-xs text-ink-3">
+              Auvo {ferramenta.auvoId ?? "-"}
+              {ferramenta.codigoAuvo ? ` · ${ferramenta.codigoAuvo}` : ""} ·{" "}
+              {ferramenta.categoriaNome ?? "sem categoria"}
+            </p>
+          </div>
         </div>
         <span
           className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ferramenta.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
@@ -564,6 +580,12 @@ function FerramentaCard({
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-3">
         <span>Total: {ferramenta.quantidadeTotal}</span>
         <span>Mínimo: {ferramenta.quantidadeMinima}</span>
+        {ferramenta.valorUnitario != null && (
+          <span>Valor: R$ {ferramenta.valorUnitario.toFixed(2)}</span>
+        )}
+        {ferramenta.custoUnitario != null && (
+          <span>Custo: R$ {ferramenta.custoUnitario.toFixed(2)}</span>
+        )}
         <span>Sync: {ferramenta.auvoSyncStatus ?? "pending"}</span>
       </div>
       {ferramenta.auvoSyncError && (
@@ -727,9 +749,19 @@ function FerramentaModal({
     categoriaId: ferramenta?.categoriaId ?? "",
     quantidadeTotal: ferramenta?.quantidadeTotal ?? 0,
     quantidadeMinima: ferramenta?.quantidadeMinima ?? 0,
+    valorUnitario: ferramenta?.valorUnitario ?? null,
+    custoUnitario: ferramenta?.custoUnitario ?? null,
   });
+  const [categoriaTexto, setCategoriaTexto] = useState(ferramenta?.categoriaNome ?? "");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const errosInline = validarFerramentaInline(dados);
+
+  function selecionarCategoriaPorTexto(texto: string) {
+    setCategoriaTexto(texto);
+    const encontrada = categorias.find((c) => c.nome.toLowerCase() === texto.trim().toLowerCase());
+    setDados((a) => ({ ...a, categoriaId: encontrada?.id ?? "" }));
+  }
 
   async function salvar() {
     try {
@@ -754,36 +786,78 @@ function FerramentaModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
+        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto p-4 md:grid-cols-2">
+          {ferramenta && (
+            <div className="md:col-span-2">
+              {ferramenta.imagemUrl ? (
+                <div className="flex items-center gap-3">
+                  <img
+                    src={ferramenta.imagemUrl}
+                    alt={ferramenta.nome}
+                    className="h-16 w-16 rounded-[6px] border border-line object-cover"
+                  />
+                  <p className="text-xs text-ink-3">
+                    Imagem vinda do Auvo. Pra trocar, cadastre direto no app Auvo — o PCM ainda não
+                    escreve esse campo (contrato de escrita não confirmado).
+                  </p>
+                </div>
+              ) : (
+                <p className="rounded-[6px] border border-line-soft bg-paper px-3 py-2 text-xs text-ink-3">
+                  Sem imagem. Cadastre a foto direto no Auvo — o PCM só exibe quando o Auvo tiver.
+                </p>
+              )}
+              {ferramenta.codigoAuvo && (
+                <p className="mt-2 text-xs text-ink-3">
+                  Código Auvo:{" "}
+                  <span className="font-brand text-ink-2">{ferramenta.codigoAuvo}</span>
+                </p>
+              )}
+            </div>
+          )}
           <Field
             label="Nome *"
             value={dados.nome}
             onChange={(v) => setDados((a) => ({ ...a, nome: v }))}
+            erro={errosInline.nome}
           />
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria</span>
-            <select
-              value={dados.categoriaId ?? ""}
-              onChange={(event) => setDados((a) => ({ ...a, categoriaId: event.target.value }))}
+            <input
+              list="ferramenta-categorias-lista"
+              value={categoriaTexto}
+              onChange={(event) => selecionarCategoriaPorTexto(event.target.value)}
+              placeholder="Buscar categoria..."
               className="input w-full"
-            >
-              <option value="">Sem categoria</option>
+            />
+            <datalist id="ferramenta-categorias-lista">
               {categorias.map((categoria) => (
-                <option key={categoria.id} value={categoria.id}>
-                  {categoria.nome}
-                </option>
+                <option key={categoria.id} value={categoria.nome} />
               ))}
-            </select>
+            </datalist>
           </label>
           <NumberField
             label="Quantidade total"
             value={dados.quantidadeTotal}
             onChange={(v) => setDados((a) => ({ ...a, quantidadeTotal: v }))}
+            erro={errosInline.quantidadeTotal}
           />
           <NumberField
             label="Quantidade mínima"
             value={dados.quantidadeMinima}
             onChange={(v) => setDados((a) => ({ ...a, quantidadeMinima: v }))}
+            erro={errosInline.quantidadeMinima}
+          />
+          <NumberField
+            label="Valor unitário (R$)"
+            value={dados.valorUnitario ?? 0}
+            onChange={(v) => setDados((a) => ({ ...a, valorUnitario: v }))}
+            step={0.01}
+          />
+          <NumberField
+            label="Custo unitário (R$)"
+            value={dados.custoUnitario ?? 0}
+            onChange={(v) => setDados((a) => ({ ...a, custoUnitario: v }))}
+            step={0.01}
           />
           <label className="block md:col-span-2">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
@@ -810,7 +884,7 @@ function FerramentaModal({
           <button
             type="button"
             onClick={salvar}
-            disabled={salvando}
+            disabled={salvando || Object.keys(errosInline).length > 0}
             className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             {salvando ? "Salvando..." : "Salvar"}
@@ -825,7 +899,8 @@ function Field({
   label,
   value,
   onChange,
-}: { label: string; value: string; onChange: (value: string) => void }) {
+  erro,
+}: { label: string; value: string; onChange: (value: string) => void; erro?: string }) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
@@ -834,6 +909,7 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className="input w-full"
       />
+      {erro && <span className="mt-1 block text-xs text-[#A23B25]">{erro}</span>}
     </label>
   );
 }
@@ -842,18 +918,27 @@ function NumberField({
   label,
   value,
   onChange,
-}: { label: string; value: number; onChange: (value: number) => void }) {
+  erro,
+  step = 1,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  erro?: string;
+  step?: number;
+}) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
       <input
         type="number"
         min={0}
-        step={1}
+        step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
         className="input w-full"
       />
+      {erro && <span className="mt-1 block text-xs text-[#A23B25]">{erro}</span>}
     </label>
   );
 }

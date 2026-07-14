@@ -25,6 +25,10 @@ interface FerramentaRow {
   auvo_sync_status: string | null;
   auvo_sync_error: string | null;
   auvo_synced_at: string | null;
+  imagem_url: string | null;
+  codigo_auvo: string | null;
+  valor_unitario: number | null;
+  custo_unitario: number | null;
 }
 
 interface CategoriaRow {
@@ -48,7 +52,7 @@ interface AlocacaoRow {
 }
 
 const FERRAMENTA_COLS =
-  "id,nome,descricao,categoria_id,quantidade_total,quantidade_minima,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
+  "id,nome,descricao,categoria_id,quantidade_total,quantidade_minima,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,imagem_url,codigo_auvo,valor_unitario,custo_unitario" as const;
 
 function mapFerramenta(row: FerramentaRow, categorias: Map<string, string>): FerramentaItem {
   return {
@@ -64,6 +68,10 @@ function mapFerramenta(row: FerramentaRow, categorias: Map<string, string>): Fer
     auvoSyncStatus: row.auvo_sync_status,
     auvoSyncError: row.auvo_sync_error,
     auvoSyncedAt: row.auvo_synced_at,
+    imagemUrl: row.imagem_url,
+    codigoAuvo: row.codigo_auvo,
+    valorUnitario: row.valor_unitario,
+    custoUnitario: row.custo_unitario,
   };
 }
 
@@ -119,6 +127,8 @@ export const supabaseFerramentasAdapter: FerramentasGateway & FerramentaAlocacoe
         auvo_category_id: categoria?.auvoId ?? null,
         quantidade_total: input.quantidadeTotal,
         quantidade_minima: input.quantidadeMinima,
+        valor_unitario: input.valorUnitario ?? null,
+        custo_unitario: input.custoUnitario ?? null,
         auvo_sync_status: "pending",
         created_by: input.userId,
         updated_by: input.userId,
@@ -144,6 +154,8 @@ export const supabaseFerramentasAdapter: FerramentasGateway & FerramentaAlocacoe
         auvo_category_id: categoria?.auvoId ?? null,
         quantidade_total: input.quantidadeTotal,
         quantidade_minima: input.quantidadeMinima,
+        valor_unitario: input.valorUnitario ?? null,
+        custo_unitario: input.custoUnitario ?? null,
         auvo_sync_status: "pending",
         updated_at: new Date().toISOString(),
         updated_by: input.userId,

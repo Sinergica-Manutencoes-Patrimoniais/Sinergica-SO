@@ -10,6 +10,9 @@ export interface FerramentaRow extends Record<string, unknown> {
   valor_unitario?: number | null;
   custo_unitario?: number | null;
   ativo?: boolean | null;
+  imagem_url?: string | null;
+  uri_anexos?: unknown[];
+  codigo_auvo?: string | null;
 }
 
 export interface AuvoProduct {
@@ -28,6 +31,12 @@ export interface AuvoProduct {
   totalStock?: number;
   active?: boolean;
   employeesStock?: Array<{ userId?: number; amount?: number }>;
+  // E01-S65: confirmado na API real (2026-07-13) — GET /products devolve `imageUrl`/
+  // `uriAttachments`/`code`. Escrita (`PATCH /products/{id}` aceitando `imageUrl`) NÃO confirmada
+  // ainda — por isso só entram em `fromAuvo` (leitura), nunca em `toAuvo`/`toAuvoUpdate`.
+  imageUrl?: string;
+  uriAttachments?: unknown[];
+  code?: string;
 }
 
 export const ferramentasDescriptor: AuvoEntityDescriptor<AuvoProduct, FerramentaRow> = {
@@ -72,6 +81,9 @@ export const ferramentasDescriptor: AuvoEntityDescriptor<AuvoProduct, Ferramenta
       custo_unitario: precoOuNull(auvo.unitaryCost),
       ativo: auvo.active !== false,
       employees_stock: Array.isArray(auvo.employeesStock) ? auvo.employeesStock : undefined,
+      imagem_url: textoOuNull(auvo.imageUrl),
+      uri_anexos: Array.isArray(auvo.uriAttachments) ? auvo.uriAttachments : [],
+      codigo_auvo: textoOuNull(auvo.code),
     };
   },
 };

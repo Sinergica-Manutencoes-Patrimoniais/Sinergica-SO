@@ -10,7 +10,46 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S64 (reserva de ferramenta por período)
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S65 (cadastro rico de ferramenta,
+caminho conservador) implementada localmente, todos os gates Node verdes.** 6ª story da leva
+(S68→S71→S70→S63→S64→S65), tudo na mesma branch. Só S68/S71 pushadas (PR #52); S70/S63/S64/S65
+locais aguardando liberação.
+
+- Migration `0088`: `pcm.ferramentas` ganha `imagem_url`/`uri_anexos`/`codigo_auvo` — **só
+  leitura**, populadas pelo pull do Auvo.
+- **AC-1 não executada — decisão consciente, não esquecimento.** A spec pedia testar
+  `PATCH /products/{id}` com `imageUrl` contra a API real do Auvo (credenciais `AUVO_API_KEY`/
+  `AUVO_USER_TOKEN` estão disponíveis em `.env.local`, tecnicamente possível). Não rodei: é uma
+  escrita em sistema de produção externo (conta Auvo real da Sinérgica), e as instruções desta
+  sessão pedem confirmação explícita antes de ações assim — não havia autorização prévia
+  específica pra esse teste. Implementei o caminho B do AC-2 (mais seguro, não tenta escrever):
+  `imageUrl`/`uriAttachments`/`code` só entram em `fromAuvo`, nunca em `toAuvo`/`toAuvoUpdate` —
+  e escrevi um teste Deno que garante isso (`"imageUrl" in toAuvo(...)` é `false`). Documentei o
+  achado no `spec.md` da story com o próximo passo exato (1 curl) se Lucas quiser destravar.
+- `domain/ferramentas.ts`: `valorUnitario`/`custoUnitario` (colunas já existiam desde a migration
+  `0033`, nunca expostas na UI — o write path pro Auvo já existia em `toAuvoUpdate`, só faltava a
+  tela mandar o dado) viram campos editáveis de verdade. `validarFerramentaInline` novo (mapa de
+  erros por campo, sem lançar — AC-4).
+- UI: card ganha thumbnail (`imagemUrl` ou placeholder `Wrench`) + valor/custo/código Auvo; modal
+  ganha preview de imagem (com aviso "cadastre no Auvo" quando ausente), categoria com busca real
+  (`<input list>` + `<datalist>` — autocomplete nativo do browser, sem lib nova), validação inline
+  por campo (botão Salvar desabilita se houver erro, sem precisar submeter).
+
+Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (320 passando), `build`,
+`arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`,
+`validate-mermaid`.
+
+**Pendências:** AC-1 (decisão de Lucas: autorizar teste de escrita de imagem no Auvo, ou manter
+permanentemente só leitura); verificação visual em browser não realizada (sem Playwright neste
+ambiente).
+
+**Próximo passo:** commitar E01-S65 (local). Depois E01-S66 (kits, depende de S63 ✓) → E01-S69 (OS
+editável) → E01-S72 (horas) → E01-S73 (inspeções, arquitetural — precisa design.md) → E01-S74
+(serviço Auvo). Tudo local até Lucas liberar push; mesma branch/PR #52 quando liberar.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S64 (reserva de ferramenta por período)
 implementada localmente, todos os gates Node verdes.** Segue E01-S68 (`e9f58ec`), E01-S71 (`7e84430`)
 pushadas pro PR #52; E01-S70 (`c37c4f4`), E01-S63 (`2f4b22b`) e esta (E01-S64) **só locais** —
 Lucas pediu pra segurar push nesta sessão (ver nota abaixo).
