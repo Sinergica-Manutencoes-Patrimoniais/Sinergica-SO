@@ -28,6 +28,7 @@ import { byWebhookEntity } from "../_shared/auvo/registry/index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
 import { resolveWebhookDispatch } from "../_shared/auvo/webhook-dispatch.ts";
 import { criarOsDaTarefa, resolverFuncionarioIdPorAuvoId } from "../_shared/auvo/os-from-task.ts";
+import { auvoNaiveToUtc } from "../_shared/auvo/datetime.ts";
 
 const FN = "pcm-auvo-webhook";
 
@@ -527,9 +528,15 @@ function firstString(values: unknown[]): string | null {
   return null;
 }
 
+// E01-S68: strings do Auvo (`taskDate`/`checkInDate`/etc.) chegam SEM offset — são horário de
+// Brasília, não UTC. `auvoNaiveToUtc` trata isso (string já com offset/Z passa direto). Números
+// (epoch ms/s) já são instante absoluto — sem ambiguidade de timezone, não passam pelo helper.
 function firstIsoString(values: unknown[]): string | null {
   for (const value of values) {
-    if (typeof value === "string" && !Number.isNaN(Date.parse(value))) return new Date(value).toISOString();
+    if (typeof value === "string") {
+      const normalizado = auvoNaiveToUtc(value);
+      if (normalizado) return normalizado;
+    }
     if (typeof value === "number" && Number.isFinite(value)) {
       const ms = value > 10_000_000_000 ? value : value * 1000;
       const date = new Date(ms);

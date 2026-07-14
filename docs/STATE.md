@@ -10,7 +10,39 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Opus 4.8) — **PR #51 mergeado; teste de produção achou 9
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S68 (fix crítico de sync) implementada
+localmente — as 3 causas corrigidas no código.** PR #52 aberto (`feat/E01-S68-fix-sync-tarefas`),
+commit de specs já pushado; commit desta implementação vem em seguida.
+
+- `_shared/auvo/datetime.ts` (novo): `auvoNaiveToUtc` trata datetime naive do Auvo como Brasília
+  (-03:00). Aplicado no import (`pcm-auvo-tasks-import`) e no webhook (`firstIsoString`).
+- `pcm-auvo-tasks-import`: cursor da E01-S67 removido, `calcularJanelaRolante` pura no lugar
+  (-21d/+60d a partir de "agora", nunca depende do banco).
+- `pcm-auvo-webhooks-register`: reescrito — deleta webhook com URL divergente, registra o que
+  falta (incluindo **Task**, entity=4, hardcoded — não tem descriptor no registry genérico, valor
+  documentado em `registry/types.ts`). **Achado bônus:** o contrato real de `GET /webHooks` não
+  batia com o código — campo é `urlResponse` (não `targetUrl`), `entity` vem como string tipo
+  `"Customer"` (não o número do nosso registry) — corrigido, com funções puras testáveis extraídas.
+
+Gates Node verdes (typecheck, build, arch:check, check:edge-functions, audit:esteira). Deno CLI
+ausente — testes escritos (datetime 6 casos, tasks-import janela rolante, webhooks-register 9
+casos), não executados aqui, rodam no CI.
+
+**Pendente (não codificável, depende de deploy):** rodar `pcm-auvo-webhooks-register` em produção
+uma vez; backfill do histórico (datas 3h erradas); verificação real (OS de hoje aparecem, horário
+correto). Lucas está ajustando o lado Auvo manualmente em paralelo (perguntou sobre campo de
+"chave secreta"/assinatura na tela de webhook do Auvo — `AUVO_WEBHOOK_SECRET` não está configurado
+nem localmente, e os 6 webhooks mostravam `hasAuthorization:false`; se o Auvo não assinar,
+`pcm-auvo-webhook` vai rejeitar tudo com 401 mesmo com a URL certa — aguardando resposta dele sobre
+esse campo antes de decidir se ajusta o código pra aceitar sem assinatura).
+
+**Próximo passo:** commitar E01-S68, seguir pra E01-S71 (imagem equipamento) → E01-S70 (abas Auvo)
+→ E01-S63..S66 (Ferramentas, specs já prontas) → E01-S69 (OS editável) → E01-S72 (horas) → E01-S73
+(inspeções) → E01-S74 (serviço Auvo), tudo na mesma branch/PR #52, um commit por story.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Opus 4.8) — **PR #51 mergeado; teste de produção achou 9
 problemas; diagnóstico + 7 specs de correção (E01-S68..S74) criadas, prontas pra Sonnet 5
 implementar.** Só artefatos SDD — nenhum código de feature nesta sessão.
 
