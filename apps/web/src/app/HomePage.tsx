@@ -72,6 +72,7 @@ import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
 import { ServicosPage } from "../features/pcm/pages/ServicosPage";
 import { TicketsPage } from "../features/pcm/pages/TicketsPage";
+import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
@@ -126,7 +127,8 @@ type PcmView =
   | "inspecoes"
   | "pmoc"
   | "laudos-spda"
-  | "apontamento-horas";
+  | "apontamento-horas"
+  | "tipos-inspecao";
 
 interface NavItem {
   label: string;
@@ -314,6 +316,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Palavras-chave", icon: FileText, view: "palavras-chave" },
       { label: "Categorias Produto", icon: Package, view: "produto-categorias" },
       { label: "Categorias Equip.", icon: Wrench, view: "equipamento-categorias" },
+      { label: "Tipos de Inspeção", icon: CheckCircle2, view: "tipos-inspecao" },
     ],
   },
   {
@@ -975,6 +978,8 @@ export function HomePage() {
               <FerramentasPorTecnicoPage />
             ) : pcmView === "apontamento-horas" ? (
               <ApontamentoHorasPage />
+            ) : pcmView === "tipos-inspecao" ? (
+              <TiposInspecaoPage />
             ) : pcmView === "tickets" ? (
               <TicketsPage />
             ) : pcmView === "servicos" ? (

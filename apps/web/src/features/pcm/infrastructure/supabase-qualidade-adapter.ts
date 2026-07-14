@@ -1,19 +1,30 @@
 import { supabase } from "../../../lib/supabase-client";
 import type {
+  ChecklistTemplate,
+  ChecklistTemplateItem,
   ClienteOpcao,
+  CriarChecklistTemplateInput,
   CriarInspecaoImportadaInput,
   CriarInspecaoInput,
   CriarInspecaoItemInput,
   CriarLaudoSpdaInput,
   CriarPontoSpdaInput,
+  CriarTipoInspecaoInput,
+  EditarInspecaoInput,
+  EditarInspecaoItemInput,
+  EditarTipoInspecaoInput,
   InspecaoItem,
   InspecaoResumo,
   ItemInspecaoImportado,
   LaudoSpdaPonto,
   LaudoSpdaResumo,
+  MidiaItem,
   QualidadeGateway,
+  TipoInspecao,
 } from "../application/qualidade-gateway";
 import { type SistemaInspecao, classificarPontoSpda } from "../domain/inspecoes-laudos";
+
+const MIDIA_BUCKET = "inspecoes-midia";
 
 interface ClienteRow {
   id: string;
@@ -32,6 +43,19 @@ interface InspecaoRow {
   itens_conformes: number;
   itens_nao_conformes: number;
   itens_atencao: number;
+  codigo: string | null;
+  tipo_inspecao_id: string | null;
+  edificacao: string | null;
+  endereco: string | null;
+  hora_inicio: string | null;
+  hora_fim: string | null;
+  inspetor: string | null;
+  responsavel_no_local: string | null;
+  escopo: string | null;
+  norma_tecnica: string | null;
+  art: string | null;
+  condicoes: string | null;
+  anexos: MidiaItem[] | null;
 }
 
 interface InspecaoItemRow {
@@ -45,6 +69,41 @@ interface InspecaoItemRow {
   recomendacao: string | null;
   prazo_recomendado: string | null;
   foto_url: string | null;
+  categoria: string | null;
+  elemento: string | null;
+  identificacao: string | null;
+  grau_risco: InspecaoItem["grauRisco"];
+  estado_conservacao: string | null;
+  anomalia: string | null;
+  medicoes: string | null;
+  midias: MidiaItem[] | null;
+  responsavel_acao: string | null;
+  observacoes: string | null;
+}
+
+interface TipoInspecaoRow {
+  id: string;
+  nome: string;
+  norma_tecnica: string | null;
+  descricao: string | null;
+  ativo: boolean;
+}
+
+interface ChecklistTemplateRow {
+  id: string;
+  tipo_inspecao_id: string;
+  nome: string;
+  ativo: boolean;
+}
+
+interface ChecklistTemplateItemRow {
+  id: string;
+  template_id: string;
+  categoria: string | null;
+  sistema: string | null;
+  elemento: string | null;
+  ordem: number;
+  obrigatorio: boolean;
 }
 
 interface LaudoRow {
@@ -74,10 +133,14 @@ interface PontoRow {
 }
 
 const INSPECAO_COLS =
-  "id,client_id,titulo,data_inspecao,responsavel_tecnico,status,observacoes_gerais,total_itens,itens_conformes,itens_nao_conformes,itens_atencao" as const;
+  "id,client_id,titulo,data_inspecao,responsavel_tecnico,status,observacoes_gerais,total_itens,itens_conformes,itens_nao_conformes,itens_atencao,codigo,tipo_inspecao_id,edificacao,endereco,hora_inicio,hora_fim,inspetor,responsavel_no_local,escopo,norma_tecnica,art,condicoes,anexos" as const;
 
 const ITEM_COLS =
-  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url" as const;
+  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes" as const;
+
+const TIPO_INSPECAO_COLS = "id,nome,norma_tecnica,descricao,ativo" as const;
+const TEMPLATE_COLS = "id,tipo_inspecao_id,nome,ativo" as const;
+const TEMPLATE_ITEM_COLS = "id,template_id,categoria,sistema,elemento,ordem,obrigatorio" as const;
 
 const LAUDO_COLS =
   "id,client_id,numero,status,data_vistoria,arte_numero,responsavel_tecnico,notas_gerais,conclusao,nivel_protecao,necessita_spda,risco_total" as const;
@@ -104,7 +167,11 @@ function mapClientes(rows: ClienteRow[]): Map<string, string> {
   return new Map(rows.map((cliente) => [cliente.id, cliente.nome]));
 }
 
-function mapInspecao(row: InspecaoRow, clientes: Map<string, string>): InspecaoResumo {
+function mapInspecao(
+  row: InspecaoRow,
+  clientes: Map<string, string>,
+  tipos: Map<string, string> = new Map(),
+): InspecaoResumo {
   return {
     id: row.id,
     clientId: row.client_id,
@@ -118,6 +185,20 @@ function mapInspecao(row: InspecaoRow, clientes: Map<string, string>): InspecaoR
     itensConformes: row.itens_conformes,
     itensNaoConformes: row.itens_nao_conformes,
     itensAtencao: row.itens_atencao,
+    codigo: row.codigo,
+    tipoInspecaoId: row.tipo_inspecao_id,
+    tipoInspecaoNome: row.tipo_inspecao_id ? (tipos.get(row.tipo_inspecao_id) ?? null) : null,
+    edificacao: row.edificacao,
+    endereco: row.endereco,
+    horaInicio: row.hora_inicio,
+    horaFim: row.hora_fim,
+    inspetor: row.inspetor,
+    responsavelNoLocal: row.responsavel_no_local,
+    escopo: row.escopo,
+    normaTecnica: row.norma_tecnica,
+    art: row.art,
+    condicoes: row.condicoes,
+    anexos: row.anexos ?? [],
   };
 }
 
@@ -133,6 +214,37 @@ function mapItem(row: InspecaoItemRow): InspecaoItem {
     recomendacao: row.recomendacao,
     prazoRecomendado: row.prazo_recomendado,
     fotoUrl: row.foto_url,
+    categoria: row.categoria,
+    elemento: row.elemento,
+    identificacao: row.identificacao,
+    grauRisco: row.grau_risco,
+    estadoConservacao: row.estado_conservacao,
+    anomalia: row.anomalia,
+    medicoes: row.medicoes,
+    midias: row.midias ?? [],
+    responsavelAcao: row.responsavel_acao,
+    observacoes: row.observacoes,
+  };
+}
+
+function mapTipoInspecao(row: TipoInspecaoRow): TipoInspecao {
+  return {
+    id: row.id,
+    nome: row.nome,
+    normaTecnica: row.norma_tecnica,
+    descricao: row.descricao,
+    ativo: row.ativo,
+  };
+}
+
+function mapTemplateItem(row: ChecklistTemplateItemRow): ChecklistTemplateItem {
+  return {
+    id: row.id,
+    categoria: row.categoria,
+    sistema: row.sistema,
+    elemento: row.elemento,
+    ordem: row.ordem,
+    obrigatorio: row.obrigatorio,
   };
 }
 
@@ -239,6 +351,12 @@ async function clientesPorId(): Promise<Map<string, string>> {
   return mapClientes((data ?? []) as ClienteRow[]);
 }
 
+async function tiposPorId(): Promise<Map<string, string>> {
+  const { data, error } = await supabase.schema("pcm").from("tipos_inspecao").select("id,nome");
+  if (error) throw error;
+  return new Map((data ?? []).map((tipo) => [tipo.id as string, tipo.nome as string]));
+}
+
 async function proximoNumeroLaudo(): Promise<string> {
   const { count, error } = await supabase
     .schema("pcm")
@@ -252,8 +370,9 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
   listarClientes: listarClientesAtivos,
 
   async listarInspecoes(): Promise<InspecaoResumo[]> {
-    const [clientes, { data, error }] = await Promise.all([
+    const [clientes, tipos, { data, error }] = await Promise.all([
       clientesPorId(),
+      tiposPorId(),
       supabase
         .schema("pcm")
         .from("inspecoes")
@@ -265,7 +384,7 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
     ]);
 
     if (error) throw error;
-    return ((data ?? []) as InspecaoRow[]).map((row) => mapInspecao(row, clientes));
+    return ((data ?? []) as InspecaoRow[]).map((row) => mapInspecao(row, clientes, tipos));
   },
 
   async criarInspecao(input: CriarInspecaoInput): Promise<InspecaoResumo> {
@@ -280,13 +399,57 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
         observacoes_gerais: input.observacoesGerais,
         status: "em_andamento",
         created_by: input.createdBy,
+        tipo_inspecao_id: input.tipoInspecaoId ?? null,
+        edificacao: input.edificacao ?? null,
+        endereco: input.endereco ?? null,
+        hora_inicio: input.horaInicio ?? null,
+        hora_fim: input.horaFim ?? null,
+        inspetor: input.inspetor ?? null,
+        responsavel_no_local: input.responsavelNoLocal ?? null,
+        escopo: input.escopo ?? null,
+        norma_tecnica: input.normaTecnica ?? null,
+        art: input.art ?? null,
+        condicoes: input.condicoes ?? null,
       })
       .select(INSPECAO_COLS)
       .single();
 
     if (error) throw error;
-    const clientes = await clientesPorId();
-    return mapInspecao(data as InspecaoRow, clientes);
+    const [clientes, tipos] = await Promise.all([clientesPorId(), tiposPorId()]);
+    return mapInspecao(data as InspecaoRow, clientes, tipos);
+  },
+
+  async editarInspecao(input: EditarInspecaoInput): Promise<InspecaoResumo> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("inspecoes")
+      .update({
+        client_id: input.clientId,
+        titulo: input.titulo,
+        data_inspecao: input.dataInspecao,
+        responsavel_tecnico: input.responsavelTecnico,
+        observacoes_gerais: input.observacoesGerais,
+        tipo_inspecao_id: input.tipoInspecaoId ?? null,
+        edificacao: input.edificacao ?? null,
+        endereco: input.endereco ?? null,
+        hora_inicio: input.horaInicio ?? null,
+        hora_fim: input.horaFim ?? null,
+        inspetor: input.inspetor ?? null,
+        responsavel_no_local: input.responsavelNoLocal ?? null,
+        escopo: input.escopo ?? null,
+        norma_tecnica: input.normaTecnica ?? null,
+        art: input.art ?? null,
+        condicoes: input.condicoes ?? null,
+        updated_at: new Date().toISOString(),
+        updated_by: input.updatedBy,
+      })
+      .eq("id", input.id)
+      .select(INSPECAO_COLS)
+      .single();
+
+    if (error) throw error;
+    const [clientes, tipos] = await Promise.all([clientesPorId(), tiposPorId()]);
+    return mapInspecao(data as InspecaoRow, clientes, tipos);
   },
 
   async listarItensInspecao(inspecaoId: string): Promise<InspecaoItem[]> {
@@ -317,6 +480,15 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
         recomendacao: input.recomendacao,
         prazo_recomendado: input.prazoRecomendado,
         foto_url: input.fotoUrl,
+        categoria: input.categoria ?? null,
+        elemento: input.elemento ?? null,
+        identificacao: input.identificacao ?? null,
+        grau_risco: input.grauRisco ?? null,
+        estado_conservacao: input.estadoConservacao ?? null,
+        anomalia: input.anomalia ?? null,
+        medicoes: input.medicoes ?? null,
+        responsavel_acao: input.responsavelAcao ?? null,
+        observacoes: input.observacoes ?? null,
         // `ordem` é `int` (int4, máx. ~2.1bi) no schema — `Date.now()` (ms, ~1.75tri) estoura a
         // coluna. Segundos desde epoch cabe em int4 até 2038, suficiente como chave de ordenação.
         ordem: Math.floor(Date.now() / 1000),
@@ -327,6 +499,44 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
 
     if (error) throw error;
     return mapItem(data as InspecaoItemRow);
+  },
+
+  async editarItemInspecao(input: EditarInspecaoItemInput): Promise<InspecaoItem> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .update({
+        sistema: input.sistema,
+        localizacao: input.localizacao,
+        descricao: input.descricao,
+        resultado: input.resultado,
+        severidade: input.severidade,
+        recomendacao: input.recomendacao,
+        prazo_recomendado: input.prazoRecomendado,
+        foto_url: input.fotoUrl,
+        categoria: input.categoria ?? null,
+        elemento: input.elemento ?? null,
+        identificacao: input.identificacao ?? null,
+        grau_risco: input.grauRisco ?? null,
+        estado_conservacao: input.estadoConservacao ?? null,
+        anomalia: input.anomalia ?? null,
+        medicoes: input.medicoes ?? null,
+        responsavel_acao: input.responsavelAcao ?? null,
+        observacoes: input.observacoes ?? null,
+        updated_at: new Date().toISOString(),
+        updated_by: input.updatedBy,
+      })
+      .eq("id", input.id)
+      .select(ITEM_COLS)
+      .single();
+
+    if (error) throw error;
+    return mapItem(data as InspecaoItemRow);
+  },
+
+  async excluirItemInspecao(id: string): Promise<void> {
+    const { error } = await supabase.schema("pcm").from("inspecao_itens").delete().eq("id", id);
+    if (error) throw error;
   },
 
   async processarRelatorioInspecao(texto: string): Promise<ItemInspecaoImportado[]> {
@@ -383,12 +593,13 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
       if (itensError) throw itensError;
     }
 
-    const [{ data: atualizada, error: atualizadaError }, clientes] = await Promise.all([
+    const [{ data: atualizada, error: atualizadaError }, clientes, tipos] = await Promise.all([
       supabase.schema("pcm").from("inspecoes").select(INSPECAO_COLS).eq("id", inspecaoId).single(),
       clientesPorId(),
+      tiposPorId(),
     ]);
     if (atualizadaError) throw atualizadaError;
-    return mapInspecao(atualizada as InspecaoRow, clientes);
+    return mapInspecao(atualizada as InspecaoRow, clientes, tipos);
   },
 
   async listarLaudosSpda(): Promise<LaudoSpdaResumo[]> {
@@ -466,5 +677,225 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
 
     if (error) throw error;
     return mapPonto(data as PontoRow);
+  },
+
+  // ── E01-S73: parametrização ────────────────────────────────────────────────────────────────
+
+  async listarTiposInspecao(): Promise<TipoInspecao[]> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("tipos_inspecao")
+      .select(TIPO_INSPECAO_COLS)
+      .is("deleted_at", null)
+      .order("nome", { ascending: true });
+    if (error) throw error;
+    return ((data ?? []) as TipoInspecaoRow[]).map(mapTipoInspecao);
+  },
+
+  async criarTipoInspecao(input: CriarTipoInspecaoInput): Promise<TipoInspecao> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("tipos_inspecao")
+      .insert({
+        nome: input.nome,
+        norma_tecnica: input.normaTecnica,
+        descricao: input.descricao,
+        created_by: input.createdBy,
+        updated_by: input.createdBy,
+      })
+      .select(TIPO_INSPECAO_COLS)
+      .single();
+    if (error) throw error;
+    return mapTipoInspecao(data as TipoInspecaoRow);
+  },
+
+  async editarTipoInspecao(input: EditarTipoInspecaoInput): Promise<TipoInspecao> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("tipos_inspecao")
+      .update({
+        nome: input.nome,
+        norma_tecnica: input.normaTecnica,
+        descricao: input.descricao,
+        updated_at: new Date().toISOString(),
+        updated_by: input.updatedBy,
+      })
+      .eq("id", input.id)
+      .select(TIPO_INSPECAO_COLS)
+      .single();
+    if (error) throw error;
+    return mapTipoInspecao(data as TipoInspecaoRow);
+  },
+
+  async listarTemplates(): Promise<ChecklistTemplate[]> {
+    const [{ data: templates, error: templatesError }, { data: itens, error: itensError }] =
+      await Promise.all([
+        supabase
+          .schema("pcm")
+          .from("checklist_templates")
+          .select(TEMPLATE_COLS)
+          .eq("ativo", true)
+          .order("nome", { ascending: true }),
+        supabase
+          .schema("pcm")
+          .from("checklist_template_itens")
+          .select(TEMPLATE_ITEM_COLS)
+          .order("ordem", { ascending: true }),
+      ]);
+    if (templatesError) throw templatesError;
+    if (itensError) throw itensError;
+    const itensPorTemplate = new Map<string, ChecklistTemplateItem[]>();
+    for (const row of (itens ?? []) as ChecklistTemplateItemRow[]) {
+      const lista = itensPorTemplate.get(row.template_id) ?? [];
+      lista.push(mapTemplateItem(row));
+      itensPorTemplate.set(row.template_id, lista);
+    }
+    return ((templates ?? []) as ChecklistTemplateRow[]).map((row) => ({
+      id: row.id,
+      tipoInspecaoId: row.tipo_inspecao_id,
+      nome: row.nome,
+      ativo: row.ativo,
+      itens: itensPorTemplate.get(row.id) ?? [],
+    }));
+  },
+
+  async criarTemplate(input: CriarChecklistTemplateInput): Promise<ChecklistTemplate> {
+    const { data: template, error: templateError } = await supabase
+      .schema("pcm")
+      .from("checklist_templates")
+      .insert({
+        tipo_inspecao_id: input.tipoInspecaoId,
+        nome: input.nome,
+        created_by: input.createdBy,
+        updated_by: input.createdBy,
+      })
+      .select(TEMPLATE_COLS)
+      .single();
+    if (templateError) throw templateError;
+    const templateRow = template as ChecklistTemplateRow;
+
+    const { data: itens, error: itensError } = await supabase
+      .schema("pcm")
+      .from("checklist_template_itens")
+      .insert(
+        input.itens.map((item, index) => ({
+          template_id: templateRow.id,
+          categoria: item.categoria,
+          sistema: item.sistema,
+          elemento: item.elemento,
+          ordem: index,
+          obrigatorio: item.obrigatorio,
+          created_by: input.createdBy,
+        })),
+      )
+      .select(TEMPLATE_ITEM_COLS);
+    if (itensError) throw itensError;
+
+    return {
+      id: templateRow.id,
+      tipoInspecaoId: templateRow.tipo_inspecao_id,
+      nome: templateRow.nome,
+      ativo: templateRow.ativo,
+      itens: ((itens ?? []) as ChecklistTemplateItemRow[]).map(mapTemplateItem),
+    };
+  },
+
+  async aplicarTemplate(
+    inspecaoId: string,
+    templateId: string,
+    userId: string,
+  ): Promise<InspecaoItem[]> {
+    const [{ data: inspecao, error: inspecaoError }, { data: itensTemplate, error: itensError }] =
+      await Promise.all([
+        supabase.schema("pcm").from("inspecoes").select("client_id").eq("id", inspecaoId).single(),
+        supabase
+          .schema("pcm")
+          .from("checklist_template_itens")
+          .select(TEMPLATE_ITEM_COLS)
+          .eq("template_id", templateId)
+          .order("ordem", { ascending: true }),
+      ]);
+    if (inspecaoError) throw inspecaoError;
+    if (itensError) throw itensError;
+    const clientId = (inspecao as { client_id: string }).client_id;
+
+    const linhas = ((itensTemplate ?? []) as ChecklistTemplateItemRow[]).map((item, index) => ({
+      inspecao_id: inspecaoId,
+      client_id: clientId,
+      sistema: normalizarSistema(item.sistema),
+      categoria: item.categoria,
+      elemento: item.elemento,
+      localizacao: null,
+      descricao: [item.categoria, item.elemento].filter(Boolean).join(" — ") || "Item do checklist",
+      resultado: "nao_avaliado",
+      severidade: "media",
+      ordem: index,
+      created_by: userId,
+    }));
+    if (linhas.length === 0) return [];
+
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .insert(linhas)
+      .select(ITEM_COLS);
+    if (error) throw error;
+    return ((data ?? []) as InspecaoItemRow[]).map(mapItem);
+  },
+
+  // ── E01-S73: mídia (Storage privado) ───────────────────────────────────────────────────────
+
+  async uploadMidiaItem(itemId: string, file: File, tipo: MidiaItem["tipo"]): Promise<MidiaItem> {
+    const extensao = file.name.split(".").pop() ?? "bin";
+    const path = `inspecoes/${itemId}/${crypto.randomUUID()}.${extensao}`;
+    const upload = await supabase.storage
+      .from(MIDIA_BUCKET)
+      .upload(path, file, { contentType: file.type || undefined });
+    if (upload.error) throw upload.error;
+
+    const midia: MidiaItem = { tipo, path, nome: file.name };
+    const atual = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .select("midias")
+      .eq("id", itemId)
+      .single();
+    if (atual.error) throw atual.error;
+    const midias = [...((atual.data?.midias as MidiaItem[] | null) ?? []), midia];
+    const { error } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .update({ midias })
+      .eq("id", itemId);
+    if (error) throw error;
+    return midia;
+  },
+
+  async removerMidiaItem(itemId: string, midia: MidiaItem): Promise<void> {
+    const remove = await supabase.storage.from(MIDIA_BUCKET).remove([midia.path]);
+    if (remove.error) throw remove.error;
+
+    const atual = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .select("midias")
+      .eq("id", itemId)
+      .single();
+    if (atual.error) throw atual.error;
+    const midias = ((atual.data?.midias as MidiaItem[] | null) ?? []).filter(
+      (item) => item.path !== midia.path,
+    );
+    const { error } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .update({ midias })
+      .eq("id", itemId);
+    if (error) throw error;
+  },
+
+  async urlAssinadaMidia(path: string): Promise<string> {
+    const { data, error } = await supabase.storage.from(MIDIA_BUCKET).createSignedUrl(path, 3600);
+    if (error) throw error;
+    return data.signedUrl;
   },
 };

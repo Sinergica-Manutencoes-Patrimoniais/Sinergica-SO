@@ -10,10 +10,66 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S72 (apontamento de horas + custo por
-cliente) implementada localmente, todos os gates Node verdes.** 9ª story da leva
-(S68→S71→S70→S63→S64→S65→S66→S69→S72), tudo na mesma branch. Só S68/S71 pushadas (PR #52); as
-outras 7 locais aguardando liberação.
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S73 (inspeções profissionais ABNT NBR
+16747) implementada localmente, todos os gates Node verdes (354 testes).** 10ª story da leva
+(S68→S71→S70→S63→S64→S65→S66→S69→S72→S73), tudo na mesma branch. Só S68/S71 pushadas (PR #52); as
+outras 8 locais aguardando liberação. **Reconstrução arquitetural** — a maior story desta leva.
+
+- Migration `0091` (aditiva, sem DROP de coluna/tabela existente) + `0092` (VALIDATE CONSTRAINT em
+  transação separada, padrão Squawk já usado em `0070/0071`, `0073/0074`, `0082/0083`): cabeçalho
+  rico em `pcm.inspecoes` (código `INSP-NNNN` via trigger BEFORE INSERT — não DEFAULT volátil,
+  tabela já tem dado; tipo_inspecao_id FK NOT VALID; edificação/endereço/hora início-fim/inspetor/
+  responsável no local/escopo/norma técnica/ART/condições/anexos); itens ricos em
+  `pcm.inspecao_itens` (categoria/elemento/identificação/grau_risco com CHECK/estado_conservacao/
+  anomalia/medições jsonb/mídias jsonb/responsável_ação/observações); CHECK de `resultado` ampliado
+  pra incluir `nao_aplicavel` (NOT VALID + validate em `0092`); 3 tabelas novas de parametrização
+  (`tipos_inspecao`, `checklist_templates`, `checklist_template_itens`) com RLS FORCE — leitura
+  aberta a `pcm:leitura`, escrita restrita a supervisor/superadmin (D-4 do design.md: parametrização
+  é configuração, não operação diária); bucket Storage privado `inspecoes-midia` (100MB, RLS por
+  módulo PCM).
+- **Achado ao implementar (gap de RLS pré-existente, não desta story):** `pcm.inspecao_itens` nunca
+  teve grant nem policy de DELETE desde a `0019` original — RLS FORCE bloqueava qualquer exclusão de
+  item mesmo com `pcm:escrita`. Corrigido nesta migration (`grant delete` + policy
+  `inspecao_itens_delete`), necessário pro AC-1 ("excluir item também disponível").
+- **SPEC_DEVIATION registrado em `tasks.md`:** a spec afirmava que este seria "o primeiro uso de
+  Supabase Storage no projeto" e pedia ADR. Falso — `0063_E02-S21_atendimento_inbox_rico.sql` já
+  criou o bucket `atendimento-midias` no mesmo padrão (privado, RLS por módulo), sem ADR próprio.
+  Decisão: seguir o padrão já estabelecido, sem ADR novo (documentado como comentário na migration
+  `0091` e formalizado no `tasks.md` da story).
+- Domínio (`inspecoes-laudos.ts`) ganhou `validarCabecalhoInspecao`/`validarItemInspecao`/
+  `validarTipoInspecao`/`validarChecklistTemplate` — 10 testes novos. `qualidade-gateway.ts`/
+  `qualidade.ts` reescritos com 12 métodos novos (editar/excluir inspeção e item, CRUD de tipos e
+  templates, `aplicarTemplate`, upload/remoção/URL assinada de mídia).
+- **Bug recorrente pego de novo (3ª vez nesta leva):** `aplicarTemplate` e mais 4 funções em
+  `qualidade.ts` (`excluirItemInspecao`, `criarTipoInspecao`, `editarTipoInspecao`, `criarTemplate`)
+  eram `function` (não `async function`) fazendo `throw` antes de qualquer `await` — quebra
+  `expect(fn(...)).rejects.toThrow()` porque o erro escapa síncrono. Mesma causa raiz já vista em
+  `editarOrdemServico` (E01-S69). Corrigidas todas de uma vez ao notar o padrão, não só a que o
+  teste pegou.
+- `InspecoesPage.tsx` reconstruída (cabeçalho rico editável, seletor de template só ao criar,
+  upload de mídia por item) + `TiposInspecaoPage.tsx` nova (admin de tipos/templates, gate por
+  `user?.papel` de `useAuth()` — não `usePermissoes()`, que não expõe papel) + entrada em
+  `HomePage.tsx` (CADASTROS).
+- **Decisão de escopo:** upload de mídia só fica ativo ao editar um item (não ao criar), porque o
+  path no Storage referencia um `item.id` real já persistido. Documentado em `tasks.md`.
+- pgTAP `supabase/tests/inspecoes_abnt_rls.test.sql` (novo, 11 asserções) — RLS de
+  tipos_inspecao/checklist_templates (supervisor/superadmin vs colaborador comum), DELETE novo de
+  item, CHECK de grau_risco/resultado, bucket privado. **Não executado localmente** (sem Docker);
+  roda no CI (`db-tests`).
+
+Gates rodados e verdes: `biome check --write .` (binário direto, `pnpm exec` deu OOM), `typecheck`,
+`test` (354 passando), `build`, `arch:check`, `lint:migrations`, `check:edge-functions`,
+`audit:esteira`, `eval:spec`, `validate-mermaid`.
+
+**Não verificado:** pgTAP `db-tests` (sem Docker local, roda no CI); verificação visual em browser
+não realizada (sem Playwright neste ambiente).
+
+**Próximo passo:** commitar E01-S73 (local, sem push — Lucas pediu "não pushar ainda, só commitar
+local"). Depois **E01-S74 (serviço→Auvo write path)** — última das 7 stories originais
+(E01-S68..S74); bloqueada por teste de contrato externo (`POST /services` na API Auvo real), mesmo
+tipo de decisão já enfrentada e adiada na E01-S65 (não testar escrita contra produção sem
+autorização explícita para aquela ação específica). Ao terminar S74 (ou decidir que está bloqueada
+de verdade), check-in com Lucas: são 8 commits locais aguardando push há uma sessão inteira.
 
 - Migration `0090`: RPC `pcm.fn_apontamento_horas(p_inicio date, p_fim date)` — `language sql
   stable`, SECURITY INVOKER (padrão). **Decisão de arquitetura:** a RPC devolve linhas BRUTAS
@@ -44,12 +100,14 @@ Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (340 passan
 
 **Não verificado:** verificação visual em browser não realizada (sem Playwright neste ambiente).
 
-**Próximo passo:** commitar E01-S72 (local). Depois **E01-S73 (inspeções ABNT NBR 16747) —
-arquitetural, precisa `design.md` aprovado antes de codar** (Storage, schema rico, templates de
-checklist parametrizáveis — decisões do PO já coletadas na sessão de diagnóstico: adotar Storage
-agora, reconstruir a inspeção, tela de admin de templates já). Depois E01-S74 (serviço→Auvo,
-bloqueado por teste de contrato externo). Tudo local até Lucas liberar push; mesma branch/PR #52
-quando liberar, um commit por story.
+**Próximo passo (histórico, já cumprido):** commitar E01-S72 e seguir para E01-S73 — ver entrada no
+topo deste arquivo para o estado atual.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S72 (apontamento de horas +
+custo por cliente) implementada localmente, todos os gates Node verdes.** 9ª story da leva
+(S68→S71→S70→S63→S64→S65→S66→S69→S72), tudo na mesma branch.
 
 ---
 

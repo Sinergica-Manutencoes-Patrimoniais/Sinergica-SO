@@ -1,5 +1,6 @@
 import type {
   ConformidadeSpda,
+  GrauRisco,
   InspecaoStatus,
   ItemResultado,
   LaudoSpdaStatus,
@@ -13,6 +14,15 @@ export interface ClienteOpcao {
   nome: string;
 }
 
+export interface MidiaItem {
+  tipo: "foto" | "video" | "documento";
+  path: string;
+  nome: string;
+}
+
+// E01-S73: cabeçalho rico (ABNT NBR 16747, Parte 1 — Dados da Inspeção). Campos anteriores à
+// E01-S73 (titulo, dataInspecao, responsavelTecnico, observacoesGerais, status, totais)
+// permanecem; os novos (codigo em diante) são aditivos e nulos no histórico.
 export interface InspecaoResumo {
   id: string;
   clientId: string;
@@ -26,8 +36,24 @@ export interface InspecaoResumo {
   itensConformes: number;
   itensNaoConformes: number;
   itensAtencao: number;
+  codigo: string | null;
+  tipoInspecaoId: string | null;
+  tipoInspecaoNome: string | null;
+  edificacao: string | null;
+  endereco: string | null;
+  horaInicio: string | null;
+  horaFim: string | null;
+  inspetor: string | null;
+  responsavelNoLocal: string | null;
+  escopo: string | null;
+  normaTecnica: string | null;
+  art: string | null;
+  condicoes: string | null;
+  anexos: MidiaItem[];
 }
 
+// E01-S73: itens ricos (Parte 2 — Itens de Inspeção). Nada hardcoded — resultado/grauRisco/mídias
+// são escolhas reais do inspetor, não valores fixos como antes da E01-S73.
 export interface InspecaoItem {
   id: string;
   inspecaoId: string;
@@ -39,6 +65,16 @@ export interface InspecaoItem {
   recomendacao: string | null;
   prazoRecomendado: string | null;
   fotoUrl: string | null;
+  categoria: string | null;
+  elemento: string | null;
+  identificacao: string | null;
+  grauRisco: GrauRisco | null;
+  estadoConservacao: string | null;
+  anomalia: string | null;
+  medicoes: string | null;
+  midias: MidiaItem[];
+  responsavelAcao: string | null;
+  observacoes: string | null;
 }
 
 export interface CriarInspecaoInput {
@@ -47,7 +83,23 @@ export interface CriarInspecaoInput {
   dataInspecao: string;
   responsavelTecnico: string | null;
   observacoesGerais: string | null;
+  tipoInspecaoId?: string | null;
+  edificacao?: string | null;
+  endereco?: string | null;
+  horaInicio?: string | null;
+  horaFim?: string | null;
+  inspetor?: string | null;
+  responsavelNoLocal?: string | null;
+  escopo?: string | null;
+  normaTecnica?: string | null;
+  art?: string | null;
+  condicoes?: string | null;
   createdBy: string;
+}
+
+export interface EditarInspecaoInput extends CriarInspecaoInput {
+  id: string;
+  updatedBy: string;
 }
 
 export interface CriarInspecaoItemInput {
@@ -61,7 +113,21 @@ export interface CriarInspecaoItemInput {
   recomendacao: string | null;
   prazoRecomendado: string | null;
   fotoUrl: string | null;
+  categoria?: string | null;
+  elemento?: string | null;
+  identificacao?: string | null;
+  grauRisco?: GrauRisco | null;
+  estadoConservacao?: string | null;
+  anomalia?: string | null;
+  medicoes?: string | null;
+  responsavelAcao?: string | null;
+  observacoes?: string | null;
   createdBy: string;
+}
+
+export interface EditarInspecaoItemInput extends CriarInspecaoItemInput {
+  id: string;
+  updatedBy: string;
 }
 
 export interface ItemInspecaoImportado {
@@ -139,16 +205,82 @@ export interface CriarPontoSpdaInput {
   createdBy: string;
 }
 
+// ── E01-S73: parametrização (tipos de inspeção + checklist templates) ──────────────────────────
+
+export interface TipoInspecao {
+  id: string;
+  nome: string;
+  normaTecnica: string | null;
+  descricao: string | null;
+  ativo: boolean;
+}
+
+export interface ChecklistTemplateItem {
+  id: string;
+  categoria: string | null;
+  sistema: string | null;
+  elemento: string | null;
+  ordem: number;
+  obrigatorio: boolean;
+}
+
+export interface ChecklistTemplate {
+  id: string;
+  tipoInspecaoId: string;
+  nome: string;
+  ativo: boolean;
+  itens: ChecklistTemplateItem[];
+}
+
+export interface CriarTipoInspecaoInput {
+  nome: string;
+  normaTecnica: string | null;
+  descricao: string | null;
+  createdBy: string;
+}
+
+export interface EditarTipoInspecaoInput extends CriarTipoInspecaoInput {
+  id: string;
+  updatedBy: string;
+}
+
+export interface CriarChecklistTemplateInput {
+  tipoInspecaoId: string;
+  nome: string;
+  itens: Array<{
+    categoria: string | null;
+    sistema: string | null;
+    elemento: string | null;
+    obrigatorio: boolean;
+  }>;
+  createdBy: string;
+}
+
 export interface QualidadeGateway {
   listarClientes(): Promise<ClienteOpcao[]>;
   listarInspecoes(): Promise<InspecaoResumo[]>;
   criarInspecao(input: CriarInspecaoInput): Promise<InspecaoResumo>;
+  editarInspecao(input: EditarInspecaoInput): Promise<InspecaoResumo>;
   listarItensInspecao(inspecaoId: string): Promise<InspecaoItem[]>;
   criarItemInspecao(input: CriarInspecaoItemInput): Promise<InspecaoItem>;
+  editarItemInspecao(input: EditarInspecaoItemInput): Promise<InspecaoItem>;
+  excluirItemInspecao(id: string): Promise<void>;
   processarRelatorioInspecao(texto: string): Promise<ItemInspecaoImportado[]>;
   criarInspecaoImportada(input: CriarInspecaoImportadaInput): Promise<InspecaoResumo>;
   listarLaudosSpda(): Promise<LaudoSpdaResumo[]>;
   criarLaudoSpda(input: CriarLaudoSpdaInput): Promise<LaudoSpdaResumo>;
   listarPontosSpda(laudoId: string): Promise<LaudoSpdaPonto[]>;
   criarPontoSpda(input: CriarPontoSpdaInput): Promise<LaudoSpdaPonto>;
+  // Parametrização (AC-4)
+  listarTiposInspecao(): Promise<TipoInspecao[]>;
+  criarTipoInspecao(input: CriarTipoInspecaoInput): Promise<TipoInspecao>;
+  editarTipoInspecao(input: EditarTipoInspecaoInput): Promise<TipoInspecao>;
+  listarTemplates(): Promise<ChecklistTemplate[]>;
+  criarTemplate(input: CriarChecklistTemplateInput): Promise<ChecklistTemplate>;
+  /** AC-4/D-2: itens do template do tipo escolhido viram itens reais da inspeção recém-criada. */
+  aplicarTemplate(inspecaoId: string, templateId: string, userId: string): Promise<InspecaoItem[]>;
+  // Mídia (AC-5)
+  uploadMidiaItem(itemId: string, file: File, tipo: MidiaItem["tipo"]): Promise<MidiaItem>;
+  removerMidiaItem(itemId: string, midia: MidiaItem): Promise<void>;
+  urlAssinadaMidia(path: string): Promise<string>;
 }
