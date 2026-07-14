@@ -10,9 +10,42 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S68 (fix crítico de sync) implementada
-localmente — as 3 causas corrigidas no código.** PR #52 aberto (`feat/E01-S68-fix-sync-tarefas`),
-commit de specs já pushado; commit desta implementação vem em seguida.
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S71 (imagem/anexos de equipamentos)
+implementada localmente, todos os gates Node verdes.** Segue a E01-S68 (fix crítico de sync, já
+commitada como `e9f58ec` e pushada pro PR #52). Ainda não commitada.
+
+- Migration `0085_E01-S71_equipamentos_imagem.sql`: `pcm.equipamentos` ganha `url_imagem text` e
+  `uri_anexos jsonb default '[]'` (aditivo, sem RLS/grant novo).
+- `registry/equipamentos.ts`: `AuvoEquipment` ganha `urlImage`/`uriAnexos` (confirmado contra a API
+  real 2026-07-14); `fromAuvo` mapeia pra `url_imagem`/`uri_anexos`. 3 testes Deno novos/ajustados.
+- UI: `EquipamentosPage.tsx` (card com thumbnail 14×14, lightbox ao clicar, placeholder `Wrench`
+  quando ausente) e `PainelEquipamentos.tsx` (usado no cliente-360, miniatura 8×8) — ambos leem da
+  mesma tabela `pcm.equipamentos`. `EquipamentoItem` (domain), `EquipamentoResumo`
+  (`cliente-360-gateway.ts`) e os 2 adapters (`supabase-equipamentos-adapter.ts`,
+  `supabase-cliente-360-adapter.ts`) expõem os novos campos.
+
+Gates rodados e verdes: `biome check --write .` (1 fix de formatação aplicado), `typecheck`,
+`test` (296 passando), `build`, `arch:check`, `lint:migrations`, `check:edge-functions`,
+`audit:esteira`, `eval:spec`, `validate-mermaid`. Deno CLI ausente — teste do `fromAuvo` roda no CI.
+**Nota operacional:** `pnpm exec biome` (via wrapper) deu OOM repetido nesta sessão por pressão de
+memória do host (SO com ~100-300MB livres, CapCut consumindo CPU); rodar o binário direto
+(`./node_modules/.bin/biome`) contornou — sem relação com o código desta story.
+
+**Não verificado (sem Playwright/browser tool neste ambiente):** renderização visual do thumbnail/
+lightbox no browser. `url_imagem` só populará em produção após o próximo pull de equipamentos do
+Auvo (cron horário ou re-sync manual) — hoje a coluna existe mas está vazia pra todo mundo.
+
+**Próximo passo:** commitar E01-S71, seguir pra E01-S70 (abas ricas do Auvo) → E01-S63..S66
+(Ferramentas, specs já prontas) → E01-S69 (OS editável) → E01-S72 (horas) → E01-S73 (inspeções) →
+E01-S74 (serviço Auvo), tudo na mesma branch/PR #52, um commit por story. E01-S68 segue com tasks
+6-8 pendentes (deploy + backfill + verificação em produção), bloqueadas em paralelo por Lucas
+confirmar se o Auvo assina webhook (`AUVO_WEBHOOK_SECRET`).
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S68 (fix crítico de sync)
+implementada localmente — as 3 causas corrigidas no código.** PR #52 aberto
+(`feat/E01-S68-fix-sync-tarefas`), commit `e9f58ec` pushado.
 
 - `_shared/auvo/datetime.ts` (novo): `auvoNaiveToUtc` trata datetime naive do Auvo como Brasília
   (-03:00). Aplicado no import (`pcm-auvo-tasks-import`) e no webhook (`firstIsoString`).
@@ -35,10 +68,6 @@ correto). Lucas está ajustando o lado Auvo manualmente em paralelo (perguntou s
 nem localmente, e os 6 webhooks mostravam `hasAuthorization:false`; se o Auvo não assinar,
 `pcm-auvo-webhook` vai rejeitar tudo com 401 mesmo com a URL certa — aguardando resposta dele sobre
 esse campo antes de decidir se ajusta o código pra aceitar sem assinatura).
-
-**Próximo passo:** commitar E01-S68, seguir pra E01-S71 (imagem equipamento) → E01-S70 (abas Auvo)
-→ E01-S63..S66 (Ferramentas, specs já prontas) → E01-S69 (OS editável) → E01-S72 (horas) → E01-S73
-(inspeções) → E01-S74 (serviço Auvo), tudo na mesma branch/PR #52, um commit por story.
 
 ---
 

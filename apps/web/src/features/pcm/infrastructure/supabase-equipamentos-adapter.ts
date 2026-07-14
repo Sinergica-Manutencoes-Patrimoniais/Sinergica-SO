@@ -21,6 +21,8 @@ interface EquipamentoRow {
   auvo_sync_status: string | null;
   auvo_sync_error: string | null;
   auvo_synced_at: string | null;
+  url_imagem: string | null;
+  uri_anexos: string[] | null;
 }
 
 interface ClienteRow {
@@ -30,7 +32,7 @@ interface ClienteRow {
 }
 
 const COLS =
-  "id,nome,identificador,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
+  "id,nome,identificador,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos" as const;
 
 function mapRow(row: EquipamentoRow, clientes: Map<string, string>): EquipamentoItem {
   return {
@@ -48,6 +50,8 @@ function mapRow(row: EquipamentoRow, clientes: Map<string, string>): Equipamento
     auvoSyncStatus: row.auvo_sync_status,
     auvoSyncError: row.auvo_sync_error,
     auvoSyncedAt: row.auvo_synced_at,
+    urlImagem: row.url_imagem,
+    uriAnexos: row.uri_anexos ?? [],
   };
 }
 

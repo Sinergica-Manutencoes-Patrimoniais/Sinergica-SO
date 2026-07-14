@@ -42,6 +42,25 @@ Deno.test("equipamentosDescriptor — inbound preserva ids Auvo e vínculo de cl
       localizacao: null,
       observacoes: null,
       ativo: false,
+      url_imagem: null,
+      uri_anexos: [],
     },
   );
+});
+
+Deno.test("equipamentosDescriptor — E01-S71 captura urlImage e uriAnexos do Auvo", () => {
+  const linha = equipamentosDescriptor.fromAuvo({
+    equipmentId: 42,
+    name: "Ar condicionado",
+    urlImage: "https://auvo-s3.example.com/equipments/42.jpg",
+    uriAnexos: ["https://auvo-s3.example.com/equipments/42-manual.pdf"],
+  });
+  assertEquals(linha.url_imagem, "https://auvo-s3.example.com/equipments/42.jpg");
+  assertEquals(linha.uri_anexos, ["https://auvo-s3.example.com/equipments/42-manual.pdf"]);
+});
+
+Deno.test("equipamentosDescriptor — sem urlImage/uriAnexos vira null/array vazio", () => {
+  const linha = equipamentosDescriptor.fromAuvo({ equipmentId: 43, name: "Bomba" });
+  assertEquals(linha.url_imagem, null);
+  assertEquals(linha.uri_anexos, []);
 });

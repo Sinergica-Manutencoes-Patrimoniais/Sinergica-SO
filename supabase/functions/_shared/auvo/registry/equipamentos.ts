@@ -9,6 +9,8 @@ export interface EquipamentoRow extends Record<string, unknown> {
   localizacao?: string | null;
   observacoes?: string | null;
   ativo?: boolean | null;
+  url_imagem?: string | null;
+  uri_anexos?: unknown[];
 }
 
 export interface AuvoEquipment {
@@ -23,6 +25,11 @@ export interface AuvoEquipment {
   location?: string;
   note?: string;
   active?: boolean;
+  // E01-S71: confirmado contra a API real (2026-07-14) — GET /equipments devolve `urlImage`
+  // (string, URL S3 do Auvo) e `uriAnexos` (array). Sem endpoint de escrita verificado pra esses
+  // campos — só leitura (o Auvo é dono do dado de equipamento, ADR-0006).
+  urlImage?: string;
+  uriAnexos?: unknown[];
 }
 
 export const equipamentosDescriptor: AuvoEntityDescriptor<AuvoEquipment, EquipamentoRow> = {
@@ -56,6 +63,8 @@ export const equipamentosDescriptor: AuvoEntityDescriptor<AuvoEquipment, Equipam
       localizacao: textoOuNull(auvo.location),
       observacoes: textoOuNull(auvo.note),
       ativo: auvo.active !== false,
+      url_imagem: textoOuNull(auvo.urlImage),
+      uri_anexos: Array.isArray(auvo.uriAnexos) ? auvo.uriAnexos : [],
     };
   },
 };

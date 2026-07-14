@@ -490,7 +490,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     const { data, error } = await supabase
       .schema("pcm")
       .from("equipamentos")
-      .select("id,nome,auvo_equipment_id")
+      .select("id,nome,auvo_equipment_id,url_imagem")
       .eq("auvo_customer_id", auvoId)
       .eq("ativo", true);
 
@@ -502,6 +502,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       id: e.id as string,
       nome: e.nome as string,
       auvoEquipmentId: (e.auvo_equipment_id as number | null) ?? null,
+      urlImagem: (e.url_imagem as string | null) ?? null,
     }));
   },
 

@@ -87,6 +87,7 @@ export interface EquipamentoResumo {
   id: string;
   nome: string;
   auvoEquipmentId?: number | null;
+  urlImagem?: string | null;
 }
 
 /**

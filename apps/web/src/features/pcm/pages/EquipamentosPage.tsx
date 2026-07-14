@@ -32,6 +32,7 @@ export function EquipamentosPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [imagemAmpliada, setImagemAmpliada] = useState<string | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -164,6 +165,7 @@ export function EquipamentosPage() {
               onDesativar={
                 temEscrita && equipamento.ativo ? () => desativar(equipamento) : undefined
               }
+              onAmpliarImagem={setImagemAmpliada}
             />
           ))}
         </div>
@@ -177,6 +179,27 @@ export function EquipamentosPage() {
           onSalvar={salvar}
         />
       )}
+
+      {imagemAmpliada && (
+        <div className="modal-backdrop">
+          <div className="max-h-[85vh] max-w-3xl">
+            <div className="flex justify-end pb-2">
+              <button
+                type="button"
+                onClick={() => setImagemAmpliada(null)}
+                className="rounded-full bg-card p-1.5 text-ink-2 hover:text-ink"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <img
+              src={imagemAmpliada}
+              alt="Equipamento ampliado"
+              className="max-h-[75vh] w-full rounded-[8px] object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -185,19 +208,40 @@ function EquipamentoCard({
   equipamento,
   onEditar,
   onDesativar,
+  onAmpliarImagem,
 }: {
   equipamento: EquipamentoItem;
   onEditar?: () => void;
   onDesativar?: () => void;
+  onAmpliarImagem: (url: string) => void;
 }) {
   return (
     <div className="rounded-[8px] border border-line bg-card p-4">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h4 className="truncate text-sm font-semibold text-ink">{equipamento.nome}</h4>
-          <p className="mt-1 text-xs text-ink-3">
-            Auvo {equipamento.auvoId ?? "-"} · {equipamento.identificador ?? "sem identificador"}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          {equipamento.urlImagem ? (
+            <button
+              type="button"
+              onClick={() => onAmpliarImagem(equipamento.urlImagem as string)}
+              className="h-14 w-14 shrink-0 overflow-hidden rounded-[6px] border border-line"
+            >
+              <img
+                src={equipamento.urlImagem}
+                alt={equipamento.nome}
+                className="h-full w-full object-cover"
+              />
+            </button>
+          ) : (
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[6px] border border-line bg-line-soft">
+              <Wrench className="h-6 w-6 text-ink-3" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h4 className="truncate text-sm font-semibold text-ink">{equipamento.nome}</h4>
+            <p className="mt-1 text-xs text-ink-3">
+              Auvo {equipamento.auvoId ?? "-"} · {equipamento.identificador ?? "sem identificador"}
+            </p>
+          </div>
         </div>
         <span
           className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${equipamento.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
@@ -216,6 +260,9 @@ function EquipamentoCard({
         )}
         <span>Sync: {equipamento.auvoSyncStatus ?? "pending"}</span>
       </div>
+      {equipamento.uriAnexos.length > 0 && (
+        <p className="mt-2 text-xs text-ink-3">{equipamento.uriAnexos.length} anexo(s) do Auvo</p>
+      )}
       {equipamento.auvoSyncError && (
         <p className="mt-2 text-xs text-[#A23B25]">{equipamento.auvoSyncError}</p>
       )}
