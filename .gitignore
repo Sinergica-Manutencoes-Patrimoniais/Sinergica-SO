@@ -18,3 +18,9 @@ gitleaks
 # Cache gerado do graphify (grafo de conhecimento) — regenerável via `graphify update .`
 graphify-out/
 apps/web/graphify-out/
+
+# Playwright (e2e) — sessão de auth salva (token real) e artefatos de execução, nunca versionar
+apps/web/e2e/.auth/
+apps/web/playwright-report/
+apps/web/test-results/
+apps/web/blob-report/

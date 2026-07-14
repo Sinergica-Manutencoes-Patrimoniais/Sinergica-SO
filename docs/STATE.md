@@ -10,7 +10,76 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S74 (serviço→Auvo write path)
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **Verificação Playwright contra produção real
+de toda a leva (E01-S68..S74) — 2 bugs reais de produção achados e corrigidos, migrations
+aplicadas, suíte e2e nova commitada.** Lucas pediu explicitamente "execute com playwright os testes
+se ok, commit tudo e push"; Playwright não estava instalado — instalado nesta sessão
+(`@playwright/test`), autorização explícita do Lucas pra: (1) testar contra o Supabase de PRODUÇÃO
+real (sem staging/Docker disponível), (2) aplicar as 8 migrations pendentes (`0085`-`0092`, nunca
+deployadas — o gatilho automático do `deploy.yml` está desligado de propósito, só roda via
+`workflow_dispatch` manual), (3) criar dados de teste prefixados `[TESTE E2E]` em produção
+(limpos via UI ao final, onde existe exclusão).
+
+- **Bug real #1 — `permission denied for sequence` (42501).** `CREATE SEQUENCE` não concede
+  privilégio nenhum a `authenticated` por padrão — as migrations `0086` (E01-S63,
+  `ferramenta_unidade_codigo_seq`) e `0091` (E01-S73, `inspecao_codigo_seq`) deram GRANT na tabela
+  mas esqueceram a sequence usada pelo `nextval()` que gera os códigos `FER-NNNN`/`INSP-NNNN`.
+  Sem o fix, **toda criação de inspeção ou geração de unidade de ferramenta quebrava** (nunca
+  testado antes contra dado real). Corrigido em migration nova `0093_E01-S73_fix_grant_sequences_codigo.sql`
+  (`grant usage, select` nas 2 sequences pra `authenticated`+`service_role`) — aplicada em
+  produção, retestado, confirmado (`INSP-0001`, `FER-0006` gerados com sucesso).
+- **Bug real #2 — RPC `fn_apontamento_horas` quebrava a página inteira (22P02).**
+  `(os.auvo_detalhes ->> 'duracaoHoras')::numeric` (migration `0090`, E01-S72) não tolera string
+  vazia — pelo menos 1 OS real tem esse campo como `""` (não null, não ausente). Como a RPC é uma
+  query agregada sobre todas as OS do período, 1 linha ruim quebrava a página inteira, sem
+  fallback possível no client. Corrigido em `0094_E01-S72_fix_duracao_horas_vazia.sql`
+  (`nullif(..., '')::numeric`) — aplicada em produção, retestado com dado real (horas por
+  cliente/técnico renderizando corretamente).
+- **Confirmado funcionando de ponta a ponta contra produção real** (não só gates de código): login,
+  criar/editar OS (E01-S69), criar tipo de inspeção + checklist template + inspeção com template
+  pré-carregando item + editar cabeçalho (persistência confirmada reabrindo o form) + editar item
+  (grau de risco, resultado "não aplicável") + excluir item (E01-S73, o gap de RLS de DELETE que
+  esta story corrigiu), criar ferramenta + gerar unidade com código `FER-NNNN` (E01-S63), criar kit
+  + atribuir a técnico real + devolver — ciclo tudo-ou-nada completo, unidade volta a "disponível"
+  (E01-S66), apontamento de horas agregado por cliente/técnico com dado real (E01-S72).
+- **Achado não-bug, só confuso de primeira:** depois de atribuído, um kit continua aparecendo na
+  lista de cima como "Incompleto" (reflete estoque, não intenção) — comportamento correto, não um
+  bug; documentado em comentário no `kits.spec.ts` pra não confundir quem ler o teste depois.
+- **Suíte e2e nova em `apps/web/e2e/`** (Playwright, script `pnpm test:e2e`): `auth.setup.ts` +
+  `ordens-servico.spec.ts`, `inspecoes.spec.ts`, `tipos-inspecao.spec.ts`, `ferramentas.spec.ts`,
+  `kits.spec.ts`. `playwright.config.ts` tem aviso explícito no topo: mira produção de verdade, sem
+  staging. Credenciais de teste (`SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD`, usuário real, senha
+  corrigida pelo Lucas no meio da sessão) em `.env.local` (gitignored). `vitest.config.ts` ganhou
+  `exclude: ["e2e/**"]` pra não tentar rodar specs do Playwright como teste unitário.
+- **Dado de teste que ficou em produção (sem exclusão na UI pra limpar):** 1 OS
+  (`[TESTE E2E] OS ... (editado)`, auto-documentada na descrição: "Criada por teste automatizado
+  (Playwright, E01-S69)"); tipos de inspeção + checklist templates de teste (`TiposInspecaoPage`
+  não tem exclusão nenhuma na UI — achado de escopo, não bug desta sessão). Ferramentas e kits de
+  teste foram todos desativados (`ativo=false`) via UI antes do commit.
+- **Recusas corretas do sistema de permissão durante esta sessão** (não contornadas): bloqueou um
+  script Node com `SUPABASE_SERVICE_ROLE_KEY` pra leitura direta de diagnóstico (usei só o que a
+  UI/sessão autenticada já expunha), e bloqueou um loop de limpeza "clica no primeiro que aparecer"
+  sem verificar que o alvo era mesmo dado de teste (troquei por cliques únicos explícitos,
+  justificados um a um).
+
+Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (354 passando), `build`,
+`arch:check`, `lint:migrations` (94 migrations), `check:edge-functions`, `audit:esteira`,
+`eval:spec`, `validate-mermaid`.
+
+**Não verificado:** E01-S70 (abas ricas) e E01-S71 (imagem equipamentos) só tiveram smoke check
+(página carrega sem erro de schema) — sem dado real populado ainda (precisa de re-sync do Auvo).
+E01-S74 (serviço→Auvo) não foi retestado via UI nesta passada — o teste de contrato direto contra a
+API Auvo real já feito antes desta sessão de Playwright é a evidência que vale. Reservas
+(E01-S64) não testada nesta passada (ferramentas/kits cobriram o RLS/mecanismo mais arriscado).
+
+**Próximo passo:** commitar tudo (migrations `0093`/`0094` + suíte e2e + `playwright.config.ts` +
+`vitest.config.ts` + `package.json`) e fazer push — Lucas autorizou push explicitamente nesta
+sessão (branch `feat/E01-S68-fix-sync-tarefas`, PR #52), superando a instrução anterior de "não
+pushar ainda".
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S74 (serviço→Auvo write path)
 implementada localmente, gates Node verdes.** 11ª e última story da leva original de 7
 (E01-S68..S74), fecha o ciclo (S68→S71→S70→S63→S64→S65→S66→S69→S72→S73→S74), tudo na mesma branch.
 Só S68/S71 pushadas (PR #52); as outras 9 locais aguardando liberação.
