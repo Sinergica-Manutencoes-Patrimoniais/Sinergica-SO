@@ -21,6 +21,7 @@ import {
   listarCategoriasFerramenta,
   listarFerramentas,
 } from "../application/ferramentas";
+import { KitsSection } from "../components/KitsSection";
 import { type FerramentaReservaItem, ordenarAgendaReservas } from "../domain/ferramenta-reservas";
 import { type FerramentaUnidadeItem, rotuloStatusUnidade } from "../domain/ferramenta-unidades";
 import { validarFerramentaInline } from "../domain/ferramentas";
@@ -415,6 +416,8 @@ export function FerramentasPage() {
           </ul>
         )}
       </section>
+
+      <KitsSection temEscrita={temEscrita} />
 
       {modal && (
         <FerramentaModal

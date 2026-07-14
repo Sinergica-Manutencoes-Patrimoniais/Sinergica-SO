@@ -10,7 +10,51 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S65 (cadastro rico de ferramenta,
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S66 (kits de ferramentas) implementada
+localmente, todos os gates Node verdes. Fecha as 4 stories de Ferramentas (S63-S66) do feedback do
+Fabrício.** 7ª story da leva (S68→S71→S70→S63→S64→S65→S66), tudo na mesma branch. Só S68/S71
+pushadas (PR #52); as outras 5 locais aguardando liberação.
+
+- Migration `0089`: `pcm.kits` (nome/descrição, soft-delete) + `pcm.kit_itens` (kit→ferramenta→
+  quantidade, **não** append-only — composição pode ser editada, AC-5) + coluna
+  `kit_atribuicao_id uuid` em `ferramenta_movimentacoes` (correlaciona as N movimentações que 1
+  evento de atribuição/devolução de kit gerou).
+- **Atomicidade tudo-ou-nada (AC-2) via RPC, não via múltiplos inserts do client:**
+  `pcm.fn_atribuir_kit` percorre os itens do kit, tenta alocar N unidades disponíveis de cada
+  (`FOR UPDATE SKIP LOCKED`), e dá `RAISE EXCEPTION` se faltar 1 — como é tudo dentro de 1 função/1
+  transação implícita, a exceção desfaz TUDO que a chamada já tinha inserido até ali (testado no
+  pgTAP: tentativa que falha no item 2 não deixa nada atribuído do item 1).
+- **Decisão técnica:** as RPCs são `SECURITY INVOKER` (padrão, sem `security definer`) — rodam com
+  o papel de quem chama, então os INSERTs em `ferramenta_movimentacoes` e SELECTs em `kit_itens`/
+  `ferramenta_unidades` continuam sob as MESMAS RLS policies já existentes (pcm leitura/escrita),
+  sem duplicar checagem de permissão dentro da função. `fn_devolver_kit` reaproveita o trigger da
+  E01-S63 (`fn_aplicar_movimentacao_ferramenta`) pra aplicar a devolução em cada unidade — não
+  reimplementa a transição de estado.
+- `domain/kits.ts`: `kitEstaCompleto`/`itensFaltantes` (AC-1, comparação estoque×composição),
+  `kitAtribuicaoEstaCompleta` (AC-4, agrupamento por `kit_atribuicao_id` — kit fica "incompleto com
+  o técnico" se 1 unidade saiu isolada do grupo). 10 testes.
+- **Decisão de escopo (task 5/6 do tasks.md):** não criei `KitsPage.tsx` nova nem toquei na
+  navegação grande do `HomePage.tsx` — `KitsSection.tsx` é um componente auto-contido (carrega os
+  próprios dados) que vive como seção extra dentro de `FerramentasPage.tsx`, mesmo padrão da seção
+  Reservas (E01-S64). A task 6 original ("agrupamento por kit na tela por-técnico") também não foi
+  feita literalmente — a mesma informação já aparece em "Kits atribuídos" dentro do `KitsSection`,
+  evitando duplicar a UI em 2 lugares.
+
+Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (329 passando), `build`,
+`arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`,
+`validate-mermaid`.
+
+**Não verificado:** pgTAP `kits_atomicidade.test.sql` não roda local (sem Docker); UI não
+verificada em browser (sem Playwright neste ambiente).
+
+**Próximo passo:** commitar E01-S66 (local). **Ferramentas (S63-S66) completa.** Depois E01-S69
+(OS editável) → E01-S72 (horas) → E01-S73 (inspeções, arquitetural — precisa design.md aprovado
+antes de codar) → E01-S74 (serviço Auvo). Tudo local até Lucas liberar push; mesma branch/PR #52
+quando liberar, um commit por story.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S65 (cadastro rico de ferramenta,
 caminho conservador) implementada localmente, todos os gates Node verdes.** 6ª story da leva
 (S68→S71→S70→S63→S64→S65), tudo na mesma branch. Só S68/S71 pushadas (PR #52); S70/S63/S64/S65
 locais aguardando liberação.
