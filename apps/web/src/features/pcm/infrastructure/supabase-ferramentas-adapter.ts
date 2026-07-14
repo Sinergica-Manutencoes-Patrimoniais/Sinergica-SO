@@ -1,6 +1,5 @@
 import { supabase } from "../../../lib/supabase-client";
 import type {
-  AlocarFerramentaCommand,
   DesativarFerramentaCommand,
   EditarFerramentaCommand,
   FerramentaAlocacoesGateway,
@@ -220,23 +219,6 @@ export const supabaseFerramentasAdapter: FerramentasGateway & FerramentaAlocacoe
       };
     });
   },
-
-  async alocar(input: AlocarFerramentaCommand) {
-    const [ferramenta, funcionario] = await Promise.all([
-      buscarFerramenta(input.ferramentaId),
-      buscarFuncionario(input.funcionarioId),
-    ]);
-    const { error } = await supabase.functions.invoke("pcm-auvo-ferramenta-alocacao", {
-      body: {
-        ferramentaId: ferramenta.id,
-        ferramentaAuvoId: ferramenta.auvoId,
-        funcionarioId: funcionario.id,
-        tecnicoAuvoId: funcionario.auvoUserId,
-        quantidade: input.quantidade,
-      },
-    });
-    if (error) throw error;
-  },
 };
 
 async function buscarCategoria(
@@ -256,18 +238,4 @@ async function buscarCategoria(
     nome: data.nome as string,
     auvoId: (data.auvo_id as number | null) ?? null,
   };
-}
-
-async function buscarFerramenta(id: string): Promise<FerramentaItem> {
-  const ferramentas = await supabaseFerramentasAdapter.listar();
-  const ferramenta = ferramentas.find((item) => item.id === id);
-  if (!ferramenta) throw new Error("Ferramenta não encontrada.");
-  return ferramenta;
-}
-
-async function buscarFuncionario(id: string): Promise<FuncionarioFerramentaOpcao> {
-  const funcionarios = await supabaseFerramentasAdapter.listarFuncionarios();
-  const funcionario = funcionarios.find((item) => item.id === id);
-  if (!funcionario) throw new Error("Técnico não encontrado.");
-  return funcionario;
 }

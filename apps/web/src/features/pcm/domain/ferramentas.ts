@@ -45,12 +45,6 @@ export interface FuncionarioFerramentaOpcao {
   auvoUserId: number | null;
 }
 
-export interface FerramentaAlocacaoFormData {
-  ferramentaId: string;
-  funcionarioId: string;
-  quantidade: number;
-}
-
 export function validarFerramenta(input: FerramentaFormData): FerramentaFormData {
   const nome = input.nome.trim();
   if (!nome) throw new Error("Nome é obrigatório.");
@@ -66,22 +60,6 @@ export function validarFerramenta(input: FerramentaFormData): FerramentaFormData
     quantidadeTotal,
     quantidadeMinima,
   };
-}
-
-export function validarAlocacao(
-  input: FerramentaAlocacaoFormData,
-  ferramenta?: FerramentaItem,
-  funcionario?: FuncionarioFerramentaOpcao,
-): FerramentaAlocacaoFormData {
-  if (!input.ferramentaId) throw new Error("Ferramenta é obrigatória.");
-  if (!input.funcionarioId) throw new Error("Técnico é obrigatório.");
-  const quantidade = inteiroNaoNegativo(input.quantidade, "Quantidade");
-  if (!ferramenta?.auvoId) throw new Error("Sincronize a ferramenta com o Auvo antes de alocar.");
-  if (!funcionario?.auvoUserId) throw new Error("Sincronize o técnico com o Auvo antes de alocar.");
-  if (quantidade > ferramenta.quantidadeTotal) {
-    throw new Error("Quantidade alocada excede o estoque total da ferramenta.");
-  }
-  return { ...input, quantidade };
 }
 
 function inteiroNaoNegativo(value: number, campo: string): number {

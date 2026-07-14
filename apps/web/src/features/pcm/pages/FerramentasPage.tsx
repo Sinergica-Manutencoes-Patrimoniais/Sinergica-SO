@@ -1,8 +1,13 @@
-import { Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import {
+  baixarUnidadeFerramenta,
+  gerarUnidadesFerramenta,
+  listarUnidadesFerramenta,
+} from "../application/ferramenta-unidades";
 import {
   criarFerramenta,
   desativarFerramenta,
@@ -10,17 +15,24 @@ import {
   listarCategoriasFerramenta,
   listarFerramentas,
 } from "../application/ferramentas";
+import { type FerramentaUnidadeItem, rotuloStatusUnidade } from "../domain/ferramenta-unidades";
 import type {
   FerramentaCategoriaOpcao,
   FerramentaFormData,
   FerramentaItem,
 } from "../domain/ferramentas";
+import { supabaseFerramentaUnidadesAdapter } from "../infrastructure/supabase-ferramenta-unidades-adapter";
 import { supabaseFerramentasAdapter } from "../infrastructure/supabase-ferramentas-adapter";
 
 type Estado =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
-  | { fase: "pronto"; ferramentas: FerramentaItem[]; categorias: FerramentaCategoriaOpcao[] };
+  | {
+      fase: "pronto";
+      ferramentas: FerramentaItem[];
+      categorias: FerramentaCategoriaOpcao[];
+      unidades: FerramentaUnidadeItem[];
+    };
 
 type Modal =
   | { modo: "novo"; ferramenta?: undefined }
@@ -33,6 +45,8 @@ export function FerramentasPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [expandida, setExpandida] = useState<string | null>(null);
+  const [baixando, setBaixando] = useState<FerramentaUnidadeItem | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -40,11 +54,12 @@ export function FerramentasPage() {
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
     try {
-      const [ferramentas, categorias] = await Promise.all([
+      const [ferramentas, categorias, unidades] = await Promise.all([
         listarFerramentas(supabaseFerramentasAdapter),
         listarCategoriasFerramenta(supabaseFerramentasAdapter),
+        listarUnidadesFerramenta(supabaseFerramentaUnidadesAdapter),
       ]);
-      setEstado({ fase: "pronto", ferramentas, categorias });
+      setEstado({ fase: "pronto", ferramentas, categorias, unidades });
     } catch (error) {
       setEstado({
         fase: "erro",
@@ -82,6 +97,32 @@ export function FerramentasPage() {
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
     }
+  }
+
+  async function gerarUnidades(ferramenta: FerramentaItem, quantidade: number) {
+    if (!user) return;
+    try {
+      setErroAcao(null);
+      await gerarUnidadesFerramenta(supabaseFerramentaUnidadesAdapter, {
+        ferramentaId: ferramenta.id,
+        quantidade,
+        userId: user.id,
+      });
+      await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível gerar unidades.");
+    }
+  }
+
+  async function confirmarBaixa(motivo: string) {
+    if (!user || !baixando) return;
+    await baixarUnidadeFerramenta(supabaseFerramentaUnidadesAdapter, {
+      unidadeId: baixando.id,
+      motivo,
+      userId: user.id,
+    });
+    setBaixando(null);
+    await carregar();
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
@@ -150,8 +191,19 @@ export function FerramentasPage() {
             <FerramentaCard
               key={ferramenta.id}
               ferramenta={ferramenta}
+              unidades={estado.unidades.filter((u) => u.ferramentaId === ferramenta.id)}
+              expandida={expandida === ferramenta.id}
+              onToggleExpandir={() =>
+                setExpandida((atual) => (atual === ferramenta.id ? null : ferramenta.id))
+              }
               onEditar={temEscrita ? () => setModal({ modo: "editar", ferramenta }) : undefined}
               onDesativar={temEscrita && ferramenta.ativo ? () => desativar(ferramenta) : undefined}
+              onGerarUnidades={
+                temEscrita
+                  ? (quantidade: number) => gerarUnidades(ferramenta, quantidade)
+                  : undefined
+              }
+              onBaixarUnidade={temEscrita ? (unidade) => setBaixando(unidade) : undefined}
             />
           ))}
         </div>
@@ -165,15 +217,38 @@ export function FerramentasPage() {
           onSalvar={salvar}
         />
       )}
+
+      {baixando && (
+        <BaixaModal
+          unidade={baixando}
+          onCancel={() => setBaixando(null)}
+          onConfirmar={confirmarBaixa}
+        />
+      )}
     </div>
   );
 }
 
 function FerramentaCard({
   ferramenta,
+  unidades,
+  expandida,
+  onToggleExpandir,
   onEditar,
   onDesativar,
-}: { ferramenta: FerramentaItem; onEditar?: () => void; onDesativar?: () => void }) {
+  onGerarUnidades,
+  onBaixarUnidade,
+}: {
+  ferramenta: FerramentaItem;
+  unidades: FerramentaUnidadeItem[];
+  expandida: boolean;
+  onToggleExpandir: () => void;
+  onEditar?: () => void;
+  onDesativar?: () => void;
+  onGerarUnidades?: (quantidade: number) => void;
+  onBaixarUnidade?: (unidade: FerramentaUnidadeItem) => void;
+}) {
+  const faltamGerar = Math.max(ferramenta.quantidadeTotal - unidades.length, 0);
   return (
     <div className="rounded-[8px] border border-line bg-card p-4">
       <div className="flex items-start justify-between gap-3">
@@ -197,7 +272,61 @@ function FerramentaCard({
       {ferramenta.auvoSyncError && (
         <p className="mt-2 text-xs text-[#A23B25]">{ferramenta.auvoSyncError}</p>
       )}
-      <div className="mt-4 flex justify-end gap-2">
+
+      <button
+        type="button"
+        onClick={onToggleExpandir}
+        className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink"
+      >
+        {expandida ? (
+          <ChevronUp className="h-3.5 w-3.5" />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5" />
+        )}
+        {unidades.length} unidade(s)
+      </button>
+
+      {expandida && (
+        <div className="mt-2 space-y-2 rounded-[6px] border border-line-soft bg-paper p-2.5">
+          {onGerarUnidades && faltamGerar > 0 && (
+            <button
+              type="button"
+              onClick={() => onGerarUnidades(faltamGerar)}
+              className="text-xs font-semibold text-orange hover:text-orange-deep"
+            >
+              Gerar {faltamGerar} unidade(s) (total cadastrado: {ferramenta.quantidadeTotal})
+            </button>
+          )}
+          {unidades.length === 0 ? (
+            <p className="text-xs text-ink-3">Nenhuma unidade gerada ainda.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {unidades.map((unidade) => (
+                <li key={unidade.id} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="text-ink-2">
+                    <span className="font-brand">{unidade.codigo}</span> ·{" "}
+                    {rotuloStatusUnidade(unidade.status)}
+                    {unidade.status === "atribuida" && unidade.atribuidaANome
+                      ? ` com ${unidade.atribuidaANome}`
+                      : ""}
+                  </span>
+                  {onBaixarUnidade && unidade.status !== "baixada" && (
+                    <button
+                      type="button"
+                      onClick={() => onBaixarUnidade(unidade)}
+                      className="shrink-0 text-[#A23B25] hover:underline"
+                    >
+                      Baixar
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      <div className="mt-3 flex justify-end gap-2">
         {onEditar && (
           <IconButton label="Editar" icon={<Pencil className="h-3.5 w-3.5" />} onClick={onEditar} />
         )}
@@ -209,6 +338,76 @@ function FerramentaCard({
             onClick={onDesativar}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+function BaixaModal({
+  unidade,
+  onCancel,
+  onConfirmar,
+}: {
+  unidade: FerramentaUnidadeItem;
+  onCancel: () => void;
+  onConfirmar: (motivo: string) => Promise<void>;
+}) {
+  const [motivo, setMotivo] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function confirmar() {
+    try {
+      setSalvando(true);
+      setErro(null);
+      await onConfirmar(motivo);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível dar baixa na unidade.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+        <div className="border-b border-line px-4 py-3">
+          <h3 className="text-base font-semibold text-ink">Dar baixa em {unidade.codigo}</h3>
+          <p className="text-xs text-ink-3">{unidade.ferramentaNome} — ação permanente</p>
+        </div>
+        <div className="space-y-3 p-4">
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-3">Motivo *</span>
+            <textarea
+              value={motivo}
+              onChange={(event) => setMotivo(event.target.value)}
+              className="input min-h-[80px] w-full resize-y"
+              placeholder="Ex.: extraviada em campo, quebrada sem conserto..."
+            />
+          </label>
+          {erro && (
+            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+              {erro}
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={confirmar}
+            disabled={salvando}
+            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+          >
+            {salvando ? "Salvando..." : "Confirmar baixa"}
+          </button>
+        </div>
       </div>
     </div>
   );

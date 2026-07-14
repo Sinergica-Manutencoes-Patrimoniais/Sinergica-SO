@@ -10,7 +10,55 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S70 (abas ricas do Auvo) implementada
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S63 (Ferramentas: unidades individuais +
+histórico) implementada localmente, todos os gates Node verdes.** Segue E01-S68 (`e9f58ec`), E01-S71
+(`7e84430`) e E01-S70 (`c37c4f4`) — as 3 primeiras pushadas pro PR #52; **E01-S70 e esta (E01-S63)
+ainda só locais** (Lucas pediu pra segurar push nesta sessão, ver nota abaixo).
+
+- Migration `0086`: `pcm.ferramenta_unidades` (código `FER-NNNN` via sequência global, nunca
+  reaproveitado) + `pcm.ferramenta_movimentacoes` (append-only de verdade — sem policy de
+  UPDATE/DELETE pra `authenticated`, mesmo padrão de `os_equipamentos_auvo`). Trigger
+  `fn_aplicar_movimentacao_ferramenta` deriva `status`/`atribuida_a` a partir de cada movimentação
+  inserida e valida a transição (raise exception se inválida — ex.: atribuir unidade já atribuída),
+  defesa em profundidade além da validação de domínio.
+- `domain/ferramenta-unidades.ts` (novo): validação de atribuição/devolução/baixa + cálculo de
+  divergência Auvo×PCM, puro, 10 testes.
+- **Fluxo antigo removido:** a alocação manual que passava pelo Auvo (`FerramentaAlocacoesGateway
+  .alocar` → edge function `pcm-auvo-ferramenta-alocacao`) foi tirada do client inteiro (domain/
+  application/adapter/UI) — confirmei via grep que não sobrava usage em nenhum outro lugar antes de
+  remover. Posse agora é 100% local (`ferramenta_movimentacoes`), sem round-trip pelo Auvo.
+  `pcm.ferramenta_alocacoes` (visão agregada do Auvo) não mudou de schema, só parou de ser escrita
+  pelo cliente — vira leitura pura pro badge de divergência (AC-7).
+- UI: `FerramentasPage.tsx` ganhou painel expansível de unidades por ferramenta (gerar unidades
+  top-up até `quantidade_total`, baixar unidade). `FerramentasPorTecnicoPage.tsx` reformulada —
+  form atribuir (ferramenta→unidade disponível→técnico), card por técnico com unidades atribuídas +
+  devolver (condição/motivo) + badge de divergência inline + modal de histórico completo.
+- pgTAP `ferramenta_unidades_rls.test.sql` (novo, 11 asserts): leitura bloqueada, código
+  auto-gerado, trigger de atribuição/devolução, invariante "1 atribuição ativa" (P0001),
+  append-only (UPDATE/DELETE negados). Escrito, não executado — sem Docker local.
+
+Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (305 passando), `build`,
+`arch:check`, `lint:migrations`, `check:edge-functions` (confirma remoção do invoke órfão — caiu de
+8 pra 7 invokes, sem `pcm-auvo-ferramenta-alocacao`), `audit:esteira`, `eval:spec`,
+`validate-mermaid`.
+
+**Não verificado:** pgTAP não roda local (sem Docker — depende do CI, job `db-tests`); UI não
+verificada em browser (sem Playwright neste ambiente).
+
+**Nota de processo:** pedi push da E01-S70 e o usuário negou o `git push` (permissão do harness) —
+perguntei como seguir e Lucas escolheu "não pushar ainda, só commitar local". Continuei
+implementando e commitando localmente (E01-S70 → `c37c4f4`, E01-S63 → commit desta entrada) sem
+push, aguardando liberação.
+
+**Próximo passo:** commitar E01-S63 (local). Depois seguir pra E01-S64 (reserva por
+período, depende de S63 ✓ agora disponível) → E01-S65 (cadastro rico, independente) → E01-S66 (kits,
+depende de S63 ✓) → E01-S69 (OS editável) → E01-S72 (horas) → E01-S73 (inspeções, arquitetural —
+precisa design.md) → E01-S74 (serviço Auvo). Tudo local até Lucas liberar push; todas na mesma
+branch/PR #52 quando liberar, um commit por story.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S70 (abas ricas do Auvo) implementada
 localmente, todos os gates Node verdes.** Segue E01-S68 (`e9f58ec`) e E01-S71 (`7e84430`), ambas já
 pushadas pro PR #52. Ainda não commitada.
 

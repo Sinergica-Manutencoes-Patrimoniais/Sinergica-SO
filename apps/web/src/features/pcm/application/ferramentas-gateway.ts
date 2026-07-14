@@ -1,5 +1,4 @@
 import type {
-  FerramentaAlocacaoFormData,
   FerramentaAlocacaoItem,
   FerramentaCategoriaOpcao,
   FerramentaFormData,
@@ -20,10 +19,6 @@ export interface DesativarFerramentaCommand {
   userId: string;
 }
 
-export interface AlocarFerramentaCommand extends FerramentaAlocacaoFormData {
-  userId: string;
-}
-
 export interface FerramentasGateway {
   listar(): Promise<FerramentaItem[]>;
   listarCategorias(): Promise<FerramentaCategoriaOpcao[]>;
@@ -32,9 +27,12 @@ export interface FerramentasGateway {
   desativar(input: DesativarFerramentaCommand): Promise<void>;
 }
 
+/** `listarAlocacoes` é a visão AGREGADA do Auvo (`employeesStock`, reconciliada pelo cron) — usada
+ * só pro badge de divergência (E01-S63, AC-7) contra a contagem real de `ferramenta_unidades` do
+ * PCM. PCM não escreve mais nela; posse/histórico de verdade vive em
+ * `FerramentaUnidadesGateway` (ferramenta-unidades-gateway.ts). */
 export interface FerramentaAlocacoesGateway {
   listarFerramentas(): Promise<FerramentaItem[]>;
   listarFuncionarios(): Promise<FuncionarioFerramentaOpcao[]>;
   listarAlocacoes(): Promise<FerramentaAlocacaoItem[]>;
-  alocar(input: AlocarFerramentaCommand): Promise<void>;
 }
