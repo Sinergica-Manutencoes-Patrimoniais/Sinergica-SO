@@ -117,6 +117,30 @@ Deno.test("processOutboxRow — create sem auvo_id existente faz POST com extern
   }
 });
 
+Deno.test("processOutboxRow — extractCreatedAuvoId customizado aceita GUID string (E01-S74, achado real em Services)", async () => {
+  // O extrator padrão só aceita `result.id` numérico. Confirmado ao vivo contra a API Auvo real
+  // que /services devolve um GUID string — sem um extractCreatedAuvoId customizado, esta criação
+  // lançaria "Auvo criou fake sem id na resposta" mesmo com a chamada HTTP tendo funcionado (201).
+  const restoreEnv = withEnv(ENV);
+  const { restore } = withFetch(() => new Response(JSON.stringify({ result: { id: "5d271e4e-guid" } }), { status: 201 }));
+  try {
+    const descriptor: AuvoEntityDescriptor<Record<string, unknown>, Record<string, unknown>> = {
+      ...fakeDescriptor(),
+      extractCreatedAuvoId: (response) => {
+        const id = (response as { result?: { id?: unknown } })?.result?.id;
+        return typeof id === "string" ? id : null;
+      },
+    };
+    const db = fakeDb({ id: "row-1", nome: "X" });
+    const resultado = await processOutboxRow(db, baseRow, descriptor);
+    assertEquals(resultado.ok, true);
+    assertEquals(db.patches[0].patch.auvo_id, "5d271e4e-guid");
+  } finally {
+    restore();
+    restoreEnv();
+  }
+});
+
 Deno.test("processOutboxRow — externalIdField customizado (ex. Services usa externalCode)", async () => {
   const restoreEnv = withEnv(ENV);
   const { restore, calls } = withFetch(() => new Response(JSON.stringify({ result: { id: 7 } }), { status: 201 }));

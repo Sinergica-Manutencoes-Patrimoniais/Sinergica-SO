@@ -82,7 +82,7 @@ export async function processOutboxRow(
     return { ok: false, error: `linha de origem ${row.row_id} não encontrada em pcm.${descriptor.pcmTable}` };
   }
 
-  const existingAuvoId = origem["auvo_id"] as number | null | undefined;
+  const existingAuvoId = origem["auvo_id"] as number | string | null | undefined;
 
   if (row.op === "delete") {
     if (existingAuvoId != null && descriptor.deleteStrategy !== "unsupported") {
@@ -115,7 +115,7 @@ export async function processOutboxRow(
 
   // create/update: AC-4 — se já existe auvo_id, é sempre PATCH (nunca um novo POST de criação),
   // mesmo que a linha do outbox diga `op='create'` (corrida entre duas fontes de escrita).
-  let auvoId: number;
+  let auvoId: number | string;
   if (existingAuvoId != null) {
     // PATCH da Auvo v2 é JSON Patch (`[{op:"replace",path,value}]`), não o objeto flat de
     // `toAuvo()` — confirmado no catálogo (Task Types/Services/Equipments/Products/Tickets, todos

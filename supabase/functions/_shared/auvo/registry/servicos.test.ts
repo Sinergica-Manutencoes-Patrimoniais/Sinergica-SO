@@ -4,9 +4,12 @@ import { decimalParaCentavos, servicosDescriptor } from "./servicos.ts";
 Deno.test("servicosDescriptor — usa externalCode e auvo_id GUID/string", () => {
   assertEquals(servicosDescriptor.auvoBasePath, "/services");
   assertEquals(servicosDescriptor.externalIdField, "externalCode");
-  // Sem cronSchedule de propósito — /services confirmado 404 na API real (2026-07-08), provável
-  // módulo não habilitado no plano Auvo da conta. Ver comentário no descriptor.
+  // Sem cronSchedule de propósito — GET /services (listagem) confirmado 404 na API real
+  // (2026-07-08, reconfirmado 2026-07-14/E01-S74). POST/PATCH/GET-por-id funcionam; ver comentário
+  // no descriptor.
   assertEquals(servicosDescriptor.cronSchedule, undefined);
+  // E01-S74: teste de contrato ao vivo confirmou POST /services aceito — write path habilitado.
+  assertEquals(servicosDescriptor.writeEnabled, true);
 
   assertEquals(
     servicosDescriptor.toAuvo({
@@ -23,6 +26,18 @@ Deno.test("servicosDescriptor — usa externalCode e auvo_id GUID/string", () =>
       active: true,
     },
   );
+});
+
+Deno.test("servicosDescriptor — extractCreatedAuvoId aceita GUID string (confirmado ao vivo, E01-S74)", () => {
+  const id = servicosDescriptor.extractCreatedAuvoId?.({
+    result: { id: "5d271e4e-7198-4e5d-a88d-72365464ec92", title: "X", price: 0.01, active: true },
+  });
+  assertEquals(id, "5d271e4e-7198-4e5d-a88d-72365464ec92");
+});
+
+Deno.test("servicosDescriptor — extractCreatedAuvoId devolve null sem result.id", () => {
+  assertEquals(servicosDescriptor.extractCreatedAuvoId?.({ result: {} }), null);
+  assertEquals(servicosDescriptor.extractCreatedAuvoId?.({}), null);
 });
 
 Deno.test("servicosDescriptor — converte preço decimal para centavos sem guardar float", () => {

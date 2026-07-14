@@ -8,9 +8,9 @@
 // puro, que exigiria `"/<campo>"`) — os próprios exemplos da documentação mostram `"path":
 // "description"`, não `"path": "/description"`. Implementado exatamente como documentado.
 //
-// NÃO VERIFICADO NESTE AMBIENTE: sem Deno CLI/chamada real ao Auvo, o formato exato (com ou sem
-// barra inicial, `op` sempre "replace") não foi confirmado contra produção — confirmar antes de
-// qualquer descriptor concreto ligar `writeEnabled:true` (mesma ressalva geral do motor de sync).
+// CONFIRMADO CONTRA PRODUÇÃO (E01-S74, 2026-07-14): `PATCH /services/{id}` com
+// `[{op:"replace",path:"active",value:false}]` (sem barra inicial) devolveu 200 e aplicou a
+// mudança de verdade — formato validado ao vivo, não só pela documentação.
 
 export interface AuvoJsonPatchOp {
   op: "replace";

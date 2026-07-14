@@ -10,7 +10,56 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S73 (inspeções profissionais ABNT NBR
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S74 (serviço→Auvo write path)
+implementada localmente, gates Node verdes.** 11ª e última story da leva original de 7
+(E01-S68..S74), fecha o ciclo (S68→S71→S70→S63→S64→S65→S66→S69→S72→S73→S74), tudo na mesma branch.
+Só S68/S71 pushadas (PR #52); as outras 9 locais aguardando liberação.
+
+- **Teste de contrato ao vivo, autorizado explicitamente pelo Lucas nesta sessão** (mesma cautela
+  já aplicada na E01-S65 — nunca testar escrita em produção externa sem autorização pontual):
+  `GET /services` (listagem paginada) segue 404, confirma achado de 2026-07-08. Mas `POST
+  /services` → 201 (criou registro reversível de teste), `GET /services/{id}` → 200, `PATCH
+  /services/{id}` (formato JSON Patch) → 200 (usado pra desativar o registro de teste — sem lixo
+  deixado em produção). **O módulo Serviços não está desabilitado** — só a listagem 404.
+- `pcm-auvo-push` nunca chama a listagem (só POST/PATCH/GET-por-id por `auvoBasePath`/`{id}`), então
+  o push funciona independente do pull estar bloqueado. `writeEnabled:true` ligado em
+  `registry/servicos.ts` com segurança.
+- **Bug real (não hipotético) achado pelo próprio teste de contrato — exatamente o que o AC-1 da
+  spec previa:** `POST /services` devolve `result.id` como **GUID string**, não number. O extrator
+  padrão de id em `pcm-auvo-push/index.ts` (`extractCreatedAuvoId`) só aceitava `number` — sem
+  correção, toda criação de serviço real teria lançado `"Auvo criou servicos sem id na resposta"`
+  mesmo com o POST tendo funcionado (201). Corrigido: `extractCreatedAuvoId` customizado no
+  descriptor de serviços (aceita string ou number) + tipo ampliado (`number | string`) em
+  `_shared/auvo/registry/types.ts` e `pcm-auvo-push/index.ts` (`existingAuvoId`, `auvoId`). Teste
+  de regressão novo em `pcm-auvo-push/index.test.ts`.
+- Comentário "NÃO VERIFICADO NESTE AMBIENTE" em `_shared/auvo/json-patch.ts` (formato JSON Patch da
+  Auvo v2, sem barra inicial no `path`) trocado por confirmação — o `PATCH` de teste usou exatamente
+  esse formato e funcionou.
+- AC-3 (banner de bloqueio se 404) não se aplica — não é o caso binário aceita/404 que a spec
+  previa; é um terceiro caso (escrita aceita, só listagem 404), documentado como divergência no
+  `tasks.md`.
+- Limpeza: nenhum registro de teste ficou "sujando" a Auvo em estado ativo — o `PATCH` de
+  desativação (`active:false`) usou a mesma semântica de `deleteStrategy:"soft-patch"` que o app já
+  usa pra excluir serviço, então o registro de teste está no mesmo estado que um serviço apagado
+  pelo fluxo normal ficaria.
+
+Gates rodados e verdes: `biome check --write .` (binário direto), `typecheck`, `test` (354
+passando), `build`, `arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`,
+`eval:spec`, `validate-mermaid`.
+
+**Não verificado:** `deno test` (sem Deno CLI local, roda no CI); verificação end-to-end em
+produção (cadastrar um serviço real no PCM e conferir `auvo_id` gravado) — precisa de deploy.
+
+**Próximo passo:** commitar E01-S74 (local, sem push). **Fecha a leva original de 7 stories
+(E01-S68..S74) que Lucas pediu especificar+implementar nesta sessão.** São agora 9 commits locais
+na branch `feat/E01-S68-fix-sync-tarefas`/PR #52 aguardando liberação de push (S68/S71 já
+pushadas). Próximo passo natural é check-in com Lucas: revisar o que está pronto pra push/deploy,
+ou seguir pra outra prioridade (Ferramentas E01-S63..S66 e Financeiro E04-S01..S06 seguem
+especificadas mas seus PRs não foram abertos ainda — mesma branch).
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S73 (inspeções profissionais ABNT NBR
 16747) implementada localmente, todos os gates Node verdes (354 testes).** 10ª story da leva
 (S68→S71→S70→S63→S64→S65→S66→S69→S72→S73), tudo na mesma branch. Só S68/S71 pushadas (PR #52); as
 outras 8 locais aguardando liberação. **Reconstrução arquitetural** — a maior story desta leva.
