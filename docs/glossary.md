@@ -11,9 +11,11 @@ alwaysApply: false
 
 | Termo | Definição | NÃO confundir com | Contexto (bounded context) |
 |-------|-----------|-------------------|----------------------------|
+| **ABNT NBR 16747** | Norma brasileira de Inspeção Predial — define o processo, os campos e a classificação de anomalias de uma inspeção profissional. Base do modelo de inspeção do PCM (E01-S73). | PMOC (norma legal de AR condicionado) | PCM |
 | **Análise Microbiológica** | Laudo de laboratório acreditado (INMETRO) obrigatório a cada 6 meses pelo PMOC. Parâmetros: fungos ≤ 750 UFC/m³, relação I/E ≤ 1,5, coliformes = ausência. Resultado não-conforme exige ação imediata. | Inspeção técnica (visual, realizada pela Sinérgica) | PCM/PMOC |
 | **Aging** | Distribuição dos recebíveis vencidos por faixa de atraso (a vencer / D+3 / D+7 / D+15+). Base dos alertas de inadimplência. | DSO (prazo médio de recebimento) | Financeiro |
 | **ART** | Anotação de Responsabilidade Técnica — documento emitido pelo CREA que vincula Fabrício Medeiros ao serviço PMOC. Obrigatória para vigência do contrato; renovada anualmente. Alerta automático D-30. | NF ou contrato comercial | PCM/PMOC |
+| **Apontamento de horas** | Horas trabalhadas por OS, derivadas do check-in/check-out/duração que o técnico registra no Auvo. Ligadas a técnico e cliente para visão de gasto (horas × custo/hora). Não há endpoint Auvo dedicado — deriva-se do GET /tasks. | Controle de ponto (jornada do funcionário) | PCM, Financeiro |
 | **Auvo** | App móvel de gestão de campo usado pelos técnicos (check-in GPS, fotos, checklist, assinatura offline). Não é substituível para execução. | PCM (o sistema de decisão) | Todos |
 | **Auvo Task** | Tarefa no Auvo — a representação de campo de uma OS do PCM. Criada via API quando OS entra no status `planejamento`. | OS (a entidade de decisão no PCM) | PCM |
 | **Backlog** | Lista de itens de manutenção pendentes de um condomínio, priorizados por score GUT. | Lista de chamados (OS abertas) | PCM |
@@ -69,6 +71,8 @@ alwaysApply: false
 | **Score PCM** | `gravidade × urgência × tendência` — inteiro de 1 a 125, coluna gerada pelo banco. | Prioridade (classificação qualitativa) | PCM |
 | **Síndico** | Representante do condomínio cliente que usa o WhatsApp/portal para abrir chamados e receber relatórios. | Administradora (terceiro) | Atendimento, Área do Cliente |
 | **Técnico** | Profissional da Sinérgica que executa OS em campo via app Auvo. | Escritório (operador do sistema) | PCM |
+| **Template de checklist** | Modelo de itens esperados de uma inspeção, vinculado a um tipo de inspeção (predial/elétrica/SPDA…). Ao criar uma inspeção do tipo, os itens do template já vêm pré-carregados. Configurável por supervisor sem dev (E01-S73). | Checklist PMOC (constante fixa de manutenção de AR) | PCM |
+| **Tipo de Inspeção** | Categoria configurável de inspeção (predial, estrutural, elétrica, SPDA, hidráulica…), cada uma com sua norma técnica e seu template de checklist. Parametrizável (E01-S73). | Categoria/severidade de item de inspeção | PCM |
 | **Tipo de OS** | Classificação de uma OS no Hub de OS: C1 (emergencial, SLA 4h), C2 (corretiva, SLA 72h), P1 (preventiva PMOC, janela ±3d), P2 (preventiva predial, janela ±7d), IN (inspeção/follow-up, prazo acordado). | Categoria de OS (modelo anterior sem SLA explícito) | PCM |
 | **Unidade de Ferramenta** | Item físico individual de uma ferramenta, com código próprio gerado pelo PCM (`FER-0001`) e histórico append-only de posse. O Auvo só enxerga o agregado por tipo (`totalStock`/`employeesStock`) — a unidade individual não existe lá. | Ferramenta (o tipo/produto, sincronizado com o Auvo) | PCM |
 | **Visão 360 do Cliente** | Sub-tela read-only do PCM que consolida, por condomínio, o cadastro do cliente, o backlog GUT de OS em aberto, o histórico de OS concluídas/canceladas (status sincronizado do Auvo) e um painel condicional de equipamentos vinculados. v1 (E01-S12) agrega tabelas já existentes (`pcm.clientes`, `pcm.ordens_servico`), sem escrita e sem nova RLS. | Hub de OS (ações de escrita) · Área do Cliente (portal do síndico, E09) | PCM |
