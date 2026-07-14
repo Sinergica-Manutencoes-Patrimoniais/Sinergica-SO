@@ -10,9 +10,45 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S71 (imagem/anexos de equipamentos)
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S70 (abas ricas do Auvo) implementada
+localmente, todos os gates Node verdes.** Segue E01-S68 (`e9f58ec`) e E01-S71 (`7e84430`), ambas já
+pushadas pro PR #52. Ainda não commitada.
+
+- `pcm-auvo-tasks-import/index.ts`: `AuvoTask` ganha `questionnaires`/`keyWords`/
+  `keyWordsDescriptions`/`timeControl`/`financialCategory`; `montarDetalhes` captura tudo (nova
+  função pura `achatarQuestionarios` achata `questionnaires[].answers[]` em lista
+  pergunta/resposta/data). 5 testes Deno novos.
+- `DetalhesTarefaAuvo.tsx` (novo, `components/`): extraído da função interna de
+  `OrdensServicoPage.tsx` (~150 linhas removidas de lá), agora com 7 abas (Relato, Anexos/Fotos,
+  Questionários, Equipamentos, Pendências, Horas, Valores). Fotos renderizam `<img>` de verdade
+  (grid de thumbnail, `onError` cai pra link — payload real de `attachments[]` não está documentado
+  no repo, extração de URL tenta várias chaves comuns, a confirmar contra dado real). Questionários
+  mostra pergunta→resposta→data, não mais contagem. Produtos/serviços/custos agora é LISTA
+  (`descreverItem`), não contagem.
+- **Aba Equipamentos ficou com estado vazio fixo, decisão consciente:** `pcm.os_equipamentos_auvo`
+  (E01-S16) só é populada pelo webhook e nunca foi exposta ao frontend — wire completo seria escopo
+  maior que o resto da story; registrado pra story futura se Lucas confirmar prioridade.
+- Domain `ordens-servico.ts` **não** ganhou interface estrita pra `questionarios`/`palavrasChave`/
+  `controleHoras` — decisão consciente de manter `detalhes: Record<string, unknown>` genérico (jsonb
+  solto desde E01-S38); o componente de apresentação faz o cast pontual só onde precisa.
+
+Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (296 passando), `build`,
+`arch:check`, `check:edge-functions`, `audit:esteira`, `eval:spec`, `validate-mermaid`. Deno CLI
+ausente — os 5 testes novos de `montarDetalhes`/`achatarQuestionarios` rodam no CI.
+
+**Não verificado (sem Playwright/browser tool neste ambiente):** as 7 abas renderizando de verdade
+no browser. `questionarios`/fotos só populam em OS re-sincronizadas após o próximo pull (cron ou
+re-sync manual, mesma dependência da E01-S68/S71).
+
+**Próximo passo:** commitar E01-S70, seguir pra E01-S63..S66 (Ferramentas, specs já prontas) →
+E01-S69 (OS editável) → E01-S72 (horas) → E01-S73 (inspeções) → E01-S74 (serviço Auvo), tudo na
+mesma branch/PR #52, um commit por story.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S71 (imagem/anexos de equipamentos)
 implementada localmente, todos os gates Node verdes.** Segue a E01-S68 (fix crítico de sync, já
-commitada como `e9f58ec` e pushada pro PR #52). Ainda não commitada.
+commitada como `e9f58ec` e pushada pro PR #52).
 
 - Migration `0085_E01-S71_equipamentos_imagem.sql`: `pcm.equipamentos` ganha `url_imagem text` e
   `uri_anexos jsonb default '[]'` (aditivo, sem RLS/grant novo).

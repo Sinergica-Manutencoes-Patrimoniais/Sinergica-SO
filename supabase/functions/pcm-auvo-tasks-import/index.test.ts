@@ -101,3 +101,60 @@ Deno.test("montarDetalhes — E01-S38: captura todo o dado rico da tarefa (produ
     },
   );
 });
+
+Deno.test("montarDetalhes — E01-S70: achata questionnaires[].answers[] em lista pergunta/resposta/data", () => {
+  assertEquals(
+    montarDetalhes({
+      questionnaires: [
+        {
+          id: 1,
+          name: "Checklist padrão",
+          answers: [
+            {
+              questionId: 10,
+              questionDescription: "Equipamento em condições de uso?",
+              reply: "Sim",
+              replyDate: "2026-07-13T08:30:00",
+            },
+            { questionId: 11, questionDescription: "Observações", reply: "" },
+          ],
+        },
+      ],
+    }),
+    {
+      questionarios: [
+        {
+          pergunta: "Equipamento em condições de uso?",
+          resposta: "Sim",
+          data: "2026-07-13T08:30:00",
+        },
+        { pergunta: "Observações", resposta: "", data: null },
+      ],
+    },
+  );
+});
+
+Deno.test("montarDetalhes — E01-S70: sem questionnaires, keyWords ou timeControl não gera chaves vazias", () => {
+  assertEquals(montarDetalhes({ questionnaires: [] }), {});
+  assertEquals(montarDetalhes({ questionnaires: [{ answers: [] }] }), {});
+  assertEquals(montarDetalhes({ keyWords: [] }), {});
+});
+
+Deno.test("montarDetalhes — E01-S70: keyWordsDescriptions, timeControl e financialCategory capturados", () => {
+  assertEquals(
+    montarDetalhes({
+      keyWordsDescriptions: ["Urgente", "Preventiva"],
+      timeControl: { totalMinutes: 45 },
+      financialCategory: "Manutenção corretiva",
+    }),
+    {
+      palavrasChave: ["Urgente", "Preventiva"],
+      controleHoras: { totalMinutes: 45 },
+      categoriaFinanceira: "Manutenção corretiva",
+    },
+  );
+});
+
+Deno.test("montarDetalhes — E01-S70: keyWords é fallback quando keyWordsDescriptions ausente", () => {
+  assertEquals(montarDetalhes({ keyWords: [1, 2] }), { palavrasChave: [1, 2] });
+});

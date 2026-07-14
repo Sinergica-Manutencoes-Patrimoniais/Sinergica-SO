@@ -95,6 +95,27 @@ interface AuvoTask {
   ticketTitle?: string;
   customerDescription?: string;
   taskUrl?: string;
+  // E01-S70: confirmado na API real (2026-07-14) — `questionnaires[].answers[]` traz o
+  // questionário preenchido em campo (pergunta/resposta/data), hoje descartado. `keyWords`/
+  // `timeControl`/`financialCategory` idem — vêm no mesmo GET /tasks, sem endpoint separado.
+  questionnaires?: AuvoQuestionnaire[];
+  keyWords?: unknown[];
+  keyWordsDescriptions?: string[];
+  timeControl?: Record<string, unknown>;
+  financialCategory?: string;
+}
+
+interface AuvoQuestionnaire {
+  id?: number;
+  name?: string;
+  answers?: AuvoQuestionnaireAnswer[];
+}
+
+interface AuvoQuestionnaireAnswer {
+  questionId?: number;
+  questionDescription?: string;
+  reply?: string;
+  replyDate?: string;
 }
 
 interface AuvoTasksResponse {
@@ -363,7 +384,36 @@ export function montarDetalhes(tarefa: AuvoTask): Record<string, unknown> {
   if (tarefa.ticketId) detalhes.ticketId = tarefa.ticketId;
   if (tarefa.ticketTitle) detalhes.ticketTitulo = tarefa.ticketTitle;
   if (tarefa.taskUrl) detalhes.taskUrl = tarefa.taskUrl;
+  const questionarios = achatarQuestionarios(tarefa.questionnaires);
+  if (questionarios.length > 0) detalhes.questionarios = questionarios;
+  if (Array.isArray(tarefa.keyWordsDescriptions) && tarefa.keyWordsDescriptions.length > 0) {
+    detalhes.palavrasChave = tarefa.keyWordsDescriptions;
+  } else if (Array.isArray(tarefa.keyWords) && tarefa.keyWords.length > 0) {
+    detalhes.palavrasChave = tarefa.keyWords;
+  }
+  if (tarefa.timeControl) detalhes.controleHoras = tarefa.timeControl;
+  if (tarefa.financialCategory) detalhes.categoriaFinanceira = tarefa.financialCategory;
   return detalhes;
+}
+
+/** Achata `questionnaires[].answers[]` (payload aninhado do Auvo) em uma lista plana
+ * pergunta/resposta/data — formato que o componente de detalhe (E01-S70) renderiza direto. */
+function achatarQuestionarios(
+  questionnaires: AuvoQuestionnaire[] | undefined,
+): Array<{ pergunta: string; resposta: string; data: string | null }> {
+  if (!Array.isArray(questionnaires)) return [];
+  const respostas: Array<{ pergunta: string; resposta: string; data: string | null }> = [];
+  for (const questionario of questionnaires) {
+    for (const answer of questionario.answers ?? []) {
+      if (!answer.questionDescription) continue;
+      respostas.push({
+        pergunta: answer.questionDescription,
+        resposta: answer.reply ?? "",
+        data: answer.replyDate ?? null,
+      });
+    }
+  }
+  return respostas;
 }
 
 /** Função pura (E01-S68): janela rolante fixa a partir de "agora" — nunca depende de dado já no
