@@ -10,7 +10,50 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S69 (OS clicável/editável) implementada
+**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S72 (apontamento de horas + custo por
+cliente) implementada localmente, todos os gates Node verdes.** 9ª story da leva
+(S68→S71→S70→S63→S64→S65→S66→S69→S72), tudo na mesma branch. Só S68/S71 pushadas (PR #52); as
+outras 7 locais aguardando liberação.
+
+- Migration `0090`: RPC `pcm.fn_apontamento_horas(p_inicio date, p_fim date)` — `language sql
+  stable`, SECURITY INVOKER (padrão). **Decisão de arquitetura:** a RPC devolve linhas BRUTAS
+  (`duracao_horas`, `check_in_at`, `check_out_at`), não o valor de horas já calculado — o cálculo
+  em si (prioridade `duracaoHoras`, fallback diff de datas, sem dado → 0) vive em
+  `domain/apontamento-horas.ts` (`calcularHorasOs`, puro, testável), não duplicado em SQL. O
+  adapter aplica a função de domínio linha a linha ao mapear a resposta da RPC.
+- `agregarPorCliente`/`agregarPorTecnico` (mesma função genérica por baixo, `agregarPor`) somam
+  horas e contam OS por chave, ordenado do maior pro menor; `calcularCusto` só multiplica quando há
+  valor/hora (nunca inventa R$0).
+- **Ponte de custo (AC-4) com E04-S06 que ainda não existe:** `financeiro.custos_funcionario` não
+  está implementada neste repo (só especificada). `buscarValorHora` tenta a query com um schema
+  "melhor palpite" (`funcionario_id`, `valor_hora`, `vigencia_inicio`) e cai pra `null` no catch
+  (`PGRST205`/`42P01`/`PGRST106`) — hoje SEMPRE retorna null, que é o comportamento CORRETO
+  esperado (não bug), documentado no código. Quando E04-S06 existir de verdade, a ponte ativa
+  sozinha se o schema bater, ou precisa de 1 ajuste pontual de nomes de coluna se divergir.
+- `ApontamentoHorasPage.tsx` (nova) + item em `HomePage.tsx` (`PCM_NAV`, grupo RELATÓRIOS, ícone
+  `Clock`) — **única story desta leva de 9 que tocou a navegação do `HomePage.tsx`.** Kits (E01-S66)
+  e Reservas (E01-S64) viraram seção dentro de `FerramentasPage.tsx` porque tinham uma página-mãe
+  natural pra hospedar; Apontamento de Horas não tinha nenhuma página PCM existente que fizesse
+  sentido como anfitriã, então segui o padrão estabelecido (toda outra página PCM já tem entrada no
+  mesmo array) — risco baixo, mudança aditiva de 4 pontos (tipo `PcmView`, entrada no array
+  `PCM_NAV`, import, 1 ramo no switch de render).
+
+Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (340 passando), `build`,
+`arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`,
+`validate-mermaid`.
+
+**Não verificado:** verificação visual em browser não realizada (sem Playwright neste ambiente).
+
+**Próximo passo:** commitar E01-S72 (local). Depois **E01-S73 (inspeções ABNT NBR 16747) —
+arquitetural, precisa `design.md` aprovado antes de codar** (Storage, schema rico, templates de
+checklist parametrizáveis — decisões do PO já coletadas na sessão de diagnóstico: adotar Storage
+agora, reconstruir a inspeção, tela de admin de templates já). Depois E01-S74 (serviço→Auvo,
+bloqueado por teste de contrato externo). Tudo local até Lucas liberar push; mesma branch/PR #52
+quando liberar, um commit por story.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S69 (OS clicável/editável) implementada
 localmente, todos os gates Node verdes.** 8ª story da leva (S68→S71→S70→S63→S64→S65→S66→S69), tudo
 na mesma branch. Só S68/S71 pushadas (PR #52); as outras 6 locais aguardando liberação.
 

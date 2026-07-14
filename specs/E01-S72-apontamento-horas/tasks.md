@@ -12,12 +12,12 @@ alwaysApply: false
 ## Plano
 | # | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |---|------|----------|------------|----------------|--------|
-| 1 | Migration `NNNN_E01-S72_apontamento_horas.sql`: view/RPC `pcm.fn_apontamento_horas(inicio date, fim date)` `security invoker` — por OS: horas (`durationDecimal` ou `check_out_at−check_in_at`), técnico, cliente; grant execute authenticated | AC-1 | E01-S68 | `pnpm run lint:migrations` | todo |
-| 2 | `domain/apontamento-horas.ts`: cálculo puro de horas (prioridade durationDecimal; fallback diff de datas; sem dado → 0), agregação por cliente/técnico — testes unit | AC-1, AC-2 | — | `pnpm run test` | todo |
-| 3 | application/gateway + adapter chamando a RPC; casos de uso listar por OS, agregar por cliente/técnico | AC-1, AC-2 | 1, 2 | `pnpm run test` | todo |
-| 4 | `ApontamentoHorasPage.tsx`: lista por OS + filtros (período/técnico/cliente) + totais agregados; item na sidebar PCM (grupo OPERAÇÃO ou RELATÓRIOS) | AC-3 | 3 | `pnpm run test` | todo |
-| 5 | Ponte de custo: se `financeiro.custos_funcionario` existir, custo = horas × R$/h; senão só horas + nota. Detectar presença sem quebrar (try/catch ou feature-check) | AC-4 | 3 | `pnpm run test` | todo |
-| 6 | `pnpm run ci:local` + Playwright (ver horas por OS, agregar por cliente) + ROADMAP/STATE | todos | 1-5 | `pnpm run ci:local` | todo |
+| 1 | Migration `0090_E01-S72_apontamento_horas.sql`: RPC `pcm.fn_apontamento_horas(p_inicio date, p_fim date)` — SQL puro (`language sql stable`), SECURITY INVOKER (RLS de `ordens_servico`/`clientes`/`funcionarios` já cobre); devolve linhas BRUTAS (`duracao_horas`, `check_in_at`, `check_out_at` — o cálculo de horas fica no domínio, não duplicado em SQL); grant execute authenticated | AC-1 | E01-S68 | `pnpm run lint:migrations` | **done** |
+| 2 | `domain/apontamento-horas.ts`: `calcularHorasOs` (prioridade `duracaoHoras`; fallback diff de datas, ignora check-out anterior ao check-in; sem dado → 0), `agregarPorCliente`/`agregarPorTecnico`, `calcularCusto` — puro, 8 testes | AC-1, AC-2 | — | `pnpm run test` | **done** |
+| 3 | `application/apontamento-horas{-gateway}.ts` + `infrastructure/supabase-apontamento-horas-adapter.ts`: adapter mapeia linha bruta da RPC → `calcularHorasOs` (cálculo real acontece no client, não no banco); `obterApontamentoHoras` orquestra listagem+filtro+agregação | AC-1, AC-2 | 1, 2 | `pnpm run test` | **done** |
+| 4 | `ApontamentoHorasPage.tsx`: lista por OS + filtros (período/técnico/cliente) + painéis agregados (por cliente, por técnico); item novo em `HomePage.tsx` (`PCM_NAV`, grupo RELATÓRIOS, ao lado de Laudo SPDA) — única story desta leva que tocou a navegação do HomePage (Kits/Reservas ficaram como seção dentro de página existente; aqui não havia página-mãe natural) | AC-3 | 3 | `pnpm run test` | **done** |
+| 5 | Ponte de custo: `buscarValorHora` tenta `financeiro.custos_funcionario` (schema exato não confirmado — E04-S06 não implementada neste repo ainda) e cai em `null` no catch (`PGRST205`/`42P01`/`PGRST106`) — hoje SEMPRE retorna null (esperado, não bug); UI mostra nota "custo disponível quando o módulo Financeiro estiver ativo" | AC-4 | 3 | `pnpm run test` | **done** (degrada corretamente; ativa sozinho quando E04-S06 existir, sem mudança de código aqui) |
+| 6 | Gates + ROADMAP/STATE | todos | 1-5 | `biome check --write .`, `typecheck`, `test` (340 passando), `build`, `arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`, `validate-mermaid` | **done, todos verdes** — verificação visual não realizada (sem Playwright neste ambiente) |
 
 ## Plano de teste
 - Unit: cálculo de horas (durationDecimal, diff de datas, sem dado); agregação.

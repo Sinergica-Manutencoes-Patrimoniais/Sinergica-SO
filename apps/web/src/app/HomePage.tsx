@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Clock,
   FileBarChart2,
   FileText,
   HardHat,
@@ -49,6 +50,7 @@ import { FinanceiroMockRouter } from "../features/financeiro/mock/FinanceiroMock
 import type { GuiaView } from "../features/guia/GuiaRouter";
 import { GuiaRouter } from "../features/guia/GuiaRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
+import { ApontamentoHorasPage } from "../features/pcm/pages/ApontamentoHorasPage";
 import { BacklogGutPage } from "../features/pcm/pages/BacklogGutPage";
 import {
   EquipamentoCategoriasPage,
@@ -123,7 +125,8 @@ type PcmView =
   | "backlog"
   | "inspecoes"
   | "pmoc"
-  | "laudos-spda";
+  | "laudos-spda"
+  | "apontamento-horas";
 
 interface NavItem {
   label: string;
@@ -327,6 +330,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Relatório Diário", icon: FileText },
       { label: "Relatório Mensal", icon: FileBarChart2 },
       { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
+      { label: "Apontamento de Horas", icon: Clock, view: "apontamento-horas" },
     ],
   },
 ];
@@ -969,6 +973,8 @@ export function HomePage() {
               <FerramentasPage />
             ) : pcmView === "ferramentas-por-tecnico" ? (
               <FerramentasPorTecnicoPage />
+            ) : pcmView === "apontamento-horas" ? (
+              <ApontamentoHorasPage />
             ) : pcmView === "tickets" ? (
               <TicketsPage />
             ) : pcmView === "servicos" ? (
