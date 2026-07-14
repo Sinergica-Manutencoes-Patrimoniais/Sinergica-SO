@@ -15,9 +15,15 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Tooltip } from "../../../components/ui/Tooltip";
-import { sincronizarAuvo } from "../application/sincronizar-auvo";
+import {
+  buscarUltimaRunSincronizacaoAuvo,
+  consultarRunSincronizacaoAuvo,
+  deveRetomarAcompanhamento,
+  iniciarSincronizacaoAuvo,
+} from "../application/sincronizar-auvo";
+import type { SincronizacaoAuvoRun } from "../application/sincronizar-auvo-gateway";
 import { PainelDadosOperacionaisAuvo } from "../components/PainelDadosOperacionaisAuvo";
 import { montarDashboardPcm } from "../domain/dashboard-pcm";
 import type { DashboardPcmResumo, KpiDashboardPcm } from "../domain/dashboard-pcm";
@@ -63,6 +69,7 @@ export function PcmDashboardPage({
     fase: "ocioso",
   });
   const [saudeSync, setSaudeSync] = useState<AuvoSyncHealthItem[]>([]);
+  const pollingRef = useRef<number | null>(null);
 
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
@@ -96,16 +103,74 @@ export function PcmDashboardPage({
     if (refreshKey > 0) void carregar();
   }, [refreshKey, carregar]);
 
+  const pararPolling = useCallback(() => {
+    if (pollingRef.current != null) {
+      window.clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  const aplicarRunConcluida = useCallback(
+    (run: SincronizacaoAuvoRun) => {
+      setSincronizacaoAuvo({
+        fase: "concluido",
+        syncedAt: run.finishedAt ?? run.startedAt,
+        etapasComErro: run.etapas.filter((e) => !e.ok).map((e) => e.step),
+      });
+      void carregar(); // relê o cache local, agora atualizado pelo pull
+    },
+    [carregar],
+  );
+
+  // E01-S67: acompanha uma run em background por polling — sai do estado "sincronizando" só
+  // quando a run atinge status terminal (succeeded/failed), independente de quem a iniciou.
+  const acompanharRun = useCallback(
+    (runId: string) => {
+      pararPolling();
+      setSincronizacaoAuvo({ fase: "sincronizando" });
+      pollingRef.current = window.setInterval(async () => {
+        try {
+          const run = await consultarRunSincronizacaoAuvo(supabaseSincronizarAuvoAdapter, runId);
+          if (run.status === "running") return;
+          pararPolling();
+          aplicarRunConcluida(run);
+        } catch (error) {
+          pararPolling();
+          setSincronizacaoAuvo({
+            fase: "erro",
+            mensagem:
+              error instanceof Error
+                ? error.message
+                : "Não foi possível acompanhar a sincronização.",
+          });
+        }
+      }, 3000);
+    },
+    [pararPolling, aplicarRunConcluida],
+  );
+
+  // Ao montar: se já existe uma sincronização em andamento (iniciada antes de sair da página, ou
+  // por outra sessão), retoma o acompanhamento em vez de mostrar o botão ocioso (AC-7).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: só na montagem — acompanharRun muda de referência a cada render, incluir viraria um loop de resumo indevido.
+  useEffect(() => {
+    let cancelado = false;
+    void buscarUltimaRunSincronizacaoAuvo(supabaseSincronizarAuvoAdapter).then((run) => {
+      if (!cancelado && deveRetomarAcompanhamento(run, new Date()) && run) {
+        acompanharRun(run.id);
+      }
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  useEffect(() => pararPolling, [pararPolling]);
+
   const sincronizar = useCallback(async () => {
     setSincronizacaoAuvo({ fase: "sincronizando" });
     try {
-      const resultado = await sincronizarAuvo(supabaseSincronizarAuvoAdapter);
-      setSincronizacaoAuvo({
-        fase: "concluido",
-        syncedAt: resultado.syncedAt,
-        etapasComErro: resultado.etapas.filter((e) => !e.ok).map((e) => e.step),
-      });
-      await carregar(); // relê o cache local, agora atualizado pelo pull
+      const { runId } = await iniciarSincronizacaoAuvo(supabaseSincronizarAuvoAdapter);
+      acompanharRun(runId);
     } catch (error) {
       setSincronizacaoAuvo({
         fase: "erro",
@@ -113,7 +178,7 @@ export function PcmDashboardPage({
           error instanceof Error ? error.message : "Não foi possível sincronizar com o Auvo.",
       });
     }
-  }, [carregar]);
+  }, [acompanharRun]);
 
   if (estado.fase === "carregando") {
     return <div className="p-8 text-center text-sm text-ink-3">Carregando dashboard PCM…</div>;

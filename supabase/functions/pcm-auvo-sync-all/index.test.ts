@@ -1,13 +1,14 @@
 // Testes de `runSyncAll` contra um `Caller` stub — sem fetch real, sem env vars. Cobre AC-1/AC-3
-// de specs/E01-S37-botao-sincronizar-auvo/spec.md + as etapas novas de E01-S52/S54-S56/S58
-// (deleted-tasks, gps e support-pull), que também devem falhar isoladas sem abortar o resto.
+// de specs/E01-S37-botao-sincronizar-auvo/spec.md + as etapas de E01-S52/S54-S56/S58
+// (deleted-tasks, gps e support-pull) + E01-S62 (orçamento por etapa e clientes antes do
+// tasks-import — incidente 2026-07-13: tickets lento matava o worker antes do tasks-import).
 
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { type Caller, runSyncAll } from "./index.ts";
+import { assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { type Caller, makeSupabaseCaller, runSyncAll } from "./index.ts";
 
 const ETAPAS_FIXAS = 6; // tasks-import + deleted-tasks + gps + questionnaires + expenses + satisfactions
 
-Deno.test("runSyncAll — chama pull para cada entidade + etapas fixas, tudo ok", async () => {
+Deno.test("runSyncAll — chama pull para cada entidade + etapas fixas, tudo ok; clientes vem primeiro", async () => {
   const chamadas: Array<{ path: string; body?: unknown }> = [];
   const caller: Caller = (path, body) => {
     chamadas.push({ path, body });
@@ -18,15 +19,28 @@ Deno.test("runSyncAll — chama pull para cada entidade + etapas fixas, tudo ok"
 
   assertEquals(resultado.ok, true);
   assertEquals(resultado.results.length, 2 + ETAPAS_FIXAS);
-  assertEquals(chamadas, [
+  // clientes É a primeira chamada (dependência do tasks-import); o resto dispara em paralelo na
+  // ordem de criação das promises.
+  assertEquals(chamadas[0], { path: "pcm-auvo-pull", body: { entity: "clientes" } });
+  assertEquals(chamadas.slice(1), [
     { path: "pcm-auvo-pull", body: { entity: "funcionarios" } },
-    { path: "pcm-auvo-pull", body: { entity: "clientes" } },
     { path: "pcm-auvo-tasks-import", body: undefined },
     { path: "pcm-auvo-deleted-tasks-sync", body: undefined },
     { path: "pcm-auvo-gps-pull", body: undefined },
     { path: "pcm-auvo-support-pull", body: { resource: "questionnaires" } },
     { path: "pcm-auvo-support-pull", body: { resource: "expenses" } },
     { path: "pcm-auvo-support-pull", body: { resource: "satisfactions" } },
+  ]);
+  // Ordem estável do resultado: clientes, demais pulls, etapas fixas.
+  assertEquals(resultado.results.map((r) => r.step), [
+    "pull:clientes",
+    "pull:funcionarios",
+    "tasks-import",
+    "deleted-tasks",
+    "gps",
+    "questionnaires",
+    "expenses",
+    "satisfactions",
   ]);
 });
 
@@ -48,6 +62,8 @@ Deno.test("runSyncAll — falha de UMA entidade não aborta as demais (AC-3)", a
   assertEquals(okFuncionarios?.ok, true);
   const okServicos = resultado.results.find((r) => r.step === "pull:servicos");
   assertEquals(okServicos?.ok, true);
+  // clientes falhou, mas tasks-import RODA mesmo assim (tarefa sem cliente resolvido fica pra
+  // próxima rodada — comportamento já tolerado pelo próprio tasks-import).
   const okTasksImport = resultado.results.find((r) => r.step === "tasks-import");
   assertEquals(okTasksImport?.ok, true);
 });
@@ -106,4 +122,40 @@ Deno.test("runSyncAll — repassa tasksImportBody pro tasks-import e pro deleted
 
   assertEquals(chamadas[0], { path: "pcm-auvo-tasks-import", body: janela });
   assertEquals(chamadas[1], { path: "pcm-auvo-deleted-tasks-sync", body: janela });
+});
+
+Deno.test("runSyncAll — cada etapa recebe orçamento de tempo próprio (E01-S62)", async () => {
+  const orcamentos = new Map<string, number | undefined>();
+  const caller: Caller = (path, body, opts) => {
+    const entity = (body as { entity?: string } | undefined)?.entity;
+    orcamentos.set(entity ? `pull:${entity}` : path, opts?.timeoutMs);
+    return Promise.resolve({ ok: true });
+  };
+
+  await runSyncAll(["clientes", "tickets"], caller);
+
+  assertEquals(orcamentos.get("pull:clientes"), 30_000);
+  assertEquals(orcamentos.get("pull:tickets"), 60_000);
+  assertEquals(orcamentos.get("pcm-auvo-tasks-import"), 90_000);
+  assertEquals(orcamentos.get("pcm-auvo-deleted-tasks-sync"), 45_000);
+  assertEquals(orcamentos.get("pcm-auvo-gps-pull"), 45_000);
+  assertEquals(orcamentos.get("pcm-auvo-support-pull"), 45_000);
+});
+
+Deno.test("makeSupabaseCaller — aborta no orçamento e devolve erro honesto (E01-S62)", async () => {
+  // fetch stub que nunca resolve por conta própria — só rejeita quando o signal aborta,
+  // simulando uma etapa lenta (ex.: pull de tickets a ~150s).
+  const fetchLento: typeof fetch = (_input, init) =>
+    new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener("abort", () => {
+        reject(new DOMException("The signal has been aborted", "AbortError"));
+      });
+    });
+
+  const caller = makeSupabaseCaller("https://exemplo.supabase.co", "chave", fetchLento);
+  await assertRejects(
+    () => caller("pcm-auvo-pull", { entity: "tickets" }, { timeoutMs: 20 }),
+    Error,
+    "orçamento de 0s",
+  );
 });
