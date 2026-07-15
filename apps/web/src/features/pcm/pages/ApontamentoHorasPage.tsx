@@ -31,7 +31,16 @@ function hoje(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function ApontamentoHorasPage() {
+export function ApontamentoHorasPage({
+  onAbrirCliente,
+  onAbrirTecnico,
+}: {
+  /** AC-5 (E01-S75): clique numa linha de "Horas por cliente" abre a visão 360 já filtrada ao
+   * mesmo período. `chave === "sem-vinculo"` nunca chama isto (não tem cliente pra abrir). */
+  onAbrirCliente?: (clienteId: string, periodo: { inicio: string; fim: string }) => void;
+  /** Clique numa linha de "Horas por técnico" abre Ordens de Serviço filtrada por ele+período. */
+  onAbrirTecnico?: (tecnicoFuncionarioId: string, periodo: { inicio: string; fim: string }) => void;
+}) {
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [inicio, setInicio] = useState(inicioDoMes());
@@ -175,11 +184,17 @@ export function ApontamentoHorasPage() {
           titulo="Horas por cliente"
           itens={estado.porCliente}
           custosPorChave={null}
+          onSelecionar={
+            onAbrirCliente ? (chave) => onAbrirCliente(chave, { inicio, fim }) : undefined
+          }
         />
         <AgregadoPainel
           titulo="Horas por técnico"
           itens={estado.porTecnico}
           custosPorChave={custosPorTecnico}
+          onSelecionar={
+            onAbrirTecnico ? (chave) => onAbrirTecnico(chave, { inicio, fim }) : undefined
+          }
         />
       </div>
       {!temAlgumCusto && (
@@ -241,10 +256,13 @@ function AgregadoPainel({
   titulo,
   itens,
   custosPorChave,
+  onSelecionar,
 }: {
   titulo: string;
   itens: AgregadoHoras[];
   custosPorChave: Map<string, number | null> | null;
+  /** AC-5: ausente = linhas não clicáveis (mantém o painel utilizável sem callback de navegação). */
+  onSelecionar?: (chave: string) => void;
 }) {
   return (
     <section className="rounded-[8px] border border-line bg-card overflow-hidden">
@@ -258,11 +276,10 @@ function AgregadoPainel({
           {itens.map((item) => {
             const valorHora = custosPorChave?.get(item.chave) ?? null;
             const custo = calcularCusto(item.totalHoras, valorHora);
-            return (
-              <li
-                key={item.chave}
-                className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm"
-              >
+            // "sem-vinculo" (OS sem cliente/técnico) não tem destino de navegação nenhum.
+            const clicavel = Boolean(onSelecionar) && item.chave !== "sem-vinculo";
+            const linha = (
+              <>
                 <span className="min-w-0 truncate text-ink-2">{item.nome}</span>
                 <span className="shrink-0 font-semibold text-ink">
                   {item.totalHoras}h · {item.totalOs} OS
@@ -272,6 +289,27 @@ function AgregadoPainel({
                     </span>
                   )}
                 </span>
+              </>
+            );
+            if (clicavel) {
+              return (
+                <li key={item.chave}>
+                  <button
+                    type="button"
+                    onClick={() => onSelecionar?.(item.chave)}
+                    className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left text-sm hover:bg-line-soft/60"
+                  >
+                    {linha}
+                  </button>
+                </li>
+              );
+            }
+            return (
+              <li
+                key={item.chave}
+                className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm"
+              >
+                {linha}
               </li>
             );
           })}

@@ -1,19 +1,17 @@
 import {
   Building2,
-  ClipboardList,
   Filter,
   Mail,
   MapPin,
-  Package,
   Pencil,
   Phone,
   Plus,
   Search,
   Trash2,
-  UserCheck,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import type { ClienteFormData, ClienteResumo } from "../application/cliente-360-gateway";
@@ -309,17 +307,35 @@ export function ListaClientesPage({
           Nenhum cliente encontrado para os filtros atuais.
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-          {clientesFiltrados.map((cliente) => (
-            <ClienteCard
-              key={cliente.id}
-              cliente={cliente}
-              onSelecionar={onSelecionar}
-              onEditar={temEscrita ? () => setModal({ modo: "editar", cliente }) : undefined}
-              onExcluir={temEscrita ? () => excluir(cliente) : undefined}
-            />
-          ))}
-        </div>
+        <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-line-soft text-sm">
+              <thead className="bg-line-soft/60 text-left text-xs font-semibold uppercase tracking-wider text-ink-3">
+                <tr>
+                  <th className="px-4 py-2.5">Cliente</th>
+                  <th className="px-4 py-2.5">Local</th>
+                  <th className="px-4 py-2.5">Contato</th>
+                  <th className="px-4 py-2.5 text-right">OS abertas</th>
+                  <th className="px-4 py-2.5 text-right">Ativos</th>
+                  <th className="px-4 py-2.5 text-right">Maior GUT</th>
+                  <th className="px-4 py-2.5">Última atividade</th>
+                  <th className="px-4 py-2.5 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line-soft">
+                {clientesFiltrados.map((cliente) => (
+                  <ClienteLinha
+                    key={cliente.id}
+                    cliente={cliente}
+                    onSelecionar={onSelecionar}
+                    onEditar={temEscrita ? () => setModal({ modo: "editar", cliente }) : undefined}
+                    onExcluir={temEscrita ? () => excluir(cliente) : undefined}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
       {modal && (
         <ClienteFormModal
@@ -332,7 +348,7 @@ export function ListaClientesPage({
   );
 }
 
-function ClienteCard({
+function ClienteLinha({
   cliente,
   onSelecionar,
   onEditar,
@@ -348,107 +364,118 @@ function ClienteCard({
   const contato = cliente.contatoTelefone ?? cliente.contatoEmail ?? cliente.contatoNome;
 
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4 text-left transition-colors hover:border-orange/60 hover:bg-orange-soft/30">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate text-sm font-semibold text-ink">{cliente.nome}</p>
-            <Badge tone={cliente.ativo ? "success" : "neutral"}>
-              {cliente.ativo ? "Ativo" : "Inativo"}
-            </Badge>
-            {cliente.tipo && (
-              <Badge tone="neutral">{cliente.tipo === "lead" ? "Lead" : "Cliente"}</Badge>
-            )}
-            {cliente.statusComercial && (
-              <Badge tone={cliente.statusComercial === "ativo" ? "success" : "warning"}>
-                {STATUS_COMERCIAL_LABEL[cliente.statusComercial] ?? cliente.statusComercial}
-              </Badge>
-            )}
-            {!cliente.cadastroCompleto && <Badge tone="warning">Cadastro incompleto</Badge>}
-          </div>
-          <p className="mt-1 text-xs tabular-nums text-ink-3">
-            CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")} · Auvo{" "}
-            {rotuloOuPlaceholder(cliente.auvoId ?? null, "—")}
-          </p>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="font-brand text-xl font-bold leading-none text-ink tabular-nums">
-            {cliente.equipamentosAtivos ?? 0}
-          </p>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
-            ativos
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <MiniIndicador
-          icon={ClipboardList}
-          label="OS abertas"
-          value={String(cliente.osAbertas ?? 0)}
-        />
-        <MiniIndicador
-          icon={Package}
-          label="Ativos Auvo"
-          value={String(cliente.equipamentosAtivos ?? 0)}
-        />
-        <MiniIndicador
-          icon={UserCheck}
-          label="Maior GUT"
-          value={String(score)}
-          destaque={score >= 80}
-        />
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-3">
-        {local && (
-          <span className="inline-flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5" />
-            {local}
-          </span>
-        )}
-        {contato && (
-          <span className="inline-flex items-center gap-1">
-            {cliente.contatoEmail ? (
-              <Mail className="h-3.5 w-3.5" />
-            ) : (
-              <Phone className="h-3.5 w-3.5" />
-            )}
-            {contato}
-          </span>
-        )}
-        <span>Última atividade: {formatarDataCurta(cliente.ultimaAtividadeEm)}</span>
-      </div>
-      <div className="mt-4 flex flex-wrap justify-end gap-2">
+    <tr className="hover:bg-line-soft/50">
+      <td className="px-4 py-2.5">
         <button
           type="button"
           onClick={() => onSelecionar(cliente.id)}
-          className="inline-flex h-8 items-center justify-center rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+          className="text-left hover:underline"
         >
-          Ver 360
+          <p className="truncate text-sm font-semibold text-ink">{cliente.nome}</p>
         </button>
-        {onEditar && (
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <Badge tone={cliente.ativo ? "success" : "neutral"}>
+            {cliente.ativo ? "Ativo" : "Inativo"}
+          </Badge>
+          {cliente.tipo && (
+            <Badge tone="neutral">{cliente.tipo === "lead" ? "Lead" : "Cliente"}</Badge>
+          )}
+          {cliente.statusComercial && (
+            <Badge tone={cliente.statusComercial === "ativo" ? "success" : "warning"}>
+              {STATUS_COMERCIAL_LABEL[cliente.statusComercial] ?? cliente.statusComercial}
+            </Badge>
+          )}
+          {!cliente.cadastroCompleto && <Badge tone="warning">Incompleto</Badge>}
+        </div>
+        <p className="mt-1 text-[11px] tabular-nums text-ink-3">
+          CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")} · Auvo{" "}
+          {rotuloOuPlaceholder(cliente.auvoId ?? null, "—")}
+        </p>
+      </td>
+      <td className="px-4 py-2.5 text-xs text-ink-2">
+        {local && (
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-ink-3" />
+            {local}
+          </span>
+        )}
+      </td>
+      <td className="px-4 py-2.5 text-xs text-ink-2">
+        {contato && (
+          <span className="inline-flex items-center gap-1">
+            {cliente.contatoEmail ? (
+              <Mail className="h-3.5 w-3.5 shrink-0 text-ink-3" />
+            ) : (
+              <Phone className="h-3.5 w-3.5 shrink-0 text-ink-3" />
+            )}
+            <span className="truncate">{contato}</span>
+          </span>
+        )}
+      </td>
+      <td className="px-4 py-2.5 text-right font-brand text-sm tabular-nums text-ink">
+        {cliente.osAbertas ?? 0}
+      </td>
+      <td className="px-4 py-2.5 text-right font-brand text-sm tabular-nums text-ink">
+        {cliente.equipamentosAtivos ?? 0}
+      </td>
+      <td
+        className={`px-4 py-2.5 text-right font-brand text-sm tabular-nums ${score >= 80 ? "font-bold text-orange" : "text-ink"}`}
+      >
+        {score}
+      </td>
+      <td className="px-4 py-2.5 text-xs text-ink-3">
+        {formatarDataCurta(cliente.ultimaAtividadeEm)}
+      </td>
+      <td className="px-4 py-2.5">
+        <div className="flex justify-end gap-2">
           <button
             type="button"
-            onClick={onEditar}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+            onClick={() => onSelecionar(cliente.id)}
+            className="inline-flex h-8 items-center justify-center rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
           >
-            <Pencil className="h-3.5 w-3.5" />
-            Editar
+            Ver 360
           </button>
-        )}
-        {onExcluir && (
-          <button
-            type="button"
-            onClick={onExcluir}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-3 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Excluir
-          </button>
-        )}
-      </div>
-    </div>
+          {onEditar && (
+            <IconButton
+              label="Editar"
+              icon={<Pencil className="h-3.5 w-3.5" />}
+              onClick={onEditar}
+            />
+          )}
+          {onExcluir && (
+            <IconButton
+              label="Excluir"
+              danger
+              icon={<Trash2 className="h-3.5 w-3.5" />}
+              onClick={onExcluir}
+            />
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function IconButton({
+  label,
+  icon,
+  danger,
+  onClick,
+}: {
+  label: string;
+  icon: ReactNode;
+  danger?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-2.5 text-xs font-semibold ${danger ? "border-[#F2C0B5] text-[#A23B25] hover:bg-[#FFF4F1]" : "border-line text-ink-2 hover:bg-line-soft"}`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 
@@ -488,32 +515,6 @@ function SelectFiltro({
         ))}
       </select>
     </label>
-  );
-}
-
-function MiniIndicador({
-  icon: Icon,
-  label,
-  value,
-  destaque = false,
-}: {
-  icon: typeof ClipboardList;
-  label: string;
-  value: string;
-  destaque?: boolean;
-}) {
-  return (
-    <div className="rounded-[6px] border border-line-soft px-3 py-2">
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
-        <Icon className="h-3.5 w-3.5" />
-        <span className="truncate">{label}</span>
-      </div>
-      <p
-        className={`mt-1 font-brand text-lg font-bold tabular-nums ${destaque ? "text-orange" : "text-ink"}`}
-      >
-        {value}
-      </p>
-    </div>
   );
 }
 

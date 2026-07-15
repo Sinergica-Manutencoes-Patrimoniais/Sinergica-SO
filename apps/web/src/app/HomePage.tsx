@@ -514,6 +514,19 @@ export function HomePage() {
     origemClienteId: string;
     seq: number;
   } | null>(null);
+  // E01-S75 AC-5: período vindo do Apontamento de Horas — só setado junto com `clienteSelecionado`
+  // pela navegação de "Horas por cliente"; nulo em qualquer outro caminho pra Visão 360 (clique
+  // direto em ListaClientesPage não filtra nada).
+  const [clientePeriodo, setClientePeriodo] = useState<{ inicio: string; fim: string } | null>(
+    null,
+  );
+  // E01-S75 AC-5: filtro pré-setado vindo de "Horas por técnico" — semeia os filtros de
+  // OrdensServicoPage no mount (a página sempre remonta ao entrar em "ordens" vindo de outra view).
+  const [ordensFiltrosPreset, setOrdensFiltrosPreset] = useState<{
+    tecnicoFuncionarioId: string;
+    dataInicio: string;
+    dataFim: string;
+  } | null>(null);
 
   function navegarModulo(area: AreaAtiva) {
     setActiveModulo(area);
@@ -523,7 +536,27 @@ export function HomePage() {
   function irParaPcmView(view: PcmView) {
     setPcmView(view);
     setClienteSelecionado(null); // ao trocar de sub-tela, sai da Visão 360 de um cliente específico
+    setClientePeriodo(null);
     setOsDeepLink(null);
+    setOrdensFiltrosPreset(null);
+  }
+
+  function abrirClienteNoPeriodo(clienteId: string, periodo: { inicio: string; fim: string }) {
+    setClienteSelecionado(clienteId);
+    setClientePeriodo(periodo);
+    setPcmView("clientes");
+  }
+
+  function abrirOrdensDoTecnicoNoPeriodo(
+    tecnicoFuncionarioId: string,
+    periodo: { inicio: string; fim: string },
+  ) {
+    setOrdensFiltrosPreset({
+      tecnicoFuncionarioId,
+      dataInicio: periodo.inicio,
+      dataFim: periodo.fim,
+    });
+    setPcmView("ordens");
   }
 
   function abrirOsDoCliente(osId: string) {
@@ -951,13 +984,20 @@ export function HomePage() {
                 <div className="flex flex-col gap-4">
                   <button
                     type="button"
-                    onClick={() => setClienteSelecionado(null)}
+                    onClick={() => {
+                      setClienteSelecionado(null);
+                      setClientePeriodo(null);
+                    }}
                     className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-orange hover:text-orange-deep cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" strokeWidth={2} />
                     Voltar para clientes
                   </button>
-                  <VisaoClientePage clienteId={clienteSelecionado} onAbrirOs={abrirOsDoCliente} />
+                  <VisaoClientePage
+                    clienteId={clienteSelecionado}
+                    onAbrirOs={abrirOsDoCliente}
+                    periodo={clientePeriodo ?? undefined}
+                  />
                 </div>
               ) : (
                 <ListaClientesPage onSelecionar={setClienteSelecionado} />
@@ -977,7 +1017,10 @@ export function HomePage() {
             ) : pcmView === "ferramentas-por-tecnico" ? (
               <FerramentasPorTecnicoPage />
             ) : pcmView === "apontamento-horas" ? (
-              <ApontamentoHorasPage />
+              <ApontamentoHorasPage
+                onAbrirCliente={abrirClienteNoPeriodo}
+                onAbrirTecnico={abrirOrdensDoTecnicoNoPeriodo}
+              />
             ) : pcmView === "tipos-inspecao" ? (
               <TiposInspecaoPage />
             ) : pcmView === "tickets" ? (
@@ -1015,6 +1058,15 @@ export function HomePage() {
                   onNovaOs={() => setNovaOsAberta(true)}
                   osIdInicialToken={
                     osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
+                  }
+                  filtrosIniciais={
+                    ordensFiltrosPreset
+                      ? {
+                          tecnicoFuncionarioId: ordensFiltrosPreset.tecnicoFuncionarioId,
+                          dataInicio: ordensFiltrosPreset.dataInicio,
+                          dataFim: ordensFiltrosPreset.dataFim,
+                        }
+                      : undefined
                   }
                 />
               </div>

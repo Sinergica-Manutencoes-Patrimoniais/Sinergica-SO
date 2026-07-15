@@ -63,14 +63,20 @@ const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
 export function VisaoClientePage({
   clienteId,
   onAbrirOs,
+  periodo,
 }: {
   clienteId: string;
   onAbrirOs?: (osId: string) => void;
+  /** E01-S75 AC-5: vindo do Apontamento de Horas — abre direto na aba "OS" filtrando backlog e
+   * histórico ao período por `createdAt` (client-side, sobre o dado já carregado; o gateway não
+   * tem parâmetro de data). `createdAt` é o campo disponível em `OrdemServicoResumo` — não é
+   * exatamente a data agendada usada no relatório de horas, por isso o rótulo diz "criadas". */
+  periodo?: { inicio: string; fim: string };
 }) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
-  const [aba, setAba] = useState<Aba360>("resumo");
+  const [aba, setAba] = useState<Aba360>(periodo ? "os" : "resumo");
   const [editandoCadastro, setEditandoCadastro] = useState(false);
 
   // AC-1: só carrega/renderiza o conteúdo com leitura no módulo pcm (mesma checagem das demais
@@ -200,9 +206,25 @@ export function VisaoClientePage({
       {aba === "timeline" && <TimelineCliente eventos={eventos} onAbrirOs={onAbrirOs} />}
 
       {aba === "os" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <PainelBacklog ordens={backlog} onSelecionar={onAbrirOs} />
-          <PainelHistorico ordens={historico} onSelecionar={onAbrirOs} />
+        <div className="flex flex-col gap-3">
+          {periodo && (
+            <p className="text-xs text-ink-3">
+              Filtrado por período (OS criadas entre{" "}
+              {new Date(`${periodo.inicio}T00:00:00`).toLocaleDateString("pt-BR")} e{" "}
+              {new Date(`${periodo.fim}T00:00:00`).toLocaleDateString("pt-BR")}) — vindo do
+              Apontamento de Horas.
+            </p>
+          )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <PainelBacklog
+              ordens={periodo ? filtrarPorPeriodo(backlog, periodo) : backlog}
+              onSelecionar={onAbrirOs}
+            />
+            <PainelHistorico
+              ordens={periodo ? filtrarPorPeriodo(historico, periodo) : historico}
+              onSelecionar={onAbrirOs}
+            />
+          </div>
         </div>
       )}
 
@@ -217,6 +239,17 @@ export function VisaoClientePage({
       {aba === "comunicacao" && <PainelComunicacao cliente={cliente} eventos={eventos} />}
     </div>
   );
+}
+
+function filtrarPorPeriodo(
+  ordens: OrdemServicoResumo[],
+  periodo: { inicio: string; fim: string },
+): OrdemServicoResumo[] {
+  return ordens.filter((ordem) => {
+    if (!ordem.createdAt) return false;
+    const data = ordem.createdAt.slice(0, 10);
+    return data >= periodo.inicio && data <= periodo.fim;
+  });
 }
 
 function Resumo360({

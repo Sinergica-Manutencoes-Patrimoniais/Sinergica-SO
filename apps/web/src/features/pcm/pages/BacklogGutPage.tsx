@@ -193,7 +193,7 @@ export function BacklogGutPage() {
                         onPlanejar(ordem);
                       }}
                       disabled={salvandoId === ordem.id}
-                      className="inline-flex items-center justify-center rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                      className="inline-flex h-8 shrink-0 items-center justify-center rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
                     >
                       Planejar
                     </button>

@@ -1,4 +1,4 @@
-import { MapPin, Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
+import { Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -156,19 +156,21 @@ export function EquipamentosPage() {
           <p className="mt-3 text-sm text-ink-3">Nenhum equipamento cadastrado.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-          {estado.equipamentos.map((equipamento) => (
-            <EquipamentoCard
-              key={equipamento.id}
-              equipamento={equipamento}
-              onEditar={temEscrita ? () => setModal({ modo: "editar", equipamento }) : undefined}
-              onDesativar={
-                temEscrita && equipamento.ativo ? () => desativar(equipamento) : undefined
-              }
-              onAmpliarImagem={setImagemAmpliada}
-            />
-          ))}
-        </div>
+        <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+          <div className="divide-y divide-line-soft">
+            {estado.equipamentos.map((equipamento) => (
+              <EquipamentoLinha
+                key={equipamento.id}
+                equipamento={equipamento}
+                onEditar={temEscrita ? () => setModal({ modo: "editar", equipamento }) : undefined}
+                onDesativar={
+                  temEscrita && equipamento.ativo ? () => desativar(equipamento) : undefined
+                }
+                onAmpliarImagem={setImagemAmpliada}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {modal && (
@@ -204,7 +206,7 @@ export function EquipamentosPage() {
   );
 }
 
-function EquipamentoCard({
+function EquipamentoLinha({
   equipamento,
   onEditar,
   onDesativar,
@@ -216,78 +218,61 @@ function EquipamentoCard({
   onAmpliarImagem: (url: string) => void;
 }) {
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          {equipamento.urlImagem ? (
-            <button
-              type="button"
-              onClick={() => onAmpliarImagem(equipamento.urlImagem as string)}
-              className="h-14 w-14 shrink-0 overflow-hidden rounded-[6px] border border-line"
-            >
-              <img
-                src={equipamento.urlImagem}
-                alt={equipamento.nome}
-                className="h-full w-full object-cover"
-              />
-            </button>
-          ) : (
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[6px] border border-line bg-line-soft">
-              <Wrench className="h-6 w-6 text-ink-3" />
-            </div>
-          )}
-          <div className="min-w-0">
-            <h4 className="truncate text-sm font-semibold text-ink">{equipamento.nome}</h4>
-            <p className="mt-1 text-xs text-ink-3">
-              Auvo {equipamento.auvoId ?? "-"} · {equipamento.identificador ?? "sem identificador"}
-            </p>
-          </div>
-        </div>
-        <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${equipamento.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
+    <div className="flex items-center gap-3 px-3 py-2.5">
+      {equipamento.urlImagem ? (
+        <button
+          type="button"
+          onClick={() => onAmpliarImagem(equipamento.urlImagem as string)}
+          className="h-9 w-9 shrink-0 overflow-hidden rounded-[6px] border border-line"
         >
-          {equipamento.ativo ? "Ativo" : "Inativo"}
-        </span>
-      </div>
-      <p className="mt-3 text-sm text-ink-3">{equipamento.categoria ?? "Sem categoria"}</p>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-3">
-        <span>Cliente: {equipamento.clienteNome ?? "sem vínculo"}</span>
-        {equipamento.localizacao && (
-          <span className="inline-flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5" />
-            {equipamento.localizacao}
+          <img
+            src={equipamento.urlImagem}
+            alt={equipamento.nome}
+            className="h-full w-full object-cover"
+          />
+        </button>
+      ) : (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] border border-line bg-line-soft">
+          <Wrench className="h-4 w-4 text-ink-3" />
+        </div>
+      )}
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="truncate text-sm font-semibold text-ink">{equipamento.nome}</span>
+          <span
+            className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${equipamento.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
+          >
+            {equipamento.ativo ? "Ativo" : "Inativo"}
           </span>
-        )}
-        <span>Sync: {equipamento.auvoSyncStatus ?? "pending"}</span>
+        </div>
+        <p className="truncate text-xs text-ink-3">
+          {equipamento.categoria ?? "Sem categoria"} · {equipamento.clienteNome ?? "sem vínculo"}
+          {equipamento.localizacao ? ` · ${equipamento.localizacao}` : ""}
+          {equipamento.auvoSyncError ? ` · erro: ${equipamento.auvoSyncError}` : ""}
+        </p>
       </div>
-      {equipamento.uriAnexos.length > 0 && (
-        <p className="mt-2 text-xs text-ink-3">{equipamento.uriAnexos.length} anexo(s) do Auvo</p>
+
+      {onEditar && (
+        <button
+          type="button"
+          onClick={onEditar}
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          Editar
+        </button>
       )}
-      {equipamento.auvoSyncError && (
-        <p className="mt-2 text-xs text-[#A23B25]">{equipamento.auvoSyncError}</p>
+      {onDesativar && (
+        <button
+          type="button"
+          onClick={onDesativar}
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-2.5 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Desativar
+        </button>
       )}
-      <div className="mt-4 flex justify-end gap-2">
-        {onEditar && (
-          <button
-            type="button"
-            onClick={onEditar}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Editar
-          </button>
-        )}
-        {onDesativar && (
-          <button
-            type="button"
-            onClick={onDesativar}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-3 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Desativar
-          </button>
-        )}
-      </div>
     </div>
   );
 }

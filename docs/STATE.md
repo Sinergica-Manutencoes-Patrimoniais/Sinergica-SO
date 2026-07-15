@@ -10,7 +10,73 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-14 (sessão Lucas/Sonnet 5) — **Verificação Playwright contra produção real
+**Atualização:** 2026-07-15 (sessão Lucas/Sonnet 5) — **E01-S75 (refinamento UX do PCM)
+implementada e verificada com Playwright contra produção real.** Sessão anterior (Opus) só
+escreveu spec+tasks; esta sessão (Sonnet) implementou as 5 tasks do zero e verificou tudo contra
+produção. Frontend-only, zero migration.
+
+- **Task 1 (horas clicável, AC-5):** `ApontamentoHorasPage.tsx` ganhou `onAbrirCliente`/
+  `onAbrirTecnico`; `AgregadoPainel` vira `<button>` por linha quando há callback (pula
+  `chave==="sem-vinculo"`). `HomePage.tsx` ganhou `clientePeriodo`/`ordensFiltrosPreset` (mesmo
+  padrão de `osDeepLink`/`clienteSelecionado`), limpos em `irParaPcmView`. `VisaoClientePage.tsx`
+  ganhou prop `periodo?` — abre na aba "OS" já filtrada **client-side por `createdAt`**
+  (`OrdemServicoResumo` não tem `dataAgendada`; rótulo da UI diz "OS criadas no período", honesto
+  sobre a diferença de semântica com o relatório de origem). `OrdensServicoPage.tsx` ganhou
+  `filtrosIniciais?` semeando o `useState` de filtros no mount. **Confirmado com Playwright contra
+  dado real de produção** — clicar num cliente e num técnico de verdade navegou certo.
+- **Task 2 (OS expandível, AC-2/AC-3):** grid da lista mudou de `minmax(520px,1fr)_380px` +
+  `self-start` (causava a área vazia que o Lucas reclamou) pra
+  `minmax(420px,1fr)_460px` com `max-h-[calc(100vh-220px)] overflow-y-auto` nos dois lados —
+  fila e detalhe rolam internamente até a mesma altura, sem buraco. `DetalheOs` ganhou botão
+  "Expandir" (`.modal-panel.max-w-4xl`, fecha por X ou Esc, **sem** clique-fora — nenhum modal do
+  repo usa esse padrão, mantive consistência). `NovaOrdemServicoModal` intocado — questionários/
+  fotos do Auvo continuam só leitura, nunca editáveis (decisão vinculante do spec).
+- **Task 3 (ferramentas lista+histórico, AC-1):** `HistoricoModal` extraído de
+  `FerramentasPorTecnicoPage.tsx` pra `components/HistoricoMovimentacoesModal.tsx` (ganhou linha de
+  `funcionarioNome` por evento — útil no histórico por unidade, onde o técnico muda a cada evento,
+  ao contrário do histórico por técnico onde é sempre o mesmo). `FerramentasPage.tsx`: card grid
+  (`xl:grid-cols-2`) virou lista densa (`FerramentaCard`→`FerramentaLinha`, `divide-y`); unidade
+  expandida mostra `atribuidaEm` ("desde DD/MM") + botão "Histórico" chamando
+  `listarHistoricoUnidade` (camada já existia inteira, só faltava caller de UI — achado da
+  exploração da sessão anterior).
+- **Task 4 (densidade, AC-4/AC-6):** `EquipamentosPage.tsx` (mesmo padrão card→lista),
+  `BacklogGutPage.tsx` (botão "Planejar" `px-4 py-2 text-sm`→`h-8 px-3 text-xs`). **Achado e
+  revertido:** tentei unificar o hex do box de erro de Backlog/OrdensServico
+  (`#F0C2BD`/`#FFF4F2`/`#A12D24`) pra família de Ferramentas/Equipamentos
+  (`#F2C0B5`/`#FFF4F1`/`#A23B25`) — mas as duas páginas de OS já eram consistentes ENTRE SI antes da
+  minha mudança; revertido pra não trocar uma inconsistência por outra. Deixado como está,
+  documentado no `tasks.md` como fora do escopo seguro desta story.
+- **Extra pedido pelo Lucas no meio da implementação (mid-turn, fora do `spec.md` original):**
+  "melhorar a visão da aba clientes, lista pra facilitar leitura, ver mais informação na mesma
+  tela". `ListaClientesPage.tsx`: `ClienteCard` (grid `xl:grid-cols-2`, cards grandes com
+  mini-indicadores) virou **tabela densa** (`table`/`thead`/`tbody`, mesmo padrão de
+  `TiposTarefaPage.tsx`) — colunas Cliente/Local/Contato/OS abertas/Ativos/Maior GUT/Última
+  atividade/Ações. Tratado com o mesmo rigor de gate/verificação do resto da story (não um
+  "só isso rapidinho" sem testar).
+- **Playwright contra produção real:** specs existentes (`ordens-servico`, `ferramentas`, `kits`)
+  precisaram de fix de locator — a lista nova de ferramentas não tem mais `<h4>` nem o texto
+  "0 unidade(s)" (virou span + "X/Y unid."); ajustado pra `xpath=ancestor::div[contains(@class,"py-2.5")]`.
+  Spec novo `refinamento-ux.spec.ts` (4 testes): OS expandir/fechar por X e Esc; ferramenta→
+  histórico de unidade (estado vazio honesto pra unidade nunca movimentada); horas→clicar cliente
+  E técnico, ambos navegaram de verdade; Clientes→tabela com colunas certas. **10/10 passando**
+  contra produção real. Dados de teste `[TESTE E2E]` criados e limpos (desativados/devolvidos) ao
+  final de cada rodada via UI.
+
+Gates rodados e verdes: `biome check --write .` (binário direto), `typecheck`, `test` (354
+passando, zero regressão), `build`, `arch:check`, `check:edge-functions`, `audit:esteira`,
+`eval:spec`, `validate-mermaid`, Playwright (10/10 contra produção real).
+
+**Não verificado:** screenshots formais de antes/depois do polimento não foram capturados (a
+verificação foi funcional via Playwright, não visual/comparativa).
+
+**Próximo passo:** commitar E01-S75 (branch `feat/E01-S68-fix-sync-tarefas`/PR #52 — mesma branch
+das stories anteriores; confirmar com Lucas se quer branch própria antes do push). Depois: roteiro
+de apresentação pro Fabrício (pedido nesta sessão, ver mensagem do Lucas) documentando o que já
+funciona e como usar — entregável separado, não faz parte do código desta story.
+
+---
+
+**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **Verificação Playwright contra produção real
 de toda a leva (E01-S68..S74) — 2 bugs reais de produção achados e corrigidos, migrations
 aplicadas, suíte e2e nova commitada.** Lucas pediu explicitamente "execute com playwright os testes
 se ok, commit tudo e push"; Playwright não estava instalado — instalado nesta sessão

@@ -27,13 +27,15 @@ test("cria ferramenta+unidade, cria kit, atribui e devolve (tudo-ou-nada)", asyn
   await page.getByLabel("Quantidade total").fill("1");
   await page.getByRole("button", { name: "Salvar" }).click();
 
-  const cardFerramenta = page
-    .locator("h4", { hasText: nomeFerramenta })
-    .locator('xpath=ancestor::div[contains(@class,"rounded-[8px]")][1]');
-  await expect(cardFerramenta).toBeVisible({ timeout: 10_000 });
-  await cardFerramenta.getByText("0 unidade(s)").click();
-  await cardFerramenta.getByRole("button", { name: /Gerar/ }).click();
-  await expect(cardFerramenta.getByText(/FER-\d{4}/)).toBeVisible({ timeout: 10_000 });
+  // E01-S75: Ferramentas virou lista densa — a linha é o ancestral `div.py-2.5` mais próximo do
+  // nome (só a linha tem essa classe).
+  const linhaFerramenta = page
+    .getByText(nomeFerramenta, { exact: true })
+    .locator('xpath=ancestor::div[contains(@class,"py-2.5")][1]');
+  await expect(linhaFerramenta).toBeVisible({ timeout: 10_000 });
+  await linhaFerramenta.getByText(nomeFerramenta, { exact: true }).click();
+  await linhaFerramenta.getByRole("button", { name: /Gerar/ }).click();
+  await expect(linhaFerramenta.getByText(/FER-\d{4}/)).toBeVisible({ timeout: 10_000 });
 
   // KitsSection carrega disponibilidade só 1x (mount) — recarrega pra pegar estado fresco.
   await page.reload();

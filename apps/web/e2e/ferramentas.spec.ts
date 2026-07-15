@@ -14,13 +14,15 @@ test("cria ferramenta e gera unidades com código FER-NNNN", async ({ page }) =>
   await page.getByLabel("Quantidade total").fill("2");
   await page.getByRole("button", { name: "Salvar" }).click();
 
-  const card = page
-    .locator("h4", { hasText: nome })
-    .locator('xpath=ancestor::div[contains(@class,"rounded-[8px]")][1]');
-  await expect(card).toBeVisible({ timeout: 10_000 });
-  await card.getByText("0 unidade(s)").click();
-  await card.getByRole("button", { name: /Gerar/ }).click();
+  // E01-S75: Ferramentas virou lista densa (linha por ferramenta, sem card) — a linha é o
+  // ancestral `div.py-2.5` mais próximo do nome (só a linha tem essa classe).
+  const linha = page
+    .getByText(nome, { exact: true })
+    .locator('xpath=ancestor::div[contains(@class,"py-2.5")][1]');
+  await expect(linha).toBeVisible({ timeout: 10_000 });
+  await linha.getByText(nome, { exact: true }).click();
+  await linha.getByRole("button", { name: /Gerar/ }).click();
 
-  await expect(card.getByText(/FER-\d{4}/).first()).toBeVisible({ timeout: 10_000 });
-  await expect(card.getByText(/FER-\d{4}/)).toHaveCount(2);
+  await expect(linha.getByText(/FER-\d{4}/).first()).toBeVisible({ timeout: 10_000 });
+  await expect(linha.getByText(/FER-\d{4}/)).toHaveCount(2);
 });

@@ -1,4 +1,4 @@
-import { Calendar, ClipboardList, Clock3, Kanban, List, RefreshCw } from "lucide-react";
+import { Calendar, ClipboardList, Clock3, Expand, Kanban, List, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -53,19 +53,26 @@ export function OrdensServicoPage({
   refreshKey = 0,
   onNovaOs,
   osIdInicialToken,
+  filtrosIniciais,
 }: {
   refreshKey?: number;
   onNovaOs: () => void;
   /** Formato `${osId}::${seq}` (E01-S49) — `seq` muda a cada clique no cliente-360, mesmo pra
    * mesma OS, forçando o efeito abaixo a reagir mesmo quando o id não muda de valor. */
   osIdInicialToken?: string;
+  /** E01-S75 AC-5: semeia os filtros no mount (ex. vindo de "técnico" no Apontamento de Horas) —
+   * a página sempre remonta ao navegar pra cá (branch diferente no switch de `pcmView`), então
+   * seed-no-mount basta, sem precisar do padrão seq/useEffect do `osIdInicialToken`. */
+  filtrosIniciais?: Partial<FiltrosOrdens>;
 }) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
   const [visao, setVisao] = useState<Visao>("lista");
-  const [filtros, setFiltros] = useState<FiltrosOrdens>(FILTROS_ORDENS_VAZIO);
+  const [filtros, setFiltros] = useState<FiltrosOrdens>(() =>
+    filtrosIniciais ? { ...FILTROS_ORDENS_VAZIO, ...filtrosIniciais } : FILTROS_ORDENS_VAZIO,
+  );
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
@@ -505,8 +512,8 @@ export function OrdensServicoPage({
       )}
 
       {visao === "lista" && (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(520px,1fr)_380px]">
-          <section className="bg-card rounded-[10px] border border-line overflow-hidden">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(420px,1fr)_460px]">
+          <section className="bg-card rounded-[10px] border border-line overflow-hidden max-h-[calc(100vh-220px)] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-line-soft bg-paper px-4 py-2.5">
               <div>
                 <h3 className="text-xs font-semibold text-ink">Fila de ordens</h3>
@@ -573,7 +580,7 @@ export function OrdensServicoPage({
             </div>
           </section>
 
-          <section className="self-start rounded-[10px] border border-line bg-card">
+          <section className="rounded-[10px] border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">
             {selecionada ? (
               <DetalheOs
                 selecionada={selecionada}
@@ -626,6 +633,118 @@ function DetalheOs({
   onAlterarStatus: (status: StatusOrdemServico) => void;
   onEditar: () => void;
 }) {
+  // E01-S75 AC-2: "Expandir" abre a mesma info + abas ricas do Auvo (questionários/fotos) num
+  // modal grande — o painel inline continua compacto (master-detail), o modal é onde dá pra ler
+  // com folga. Fecha por Esc, clique fora, ou no X.
+  const [expandido, setExpandido] = useState(false);
+
+  useEffect(() => {
+    if (!expandido) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setExpandido(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [expandido]);
+
+  const corpo = (
+    <>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <Info label="Status" value={rotuloStatusOs(selecionada.status)} />
+        <Info
+          label="Prioridade"
+          value={PRIORIDADE_LABEL[selecionada.prioridade] ?? selecionada.prioridade}
+        />
+        <Info label="Categoria" value={selecionada.categoria} />
+        <Info label="Score GUT" value={String(selecionada.scorePcm)} />
+        <Info
+          label="Fatores"
+          value={`${selecionada.gravidade ?? 1} · ${selecionada.urgencia ?? 1} · ${
+            selecionada.tendencia ?? 1
+          }`}
+        />
+        <Info
+          label="Auvo"
+          value={
+            selecionada.auvoTaskId
+              ? `Task ${selecionada.auvoTaskId}`
+              : selecionada.auvoSyncStatus || "Sem task"
+          }
+        />
+        <Info
+          label="Técnico"
+          value={
+            selecionada.tecnicoNome ??
+            (typeof selecionada.detalhes?.tecnicoNomeAuvo === "string"
+              ? selecionada.detalhes.tecnicoNomeAuvo
+              : "Não atribuído")
+          }
+        />
+        {selecionada.dataAgendada && (
+          <Info
+            label="Agendada"
+            value={new Date(selecionada.dataAgendada).toLocaleString("pt-BR")}
+          />
+        )}
+        {selecionada.checkInAt && (
+          <Info label="Check-in" value={new Date(selecionada.checkInAt).toLocaleString("pt-BR")} />
+        )}
+        {selecionada.checkOutAt && (
+          <Info
+            label="Check-out"
+            value={new Date(selecionada.checkOutAt).toLocaleString("pt-BR")}
+          />
+        )}
+      </div>
+
+      {selecionada.auvoSyncError && (
+        <div className="rounded-[8px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#A12D24]">
+            Erro Auvo
+          </p>
+          <p className="mt-1 text-sm text-[#7A241D]">{selecionada.auvoSyncError}</p>
+        </div>
+      )}
+
+      {selecionada.detalhes && Object.keys(selecionada.detalhes).length > 0 && (
+        <DetalhesTarefaAuvo
+          detalhes={selecionada.detalhes}
+          checkInAt={selecionada.checkInAt}
+          checkOutAt={selecionada.checkOutAt}
+        />
+      )}
+
+      {temEscrita && (
+        <div className="rounded-[8px] border border-line bg-paper p-2.5">
+          <label
+            htmlFor="status-os-operacional"
+            className="text-xs font-semibold uppercase tracking-wider text-ink-3"
+          >
+            Alterar status
+          </label>
+          <div className="mt-2 flex gap-2">
+            <select
+              id="status-os-operacional"
+              className="input flex-1"
+              value={selecionada.status}
+              disabled={salvando}
+              onChange={(event) => onAlterarStatus(event.target.value as StatusOrdemServico)}
+            >
+              {STATUS_OS.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="mt-2 text-xs text-ink-3">
+            Planejamento dispara o gatilho Auvo já existente quando aplicável.
+          </p>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div>
       <div className="border-b border-line-soft px-4 py-3">
@@ -633,15 +752,26 @@ function DetalheOs({
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
             Resumo da OS
           </p>
-          {temEscrita && (
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={onEditar}
-              className="text-xs font-semibold text-orange hover:text-orange-deep"
+              onClick={() => setExpandido(true)}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink"
+              aria-label="Expandir detalhe da OS"
             >
-              Editar
+              <Expand className="h-3.5 w-3.5" />
+              Expandir
             </button>
-          )}
+            {temEscrita && (
+              <button
+                type="button"
+                onClick={onEditar}
+                className="text-xs font-semibold text-orange hover:text-orange-deep"
+              >
+                Editar
+              </button>
+            )}
+          </div>
         </div>
         <Tooltip content="Numeração interna do PCM (Chamado) — não é o ticket/task do Auvo.">
           <p className="mt-1 inline-block text-xs font-brand tabular-nums text-ink-3">
@@ -655,104 +785,41 @@ function DetalheOs({
         </p>
       </div>
 
-      <div className="space-y-3 p-4">
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <Info label="Status" value={rotuloStatusOs(selecionada.status)} />
-          <Info
-            label="Prioridade"
-            value={PRIORIDADE_LABEL[selecionada.prioridade] ?? selecionada.prioridade}
-          />
-          <Info label="Categoria" value={selecionada.categoria} />
-          <Info label="Score GUT" value={String(selecionada.scorePcm)} />
-          <Info
-            label="Fatores"
-            value={`${selecionada.gravidade ?? 1} · ${selecionada.urgencia ?? 1} · ${
-              selecionada.tendencia ?? 1
-            }`}
-          />
-          <Info
-            label="Auvo"
-            value={
-              selecionada.auvoTaskId
-                ? `Task ${selecionada.auvoTaskId}`
-                : selecionada.auvoSyncStatus || "Sem task"
-            }
-          />
-          <Info
-            label="Técnico"
-            value={
-              selecionada.tecnicoNome ??
-              (typeof selecionada.detalhes?.tecnicoNomeAuvo === "string"
-                ? selecionada.detalhes.tecnicoNomeAuvo
-                : "Não atribuído")
-            }
-          />
-          {selecionada.dataAgendada && (
-            <Info
-              label="Agendada"
-              value={new Date(selecionada.dataAgendada).toLocaleString("pt-BR")}
-            />
-          )}
-          {selecionada.checkInAt && (
-            <Info
-              label="Check-in"
-              value={new Date(selecionada.checkInAt).toLocaleString("pt-BR")}
-            />
-          )}
-          {selecionada.checkOutAt && (
-            <Info
-              label="Check-out"
-              value={new Date(selecionada.checkOutAt).toLocaleString("pt-BR")}
-            />
-          )}
-        </div>
+      <div className="space-y-3 p-4">{corpo}</div>
 
-        {selecionada.auvoSyncError && (
-          <div className="rounded-[8px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#A12D24]">
-              Erro Auvo
-            </p>
-            <p className="mt-1 text-sm text-[#7A241D]">{selecionada.auvoSyncError}</p>
-          </div>
-        )}
-
-        {selecionada.detalhes && Object.keys(selecionada.detalhes).length > 0 && (
-          <DetalhesTarefaAuvo
-            detalhes={selecionada.detalhes}
-            checkInAt={selecionada.checkInAt}
-            checkOutAt={selecionada.checkOutAt}
-          />
-        )}
-
-        {temEscrita && (
-          <div className="rounded-[8px] border border-line bg-paper p-2.5">
-            <label
-              htmlFor="status-os-operacional"
-              className="text-xs font-semibold uppercase tracking-wider text-ink-3"
-            >
-              Alterar status
-            </label>
-            <div className="mt-2 flex gap-2">
-              <select
-                id="status-os-operacional"
-                className="input flex-1"
-                value={selecionada.status}
-                disabled={salvando}
-                onChange={(event) => onAlterarStatus(event.target.value as StatusOrdemServico)}
+      {expandido && (
+        <div className="modal-backdrop">
+          <div className="modal-panel max-w-4xl">
+            <div className="flex items-start justify-between gap-2 border-b border-line-soft px-5 py-3">
+              <div className="min-w-0">
+                <Tooltip content="Numeração interna do PCM (Chamado) — não é o ticket/task do Auvo.">
+                  <p className="inline-block text-xs font-brand tabular-nums text-ink-3">
+                    {selecionada.numero}
+                  </p>
+                </Tooltip>
+                <h2 className="mt-0.5 truncate text-lg font-semibold text-ink">
+                  {selecionada.titulo}
+                </h2>
+                <p className="mt-0.5 text-xs text-ink-3">{selecionada.clienteNome}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setExpandido(false)}
+                className="shrink-0 rounded-[6px] p-1.5 text-ink-3 hover:bg-line-soft hover:text-ink"
+                aria-label="Fechar"
               >
-                {STATUS_OS.map((status) => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <p className="mt-2 text-xs text-ink-3">
-              Planejamento dispara o gatilho Auvo já existente quando aplicável.
-            </p>
+            <div className="space-y-3 p-5">
+              <p className="text-sm leading-relaxed text-ink-2">
+                {selecionada.descricao?.trim() || "Sem descrição informada para esta OS."}
+              </p>
+              {corpo}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

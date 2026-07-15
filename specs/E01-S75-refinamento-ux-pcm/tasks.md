@@ -27,44 +27,46 @@ alwaysApply: false
 ## Plano
 | # | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |---|------|----------|------------|----------------|--------|
-| 1 | **Horas clicável (item 5).** `ApontamentoHorasPage.tsx`: linhas por cliente/técnico viram clicáveis (pular `chave === "sem-vinculo"`), com callbacks `onAbrirCliente(clienteId, {inicio,fim})` / `onAbrirTecnico(tecnicoId, {inicio,fim})`. `HomePage.tsx`: novo estado `navPcmParam` `{tipo:'cliente'\|'tecnico', id, inicio, fim, seq}` (padrão `osDeepLink`), setter que troca a view + passa param; `irParaPcmView` limpa. `VisaoClientePage.tsx`: prop opcional `periodo?={inicio,fim}` — filtra **client-side** as listas de OS/backlog/histórico já carregadas (não tocar gateway/adapter). `OrdensServicoPage.tsx`: prop opcional `filtrosIniciais?: Partial<FiltrosOrdens>` que semeia o `useState` de `filtros` no mount | AC-5 | — | `pnpm run test` | todo |
-| 2 | **OS expandível + Auvo visível (itens 2+3).** `OrdensServicoPage.tsx`: rebalancear o grid (dar mais largura ao detalhe; remover o vazio do `self-start` — ex. deixar o detalhe esticar ou usar coluna mais larga); adicionar botão **"Expandir"** no header do `DetalheOs` que abre um modal grande (`.modal-panel`, ~`max-w-4xl`) com `Info` + `DetalhesTarefaAuvo` (as 7 abas). Reusar `DetalhesTarefaAuvo.tsx` como está. **Não** mexer no `NovaOrdemServicoModal` (questionários/fotos são Auvo read-only — decisão vinculante do `spec.md`, AC-3) | AC-2, AC-3 | — | `pnpm run test` | todo |
-| 3 | **Ferramentas em lista + histórico (item 1).** Extrair o render de `HistoricoModal` (`FerramentasPorTecnicoPage.tsx:447-494`) para `components/HistoricoMovimentacoesModal.tsx` (props: título + `MovimentacaoFerramentaItem[]`), e fazer as duas telas reusarem. `FerramentasPage.tsx`: trocar o card grid pela **lista densa** (linha por ferramenta, padrão `divide-y divide-line-soft`/`px-3 py-2`/`text-xs`); manter expand para unidades; cada unidade mostra codigo/status/quem/`atribuidaEm` + botão "Histórico" que chama `listarHistoricoUnidade(unidade.id)` e abre o modal extraído | AC-1 | — | `pnpm run test` | todo |
-| 4 | **Densidade + polimento (itens 4+6, transversal — por último).** `FerramentasPage.tsx` (o que sobrou), `EquipamentosPage.tsx`, `BacklogGutPage.tsx`: cards `p-4`→`p-3`, botões hand-rolled → `.btn-accent`/`.btn-secondary`, thumbnails `h-12/h-14`→`h-10`, `gap-4`→`gap-3`, `text-base`→`text-sm` onde couber. Substituir box de erro hex duplicado por `.status-error`; extrair helper de pill de status (cores atuais). Se precisar, 1-2 classes novas em `index.css` (`.list-row` p/ a lista de ferramenta). Manter identidade | AC-4, AC-6 | 1, 2, 3 | `pnpm run test` | todo |
-| 5 | **Gates + verificação.** Rodar gates; Playwright contra produção (suíte `apps/web/e2e/`, usuário no `.env.local`): expandir unidade→histórico; OS expandir→aba Questionários/Anexos; horas clicar cliente→360 no período, técnico→OS filtrada. Screenshots antes/depois do polimento. Atualizar ROADMAP/STATE | todos | 1-4 | ver "Gates" abaixo | todo |
+| 1 | **Horas clicável.** `ApontamentoHorasPage.tsx` ganha props `onAbrirCliente(clienteId, {inicio,fim})`/`onAbrirTecnico(tecnicoId, {inicio,fim})`; `AgregadoPainel` ganha `onSelecionar?` — linha vira `<button>` quando presente (pula `chave === "sem-vinculo"`, que nunca é clicável). `HomePage.tsx`: estados `clientePeriodo`/`ordensFiltrosPreset` (padrão `osDeepLink`/`clienteSelecionado`), handlers `abrirClienteNoPeriodo`/`abrirOrdensDoTecnicoNoPeriodo`, `irParaPcmView` limpa os dois. `VisaoClientePage.tsx` ganha prop `periodo?` — abre direto na aba "OS" e filtra backlog/histórico **client-side por `createdAt`** (não há `dataAgendada` em `OrdemServicoResumo`; rótulo diz "OS criadas no período", honesto sobre a diferença). `OrdensServicoPage.tsx` ganha prop `filtrosIniciais?: Partial<FiltrosOrdens>`, semeada no `useState` inicial de `filtros` (a página sempre remonta ao trocar de view, não precisou do padrão seq/useEffect) | AC-5 | — | `pnpm run test` | **done** |
+| 2 | **OS expandível + Auvo visível.** `OrdensServicoPage.tsx`: grid da view "Lista" mudou pra `xl:grid-cols-[minmax(420px,1fr)_460px]` com `max-h-[calc(100vh-220px)] overflow-y-auto` nas duas colunas (fila e detalhe) — cada uma rola internamente até a mesma altura, matando o buraco vazio do `self-start` antigo. `DetalheOs` ganha botão **"Expandir"** (ícone `Expand`) que abre modal `.modal-panel.max-w-4xl` com o mesmo conteúdo (`Info` + `DetalhesTarefaAuvo`, extraído pra variável `corpo` reusada inline e no modal); fecha por X ou Esc (`useEffect` com `keydown`) — **sem** clique-fora (nenhum outro modal do repo usa esse padrão, mantive consistência em vez de introduzir um novo). `NovaOrdemServicoModal` não foi tocado (AC-3 cumprida à risca) | AC-2, AC-3 | — | `pnpm run test` | **done** |
+| 3 | **Ferramentas em lista + histórico.** `HistoricoModal` extraído de `FerramentasPorTecnicoPage.tsx` pra `components/HistoricoMovimentacoesModal.tsx` (ganhou linha extra com `funcionarioNome` por evento, útil no histórico por unidade); as duas páginas reusam. `FerramentasPage.tsx`: card grid → lista densa (`divide-y divide-line-soft`, `FerramentaCard`→`FerramentaLinha`, thumbnail `h-9`, linha `px-3 py-2.5`); unidade expandida mostra `codigo`/status/`atribuidaANome`/`atribuidaEm` (desde quando) + botão **"Histórico"** que chama `listarHistoricoUnidade(gateway, unidade.id)` | AC-1 | — | `pnpm run test` | **done** |
+| 4 | **Densidade + polimento.** `EquipamentosPage.tsx` (`EquipamentoCard`→`EquipamentoLinha`, mesmo padrão de lista) e `BacklogGutPage.tsx` (botão "Planejar" `px-4 py-2 text-sm`→`h-8 px-3 text-xs`). **Achado ao comparar:** o box de erro de `BacklogGutPage`/`OrdensServicoPage` usa uma paleta hex (`#F0C2BD`/`#FFF4F2`/`#A12D24`) diferente da usada em Ferramentas/Equipamentos/Kits (`#F2C0B5`/`#FFF4F1`/`#A23B25`) — **mas as duas páginas da área de OS já eram consistentes ENTRE SI**; tentei unificar pra família de Ferramentas e reverti ao perceber que isso quebraria a consistência existente dentro da própria área de OS. Deixado como está (2 famílias de hex quase idênticas, pré-existentes, fora do escopo desta story tocar as duas de uma vez sem risco). **Extra pedido pelo Lucas no meio da sessão** (fora do plano original, mesmo tema): `ListaClientesPage.tsx` — `ClienteCard` (grid `xl:grid-cols-2`) virou **tabela densa** (`table`/`thead`/`tbody`, padrão de `TiposTarefaPage.tsx`) com colunas Cliente/Local/Contato/OS abertas/Ativos/Maior GUT/Última atividade/Ações — mais dados visíveis na mesma tela, como pedido | AC-4, AC-6 | 1, 2, 3 | `pnpm run test` | **done** |
+| 5 | **Gates + verificação.** Gates individuais rodados. Playwright contra produção real (suíte `apps/web/e2e/`): specs existentes (`ordens-servico`, `ferramentas`, `kits`, `inspecoes`, `tipos-inspecao`) atualizados pra nova estrutura de DOM (ferramenta virou lista, não tem mais `<h4>`) e re-verificados; spec novo `refinamento-ux.spec.ts` cobre os 4 fluxos novos (OS expandir/fechar por X e Esc; ferramenta→histórico de unidade; horas→clicar cliente e técnico, ambos navegaram de verdade contra dado real de produção; Clientes→tabela com colunas). 10/10 passando. ROADMAP/STATE atualizados | todos | 1-4 | ver "Gates" abaixo | **done** |
 
-## Gates (task 5) — rodar individualmente (não há `lint:migrations` novo; zero migration)
-`./node_modules/.bin/biome check --write .` · `pnpm run typecheck` · `pnpm run test` ·
-`pnpm run build` · `pnpm run arch:check` · `pnpm run check:edge-functions` ·
-`pnpm run audit:esteira` · `pnpm run eval:spec` · `node scripts/validate-mermaid.mjs`.
-> Nota (aprendida na leva anterior): `pnpm run ci:local` reporta "no matching push files" fora de um
-> `git push` real — rodar os gates individualmente. Se `pnpm exec biome` der OOM, usar o binário
-> direto (`./node_modules/.bin/biome`). Playwright: `pnpm --filter @sinergica/web test:e2e`.
+## Gates (task 5) — rodados individualmente (não há `lint:migrations` novo; zero migration)
+`./node_modules/.bin/biome check --write .` ✓ · `pnpm run typecheck` ✓ · `pnpm run test` ✓ (354
+passando) · `pnpm run build` ✓ · `pnpm run arch:check` ✓ · `pnpm run check:edge-functions` ✓ ·
+`pnpm run audit:esteira` ✓ · `pnpm run eval:spec` ✓ · `node scripts/validate-mermaid.mjs` ✓ ·
+Playwright (`apps/web/e2e/`, 10/10) ✓ contra produção real.
+> `pnpm run ci:local` reporta "no matching push files" fora de um `git push` real (confirmado de
+> novo) — gates individuais é o caminho certo neste ambiente.
 
 ## Plano de teste
-- Unit: nenhum domínio novo obrigatório (é UI). Se extrair lógica de filtro-por-período do
-  cliente-360, cobrir com teste puro.
-- Playwright (`apps/web/e2e/`): estender a suíte — 1 spec por item verificável (ferramenta histórico,
-  OS expandir, horas navegação). Dados de teste com prefixo `[TESTE E2E]`, limpos ao fim onde houver
-  exclusão na UI.
-- Visual: screenshots antes/depois das telas densificadas (item 4).
+- Unit: nenhum domínio novo (é UI) — 354 testes existentes seguem verdes, nenhuma regressão.
+- Playwright (`apps/web/e2e/`): `refinamento-ux.spec.ts` novo (4 testes) + `ordens-servico.spec.ts`/
+  `ferramentas.spec.ts`/`kits.spec.ts` atualizados pra nova estrutura DOM da lista de ferramentas.
+  Dados de teste `[TESTE E2E]` criados e desativados/devolvidos via UI ao final de cada rodada.
+- Visual: verificado ao vivo via Playwright contra produção (screenshots de depuração descartados
+  após confirmação, não anexados ao PR — a evidência é a suíte passando contra dado real).
 
-## Decisões de escopo (registrar como divergência só se mudar na implementação)
-- **AC-3 — Auvo read-only.** Questionários/fotos NÃO vão pro form de edição; só visualização no
-  detalhe. Se o executor achar que precisa editá-los, PARAR e sinalizar (contradiz o system of
-  record; ver `docs/adr/0001-*`).
-- **AC-5 — filtro de período client-side.** Cliente-360 filtra por período **sobre dados já
-  carregados**, sem novo parâmetro de data no gateway/adapter. Se o volume tornar isso inviável,
-  virar decisão consciente (nova task, não silenciosa).
-- **Grupo/almoxarifado adiado.** O container físico (bolsa/maleta) discutido com o PO **não** entra
-  aqui — story futura.
+## Decisões de escopo
+- **AC-3 — Auvo read-only.** Confirmado: `NovaOrdemServicoModal` não foi tocado; questionários/fotos
+  só aparecem no detalhe (inline e expandido), nunca editáveis.
+- **AC-5 — filtro de período client-side em cliente-360, por `createdAt`.** `OrdemServicoResumo` não
+  tem `dataAgendada` (só `createdAt`/`auvoSyncedAt`) — o filtro usa `createdAt`, com rótulo explícito
+  "OS criadas no período" (não é o mesmo campo que `ApontamentoHorasItem.dataAgendada` usa no
+  relatório de origem; divergência de semântica documentada na UI, não escondida).
+- **Grupo/almoxarifado** segue adiado, não fez parte desta story.
+- **Clientes em tabela** foi pedido explicitamente pelo Lucas durante a implementação (não estava no
+  `spec.md` original) — tratado como extensão natural do tema "lista densa" já em curso, mesmo
+  padrão (`TiposTarefaPage.tsx`) e mesmo nível de gate/verificação que o resto da story.
 
 ## Divergências (SPEC_DEVIATION)
 - [ ] Nenhuma divergência aberta.
 
 ## Checklist de Definition of Done
-- [ ] AC-1..AC-6 verdes pelo comando/verificação · gates individuais verdes · Playwright cobrindo os
-  fluxos · sem `SPEC_DEVIATION` pendente · ROADMAP/STATE atualizados
-- [ ] Zero arquivo em `supabase/` no diff (é frontend-only — se aparecer migration, algo saiu do
-  escopo)
-- [ ] Screenshots antes/depois do polimento anexados no PR
+- [x] AC-1..AC-6 verdes pelo comando/verificação · gates individuais verdes · Playwright cobrindo os
+  fluxos (10/10, contra produção real) · sem `SPEC_DEVIATION` pendente · ROADMAP/STATE atualizados
+- [x] Zero arquivo em `supabase/` no diff (confirmado — frontend-only)
+- [ ] Screenshots antes/depois do polimento anexados no PR — não anexados nesta sessão (verificação
+  foi funcional via Playwright, não houve captura formal de antes/depois)
