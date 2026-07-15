@@ -48,6 +48,9 @@ Deno.test("ferramentasDescriptor — inbound preserva employeesStock como dado a
       custo_unitario: null,
       ativo: true,
       employees_stock: [{ userId: 42, amount: 2 }],
+      imagem_url: null,
+      uri_anexos: [],
+      codigo_auvo: null,
     },
   );
 });
@@ -76,6 +79,34 @@ Deno.test("ferramentasDescriptor — inbound real: unitaryValue/unitaryCost vêm
       custo_unitario: 0,
       ativo: true,
       employees_stock: undefined,
+      imagem_url: null,
+      uri_anexos: [],
+      codigo_auvo: null,
     },
   );
+});
+
+Deno.test("ferramentasDescriptor — E01-S65: captura imageUrl/uriAttachments/code (só leitura)", () => {
+  const linha = ferramentasDescriptor.fromAuvo({
+    id: 55,
+    name: "Furadeira",
+    imageUrl: "https://auvo-s3.example.com/products/55.jpg",
+    uriAttachments: ["https://auvo-s3.example.com/products/55-manual.pdf"],
+    code: "FUR-A1",
+  });
+  assertEquals(linha.imagem_url, "https://auvo-s3.example.com/products/55.jpg");
+  assertEquals(linha.uri_anexos, ["https://auvo-s3.example.com/products/55-manual.pdf"]);
+  assertEquals(linha.codigo_auvo, "FUR-A1");
+});
+
+Deno.test("ferramentasDescriptor — E01-S65: toAuvo/toAuvoUpdate NUNCA enviam imageUrl (escrita não confirmada)", () => {
+  const linhaComImagem = {
+    id: "x",
+    nome: "Furadeira",
+    quantidade_total: 1,
+    quantidade_minima: 0,
+    imagem_url: "https://exemplo.com/foto.jpg",
+  };
+  assertEquals("imageUrl" in ferramentasDescriptor.toAuvo(linhaComImagem), false);
+  assertEquals("imageUrl" in (ferramentasDescriptor.toAuvoUpdate?.(linhaComImagem) ?? {}), false);
 });

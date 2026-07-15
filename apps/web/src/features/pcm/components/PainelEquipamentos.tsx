@@ -27,6 +27,15 @@ export function PainelEquipamentos({ equipamentos }: { equipamentos: ResultadoEq
         <div className="divide-y divide-line-soft">
           {equipamentos.map((eq) => (
             <div key={eq.id} className="px-5 py-3 flex items-center gap-2">
+              {eq.urlImagem ? (
+                <img
+                  src={eq.urlImagem}
+                  alt={eq.nome}
+                  className="h-8 w-8 shrink-0 rounded-[4px] border border-line object-cover"
+                />
+              ) : (
+                <div className="h-8 w-8 shrink-0 rounded-[4px] border border-line bg-line-soft" />
+              )}
               <span className="text-sm text-ink truncate">{eq.nome}</span>
             </div>
           ))}

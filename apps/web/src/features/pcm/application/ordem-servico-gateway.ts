@@ -46,7 +46,25 @@ export interface OrdemServicoCriada {
   numero: string;
 }
 
+/** E01-S69: campos editáveis de uma OS já existente — deliberadamente menor que
+ * `CriarOrdemServicoInput` (sem cliente/origem/solicitante/tipo de tarefa, que não fazem sentido
+ * mudar depois de aberta; ver spec.md AC-1). */
+export interface EditarOrdemServicoInput {
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  categoria: CategoriaOs;
+  prioridade: "baixa" | "normal" | "media" | "alta" | "critica";
+  gravidade: number;
+  urgencia: number;
+  tendencia: number;
+  tecnicoId: string | null;
+  dataPrevista: string | null;
+  updatedBy: string;
+}
+
 export interface OrdemServicoGateway {
   carregarDadosAbertura(): Promise<DadosAberturaOs>;
   criarOrdemServico(input: CriarOrdemServicoInput): Promise<OrdemServicoCriada>;
+  editarOrdemServico(input: EditarOrdemServicoInput): Promise<void>;
 }

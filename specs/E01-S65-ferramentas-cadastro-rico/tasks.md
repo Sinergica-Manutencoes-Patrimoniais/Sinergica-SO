@@ -12,11 +12,11 @@ alwaysApply: false
 ## Plano
 | # | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |---|------|----------|------------|----------------|--------|
-| 1 | Testar `PATCH /products/{id}` com `imageUrl` num produto de teste reversível (credencial Auvo real) — documentar resultado nesta pasta (append ao spec.md, seção "Achado técnico") | AC-1 | credencial Auvo | manual (curl) | todo |
-| 2 | Atualizar `AuvoProduct`/mapeamento em `_shared/auvo/registry/ferramentas.ts` com `imageUrl`, `uriAttachments`, `code`; `toAuvoUpdate` inclui `imageUrl` só se a task 1 confirmar escrita | AC-1, AC-2 | 1 | `pnpm run test` | todo |
-| 3 | `domain/ferramentas.ts`: estender `FerramentaFormData`/`FerramentaItem` com `imagemUrl`, `codigoAuvo`, validação de URL de imagem (se editável) | AC-2, AC-3 | 2 | `pnpm run test` | todo |
-| 4 | Reformular formulário em `FerramentasPage.tsx`: campos novos, preview de imagem, categoria com busca, validação inline; lista ganha thumbnail quando houver imagem | AC-2–AC-4 | 3 | `pnpm run test` | todo |
-| 5 | `pnpm run ci:local` + Playwright (cadastrar com/sem imagem conforme resultado da task 1) + ROADMAP/STATE | todos | 1–4 | `pnpm run ci:local` | todo |
+| 1 | Testar `PATCH /products/{id}` com `imageUrl` num produto de teste reversível (credencial Auvo real) — documentar resultado nesta pasta (append ao spec.md, seção "Achado técnico") | AC-1 | credencial Auvo | manual (curl) | **não executado** — ação de escrita em produção externa pede confirmação explícita do Lucas antes de rodar (credenciais disponíveis, teste não autorizado nesta sessão). Implementação seguiu o caminho conservador (não aceita escrita) — ver spec.md |
+| 2 | `AuvoProduct`/`FerramentaRow` em `_shared/auvo/registry/ferramentas.ts` ganham `imageUrl`/`uriAttachments`/`code` — só em `fromAuvo` (leitura); `toAuvo`/`toAuvoUpdate` explicitamente NÃO incluem `imageUrl` (teste garante isso). Migration `0088` (`imagem_url`/`uri_anexos`/`codigo_auvo`) | AC-1, AC-2 | 1 | `pnpm run test`/`lint:migrations` | **done** |
+| 3 | `domain/ferramentas.ts`: `FerramentaItem` ganha `imagemUrl`/`codigoAuvo`/`valorUnitario`/`custoUnitario`; `FerramentaFormData` ganha `valorUnitario`/`custoUnitario` (editáveis — write path já existia em `toAuvoUpdate`, só faltava UI); `validarFerramentaInline` novo (mapa de erros por campo, sem lançar) | AC-2, AC-3 | 2 | `pnpm run test` | **done** |
+| 4 | `FerramentasPage.tsx`: card ganha thumbnail (`imagemUrl` ou placeholder) + valor/custo/código Auvo; modal ganha preview de imagem (read-only, com aviso "cadastre no Auvo"), valor/custo unitário editáveis, categoria com busca (`<input list>` + `<datalist>`, autocomplete nativo), validação inline (erro por campo antes de submeter, botão desabilitado se houver erro) | AC-2–AC-4 | 3 | `pnpm run test` | **done** |
+| 5 | Gates + ROADMAP/STATE | todos | 1–4 | `biome check --write .`, `typecheck`, `test` (320 passando), `build`, `arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`, `validate-mermaid` | **done, todos verdes** — verificação visual não realizada (sem Playwright neste ambiente) |
 
 ## Plano de teste
 - Unit: validação de URL de imagem (vazio ok, URL inválida rejeitada).

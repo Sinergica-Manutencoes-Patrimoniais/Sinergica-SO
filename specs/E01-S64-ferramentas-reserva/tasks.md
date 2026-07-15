@@ -11,12 +11,12 @@ alwaysApply: false
 ## Plano
 | # | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |---|------|----------|------------|----------------|--------|
-| 1 | Migration `NNNN_E01-S64_ferramenta_reservas.sql`: `pcm.ferramenta_reservas` (unidade opcional, funcionario, período, status `pendente/efetivada/cancelada`), exclusion constraint ou check via trigger para não sobrepor no mesmo `unidade_id` — RLS FORCE padrão | AC-1, AC-2 | S63 | `pnpm run lint:migrations` | todo |
-| 2 | `domain/ferramenta-reservas.ts`: detecção de sobreposição de intervalo, escolha de unidade livre pra reserva genérica — puro, testes (borda: intervalos que só tocam na borda) | AC-1, AC-2 | 1 | `pnpm run test` | todo |
-| 3 | Use cases + adapter: criar/cancelar/efetivar reserva, listar agenda | AC-1, AC-3–AC-5 | 2 | `pnpm run test` | todo |
-| 4 | UI: seção de reservas em `FerramentasPage` (criar, agenda por data, efetivar/cancelar) | AC-1, AC-3–AC-5 | 3 | `pnpm run test` | todo |
-| 5 | pgTAP: constraint de não-sobreposição realmente rejeita conflito | AC-2 | 1 | CI `db-tests` | todo |
-| 6 | `pnpm run ci:local` + Playwright (reservar→efetivar, reservar→cancelar, conflito rejeitado) + ROADMAP/STATE | todos | 1–5 | `pnpm run ci:local` | todo |
+| 1 | Migration `0087_E01-S64_ferramenta_reservas.sql`: `pcm.ferramenta_reservas` (unidade opcional = "qualquer disponível", funcionario, período `data_inicio`/`data_fim`, status `pendente/efetivada/cancelada`). Trigger `fn_validar_reserva_ferramenta` (não exclusion constraint/GiST — evita depender de `btree_gist`, extensão nunca usada neste repo, sem como verificar disponibilidade no Supabase daqui) rejeita conflito de intervalo pra reserva de UNIDADE ESPECÍFICA; RLS FORCE padrão | AC-1, AC-2 | S63 | `pnpm run lint:migrations` | **done** |
+| 2 | `domain/ferramenta-reservas.ts`: `validarCriarReserva` (sobreposição pra unidade específica; "pior caso" conservador pra reserva genérica — conta reservas sobrepondo vs unidades ativas), `validarEfetivarReserva`, `validarCancelarReserva`, `ordenarAgendaReservas` — puro, 12 testes vitest (inclusive borda: intervalo que só toca a borda de outro conta como conflito, deliberadamente conservador) | AC-1, AC-2 | 1 | `pnpm run test` | **done** |
+| 3 | `application/ferramenta-reservas{-gateway}.ts` + `infrastructure/supabase-ferramenta-reservas-adapter.ts`: criar/cancelar/efetivar (efetivar orquestra `atribuirUnidadeFerramenta` da S63 + marca reserva `efetivada`), listar reservas | AC-1, AC-3–AC-5 | 2 | `pnpm run test` | **done** |
+| 4 | UI: seção "Reservas" em `FerramentasPage.tsx` — form criar (ferramenta→unidade opcional "qualquer disponível"→técnico→datas), agenda ordenada (só pendentes), botões Efetivar (modal escolhe unidade se genérica) e Cancelar | AC-1, AC-3–AC-5 | 3 | `pnpm run test` | **done** |
+| 5 | pgTAP `supabase/tests/ferramenta_reservas_rls.test.sql`: leitura não cria reserva; escrita cria (nasce pendente); conflito de intervalo na mesma unidade rejeitado (P0001); reserva sem sobreposição aceita; cancelar/efetivar via UPDATE funcionam (reserva não é append-only como movimentações — pode mudar de status) — 7 asserts | AC-2 | 1 | CI `db-tests` (Docker ausente local — não executado aqui) | **done** (escrito, não executado) |
+| 6 | Gates + ROADMAP/STATE | todos | 1–5 | `biome check --write .`, `typecheck`, `test` (317 passando), `build`, `arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`, `validate-mermaid` | **done, todos verdes** — pgTAP não roda local (sem Docker), verificação visual não realizada (sem Playwright neste ambiente) |
 
 ## Plano de teste
 - Unit: sobreposição (mesmo dia, borda início=fim de outra, sem sobreposição).

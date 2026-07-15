@@ -2,6 +2,7 @@ import { supabase } from "../../../lib/supabase-client";
 import type {
   CriarOrdemServicoInput,
   DadosAberturaOs,
+  EditarOrdemServicoInput,
   OrdemServicoCriada,
   OrdemServicoGateway,
 } from "../application/ordem-servico-gateway";
@@ -100,5 +101,26 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
 
     if (error) throw error;
     return { id: data.id as string, numero: data.numero as string };
+  },
+
+  async editarOrdemServico(input: EditarOrdemServicoInput): Promise<void> {
+    const { error } = await supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .update({
+        titulo: input.titulo,
+        descricao: input.descricao,
+        categoria: input.categoria,
+        prioridade: input.prioridade,
+        gravidade: input.gravidade,
+        urgencia: input.urgencia,
+        tendencia: input.tendencia,
+        tecnico_funcionario_id: input.tecnicoId,
+        data_agendada: input.dataPrevista,
+        updated_at: new Date().toISOString(),
+        updated_by: input.updatedBy,
+      })
+      .eq("id", input.id);
+    if (error) throw error;
   },
 };

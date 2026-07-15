@@ -12,25 +12,42 @@ import {
   RefreshCw,
   Search,
   Sheet,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { criarInspecao, criarItemInspecao } from "../application/qualidade";
+import {
+  aplicarTemplate,
+  criarInspecao,
+  criarItemInspecao,
+  editarInspecao,
+  editarItemInspecao,
+  excluirItemInspecao,
+} from "../application/qualidade";
 import type {
+  ChecklistTemplate,
   ClienteOpcao,
   InspecaoItem,
   InspecaoResumo,
   ItemInspecaoImportado,
+  MidiaItem,
+  TipoInspecao,
 } from "../application/qualidade-gateway";
 import {
+  GRAUS_RISCO,
+  GRAU_RISCO_LABEL,
+  type GrauRisco,
   INSPECAO_STATUS_LABEL,
+  type ItemResultado,
+  RESULTADOS_INSPECAO,
   RESULTADO_LABEL,
   SISTEMAS_INSPECAO,
   SISTEMA_ICONE,
   type SistemaInspecao,
+  grauRiscoColor,
   resultadoColor,
   rotuloSistema,
   statusColor,
@@ -40,9 +57,21 @@ import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-a
 type Estado =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
-  | { fase: "pronto"; clientes: ClienteOpcao[]; inspecoes: InspecaoResumo[] };
+  | {
+      fase: "pronto";
+      clientes: ClienteOpcao[];
+      inspecoes: InspecaoResumo[];
+      tipos: TipoInspecao[];
+      templates: ChecklistTemplate[];
+    };
 
-type ModalAtivo = "nova-inspecao" | "novo-item" | "importar-pdf" | "importar-xls" | null;
+type ModalAtivo =
+  | "nova-inspecao"
+  | "editar-inspecao"
+  | "novo-item"
+  | "importar-pdf"
+  | "importar-xls"
+  | null;
 type FiltroSistema = SistemaInspecao | "todos";
 
 const SISTEMAS: SistemaInspecao[] = SISTEMAS_INSPECAO.map((item) => item.valor);
@@ -83,6 +112,7 @@ export function InspecoesPage() {
   const [busca, setBusca] = useState("");
   const [filtroSistema, setFiltroSistema] = useState<FiltroSistema>("todos");
   const [modalAtivo, setModalAtivo] = useState<ModalAtivo>(null);
+  const [itemEditando, setItemEditando] = useState<InspecaoItem | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -97,11 +127,13 @@ export function InspecoesPage() {
     setEstado({ fase: "carregando" });
     setErroAcao(null);
     try {
-      const [clientes, inspecoes] = await Promise.all([
+      const [clientes, inspecoes, tipos, templates] = await Promise.all([
         supabaseQualidadeAdapter.listarClientes(),
         supabaseQualidadeAdapter.listarInspecoes(),
+        supabaseQualidadeAdapter.listarTiposInspecao(),
+        supabaseQualidadeAdapter.listarTemplates(),
       ]);
-      setEstado({ fase: "pronto", clientes, inspecoes });
+      setEstado({ fase: "pronto", clientes, inspecoes, tipos, templates });
       setSelecionadaId((atual) => atual ?? inspecoes[0]?.id ?? null);
     } catch (error) {
       setEstado({
@@ -161,52 +193,119 @@ export function InspecoesPage() {
     [itens],
   );
 
-  async function handleCriarItem(input: NovoItemInput) {
+  async function handleCriarOuEditarItem(input: NovoItemInput) {
     if (!user || !inspecaoSelecionada) return;
     setSalvando(true);
     setErroAcao(null);
     try {
-      const item = await criarItemInspecao(supabaseQualidadeAdapter, {
+      const payload = {
         inspecaoId: inspecaoSelecionada.id,
         clientId: inspecaoSelecionada.clientId,
         sistema: input.sistema,
         localizacao: input.localizacao || null,
         descricao: input.descricao,
-        resultado: "nao_avaliado",
-        severidade: "media",
-        recomendacao: null,
-        prazoRecomendado: null,
-        fotoUrl: null,
-        createdBy: user.id,
-      });
-      setItens((atuais) => [...atuais, item]);
+        resultado: input.resultado,
+        severidade: "media" as const,
+        recomendacao: input.recomendacao || null,
+        prazoRecomendado: input.prazoRecomendado || null,
+        fotoUrl: itemEditando?.fotoUrl ?? null,
+        categoria: input.categoria || null,
+        elemento: input.elemento || null,
+        identificacao: input.identificacao || null,
+        grauRisco: input.grauRisco || null,
+        estadoConservacao: input.estadoConservacao || null,
+        anomalia: input.anomalia || null,
+        medicoes: input.medicoes || null,
+        responsavelAcao: input.responsavelAcao || null,
+        observacoes: input.observacoes || null,
+      };
+      const item = itemEditando
+        ? await editarItemInspecao(supabaseQualidadeAdapter, {
+            ...payload,
+            id: itemEditando.id,
+            createdBy: user.id,
+            updatedBy: user.id,
+          })
+        : await criarItemInspecao(supabaseQualidadeAdapter, { ...payload, createdBy: user.id });
+      setItens((atuais) =>
+        itemEditando
+          ? atuais.map((atual) => (atual.id === item.id ? item : atual))
+          : [...atuais, item],
+      );
       setModalAtivo(null);
+      setItemEditando(null);
       void carregar();
     } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível adicionar item.");
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível salvar item.");
     } finally {
       setSalvando(false);
     }
   }
 
-  async function handleCriarInspecao(input: NovaInspecaoInput) {
+  async function handleExcluirItem(item: InspecaoItem) {
+    if (!user || !confirm("Excluir este item de inspeção?")) return;
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      await excluirItemInspecao(supabaseQualidadeAdapter, item.id);
+      setItens((atuais) => atuais.filter((atual) => atual.id !== item.id));
+      void carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir item.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function handleCriarOuEditarInspecao(input: NovaInspecaoInput) {
     if (!user || estado.fase !== "pronto") return;
     setSalvando(true);
     setErroAcao(null);
     try {
-      const criada = await criarInspecao(supabaseQualidadeAdapter, {
+      const payload = {
         clientId: input.clientId,
         titulo: input.titulo,
         dataInspecao: input.dataInspecao,
         responsavelTecnico: input.responsavelTecnico || null,
         observacoesGerais: input.observacoesGerais || null,
-        createdBy: user.id,
-      });
-      setEstado({ ...estado, inspecoes: [criada, ...estado.inspecoes] });
-      setSelecionadaId(criada.id);
+        tipoInspecaoId: input.tipoInspecaoId || null,
+        edificacao: input.edificacao || null,
+        endereco: input.endereco || null,
+        horaInicio: input.horaInicio || null,
+        horaFim: input.horaFim || null,
+        inspetor: input.inspetor || null,
+        responsavelNoLocal: input.responsavelNoLocal || null,
+        escopo: input.escopo || null,
+        normaTecnica: input.normaTecnica || null,
+        art: input.art || null,
+        condicoes: input.condicoes || null,
+      };
+      if (modalAtivo === "editar-inspecao" && inspecaoSelecionada) {
+        const editada = await editarInspecao(supabaseQualidadeAdapter, {
+          ...payload,
+          id: inspecaoSelecionada.id,
+          createdBy: user.id,
+          updatedBy: user.id,
+        });
+        setEstado({
+          ...estado,
+          inspecoes: estado.inspecoes.map((item) => (item.id === editada.id ? editada : item)),
+        });
+      } else {
+        const criada = await criarInspecao(supabaseQualidadeAdapter, {
+          ...payload,
+          createdBy: user.id,
+        });
+        setEstado({ ...estado, inspecoes: [criada, ...estado.inspecoes] });
+        setSelecionadaId(criada.id);
+        if (input.templateId) {
+          await aplicarTemplate(supabaseQualidadeAdapter, criada.id, input.templateId, user.id);
+          await carregarItens(criada.id);
+        }
+      }
       setModalAtivo(null);
     } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível criar inspeção.");
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível salvar inspeção.");
     } finally {
       setSalvando(false);
     }
@@ -390,15 +489,30 @@ export function InspecoesPage() {
                   <ArrowLeft className="h-4 w-4" />
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{inspecaoSelecionada.titulo}</p>
+                  <p className="truncate text-sm font-semibold">
+                    {inspecaoSelecionada.codigo ? `${inspecaoSelecionada.codigo} · ` : ""}
+                    {inspecaoSelecionada.titulo}
+                  </p>
                   <p className="mt-0.5 truncate text-xs text-white/65">
                     {inspecaoSelecionada.clienteNome} ·{" "}
                     {formatarData(inspecaoSelecionada.dataInspecao)}
+                    {inspecaoSelecionada.tipoInspecaoNome
+                      ? ` · ${inspecaoSelecionada.tipoInspecaoNome}`
+                      : ""}
                   </p>
                 </div>
                 <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">
                   {INSPECAO_STATUS_LABEL[inspecaoSelecionada.status]}
                 </span>
+                {temEscrita && (
+                  <button
+                    type="button"
+                    onClick={() => setModalAtivo("editar-inspecao")}
+                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-white/85 hover:bg-white/10 hover:text-white"
+                  >
+                    Editar
+                  </button>
+                )}
               </div>
 
               {itens.length > 0 && (
@@ -447,7 +561,16 @@ export function InspecoesPage() {
               ) : (
                 <div className="space-y-3">
                   {itensFiltrados.map((item) => (
-                    <ItemInspecaoCard key={item.id} item={item} />
+                    <ItemInspecaoCard
+                      key={item.id}
+                      item={item}
+                      temEscrita={temEscrita}
+                      onEditar={() => {
+                        setItemEditando(item);
+                        setModalAtivo("novo-item");
+                      }}
+                      onExcluir={() => handleExcluirItem(item)}
+                    />
                   ))}
                 </div>
               )}
@@ -457,7 +580,10 @@ export function InspecoesPage() {
               <div className="sticky bottom-0 rounded-b-[10px] border-t border-line bg-card px-4 py-3">
                 <button
                   type="button"
-                  onClick={() => setModalAtivo("novo-item")}
+                  onClick={() => {
+                    setItemEditando(null);
+                    setModalAtivo("novo-item");
+                  }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-navy px-4 py-3 text-sm font-semibold text-white hover:bg-navy-deep"
                 >
                   <Plus className="h-4 w-4" />
@@ -477,19 +603,28 @@ export function InspecoesPage() {
         )}
       </section>
 
-      {modalAtivo === "nova-inspecao" && (
+      {(modalAtivo === "nova-inspecao" || modalAtivo === "editar-inspecao") && (
         <NovaInspecaoModal
           clientes={estado.clientes}
+          tipos={estado.tipos}
+          templates={estado.templates}
+          inspecao={
+            modalAtivo === "editar-inspecao" ? (inspecaoSelecionada ?? undefined) : undefined
+          }
           salvando={salvando}
           onClose={() => setModalAtivo(null)}
-          onSubmit={handleCriarInspecao}
+          onSubmit={handleCriarOuEditarInspecao}
         />
       )}
       {modalAtivo === "novo-item" && inspecaoSelecionada && (
         <NovoItemModal
+          item={itemEditando ?? undefined}
           salvando={salvando}
-          onClose={() => setModalAtivo(null)}
-          onSubmit={handleCriarItem}
+          onClose={() => {
+            setModalAtivo(null);
+            setItemEditando(null);
+          }}
+          onSubmit={handleCriarOuEditarItem}
         />
       )}
       {(modalAtivo === "importar-pdf" || modalAtivo === "importar-xls") && (
@@ -559,7 +694,17 @@ function FiltroSistemaButton({
   );
 }
 
-function ItemInspecaoCard({ item }: { item: InspecaoItem }) {
+function ItemInspecaoCard({
+  item,
+  temEscrita,
+  onEditar,
+  onExcluir,
+}: {
+  item: InspecaoItem;
+  temEscrita: boolean;
+  onEditar: () => void;
+  onExcluir: () => void;
+}) {
   const [aberto, setAberto] = useState(false);
   return (
     <article className="rounded-[8px] border border-line bg-card p-4">
@@ -585,13 +730,18 @@ function ItemInspecaoCard({ item }: { item: InspecaoItem }) {
             >
               {RESULTADO_LABEL[item.resultado]}
             </span>
-            <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] font-semibold text-ink-3">
-              {item.severidade}
-            </span>
+            {item.grauRisco && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${grauRiscoColor(item.grauRisco)}`}
+              >
+                Risco {GRAU_RISCO_LABEL[item.grauRisco]}
+              </span>
+            )}
           </div>
           <p className="mt-2 line-clamp-2 text-sm font-medium text-ink">{item.descricao}</p>
           <p className="mt-1 truncate text-xs text-ink-3">
-            {item.localizacao || "Localização não informada"}
+            {[item.categoria, item.elemento, item.localizacao].filter(Boolean).join(" · ") ||
+              "Localização não informada"}
           </p>
         </div>
         <button
@@ -605,8 +755,24 @@ function ItemInspecaoCard({ item }: { item: InspecaoItem }) {
       </div>
       {aberto && (
         <div className="mt-4 space-y-3 border-t border-line-soft pt-3 text-sm">
+          <DetalheItem label="Identificação" value={item.identificacao} />
+          <DetalheItem label="Estado de conservação" value={item.estadoConservacao} />
+          <DetalheItem label="Anomalia" value={item.anomalia} />
+          <DetalheItem label="Medições" value={item.medicoes} />
           <DetalheItem label="Recomendação" value={item.recomendacao} />
           <DetalheItem label="Prazo recomendado" value={item.prazoRecomendado} />
+          <DetalheItem label="Responsável pela ação" value={item.responsavelAcao} />
+          <DetalheItem label="Observações" value={item.observacoes} />
+          {item.midias.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+                Mídias ({item.midias.length})
+              </p>
+              <p className="mt-1 text-xs text-ink-3">
+                {item.midias.map((midia) => midia.nome).join(", ")}
+              </p>
+            </div>
+          )}
           {item.fotoUrl && (
             <a
               href={item.fotoUrl}
@@ -616,6 +782,25 @@ function ItemInspecaoCard({ item }: { item: InspecaoItem }) {
             >
               Abrir foto/referência
             </a>
+          )}
+          {temEscrita && (
+            <div className="flex gap-3 border-t border-line-soft pt-3">
+              <button
+                type="button"
+                onClick={onEditar}
+                className="text-xs font-semibold text-ink-2 hover:text-ink"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={onExcluir}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#A23B25] hover:underline"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Excluir
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -638,29 +823,70 @@ interface NovaInspecaoInput {
   dataInspecao: string;
   responsavelTecnico: string;
   observacoesGerais: string;
+  tipoInspecaoId: string;
+  templateId: string;
+  edificacao: string;
+  endereco: string;
+  horaInicio: string;
+  horaFim: string;
+  inspetor: string;
+  responsavelNoLocal: string;
+  escopo: string;
+  normaTecnica: string;
+  art: string;
+  condicoes: string;
 }
 
+/** E01-S73: cabeçalho ABNT NBR 16747 (Parte 1 — Dados da Inspeção). Serve pra criar E editar —
+ * `inspecao` presente = edição (pré-preenche, esconde escolha de template — só faz sentido na
+ * criação). */
 function NovaInspecaoModal({
   clientes,
+  tipos,
+  templates,
+  inspecao,
   salvando,
   onClose,
   onSubmit,
 }: {
   clientes: ClienteOpcao[];
+  tipos: TipoInspecao[];
+  templates: ChecklistTemplate[];
+  inspecao?: InspecaoResumo;
   salvando: boolean;
   onClose: () => void;
   onSubmit: (input: NovaInspecaoInput) => Promise<void>;
 }) {
   const [form, setForm] = useState<NovaInspecaoInput>({
-    clientId: clientes[0]?.id ?? "",
-    titulo: "",
-    dataInspecao: hojeIso(),
-    responsavelTecnico: "",
-    observacoesGerais: "",
+    clientId: inspecao?.clientId ?? clientes[0]?.id ?? "",
+    titulo: inspecao?.titulo ?? "",
+    dataInspecao: inspecao?.dataInspecao ?? hojeIso(),
+    responsavelTecnico: inspecao?.responsavelTecnico ?? "",
+    observacoesGerais: inspecao?.observacoesGerais ?? "",
+    tipoInspecaoId: inspecao?.tipoInspecaoId ?? "",
+    templateId: "",
+    edificacao: inspecao?.edificacao ?? "",
+    endereco: inspecao?.endereco ?? "",
+    horaInicio: inspecao?.horaInicio ?? "",
+    horaFim: inspecao?.horaFim ?? "",
+    inspetor: inspecao?.inspetor ?? "",
+    responsavelNoLocal: inspecao?.responsavelNoLocal ?? "",
+    escopo: inspecao?.escopo ?? "",
+    normaTecnica: inspecao?.normaTecnica ?? "",
+    art: inspecao?.art ?? "",
+    condicoes: inspecao?.condicoes ?? "",
   });
 
+  const templatesDoTipo = templates.filter(
+    (template) => template.tipoInspecaoId === form.tipoInspecaoId,
+  );
+
   return (
-    <ModalBase title="Nova inspeção" onClose={onClose}>
+    <ModalBase
+      title={inspecao ? `Editar inspeção ${inspecao.codigo ?? ""}` : "Nova inspeção"}
+      onClose={onClose}
+      size="lg"
+    >
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Field label="Cliente *">
           <select
@@ -675,13 +901,21 @@ function NovaInspecaoModal({
             ))}
           </select>
         </Field>
-        <Field label="Data *">
-          <input
+        <Field label="Tipo de inspeção">
+          <select
             className="input"
-            type="date"
-            value={form.dataInspecao}
-            onChange={(event) => setForm({ ...form, dataInspecao: event.target.value })}
-          />
+            value={form.tipoInspecaoId}
+            onChange={(event) =>
+              setForm({ ...form, tipoInspecaoId: event.target.value, templateId: "" })
+            }
+          >
+            <option value="">Sem tipo definido</option>
+            {tipos.map((tipo) => (
+              <option key={tipo.id} value={tipo.id}>
+                {tipo.nome}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="Título *" className="md:col-span-2">
           <input
@@ -691,11 +925,108 @@ function NovaInspecaoModal({
             placeholder="Ex: Inspeção Predial — Condomínio — julho/2026"
           />
         </Field>
-        <Field label="Responsável técnico" className="md:col-span-2">
+        {!inspecao && templatesDoTipo.length > 0 && (
+          <Field label="Checklist (pré-carrega os itens)" className="md:col-span-2">
+            <select
+              className="input"
+              value={form.templateId}
+              onChange={(event) => setForm({ ...form, templateId: event.target.value })}
+            >
+              <option value="">Nenhum — começar em branco</option>
+              {templatesDoTipo.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.nome} ({template.itens.length} itens)
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+        <Field label="Data *">
+          <input
+            className="input"
+            type="date"
+            value={form.dataInspecao}
+            onChange={(event) => setForm({ ...form, dataInspecao: event.target.value })}
+          />
+        </Field>
+        <Field label="Edificação / local">
+          <input
+            className="input"
+            value={form.edificacao}
+            onChange={(event) => setForm({ ...form, edificacao: event.target.value })}
+          />
+        </Field>
+        <Field label="Endereço" className="md:col-span-2">
+          <input
+            className="input"
+            value={form.endereco}
+            onChange={(event) => setForm({ ...form, endereco: event.target.value })}
+          />
+        </Field>
+        <Field label="Hora início">
+          <input
+            className="input"
+            type="time"
+            value={form.horaInicio}
+            onChange={(event) => setForm({ ...form, horaInicio: event.target.value })}
+          />
+        </Field>
+        <Field label="Hora fim">
+          <input
+            className="input"
+            type="time"
+            value={form.horaFim}
+            onChange={(event) => setForm({ ...form, horaFim: event.target.value })}
+          />
+        </Field>
+        <Field label="Inspetor">
+          <input
+            className="input"
+            value={form.inspetor}
+            onChange={(event) => setForm({ ...form, inspetor: event.target.value })}
+          />
+        </Field>
+        <Field label="Responsável no local">
+          <input
+            className="input"
+            value={form.responsavelNoLocal}
+            onChange={(event) => setForm({ ...form, responsavelNoLocal: event.target.value })}
+          />
+        </Field>
+        <Field label="Responsável técnico">
           <input
             className="input"
             value={form.responsavelTecnico}
             onChange={(event) => setForm({ ...form, responsavelTecnico: event.target.value })}
+          />
+        </Field>
+        <Field label="ART (quando aplicável)">
+          <input
+            className="input"
+            value={form.art}
+            onChange={(event) => setForm({ ...form, art: event.target.value })}
+          />
+        </Field>
+        <Field label="Norma técnica utilizada" className="md:col-span-2">
+          <input
+            className="input"
+            value={form.normaTecnica}
+            onChange={(event) => setForm({ ...form, normaTecnica: event.target.value })}
+            placeholder="Ex: ABNT NBR 16747"
+          />
+        </Field>
+        <Field label="Escopo" className="md:col-span-2">
+          <textarea
+            className="input min-h-16 resize-y"
+            value={form.escopo}
+            onChange={(event) => setForm({ ...form, escopo: event.target.value })}
+          />
+        </Field>
+        <Field label="Condições da inspeção" className="md:col-span-2">
+          <textarea
+            className="input min-h-16 resize-y"
+            value={form.condicoes}
+            onChange={(event) => setForm({ ...form, condicoes: event.target.value })}
           />
         </Field>
         <Field label="Observações gerais" className="md:col-span-2">
@@ -707,7 +1038,7 @@ function NovaInspecaoModal({
         </Field>
       </div>
       <ModalActions
-        primaryLabel="Criar inspeção"
+        primaryLabel={inspecao ? "Salvar alterações" : "Criar inspeção"}
         disabled={salvando || !form.clientId || !form.titulo.trim()}
         onCancel={onClose}
         onPrimary={() => onSubmit(form)}
@@ -720,25 +1051,98 @@ interface NovoItemInput {
   sistema: SistemaInspecao;
   localizacao: string;
   descricao: string;
+  categoria: string;
+  elemento: string;
+  identificacao: string;
+  resultado: ItemResultado;
+  grauRisco: GrauRisco | "";
+  estadoConservacao: string;
+  anomalia: string;
+  medicoes: string;
+  recomendacao: string;
+  prazoRecomendado: string;
+  responsavelAcao: string;
+  observacoes: string;
 }
 
+/** E01-S73: item ABNT NBR 16747 (Parte 2 — Itens de Inspeção). `item` presente = edição
+ * (pré-preenche + habilita upload de mídia — precisa do id do item já existir no banco). */
 function NovoItemModal({
+  item,
   salvando,
   onClose,
   onSubmit,
 }: {
+  item?: InspecaoItem;
   salvando: boolean;
   onClose: () => void;
   onSubmit: (input: NovoItemInput) => Promise<void>;
 }) {
   const [form, setForm] = useState<NovoItemInput>({
-    sistema: "geral",
-    localizacao: "",
-    descricao: "",
+    sistema: item?.sistema ?? "geral",
+    localizacao: item?.localizacao ?? "",
+    descricao: item?.descricao ?? "",
+    categoria: item?.categoria ?? "",
+    elemento: item?.elemento ?? "",
+    identificacao: item?.identificacao ?? "",
+    resultado: item?.resultado ?? "nao_avaliado",
+    grauRisco: item?.grauRisco ?? "",
+    estadoConservacao: item?.estadoConservacao ?? "",
+    anomalia: item?.anomalia ?? "",
+    medicoes: item?.medicoes ?? "",
+    recomendacao: item?.recomendacao ?? "",
+    prazoRecomendado: item?.prazoRecomendado ?? "",
+    responsavelAcao: item?.responsavelAcao ?? "",
+    observacoes: item?.observacoes ?? "",
   });
+  const [midias, setMidias] = useState<MidiaItem[]>(item?.midias ?? []);
+  const [enviandoMidia, setEnviandoMidia] = useState(false);
+  const [erroMidia, setErroMidia] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleUploadMidia(file: File) {
+    if (!item) return;
+    setEnviandoMidia(true);
+    setErroMidia(null);
+    try {
+      const tipo = file.type.startsWith("image/")
+        ? "foto"
+        : file.type.startsWith("video/")
+          ? "video"
+          : "documento";
+      const midia = await supabaseQualidadeAdapter.uploadMidiaItem(item.id, file, tipo);
+      setMidias((atuais) => [...atuais, midia]);
+    } catch (error) {
+      setErroMidia(error instanceof Error ? error.message : "Não foi possível enviar a mídia.");
+    } finally {
+      setEnviandoMidia(false);
+    }
+  }
+
+  async function handleRemoverMidia(midia: MidiaItem) {
+    if (!item) return;
+    try {
+      await supabaseQualidadeAdapter.removerMidiaItem(item.id, midia);
+      setMidias((atuais) => atuais.filter((atual) => atual.path !== midia.path));
+    } catch (error) {
+      setErroMidia(error instanceof Error ? error.message : "Não foi possível remover a mídia.");
+    }
+  }
+
+  async function handleAbrirMidia(midia: MidiaItem) {
+    try {
+      const url = await supabaseQualidadeAdapter.urlAssinadaMidia(midia.path);
+      window.open(url, "_blank", "noreferrer");
+    } catch (error) {
+      setErroMidia(error instanceof Error ? error.message : "Não foi possível abrir a mídia.");
+    }
+  }
 
   return (
-    <BottomSheet title="Novo item de inspeção" onClose={onClose}>
+    <BottomSheet
+      title={item ? "Editar item de inspeção" : "Novo item de inspeção"}
+      onClose={onClose}
+    >
       <div>
         <p className="mb-2 text-center text-xs font-semibold text-ink-3">Sistema / Área *</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -759,15 +1163,84 @@ function NovoItemModal({
           ))}
         </div>
       </div>
-      <Field label="Localização">
-        <input
-          className="input"
-          value={form.localizacao}
-          onChange={(event) => setForm({ ...form, localizacao: event.target.value })}
-          placeholder="Ex: 3º andar — corredor leste"
-        />
-      </Field>
-      <Field label="Observação inicial">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Categoria">
+          <input
+            className="input"
+            value={form.categoria}
+            onChange={(event) => setForm({ ...form, categoria: event.target.value })}
+          />
+        </Field>
+        <Field label="Elemento inspecionado">
+          <input
+            className="input"
+            value={form.elemento}
+            onChange={(event) => setForm({ ...form, elemento: event.target.value })}
+          />
+        </Field>
+        <Field label="Localização">
+          <input
+            className="input"
+            value={form.localizacao}
+            onChange={(event) => setForm({ ...form, localizacao: event.target.value })}
+            placeholder="Ex: 3º andar — corredor leste"
+          />
+        </Field>
+        <Field label="Identificação">
+          <input
+            className="input"
+            value={form.identificacao}
+            onChange={(event) => setForm({ ...form, identificacao: event.target.value })}
+          />
+        </Field>
+        <Field label="Resultado *">
+          <select
+            className="input"
+            value={form.resultado}
+            onChange={(event) =>
+              setForm({ ...form, resultado: event.target.value as ItemResultado })
+            }
+          >
+            {RESULTADOS_INSPECAO.map((opcao) => (
+              <option key={opcao.valor} value={opcao.valor}>
+                {opcao.rotulo}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Grau de risco">
+          <select
+            className="input"
+            value={form.grauRisco}
+            onChange={(event) =>
+              setForm({ ...form, grauRisco: event.target.value as GrauRisco | "" })
+            }
+          >
+            <option value="">Não informado</option>
+            {GRAUS_RISCO.map((opcao) => (
+              <option key={opcao.valor} value={opcao.valor}>
+                {opcao.rotulo}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Estado de conservação">
+          <input
+            className="input"
+            value={form.estadoConservacao}
+            onChange={(event) => setForm({ ...form, estadoConservacao: event.target.value })}
+          />
+        </Field>
+        <Field label="Prazo para correção">
+          <input
+            className="input"
+            type="date"
+            value={form.prazoRecomendado}
+            onChange={(event) => setForm({ ...form, prazoRecomendado: event.target.value })}
+          />
+        </Field>
+      </div>
+      <Field label="Descrição / observação *">
         <textarea
           className="input min-h-24 resize-y"
           value={form.descricao}
@@ -775,8 +1248,101 @@ function NovoItemModal({
           placeholder="Descreva o que observou; a análise técnica pode ser complementada depois."
         />
       </Field>
+      <Field label="Descrição da anomalia">
+        <textarea
+          className="input min-h-20 resize-y"
+          value={form.anomalia}
+          onChange={(event) => setForm({ ...form, anomalia: event.target.value })}
+        />
+      </Field>
+      <Field label="Medições">
+        <textarea
+          className="input min-h-16 resize-y"
+          value={form.medicoes}
+          onChange={(event) => setForm({ ...form, medicoes: event.target.value })}
+        />
+      </Field>
+      <Field label="Recomendação">
+        <textarea
+          className="input min-h-20 resize-y"
+          value={form.recomendacao}
+          onChange={(event) => setForm({ ...form, recomendacao: event.target.value })}
+        />
+      </Field>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Responsável pela ação corretiva">
+          <input
+            className="input"
+            value={form.responsavelAcao}
+            onChange={(event) => setForm({ ...form, responsavelAcao: event.target.value })}
+          />
+        </Field>
+        <Field label="Observações">
+          <input
+            className="input"
+            value={form.observacoes}
+            onChange={(event) => setForm({ ...form, observacoes: event.target.value })}
+          />
+        </Field>
+      </div>
+
+      {item && (
+        <div className="rounded-[8px] border border-line-soft bg-paper p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+              Mídias (foto/vídeo/documento)
+            </p>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={enviandoMidia}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep disabled:opacity-50"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              {enviandoMidia ? "Enviando..." : "Adicionar"}
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,video/*,.pdf,.doc,.docx"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void handleUploadMidia(file);
+                event.target.value = "";
+              }}
+            />
+          </div>
+          {erroMidia && <p className="mt-2 text-xs text-[#A23B25]">{erroMidia}</p>}
+          {midias.length === 0 ? (
+            <p className="mt-2 text-xs text-ink-3">Nenhuma mídia anexada.</p>
+          ) : (
+            <ul className="mt-2 space-y-1.5">
+              {midias.map((midia) => (
+                <li key={midia.path} className="flex items-center justify-between gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => handleAbrirMidia(midia)}
+                    className="truncate text-left text-ink-2 hover:text-orange"
+                  >
+                    {midia.tipo} · {midia.nome}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoverMidia(midia)}
+                    className="shrink-0 text-[#A23B25] hover:underline"
+                  >
+                    Remover
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       <ModalActions
-        primaryLabel="Adicionar item"
+        primaryLabel={item ? "Salvar alterações" : "Adicionar item"}
         disabled={salvando || !form.descricao.trim()}
         onCancel={onClose}
         onPrimary={() => onSubmit(form)}

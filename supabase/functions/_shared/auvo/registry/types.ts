@@ -80,8 +80,10 @@ export interface AuvoEntityDescriptor<TAuvo, TRow> {
   readonly externalIdField?: string;
 
   /** Extrai o identificador da resposta de criação quando o endpoint não devolve
-   * `result.id` (ex.: `/customergroups` → `result.clientGroupSearchReturn.id`). */
-  readonly extractCreatedAuvoId?: (response: unknown) => number | null;
+   * `result.id` (ex.: `/customergroups` → `result.clientGroupSearchReturn.id`), ou quando o `id`
+   * não é numérico (ex.: `/services` devolve `result.id` como GUID string — confirmado contra a
+   * API real em 2026-07-14, E01-S74; o extrator padrão em `pcm-auvo-push` só aceita `number`). */
+  readonly extractCreatedAuvoId?: (response: unknown) => number | string | null;
 
   /**
    * `paramFilter` obrigatório para o `GET` de listagem deste recurso (usado por `pcm-auvo-pull`).

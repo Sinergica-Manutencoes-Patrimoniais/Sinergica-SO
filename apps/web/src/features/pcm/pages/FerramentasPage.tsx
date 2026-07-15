@@ -1,8 +1,19 @@
-import { Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import {
+  cancelarReservaFerramenta,
+  criarReservaFerramenta,
+  efetivarReservaFerramenta,
+  listarReservasFerramenta,
+} from "../application/ferramenta-reservas";
+import {
+  baixarUnidadeFerramenta,
+  gerarUnidadesFerramenta,
+  listarUnidadesFerramenta,
+} from "../application/ferramenta-unidades";
 import {
   criarFerramenta,
   desativarFerramenta,
@@ -10,17 +21,31 @@ import {
   listarCategoriasFerramenta,
   listarFerramentas,
 } from "../application/ferramentas";
+import { KitsSection } from "../components/KitsSection";
+import { type FerramentaReservaItem, ordenarAgendaReservas } from "../domain/ferramenta-reservas";
+import { type FerramentaUnidadeItem, rotuloStatusUnidade } from "../domain/ferramenta-unidades";
+import { validarFerramentaInline } from "../domain/ferramentas";
 import type {
   FerramentaCategoriaOpcao,
   FerramentaFormData,
   FerramentaItem,
+  FuncionarioFerramentaOpcao,
 } from "../domain/ferramentas";
+import { supabaseFerramentaReservasAdapter } from "../infrastructure/supabase-ferramenta-reservas-adapter";
+import { supabaseFerramentaUnidadesAdapter } from "../infrastructure/supabase-ferramenta-unidades-adapter";
 import { supabaseFerramentasAdapter } from "../infrastructure/supabase-ferramentas-adapter";
 
 type Estado =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
-  | { fase: "pronto"; ferramentas: FerramentaItem[]; categorias: FerramentaCategoriaOpcao[] };
+  | {
+      fase: "pronto";
+      ferramentas: FerramentaItem[];
+      categorias: FerramentaCategoriaOpcao[];
+      unidades: FerramentaUnidadeItem[];
+      funcionarios: FuncionarioFerramentaOpcao[];
+      reservas: FerramentaReservaItem[];
+    };
 
 type Modal =
   | { modo: "novo"; ferramenta?: undefined }
@@ -33,6 +58,17 @@ export function FerramentasPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [expandida, setExpandida] = useState<string | null>(null);
+  const [baixando, setBaixando] = useState<FerramentaUnidadeItem | null>(null);
+  const [reservaForm, setReservaForm] = useState({
+    ferramentaId: "",
+    unidadeId: "",
+    funcionarioId: "",
+    dataInicio: "",
+    dataFim: "",
+  });
+  const [salvandoReserva, setSalvandoReserva] = useState(false);
+  const [efetivando, setEfetivando] = useState<FerramentaReservaItem | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -40,11 +76,14 @@ export function FerramentasPage() {
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
     try {
-      const [ferramentas, categorias] = await Promise.all([
+      const [ferramentas, categorias, unidades, funcionarios, reservas] = await Promise.all([
         listarFerramentas(supabaseFerramentasAdapter),
         listarCategoriasFerramenta(supabaseFerramentasAdapter),
+        listarUnidadesFerramenta(supabaseFerramentaUnidadesAdapter),
+        supabaseFerramentasAdapter.listarFuncionarios(),
+        listarReservasFerramenta(supabaseFerramentaReservasAdapter),
       ]);
-      setEstado({ fase: "pronto", ferramentas, categorias });
+      setEstado({ fase: "pronto", ferramentas, categorias, unidades, funcionarios, reservas });
     } catch (error) {
       setEstado({
         fase: "erro",
@@ -82,6 +121,93 @@ export function FerramentasPage() {
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
     }
+  }
+
+  async function gerarUnidades(ferramenta: FerramentaItem, quantidade: number) {
+    if (!user) return;
+    try {
+      setErroAcao(null);
+      await gerarUnidadesFerramenta(supabaseFerramentaUnidadesAdapter, {
+        ferramentaId: ferramenta.id,
+        quantidade,
+        userId: user.id,
+      });
+      await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível gerar unidades.");
+    }
+  }
+
+  async function confirmarBaixa(motivo: string) {
+    if (!user || !baixando) return;
+    await baixarUnidadeFerramenta(supabaseFerramentaUnidadesAdapter, {
+      unidadeId: baixando.id,
+      motivo,
+      userId: user.id,
+    });
+    setBaixando(null);
+    await carregar();
+  }
+
+  async function criarReserva() {
+    if (!user) return;
+    try {
+      setSalvandoReserva(true);
+      setErroAcao(null);
+      await criarReservaFerramenta(
+        supabaseFerramentaReservasAdapter,
+        supabaseFerramentaUnidadesAdapter,
+        {
+          ferramentaId: reservaForm.ferramentaId,
+          unidadeId: reservaForm.unidadeId || null,
+          funcionarioId: reservaForm.funcionarioId,
+          dataInicio: reservaForm.dataInicio,
+          dataFim: reservaForm.dataFim || null,
+          userId: user.id,
+        },
+      );
+      setReservaForm({
+        ferramentaId: "",
+        unidadeId: "",
+        funcionarioId: "",
+        dataInicio: "",
+        dataFim: "",
+      });
+      await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível criar a reserva.");
+    } finally {
+      setSalvandoReserva(false);
+    }
+  }
+
+  async function cancelarReserva(reserva: FerramentaReservaItem) {
+    if (!user || !confirm(`Cancelar a reserva de ${reserva.funcionarioNome}?`)) return;
+    try {
+      setErroAcao(null);
+      await cancelarReservaFerramenta(supabaseFerramentaReservasAdapter, {
+        reservaId: reserva.id,
+        userId: user.id,
+      });
+      await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível cancelar a reserva.");
+    }
+  }
+
+  async function confirmarEfetivar(unidadeId: string) {
+    if (!user || !efetivando) return;
+    await efetivarReservaFerramenta(
+      supabaseFerramentaReservasAdapter,
+      supabaseFerramentaUnidadesAdapter,
+      {
+        reservaId: efetivando.id,
+        unidadeId,
+        userId: user.id,
+      },
+    );
+    setEfetivando(null);
+    await carregar();
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
@@ -150,12 +276,148 @@ export function FerramentasPage() {
             <FerramentaCard
               key={ferramenta.id}
               ferramenta={ferramenta}
+              unidades={estado.unidades.filter((u) => u.ferramentaId === ferramenta.id)}
+              expandida={expandida === ferramenta.id}
+              onToggleExpandir={() =>
+                setExpandida((atual) => (atual === ferramenta.id ? null : ferramenta.id))
+              }
               onEditar={temEscrita ? () => setModal({ modo: "editar", ferramenta }) : undefined}
               onDesativar={temEscrita && ferramenta.ativo ? () => desativar(ferramenta) : undefined}
+              onGerarUnidades={
+                temEscrita
+                  ? (quantidade: number) => gerarUnidades(ferramenta, quantidade)
+                  : undefined
+              }
+              onBaixarUnidade={temEscrita ? (unidade) => setBaixando(unidade) : undefined}
             />
           ))}
         </div>
       )}
+
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+        <h3 className="text-base font-semibold text-ink">Reservas</h3>
+        <p className="mt-0.5 text-sm text-ink-3">
+          Reserva uma unidade (ou "qualquer disponível") pra um técnico num período — sem mover a
+          ferramenta ainda
+        </p>
+        {temEscrita && (
+          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-[minmax(160px,1fr)_minmax(140px,1fr)_minmax(160px,1fr)_120px_120px_auto]">
+            <select
+              value={reservaForm.ferramentaId}
+              onChange={(event) =>
+                setReservaForm((a) => ({ ...a, ferramentaId: event.target.value, unidadeId: "" }))
+              }
+              className="input h-9"
+            >
+              <option value="">Ferramenta</option>
+              {estado.ferramentas.map((ferramenta) => (
+                <option key={ferramenta.id} value={ferramenta.id}>
+                  {ferramenta.nome}
+                </option>
+              ))}
+            </select>
+            <select
+              value={reservaForm.unidadeId}
+              onChange={(event) => setReservaForm((a) => ({ ...a, unidadeId: event.target.value }))}
+              disabled={!reservaForm.ferramentaId}
+              className="input h-9"
+            >
+              <option value="">Qualquer disponível</option>
+              {estado.unidades
+                .filter(
+                  (u) => u.ferramentaId === reservaForm.ferramentaId && u.status !== "baixada",
+                )
+                .map((unidade) => (
+                  <option key={unidade.id} value={unidade.id}>
+                    {unidade.codigo}
+                  </option>
+                ))}
+            </select>
+            <select
+              value={reservaForm.funcionarioId}
+              onChange={(event) =>
+                setReservaForm((a) => ({ ...a, funcionarioId: event.target.value }))
+              }
+              className="input h-9"
+            >
+              <option value="">Técnico</option>
+              {estado.funcionarios.map((funcionario) => (
+                <option key={funcionario.id} value={funcionario.id}>
+                  {funcionario.nome}
+                </option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={reservaForm.dataInicio}
+              onChange={(event) =>
+                setReservaForm((a) => ({ ...a, dataInicio: event.target.value }))
+              }
+              className="input h-9"
+            />
+            <input
+              type="date"
+              value={reservaForm.dataFim}
+              placeholder="fim (opcional)"
+              onChange={(event) => setReservaForm((a) => ({ ...a, dataFim: event.target.value }))}
+              className="input h-9"
+            />
+            <button
+              type="button"
+              onClick={criarReserva}
+              disabled={
+                salvandoReserva ||
+                !reservaForm.ferramentaId ||
+                !reservaForm.funcionarioId ||
+                !reservaForm.dataInicio
+              }
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            >
+              Reservar
+            </button>
+          </div>
+        )}
+
+        {ordenarAgendaReservas(estado.reservas).length === 0 ? (
+          <p className="mt-4 text-sm text-ink-3">Sem reservas pendentes.</p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {ordenarAgendaReservas(estado.reservas).map((reserva) => (
+              <li
+                key={reserva.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-[6px] border border-line-soft bg-paper px-3 py-2 text-sm"
+              >
+                <span className="text-ink-2">
+                  {reserva.ferramentaNome}{" "}
+                  {reserva.unidadeCodigo ? `(${reserva.unidadeCodigo})` : "(qualquer unidade)"} ·{" "}
+                  {reserva.funcionarioNome} · {reserva.dataInicio}
+                  {reserva.dataFim !== reserva.dataInicio ? ` a ${reserva.dataFim}` : ""}
+                </span>
+                {temEscrita && (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEfetivando(reserva)}
+                      className="text-xs font-semibold text-orange hover:text-orange-deep"
+                    >
+                      Efetivar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => cancelarReserva(reserva)}
+                      className="text-xs font-semibold text-[#A23B25] hover:underline"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <KitsSection temEscrita={temEscrita} />
 
       {modal && (
         <FerramentaModal
@@ -165,23 +427,152 @@ export function FerramentasPage() {
           onSalvar={salvar}
         />
       )}
+
+      {baixando && (
+        <BaixaModal
+          unidade={baixando}
+          onCancel={() => setBaixando(null)}
+          onConfirmar={confirmarBaixa}
+        />
+      )}
+
+      {efetivando && (
+        <EfetivarReservaModal
+          reserva={efetivando}
+          unidadesDisponiveis={estado.unidades.filter(
+            (u) => u.ferramentaId === efetivando.ferramentaId && u.status === "disponivel",
+          )}
+          onCancel={() => setEfetivando(null)}
+          onConfirmar={confirmarEfetivar}
+        />
+      )}
+    </div>
+  );
+}
+
+function EfetivarReservaModal({
+  reserva,
+  unidadesDisponiveis,
+  onCancel,
+  onConfirmar,
+}: {
+  reserva: FerramentaReservaItem;
+  unidadesDisponiveis: FerramentaUnidadeItem[];
+  onCancel: () => void;
+  onConfirmar: (unidadeId: string) => Promise<void>;
+}) {
+  const [unidadeId, setUnidadeId] = useState(reserva.unidadeId ?? "");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function confirmar() {
+    try {
+      setSalvando(true);
+      setErro(null);
+      await onConfirmar(unidadeId);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível efetivar a reserva.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+        <div className="border-b border-line px-4 py-3">
+          <h3 className="text-base font-semibold text-ink">Efetivar reserva</h3>
+          <p className="text-xs text-ink-3">
+            {reserva.ferramentaNome} · {reserva.funcionarioNome}
+          </p>
+        </div>
+        <div className="space-y-3 p-4">
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-3">Unidade</span>
+            <select
+              value={unidadeId}
+              onChange={(event) => setUnidadeId(event.target.value)}
+              className="input w-full"
+            >
+              <option value="">Escolha a unidade</option>
+              {unidadesDisponiveis.map((unidade) => (
+                <option key={unidade.id} value={unidade.id}>
+                  {unidade.codigo}
+                </option>
+              ))}
+            </select>
+          </label>
+          {erro && (
+            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+              {erro}
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={confirmar}
+            disabled={salvando || !unidadeId}
+            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+          >
+            {salvando ? "Salvando..." : "Efetivar (atribuir agora)"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
 function FerramentaCard({
   ferramenta,
+  unidades,
+  expandida,
+  onToggleExpandir,
   onEditar,
   onDesativar,
-}: { ferramenta: FerramentaItem; onEditar?: () => void; onDesativar?: () => void }) {
+  onGerarUnidades,
+  onBaixarUnidade,
+}: {
+  ferramenta: FerramentaItem;
+  unidades: FerramentaUnidadeItem[];
+  expandida: boolean;
+  onToggleExpandir: () => void;
+  onEditar?: () => void;
+  onDesativar?: () => void;
+  onGerarUnidades?: (quantidade: number) => void;
+  onBaixarUnidade?: (unidade: FerramentaUnidadeItem) => void;
+}) {
+  const faltamGerar = Math.max(ferramenta.quantidadeTotal - unidades.length, 0);
   return (
     <div className="rounded-[8px] border border-line bg-card p-4">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h4 className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</h4>
-          <p className="mt-1 text-xs text-ink-3">
-            Auvo {ferramenta.auvoId ?? "-"} · {ferramenta.categoriaNome ?? "sem categoria"}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          {ferramenta.imagemUrl ? (
+            <img
+              src={ferramenta.imagemUrl}
+              alt={ferramenta.nome}
+              className="h-12 w-12 shrink-0 rounded-[6px] border border-line object-cover"
+            />
+          ) : (
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[6px] border border-line bg-line-soft">
+              <Wrench className="h-5 w-5 text-ink-3" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h4 className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</h4>
+            <p className="mt-1 text-xs text-ink-3">
+              Auvo {ferramenta.auvoId ?? "-"}
+              {ferramenta.codigoAuvo ? ` · ${ferramenta.codigoAuvo}` : ""} ·{" "}
+              {ferramenta.categoriaNome ?? "sem categoria"}
+            </p>
+          </div>
         </div>
         <span
           className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ferramenta.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
@@ -192,12 +583,72 @@ function FerramentaCard({
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-3">
         <span>Total: {ferramenta.quantidadeTotal}</span>
         <span>Mínimo: {ferramenta.quantidadeMinima}</span>
+        {ferramenta.valorUnitario != null && (
+          <span>Valor: R$ {ferramenta.valorUnitario.toFixed(2)}</span>
+        )}
+        {ferramenta.custoUnitario != null && (
+          <span>Custo: R$ {ferramenta.custoUnitario.toFixed(2)}</span>
+        )}
         <span>Sync: {ferramenta.auvoSyncStatus ?? "pending"}</span>
       </div>
       {ferramenta.auvoSyncError && (
         <p className="mt-2 text-xs text-[#A23B25]">{ferramenta.auvoSyncError}</p>
       )}
-      <div className="mt-4 flex justify-end gap-2">
+
+      <button
+        type="button"
+        onClick={onToggleExpandir}
+        className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink"
+      >
+        {expandida ? (
+          <ChevronUp className="h-3.5 w-3.5" />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5" />
+        )}
+        {unidades.length} unidade(s)
+      </button>
+
+      {expandida && (
+        <div className="mt-2 space-y-2 rounded-[6px] border border-line-soft bg-paper p-2.5">
+          {onGerarUnidades && faltamGerar > 0 && (
+            <button
+              type="button"
+              onClick={() => onGerarUnidades(faltamGerar)}
+              className="text-xs font-semibold text-orange hover:text-orange-deep"
+            >
+              Gerar {faltamGerar} unidade(s) (total cadastrado: {ferramenta.quantidadeTotal})
+            </button>
+          )}
+          {unidades.length === 0 ? (
+            <p className="text-xs text-ink-3">Nenhuma unidade gerada ainda.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {unidades.map((unidade) => (
+                <li key={unidade.id} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="text-ink-2">
+                    <span className="font-brand">{unidade.codigo}</span> ·{" "}
+                    {rotuloStatusUnidade(unidade.status)}
+                    {unidade.status === "atribuida" && unidade.atribuidaANome
+                      ? ` com ${unidade.atribuidaANome}`
+                      : ""}
+                  </span>
+                  {onBaixarUnidade && unidade.status !== "baixada" && (
+                    <button
+                      type="button"
+                      onClick={() => onBaixarUnidade(unidade)}
+                      className="shrink-0 text-[#A23B25] hover:underline"
+                    >
+                      Baixar
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      <div className="mt-3 flex justify-end gap-2">
         {onEditar && (
           <IconButton label="Editar" icon={<Pencil className="h-3.5 w-3.5" />} onClick={onEditar} />
         )}
@@ -209,6 +660,76 @@ function FerramentaCard({
             onClick={onDesativar}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+function BaixaModal({
+  unidade,
+  onCancel,
+  onConfirmar,
+}: {
+  unidade: FerramentaUnidadeItem;
+  onCancel: () => void;
+  onConfirmar: (motivo: string) => Promise<void>;
+}) {
+  const [motivo, setMotivo] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function confirmar() {
+    try {
+      setSalvando(true);
+      setErro(null);
+      await onConfirmar(motivo);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível dar baixa na unidade.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+        <div className="border-b border-line px-4 py-3">
+          <h3 className="text-base font-semibold text-ink">Dar baixa em {unidade.codigo}</h3>
+          <p className="text-xs text-ink-3">{unidade.ferramentaNome} — ação permanente</p>
+        </div>
+        <div className="space-y-3 p-4">
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-3">Motivo *</span>
+            <textarea
+              value={motivo}
+              onChange={(event) => setMotivo(event.target.value)}
+              className="input min-h-[80px] w-full resize-y"
+              placeholder="Ex.: extraviada em campo, quebrada sem conserto..."
+            />
+          </label>
+          {erro && (
+            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+              {erro}
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={confirmar}
+            disabled={salvando}
+            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+          >
+            {salvando ? "Salvando..." : "Confirmar baixa"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -231,9 +752,19 @@ function FerramentaModal({
     categoriaId: ferramenta?.categoriaId ?? "",
     quantidadeTotal: ferramenta?.quantidadeTotal ?? 0,
     quantidadeMinima: ferramenta?.quantidadeMinima ?? 0,
+    valorUnitario: ferramenta?.valorUnitario ?? null,
+    custoUnitario: ferramenta?.custoUnitario ?? null,
   });
+  const [categoriaTexto, setCategoriaTexto] = useState(ferramenta?.categoriaNome ?? "");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const errosInline = validarFerramentaInline(dados);
+
+  function selecionarCategoriaPorTexto(texto: string) {
+    setCategoriaTexto(texto);
+    const encontrada = categorias.find((c) => c.nome.toLowerCase() === texto.trim().toLowerCase());
+    setDados((a) => ({ ...a, categoriaId: encontrada?.id ?? "" }));
+  }
 
   async function salvar() {
     try {
@@ -258,36 +789,78 @@ function FerramentaModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
+        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto p-4 md:grid-cols-2">
+          {ferramenta && (
+            <div className="md:col-span-2">
+              {ferramenta.imagemUrl ? (
+                <div className="flex items-center gap-3">
+                  <img
+                    src={ferramenta.imagemUrl}
+                    alt={ferramenta.nome}
+                    className="h-16 w-16 rounded-[6px] border border-line object-cover"
+                  />
+                  <p className="text-xs text-ink-3">
+                    Imagem vinda do Auvo. Pra trocar, cadastre direto no app Auvo — o PCM ainda não
+                    escreve esse campo (contrato de escrita não confirmado).
+                  </p>
+                </div>
+              ) : (
+                <p className="rounded-[6px] border border-line-soft bg-paper px-3 py-2 text-xs text-ink-3">
+                  Sem imagem. Cadastre a foto direto no Auvo — o PCM só exibe quando o Auvo tiver.
+                </p>
+              )}
+              {ferramenta.codigoAuvo && (
+                <p className="mt-2 text-xs text-ink-3">
+                  Código Auvo:{" "}
+                  <span className="font-brand text-ink-2">{ferramenta.codigoAuvo}</span>
+                </p>
+              )}
+            </div>
+          )}
           <Field
             label="Nome *"
             value={dados.nome}
             onChange={(v) => setDados((a) => ({ ...a, nome: v }))}
+            erro={errosInline.nome}
           />
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria</span>
-            <select
-              value={dados.categoriaId ?? ""}
-              onChange={(event) => setDados((a) => ({ ...a, categoriaId: event.target.value }))}
+            <input
+              list="ferramenta-categorias-lista"
+              value={categoriaTexto}
+              onChange={(event) => selecionarCategoriaPorTexto(event.target.value)}
+              placeholder="Buscar categoria..."
               className="input w-full"
-            >
-              <option value="">Sem categoria</option>
+            />
+            <datalist id="ferramenta-categorias-lista">
               {categorias.map((categoria) => (
-                <option key={categoria.id} value={categoria.id}>
-                  {categoria.nome}
-                </option>
+                <option key={categoria.id} value={categoria.nome} />
               ))}
-            </select>
+            </datalist>
           </label>
           <NumberField
             label="Quantidade total"
             value={dados.quantidadeTotal}
             onChange={(v) => setDados((a) => ({ ...a, quantidadeTotal: v }))}
+            erro={errosInline.quantidadeTotal}
           />
           <NumberField
             label="Quantidade mínima"
             value={dados.quantidadeMinima}
             onChange={(v) => setDados((a) => ({ ...a, quantidadeMinima: v }))}
+            erro={errosInline.quantidadeMinima}
+          />
+          <NumberField
+            label="Valor unitário (R$)"
+            value={dados.valorUnitario ?? 0}
+            onChange={(v) => setDados((a) => ({ ...a, valorUnitario: v }))}
+            step={0.01}
+          />
+          <NumberField
+            label="Custo unitário (R$)"
+            value={dados.custoUnitario ?? 0}
+            onChange={(v) => setDados((a) => ({ ...a, custoUnitario: v }))}
+            step={0.01}
           />
           <label className="block md:col-span-2">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
@@ -314,7 +887,7 @@ function FerramentaModal({
           <button
             type="button"
             onClick={salvar}
-            disabled={salvando}
+            disabled={salvando || Object.keys(errosInline).length > 0}
             className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             {salvando ? "Salvando..." : "Salvar"}
@@ -329,7 +902,8 @@ function Field({
   label,
   value,
   onChange,
-}: { label: string; value: string; onChange: (value: string) => void }) {
+  erro,
+}: { label: string; value: string; onChange: (value: string) => void; erro?: string }) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
@@ -338,6 +912,7 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className="input w-full"
       />
+      {erro && <span className="mt-1 block text-xs text-[#A23B25]">{erro}</span>}
     </label>
   );
 }
@@ -346,18 +921,27 @@ function NumberField({
   label,
   value,
   onChange,
-}: { label: string; value: number; onChange: (value: number) => void }) {
+  erro,
+  step = 1,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  erro?: string;
+  step?: number;
+}) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
       <input
         type="number"
         min={0}
-        step={1}
+        step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
         className="input w-full"
       />
+      {erro && <span className="mt-1 block text-xs text-[#A23B25]">{erro}</span>}
     </label>
   );
 }

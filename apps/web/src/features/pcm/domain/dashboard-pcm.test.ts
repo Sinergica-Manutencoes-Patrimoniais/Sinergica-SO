@@ -42,6 +42,20 @@ const inspecao = (dataInspecao: string): InspecaoResumo => ({
   itensConformes: 0,
   itensNaoConformes: 0,
   itensAtencao: 0,
+  codigo: null,
+  tipoInspecaoId: null,
+  tipoInspecaoNome: null,
+  edificacao: null,
+  endereco: null,
+  horaInicio: null,
+  horaFim: null,
+  inspetor: null,
+  responsavelNoLocal: null,
+  escopo: null,
+  normaTecnica: null,
+  art: null,
+  condicoes: null,
+  anexos: [],
 });
 
 describe("dashboard-pcm", () => {

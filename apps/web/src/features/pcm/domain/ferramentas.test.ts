@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validarAlocacao, validarFerramenta } from "./ferramentas";
+import { validarFerramenta, validarFerramentaInline } from "./ferramentas";
 
 describe("ferramentas", () => {
   it("normaliza cadastro de ferramenta", () => {
@@ -17,6 +17,8 @@ describe("ferramentas", () => {
       categoriaId: null,
       quantidadeTotal: 3,
       quantidadeMinima: 1,
+      valorUnitario: null,
+      custoUnitario: null,
     });
   });
 
@@ -30,26 +32,44 @@ describe("ferramentas", () => {
     ).toThrow("Quantidade mínima não pode exceder");
   });
 
-  it("bloqueia alocação sem sincronismo Auvo", () => {
+  it("aceita e normaliza valor/custo unitário", () => {
+    expect(
+      validarFerramenta({
+        nome: "Kit",
+        quantidadeTotal: 2,
+        quantidadeMinima: 0,
+        valorUnitario: 129.9,
+        custoUnitario: 80,
+      }),
+    ).toEqual({
+      nome: "Kit",
+      descricao: null,
+      categoriaId: null,
+      quantidadeTotal: 2,
+      quantidadeMinima: 0,
+      valorUnitario: 129.9,
+      custoUnitario: 80,
+    });
+  });
+
+  it("bloqueia valor unitário negativo", () => {
     expect(() =>
-      validarAlocacao(
-        { ferramentaId: "f1", funcionarioId: "u1", quantidade: 1 },
-        {
-          id: "f1",
-          nome: "Kit",
-          descricao: null,
-          categoriaId: null,
-          categoriaNome: null,
-          quantidadeTotal: 2,
-          quantidadeMinima: 0,
-          ativo: true,
-          auvoId: null,
-          auvoSyncStatus: null,
-          auvoSyncError: null,
-          auvoSyncedAt: null,
-        },
-        { id: "u1", nome: "Técnico", auvoUserId: 7 },
-      ),
-    ).toThrow("Sincronize a ferramenta");
+      validarFerramenta({
+        nome: "Kit",
+        quantidadeTotal: 1,
+        quantidadeMinima: 0,
+        valorUnitario: -5,
+      }),
+    ).toThrow("Valor unitário deve ser maior ou igual a zero.");
+  });
+
+  it("validação inline não lança, retorna mapa de erros por campo", () => {
+    expect(validarFerramentaInline({ nome: "", quantidadeTotal: 1, quantidadeMinima: 2 })).toEqual({
+      nome: "Nome é obrigatório.",
+      quantidadeMinima: "Não pode exceder a quantidade total.",
+    });
+    expect(
+      validarFerramentaInline({ nome: "Kit", quantidadeTotal: 2, quantidadeMinima: 1 }),
+    ).toEqual({});
   });
 });

@@ -1,6 +1,5 @@
-import { validarAlocacao, validarFerramenta } from "../domain/ferramentas";
+import { validarFerramenta } from "../domain/ferramentas";
 import type {
-  AlocarFerramentaCommand,
   DesativarFerramentaCommand,
   EditarFerramentaCommand,
   FerramentaAlocacoesGateway,
@@ -41,15 +40,4 @@ export async function obterFerramentasPorTecnico(gateway: FerramentaAlocacoesGat
     gateway.listarAlocacoes(),
   ]);
   return { ferramentas, funcionarios, alocacoes };
-}
-
-export async function alocarFerramenta(
-  gateway: FerramentaAlocacoesGateway,
-  input: AlocarFerramentaCommand,
-) {
-  const dados = await obterFerramentasPorTecnico(gateway);
-  const ferramenta = dados.ferramentas.find((item) => item.id === input.ferramentaId);
-  const funcionario = dados.funcionarios.find((item) => item.id === input.funcionarioId);
-  validarAlocacao(input, ferramenta, funcionario);
-  await gateway.alocar(input);
 }

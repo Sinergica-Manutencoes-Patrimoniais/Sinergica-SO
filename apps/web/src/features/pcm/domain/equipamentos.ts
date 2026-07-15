@@ -13,6 +13,8 @@ export interface EquipamentoItem {
   auvoSyncStatus: string | null;
   auvoSyncError: string | null;
   auvoSyncedAt: string | null;
+  urlImagem: string | null;
+  uriAnexos: string[];
 }
 
 export interface EquipamentoClienteOpcao {

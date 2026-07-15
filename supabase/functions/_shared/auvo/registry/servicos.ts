@@ -23,13 +23,26 @@ export const servicosDescriptor: AuvoEntityDescriptor<AuvoService, ServicoRow> =
   key: "servicos",
   auvoBasePath: "/services",
   pcmTable: "servicos",
-  // Sem cronSchedule DE PROPÓSITO: `/services` confirmado 404 direto na API real (2026-07-08),
-  // mesmo path do doc oficial — a conta Auvo provavelmente não tem o módulo de Serviços habilitado
-  // no plano. Não é bug de código; não repetir cron pra não gerar erro permanente na saúde de
-  // sync. Decisão de negócio (confirmar/ativar o módulo junto ao Auvo) é do Lucas — ver STATE.md.
-  writeEnabled: false,
+  // Sem cronSchedule DE PROPÓSITO: `GET /services` (listagem paginada, usada pelo pull-sync) segue
+  // 404 na API real — reconfirmado em 2026-07-14 (E01-S74). Mas `GET /services/{id}`, `POST
+  // /services` e `PATCH /services/{id}` funcionam normalmente (mesmo teste, registro reversível
+  // criado/editado/desativado com sucesso) — só a listagem está bloqueada, não o módulo inteiro.
+  // `pcm-auvo-push` nunca chama a listagem (só POST/PATCH/DELETE por id), então o write path é
+  // seguro mesmo com o pull desabilitado. Decisão de negócio sobre a listagem (confirmar com o
+  // Auvo) segue em aberto — ver STATE.md.
+  writeEnabled: true,
   deleteStrategy: "soft-patch",
   externalIdField: "externalCode",
+  // Confirmado ao vivo (E01-S74): `POST /services` devolve `result.id` como GUID **string**, não
+  // number — o extrator padrão de `pcm-auvo-push` só aceita `number` (a maioria das entidades Auvo
+  // usa id numérico). Sem este override, toda criação de serviço lançaria "Auvo criou servicos sem
+  // id na resposta" mesmo com a chamada tendo funcionado.
+  extractCreatedAuvoId(response) {
+    const id = (response as { result?: { id?: unknown } })?.result?.id;
+    if (typeof id === "string" && id.trim().length > 0) return id;
+    if (typeof id === "number" && Number.isFinite(id)) return id;
+    return null;
+  },
   toAuvo(row) {
     return limparVazios({
       title: row.titulo,

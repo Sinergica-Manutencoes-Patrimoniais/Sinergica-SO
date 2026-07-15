@@ -11,6 +11,12 @@ export interface FerramentaItem {
   auvoSyncStatus: string | null;
   auvoSyncError: string | null;
   auvoSyncedAt: string | null;
+  // E01-S65: só leitura — vêm do Auvo, PCM não escreve (escrita de imageUrl não confirmada
+  // contra a API real ainda; codigoAuvo é o `code` humano do Auvo, distinto do id numérico).
+  imagemUrl: string | null;
+  codigoAuvo: string | null;
+  valorUnitario: number | null;
+  custoUnitario: number | null;
 }
 
 export interface FerramentaCategoriaOpcao {
@@ -25,6 +31,8 @@ export interface FerramentaFormData {
   categoriaId?: string | null;
   quantidadeTotal: number;
   quantidadeMinima: number;
+  valorUnitario?: number | null;
+  custoUnitario?: number | null;
 }
 
 export interface FerramentaAlocacaoItem {
@@ -45,12 +53,6 @@ export interface FuncionarioFerramentaOpcao {
   auvoUserId: number | null;
 }
 
-export interface FerramentaAlocacaoFormData {
-  ferramentaId: string;
-  funcionarioId: string;
-  quantidade: number;
-}
-
 export function validarFerramenta(input: FerramentaFormData): FerramentaFormData {
   const nome = input.nome.trim();
   if (!nome) throw new Error("Nome é obrigatório.");
@@ -65,28 +67,39 @@ export function validarFerramenta(input: FerramentaFormData): FerramentaFormData
     categoriaId: textoOuNull(input.categoriaId),
     quantidadeTotal,
     quantidadeMinima,
+    valorUnitario: numeroNaoNegativoOuNull(input.valorUnitario, "Valor unitário"),
+    custoUnitario: numeroNaoNegativoOuNull(input.custoUnitario, "Custo unitário"),
   };
 }
 
-export function validarAlocacao(
-  input: FerramentaAlocacaoFormData,
-  ferramenta?: FerramentaItem,
-  funcionario?: FuncionarioFerramentaOpcao,
-): FerramentaAlocacaoFormData {
-  if (!input.ferramentaId) throw new Error("Ferramenta é obrigatória.");
-  if (!input.funcionarioId) throw new Error("Técnico é obrigatório.");
-  const quantidade = inteiroNaoNegativo(input.quantidade, "Quantidade");
-  if (!ferramenta?.auvoId) throw new Error("Sincronize a ferramenta com o Auvo antes de alocar.");
-  if (!funcionario?.auvoUserId) throw new Error("Sincronize o técnico com o Auvo antes de alocar.");
-  if (quantidade > ferramenta.quantidadeTotal) {
-    throw new Error("Quantidade alocada excede o estoque total da ferramenta.");
+/** AC-4: validação inline — mensagens por campo, sem lançar, pra UI mostrar antes do submit. */
+export function validarFerramentaInline(
+  input: FerramentaFormData,
+): Partial<Record<keyof FerramentaFormData, string>> {
+  const erros: Partial<Record<keyof FerramentaFormData, string>> = {};
+  if (!input.nome.trim()) erros.nome = "Nome é obrigatório.";
+  if (!Number.isInteger(input.quantidadeTotal) || input.quantidadeTotal < 0) {
+    erros.quantidadeTotal = "Deve ser um número inteiro ≥ 0.";
   }
-  return { ...input, quantidade };
+  if (!Number.isInteger(input.quantidadeMinima) || input.quantidadeMinima < 0) {
+    erros.quantidadeMinima = "Deve ser um número inteiro ≥ 0.";
+  } else if (input.quantidadeMinima > input.quantidadeTotal) {
+    erros.quantidadeMinima = "Não pode exceder a quantidade total.";
+  }
+  return erros;
 }
 
 function inteiroNaoNegativo(value: number, campo: string): number {
   if (!Number.isInteger(value) || value < 0)
     throw new Error(`${campo} deve ser maior ou igual a zero.`);
+  return value;
+}
+
+function numeroNaoNegativoOuNull(value: number | null | undefined, campo: string): number | null {
+  if (value == null) return null;
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`${campo} deve ser maior ou igual a zero.`);
+  }
   return value;
 }
 

@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
-  calcularInicioJanelaDeCursor,
+  calcularJanelaRolante,
   extractTaskId,
   mapTaskStatusToOsStatus,
   montarDetalhes,
@@ -15,24 +15,21 @@ Deno.test("extractTaskId — taskID é o campo real confirmado na API, id/taskId
   assertEquals(extractTaskId({}), null);
 });
 
-Deno.test("calcularInicioJanelaDeCursor — E01-S67: cursor presente usa (cursor - 3 dias de overlap)", () => {
+Deno.test("calcularJanelaRolante — E01-S68: -21d/+60d a partir de agora, nunca depende do banco", () => {
   const agora = new Date("2026-07-13T12:00:00Z");
-  const cursor = "2026-07-10T08:00:00.000Z"; // 3 dias atrás de "agora"
-  const inicio = calcularInicioJanelaDeCursor(cursor, agora);
-  assertEquals(inicio.toISOString(), "2026-07-07T08:00:00.000Z");
+  const { inicio, fim } = calcularJanelaRolante(agora);
+  assertEquals(inicio.toISOString(), "2026-06-22T12:00:00.000Z");
+  assertEquals(fim.toISOString(), "2026-09-11T12:00:00.000Z");
 });
 
-Deno.test("calcularInicioJanelaDeCursor — cursor recente (rodando de hora em hora) fica bem próximo de agora", () => {
+Deno.test("calcularJanelaRolante — inclui tarefa de hoje mesmo com preventiva agendada bem no futuro", () => {
+  // Reproduz o incidente de produção (2026-07-14): o cursor da E01-S67 pulava pra depois de uma
+  // preventiva agendada e excluía o dia corrente. A janela rolante nunca depende de MAX(data
+  // agendada) — sempre cobre "agora", independente do que já está no banco.
   const agora = new Date("2026-07-13T12:00:00Z");
-  const cursor = "2026-07-13T11:00:00.000Z"; // 1h atrás — cron horário
-  const inicio = calcularInicioJanelaDeCursor(cursor, agora);
-  assertEquals(inicio.toISOString(), "2026-07-10T11:00:00.000Z"); // cursor - 3 dias, não "agora - 3 dias"
-});
-
-Deno.test("calcularInicioJanelaDeCursor — sem cursor (bootstrap) cai no fallback fixo de 14 dias", () => {
-  const agora = new Date("2026-07-13T12:00:00Z");
-  const inicio = calcularInicioJanelaDeCursor(null, agora);
-  assertEquals(inicio.toISOString(), "2026-06-29T12:00:00.000Z");
+  const { inicio, fim } = calcularJanelaRolante(agora);
+  const hoje = new Date("2026-07-13T08:00:00Z");
+  assertEquals(hoje >= inicio && hoje <= fim, true);
 });
 
 Deno.test("mapTaskStatusToOsStatus — mapeia taskStatus Auvo pro status inicial da OS", () => {
@@ -103,4 +100,61 @@ Deno.test("montarDetalhes — E01-S38: captura todo o dado rico da tarefa (produ
       taskUrl: "https://app.auvo.com.br/informacoes/tarefa/x",
     },
   );
+});
+
+Deno.test("montarDetalhes — E01-S70: achata questionnaires[].answers[] em lista pergunta/resposta/data", () => {
+  assertEquals(
+    montarDetalhes({
+      questionnaires: [
+        {
+          id: 1,
+          name: "Checklist padrão",
+          answers: [
+            {
+              questionId: 10,
+              questionDescription: "Equipamento em condições de uso?",
+              reply: "Sim",
+              replyDate: "2026-07-13T08:30:00",
+            },
+            { questionId: 11, questionDescription: "Observações", reply: "" },
+          ],
+        },
+      ],
+    }),
+    {
+      questionarios: [
+        {
+          pergunta: "Equipamento em condições de uso?",
+          resposta: "Sim",
+          data: "2026-07-13T08:30:00",
+        },
+        { pergunta: "Observações", resposta: "", data: null },
+      ],
+    },
+  );
+});
+
+Deno.test("montarDetalhes — E01-S70: sem questionnaires, keyWords ou timeControl não gera chaves vazias", () => {
+  assertEquals(montarDetalhes({ questionnaires: [] }), {});
+  assertEquals(montarDetalhes({ questionnaires: [{ answers: [] }] }), {});
+  assertEquals(montarDetalhes({ keyWords: [] }), {});
+});
+
+Deno.test("montarDetalhes — E01-S70: keyWordsDescriptions, timeControl e financialCategory capturados", () => {
+  assertEquals(
+    montarDetalhes({
+      keyWordsDescriptions: ["Urgente", "Preventiva"],
+      timeControl: { totalMinutes: 45 },
+      financialCategory: "Manutenção corretiva",
+    }),
+    {
+      palavrasChave: ["Urgente", "Preventiva"],
+      controleHoras: { totalMinutes: 45 },
+      categoriaFinanceira: "Manutenção corretiva",
+    },
+  );
+});
+
+Deno.test("montarDetalhes — E01-S70: keyWords é fallback quando keyWordsDescriptions ausente", () => {
+  assertEquals(montarDetalhes({ keyWords: [1, 2] }), { palavrasChave: [1, 2] });
 });

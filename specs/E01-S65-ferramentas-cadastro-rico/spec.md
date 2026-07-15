@@ -71,3 +71,24 @@ UI de edição — conferir `ferramentas.ts` do registry), preview de imagem, e 
 - Arquivos-âncora: `apps/web/src/features/pcm/domain/ferramentas.ts` (`FerramentaFormData`),
   `pages/FerramentasPage.tsx`, `supabase/functions/_shared/auvo/registry/ferramentas.ts`
   (`AuvoProduct` já tem os campos de valor; adicionar `imageUrl`/`code` ao tipo).
+
+## Achado técnico — AC-1 (2026-07-14, sessão Sonnet 5)
+
+**Task 1 (`PATCH /products/{id}` com `imageUrl`) NÃO foi executada nesta sessão.** Testar escrita
+contra a API real do Auvo é uma ação em sistema externo de produção (mesmo "reversível", altera
+dado real da conta Sinérgica) — por instrução de segurança da sessão, ações desse tipo pedem
+confirmação explícita antes de rodar, e não havia decisão prévia do Lucas autorizando
+especificamente esse teste. Credenciais (`AUVO_API_KEY`/`AUVO_USER_TOKEN`) estão disponíveis no
+`.env.local`, então o teste é tecnicamente possível a qualquer momento.
+
+**Implementação seguiu o caminho B do AC-2 (não aceita escrita)** — o mais seguro dado o
+desconhecido: `imageUrl`/`uriAttachments`/`code` só entram em `fromAuvo` (leitura, migration
+`0088`), nunca em `toAuvo`/`toAuvoUpdate`. A UI mostra a imagem do Auvo quando existe (thumbnail no
+card + preview no modal) com aviso "cadastre a foto direto no Auvo"; sem imagem, mostra nota
+equivalente. Valor unitário/custo unitário (já existiam na tabela desde a `0033`, nunca expostos na
+UI) e código Auvo (`code`, novo) ficaram visíveis — valor/custo agora **editáveis** (o write path já
+existia em `toAuvoUpdate`, só faltava a UI mandar o dado).
+
+**Pendente:** se Lucas quiser confirmar a escrita de imagem (destravaria o caminho A — campo de URL
+editável com preview), o teste é 1 `curl -X PATCH` num produto de teste. Registrar o resultado aqui
+antes de reabrir esta story.

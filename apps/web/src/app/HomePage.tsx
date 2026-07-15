@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Clock,
   FileBarChart2,
   FileText,
   HardHat,
@@ -49,6 +50,7 @@ import { FinanceiroMockRouter } from "../features/financeiro/mock/FinanceiroMock
 import type { GuiaView } from "../features/guia/GuiaRouter";
 import { GuiaRouter } from "../features/guia/GuiaRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
+import { ApontamentoHorasPage } from "../features/pcm/pages/ApontamentoHorasPage";
 import { BacklogGutPage } from "../features/pcm/pages/BacklogGutPage";
 import {
   EquipamentoCategoriasPage,
@@ -70,6 +72,7 @@ import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
 import { ServicosPage } from "../features/pcm/pages/ServicosPage";
 import { TicketsPage } from "../features/pcm/pages/TicketsPage";
+import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
@@ -123,7 +126,9 @@ type PcmView =
   | "backlog"
   | "inspecoes"
   | "pmoc"
-  | "laudos-spda";
+  | "laudos-spda"
+  | "apontamento-horas"
+  | "tipos-inspecao";
 
 interface NavItem {
   label: string;
@@ -311,6 +316,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Palavras-chave", icon: FileText, view: "palavras-chave" },
       { label: "Categorias Produto", icon: Package, view: "produto-categorias" },
       { label: "Categorias Equip.", icon: Wrench, view: "equipamento-categorias" },
+      { label: "Tipos de Inspeção", icon: CheckCircle2, view: "tipos-inspecao" },
     ],
   },
   {
@@ -327,6 +333,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Relatório Diário", icon: FileText },
       { label: "Relatório Mensal", icon: FileBarChart2 },
       { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
+      { label: "Apontamento de Horas", icon: Clock, view: "apontamento-horas" },
     ],
   },
 ];
@@ -969,6 +976,10 @@ export function HomePage() {
               <FerramentasPage />
             ) : pcmView === "ferramentas-por-tecnico" ? (
               <FerramentasPorTecnicoPage />
+            ) : pcmView === "apontamento-horas" ? (
+              <ApontamentoHorasPage />
+            ) : pcmView === "tipos-inspecao" ? (
+              <TiposInspecaoPage />
             ) : pcmView === "tickets" ? (
               <TicketsPage />
             ) : pcmView === "servicos" ? (

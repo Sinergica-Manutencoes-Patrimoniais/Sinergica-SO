@@ -1,26 +1,25 @@
 // pcm-auvo-tasks-import — reconciliação Auvo→PCM de Ordens de Serviço (E01-S34). Mesmo padrão de
-// `pcm-auvo-customers-import` (E01-S13): pagina as tarefas do Auvo numa janela de data e cria a OS
-// local para as que não têm `auvo_task_id` correspondente ainda. Janela padrão é pequena (rede de
-// segurança pro que o webhook de Task perder, não backfill histórico — ver comentário na janela
-// mais abaixo); `startDate`/`endDate` no corpo da requisição sobrescrevem pra um backfill
-// pontual em fatias. Resolve cliente/numeração/autoria em LOTE (1 query cada pro lote inteiro) e
-// faz insert em lote — diferente do webhook em tempo real (`pcm-auvo-webhook`, 1 tarefa por vez via
-// `criarOsDaTarefa`), mas reaproveita a mesma montagem de linha (`montarLinhaOs`,
-// _shared/auvo/os-from-task.ts) pra não duplicar o formato entre os dois.
+// `pcm-auvo-customers-import` (E01-S13): pagina as tarefas do Auvo numa janela ROLANTE de data
+// (-21d/+60d — E01-S68, ver comentário na janela mais abaixo) e cria a OS local para as que não
+// têm `auvo_task_id` correspondente ainda; `startDate`/`endDate` no corpo da requisição
+// sobrescrevem pra um backfill pontual em fatias. Resolve cliente/numeração/autoria em LOTE
+// (1 query cada pro lote inteiro) e faz insert em lote — diferente do webhook em tempo real
+// (`pcm-auvo-webhook`, 1 tarefa por vez via `criarOsDaTarefa`), mas reaproveita a mesma montagem
+// de linha (`montarLinhaOs`, _shared/auvo/os-from-task.ts) pra não duplicar o formato entre os dois.
 //
 // Assimetria intencional em relação a `pcm-auvo-customers-import`: NÃO faz soft-delete de OS que
 // sumiram do Auvo. OS é dado operacional do PCM — uma tarefa cancelada/removida no Auvo não deveria
 // apagar/desativar histórico local (ver design.md).
 //
-// Gatilho: `pg_cron` diário (migration 0038) via `net.http_post`, ou invocação manual
+// Gatilho: `pg_cron` horário (migration 0084) via `net.http_post`, ou invocação manual
 // (`supabase functions invoke pcm-auvo-tasks-import`).
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
 import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
+import { auvoNaiveToUtc } from "../_shared/auvo/datetime.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 import {
   contarOsExistentes,
@@ -32,11 +31,12 @@ import {
   resolverFuncionarioIdsPorAuvoIds,
 } from "../_shared/auvo/os-from-task.ts";
 
-/** Sobreposição de segurança do cursor incremental (E01-S67) — cobre tarefa retroagendada/
- * lançada com atraso no Auvo, que teria ficado fora de uma janela sem margem. */
-const OVERLAP_DIAS_CURSOR = 3;
-/** Janela de fallback quando não há nenhuma tarefa sincronizada ainda (bootstrap). */
-const FALLBACK_DIAS_PASSADO = 14;
+/** Janela rolante padrão (E01-S68 — substitui o cursor incremental da E01-S67, que dava
+ * regressão: `MAX(data_agendada)` pulava pro futuro quando havia preventiva agendada e excluía
+ * tarefas de hoje). Passado generoso (21d) cobre o que o webhook eventualmente perder; futuro
+ * (60d) cobre preventivas já agendadas sem depender de nenhum dado local. */
+const JANELA_DIAS_PASSADO = 21;
+const JANELA_DIAS_FUTURO = 60;
 
 /** Máximo de linhas por `insert()` em lote — payload único grande demais é tão arriscado quanto
  * 1 round-trip por linha; fatiar mantém os dois lados saudáveis mesmo num backfill grande. */
@@ -95,6 +95,27 @@ interface AuvoTask {
   ticketTitle?: string;
   customerDescription?: string;
   taskUrl?: string;
+  // E01-S70: confirmado na API real (2026-07-14) — `questionnaires[].answers[]` traz o
+  // questionário preenchido em campo (pergunta/resposta/data), hoje descartado. `keyWords`/
+  // `timeControl`/`financialCategory` idem — vêm no mesmo GET /tasks, sem endpoint separado.
+  questionnaires?: AuvoQuestionnaire[];
+  keyWords?: unknown[];
+  keyWordsDescriptions?: string[];
+  timeControl?: Record<string, unknown>;
+  financialCategory?: string;
+}
+
+interface AuvoQuestionnaire {
+  id?: number;
+  name?: string;
+  answers?: AuvoQuestionnaireAnswer[];
+}
+
+interface AuvoQuestionnaireAnswer {
+  questionId?: number;
+  questionDescription?: string;
+  reply?: string;
+  replyDate?: string;
 }
 
 interface AuvoTasksResponse {
@@ -105,8 +126,8 @@ interface AuvoTasksResponse {
 
 interface RequestBody {
   /** Override opcional da janela padrão (ISO), usado só pro backfill histórico em fatias — ver
-   * `runSyncAll`/script de backfill. Sem override, usa a janela padrão pequena (rede de segurança
-   * do webhook, não backfill). */
+   * `runSyncAll`/script de backfill. Sem override, usa a janela rolante padrão (rede de segurança
+   * do webhook, não backfill — ver E01-S68). */
   startDate?: string;
   endDate?: string;
 }
@@ -136,24 +157,19 @@ if (import.meta.main) serve(async (req) => {
     // confirmado direto na API real (400 "Start date and end date are required when customerId is
     // not provided", errorCode 168).
     //
-    // E01-S67: StartDate por CURSOR incremental (MAX(data_agendada) das OS já sincronizadas do
-    // Auvo, menos 3 dias de sobreposição de segurança) em vez de janela fixa. Antes disso a janela
-    // era sempre -14/+14 dias fixos, reprocessando dado que na maior parte das vezes já estava
-    // sincronizado — mesma classe de causa raiz do incidente E01-S62 (`pull:tickets` com janela
-    // fixa grande). Cursor incremental faz o custo por execução cair pra "poucos dias desde a
-    // última rodada" em operação normal, o que torna seguro rodar de hora em hora (migration 0084)
-    // em vez de só 1x/dia. Ver `specs/E01-S67-sync-incremental-background/design.md`.
-    //
-    // Overlap de 3 dias cobre tarefa retroagendada/lançada com atraso pelo técnico (o cursor já
-    // teria avançado além dela numa rodada anterior sem essa margem). Fallback pra janela fixa
-    // antiga (-14 dias) só no bootstrap (nenhuma tarefa sincronizada ainda) — sem regressão nesse
-    // caso. EndDate continua fixo (+14 dias) — forward window já era pequeno, não muda.
-    const agora = new Date();
-    const fimPadrao = new Date(agora);
-    fimPadrao.setDate(fimPadrao.getDate() + 14);
-    const startDate = body.startDate ?? (await calcularInicioJanela(db, agora)).toISOString().slice(0, 19);
+    // E01-S68: janela ROLANTE fixa (-21d / +60d), não mais cursor incremental (E01-S67). O cursor
+    // (`MAX(data_agendada)` das OS já sincronizadas) deu regressão real em produção 2026-07-14:
+    // como havia preventiva agendada pro futuro (ex.: +9 dias), o cursor pulava pra lá e a janela
+    // (cursor−3d a cursor) excluía as tarefas de HOJE — 0 tarefas do dia viraram OS. O filtro do
+    // Auvo é sobre `taskDate` (agendamento), não sobre criação/modificação, então um cursor
+    // baseado em data agendada é estruturalmente furável por qualquer tarefa futura. A janela
+    // rolante nunca depende do que já está no banco — sempre cobre "agora". O custo (mais páginas
+    // por rodada que o cursor) é mitigado por: (1) o webhook (quando reconfigurado — E01-S68) é o
+    // caminho primário, isto aqui é rede de segurança; (2) orçamento de tempo por etapa no
+    // sync-all (E01-S62) isola qualquer etapa lenta sem travar as demais.
+    const { inicio: inicioPadrao, fim: fimPadrao } = calcularJanelaRolante(new Date());
     const paramFilter = buildParamFilter({
-      StartDate: startDate,
+      StartDate: body.startDate ?? inicioPadrao.toISOString().slice(0, 19),
       EndDate: body.endDate ?? fimPadrao.toISOString().slice(0, 19),
     });
 
@@ -219,9 +235,11 @@ if (import.meta.main) serve(async (req) => {
         titulo: tarefa.taskTypeDescription ?? tarefa.title ?? tarefa.taskTitle ?? tarefa.description ?? `Tarefa Auvo ${taskId}`,
         status: mapTaskStatusToOsStatus(tarefa.taskStatus ?? tarefa.status),
         tecnicoAuvoUserId: tarefa.idUserTo ?? null,
-        dataAgendada: tarefa.taskDate ?? null,
-        checkInAt: tarefa.checkInDate ?? null,
-        checkOutAt: tarefa.checkOutDate ?? null,
+        // E01-S68: Auvo devolve datetime naive (Brasília) — normaliza pra UTC correto antes de
+        // gravar (ver _shared/auvo/datetime.ts). Sem isso, grava 3h adiantado.
+        dataAgendada: auvoNaiveToUtc(tarefa.taskDate),
+        checkInAt: auvoNaiveToUtc(tarefa.checkInDate),
+        checkOutAt: auvoNaiveToUtc(tarefa.checkOutDate),
         detalhes: montarDetalhes(tarefa),
       });
     }
@@ -366,41 +384,46 @@ export function montarDetalhes(tarefa: AuvoTask): Record<string, unknown> {
   if (tarefa.ticketId) detalhes.ticketId = tarefa.ticketId;
   if (tarefa.ticketTitle) detalhes.ticketTitulo = tarefa.ticketTitle;
   if (tarefa.taskUrl) detalhes.taskUrl = tarefa.taskUrl;
+  const questionarios = achatarQuestionarios(tarefa.questionnaires);
+  if (questionarios.length > 0) detalhes.questionarios = questionarios;
+  if (Array.isArray(tarefa.keyWordsDescriptions) && tarefa.keyWordsDescriptions.length > 0) {
+    detalhes.palavrasChave = tarefa.keyWordsDescriptions;
+  } else if (Array.isArray(tarefa.keyWords) && tarefa.keyWords.length > 0) {
+    detalhes.palavrasChave = tarefa.keyWords;
+  }
+  if (tarefa.timeControl) detalhes.controleHoras = tarefa.timeControl;
+  if (tarefa.financialCategory) detalhes.categoriaFinanceira = tarefa.financialCategory;
   return detalhes;
 }
 
-/** Busca `MAX(data_agendada)` das OS já sincronizadas do Auvo — o cursor incremental. `null` no
- * bootstrap (nenhuma tarefa sincronizada ainda), quem chama decide o fallback. */
-async function buscarCursorMaxDataAgendada(db: UntypedSupabaseClient): Promise<string | null> {
-  const { data, error } = await db
-    .schema("pcm")
-    .from("ordens_servico")
-    .select("data_agendada")
-    .not("auvo_task_id", "is", null)
-    .not("data_agendada", "is", null)
-    .order("data_agendada", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return (data?.data_agendada as string | undefined) ?? null;
-}
-
-/** Função pura: dado o cursor (string ISO ou null) e "agora", calcula o `StartDate` da janela.
- * `null` (bootstrap) cai no fallback fixo antigo; cursor presente usa `cursor - overlap`. */
-export function calcularInicioJanelaDeCursor(cursorMax: string | null, agora: Date): Date {
-  if (cursorMax == null) {
-    const inicio = new Date(agora);
-    inicio.setDate(inicio.getDate() - FALLBACK_DIAS_PASSADO);
-    return inicio;
+/** Achata `questionnaires[].answers[]` (payload aninhado do Auvo) em uma lista plana
+ * pergunta/resposta/data — formato que o componente de detalhe (E01-S70) renderiza direto. */
+function achatarQuestionarios(
+  questionnaires: AuvoQuestionnaire[] | undefined,
+): Array<{ pergunta: string; resposta: string; data: string | null }> {
+  if (!Array.isArray(questionnaires)) return [];
+  const respostas: Array<{ pergunta: string; resposta: string; data: string | null }> = [];
+  for (const questionario of questionnaires) {
+    for (const answer of questionario.answers ?? []) {
+      if (!answer.questionDescription) continue;
+      respostas.push({
+        pergunta: answer.questionDescription,
+        resposta: answer.reply ?? "",
+        data: answer.replyDate ?? null,
+      });
+    }
   }
-  const inicio = new Date(cursorMax);
-  inicio.setDate(inicio.getDate() - OVERLAP_DIAS_CURSOR);
-  return inicio;
+  return respostas;
 }
 
-async function calcularInicioJanela(db: UntypedSupabaseClient, agora: Date): Promise<Date> {
-  const cursorMax = await buscarCursorMaxDataAgendada(db);
-  return calcularInicioJanelaDeCursor(cursorMax, agora);
+/** Função pura (E01-S68): janela rolante fixa a partir de "agora" — nunca depende de dado já no
+ * banco (ao contrário do cursor da E01-S67, que dava regressão quando havia tarefa futura). */
+export function calcularJanelaRolante(agora: Date): { inicio: Date; fim: Date } {
+  const inicio = new Date(agora);
+  inicio.setDate(inicio.getDate() - JANELA_DIAS_PASSADO);
+  const fim = new Date(agora);
+  fim.setDate(fim.getDate() + JANELA_DIAS_FUTURO);
+  return { inicio, fim };
 }
 
 export function extractTaskId(tarefa: AuvoTask): number | null {

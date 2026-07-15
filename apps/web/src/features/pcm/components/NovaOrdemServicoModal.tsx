@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { abrirOrdemServico, carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
+import { editarOrdemServico } from "../application/editar-ordem-servico";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import {
   CATEGORIAS_OS,
@@ -11,6 +12,7 @@ import {
   prioridadeParaOs,
   sugerirPrioridadePorGut,
 } from "../domain/abertura-os";
+import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import { type PrioridadeBacklog, calcularScoreGut } from "../domain/priorizacao-backlog";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 
@@ -58,14 +60,32 @@ const FORM_INICIAL: FormState = {
   tendencia: 3,
 };
 
+/** Converte a prioridade livre de uma OS já existente pro conjunto fechado do formulário
+ * (GUT-based: baixa/media/alta/critica) — `"normal"` é um valor legado que a criação nunca produz
+ * (ver `prioridadeParaOs`), tratado como "media" ao editar. */
+function prioridadeParaForm(prioridade: string): PrioridadeBacklog {
+  return prioridade === "baixa" ||
+    prioridade === "media" ||
+    prioridade === "alta" ||
+    prioridade === "critica"
+    ? prioridade
+    : "media";
+}
+
 export function NovaOrdemServicoModal({
   aberto,
+  ordem,
   onFechar,
   onCriada,
+  onEditada,
 }: {
   aberto: boolean;
+  /** E01-S69: presente = modo edição (pré-preenche e salva via `editarOrdemServico`); ausente =
+   * modo criação (comportamento original, inalterado). */
+  ordem?: OrdemServicoOperacional;
   onFechar: () => void;
-  onCriada: (numero: string) => void;
+  onCriada?: (numero: string) => void;
+  onEditada?: () => void;
 }) {
   const { user } = useAuth();
   const [dados, setDados] = useState<DadosAberturaOs>({
@@ -78,6 +98,7 @@ export function NovaOrdemServicoModal({
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [prioridadeManual, setPrioridadeManual] = useState(false);
+  const editando = Boolean(ordem);
 
   const score = useMemo(
     () => calcularScoreGut(form.gravidade, form.urgencia, form.tendencia),
@@ -110,46 +131,85 @@ export function NovaOrdemServicoModal({
     if (aberto) carregar();
   }, [aberto, carregar]);
 
+  // E01-S69: pré-preenche o formulário a partir da OS quando abre em modo edição — e trava a
+  // sugestão automática de prioridade (efeito abaixo) pra não sobrescrever o valor real da OS.
+  useEffect(() => {
+    if (!aberto || !ordem) return;
+    setForm({
+      ...FORM_INICIAL,
+      titulo: ordem.titulo,
+      descricao: ordem.descricao ?? "",
+      categoria: ordem.categoria as CategoriaOs,
+      prioridade: prioridadeParaForm(ordem.prioridade),
+      tecnicoId: ordem.tecnicoFuncionarioId ?? "",
+      dataPrevista: ordem.dataAgendada?.slice(0, 10) ?? "",
+      gravidade: ordem.gravidade ?? 3,
+      urgencia: ordem.urgencia ?? 3,
+      tendencia: ordem.tendencia ?? 3,
+    });
+    setPrioridadeManual(true);
+  }, [aberto, ordem]);
+
   useEffect(() => {
     if (!prioridadeManual) setForm((f) => ({ ...f, prioridade: prioridadeSugerida }));
   }, [prioridadeManual, prioridadeSugerida]);
 
   if (!aberto) return null;
-  const semClientes = dados.clientes.length === 0;
-  const semTiposTarefa = dados.tiposTarefa.length === 0;
+  const semClientes = !editando && dados.clientes.length === 0;
+  const semTiposTarefa = !editando && dados.tiposTarefa.length === 0;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!user?.id) {
-      setErro("Sessão inválida. Entre novamente para criar a OS.");
+      setErro(`Sessão inválida. Entre novamente para ${editando ? "editar" : "criar"} a OS.`);
       return;
     }
     setSalvando(true);
     setErro(null);
     try {
-      const criada = await abrirOrdemServico(supabaseOrdemServicoAdapter, {
-        clientId: form.clientId,
-        titulo: form.titulo,
-        descricao: form.descricao || null,
-        categoria: form.categoria,
-        prioridade: prioridadeParaOs(form.prioridade),
-        gravidade: form.gravidade,
-        urgencia: form.urgencia,
-        tendencia: form.tendencia,
-        localDescricao: form.localDescricao || null,
-        solicitante: form.solicitante || null,
-        origem: form.origem,
-        tecnicoId: form.tecnicoId || null,
-        tipoTarefaId: form.tipoTarefaId,
-        dataPrevista: form.dataPrevista || null,
-        createdBy: user.id,
-      });
-      onCriada(criada.numero);
-      onFechar();
-      setForm(FORM_INICIAL);
-      setPrioridadeManual(false);
+      if (editando && ordem) {
+        await editarOrdemServico(supabaseOrdemServicoAdapter, {
+          id: ordem.id,
+          titulo: form.titulo,
+          descricao: form.descricao || null,
+          categoria: form.categoria,
+          prioridade: prioridadeParaOs(form.prioridade),
+          gravidade: form.gravidade,
+          urgencia: form.urgencia,
+          tendencia: form.tendencia,
+          tecnicoId: form.tecnicoId || null,
+          dataPrevista: form.dataPrevista || null,
+          updatedBy: user.id,
+        });
+        onEditada?.();
+        onFechar();
+      } else {
+        const criada = await abrirOrdemServico(supabaseOrdemServicoAdapter, {
+          clientId: form.clientId,
+          titulo: form.titulo,
+          descricao: form.descricao || null,
+          categoria: form.categoria,
+          prioridade: prioridadeParaOs(form.prioridade),
+          gravidade: form.gravidade,
+          urgencia: form.urgencia,
+          tendencia: form.tendencia,
+          localDescricao: form.localDescricao || null,
+          solicitante: form.solicitante || null,
+          origem: form.origem,
+          tecnicoId: form.tecnicoId || null,
+          tipoTarefaId: form.tipoTarefaId,
+          dataPrevista: form.dataPrevista || null,
+          createdBy: user.id,
+        });
+        onCriada?.(criada.numero);
+        onFechar();
+        setForm(FORM_INICIAL);
+        setPrioridadeManual(false);
+      }
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível criar a OS.");
+      setErro(
+        e instanceof Error ? e.message : `Não foi possível ${editando ? "editar" : "criar"} a OS.`,
+      );
     } finally {
       setSalvando(false);
     }
@@ -163,8 +223,14 @@ export function NovaOrdemServicoModal({
       >
         <div className="px-5 py-4 border-b border-line-soft flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-base font-bold text-ink">Nova Ordem de Serviço</h2>
-            <p className="text-xs text-ink-3 mt-0.5">Abertura manual no PCM · status solicitação</p>
+            <h2 className="text-base font-bold text-ink">
+              {editando ? `Editar OS ${ordem?.numero ?? ""}` : "Nova Ordem de Serviço"}
+            </h2>
+            <p className="text-xs text-ink-3 mt-0.5">
+              {editando
+                ? "Alteração de campos da OS"
+                : "Abertura manual no PCM · status solicitação"}
+            </p>
           </div>
           <button
             type="button"
@@ -190,48 +256,52 @@ export function NovaOrdemServicoModal({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Cliente *" className="md:col-span-2">
-              <select
-                value={form.clientId}
-                disabled={carregando}
-                onChange={(e) => setForm((f) => ({ ...f, clientId: e.target.value }))}
-                className="input"
-                required
-              >
-                {dados.clientes.length === 0 ? (
-                  <option value="">Nenhum cliente disponível</option>
-                ) : (
-                  dados.clientes.map((cliente) => (
-                    <option key={cliente.id} value={cliente.id}>
-                      {cliente.nome}
-                    </option>
-                  ))
-                )}
-              </select>
-            </Field>
+            {!editando && (
+              <>
+                <Field label="Cliente *" className="md:col-span-2">
+                  <select
+                    value={form.clientId}
+                    disabled={carregando}
+                    onChange={(e) => setForm((f) => ({ ...f, clientId: e.target.value }))}
+                    className="input"
+                    required
+                  >
+                    {dados.clientes.length === 0 ? (
+                      <option value="">Nenhum cliente disponível</option>
+                    ) : (
+                      dados.clientes.map((cliente) => (
+                        <option key={cliente.id} value={cliente.id}>
+                          {cliente.nome}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </Field>
 
-            <Field label="Solicitante">
-              <input
-                value={form.solicitante}
-                onChange={(e) => setForm((f) => ({ ...f, solicitante: e.target.value }))}
-                className="input"
-                placeholder="Ex: João Silva (porteiro)"
-              />
-            </Field>
+                <Field label="Solicitante">
+                  <input
+                    value={form.solicitante}
+                    onChange={(e) => setForm((f) => ({ ...f, solicitante: e.target.value }))}
+                    className="input"
+                    placeholder="Ex: João Silva (porteiro)"
+                  />
+                </Field>
 
-            <Field label="Origem">
-              <select
-                value={form.origem}
-                onChange={(e) => setForm((f) => ({ ...f, origem: e.target.value as OrigemOs }))}
-                className="input"
-              >
-                {ORIGENS_OS.map((origem) => (
-                  <option key={origem.value} value={origem.value}>
-                    {origem.label}
-                  </option>
-                ))}
-              </select>
-            </Field>
+                <Field label="Origem">
+                  <select
+                    value={form.origem}
+                    onChange={(e) => setForm((f) => ({ ...f, origem: e.target.value as OrigemOs }))}
+                    className="input"
+                  >
+                    {ORIGENS_OS.map((origem) => (
+                      <option key={origem.value} value={origem.value}>
+                        {origem.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </>
+            )}
 
             <Field label="Título *" className="md:col-span-2">
               <input
@@ -309,27 +379,29 @@ export function NovaOrdemServicoModal({
               />
             </div>
 
-            <Field label="Tipo de tarefa *">
-              {semTiposTarefa ? (
-                <p className="text-xs text-ink-3">
-                  Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa
-                  antes de abrir uma OS.
-                </p>
-              ) : (
-                <select
-                  value={form.tipoTarefaId}
-                  onChange={(e) => setForm((f) => ({ ...f, tipoTarefaId: e.target.value }))}
-                  className="input"
-                  required
-                >
-                  {dados.tiposTarefa.map((tipo) => (
-                    <option key={tipo.id} value={tipo.id}>
-                      {tipo.nome}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </Field>
+            {!editando && (
+              <Field label="Tipo de tarefa *">
+                {semTiposTarefa ? (
+                  <p className="text-xs text-ink-3">
+                    Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa
+                    antes de abrir uma OS.
+                  </p>
+                ) : (
+                  <select
+                    value={form.tipoTarefaId}
+                    onChange={(e) => setForm((f) => ({ ...f, tipoTarefaId: e.target.value }))}
+                    className="input"
+                    required
+                  >
+                    {dados.tiposTarefa.map((tipo) => (
+                      <option key={tipo.id} value={tipo.id}>
+                        {tipo.nome}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </Field>
+            )}
 
             <Field label="Técnico responsável">
               <select
@@ -346,14 +418,16 @@ export function NovaOrdemServicoModal({
               </select>
             </Field>
 
-            <Field label="Localização">
-              <input
-                value={form.localDescricao}
-                onChange={(e) => setForm((f) => ({ ...f, localDescricao: e.target.value }))}
-                className="input"
-                placeholder="Ex: Térreo — Garagem B"
-              />
-            </Field>
+            {!editando && (
+              <Field label="Localização">
+                <input
+                  value={form.localDescricao}
+                  onChange={(e) => setForm((f) => ({ ...f, localDescricao: e.target.value }))}
+                  className="input"
+                  placeholder="Ex: Térreo — Garagem B"
+                />
+              </Field>
+            )}
 
             <Field label="Data prevista">
               <input
@@ -379,7 +453,7 @@ export function NovaOrdemServicoModal({
             disabled={salvando || carregando || semClientes || semTiposTarefa}
             className="px-4 py-2 rounded-[6px] bg-navy text-white text-sm font-semibold hover:bg-navy-deep disabled:opacity-60"
           >
-            {salvando ? "Criando..." : "Criar OS"}
+            {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Criar OS"}
           </button>
         </div>
       </form>
