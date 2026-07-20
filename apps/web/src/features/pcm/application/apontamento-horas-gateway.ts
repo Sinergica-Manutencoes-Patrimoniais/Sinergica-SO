@@ -8,6 +8,8 @@ export interface ClienteOpcaoHoras {
 export interface TecnicoOpcaoHoras {
   id: string;
   nome: string;
+  /** AC-6: jornada diária esperada (horas). `null` = sem sinalização de falta/hora-extra. */
+  jornadaDiariaHoras: number | null;
 }
 
 export interface ApontamentoHorasGateway {

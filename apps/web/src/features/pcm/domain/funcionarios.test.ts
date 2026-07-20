@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validarCriacaoFuncionario, validarFuncionario } from "./funcionarios";
+import { normalizarJornada, validarCriacaoFuncionario, validarFuncionario } from "./funcionarios";
 
 describe("funcionarios", () => {
   it("valida cadastro comum sem credenciais", () => {
@@ -19,7 +19,19 @@ describe("funcionarios", () => {
       email: null,
       culture: "pt-BR",
       userType: 1,
+      jornadaDiariaHoras: null,
     });
+  });
+
+  it("normaliza jornada: número > 0 e ≤ 24 vale; resto vira null (E01-S77)", () => {
+    expect(normalizarJornada(8)).toBe(8);
+    expect(normalizarJornada(8.8)).toBe(8.8);
+    expect(normalizarJornada(0)).toBeNull();
+    expect(normalizarJornada(-2)).toBeNull();
+    expect(normalizarJornada(30)).toBeNull();
+    expect(normalizarJornada(null)).toBeNull();
+    expect(normalizarJornada(undefined)).toBeNull();
+    expect(normalizarJornada(Number.NaN)).toBeNull();
   });
 
   it("criação exige senha com limite Auvo de 14 caracteres", () => {

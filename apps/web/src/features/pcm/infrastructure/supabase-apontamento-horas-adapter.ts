@@ -57,12 +57,16 @@ export const supabaseApontamentoHorasAdapter: ApontamentoHorasGateway = {
     const { data, error } = await supabase
       .schema("pcm")
       .from("funcionarios")
-      .select("id,nome")
+      .select("id,nome,jornada_diaria_horas")
       .eq("ativo", true)
       .is("deleted_at", null)
       .order("nome", { ascending: true });
     if (error) throw error;
-    return (data ?? []).map((f) => ({ id: f.id as string, nome: f.nome as string }));
+    return (data ?? []).map((f) => ({
+      id: f.id as string,
+      nome: f.nome as string,
+      jornadaDiariaHoras: (f.jornada_diaria_horas as number | null) ?? null,
+    }));
   },
 
   // AC-4: `financeiro.custos_funcionario` (E04-S06) ainda não existe neste repo — schema exato
