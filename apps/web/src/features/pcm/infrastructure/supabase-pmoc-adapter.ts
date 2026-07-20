@@ -228,7 +228,7 @@ function mapSugestoesAuvo(params: {
     .sort((a, b) => Number(a.jaImportado) - Number(b.jaImportado) || a.nome.localeCompare(b.nome));
 }
 
-function mapAgenda(row: ScheduleRow): PmocAgenda {
+function mapAgenda(row: ScheduleRow, osPorSchedule: Map<string, string>): PmocAgenda {
   return {
     id: row.id,
     contractId: row.contract_id,
@@ -239,6 +239,7 @@ function mapAgenda(row: ScheduleRow): PmocAgenda {
     yearRef: row.year_ref,
     status: row.status,
     auvoOsId: row.auvo_os_id,
+    ordemServicoId: osPorSchedule.get(row.id) ?? null,
   };
 }
 
@@ -367,6 +368,7 @@ async function carregarDataset() {
     agenda,
     microbiologia,
     ncs,
+    osDeVisitas,
   ] = await Promise.all([
     supabase
       .schema("pcm")
@@ -403,6 +405,13 @@ async function carregarDataset() {
       .select(MICROBIO_COLS)
       .order("analysis_date", { ascending: false }),
     supabase.schema("pcm").from("pmoc_nonconformity_log").select(NC_COLS),
+    // E01-S05 AC-1: mapeia visitas que já têm OS criada (botão "Criar OS" da agenda).
+    supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select("id,pmoc_schedule_id")
+      .not("pmoc_schedule_id", "is", null)
+      .is("deleted_at", null),
   ]);
 
   if (clientes.error) throw clientes.error;
@@ -426,6 +435,7 @@ async function carregarDataset() {
       agenda: [],
       microbiologia: [],
       ncs: [],
+      osPorSchedule: new Map<string, string>(),
     };
   }
   if (properties.error) throw properties.error;
@@ -435,6 +445,14 @@ async function carregarDataset() {
   if (agenda.error) throw agenda.error;
   if (microbiologia.error) throw microbiologia.error;
   if (ncs.error) throw ncs.error;
+  if (osDeVisitas.error) throw osDeVisitas.error;
+
+  const osPorSchedule = new Map<string, string>(
+    ((osDeVisitas.data ?? []) as Array<{ id: string; pmoc_schedule_id: string }>).map((row) => [
+      row.pmoc_schedule_id,
+      row.id,
+    ]),
+  );
 
   return {
     clientes: (clientes.data ?? []) as ClienteRow[],
@@ -445,6 +463,7 @@ async function carregarDataset() {
     agenda: (agenda.data ?? []) as ScheduleRow[],
     microbiologia: (microbiologia.data ?? []) as MicrobioRow[],
     ncs: (ncs.data ?? []) as NcRow[],
+    osPorSchedule,
   };
 }
 
@@ -501,7 +520,7 @@ export const supabasePmocAdapter: PmocGateway = {
         equipamentosAuvo: dataset.equipamentosAuvo,
         equipamentosPmoc: equipamentos,
       }),
-      agenda: agenda.map(mapAgenda),
+      agenda: agenda.map((row) => mapAgenda(row, dataset.osPorSchedule)),
       microbiologia: microbiologia.map(mapMicrobio),
       naoConformidades: ncs.map(mapNc),
     };

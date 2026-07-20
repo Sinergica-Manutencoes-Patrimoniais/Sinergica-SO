@@ -18,9 +18,10 @@ export async function abrirOrdemServico(
   if (!input.clientId) throw new Error("Cliente é obrigatório.");
   if (!titulo) throw new Error("Título é obrigatório.");
   if (!input.tipoTarefaId) throw new Error("Tipo de tarefa é obrigatório.");
-  // E01-S07 AC-1: tipo do Hub inferido na criação; nenhum produtor de pmocScheduleId ainda
-  // (Edge Function pmoc-auvo-create-os é deferida — ver design.md/ADR-0010), sempre null aqui.
-  const pmocScheduleId = null;
+  // E01-S07 AC-1 / E01-S05: tipo do Hub inferido na criação. `pmocScheduleId` só chega aqui quando
+  // o caller sabe que a OS nasce de uma visita PMOC (E01-S05 "Criar OS" síncrono) — omitido em
+  // toda criação manual normal.
+  const pmocScheduleId = input.pmocScheduleId ?? null;
   return gateway.criarOrdemServico({
     ...input,
     titulo,

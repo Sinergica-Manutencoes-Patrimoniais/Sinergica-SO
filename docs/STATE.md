@@ -10,70 +10,80 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-20 (sessão Lucas/Sonnet 5) — **Suíte PMOC (E01-S03 reconciliado, S04, S06,
-S08) + E01-S07 (Hub de OS) — gap fechado, código verificado, 3 migrations locais não aplicadas em
-prod (`0100`, `0101`, `0102`).** Lucas pediu a suíte
-PMOC completa (S03-S08, legalmente relevante — Portaria MS 3.523/1998) mais Hub de OS (S07). PMOC
-já tinha MUITO código de S03b (migration `0023`, `PmocPage.tsx` 40KB) entrando sem spec/tasks — a
-sessão auditou o real vs. `design.md` antes de codar, em vez de assumir greenfield.
+**Atualização:** 2026-07-20 (sessão Lucas/Sonnet 5) — **Suíte PMOC completa (E01-S03 reconciliado,
+S04, S06, S07 Hub de OS, S08, S05) + E00-S12 (Config > Integrações) — 8 stories fechadas, 10
+commits. Migrations 0100-0105 todas em produção. Deploy de 2 Edge Functions BLOQUEADO por
+credencial (`SUPABASE_ACCESS_TOKEN` inválido).** Lucas pediu a suíte PMOC completa (S03-S08,
+legalmente relevante — Portaria MS 3.523/1998) mais Hub de OS (S07); depois pediu pra construir e
+fazer deploy real de S05 (laudo PDF) + Edge Functions via CLI. PMOC já tinha MUITO código de S03b
+(migration `0023`, `PmocPage.tsx` 40KB) entrando sem spec/tasks — a sessão auditou o real vs.
+`design.md` antes de codar, em vez de assumir greenfield.
 
 - **Housekeeping primeiro:** 3 stories da sessão anterior (S76/S77/S78) estavam prontas mas não
   commitadas — 3 commits separados (sem PR, por pedido) antes de empilhar PMOC por cima.
-- **E01-S03 reconciliado:** `spec.md`/`tasks.md` retroativos escritos a partir do `design.md`
-  aprovado. **SPEC_DEVIATION SD-1** registrada: cronograma de 12 visitas é gerado client-side
-  (`gerarCronogramaPmoc` + adapter), não pela Edge Function `pmoc-generate-schedule` que o design
-  previa — decisão consciente (cálculo de datas puro, sem I/O). Pendências reais mapeadas pra
-  S04/S05/S06/S07.
-- **E01-S04 (inventário climatização):** o wizard de cadastro (form + import 1-clique do Auvo com
-  `proximaTagPmoc`/`inferirTipoEquipamentoPmoc`) **já existia** — só faltava o espelho
-  `pcm.pcm_equipment` (design Decisão 2, nunca implementado). Migration `0100`: tabela +
-  `security definer` trigger `fn_pmoc_equipment_espelha_pcm` (upsert por `pmoc_equipment_id`,
-  `discipline='climatizacao'`); sem GRANT de insert/update pra `authenticated` — só o trigger
-  escreve no espelho. pgTAP escrito (`pcm_equipment_mirror.test.sql`, 10 assertions), não rodado
-  (sem Docker local). **Migration não aplicada em produção ainda** (tabela nova/vazia, baixo risco,
-  mas decidi não aplicar sem pedir de novo).
-- **E01-S06 (microbiologia + NC):** schema e RLS (incl. policies de UPDATE) já existiam prontos
-  desde a `0023`, nunca usados pela aplicação. Gateway ganhou `criarAnaliseMicrobio`/
-  `criarNaoConformidade`/`atualizarStatusNc`; use-case calcula `status` via `classificarMicrobio`
-  (domínio já existia) — nunca digitado à mão — e `correctiveActionNeeded` só quando não-conforme;
-  `validarTransicaoStatusNc` (novo) bloqueia só o pulo `aberto→fechado`, permite reabrir. UI:
-  seções Microbiologia/NC no detalhe do contrato PMOC, modal de análise com **preview do status
-  calculado antes de salvar**, badges de severidade/status, botão Iniciar/Fechar NC. **Notificação
-  real (push/e-mail) de NC alta / não-conforme explicitamente fora de escopo** — só sinalização
-  visual; depende de Edge Function, fica com S05.
-- **E01-S08 (dashboard PMOC):** KPIs e detalhe rico por contrato já existiam (S03/S04/S06) — lacuna
-  real era achar quem precisa de ação sem clicar contrato a contrato. Painel "Precisa de atenção"
-  novo: `contratosComAlerta` (domínio puro) categoriza por urgência (NC alta > ART vencendo >
-  microbiológico pendente > NC aberta não-alta > visita atrasada), um contrato nunca duplica
-  categoria (a mais urgente vence); clique abre o contrato direto (reusa `setSelecionadoId`
-  existente, zero navegação nova); estado "Tudo em dia" quando não há alerta (reforça caminho
-  feliz, não erro). `PmocContratoResumo` ganhou `ncsAltasAbertas` computado do dataset **já
-  carregado** — nenhuma query nova. 100% frontend, zero migration.
-- **Gates:** `ci:local` verde (10/10) depois de cada story.
-- **Branches:** `feat/E01-S03-reconcile-pmoc`, `feat/E01-S04-inventario-climatizacao`,
-  `feat/E01-S06-microbio-nc-gestao` — todas commitadas. `feat/E01-S08-dashboard-pmoc` (atual, a
-  commitar).
-- **E01-S07 (Hub de OS, tier arquitetural):** resolveu a Decisão 5 adiada em E01-S03/design.md com
-  `design.md` + **ADR-0010** próprios — decisão: **estender `pcm.ordens_servico`**, não criar
-  `pcm.os_hub` (mesmo racional do ADR-0009 de S76: fonte única, não fragmentar o estado
-  operacional/sync Auvo já existente). Migrations `0101`/`0102`: `tipo_os` (C1/C2/P1/P2/IN, inferido
-  de `categoria` na criação via `inferirTipoOsHub`, editável manualmente depois — nunca reinferido)
-  + `pmoc_schedule_id` (FK pronta pra `pmoc_schedules`, **sem produtor ainda** — a Edge Function
-  `pmoc-auvo-create-os` que criaria OS a partir do cronograma PMOC é deferida). **Decisão central:
-  a prioridade do Hub NUNCA é gravada** — `calcularPrioridadeHub(tipoOs, dataAgendada, hoje)` sempre
-  recalcula em runtime (C1=1, C2=2, P1 atrasada=2/no prazo=3, P2=3, IN=4), evitando um cron de
-  "promoção" que poderia falhar silenciosamente (mesmo tipo de risco do incidente de E00-S11).
-  `calcularPrazoSlaOs` cobre C1=4h/C2=72h/P1=±3d/P2=±7d/IN=prazo acordado. UI: toggle "Ordenar por
-  Hub" + badge tipo/prioridade/atraso na lista de `OrdensServicoPage` — Kanban/Timeline/Calendário
-  intocados. **Fora de escopo, sinalizado no design:** "dias preventivos" (motor de alocação de
-  técnico por dia da semana) — exige conceito novo que não existe hoje, feature própria futura.
-  `ci:local` verde (10/10).
-- **Migrations pendentes de aplicar em produção (todas nullable/aditivas, baixo risco — pedir
-  autorização antes, mesma disciplina de E01-S77):** `0100` (S04, `pcm.pcm_equipment` mirror),
-  `0101`+`0102` (S07, `tipo_os`/`pmoc_schedule_id` em `ordens_servico`).
-- **Próximo passo:** S05 (laudo PDF) e o bloco de Edge Functions/cron/alertas (webhook→laudo,
-  `pmoc-auvo-create-os`, alertas D-30/microbio) ficam por último — não verificáveis localmente
-  (Deno/Storage/deploy), viram "código pronto, deploy pendente" como o resto do repo.
+- **E01-S03 reconciliado:** `spec.md`/`tasks.md` retroativos a partir do `design.md` aprovado.
+  **SPEC_DEVIATION SD-1**: cronograma de 12 visitas é client-side (`gerarCronogramaPmoc`), não pela
+  Edge Function que o design previa.
+- **E01-S04 (inventário climatização):** wizard de cadastro já existia — faltava só o espelho
+  `pcm.pcm_equipment` (design Decisão 2). Migration `0100`: trigger `security definer`
+  `fn_pmoc_equipment_espelha_pcm`, sem GRANT de escrita pra `authenticated`.
+- **E01-S06 (microbiologia + NC):** schema/RLS já existiam desde `0023`, nunca usados. Gateway
+  ganhou `criarAnaliseMicrobio`/`criarNaoConformidade`/`atualizarStatusNc`; status calculado via
+  `classificarMicrobio` (nunca digitado); `validarTransicaoStatusNc` bloqueia só `aberto→fechado`.
+- **E01-S08 (dashboard PMOC):** painel "Precisa de atenção" — `contratosComAlerta` (domínio puro)
+  categoriza por urgência (NC alta > ART vencendo > microbiológico pendente > NC aberta não-alta >
+  atrasado), 100% frontend, zero migration.
+- **E01-S07 (Hub de OS, tier arquitetural):** `design.md` + **ADR-0010** próprios resolvem a Decisão
+  5 adiada em S03 — **estende `pcm.ordens_servico`**, não cria `pcm.os_hub` (mesmo racional do
+  ADR-0009). Migrations `0101`/`0102`: `tipo_os` (C1/C2/P1/P2/IN, inferido de `categoria` na
+  criação) + `pmoc_schedule_id` (FK pronta, sem produtor até esta sessão — ver S05). **Prioridade do
+  Hub nunca é gravada** — `calcularPrioridadeHub` sempre recalcula em runtime (evita cron de
+  "promoção" e o risco de staleness silenciosa, mesmo padrão do incidente de E00-S11).
+- **E00-S12 (Config > Integrações):** nasceu de S05 precisar de credencial de e-mail — Lucas pediu
+  uma tela de config em vez de secret cru via CLI. Migration `0103`: `config.integracoes`
+  (metadado não-sensível) + RPCs `security definer` `fn_definir_segredo_integracao`/
+  `fn_integracao_tem_segredo` que gravam/checam no **Supabase Vault** (`vault.create_secret`/
+  `update_secret`) — segredo nunca numa tabela, campo de API key é write-only na UI.
+- **E01-S05 (visitas + laudo PDF) — decisões do PO nesta sessão:** (1) criação de OS a partir do
+  PMOC é **síncrona por ação do usuário** (botão "Criar OS" no cronograma), não cron — reusa
+  `abrirOrdemServico` (já cria a tarefa no Auvo, pipeline em produção desde E01-S09); (2) e-mail sem
+  provedor configurado nunca finge sucesso, só loga e segue.
+  - Fecha o **`SPEC_DEVIATION AC-7`** deixado por E01-S10/E01-S16 (`pcm-auvo-webhook`): finalizar
+    uma OS com `pmoc_schedule_id` agora cria `pcm.pmoc_records` (idempotente, checa
+    `schedule.record_id`) e marca o schedule `realizado`.
+  - Nova Edge Function `pmoc-generate-pdf`: gera o laudo (`pdf-lib`, puro TS/Deno), sobe pro bucket
+    privado `pmoc-laudos` (migration `0104`), envia por e-mail via Resend **só se** a integração
+    E00-S12 estiver ativa+configurada. Disparada automaticamente pelo webhook logo após criar o
+    `pmoc_records` (`await`ado, fire-and-forget seria arriscado — erro na geração nunca derruba o
+    200 do webhook, só fica no log).
+  - `config.fn_obter_segredo_integracao_interno` (migration `0104`): RPC extra, granted só
+    `service_role` — `vault` não é schema exposto via PostgREST, a Edge Function precisa desse
+    caminho pra ler a chave decriptada (nunca alcança `authenticated`).
+  - Cron `pmoc_daily_status` (migration `0105`) é **SQL puro** (`pcm.fn_pmoc_marcar_atrasadas` +
+    `cron.schedule`), sem Edge Function — mais simples/seguro que o padrão Auvo (pg_net), porque não
+    chama nada externo. O painel de S08 já mostra o alerta ao vivo; o cron só mantém o `status`
+    correto na tabela.
+- **Gates:** `ci:local` verde (10/10) em toda story.
+- **Migrations aplicadas em produção nesta sessão:** `0099` (S77, sessão anterior) até `0105`
+  (S05) — `0100`(S04) `0101`+`0102`(S07) `0103`(E00-S12) `0104`+`0105`(S05). Todas aditivas/nullable,
+  nenhum backfill.
+- **BLOQUEIO ATUAL — deploy de Edge Functions:** `SUPABASE_ACCESS_TOKEN` em `.env.local` tem formato
+  `sbp_v0_<40hex>` (47 chars); o Supabase CLI exige `sbp_<40hex>` (44 chars) e rejeita com
+  `LegacyInvalidAccessTokenError` **antes de qualquer chamada de rede** — testado nas versões 2.90.0
+  e 2.109.1 (atualizei o CLI via `brew upgrade` tentando resolver, mesmo erro nas duas). `db push`
+  não é afetado (usa a connection string do Postgres, credencial diferente) — por isso todas as
+  migrations acima foram aplicadas normalmente, só os 2 `functions deploy` (novo `pmoc-generate-pdf`
+  + redeploy do `pcm-auvo-webhook` modificado) ficaram pendentes. Não tentei adivinhar/editar o
+  token — é credencial, não bug de código.
+  - **Ação do Lucas:** gerar novo PAT em https://supabase.com/dashboard/account/tokens, substituir
+    em `.env.local`, depois rodar `supabase functions deploy pmoc-generate-pdf --use-api` e
+    `supabase functions deploy pcm-auvo-webhook --use-api`.
+  - **Até lá:** produção roda exatamente como antes desta story — sem regressão, só a entrega do
+    laudo PDF/registro de visita ainda não está ativa em campo.
+- **Branches (nenhum PR aberto ainda, por pedido):** `feat/E01-S03-reconcile-pmoc`,
+  `feat/E01-S04-inventario-climatizacao`, `feat/E01-S06-microbio-nc-gestao`,
+  `feat/E01-S08-dashboard-pmoc`, `feat/E01-S07-hub-de-os`, `feat/E00-S12-config-integracoes`,
+  `feat/E01-S05-visitas-laudo-pdf` (atual, a commitar) — todas commitadas exceto a atual.
 
 ---
 

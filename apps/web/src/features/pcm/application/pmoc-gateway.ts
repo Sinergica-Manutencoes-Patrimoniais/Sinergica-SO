@@ -89,6 +89,9 @@ export interface PmocAgenda {
   yearRef: number;
   status: PmocStatusAgenda;
   auvoOsId: string | null;
+  /** E01-S05 AC-1: OS já criada a partir desta visita (`ordens_servico.pmoc_schedule_id`) — `null`
+   * = ainda não tem, botão "Criar OS" fica disponível. */
+  ordemServicoId: string | null;
 }
 
 export interface PmocMicrobioAnalysis {

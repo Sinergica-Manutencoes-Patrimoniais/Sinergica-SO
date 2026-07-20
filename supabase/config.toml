@@ -420,6 +420,8 @@ verify_jwt = true
 verify_jwt = true
 [functions.importar-relatorio-pdf]
 verify_jwt = true
+[functions.pmoc-generate-pdf]
+verify_jwt = true
 [functions.config-gerenciar-usuario]
 verify_jwt = true
 [functions.pcm-auvo-create-task]

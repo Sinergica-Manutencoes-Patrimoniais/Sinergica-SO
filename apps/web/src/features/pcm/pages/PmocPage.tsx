@@ -14,10 +14,13 @@ import {
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
+import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import {
   avancarStatusNc,
   criarContratoPmoc,
   criarEquipamentoPmoc,
+  criarOsDaVisitaPmoc,
   registrarAnaliseMicrobio,
   registrarNaoConformidade,
 } from "../application/pmoc";
@@ -25,6 +28,7 @@ import type {
   AtualizarStatusNcInput,
   CriarContratoPmocInput,
   CriarNaoConformidadeInput,
+  PmocAgenda,
   PmocClienteOpcao,
   PmocContratoResumo,
   PmocDetalhe,
@@ -54,6 +58,7 @@ import {
   statusAgendaColor,
   statusContratoColor,
 } from "../domain/pmoc";
+import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 
 type Estado =
@@ -61,7 +66,13 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; clientes: PmocClienteOpcao[]; contratos: PmocContratoResumo[] };
 
-type ModalAtivo = "novo-pmoc" | "novo-equipamento" | "nova-analise" | "nova-nc" | null;
+type ModalAtivo =
+  | "novo-pmoc"
+  | "novo-equipamento"
+  | "nova-analise"
+  | "nova-nc"
+  | "criar-os-visita"
+  | null;
 
 function hojeIso(): string {
   const hoje = new Date();
@@ -97,6 +108,8 @@ export function PmocPage() {
   const [modalAtivo, setModalAtivo] = useState<ModalAtivo>(null);
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [agendaParaOs, setAgendaParaOs] = useState<PmocAgenda | null>(null);
+  const [dadosAbertura, setDadosAbertura] = useState<DadosAberturaOs | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -275,6 +288,50 @@ export function PmocPage() {
     }
   }
 
+  async function abrirCriarOsVisita(agenda: PmocAgenda) {
+    setAgendaParaOs(agenda);
+    setModalAtivo("criar-os-visita");
+    if (!dadosAbertura) {
+      try {
+        setDadosAbertura(await carregarDadosAberturaOs(supabaseOrdemServicoAdapter));
+      } catch (error) {
+        setErroAcao(
+          error instanceof Error
+            ? error.message
+            : "Não foi possível carregar técnicos/tipos de tarefa.",
+        );
+      }
+    }
+  }
+
+  async function handleCriarOsDaVisita(tecnicoId: string | null, tipoTarefaId: string) {
+    if (!user || !detalhe || !agendaParaOs) return;
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      await criarOsDaVisitaPmoc(supabaseOrdemServicoAdapter, {
+        clientId: detalhe.contrato.clientId ?? "",
+        imovelNome: detalhe.contrato.imovelNome,
+        endereco: detalhe.contrato.endereco,
+        scheduleId: agendaParaOs.id,
+        maintenanceType: agendaParaOs.maintenanceType,
+        scheduledDate: agendaParaOs.scheduledDate,
+        tecnicoId,
+        tipoTarefaId,
+        createdBy: user.id,
+      });
+      setModalAtivo(null);
+      setAgendaParaOs(null);
+      await carregarDetalhe(detalhe.contrato.id);
+    } catch (error) {
+      setErroAcao(
+        error instanceof Error ? error.message : "Não foi possível criar a OS da visita.",
+      );
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   async function handleAvancarStatusNc(atual: PmocStatusNc, input: AtualizarStatusNcInput) {
     if (!detalhe) return;
     setErroAcao(null);
@@ -427,6 +484,7 @@ export function PmocPage() {
               onNovaAnalise={() => setModalAtivo("nova-analise")}
               onNovaNc={() => setModalAtivo("nova-nc")}
               onAvancarStatusNc={handleAvancarStatusNc}
+              onCriarOsVisita={abrirCriarOsVisita}
             />
           ) : (
             <div className="p-10 text-center text-sm text-ink-3">Selecione ou crie um PMOC.</div>
@@ -470,6 +528,19 @@ export function PmocPage() {
           onSubmit={handleRegistrarNc}
         />
       )}
+
+      {modalAtivo === "criar-os-visita" && agendaParaOs && (
+        <CriarOsVisitaModal
+          agenda={agendaParaOs}
+          dadosAbertura={dadosAbertura}
+          salvando={salvando}
+          onClose={() => {
+            setModalAtivo(null);
+            setAgendaParaOs(null);
+          }}
+          onSubmit={handleCriarOsDaVisita}
+        />
+      )}
     </div>
   );
 }
@@ -483,6 +554,7 @@ function DetalhePmoc({
   onNovaAnalise,
   onNovaNc,
   onAvancarStatusNc,
+  onCriarOsVisita,
 }: {
   detalhe: PmocDetalhe;
   podeEditar: boolean;
@@ -492,6 +564,7 @@ function DetalhePmoc({
   onNovaAnalise: () => void;
   onNovaNc: () => void;
   onAvancarStatusNc: (atual: PmocStatusNc, input: AtualizarStatusNcInput) => Promise<void>;
+  onCriarOsVisita: (agenda: PmocAgenda) => void;
 }) {
   const contrato = detalhe.contrato;
   const proxima = detalhe.agenda.find(
@@ -708,6 +781,20 @@ function DetalhePmoc({
               <p className="mt-1 text-xs text-ink-3">
                 {TIPO_MANUTENCAO_LABEL[agenda.maintenanceType]}
               </p>
+              {agenda.ordemServicoId ? (
+                <p className="mt-2 text-[11px] font-semibold text-[#267343]">OS criada</p>
+              ) : (
+                podeEditar &&
+                agenda.status !== "cancelado" && (
+                  <button
+                    type="button"
+                    onClick={() => onCriarOsVisita(agenda)}
+                    className="mt-2 w-full rounded-[6px] border border-line px-2 py-1 text-[11px] font-semibold text-ink-2 hover:bg-line-soft"
+                  >
+                    Criar OS
+                  </button>
+                )
+              )}
             </div>
           ))}
         </div>
@@ -1604,6 +1691,72 @@ function NovaNcModal({
             deadline: form.deadline || null,
           })
         }
+      />
+    </ModalBase>
+  );
+}
+
+function CriarOsVisitaModal({
+  agenda,
+  dadosAbertura,
+  salvando,
+  onClose,
+  onSubmit,
+}: {
+  agenda: PmocAgenda;
+  dadosAbertura: DadosAberturaOs | null;
+  salvando: boolean;
+  onClose: () => void;
+  onSubmit: (tecnicoId: string | null, tipoTarefaId: string) => Promise<void>;
+}) {
+  const [tecnicoId, setTecnicoId] = useState("");
+  const [tipoTarefaId, setTipoTarefaId] = useState("");
+
+  return (
+    <ModalBase title="Criar OS da visita PMOC" onClose={onClose}>
+      <p className="text-sm text-ink-3">
+        {TIPO_MANUTENCAO_LABEL[agenda.maintenanceType]} · {formatarData(agenda.scheduledDate)}. Cria
+        a OS e já dispara a tarefa no Auvo (síncrono, mesmo fluxo de "Nova OS").
+      </p>
+      {!dadosAbertura ? (
+        <p className="mt-4 text-sm text-ink-3">Carregando técnicos e tipos de tarefa…</p>
+      ) : (
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Field label="Tipo de tarefa (Auvo) *">
+            <select
+              className="input"
+              value={tipoTarefaId}
+              onChange={(e) => setTipoTarefaId(e.target.value)}
+            >
+              <option value="">Selecione…</option>
+              {dadosAbertura.tiposTarefa.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.nome}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Técnico (opcional)">
+            <select
+              className="input"
+              value={tecnicoId}
+              onChange={(e) => setTecnicoId(e.target.value)}
+            >
+              <option value="">Sem técnico definido</option>
+              {dadosAbertura.tecnicos.map((tecnico) => (
+                <option key={tecnico.id} value={tecnico.id}>
+                  {tecnico.nome}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+      )}
+      <ModalActions
+        primaryLabel="Criar OS"
+        disabled={salvando || !dadosAbertura || !tipoTarefaId}
+        onCancel={onClose}
+        onPrimary={() => onSubmit(tecnicoId || null, tipoTarefaId)}
       />
     </ModalBase>
   );

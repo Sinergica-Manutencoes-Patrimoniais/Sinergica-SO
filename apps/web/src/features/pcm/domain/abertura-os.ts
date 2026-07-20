@@ -12,7 +12,14 @@ export type CategoriaOs =
   | "emergencial"
   | "outro";
 
-export type OrigemOs = "manual" | "solicitacao_cliente" | "telefone" | "vistoria" | "ze" | "portal";
+export type OrigemOs =
+  | "manual"
+  | "solicitacao_cliente"
+  | "telefone"
+  | "vistoria"
+  | "ze"
+  | "portal"
+  | "pmoc";
 
 export interface OpcaoSelect<T extends string = string> {
   value: T;
@@ -35,6 +42,7 @@ export const ORIGENS_OS: OpcaoSelect<OrigemOs>[] = [
   { value: "vistoria", label: "Vistoria interna" },
   { value: "ze", label: "Agente Zé" },
   { value: "portal", label: "Área do Cliente" },
+  { value: "pmoc", label: "PMOC (cronograma)" },
 ];
 
 export function sugerirPrioridadePorGut(

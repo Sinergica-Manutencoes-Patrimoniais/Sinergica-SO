@@ -40,6 +40,8 @@ export interface CriarOrdemServicoInput {
   tipoTarefaId: string;
   dataPrevista: string | null;
   createdBy: string;
+  /** E01-S05: setado só quando a OS nasce de uma visita PMOC ("Criar OS" síncrono na agenda). */
+  pmocScheduleId?: string | null;
 }
 
 /** E01-S07: comando real enviado ao gateway — inclui `tipoOs`, calculado pelo use-case
