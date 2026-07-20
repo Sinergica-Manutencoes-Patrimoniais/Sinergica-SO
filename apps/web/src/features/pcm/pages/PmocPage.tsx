@@ -33,6 +33,7 @@ import type {
 import {
   CHECKLIST_PMOC,
   CONDICAO_EQUIPAMENTO_PMOC,
+  type ContratoComAlerta,
   type PmocCondicaoEquipamento,
   type PmocSeveridadeNc,
   type PmocStatusNc,
@@ -40,11 +41,14 @@ import {
   type PmocTipoImovel,
   STATUS_AGENDA_LABEL,
   STATUS_CONTRATO_LABEL,
+  TIPO_ALERTA_LABEL,
   TIPO_EQUIPAMENTO_PMOC,
   TIPO_IMOVEL_PMOC,
   TIPO_MANUTENCAO_LABEL,
+  type TipoAlertaPmoc,
   checklistAcumulado,
   classificarMicrobio,
+  contratosComAlerta,
   inferirTipoEquipamentoPmoc,
   proximaTagPmoc,
   statusAgendaColor,
@@ -148,6 +152,12 @@ export function PmocPage() {
         estado.contratos.filter((contrato) => contrato.status === "renovar").length +
         estado.contratos.reduce((total, contrato) => total + contrato.microbioPendentes, 0),
     };
+  }, [estado]);
+
+  // E01-S08: painel de triagem cross-contrato — quem precisa de ação sem clicar contrato a contrato.
+  const alertasContratos = useMemo(() => {
+    if (estado.fase !== "pronto") return [];
+    return contratosComAlerta(estado.contratos);
   }, [estado]);
 
   async function handleCriarContrato(input: CriarContratoPmocInput) {
@@ -346,6 +356,13 @@ export function PmocPage() {
           <Kpi label="Atrasadas" value={resumo.atrasadas} icon={AlertTriangle} danger />
           <Kpi label="Alertas legais" value={resumo.alertas} icon={ClipboardList} />
         </div>
+      )}
+
+      {estado.contratos.length > 0 && (
+        <PainelAlertasPmoc
+          alertas={alertasContratos}
+          onAbrirContrato={(contractId) => setSelecionadoId(contractId)}
+        />
       )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_1fr]">
@@ -887,6 +904,63 @@ function HeaderMetric({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">{label}</p>
       <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+function PainelAlertasPmoc({
+  alertas,
+  onAbrirContrato,
+}: {
+  alertas: ContratoComAlerta[];
+  onAbrirContrato: (contractId: string) => void;
+}) {
+  if (alertas.length === 0) {
+    return (
+      <div className="flex items-center gap-2 rounded-[8px] border border-line bg-card px-4 py-3 text-sm">
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-[#267343]" />
+        <span className="font-semibold text-[#267343]">Tudo em dia</span>
+        <span className="text-ink-3">— nenhum contrato PMOC precisa de atenção agora.</span>
+      </div>
+    );
+  }
+
+  const grupos = new Map<TipoAlertaPmoc, ContratoComAlerta[]>();
+  for (const item of alertas) {
+    const grupo = grupos.get(item.tipo) ?? [];
+    grupo.push(item);
+    grupos.set(item.tipo, grupo);
+  }
+
+  return (
+    <div className="rounded-[10px] border border-line bg-card">
+      <div className="border-b border-line-soft px-4 py-3">
+        <h3 className="text-sm font-semibold text-ink">Precisa de atenção</h3>
+        <p className="mt-0.5 text-xs text-ink-3">
+          {alertas.length} contrato(s) — clique para abrir
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
+        {[...grupos.entries()].map(([tipo, contratos]) => (
+          <div key={tipo} className="rounded-[8px] border border-line-soft p-3">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-orange-deep">
+              {TIPO_ALERTA_LABEL[tipo]} ({contratos.length})
+            </p>
+            <div className="space-y-1">
+              {contratos.map((item) => (
+                <button
+                  key={item.contratoId}
+                  type="button"
+                  onClick={() => onAbrirContrato(item.contratoId)}
+                  className="block w-full truncate rounded-[6px] px-2 py-1 text-left text-sm text-ink-2 hover:bg-line-soft"
+                >
+                  {item.imovelNome} <span className="text-xs text-ink-3">· {item.clienteNome}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

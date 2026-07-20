@@ -38,6 +38,7 @@ function gatewayFake(): PmocGateway {
       proximaVisita: input.startDate,
       microbioPendentes: 0,
       ncsAbertas: 0,
+      ncsAltasAbertas: 0,
     })),
     criarEquipamento: vi.fn(async (input) => ({
       id: "eq-1",

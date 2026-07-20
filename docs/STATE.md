@@ -10,8 +10,8 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-**Atualização:** 2026-07-20 (sessão Lucas/Sonnet 5) — **Suíte PMOC (E01-S03 reconciliado, S04, S06)
-— gap fechado, código verificado, migrations locais não aplicadas em prod.** Lucas pediu a suíte
+**Atualização:** 2026-07-20 (sessão Lucas/Sonnet 5) — **Suíte PMOC (E01-S03 reconciliado, S04, S06,
+S08) — gap fechado, código verificado, migration de S04 não aplicada em prod.** Lucas pediu a suíte
 PMOC completa (S03-S08, legalmente relevante — Portaria MS 3.523/1998) mais Hub de OS (S07). PMOC
 já tinha MUITO código de S03b (migration `0023`, `PmocPage.tsx` 40KB) entrando sem spec/tasks — a
 sessão auditou o real vs. `design.md` antes de codar, em vez de assumir greenfield.
@@ -40,11 +40,21 @@ sessão auditou o real vs. `design.md` antes de codar, em vez de assumir greenfi
   calculado antes de salvar**, badges de severidade/status, botão Iniciar/Fechar NC. **Notificação
   real (push/e-mail) de NC alta / não-conforme explicitamente fora de escopo** — só sinalização
   visual; depende de Edge Function, fica com S05.
-- **Gates:** `ci:local` verde (10/10) depois de cada story. Sem migration nova em S06.
-- **Branches:** `feat/E01-S03-reconcile-pmoc` (commit da reconciliação), `feat/E01-S04-inventario-climatizacao`
-  (commitado), `feat/E01-S06-microbio-nc-gestao` (atual, a commitar).
-- **Próximo passo:** S08 (dashboard PMOC consolidado) e S07 (Hub de OS, tier arquitetural — decisão
-  adiada no design original, precisa de `design.md` próprio antes de codar) seguem a mesma linha.
+- **E01-S08 (dashboard PMOC):** KPIs e detalhe rico por contrato já existiam (S03/S04/S06) — lacuna
+  real era achar quem precisa de ação sem clicar contrato a contrato. Painel "Precisa de atenção"
+  novo: `contratosComAlerta` (domínio puro) categoriza por urgência (NC alta > ART vencendo >
+  microbiológico pendente > NC aberta não-alta > visita atrasada), um contrato nunca duplica
+  categoria (a mais urgente vence); clique abre o contrato direto (reusa `setSelecionadoId`
+  existente, zero navegação nova); estado "Tudo em dia" quando não há alerta (reforça caminho
+  feliz, não erro). `PmocContratoResumo` ganhou `ncsAltasAbertas` computado do dataset **já
+  carregado** — nenhuma query nova. 100% frontend, zero migration.
+- **Gates:** `ci:local` verde (10/10) depois de cada story.
+- **Branches:** `feat/E01-S03-reconcile-pmoc`, `feat/E01-S04-inventario-climatizacao`,
+  `feat/E01-S06-microbio-nc-gestao` — todas commitadas. `feat/E01-S08-dashboard-pmoc` (atual, a
+  commitar).
+- **Próximo passo:** S07 (Hub de OS) é tier arquitetural — a decisão de relação com
+  `pcm.ordens_servico` foi **explicitamente adiada** no `design.md` original de S03 (Decisão 5),
+  então S07 precisa do próprio `design.md` antes de codar, não pode entrar direto como as demais.
   S05 (laudo PDF) e o bloco de Edge Functions/cron/alertas ficam por último — não verificáveis
   localmente (Deno/Storage/deploy), viram "código pronto, deploy pendente" como o resto do repo.
 

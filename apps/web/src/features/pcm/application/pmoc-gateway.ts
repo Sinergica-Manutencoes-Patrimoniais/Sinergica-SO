@@ -49,6 +49,8 @@ export interface PmocContratoResumo {
   proximaVisita: string | null;
   microbioPendentes: number;
   ncsAbertas: number;
+  /** E01-S08 AC-4: NCs abertas com `severity='alta'` — usado pra priorizar o painel de alertas. */
+  ncsAltasAbertas: number;
 }
 
 export interface PmocEquipamento {

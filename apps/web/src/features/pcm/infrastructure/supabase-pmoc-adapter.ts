@@ -325,6 +325,8 @@ function mapContratoResumo(params: {
       null,
     microbioPendentes: params.microbiologia.filter((item) => item.status === "pendente").length,
     ncsAbertas: params.ncs.filter((nc) => nc.status !== "fechado").length,
+    ncsAltasAbertas: params.ncs.filter((nc) => nc.status !== "fechado" && nc.severity === "alta")
+      .length,
   };
 }
 
