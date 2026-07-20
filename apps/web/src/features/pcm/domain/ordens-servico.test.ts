@@ -33,6 +33,8 @@ const base = {
   checkInAt: null,
   checkOutAt: null,
   detalhes: null,
+  tipoOs: null,
+  pmocScheduleId: null,
 };
 
 describe("ordens-servico", () => {

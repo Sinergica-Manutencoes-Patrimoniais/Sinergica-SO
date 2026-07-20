@@ -95,6 +95,8 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         tipo_tarefa_id: input.tipoTarefaId,
         tecnico_funcionario_id: input.tecnicoId,
         data_agendada: input.dataPrevista,
+        tipo_os: input.tipoOs,
+        pmoc_schedule_id: input.pmocScheduleId,
       })
       .select("id,numero")
       .single();

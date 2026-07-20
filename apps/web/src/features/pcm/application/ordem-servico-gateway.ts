@@ -1,4 +1,5 @@
 import type { CategoriaOs, OrigemOs } from "../domain/abertura-os";
+import type { TipoOsHub } from "../domain/hub-os";
 
 export interface ClienteOpcao {
   id: string;
@@ -41,6 +42,16 @@ export interface CriarOrdemServicoInput {
   createdBy: string;
 }
 
+/** E01-S07: comando real enviado ao gateway — inclui `tipoOs`, calculado pelo use-case
+ * (`inferirTipoOsHub`, AC-1) a partir da `categoria` do `CriarOrdemServicoInput`. A UI nunca monta
+ * isto diretamente; continua submetendo `CriarOrdemServicoInput`. */
+export interface CriarOrdemServicoCommand extends CriarOrdemServicoInput {
+  tipoOs: TipoOsHub | null;
+  /** Vínculo com o cronograma PMOC que originou a OS. Sempre `null` na criação manual — o produtor
+   * real é a Edge Function `pmoc-auvo-create-os`, ainda não construída (fora de escopo de E01-S07). */
+  pmocScheduleId: string | null;
+}
+
 export interface OrdemServicoCriada {
   id: string;
   numero: string;
@@ -65,6 +76,6 @@ export interface EditarOrdemServicoInput {
 
 export interface OrdemServicoGateway {
   carregarDadosAbertura(): Promise<DadosAberturaOs>;
-  criarOrdemServico(input: CriarOrdemServicoInput): Promise<OrdemServicoCriada>;
+  criarOrdemServico(input: CriarOrdemServicoCommand): Promise<OrdemServicoCriada>;
   editarOrdemServico(input: EditarOrdemServicoInput): Promise<void>;
 }

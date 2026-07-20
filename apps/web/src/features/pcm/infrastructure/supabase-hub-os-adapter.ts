@@ -4,6 +4,7 @@ import type {
   FiltrosServidorOrdens,
   HubOsGateway,
 } from "../application/hub-os-gateway";
+import type { TipoOsHub } from "../domain/hub-os";
 import type { KpisOrdensServico, OrdemServicoOperacional } from "../domain/ordens-servico";
 
 interface KpiRpcRow {
@@ -51,10 +52,12 @@ interface OrdemRow {
   check_in_at: string | null;
   check_out_at: string | null;
   auvo_detalhes: Record<string, unknown> | null;
+  tipo_os: TipoOsHub | null;
+  pmoc_schedule_id: string | null;
 }
 
 const COLUNAS_OS =
-  "id,client_id,numero,titulo,descricao,categoria,status,prioridade,gravidade,urgencia,tendencia,score_pcm,local_descricao,solicitante,origem,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,updated_at,tecnico_funcionario_id,data_agendada,check_in_at,check_out_at,auvo_detalhes" as const;
+  "id,client_id,numero,titulo,descricao,categoria,status,prioridade,gravidade,urgencia,tendencia,score_pcm,local_descricao,solicitante,origem,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,updated_at,tecnico_funcionario_id,data_agendada,check_in_at,check_out_at,auvo_detalhes,tipo_os,pmoc_schedule_id" as const;
 
 function mapearOrdem(
   row: OrdemRow,
@@ -86,6 +89,8 @@ function mapearOrdem(
     checkInAt: row.check_in_at,
     checkOutAt: row.check_out_at,
     detalhes: row.auvo_detalhes,
+    tipoOs: row.tipo_os,
+    pmocScheduleId: row.pmoc_schedule_id,
   };
 }
 

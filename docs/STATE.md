@@ -11,7 +11,8 @@ alwaysApply: true
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
 **Atualização:** 2026-07-20 (sessão Lucas/Sonnet 5) — **Suíte PMOC (E01-S03 reconciliado, S04, S06,
-S08) — gap fechado, código verificado, migration de S04 não aplicada em prod.** Lucas pediu a suíte
+S08) + E01-S07 (Hub de OS) — gap fechado, código verificado, 3 migrations locais não aplicadas em
+prod (`0100`, `0101`, `0102`).** Lucas pediu a suíte
 PMOC completa (S03-S08, legalmente relevante — Portaria MS 3.523/1998) mais Hub de OS (S07). PMOC
 já tinha MUITO código de S03b (migration `0023`, `PmocPage.tsx` 40KB) entrando sem spec/tasks — a
 sessão auditou o real vs. `design.md` antes de codar, em vez de assumir greenfield.
@@ -52,11 +53,27 @@ sessão auditou o real vs. `design.md` antes de codar, em vez de assumir greenfi
 - **Branches:** `feat/E01-S03-reconcile-pmoc`, `feat/E01-S04-inventario-climatizacao`,
   `feat/E01-S06-microbio-nc-gestao` — todas commitadas. `feat/E01-S08-dashboard-pmoc` (atual, a
   commitar).
-- **Próximo passo:** S07 (Hub de OS) é tier arquitetural — a decisão de relação com
-  `pcm.ordens_servico` foi **explicitamente adiada** no `design.md` original de S03 (Decisão 5),
-  então S07 precisa do próprio `design.md` antes de codar, não pode entrar direto como as demais.
-  S05 (laudo PDF) e o bloco de Edge Functions/cron/alertas ficam por último — não verificáveis
-  localmente (Deno/Storage/deploy), viram "código pronto, deploy pendente" como o resto do repo.
+- **E01-S07 (Hub de OS, tier arquitetural):** resolveu a Decisão 5 adiada em E01-S03/design.md com
+  `design.md` + **ADR-0010** próprios — decisão: **estender `pcm.ordens_servico`**, não criar
+  `pcm.os_hub` (mesmo racional do ADR-0009 de S76: fonte única, não fragmentar o estado
+  operacional/sync Auvo já existente). Migrations `0101`/`0102`: `tipo_os` (C1/C2/P1/P2/IN, inferido
+  de `categoria` na criação via `inferirTipoOsHub`, editável manualmente depois — nunca reinferido)
+  + `pmoc_schedule_id` (FK pronta pra `pmoc_schedules`, **sem produtor ainda** — a Edge Function
+  `pmoc-auvo-create-os` que criaria OS a partir do cronograma PMOC é deferida). **Decisão central:
+  a prioridade do Hub NUNCA é gravada** — `calcularPrioridadeHub(tipoOs, dataAgendada, hoje)` sempre
+  recalcula em runtime (C1=1, C2=2, P1 atrasada=2/no prazo=3, P2=3, IN=4), evitando um cron de
+  "promoção" que poderia falhar silenciosamente (mesmo tipo de risco do incidente de E00-S11).
+  `calcularPrazoSlaOs` cobre C1=4h/C2=72h/P1=±3d/P2=±7d/IN=prazo acordado. UI: toggle "Ordenar por
+  Hub" + badge tipo/prioridade/atraso na lista de `OrdensServicoPage` — Kanban/Timeline/Calendário
+  intocados. **Fora de escopo, sinalizado no design:** "dias preventivos" (motor de alocação de
+  técnico por dia da semana) — exige conceito novo que não existe hoje, feature própria futura.
+  `ci:local` verde (10/10).
+- **Migrations pendentes de aplicar em produção (todas nullable/aditivas, baixo risco — pedir
+  autorização antes, mesma disciplina de E01-S77):** `0100` (S04, `pcm.pcm_equipment` mirror),
+  `0101`+`0102` (S07, `tipo_os`/`pmoc_schedule_id` em `ordens_servico`).
+- **Próximo passo:** S05 (laudo PDF) e o bloco de Edge Functions/cron/alertas (webhook→laudo,
+  `pmoc-auvo-create-os`, alertas D-30/microbio) ficam por último — não verificáveis localmente
+  (Deno/Storage/deploy), viram "código pronto, deploy pendente" como o resto do repo.
 
 ---
 

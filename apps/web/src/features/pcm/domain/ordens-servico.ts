@@ -1,4 +1,5 @@
 import { STATUS_HISTORICO } from "./cliente-360";
+import type { TipoOsHub } from "./hub-os";
 
 export type StatusOrdemServico =
   | "solicitacao"
@@ -34,6 +35,9 @@ export interface OrdemServicoOperacional {
   checkInAt: string | null;
   checkOutAt: string | null;
   detalhes: Record<string, unknown> | null;
+  /** E01-S07: tipo do Hub (C1/C2/P1/P2/IN), gravado — `null` = fora do Hub (melhoria/outro). */
+  tipoOs: TipoOsHub | null;
+  pmocScheduleId: string | null;
 }
 
 export interface KpisOrdensServico {

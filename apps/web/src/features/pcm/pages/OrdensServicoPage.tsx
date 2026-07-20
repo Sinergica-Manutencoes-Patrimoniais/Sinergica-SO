@@ -16,6 +16,7 @@ import { OsCalendarioView } from "../components/OsCalendarioView";
 import { OsKanbanView } from "../components/OsKanbanView";
 import { OsTimelineView } from "../components/OsTimelineView";
 import { CATEGORIAS_OS } from "../domain/abertura-os";
+import { TIPO_OS_HUB_LABEL, calcularPrioridadeHub } from "../domain/hub-os";
 import type {
   FiltrosOrdens,
   KpisOrdensServico,
@@ -152,10 +153,20 @@ export function OrdensServicoPage({
     if (osId) setSelecionadaId(osId);
   }, [osIdInicialToken]);
 
+  // E01-S07: ordenação opcional pela prioridade do Hub (calculada, nunca gravada) — quem não tem
+  // tipoOs (melhoria/outro, fora do Hub) fica sempre por último, sem sumir da lista.
+  const [ordenarPorHub, setOrdenarPorHub] = useState(false);
+
   const ordensFiltradas = useMemo(() => {
     if (estado.fase !== "pronto") return [];
-    return filtrarOrdens(estado.ordens, filtros);
-  }, [estado, filtros]);
+    const filtradas = filtrarOrdens(estado.ordens, filtros);
+    if (!ordenarPorHub) return filtradas;
+    return [...filtradas].sort((a, b) => {
+      const prioA = calcularPrioridadeHub(a.tipoOs, a.dataAgendada) ?? Number.POSITIVE_INFINITY;
+      const prioB = calcularPrioridadeHub(b.tipoOs, b.dataAgendada) ?? Number.POSITIVE_INFINITY;
+      return prioA - prioB;
+    });
+  }, [estado, filtros, ordenarPorHub]);
 
   const tecnicosDisponiveis = useMemo(() => {
     if (estado.fase !== "pronto") return [];
@@ -519,9 +530,20 @@ export function OrdensServicoPage({
                 <h3 className="text-xs font-semibold text-ink">Fila de ordens</h3>
                 <p className="text-[11px] text-ink-3">Selecione uma OS para ver o resumo</p>
               </div>
-              <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink-2">
-                {ordensFiltradas.length}
-              </span>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-2">
+                  <input
+                    type="checkbox"
+                    checked={ordenarPorHub}
+                    onChange={(e) => setOrdenarPorHub(e.target.checked)}
+                    className="h-3.5 w-3.5 accent-orange"
+                  />
+                  Ordenar por Hub
+                </label>
+                <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink-2">
+                  {ordensFiltradas.length}
+                </span>
+              </div>
             </div>
             <div className="divide-y divide-line-soft">
               {ordensFiltradas.length === 0 ? (
@@ -566,6 +588,9 @@ export function OrdensServicoPage({
                           >
                             {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                           </span>
+                          {ordem.tipoOs && (
+                            <BadgeHubOs tipoOs={ordem.tipoOs} dataAgendada={ordem.dataAgendada} />
+                          )}
                         </div>
                         <p className="mt-1.5 text-sm font-semibold text-ink">{ordem.titulo}</p>
                         <p className="mt-1 text-xs text-ink-3">
@@ -608,6 +633,30 @@ export function OrdensServicoPage({
         />
       )}
     </div>
+  );
+}
+
+/** E01-S07: badge do tipo do Hub + prioridade calculada; sinaliza P1 atrasada (risco legal PMOC). */
+function BadgeHubOs({
+  tipoOs,
+  dataAgendada,
+}: {
+  tipoOs: NonNullable<OrdemServicoOperacional["tipoOs"]>;
+  dataAgendada: string | null;
+}) {
+  const prioridade = calcularPrioridadeHub(tipoOs, dataAgendada);
+  const atrasada =
+    tipoOs === "P1" && dataAgendada != null && new Date(dataAgendada).getTime() < Date.now();
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+        atrasada ? "bg-[#FDECEB] text-[#B42318]" : "bg-[#EEF2FF] text-navy"
+      }`}
+      title={TIPO_OS_HUB_LABEL[tipoOs]}
+    >
+      {tipoOs} · P{prioridade}
+      {atrasada && " · atrasada"}
+    </span>
   );
 }
 

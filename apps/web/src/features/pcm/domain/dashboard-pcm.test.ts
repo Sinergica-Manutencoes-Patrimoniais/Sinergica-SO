@@ -26,6 +26,8 @@ const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional
   checkInAt: null,
   checkOutAt: null,
   detalhes: null,
+  tipoOs: null,
+  pmocScheduleId: null,
   ...patch,
 });
 
