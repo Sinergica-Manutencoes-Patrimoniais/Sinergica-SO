@@ -13,6 +13,7 @@ import { equipesDescriptor } from "./equipes.ts";
 import { ferramentasDescriptor } from "./ferramentas.ts";
 import { funcionariosDescriptor } from "./funcionarios.ts";
 import { servicosDescriptor } from "./servicos.ts";
+import { sistemasDescriptor } from "./sistemas.ts";
 import { ticketsDescriptor } from "./tickets.ts";
 import { tiposTarefaDescriptor } from "./tipos-tarefa.ts";
 import type { AuvoEntityDescriptor } from "./types.ts";
@@ -41,6 +42,7 @@ function resetRegistry(): void {
     produto_categorias: produtoCategoriasDescriptor,
     servicos: servicosDescriptor,
     segmentos: segmentosDescriptor,
+    sistemas: sistemasDescriptor,
     tickets: ticketsDescriptor,
     tipos_tarefa: tiposTarefaDescriptor,
   });
@@ -65,6 +67,7 @@ Deno.test("listEntities — inclui descriptors concretos registrados", () => {
     "produto_categorias",
     "servicos",
     "segmentos",
+    "sistemas",
     "tickets",
     "tipos_tarefa",
   ]);

@@ -16,6 +16,7 @@ import {
   Home,
   LayoutDashboard,
   LayoutGrid,
+  Link2,
   LogOut,
   Megaphone,
   Menu,
@@ -71,6 +72,7 @@ import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
 import { ServicosPage } from "../features/pcm/pages/ServicosPage";
+import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TicketsPage } from "../features/pcm/pages/TicketsPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
@@ -128,7 +130,8 @@ type PcmView =
   | "pmoc"
   | "laudos-spda"
   | "apontamento-horas"
-  | "tipos-inspecao";
+  | "tipos-inspecao"
+  | "sistemas";
 
 interface NavItem {
   label: string;
@@ -307,6 +310,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Clientes", icon: Building2, view: "clientes" },
       { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
       { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
+      { label: "Sistemas", icon: Link2, view: "sistemas" },
       { label: "Equipes", icon: Users, view: "equipes" },
       { label: "Ferramentas", icon: Package, view: "ferramentas" },
       { label: "Funcionários", icon: UserCog, view: "funcionarios" },
@@ -1010,6 +1014,8 @@ export function HomePage() {
               <FuncionariosPage />
             ) : pcmView === "equipamentos" ? (
               <EquipamentosPage />
+            ) : pcmView === "sistemas" ? (
+              <SistemasPage />
             ) : pcmView === "equipes" ? (
               <EquipesPage />
             ) : pcmView === "ferramentas" ? (

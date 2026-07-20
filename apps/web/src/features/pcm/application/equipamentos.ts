@@ -1,4 +1,4 @@
-import { validarEquipamento } from "../domain/equipamentos";
+import { validarEquipamento, validarParentItem } from "../domain/equipamentos";
 import type {
   DesativarEquipamentoCommand,
   EditarEquipamentoCommand,
@@ -14,14 +14,31 @@ export function listarClientesEquipamento(gateway: EquipamentosGateway) {
   return gateway.listarClientes();
 }
 
-export function criarEquipamento(gateway: EquipamentosGateway, input: EquipamentoCommand) {
+export async function criarEquipamento(gateway: EquipamentosGateway, input: EquipamentoCommand) {
   const validado = validarEquipamento(input);
+  if (validado.parentItemId) {
+    const pai = await gateway.obterItem(validado.parentItemId);
+    validarParentItem(validado.clientId ?? null, pai);
+  }
   return gateway.criar({ ...validado, userId: input.userId });
 }
 
-export function editarEquipamento(gateway: EquipamentosGateway, input: EditarEquipamentoCommand) {
+export async function editarEquipamento(
+  gateway: EquipamentosGateway,
+  input: EditarEquipamentoCommand,
+) {
   const validado = validarEquipamento(input);
+  if (validado.parentItemId) {
+    const pai = await gateway.obterItem(validado.parentItemId);
+    validarParentItem(validado.clientId ?? null, pai);
+  }
   return gateway.editar({ ...validado, id: input.id, userId: input.userId });
+}
+
+/** AC-6 — resolve o caminho de instalação (Cliente>Área>Local) + Sistemas do Item, pra tela de
+ * Detalhe do Item (breadcrumb + chips). */
+export function obterContextoItem(gateway: EquipamentosGateway, id: string) {
+  return gateway.obterContextoItem(id);
 }
 
 export function desativarEquipamento(

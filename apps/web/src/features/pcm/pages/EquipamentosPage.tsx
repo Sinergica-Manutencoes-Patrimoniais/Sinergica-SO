@@ -1,4 +1,4 @@
-import { Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
+import { Boxes, Layers, Link2, Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -8,13 +8,19 @@ import {
   editarEquipamento,
   listarClientesEquipamento,
   listarEquipamentos,
+  obterContextoItem,
 } from "../application/equipamentos";
 import type {
   EquipamentoClienteOpcao,
   EquipamentoFormData,
   EquipamentoItem,
+  ItemContexto,
+  ItemTipo,
 } from "../domain/equipamentos";
+import { montarArvore } from "../domain/hierarquia";
+import type { LocalArvoreNode } from "../domain/hierarquia";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
+import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 
 type Estado =
   | { fase: "carregando" }
@@ -26,6 +32,8 @@ type Modal =
   | { modo: "editar"; equipamento: EquipamentoItem }
   | null;
 
+type FiltroTipo = "todos" | ItemTipo;
+
 export function EquipamentosPage() {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
@@ -33,6 +41,8 @@ export function EquipamentosPage() {
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [imagemAmpliada, setImagemAmpliada] = useState<string | null>(null);
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
+  const [itemDetalheId, setItemDetalheId] = useState<string | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -148,6 +158,23 @@ export function EquipamentosPage() {
             {erroAcao}
           </div>
         )}
+        {/* AC-4: filtro por tipo (equipamento|componente) */}
+        <div className="mt-3 flex gap-1.5">
+          {(["todos", "equipamento", "componente"] as FiltroTipo[]).map((tipo) => (
+            <button
+              key={tipo}
+              type="button"
+              onClick={() => setFiltroTipo(tipo)}
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                filtroTipo === tipo
+                  ? "bg-navy text-white"
+                  : "border border-line text-ink-2 hover:bg-line-soft"
+              }`}
+            >
+              {tipo === "todos" ? "Todos" : tipo === "equipamento" ? "Equipamentos" : "Componentes"}
+            </button>
+          ))}
+        </div>
       </section>
 
       {estado.equipamentos.length === 0 ? (
@@ -158,17 +185,22 @@ export function EquipamentosPage() {
       ) : (
         <section className="rounded-[8px] border border-line bg-card overflow-hidden">
           <div className="divide-y divide-line-soft">
-            {estado.equipamentos.map((equipamento) => (
-              <EquipamentoLinha
-                key={equipamento.id}
-                equipamento={equipamento}
-                onEditar={temEscrita ? () => setModal({ modo: "editar", equipamento }) : undefined}
-                onDesativar={
-                  temEscrita && equipamento.ativo ? () => desativar(equipamento) : undefined
-                }
-                onAmpliarImagem={setImagemAmpliada}
-              />
-            ))}
+            {estado.equipamentos
+              .filter((equipamento) => filtroTipo === "todos" || equipamento.tipo === filtroTipo)
+              .map((equipamento) => (
+                <EquipamentoLinha
+                  key={equipamento.id}
+                  equipamento={equipamento}
+                  onEditar={
+                    temEscrita ? () => setModal({ modo: "editar", equipamento }) : undefined
+                  }
+                  onDesativar={
+                    temEscrita && equipamento.ativo ? () => desativar(equipamento) : undefined
+                  }
+                  onAmpliarImagem={setImagemAmpliada}
+                  onVerDetalhe={() => setItemDetalheId(equipamento.id)}
+                />
+              ))}
           </div>
         </section>
       )}
@@ -177,9 +209,14 @@ export function EquipamentosPage() {
         <EquipamentoModal
           equipamento={modal.modo === "editar" ? modal.equipamento : undefined}
           clientes={estado.clientes}
+          equipamentosDisponiveis={estado.equipamentos}
           onCancel={() => setModal(null)}
           onSalvar={salvar}
         />
+      )}
+
+      {itemDetalheId && (
+        <ItemDetalheModal itemId={itemDetalheId} onFechar={() => setItemDetalheId(null)} />
       )}
 
       {imagemAmpliada && (
@@ -211,11 +248,13 @@ function EquipamentoLinha({
   onEditar,
   onDesativar,
   onAmpliarImagem,
+  onVerDetalhe,
 }: {
   equipamento: EquipamentoItem;
   onEditar?: () => void;
   onDesativar?: () => void;
   onAmpliarImagem: (url: string) => void;
+  onVerDetalhe: () => void;
 }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5">
@@ -245,6 +284,9 @@ function EquipamentoLinha({
           >
             {equipamento.ativo ? "Ativo" : "Inativo"}
           </span>
+          <span className="shrink-0 rounded-full bg-line-soft px-1.5 py-0.5 text-[10px] font-semibold text-ink-2">
+            {equipamento.tipo === "componente" ? "Componente" : "Equipamento"}
+          </span>
         </div>
         <p className="truncate text-xs text-ink-3">
           {equipamento.categoria ?? "Sem categoria"} · {equipamento.clienteNome ?? "sem vínculo"}
@@ -252,6 +294,15 @@ function EquipamentoLinha({
           {equipamento.auvoSyncError ? ` · erro: ${equipamento.auvoSyncError}` : ""}
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={onVerDetalhe}
+        className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+      >
+        <Layers className="h-3.5 w-3.5" />
+        Detalhe
+      </button>
 
       {onEditar && (
         <button
@@ -280,11 +331,13 @@ function EquipamentoLinha({
 function EquipamentoModal({
   equipamento,
   clientes,
+  equipamentosDisponiveis,
   onCancel,
   onSalvar,
 }: {
   equipamento?: EquipamentoItem;
   clientes: EquipamentoClienteOpcao[];
+  equipamentosDisponiveis: EquipamentoItem[];
   onCancel: () => void;
   onSalvar: (input: EquipamentoFormData) => Promise<void>;
 }) {
@@ -295,9 +348,33 @@ function EquipamentoModal({
     clientId: equipamento?.clientId ?? "",
     localizacao: equipamento?.localizacao ?? "",
     observacoes: equipamento?.observacoes ?? "",
+    tipo: equipamento?.tipo ?? "equipamento",
+    localId: equipamento?.localId ?? "",
+    parentItemId: equipamento?.parentItemId ?? "",
   });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [locaisDoCliente, setLocaisDoCliente] = useState<LocalArvoreNode[]>([]);
+
+  useEffect(() => {
+    if (!dados.clientId) {
+      setLocaisDoCliente([]);
+      return;
+    }
+    let cancelado = false;
+    supabaseHierarquiaAdapter.listarLocaisDoCliente(dados.clientId).then((locais) => {
+      if (!cancelado) setLocaisDoCliente(montarArvore(locais));
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [dados.clientId]);
+
+  // AC-5: Componente pode ser filho de um Equipamento do MESMO cliente — lista só equipamentos
+  // (não outros componentes) do cliente selecionado, excluindo o próprio item (edição).
+  const paisDisponiveis = equipamentosDisponiveis.filter(
+    (e) => e.tipo === "equipamento" && e.clientId === dados.clientId && e.id !== equipamento?.id,
+  );
 
   async function salvar() {
     try {
@@ -354,11 +431,61 @@ function EquipamentoModal({
               ))}
             </select>
           </label>
-          <Field
-            label="Localização"
-            value={dados.localizacao ?? ""}
-            onChange={(v) => setCampo("localizacao", v)}
-          />
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo</span>
+            <select
+              value={dados.tipo ?? "equipamento"}
+              onChange={(event) =>
+                setDados((atual) => ({
+                  ...atual,
+                  tipo: event.target.value as EquipamentoFormData["tipo"],
+                  // trocar pra "equipamento" limpa o pai — invariante só faz sentido pra componente
+                  parentItemId: event.target.value === "componente" ? atual.parentItemId : "",
+                }))
+              }
+              className="input w-full"
+            >
+              <option value="equipamento">Equipamento</option>
+              <option value="componente">Componente</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-3">Local (AC-4)</span>
+            <select
+              value={dados.localId ?? ""}
+              onChange={(event) => setCampo("localId", event.target.value)}
+              className="input w-full"
+              disabled={!dados.clientId}
+            >
+              <option value="">Sem local</option>
+              {flattenArvore(locaisDoCliente).map(({ local, profundidade }) => (
+                <option key={local.id} value={local.id}>
+                  {"— ".repeat(profundidade)}
+                  {local.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+          {dados.tipo === "componente" && (
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-ink-3">
+                Equipamento pai (AC-5)
+              </span>
+              <select
+                value={dados.parentItemId ?? ""}
+                onChange={(event) => setCampo("parentItemId", event.target.value)}
+                className="input w-full"
+                disabled={!dados.clientId}
+              >
+                <option value="">Nenhum</option>
+                {paisDisponiveis.map((pai) => (
+                  <option key={pai.id} value={pai.id}>
+                    {pai.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="block md:col-span-2">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Observações</span>
             <textarea
@@ -389,6 +516,111 @@ function EquipamentoModal({
           >
             {salvando ? "Salvando..." : "Salvar"}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function flattenArvore(
+  nodes: LocalArvoreNode[],
+  profundidade = 0,
+): Array<{ local: LocalArvoreNode; profundidade: number }> {
+  return nodes.flatMap((node) => [
+    { local: node, profundidade },
+    ...flattenArvore(node.filhos, profundidade + 1),
+  ]);
+}
+
+/** AC-6 — Detalhe do Item: breadcrumb Cliente>Área>Local + chips de Sistema + componentes
+ * filhos aninhados sob o Equipamento pai. */
+function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () => void }) {
+  const [contexto, setContexto] = useState<ItemContexto | null | "carregando">("carregando");
+
+  useEffect(() => {
+    setContexto("carregando");
+    obterContextoItem(supabaseEquipamentosAdapter, itemId).then(setContexto);
+  }, [itemId]);
+
+  return (
+    <div className="modal-backdrop">
+      <div className="w-full max-w-xl rounded-[8px] border border-line bg-card shadow-xl">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <h3 className="text-base font-semibold text-ink">Detalhe do Item</h3>
+          <button
+            type="button"
+            onClick={onFechar}
+            aria-label="Fechar"
+            className="text-ink-3 hover:text-ink"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto p-4">
+          {contexto === "carregando" ? (
+            <p className="text-sm text-ink-3">Carregando…</p>
+          ) : contexto === null ? (
+            <p className="text-sm text-ink-3">Item não encontrado.</p>
+          ) : (
+            <>
+              <div>
+                <h4 className="text-lg font-semibold text-ink">{contexto.item.nome}</h4>
+                {/* AC-6: breadcrumb Cliente > Área > Local */}
+                <p className="mt-1 text-sm text-ink-3" data-testid="item-breadcrumb">
+                  {contexto.breadcrumb
+                    ? [
+                        contexto.breadcrumb.clienteNome,
+                        contexto.breadcrumb.areaNome,
+                        contexto.breadcrumb.localNome,
+                      ]
+                        .filter(Boolean)
+                        .join(" > ")
+                    : "Sem instalação definida (Local não atribuído)."}
+                </p>
+              </div>
+
+              <div>
+                <h5 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
+                  Faz parte de
+                </h5>
+                {contexto.sistemas.length === 0 ? (
+                  <p className="text-sm text-ink-3">Nenhum Sistema.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {contexto.sistemas.map((sistema) => (
+                      <span
+                        key={sistema.id}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-orange-soft px-3 py-1 text-xs font-semibold text-orange-deep"
+                      >
+                        <Link2 className="h-3 w-3" />
+                        {sistema.nome}
+                        {sistema.codigo ? ` · ${sistema.codigo}` : ""}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {contexto.componentesFilhos.length > 0 && (
+                <div>
+                  <h5 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
+                    Componentes
+                  </h5>
+                  <div className="flex flex-col gap-1.5">
+                    {contexto.componentesFilhos.map((componente) => (
+                      <div
+                        key={componente.id}
+                        className="flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2"
+                      >
+                        <Boxes className="h-3.5 w-3.5 text-ink-3" />
+                        {componente.nome}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
