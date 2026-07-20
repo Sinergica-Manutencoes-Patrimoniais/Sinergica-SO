@@ -12,8 +12,9 @@ alwaysApply: true
 
 **Atualização:** 2026-07-20 (sessão Lucas/Sonnet 5) — **Suíte PMOC completa (E01-S03 reconciliado,
 S04, S06, S07 Hub de OS, S08, S05) + E00-S12 (Config > Integrações) — 8 stories fechadas, 10
-commits. Migrations 0100-0105 todas em produção. Deploy de 2 Edge Functions BLOQUEADO por
-credencial (`SUPABASE_ACCESS_TOKEN` inválido).** Lucas pediu a suíte PMOC completa (S03-S08,
+commits. Migrations 0100-0105 todas em produção. As 2 Edge Functions de S05 (`pmoc-generate-pdf`
+nova + redeploy de `pcm-auvo-webhook`) DEPLOYADAS e confirmadas ACTIVE — Lucas corrigiu o
+`SUPABASE_ACCESS_TOKEN` com um novo Personal Access Token.** Lucas pediu a suíte PMOC completa (S03-S08,
 legalmente relevante — Portaria MS 3.523/1998) mais Hub de OS (S07); depois pediu pra construir e
 fazer deploy real de S05 (laudo PDF) + Edge Functions via CLI. PMOC já tinha MUITO código de S03b
 (migration `0023`, `PmocPage.tsx` 40KB) entrando sem spec/tasks — a sessão auditou o real vs.
@@ -67,19 +68,21 @@ fazer deploy real de S05 (laudo PDF) + Edge Functions via CLI. PMOC já tinha MU
 - **Migrations aplicadas em produção nesta sessão:** `0099` (S77, sessão anterior) até `0105`
   (S05) — `0100`(S04) `0101`+`0102`(S07) `0103`(E00-S12) `0104`+`0105`(S05). Todas aditivas/nullable,
   nenhum backfill.
-- **BLOQUEIO ATUAL — deploy de Edge Functions:** `SUPABASE_ACCESS_TOKEN` em `.env.local` tem formato
-  `sbp_v0_<40hex>` (47 chars); o Supabase CLI exige `sbp_<40hex>` (44 chars) e rejeita com
-  `LegacyInvalidAccessTokenError` **antes de qualquer chamada de rede** — testado nas versões 2.90.0
-  e 2.109.1 (atualizei o CLI via `brew upgrade` tentando resolver, mesmo erro nas duas). `db push`
-  não é afetado (usa a connection string do Postgres, credencial diferente) — por isso todas as
-  migrations acima foram aplicadas normalmente, só os 2 `functions deploy` (novo `pmoc-generate-pdf`
-  + redeploy do `pcm-auvo-webhook` modificado) ficaram pendentes. Não tentei adivinhar/editar o
-  token — é credencial, não bug de código.
-  - **Ação do Lucas:** gerar novo PAT em https://supabase.com/dashboard/account/tokens, substituir
-    em `.env.local`, depois rodar `supabase functions deploy pmoc-generate-pdf --use-api` e
-    `supabase functions deploy pcm-auvo-webhook --use-api`.
-  - **Até lá:** produção roda exatamente como antes desta story — sem regressão, só a entrega do
-    laudo PDF/registro de visita ainda não está ativa em campo.
+- **Bloqueio de credencial — RESOLVIDO.** `SUPABASE_ACCESS_TOKEN` em `.env.local` tinha formato
+  `sbp_v0_<40hex>` (47 chars); o CLI exige `sbp_<40hex>` (44) e rejeitava com
+  `LegacyInvalidAccessTokenError` antes de qualquer chamada de rede (testado nas versões 2.90.0 e
+  2.109.1, `brew upgrade` não resolveu — era mesmo o valor da credencial). Lucas gerou um novo PAT e
+  passou direto no chat; substituí em `.env.local` (gitignored, nunca commitado — confirmado via
+  `git ls-files`/`check-ignore`). Deploy real, ambas confirmadas `ACTIVE`:
+  - `supabase functions deploy pmoc-generate-pdf --use-api` → v1 (nova).
+  - `supabase functions deploy pcm-auvo-webhook --use-api` → v30→v31 (redeploy com o fechamento do AC-7).
+  - Smoke test manual (script `smoke-edge-functions.mjs` do CI exige `SUPABASE_PROJECT_ID`, ausente
+    aqui — testei via `curl` direto): `pmoc-generate-pdf` → `401 UNAUTHORIZED_NO_AUTH_HEADER` sem
+    Authorization; `pcm-auvo-webhook` → `401 "Assinatura inválida"` sem HMAC. Ambos confirmam "no
+    ar e rodando meu código" (não 404), não uma verificação funcional completa (isso só com um
+    evento Auvo real).
+  - **Produção agora tem, ao vivo:** finalizar uma OS PMOC cria `pmoc_records` + dispara o laudo PDF
+    automaticamente; cron `pmoc_daily_status` agendado (00:01 UTC).
 - **Branches (nenhum PR aberto ainda, por pedido):** `feat/E01-S03-reconcile-pmoc`,
   `feat/E01-S04-inventario-climatizacao`, `feat/E01-S06-microbio-nc-gestao`,
   `feat/E01-S08-dashboard-pmoc`, `feat/E01-S07-hub-de-os`, `feat/E00-S12-config-integracoes`,
