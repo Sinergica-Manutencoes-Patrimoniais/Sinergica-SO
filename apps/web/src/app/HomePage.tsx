@@ -14,6 +14,7 @@ import {
   FileText,
   HardHat,
   Home,
+  KeyRound,
   LayoutDashboard,
   LayoutGrid,
   Link2,
@@ -45,6 +46,7 @@ import { AtendimentoDashboardPage } from "../features/atendimento/pages/Atendime
 import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { GruposPage } from "../features/config/pages/GruposPage";
+import { IntegracoesPage } from "../features/config/pages/IntegracoesPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
 import type { FinanceiroView } from "../features/financeiro/mock/FinanceiroMockRouter";
 import { FinanceiroMockRouter } from "../features/financeiro/mock/FinanceiroMockRouter";
@@ -233,9 +235,14 @@ const MODULOS: ModuloTab[] = [
   },
 ];
 
-const CONFIG_NAV: Array<{ id: "grupos" | "usuarios"; label: string; icon: LucideIcon }> = [
+const CONFIG_NAV: Array<{
+  id: "grupos" | "usuarios" | "integracoes";
+  label: string;
+  icon: LucideIcon;
+}> = [
   { id: "grupos", label: "Grupos", icon: Users },
   { id: "usuarios", label: "Usuários", icon: UserCog },
+  { id: "integracoes", label: "Integrações", icon: KeyRound },
 ];
 
 const ATENDIMENTO_NAV: AtendimentoNavGroup[] = [
@@ -495,7 +502,7 @@ export function HomePage() {
   const { mode, toggleMode } = useTheme();
   const { podeAcessar } = usePermissoes();
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
-  const [configTab, setConfigTab] = useState<"grupos" | "usuarios">("grupos");
+  const [configTab, setConfigTab] = useState<"grupos" | "usuarios" | "integracoes">("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   // Sub-navegação do Atendimento (E02-S02) — só "inbox" por enquanto (E02-S03+ adiciona mais).
@@ -1097,8 +1104,10 @@ export function HomePage() {
           ) : activeModulo === "config" ? (
             configTab === "grupos" ? (
               <GruposPage />
-            ) : (
+            ) : configTab === "usuarios" ? (
               <UsuariosPage />
+            ) : (
+              <IntegracoesPage />
             )
           ) : activeModulo === "atendimento" ? (
             atendimentoView === "dashboard" ? (
