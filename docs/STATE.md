@@ -10,6 +10,46 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+**Atualização:** 2026-07-20 (sessão Lucas/Sonnet 5) — **Suíte PMOC (E01-S03 reconciliado, S04, S06)
+— gap fechado, código verificado, migrations locais não aplicadas em prod.** Lucas pediu a suíte
+PMOC completa (S03-S08, legalmente relevante — Portaria MS 3.523/1998) mais Hub de OS (S07). PMOC
+já tinha MUITO código de S03b (migration `0023`, `PmocPage.tsx` 40KB) entrando sem spec/tasks — a
+sessão auditou o real vs. `design.md` antes de codar, em vez de assumir greenfield.
+
+- **Housekeeping primeiro:** 3 stories da sessão anterior (S76/S77/S78) estavam prontas mas não
+  commitadas — 3 commits separados (sem PR, por pedido) antes de empilhar PMOC por cima.
+- **E01-S03 reconciliado:** `spec.md`/`tasks.md` retroativos escritos a partir do `design.md`
+  aprovado. **SPEC_DEVIATION SD-1** registrada: cronograma de 12 visitas é gerado client-side
+  (`gerarCronogramaPmoc` + adapter), não pela Edge Function `pmoc-generate-schedule` que o design
+  previa — decisão consciente (cálculo de datas puro, sem I/O). Pendências reais mapeadas pra
+  S04/S05/S06/S07.
+- **E01-S04 (inventário climatização):** o wizard de cadastro (form + import 1-clique do Auvo com
+  `proximaTagPmoc`/`inferirTipoEquipamentoPmoc`) **já existia** — só faltava o espelho
+  `pcm.pcm_equipment` (design Decisão 2, nunca implementado). Migration `0100`: tabela +
+  `security definer` trigger `fn_pmoc_equipment_espelha_pcm` (upsert por `pmoc_equipment_id`,
+  `discipline='climatizacao'`); sem GRANT de insert/update pra `authenticated` — só o trigger
+  escreve no espelho. pgTAP escrito (`pcm_equipment_mirror.test.sql`, 10 assertions), não rodado
+  (sem Docker local). **Migration não aplicada em produção ainda** (tabela nova/vazia, baixo risco,
+  mas decidi não aplicar sem pedir de novo).
+- **E01-S06 (microbiologia + NC):** schema e RLS (incl. policies de UPDATE) já existiam prontos
+  desde a `0023`, nunca usados pela aplicação. Gateway ganhou `criarAnaliseMicrobio`/
+  `criarNaoConformidade`/`atualizarStatusNc`; use-case calcula `status` via `classificarMicrobio`
+  (domínio já existia) — nunca digitado à mão — e `correctiveActionNeeded` só quando não-conforme;
+  `validarTransicaoStatusNc` (novo) bloqueia só o pulo `aberto→fechado`, permite reabrir. UI:
+  seções Microbiologia/NC no detalhe do contrato PMOC, modal de análise com **preview do status
+  calculado antes de salvar**, badges de severidade/status, botão Iniciar/Fechar NC. **Notificação
+  real (push/e-mail) de NC alta / não-conforme explicitamente fora de escopo** — só sinalização
+  visual; depende de Edge Function, fica com S05.
+- **Gates:** `ci:local` verde (10/10) depois de cada story. Sem migration nova em S06.
+- **Branches:** `feat/E01-S03-reconcile-pmoc` (commit da reconciliação), `feat/E01-S04-inventario-climatizacao`
+  (commitado), `feat/E01-S06-microbio-nc-gestao` (atual, a commitar).
+- **Próximo passo:** S08 (dashboard PMOC consolidado) e S07 (Hub de OS, tier arquitetural — decisão
+  adiada no design original, precisa de `design.md` próprio antes de codar) seguem a mesma linha.
+  S05 (laudo PDF) e o bloco de Edge Functions/cron/alertas ficam por último — não verificáveis
+  localmente (Deno/Storage/deploy), viram "código pronto, deploy pendente" como o resto do repo.
+
+---
+
 **Atualização:** 2026-07-18 (sessão Lucas/Opus 4.8) — **E01-S78 (Board de ativos por Local + detalhe
 do ativo): implementado e verificado em produção.** Fase 1 da visualização espacial pedida pelo Lucas
 ("ver todos os ativos de uma vez, na linha de um mapa do andar, detalhe do ativo"). Fase 2 (planta com

@@ -6,6 +6,7 @@ import {
   inferirTipoEquipamentoPmoc,
   proximaTagPmoc,
   tipoManutencaoPorMes,
+  validarTransicaoStatusNc,
 } from "./pmoc";
 
 describe("pmoc", () => {
@@ -65,5 +66,16 @@ describe("pmoc", () => {
     expect(inferirTipoEquipamentoPmoc("Fan Coil auditório")).toBe("fancoil");
     expect(inferirTipoEquipamentoPmoc("Equipamento sem categoria")).toBe("outro");
     expect(proximaTagPmoc(["AC-01", "AC-09", "Bomba 1"])).toBe("AC-10");
+  });
+
+  it("valida transição de status de NC — só rejeita o pulo aberto->fechado (AC-6)", () => {
+    expect(() => validarTransicaoStatusNc("aberto", "fechado")).toThrow(
+      "NC deve passar por 'em andamento' antes de ser fechada.",
+    );
+    expect(() => validarTransicaoStatusNc("aberto", "em_andamento")).not.toThrow();
+    expect(() => validarTransicaoStatusNc("em_andamento", "fechado")).not.toThrow();
+    // reabrir (recorrência) é permitido
+    expect(() => validarTransicaoStatusNc("fechado", "em_andamento")).not.toThrow();
+    expect(() => validarTransicaoStatusNc("em_andamento", "aberto")).not.toThrow();
   });
 });

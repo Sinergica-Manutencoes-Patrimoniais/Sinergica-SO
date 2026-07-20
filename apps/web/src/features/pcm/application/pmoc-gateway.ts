@@ -95,11 +95,16 @@ export interface PmocMicrobioAnalysis {
   propertyId: string;
   analysisDate: string;
   labName: string | null;
+  labAccreditation: string | null;
+  collectionPoints: number | null;
   fungiUfcM3: number | null;
   ieRatio: number | null;
+  coliformsResult: "ausencia" | "presenca" | null;
   status: PmocStatusMicrobio;
   reportNumber: string | null;
   reportUrl: string | null;
+  /** E01-S06 AC-1/AC-3: true quando `status === 'nao_conforme'` — dispara o aviso na UI. */
+  correctiveActionNeeded: boolean;
 }
 
 export interface PmocNaoConformidade {
@@ -173,10 +178,53 @@ export interface CriarEquipamentoPmocInput {
   createdBy: string;
 }
 
+export interface CriarAnaliseMicrobioInput {
+  contractId: string;
+  propertyId: string;
+  analysisDate: string;
+  labName: string | null;
+  labAccreditation: string | null;
+  collectionPoints: number | null;
+  fungiUfcM3: number | null;
+  ieRatio: number | null;
+  coliformsResult: "ausencia" | "presenca" | null;
+  reportNumber: string | null;
+  reportUrl: string | null;
+  notes: string | null;
+  createdBy: string;
+  /** AC-1: calculados pelo use-case via `classificarMicrobio` (domínio) — nunca digitados pelo
+   * usuário. O adapter só persiste. */
+  status: PmocStatusMicrobio;
+  correctiveActionNeeded: boolean;
+}
+
+export interface CriarNaoConformidadeInput {
+  contractId: string;
+  equipmentId: string | null;
+  tag: string | null;
+  description: string;
+  severity: PmocSeveridadeNc;
+  recommendedAction: string | null;
+  responsible: string | null;
+  deadline: string | null;
+  createdBy: string;
+}
+
+export interface AtualizarStatusNcInput {
+  id: string;
+  status: PmocStatusNc;
+  /** obrigatório quando `status === 'fechado'`; o use-case preenche com hoje se omitido. */
+  completedAt?: string | null;
+}
+
 export interface PmocGateway {
   listarClientes(): Promise<PmocClienteOpcao[]>;
   listarContratos(): Promise<PmocContratoResumo[]>;
   obterDetalheContrato(contractId: string): Promise<PmocDetalhe>;
   criarContrato(input: CriarContratoPmocInput): Promise<PmocContratoResumo>;
   criarEquipamento(input: CriarEquipamentoPmocInput): Promise<PmocEquipamento>;
+  // E01-S06
+  criarAnaliseMicrobio(input: CriarAnaliseMicrobioInput): Promise<PmocMicrobioAnalysis>;
+  criarNaoConformidade(input: CriarNaoConformidadeInput): Promise<PmocNaoConformidade>;
+  atualizarStatusNc(input: AtualizarStatusNcInput): Promise<PmocNaoConformidade>;
 }

@@ -1,7 +1,10 @@
 import { supabase } from "../../../lib/supabase-client";
 import type {
+  AtualizarStatusNcInput,
+  CriarAnaliseMicrobioInput,
   CriarContratoPmocInput,
   CriarEquipamentoPmocInput,
+  CriarNaoConformidadeInput,
   PmocAgenda,
   PmocClienteOpcao,
   PmocContratoResumo,
@@ -104,11 +107,15 @@ interface MicrobioRow {
   property_id: string;
   analysis_date: string;
   lab_name: string | null;
+  lab_accreditation: string | null;
+  collection_points: number | null;
   fungi_ufc_m3: number | null;
   ie_ratio: number | null;
+  coliforms_result: "ausencia" | "presenca" | null;
   status: PmocStatusMicrobio;
   report_number: string | null;
   report_url: string | null;
+  corrective_action_needed: boolean;
 }
 
 interface NcRow {
@@ -142,7 +149,7 @@ const EQUIPMENT_COLS =
 const SCHEDULE_COLS =
   "id,contract_id,property_id,scheduled_date,maintenance_type,month_ref,year_ref,status,auvo_os_id" as const;
 const MICROBIO_COLS =
-  "id,contract_id,property_id,analysis_date,lab_name,fungi_ufc_m3,ie_ratio,status,report_number,report_url" as const;
+  "id,contract_id,property_id,analysis_date,lab_name,lab_accreditation,collection_points,fungi_ufc_m3,ie_ratio,coliforms_result,status,report_number,report_url,corrective_action_needed" as const;
 const NC_COLS =
   "id,contract_id,equipment_id,tag,description,severity,recommended_action,responsible,deadline,completed_at,status" as const;
 
@@ -242,11 +249,15 @@ function mapMicrobio(row: MicrobioRow): PmocMicrobioAnalysis {
     propertyId: row.property_id,
     analysisDate: row.analysis_date,
     labName: row.lab_name,
+    labAccreditation: row.lab_accreditation,
+    collectionPoints: row.collection_points,
     fungiUfcM3: row.fungi_ufc_m3,
     ieRatio: row.ie_ratio,
+    coliformsResult: row.coliforms_result,
     status: row.status,
     reportNumber: row.report_number,
     reportUrl: row.report_url,
+    correctiveActionNeeded: row.corrective_action_needed,
   };
 }
 
@@ -600,5 +611,68 @@ export const supabasePmocAdapter: PmocGateway = {
 
     if (error) throw error;
     return mapEquipamento(data as EquipmentRow);
+  },
+
+  async criarAnaliseMicrobio(input: CriarAnaliseMicrobioInput): Promise<PmocMicrobioAnalysis> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("pmoc_microbio_analysis")
+      .insert({
+        contract_id: input.contractId,
+        property_id: input.propertyId,
+        analysis_date: input.analysisDate,
+        lab_name: input.labName,
+        lab_accreditation: input.labAccreditation,
+        collection_points: input.collectionPoints,
+        fungi_ufc_m3: input.fungiUfcM3,
+        ie_ratio: input.ieRatio,
+        coliforms_result: input.coliformsResult,
+        status: input.status,
+        report_number: input.reportNumber,
+        report_url: input.reportUrl,
+        corrective_action_needed: input.correctiveActionNeeded,
+        notes: input.notes,
+        created_by: input.createdBy,
+      })
+      .select(MICROBIO_COLS)
+      .single();
+    if (error) throw error;
+    return mapMicrobio(data as MicrobioRow);
+  },
+
+  async criarNaoConformidade(input: CriarNaoConformidadeInput): Promise<PmocNaoConformidade> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("pmoc_nonconformity_log")
+      .insert({
+        contract_id: input.contractId,
+        equipment_id: input.equipmentId,
+        tag: input.tag,
+        description: input.description,
+        severity: input.severity,
+        recommended_action: input.recommendedAction,
+        responsible: input.responsible,
+        deadline: input.deadline,
+        created_by: input.createdBy,
+      })
+      .select(NC_COLS)
+      .single();
+    if (error) throw error;
+    return mapNc(data as NcRow);
+  },
+
+  async atualizarStatusNc(input: AtualizarStatusNcInput): Promise<PmocNaoConformidade> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("pmoc_nonconformity_log")
+      .update({
+        status: input.status,
+        completed_at: input.completedAt ?? null,
+      })
+      .eq("id", input.id)
+      .select(NC_COLS)
+      .single();
+    if (error) throw error;
+    return mapNc(data as NcRow);
   },
 };

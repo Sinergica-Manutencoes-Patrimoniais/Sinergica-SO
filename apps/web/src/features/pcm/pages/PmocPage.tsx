@@ -14,9 +14,17 @@ import {
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { criarContratoPmoc, criarEquipamentoPmoc } from "../application/pmoc";
+import {
+  avancarStatusNc,
+  criarContratoPmoc,
+  criarEquipamentoPmoc,
+  registrarAnaliseMicrobio,
+  registrarNaoConformidade,
+} from "../application/pmoc";
 import type {
+  AtualizarStatusNcInput,
   CriarContratoPmocInput,
+  CriarNaoConformidadeInput,
   PmocClienteOpcao,
   PmocContratoResumo,
   PmocDetalhe,
@@ -26,6 +34,8 @@ import {
   CHECKLIST_PMOC,
   CONDICAO_EQUIPAMENTO_PMOC,
   type PmocCondicaoEquipamento,
+  type PmocSeveridadeNc,
+  type PmocStatusNc,
   type PmocTipoEquipamento,
   type PmocTipoImovel,
   STATUS_AGENDA_LABEL,
@@ -34,6 +44,7 @@ import {
   TIPO_IMOVEL_PMOC,
   TIPO_MANUTENCAO_LABEL,
   checklistAcumulado,
+  classificarMicrobio,
   inferirTipoEquipamentoPmoc,
   proximaTagPmoc,
   statusAgendaColor,
@@ -46,7 +57,7 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; clientes: PmocClienteOpcao[]; contratos: PmocContratoResumo[] };
 
-type ModalAtivo = "novo-pmoc" | "novo-equipamento" | null;
+type ModalAtivo = "novo-pmoc" | "novo-equipamento" | "nova-analise" | "nova-nc" | null;
 
 function hojeIso(): string {
   const hoje = new Date();
@@ -211,6 +222,60 @@ export function PmocPage() {
     }
   }
 
+  async function handleRegistrarAnalise(input: NovaAnaliseForm) {
+    if (!user || !detalhe) return;
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      await registrarAnaliseMicrobio(supabasePmocAdapter, {
+        ...input,
+        contractId: detalhe.contrato.id,
+        propertyId: detalhe.contrato.propertyId,
+        createdBy: user.id,
+      });
+      setModalAtivo(null);
+      await carregar();
+      await carregarDetalhe(detalhe.contrato.id);
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível registrar a análise.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function handleRegistrarNc(
+    input: Omit<CriarNaoConformidadeInput, "contractId" | "createdBy">,
+  ) {
+    if (!user || !detalhe) return;
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      await registrarNaoConformidade(supabasePmocAdapter, {
+        ...input,
+        contractId: detalhe.contrato.id,
+        createdBy: user.id,
+      });
+      setModalAtivo(null);
+      await carregar();
+      await carregarDetalhe(detalhe.contrato.id);
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível registrar a NC.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function handleAvancarStatusNc(atual: PmocStatusNc, input: AtualizarStatusNcInput) {
+    if (!detalhe) return;
+    setErroAcao(null);
+    try {
+      await avancarStatusNc(supabasePmocAdapter, atual, input);
+      await carregarDetalhe(detalhe.contrato.id);
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível atualizar a NC.");
+    }
+  }
+
   if (permissoesCarregando) {
     return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   }
@@ -342,6 +407,9 @@ export function PmocPage() {
               salvando={salvando}
               onNovoEquipamento={() => setModalAtivo("novo-equipamento")}
               onImportarAuvo={handleImportarEquipamentoAuvo}
+              onNovaAnalise={() => setModalAtivo("nova-analise")}
+              onNovaNc={() => setModalAtivo("nova-nc")}
+              onAvancarStatusNc={handleAvancarStatusNc}
             />
           ) : (
             <div className="p-10 text-center text-sm text-ink-3">Selecione ou crie um PMOC.</div>
@@ -369,6 +437,22 @@ export function PmocPage() {
           onSubmit={handleCriarEquipamento}
         />
       )}
+
+      {modalAtivo === "nova-analise" && (
+        <NovaAnaliseMicrobioModal
+          salvando={salvando}
+          onClose={() => setModalAtivo(null)}
+          onSubmit={handleRegistrarAnalise}
+        />
+      )}
+
+      {modalAtivo === "nova-nc" && (
+        <NovaNcModal
+          salvando={salvando}
+          onClose={() => setModalAtivo(null)}
+          onSubmit={handleRegistrarNc}
+        />
+      )}
     </div>
   );
 }
@@ -379,12 +463,18 @@ function DetalhePmoc({
   salvando,
   onNovoEquipamento,
   onImportarAuvo,
+  onNovaAnalise,
+  onNovaNc,
+  onAvancarStatusNc,
 }: {
   detalhe: PmocDetalhe;
   podeEditar: boolean;
   salvando: boolean;
   onNovoEquipamento: () => void;
   onImportarAuvo: (sugestao: PmocEquipamentoAuvoSugestao) => Promise<void>;
+  onNovaAnalise: () => void;
+  onNovaNc: () => void;
+  onAvancarStatusNc: (atual: PmocStatusNc, input: AtualizarStatusNcInput) => Promise<void>;
 }) {
   const contrato = detalhe.contrato;
   const proxima = detalhe.agenda.find(
@@ -605,8 +695,156 @@ function DetalhePmoc({
           ))}
         </div>
       </div>
+
+      <div className="grid grid-cols-1 gap-4 border-t border-line-soft p-4 lg:grid-cols-2">
+        <div>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h4 className="text-sm font-semibold text-ink">Análises microbiológicas</h4>
+            {podeEditar && (
+              <button
+                type="button"
+                onClick={onNovaAnalise}
+                className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+              >
+                <Plus className="h-4 w-4" />
+                Nova análise
+              </button>
+            )}
+          </div>
+          {detalhe.microbiologia.length === 0 ? (
+            <div className="rounded-[8px] border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
+              Nenhuma análise registrada.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {detalhe.microbiologia.map((analise) => (
+                <div key={analise.id} className="rounded-[8px] border border-line p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-ink">
+                        {formatarData(analise.analysisDate)}
+                      </p>
+                      <p className="text-xs text-ink-3">{analise.labName || "Laboratório —"}</p>
+                    </div>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusMicrobioColor(analise.status)}`}
+                    >
+                      {STATUS_MICROBIO_LABEL[analise.status]}
+                    </span>
+                  </div>
+                  {analise.correctiveActionNeeded && (
+                    <div className="mt-2 flex items-center gap-2 rounded-[6px] bg-[#FDECEB] px-3 py-2 text-xs font-semibold text-[#B42318]">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      Fora dos limites legais — ação corretiva necessária.
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h4 className="text-sm font-semibold text-ink">Não-conformidades</h4>
+            {podeEditar && (
+              <button
+                type="button"
+                onClick={onNovaNc}
+                className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+              >
+                <Plus className="h-4 w-4" />
+                Nova NC
+              </button>
+            )}
+          </div>
+          {detalhe.naoConformidades.length === 0 ? (
+            <div className="rounded-[8px] border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
+              Nenhuma não-conformidade registrada.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {detalhe.naoConformidades.map((nc) => (
+                <div key={nc.id} className="rounded-[8px] border border-line p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-ink">{nc.description}</p>
+                      <p className="text-xs text-ink-3">
+                        {nc.tag ? `${nc.tag} · ` : ""}
+                        {nc.deadline ? `Prazo ${formatarData(nc.deadline)}` : "Sem prazo"}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${severidadeNcColor(nc.severity)}`}
+                    >
+                      {SEVERIDADE_NC_LABEL[nc.severity]}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusNcColor(nc.status)}`}
+                    >
+                      {STATUS_NC_LABEL[nc.status]}
+                    </span>
+                    {podeEditar && nc.status !== "fechado" && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onAvancarStatusNc(nc.status, {
+                            id: nc.id,
+                            status: nc.status === "aberto" ? "em_andamento" : "fechado",
+                          })
+                        }
+                        className="text-xs font-semibold text-orange hover:text-orange-deep"
+                      >
+                        {nc.status === "aberto" ? "Iniciar" : "Fechar"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
+}
+
+const STATUS_MICROBIO_LABEL: Record<"conforme" | "nao_conforme" | "pendente", string> = {
+  conforme: "Conforme",
+  nao_conforme: "Não-conforme",
+  pendente: "Pendente",
+};
+
+function statusMicrobioColor(status: "conforme" | "nao_conforme" | "pendente"): string {
+  if (status === "conforme") return "bg-[#EAF8EF] text-[#267343]";
+  if (status === "nao_conforme") return "bg-[#FDECEB] text-[#B42318]";
+  return "bg-line-soft text-ink-2";
+}
+
+const SEVERIDADE_NC_LABEL: Record<PmocSeveridadeNc, string> = {
+  alta: "Alta",
+  media: "Média",
+  baixa: "Baixa",
+};
+
+function severidadeNcColor(severity: PmocSeveridadeNc): string {
+  if (severity === "alta") return "bg-[#FDECEB] text-[#B42318]";
+  if (severity === "media") return "bg-orange-soft text-orange-deep";
+  return "bg-line-soft text-ink-2";
+}
+
+const STATUS_NC_LABEL: Record<PmocStatusNc, string> = {
+  aberto: "Aberto",
+  em_andamento: "Em andamento",
+  fechado: "Fechado",
+};
+
+function statusNcColor(status: PmocStatusNc): string {
+  if (status === "fechado") return "bg-[#EAF8EF] text-[#267343]";
+  if (status === "em_andamento") return "bg-[#EEF2FF] text-navy";
+  return "bg-line-soft text-ink-2";
 }
 
 function Kpi({
@@ -1073,6 +1311,223 @@ function NovoEquipamentoModal({
             environment: form.environment || null,
             floor: form.floor || null,
             notes: form.notes || null,
+          })
+        }
+      />
+    </ModalBase>
+  );
+}
+
+interface NovaAnaliseForm {
+  analysisDate: string;
+  labName: string | null;
+  labAccreditation: string | null;
+  collectionPoints: number | null;
+  fungiUfcM3: number | null;
+  ieRatio: number | null;
+  coliformsResult: "ausencia" | "presenca" | null;
+  reportNumber: string | null;
+  reportUrl: string | null;
+  notes: string | null;
+}
+
+function NovaAnaliseMicrobioModal({
+  salvando,
+  onClose,
+  onSubmit,
+}: {
+  salvando: boolean;
+  onClose: () => void;
+  onSubmit: (input: NovaAnaliseForm) => Promise<void>;
+}) {
+  const [form, setForm] = useState({
+    analysisDate: hojeIso(),
+    labName: "",
+    labAccreditation: "",
+    collectionPoints: "",
+    fungiUfcM3: "",
+    ieRatio: "",
+    coliformsResult: "" as "" | "ausencia" | "presenca",
+    reportNumber: "",
+    reportUrl: "",
+  });
+
+  // AC-1/AC-3: pré-visualiza o status calculado antes de salvar — o usuário vê o resultado da regra
+  // legal (fungos ≤750, I/E ≤1,5, coliformes ausência) antes de confirmar, nunca digita o status.
+  const previaStatus = classificarMicrobio({
+    fungiUfcM3: form.fungiUfcM3 ? Number(form.fungiUfcM3) : null,
+    ieRatio: form.ieRatio ? Number(form.ieRatio) : null,
+    coliformsResult: form.coliformsResult || null,
+  });
+
+  return (
+    <ModalBase title="Nova análise microbiológica" onClose={onClose}>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Field label="Data da coleta">
+          <input
+            type="date"
+            className="input"
+            value={form.analysisDate}
+            onChange={(e) => setForm({ ...form, analysisDate: e.target.value })}
+          />
+        </Field>
+        <Field label="Laboratório">
+          <input
+            className="input"
+            value={form.labName}
+            onChange={(e) => setForm({ ...form, labName: e.target.value })}
+          />
+        </Field>
+        <Field label="Fungos (UFC/m³) — limite ≤750">
+          <input
+            className="input"
+            inputMode="decimal"
+            value={form.fungiUfcM3}
+            onChange={(e) => setForm({ ...form, fungiUfcM3: e.target.value })}
+          />
+        </Field>
+        <Field label="Relação I/E — limite ≤1,5">
+          <input
+            className="input"
+            inputMode="decimal"
+            value={form.ieRatio}
+            onChange={(e) => setForm({ ...form, ieRatio: e.target.value })}
+          />
+        </Field>
+        <Field label="Coliformes">
+          <select
+            className="input"
+            value={form.coliformsResult}
+            onChange={(e) =>
+              setForm({ ...form, coliformsResult: e.target.value as "" | "ausencia" | "presenca" })
+            }
+          >
+            <option value="">Sem resultado ainda</option>
+            <option value="ausencia">Ausência</option>
+            <option value="presenca">Presença</option>
+          </select>
+        </Field>
+        <Field label="Nº do laudo">
+          <input
+            className="input"
+            value={form.reportNumber}
+            onChange={(e) => setForm({ ...form, reportNumber: e.target.value })}
+          />
+        </Field>
+      </div>
+
+      <div
+        className={`mt-4 rounded-[6px] px-3 py-2 text-sm font-semibold ${statusMicrobioColor(previaStatus)}`}
+      >
+        Status calculado: {STATUS_MICROBIO_LABEL[previaStatus]}
+        {previaStatus === "nao_conforme" && " — ação corretiva será marcada como necessária"}
+      </div>
+
+      <ModalActions
+        primaryLabel="Registrar análise"
+        disabled={salvando || !form.analysisDate}
+        onCancel={onClose}
+        onPrimary={() =>
+          onSubmit({
+            analysisDate: form.analysisDate,
+            labName: form.labName || null,
+            labAccreditation: form.labAccreditation || null,
+            collectionPoints: form.collectionPoints ? Number(form.collectionPoints) : null,
+            fungiUfcM3: form.fungiUfcM3 ? Number(form.fungiUfcM3) : null,
+            ieRatio: form.ieRatio ? Number(form.ieRatio) : null,
+            coliformsResult: form.coliformsResult || null,
+            reportNumber: form.reportNumber || null,
+            reportUrl: form.reportUrl || null,
+            notes: null,
+          })
+        }
+      />
+    </ModalBase>
+  );
+}
+
+function NovaNcModal({
+  salvando,
+  onClose,
+  onSubmit,
+}: {
+  salvando: boolean;
+  onClose: () => void;
+  onSubmit: (input: Omit<CriarNaoConformidadeInput, "contractId" | "createdBy">) => Promise<void>;
+}) {
+  const [form, setForm] = useState({
+    tag: "",
+    description: "",
+    severity: "media" as PmocSeveridadeNc,
+    recommendedAction: "",
+    responsible: "",
+    deadline: "",
+  });
+
+  return (
+    <ModalBase title="Nova não-conformidade" onClose={onClose}>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Field label="Descrição">
+          <input
+            className="input"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </Field>
+        <Field label="Severidade">
+          <select
+            className="input"
+            value={form.severity}
+            onChange={(e) => setForm({ ...form, severity: e.target.value as PmocSeveridadeNc })}
+          >
+            <option value="alta">Alta</option>
+            <option value="media">Média</option>
+            <option value="baixa">Baixa</option>
+          </select>
+        </Field>
+        <Field label="Tag do equipamento (opcional)">
+          <input
+            className="input"
+            value={form.tag}
+            onChange={(e) => setForm({ ...form, tag: e.target.value })}
+          />
+        </Field>
+        <Field label="Prazo">
+          <input
+            type="date"
+            className="input"
+            value={form.deadline}
+            onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+          />
+        </Field>
+        <Field label="Ação recomendada">
+          <input
+            className="input"
+            value={form.recommendedAction}
+            onChange={(e) => setForm({ ...form, recommendedAction: e.target.value })}
+          />
+        </Field>
+        <Field label="Responsável">
+          <input
+            className="input"
+            value={form.responsible}
+            onChange={(e) => setForm({ ...form, responsible: e.target.value })}
+          />
+        </Field>
+      </div>
+      <ModalActions
+        primaryLabel="Registrar NC"
+        disabled={salvando || !form.description.trim()}
+        onCancel={onClose}
+        onPrimary={() =>
+          onSubmit({
+            equipmentId: null,
+            tag: form.tag || null,
+            description: form.description,
+            severity: form.severity,
+            recommendedAction: form.recommendedAction || null,
+            responsible: form.responsible || null,
+            deadline: form.deadline || null,
           })
         }
       />

@@ -1,6 +1,11 @@
+import { classificarMicrobio, validarTransicaoStatusNc } from "../domain/pmoc";
+import type { PmocStatusNc } from "../domain/pmoc";
 import type {
+  AtualizarStatusNcInput,
+  CriarAnaliseMicrobioInput,
   CriarContratoPmocInput,
   CriarEquipamentoPmocInput,
+  CriarNaoConformidadeInput,
   PmocGateway,
 } from "./pmoc-gateway";
 
@@ -75,4 +80,64 @@ export async function criarEquipamentoPmoc(gateway: PmocGateway, input: CriarEqu
     refrigerant: exigirTexto(input.refrigerant || "R-410A", "Fluido refrigerante"),
     notes: normalizarOpcional(input.notes),
   });
+}
+
+/** Input do caller (sem status/correctiveActionNeeded — são calculados aqui, AC-1). */
+type RegistrarAnaliseMicrobioInput = Omit<
+  CriarAnaliseMicrobioInput,
+  "status" | "correctiveActionNeeded"
+>;
+
+export async function registrarAnaliseMicrobio(
+  gateway: PmocGateway,
+  input: RegistrarAnaliseMicrobioInput,
+) {
+  if (!input.contractId) throw new Error("Contrato é obrigatório.");
+  const status = classificarMicrobio({
+    fungiUfcM3: input.fungiUfcM3,
+    ieRatio: input.ieRatio,
+    coliformsResult: input.coliformsResult,
+  });
+
+  return gateway.criarAnaliseMicrobio({
+    ...input,
+    labName: normalizarOpcional(input.labName),
+    labAccreditation: normalizarOpcional(input.labAccreditation),
+    reportNumber: normalizarOpcional(input.reportNumber),
+    reportUrl: normalizarOpcional(input.reportUrl),
+    notes: normalizarOpcional(input.notes),
+    status,
+    // AC-1: só marca ação corretiva quando efetivamente não-conforme (pendente/conforme não marcam).
+    correctiveActionNeeded: status === "nao_conforme",
+  });
+}
+
+export async function registrarNaoConformidade(
+  gateway: PmocGateway,
+  input: CriarNaoConformidadeInput,
+) {
+  if (!input.contractId) throw new Error("Contrato é obrigatório.");
+  return gateway.criarNaoConformidade({
+    ...input,
+    description: exigirTexto(input.description, "Descrição"),
+    tag: normalizarOpcional(input.tag),
+    recommendedAction: normalizarOpcional(input.recommendedAction),
+    responsible: normalizarOpcional(input.responsible),
+    deadline: normalizarOpcional(input.deadline),
+  });
+}
+
+/** AC-6: valida a transição antes de persistir; ao fechar, preenche `completedAt` com hoje se
+ * o caller não informou. */
+export async function avancarStatusNc(
+  gateway: PmocGateway,
+  atual: PmocStatusNc,
+  input: AtualizarStatusNcInput,
+) {
+  validarTransicaoStatusNc(atual, input.status);
+  const completedAt =
+    input.status === "fechado"
+      ? (input.completedAt ?? new Date().toISOString().slice(0, 10))
+      : null;
+  return gateway.atualizarStatusNc({ ...input, completedAt });
 }

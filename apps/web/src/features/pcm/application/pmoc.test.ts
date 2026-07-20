@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { criarContratoPmoc, criarEquipamentoPmoc } from "./pmoc";
+import {
+  avancarStatusNc,
+  criarContratoPmoc,
+  criarEquipamentoPmoc,
+  registrarAnaliseMicrobio,
+  registrarNaoConformidade,
+} from "./pmoc";
 import type { PmocGateway } from "./pmoc-gateway";
 
 function gatewayFake(): PmocGateway {
@@ -49,6 +55,48 @@ function gatewayFake(): PmocGateway {
       phase: input.phase,
       condition: input.condition,
       notes: input.notes,
+    })),
+    criarAnaliseMicrobio: vi.fn(async (input) => ({
+      id: "microbio-1",
+      contractId: input.contractId,
+      propertyId: input.propertyId,
+      analysisDate: input.analysisDate,
+      labName: input.labName,
+      labAccreditation: input.labAccreditation,
+      collectionPoints: input.collectionPoints,
+      fungiUfcM3: input.fungiUfcM3,
+      ieRatio: input.ieRatio,
+      coliformsResult: input.coliformsResult,
+      status: input.status,
+      reportNumber: input.reportNumber,
+      reportUrl: input.reportUrl,
+      correctiveActionNeeded: input.correctiveActionNeeded,
+    })),
+    criarNaoConformidade: vi.fn(async (input) => ({
+      id: "nc-1",
+      contractId: input.contractId,
+      equipmentId: input.equipmentId,
+      tag: input.tag,
+      description: input.description,
+      severity: input.severity,
+      recommendedAction: input.recommendedAction,
+      responsible: input.responsible,
+      deadline: input.deadline,
+      completedAt: null,
+      status: "aberto" as const,
+    })),
+    atualizarStatusNc: vi.fn(async (input) => ({
+      id: input.id,
+      contractId: "contrato-1",
+      equipmentId: null,
+      tag: null,
+      description: "NC existente",
+      severity: "media" as const,
+      recommendedAction: null,
+      responsible: null,
+      deadline: null,
+      completedAt: input.completedAt ?? null,
+      status: input.status,
     })),
   };
 }
@@ -211,5 +259,129 @@ describe("pmoc application", () => {
       }),
     ).rejects.toThrow("Imóvel PMOC é obrigatório.");
     expect(gateway.criarEquipamento).not.toHaveBeenCalled();
+  });
+
+  it("registra análise microbiológica com status calculado (AC-1)", async () => {
+    const gateway = gatewayFake();
+
+    await registrarAnaliseMicrobio(gateway, {
+      contractId: "contrato-1",
+      propertyId: "prop-1",
+      analysisDate: "2026-06-15",
+      labName: "  Lab X  ",
+      labAccreditation: null,
+      collectionPoints: 2,
+      fungiUfcM3: 900,
+      ieRatio: 1.2,
+      coliformsResult: "ausencia",
+      reportNumber: null,
+      reportUrl: null,
+      notes: null,
+      createdBy: "user-1",
+    });
+
+    expect(gateway.criarAnaliseMicrobio).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labName: "Lab X",
+        status: "nao_conforme",
+        correctiveActionNeeded: true,
+      }),
+    );
+  });
+
+  it("análise sem resultado fica pendente, sem ação corretiva (AC-2)", async () => {
+    const gateway = gatewayFake();
+
+    await registrarAnaliseMicrobio(gateway, {
+      contractId: "contrato-1",
+      propertyId: "prop-1",
+      analysisDate: "2026-06-15",
+      labName: null,
+      labAccreditation: null,
+      collectionPoints: null,
+      fungiUfcM3: null,
+      ieRatio: null,
+      coliformsResult: null,
+      reportNumber: null,
+      reportUrl: null,
+      notes: null,
+      createdBy: "user-1",
+    });
+
+    expect(gateway.criarAnaliseMicrobio).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "pendente", correctiveActionNeeded: false }),
+    );
+  });
+
+  it("bloqueia análise sem contrato", async () => {
+    await expect(
+      registrarAnaliseMicrobio(gatewayFake(), {
+        contractId: "",
+        propertyId: "prop-1",
+        analysisDate: "2026-06-15",
+        labName: null,
+        labAccreditation: null,
+        collectionPoints: null,
+        fungiUfcM3: null,
+        ieRatio: null,
+        coliformsResult: null,
+        reportNumber: null,
+        reportUrl: null,
+        notes: null,
+        createdBy: "user-1",
+      }),
+    ).rejects.toThrow("Contrato é obrigatório.");
+  });
+
+  it("registra NC exigindo descrição (AC-4)", async () => {
+    const gateway = gatewayFake();
+
+    await registrarNaoConformidade(gateway, {
+      contractId: "contrato-1",
+      equipmentId: null,
+      tag: "AC-01",
+      description: "  Vazamento no dreno  ",
+      severity: "alta",
+      recommendedAction: null,
+      responsible: null,
+      deadline: null,
+      createdBy: "user-1",
+    });
+
+    expect(gateway.criarNaoConformidade).toHaveBeenCalledWith(
+      expect.objectContaining({ description: "Vazamento no dreno", severity: "alta" }),
+    );
+  });
+
+  it("bloqueia NC sem descrição", async () => {
+    await expect(
+      registrarNaoConformidade(gatewayFake(), {
+        contractId: "contrato-1",
+        equipmentId: null,
+        tag: null,
+        description: "   ",
+        severity: "media",
+        recommendedAction: null,
+        responsible: null,
+        deadline: null,
+        createdBy: "user-1",
+      }),
+    ).rejects.toThrow("Descrição é obrigatório.");
+  });
+
+  it("avança status de NC e preenche completedAt ao fechar (AC-6)", async () => {
+    const gateway = gatewayFake();
+
+    await avancarStatusNc(gateway, "em_andamento", { id: "nc-1", status: "fechado" });
+
+    expect(gateway.atualizarStatusNc).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "nc-1", status: "fechado", completedAt: expect.any(String) }),
+    );
+  });
+
+  it("bloqueia pulo direto aberto->fechado (AC-6)", async () => {
+    await expect(
+      avancarStatusNc(gatewayFake(), "aberto", { id: "nc-1", status: "fechado" }),
+    ).rejects.toThrow("NC deve passar por 'em andamento' antes de ser fechada.");
   });
 });

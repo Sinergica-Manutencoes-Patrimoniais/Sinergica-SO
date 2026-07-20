@@ -262,6 +262,15 @@ export function classificarMicrobio(input: {
   return "conforme";
 }
 
+/** E01-S06 AC-6: só rejeita o pulo direto aberto->fechado (precisa passar por em_andamento).
+ * Demais transições (incl. reabrir: fechado->em_andamento, em_andamento->aberto) são permitidas —
+ * NC pode recorrer e precisar reabrir. */
+export function validarTransicaoStatusNc(atual: PmocStatusNc, novo: PmocStatusNc): void {
+  if (atual === "aberto" && novo === "fechado") {
+    throw new Error("NC deve passar por 'em andamento' antes de ser fechada.");
+  }
+}
+
 export function statusContratoColor(status: PmocStatusContrato): string {
   if (status === "ativo") return "bg-[#EAF8EF] text-[#267343]";
   if (status === "renovar") return "bg-orange-soft text-orange-deep";
