@@ -10,6 +10,122 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+**Atualização:** 2026-07-18 (sessão Lucas/Opus 4.8) — **E01-S78 (Board de ativos por Local + detalhe
+do ativo): implementado e verificado em produção.** Fase 1 da visualização espacial pedida pelo Lucas
+("ver todos os ativos de uma vez, na linha de um mapa do andar, detalhe do ativo"). Fase 2 (planta com
+pins arrastáveis) fica pra story separada.
+
+- **Aba "Board" na `VisaoClientePage`** (ao lado de "Estrutura"): escolhida uma Área, colunas = Locais
+  **nível-1** (filhos diretos da Área); itens de sub-locais agrupados por sub-local dentro da coluna;
+  coluna "Sem local" pros itens sem `local_id`. Card = ícone tipo/foto/status. Clicar → **drawer** de
+  detalhe (breadcrumb Cliente>Área>Local, foto, chips de sistema, componentes filhos via
+  `obterContextoItem` de E01-S76, + histórico de OS via `os_equipamentos_auvo` por `auvo_equipment_id`;
+  fecha X/Esc; a seção de histórico degrada sozinha se falhar).
+- **Frontend-only, sem migration.** Reusa `HierarquiaGateway`, `EquipamentosGateway.obterContextoItem`,
+  `domain/hierarquia.montarArvore`. Novos: `domain/board-ativos.ts` (`montarColunasBoard` puro + 6
+  testes), `application/board-ativos-gateway.ts`+`board-ativos.ts`, `infrastructure/supabase-board-ativos-adapter.ts`,
+  `components/BoardAtivos.tsx`+`DrawerDetalheAtivo.tsx`.
+- **Decisões do PO (via AskUserQuestion):** aba na 360 (não página nova) · colunas nível-1 com subgrupos
+  (não folhas) · drawer completo com histórico de OS.
+- **Verificado:** `ci:local` verde (412 testes); Playwright `board-ativos.spec.ts` 1/1 contra Supabase de
+  produção (cria cliente>Área "Torre A">Local "3º andar">sub-local "Sala 302">item → aba Board → coluna
+  "3º andar" com subgrupo "Sala 302" + card → drawer com breadcrumb + histórico vazio honesto → Esc).
+  **Ajuste de tooling:** `test-results/`/`playwright-report/`/`e2e/.auth/` adicionados ao `files.ignore`
+  do `biome.json` (artefatos gerados pelo Playwright quebravam o gate de lint do `ci:local`). Zero
+  SPEC_DEVIATION.
+- **Branch:** `feat/E01-S78-board-ativos-por-local` (nada commitado; carrega junto os untracked de
+  S76/S77 — separar no commit/PR).
+
+---
+
+**Atualização:** 2026-07-18 (sessão Lucas/Opus 4.8) — **E01-S77 (Apontamento de Horas: visão diária
+por técnico): implementado localmente, migration prod + Playwright pendentes.** Evolui a
+`ApontamentoHorasPage` (E01-S72/S75) com aba "Por dia": agrupa check-in/check-out por (técnico, dia),
+mostra a **diferença do dia** (1º check-in→último check-out) e a **soma das OS** lado a lado em
+`HHhMMmin`, sinaliza dia incompleto e falta/hora-extra vs jornada esperada, exporta CSV e mostra
+tendência semanal (8 semanas).
+
+- **Migration `0099`** (`pcm.funcionarios.jornada_diaria_horas numeric`, aditiva nullable). **Renumerada
+  de 0095**: a sessão paralela de S76 consumiu 0095-0098 — `lint:migrations` pegou a colisão, renumerei
+  pro próximo livre. Dado 100% local (não vai ao Auvo).
+- **Domínio puro** (`apontamento-horas.ts`): `formatarHorasMinutos`, `diaLocal`/`horaLocal` (fuso
+  Brasília fixo −03:00, premissa de E01-S68), `agruparPorDia` (span só conta check-in/out do próprio
+  dia; OS que cruza meia-noite fica no dia do check-in e marca incompleto; soma usa duração cheia),
+  `sinalizarJornada` (tolerância 15min; sem jornada = neutro), `gerarCsvApontamento` (separador `;`,
+  BOM p/ Excel), `agregarPorSemana`. 16 testes novos.
+- **Application:** `obterApontamentoHoras` passou a devolver `porDia` (com sinal de jornada, pulado se
+  incompleto); `obterTendenciaTecnico(gateway, tecnicoId, 8)`. **Adapters:** `listarTecnicos` expõe
+  `jornadaDiariaHoras`; funcionários lê/grava a coluna (follow-up no criar, pois a Edge Function de
+  criação não conhece o campo). `FuncionariosPage` ganhou campo "Jornada diária (horas)".
+- **UI `ApontamentoHorasPage`:** abas Por período (intacta, AC-9) / Por dia (tabela expansível com OS
+  do dia, badges incompleto/abaixo-jornada/hora-extra, export CSV, sub-visão de tendência que pede
+  técnico selecionado).
+- **Gates verdes:** typecheck, lint (biome), `test` (406, +20), build, arch:check, `lint:migrations`
+  (99). e2e `apontamento-horas-diario.spec.ts` escrito (4 casos).
+- **Verificado (2026-07-18):** migration `0099` aplicada em produção (`supabase db push`); Playwright
+  contra dado real de prod — `apontamento-horas-diario.spec.ts` 4/4 (span+soma reais tipo "15h37min ·
+  8 OS", expandir OS do dia, download CSV, tendência) + regressão `refinamento-ux.spec.ts` 5/5 (AC-9).
+  Zero SPEC_DEVIATION. Story pronta; falta só commit/PR.
+- **Branch:** `feat/E01-S77-apontamento-horas-visao-diaria` (nada commitado). Contém também os
+  untracked de S76 (sessão paralela) — separar no commit/PR.
+
+---
+
+**Atualização:** 2026-07-17 (sessão Lucas/Sonnet 5, continuação do SDD do Opus 4.8) — **E01-S76
+(hierarquia de localização de ativos + Sistemas): implementada e verificada, PR pendente de
+abertura.** Modela `Cliente > Área (Torre A) > Local (árvore: andar>sala>ambiente) > Item
+(Equipamento|Componente)` + **Sistemas** transversais (N:N) que vão ao Auvo como Equipment
+(`/equipments`) para receber código de campo. Ao abrir um Item: breadcrumb de instalação + chips
+dos sistemas.
+
+- **Decisão arquitetural (ADR-0009):** estendeu `pcm.equipamentos` in-place (`local_id`, `tipo`,
+  `parent_item_id`) em vez de criar `pcm.itens` — preserva 2000+ linhas de produção e o pipeline de
+  sync Auvo. Novas tabelas: `pcm.areas`, `pcm.locais` (árvore + trigger anti-ciclo/consistência de
+  área), `pcm.sistemas` (sync-cols Auvo), `pcm.sistema_itens` (N:N).
+- **Migrations `0095`/`0096` aplicadas em produção** (`supabase db push`, dry-run conferido antes;
+  FK `NOT VALID`→`VALIDATE`, sem quebra dos 2000+ equipamentos existentes — AC-10).
+- **Camadas DDD completas** em `features/pcm/`: `domain/{hierarquia,sistemas}.ts` novos +
+  `equipamentos.ts` estendido (`ItemContexto`, `validarParentItem`), todos com `.test.ts` (29 casos
+  novos); `application/{hierarquia,sistemas}-gateway.ts`+use-cases + `equipamentos.ts` estendido
+  (`obterContextoItem`); `infrastructure/supabase-{hierarquia,sistemas}-adapter.ts` novos +
+  `supabase-equipamentos-adapter.ts` estendido (breadcrumb via join `locais`→`areas`, chips via
+  `sistema_itens`).
+- **Auvo:** `registry/sistemas.ts` — `/equipments`, `writeEnabled:false` (dry-run; flip é
+  follow-up gated após teste de contrato real + mitigação da linha-fantasma Equipment(27),
+  documentada no design.md/ADR-0009). Registrado em `registry/index.ts`.
+- **UI:** aba "Estrutura" (Área>Local, CRUD em árvore) em `VisaoClientePage.tsx`;
+  `EquipamentosPage.tsx` ganhou filtro por tipo, seletor de Local e de Equipamento-pai, modal
+  "Detalhe do Item" (breadcrumb + chips + componentes filhos); `SistemasPage.tsx` nova (CRUD +
+  seletor de itens membros + status de sync) — registrada em `HomePage.tsx`
+  (`PcmView`/`PCM_NAV`/branch/gate `podeAcessar('pcm','leitura')`).
+- **Gates:** `pnpm run ci:local` verde (lint/typecheck/test 381 casos/build/arch:check/
+  audit:esteira/eval:spec). pgTAP `supabase/tests/hierarquia_localizacao_rls.test.sql` (17
+  assertions, AC-3/7/8/9) escrito — **não rodado localmente** (sem Docker nesta máquina); roda no
+  job `db-tests` da CI. Playwright `apps/web/e2e/hierarquia-sistemas.spec.ts` **verde** no dev
+  server local contra Supabase de produção (mesmo padrão de `ferramentas.spec.ts`) — cria Área>Local
+  em árvore, instala Item, cria Sistema, confirma dry-run e breadcrumb+chip. Dados de teste
+  prefixados `[TESTE E2E]` ficam em produção (sem script de limpeza automática no repo — mesma
+  situação de outros specs e2e existentes).
+- **Revisão adversarial (achado real, corrigido):** `desativarLocal` só bloqueava Local com
+  sub-locais ativos, não com **Itens instalados** — spec.md exige bloquear nos dois casos. Corrigido
+  com `HierarquiaGateway.possuiItensInstalados` + guard em `application/hierarquia.ts` (testado em
+  `application/hierarquia.test.ts`, novo). `e2e/hierarquia-sistemas.spec.ts` também tinha bug real
+  na primeira rodada: `SistemasPage` lista Sistemas de **todos** os clientes (sem filtro), então o
+  nome fixo "Sistema de Hidrante Torre A" colidia entre execuções — corrigido com sufixo de
+  timestamp no nome do Sistema de teste.
+- **Feedback do Lucas pós-implementação (divergência de escrita):** (1) campo legado
+  `equipamentos.localizacao` (texto livre) removido do formulário de Equipamento — UI agora força
+  Local estruturado (AC-4), coluna do banco fica só como histórico; (2) `SistemasPage` não expunha
+  seletor de Área (domínio/banco já suportavam `area_id`, UI esqueceu o campo) — corrigido,
+  select carrega só as Áreas já cadastradas na Estrutura do cliente.
+- **Zero SPEC_DEVIATION.** `eval:spec`/`audit:esteira` não reconhecem a convenção `E0N-S0N-*` de
+  `specs/` (só `NNNN-*`) — gap de tooling pré-existente, não bloqueia, fora do escopo desta story.
+- **Branch:** `feat/E01-S76-hierarquia-localizacao-ativos`, ainda não commitado/PR aberto.
+- **Próximo passo:** revisão adversarial, commit, abrir PR (`@devops`), confirmar `db-tests` verde
+  na CI.
+
+---
+
 **Atualização:** 2026-07-15 (sessão Lucas/Sonnet 5) — **E01-S75 (refinamento UX do PCM)
 implementada e verificada com Playwright contra produção real.** Sessão anterior (Opus) só
 escreveu spec+tasks; esta sessão (Sonnet) implementou as 5 tasks do zero e verificou tudo contra

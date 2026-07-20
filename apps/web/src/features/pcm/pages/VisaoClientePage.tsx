@@ -11,7 +11,9 @@ import {
   Copy,
   DollarSign,
   ExternalLink,
+  FolderTree,
   Layers,
+  LayoutGrid,
   MessageCircle,
   Package,
   Pencil,
@@ -35,20 +37,32 @@ import type {
 } from "../application/cliente-360-gateway";
 import { editarCliente } from "../application/clientes-crud";
 import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao-cliente";
+import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
 import { ClienteFormModal } from "../components/ClienteFormModal";
 import { ClienteNaoEncontrado } from "../components/ClienteNaoEncontrado";
 import { PainelBacklog } from "../components/PainelBacklog";
 import { PainelEquipamentos } from "../components/PainelEquipamentos";
 import { PainelHistorico } from "../components/PainelHistorico";
+import { PainelItensDoCliente } from "../components/PainelItensDoCliente";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
+import { EstruturaClientePage } from "./EstruturaClientePage";
 
 type Estado =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; visao: VisaoCliente };
 
-type Aba360 = "resumo" | "timeline" | "os" | "qualidade" | "ativos" | "financeiro" | "comunicacao";
+type Aba360 =
+  | "resumo"
+  | "timeline"
+  | "os"
+  | "qualidade"
+  | "ativos"
+  | "estrutura"
+  | "board"
+  | "financeiro"
+  | "comunicacao";
 
 const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   { id: "resumo", label: "Resumo", icon: Activity },
@@ -56,6 +70,10 @@ const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   { id: "os", label: "OS", icon: ClipboardList },
   { id: "qualidade", label: "Inspeções", icon: Calendar },
   { id: "ativos", label: "Ativos", icon: Layers },
+  // E01-S76: Área>Local (árvore) — onde os Itens estão instalados.
+  { id: "estrutura", label: "Estrutura", icon: FolderTree },
+  // E01-S78: board visual dos ativos por Local (fase 1 do "mapa do andar").
+  { id: "board", label: "Board", icon: LayoutGrid },
   { id: "financeiro", label: "Financeiro", icon: DollarSign },
   { id: "comunicacao", label: "Comunicação", icon: MessageCircle },
 ];
@@ -230,7 +248,22 @@ export function VisaoClientePage({
 
       {aba === "qualidade" && <PainelQualidade qualidade={qualidade} />}
 
-      {aba === "ativos" && <PainelEquipamentos equipamentos={equipamentos} />}
+      {aba === "ativos" && (
+        <div className="flex flex-col gap-4">
+          {user && (
+            <PainelItensDoCliente clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
+          )}
+          <PainelEquipamentos equipamentos={equipamentos} />
+        </div>
+      )}
+
+      {aba === "estrutura" && user && (
+        <EstruturaClientePage clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
+      )}
+
+      {aba === "board" && (
+        <BoardAtivos clienteId={cliente.id} onIrParaEstrutura={() => setAba("estrutura")} />
+      )}
 
       {aba === "financeiro" && (
         <PainelFinanceiro cliente={cliente} backlog={backlog} historico={historico} />
