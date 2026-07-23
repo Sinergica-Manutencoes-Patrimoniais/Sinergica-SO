@@ -13,8 +13,8 @@ values
 on conflict (id) do nothing;
 
 -- fixtures (papel padrão da transação, sem RLS)
-insert into pcm.clientes (id, nome, contato_email, cnpj)
-values ('40000000-0000-0000-0000-000000000030', 'Cliente Teste S09', 'cliente-s09@test.local', '12345678000199')
+insert into pcm.clientes (id, nome, contato_email, cnpj, created_by)
+values ('40000000-0000-0000-0000-000000000030', 'Cliente Teste S09', 'cliente-s09@test.local', '12345678000199', '00000000-0000-0000-0000-000000000471')
 on conflict (id) do nothing;
 insert into financeiro.categorias (id, nome, tipo)
 values ('40000000-0000-0000-0000-000000000031', 'Categoria teste S09', 'entrada')

@@ -13,14 +13,14 @@ alwaysApply: false
 |----|---------------------------------------------------------|----------|------------|----------------|--------|
 | 1  | RLS por `cliente_id` nas tabelas de documento (PMOC/SPDA) | AC-1   | E09-S01    | smoke SQL remoto | done |
 | 2  | Read-model agregando documentos do condomínio           | AC-1,3   | 1          | `pnpm test`    | done   |
-| 3  | Central de Documentos na PortalShell (lista + vazio)    | AC-1,4   | 2          | browser        | todo   |
-| 4  | Download por signed URL                                 | AC-2     | 3          | browser        | todo   |
+| 3  | Central de Documentos na PortalShell (lista + vazio)    | AC-1,4   | 2          | browser        | done   |
+| 4  | Download por signed URL                                 | AC-2     | 3          | browser        | done   |
 
 ## Plano de teste
 - pgTAP: síndico só vê documentos do próprio `cliente_id`.
 - Aceite: um teste por AC.
 
 ## Checklist de Definition of Done
-- [ ] AC-1..AC-4 verdes; pgTAP de isolamento
-- [ ] `pnpm run ci:local` verde
-- [ ] `docs/STATE.md` + ROADMAP atualizados
+- [x] AC-1..AC-4 verdes; pgTAP de isolamento
+- [x] `pnpm run ci:local` verde
+- [x] `docs/STATE.md` + ROADMAP atualizados

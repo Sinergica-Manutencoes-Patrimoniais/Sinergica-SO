@@ -15,8 +15,8 @@ on conflict (id) do nothing;
 
 -- fixtures (papel padrão da transação de teste, sem RLS) — cliente + categoria + recebível
 -- previsto vencendo daqui a 3 dias (ponto D-3 já atingido hoje).
-insert into pcm.clientes (id, nome, contato_telefone, contato_email)
-values ('40000000-0000-0000-0000-000000000022', 'Cliente Teste S08', '11999998888', 'cliente-s08@test.local')
+insert into pcm.clientes (id, nome, contato_telefone, contato_email, created_by)
+values ('40000000-0000-0000-0000-000000000022', 'Cliente Teste S08', '11999998888', 'cliente-s08@test.local', '00000000-0000-0000-0000-000000000462')
 on conflict (id) do nothing;
 insert into financeiro.categorias (id, nome, tipo)
 values ('40000000-0000-0000-0000-000000000023', 'Categoria teste S08', 'entrada')

@@ -17,10 +17,9 @@ set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000601","u
 
 -- 1) usuário comum (sem superadmin) NAO consegue ler config.integracoes direto (RLS existente,
 -- E00-S12) — prova que a RPC nova é mesmo necessária, não redundante.
-select throws_ok(
-  $$ select ativo from config.integracoes where chave = 'openrouter' $$,
-  '42501',
-  null,
+select is(
+  (select count(*)::int from config.integracoes where chave = 'openrouter'),
+  0,
   'usuario comum NAO le config.integracoes direto (RLS superadmin-only de E00-S12)'
 );
 

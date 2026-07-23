@@ -5,7 +5,8 @@ select plan(4);
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000091","user_role":"colaborador","user_modulos":{"pcm":"leitura"}}';
 select is((select meta_diaria_horas from config.parametros_apontamento_horas where id = 1), 8::numeric, 'pcm leitura lê defaults');
-select throws_ok($$ update config.parametros_apontamento_horas set meta_diaria_horas = 7 where id = 1 $$, '42501', null, 'pcm leitura não altera parâmetros');
+update config.parametros_apontamento_horas set meta_diaria_horas = 7 where id = 1;
+select is((select meta_diaria_horas from config.parametros_apontamento_horas where id = 1), 8::numeric, 'pcm leitura não altera parâmetros');
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000092","user_role":"colaborador","user_modulos":{"pcm":"escrita"}}';
 select lives_ok($$ update config.parametros_apontamento_horas set meta_diaria_horas = 7.5, tolerancia_minutos = 20, limiar_anomalia_minutos = 6 where id = 1 $$, 'pcm escrita altera parâmetros');

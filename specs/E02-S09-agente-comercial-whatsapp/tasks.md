@@ -18,6 +18,6 @@ alwaysApply: false
 ## Definition of Done
 - [x] Spec ↔ código rastreável.
 - [x] Testes unitários e typecheck verdes.
-- [x] Smoke SQL transacional remoto verde (pgTAP indisponível no projeto remoto).
-- [ ] UAT com Evolution real verde.
+- [x] pgTAP local em stack criada do zero + smoke SQL remoto verdes.
+- [ ] UAT externo pós-merge com Evolution real — requer conectar a instância via QR Code.
 - [x] Nenhuma `SPEC_DEVIATION` aberta.

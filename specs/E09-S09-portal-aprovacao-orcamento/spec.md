@@ -7,7 +7,8 @@ tier: arquitetural
 
 # Spec — Aprovação de orçamento no portal
 
-> **Fonte da verdade.** Status: aprovado (após `design.md`). Depende de E09-S01 e **E01-S14** (Fluxo B).
+> **Fonte da verdade.** Status: implementado. Depende de E09-S01; o recorte necessário de E01-S14
+> foi modelado pela migration `0144_E09-S09_portal_orcamentos.sql`.
 
 ## Resumo
 O síndico vê os orçamentos pendentes do seu condomínio e **aprova ou recusa**, com o aceite
@@ -43,13 +44,13 @@ bloqueia o E01-S14.
 ## Casos de borda e erros
 - Orçamento já decidido → não permite nova decisão pelo síndico.
 - Orçamento expirado → estado próprio, não aprovável.
-- E01-S14 ainda não modelado → story bloqueada (dependência dura).
+- Claim de cliente ausente ou divergente → falha fechada; não decide nem cria OS.
 
 ## Fora de escopo (vinculante)
-- Modelagem da entidade de orçamento e a virada em OS — E01-S14.
+- Evolução do orçamento interno além do recorte de aceite/virada em OS entregue pela migration 0144.
 - Precificação/edição do orçamento — interno.
 
 ## Rastreabilidade
 - Design: `./design.md`
 - `apps/web/src/features/area-cliente/` (seção Orçamentos)
-- Depende de E01-S14 (entidade de orçamento) + RLS por `cliente_id` + registro de aceite append-only
+- Migration `0144` (entidade/decisão/virada em OS) + RLS por `cliente_id` + aceite append-only

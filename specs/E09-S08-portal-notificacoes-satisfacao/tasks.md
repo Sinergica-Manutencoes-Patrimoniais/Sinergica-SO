@@ -13,8 +13,8 @@ alwaysApply: false
 |----|-------------------------------------------------------------|----------|------------|------------------------------|--------|
 | 1  | Migration: notificações por `cliente_id` (RLS) + satisfação | AC-1,2,3 | E09-S01    | lint + smoke SQL remoto      | done   |
 | 2  | Geração de notificação a partir dos eventos-fonte           | AC-1     | 1          | `pnpm test`                  | done   |
-| 3  | Central de notificações na PortalShell (lida/não-lida)      | AC-2     | 1          | browser                      | todo   |
-| 4  | Pesquisa CSAT/NPS pós-OS (registro, não repetir)            | AC-3,4   | 1          | `pnpm test`+browser          | todo   |
+| 3  | Central de notificações na PortalShell (lida/não-lida)      | AC-2     | 1          | browser                      | done   |
+| 4  | Pesquisa CSAT/NPS pós-OS (registro, não repetir)            | AC-3,4   | 1          | `pnpm test`+browser          | done   |
 | 5  | E-mail opcional via E00-S12 (degrada sem provedor)          | AC-1     | 2          | Deno check + HTTP smoke      | done   |
 
 ## Plano de teste
@@ -23,7 +23,7 @@ alwaysApply: false
 - Aceite: um teste por AC.
 
 ## Checklist de Definition of Done
-- [ ] AC-1..AC-4 verdes; pgTAP de isolamento
-- [ ] `pnpm run ci:local` verde
-- [ ] Liga a E01-S55 (satisfação) sem duplicar
-- [ ] `docs/STATE.md` + ROADMAP atualizados
+- [x] AC-1..AC-4 verdes; pgTAP de isolamento
+- [x] `pnpm run ci:local` verde
+- [x] Liga a E01-S55 (satisfação) sem duplicar
+- [x] `docs/STATE.md` + ROADMAP atualizados

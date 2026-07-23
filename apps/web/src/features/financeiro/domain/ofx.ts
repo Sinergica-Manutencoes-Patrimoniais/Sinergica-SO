@@ -4,9 +4,10 @@
 // igual nos dois formatos, porque a tag de fechamento do 2.x (`</TAG>`) também começa com `<` e
 // interrompe a captura.
 //
-// SPEC_DEVIATION (E04-S02, registrado em tasks.md): as fixtures em `__fixtures__/` são sintéticas
-// (Lucas ainda não forneceu o OFX real anonimizado do banco da Sinérgica — pendência de insumo
-// documentada na spec). Validar contra arquivo real antes de considerar o parser definitivo.
+// As fixtures em `__fixtures__/` são sintéticas. A validação adicional contra o OFX real
+// anonimizado do banco da Sinérgica continua como pendência de insumo registrada na spec; não há
+// divergência do contrato implementado, mas esse UAT deve ocorrer antes de declarar o parser
+// definitivo para o banco usado em produção.
 
 export interface TransacaoOfx {
   fitid: string;

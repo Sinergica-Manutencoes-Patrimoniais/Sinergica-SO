@@ -106,32 +106,13 @@ serve(async (req) => {
     await registrarConversaEMensagem(db, instanceId, message);
 
     const waitUntil = new Date(Date.now() + 3000).toISOString();
-    const { data: pending, error: pendingError } = await db
+    const { error: debounceError } = await db
       .schema("atendimento")
-      .from("wa_queue")
-      .select("id")
-      .eq("queue_key", queueKey)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (pendingError) throw pendingError;
-
-    if (pending?.id) {
-      const { error } = await db
-        .schema("atendimento")
-        .from("wa_queue")
-        .update({ wait_until: waitUntil, error_message: null })
-        .eq("id", pending.id);
-      if (error) throw error;
-    } else {
-      const { error } = await db.schema("atendimento").from("wa_queue").insert({
-        queue_key: queueKey,
-        wait_until: waitUntil,
-        status: "pending",
+      .rpc("fn_debounce_wa_queue", {
+        p_queue_key: queueKey,
+        p_wait_until: waitUntil,
       });
-      if (error) throw error;
-    }
+    if (debounceError) throw debounceError;
 
     scheduleAgent(url, serviceKey, queueKey);
     return json(200, { ok: true, queued: true, queueKey }, cors);

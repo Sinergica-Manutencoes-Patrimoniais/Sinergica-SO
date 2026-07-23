@@ -2,7 +2,7 @@
 -- Gate crítico: cliente-sindico só alcança linhas do cliente_id do JWT.
 
 begin;
-select plan(14);
+select plan(17);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -92,6 +92,18 @@ select is((select count(*) from financeiro.lancamentos), 0::bigint, 'E09-S10: ta
 
 set local request.jwt.claims = '{"sub":"90000000-0000-0000-0000-000000000003","role":"authenticated","user_role":"cliente-sindico","user_modulos":{"area-cliente":"leitura"}}';
 select is((select count(*) from pcm.clientes), 0::bigint, 'AC-3: síndico sem cliente_id vê zero linhas');
+select throws_ok(
+  $$ select pcm.portal_decidir_orcamento(gen_random_uuid(), 'aprovado', null) $$,
+  '42501', 'somente_cliente_sindico',
+  'E09-S09: síndico sem cliente_id não decide orçamento'
+);
+
+set local request.jwt.claims = '{"sub":"90000000-0000-0000-0000-000000000003","role":"authenticated"}';
+select throws_ok(
+  $$ select pcm.portal_decidir_orcamento(gen_random_uuid(), 'aprovado', null) $$,
+  '42501', 'somente_cliente_sindico',
+  'E09-S09: authenticated sem claims de portal não decide orçamento'
+);
 
 reset role;
 select * from finish();

@@ -4,7 +4,7 @@
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
 
 begin;
-select plan(9);
+select plan(10);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -105,10 +105,5 @@ select throws_ok(
 );
 
 reset role;
-delete from pcm.chamados_eventos where chamado_id = '00000000-0000-0000-0000-000000000bc2';
-delete from pcm.ordens_servico where id = '00000000-0000-0000-0000-000000000bc3';
-delete from pcm.chamados where id = '00000000-0000-0000-0000-000000000bc2';
-delete from pcm.clientes where id = '00000000-0000-0000-0000-000000000bc1';
-
 select * from finish();
 rollback;

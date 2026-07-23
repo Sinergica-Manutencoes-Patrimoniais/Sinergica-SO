@@ -2,7 +2,7 @@
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
 
 begin;
-select plan(18);
+select plan(24);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -59,6 +59,30 @@ select throws_ok(
   $$ select * from atendimento.fn_listar_clientes_para_vinculo() $$,
   '42501', null,
   'leitura nao lista CRM para alteracao'
+);
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000003a2","role":"authenticated"}';
+select throws_ok(
+  $$ select * from atendimento.fn_listar_clientes_para_vinculo() $$,
+  '42501', null,
+  'authenticated sem user_modulos nao lista CRM'
+);
+select throws_ok(
+  $$ select atendimento.fn_vincular_conversa_cliente('3a000000-0000-0000-0000-000000000031', '3a000000-0000-0000-0000-000000000002') $$,
+  '42501', null,
+  'authenticated sem user_modulos nao vincula conversa ao CRM'
+);
+select throws_ok(
+  $$ select atendimento.fn_definir_handoff('3a000000-0000-0000-0000-000000000031', 'assumir', null) $$,
+  '42501', null,
+  'authenticated sem user_modulos nao assume conversa'
+);
+select throws_ok(
+  $$ select atendimento.fn_debounce_wa_queue('teste:negado', now() + interval '3 seconds') $$,
+  '42501', null,
+  'authenticated nao executa debounce exclusivo do service_role'
 );
 reset role;
 
@@ -129,6 +153,21 @@ select ok(
 select ok(
   not atendimento.fn_consumir_rate_limit_webhook('teste:evo-a', 1, 60),
   'entrega excedente e bloqueada'
+);
+
+create temporary table debounce_resultados (id uuid);
+insert into debounce_resultados values
+  (atendimento.fn_debounce_wa_queue('teste:debounce-atomico', now() + interval '3 seconds')),
+  (atendimento.fn_debounce_wa_queue('teste:debounce-atomico', now() + interval '6 seconds'));
+select is(
+  (select count(distinct id)::int from debounce_resultados),
+  1,
+  'duas chamadas de debounce retornam a mesma fila pending'
+);
+select is(
+  (select count(*)::int from atendimento.wa_queue where queue_key = 'teste:debounce-atomico' and status = 'pending'),
+  1,
+  'duas chamadas de debounce nao criam duas filas pending'
 );
 reset role;
 

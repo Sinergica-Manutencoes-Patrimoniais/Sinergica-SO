@@ -6,7 +6,8 @@ alwaysApply: true
 
 # Spec — Atendimento Evolution multi-instância operacional
 
-> **Fonte da verdade.** Status: implementado em produção; UAT com instâncias reais pendente
+> **Fonte da verdade.** Status: código/hardening merge-ready; produção está em `0148` até promover
+> `0149` e as Edge Functions após o merge; UAT com instâncias reais pendente
 
 ## Resumo
 Cada instância do servidor Evolution usa sua própria persona, conhecimento e regras, com handoff

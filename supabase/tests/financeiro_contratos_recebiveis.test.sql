@@ -12,8 +12,8 @@ values
 on conflict (id) do nothing;
 
 -- cliente de teste (pcm.clientes) — necessário pra FK de contratos
-insert into pcm.clientes (id, nome)
-values ('41000000-0000-0000-0000-000000000001', 'Cliente teste S04')
+insert into pcm.clientes (id, nome, created_by)
+values ('41000000-0000-0000-0000-000000000001', 'Cliente teste S04', '00000000-0000-0000-0000-000000000411')
 on conflict (id) do nothing;
 
 set local role authenticated;

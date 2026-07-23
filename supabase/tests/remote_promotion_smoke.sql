@@ -2,6 +2,7 @@
 -- Uso: supabase db query --linked --file supabase/tests/remote_promotion_smoke.sql
 
 begin;
+select '1..1';
 
 do $$
 begin
@@ -135,5 +136,5 @@ end;
 $$;
 
 reset role;
-select 'remote_promotion_smoke_ok' as resultado;
+select 'ok 1 - remote_promotion_smoke_ok';
 rollback;

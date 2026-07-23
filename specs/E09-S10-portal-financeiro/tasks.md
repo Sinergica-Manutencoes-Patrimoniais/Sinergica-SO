@@ -18,8 +18,8 @@ alwaysApply: false
 | 0  | **Pré-requisito**: E04 fundação + contratos/contas a receber     | —        | E04        | —              | done |
 | 1  | Views `financeiro` dedicadas ao `cliente-sindico` (RLS por linha)| AC-1,3,4 | 0,E09-S01  | smoke SQL remoto | done |
 | 2  | Read-model financeiro do portal (só devido/pago)                | AC-1,3   | 1          | `pnpm test`    | done |
-| 3  | Aba Financeiro na PortalShell (faturas/vencimentos/status)      | AC-1     | 2          | browser        | todo    |
-| 4  | 2ª via / comprovante por signed URL                            | AC-2     | 3          | browser        | todo    |
+| 3  | Aba Financeiro na PortalShell (faturas/vencimentos/status)      | AC-1     | 2          | browser        | done    |
+| 4  | 2ª via / comprovante por signed URL                            | AC-2     | 3          | browser        | done    |
 
 ## Plano de teste
 - pgTAP: view só devolve linhas do `cliente_id`; nenhum campo de custo/margem exposto.
@@ -30,6 +30,6 @@ alwaysApply: false
 
 ## Checklist de Definition of Done
 - [x] E04 construído (pré-requisito)
-- [ ] AC-1..AC-4 verdes; pgTAP confirma isolamento e ausência de dado interno
-- [ ] Blueprint 09 alinhado (fatura sim, custo/rentabilidade não)
-- [ ] `docs/STATE.md` + ROADMAP atualizados
+- [x] AC-1..AC-4 verdes; pgTAP confirma isolamento e ausência de dado interno
+- [x] Blueprint 09 alinhado (fatura sim, custo/rentabilidade não)
+- [x] `docs/STATE.md` + ROADMAP atualizados

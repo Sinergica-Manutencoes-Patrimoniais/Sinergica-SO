@@ -356,8 +356,8 @@ async function processarComercial(
   const fluxo = await buscarFluxoAtivo(db, personaId);
   const passos = fluxo.passos;
   const lead = await extrairLeadViaOpenRouter(
-    persona.prompt_sistema,
-    [persona.base_conhecimento, conhecimento].filter(Boolean).join("\n\n") || null,
+    comporPromptPersona(persona.prompt_sistema, persona.base_conhecimento, conhecimento),
+    null,
     passos,
     contexto,
     messages.at(-1)?.sender_jid ?? undefined,

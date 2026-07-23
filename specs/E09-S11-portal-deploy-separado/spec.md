@@ -7,7 +7,8 @@ tier: arquitetural
 
 # Spec — Deploy separado do Portal do Cliente
 
-> **Fonte da verdade.** Status: aprovado (após `design.md`). Depende de E09-S01..S10 estáveis.
+> **Fonte da verdade.** Status: código/build implementados; site/subdomínio Netlify pendente como
+> gate operacional externo pós-merge. Depende de E09-S01..S10 estáveis.
 > Origem: decisão do PO — "depois vamos para um deploy separado para não ter risco do cliente
 > conseguir com o acesso dele ver informações do OS".
 

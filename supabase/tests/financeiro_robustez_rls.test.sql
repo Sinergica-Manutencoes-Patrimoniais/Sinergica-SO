@@ -5,7 +5,7 @@
 -- (requer Docker/Supabase local).
 
 begin;
-select plan(9);
+select plan(10);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values

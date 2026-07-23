@@ -67,8 +67,5 @@ select throws_ok(
 );
 
 reset role;
-delete from pcm.ordens_servico where id = '00000000-0000-0000-0000-0000000008c2';
-delete from pcm.clientes where id = '00000000-0000-0000-0000-0000000008c1';
-
 select * from finish();
 rollback;

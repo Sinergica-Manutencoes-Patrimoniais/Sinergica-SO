@@ -12,36 +12,39 @@ alwaysApply: true
 
 ## 2026-07-22 — E09 promovida + Atendimento Evolution multi-instância
 
-**Estado:** E04-S01..S13 já estava completo em produção. E09-S01..S11 foi concluída em código;
-migrations `0142`–`0145` e corretiva de segurança `0147` estão no Supabase. E02-S09/S22 foi
-formalizada e o runtime multi-instância foi promovido com `0146`/`0148`. Seis Edge Functions foram
-publicadas; `pcm-ze-agent` está ACTIVE v27. Smoke SQL transacional E09/E02 e smokes HTTP de
-autenticação passaram. Advisors acharam duas views financeiras do portal como security definer;
-`0147` corrigiu ambas para `security_invoker=true` antes da entrega.
+**Estado:** PR #53 contém E04-S01..S13, E09-S01..S11 e E02-S09/S22. O código está merge-ready após
+uma revisão adversarial corrigir guardas `SECURITY DEFINER` que falhavam abertas com claims nulas,
+o isolamento financeiro do portal, a retificação tributária, o privilégio DELETE de itens de
+sistema e o debounce concorrente do WhatsApp. A migration corretiva `0149` e as versões novas de
+`pcm-whatsapp-webhook`/`pcm-ze-agent` ainda precisam ser promovidas ao Supabase depois do CI/merge;
+produção permanece alinhada até `0148` enquanto isso.
 
 **Atendimento pronto em código/backend:** mesmo `EVOLUTION_API_URL` para N instâncias; vínculo
 exato instância→persona; prompt/modelo/base/regras por persona; webhook registrado por instância com
-token/HMAC, rate limit, dedupe, descarte `fromMe`/broadcast; contrato `sendText` atual; handoff
+token/HMAC, rate limit e debounce atômicos, dedupe, descarte `fromMe`/broadcast; contrato `sendText` atual; handoff
 automático/manual auditável; resposta pontual de IA sem service role no browser; vínculo atômico da
 conversa com Cliente PCM. Há duas personas ativas (Chamados e Comercial), ambas com base e regras
-default editáveis.
+default editáveis. Base/RAG entram delimitados como dados não confiáveis, com teste adversarial de
+prompt injection.
 
-**Gates verdes:** `ci:local` completo (708 testes web + 1 isolamento do portal, build web+portal,
-typecheck, arquitetura, lint/format, lint de 148 migrations, auditoria SDD e fidelidade), Deno check
-das 34 Edge Functions + 172 testes Deno, Playwright completo com 52 cenários passando e 1 skip
-condicionado à existência de conversa CRM vinculada, gitleaks sem vazamentos e `pnpm audit --prod`
-sem vulnerabilidades conhecidas. Migrations local/remoto estão alinhadas de `0001` a `0148`;
-smoke remoto passou. pgTAP não existe no projeto remoto; foi substituído por smoke SQL transacional
-com rollback, sem instalar extensão em produção.
+**Gates verdes em 2026-07-22:** stack Supabase criada do zero aplicou migrations `0001`–`0149` e
+`supabase test db` passou **55 arquivos/440 testes**; lint/Squawk passou 149 migrations. Web passou
+708 testes; Deno check das 34 Edge Functions e 174 testes; Playwright completo passou 52 cenários
+com 1 skip condicionado à existência de conversa CRM vinculada. Build web+portal, isolamento do
+bundle do portal, lint, typecheck, arquitetura, auditoria de 470 documentos, fidelidade de spec,
+Mermaid, gitleaks e audit de dependências também passaram. O deploy preview do SO no Netlify
+respondeu 200 e exibiu a tela de login correta.
 
 **Bloqueios / próximo passo:**
-- Evolution remoto tem **0 instâncias/canais**. Criar duas instâncias pela aba Atendimento › Config ›
-  Evolution, ler os dois QR Codes e mapear uma para `Zé — Chamados (PCM)` e outra para
-  `Agente Comercial — WhatsApp`. Depois executar UAT A/B real e validar webhook/status.
-- Netlify CLI está sem login e não há `.netlify/state.json`; web/portal buildam, mas as mudanças de UI
-  ainda não foram publicadas. Destrava com login/vínculo inequívoco dos sites; não criar site/DNS
-  arbitrário. `https://so-sinergica.netlify.app` atual responde 200, porém não contém esta entrega.
-- UAT autenticado do Portal depende desse deploy e de uma conta `cliente-sindico` de teste.
+- Após merge: promover migration `0149` e as duas Edge Functions alteradas ao Supabase, validar
+  migration list/functions/smoke e acompanhar o deploy de produção do SO no Netlify.
+- Evolution remoto tem **0 instâncias/canais**. O UAT A/B é externo pós-merge: criar/conectar duas
+  instâncias via QR Code, mapear uma para `Zé — Chamados (PCM)` e outra para `Agente Comercial —
+  WhatsApp`, então validar webhook, isolamento, handoff e CRM com mensagens reais.
+- O SO interno já tem integração Netlify e preview verde. O **site separado do portal** ainda exige
+  autenticação/vínculo Netlify, subdomínio/envs e uma conta `cliente-sindico` de teste.
+- E04-S02 ainda requer um OFX real anonimizado como UAT externo do banco usado em produção; os
+  formatos SGML/XML e o fluxo idempotente estão cobertos por unitário e Playwright.
 
 **Decisão durável:** ADR-0013 define roteamento por instância e fallback legado. Autor: Codex.
 

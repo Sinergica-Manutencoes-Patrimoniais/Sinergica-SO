@@ -6,16 +6,17 @@ alwaysApply: false
 
 # Design — Aprovação de orçamento no portal
 
-> **Tier arquitetural-lite.** Toca o estado do orçamento (E01-S14, hoje bloqueado). Aprovar antes de codar.
+> **Tier arquitetural-lite.** Decisão implementada pela migration `0144`, que entrega o recorte de
+> orçamento necessário ao portal e destrava o elo de aceite do Fluxo B.
 
 ## Problema
-O Fluxo B (E01-S14: chamado → requisição → orçamento → aceite → OS) está **bloqueado** justamente em
+O Fluxo B (E01-S14: chamado → requisição → orçamento → aceite → OS) estava **bloqueado** justamente em
 "papel da Área do Cliente no MVP" (ROADMAP:65). O portal resolve o elo que faltava: o **síndico
 aprova ou recusa o orçamento** e o aceite fica registrado, disparando (ou não) a virada em OS.
 
 ## Contexto atual (AS-IS)
-- E01-S14 tem só `design.md` (entidade pré-OS + orçamento, vira OS após aceite), implementação parada
-  nas 2 perguntas: orçamento recusado e papel da Área do Cliente. Esta story responde a 2ª.
+- A migration `0144` implementa requisição, orçamento, decisão append-only e virada em OS no recorte
+  necessário; evoluções do fluxo interno continuam sob E01-S14.
 - Fundação do portal (E09-S01) dá auth/isolamento por `cliente_id`.
 
 ## Decisões
@@ -40,10 +41,9 @@ RLS por `cliente_id` — síndico só vê/aprova orçamento do seu condomínio.
 - **Auto-virar OS sem aceite explícito** — perde o consentimento do cliente (razão do Fluxo B).
 
 ## Impacto
-- Depende de E01-S14 definir a entidade de orçamento; esta story adiciona a **superfície de aceite**
-  do cliente + RLS por `cliente_id` + registro de aceite.
-- Coordenar com E01-S14 (destravar juntos): esta story é a resposta à pergunta que o bloqueia.
+- O recorte mínimo de E01-S14 foi implementado junto da **superfície de aceite** do cliente, RLS por
+  `cliente_id` e registro append-only.
 
 ## Riscos
-- Se E01-S14 não estiver modelada, esta story fica bloqueada — sinalizar dependência dura.
+- Evoluções no fluxo interno devem preservar o contrato e a imutabilidade entregues pela migration 0144.
 - Aceite precisa ser inequívoco (append-only + carimbo) para valor jurídico/comercial.

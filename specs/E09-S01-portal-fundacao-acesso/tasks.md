@@ -6,8 +6,8 @@ alwaysApply: false
 
 # Tasks — Fundação do Portal do Cliente
 
-> Implementação local concluída em 2026-07-21. Status por task permanece `todo` até o gate específico
-> passar: pgTAP depende de Docker/CI; browser depende de backend com migrations 0142–0145 aplicado.
+> Implementação e gates concluídos. Em 2026-07-22, pgTAP rodou numa stack criada do zero e o
+> portal/build passou junto da suíte de browser; o UAT hospedado pertence à E09-S11.
 
 ## Plano
 | #  | Task                                                                 | Cobre AC | Depende de | Gate (comando)               | Status |
@@ -17,8 +17,8 @@ alwaysApply: false
 | 3  | Migration: `resolver_permissoes_modulo` concede `area-cliente`       | AC-4     | 1          | smoke SQL remoto             | done   |
 | 4  | Migration: RLS por-linha (`pcm.clientes` + base painel) via claim    | AC-3     | 2          | smoke SQL isolamento         | done   |
 | 5  | Edge Function `config-gerenciar-usuario` estendida: cria + vincula   | AC-1,6   | 1          | Deno check + HTTP smoke      | done   |
-| 6  | Botão "Criar acesso" na `VisaoClientePage` (gate superadmin/superv.) | AC-6     | 5          | browser                      | todo   |
-| 7  | `PortalShell` + roteamento por papel em `App.tsx`                    | AC-5     | 3          | Playwright                   | todo   |
+| 6  | Botão "Criar acesso" na `VisaoClientePage` (gate superadmin/superv.) | AC-6     | 5          | browser                      | done   |
+| 7  | `PortalShell` + roteamento por papel em `App.tsx`                    | AC-5     | 3          | Playwright                   | done   |
 
 ## Plano de teste
 - Unidade: roteamento por papel (síndico→PortalShell, interno→HomePage).
@@ -28,10 +28,10 @@ alwaysApply: false
 - Aceite: um teste por AC; AC-3 é o gate de segurança.
 
 ## Divergências (SPEC_DEVIATION)
-- [ ] Nenhuma prevista.
+- [x] Nenhuma prevista.
 
 ## Checklist de Definition of Done
-- [ ] AC-1..AC-6 verdes; **pgTAP de isolamento verde no CI `db-tests`**
-- [ ] `pnpm run ci:local` verde; Edge Function deployada + smoke
-- [ ] ADR-0011 referenciado; senha nunca em log
-- [ ] `docs/STATE.md` + ROADMAP + glossário atualizados
+- [x] AC-1..AC-6 verdes; **pgTAP de isolamento verde no CI `db-tests`**
+- [x] `pnpm run ci:local` verde; Edge Function deployada + smoke
+- [x] ADR-0011 referenciado; senha nunca em log
+- [x] `docs/STATE.md` + ROADMAP + glossário atualizados
