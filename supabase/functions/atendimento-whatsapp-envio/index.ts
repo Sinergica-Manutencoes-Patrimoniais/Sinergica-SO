@@ -3,15 +3,15 @@
 // assumir (pausar o Zé nesta conversa) e devolver (voltar ao automático).
 //
 // Autorização: nenhuma checagem de papel/permissão reimplementada aqui — todo acesso a
-// `atendimento.conversas`/`mensagens` passa pelo client do PRÓPRIO chamador (anon key + JWT),
-// nunca service_role; a policy de INSERT/UPDATE de `atendimento='escrita'` já barra quem não tem
-// (mesmo padrão de `config-gerenciar-usuario`).
+// `atendimento.conversas`/`mensagens` passa pelo client do PRÓPRIO chamador (anon key + JWT).
+// Service role é usado somente para encadear o runtime interno `pcm-ze-agent`, depois de a RLS
+// comprovar que o chamador pode acessar a conversa.
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { HttpError, requireAuth } from "../_shared/auth.ts";
+import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
 import { enviarEvolution, responderEvolution } from "../_shared/evolution.ts";
 import { enviarMeta, metaRequest } from "../_shared/meta.ts";
 import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
@@ -20,7 +20,7 @@ const FN = "atendimento-whatsapp-envio";
 
 const InputSchema = z.object({
   conversaId: z.string().uuid(),
-  acao: z.enum(["enviar", "enviar_rico", "assumir", "devolver"]),
+  acao: z.enum(["enviar", "enviar_rico", "assumir", "devolver", "acionar_ia"]),
   texto: z.string().min(1).max(4000).optional(),
   tipo: z.enum(["audio", "midia", "template", "interativa"]).optional(),
   midiaPath: z.string().max(1000).nullable().optional(),
@@ -70,16 +70,25 @@ serve(async (req) => {
     if (!conversa) throw new HttpError(404, "Conversa não encontrada");
 
     if (input.acao === "assumir") {
-      await atualizarConversa(userClient, conversa.id as string, {
-        modo: "pausado",
-        atribuido_a: userId,
-        updated_by: userId,
-      });
+      await definirHandoff(userClient, conversa.id as string, "assumir");
       return json(200, { ok: true }, cors);
     }
 
     if (input.acao === "devolver") {
-      await atualizarConversa(userClient, conversa.id as string, { modo: "auto", updated_by: userId });
+      await definirHandoff(userClient, conversa.id as string, "devolver");
+      return json(200, { ok: true }, cors);
+    }
+
+    if (input.acao === "acionar_ia") {
+      if (conversa.canal !== "whatsapp") {
+        throw new HttpError(409, "Resposta com IA está disponível apenas para conversas de WhatsApp");
+      }
+      const serviceClient = createClient(url, getSupabaseServiceKey());
+      const queueKey = `${conversa.instance_id}:${conversa.remote_jid}`;
+      const { error } = await serviceClient.functions.invoke("pcm-ze-agent", {
+        body: { queueKey, forcar: true },
+      });
+      if (error) throw new HttpError(502, "Não foi possível acionar a IA");
       return json(200, { ok: true }, cors);
     }
 
@@ -186,10 +195,8 @@ serve(async (req) => {
     await userClient.schema("atendimento").from("mensagens").update({ status_entrega: "enviado" }).eq("id", mensagem.id);
     // Rede de segurança (design.md): envio manual também pausa o Zé nesta conversa, evita os dois
     // responderem em paralelo se o humano mandar mensagem sem ter clicado "assumir" antes.
+    await definirHandoff(userClient, conversa.id as string, "envio_humano");
     await atualizarConversa(userClient, conversa.id as string, {
-      modo: "pausado",
-      atribuido_a: userId,
-      updated_by: userId,
       ultima_mensagem_preview: texto.slice(0, 200),
       ultima_mensagem_em: now,
     });
@@ -276,6 +283,19 @@ async function atualizarConversa(
   if (error) throw error;
 }
 
+async function definirHandoff(
+  userClient: UntypedSupabaseClient,
+  conversaId: string,
+  acao: "assumir" | "devolver" | "envio_humano",
+): Promise<void> {
+  const { error } = await userClient.schema("atendimento").rpc("fn_definir_handoff", {
+    p_conversa_id: conversaId,
+    p_acao: acao,
+    p_motivo: acao === "envio_humano" ? "mensagem enviada por atendente" : null,
+  });
+  if (error) throw error;
+}
+
 function json(status: number, body: unknown, cors: Record<string, string>): Response {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...cors } });
 }
@@ -289,6 +309,7 @@ function problem(status: number, detail: string, reqId: string, cors: Record<str
     409: "Conflict",
     422: "Unprocessable Entity",
     500: "Internal Server Error",
+    502: "Bad Gateway",
   };
   const body = { type: "about:blank", title: titles[status] ?? "Error", status, detail, reqId };
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/problem+json", ...cors } });

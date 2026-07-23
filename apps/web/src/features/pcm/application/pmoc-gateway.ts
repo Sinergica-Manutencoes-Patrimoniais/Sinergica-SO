@@ -49,6 +49,8 @@ export interface PmocContratoResumo {
   proximaVisita: string | null;
   microbioPendentes: number;
   ncsAbertas: number;
+  /** E01-S08 AC-4: NCs abertas com `severity='alta'` — usado pra priorizar o painel de alertas. */
+  ncsAltasAbertas: number;
 }
 
 export interface PmocEquipamento {
@@ -87,6 +89,21 @@ export interface PmocAgenda {
   yearRef: number;
   status: PmocStatusAgenda;
   auvoOsId: string | null;
+  /** E01-S05 AC-1: OS já criada a partir desta visita (`ordens_servico.pmoc_schedule_id`) — `null`
+   * = ainda não tem, botão "Criar OS" fica disponível. */
+  ordemServicoId: string | null;
+}
+
+/** E01-S84 AC-3: visão cross-contrato de uma visita PMOC ainda sem OS — usada pela coluna
+ * "Preventiva" do Kanban (que não é escopada a um único contrato, ao contrário de `PmocDetalhe`). */
+export interface PmocPreventivaResumo {
+  id: string;
+  contractId: string;
+  clienteNome: string;
+  imovelNome: string;
+  scheduledDate: string;
+  maintenanceType: PmocTipoManutencao;
+  status: PmocStatusAgenda;
 }
 
 export interface PmocMicrobioAnalysis {
@@ -95,11 +112,16 @@ export interface PmocMicrobioAnalysis {
   propertyId: string;
   analysisDate: string;
   labName: string | null;
+  labAccreditation: string | null;
+  collectionPoints: number | null;
   fungiUfcM3: number | null;
   ieRatio: number | null;
+  coliformsResult: "ausencia" | "presenca" | null;
   status: PmocStatusMicrobio;
   reportNumber: string | null;
   reportUrl: string | null;
+  /** E01-S06 AC-1/AC-3: true quando `status === 'nao_conforme'` — dispara o aviso na UI. */
+  correctiveActionNeeded: boolean;
 }
 
 export interface PmocNaoConformidade {
@@ -173,10 +195,56 @@ export interface CriarEquipamentoPmocInput {
   createdBy: string;
 }
 
+export interface CriarAnaliseMicrobioInput {
+  contractId: string;
+  propertyId: string;
+  analysisDate: string;
+  labName: string | null;
+  labAccreditation: string | null;
+  collectionPoints: number | null;
+  fungiUfcM3: number | null;
+  ieRatio: number | null;
+  coliformsResult: "ausencia" | "presenca" | null;
+  reportNumber: string | null;
+  reportUrl: string | null;
+  notes: string | null;
+  createdBy: string;
+  /** AC-1: calculados pelo use-case via `classificarMicrobio` (domínio) — nunca digitados pelo
+   * usuário. O adapter só persiste. */
+  status: PmocStatusMicrobio;
+  correctiveActionNeeded: boolean;
+}
+
+export interface CriarNaoConformidadeInput {
+  contractId: string;
+  equipmentId: string | null;
+  tag: string | null;
+  description: string;
+  severity: PmocSeveridadeNc;
+  recommendedAction: string | null;
+  responsible: string | null;
+  deadline: string | null;
+  createdBy: string;
+}
+
+export interface AtualizarStatusNcInput {
+  id: string;
+  status: PmocStatusNc;
+  /** obrigatório quando `status === 'fechado'`; o use-case preenche com hoje se omitido. */
+  completedAt?: string | null;
+}
+
 export interface PmocGateway {
   listarClientes(): Promise<PmocClienteOpcao[]>;
   listarContratos(): Promise<PmocContratoResumo[]>;
   obterDetalheContrato(contractId: string): Promise<PmocDetalhe>;
   criarContrato(input: CriarContratoPmocInput): Promise<PmocContratoResumo>;
   criarEquipamento(input: CriarEquipamentoPmocInput): Promise<PmocEquipamento>;
+  // E01-S06
+  criarAnaliseMicrobio(input: CriarAnaliseMicrobioInput): Promise<PmocMicrobioAnalysis>;
+  criarNaoConformidade(input: CriarNaoConformidadeInput): Promise<PmocNaoConformidade>;
+  atualizarStatusNc(input: AtualizarStatusNcInput): Promise<PmocNaoConformidade>;
+  /** E01-S84 AC-3: visitas PMOC planejadas (todo contrato, agendadas/atrasadas) ainda sem OS criada
+   * — alimenta a coluna "Preventiva" do Kanban de OS. */
+  listarProximasPreventivas(): Promise<PmocPreventivaResumo[]>;
 }

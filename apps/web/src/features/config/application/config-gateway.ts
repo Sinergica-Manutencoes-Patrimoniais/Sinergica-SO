@@ -26,6 +26,8 @@ export interface CriarUsuarioInput {
   nome: string;
   papel: string;
   modo: ModoPermissaoInput;
+  /** E09-S01: obrigatório para cliente-sindico; omitido para papéis internos. */
+  clienteId?: string;
 }
 
 export interface PatchGrupo {

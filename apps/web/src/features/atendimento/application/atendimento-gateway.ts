@@ -24,6 +24,16 @@ export interface AcionarZeAgoraCommand {
   conversaId: string;
 }
 
+export interface ClienteVinculoOpcao {
+  id: string;
+  nome: string;
+}
+
+export interface VincularClienteCommand {
+  conversaId: string;
+  clienteId: string;
+}
+
 export interface AtendimentoGateway {
   listarConversas(filtro?: { status?: StatusConversa }): Promise<ConversaItem[]>;
   listarMensagens(conversaId: string): Promise<MensagemItem[]>;
@@ -32,6 +42,8 @@ export interface AtendimentoGateway {
   devolverAoZe(input: DevolverAoZeCommand): Promise<void>;
   marcarComoLida(input: MarcarConversaLidaCommand): Promise<void>;
   acionarZeAgora(input: AcionarZeAgoraCommand): Promise<void>;
+  listarClientesParaVinculo(): Promise<ClienteVinculoOpcao[]>;
+  vincularCliente(input: VincularClienteCommand): Promise<void>;
   enviarMensagemRica(input: MensagemRicaInput & { conversaId: string }): Promise<MensagemItem>;
   atualizarTags(conversaId: string, tags: string[]): Promise<void>;
 }

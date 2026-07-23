@@ -15,9 +15,9 @@ Deno.test("produtoCategoriasDescriptor — mapeia description e hard-delete", ()
   });
 });
 
-Deno.test("equipamentoCategoriasDescriptor — mapeia description e hard-delete", () => {
+Deno.test("equipamentoCategoriasDescriptor — mapeia description e bloqueia delete não confirmado", () => {
   assertEquals(equipamentoCategoriasDescriptor.auvoBasePath, "/equipmentcategories");
-  assertEquals(equipamentoCategoriasDescriptor.deleteStrategy, "hard-delete");
+  assertEquals(equipamentoCategoriasDescriptor.deleteStrategy, "unsupported");
   assertEquals(equipamentoCategoriasDescriptor.cronSchedule, "0 6 * * *");
   assertEquals(equipamentoCategoriasDescriptor.toAuvo({ id: "c2", nome: "Climatização" }), {
     description: "Climatização",

@@ -1,17 +1,26 @@
 import { describe, expect, it } from "vitest";
 import {
   type ApontamentoHorasItem,
+  type DiaTecnico,
   agregarPorCliente,
+  agregarPorSemana,
   agregarPorTecnico,
+  agruparPorDia,
+  analisarConsistencia,
   calcularCusto,
   calcularHorasOs,
   filtrarApontamentos,
+  formatarHorasMinutos,
+  gerarCsvApontamento,
+  listarAnomalias,
+  produtividadeDiaria,
+  sinalizarJornada,
 } from "./apontamento-horas";
 
 function item(overrides: Partial<ApontamentoHorasItem> = {}): ApontamentoHorasItem {
   return {
     osId: "os1",
-    osNumero: "CH-001",
+    osNumero: "OS-0001",
     clienteId: "c1",
     clienteNome: "Cliente A",
     tecnicoFuncionarioId: "t1",
@@ -85,5 +94,178 @@ describe("apontamento-horas", () => {
     expect(calcularCusto(10, 50)).toBe(500);
     expect(calcularCusto(10, null)).toBeNull();
     expect(calcularCusto(10, undefined)).toBeNull();
+  });
+});
+
+describe("apontamento-horas — visualizações E01-S92", () => {
+  const dia: DiaTecnico = {
+    chave: "t1|2026-07-10",
+    tecnicoFuncionarioId: "t1",
+    tecnicoNome: "Técnico A",
+    dia: "2026-07-10",
+    primeiroCheckIn: "2026-07-10T11:00:00Z",
+    ultimoCheckOut: "2026-07-10T19:00:00Z",
+    diferencaDiaHoras: 8,
+    somaOsHoras: 7,
+    quantidadeOs: 1,
+    incompleto: false,
+    sinalJornada: null,
+    ordens: [],
+  };
+
+  it("compara produtividade diária à meta configurada (AC-1)", () => {
+    expect(produtividadeDiaria([dia], 8)[0]?.desvioHoras).toBe(-1);
+  });
+
+  it("sinaliza divergência e preserva fonte ponto ausente como null (AC-2)", () => {
+    const resultado = analisarConsistencia(
+      [dia],
+      [item({ tecnicoFuncionarioId: "t1", checkInAt: "2026-07-10T11:00:00Z", pontoHoras: null })],
+      15,
+    )[0];
+    expect(resultado).toMatchObject({
+      horasOs: 7,
+      janelaVisitaHoras: 8,
+      pontoHoras: null,
+      divergente: true,
+    });
+  });
+
+  it("lista somente OS positivas abaixo do limiar configurado (AC-3)", () => {
+    const resultado = listarAnomalias(
+      [
+        item({ osId: "curta", horas: 0.05 }),
+        item({ osId: "zero", horas: 0 }),
+        item({ osId: "normal", horas: 1 }),
+      ],
+      5,
+    );
+    expect(resultado.map((os) => os.osId)).toEqual(["curta"]);
+  });
+});
+
+describe("apontamento-horas — visão diária (E01-S77)", () => {
+  it("formata horas decimais como HHhMMmin, nunca decimal (AC-2/AC-3)", () => {
+    expect(formatarHorasMinutos(8.4)).toBe("8h24min");
+    expect(formatarHorasMinutos(1.4)).toBe("1h24min");
+    expect(formatarHorasMinutos(0)).toBe("0h00min");
+    expect(formatarHorasMinutos(-5)).toBe("0h00min"); // clampa negativo (nunca ocorre)
+    expect(formatarHorasMinutos(2)).toBe("2h00min");
+  });
+
+  it("agrupa por (técnico, dia): span do dia × soma das OS (AC-1/AC-2/AC-3)", () => {
+    // 08:00–11:00 local e 14:00–17:00 local (offset −03:00): span 9h, soma 6h → 3h fora de OS
+    const dias = agruparPorDia([
+      item({
+        osId: "a",
+        checkInAt: "2026-07-10T11:00:00Z",
+        checkOutAt: "2026-07-10T14:00:00Z",
+        horas: 3,
+      }),
+      item({
+        osId: "b",
+        checkInAt: "2026-07-10T17:00:00Z",
+        checkOutAt: "2026-07-10T20:00:00Z",
+        horas: 3,
+      }),
+    ]);
+    expect(dias).toHaveLength(1);
+    expect(dias[0]?.dia).toBe("2026-07-10");
+    expect(dias[0]?.diferencaDiaHoras).toBe(9);
+    expect(dias[0]?.somaOsHoras).toBe(6);
+    expect(dias[0]?.quantidadeOs).toBe(2);
+    expect(dias[0]?.incompleto).toBe(false);
+    expect(dias[0]?.ordens).toHaveLength(2);
+  });
+
+  it("marca dia incompleto quando falta check-out (AC-5), sem quebrar a soma", () => {
+    const dias = agruparPorDia([
+      item({
+        osId: "a",
+        checkInAt: "2026-07-10T11:00:00Z",
+        checkOutAt: "2026-07-10T14:00:00Z",
+        horas: 3,
+      }),
+      item({ osId: "b", checkInAt: "2026-07-10T17:00:00Z", checkOutAt: null, horas: 0 }),
+    ]);
+    expect(dias[0]?.incompleto).toBe(true);
+    expect(dias[0]?.somaOsHoras).toBe(3); // OS completa segue contando
+  });
+
+  it("OS que cruza a meia-noite fica no dia do check-in e marca incompleto (AC-5, borda)", () => {
+    // check-in 17:00 local 07-10, check-out 02:00 local 07-11
+    const dias = agruparPorDia([
+      item({
+        osId: "a",
+        checkInAt: "2026-07-10T20:00:00Z",
+        checkOutAt: "2026-07-11T05:00:00Z",
+        horas: 9,
+      }),
+    ]);
+    expect(dias).toHaveLength(1);
+    expect(dias[0]?.dia).toBe("2026-07-10");
+    expect(dias[0]?.incompleto).toBe(true);
+    expect(dias[0]?.diferencaDiaHoras).toBe(0); // sem check-out no próprio dia
+    expect(dias[0]?.somaOsHoras).toBe(9); // duração cheia conta na soma
+  });
+
+  it("ignora OS sem check-in nem check-out (borda: não entra em nenhum dia)", () => {
+    expect(agruparPorDia([item({ checkInAt: null, checkOutAt: null })])).toHaveLength(0);
+  });
+
+  it("sinaliza jornada com tolerância de 15min; sem jornada = neutro (AC-6)", () => {
+    expect(sinalizarJornada(8, 8)).toBe("ok");
+    expect(sinalizarJornada(8.2, 8)).toBe("ok"); // dentro da tolerância
+    expect(sinalizarJornada(7, 8)).toBe("falta");
+    expect(sinalizarJornada(9, 8)).toBe("hora-extra");
+    expect(sinalizarJornada(5, null)).toBeNull();
+    expect(sinalizarJornada(5, undefined)).toBeNull();
+  });
+
+  it("gera CSV com cabeçalho e escapa separador (AC-7)", () => {
+    const dia: DiaTecnico = {
+      chave: "t1|2026-07-10",
+      tecnicoFuncionarioId: "t1",
+      tecnicoNome: "Silva; João",
+      dia: "2026-07-10",
+      primeiroCheckIn: "2026-07-10T11:00:00Z",
+      ultimoCheckOut: "2026-07-10T20:00:00Z",
+      diferencaDiaHoras: 9,
+      somaOsHoras: 6,
+      quantidadeOs: 2,
+      incompleto: false,
+      sinalJornada: "hora-extra",
+      ordens: [],
+    };
+    const csv = gerarCsvApontamento([dia]);
+    const linhas = csv.split("\n");
+    expect(linhas[0]).toBe(
+      "Técnico;Dia;Check-in;Check-out;Diferença do dia;Soma das OS;Qtd OS;Status",
+    );
+    expect(linhas[1]).toContain('"Silva; João"'); // nome com ';' é escapado
+    expect(linhas[1]).toContain("08:00"); // check-in local (11:00Z −03:00)
+    expect(linhas[1]).toContain("17:00"); // check-out local (20:00Z −03:00)
+    expect(linhas[1]).toContain("9h00min"); // diferença do dia
+    expect(linhas[1]).toContain("6h00min"); // soma das OS
+    expect(linhas[1]).toContain("hora extra");
+  });
+
+  it("agrega horas de OS por semana, ordenado por início da semana (AC-8)", () => {
+    const semanas = agregarPorSemana([
+      item({ osId: "a", checkInAt: "2026-07-06T12:00:00Z", checkOutAt: null, horas: 4 }), // seg 06/07
+      item({ osId: "b", checkInAt: "2026-07-08T12:00:00Z", checkOutAt: null, horas: 2 }), // qua 08/07
+      item({ osId: "c", checkInAt: "2026-07-14T12:00:00Z", checkOutAt: null, horas: 5 }), // seg 13/07
+    ]);
+    expect(semanas).toHaveLength(2);
+    expect(semanas[0]).toMatchObject({
+      semanaInicio: "2026-07-06",
+      totalHoras: 6,
+      quantidadeOs: 2,
+    });
+    expect(semanas[1]).toMatchObject({
+      semanaInicio: "2026-07-13",
+      totalHoras: 5,
+      quantidadeOs: 1,
+    });
   });
 });

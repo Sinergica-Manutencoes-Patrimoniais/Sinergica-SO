@@ -44,6 +44,8 @@ function gatewayFake(): QualidadeGateway {
       art: input.art ?? null,
       condicoes: input.condicoes ?? null,
       anexos: [],
+      eAssessment: input.eAssessment ?? false,
+      motivoAssessment: input.motivoAssessment ?? null,
     })),
     editarInspecao: vi.fn(async (input) => ({
       id: input.id,
@@ -72,6 +74,8 @@ function gatewayFake(): QualidadeGateway {
       art: input.art ?? null,
       condicoes: input.condicoes ?? null,
       anexos: [],
+      eAssessment: input.eAssessment ?? false,
+      motivoAssessment: input.motivoAssessment ?? null,
     })),
     listarItensInspecao: vi.fn(),
     criarItemInspecao: vi.fn(async (input) => ({
@@ -95,6 +99,9 @@ function gatewayFake(): QualidadeGateway {
       midias: [],
       responsavelAcao: input.responsavelAcao ?? null,
       observacoes: input.observacoes ?? null,
+      destino: null,
+      destinoResponsavel: null,
+      auvoQuestaoChave: input.auvoQuestaoChave ?? null,
     })),
     editarItemInspecao: vi.fn(async (input) => ({
       id: input.id,
@@ -117,6 +124,9 @@ function gatewayFake(): QualidadeGateway {
       midias: [],
       responsavelAcao: input.responsavelAcao ?? null,
       observacoes: input.observacoes ?? null,
+      destino: null,
+      destinoResponsavel: null,
+      auvoQuestaoChave: input.auvoQuestaoChave ?? null,
     })),
     excluirItemInspecao: vi.fn(async () => undefined),
     processarRelatorioInspecao: vi.fn(async () => []),
@@ -147,6 +157,8 @@ function gatewayFake(): QualidadeGateway {
       art: null,
       condicoes: null,
       anexos: [],
+      eAssessment: false,
+      motivoAssessment: null,
     })),
     listarLaudosSpda: vi.fn(),
     criarLaudoSpda: vi.fn(async (input) => ({
@@ -197,6 +209,9 @@ function gatewayFake(): QualidadeGateway {
     uploadMidiaItem: vi.fn(),
     removerMidiaItem: vi.fn(),
     urlAssinadaMidia: vi.fn(),
+    importarQuestionarioAuvo: vi.fn(async () => []),
+    marcarItemDerivado: vi.fn(async () => undefined),
+    obterAssessmentVigente: vi.fn(async () => null),
   };
 }
 

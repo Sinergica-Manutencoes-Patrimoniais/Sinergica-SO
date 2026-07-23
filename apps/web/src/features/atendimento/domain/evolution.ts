@@ -6,6 +6,7 @@ export interface EvolutionInstancia {
   instanceName: string;
   numeroVinculado: string | null;
   status: EvolutionStatus;
+  webhookRegistrado: boolean;
   ativo: boolean;
   erro: string | null;
 }

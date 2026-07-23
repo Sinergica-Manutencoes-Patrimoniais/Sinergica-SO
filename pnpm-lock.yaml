@@ -33,8 +33,63 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
+  apps/portal:
+    dependencies:
+      '@sinergica/portal-core':
+        specifier: workspace:*
+        version: link:../../packages/portal-core
+      '@sinergica/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@sinergica/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@supabase/supabase-js':
+        specifier: ^2.45.0
+        version: 2.108.2
+      '@tailwindcss/vite':
+        specifier: ^4.3.1
+        version: 4.3.1(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+      react:
+        specifier: ^19.0.0
+        version: 19.2.7
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.7(react@19.2.7)
+      react-router-dom:
+        specifier: ^7.18.0
+        version: 7.18.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      tailwindcss:
+        specifier: ^4.3.1
+        version: 4.3.1
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.17)
+      '@vitejs/plugin-react':
+        specifier: ^4.7.0
+        version: 4.7.0(vite@6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.4.3
+        version: 6.4.3(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
+
   apps/web:
     dependencies:
+      '@sinergica/portal-core':
+        specifier: workspace:*
+        version: link:../../packages/portal-core
       '@sinergica/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -103,6 +158,12 @@ importers:
   packages/config: {}
 
   packages/database:
+    devDependencies:
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+
+  packages/portal-core:
     devDependencies:
       typescript:
         specifier: ^5.6.0

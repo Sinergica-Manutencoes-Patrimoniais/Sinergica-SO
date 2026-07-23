@@ -2,6 +2,13 @@
 // nunca importa @supabase/supabase-js diretamente (ver docs/ARCHITECTURE.md — application/).
 // Read-model DTOs da Visão 360 (E01-S12): já em camelCase, desacoplados do snake_case do banco.
 
+/** E01-S91 AC-4: marcação de status vigente do cliente — `null` quando nenhuma foi definida. */
+export interface MarcacaoClienteResumo {
+  id: string;
+  nome: string;
+  cor: string;
+}
+
 /** Cabeçalho de cadastro do cliente (AC-2). */
 export interface ClienteHeader {
   id: string;
@@ -21,6 +28,7 @@ export interface ClienteHeader {
   observacoes?: string | null;
   /** E01-S51: dado rico do Auvo só pra exibição (hoje: `contacts[]` completo). */
   detalhes?: Record<string, unknown> | null;
+  marcacao?: MarcacaoClienteResumo | null;
 }
 
 /** Grupo de clientes (E01-S27) associado a este cliente — E01-S51 (card Grupos na 360). */
@@ -54,6 +62,7 @@ export interface ClienteResumo {
   maiorScorePcm?: number;
   ultimaAtividadeEm?: string | null;
   cadastroCompleto?: boolean;
+  marcacao?: MarcacaoClienteResumo | null;
 }
 
 /**
@@ -115,6 +124,15 @@ export interface Cliente360Evento {
   /** Ponto 4 do feedback (2026-07-10) — só populado em eventos `tipo === "os"`. */
   tecnicoNome?: string | null;
   descricao?: string | null;
+}
+
+/** E01-S90 AC-4: assessment vigente do cliente — `null` quando nunca houve um. */
+export interface AssessmentClienteResumo {
+  id: string;
+  motivo: "inicio" | "alteracao_contrato" | "anual" | null;
+  dataInspecao: string;
+  totalItens: number;
+  itensDerivados: number;
 }
 
 export interface QualidadeClienteResumo {
@@ -179,6 +197,8 @@ export interface Cliente360Gateway {
   listarEventosCliente(id: string): Promise<Cliente360Evento[]>;
   /** Resumo operacional de qualidade do cliente. */
   listarQualidadeCliente(id: string): Promise<QualidadeClienteResumo>;
+  /** E01-S90 AC-4: assessment vigente (mais recente, `e_assessment=true`) — `null` se nunca houve. */
+  obterAssessmentCliente(id: string): Promise<AssessmentClienteResumo | null>;
   /** Grupos de clientes (E01-S27) que incluem este cliente — E01-S51. */
   listarGruposCliente(id: string): Promise<GrupoClienteResumo[]>;
   criarCliente?(input: ClienteCommand): Promise<ClienteHeader>;

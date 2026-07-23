@@ -181,12 +181,18 @@ serve(async (req) => {
     const { data: osExistente, error: osError } = await db
       .schema("pcm")
       .from("ordens_servico")
-      .select("id, status, categoria, auvo_task_id")
+      .select("id, status, categoria, auvo_task_id, numero, pmoc_schedule_id")
       .eq("auvo_task_id", taskId)
       .maybeSingle();
     if (osError) throw osError;
 
-    let os: { id: string; status: string; categoria: string };
+    let os: {
+      id: string;
+      status: string;
+      categoria: string;
+      numero?: string;
+      pmoc_schedule_id?: string | null;
+    };
     let transicionou: boolean;
     let criadaAgora = false;
 
@@ -293,22 +299,59 @@ serve(async (req) => {
       if (equipmentLinkError) throw equipmentLinkError;
     }
 
-    // AC-7: OS preventiva de climatização concluída deveria disparar criação de registro PMOC
-    // (pcm.pmoc_records) — spec.md AC-7. PMOC (E01-S03..S08) ainda não tem essa tabela no schema
-    // (ROADMAP: "Planejado"). Criar a tabela aqui seria decisão arquitetural de outra story, fora
-    // do escopo deste dev. Registrado como SPEC_DEVIATION em tasks.md.
-    // SPEC_DEVIATION: AC-7 não implementado — pcm.pmoc_records não existe ainda (PMOC não
-    // construído). Loga aviso estruturado e segue sem criar o registro; ver tasks.md.
-    if (targetStatus === "finalizado" && os.categoria === "preventiva") {
-      console.warn(
-        JSON.stringify({
-          ...logBase,
-          nivel: "warn",
-          msg: "SPEC_DEVIATION AC-7: OS preventiva concluída, mas criação de pcm.pmoc_records está deferida (tabela ainda não existe — PMOC não implementado, ver ROADMAP)",
-          osId: os.id,
-          taskId,
-        }),
-      );
+    // E01-S05 (fecha o SPEC_DEVIATION AC-7 de E01-S10/E01-S16): OS criada a partir de um cronograma
+    // PMOC (pmoc_schedule_id setado — E01-S07 AC-1/E01-S05 "Criar OS") que finaliza no Auvo gera o
+    // registro de visita (pcm.pmoc_records) e marca o schedule como realizado. Conservador de
+    // propósito: sem payload real de checklist/NCs vindo do Auvo pra esta visita, os campos ricos
+    // (checklist/materials_used/nonconformities) ficam vazios — a visita registrada é o fato
+    // "aconteceu, nesta data, este técnico"; enriquecimento de checklist é gap conhecido, sinalizado
+    // (não é regressão: não existia registro NENHUM antes desta story).
+    if (targetStatus === "finalizado" && os.pmoc_schedule_id) {
+      const { data: schedule, error: scheduleError } = await db
+        .schema("pcm")
+        .from("pmoc_schedules")
+        .select("id, contract_id, property_id, maintenance_type, record_id")
+        .eq("id", os.pmoc_schedule_id)
+        .maybeSingle();
+      if (scheduleError) throw scheduleError;
+
+      if (!schedule) {
+        console.warn(JSON.stringify({ ...logBase, nivel: "warn", msg: "pmoc_schedule_id na OS não corresponde a schedule real — ignorado", osId: os.id, pmocScheduleId: os.pmoc_schedule_id }));
+      } else if (!schedule.record_id) {
+        const hoje = new Date().toISOString().slice(0, 10);
+        const tecnicoAuvoUserId = extractTecnicoAuvoUserId(evento);
+        const { data: record, error: recordError } = await db
+          .schema("pcm")
+          .from("pmoc_records")
+          .insert({
+            schedule_id: schedule.id,
+            contract_id: schedule.contract_id,
+            property_id: schedule.property_id,
+            executed_date: hoje,
+            maintenance_type: schedule.maintenance_type,
+            technician_name: tecnicoAuvoUserId != null
+              ? await resolverNomeFuncionarioPorAuvoId(db, tecnicoAuvoUserId)
+              : null,
+            auvo_os_number: os.numero ?? null,
+          })
+          .select("id")
+          .single();
+        if (recordError) throw recordError;
+
+        const { error: updateScheduleError } = await db
+          .schema("pcm")
+          .from("pmoc_schedules")
+          .update({ status: "realizado", record_id: record.id })
+          .eq("id", schedule.id);
+        if (updateScheduleError) throw updateScheduleError;
+
+        console.log(JSON.stringify({ ...logBase, nivel: "info", msg: "pmoc_records criado a partir de OS PMOC finalizada (E01-S05)", osId: os.id, scheduleId: schedule.id, recordId: record.id }));
+
+        // E01-S05 AC-3/AC-4: dispara a geração do laudo PDF (+ e-mail se a integração estiver
+        // ativa) — fire-and-forget, nunca derruba o 200 do webhook. Falha de geração fica só no log
+        // da função pmoc-generate-pdf; o registro em si (o que legalmente importa) já está salvo.
+        await dispararGeracaoLaudo(supabaseUrl, serviceKey, record.id, logBase);
+      }
     }
 
     return json(200, { ok: true, osId: os.id, taskId, status: targetStatus, transitioned: transicionou, created: criadaAgora }, cors);
@@ -600,6 +643,47 @@ function resolveTargetStatus(
   // Outras ações (ex.: action=1 Inclusão) são fora de escopo — a task só existe no Auvo porque o
   // PCM já a criou (E01-S09); nada a fazer aqui além de confirmar recebimento.
   return null;
+}
+
+/** E01-S05 AC-3: chama `pmoc-generate-pdf` no mesmo projeto, autenticado com o service key (o
+ * gateway do Supabase exige um JWT válido mesmo entre funções — `verify_jwt=true` na function
+ * alvo). `await`ado (não solto) pra garantir que a chamada realmente sai antes do webhook
+ * responder; falha aqui é logada e NUNCA propagada — o registro de visita já está salvo, o laudo
+ * pode ser regenerado depois. */
+async function dispararGeracaoLaudo(
+  supabaseUrl: string,
+  serviceKey: string,
+  recordId: string,
+  logBase: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const resp = await fetch(`${supabaseUrl}/functions/v1/pmoc-generate-pdf`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+      body: JSON.stringify({ recordId }),
+    });
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => "");
+      console.error(JSON.stringify({ ...logBase, nivel: "error", msg: "pmoc-generate-pdf falhou", status: resp.status, detail, recordId }));
+    }
+  } catch (e) {
+    console.error(JSON.stringify({ ...logBase, nivel: "error", msg: "erro ao chamar pmoc-generate-pdf", detail: String(e), recordId }));
+  }
+}
+
+/** E01-S05: nome do técnico pra `pmoc_records.technician_name` (texto livre, não FK — o registro de
+ * visita legal preserva o nome mesmo se o funcionário for desativado depois). */
+async function resolverNomeFuncionarioPorAuvoId(
+  db: UntypedSupabaseClient,
+  auvoUserId: number,
+): Promise<string | null> {
+  const { data } = await db
+    .schema("pcm")
+    .from("funcionarios")
+    .select("nome")
+    .eq("auvo_user_id", auvoUserId)
+    .maybeSingle();
+  return (data?.nome as string | undefined) ?? null;
 }
 
 function json(status: number, body: unknown, cors: Record<string, string>): Response {

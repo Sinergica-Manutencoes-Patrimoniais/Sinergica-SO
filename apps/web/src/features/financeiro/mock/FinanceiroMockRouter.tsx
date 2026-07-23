@@ -1,4 +1,10 @@
 import type { ComponentType } from "react";
+import { CobrancaPage } from "../pages/CobrancaPage";
+import { CockpitFinanceiroPage } from "../pages/CockpitFinanceiroPage";
+import { DrePage } from "../pages/DrePage";
+import { FechamentoPage } from "../pages/FechamentoPage";
+import { ImpostosPage } from "../pages/ImpostosPage";
+import { OrcamentoPage } from "../pages/OrcamentoPage";
 import { CategoriasMock } from "./CategoriasMock";
 import { ContasBancariasMock } from "./ContasBancariasMock";
 import { ContasPagarMock } from "./ContasPagarMock";
@@ -21,7 +27,13 @@ export type FinanceiroView =
   | "contratos"
   | "pagar"
   | "rentabilidade"
-  | "pessoal";
+  | "pessoal"
+  | "cobranca"
+  | "impostos"
+  | "fechamento"
+  | "dre"
+  | "orcamento"
+  | "cockpit";
 
 const TELAS: Record<FinanceiroView, ComponentType> = {
   dashboard: DashboardMock,
@@ -34,6 +46,14 @@ const TELAS: Record<FinanceiroView, ComponentType> = {
   pagar: ContasPagarMock,
   rentabilidade: RentabilidadeMock,
   pessoal: CustosPessoalMock,
+  // Sem mock: E04-S08 nasceu direto real (feature nova, sem protótipo prévio). HomePage sempre
+  // intercepta "cobranca" antes de chegar aqui — mapeada pra a página real por segurança/tipo.
+  cobranca: CobrancaPage,
+  impostos: ImpostosPage,
+  fechamento: FechamentoPage,
+  dre: DrePage,
+  orcamento: OrcamentoPage,
+  cockpit: CockpitFinanceiroPage,
 };
 
 /** Protótipo navegável do Financeiro (specs/E04-S01-fundacao-financeiro/) — dados fictícios,

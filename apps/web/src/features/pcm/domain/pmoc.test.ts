@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  type ContratoParaAlerta,
   checklistAcumulado,
   classificarMicrobio,
+  contratosComAlerta,
   gerarCronogramaPmoc,
   inferirTipoEquipamentoPmoc,
   proximaTagPmoc,
   tipoManutencaoPorMes,
+  validarTransicaoStatusNc,
 } from "./pmoc";
 
 describe("pmoc", () => {
@@ -65,5 +68,102 @@ describe("pmoc", () => {
     expect(inferirTipoEquipamentoPmoc("Fan Coil auditório")).toBe("fancoil");
     expect(inferirTipoEquipamentoPmoc("Equipamento sem categoria")).toBe("outro");
     expect(proximaTagPmoc(["AC-01", "AC-09", "Bomba 1"])).toBe("AC-10");
+  });
+
+  it("valida transição de status de NC — só rejeita o pulo aberto->fechado (AC-6)", () => {
+    expect(() => validarTransicaoStatusNc("aberto", "fechado")).toThrow(
+      "NC deve passar por 'em andamento' antes de ser fechada.",
+    );
+    expect(() => validarTransicaoStatusNc("aberto", "em_andamento")).not.toThrow();
+    expect(() => validarTransicaoStatusNc("em_andamento", "fechado")).not.toThrow();
+    // reabrir (recorrência) é permitido
+    expect(() => validarTransicaoStatusNc("fechado", "em_andamento")).not.toThrow();
+    expect(() => validarTransicaoStatusNc("em_andamento", "aberto")).not.toThrow();
+  });
+
+  it("triagem cross-contrato: só lista quem tem alerta (AC-1/AC-2)", () => {
+    function contrato(over: Partial<ContratoParaAlerta>): ContratoParaAlerta {
+      return {
+        id: "c1",
+        imovelNome: "Imóvel",
+        clienteNome: "Cliente",
+        status: "ativo",
+        microbioPendentes: 0,
+        ncsAbertas: 0,
+        ncsAltasAbertas: 0,
+        visitasAtrasadas: 0,
+        ...over,
+      };
+    }
+
+    const semAlerta = contrato({ id: "ok" });
+    const comAtraso = contrato({ id: "atrasado", visitasAtrasadas: 2 });
+    const resultado = contratosComAlerta([semAlerta, comAtraso]);
+
+    expect(resultado).toHaveLength(1);
+    expect(resultado[0]).toMatchObject({ contratoId: "atrasado", tipo: "atrasado" });
+  });
+
+  it("prioriza NC alta sobre ART vencendo mesmo quando os dois são verdade (AC-4)", () => {
+    function contrato(over: Partial<ContratoParaAlerta>): ContratoParaAlerta {
+      return {
+        id: "c1",
+        imovelNome: "Imóvel",
+        clienteNome: "Cliente",
+        status: "ativo",
+        microbioPendentes: 0,
+        ncsAbertas: 0,
+        ncsAltasAbertas: 0,
+        visitasAtrasadas: 0,
+        ...over,
+      };
+    }
+
+    const duploAlerta = contrato({ id: "duplo", status: "renovar", ncsAltasAbertas: 1 });
+    const resultado = contratosComAlerta([duploAlerta]);
+
+    expect(resultado).toHaveLength(1); // não duplica em duas categorias
+    expect(resultado[0]?.tipo).toBe("nc_alta"); // categoria mais urgente vence
+  });
+
+  it("NC aberta sem severidade alta cai na categoria nc_aberta, não nc_alta", () => {
+    function contrato(over: Partial<ContratoParaAlerta>): ContratoParaAlerta {
+      return {
+        id: "c1",
+        imovelNome: "Imóvel",
+        clienteNome: "Cliente",
+        status: "ativo",
+        microbioPendentes: 0,
+        ncsAbertas: 1,
+        ncsAltasAbertas: 0,
+        visitasAtrasadas: 0,
+        ...over,
+      };
+    }
+
+    expect(contratosComAlerta([contrato({ id: "c1" })])[0]?.tipo).toBe("nc_aberta");
+  });
+
+  it("ordena por prioridade entre categorias diferentes (AC-4)", () => {
+    function contrato(over: Partial<ContratoParaAlerta>): ContratoParaAlerta {
+      return {
+        id: "c1",
+        imovelNome: "Imóvel",
+        clienteNome: "Cliente",
+        status: "ativo",
+        microbioPendentes: 0,
+        ncsAbertas: 0,
+        ncsAltasAbertas: 0,
+        visitasAtrasadas: 0,
+        ...over,
+      };
+    }
+
+    const atrasado = contrato({ id: "atrasado", visitasAtrasadas: 1 });
+    const ncAlta = contrato({ id: "nc-alta", ncsAltasAbertas: 1 });
+    const microbio = contrato({ id: "microbio", microbioPendentes: 1 });
+
+    const resultado = contratosComAlerta([atrasado, ncAlta, microbio]);
+    expect(resultado.map((r) => r.contratoId)).toEqual(["nc-alta", "microbio", "atrasado"]);
   });
 });

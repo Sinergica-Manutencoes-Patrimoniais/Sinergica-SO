@@ -1,4 +1,14 @@
-import { ChevronDown, ChevronUp, Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  History,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Wrench,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -12,6 +22,7 @@ import {
 import {
   baixarUnidadeFerramenta,
   gerarUnidadesFerramenta,
+  listarHistoricoUnidade,
   listarUnidadesFerramenta,
 } from "../application/ferramenta-unidades";
 import {
@@ -21,9 +32,14 @@ import {
   listarCategoriasFerramenta,
   listarFerramentas,
 } from "../application/ferramentas";
+import { HistoricoMovimentacoesModal } from "../components/HistoricoMovimentacoesModal";
 import { KitsSection } from "../components/KitsSection";
 import { type FerramentaReservaItem, ordenarAgendaReservas } from "../domain/ferramenta-reservas";
-import { type FerramentaUnidadeItem, rotuloStatusUnidade } from "../domain/ferramenta-unidades";
+import {
+  type FerramentaUnidadeItem,
+  type MovimentacaoFerramentaItem,
+  rotuloStatusUnidade,
+} from "../domain/ferramenta-unidades";
 import { validarFerramentaInline } from "../domain/ferramentas";
 import type {
   FerramentaCategoriaOpcao,
@@ -60,6 +76,11 @@ export function FerramentasPage() {
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [expandida, setExpandida] = useState<string | null>(null);
   const [baixando, setBaixando] = useState<FerramentaUnidadeItem | null>(null);
+  // E01-S75 AC-1: histórico de posse por unidade — "quem ficou com FER-0003 quando quebrou".
+  const [historicoUnidade, setHistoricoUnidade] = useState<{
+    codigo: string;
+    itens: MovimentacaoFerramentaItem[];
+  } | null>(null);
   const [reservaForm, setReservaForm] = useState({
     ferramentaId: "",
     unidadeId: "",
@@ -135,6 +156,15 @@ export function FerramentasPage() {
       await carregar();
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível gerar unidades.");
+    }
+  }
+
+  async function verHistoricoUnidade(unidade: FerramentaUnidadeItem) {
+    try {
+      const itens = await listarHistoricoUnidade(supabaseFerramentaUnidadesAdapter, unidade.id);
+      setHistoricoUnidade({ codigo: unidade.codigo, itens });
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível carregar histórico.");
     }
   }
 
@@ -271,27 +301,32 @@ export function FerramentasPage() {
           <p className="mt-3 text-sm text-ink-3">Nenhuma ferramenta cadastrada.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-          {estado.ferramentas.map((ferramenta) => (
-            <FerramentaCard
-              key={ferramenta.id}
-              ferramenta={ferramenta}
-              unidades={estado.unidades.filter((u) => u.ferramentaId === ferramenta.id)}
-              expandida={expandida === ferramenta.id}
-              onToggleExpandir={() =>
-                setExpandida((atual) => (atual === ferramenta.id ? null : ferramenta.id))
-              }
-              onEditar={temEscrita ? () => setModal({ modo: "editar", ferramenta }) : undefined}
-              onDesativar={temEscrita && ferramenta.ativo ? () => desativar(ferramenta) : undefined}
-              onGerarUnidades={
-                temEscrita
-                  ? (quantidade: number) => gerarUnidades(ferramenta, quantidade)
-                  : undefined
-              }
-              onBaixarUnidade={temEscrita ? (unidade) => setBaixando(unidade) : undefined}
-            />
-          ))}
-        </div>
+        <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+          <div className="divide-y divide-line-soft">
+            {estado.ferramentas.map((ferramenta) => (
+              <FerramentaLinha
+                key={ferramenta.id}
+                ferramenta={ferramenta}
+                unidades={estado.unidades.filter((u) => u.ferramentaId === ferramenta.id)}
+                expandida={expandida === ferramenta.id}
+                onToggleExpandir={() =>
+                  setExpandida((atual) => (atual === ferramenta.id ? null : ferramenta.id))
+                }
+                onEditar={temEscrita ? () => setModal({ modo: "editar", ferramenta }) : undefined}
+                onDesativar={
+                  temEscrita && ferramenta.ativo ? () => desativar(ferramenta) : undefined
+                }
+                onGerarUnidades={
+                  temEscrita
+                    ? (quantidade: number) => gerarUnidades(ferramenta, quantidade)
+                    : undefined
+                }
+                onBaixarUnidade={temEscrita ? (unidade) => setBaixando(unidade) : undefined}
+                onVerHistorico={verHistoricoUnidade}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
@@ -446,6 +481,14 @@ export function FerramentasPage() {
           onConfirmar={confirmarEfetivar}
         />
       )}
+
+      {historicoUnidade && (
+        <HistoricoMovimentacoesModal
+          titulo={`Histórico de ${historicoUnidade.codigo}`}
+          itens={historicoUnidade.itens}
+          onFechar={() => setHistoricoUnidade(null)}
+        />
+      )}
     </div>
   );
 }
@@ -530,7 +573,7 @@ function EfetivarReservaModal({
   );
 }
 
-function FerramentaCard({
+function FerramentaLinha({
   ferramenta,
   unidades,
   expandida,
@@ -539,6 +582,7 @@ function FerramentaCard({
   onDesativar,
   onGerarUnidades,
   onBaixarUnidade,
+  onVerHistorico,
 }: {
   ferramenta: FerramentaItem;
   unidades: FerramentaUnidadeItem[];
@@ -548,68 +592,69 @@ function FerramentaCard({
   onDesativar?: () => void;
   onGerarUnidades?: (quantidade: number) => void;
   onBaixarUnidade?: (unidade: FerramentaUnidadeItem) => void;
+  onVerHistorico: (unidade: FerramentaUnidadeItem) => void;
 }) {
   const faltamGerar = Math.max(ferramenta.quantidadeTotal - unidades.length, 0);
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          {ferramenta.imagemUrl ? (
-            <img
-              src={ferramenta.imagemUrl}
-              alt={ferramenta.nome}
-              className="h-12 w-12 shrink-0 rounded-[6px] border border-line object-cover"
-            />
+    <div className="px-3 py-2.5">
+      <div className="flex items-center gap-3">
+        {ferramenta.imagemUrl ? (
+          <img
+            src={ferramenta.imagemUrl}
+            alt={ferramenta.nome}
+            className="h-9 w-9 shrink-0 rounded-[6px] border border-line object-cover"
+          />
+        ) : (
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] border border-line bg-line-soft">
+            <Wrench className="h-4 w-4 text-ink-3" />
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={onToggleExpandir}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        >
+          {expandida ? (
+            <ChevronUp className="h-3.5 w-3.5 shrink-0 text-ink-3" />
           ) : (
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[6px] border border-line bg-line-soft">
-              <Wrench className="h-5 w-5 text-ink-3" />
-            </div>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-ink-3" />
           )}
           <div className="min-w-0">
-            <h4 className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</h4>
-            <p className="mt-1 text-xs text-ink-3">
-              Auvo {ferramenta.auvoId ?? "-"}
-              {ferramenta.codigoAuvo ? ` · ${ferramenta.codigoAuvo}` : ""} ·{" "}
-              {ferramenta.categoriaNome ?? "sem categoria"}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</span>
+              <span
+                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ferramenta.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
+              >
+                {ferramenta.ativo ? "Ativa" : "Inativa"}
+              </span>
+            </div>
+            <p className="truncate text-xs text-ink-3">
+              {ferramenta.categoriaNome ?? "sem categoria"} · Auvo {ferramenta.auvoId ?? "-"}
+              {ferramenta.auvoSyncError ? ` · erro: ${ferramenta.auvoSyncError}` : ""}
             </p>
           </div>
-        </div>
-        <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ferramenta.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
-        >
-          {ferramenta.ativo ? "Ativa" : "Inativa"}
-        </span>
-      </div>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-3">
-        <span>Total: {ferramenta.quantidadeTotal}</span>
-        <span>Mínimo: {ferramenta.quantidadeMinima}</span>
-        {ferramenta.valorUnitario != null && (
-          <span>Valor: R$ {ferramenta.valorUnitario.toFixed(2)}</span>
-        )}
-        {ferramenta.custoUnitario != null && (
-          <span>Custo: R$ {ferramenta.custoUnitario.toFixed(2)}</span>
-        )}
-        <span>Sync: {ferramenta.auvoSyncStatus ?? "pending"}</span>
-      </div>
-      {ferramenta.auvoSyncError && (
-        <p className="mt-2 text-xs text-[#A23B25]">{ferramenta.auvoSyncError}</p>
-      )}
+        </button>
 
-      <button
-        type="button"
-        onClick={onToggleExpandir}
-        className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink"
-      >
-        {expandida ? (
-          <ChevronUp className="h-3.5 w-3.5" />
-        ) : (
-          <ChevronDown className="h-3.5 w-3.5" />
+        <span className="shrink-0 text-xs text-ink-3">
+          {unidades.length}/{ferramenta.quantidadeTotal} unid.
+        </span>
+
+        {onEditar && (
+          <IconButton label="Editar" icon={<Pencil className="h-3.5 w-3.5" />} onClick={onEditar} />
         )}
-        {unidades.length} unidade(s)
-      </button>
+        {onDesativar && (
+          <IconButton
+            label="Desativar"
+            danger
+            icon={<Trash2 className="h-3.5 w-3.5" />}
+            onClick={onDesativar}
+          />
+        )}
+      </div>
 
       {expandida && (
-        <div className="mt-2 space-y-2 rounded-[6px] border border-line-soft bg-paper p-2.5">
+        <div className="mt-2 ml-12 space-y-2 rounded-[6px] border border-line-soft bg-paper p-2.5">
           {onGerarUnidades && faltamGerar > 0 && (
             <button
               type="button"
@@ -625,42 +670,41 @@ function FerramentaCard({
             <ul className="space-y-1.5">
               {unidades.map((unidade) => (
                 <li key={unidade.id} className="flex items-center justify-between gap-2 text-xs">
-                  <span className="text-ink-2">
+                  <span className="min-w-0 truncate text-ink-2">
                     <span className="font-brand">{unidade.codigo}</span> ·{" "}
                     {rotuloStatusUnidade(unidade.status)}
                     {unidade.status === "atribuida" && unidade.atribuidaANome
                       ? ` com ${unidade.atribuidaANome}`
                       : ""}
+                    {unidade.status === "atribuida" && unidade.atribuidaEm
+                      ? ` (desde ${new Date(unidade.atribuidaEm).toLocaleDateString("pt-BR")})`
+                      : ""}
                   </span>
-                  {onBaixarUnidade && unidade.status !== "baixada" && (
+                  <span className="flex shrink-0 items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => onBaixarUnidade(unidade)}
-                      className="shrink-0 text-[#A23B25] hover:underline"
+                      onClick={() => onVerHistorico(unidade)}
+                      className="inline-flex items-center gap-1 font-semibold text-ink-2 hover:text-ink"
                     >
-                      Baixar
+                      <History className="h-3 w-3" />
+                      Histórico
                     </button>
-                  )}
+                    {onBaixarUnidade && unidade.status !== "baixada" && (
+                      <button
+                        type="button"
+                        onClick={() => onBaixarUnidade(unidade)}
+                        className="text-[#A23B25] hover:underline"
+                      >
+                        Baixar
+                      </button>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>
           )}
         </div>
       )}
-
-      <div className="mt-3 flex justify-end gap-2">
-        {onEditar && (
-          <IconButton label="Editar" icon={<Pencil className="h-3.5 w-3.5" />} onClick={onEditar} />
-        )}
-        {onDesativar && (
-          <IconButton
-            label="Desativar"
-            danger
-            icon={<Trash2 className="h-3.5 w-3.5" />}
-            onClick={onDesativar}
-          />
-        )}
-      </div>
     </div>
   );
 }

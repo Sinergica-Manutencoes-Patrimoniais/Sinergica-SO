@@ -8,10 +8,22 @@ import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError } from "../_shared/auth.ts";
 import { constantTimeEqual } from "../_shared/crypto.ts";
+import {
+  extractEvolutionMessage,
+  normalizarEventoEvolution,
+  type EvolutionIncomingMessage,
+} from "../_shared/evolution-webhook.ts";
 
 const FN = "pcm-whatsapp-webhook";
 
-const EvolutionWebhookSchema = z.object({}).passthrough();
+const EvolutionWebhookSchema = z
+  .object({
+    event: z.string().optional(),
+    instance: z.string().optional(),
+    instanceId: z.string().optional(),
+    data: z.record(z.unknown()).optional(),
+  })
+  .passthrough();
 
 serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin"));
@@ -22,7 +34,7 @@ serve(async (req) => {
     if (req.method !== "POST") throw new HttpError(405, "Método não permitido");
 
     const rawBody = await req.text();
-    if (!(await validateEvolutionSignature(req, rawBody))) {
+    if (!(await validateEvolutionAuth(req, rawBody))) {
       throw new HttpError(401, "Assinatura inválida");
     }
 
@@ -33,7 +45,17 @@ serve(async (req) => {
       throw new HttpError(400, "JSON inválido");
     }
     const payload = EvolutionWebhookSchema.parse(body);
-    const message = extractMessage(payload);
+    const event = normalizarEventoEvolution(payload.event);
+    if (event && event !== "messages.upsert") {
+      return json(200, { ok: true, ignored: true, reason: "event" }, cors);
+    }
+    const message = extractEvolutionMessage(payload);
+    if (message.fromMe) {
+      return json(200, { ok: true, ignored: true, reason: "fromMe" }, cors);
+    }
+    if (message.remoteJid?.endsWith("@broadcast")) {
+      return json(200, { ok: true, ignored: true, reason: "broadcast" }, cors);
+    }
     if (!message.messageId || !message.remoteJid) {
       console.warn(JSON.stringify({ ts: new Date().toISOString(), fn: FN, reqId, nivel: "warn", msg: "payload sem mensagem reconhecível" }));
       return json(200, { ok: true, ignored: true }, cors);
@@ -46,9 +68,21 @@ serve(async (req) => {
 
     const now = new Date().toISOString();
     const instanceId = message.instanceId ?? "default";
+    const { data: rateAllowed, error: rateError } = await db
+      .schema("atendimento")
+      .rpc("fn_consumir_rate_limit_webhook", {
+        p_chave: `evolution:${instanceId}`,
+        p_limite: 120,
+        p_janela_segundos: 60,
+      });
+    if (rateError) throw rateError;
+    if (!rateAllowed) throw new HttpError(429, "Limite de webhook excedido");
     const queueKey = `${instanceId}:${message.remoteJid}`;
 
-    const { error: insertMessageError } = await db.schema("atendimento").from("wa_messages").upsert(
+    const { data: insertedMessage, error: insertMessageError } = await db
+      .schema("atendimento")
+      .from("wa_messages")
+      .upsert(
       {
         instance_id: instanceId,
         remote_jid: message.remoteJid,
@@ -58,41 +92,27 @@ serve(async (req) => {
         received_at: message.receivedAt ?? now,
         created_at: now,
       },
-      { onConflict: "message_id" },
-    );
+      { onConflict: "message_id", ignoreDuplicates: true },
+    )
+      .select("id")
+      .maybeSingle();
     if (insertMessageError) throw insertMessageError;
+    if (!insertedMessage) {
+      return json(200, { ok: true, ignored: true, reason: "duplicate" }, cors);
+    }
 
     // E02-S01: aggregate voltado a humano (Inbox) — existe/atualiza mesmo com config_ze
     // desligada/ausente, senão a conversa nunca apareceria pro humano ver.
     await registrarConversaEMensagem(db, instanceId, message);
 
     const waitUntil = new Date(Date.now() + 3000).toISOString();
-    const { data: pending, error: pendingError } = await db
+    const { error: debounceError } = await db
       .schema("atendimento")
-      .from("wa_queue")
-      .select("id")
-      .eq("queue_key", queueKey)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (pendingError) throw pendingError;
-
-    if (pending?.id) {
-      const { error } = await db
-        .schema("atendimento")
-        .from("wa_queue")
-        .update({ wait_until: waitUntil, error_message: null })
-        .eq("id", pending.id);
-      if (error) throw error;
-    } else {
-      const { error } = await db.schema("atendimento").from("wa_queue").insert({
-        queue_key: queueKey,
-        wait_until: waitUntil,
-        status: "pending",
+      .rpc("fn_debounce_wa_queue", {
+        p_queue_key: queueKey,
+        p_wait_until: waitUntil,
       });
-      if (error) throw error;
-    }
+    if (debounceError) throw debounceError;
 
     scheduleAgent(url, serviceKey, queueKey);
     return json(200, { ok: true, queued: true, queueKey }, cors);
@@ -104,18 +124,21 @@ serve(async (req) => {
   }
 });
 
-async function validateEvolutionSignature(req: Request, rawBody: string): Promise<boolean> {
-  const secret = Deno.env.get("EVOLUTION_HMAC_SECRET") ?? "";
-  if (!secret) return false;
+async function validateEvolutionAuth(req: Request, rawBody: string): Promise<boolean> {
+  const hmacSecret = Deno.env.get("EVOLUTION_HMAC_SECRET") ?? "";
+  const webhookToken = Deno.env.get("EVOLUTION_WEBHOOK_TOKEN") ?? hmacSecret;
+  const receivedToken = req.headers.get("X-Sinergica-Webhook-Token") ?? "";
+  if (webhookToken && receivedToken && constantTimeEqual(webhookToken, receivedToken)) return true;
+
   const header =
     req.headers.get("X-Evolution-Signature") ??
     req.headers.get("X-Hub-Signature-256") ??
     req.headers.get("x-signature");
-  if (!header) return false;
+  if (!hmacSecret || !header) return false;
   const received = header.startsWith("sha256=") ? header.slice("sha256=".length) : header;
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(secret),
+    new TextEncoder().encode(hmacSecret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
@@ -125,52 +148,13 @@ async function validateEvolutionSignature(req: Request, rawBody: string): Promis
   return constantTimeEqual(expected, received);
 }
 
-function extractMessage(payload: Record<string, unknown>): {
-  instanceId: string | null;
-  remoteJid: string | null;
-  senderJid: string | null;
-  messageId: string | null;
-  content: string | null;
-  receivedAt: string | null;
-  contactName: string | null;
-} {
-  const data = asObject(payload.data) ?? asObject(payload.message) ?? payload;
-  const key = asObject(data.key);
-  const message = asObject(data.message);
-  const content =
-    firstString([
-      data.conversation,
-      data.text,
-      data.body,
-      data.messageText,
-      message?.conversation,
-      asObject(message?.extendedTextMessage)?.text,
-      asObject(message?.buttonsResponseMessage)?.selectedDisplayText,
-      asObject(message?.buttonsResponseMessage)?.selectedButtonId,
-      asObject(message?.listResponseMessage)?.title,
-      asObject(asObject(message?.listResponseMessage)?.singleSelectReply)?.selectedRowId,
-    ]) ??
-    "";
-  return {
-    instanceId: firstString([payload.instance, payload.instanceId, data.instanceId]),
-    remoteJid: firstString([data.remoteJid, key?.remoteJid]),
-    senderJid: firstString([data.sender, data.senderJid, key?.participant]),
-    messageId: firstString([data.messageId, data.id, key?.id]),
-    content,
-    receivedAt: toIso(data.messageTimestamp ?? data.timestamp ?? payload.date_time),
-    // E02-S01: nome de exibição do contato/grupo — só usado como cache pra lista do Inbox
-    // (nunca bloqueia o fluxo se ausente). Shape de entrega não confirmado, extração defensiva.
-    contactName: firstString([data.pushName, payload.pushName, data.notifyName]),
-  };
-}
-
 /** E02-S01: grava/atualiza atendimento.conversas e insere a mensagem de entrada via RPC atômica
  * (idempotente por wa_message_id, incrementa nao_lidas sem race condition). Roda mesmo com
  * config_ze desligada/ausente — senão a conversa nunca apareceria pro Inbox humano ver. */
 async function registrarConversaEMensagem(
   db: UntypedSupabaseClient,
   instanceId: string,
-  message: ReturnType<typeof extractMessage>,
+  message: EvolutionIncomingMessage,
 ): Promise<void> {
   const { error } = await db.schema("atendimento").rpc("fn_registrar_mensagem_entrada", {
     p_instance_id: instanceId,
@@ -193,28 +177,6 @@ function scheduleAgent(url: string, serviceKey: string, queueKey: string): void 
   };
   const edgeRuntime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;
   edgeRuntime?.waitUntil ? edgeRuntime.waitUntil(run()) : run();
-}
-
-function asObject(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
-}
-
-function firstString(values: unknown[]): string | null {
-  for (const value of values) {
-    if (typeof value === "string" && value.trim()) return value;
-    if (typeof value === "number" && Number.isFinite(value)) return String(value);
-  }
-  return null;
-}
-
-function toIso(value: unknown): string | null {
-  if (typeof value === "string" && !Number.isNaN(Date.parse(value))) return new Date(value).toISOString();
-  if (typeof value === "number") {
-    const ms = value > 10_000_000_000 ? value : value * 1000;
-    const date = new Date(ms);
-    if (!Number.isNaN(date.getTime())) return date.toISOString();
-  }
-  return null;
 }
 
 function json(status: number, body: unknown, cors: Record<string, string>): Response {

@@ -26,9 +26,8 @@ select isnt(
   null,
   'trigger gera codigo INSP-NNNN automaticamente ao inserir'
 );
-select like(
-  (select codigo from pcm.inspecoes where id = '70000000-0000-0000-0000-000000000002'),
-  'INSP-%',
+select ok(
+  (select codigo like 'INSP-%' from pcm.inspecoes where id = '70000000-0000-0000-0000-000000000002'),
   'codigo gerado segue o formato INSP-NNNN'
 );
 
@@ -60,11 +59,11 @@ insert into pcm.inspecao_itens (id, inspecao_id, client_id, sistema, descricao, 
 values ('70000000-0000-0000-0000-000000000004', '70000000-0000-0000-0000-000000000002', '70000000-0000-0000-0000-000000000001', 'geral', 'Item S73-b', 'conforme', '00000000-0000-0000-0000-000000000701');
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000701","user_role":"colaborador","user_modulos":{"pcm":"leitura"}}';
-select throws_ok(
-  $$ delete from pcm.inspecao_itens where id = '70000000-0000-0000-0000-000000000004' $$,
-  '42501',
-  null,
-  'pcm leitura NAO exclui item de inspecao'
+delete from pcm.inspecao_itens where id = '70000000-0000-0000-0000-000000000004';
+select is(
+  (select count(*) from pcm.inspecao_itens where id = '70000000-0000-0000-0000-000000000004'),
+  1::bigint,
+  'pcm leitura NAO exclui item de inspecao (RLS filtra zero linhas)'
 );
 
 -- D-4: parametrização (tipos_inspecao/templates) exige supervisor/superadmin — colaborador com
@@ -93,12 +92,12 @@ select lives_ok(
 );
 
 -- Storage: bucket privado inspecoes-midia gated por pcm:leitura no select, pcm:escrita no insert.
+reset role;
 select is(
   (select public from storage.buckets where id = 'inspecoes-midia'),
   false,
   'bucket inspecoes-midia eh privado'
 );
 
-reset role;
 select * from finish();
 rollback;

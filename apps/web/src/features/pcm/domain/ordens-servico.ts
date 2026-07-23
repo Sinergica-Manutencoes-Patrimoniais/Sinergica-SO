@@ -1,4 +1,5 @@
 import { STATUS_HISTORICO } from "./cliente-360";
+import type { TipoOsHub } from "./hub-os";
 
 export type StatusOrdemServico =
   | "solicitacao"
@@ -23,6 +24,13 @@ export interface OrdemServicoOperacional {
   gravidade: number | null;
   urgencia: number | null;
   tendencia: number | null;
+  /** E01-S82: "Dor do cliente" (D do GUTD) — `null` em OS antigas (retrocompat, AC-4). */
+  dorCliente: number | null;
+  /** E01-S83 AC-4: texto livre, distinto da `descricao` (que descreve o problema reportado). */
+  observacao: string | null;
+  /** E01-S83 AC-3: item de inspeção que originou este item de backlog — `null` na maioria das OS
+   * (cadastro direto/Auvo). Pipeline completo de inspeção→backlog é E01-S90; aqui só exibimos. */
+  origemInspecaoItemId: string | null;
   auvoTaskId: number | null;
   auvoSyncStatus: string | null;
   auvoSyncError: string | null;
@@ -34,6 +42,9 @@ export interface OrdemServicoOperacional {
   checkInAt: string | null;
   checkOutAt: string | null;
   detalhes: Record<string, unknown> | null;
+  /** E01-S07: tipo do Hub (C1/C2/P1/P2/IN), gravado — `null` = fora do Hub (melhoria/outro). */
+  tipoOs: TipoOsHub | null;
+  pmocScheduleId: string | null;
 }
 
 export interface KpisOrdensServico {
@@ -87,6 +98,24 @@ export function ehOsHistorica(status: string): boolean {
 
 export function ehOsAberta(status: string): boolean {
   return !ehOsHistorica(status);
+}
+
+/** E01-S83 AC-2: item de backlog é uma OS aberta ainda sem agendamento — sem data prevista, sem
+ * técnico e sem vínculo com tarefa no Auvo (a criação via `abrirOrdemServico` nunca dispara sync
+ * com o Auvo — só a transição de status pra `planejamento` dispara, ver trigger
+ * `pcm.fn_auvo_create_task_on_planejamento`). Deixa de ser backlog só ao ser planejado/promovido. */
+export function ehItemBacklog(
+  ordem: Pick<
+    OrdemServicoOperacional,
+    "status" | "dataAgendada" | "tecnicoFuncionarioId" | "auvoTaskId"
+  >,
+): boolean {
+  return (
+    ehOsAberta(ordem.status) &&
+    ordem.dataAgendada === null &&
+    ordem.tecnicoFuncionarioId === null &&
+    ordem.auvoTaskId === null
+  );
 }
 
 /** E01-S61 — AC-4: soltar o card na própria coluna de origem não deve disparar alteração de
@@ -180,6 +209,7 @@ export function resumoTooltipOrdem(ordem: OrdemServicoOperacional): string | nul
     `Cliente: ${ordem.clienteNome}`,
     `Categoria: ${ordem.categoria} · Técnico: ${tecnico}`,
     ordem.descricao?.trim() || null,
+    ordem.observacao?.trim() ? `Observação: ${ordem.observacao.trim()}` : null,
     texto("address") ? `Endereço: ${texto("address")}` : null,
     texto("orientacao") ? `Orientação: ${texto("orientacao")}` : null,
     texto("relato") ? `Relato: ${texto("relato")}` : null,

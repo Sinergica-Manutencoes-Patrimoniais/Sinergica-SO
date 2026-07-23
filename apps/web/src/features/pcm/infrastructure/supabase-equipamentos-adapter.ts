@@ -5,7 +5,12 @@ import type {
   EquipamentoCommand,
   EquipamentosGateway,
 } from "../application/equipamentos-gateway";
-import type { EquipamentoClienteOpcao, EquipamentoItem } from "../domain/equipamentos";
+import type {
+  EquipamentoClienteOpcao,
+  EquipamentoItem,
+  ItemContexto,
+  ItemTipo,
+} from "../domain/equipamentos";
 
 interface EquipamentoRow {
   id: string;
@@ -23,6 +28,10 @@ interface EquipamentoRow {
   auvo_synced_at: string | null;
   url_imagem: string | null;
   uri_anexos: string[] | null;
+  // E01-S76
+  local_id: string | null;
+  tipo: string;
+  parent_item_id: string | null;
 }
 
 interface ClienteRow {
@@ -32,7 +41,7 @@ interface ClienteRow {
 }
 
 const COLS =
-  "id,nome,identificador,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos" as const;
+  "id,nome,identificador,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id" as const;
 
 function mapRow(row: EquipamentoRow, clientes: Map<string, string>): EquipamentoItem {
   return {
@@ -52,6 +61,9 @@ function mapRow(row: EquipamentoRow, clientes: Map<string, string>): Equipamento
     auvoSyncedAt: row.auvo_synced_at,
     urlImagem: row.url_imagem,
     uriAnexos: row.uri_anexos ?? [],
+    localId: row.local_id,
+    tipo: (row.tipo as ItemTipo) ?? "equipamento",
+    parentItemId: row.parent_item_id,
   };
 }
 
@@ -104,6 +116,9 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
         localizacao: input.localizacao,
         observacoes: input.observacoes,
         auvo_sync_status: "pending",
+        local_id: input.localId ?? null,
+        tipo: input.tipo ?? "equipamento",
+        parent_item_id: input.parentItemId ?? null,
         created_by: input.userId,
         updated_by: input.userId,
       })
@@ -127,6 +142,9 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
         localizacao: input.localizacao,
         observacoes: input.observacoes,
         auvo_sync_status: "pending",
+        local_id: input.localId ?? null,
+        tipo: input.tipo ?? "equipamento",
+        parent_item_id: input.parentItemId ?? null,
         updated_at: new Date().toISOString(),
         updated_by: input.userId,
       })
@@ -173,6 +191,103 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
       .eq("auvo_equipment_id", auvoId);
     if (error && !["PGRST205", "42P01"].includes(error.code ?? "")) throw error;
     return (count ?? 0) > 0;
+  },
+
+  async obterItem(id): Promise<EquipamentoItem | null> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("equipamentos")
+      .select(COLS)
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    const row = data as EquipamentoRow;
+    const clientesMap = new Map<string, string>();
+    if (row.client_id) {
+      const cliente = await supabase
+        .schema("pcm")
+        .from("clientes")
+        .select("id,nome")
+        .eq("id", row.client_id)
+        .maybeSingle();
+      if (cliente.data) clientesMap.set(cliente.data.id as string, cliente.data.nome as string);
+    }
+    return mapRow(row, clientesMap);
+  },
+
+  /** AC-6 — breadcrumb Cliente>Área>Local + chips de Sistema + componentes filhos (aninhados sob
+   * o Equipamento pai). Sem lib de fetch — várias queries pequenas, supabase-js puro (mesmo padrão
+   * dos demais adapters PCM). */
+  async obterContextoItem(id): Promise<ItemContexto | null> {
+    const item = await this.obterItem(id);
+    if (!item) return null;
+
+    let breadcrumb: ItemContexto["breadcrumb"] = null;
+    if (item.localId) {
+      const local = await supabase
+        .schema("pcm")
+        .from("locais")
+        .select("nome,area_id")
+        .eq("id", item.localId)
+        .maybeSingle();
+      if (local.data) {
+        const area = await supabase
+          .schema("pcm")
+          .from("areas")
+          .select("nome")
+          .eq("id", local.data.area_id as string)
+          .maybeSingle();
+        breadcrumb = {
+          clienteNome: item.clienteNome,
+          areaNome: (area.data?.nome as string | undefined) ?? null,
+          localNome: local.data.nome as string,
+        };
+      }
+    } else if (item.clienteNome) {
+      breadcrumb = { clienteNome: item.clienteNome, areaNome: null, localNome: null };
+    }
+
+    const [membros, filhos] = await Promise.all([
+      supabase.schema("pcm").from("sistema_itens").select("sistema_id").eq("item_id", id),
+      supabase
+        .schema("pcm")
+        .from("equipamentos")
+        .select(COLS)
+        .eq("parent_item_id", id)
+        .is("deleted_at", null)
+        .order("nome", { ascending: true }),
+    ]);
+    if (membros.error) throw membros.error;
+    if (filhos.error) throw filhos.error;
+
+    const sistemaIds = (membros.data ?? []).map((m) => m.sistema_id as string);
+    let sistemas: ItemContexto["sistemas"] = [];
+    if (sistemaIds.length > 0) {
+      const resultado = await supabase
+        .schema("pcm")
+        .from("sistemas")
+        .select("id,nome,codigo")
+        .in("id", sistemaIds)
+        .is("deleted_at", null);
+      if (resultado.error) throw resultado.error;
+      sistemas = (resultado.data ?? []).map((s) => ({
+        id: s.id as string,
+        nome: s.nome as string,
+        codigo: (s.codigo as string | null) ?? null,
+      }));
+    }
+
+    const componentesFilhos = ((filhos.data ?? []) as EquipamentoRow[]).map((row) =>
+      mapRow(
+        row,
+        item.clienteNome && item.clientId
+          ? new Map([[item.clientId, item.clienteNome]])
+          : new Map(),
+      ),
+    );
+
+    return { item, breadcrumb, sistemas, componentesFilhos };
   },
 };
 

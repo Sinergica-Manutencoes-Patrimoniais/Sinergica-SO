@@ -8,6 +8,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { HttpError, requireAuth } from "../_shared/auth.ts";
 import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
+import {
+  criarConfiguracaoWebhook,
+  criarPayloadInstancia,
+} from "../_shared/evolution-admin.ts";
 
 const FN = "atendimento-evolution";
 const InputSchema = z.discriminatedUnion("acao", [
@@ -20,6 +24,7 @@ const InputSchema = z.discriminatedUnion("acao", [
   }),
   z.object({ acao: z.literal("conectar"), id: z.string().uuid() }),
   z.object({ acao: z.literal("desconectar"), id: z.string().uuid() }),
+  z.object({ acao: z.literal("sincronizar_webhook"), id: z.string().uuid() }),
 ]);
 
 type StatusConexao = "conectado" | "desconectado" | "erro";
@@ -30,6 +35,7 @@ interface CanalRow {
   identificador_externo: string | null;
   numero_vinculado: string | null;
   status_conexao: StatusConexao;
+  webhook_registrado: boolean;
   ativo: boolean;
 }
 
@@ -70,7 +76,7 @@ serve(async (req) => {
       const { data, error } = await userClient
         .schema("atendimento")
         .from("canais_externos")
-        .select("id,label,identificador_externo,numero_vinculado,status_conexao,ativo")
+        .select("id,label,identificador_externo,numero_vinculado,status_conexao,webhook_registrado,ativo")
         .eq("tipo", "evolution")
         .eq("ativo", true)
         .order("label");
@@ -115,7 +121,7 @@ serve(async (req) => {
           status_conexao: "desconectado",
           created_by: userId,
         })
-        .select("id,label,identificador_externo,numero_vinculado,status_conexao,ativo")
+        .select("id,label,identificador_externo,numero_vinculado,status_conexao,webhook_registrado,ativo")
         .single();
       if (error) {
         if (error.code === "23505") throw new HttpError(409, "Instance ID já cadastrado");
@@ -126,15 +132,15 @@ serve(async (req) => {
       try {
         const payload = await evolutionRequest("/instance/create", {
           method: "POST",
-          body: JSON.stringify({
-            instanceName: input.instanceName,
-            qrcode: true,
-            integration: Deno.env.get("EVOLUTION_INTEGRATION") ?? "WHATSAPP-BAILEYS",
-          }),
+          body: JSON.stringify(payloadCriacao(input.instanceName)),
         });
+        await configurarWebhook(input.instanceName);
         const estado = estadoDoPayload(payload);
-        await atualizarSnapshot(userClient, row.id, estado);
-        return json(200, { instancia: mapInstancia(row, estado, null), qrCode: estado.qrCode }, cors);
+        await atualizarSnapshot(userClient, row.id, estado, true);
+        return json(200, {
+          instancia: mapInstancia({ ...row, webhook_registrado: true }, estado, null),
+          qrCode: estado.qrCode,
+        }, cors);
       } catch (error) {
         await marcarErro(userClient, row.id);
         throw error;
@@ -143,6 +149,24 @@ serve(async (req) => {
 
     const row = await buscarInstancia(userClient, input.id);
     const instanceName = row.identificador_externo ?? "";
+    await exigirEscritaInstancia(userClient, row, userId);
+
+    if (input.acao === "sincronizar_webhook") {
+      await configurarWebhook(instanceName);
+      await atualizarSnapshot(
+        userClient,
+        row.id,
+        { status: row.status_conexao, numeroVinculado: row.numero_vinculado, qrCode: null },
+        true,
+      );
+      return json(200, {
+        instancia: mapInstancia({ ...row, webhook_registrado: true }, {
+          status: row.status_conexao,
+          numeroVinculado: row.numero_vinculado,
+          qrCode: null,
+        }, null),
+      }, cors);
+    }
 
     if (input.acao === "conectar") {
       try {
@@ -155,16 +179,16 @@ serve(async (req) => {
           if (!(error instanceof EvolutionApiError) || error.status !== 404) throw error;
           payload = await evolutionRequest("/instance/create", {
             method: "POST",
-            body: JSON.stringify({
-              instanceName,
-              qrcode: true,
-              integration: Deno.env.get("EVOLUTION_INTEGRATION") ?? "WHATSAPP-BAILEYS",
-            }),
+            body: JSON.stringify(payloadCriacao(instanceName)),
           });
         }
+        await configurarWebhook(instanceName);
         const estado = estadoDoPayload(payload);
-        await atualizarSnapshot(userClient, row.id, estado);
-        return json(200, { instancia: mapInstancia(row, estado, null), qrCode: estado.qrCode }, cors);
+        await atualizarSnapshot(userClient, row.id, estado, true);
+        return json(200, {
+          instancia: mapInstancia({ ...row, webhook_registrado: true }, estado, null),
+          qrCode: estado.qrCode,
+        }, cors);
       } catch (error) {
         await marcarErro(userClient, row.id);
         throw error;
@@ -205,7 +229,7 @@ async function buscarInstancia(
   const { data, error } = await userClient
     .schema("atendimento")
     .from("canais_externos")
-    .select("id,label,identificador_externo,numero_vinculado,status_conexao,ativo")
+    .select("id,label,identificador_externo,numero_vinculado,status_conexao,webhook_registrado,ativo")
     .eq("id", id)
     .eq("tipo", "evolution")
     .eq("ativo", true)
@@ -213,6 +237,22 @@ async function buscarInstancia(
   if (error) throw error;
   if (!data) throw new HttpError(404, "Instância Evolution não encontrada");
   return data as CanalRow;
+}
+
+async function exigirEscritaInstancia(
+  userClient: UntypedSupabaseClient,
+  row: CanalRow,
+  userId: string,
+): Promise<void> {
+  const { data, error } = await userClient
+    .schema("atendimento")
+    .from("canais_externos")
+    .update({ status_conexao: row.status_conexao, updated_by: userId })
+    .eq("id", row.id)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new HttpError(403, "atendimento:escrita obrigatório");
 }
 
 async function consultarEstado(instanceName: string): Promise<EstadoRemoto> {
@@ -257,6 +297,28 @@ async function evolutionRequest(path: string, init: RequestInit = {}): Promise<u
   return text ? JSON.parse(text) : {};
 }
 
+function configuracaoWebhook() {
+  const supabaseUrl = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/+$/, "");
+  const token = Deno.env.get("EVOLUTION_WEBHOOK_TOKEN") ??
+    Deno.env.get("EVOLUTION_HMAC_SECRET") ?? "";
+  return criarConfiguracaoWebhook(supabaseUrl, token);
+}
+
+function payloadCriacao(instanceName: string) {
+  return criarPayloadInstancia(
+    instanceName,
+    Deno.env.get("EVOLUTION_INTEGRATION") ?? "WHATSAPP-BAILEYS",
+    configuracaoWebhook(),
+  );
+}
+
+async function configurarWebhook(instanceName: string): Promise<void> {
+  await evolutionRequest(`/webhook/set/${encodeURIComponent(instanceName)}`, {
+    method: "POST",
+    body: JSON.stringify({ webhook: configuracaoWebhook() }),
+  });
+}
+
 function estadoDoPayload(payload: unknown): EstadoRemoto {
   const obj = (payload ?? {}) as Record<string, unknown>;
   const instance = (obj.instance ?? {}) as Record<string, unknown>;
@@ -290,15 +352,18 @@ async function atualizarSnapshot(
   userClient: UntypedSupabaseClient,
   id: string,
   estado: EstadoRemoto,
+  webhookRegistrado?: boolean,
 ): Promise<void> {
+  const patch: Record<string, unknown> = {
+    status_conexao: estado.status,
+    numero_vinculado: estado.numeroVinculado,
+    updated_at: new Date().toISOString(),
+  };
+  if (webhookRegistrado !== undefined) patch.webhook_registrado = webhookRegistrado;
   const { error } = await userClient
     .schema("atendimento")
     .from("canais_externos")
-    .update({
-      status_conexao: estado.status,
-      numero_vinculado: estado.numeroVinculado,
-      updated_at: new Date().toISOString(),
-    })
+    .update(patch)
     .eq("id", id);
   if (error) throw error;
 }
@@ -321,6 +386,7 @@ function mapInstancia(row: CanalRow, estado: EstadoRemoto, erro: string | null) 
     instanceName: row.identificador_externo ?? "",
     numeroVinculado: estado.numeroVinculado,
     status: estado.status,
+    webhookRegistrado: row.webhook_registrado,
     ativo: row.ativo,
     erro,
   };

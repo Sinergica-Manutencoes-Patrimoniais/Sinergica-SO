@@ -6,7 +6,8 @@ alwaysApply: true
 
 # Spec — E04-S02 · Import de extrato OFX + classificação + conciliação
 
-> **Fonte da verdade.** Status: pronto para implementar · Tier: pequeno
+> **Fonte da verdade.** Status: implementado e com gates automatizados verdes; UAT externo com OFX
+> real anonimizado pendente · Tier: pequeno
 > **Depende de: E04-S01** (schema `financeiro`, tela de Lançamentos). Design do épico:
 > `specs/E04-S01-fundacao-financeiro/design.md` (§S02 tem o contrato das tabelas; D-1 fecha a
 > decisão do parser). Visão de produto: `specs/E04-S01-fundacao-financeiro/product.md`.
@@ -21,8 +22,9 @@ ou (c) ignorada. Reimportar o mesmo arquivo nunca duplica nada. Decisão de esco
 ## Critérios de aceite
 
 ### AC-1: Parser OFX puro
-- **Dado** um arquivo OFX 1.x (SGML) ou 2.x (XML) de banco brasileiro (fixtures reais anonimizadas
-  em `domain/__fixtures__/`)
+- **Dado** um arquivo OFX 1.x (SGML) ou 2.x (XML) de banco brasileiro (formatos cobertos por
+  fixtures sintéticas; compatibilidade do banco usado em produção homologada por UAT com arquivo
+  real anonimizado)
 - **Quando** `parseOfx(texto)` roda (função pura em `domain/ofx.ts`, sem I/O, sem lib nova)
 - **Então** devolve as transações com FITID, data, valor em centavos **com sinal** (parse da
   string decimal, nunca float), memo e tipo; arquivo ilegível devolve erro claro, nunca exceção
@@ -75,5 +77,6 @@ ou (c) ignorada. Reimportar o mesmo arquivo nunca duplica nada. Decisão de esco
   `lancamentos.extrato_transacao_id` — contrato em `specs/E04-S01-fundacao-financeiro/design.md` §S02.
 - Arquivos-âncora: `apps/web/src/features/financeiro/domain/ofx.ts` + `conciliacao.ts` (novos),
   `pages/ImportOfxPage.tsx`, migration nova em `supabase/migrations/` (sequência seguinte à da S01).
-- **Pendência de insumo (PO):** OFX real do banco da Sinérgica, anonimizado, para fixture — pedir
-  ao Lucas antes de fechar o parser; até lá, fixtures sintéticas nos dois formatos (1.x e 2.x).
+- **UAT externo pós-merge:** OFX real do banco da Sinérgica, anonimizado. O insumo homologa o banco
+  de produção e não bloqueia o merge do parser já coberto nos formatos 1.x/2.x; até ser fornecido,
+  o parser não deve ser declarado homologado para esse banco específico.

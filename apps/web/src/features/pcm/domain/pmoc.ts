@@ -262,6 +262,90 @@ export function classificarMicrobio(input: {
   return "conforme";
 }
 
+/** E01-S06 AC-6: só rejeita o pulo direto aberto->fechado (precisa passar por em_andamento).
+ * Demais transições (incl. reabrir: fechado->em_andamento, em_andamento->aberto) são permitidas —
+ * NC pode recorrer e precisar reabrir. */
+export function validarTransicaoStatusNc(atual: PmocStatusNc, novo: PmocStatusNc): void {
+  if (atual === "aberto" && novo === "fechado") {
+    throw new Error("NC deve passar por 'em andamento' antes de ser fechada.");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// E01-S08 — Painel de alertas cross-contrato (triagem sem abrir contrato a contrato)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TipoAlertaPmoc =
+  | "nc_alta"
+  | "art_vencendo"
+  | "microbio_pendente"
+  | "nc_aberta"
+  | "atrasado";
+
+/** Shape mínimo exigido — não importa `PmocContratoResumo` (application) pra manter o domínio sem
+ * dependência de camada superior; `PmocContratoResumo` já satisfaz esta interface estruturalmente. */
+export interface ContratoParaAlerta {
+  id: string;
+  imovelNome: string;
+  clienteNome: string;
+  status: PmocStatusContrato;
+  microbioPendentes: number;
+  ncsAbertas: number;
+  ncsAltasAbertas: number;
+  visitasAtrasadas: number;
+}
+
+export interface ContratoComAlerta {
+  contratoId: string;
+  imovelNome: string;
+  clienteNome: string;
+  tipo: TipoAlertaPmoc;
+}
+
+const PRIORIDADE_ALERTA: readonly TipoAlertaPmoc[] = [
+  "nc_alta",
+  "art_vencendo",
+  "microbio_pendente",
+  "nc_aberta",
+  "atrasado",
+];
+
+export const TIPO_ALERTA_LABEL: Record<TipoAlertaPmoc, string> = {
+  nc_alta: "NC alta aberta",
+  art_vencendo: "ART vencendo",
+  microbio_pendente: "Laudo microbiológico pendente",
+  nc_aberta: "Não-conformidade aberta",
+  atrasado: "Visita atrasada",
+};
+
+function tipoAlertaDoContrato(contrato: ContratoParaAlerta): TipoAlertaPmoc | null {
+  if (contrato.ncsAltasAbertas > 0) return "nc_alta";
+  if (contrato.status === "renovar") return "art_vencendo";
+  if (contrato.microbioPendentes > 0) return "microbio_pendente";
+  if (contrato.ncsAbertas > 0) return "nc_aberta";
+  if (contrato.visitasAtrasadas > 0) return "atrasado";
+  return null;
+}
+
+/** AC-1/AC-2/AC-4: filtra só contratos com alerta, categoriza pela condição mais urgente (um
+ * contrato nunca aparece duas vezes) e ordena por prioridade entre categorias. */
+export function contratosComAlerta(contratos: ContratoParaAlerta[]): ContratoComAlerta[] {
+  return contratos
+    .map((contrato) => {
+      const tipo = tipoAlertaDoContrato(contrato);
+      return tipo
+        ? {
+            contratoId: contrato.id,
+            imovelNome: contrato.imovelNome,
+            clienteNome: contrato.clienteNome,
+            tipo,
+          }
+        : null;
+    })
+    .filter((item): item is ContratoComAlerta => item !== null)
+    .sort((a, b) => PRIORIDADE_ALERTA.indexOf(a.tipo) - PRIORIDADE_ALERTA.indexOf(b.tipo));
+}
+
 export function statusContratoColor(status: PmocStatusContrato): string {
   if (status === "ativo") return "bg-[#EAF8EF] text-[#267343]";
   if (status === "renovar") return "bg-orange-soft text-orange-deep";

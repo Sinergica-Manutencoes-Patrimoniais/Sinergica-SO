@@ -7,6 +7,8 @@ export interface FuncionarioItem {
   email: string | null;
   culture: string;
   userType: 1 | 2 | 3;
+  /** E01-S77: jornada diária esperada em horas (dado local do PCM, não vai ao Auvo). */
+  jornadaDiariaHoras: number | null;
   ativo: boolean;
   auvoId: number | null;
   auvoSyncStatus: string | null;
@@ -22,6 +24,7 @@ export interface FuncionarioFormData {
   email?: string | null;
   culture: string;
   userType: 1 | 2 | 3;
+  jornadaDiariaHoras?: number | null;
 }
 
 export interface CriarFuncionarioFormData extends FuncionarioFormData {
@@ -41,7 +44,15 @@ export function validarFuncionario(input: FuncionarioFormData): FuncionarioFormD
     email: textoOuNull(input.email),
     culture: input.culture.trim() || "pt-BR",
     userType: input.userType,
+    jornadaDiariaHoras: normalizarJornada(input.jornadaDiariaHoras),
   };
+}
+
+/** Jornada válida = número finito > 0 (até 24h); qualquer outra coisa vira `null` (não sinaliza). */
+export function normalizarJornada(valor: number | null | undefined): number | null {
+  if (valor == null || !Number.isFinite(valor)) return null;
+  if (valor <= 0 || valor > 24) return null;
+  return valor;
 }
 
 export function validarCriacaoFuncionario(

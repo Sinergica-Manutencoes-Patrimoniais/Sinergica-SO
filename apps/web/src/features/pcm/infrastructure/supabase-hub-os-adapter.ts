@@ -4,7 +4,10 @@ import type {
   FiltrosServidorOrdens,
   HubOsGateway,
 } from "../application/hub-os-gateway";
+import type { TipoOsHub } from "../domain/hub-os";
 import type { KpisOrdensServico, OrdemServicoOperacional } from "../domain/ordens-servico";
+import { PESOS_GUTD_PADRAO } from "../domain/priorizacao-backlog";
+import type { PesosGutd } from "../domain/priorizacao-backlog";
 
 interface KpiRpcRow {
   total: number | string;
@@ -37,6 +40,9 @@ interface OrdemRow {
   gravidade: number | null;
   urgencia: number | null;
   tendencia: number | null;
+  dor_cliente: number | null;
+  observacao: string | null;
+  origem_inspecao_item_id: string | null;
   score_pcm: number;
   local_descricao: string | null;
   solicitante: string | null;
@@ -51,10 +57,12 @@ interface OrdemRow {
   check_in_at: string | null;
   check_out_at: string | null;
   auvo_detalhes: Record<string, unknown> | null;
+  tipo_os: TipoOsHub | null;
+  pmoc_schedule_id: string | null;
 }
 
 const COLUNAS_OS =
-  "id,client_id,numero,titulo,descricao,categoria,status,prioridade,gravidade,urgencia,tendencia,score_pcm,local_descricao,solicitante,origem,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,updated_at,tecnico_funcionario_id,data_agendada,check_in_at,check_out_at,auvo_detalhes" as const;
+  "id,client_id,numero,titulo,descricao,categoria,status,prioridade,gravidade,urgencia,tendencia,dor_cliente,observacao,origem_inspecao_item_id,score_pcm,local_descricao,solicitante,origem,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,updated_at,tecnico_funcionario_id,data_agendada,check_in_at,check_out_at,auvo_detalhes,tipo_os,pmoc_schedule_id" as const;
 
 function mapearOrdem(
   row: OrdemRow,
@@ -74,6 +82,9 @@ function mapearOrdem(
     gravidade: row.gravidade,
     urgencia: row.urgencia,
     tendencia: row.tendencia,
+    dorCliente: row.dor_cliente,
+    observacao: row.observacao,
+    origemInspecaoItemId: row.origem_inspecao_item_id,
     auvoTaskId: row.auvo_task_id,
     auvoSyncStatus: row.auvo_sync_status,
     auvoSyncError: row.auvo_sync_error,
@@ -86,6 +97,8 @@ function mapearOrdem(
     checkInAt: row.check_in_at,
     checkOutAt: row.check_out_at,
     detalhes: row.auvo_detalhes,
+    tipoOs: row.tipo_os,
+    pmocScheduleId: row.pmoc_schedule_id,
   };
 }
 
@@ -218,5 +231,22 @@ export const supabaseHubOsAdapter: HubOsGateway = {
     if (error) throw error;
     const [clientes, funcionarios] = await Promise.all([clientesPorId(), funcionariosPorId()]);
     return mapearOrdem((data ?? (await buscarOrdem(input.id))) as OrdemRow, clientes, funcionarios);
+  },
+
+  async obterPesosGutd(): Promise<PesosGutd> {
+    const { data, error } = await supabase
+      .schema("config")
+      .from("priorizacao_gutd")
+      .select("peso_gravidade,peso_urgencia,peso_tendencia,peso_dor_cliente")
+      .eq("id", 1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return PESOS_GUTD_PADRAO;
+    return {
+      gravidade: data.peso_gravidade,
+      urgencia: data.peso_urgencia,
+      tendencia: data.peso_tendencia,
+      dorCliente: data.peso_dor_cliente,
+    };
   },
 };

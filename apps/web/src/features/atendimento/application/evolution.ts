@@ -23,6 +23,10 @@ export function conectarEvolution(gateway: EvolutionGateway, id: string) {
   return gateway.conectar(exigirId(id));
 }
 
+export function sincronizarWebhookEvolution(gateway: EvolutionGateway, id: string) {
+  return gateway.sincronizarWebhook(exigirId(id));
+}
+
 export function desconectarEvolution(gateway: EvolutionGateway, id: string) {
   return gateway.desconectar(exigirId(id));
 }

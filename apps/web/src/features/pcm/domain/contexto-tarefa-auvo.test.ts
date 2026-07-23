@@ -5,7 +5,7 @@ describe("contexto de tarefa Auvo", () => {
   it("gera contexto operacional sem campos vazios", () => {
     expect(
       montarContextoTarefaAuvo({
-        numeroOs: "CH-001",
+        numeroOs: "OS-0001",
         titulo: "Bomba",
         cliente: "Condomínio A",
         descricao: "Vazamento",

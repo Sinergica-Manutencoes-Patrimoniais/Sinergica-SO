@@ -282,6 +282,7 @@ function FuncionarioModal({
     email: funcionario?.email ?? "",
     culture: funcionario?.culture ?? "pt-BR",
     userType: funcionario?.userType ?? 1,
+    jornadaDiariaHoras: funcionario?.jornadaDiariaHoras ?? null,
     login: "",
     password: "",
   });
@@ -302,6 +303,7 @@ function FuncionarioModal({
               email: dados.email,
               culture: dados.culture,
               userType: dados.userType,
+              jornadaDiariaHoras: dados.jornadaDiariaHoras ?? null,
             }
           : dados,
       );
@@ -374,6 +376,30 @@ function FuncionarioModal({
             value={dados.email ?? ""}
             onChange={(v) => setCampo("email", v)}
           />
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-3">
+              Jornada diária (horas)
+            </span>
+            <input
+              type="number"
+              min={0}
+              max={24}
+              step={0.5}
+              value={dados.jornadaDiariaHoras ?? ""}
+              onChange={(event) =>
+                setDados((atual) => ({
+                  ...atual,
+                  jornadaDiariaHoras: event.target.value === "" ? null : Number(event.target.value),
+                }))
+              }
+              placeholder="ex.: 8"
+              className="input w-full"
+            />
+            <span className="mt-1 block text-[11px] text-ink-3">
+              Usada na visão diária de horas para sinalizar falta/hora-extra. Vazio = sem
+              sinalização.
+            </span>
+          </label>
           {erro && (
             <div className="md:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
               {erro}

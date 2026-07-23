@@ -35,6 +35,14 @@ const FN = "pcm-auvo-webhooks-register";
  * valor fica hardcoded aqui em vez de vir do registry genérico. */
 const TASK_WEBHOOK_ENTITY = 4;
 const TASK_DESCRIPTOR_KEY = "task";
+const WEBHOOK_ENTITY_NAMES: Readonly<Record<number, string>> = {
+  1: "User",
+  4: "Task",
+  7: "Customer",
+  27: "Equipment",
+  50: "Invoice",
+  62: "Ticket",
+};
 
 export interface ExistingWebhook {
   id?: number;
@@ -76,10 +84,16 @@ export function descriptorsParaRegistrar(
   return descriptors.filter((descriptor): descriptor is AuvoEntityDescriptor<unknown, unknown> => {
     if (!descriptor?.webhookEntity) return false;
     const codigo = String(descriptor.webhookEntity);
-    const jaExisteComUrlCerta = existentesAtualizados.some((webhook) =>
-      (webhook.entity === codigo || webhook.entity === descriptor.key) &&
-      normalizeUrl(webhook.urlResponse) === normalizeUrl(targetUrl)
+    const nomesAceitos = new Set(
+      [codigo, descriptor.key, WEBHOOK_ENTITY_NAMES[descriptor.webhookEntity]]
+        .filter((nome): nome is string => Boolean(nome))
+        .map((nome) => nome.toLocaleLowerCase("en-US")),
     );
+    const jaExisteComUrlCerta = existentesAtualizados.some((webhook) => {
+      const entidade = webhook.entity?.trim().toLocaleLowerCase("en-US");
+      return entidade != null && nomesAceitos.has(entidade) &&
+        normalizeUrl(webhook.urlResponse) === normalizeUrl(targetUrl);
+    });
     return !jaExisteComUrlCerta;
   });
 }

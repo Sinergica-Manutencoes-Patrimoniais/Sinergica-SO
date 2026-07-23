@@ -13,6 +13,7 @@ alwaysApply: false
 
 | Período | Arquivo | O que tem |
 |---------|---------|-----------|
+| 2026-07-15 a 2026-07-18 | [2026-07-15-a-2026-07-18.md](2026-07-15-a-2026-07-18.md) | E01-S75 (refinamento UX do PCM); E01-S76 (hierarquia de localização de ativos + Sistemas, tier arquitetural); E01-S77 (apontamento de horas visão diária); E01-S78 (Board de ativos por Local + drawer de detalhe). |
 | 2026-07-04 a 2026-07-11 | [2026-07-04-a-2026-07-11.md](2026-07-04-a-2026-07-11.md) | Motor de sync Auvo genérico (write+read path, E01-S22/S23) e catálogo de ~13 entidades (E01-S24–S33); épico Atendimento/E02 inteiro (Inbox rico, IA, canais Meta/Evolution, growth/scoring, fluxos node-graph); backfill real de 2364 OS em produção; bugs de produção corrigidos (campo `taskID`, arrays vazios no upsert, timeout do sync); acabamento visual V1 (E01-S59/S60); Kanban drag-and-drop (E01-S61). |
 | 2026-06-25 a 2026-07-03 | [2026-06-25-a-2026-07-03-fundacao.md](2026-06-25-a-2026-07-03-fundacao.md) | Fundação do projeto — schemas de domínio, autenticação/RBAC real (E00-S05), grupos e permissões por módulo (E00-S09/S10), fundação da integração Auvo (E01-S09/S10/S11), Padrão OS v3.2→v3.4 (Lefthook, Squawk), provisionamento do Supabase e GitHub Actions em produção. Formato antigo (seções fixas, não entradas por sessão) — vários "Bloqueios" já resolvidos no próprio texto. |
 

@@ -16,6 +16,7 @@ interface FuncionarioRow {
   email: string | null;
   culture: string;
   user_type: 1 | 2 | 3;
+  jornada_diaria_horas: number | null;
   ativo: boolean;
   auvo_id: number | null;
   auvo_sync_status: string | null;
@@ -24,7 +25,7 @@ interface FuncionarioRow {
 }
 
 const COLS =
-  "id,nome,equipe,cargo,telefone,email,culture,user_type,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
+  "id,nome,equipe,cargo,telefone,email,culture,user_type,jornada_diaria_horas,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
 
 function mapRow(row: FuncionarioRow): FuncionarioItem {
   return {
@@ -36,6 +37,7 @@ function mapRow(row: FuncionarioRow): FuncionarioItem {
     email: row.email,
     culture: row.culture,
     userType: row.user_type,
+    jornadaDiariaHoras: row.jornada_diaria_horas ?? null,
     ativo: row.ativo,
     auvoId: row.auvo_id,
     auvoSyncStatus: row.auvo_sync_status,
@@ -73,6 +75,16 @@ export const supabaseFuncionariosAdapter: FuncionariosGateway = {
     if (error) throw error;
     const id = (data as { id?: string } | null)?.id;
     if (!id) throw new Error("Funcionário criado sem id local.");
+    // Jornada é dado local do PCM — a Edge Function de criação (Auvo /users) não a conhece; grava
+    // num follow-up quando informada. Não mexe em `auvo_sync_status` (jornada não vai ao Auvo).
+    if (input.jornadaDiariaHoras != null) {
+      const { error: jornadaErro } = await supabase
+        .schema("pcm")
+        .from("funcionarios")
+        .update({ jornada_diaria_horas: input.jornadaDiariaHoras })
+        .eq("id", id);
+      if (jornadaErro) throw jornadaErro;
+    }
     const funcionario = await buscarPorId(id);
     if (!funcionario) throw new Error("Funcionário criado não encontrado.");
     return funcionario;
@@ -90,6 +102,7 @@ export const supabaseFuncionariosAdapter: FuncionariosGateway = {
         email: input.email,
         culture: input.culture,
         user_type: input.userType,
+        jornada_diaria_horas: input.jornadaDiariaHoras ?? null,
         auvo_sync_status: "pending",
         updated_at: new Date().toISOString(),
         updated_by: input.userId,

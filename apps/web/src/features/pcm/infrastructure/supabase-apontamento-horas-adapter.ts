@@ -57,12 +57,16 @@ export const supabaseApontamentoHorasAdapter: ApontamentoHorasGateway = {
     const { data, error } = await supabase
       .schema("pcm")
       .from("funcionarios")
-      .select("id,nome")
+      .select("id,nome,jornada_diaria_horas")
       .eq("ativo", true)
       .is("deleted_at", null)
       .order("nome", { ascending: true });
     if (error) throw error;
-    return (data ?? []).map((f) => ({ id: f.id as string, nome: f.nome as string }));
+    return (data ?? []).map((f) => ({
+      id: f.id as string,
+      nome: f.nome as string,
+      jornadaDiariaHoras: (f.jornada_diaria_horas as number | null) ?? null,
+    }));
   },
 
   // AC-4: `financeiro.custos_funcionario` (E04-S06) ainda não existe neste repo — schema exato
@@ -87,5 +91,33 @@ export const supabaseApontamentoHorasAdapter: ApontamentoHorasGateway = {
     } catch {
       return null;
     }
+  },
+  async obterParametros() {
+    const { data, error } = await supabase
+      .schema("config")
+      .from("parametros_apontamento_horas")
+      .select("meta_diaria_horas,tolerancia_minutos,limiar_anomalia_minutos")
+      .eq("id", 1)
+      .single();
+    if (error) throw error;
+    return {
+      metaDiariaHoras: Number(data.meta_diaria_horas),
+      toleranciaMinutos: Number(data.tolerancia_minutos),
+      limiarAnomaliaMinutos: Number(data.limiar_anomalia_minutos),
+    };
+  },
+  async salvarParametros(parametros, userId) {
+    const { error } = await supabase
+      .schema("config")
+      .from("parametros_apontamento_horas")
+      .update({
+        meta_diaria_horas: parametros.metaDiariaHoras,
+        tolerancia_minutos: parametros.toleranciaMinutos,
+        limiar_anomalia_minutos: parametros.limiarAnomaliaMinutos,
+        updated_at: new Date().toISOString(),
+        updated_by: userId,
+      })
+      .eq("id", 1);
+    if (error) throw error;
   },
 };

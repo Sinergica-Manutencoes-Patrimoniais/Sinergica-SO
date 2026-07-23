@@ -34,13 +34,23 @@ const ModoSchema = z.discriminatedUnion("tipo", [
   }),
 ]);
 
-const InputSchema = z.object({
-  email: z.string().email(),
-  senha: z.string().min(8),
-  nome: z.string().min(1),
-  papel: PapelSchema,
-  modo: ModoSchema,
-});
+const InputSchema = z
+  .object({
+    email: z.string().email(),
+    senha: z.string().min(8),
+    nome: z.string().min(1),
+    papel: PapelSchema,
+    modo: ModoSchema,
+    clienteId: z.string().uuid().optional(),
+  })
+  .superRefine((input, ctx) => {
+    if (input.papel === "cliente-sindico" && !input.clienteId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["clienteId"], message: "clienteId obrigatório" });
+    }
+    if (input.papel !== "cliente-sindico" && input.clienteId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["clienteId"], message: "clienteId só é válido para cliente-sindico" });
+    }
+  });
 
 serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin"));
@@ -84,6 +94,17 @@ serve(async (req) => {
       throw new HttpError(403, "Supervisor não pode criar superadmin");
     }
 
+    if (input.clienteId) {
+      const { data: vinculoExistente, error: vinculoConsultaError } = await serviceClient
+        .schema("config")
+        .from("usuario_cliente")
+        .select("user_id")
+        .eq("cliente_id", input.clienteId)
+        .maybeSingle();
+      if (vinculoConsultaError) throw vinculoConsultaError;
+      if (vinculoExistente) throw new HttpError(409, "Este cliente já possui acesso ao portal");
+    }
+
     const { data: authData, error: authError } = await serviceClient.auth.admin.createUser({
       email: input.email,
       password: input.senha,
@@ -110,8 +131,19 @@ serve(async (req) => {
           p_permissoes: input.modo.tipo === "individual" ? input.modo.permissoes : null,
         });
       if (permissaoError) throw permissaoError;
+
+      if (input.papel === "cliente-sindico" && input.clienteId) {
+        const { error: vinculoError } = await serviceClient
+          .schema("config")
+          .from("usuario_cliente")
+          .insert({ user_id: createdUserId, cliente_id: input.clienteId, created_by: userId });
+        if (vinculoError) throw vinculoError;
+      }
     } catch (e) {
       await serviceClient.auth.admin.deleteUser(createdUserId);
+      if (e && typeof e === "object" && "code" in e && e.code === "23505") {
+        throw new HttpError(409, "Este cliente ou usuário já possui acesso ao portal");
+      }
       throw e;
     }
 
@@ -137,6 +169,7 @@ function problem(status: number, detail: string, reqId: string, cors: Record<str
     401: "Unauthorized",
     403: "Forbidden",
     405: "Method Not Allowed",
+    409: "Conflict",
     422: "Unprocessable Entity",
     500: "Internal Server Error",
   };

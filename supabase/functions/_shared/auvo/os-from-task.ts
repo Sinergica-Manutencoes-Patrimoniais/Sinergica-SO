@@ -108,23 +108,27 @@ export async function resolverFuncionarioIdsPorAuvoIds(
   return mapa;
 }
 
-export async function contarOsExistentes(db: UntypedSupabaseClient): Promise<number> {
-  const { count, error } = await db
-    .schema("pcm")
-    .from("ordens_servico")
-    .select("id", { count: "exact", head: true });
-  if (error) throw error;
-  return count ?? 0;
-}
-
-export function formatarNumeroOs(sequencial: number): string {
-  return `CH-${String(sequencial).padStart(3, "0")}`;
-}
-
-/** Mesma lógica de `pcm-ze-agent` (`proximoNumeroChamado`) — `count()` tem race condition
- * conhecida sob concorrência real, mesma dívida já documentada e aceita nesse padrão (E01-S02). */
+/** E01-S88: numeração atômica via sequence (RPC `pcm.fn_proximo_numero_os`) — substitui o
+ * `count()` com race condition conhecida sob concorrência real (E01-S02). Prefixo "OS-" — "CH-"
+ * agora é do Chamado (`pcm.chamados`). */
 export async function proximoNumeroOs(db: UntypedSupabaseClient): Promise<string> {
-  return formatarNumeroOs((await contarOsExistentes(db)) + 1);
+  const { data, error } = await db.schema("pcm").rpc("fn_proximo_numero_os");
+  if (error) throw error;
+  return data as string;
+}
+
+/** Reserva `quantidade` números atomicamente numa chamada só (RPC `pcm.fn_proximos_numeros_os`) —
+ * usado pelo import em lote de `pcm-auvo-tasks-import`, que precisa de N números sem N round-trips. */
+export async function proximosNumerosOs(
+  db: UntypedSupabaseClient,
+  quantidade: number,
+): Promise<string[]> {
+  if (quantidade <= 0) return [];
+  const { data, error } = await db
+    .schema("pcm")
+    .rpc("fn_proximos_numeros_os", { p_quantidade: quantidade });
+  if (error) throw error;
+  return (data ?? []) as string[];
 }
 
 /** Mesmo padrão de `pcm-auvo-customers-import` (`obterUsuarioSistema`): primeiro

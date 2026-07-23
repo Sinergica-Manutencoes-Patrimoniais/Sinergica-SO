@@ -1,0 +1,24 @@
+{
+  "extends": "../../packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@sinergica/shared": ["../../packages/shared/src/index.ts"],
+      "@sinergica/ui": ["../../packages/ui/src/index.ts"],
+      "@sinergica/portal-core": ["../../packages/portal-core/src/index.ts"]
+    }
+  },
+  "include": [
+    "src",
+    "scripts",
+    "vite.config.ts",
+    "../web/src/features/area-cliente",
+    "../web/src/features/auth",
+    "../web/src/app/auth-context.tsx",
+    "../web/src/app/theme-context.tsx",
+    "../web/src/lib",
+    "../web/src/config"
+  ]
+}

@@ -1,4 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { PortalShell } from "../features/area-cliente/PortalShell";
+import { deveUsarPortal } from "../features/area-cliente/domain/roteamento";
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { HomePage } from "./HomePage";
 import { AuthProvider, useAuth } from "./auth-context";
@@ -37,6 +39,11 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function EntradaAutenticada() {
+  const { user } = useAuth();
+  return user && deveUsarPortal(user.papel) ? <PortalShell /> : <HomePage />;
+}
+
 export function App() {
   return (
     <ThemeProvider>
@@ -56,7 +63,7 @@ export function App() {
                 path="/"
                 element={
                   <RequireAuth>
-                    <HomePage />
+                    <EntradaAutenticada />
                   </RequireAuth>
                 }
               />

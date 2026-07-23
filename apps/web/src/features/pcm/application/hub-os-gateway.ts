@@ -3,6 +3,7 @@ import type {
   OrdemServicoOperacional,
   StatusOrdemServico,
 } from "../domain/ordens-servico";
+import type { PesosGutd } from "../domain/priorizacao-backlog";
 
 export interface AlterarStatusOsInput {
   id: string;
@@ -25,4 +26,6 @@ export interface HubOsGateway {
   /** E01-S44: agregação server-side (RPC) — não baixa nenhuma OS pra calcular os 6 números. */
   contarKpis(filtros?: FiltrosServidorOrdens): Promise<KpisOrdensServico>;
   alterarStatus(input: AlterarStatusOsInput): Promise<OrdemServicoOperacional>;
+  /** E01-S82 AC-2: pesos GUTD atuais — lidos por qualquer usuário do PCM pra ordenar em runtime. */
+  obterPesosGutd(): Promise<PesosGutd>;
 }

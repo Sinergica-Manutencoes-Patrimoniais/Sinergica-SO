@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 
@@ -13,7 +14,7 @@ export function extractDeletedTaskIds(tasks: DeletedTask[]): number[] {
   return [...new Set(tasks.map((task) => task.taskID ?? task.id ?? task.taskId).filter((id): id is number => typeof id === "number" && Number.isFinite(id)))];
 }
 
-async function run(body: RequestBody, db: ReturnType<typeof createClient>) {
+async function run(body: RequestBody, db: UntypedSupabaseClient) {
   const now = new Date();
   const start = body.startDate ?? new Date(now.getTime() - 14 * 86_400_000).toISOString().slice(0, 10);
   const end = body.endDate ?? now.toISOString().slice(0, 10);

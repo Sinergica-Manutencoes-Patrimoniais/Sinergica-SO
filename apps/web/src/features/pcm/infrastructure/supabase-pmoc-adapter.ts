@@ -1,7 +1,10 @@
 import { supabase } from "../../../lib/supabase-client";
 import type {
+  AtualizarStatusNcInput,
+  CriarAnaliseMicrobioInput,
   CriarContratoPmocInput,
   CriarEquipamentoPmocInput,
+  CriarNaoConformidadeInput,
   PmocAgenda,
   PmocClienteOpcao,
   PmocContratoResumo,
@@ -11,6 +14,7 @@ import type {
   PmocGateway,
   PmocMicrobioAnalysis,
   PmocNaoConformidade,
+  PmocPreventivaResumo,
 } from "../application/pmoc-gateway";
 import { gerarCronogramaPmoc } from "../domain/pmoc";
 import type {
@@ -104,11 +108,15 @@ interface MicrobioRow {
   property_id: string;
   analysis_date: string;
   lab_name: string | null;
+  lab_accreditation: string | null;
+  collection_points: number | null;
   fungi_ufc_m3: number | null;
   ie_ratio: number | null;
+  coliforms_result: "ausencia" | "presenca" | null;
   status: PmocStatusMicrobio;
   report_number: string | null;
   report_url: string | null;
+  corrective_action_needed: boolean;
 }
 
 interface NcRow {
@@ -142,7 +150,7 @@ const EQUIPMENT_COLS =
 const SCHEDULE_COLS =
   "id,contract_id,property_id,scheduled_date,maintenance_type,month_ref,year_ref,status,auvo_os_id" as const;
 const MICROBIO_COLS =
-  "id,contract_id,property_id,analysis_date,lab_name,fungi_ufc_m3,ie_ratio,status,report_number,report_url" as const;
+  "id,contract_id,property_id,analysis_date,lab_name,lab_accreditation,collection_points,fungi_ufc_m3,ie_ratio,coliforms_result,status,report_number,report_url,corrective_action_needed" as const;
 const NC_COLS =
   "id,contract_id,equipment_id,tag,description,severity,recommended_action,responsible,deadline,completed_at,status" as const;
 
@@ -221,7 +229,7 @@ function mapSugestoesAuvo(params: {
     .sort((a, b) => Number(a.jaImportado) - Number(b.jaImportado) || a.nome.localeCompare(b.nome));
 }
 
-function mapAgenda(row: ScheduleRow): PmocAgenda {
+function mapAgenda(row: ScheduleRow, osPorSchedule: Map<string, string>): PmocAgenda {
   return {
     id: row.id,
     contractId: row.contract_id,
@@ -232,6 +240,7 @@ function mapAgenda(row: ScheduleRow): PmocAgenda {
     yearRef: row.year_ref,
     status: row.status,
     auvoOsId: row.auvo_os_id,
+    ordemServicoId: osPorSchedule.get(row.id) ?? null,
   };
 }
 
@@ -242,11 +251,15 @@ function mapMicrobio(row: MicrobioRow): PmocMicrobioAnalysis {
     propertyId: row.property_id,
     analysisDate: row.analysis_date,
     labName: row.lab_name,
+    labAccreditation: row.lab_accreditation,
+    collectionPoints: row.collection_points,
     fungiUfcM3: row.fungi_ufc_m3,
     ieRatio: row.ie_ratio,
+    coliformsResult: row.coliforms_result,
     status: row.status,
     reportNumber: row.report_number,
     reportUrl: row.report_url,
+    correctiveActionNeeded: row.corrective_action_needed,
   };
 }
 
@@ -314,6 +327,8 @@ function mapContratoResumo(params: {
       null,
     microbioPendentes: params.microbiologia.filter((item) => item.status === "pendente").length,
     ncsAbertas: params.ncs.filter((nc) => nc.status !== "fechado").length,
+    ncsAltasAbertas: params.ncs.filter((nc) => nc.status !== "fechado" && nc.severity === "alta")
+      .length,
   };
 }
 
@@ -354,6 +369,7 @@ async function carregarDataset() {
     agenda,
     microbiologia,
     ncs,
+    osDeVisitas,
   ] = await Promise.all([
     supabase
       .schema("pcm")
@@ -390,6 +406,13 @@ async function carregarDataset() {
       .select(MICROBIO_COLS)
       .order("analysis_date", { ascending: false }),
     supabase.schema("pcm").from("pmoc_nonconformity_log").select(NC_COLS),
+    // E01-S05 AC-1: mapeia visitas que já têm OS criada (botão "Criar OS" da agenda).
+    supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select("id,pmoc_schedule_id")
+      .not("pmoc_schedule_id", "is", null)
+      .is("deleted_at", null),
   ]);
 
   if (clientes.error) throw clientes.error;
@@ -413,6 +436,7 @@ async function carregarDataset() {
       agenda: [],
       microbiologia: [],
       ncs: [],
+      osPorSchedule: new Map<string, string>(),
     };
   }
   if (properties.error) throw properties.error;
@@ -422,6 +446,14 @@ async function carregarDataset() {
   if (agenda.error) throw agenda.error;
   if (microbiologia.error) throw microbiologia.error;
   if (ncs.error) throw ncs.error;
+  if (osDeVisitas.error) throw osDeVisitas.error;
+
+  const osPorSchedule = new Map<string, string>(
+    ((osDeVisitas.data ?? []) as Array<{ id: string; pmoc_schedule_id: string }>).map((row) => [
+      row.pmoc_schedule_id,
+      row.id,
+    ]),
+  );
 
   return {
     clientes: (clientes.data ?? []) as ClienteRow[],
@@ -432,6 +464,7 @@ async function carregarDataset() {
     agenda: (agenda.data ?? []) as ScheduleRow[],
     microbiologia: (microbiologia.data ?? []) as MicrobioRow[],
     ncs: (ncs.data ?? []) as NcRow[],
+    osPorSchedule,
   };
 }
 
@@ -488,7 +521,7 @@ export const supabasePmocAdapter: PmocGateway = {
         equipamentosAuvo: dataset.equipamentosAuvo,
         equipamentosPmoc: equipamentos,
       }),
-      agenda: agenda.map(mapAgenda),
+      agenda: agenda.map((row) => mapAgenda(row, dataset.osPorSchedule)),
       microbiologia: microbiologia.map(mapMicrobio),
       naoConformidades: ncs.map(mapNc),
     };
@@ -600,5 +633,97 @@ export const supabasePmocAdapter: PmocGateway = {
 
     if (error) throw error;
     return mapEquipamento(data as EquipmentRow);
+  },
+
+  async criarAnaliseMicrobio(input: CriarAnaliseMicrobioInput): Promise<PmocMicrobioAnalysis> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("pmoc_microbio_analysis")
+      .insert({
+        contract_id: input.contractId,
+        property_id: input.propertyId,
+        analysis_date: input.analysisDate,
+        lab_name: input.labName,
+        lab_accreditation: input.labAccreditation,
+        collection_points: input.collectionPoints,
+        fungi_ufc_m3: input.fungiUfcM3,
+        ie_ratio: input.ieRatio,
+        coliforms_result: input.coliformsResult,
+        status: input.status,
+        report_number: input.reportNumber,
+        report_url: input.reportUrl,
+        corrective_action_needed: input.correctiveActionNeeded,
+        notes: input.notes,
+        created_by: input.createdBy,
+      })
+      .select(MICROBIO_COLS)
+      .single();
+    if (error) throw error;
+    return mapMicrobio(data as MicrobioRow);
+  },
+
+  async criarNaoConformidade(input: CriarNaoConformidadeInput): Promise<PmocNaoConformidade> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("pmoc_nonconformity_log")
+      .insert({
+        contract_id: input.contractId,
+        equipment_id: input.equipmentId,
+        tag: input.tag,
+        description: input.description,
+        severity: input.severity,
+        recommended_action: input.recommendedAction,
+        responsible: input.responsible,
+        deadline: input.deadline,
+        created_by: input.createdBy,
+      })
+      .select(NC_COLS)
+      .single();
+    if (error) throw error;
+    return mapNc(data as NcRow);
+  },
+
+  async atualizarStatusNc(input: AtualizarStatusNcInput): Promise<PmocNaoConformidade> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("pmoc_nonconformity_log")
+      .update({
+        status: input.status,
+        completed_at: input.completedAt ?? null,
+      })
+      .eq("id", input.id)
+      .select(NC_COLS)
+      .single();
+    if (error) throw error;
+    return mapNc(data as NcRow);
+  },
+
+  async listarProximasPreventivas(): Promise<PmocPreventivaResumo[]> {
+    const dataset = await carregarDataset();
+    const clientes = mapClientes(dataset.clientes);
+    const properties = new Map(dataset.properties.map((property) => [property.id, property]));
+    const contratosPorId = new Map(dataset.contratos.map((contrato) => [contrato.id, contrato]));
+
+    return dataset.agenda
+      .filter(
+        (item) =>
+          (item.status === "agendado" || item.status === "atrasado") &&
+          !dataset.osPorSchedule.has(item.id),
+      )
+      .map((item) => {
+        const contrato = contratosPorId.get(item.contract_id);
+        const property = contrato ? properties.get(contrato.property_id) : undefined;
+        const cliente = property?.client_id ? clientes.get(property.client_id) : undefined;
+        return {
+          id: item.id,
+          contractId: item.contract_id,
+          clienteNome: cliente?.nome ?? property?.name ?? "Cliente não identificado",
+          imovelNome: property?.name ?? "Imóvel PMOC",
+          scheduledDate: item.scheduled_date,
+          maintenanceType: item.maintenance_type,
+          status: item.status,
+        };
+      })
+      .sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
   },
 };

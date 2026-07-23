@@ -197,6 +197,7 @@ export const supabaseConfigAdapter: ConfigGateway = {
           senha: input.senha,
           nome: input.nome,
           papel: input.papel,
+          clienteId: input.clienteId,
           modo:
             input.modo.tipo === "grupo"
               ? { tipo: "grupo", grupoId: input.modo.grupoId }

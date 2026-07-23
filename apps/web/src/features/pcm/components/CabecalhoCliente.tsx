@@ -33,6 +33,14 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
                 {cliente.statusComercial}
               </span>
             )}
+            {cliente.marcacao && (
+              <span
+                className="rounded-full px-2.5 py-1 font-semibold text-white"
+                style={{ backgroundColor: cliente.marcacao.cor }}
+              >
+                {cliente.marcacao.nome}
+              </span>
+            )}
           </div>
         </div>
         <div className="shrink-0 rounded-[8px] bg-white/10 px-4 py-3 text-sm">

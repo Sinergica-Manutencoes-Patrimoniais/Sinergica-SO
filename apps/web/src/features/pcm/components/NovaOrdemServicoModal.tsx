@@ -1,8 +1,9 @@
-import { X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { abrirOrdemServico, carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import { editarOrdemServico } from "../application/editar-ordem-servico";
+import { gerarTituloOs, iaTituloAtiva } from "../application/gerar-titulo-os";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import {
   CATEGORIAS_OS,
@@ -10,10 +11,16 @@ import {
   ORIGENS_OS,
   type OrigemOs,
   prioridadeParaOs,
-  sugerirPrioridadePorGut,
 } from "../domain/abertura-os";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
-import { type PrioridadeBacklog, calcularScoreGut } from "../domain/priorizacao-backlog";
+import {
+  PESOS_GUTD_PADRAO,
+  type PesosGutd,
+  type PrioridadeBacklog,
+  calcularScoreGutd,
+  classificarPrioridadeGutd,
+} from "../domain/priorizacao-backlog";
+import { podeGerarTitulo } from "../domain/titulo-os";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 
 const GUT_OPCOES = [1, 2, 3, 4, 5];
@@ -39,6 +46,10 @@ interface FormState {
   gravidade: number;
   urgencia: number;
   tendencia: number;
+  /** E01-S82: "Dor do cliente" (D do GUTD) — `null` = não avaliado (AC-4, retrocompat). */
+  dorCliente: number | null;
+  /** E01-S83 AC-4: texto livre, distinto da descrição do problema. */
+  observacao: string;
 }
 
 const hoje = new Date().toISOString().slice(0, 10);
@@ -58,6 +69,8 @@ const FORM_INICIAL: FormState = {
   gravidade: 3,
   urgencia: 3,
   tendencia: 3,
+  dorCliente: null,
+  observacao: "",
 };
 
 /** Converte a prioridade livre de uma OS já existente pro conjunto fechado do formulário
@@ -98,16 +111,17 @@ export function NovaOrdemServicoModal({
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [prioridadeManual, setPrioridadeManual] = useState(false);
+  const [iaAtiva, setIaAtiva] = useState(false);
+  const [gerandoTitulo, setGerandoTitulo] = useState(false);
+  const [pesosGutd, setPesosGutd] = useState<PesosGutd>(PESOS_GUTD_PADRAO);
   const editando = Boolean(ordem);
 
   const score = useMemo(
-    () => calcularScoreGut(form.gravidade, form.urgencia, form.tendencia),
-    [form.gravidade, form.urgencia, form.tendencia],
+    () =>
+      calcularScoreGutd(form.gravidade, form.urgencia, form.tendencia, form.dorCliente, pesosGutd),
+    [form.gravidade, form.urgencia, form.tendencia, form.dorCliente, pesosGutd],
   );
-  const prioridadeSugerida = useMemo(
-    () => sugerirPrioridadePorGut(form.gravidade, form.urgencia, form.tendencia),
-    [form.gravidade, form.urgencia, form.tendencia],
-  );
+  const prioridadeSugerida = useMemo(() => classificarPrioridadeGutd(score), [score]);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -131,6 +145,37 @@ export function NovaOrdemServicoModal({
     if (aberto) carregar();
   }, [aberto, carregar]);
 
+  // E01-S81 AC-4: checa se a IA está ligada quando o modal abre, pra habilitar/desabilitar o
+  // botão "Gerar título" sem precisar de uma tentativa falha primeiro.
+  useEffect(() => {
+    if (!aberto) return;
+    iaTituloAtiva(supabaseOrdemServicoAdapter)
+      .then(setIaAtiva)
+      .catch(() => setIaAtiva(false));
+  }, [aberto]);
+
+  // E01-S82 AC-2: pesos GUTD vigentes — carregados uma vez por abertura pro preview de prioridade.
+  useEffect(() => {
+    if (!aberto) return;
+    supabaseOrdemServicoAdapter
+      .obterPesosGutd()
+      .then(setPesosGutd)
+      .catch(() => setPesosGutd(PESOS_GUTD_PADRAO));
+  }, [aberto]);
+
+  async function gerarTitulo() {
+    setGerandoTitulo(true);
+    setErro(null);
+    try {
+      const titulo = await gerarTituloOs(supabaseOrdemServicoAdapter, form.descricao);
+      setForm((f) => ({ ...f, titulo }));
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível gerar o título.");
+    } finally {
+      setGerandoTitulo(false);
+    }
+  }
+
   // E01-S69: pré-preenche o formulário a partir da OS quando abre em modo edição — e trava a
   // sugestão automática de prioridade (efeito abaixo) pra não sobrescrever o valor real da OS.
   useEffect(() => {
@@ -146,6 +191,8 @@ export function NovaOrdemServicoModal({
       gravidade: ordem.gravidade ?? 3,
       urgencia: ordem.urgencia ?? 3,
       tendencia: ordem.tendencia ?? 3,
+      dorCliente: ordem.dorCliente,
+      observacao: ordem.observacao ?? "",
     });
     setPrioridadeManual(true);
   }, [aberto, ordem]);
@@ -177,6 +224,8 @@ export function NovaOrdemServicoModal({
           gravidade: form.gravidade,
           urgencia: form.urgencia,
           tendencia: form.tendencia,
+          dorCliente: form.dorCliente,
+          observacao: form.observacao || null,
           tecnicoId: form.tecnicoId || null,
           dataPrevista: form.dataPrevista || null,
           updatedBy: user.id,
@@ -193,6 +242,8 @@ export function NovaOrdemServicoModal({
           gravidade: form.gravidade,
           urgencia: form.urgencia,
           tendencia: form.tendencia,
+          dorCliente: form.dorCliente,
+          observacao: form.observacao || null,
           localDescricao: form.localDescricao || null,
           solicitante: form.solicitante || null,
           origem: form.origem,
@@ -304,13 +355,31 @@ export function NovaOrdemServicoModal({
             )}
 
             <Field label="Título *" className="md:col-span-2">
-              <input
-                value={form.titulo}
-                onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
-                className="input"
-                placeholder="Ex: Reparo vazamento tubulação — Térreo"
-                required
-              />
+              <div className="flex gap-2">
+                <input
+                  value={form.titulo}
+                  onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
+                  className="input flex-1"
+                  placeholder="Ex: Reparo vazamento tubulação — Térreo"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={gerarTitulo}
+                  disabled={!iaAtiva || !podeGerarTitulo(form.descricao) || gerandoTitulo}
+                  title={
+                    !iaAtiva
+                      ? "IA de título não configurada (Configurações > IA)"
+                      : !podeGerarTitulo(form.descricao)
+                        ? "Preencha a descrição primeiro"
+                        : "Gerar título a partir da descrição"
+                  }
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {gerandoTitulo ? "Gerando..." : "Gerar título"}
+                </button>
+              </div>
             </Field>
 
             <Field label="Descrição" className="md:col-span-2">
@@ -319,6 +388,15 @@ export function NovaOrdemServicoModal({
                 onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
                 className="input min-h-28 resize-y"
                 placeholder="Descreva o problema, evidências, restrições de acesso e contexto relevante."
+              />
+            </Field>
+
+            <Field label="Observação" className="md:col-span-2">
+              <textarea
+                value={form.observacao}
+                onChange={(e) => setForm((f) => ({ ...f, observacao: e.target.value }))}
+                className="input min-h-16 resize-y"
+                placeholder="Observação livre — anotações internas, contexto adicional."
               />
             </Field>
 
@@ -355,11 +433,11 @@ export function NovaOrdemServicoModal({
               </select>
             </Field>
 
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-4 gap-3 rounded-[8px] border border-line bg-paper p-3">
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-5 gap-3 rounded-[8px] border border-line bg-paper p-3">
               <div className="sm:col-span-1">
-                <p className="text-xs font-semibold text-ink-2">GUT</p>
+                <p className="text-xs font-semibold text-ink-2">GUTD</p>
                 <p className="text-xs text-ink-3 mt-0.5">
-                  Score {score} · {labelPrioridade(prioridadeSugerida)}
+                  Score {score.toFixed(1)} · {labelPrioridade(prioridadeSugerida)}
                 </p>
               </div>
               <GutSelect
@@ -376,6 +454,10 @@ export function NovaOrdemServicoModal({
                 label="Tendência"
                 value={form.tendencia}
                 onChange={(v) => setForm((f) => ({ ...f, tendencia: v }))}
+              />
+              <DorClienteSelect
+                value={form.dorCliente}
+                onChange={(v) => setForm((f) => ({ ...f, dorCliente: v }))}
               />
             </div>
 
@@ -495,6 +577,32 @@ function GutSelect({
         onChange={(e) => onChange(Number(e.target.value))}
         className="input h-9"
       >
+        {GUT_OPCOES.map((opcao) => (
+          <option key={opcao} value={opcao}>
+            {opcao}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function DorClienteSelect({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (value: number | null) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-[11px] font-medium text-ink-3">Dor do cliente</span>
+      <select
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+        className="input h-9"
+      >
+        <option value="">Não avaliado</option>
         {GUT_OPCOES.map((opcao) => (
           <option key={opcao} value={opcao}>
             {opcao}

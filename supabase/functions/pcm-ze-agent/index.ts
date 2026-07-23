@@ -7,6 +7,14 @@ import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
 import { responderEvolution } from "../_shared/evolution.ts";
+import { gerarTituloOsViaOpenRouter } from "../_shared/openrouter.ts";
+import { sanearTituloGerado } from "../_shared/titulo-os.ts";
+import {
+  avaliarMotivoHandoff,
+  comporPromptPersona,
+  resolverRotaAtendimento,
+  type TipoPersonaAtendimento,
+} from "../_shared/atendimento-runtime.ts";
 
 const FN = "pcm-ze-agent";
 
@@ -16,6 +24,8 @@ const InputSchema = z.object({
   // status='pending'/wait_until e o check de pausa por-conversa. Exige queueKey.
   forcar: z.boolean().optional(),
 });
+
+const LlmEnvelopeSchema = z.object({ pronto: z.boolean() }).passthrough();
 
 type ModoZe = "off" | "monitor" | "active";
 type ModoConversa = "auto" | "pausado";
@@ -109,23 +119,56 @@ async function processarItem(db: UntypedSupabaseClient, item: QueueItem, forcar 
 
   try {
     const [instanceId, remoteJid] = splitQueueKey(item.queue_key);
-    const config = await buscarConfig(db, remoteJid);
+    const [config, vinculo, conversa] = await Promise.all([
+      buscarConfig(db, remoteJid),
+      buscarInstanciaAgente(db, instanceId),
+      buscarConversa(db, instanceId, remoteJid),
+    ]);
     const messages = await buscarMensagens(db, instanceId, remoteJid);
     const contexto = messages.map((m) => m.content).filter((c): c is string => Boolean(c?.trim())).join("\n");
 
-    if (config) {
-      return await processarChamados(db, item, instanceId, remoteJid, messages, contexto, config, now, forcar);
-    }
-
-    // E02-S08: sem config_ze (não é grupo de condomínio já cliente) — checa se a instância é de
-    // um agente comercial (atendimento.instancias_agente, E02-S06). Se nem isso, ignora (mesmo
-    // comportamento de antes de E02-S08).
-    const instanciaAgente = await buscarInstanciaAgente(db, instanceId);
-    if (!instanciaAgente) {
+    const rota = resolverRotaAtendimento({ vinculo, temConfigZe: config !== null });
+    if (!rota) {
       await finalizarFila(db, item.id, "skipped", now);
       return { queueId: item.id, status: "skipped" };
     }
-    return await processarComercial(db, item, instanceId, remoteJid, messages, contexto, instanciaAgente.personaId, now, forcar);
+
+    if (rota.tipo === "comercial") {
+      return await processarComercial(
+        db,
+        item,
+        instanceId,
+        remoteJid,
+        messages,
+        contexto,
+        rota.personaId as string,
+        now,
+        forcar,
+      );
+    }
+
+    const clientId = conversa?.clientId ?? config?.client_id ?? null;
+    if (!clientId) {
+      await registrarHandoffAutomatico(db, conversa?.id ?? null, "Cliente PCM não vinculado");
+      await finalizarFila(db, item.id, "skipped", now);
+      return { queueId: item.id, status: "transferred", reason: "Cliente PCM não vinculado" };
+    }
+    return await processarChamados(
+      db,
+      item,
+      instanceId,
+      remoteJid,
+      messages,
+      contexto,
+      {
+        client_id: clientId,
+        modo: config?.modo ?? "active",
+        bot_jid: config?.bot_jid ?? null,
+      },
+      rota.personaId,
+      now,
+      forcar,
+    );
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     await db
@@ -145,6 +188,7 @@ async function processarChamados(
   messages: WaMessage[],
   contexto: string,
   config: { client_id: string; modo: ModoZe; bot_jid: string | null },
+  personaId: string | null,
   now: string,
   forcar: boolean,
 ): Promise<Record<string, unknown>> {
@@ -159,24 +203,36 @@ async function processarChamados(
     }
   }
 
-  const persona = await buscarPersona(db, "chamados");
+  const persona = personaId
+    ? await buscarPersonaPorId(db, personaId)
+    : await buscarPersona(db, "chamados");
   if (!personaDisponivelAgora(persona, new Date())) {
     await finalizarFila(db, item.id, "skipped", now);
     return { queueId: item.id, status: "outside_service_window" };
   }
-  if (await deveTransferirParaHumano(db, persona, instanceId, remoteJid, contexto)) {
-    await finalizarFila(db, item.id, "skipped", now);
-    return { queueId: item.id, status: "transferred" };
+  if (!forcar) {
+    const motivoHandoff = await deveTransferirParaHumano(
+      db,
+      persona,
+      instanceId,
+      remoteJid,
+      contexto,
+    );
+    if (motivoHandoff) {
+      await finalizarFila(db, item.id, "skipped", now);
+      return { queueId: item.id, status: "transferred", reason: motivoHandoff };
+    }
   }
-  const conhecimento = persona.rag_enabled
+  const conhecimentoRag = persona.rag_enabled
     ? await buscarConhecimentoRelevante(db, persona.id, contexto)
     : "";
   const chamado = await extrairChamadoViaOpenRouter(
-    [persona.prompt_sistema, conhecimento].filter(Boolean).join("\n\n"),
+    comporPromptPersona(persona.prompt_sistema, persona.base_conhecimento, conhecimentoRag),
     contexto,
     config.client_id,
     remoteJid,
     messages.at(-1)?.sender_jid ?? undefined,
+    persona.modelo_llm,
   );
   if (!chamado.pronto) {
     await responderEvolution(instanceId, remoteJid, chamado.pergunta);
@@ -185,7 +241,7 @@ async function processarChamados(
     return { queueId: item.id, status: "asked" };
   }
 
-  const numero = await proximoNumeroChamado(db);
+  const numero = await proximoNumeroOs(db);
   const { data: os, error: osError } = await db
     .schema("pcm")
     .from("ordens_servico")
@@ -207,6 +263,13 @@ async function processarChamados(
     .single();
   if (osError) throw osError;
 
+  // E01-S81 AC-3/AC-4: se a extração não produziu um título declarativo de verdade (só o
+  // fallback genérico), tenta melhorar via IA — nunca bloqueia a confirmação ao cliente nem
+  // derruba o fluxo se a IA estiver indisponível/desligada (mesmo princípio de E01-S05/e-mail).
+  if (!chamado.titulo?.trim() || chamado.titulo.trim() === "Chamado via Zé") {
+    await tentarMelhorarTituloOs(db, os.id as string, chamado.descricao ?? contexto);
+  }
+
   const confirmacao = `Chamado ${os.numero} aberto. Vou acompanhar por aqui.`;
   await responderEvolution(instanceId, remoteJid, confirmacao);
   await registrarMensagemAgente(db, instanceId, remoteJid, confirmacao, "ze");
@@ -215,6 +278,32 @@ async function processarChamados(
   await db.schema("atendimento").from("conversas").update({ ordem_servico_id: os.id }).eq("instance_id", instanceId).eq("remote_jid", remoteJid);
   await finalizarFila(db, item.id, "done", now);
   return { queueId: item.id, status: "done", osId: os.id, numero: os.numero };
+}
+
+/** E01-S81 AC-3/AC-4: melhora o título de uma OS recém-criada pelo Zé quando a extração só
+ * produziu o fallback genérico ("Chamado via Zé"/vazio) — usa a MESMA credencial de Vault
+ * (`config.integracoes` chave 'openrouter') do botão manual "Gerar título", nunca a env var
+ * `OPENROUTER_API_KEY` do fluxo de extração. Nunca lança: sem IA configurada, erro de rede ou
+ * qualquer falha só loga e segue — a OS já foi criada e confirmada ao cliente, título genérico é
+ * degradação aceitável (mesmo princípio do e-mail em E01-S05), nunca bloqueia o fluxo. */
+async function tentarMelhorarTituloOs(db: UntypedSupabaseClient, osId: string, descricao: string): Promise<void> {
+  if (!descricao.trim()) return;
+  try {
+    const { data: integracao } = await db.schema("config").from("integracoes").select("ativo,config_publico").eq("chave", "openrouter").maybeSingle();
+    if (!integracao?.ativo) return;
+
+    const { data: apiKey } = await db.schema("config").rpc("fn_obter_segredo_integracao_interno", { p_chave: "openrouter_api_key" });
+    if (!apiKey) return;
+
+    const modelo = (integracao.config_publico?.modelo as string | undefined) ?? "openai/gpt-4o-mini";
+    const bruto = await gerarTituloOsViaOpenRouter(apiKey, modelo, descricao);
+    const titulo = sanearTituloGerado(bruto);
+    if (!titulo) return;
+
+    await db.schema("pcm").from("ordens_servico").update({ titulo }).eq("id", osId);
+  } catch (e) {
+    console.error(JSON.stringify({ nivel: "warn", fn: FN, msg: "não foi possível melhorar título via IA — OS segue com título genérico", osId, detail: String(e) }));
+  }
 }
 
 /** E02-S08: agente comercial — qualifica contato novo (não é síndico de condomínio já cliente)
@@ -248,9 +337,18 @@ async function processarComercial(
     await finalizarFila(db, item.id, "skipped", now);
     return { queueId: item.id, status: "outside_service_window" };
   }
-  if (await deveTransferirParaHumano(db, persona, instanceId, remoteJid, contexto)) {
-    await finalizarFila(db, item.id, "skipped", now);
-    return { queueId: item.id, status: "transferred" };
+  if (!forcar) {
+    const motivoHandoff = await deveTransferirParaHumano(
+      db,
+      persona,
+      instanceId,
+      remoteJid,
+      contexto,
+    );
+    if (motivoHandoff) {
+      await finalizarFila(db, item.id, "skipped", now);
+      return { queueId: item.id, status: "transferred", reason: motivoHandoff };
+    }
   }
   const conhecimento = persona.rag_enabled
     ? await buscarConhecimentoRelevante(db, personaId, contexto)
@@ -258,11 +356,12 @@ async function processarComercial(
   const fluxo = await buscarFluxoAtivo(db, personaId);
   const passos = fluxo.passos;
   const lead = await extrairLeadViaOpenRouter(
-    persona.prompt_sistema,
-    [persona.base_conhecimento, conhecimento].filter(Boolean).join("\n\n") || null,
+    comporPromptPersona(persona.prompt_sistema, persona.base_conhecimento, conhecimento),
+    null,
     passos,
     contexto,
     messages.at(-1)?.sender_jid ?? undefined,
+    persona.modelo_llm,
   );
   const conversaExecucao = await buscarConversa(db, instanceId, remoteJid);
   if (fluxo.fluxoId && conversaExecucao?.id) {
@@ -390,16 +489,22 @@ async function buscarConversa(
   db: UntypedSupabaseClient,
   instanceId: string,
   remoteJid: string,
-): Promise<{ id: string; contatoId: string | null } | null> {
+): Promise<{ id: string; contatoId: string | null; clientId: string | null } | null> {
   const { data, error } = await db
     .schema("atendimento")
     .from("conversas")
-    .select("id,contato_id")
+    .select("id,contato_id,client_id")
     .eq("instance_id", instanceId)
     .eq("remote_jid", remoteJid)
     .maybeSingle();
   if (error) throw error;
-  return data ? { id: data.id as string, contatoId: (data.contato_id as string | null) ?? null } : null;
+  return data
+    ? {
+        id: data.id as string,
+        contatoId: (data.contato_id as string | null) ?? null,
+        clientId: (data.client_id as string | null) ?? null,
+      }
+    : null;
 }
 
 /** E02-S01/E02-S08: espelha uma resposta de agente em atendimento.mensagens, pro Inbox humano
@@ -449,7 +554,7 @@ async function buscarPersona(
   const { data, error } = await db
     .schema("atendimento")
     .from("personas")
-    .select("id,prompt_sistema,base_conhecimento,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,palavras_transferencia")
+    .select("id,tipo,prompt_sistema,base_conhecimento,modelo_llm,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,transferir_apos_n_respostas,palavras_transferencia")
     .eq("tipo", tipo)
     .eq("ativo", true)
     .limit(1)
@@ -465,7 +570,7 @@ async function buscarPersona(
 async function buscarInstanciaAgente(
   db: UntypedSupabaseClient,
   instanceId: string,
-): Promise<{ personaId: string } | null> {
+): Promise<{ personaId: string; personaTipo: TipoPersonaAtendimento } | null> {
   const { data, error } = await db
     .schema("atendimento")
     .from("instancias_agente")
@@ -474,7 +579,9 @@ async function buscarInstanciaAgente(
     .eq("ativo", true)
     .maybeSingle();
   if (error) throw error;
-  return data ? { personaId: data.persona_id as string } : null;
+  if (!data) return null;
+  const persona = await buscarPersonaPorId(db, data.persona_id as string);
+  return { personaId: persona.id, personaTipo: persona.tipo };
 }
 
 async function buscarPersonaPorId(
@@ -484,8 +591,9 @@ async function buscarPersonaPorId(
   const { data, error } = await db
     .schema("atendimento")
     .from("personas")
-    .select("id,prompt_sistema,base_conhecimento,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,palavras_transferencia")
+    .select("id,tipo,prompt_sistema,base_conhecimento,modelo_llm,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,transferir_apos_n_respostas,palavras_transferencia")
     .eq("id", id)
+    .eq("ativo", true)
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new HttpError(500, `Persona '${id}' não encontrada`);
@@ -494,13 +602,16 @@ async function buscarPersonaPorId(
 
 interface PersonaRuntime {
   id: string;
+  tipo: TipoPersonaAtendimento;
   prompt_sistema: string;
   base_conhecimento: string | null;
+  modelo_llm: string;
   janela_inicio: string | null;
   janela_fim: string | null;
   janela_dias: number[];
   rag_enabled: boolean;
   limite_diario_mensagens: number | null;
+  transferir_apos_n_respostas: number | null;
   palavras_transferencia: string[];
 }
 
@@ -536,33 +647,57 @@ async function deveTransferirParaHumano(
   instanceId: string,
   remoteJid: string,
   contexto: string,
-): Promise<boolean> {
-  const porPalavra = (persona.palavras_transferencia ?? []).some((palavra) =>
-    contexto.toLocaleLowerCase("pt-BR").includes(palavra.toLocaleLowerCase("pt-BR")),
-  );
+): Promise<string | null> {
   const conversa = await buscarConversa(db, instanceId, remoteJid);
-  let porLimite = false;
-  if (conversa?.id && persona.limite_diario_mensagens !== null) {
+  let respostasAgente = 0;
+  let respostasAgenteHoje = 0;
+  if (conversa?.id) {
     const inicio = new Date();
     inicio.setHours(0, 0, 0, 0);
-    const { count, error } = await db
-      .schema("atendimento")
-      .from("mensagens")
-      .select("id", { count: "exact", head: true })
-      .eq("conversa_id", conversa.id)
-      .in("remetente_tipo", ["ze", "agente"])
-      .gte("created_at", inicio.toISOString());
-    if (error) throw error;
-    porLimite = (count ?? 0) >= persona.limite_diario_mensagens;
+    const [total, hoje] = await Promise.all([
+      db
+        .schema("atendimento")
+        .from("mensagens")
+        .select("id", { count: "exact", head: true })
+        .eq("conversa_id", conversa.id)
+        .in("remetente_tipo", ["ze", "agente"]),
+      db
+        .schema("atendimento")
+        .from("mensagens")
+        .select("id", { count: "exact", head: true })
+        .eq("conversa_id", conversa.id)
+        .in("remetente_tipo", ["ze", "agente"])
+        .gte("created_at", inicio.toISOString()),
+    ]);
+    if (total.error) throw total.error;
+    if (hoje.error) throw hoje.error;
+    respostasAgente = total.count ?? 0;
+    respostasAgenteHoje = hoje.count ?? 0;
   }
-  if ((porPalavra || porLimite) && conversa?.id) {
-    await db
-      .schema("atendimento")
-      .from("conversas")
-      .update({ modo: "pausado" })
-      .eq("id", conversa.id);
-  }
-  return porPalavra || porLimite;
+  const motivo = avaliarMotivoHandoff({
+    contexto,
+    palavrasTransferencia: persona.palavras_transferencia ?? [],
+    respostasAgente,
+    transferirAposNRespostas: persona.transferir_apos_n_respostas,
+    respostasAgenteHoje,
+    limiteDiarioMensagens: persona.limite_diario_mensagens,
+  });
+  if (motivo) await registrarHandoffAutomatico(db, conversa?.id ?? null, motivo);
+  return motivo;
+}
+
+async function registrarHandoffAutomatico(
+  db: UntypedSupabaseClient,
+  conversaId: string | null,
+  motivo: string,
+): Promise<void> {
+  if (!conversaId) return;
+  const { error } = await db.schema("atendimento").rpc("fn_definir_handoff", {
+    p_conversa_id: conversaId,
+    p_acao: "automatico",
+    p_motivo: motivo,
+  });
+  if (error) throw error;
 }
 
 interface PassoFluxo {
@@ -606,6 +741,7 @@ async function extrairChamadoViaOpenRouter(
   clientId: string,
   remoteJid: string,
   solicitante?: string,
+  modelo?: string,
 ): Promise<
   | { pronto: false; pergunta: string }
   | {
@@ -629,13 +765,16 @@ async function extrairChamadoViaOpenRouter(
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: Deno.env.get("OPENROUTER_ZE_MODEL") ?? "google/gemini-2.5-flash",
+      model: modelo || Deno.env.get("OPENROUTER_ZE_MODEL") || "google/gemini-2.5-flash",
       messages: [
         {
           role: "system",
           content: promptSistema,
         },
-        { role: "user", content: `Cliente PCM: ${clientId}\nGrupo: ${remoteJid}\nMensagens:\n${contexto}` },
+        {
+          role: "user",
+          content: `Cliente PCM: ${clientId}\nGrupo: ${remoteJid}\n<DADOS_NAO_CONFIAVEIS>\n${contexto}\n</DADOS_NAO_CONFIAVEIS>`,
+        },
       ],
       response_format: { type: "json_object" },
     }),
@@ -643,7 +782,7 @@ async function extrairChamadoViaOpenRouter(
   if (!res.ok) throw new Error(`OpenRouter falhou: ${res.status}`);
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content;
-  const parsed = JSON.parse(text);
+  const parsed = LlmEnvelopeSchema.parse(JSON.parse(text));
   if (parsed?.pronto === false) {
     return { pronto: false, pergunta: String(parsed.pergunta ?? "Pode me informar o problema, o local e a urgência?") };
   }
@@ -669,6 +808,7 @@ async function extrairLeadViaOpenRouter(
   passos: PassoFluxo[],
   contexto: string,
   solicitante?: string,
+  modelo?: string,
 ): Promise<
   | { pronto: false; pergunta: string }
   | { pronto: true; nome: string; email?: string; telefone?: string; resumo: string; score: number }
@@ -702,10 +842,13 @@ async function extrairLeadViaOpenRouter(
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: Deno.env.get("OPENROUTER_ZE_MODEL") ?? "google/gemini-2.5-flash",
+      model: modelo || Deno.env.get("OPENROUTER_ZE_MODEL") || "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: partesPrompt.join("\n\n") },
-        { role: "user", content: `Mensagens:\n${contexto}` },
+        {
+          role: "user",
+          content: `Mensagens:\n<DADOS_NAO_CONFIAVEIS>\n${contexto}\n</DADOS_NAO_CONFIAVEIS>`,
+        },
       ],
       response_format: { type: "json_object" },
     }),
@@ -713,7 +856,7 @@ async function extrairLeadViaOpenRouter(
   if (!res.ok) throw new Error(`OpenRouter falhou: ${res.status}`);
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content;
-  const parsed = JSON.parse(text);
+  const parsed = LlmEnvelopeSchema.parse(JSON.parse(text));
   if (parsed?.pronto === false) {
     return { pronto: false, pergunta: String(parsed.pergunta ?? "Pode me contar um pouco mais sobre o que você precisa?") };
   }
@@ -735,13 +878,14 @@ function normalizePrioridade(value: unknown): "baixa" | "normal" | "media" | "al
   return value === "baixa" || value === "media" || value === "alta" || value === "critica" ? value : "normal";
 }
 
-async function proximoNumeroChamado(db: UntypedSupabaseClient): Promise<string> {
-  const { count, error } = await db
-    .schema("pcm")
-    .from("ordens_servico")
-    .select("id", { count: "exact", head: true });
+/** E01-S88: numeração atômica via sequence (RPC `pcm.fn_proximo_numero_os`) — substitui o
+ * `count()` com race condition conhecida (E01-S02). Renomeada de `proximoNumeroChamado` — esta
+ * função numera a OS que o Zé cria direto (fluxo WhatsApp→OS de E01-S89 continua fora de escopo
+ * aqui), não o Chamado (`pcm.chamados`, que tem sua própria numeração CH-XXXX). Prefixo "OS-". */
+async function proximoNumeroOs(db: UntypedSupabaseClient): Promise<string> {
+  const { data, error } = await db.schema("pcm").rpc("fn_proximo_numero_os");
   if (error) throw error;
-  return `CH-${String((count ?? 0) + 1).padStart(3, "0")}`;
+  return data as string;
 }
 
 async function systemUserId(_db: UntypedSupabaseClient): Promise<string> {

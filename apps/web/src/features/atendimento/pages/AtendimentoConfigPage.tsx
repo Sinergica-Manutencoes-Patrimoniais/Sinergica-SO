@@ -40,6 +40,7 @@ import {
   criarEvolution,
   desconectarEvolution,
   listarEvolution,
+  sincronizarWebhookEvolution,
 } from "../application/evolution";
 import {
   criarFluxoDeRecipe,
@@ -521,6 +522,11 @@ export function AtendimentoConfigPage() {
     await atualizarEvolution();
   }
 
+  async function handleSincronizarWebhookEvolution(id: string) {
+    await sincronizarWebhookEvolution(supabaseEvolutionAdapter, id);
+    await atualizarEvolution();
+  }
+
   async function handleCriarFluxo(nome: string, personaId: string) {
     if (!user) return;
     await criarFluxo(supabaseFluxoAdapter, { nome, personaId, userId: user.id });
@@ -849,6 +855,7 @@ export function AtendimentoConfigPage() {
           onAtualizar={atualizarEvolution}
           onCriar={handleCriarEvolution}
           onConectar={handleConectarEvolution}
+          onSincronizarWebhook={handleSincronizarWebhookEvolution}
           onDesconectar={handleDesconectarEvolution}
         />
       ) : aba === "canal" ? (

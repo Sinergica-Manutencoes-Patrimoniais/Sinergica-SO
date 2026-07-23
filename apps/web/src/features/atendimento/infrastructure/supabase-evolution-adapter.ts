@@ -50,6 +50,10 @@ export const supabaseEvolutionAdapter: EvolutionGateway = {
     return { instancia: exigirInstancia(data), qrCode: data.qrCode ?? null };
   },
 
+  async sincronizarWebhook(id) {
+    return exigirInstancia(await invocar({ acao: "sincronizar_webhook", id }));
+  },
+
   async desconectar(id) {
     return exigirInstancia(await invocar({ acao: "desconectar", id }));
   },

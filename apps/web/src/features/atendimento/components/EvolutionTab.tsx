@@ -18,6 +18,7 @@ export function EvolutionTab({
   onAtualizar,
   onCriar,
   onConectar,
+  onSincronizarWebhook,
   onDesconectar,
 }: {
   instancias: EvolutionInstancia[];
@@ -25,6 +26,7 @@ export function EvolutionTab({
   onAtualizar: () => Promise<void>;
   onCriar: (form: EvolutionCriarForm) => Promise<EvolutionAcaoResultado>;
   onConectar: (id: string) => Promise<EvolutionAcaoResultado>;
+  onSincronizarWebhook: (id: string) => Promise<void>;
   onDesconectar: (id: string) => Promise<void>;
 }) {
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -157,6 +159,15 @@ export function EvolutionTab({
                 <p className="text-xs text-ink-3">
                   {instancia.instanceName} · {instancia.numeroVinculado ?? "sem número vinculado"}
                 </p>
+                <p
+                  className={`mt-1 text-[11px] ${
+                    instancia.webhookRegistrado ? "text-[#1E8E45]" : "text-[#A12D24]"
+                  }`}
+                >
+                  {instancia.webhookRegistrado
+                    ? "Webhook de mensagens registrado"
+                    : "Webhook pendente — reconecte a instância"}
+                </p>
                 {instancia.erro && <p className="mt-1 text-xs text-[#A12D24]">{instancia.erro}</p>}
               </div>
               <div className="flex items-center gap-2">
@@ -173,6 +184,21 @@ export function EvolutionTab({
                     className="inline-flex items-center gap-1 text-xs font-semibold text-orange disabled:opacity-60"
                   >
                     <RefreshCw className="h-3.5 w-3.5" /> Reconectar
+                  </button>
+                )}
+                {temEscrita && !instancia.webhookRegistrado && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      executar(instancia.id, async () => {
+                        await onSincronizarWebhook(instancia.id);
+                        return undefined;
+                      })
+                    }
+                    disabled={processando !== null}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-orange disabled:opacity-60"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Registrar webhook
                   </button>
                 )}
                 {temEscrita && instancia.status === "conectado" && (

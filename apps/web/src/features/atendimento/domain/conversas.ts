@@ -17,6 +17,8 @@ export interface ConversaItem {
   status: StatusConversa;
   modo: ModoConversa;
   atribuidoA: string | null;
+  handoffMotivo?: string | null;
+  handoffEm?: string | null;
   naoLidas: number;
   ultimaMensagemPreview: string | null;
   ultimaMensagemEm: string | null;

@@ -4,6 +4,7 @@
 // verdade do backlog GUT (E01-S01) e do Hub de OS.
 import { supabase } from "../../../lib/supabase-client";
 import type {
+  AssessmentClienteResumo,
   Cliente360Evento,
   Cliente360Gateway,
   ClienteCommand,
@@ -12,6 +13,7 @@ import type {
   EditarClienteCommand,
   ExcluirClienteCommand,
   GrupoClienteResumo,
+  MarcacaoClienteResumo,
   OrdemServicoResumo,
   QualidadeClienteResumo,
   ResultadoEquipamentos,
@@ -61,6 +63,13 @@ interface ClienteRow {
   observacoes: string | null;
   updated_at: string | null;
   detalhes?: Record<string, unknown> | null;
+  marcacao_id?: string | null;
+}
+
+interface MarcacaoClienteRow {
+  id: string;
+  nome: string;
+  cor: string;
 }
 
 interface GrupoClienteRow {
@@ -152,7 +161,10 @@ function mapearOs(row: OrdemServicoRow, funcionarios: Map<string, string>): Orde
   };
 }
 
-function mapearCliente(row: ClienteRow): ClienteHeader {
+function mapearCliente(
+  row: ClienteRow,
+  marcacoes: Map<string, MarcacaoClienteResumo> = new Map(),
+): ClienteHeader {
   return {
     id: row.id,
     nome: row.nome,
@@ -170,7 +182,23 @@ function mapearCliente(row: ClienteRow): ClienteHeader {
     contatoEmail: row.contato_email,
     observacoes: row.observacoes,
     detalhes: row.detalhes ?? null,
+    marcacao: row.marcacao_id ? (marcacoes.get(row.marcacao_id) ?? null) : null,
   };
+}
+
+/** E01-S91: mesmo padrão de `funcionariosPorId()` — mapa pra anexar a marcação vigente sem N+1. */
+async function marcacoesClientePorId(): Promise<Map<string, MarcacaoClienteResumo>> {
+  const { data, error } = await supabase
+    .schema("pcm")
+    .from("marcacoes_cliente")
+    .select("id,nome,cor");
+  if (error) throw error;
+  return new Map(
+    ((data ?? []) as MarcacaoClienteRow[]).map((row) => [
+      row.id,
+      { id: row.id, nome: row.nome, cor: row.cor },
+    ]),
+  );
 }
 
 function ordenarEventos(eventos: Cliente360Evento[]): Cliente360Evento[] {
@@ -282,12 +310,12 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
   async listarClientes(): Promise<ClienteResumo[]> {
     // A lista virou um cockpit de carteira: além do cadastro Auvo, cruza ativos e OS para permitir
     // filtro operacional sem novas tabelas nem mutação local.
-    const [clientes, ordens, equipamentos] = await Promise.all([
+    const [clientes, ordens, equipamentos, marcacoes] = await Promise.all([
       supabase
         .schema("pcm")
         .from("clientes")
         .select(
-          "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,updated_at",
+          "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,updated_at,marcacao_id",
         )
         .is("deleted_at", null)
         .order("nome", { ascending: true }),
@@ -297,6 +325,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         .select("client_id,status,score_pcm,created_at,auvo_synced_at")
         .is("deleted_at", null),
       supabase.schema("pcm").from("equipamentos").select("auvo_customer_id,ativo,updated_at"),
+      marcacoesClientePorId(),
     ]);
     const { data, error } = clientes;
     if (error && erroColunaAusente(error)) {
@@ -398,6 +427,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
             (row.cidade || row.estado) &&
             (row.contato_telefone || row.contato_email),
         ),
+        marcacao: row.marcacao_id ? (marcacoes.get(row.marcacao_id) ?? null) : null,
       };
     });
   },
@@ -409,7 +439,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       .schema("pcm")
       .from("clientes")
       .select(
-        "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,detalhes",
+        "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,detalhes,marcacao_id",
       )
       .eq("id", id)
       .is("deleted_at", null)
@@ -435,7 +465,8 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     if (error) throw error;
     if (!data) return null;
 
-    return mapearCliente(data as ClienteRow);
+    const marcacoes = await marcacoesClientePorId();
+    return mapearCliente(data as ClienteRow, marcacoes);
   },
 
   async listarBacklogCliente(id): Promise<OrdemServicoResumo[]> {
@@ -671,6 +702,37 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         dataVistoria: laudo.data_vistoria,
         nivelProtecao: laudo.nivel_protecao,
       })),
+    };
+  },
+
+  async obterAssessmentCliente(id): Promise<AssessmentClienteResumo | null> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("inspecoes")
+      .select("id,motivo_assessment,data_inspecao,total_itens")
+      .eq("client_id", id)
+      .eq("e_assessment", true)
+      .is("deleted_at", null)
+      .order("data_inspecao", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+
+    const { count, error: itensError } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .select("id", { count: "exact", head: true })
+      .eq("inspecao_id", data.id)
+      .not("destino", "is", null);
+    if (itensError) throw itensError;
+
+    return {
+      id: data.id as string,
+      motivo: data.motivo_assessment as AssessmentClienteResumo["motivo"],
+      dataInspecao: data.data_inspecao as string,
+      totalItens: data.total_itens as number,
+      itensDerivados: count ?? 0,
     };
   },
 
