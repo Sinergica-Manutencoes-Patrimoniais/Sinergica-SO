@@ -8,6 +8,7 @@ import { PDFDocument, StandardFonts, rgb } from "https://esm.sh/pdf-lib@1.17.1";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
+import { enviarEmailResend } from "../_shared/resend.ts";
 
 const InputSchema = z.object({ recordId: z.string().uuid() });
 
@@ -184,48 +185,10 @@ async function tentarEnviarEmail(
   params: { to: string | null; propertyName: string; pdfBytes: Uint8Array },
 ): Promise<{ sent: boolean; skippedReason?: string }> {
   if (!params.to) return { sent: false, skippedReason: "imóvel sem e-mail de contato" };
-
-  const { data: integracao } = await db
-    .schema("config")
-    .from("integracoes")
-    .select("ativo, provedor, config_publico")
-    .eq("chave", "email")
-    .maybeSingle();
-  if (!integracao?.ativo) {
-    return { sent: false, skippedReason: "integração de e-mail não está ativa (Config > Integrações)" };
-  }
-
-  const { data: apiKey } = await db
-    .schema("config")
-    .rpc("fn_obter_segredo_integracao_interno", { p_chave: "email" });
-  if (!apiKey) {
-    return { sent: false, skippedReason: "chave da integração de e-mail não configurada" };
-  }
-
-  const fromEmail = integracao.config_publico?.fromEmail ?? "pmoc@sinergica.com.br";
-  const fromName = integracao.config_publico?.fromName ?? "Sinérgica Manutenções";
-
-  // Resend REST API — único provedor suportado por ora (E00-S12).
-  const resp = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      from: `${fromName} <${fromEmail}>`,
-      to: [params.to],
-      subject: `Laudo de visita PMOC — ${params.propertyName}`,
-      html: `<p>Segue em anexo o laudo da visita de manutenção PMOC do imóvel <strong>${params.propertyName}</strong>.</p>`,
-      attachments: [
-        {
-          filename: "laudo-pmoc.pdf",
-          content: btoa(String.fromCharCode(...params.pdfBytes)),
-        },
-      ],
-    }),
+  return enviarEmailResend(db, {
+    to: params.to,
+    subject: `Laudo de visita PMOC — ${params.propertyName}`,
+    html: `<p>Segue em anexo o laudo da visita de manutenção PMOC do imóvel <strong>${params.propertyName}</strong>.</p>`,
+    attachments: [{ filename: "laudo-pmoc.pdf", content: btoa(String.fromCharCode(...params.pdfBytes)) }],
   });
-  if (!resp.ok) {
-    const detail = await resp.text().catch(() => "");
-    console.error(JSON.stringify({ nivel: "error", msg: "falha ao enviar e-mail via Resend", status: resp.status, detail }));
-    return { sent: false, skippedReason: `falha no envio (HTTP ${resp.status})` };
-  }
-  return { sent: true };
 }

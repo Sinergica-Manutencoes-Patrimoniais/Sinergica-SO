@@ -14,10 +14,11 @@ export async function obterApontamentoHoras(
   gateway: ApontamentoHorasGateway,
   filtros: FiltrosApontamentoHoras,
 ) {
-  const [itensBrutos, clientes, tecnicos] = await Promise.all([
+  const [itensBrutos, clientes, tecnicos, parametros] = await Promise.all([
     gateway.listarApontamentos(filtros.inicio, filtros.fim),
     gateway.listarClientes(),
     gateway.listarTecnicos(),
+    gateway.obterParametros(),
   ]);
   const itens = filtrarApontamentos(itensBrutos, filtros);
   const jornadaPorTecnico = new Map(tecnicos.map((t) => [t.id, t.jornadaDiariaHoras] as const));
@@ -28,6 +29,7 @@ export async function obterApontamentoHoras(
     porCliente: agregarPorCliente(itens),
     porTecnico: agregarPorTecnico(itens),
     porDia: enriquecerComJornada(agruparPorDia(itens), jornadaPorTecnico),
+    parametros,
   };
 }
 

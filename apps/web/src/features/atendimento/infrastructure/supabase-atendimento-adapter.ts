@@ -2,6 +2,7 @@ import { supabase } from "../../../lib/supabase-client";
 import type {
   AssumirConversaCommand,
   AtendimentoGateway,
+  ClienteVinculoOpcao,
   DevolverAoZeCommand,
   EnviarMensagemCommand,
   MarcarConversaLidaCommand,
@@ -18,6 +19,8 @@ interface ConversaRow {
   status: StatusConversa;
   modo: "auto" | "pausado";
   atribuido_a: string | null;
+  handoff_motivo: string | null;
+  handoff_em: string | null;
   nao_lidas: number;
   ultima_mensagem_preview: string | null;
   ultima_mensagem_em: string | null;
@@ -45,7 +48,7 @@ interface MensagemRow {
 }
 
 const CONVERSA_COLS =
-  "id,client_id,contato_nome,canal,status,modo,atribuido_a,nao_lidas,ultima_mensagem_preview,ultima_mensagem_em,ordem_servico_id,tags,instance_id,remote_jid" as const;
+  "id,client_id,contato_nome,canal,status,modo,atribuido_a,handoff_motivo,handoff_em,nao_lidas,ultima_mensagem_preview,ultima_mensagem_em,ordem_servico_id,tags,instance_id,remote_jid" as const;
 const MENSAGEM_COLS =
   "id,conversa_id,direcao,remetente_tipo,remetente_id,conteudo,status_entrega,erro_detalhe,created_at,tipo_conteudo,midia_url,midia_nome,midia_mime,payload" as const;
 
@@ -59,6 +62,8 @@ function mapConversa(row: ConversaRow, clientesMap: Map<string, string>): Conver
     status: row.status,
     modo: row.modo,
     atribuidoA: row.atribuido_a,
+    handoffMotivo: row.handoff_motivo,
+    handoffEm: row.handoff_em,
     naoLidas: row.nao_lidas,
     ultimaMensagemPreview: row.ultima_mensagem_preview,
     ultimaMensagemEm: row.ultima_mensagem_em,
@@ -88,7 +93,7 @@ function mapMensagem(row: MensagemRow): MensagemItem {
 
 async function invocarAcao(
   conversaId: string,
-  acao: "enviar" | "assumir" | "devolver",
+  acao: "enviar" | "assumir" | "devolver" | "acionar_ia",
   texto?: string,
 ): Promise<{ ok: boolean; mensagemId?: string; erro?: string }> {
   const { data, error } = await supabase.functions.invoke<{
@@ -184,18 +189,22 @@ export const supabaseAtendimentoAdapter: AtendimentoGateway = {
   },
 
   async acionarZeAgora(input) {
-    const { data: conversa, error: conversaError } = await supabase
+    const resultado = await invocarAcao(input.conversaId, "acionar_ia");
+    if (!resultado.ok) throw new Error("Não foi possível acionar a IA.");
+  },
+
+  async listarClientesParaVinculo() {
+    const { data, error } = await supabase
       .schema("atendimento")
-      .from("conversas")
-      .select("instance_id,remote_jid,canal")
-      .eq("id", input.conversaId)
-      .single();
-    if (conversaError) throw conversaError;
-    if (conversa.canal !== "whatsapp")
-      throw new Error("Resposta com IA está disponível apenas para conversas de WhatsApp.");
-    const queueKey = `${conversa.instance_id}:${conversa.remote_jid}`;
-    const { error } = await supabase.functions.invoke("pcm-ze-agent", {
-      body: { queueKey, forcar: true },
+      .rpc("fn_listar_clientes_para_vinculo");
+    if (error) throw error;
+    return (data ?? []) as ClienteVinculoOpcao[];
+  },
+
+  async vincularCliente(input) {
+    const { error } = await supabase.schema("atendimento").rpc("fn_vincular_conversa_cliente", {
+      p_conversa_id: input.conversaId,
+      p_cliente_id: input.clienteId,
     });
     if (error) throw error;
   },

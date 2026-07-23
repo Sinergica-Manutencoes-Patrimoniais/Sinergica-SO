@@ -1,4 +1,5 @@
-import { type StatusOrdemServico, filtrarBacklogGut } from "../domain/ordens-servico";
+import { type StatusOrdemServico, ehOsAberta } from "../domain/ordens-servico";
+import { calcularScoreGutd, ordenarPorPrioridade } from "../domain/priorizacao-backlog";
 import type { AlterarStatusOsInput, FiltrosServidorOrdens, HubOsGateway } from "./hub-os-gateway";
 
 export async function listarOrdensServico(gateway: HubOsGateway, filtros?: FiltrosServidorOrdens) {
@@ -10,8 +11,27 @@ export async function contarKpisOrdens(gateway: HubOsGateway, filtros?: FiltrosS
   return gateway.contarKpis(filtros);
 }
 
+/** E01-S82 AC-2: ordena pelo score GUTD ponderado (nunca gravado — recalculado aqui, em runtime,
+ * a cada carregamento, com os pesos vigentes). G/U/T ausentes (nulos) caem pra 1 (mesmo fallback
+ * do `score_pcm` GENERATED no banco); D ausente é tratado pelo próprio `calcularScoreGutd`
+ * (redistribui peso — AC-4, não penaliza nem infla). */
 export async function listarBacklogGut(gateway: HubOsGateway) {
-  return filtrarBacklogGut(await gateway.listarOrdensServico());
+  const [ordens, pesos] = await Promise.all([
+    gateway.listarOrdensServico(),
+    gateway.obterPesosGutd(),
+  ]);
+  const abertas = ordens.filter((ordem) => ehOsAberta(ordem.status));
+  const comScore = abertas.map((ordem) => ({
+    ...ordem,
+    score: calcularScoreGutd(
+      ordem.gravidade ?? 1,
+      ordem.urgencia ?? 1,
+      ordem.tendencia ?? 1,
+      ordem.dorCliente,
+      pesos,
+    ),
+  }));
+  return ordenarPorPrioridade(comScore);
 }
 
 export async function alterarStatusOrdemServico(

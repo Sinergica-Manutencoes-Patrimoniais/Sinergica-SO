@@ -14,6 +14,7 @@ import type {
   PmocGateway,
   PmocMicrobioAnalysis,
   PmocNaoConformidade,
+  PmocPreventivaResumo,
 } from "../application/pmoc-gateway";
 import { gerarCronogramaPmoc } from "../domain/pmoc";
 import type {
@@ -695,5 +696,34 @@ export const supabasePmocAdapter: PmocGateway = {
       .single();
     if (error) throw error;
     return mapNc(data as NcRow);
+  },
+
+  async listarProximasPreventivas(): Promise<PmocPreventivaResumo[]> {
+    const dataset = await carregarDataset();
+    const clientes = mapClientes(dataset.clientes);
+    const properties = new Map(dataset.properties.map((property) => [property.id, property]));
+    const contratosPorId = new Map(dataset.contratos.map((contrato) => [contrato.id, contrato]));
+
+    return dataset.agenda
+      .filter(
+        (item) =>
+          (item.status === "agendado" || item.status === "atrasado") &&
+          !dataset.osPorSchedule.has(item.id),
+      )
+      .map((item) => {
+        const contrato = contratosPorId.get(item.contract_id);
+        const property = contrato ? properties.get(contrato.property_id) : undefined;
+        const cliente = property?.client_id ? clientes.get(property.client_id) : undefined;
+        return {
+          id: item.id,
+          contractId: item.contract_id,
+          clienteNome: cliente?.nome ?? property?.name ?? "Cliente não identificado",
+          imovelNome: property?.name ?? "Imóvel PMOC",
+          scheduledDate: item.scheduled_date,
+          maintenanceType: item.maintenance_type,
+          status: item.status,
+        };
+      })
+      .sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
   },
 };

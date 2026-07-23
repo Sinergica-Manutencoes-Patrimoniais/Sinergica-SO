@@ -75,4 +75,12 @@ export const supabaseIntegracoesAdapter: IntegracoesGateway = {
       .update({ configurado_em: new Date().toISOString() })
       .eq("chave", chave);
   },
+
+  async temSegredo(chave: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .schema("config")
+      .rpc("fn_integracao_tem_segredo", { p_chave: chave });
+    if (error) throw error;
+    return Boolean(data);
+  },
 };

@@ -17,9 +17,12 @@ import { usePermissoes } from "../../../app/permissoes-context";
 import type { ClienteFormData, ClienteResumo } from "../application/cliente-360-gateway";
 import { criarCliente, editarCliente, excluirCliente } from "../application/clientes-crud";
 import { listarClientes } from "../application/listar-clientes";
+import { definirMarcacaoCliente, listarMarcacoes } from "../application/marcacoes-cliente";
 import { ClienteFormModal } from "../components/ClienteFormModal";
 import { rotuloOuPlaceholder } from "../domain/cliente-360";
+import type { MarcacaoCliente } from "../domain/marcacoes-cliente";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
+import { supabaseMarcacoesClienteAdapter } from "../infrastructure/supabase-marcacoes-cliente-adapter";
 
 type Estado =
   | { fase: "carregando" }
@@ -50,6 +53,8 @@ export function ListaClientesPage({
   const [tipo, setTipo] = useState<FiltroTipo>("todos");
   const [operacao, setOperacao] = useState<FiltroOperacao>("todos");
   const [ordenacao, setOrdenacao] = useState<Ordenacao>("atividade");
+  const [marcacaoFiltro, setMarcacaoFiltro] = useState<string>("todos");
+  const [marcacoes, setMarcacoes] = useState<MarcacaoCliente[]>([]);
   const [modal, setModal] = useState<
     { modo: "novo" } | { modo: "editar"; cliente: ClienteResumo } | null
   >(null);
@@ -72,6 +77,30 @@ export function ListaClientesPage({
     if (!permissoesCarregando && temAcesso) carregar();
   }, [permissoesCarregando, temAcesso, carregar]);
 
+  useEffect(() => {
+    if (!permissoesCarregando && temAcesso) {
+      listarMarcacoes(supabaseMarcacoesClienteAdapter)
+        .then(setMarcacoes)
+        .catch(() => undefined);
+    }
+  }, [permissoesCarregando, temAcesso]);
+
+  async function trocarMarcacao(cliente: ClienteResumo, marcacaoId: string | null) {
+    if (!user) return;
+    setErroAcao(null);
+    try {
+      await definirMarcacaoCliente(
+        supabaseMarcacoesClienteAdapter,
+        cliente.id,
+        marcacaoId,
+        user.id,
+      );
+      await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível trocar a marcação.");
+    }
+  }
+
   const clientes = estado.fase === "pronto" ? estado.clientes : [];
   const termo = normalizar(busca);
   const clientesFiltrados = useMemo(() => {
@@ -88,6 +117,14 @@ export function ListaClientesPage({
           return false;
         }
         if (operacao === "incompleto" && cliente.cadastroCompleto) return false;
+        if (marcacaoFiltro === "sem_marcacao" && cliente.marcacao) return false;
+        if (
+          marcacaoFiltro !== "todos" &&
+          marcacaoFiltro !== "sem_marcacao" &&
+          cliente.marcacao?.id !== marcacaoFiltro
+        ) {
+          return false;
+        }
         if (!termo) return true;
 
         return [
@@ -107,7 +144,7 @@ export function ListaClientesPage({
           .some((valor) => normalizar(String(valor)).includes(termo));
       })
       .sort((a, b) => compararClientes(a, b, ordenacao));
-  }, [clientes, termo, status, tipo, operacao, ordenacao]);
+  }, [clientes, termo, status, tipo, operacao, ordenacao, marcacaoFiltro]);
 
   const metricas = useMemo(() => montarMetricas(clientes), [clientes]);
   const filtrosAtivos =
@@ -115,7 +152,8 @@ export function ListaClientesPage({
     status !== "todos" ||
     tipo !== "todos" ||
     operacao !== "todos" ||
-    ordenacao !== "atividade";
+    ordenacao !== "atividade" ||
+    marcacaoFiltro !== "todos";
 
   function limparFiltros() {
     setBusca("");
@@ -123,6 +161,7 @@ export function ListaClientesPage({
     setTipo("todos");
     setOperacao("todos");
     setOrdenacao("atividade");
+    setMarcacaoFiltro("todos");
   }
 
   async function salvarCliente(dados: ClienteFormData) {
@@ -218,7 +257,7 @@ export function ListaClientesPage({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(260px,1fr)_repeat(4,170px)_auto]">
+        <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(260px,1fr)_repeat(5,170px)_auto]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
             <input
@@ -260,6 +299,16 @@ export function ListaClientesPage({
               ["com_backlog", "Com backlog"],
               ["sem_contato", "Sem contato"],
               ["incompleto", "Incompleto"],
+            ]}
+          />
+          <SelectFiltro
+            label="Marcação"
+            value={marcacaoFiltro}
+            onChange={setMarcacaoFiltro}
+            options={[
+              ["todos", "Todas marcações"],
+              ["sem_marcacao", "Sem marcação"],
+              ...marcacoes.map((m): [string, string] => [m.id, m.nome]),
             ]}
           />
           <SelectFiltro
@@ -327,9 +376,13 @@ export function ListaClientesPage({
                   <ClienteLinha
                     key={cliente.id}
                     cliente={cliente}
+                    marcacoes={marcacoes}
                     onSelecionar={onSelecionar}
                     onEditar={temEscrita ? () => setModal({ modo: "editar", cliente }) : undefined}
                     onExcluir={temEscrita ? () => excluir(cliente) : undefined}
+                    onTrocarMarcacao={
+                      temEscrita ? (marcacaoId) => trocarMarcacao(cliente, marcacaoId) : undefined
+                    }
                   />
                 ))}
               </tbody>
@@ -350,14 +403,18 @@ export function ListaClientesPage({
 
 function ClienteLinha({
   cliente,
+  marcacoes,
   onSelecionar,
   onEditar,
   onExcluir,
+  onTrocarMarcacao,
 }: {
   cliente: ClienteResumo;
+  marcacoes: MarcacaoCliente[];
   onSelecionar: (clienteId: string) => void;
   onEditar?: () => void;
   onExcluir?: () => void;
+  onTrocarMarcacao?: (marcacaoId: string | null) => void;
 }) {
   const local = [cliente.cidade, cliente.estado].filter(Boolean).join(" — ");
   const score = cliente.maiorScorePcm ?? 0;
@@ -386,6 +443,29 @@ function ClienteLinha({
             </Badge>
           )}
           {!cliente.cadastroCompleto && <Badge tone="warning">Incompleto</Badge>}
+          {cliente.marcacao && !onTrocarMarcacao && (
+            <span
+              className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+              style={{ backgroundColor: cliente.marcacao.cor }}
+            >
+              {cliente.marcacao.nome}
+            </span>
+          )}
+          {onTrocarMarcacao && (
+            <select
+              value={cliente.marcacao?.id ?? ""}
+              onChange={(event) => onTrocarMarcacao(event.target.value || null)}
+              className="h-6 rounded-full border-0 px-2 py-0 text-[11px] font-semibold text-white"
+              style={{ backgroundColor: cliente.marcacao?.cor ?? "#9CA3AF" }}
+            >
+              <option value="">Sem marcação</option>
+              {marcacoes.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nome}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
         <p className="mt-1 text-[11px] tabular-nums text-ink-3">
           CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")} · Auvo{" "}

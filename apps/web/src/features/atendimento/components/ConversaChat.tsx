@@ -1,4 +1,4 @@
-import { Bot, MessageCircle, RefreshCw, Send, UserCheck } from "lucide-react";
+import { Bot, History, MessageCircle, RefreshCw, Send, UserCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { WaTemplateItem } from "../domain/canais-externos";
 import { canalSuportaIa, labelCanal } from "../domain/conversas";
@@ -21,6 +21,7 @@ export function ConversaChat({
   tagsDisponiveis,
   onEnviarRico,
   onAtualizarTags,
+  onEnviarHistorico,
 }: {
   conversa: ConversaItem | null;
   mensagens: MensagemItem[];
@@ -33,6 +34,7 @@ export function ConversaChat({
   tagsDisponiveis: TagItem[];
   onEnviarRico: (input: MensagemRicaInput) => Promise<void>;
   onAtualizarTags: (tags: string[]) => Promise<void>;
+  onEnviarHistorico?: () => void;
 }) {
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -168,6 +170,17 @@ export function ConversaChat({
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Responder com IA agora
+              </button>
+            )}
+            {onEnviarHistorico && (
+              <button
+                type="button"
+                disabled={acao !== null}
+                onClick={onEnviarHistorico}
+                className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+              >
+                <History className="h-3.5 w-3.5" />
+                Enviar histórico
               </button>
             )}
           </div>

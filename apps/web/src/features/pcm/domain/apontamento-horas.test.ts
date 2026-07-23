@@ -6,18 +6,21 @@ import {
   agregarPorSemana,
   agregarPorTecnico,
   agruparPorDia,
+  analisarConsistencia,
   calcularCusto,
   calcularHorasOs,
   filtrarApontamentos,
   formatarHorasMinutos,
   gerarCsvApontamento,
+  listarAnomalias,
+  produtividadeDiaria,
   sinalizarJornada,
 } from "./apontamento-horas";
 
 function item(overrides: Partial<ApontamentoHorasItem> = {}): ApontamentoHorasItem {
   return {
     osId: "os1",
-    osNumero: "CH-001",
+    osNumero: "OS-0001",
     clienteId: "c1",
     clienteNome: "Cliente A",
     tecnicoFuncionarioId: "t1",
@@ -91,6 +94,53 @@ describe("apontamento-horas", () => {
     expect(calcularCusto(10, 50)).toBe(500);
     expect(calcularCusto(10, null)).toBeNull();
     expect(calcularCusto(10, undefined)).toBeNull();
+  });
+});
+
+describe("apontamento-horas — visualizações E01-S92", () => {
+  const dia: DiaTecnico = {
+    chave: "t1|2026-07-10",
+    tecnicoFuncionarioId: "t1",
+    tecnicoNome: "Técnico A",
+    dia: "2026-07-10",
+    primeiroCheckIn: "2026-07-10T11:00:00Z",
+    ultimoCheckOut: "2026-07-10T19:00:00Z",
+    diferencaDiaHoras: 8,
+    somaOsHoras: 7,
+    quantidadeOs: 1,
+    incompleto: false,
+    sinalJornada: null,
+    ordens: [],
+  };
+
+  it("compara produtividade diária à meta configurada (AC-1)", () => {
+    expect(produtividadeDiaria([dia], 8)[0]?.desvioHoras).toBe(-1);
+  });
+
+  it("sinaliza divergência e preserva fonte ponto ausente como null (AC-2)", () => {
+    const resultado = analisarConsistencia(
+      [dia],
+      [item({ tecnicoFuncionarioId: "t1", checkInAt: "2026-07-10T11:00:00Z", pontoHoras: null })],
+      15,
+    )[0];
+    expect(resultado).toMatchObject({
+      horasOs: 7,
+      janelaVisitaHoras: 8,
+      pontoHoras: null,
+      divergente: true,
+    });
+  });
+
+  it("lista somente OS positivas abaixo do limiar configurado (AC-3)", () => {
+    const resultado = listarAnomalias(
+      [
+        item({ osId: "curta", horas: 0.05 }),
+        item({ osId: "zero", horas: 0 }),
+        item({ osId: "normal", horas: 1 }),
+      ],
+      5,
+    );
+    expect(resultado.map((os) => os.osId)).toEqual(["curta"]);
   });
 });
 

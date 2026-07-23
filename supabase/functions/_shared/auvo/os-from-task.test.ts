@@ -1,9 +1,9 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
-  contarOsExistentes,
   criarOsDaTarefa,
-  formatarNumeroOs,
   montarLinhaOs,
+  proximoNumeroOs,
+  proximosNumerosOs,
   resolverClienteIdsPorAuvoIds,
   resolverFuncionarioIdsPorAuvoIds,
 } from "./os-from-task.ts";
@@ -16,13 +16,14 @@ interface Call {
 
 /** Stub mínimo do client Supabase — só o suficiente pra exercitar `criarOsDaTarefa` sem um
  * Postgres real. Cada `.from(table)` devolve um builder que registra a chamada e resolve com o
- * fixture configurado para aquela tabela. */
+ * fixture configurado para aquela tabela; `.rpc(nome)` resolve a numeração (E01-S88, sequence). */
 function fakeDb(fixtures: {
   cliente?: { id: string } | null;
   clientesBatch?: Array<{ id: string; auvo_id: number }>;
   funcionario?: { id: string } | null;
   funcionariosBatch?: Array<{ id: string; auvo_user_id: number }>;
-  osCount?: number;
+  osNumero?: string;
+  osNumeros?: string[];
   usuarioSistema?: { user_id: string } | null;
   osInseridaId?: string;
 }) {
@@ -31,6 +32,16 @@ function fakeDb(fixtures: {
     calls,
     schema(_schema: string) {
       return {
+        rpc(nome: string, args?: Record<string, unknown>) {
+          calls.push({ table: "rpc", method: nome, args: [args] });
+          if (nome === "fn_proximo_numero_os") {
+            return Promise.resolve({ data: fixtures.osNumero ?? "OS-0001", error: null });
+          }
+          if (nome === "fn_proximos_numeros_os") {
+            return Promise.resolve({ data: fixtures.osNumeros ?? [], error: null });
+          }
+          throw new Error(`rpc não mapeada no stub: ${nome}`);
+        },
         from(table: string) {
           calls.push({ table, method: "from", args: [] });
           if (table === "clientes") {
@@ -64,18 +75,6 @@ function fakeDb(fixtures: {
           }
           if (table === "ordens_servico") {
             return {
-              select: (_cols: string, opts?: { count?: string; head?: boolean }) => {
-                if (opts?.count === "exact" && opts.head) {
-                  return Promise.resolve({ count: fixtures.osCount ?? 0, error: null });
-                }
-                return {
-                  single: () =>
-                    Promise.resolve({
-                      data: { id: fixtures.osInseridaId ?? "os-nova-1" },
-                      error: null,
-                    }),
-                };
-              },
               insert: (row: Record<string, unknown>) => {
                 calls.push({ table, method: "insert", args: [row] });
                 return {
@@ -117,7 +116,7 @@ function fakeDb(fixtures: {
 Deno.test("criarOsDaTarefa — cliente resolvido cria a OS e devolve id/status", async () => {
   const db = fakeDb({
     cliente: { id: "cliente-1" },
-    osCount: 6,
+    osNumero: "OS-0007",
     usuarioSistema: { user_id: "user-sistema-1" },
     osInseridaId: "os-nova-1",
   });
@@ -141,21 +140,30 @@ Deno.test("criarOsDaTarefa — cliente não sincronizado devolve null sem lança
   assertEquals(resultado, null);
 });
 
-Deno.test("formatarNumeroOs — preenche com zero à esquerda até 3 dígitos", () => {
-  assertEquals(formatarNumeroOs(1), "CH-001");
-  assertEquals(formatarNumeroOs(42), "CH-042");
-  assertEquals(formatarNumeroOs(1234), "CH-1234");
+Deno.test("proximoNumeroOs — E01-S88: chama a RPC de sequence e devolve o número formatado", async () => {
+  const db = fakeDb({ osNumero: "OS-0042" });
+  assertEquals(await proximoNumeroOs(db as never), "OS-0042");
+  assertEquals(db.calls.some((c) => c.table === "rpc" && c.method === "fn_proximo_numero_os"), true);
+});
+
+Deno.test("proximosNumerosOs — E01-S88: reserva N números numa chamada só; 0/negativo não chama a RPC", async () => {
+  const db = fakeDb({ osNumeros: ["OS-0010", "OS-0011", "OS-0012"] });
+  assertEquals(await proximosNumerosOs(db as never, 3), ["OS-0010", "OS-0011", "OS-0012"]);
+
+  const dbVazio = fakeDb({});
+  assertEquals(await proximosNumerosOs(dbVazio as never, 0), []);
+  assertEquals(dbVazio.calls.length, 0);
 });
 
 Deno.test("montarLinhaOs — monta a linha sem I/O, mesmo formato de criarOsDaTarefa", () => {
   const linha = montarLinhaOs(
     { taskId: 999, titulo: "Vazamento", customerId: 501, status: "em_execucao" },
-    { clienteId: "cliente-1", numero: "CH-007", systemUserId: "user-sistema-1" },
+    { clienteId: "cliente-1", numero: "OS-0007", systemUserId: "user-sistema-1" },
   );
   const { auvo_synced_at, ...resto } = linha;
   assertEquals(resto, {
     client_id: "cliente-1",
-    numero: "CH-007",
+    numero: "OS-0007",
     titulo: "Vazamento",
     categoria: "corretiva",
     status: "em_execucao",
@@ -190,7 +198,7 @@ Deno.test("montarLinhaOs — E01-S38: inclui técnico/data agendada/check-in-out
     },
     {
       clienteId: "cliente-1",
-      numero: "CH-007",
+      numero: "OS-0007",
       systemUserId: "user-sistema-1",
       tecnicoFuncionarioId: "funcionario-1",
     },
@@ -223,7 +231,7 @@ Deno.test("criarOsDaTarefa — E01-S38: resolve técnico quando tecnicoAuvoUserI
   const db = fakeDb({
     cliente: { id: "cliente-1" },
     funcionario: { id: "funcionario-1" },
-    osCount: 6,
+    osNumero: "OS-0007",
     usuarioSistema: { user_id: "user-sistema-1" },
     osInseridaId: "os-nova-1",
   });
@@ -256,12 +264,4 @@ Deno.test("resolverClienteIdsPorAuvoIds — resolve em lote e dedup, sem query p
 
   const mapaVazio = await resolverClienteIdsPorAuvoIds(db as never, []);
   assertEquals(mapaVazio.size, 0);
-});
-
-Deno.test("contarOsExistentes — devolve a contagem via count/head, 0 se ausente", async () => {
-  const db = fakeDb({ osCount: 41 });
-  assertEquals(await contarOsExistentes(db as never), 41);
-
-  const dbSemCount = fakeDb({});
-  assertEquals(await contarOsExistentes(dbSemCount as never), 0);
 });

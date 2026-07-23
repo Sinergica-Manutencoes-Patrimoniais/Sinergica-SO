@@ -4,6 +4,7 @@ import {
   criarEvolution,
   desconectarEvolution,
   listarEvolution,
+  sincronizarWebhookEvolution,
 } from "./evolution";
 import type { EvolutionGateway } from "./evolution-gateway";
 
@@ -17,12 +18,14 @@ function gatewayFake(): EvolutionGateway {
         instanceName: "sinergica",
         numeroVinculado: null,
         status: "desconectado",
+        webhookRegistrado: true,
         ativo: true,
         erro: null,
       },
       qrCode: "data:image/png;base64,abc",
     }),
     conectar: vi.fn(),
+    sincronizarWebhook: vi.fn(),
     desconectar: vi.fn(),
   };
 }
@@ -64,5 +67,8 @@ describe("casos de uso Evolution", () => {
     const gateway = gatewayFake();
     expect(() => conectarEvolution(gateway, " ")).toThrow("Instância Evolution é obrigatória.");
     expect(() => desconectarEvolution(gateway, "")).toThrow("Instância Evolution é obrigatória.");
+    expect(() => sincronizarWebhookEvolution(gateway, "")).toThrow(
+      "Instância Evolution é obrigatória.",
+    );
   });
 });

@@ -1,16 +1,33 @@
 // E01-S78: drawer lateral de detalhe do ativo. Reusa `obterContextoItem` (E01-S76) para
 // breadcrumb/sistemas/componentes e acrescenta o histórico de OS (E01-S16). Fecha por X e por Esc.
-import { Puzzle, Wrench, X } from "lucide-react";
+// E01-S79: passa a permitir editar o ativo direto do drawer (antes só visualização).
+import { Pencil, Puzzle, Wrench, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuth } from "../../../app/auth-context";
+import { usePermissoes } from "../../../app/permissoes-context";
 import { obterDetalheAtivo } from "../application/board-ativos";
 import type { DetalheAtivo } from "../application/board-ativos";
+import {
+  editarEquipamento,
+  listarClientesEquipamento,
+  listarEquipamentos,
+} from "../application/equipamentos";
+import type {
+  EquipamentoClienteOpcao,
+  EquipamentoFormData,
+  EquipamentoItem,
+} from "../domain/equipamentos";
+import { ultimaManutencao } from "../domain/historico-ativo";
 import { supabaseBoardAtivosAdapter } from "../infrastructure/supabase-board-ativos-adapter";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
+import { EquipamentoModal } from "./EquipamentoModal";
 
 type Estado =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; detalhe: DetalheAtivo };
+
+type OpcoesEdicao = { clientes: EquipamentoClienteOpcao[]; equipamentos: EquipamentoItem[] };
 
 function dataBr(iso: string | null): string {
   if (!iso) return "—";
@@ -21,11 +38,19 @@ function dataBr(iso: string | null): string {
 export function DrawerDetalheAtivo({
   itemId,
   onClose,
+  onAtualizado,
 }: {
   itemId: string;
   onClose: () => void;
+  /** notifica o board pra recarregar (item movido/renomeado etc.) após uma edição salva. */
+  onAtualizado?: () => void;
 }) {
+  const { user } = useAuth();
+  const { podeAcessar } = usePermissoes();
+  const temEscrita = podeAcessar("pcm", "escrita");
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
+  const [editando, setEditando] = useState(false);
+  const [opcoes, setOpcoes] = useState<OpcoesEdicao | null>(null);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -50,6 +75,36 @@ export function DrawerDetalheAtivo({
     };
   }, [itemId]);
 
+  async function abrirEdicao() {
+    setEditando(true);
+    if (!opcoes) {
+      const [clientes, equipamentos] = await Promise.all([
+        listarClientesEquipamento(supabaseEquipamentosAdapter),
+        listarEquipamentos(supabaseEquipamentosAdapter),
+      ]);
+      setOpcoes({ clientes, equipamentos });
+    }
+  }
+
+  async function salvarEdicao(input: EquipamentoFormData) {
+    if (!user || estado.fase !== "pronto" || !estado.detalhe.contexto) return;
+    await editarEquipamento(supabaseEquipamentosAdapter, {
+      ...input,
+      id: estado.detalhe.contexto.item.id,
+      userId: user.id,
+    });
+    setEditando(false);
+    const detalhe = await obterDetalheAtivo(
+      supabaseEquipamentosAdapter,
+      supabaseBoardAtivosAdapter,
+      itemId,
+    );
+    setEstado({ fase: "pronto", detalhe });
+    onAtualizado?.();
+  }
+
+  const item = estado.fase === "pronto" ? estado.detalhe.contexto?.item : null;
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: Esc já fecha via listener global acima. */}
@@ -57,14 +112,27 @@ export function DrawerDetalheAtivo({
       <div className="drawer-panel relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Detalhe do ativo</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar detalhe do ativo"
-            className="text-ink-3 hover:text-ink"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-3">
+            {temEscrita && item && (
+              <button
+                type="button"
+                onClick={abrirEdicao}
+                aria-label="Editar ativo"
+                className="flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep"
+              >
+                <Pencil className="h-4 w-4" />
+                Editar
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar detalhe do ativo"
+              className="text-ink-3 hover:text-ink"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {estado.fase === "carregando" && (
@@ -75,6 +143,16 @@ export function DrawerDetalheAtivo({
         )}
         {estado.fase === "pronto" && <Conteudo detalhe={estado.detalhe} />}
       </div>
+
+      {editando && item && opcoes && (
+        <EquipamentoModal
+          equipamento={item}
+          clientes={opcoes.clientes}
+          equipamentosDisponiveis={opcoes.equipamentos}
+          onCancel={() => setEditando(false)}
+          onSalvar={salvarEdicao}
+        />
+      )}
     </div>
   );
 }
@@ -157,7 +235,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
           <>
             <p className="mb-2 text-xs text-ink-3">
               Última manutenção:{" "}
-              <strong className="text-ink-2">{dataBr(historicoOs[0]?.data ?? null)}</strong>
+              <strong className="text-ink-2">{dataBr(ultimaManutencao(historicoOs))}</strong>
             </p>
             <ul className="flex flex-col divide-y divide-line-soft">
               {historicoOs.map((os) => (

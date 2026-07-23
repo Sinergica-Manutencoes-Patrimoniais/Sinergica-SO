@@ -1,3 +1,4 @@
+import type { OsHistoricoItem } from "../domain/historico-ativo";
 import type { Sistema, SistemaFormData, SistemaItemMembro } from "../domain/sistemas";
 
 export interface SistemaCommand extends SistemaFormData {
@@ -25,4 +26,8 @@ export interface SistemasGateway {
   listarItensDoSistema(sistemaId: string): Promise<SistemaItemMembro[]>;
   adicionarItem(sistemaId: string, itemId: string, userId: string): Promise<SistemaItemMembro>;
   removerItem(sistemaId: string, itemId: string): Promise<void>;
+
+  /** E01-S87 AC-2: histórico de OS vinculadas ao Sistema em si (`pcm.sistemas.auvo_equipment_id`)
+   * + às OS dos seus Componentes — já deduplicado e ordenado (mais recente primeiro). */
+  listarHistoricoOsSistema(sistemaId: string): Promise<OsHistoricoItem[]>;
 }

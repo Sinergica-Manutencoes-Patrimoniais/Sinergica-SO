@@ -22,6 +22,12 @@ import type {
   QualidadeGateway,
   TipoInspecao,
 } from "../application/qualidade-gateway";
+import { type QuestaoAuvo, mapearQuestionarioParaQuestoes } from "../domain/assessment";
+import type {
+  DestinoItemAssessment,
+  MotivoAssessment,
+  ResponsavelDestino,
+} from "../domain/assessment";
 import { type SistemaInspecao, classificarPontoSpda } from "../domain/inspecoes-laudos";
 
 const MIDIA_BUCKET = "inspecoes-midia";
@@ -56,6 +62,8 @@ interface InspecaoRow {
   art: string | null;
   condicoes: string | null;
   anexos: MidiaItem[] | null;
+  e_assessment: boolean;
+  motivo_assessment: MotivoAssessment | null;
 }
 
 interface InspecaoItemRow {
@@ -79,6 +87,9 @@ interface InspecaoItemRow {
   midias: MidiaItem[] | null;
   responsavel_acao: string | null;
   observacoes: string | null;
+  destino: DestinoItemAssessment | null;
+  destino_responsavel: ResponsavelDestino | null;
+  auvo_questao_chave: string | null;
 }
 
 interface TipoInspecaoRow {
@@ -133,10 +144,10 @@ interface PontoRow {
 }
 
 const INSPECAO_COLS =
-  "id,client_id,titulo,data_inspecao,responsavel_tecnico,status,observacoes_gerais,total_itens,itens_conformes,itens_nao_conformes,itens_atencao,codigo,tipo_inspecao_id,edificacao,endereco,hora_inicio,hora_fim,inspetor,responsavel_no_local,escopo,norma_tecnica,art,condicoes,anexos" as const;
+  "id,client_id,titulo,data_inspecao,responsavel_tecnico,status,observacoes_gerais,total_itens,itens_conformes,itens_nao_conformes,itens_atencao,codigo,tipo_inspecao_id,edificacao,endereco,hora_inicio,hora_fim,inspetor,responsavel_no_local,escopo,norma_tecnica,art,condicoes,anexos,e_assessment,motivo_assessment" as const;
 
 const ITEM_COLS =
-  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes" as const;
+  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes,destino,destino_responsavel,auvo_questao_chave" as const;
 
 const TIPO_INSPECAO_COLS = "id,nome,norma_tecnica,descricao,ativo" as const;
 const TEMPLATE_COLS = "id,tipo_inspecao_id,nome,ativo" as const;
@@ -199,6 +210,8 @@ function mapInspecao(
     art: row.art,
     condicoes: row.condicoes,
     anexos: row.anexos ?? [],
+    eAssessment: row.e_assessment,
+    motivoAssessment: row.motivo_assessment,
   };
 }
 
@@ -224,6 +237,9 @@ function mapItem(row: InspecaoItemRow): InspecaoItem {
     midias: row.midias ?? [],
     responsavelAcao: row.responsavel_acao,
     observacoes: row.observacoes,
+    destino: row.destino,
+    destinoResponsavel: row.destino_responsavel,
+    auvoQuestaoChave: row.auvo_questao_chave,
   };
 }
 
@@ -410,6 +426,8 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
         norma_tecnica: input.normaTecnica ?? null,
         art: input.art ?? null,
         condicoes: input.condicoes ?? null,
+        e_assessment: input.eAssessment ?? false,
+        motivo_assessment: input.motivoAssessment ?? null,
       })
       .select(INSPECAO_COLS)
       .single();
@@ -489,6 +507,7 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
         medicoes: input.medicoes ?? null,
         responsavel_acao: input.responsavelAcao ?? null,
         observacoes: input.observacoes ?? null,
+        auvo_questao_chave: input.auvoQuestaoChave ?? null,
         // `ordem` é `int` (int4, máx. ~2.1bi) no schema — `Date.now()` (ms, ~1.75tri) estoura a
         // coluna. Segundos desde epoch cabe em int4 até 2038, suficiente como chave de ordenação.
         ordem: Math.floor(Date.now() / 1000),
@@ -897,5 +916,107 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
     const { data, error } = await supabase.storage.from(MIDIA_BUCKET).createSignedUrl(path, 3600);
     if (error) throw error;
     return data.signedUrl;
+  },
+
+  // ── E01-S90: assessment ──────────────────────────────────────────────────────────────────────
+
+  async importarQuestionarioAuvo(
+    inspecaoId: string,
+    clientId: string,
+    auvoTaskId: number,
+    userId: string,
+  ): Promise<InspecaoItem[]> {
+    const { data: snapshot, error: snapshotError } = await supabase
+      .schema("pcm")
+      .from("auvo_task_snapshots")
+      .select("checklist")
+      .eq("auvo_task_id", auvoTaskId)
+      .maybeSingle();
+    if (snapshotError) throw snapshotError;
+
+    const questoes: QuestaoAuvo[] = mapearQuestionarioParaQuestoes(
+      (snapshot as { checklist: unknown } | null)?.checklist ?? [],
+    );
+
+    // D2: idempotência resolvida na aplicação (não via upsert/ON CONFLICT) — o índice único de
+    // `auvo_questao_chave` é parcial (`where ... is not null`), e Postgres só infere um índice
+    // parcial em ON CONFLICT quando o predicado é repetido na cláusula, o que o cliente Supabase JS
+    // não expõe. Mais simples e igualmente correto: buscar chaves já importadas e inserir só as novas.
+    const { data: existentes, error: existentesError } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .select("auvo_questao_chave")
+      .eq("inspecao_id", inspecaoId)
+      .not("auvo_questao_chave", "is", null);
+    if (existentesError) throw existentesError;
+    const chavesExistentes = new Set(
+      ((existentes ?? []) as Array<{ auvo_questao_chave: string }>).map(
+        (row) => row.auvo_questao_chave,
+      ),
+    );
+
+    const novas = questoes.filter((questao) => !chavesExistentes.has(questao.chave));
+    if (novas.length > 0) {
+      const { error: insertError } = await supabase
+        .schema("pcm")
+        .from("inspecao_itens")
+        .insert(
+          novas.map((questao) => ({
+            inspecao_id: inspecaoId,
+            client_id: clientId,
+            sistema: "geral",
+            descricao: `${questao.pergunta}: ${questao.resposta}`.slice(0, 2000),
+            resultado: "nao_avaliado",
+            severidade: "media",
+            // D2/casos de borda: mídia do Auvo é URL externa, nunca sobe pro Storage — mesma
+            // convenção já registrada em `0091` pra `foto_url`. Só a primeira imagem é guardada
+            // (coluna única); o item nunca deixa de existir por falta de imagem.
+            foto_url: questao.fotoUrls[0] ?? null,
+            auvo_questao_chave: questao.chave,
+            ordem: Math.floor(Date.now() / 1000),
+            created_by: userId,
+          })),
+        );
+      if (insertError) throw insertError;
+    }
+
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .select(ITEM_COLS)
+      .eq("inspecao_id", inspecaoId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return ((data ?? []) as InspecaoItemRow[]).map(mapItem);
+  },
+
+  async marcarItemDerivado(
+    itemId: string,
+    destino: DestinoItemAssessment,
+    responsavel: ResponsavelDestino,
+  ): Promise<void> {
+    const { error } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .update({ destino, destino_responsavel: responsavel })
+      .eq("id", itemId);
+    if (error) throw error;
+  },
+
+  async obterAssessmentVigente(clientId: string): Promise<InspecaoResumo | null> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("inspecoes")
+      .select(INSPECAO_COLS)
+      .eq("client_id", clientId)
+      .eq("e_assessment", true)
+      .is("deleted_at", null)
+      .order("data_inspecao", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    const [clientes, tipos] = await Promise.all([clientesPorId(), tiposPorId()]);
+    return mapInspecao(data as InspecaoRow, clientes, tipos);
   },
 };

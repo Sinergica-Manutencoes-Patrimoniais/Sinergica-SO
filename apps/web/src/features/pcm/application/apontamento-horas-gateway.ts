@@ -1,4 +1,4 @@
-import type { ApontamentoHorasItem } from "../domain/apontamento-horas";
+import type { ApontamentoHorasItem, ParametrosApontamentoHoras } from "../domain/apontamento-horas";
 
 export interface ClienteOpcaoHoras {
   id: string;
@@ -19,4 +19,6 @@ export interface ApontamentoHorasGateway {
   /** AC-4: `null` quando `financeiro.custos_funcionario` (E04-S06) ainda não existe — degrada sem
    * lançar, a UI mostra só horas com nota. */
   buscarValorHora(tecnicoFuncionarioId: string): Promise<number | null>;
+  obterParametros(): Promise<ParametrosApontamentoHoras>;
+  salvarParametros(parametros: ParametrosApontamentoHoras, userId: string): Promise<void>;
 }

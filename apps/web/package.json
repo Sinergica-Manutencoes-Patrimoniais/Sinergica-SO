@@ -17,6 +17,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@sinergica/portal-core": "workspace:*",
     "@sinergica/shared": "workspace:*",
     "@sinergica/ui": "workspace:*",
     "@supabase/supabase-js": "^2.45.0",

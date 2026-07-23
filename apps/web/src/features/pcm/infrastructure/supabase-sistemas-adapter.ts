@@ -5,6 +5,8 @@ import type {
   SistemaItemOpcao,
   SistemasGateway,
 } from "../application/sistemas-gateway";
+import { agregarHistoricoSistema } from "../domain/historico-ativo";
+import type { OsHistoricoItem } from "../domain/historico-ativo";
 import type { Sistema, SistemaItemMembro } from "../domain/sistemas";
 
 interface SistemaRow {
@@ -209,4 +211,82 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       .eq("item_id", itemId);
     if (error) throw error;
   },
+
+  async listarHistoricoOsSistema(sistemaId): Promise<OsHistoricoItem[]> {
+    // AC-2: duas fontes — OS vinculadas ao Sistema em si (E01-S76/S85 — sobe como Equipment) e OS
+    // vinculadas a qualquer um dos seus Componentes/Itens membros. `agregarHistoricoSistema`
+    // (domínio) junta e deduplica — a mesma OS pode aparecer nas duas fontes.
+    const [sistemaRes, membrosRes] = await Promise.all([
+      supabase
+        .schema("pcm")
+        .from("sistemas")
+        .select("auvo_equipment_id")
+        .eq("id", sistemaId)
+        .maybeSingle(),
+      supabase.schema("pcm").from("sistema_itens").select("item_id").eq("sistema_id", sistemaId),
+    ]);
+    if (sistemaRes.error) throw sistemaRes.error;
+    if (membrosRes.error) throw membrosRes.error;
+
+    const itemIds = (membrosRes.data ?? []).map((row) => row.item_id as string);
+    let auvoEquipmentIdsComponentes: number[] = [];
+    if (itemIds.length > 0) {
+      const { data: itens, error: itensErro } = await supabase
+        .schema("pcm")
+        .from("equipamentos")
+        .select("auvo_equipment_id")
+        .in("id", itemIds);
+      if (itensErro) throw itensErro;
+      auvoEquipmentIdsComponentes = (itens ?? [])
+        .map((row) => row.auvo_equipment_id as number | null)
+        .filter((id): id is number => id != null);
+    }
+    const auvoEquipmentIdSistema =
+      (sistemaRes.data?.auvo_equipment_id as number | null | undefined) ?? null;
+
+    const [historicoSistema, historicoComponentes] = await Promise.all([
+      buscarHistoricoPorAuvoIds(auvoEquipmentIdSistema == null ? [] : [auvoEquipmentIdSistema]),
+      buscarHistoricoPorAuvoIds(auvoEquipmentIdsComponentes),
+    ]);
+    return agregarHistoricoSistema([historicoSistema, historicoComponentes]);
+  },
 };
+
+async function buscarHistoricoPorAuvoIds(auvoEquipmentIds: number[]): Promise<OsHistoricoItem[]> {
+  const ids = [...new Set(auvoEquipmentIds)];
+  if (ids.length === 0) return [];
+
+  const { data: vinculos, error: vincErro } = await supabase
+    .schema("pcm")
+    .from("os_equipamentos_auvo")
+    .select("ordem_servico_id")
+    .in("auvo_equipment_id", ids);
+  if (vincErro) throw vincErro;
+  const osIds = [...new Set((vinculos ?? []).map((v) => v.ordem_servico_id as string))];
+  if (osIds.length === 0) return [];
+
+  const { data: ordens, error: osErro } = await supabase
+    .schema("pcm")
+    .from("ordens_servico")
+    .select("id,numero,categoria,status,data_agendada,created_at")
+    .in("id", osIds)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+  if (osErro) throw osErro;
+  return (
+    (ordens ?? []) as Array<{
+      id: string;
+      numero: string;
+      categoria: string | null;
+      status: string | null;
+      data_agendada: string | null;
+      created_at: string | null;
+    }>
+  ).map((o) => ({
+    osId: o.id,
+    numero: o.numero,
+    categoria: o.categoria,
+    status: o.status,
+    data: o.data_agendada ?? o.created_at,
+  }));
+}

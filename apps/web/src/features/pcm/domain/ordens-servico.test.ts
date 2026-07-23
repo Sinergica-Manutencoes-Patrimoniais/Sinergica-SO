@@ -4,6 +4,7 @@ import {
   agruparPorTecnico,
   calcularKpisOrdens,
   deveAlterarStatusPorDrop,
+  ehItemBacklog,
   filtrarBacklogGut,
   filtrarOrdens,
   formatarDiaIso,
@@ -15,7 +16,7 @@ import {
 
 const base = {
   id: "os",
-  numero: "CH-001",
+  numero: "OS-0001",
   titulo: "Teste",
   descricao: null,
   clienteNome: "Cliente",
@@ -24,6 +25,9 @@ const base = {
   gravidade: 3,
   urgencia: 3,
   tendencia: 3,
+  dorCliente: null,
+  observacao: null,
+  origemInspecaoItemId: null,
   auvoTaskId: null,
   auvoSyncStatus: null,
   auvoSyncError: null,
@@ -154,7 +158,7 @@ describe("ordens-servico", () => {
       {
         ...base,
         id: "1",
-        numero: "CH-001",
+        numero: "OS-0001",
         status: "planejamento",
         categoria: "corretiva",
         tecnicoFuncionarioId: "tec-1",
@@ -163,7 +167,7 @@ describe("ordens-servico", () => {
       {
         ...base,
         id: "2",
-        numero: "CH-002",
+        numero: "OS-0002",
         status: "planejamento",
         categoria: "corretiva",
         tecnicoFuncionarioId: "tec-2",
@@ -200,10 +204,73 @@ describe("ordens-servico", () => {
       tecnicoNome: "Fabrício",
     });
 
-    expect(resumo).toContain("CH-001 · Planejamento · Média");
+    expect(resumo).toContain("OS-0001 · Planejamento · Média");
     expect(resumo).toContain("Cliente: Cliente");
     expect(resumo).toContain("Técnico: Fabrício");
     expect(resumo).toContain("Trocar o disjuntor");
+  });
+
+  it("E01-S83 AC-4: tooltip inclui a Observação quando preenchida, omite quando vazia", () => {
+    const comObservacao = resumoTooltipOrdem({
+      ...base,
+      status: "solicitacao",
+      scorePcm: 3,
+      createdAt: "2026-07-21",
+      observacao: "Aguardando autorização do síndico",
+    });
+    expect(comObservacao).toContain("Observação: Aguardando autorização do síndico");
+
+    const semObservacao = resumoTooltipOrdem({
+      ...base,
+      status: "solicitacao",
+      scorePcm: 3,
+      createdAt: "2026-07-21",
+    });
+    expect(semObservacao).not.toContain("Observação:");
+  });
+
+  it("E01-S83 AC-2: ehItemBacklog — só é backlog sem data/técnico/vínculo Auvo, e só enquanto aberta", () => {
+    expect(
+      ehItemBacklog({
+        status: "solicitacao",
+        dataAgendada: null,
+        tecnicoFuncionarioId: null,
+        auvoTaskId: null,
+      }),
+    ).toBe(true);
+
+    expect(
+      ehItemBacklog({
+        status: "solicitacao",
+        dataAgendada: "2026-07-25",
+        tecnicoFuncionarioId: null,
+        auvoTaskId: null,
+      }),
+    ).toBe(false);
+    expect(
+      ehItemBacklog({
+        status: "solicitacao",
+        dataAgendada: null,
+        tecnicoFuncionarioId: "tec-1",
+        auvoTaskId: null,
+      }),
+    ).toBe(false);
+    expect(
+      ehItemBacklog({
+        status: "solicitacao",
+        dataAgendada: null,
+        tecnicoFuncionarioId: null,
+        auvoTaskId: 42,
+      }),
+    ).toBe(false);
+    expect(
+      ehItemBacklog({
+        status: "finalizado",
+        dataAgendada: null,
+        tecnicoFuncionarioId: null,
+        auvoTaskId: null,
+      }),
+    ).toBe(false);
   });
 
   it("deveAlterarStatusPorDrop — E01-S61: só dispara quando origem e destino diferem", () => {

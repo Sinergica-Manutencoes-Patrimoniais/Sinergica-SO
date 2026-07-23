@@ -9,6 +9,24 @@ export interface ApontamentoHorasItem {
   checkInAt: string | null;
   checkOutAt: string | null;
   horas: number;
+  /** Fonte de ponto ainda não integrada no dataset atual. Ausência é `null`, nunca zero. */
+  pontoHoras?: number | null;
+}
+
+export interface ParametrosApontamentoHoras {
+  metaDiariaHoras: number;
+  toleranciaMinutos: number;
+  limiarAnomaliaMinutos: number;
+}
+
+export interface ConsistenciaDia {
+  chave: string;
+  tecnicoNome: string;
+  dia: string;
+  horasOs: number;
+  janelaVisitaHoras: number | null;
+  pontoHoras: number | null;
+  divergente: boolean;
 }
 
 export interface AgregadoHoras {
@@ -101,6 +119,54 @@ export function agregarPorTecnico(itens: ApontamentoHorasItem[]): AgregadoHoras[
     (item) => item.tecnicoFuncionarioId,
     (item) => item.tecnicoNome || "Sem técnico",
   );
+}
+
+export function produtividadeDiaria(dias: DiaTecnico[], metaDiariaHoras: number) {
+  return dias.map((dia) => ({
+    ...dia,
+    metaDiariaHoras,
+    desvioHoras: arredondar(dia.somaOsHoras - metaDiariaHoras),
+  }));
+}
+
+export function analisarConsistencia(
+  dias: DiaTecnico[],
+  itens: ApontamentoHorasItem[],
+  toleranciaMinutos: number,
+): ConsistenciaDia[] {
+  return dias.map((dia) => {
+    const pontoValores = itens
+      .filter((item) => {
+        const itemDia = diaLocal(item.checkInAt) ?? diaLocal(item.checkOutAt);
+        return item.tecnicoFuncionarioId === dia.tecnicoFuncionarioId && itemDia === dia.dia;
+      })
+      .map((item) => item.pontoHoras)
+      .filter((valor): valor is number => valor != null && Number.isFinite(valor));
+    const pontoHoras = pontoValores.length
+      ? arredondar(pontoValores.reduce((soma, valor) => soma + valor, 0))
+      : null;
+    const janelaVisitaHoras = dia.incompleto ? null : dia.diferencaDiaHoras;
+    const fontes = [dia.somaOsHoras, janelaVisitaHoras, pontoHoras].filter(
+      (valor): valor is number => valor != null,
+    );
+    const amplitudeMinutos =
+      fontes.length > 1 ? (Math.max(...fontes) - Math.min(...fontes)) * 60 : 0;
+    return {
+      chave: dia.chave,
+      tecnicoNome: dia.tecnicoNome,
+      dia: dia.dia,
+      horasOs: dia.somaOsHoras,
+      janelaVisitaHoras,
+      pontoHoras,
+      divergente: amplitudeMinutos > toleranciaMinutos,
+    };
+  });
+}
+
+export function listarAnomalias(itens: ApontamentoHorasItem[], limiarMinutos: number) {
+  return itens
+    .filter((item) => item.horas > 0 && item.horas * 60 < limiarMinutos)
+    .sort((a, b) => a.horas - b.horas);
 }
 
 /** AC-4: ponte de custo — só calcula quando há valor/hora (E04-S06); sem isso, a tela mostra só

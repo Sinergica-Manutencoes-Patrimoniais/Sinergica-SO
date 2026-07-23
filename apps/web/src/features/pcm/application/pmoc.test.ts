@@ -99,6 +99,7 @@ function gatewayFake(): PmocGateway {
       completedAt: input.completedAt ?? null,
       status: input.status,
     })),
+    listarProximasPreventivas: vi.fn(async () => []),
   };
 }
 

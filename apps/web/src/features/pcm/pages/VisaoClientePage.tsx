@@ -7,6 +7,7 @@
 import {
   Activity,
   Calendar,
+  ClipboardCheck,
   ClipboardList,
   Copy,
   DollarSign,
@@ -14,19 +15,23 @@ import {
   FolderTree,
   Layers,
   LayoutGrid,
+  Link2,
   MessageCircle,
   Package,
   Pencil,
   RefreshCw,
   ShieldCheck,
   TrendingUp,
+  UserPlus,
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { supabaseConfigAdapter } from "../../config/infrastructure/supabase-config-adapter";
 import type {
+  AssessmentClienteResumo,
   Cliente360Evento,
   Cliente360Metricas,
   ClienteHeader,
@@ -45,6 +50,8 @@ import { PainelBacklog } from "../components/PainelBacklog";
 import { PainelEquipamentos } from "../components/PainelEquipamentos";
 import { PainelHistorico } from "../components/PainelHistorico";
 import { PainelItensDoCliente } from "../components/PainelItensDoCliente";
+import { PainelSistemasCliente } from "../components/PainelSistemasCliente";
+import { MOTIVO_ASSESSMENT_LABEL } from "../domain/assessment";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { EstruturaClientePage } from "./EstruturaClientePage";
 
@@ -58,8 +65,10 @@ type Aba360 =
   | "timeline"
   | "os"
   | "qualidade"
+  | "assessment"
   | "ativos"
   | "estrutura"
+  | "sistemas"
   | "board"
   | "financeiro"
   | "comunicacao";
@@ -69,9 +78,13 @@ const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   { id: "timeline", label: "Timeline", icon: RefreshCw },
   { id: "os", label: "OS", icon: ClipboardList },
   { id: "qualidade", label: "Inspeções", icon: Calendar },
+  // E01-S90 AC-4: assessment vigente do cliente (documento de estado, distinto de Inspeções ABNT).
+  { id: "assessment", label: "Assessment", icon: ClipboardCheck },
   { id: "ativos", label: "Ativos", icon: Layers },
   // E01-S76: Área>Local (árvore) — onde os Itens estão instalados.
   { id: "estrutura", label: "Estrutura", icon: FolderTree },
+  // E01-S86 AC-2: compor Sistema (checkbox+filtro), mesmo componente do PCM.
+  { id: "sistemas", label: "Sistemas", icon: Link2 },
   // E01-S78: board visual dos ativos por Local (fase 1 do "mapa do andar").
   { id: "board", label: "Board", icon: LayoutGrid },
   { id: "financeiro", label: "Financeiro", icon: DollarSign },
@@ -96,6 +109,7 @@ export function VisaoClientePage({
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [aba, setAba] = useState<Aba360>(periodo ? "os" : "resumo");
   const [editandoCadastro, setEditandoCadastro] = useState(false);
+  const [criandoAcesso, setCriandoAcesso] = useState(false);
 
   // AC-1: só carrega/renderiza o conteúdo com leitura no módulo pcm (mesma checagem das demais
   // telas do PCM; superadmin já é bypass dentro de podeAcessarModulo). Sem permissão nova.
@@ -159,12 +173,39 @@ export function VisaoClientePage({
     return <ClienteNaoEncontrado />;
   }
 
-  const { cliente, metricas, eventos, backlog, historico, equipamentos, qualidade, grupos } =
-    estado.visao;
+  const {
+    cliente,
+    metricas,
+    eventos,
+    backlog,
+    historico,
+    equipamentos,
+    qualidade,
+    grupos,
+    assessment,
+  } = estado.visao;
 
   return (
     <div className="flex flex-col gap-5">
       <CabecalhoCliente cliente={cliente} />
+      {(user?.papel === "superadmin" || user?.papel === "supervisor") && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setCriandoAcesso(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white hover:bg-orange-deep"
+          >
+            <UserPlus size={16} /> Criar acesso ao portal
+          </button>
+        </div>
+      )}
+      {criandoAcesso && (
+        <CriarAcessoPortalModal
+          clienteId={cliente.id}
+          clienteNome={cliente.nome}
+          onClose={() => setCriandoAcesso(false)}
+        />
+      )}
       <PainelCadastroAuvo
         cliente={cliente}
         temEscrita={temEscrita}
@@ -248,6 +289,8 @@ export function VisaoClientePage({
 
       {aba === "qualidade" && <PainelQualidade qualidade={qualidade} />}
 
+      {aba === "assessment" && <PainelAssessment assessment={assessment} />}
+
       {aba === "ativos" && (
         <div className="flex flex-col gap-4">
           {user && (
@@ -261,6 +304,10 @@ export function VisaoClientePage({
         <EstruturaClientePage clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
       )}
 
+      {aba === "sistemas" && user && (
+        <PainelSistemasCliente clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
+      )}
+
       {aba === "board" && (
         <BoardAtivos clienteId={cliente.id} onIrParaEstrutura={() => setAba("estrutura")} />
       )}
@@ -271,6 +318,98 @@ export function VisaoClientePage({
 
       {aba === "comunicacao" && <PainelComunicacao cliente={cliente} eventos={eventos} />}
     </div>
+  );
+}
+
+function CriarAcessoPortalModal({
+  clienteId,
+  clienteNome,
+  onClose,
+}: {
+  clienteId: string;
+  clienteNome: string;
+  onClose: () => void;
+}) {
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const criar = async () => {
+    setErro(null);
+    setSalvando(true);
+    try {
+      await supabaseConfigAdapter.criarUsuario({
+        nome,
+        email,
+        senha,
+        papel: "cliente-sindico",
+        clienteId,
+        modo: { tipo: "individual", permissoes: [] },
+      });
+      onClose();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível criar o acesso.");
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  return (
+    <dialog open className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <h2 className="text-lg font-semibold text-ink">Criar acesso ao Portal do Cliente</h2>
+        <p className="mt-1 text-sm text-ink-3">Condomínio: {clienteNome}</p>
+        <div className="mt-5 grid gap-3">
+          <label className="text-sm text-ink-2">
+            Nome
+            <input
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+          <label className="text-sm text-ink-2">
+            E-mail
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+          <label className="text-sm text-ink-2">
+            Senha inicial
+            <input
+              type="password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              minLength={8}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+        </div>
+        {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-line px-4 py-2 text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={salvando || !nome.trim() || !email.trim() || senha.length < 8}
+            onClick={criar}
+            className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {salvando ? "Criando…" : "Criar acesso"}
+          </button>
+        </div>
+      </div>
+    </dialog>
   );
 }
 
@@ -682,6 +821,34 @@ function ResumoLinha({
         {value}
       </span>
     </div>
+  );
+}
+
+function PainelAssessment({ assessment }: { assessment: AssessmentClienteResumo | null }) {
+  return (
+    <section className="rounded-[8px] border border-line bg-card">
+      <div className="border-b border-line-soft px-4 py-3">
+        <h3 className="text-sm font-semibold text-ink">Assessment</h3>
+        <p className="mt-0.5 text-xs text-ink-3">Documento de estado vigente do cliente</p>
+      </div>
+      {!assessment ? (
+        <div className="px-5 py-8 text-center text-sm text-ink-3">
+          Nenhum assessment cadastrado ainda — crie um em PCM → Assessment.
+        </div>
+      ) : (
+        <div className="p-4">
+          <p className="text-sm text-ink-2">
+            {MOTIVO_ASSESSMENT_LABEL[assessment.motivo ?? "inicio"]} ·{" "}
+            {new Date(`${assessment.dataInspecao}T00:00:00`).toLocaleDateString("pt-BR")}
+          </p>
+          <p className="mt-1 text-xs text-ink-3">
+            {`${assessment.itensDerivados} de ${assessment.totalItens} ${
+              assessment.totalItens === 1 ? "item" : "itens"
+            } já derivado${assessment.itensDerivados === 1 ? "" : "s"} (Chamado/Backlog/OS)`}
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
 

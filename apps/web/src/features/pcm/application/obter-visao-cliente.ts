@@ -1,5 +1,6 @@
 // Caso de uso principal da Visão 360 (E01-S12) — orquestra o gateway, sem I/O direto.
 import type {
+  AssessmentClienteResumo,
   Cliente360Evento,
   Cliente360Gateway,
   Cliente360Metricas,
@@ -26,6 +27,7 @@ export type VisaoCliente =
       equipamentos: ResultadoEquipamentos;
       qualidade: QualidadeClienteResumo;
       grupos: GrupoClienteResumo[];
+      assessment: AssessmentClienteResumo | null;
     };
 
 /**
@@ -50,14 +52,16 @@ export async function obterVisaoCliente(
   const cliente = await gateway.buscarCliente(clienteId);
   if (cliente === null) return { tipo: "nao_encontrado" };
 
-  const [backlog, historico, equipamentos, eventos, qualidade, grupos] = await Promise.all([
-    gateway.listarBacklogCliente(clienteId),
-    gateway.listarHistoricoCliente(clienteId),
-    carregarEquipamentos(gateway, clienteId, cliente.auvoId),
-    carregarEventos(gateway, clienteId),
-    carregarQualidade(gateway, clienteId),
-    carregarGrupos(gateway, clienteId),
-  ]);
+  const [backlog, historico, equipamentos, eventos, qualidade, grupos, assessment] =
+    await Promise.all([
+      gateway.listarBacklogCliente(clienteId),
+      gateway.listarHistoricoCliente(clienteId),
+      carregarEquipamentos(gateway, clienteId, cliente.auvoId),
+      carregarEventos(gateway, clienteId),
+      carregarQualidade(gateway, clienteId),
+      carregarGrupos(gateway, clienteId),
+      carregarAssessment(gateway, clienteId),
+    ]);
 
   return {
     tipo: "ok",
@@ -69,7 +73,20 @@ export async function obterVisaoCliente(
     equipamentos,
     qualidade,
     grupos,
+    assessment,
   };
+}
+
+/** E01-S90 AC-4: isolado como qualidade/equipamentos — falha não derruba o resto da página. */
+async function carregarAssessment(
+  gateway: Cliente360Gateway,
+  clienteId: string,
+): Promise<AssessmentClienteResumo | null> {
+  try {
+    return await gateway.obterAssessmentCliente(clienteId);
+  } catch {
+    return null;
+  }
 }
 
 /** E01-S51: isolado como equipamentos/qualidade — falha não derruba o resto da página. */

@@ -92,4 +92,32 @@ export const supabaseApontamentoHorasAdapter: ApontamentoHorasGateway = {
       return null;
     }
   },
+  async obterParametros() {
+    const { data, error } = await supabase
+      .schema("config")
+      .from("parametros_apontamento_horas")
+      .select("meta_diaria_horas,tolerancia_minutos,limiar_anomalia_minutos")
+      .eq("id", 1)
+      .single();
+    if (error) throw error;
+    return {
+      metaDiariaHoras: Number(data.meta_diaria_horas),
+      toleranciaMinutos: Number(data.tolerancia_minutos),
+      limiarAnomaliaMinutos: Number(data.limiar_anomalia_minutos),
+    };
+  },
+  async salvarParametros(parametros, userId) {
+    const { error } = await supabase
+      .schema("config")
+      .from("parametros_apontamento_horas")
+      .update({
+        meta_diaria_horas: parametros.metaDiariaHoras,
+        tolerancia_minutos: parametros.toleranciaMinutos,
+        limiar_anomalia_minutos: parametros.limiarAnomaliaMinutos,
+        updated_at: new Date().toISOString(),
+        updated_by: userId,
+      })
+      .eq("id", 1);
+    if (error) throw error;
+  },
 };

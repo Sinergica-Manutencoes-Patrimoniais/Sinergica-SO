@@ -24,3 +24,7 @@ export function definirSegredoIntegracao(
   if (!valorNormalizado) throw new Error("Valor do segredo é obrigatório.");
   return gateway.definirSegredo(chaveNormalizada, valorNormalizado);
 }
+
+export function temSegredoIntegracao(gateway: IntegracoesGateway, chave: string) {
+  return gateway.temSegredo(chave);
+}

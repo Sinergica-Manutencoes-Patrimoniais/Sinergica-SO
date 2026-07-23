@@ -15,7 +15,7 @@ port = 54321
 # query a uma tabela fora de `public` falha. O MESMO ajuste precisa ser feito manualmente no
 # projeto hospedado (Dashboard → Settings → API → Exposed schemas) — não é aplicado por
 # migration. Ver spec.md desta story (E00-S05) e o runbook de provisionamento.
-schemas = ["public", "graphql_public", "pcm", "atendimento", "comercial", "relacionamento", "config"]
+schemas = ["public", "graphql_public", "pcm", "atendimento", "comercial", "relacionamento", "config", "financeiro"]
 # Extra schemas to add to the search_path of every request.
 extra_search_path = ["public", "extensions"]
 # The maximum number of rows returns from a view, table, or stored procedure. Limits payload size
@@ -460,6 +460,18 @@ verify_jwt = true
 [functions.pcm-auvo-webhooks-register]
 verify_jwt = true
 [functions.pcm-ze-agent]
+verify_jwt = true
+[functions.financeiro-regua-cobranca-disparo]
+verify_jwt = true
+[functions.financeiro-cobranca-emitir]
+verify_jwt = true
+[functions.financeiro-cobranca-webhook]
+verify_jwt = false
+[functions.financeiro-cobranca-reconciliar]
+verify_jwt = true
+[functions.pcm-os-gerar-titulo]
+verify_jwt = true
+[functions.portal-notificar-email]
 verify_jwt = true
 
 # Experimental features may be deprecated any time

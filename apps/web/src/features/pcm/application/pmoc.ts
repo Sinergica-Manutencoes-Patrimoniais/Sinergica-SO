@@ -10,6 +10,7 @@ import type {
   CriarEquipamentoPmocInput,
   CriarNaoConformidadeInput,
   PmocGateway,
+  PmocPreventivaResumo,
 } from "./pmoc-gateway";
 
 function exigirTexto(valor: string, campo: string): string {
@@ -36,6 +37,13 @@ export async function carregarPmoc(gateway: PmocGateway) {
     gateway.listarContratos(),
   ]);
   return { clientes, contratos };
+}
+
+/** E01-S84 AC-3: alimenta a coluna "Preventiva" do Kanban de OS. */
+export async function listarProximasPreventivas(
+  gateway: PmocGateway,
+): Promise<PmocPreventivaResumo[]> {
+  return gateway.listarProximasPreventivas();
 }
 
 export async function criarContratoPmoc(gateway: PmocGateway, input: CriarContratoPmocInput) {
@@ -175,6 +183,8 @@ export async function criarOsDaVisitaPmoc(
     gravidade: 2,
     urgencia: 2,
     tendencia: 2,
+    dorCliente: null,
+    observacao: null,
     localDescricao: input.endereco,
     solicitante: null,
     origem: "pmoc",

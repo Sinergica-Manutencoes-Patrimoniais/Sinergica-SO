@@ -7,6 +7,9 @@ export interface EquipamentoRow extends Record<string, unknown> {
   categoria?: string | null;
   auvo_customer_id?: number | null;
   localizacao?: string | null;
+  /** E01-S85 AC-1: Área+Local+Sublocal concatenados, recalculado por trigger (`0131`). `null` = sem
+   * `local_id` ainda, ou item nunca tocado por esta story — `toAuvo` cai pro `localizacao` legado. */
+  auvo_localizacao?: string | null;
   observacoes?: string | null;
   ativo?: boolean | null;
   url_imagem?: string | null;
@@ -47,7 +50,9 @@ export const equipamentosDescriptor: AuvoEntityDescriptor<AuvoEquipment, Equipam
       category: row.categoria,
       associatedCustomerId: row.auvo_customer_id,
       customerId: row.auvo_customer_id,
-      location: row.localizacao,
+      // E01-S85 AC-1: localização hierárquica (Área+Local+Sublocal) tem prioridade — cai pro texto
+      // livre legado só enquanto o item não tiver `local_id`/nunca foi recalculado.
+      location: row.auvo_localizacao ?? row.localizacao,
       note: row.observacoes,
       active: row.ativo ?? true,
     }) as AuvoEquipment;

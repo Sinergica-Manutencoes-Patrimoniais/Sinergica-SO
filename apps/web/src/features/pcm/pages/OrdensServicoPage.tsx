@@ -10,6 +10,9 @@ import {
   listarOrdensServico,
 } from "../application/hub-os";
 import type { FiltrosServidorOrdens } from "../application/hub-os-gateway";
+import { obterPreferenciaColunas, salvarPreferenciaColunas } from "../application/kanban-colunas";
+import { listarProximasPreventivas } from "../application/pmoc";
+import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
 import { DetalhesTarefaAuvo } from "../components/DetalhesTarefaAuvo";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import { OsCalendarioView } from "../components/OsCalendarioView";
@@ -17,6 +20,13 @@ import { OsKanbanView } from "../components/OsKanbanView";
 import { OsTimelineView } from "../components/OsTimelineView";
 import { CATEGORIAS_OS } from "../domain/abertura-os";
 import { TIPO_OS_HUB_LABEL, calcularPrioridadeHub } from "../domain/hub-os";
+import {
+  COLUNAS_KANBAN_PADRAO,
+  type ColunaKanbanId,
+  type ColunaKanbanPreferencia,
+  alternarVisibilidadeColuna,
+  moverColuna,
+} from "../domain/kanban-colunas";
 import type {
   FiltrosOrdens,
   KpisOrdensServico,
@@ -35,6 +45,8 @@ import {
   statusOsColor,
 } from "../domain/ordens-servico";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
+import { supabaseKanbanColunasAdapter } from "../infrastructure/supabase-kanban-colunas-adapter";
+import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 
 type Visao = "lista" | "kanban" | "timeline" | "calendario";
 
@@ -80,6 +92,9 @@ export function OrdensServicoPage({
   const [recarregando, setRecarregando] = useState(false);
   const [kpisServidor, setKpisServidor] = useState<KpisOrdensServico | null>(null);
   const [editando, setEditando] = useState(false);
+  const [colunasKanban, setColunasKanban] =
+    useState<ColunaKanbanPreferencia[]>(COLUNAS_KANBAN_PADRAO);
+  const [preventivas, setPreventivas] = useState<PmocPreventivaResumo[]>([]);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -152,6 +167,33 @@ export function OrdensServicoPage({
     const osId = osIdInicialToken?.split("::")[0];
     if (osId) setSelecionadaId(osId);
   }, [osIdInicialToken]);
+
+  // E01-S84 AC-1/AC-2: preferência de colunas do Kanban é por usuário — carrega só quando a visão
+  // Kanban é aberta pela primeira vez (lazy, evita round-trip nas outras visões).
+  const colunasCarregadasRef = useRef(false);
+  useEffect(() => {
+    if (visao !== "kanban" || !user?.id || colunasCarregadasRef.current) return;
+    colunasCarregadasRef.current = true;
+    obterPreferenciaColunas(supabaseKanbanColunasAdapter, user.id)
+      .then(setColunasKanban)
+      .catch(() => setColunasKanban(COLUNAS_KANBAN_PADRAO));
+    listarProximasPreventivas(supabasePmocAdapter)
+      .then(setPreventivas)
+      .catch(() => setPreventivas([]));
+  }, [visao, user?.id]);
+
+  function persistirColunas(proximo: ColunaKanbanPreferencia[]) {
+    setColunasKanban(proximo);
+    if (user?.id) salvarPreferenciaColunas(supabaseKanbanColunasAdapter, user.id, proximo);
+  }
+
+  function onMoverColunaKanban(id: ColunaKanbanId, direcao: "cima" | "baixo") {
+    persistirColunas(moverColuna(colunasKanban, id, direcao));
+  }
+
+  function onAlternarVisibilidadeColunaKanban(id: ColunaKanbanId) {
+    persistirColunas(alternarVisibilidadeColuna(colunasKanban, id));
+  }
 
   // E01-S07: ordenação opcional pela prioridade do Hub (calculada, nunca gravada) — quem não tem
   // tipoOs (melhoria/outro, fora do Hub) fica sempre por último, sem sumir da lista.
@@ -499,6 +541,10 @@ export function OrdensServicoPage({
               onSelecionar={setSelecionadaId}
               selecionados={selecionados}
               onToggleSelecionado={onToggleSelecionado}
+              colunas={colunasKanban}
+              onMoverColuna={onMoverColunaKanban}
+              onAlternarVisibilidadeColuna={onAlternarVisibilidadeColunaKanban}
+              preventivas={preventivas}
             />
           )}
           {visao === "timeline" && (
@@ -523,7 +569,7 @@ export function OrdensServicoPage({
       )}
 
       {visao === "lista" && (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(420px,1fr)_460px]">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[360px_1fr]">
           <section className="bg-card rounded-[10px] border border-line overflow-hidden max-h-[calc(100vh-220px)] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-line-soft bg-paper px-4 py-2.5">
               <div>
@@ -545,64 +591,87 @@ export function OrdensServicoPage({
                 </span>
               </div>
             </div>
-            <div className="divide-y divide-line-soft">
-              {ordensFiltradas.length === 0 ? (
-                <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS encontrada.</div>
-              ) : (
-                ordensFiltradas.map((ordem) => (
-                  <div
-                    key={ordem.id}
-                    className={`flex items-center gap-2 border-l-2 pl-2 ${
-                      ordem.id === selecionadaId
-                        ? "border-orange bg-line-soft"
-                        : "border-transparent"
-                    }`}
-                  >
-                    {temEscrita && (
-                      <input
-                        type="checkbox"
-                        checked={selecionados.has(ordem.id)}
-                        onChange={() => onToggleSelecionado(ordem.id)}
-                        aria-label={`Selecionar ${ordem.numero}`}
-                        className="h-4 w-4 shrink-0 accent-orange"
-                      />
-                    )}
-                    <Tooltip content={resumoTooltipOrdem(ordem)} className="min-w-0 flex-1">
-                      <button
-                        type="button"
+            {ordensFiltradas.length === 0 ? (
+              <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS encontrada.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="sticky top-0 bg-paper text-[11px] text-ink-3">
+                    <tr className="border-b border-line-soft">
+                      {temEscrita && <th className="w-8 px-2 py-2" />}
+                      <th className="px-2 py-2 text-left font-semibold">Nº</th>
+                      <th className="px-2 py-2 text-left font-semibold">OS</th>
+                      <th className="px-2 py-2 text-left font-semibold">Status</th>
+                      <th className="px-2 py-2 text-left font-semibold">Prioridade</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line-soft">
+                    {ordensFiltradas.map((ordem) => (
+                      // biome-ignore lint/a11y/useKeyWithClickEvents: mesmo padrão de linha clicável do BacklogGutPage — checkbox interno já é acessível via teclado.
+                      <tr
+                        key={ordem.id}
                         onClick={() => setSelecionadaId(ordem.id)}
-                        aria-pressed={ordem.id === selecionadaId}
-                        className="w-full px-2 py-2.5 text-left hover:bg-line-soft"
+                        aria-selected={ordem.id === selecionadaId}
+                        className={`cursor-pointer border-l-2 ${
+                          ordem.id === selecionadaId
+                            ? "border-orange bg-line-soft"
+                            : "border-transparent hover:bg-line-soft"
+                        }`}
                       >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-brand tabular-nums text-ink-3">
-                            {ordem.numero}
-                          </span>
+                        {temEscrita && (
+                          // biome-ignore lint/a11y/useKeyWithClickEvents: só existe pra impedir o clique no checkbox de também disparar a seleção da linha (checkbox já tem seu próprio onChange).
+                          <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selecionados.has(ordem.id)}
+                              onChange={() => onToggleSelecionado(ordem.id)}
+                              aria-label={`Selecionar ${ordem.numero}`}
+                              className="h-4 w-4 accent-orange"
+                            />
+                          </td>
+                        )}
+                        <td className="px-2 py-2 whitespace-nowrap font-brand tabular-nums text-ink-3">
+                          {ordem.numero}
+                        </td>
+                        <td className="px-2 py-2">
+                          <Tooltip content={resumoTooltipOrdem(ordem)}>
+                            <div className="min-w-[180px]">
+                              <p className="truncate font-semibold text-ink">{ordem.titulo}</p>
+                              <p className="mt-0.5 truncate text-[11px] text-ink-3">
+                                {ordem.clienteNome} · {ordem.categoria} ·{" "}
+                                {ordem.tecnicoNome ?? "sem técnico"}
+                              </p>
+                              {ordem.tipoOs && (
+                                <div className="mt-1">
+                                  <BadgeHubOs
+                                    tipoOs={ordem.tipoOs}
+                                    dataAgendada={ordem.dataAgendada}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </Tooltip>
+                        </td>
+                        <td className="px-2 py-2 whitespace-nowrap">
                           <span
                             className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
                           >
                             {rotuloStatusOs(ordem.status)}
                           </span>
+                        </td>
+                        <td className="px-2 py-2 whitespace-nowrap">
                           <span
                             className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
                           >
                             {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                           </span>
-                          {ordem.tipoOs && (
-                            <BadgeHubOs tipoOs={ordem.tipoOs} dataAgendada={ordem.dataAgendada} />
-                          )}
-                        </div>
-                        <p className="mt-1.5 text-sm font-semibold text-ink">{ordem.titulo}</p>
-                        <p className="mt-1 text-xs text-ink-3">
-                          {ordem.clienteNome} · {ordem.categoria} ·{" "}
-                          {ordem.tecnicoNome ?? "sem técnico"}
-                        </p>
-                      </button>
-                    </Tooltip>
-                  </div>
-                ))
-              )}
-            </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           <section className="rounded-[10px] border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">

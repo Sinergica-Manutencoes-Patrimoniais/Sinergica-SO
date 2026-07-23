@@ -7,6 +7,9 @@ export interface SistemaRow extends Record<string, unknown> {
   descricao?: string | null;
   ativo?: boolean | null;
   codigo?: string | null;
+  /** E01-S85 AC-4: nome da Área (Sistema não tem `local_id`, só `area_id` opcional) — recalculado
+   * por trigger (`0131`). */
+  auvo_localizacao?: string | null;
   // NÃO existe hoje em pcm.sistemas (ver migration 0095/design.md — schema travado pelo PO).
   // `associatedCustomerId` fica sem valor até essa lacuna ser fechada — sem efeito prático nesta
   // story: `writeEnabled:false` garante que `toAuvo` nunca é chamado pelo drain (processOutboxRow
@@ -23,6 +26,7 @@ export interface AuvoEquipmentSistema {
   identifier?: string;
   associatedCustomerId?: number;
   customerId?: number;
+  location?: string;
   active?: boolean;
 }
 
@@ -42,6 +46,8 @@ export const sistemasDescriptor: AuvoEntityDescriptor<AuvoEquipmentSistema, Sist
       description: row.descricao ?? row.nome,
       associatedCustomerId: row.auvo_customer_id,
       identifier: row.codigo,
+      // E01-S85 AC-4: localização do Sistema é só a Área (não tem local_id).
+      location: row.auvo_localizacao,
       active: row.ativo ?? true,
     }) as AuvoEquipmentSistema;
   },

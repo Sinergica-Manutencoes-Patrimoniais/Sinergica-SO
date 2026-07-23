@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -27,6 +27,7 @@ export function BacklogGutPage() {
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [editando, setEditando] = useState<OrdemServicoOperacional | null>(null);
+  const [criando, setCriando] = useState(false);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -109,10 +110,22 @@ export function BacklogGutPage() {
             OS abertas priorizadas por gravidade, urgência e tendência
           </p>
         </div>
-        <button type="button" onClick={carregar} className="btn-secondary">
-          <RefreshCw className="h-4 w-4" />
-          Atualizar
-        </button>
+        <div className="flex items-center gap-2">
+          {temEscrita && (
+            <button
+              type="button"
+              onClick={() => setCriando(true)}
+              className="inline-flex h-9 items-center gap-1.5 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Novo item de backlog
+            </button>
+          )}
+          <button type="button" onClick={carregar} className="btn-secondary">
+            <RefreshCw className="h-4 w-4" />
+            Atualizar
+          </button>
+        </div>
       </div>
 
       {erroAcao && (
@@ -164,6 +177,11 @@ export function BacklogGutPage() {
                       >
                         {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                       </span>
+                      {ordem.origemInspecaoItemId && (
+                        <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-[#EAEEF8] text-[#2E3C70]">
+                          Origem: Inspeção
+                        </span>
+                      )}
                     </div>
                     <p className="mt-2 text-sm font-semibold text-ink">{ordem.titulo}</p>
                     <p className="mt-1 text-xs text-ink-3">
@@ -212,6 +230,17 @@ export function BacklogGutPage() {
           onFechar={() => setEditando(null)}
           onEditada={() => {
             setEditando(null);
+            carregar();
+          }}
+        />
+      )}
+
+      {criando && (
+        <NovaOrdemServicoModal
+          aberto={criando}
+          onFechar={() => setCriando(false)}
+          onCriada={() => {
+            setCriando(false);
             carregar();
           }}
         />

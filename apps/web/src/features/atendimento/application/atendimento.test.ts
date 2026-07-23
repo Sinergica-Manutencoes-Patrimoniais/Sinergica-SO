@@ -5,6 +5,7 @@ import type { AtendimentoGateway } from "./atendimento-gateway";
 import { devolverAoZe } from "./devolver-ao-ze";
 import { enviarMensagem } from "./enviar-mensagem";
 import { marcarConversaLida } from "./marcar-conversa-lida";
+import { vincularCliente } from "./vincular-cliente";
 
 function fakeGateway(overrides: Partial<AtendimentoGateway> = {}): AtendimentoGateway {
   return {
@@ -15,6 +16,8 @@ function fakeGateway(overrides: Partial<AtendimentoGateway> = {}): AtendimentoGa
     devolverAoZe: vi.fn().mockResolvedValue(undefined),
     marcarComoLida: vi.fn().mockResolvedValue(undefined),
     acionarZeAgora: vi.fn().mockResolvedValue(undefined),
+    listarClientesParaVinculo: vi.fn().mockResolvedValue([]),
+    vincularCliente: vi.fn().mockResolvedValue(undefined),
     enviarMensagemRica: vi.fn(),
     atualizarTags: vi.fn().mockResolvedValue(undefined),
     ...overrides,
@@ -42,6 +45,24 @@ describe("enviarMensagem", () => {
       "Conversa é obrigatória.",
     );
     expect(gateway.enviarMensagem).not.toHaveBeenCalled();
+  });
+});
+
+describe("vincularCliente", () => {
+  it("valida os identificadores e delega o vínculo ao gateway", async () => {
+    const gateway = fakeGateway();
+    expect(() => vincularCliente(gateway, { conversaId: "", clienteId: "cliente-1" })).toThrow(
+      "Conversa é obrigatória.",
+    );
+    expect(() => vincularCliente(gateway, { conversaId: "conv-1", clienteId: "" })).toThrow(
+      "Cliente é obrigatório.",
+    );
+
+    await vincularCliente(gateway, { conversaId: "conv-1", clienteId: "cliente-1" });
+    expect(gateway.vincularCliente).toHaveBeenCalledWith({
+      conversaId: "conv-1",
+      clienteId: "cliente-1",
+    });
   });
 });
 

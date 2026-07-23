@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { PESOS_GUTD_PADRAO } from "../domain/priorizacao-backlog";
 import { editarOrdemServico } from "./editar-ordem-servico";
 import type { OrdemServicoGateway } from "./ordem-servico-gateway";
 
@@ -7,6 +8,9 @@ function gatewayFake(): OrdemServicoGateway {
     carregarDadosAbertura: vi.fn(),
     criarOrdemServico: vi.fn(),
     editarOrdemServico: vi.fn().mockResolvedValue(undefined),
+    iaTituloAtiva: vi.fn(),
+    gerarTituloOs: vi.fn(),
+    obterPesosGutd: vi.fn(async () => PESOS_GUTD_PADRAO),
   };
 }
 
@@ -19,6 +23,8 @@ const INPUT_BASE = {
   gravidade: 3,
   urgencia: 3,
   tendencia: 3,
+  dorCliente: null,
+  observacao: null,
   tecnicoId: null,
   dataPrevista: null,
   updatedBy: "user1",

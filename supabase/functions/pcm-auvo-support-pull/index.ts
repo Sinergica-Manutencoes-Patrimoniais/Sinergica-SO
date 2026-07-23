@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 
@@ -11,7 +12,7 @@ const list = (response: ApiList) => Array.isArray(response.result) ? response.re
 const number = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? value : null;
 const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : null;
 
-async function pull(resource: Resource, db: ReturnType<typeof createClient>) {
+async function pull(resource: Resource, db: UntypedSupabaseClient) {
   if (resource === "questionnaires") {
     const rows = await auvoPaginate<Record<string, unknown>>((page, pageSize) => auvoGet<ApiList>(`/questionnaires?page=${page}&pageSize=${pageSize}&order=asc`).then(list), { pageSize: DEFAULT_PAGE_SIZE });
     const mapped = rows.map((row) => ({ auvo_id: number(row.id), nome: text(row.description) ?? `Questionário ${row.id}`, cabecalho: text(row.header), rodape: text(row.footer), perguntas: Array.isArray(row.questions) ? row.questions : [], ativo: row.active !== false, auvo_payload: row })).filter((row) => row.auvo_id != null);

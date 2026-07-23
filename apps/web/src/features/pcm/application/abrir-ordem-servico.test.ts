@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { PESOS_GUTD_PADRAO } from "../domain/priorizacao-backlog";
 import { abrirOrdemServico } from "./abrir-ordem-servico";
 import type { CriarOrdemServicoInput, OrdemServicoGateway } from "./ordem-servico-gateway";
 
@@ -11,6 +12,8 @@ const input: CriarOrdemServicoInput = {
   gravidade: 4,
   urgencia: 4,
   tendencia: 4,
+  dorCliente: null,
+  observacao: null,
   localDescricao: "Garagem",
   solicitante: "João",
   origem: "manual",
@@ -23,8 +26,11 @@ const input: CriarOrdemServicoInput = {
 function gatewayMock(): OrdemServicoGateway {
   return {
     carregarDadosAbertura: vi.fn(async () => ({ clientes: [], tecnicos: [], tiposTarefa: [] })),
-    criarOrdemServico: vi.fn(async () => ({ id: "os1", numero: "CH-001" })),
+    criarOrdemServico: vi.fn(async () => ({ id: "os1", numero: "OS-0001" })),
     editarOrdemServico: vi.fn(async () => undefined),
+    iaTituloAtiva: vi.fn(async () => false),
+    gerarTituloOs: vi.fn(async () => ""),
+    obterPesosGutd: vi.fn(async () => PESOS_GUTD_PADRAO),
   };
 }
 

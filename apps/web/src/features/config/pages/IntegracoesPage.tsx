@@ -1,18 +1,20 @@
 // E00-S12: Configurações > Integrações. Superadmin cadastra credenciais externas (começando por
 // provedor de e-mail, usado pelo laudo PMOC em E01-S05). A API key é write-only — nunca volta pra
 // tela depois de salva (mesmo padrão de campo de senha); grava direto no Supabase Vault via RPC.
-import { KeyRound, Mail } from "lucide-react";
+import { CreditCard, KeyRound, Mail } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import {
   definirSegredoIntegracao,
   listarIntegracoes,
   salvarMetadadoIntegracao,
+  temSegredoIntegracao,
 } from "../application/integracoes";
 import type { Integracao } from "../application/integracoes-gateway";
 import { supabaseIntegracoesAdapter } from "../infrastructure/supabase-integracoes-adapter";
 
 const CHAVE_EMAIL = "email";
+const CHAVE_MERCADOPAGO = "mercadopago";
 
 export function IntegracoesPage() {
   const { user } = useAuth();
@@ -26,6 +28,13 @@ export function IntegracoesPage() {
   const [fromName, setFromName] = useState("Sinérgica Manutenções");
   const [ativo, setAtivo] = useState(false);
   const [apiKey, setApiKey] = useState("");
+
+  const [ambienteMp, setAmbienteMp] = useState<"sandbox" | "producao">("sandbox");
+  const [ativoMp, setAtivoMp] = useState(false);
+  const [accessTokenMp, setAccessTokenMp] = useState("");
+  const [webhookSecretMp, setWebhookSecretMp] = useState("");
+  const [temAccessTokenMp, setTemAccessTokenMp] = useState(false);
+  const [temWebhookSecretMp, setTemWebhookSecretMp] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -42,6 +51,19 @@ export function IntegracoesPage() {
         );
         setAtivo(email.ativo);
       }
+      const mercadopago = lista.find((i) => i.chave === CHAVE_MERCADOPAGO);
+      if (mercadopago) {
+        setAmbienteMp(
+          (mercadopago.configPublico.ambiente as "sandbox" | "producao" | undefined) ?? "sandbox",
+        );
+        setAtivoMp(mercadopago.ativo);
+      }
+      const [temAccess, temWebhook] = await Promise.all([
+        temSegredoIntegracao(supabaseIntegracoesAdapter, "mercadopago_access_token"),
+        temSegredoIntegracao(supabaseIntegracoesAdapter, "mercadopago_webhook_secret"),
+      ]);
+      setTemAccessTokenMp(temAccess);
+      setTemWebhookSecretMp(temWebhook);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar integrações.");
     } finally {
@@ -92,6 +114,62 @@ export function IntegracoesPage() {
       await carregar();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível salvar a chave.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function salvarMetadadoMp() {
+    setSalvando(true);
+    setErro(null);
+    try {
+      await salvarMetadadoIntegracao(supabaseIntegracoesAdapter, {
+        chave: CHAVE_MERCADOPAGO,
+        provedor: "mercadopago",
+        ativo: ativoMp,
+        configPublico: { ambiente: ambienteMp },
+      });
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function salvarAccessTokenMp() {
+    if (!accessTokenMp.trim()) return;
+    setSalvando(true);
+    setErro(null);
+    try {
+      await definirSegredoIntegracao(
+        supabaseIntegracoesAdapter,
+        "mercadopago_access_token",
+        accessTokenMp,
+      );
+      setAccessTokenMp("");
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível salvar o access token.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function salvarWebhookSecretMp() {
+    if (!webhookSecretMp.trim()) return;
+    setSalvando(true);
+    setErro(null);
+    try {
+      await definirSegredoIntegracao(
+        supabaseIntegracoesAdapter,
+        "mercadopago_webhook_secret",
+        webhookSecretMp,
+      );
+      setWebhookSecretMp("");
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível salvar o webhook secret.");
     } finally {
       setSalvando(false);
     }
@@ -204,6 +282,116 @@ export function IntegracoesPage() {
                   Salvar chave
                 </button>
               </div>
+            </label>
+          </div>
+        </section>
+      )}
+
+      {!carregando && (
+        <section className="rounded-[10px] border border-line bg-card p-4">
+          <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-3">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-ink-3" />
+              <h3 className="text-sm font-semibold text-ink">Cobrança — Mercado Pago</h3>
+            </div>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                temAccessTokenMp ? "bg-[#EAF8EF] text-[#267343]" : "bg-line-soft text-ink-3"
+              }`}
+            >
+              {temAccessTokenMp ? "Access token configurado" : "Access token não configurado"}
+            </span>
+          </div>
+
+          <p className="mt-2 text-xs text-ink-3">
+            Emite boleto/PIX de recebíveis (E04-S09). Access token e webhook secret nunca voltam pra
+            tela depois de salvos.
+          </p>
+
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-ink-3">Ambiente</span>
+              <select
+                className="input w-full"
+                value={ambienteMp}
+                onChange={(e) => setAmbienteMp(e.target.value as "sandbox" | "producao")}
+              >
+                <option value="sandbox">Sandbox (testes)</option>
+                <option value="producao">Produção</option>
+              </select>
+            </label>
+            <label className="flex items-end gap-2 pb-2">
+              <input
+                type="checkbox"
+                checked={ativoMp}
+                onChange={(e) => setAtivoMp(e.target.checked)}
+                className="h-4 w-4 accent-orange"
+              />
+              <span className="text-sm text-ink-2">Ativo (habilita emissão real de cobrança)</span>
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={salvarMetadadoMp}
+            disabled={salvando}
+            className="mt-3 h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+          >
+            Salvar configurações
+          </button>
+
+          <div className="mt-5 flex flex-col gap-4 border-t border-line-soft pt-4">
+            <label className="block">
+              <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ink-3">
+                <KeyRound className="h-3.5 w-3.5" />
+                Access token {temAccessTokenMp && "(substituir)"}
+              </span>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  className="input flex-1"
+                  value={accessTokenMp}
+                  onChange={(e) => setAccessTokenMp(e.target.value)}
+                  placeholder={temAccessTokenMp ? "•••••••• (já configurado)" : "APP_USR-xxxxxxxx"}
+                />
+                <button
+                  type="button"
+                  onClick={salvarAccessTokenMp}
+                  disabled={salvando || !accessTokenMp.trim()}
+                  className="h-9 shrink-0 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                >
+                  Salvar
+                </button>
+              </div>
+            </label>
+            <label className="block">
+              <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ink-3">
+                <KeyRound className="h-3.5 w-3.5" />
+                Webhook secret {temWebhookSecretMp && "(substituir)"}
+              </span>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  className="input flex-1"
+                  value={webhookSecretMp}
+                  onChange={(e) => setWebhookSecretMp(e.target.value)}
+                  placeholder={
+                    temWebhookSecretMp
+                      ? "•••••••• (já configurado)"
+                      : "assinatura secreta do webhook"
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={salvarWebhookSecretMp}
+                  disabled={salvando || !webhookSecretMp.trim()}
+                  className="h-9 shrink-0 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                >
+                  Salvar
+                </button>
+              </div>
+              <span className="mt-1 block text-[11px] text-ink-3">
+                Painel Mercado Pago → Suas integrações → Webhooks → Assinatura secreta.
+              </span>
             </label>
           </div>
         </section>

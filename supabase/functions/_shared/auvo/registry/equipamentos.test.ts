@@ -64,3 +64,23 @@ Deno.test("equipamentosDescriptor — sem urlImage/uriAnexos vira null/array vaz
   assertEquals(linha.url_imagem, null);
   assertEquals(linha.uri_anexos, []);
 });
+
+Deno.test("equipamentosDescriptor — E01-S85 AC-1: auvo_localizacao tem prioridade sobre localizacao legado", () => {
+  const payload = equipamentosDescriptor.toAuvo({
+    id: "e1",
+    nome: "Bomba 1",
+    localizacao: "Térreo (texto livre legado)",
+    auvo_localizacao: "Torre A · 1º andar · Sala 001",
+  });
+  assertEquals(payload.location, "Torre A · 1º andar · Sala 001");
+});
+
+Deno.test("equipamentosDescriptor — E01-S85 AC-1: sem auvo_localizacao cai pro localizacao legado", () => {
+  const payload = equipamentosDescriptor.toAuvo({
+    id: "e1",
+    nome: "Bomba 1",
+    localizacao: "Térreo (texto livre legado)",
+    auvo_localizacao: null,
+  });
+  assertEquals(payload.location, "Térreo (texto livre legado)");
+});

@@ -23,4 +23,7 @@ export interface IntegracoesGateway {
   salvarMetadado(input: SalvarIntegracaoInput): Promise<Integracao>;
   /** E00-S12 AC-1: grava o segredo no Vault via RPC — nunca numa tabela. */
   definirSegredo(chave: string, valor: string): Promise<void>;
+  /** E04-S09: status de um segredo específico do Vault (uma integração pode ter mais de um —
+   * ex. Mercado Pago tem access token + webhook secret sob a mesma linha de `config.integracoes`). */
+  temSegredo(chave: string): Promise<boolean>;
 }

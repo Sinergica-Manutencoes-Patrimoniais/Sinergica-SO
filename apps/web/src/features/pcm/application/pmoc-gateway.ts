@@ -94,6 +94,18 @@ export interface PmocAgenda {
   ordemServicoId: string | null;
 }
 
+/** E01-S84 AC-3: visão cross-contrato de uma visita PMOC ainda sem OS — usada pela coluna
+ * "Preventiva" do Kanban (que não é escopada a um único contrato, ao contrário de `PmocDetalhe`). */
+export interface PmocPreventivaResumo {
+  id: string;
+  contractId: string;
+  clienteNome: string;
+  imovelNome: string;
+  scheduledDate: string;
+  maintenanceType: PmocTipoManutencao;
+  status: PmocStatusAgenda;
+}
+
 export interface PmocMicrobioAnalysis {
   id: string;
   contractId: string;
@@ -232,4 +244,7 @@ export interface PmocGateway {
   criarAnaliseMicrobio(input: CriarAnaliseMicrobioInput): Promise<PmocMicrobioAnalysis>;
   criarNaoConformidade(input: CriarNaoConformidadeInput): Promise<PmocNaoConformidade>;
   atualizarStatusNc(input: AtualizarStatusNcInput): Promise<PmocNaoConformidade>;
+  /** E01-S84 AC-3: visitas PMOC planejadas (todo contrato, agendadas/atrasadas) ainda sem OS criada
+   * — alimenta a coluna "Preventiva" do Kanban de OS. */
+  listarProximasPreventivas(): Promise<PmocPreventivaResumo[]>;
 }

@@ -1,16 +1,24 @@
 // E01-S78: Board de ativos por Local — aba "Board" da Visão do Cliente. Colunas = Locais nível-1
 // da Área selecionada; sub-locais viram subgrupos; itens sem local vão pra coluna "Sem local".
 // Clicar num card abre o drawer de detalhe. Leitura + navegação sobre o dado de E01-S76.
+// E01-S79: arrastar um card pra outra coluna/subgrupo atualiza o `localId` do item (drag and drop
+// nativo HTML5, mesmo padrão do `OsKanbanView.tsx` — sem lib externa).
 import { LayoutGrid, Package, Puzzle, Wrench } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../../app/auth-context";
+import { usePermissoes } from "../../../app/permissoes-context";
 import { carregarBoardCliente } from "../application/board-ativos";
+import { editarEquipamento } from "../application/equipamentos";
 import type { ColunaBoard, ItemCard } from "../domain/board-ativos";
 import { montarColunasBoard } from "../domain/board-ativos";
 import type { EquipamentoItem } from "../domain/equipamentos";
 import type { Area, Local } from "../domain/hierarquia";
 import { supabaseBoardAtivosAdapter } from "../infrastructure/supabase-board-ativos-adapter";
+import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 import { DrawerDetalheAtivo } from "./DrawerDetalheAtivo";
+
+const DRAG_MIME = "application/x-sinergica-item-id";
 
 type Estado =
   | { fase: "carregando" }
@@ -25,26 +33,57 @@ export function BoardAtivos({
   /** atalho pra aba "Estrutura" quando o cliente ainda não tem Áreas (AC-7). */
   onIrParaEstrutura?: () => void;
 }) {
+  const { user } = useAuth();
+  const { podeAcessar } = usePermissoes();
+  const temEscrita = podeAcessar("pcm", "escrita");
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [areaId, setAreaId] = useState<string | null>(null);
   const [itemSelecionado, setItemSelecionado] = useState<string | null>(null);
+  const [erroMover, setErroMover] = useState<string | null>(null);
 
-  useEffect(() => {
-    let vivo = true;
+  const carregar = useCallback(() => {
     setEstado({ fase: "carregando" });
     carregarBoardCliente(supabaseHierarquiaAdapter, supabaseBoardAtivosAdapter, clienteId)
       .then((d) => {
-        if (!vivo) return;
         setEstado({ fase: "pronto", ...d });
         setAreaId((atual) => atual ?? d.areas[0]?.id ?? null);
       })
       .catch(() => {
-        if (vivo) setEstado({ fase: "erro", mensagem: "Não foi possível carregar o board." });
+        setEstado({ fase: "erro", mensagem: "Não foi possível carregar o board." });
       });
-    return () => {
-      vivo = false;
-    };
   }, [clienteId]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  const moverItem = useCallback(
+    async (itemId: string, novoLocalId: string | null) => {
+      if (!user || estado.fase !== "pronto") return;
+      const item = estado.itens.find((i) => i.id === itemId);
+      if (!item || item.localId === novoLocalId) return;
+      try {
+        setErroMover(null);
+        await editarEquipamento(supabaseEquipamentosAdapter, {
+          nome: item.nome,
+          identificador: item.identificador,
+          categoria: item.categoria,
+          clientId: item.clientId,
+          localizacao: item.localizacao,
+          observacoes: item.observacoes,
+          tipo: item.tipo,
+          localId: novoLocalId,
+          parentItemId: item.parentItemId,
+          id: item.id,
+          userId: user.id,
+        });
+        carregar();
+      } catch (error) {
+        setErroMover(error instanceof Error ? error.message : "Não foi possível mover o ativo.");
+      }
+    },
+    [user, estado, carregar],
+  );
 
   const area = estado.fase === "pronto" ? estado.areas.find((a) => a.id === areaId) : undefined;
 
@@ -100,18 +139,30 @@ export function BoardAtivos({
         ))}
       </div>
 
+      {erroMover && (
+        <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          {erroMover}
+        </div>
+      )}
+
       <div className="flex gap-3 overflow-x-auto pb-2">
         {colunas.map((coluna) => (
           <ColunaLocal
             key={coluna.localId ?? "sem-local"}
             coluna={coluna}
             onAbrir={setItemSelecionado}
+            arrastavel={temEscrita}
+            onSoltar={moverItem}
           />
         ))}
       </div>
 
       {itemSelecionado && (
-        <DrawerDetalheAtivo itemId={itemSelecionado} onClose={() => setItemSelecionado(null)} />
+        <DrawerDetalheAtivo
+          itemId={itemSelecionado}
+          onClose={() => setItemSelecionado(null)}
+          onAtualizado={carregar}
+        />
       )}
     </div>
   );
@@ -120,10 +171,34 @@ export function BoardAtivos({
 function ColunaLocal({
   coluna,
   onAbrir,
+  arrastavel,
+  onSoltar,
 }: {
   coluna: ColunaBoard;
   onAbrir: (itemId: string) => void;
+  arrastavel: boolean;
+  onSoltar: (itemId: string, novoLocalId: string | null) => void;
 }) {
+  const [alvo, setAlvo] = useState<string | null>(null);
+
+  function zonaProps(chaveAlvo: string, localAlvo: string | null) {
+    if (!arrastavel) return {};
+    return {
+      onDragOver: (event: React.DragEvent) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        setAlvo(chaveAlvo);
+      },
+      onDragLeave: () => setAlvo((atual) => (atual === chaveAlvo ? null : atual)),
+      onDrop: (event: React.DragEvent) => {
+        event.preventDefault();
+        setAlvo(null);
+        const itemId = event.dataTransfer.getData(DRAG_MIME);
+        if (itemId) onSoltar(itemId, localAlvo);
+      },
+    };
+  }
+
   return (
     <section className="flex w-64 shrink-0 flex-col rounded-[8px] border border-line bg-card">
       <header className="flex items-center justify-between border-b border-line-soft px-3 py-2">
@@ -133,16 +208,32 @@ function ColunaLocal({
         </span>
       </header>
       <div className="flex flex-col gap-2 p-2">
-        {coluna.itensDiretos.map((item) => (
-          <CardAtivo key={item.id} item={item} onAbrir={onAbrir} />
-        ))}
+        <div
+          className={`flex flex-col gap-2 rounded-[6px] ${
+            alvo === "direto" ? "bg-orange-soft/40 outline outline-dashed outline-orange" : ""
+          }`}
+          {...zonaProps("direto", coluna.localId)}
+        >
+          {coluna.itensDiretos.map((item) => (
+            <CardAtivo key={item.id} item={item} onAbrir={onAbrir} arrastavel={arrastavel} />
+          ))}
+          {coluna.itensDiretos.length === 0 && arrastavel && (
+            <p className="px-1 py-1 text-center text-[10px] text-ink-3">Solte aqui</p>
+          )}
+        </div>
         {coluna.subgrupos.map((sg) => (
-          <div key={sg.localId} className="flex flex-col gap-1">
+          <div
+            key={sg.localId}
+            className={`flex flex-col gap-1 rounded-[6px] ${
+              alvo === sg.localId ? "bg-orange-soft/40 outline outline-dashed outline-orange" : ""
+            }`}
+            {...zonaProps(sg.localId, sg.localId)}
+          >
             <p className="px-1 pt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               {sg.localNome}
             </p>
             {sg.itens.map((item) => (
-              <CardAtivo key={item.id} item={item} onAbrir={onAbrir} />
+              <CardAtivo key={item.id} item={item} onAbrir={onAbrir} arrastavel={arrastavel} />
             ))}
           </div>
         ))}
@@ -154,15 +245,28 @@ function ColunaLocal({
   );
 }
 
-function CardAtivo({ item, onAbrir }: { item: ItemCard; onAbrir: (itemId: string) => void }) {
+function CardAtivo({
+  item,
+  onAbrir,
+  arrastavel,
+}: {
+  item: ItemCard;
+  onAbrir: (itemId: string) => void;
+  arrastavel: boolean;
+}) {
   const Icone = item.tipo === "componente" ? Puzzle : Wrench;
   return (
     <button
       type="button"
+      draggable={arrastavel}
+      onDragStart={(event) => {
+        event.dataTransfer.setData(DRAG_MIME, item.id);
+        event.dataTransfer.effectAllowed = "move";
+      }}
       onClick={() => onAbrir(item.id)}
       className={`flex items-center gap-2 rounded-[6px] border border-line px-2 py-1.5 text-left hover:border-orange hover:bg-orange-soft/40 ${
         item.ativo ? "" : "opacity-60"
-      }`}
+      } ${arrastavel ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
       {item.urlImagem ? (
         <img

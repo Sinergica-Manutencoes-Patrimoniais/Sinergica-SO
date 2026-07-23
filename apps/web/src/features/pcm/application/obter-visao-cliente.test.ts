@@ -15,7 +15,7 @@ const CLIENTE: ClienteHeader = {
 function os(over: Partial<OrdemServicoResumo> = {}): OrdemServicoResumo {
   return {
     id: "os1",
-    numero: "CH-001",
+    numero: "OS-0001",
     titulo: "Vazamento",
     categoria: "corretiva",
     status: "solicitacao",
@@ -39,13 +39,14 @@ function gatewayMock(overrides: Partial<Cliente360Gateway> = {}): Cliente360Gate
       {
         id: "evt-1",
         tipo: "os" as const,
-        titulo: "OS CH-001 aberta — Vazamento",
+        titulo: "OS OS-0001 aberta — Vazamento",
         subtitulo: "corretiva",
         data: "2026-07-05T03:00:00.000Z",
       },
     ]),
     listarQualidadeCliente: vi.fn(async () => ({ inspecoes: [], laudos: [] })),
     listarGruposCliente: vi.fn(async () => []),
+    obterAssessmentCliente: vi.fn(async () => null),
     ...overrides,
   };
 }

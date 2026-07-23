@@ -4,17 +4,25 @@ import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { acionarZeAgora } from "../application/acionar-ze-agora";
 import { assumirConversa } from "../application/assumir-conversa";
+import type { ClienteVinculoOpcao } from "../application/atendimento-gateway";
 import { listarWaTemplates } from "../application/canais-externos";
 import { devolverAoZe } from "../application/devolver-ao-ze";
 import { enviarMensagem } from "../application/enviar-mensagem";
 import { atualizarTagsConversa, enviarMensagemRica } from "../application/enviar-mensagem-rica";
+import {
+  criarChamadoRapido,
+  enviarHistoricoParaChamado,
+  listarChamadosDoCliente,
+} from "../application/historico-chamado";
 import { listarConversas } from "../application/listar-conversas";
 import { listarMensagens } from "../application/listar-mensagens";
 import { listarTags } from "../application/listar-tags";
 import { marcarConversaLida } from "../application/marcar-conversa-lida";
+import { listarClientesParaVinculo, vincularCliente } from "../application/vincular-cliente";
 import { ConversaChat } from "../components/ConversaChat";
 import { ConversaLista } from "../components/ConversaLista";
 import { ConversaPerfil } from "../components/ConversaPerfil";
+import { EnviarHistoricoModal } from "../components/EnviarHistoricoModal";
 import type { WaTemplateItem } from "../domain/canais-externos";
 import type { ConversaItem } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
@@ -23,6 +31,7 @@ import type { TagItem } from "../domain/tags";
 import { supabaseAtendimentoAdapter } from "../infrastructure/supabase-atendimento-adapter";
 import { supabaseCanaisExternosAdapter } from "../infrastructure/supabase-canais-externos-adapter";
 import { supabaseConfigAdapter } from "../infrastructure/supabase-config-adapter";
+import { supabaseHistoricoChamadoAdapter } from "../infrastructure/supabase-historico-chamado-adapter";
 
 const INTERVALO_LISTA_MS = 5000;
 const INTERVALO_MENSAGENS_MS = 3000;
@@ -40,10 +49,13 @@ export function AtendimentoInboxPage() {
   const [mensagens, setMensagens] = useState<MensagemItem[]>([]);
   const [templates, setTemplates] = useState<WaTemplateItem[]>([]);
   const [tags, setTags] = useState<TagItem[]>([]);
+  const [clientes, setClientes] = useState<ClienteVinculoOpcao[]>([]);
+  const [modalHistoricoAberto, setModalHistoricoAberto] = useState(false);
   const abaVisivelRef = useRef(true);
 
   const temLeitura = podeAcessar("atendimento", "leitura");
   const temEscrita = podeAcessar("atendimento", "escrita");
+  const temEscritaPcm = podeAcessar("pcm", "escrita");
 
   const carregarConversas = useCallback(async () => {
     try {
@@ -86,11 +98,16 @@ export function AtendimentoInboxPage() {
         setTags(listaTags);
       })
       .catch(() => undefined);
+    if (temEscrita) {
+      listarClientesParaVinculo(supabaseAtendimentoAdapter)
+        .then(setClientes)
+        .catch(() => setClientes([]));
+    }
     const intervalo = setInterval(() => {
       if (abaVisivelRef.current) carregarConversas();
     }, INTERVALO_LISTA_MS);
     return () => clearInterval(intervalo);
-  }, [permissoesCarregando, temLeitura, carregarConversas]);
+  }, [permissoesCarregando, temLeitura, temEscrita, carregarConversas]);
 
   useEffect(() => {
     if (!conversaSelecionadaId) {
@@ -162,6 +179,40 @@ export function AtendimentoInboxPage() {
     await carregarMensagens(conversaSelecionada.id);
   }
 
+  async function handleVincularCliente(clienteId: string) {
+    if (!conversaSelecionada) return;
+    await vincularCliente(supabaseAtendimentoAdapter, {
+      conversaId: conversaSelecionada.id,
+      clienteId,
+    });
+    await carregarConversas();
+  }
+
+  async function handleCarregarChamados() {
+    if (!conversaSelecionada?.clientId) return [];
+    return listarChamadosDoCliente(supabaseHistoricoChamadoAdapter, conversaSelecionada.clientId);
+  }
+
+  async function handleCriarChamadoRapido(titulo: string) {
+    if (!conversaSelecionada?.clientId || !user) throw new Error("Cliente não vinculado.");
+    return criarChamadoRapido(
+      supabaseHistoricoChamadoAdapter,
+      conversaSelecionada.clientId,
+      titulo,
+      user.id,
+    );
+  }
+
+  async function handleEnviarHistorico(chamadoId: string, janelaDias: number) {
+    if (!conversaSelecionada || !user) return;
+    await enviarHistoricoParaChamado(supabaseHistoricoChamadoAdapter, {
+      conversaId: conversaSelecionada.id,
+      chamadoId,
+      janelaDias,
+      userId: user.id,
+    });
+  }
+
   if (permissoesCarregando || estado.fase === "carregando") {
     return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
   }
@@ -230,10 +281,28 @@ export function AtendimentoInboxPage() {
             tagsDisponiveis={tags}
             onEnviarRico={handleEnviarRico}
             onAtualizarTags={handleAtualizarTags}
+            onEnviarHistorico={
+              conversaSelecionada?.clientId ? () => setModalHistoricoAberto(true) : undefined
+            }
           />
         </div>
       </div>
-      <ConversaPerfil conversa={conversaSelecionada} />
+      <ConversaPerfil
+        conversa={conversaSelecionada}
+        clientes={clientes}
+        podeVincular={temEscrita}
+        onVincular={handleVincularCliente}
+      />
+      {modalHistoricoAberto && conversaSelecionada && (
+        <EnviarHistoricoModal
+          clienteNome={conversaSelecionada.clienteNome ?? "Cliente"}
+          podeCriarChamado={temEscritaPcm}
+          onCarregarChamados={handleCarregarChamados}
+          onCancel={() => setModalHistoricoAberto(false)}
+          onEnviar={handleEnviarHistorico}
+          onCriarChamado={handleCriarChamadoRapido}
+        />
+      )}
     </div>
   );
 }

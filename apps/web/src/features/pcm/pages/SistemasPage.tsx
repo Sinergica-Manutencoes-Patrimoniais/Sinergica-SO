@@ -1,23 +1,21 @@
 // SistemasPage.tsx — E01-S76 (AC-7, AC-8): CRUD de Sistema + seletor de itens membros (N:N) +
 // status de sync Auvo (código/estado — descriptor `sistemas` nasce writeEnabled:false, dry-run).
-import { Link2, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { Clock3, Link2, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { listarClientesEquipamento } from "../application/equipamentos";
 import {
-  adicionarItem,
   criarSistema,
   desativarSistema,
   editarSistema,
-  listarItensDisponiveis,
-  listarItensDoSistema,
   listarSistemas,
-  removerItem,
 } from "../application/sistemas";
+import { ComposicaoSistema } from "../components/ComposicaoSistema";
+import { HistoricoOsSistema } from "../components/HistoricoOsSistema";
 import type { EquipamentoClienteOpcao } from "../domain/equipamentos";
 import type { Area } from "../domain/hierarquia";
-import type { Sistema, SistemaFormData, SistemaItemMembro } from "../domain/sistemas";
+import type { Sistema, SistemaFormData } from "../domain/sistemas";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
@@ -42,6 +40,7 @@ export function SistemasPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
   const [membrosAbertoId, setMembrosAbertoId] = useState<string | null>(null);
+  const [historicoAbertoId, setHistoricoAbertoId] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
@@ -191,6 +190,16 @@ export function SistemasPage() {
                     <Link2 className="h-3.5 w-3.5" />
                     Itens
                   </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setHistoricoAbertoId(historicoAbertoId === sistema.id ? null : sistema.id)
+                    }
+                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                  >
+                    <Clock3 className="h-3.5 w-3.5" />
+                    Histórico
+                  </button>
                   {temEscrita && (
                     <>
                       <button
@@ -212,11 +221,19 @@ export function SistemasPage() {
                   )}
                 </div>
                 {membrosAbertoId === sistema.id && (
-                  <MembrosSistema
-                    sistema={sistema}
-                    temEscrita={temEscrita}
-                    userId={user?.id ?? ""}
-                  />
+                  <div className="border-t border-line-soft px-4 py-3">
+                    <ComposicaoSistema
+                      gateway={supabaseSistemasAdapter}
+                      sistema={sistema}
+                      temEscrita={temEscrita}
+                      userId={user?.id ?? ""}
+                    />
+                  </div>
+                )}
+                {historicoAbertoId === sistema.id && (
+                  <div className="border-t border-line-soft px-4 py-3">
+                    <HistoricoOsSistema gateway={supabaseSistemasAdapter} sistemaId={sistema.id} />
+                  </div>
                 )}
               </section>
             );
@@ -231,111 +248,6 @@ export function SistemasPage() {
           onCancel={() => setModal(null)}
           onSalvar={salvar}
         />
-      )}
-    </div>
-  );
-}
-
-function MembrosSistema({
-  sistema,
-  temEscrita,
-  userId,
-}: {
-  sistema: Sistema;
-  temEscrita: boolean;
-  userId: string;
-}) {
-  const [membros, setMembros] = useState<SistemaItemMembro[] | "carregando">("carregando");
-  const [itensDisponiveis, setItensDisponiveis] = useState<Array<{ id: string; nome: string }>>([]);
-  const [itemSelecionado, setItemSelecionado] = useState("");
-  const [erro, setErro] = useState<string | null>(null);
-
-  const carregar = useCallback(async () => {
-    const [membrosAtuais, itens] = await Promise.all([
-      listarItensDoSistema(supabaseSistemasAdapter, sistema.id),
-      listarItensDisponiveis(supabaseSistemasAdapter, sistema.clienteId),
-    ]);
-    setMembros(membrosAtuais);
-    setItensDisponiveis(itens);
-  }, [sistema.id, sistema.clienteId]);
-
-  useEffect(() => {
-    carregar();
-  }, [carregar]);
-
-  async function adicionar() {
-    if (!itemSelecionado) return;
-    try {
-      setErro(null);
-      await adicionarItem(supabaseSistemasAdapter, sistema.id, itemSelecionado, userId);
-      setItemSelecionado("");
-      await carregar();
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível adicionar o item.");
-    }
-  }
-
-  async function remover(itemId: string) {
-    await removerItem(supabaseSistemasAdapter, sistema.id, itemId);
-    await carregar();
-  }
-
-  const membrosIds = new Set(membros === "carregando" ? [] : membros.map((m) => m.itemId));
-  const opcoes = itensDisponiveis.filter((i) => !membrosIds.has(i.id));
-
-  return (
-    <div className="border-t border-line-soft px-4 py-3">
-      {temEscrita && (
-        <div className="mb-3 flex gap-2">
-          <select
-            value={itemSelecionado}
-            onChange={(e) => setItemSelecionado(e.target.value)}
-            className="input h-9 flex-1"
-          >
-            <option value="">Selecione um item para adicionar…</option>
-            {opcoes.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={adicionar}
-            className="btn-secondary"
-            disabled={!itemSelecionado}
-          >
-            <Plus className="h-4 w-4" />
-            Adicionar
-          </button>
-        </div>
-      )}
-      {erro && <p className="mb-2 text-xs text-[#A23B25]">{erro}</p>}
-      {membros === "carregando" ? (
-        <p className="text-sm text-ink-3">Carregando…</p>
-      ) : membros.length === 0 ? (
-        <p className="text-sm text-ink-3">Nenhum item neste Sistema.</p>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {membros.map((membro) => (
-            <span
-              key={membro.id}
-              className="inline-flex items-center gap-1.5 rounded-full bg-line-soft px-3 py-1 text-xs font-semibold text-ink-2"
-            >
-              {membro.itemNome}
-              {temEscrita && (
-                <button
-                  type="button"
-                  onClick={() => remover(membro.itemId)}
-                  aria-label={`Remover ${membro.itemNome}`}
-                  className="text-ink-3 hover:text-[#A23B25]"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </span>
-          ))}
-        </div>
       )}
     </div>
   );

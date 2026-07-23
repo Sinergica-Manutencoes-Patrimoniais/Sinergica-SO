@@ -8,6 +8,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import {
   buscarValorHoraTecnico,
@@ -19,15 +20,19 @@ import type {
   TecnicoOpcaoHoras,
 } from "../application/apontamento-horas-gateway";
 import {
+  analisarConsistencia,
   calcularCusto,
   formatarHorasMinutos,
   gerarCsvApontamento,
   horaLocal,
+  listarAnomalias,
+  produtividadeDiaria,
 } from "../domain/apontamento-horas";
 import type {
   AgregadoHoras,
   ApontamentoHorasItem,
   DiaTecnico,
+  ParametrosApontamentoHoras,
   SinalJornada,
   TendenciaSemana,
 } from "../domain/apontamento-horas";
@@ -44,6 +49,7 @@ type Estado =
       porCliente: AgregadoHoras[];
       porTecnico: AgregadoHoras[];
       porDia: DiaTecnico[];
+      parametros: ParametrosApontamentoHoras;
     };
 
 type Aba = "periodo" | "dia";
@@ -68,6 +74,7 @@ export function ApontamentoHorasPage({
   onAbrirTecnico?: (tecnicoFuncionarioId: string, periodo: { inicio: string; fim: string }) => void;
 }) {
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
+  const { user } = useAuth();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [inicio, setInicio] = useState(inicioDoMes());
   const [fim, setFim] = useState(hoje());
@@ -75,8 +82,10 @@ export function ApontamentoHorasPage({
   const [clienteId, setClienteId] = useState("");
   const [custosPorTecnico, setCustosPorTecnico] = useState<Map<string, number | null>>(new Map());
   const [aba, setAba] = useState<Aba>("periodo");
+  const [salvandoParametros, setSalvandoParametros] = useState(false);
 
   const temLeitura = podeAcessar("pcm", "leitura");
+  const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
@@ -240,6 +249,23 @@ export function ApontamentoHorasPage({
       )}
 
       <div hidden={aba !== "periodo"} className="flex flex-col gap-3">
+        <InsightsApontamento
+          itens={estado.itens}
+          dias={estado.porDia}
+          parametros={estado.parametros}
+          podeEditar={temEscrita}
+          salvando={salvandoParametros}
+          onSalvar={async (parametros) => {
+            if (!user) return;
+            setSalvandoParametros(true);
+            try {
+              await supabaseApontamentoHorasAdapter.salvarParametros(parametros, user.id);
+              await carregar();
+            } finally {
+              setSalvandoParametros(false);
+            }
+          }}
+        />
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <AgregadoPainel
             titulo="Horas por cliente"
@@ -311,6 +337,122 @@ export function ApontamentoHorasPage({
         </section>
       </div>
     </div>
+  );
+}
+
+function InsightsApontamento({
+  itens,
+  dias,
+  parametros,
+  podeEditar,
+  salvando,
+  onSalvar,
+}: {
+  itens: ApontamentoHorasItem[];
+  dias: DiaTecnico[];
+  parametros: ParametrosApontamentoHoras;
+  podeEditar: boolean;
+  salvando: boolean;
+  onSalvar: (parametros: ParametrosApontamentoHoras) => Promise<void>;
+}) {
+  const [form, setForm] = useState(parametros);
+  useEffect(() => setForm(parametros), [parametros]);
+  const produtividade = produtividadeDiaria(dias, parametros.metaDiariaHoras);
+  const consistencia = analisarConsistencia(dias, itens, parametros.toleranciaMinutos);
+  const anomalias = listarAnomalias(itens, parametros.limiarAnomaliaMinutos);
+  return (
+    <section className="rounded-[8px] border border-line bg-card p-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h4 className="text-sm font-semibold text-ink">Produtividade e consistência</h4>
+          <p className="text-xs text-ink-3">Horas de OS × janela de visita × ponto</p>
+        </div>
+        <div className="flex flex-wrap items-end gap-2">
+          {(
+            [
+              ["metaDiariaHoras", "Meta diária (h)"],
+              ["toleranciaMinutos", "Tolerância (min)"],
+              ["limiarAnomaliaMinutos", "OS curta (min)"],
+            ] as const
+          ).map(([chave, label]) => (
+            <label key={chave} className="text-xs text-ink-3">
+              {label}
+              <input
+                aria-label={label}
+                type="number"
+                disabled={!podeEditar}
+                value={form[chave]}
+                onChange={(e) => setForm({ ...form, [chave]: Number(e.target.value) })}
+                className="input ml-1 h-8 w-20"
+              />
+            </label>
+          ))}
+          {podeEditar && (
+            <button
+              type="button"
+              disabled={salvando}
+              onClick={() => void onSalvar(form)}
+              className="btn-secondary h-8"
+            >
+              {salvando ? "Salvando…" : "Salvar parâmetros"}
+            </button>
+          )}
+        </div>
+      </div>
+      {dias.length === 0 ? (
+        <p className="mt-4 text-sm text-ink-3">Sem dados no período.</p>
+      ) : (
+        <div className="mt-4 grid gap-3 lg:grid-cols-3">
+          <div>
+            <h5 className="text-xs font-semibold uppercase text-ink-3">Produtividade diária</h5>
+            <ul className="mt-2 space-y-1 text-xs">
+              {produtividade.slice(0, 8).map((d) => (
+                <li key={d.chave} className="flex justify-between">
+                  <span>
+                    {d.tecnicoNome} · {formatarDiaBr(d.dia)}
+                  </span>
+                  <strong className={d.desvioHoras < 0 ? "text-[#A23B25]" : "text-[#1E8E45]"}>
+                    {formatarHorasMinutos(d.somaOsHoras)} / {d.metaDiariaHoras}h
+                  </strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h5 className="text-xs font-semibold uppercase text-ink-3">Consistência das fontes</h5>
+            <ul className="mt-2 space-y-1 text-xs">
+              {consistencia.slice(0, 8).map((d) => (
+                <li key={d.chave} className={d.divergente ? "text-[#A23B25]" : "text-ink-2"}>
+                  {d.tecnicoNome}: OS {formatarHorasMinutos(d.horasOs)} · visita{" "}
+                  {d.janelaVisitaHoras == null
+                    ? "sem dado"
+                    : formatarHorasMinutos(d.janelaVisitaHoras)}{" "}
+                  · ponto {d.pontoHoras == null ? "sem dado" : formatarHorasMinutos(d.pontoHoras)}
+                  {d.divergente ? " · divergente" : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h5 className="text-xs font-semibold uppercase text-ink-3">
+              OS abaixo de {parametros.limiarAnomaliaMinutos} min
+            </h5>
+            {anomalias.length === 0 ? (
+              <p className="mt-2 text-xs text-ink-3">Nenhuma anomalia.</p>
+            ) : (
+              <ul className="mt-2 space-y-1 text-xs">
+                {anomalias.slice(0, 8).map((item) => (
+                  <li key={item.osId}>
+                    {item.osNumero} · {item.tecnicoNome} · {item.clienteNome} ·{" "}
+                    {formatarHorasMinutos(item.horas)}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

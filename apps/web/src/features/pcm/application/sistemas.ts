@@ -1,3 +1,5 @@
+import { diffComposicaoSistema } from "../domain/composicao-sistema";
+import type { OsHistoricoItem } from "../domain/historico-ativo";
 import {
   validarMembroMesmoCliente,
   validarMembroNaoDuplicado,
@@ -39,6 +41,19 @@ export function listarItensDoSistema(gateway: SistemasGateway, sistemaId: string
   return gateway.listarItensDoSistema(sistemaId);
 }
 
+/** E01-S87 AC-2/AC-3: histórico de OS do Sistema — degrada pra `null` em falha de infra (mesmo
+ * padrão de `obterDetalheAtivo`, isola a falha do resto da tela) em vez de derrubar quem chama. */
+export async function listarHistoricoOsSistema(
+  gateway: SistemasGateway,
+  sistemaId: string,
+): Promise<OsHistoricoItem[] | null> {
+  try {
+    return await gateway.listarHistoricoOsSistema(sistemaId);
+  } catch {
+    return null;
+  }
+}
+
 /** AC-7 — adiciona N itens ao Sistema; um Item pode entrar em >1 Sistema (INV-6 só impede
  * duplicata NO MESMO Sistema). Valida INV-5 (mesmo cliente) e INV-6 antes do round-trip. */
 export async function adicionarItem(
@@ -61,4 +76,24 @@ export async function adicionarItem(
 
 export function removerItem(gateway: SistemasGateway, sistemaId: string, itemId: string) {
   return gateway.removerItem(sistemaId, itemId);
+}
+
+/** E01-S86 AC-1/AC-3: persiste a composição marcada no seletor (checkbox+filtro) de uma vez —
+ * calcula o diff contra os membros atuais e só chama `adicionarItem`/`removerItem` pro que
+ * realmente mudou (menos round-trips que salvar item a item). */
+export async function salvarComposicaoSistema(
+  gateway: SistemasGateway,
+  sistemaId: string,
+  selecionadosIds: string[],
+  userId: string,
+): Promise<void> {
+  const membrosAtuais = await gateway.listarItensDoSistema(sistemaId);
+  const { adicionar, remover } = diffComposicaoSistema(
+    membrosAtuais.map((m) => m.itemId),
+    selecionadosIds,
+  );
+  await Promise.all([
+    ...adicionar.map((itemId) => adicionarItem(gateway, sistemaId, itemId, userId)),
+    ...remover.map((itemId) => gateway.removerItem(sistemaId, itemId)),
+  ]);
 }

@@ -5,7 +5,7 @@ import type { OrdemServicoOperacional } from "./ordens-servico";
 
 const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional => ({
   id: "os",
-  numero: "CH-001",
+  numero: "OS-0001",
   titulo: "OS",
   descricao: null,
   clienteNome: "Cliente",
@@ -16,6 +16,9 @@ const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional
   gravidade: 3,
   urgencia: 3,
   tendencia: 3,
+  dorCliente: null,
+  observacao: null,
+  origemInspecaoItemId: null,
   auvoTaskId: null,
   auvoSyncStatus: null,
   auvoSyncError: null,
@@ -58,16 +61,18 @@ const inspecao = (dataInspecao: string): InspecaoResumo => ({
   art: null,
   condicoes: null,
   anexos: [],
+  eAssessment: false,
+  motivoAssessment: null,
 });
 
 describe("dashboard-pcm", () => {
   it("monta KPIs e listas a partir de OS/inspeções reais", () => {
     const dashboard = montarDashboardPcm(
       [
-        ordem({ id: "a", numero: "CH-001", scorePcm: 20, createdAt: "2026-07-03T10:00:00Z" }),
+        ordem({ id: "a", numero: "OS-0001", scorePcm: 20, createdAt: "2026-07-03T10:00:00Z" }),
         ordem({
           id: "b",
-          numero: "CH-002",
+          numero: "OS-0002",
           scorePcm: 125,
           prioridade: "critica",
           auvoTaskId: 123,
@@ -75,7 +80,7 @@ describe("dashboard-pcm", () => {
         }),
         ordem({
           id: "c",
-          numero: "CH-003",
+          numero: "OS-0003",
           status: "finalizado",
           scorePcm: 90,
           createdAt: "2026-07-02T10:00:00Z",

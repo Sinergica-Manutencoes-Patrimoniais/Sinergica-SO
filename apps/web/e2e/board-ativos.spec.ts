@@ -90,7 +90,25 @@ test("Board: colunas por Local, card do ativo e drawer de detalhe", async ({ pag
   // item recém-criado sem OS vinculada — estado vazio honesto, nunca erro.
   await expect(drawer.getByText("Nenhuma OS registrada para este ativo.")).toBeVisible();
 
+  // ── E01-S79: editar o item direto do drawer (antes só era possível visualizar) ─────────────────
+  const nomeEditado = `${nomeItem} (editado)`;
+  await drawer.getByRole("button", { name: "Editar ativo" }).click();
+  const campoNome = page.getByLabel("Nome *");
+  await expect(campoNome).toHaveValue(nomeItem);
+  await campoNome.fill(nomeEditado);
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(drawer.getByText(nomeEditado, { exact: true })).toBeVisible({ timeout: 10_000 });
+
   // AC-5: fecha por Esc.
   await page.keyboard.press("Escape");
   await expect(page.locator(".drawer-panel")).toHaveCount(0);
+  await expect(page.getByText(nomeEditado, { exact: true })).toBeVisible({ timeout: 10_000 });
+
+  // ── E01-S79: drag and drop move o item de "Sala 302" pra "3º andar" (coluna nível-1) ───────────
+  const zonaSolteAqui = page.getByText("Solte aqui", { exact: true });
+  await expect(zonaSolteAqui).toBeVisible();
+  await page.getByText(nomeEditado, { exact: true }).dragTo(zonaSolteAqui);
+  await expect(zonaSolteAqui).toHaveCount(0, { timeout: 10_000 });
+  await expect(page.getByText("Sala 302", { exact: true })).toHaveCount(0);
+  await expect(page.getByText(nomeEditado, { exact: true })).toBeVisible();
 });

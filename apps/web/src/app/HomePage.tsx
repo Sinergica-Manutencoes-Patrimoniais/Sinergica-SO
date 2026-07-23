@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BellRing,
   BookOpen,
   Bot,
   Briefcase,
@@ -8,17 +9,24 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
   ClipboardList,
   Clock,
+  FileBarChart,
   FileBarChart2,
   FileText,
+  Gauge,
   HardHat,
+  Headset,
   Home,
   KeyRound,
+  Landmark,
   LayoutDashboard,
   LayoutGrid,
   Link2,
+  LockKeyhole,
   LogOut,
+  MapPin,
   Megaphone,
   Menu,
   MessageCircle,
@@ -26,9 +34,12 @@ import {
   Package,
   PieChart,
   Settings,
+  SlidersHorizontal,
   Snowflake,
+  Sparkles,
   Sun,
-  Ticket,
+  Tag,
+  Target,
   TrendingDown,
   TrendingUp,
   Upload,
@@ -45,23 +56,43 @@ import { AtendimentoConfigPage } from "../features/atendimento/pages/Atendimento
 import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
 import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
+import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
 import { IntegracoesPage } from "../features/config/pages/IntegracoesPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
 import type { FinanceiroView } from "../features/financeiro/mock/FinanceiroMockRouter";
 import { FinanceiroMockRouter } from "../features/financeiro/mock/FinanceiroMockRouter";
+import { CategoriasPage as FinanceiroCategoriasPage } from "../features/financeiro/pages/CategoriasPage";
+import { CobrancaPage as FinanceiroCobrancaPage } from "../features/financeiro/pages/CobrancaPage";
+import { CockpitFinanceiroPage as FinanceiroCockpitPage } from "../features/financeiro/pages/CockpitFinanceiroPage";
+import { ContasPagarPage as FinanceiroContasPagarPage } from "../features/financeiro/pages/ContasPagarPage";
+import { ContasPage as FinanceiroContasPage } from "../features/financeiro/pages/ContasPage";
+import { ContasReceberPage as FinanceiroContasReceberPage } from "../features/financeiro/pages/ContasReceberPage";
+import { ContratosPage as FinanceiroContratosPage } from "../features/financeiro/pages/ContratosPage";
+import { CustosPessoalPage as FinanceiroCustosPessoalPage } from "../features/financeiro/pages/CustosPessoalPage";
+import { DrePage as FinanceiroDrePage } from "../features/financeiro/pages/DrePage";
+import { FechamentoPage as FinanceiroFechamentoPage } from "../features/financeiro/pages/FechamentoPage";
+import { FinanceiroDashboardPage } from "../features/financeiro/pages/FinanceiroDashboardPage";
+import { ImportOfxPage as FinanceiroImportOfxPage } from "../features/financeiro/pages/ImportOfxPage";
+import { ImpostosPage as FinanceiroImpostosPage } from "../features/financeiro/pages/ImpostosPage";
+import { LancamentosPage as FinanceiroLancamentosPage } from "../features/financeiro/pages/LancamentosPage";
+import { OrcamentoPage as FinanceiroOrcamentoPage } from "../features/financeiro/pages/OrcamentoPage";
+import { RentabilidadePage as FinanceiroRentabilidadePage } from "../features/financeiro/pages/RentabilidadePage";
 import type { GuiaView } from "../features/guia/GuiaRouter";
 import { GuiaRouter } from "../features/guia/GuiaRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
 import { ApontamentoHorasPage } from "../features/pcm/pages/ApontamentoHorasPage";
+import { AssessmentPage } from "../features/pcm/pages/AssessmentPage";
 import { BacklogGutPage } from "../features/pcm/pages/BacklogGutPage";
 import {
   EquipamentoCategoriasPage,
   PalavrasChavePage,
-  ProdutoCategoriasPage,
   SegmentosPage,
 } from "../features/pcm/pages/CatalogoSimplesPage";
+import { ChamadosPage } from "../features/pcm/pages/ChamadosPage";
 import { ClienteGruposPage } from "../features/pcm/pages/ClienteGruposPage";
+import { ConfigLocalizacaoAuvoPage } from "../features/pcm/pages/ConfigLocalizacaoAuvoPage";
+import { ConfigPriorizacaoPage } from "../features/pcm/pages/ConfigPriorizacaoPage";
 import { EquipamentosPage } from "../features/pcm/pages/EquipamentosPage";
 import { EquipesPage } from "../features/pcm/pages/EquipesPage";
 import { FerramentasPage } from "../features/pcm/pages/FerramentasPage";
@@ -70,12 +101,12 @@ import { FuncionariosPage } from "../features/pcm/pages/FuncionariosPage";
 import { InspecoesPage } from "../features/pcm/pages/InspecoesPage";
 import { LaudosSpdaPage } from "../features/pcm/pages/LaudosSpdaPage";
 import { ListaClientesPage } from "../features/pcm/pages/ListaClientesPage";
+import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage";
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
 import { ServicosPage } from "../features/pcm/pages/ServicosPage";
 import { SistemasPage } from "../features/pcm/pages/SistemasPage";
-import { TicketsPage } from "../features/pcm/pages/TicketsPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
@@ -123,12 +154,13 @@ type PcmView =
   | "segmentos"
   | "servicos"
   | "palavras-chave"
-  | "produto-categorias"
   | "equipamento-categorias"
-  | "tickets"
+  | "chamados"
   | "ordens"
   | "backlog"
   | "inspecoes"
+  | "assessment"
+  | "cliente-marcacoes"
   | "pmoc"
   | "laudos-spda"
   | "apontamento-horas"
@@ -142,6 +174,11 @@ interface NavItem {
   // Quando presente, o item navega (seta o PcmView). Itens sem `view` seguem decorativos (mock),
   // como já eram antes desta story — não são o foco do escopo enxuto da Task 18.
   view?: PcmView;
+  // E01-S80 AC-2: atalho pra fora do módulo PCM — "Grupos de Usuário" abre o hub global de
+  // Configurações na aba Grupos, reusando o mesmo `GruposPage` (nunca duplica o CRUD). `PCM_NAV` é
+  // módulo-scoped (fora do componente), então o clique de fato é resolvido no render (tem acesso a
+  // `navegarModulo`/`setConfigTab`); esta flag só marca a intenção nos dados estáticos.
+  atalhoConfigGrupos?: boolean;
 }
 
 interface NavGroup {
@@ -236,13 +273,16 @@ const MODULOS: ModuloTab[] = [
 ];
 
 const CONFIG_NAV: Array<{
-  id: "grupos" | "usuarios" | "integracoes";
+  id: "grupos" | "usuarios" | "integracoes" | "ia" | "priorizacao" | "localizacao-auvo";
   label: string;
   icon: LucideIcon;
 }> = [
   { id: "grupos", label: "Grupos", icon: Users },
   { id: "usuarios", label: "Usuários", icon: UserCog },
   { id: "integracoes", label: "Integrações", icon: KeyRound },
+  { id: "ia", label: "IA", icon: Sparkles },
+  { id: "priorizacao", label: "Priorização", icon: SlidersHorizontal },
+  { id: "localizacao-auvo", label: "Localização Auvo", icon: MapPin },
 ];
 
 const ATENDIMENTO_NAV: AtendimentoNavGroup[] = [
@@ -275,14 +315,28 @@ const FINANCEIRO_NAV: FinanceiroNavGroup[] = [
     items: [
       { label: "Contas a Receber", icon: TrendingUp, view: "receber" },
       { label: "Contratos", icon: FileText, view: "contratos" },
+      { label: "Cobrança", icon: BellRing, view: "cobranca" },
     ],
   },
   { titulo: "PAGAMENTOS", items: [{ label: "Contas a Pagar", icon: TrendingDown, view: "pagar" }] },
+  { titulo: "IMPOSTOS", items: [{ label: "Impostos", icon: Landmark, view: "impostos" }] },
+  {
+    titulo: "FECHAMENTO",
+    items: [{ label: "Fechamento Mensal", icon: LockKeyhole, view: "fechamento" }],
+  },
   {
     titulo: "RENTABILIDADE",
     items: [
       { label: "Rentabilidade", icon: PieChart, view: "rentabilidade" },
       { label: "Custos de Pessoal", icon: UserCog, view: "pessoal" },
+    ],
+  },
+  {
+    titulo: "GERENCIAL",
+    items: [
+      { label: "DRE", icon: FileBarChart, view: "dre" },
+      { label: "Orçamento", icon: Target, view: "orcamento" },
+      { label: "Cockpit", icon: Gauge, view: "cockpit" },
     ],
   },
 ];
@@ -307,27 +361,37 @@ const PCM_NAV: NavGroup[] = [
       { label: "Ordens de Serviço", icon: ClipboardList, view: "ordens" },
       { label: "Backlog GUT", icon: LayoutGrid, view: "backlog" },
       { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
+      { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
-      { label: "Tickets", icon: Ticket, view: "tickets" },
+      { label: "Chamados", icon: Headset, view: "chamados" },
     ],
   },
   {
     titulo: "CADASTROS",
     items: [
       { label: "Clientes", icon: Building2, view: "clientes" },
-      { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
       { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
       { label: "Sistemas", icon: Link2, view: "sistemas" },
-      { label: "Equipes", icon: Users, view: "equipes" },
-      { label: "Ferramentas", icon: Package, view: "ferramentas" },
-      { label: "Funcionários", icon: UserCog, view: "funcionarios" },
       { label: "Serviços", icon: Briefcase, view: "servicos" },
       { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
-      { label: "Segmentos", icon: LayoutGrid, view: "segmentos" },
-      { label: "Palavras-chave", icon: FileText, view: "palavras-chave" },
-      { label: "Categorias Produto", icon: Package, view: "produto-categorias" },
-      { label: "Categorias Equip.", icon: Wrench, view: "equipamento-categorias" },
+    ],
+  },
+  {
+    // E01-S80 AC-2/AC-3: cadastros/parametrizações do PCM, reunidos aqui (saíram do topo da
+    // sidebar operacional). "Grupos de Usuário" reusa o hub global de Configurações (E00-S09) —
+    // não duplica o CRUD, só atalho (ver `atalhoConfigGrupos`).
+    titulo: "CONFIGURAÇÕES",
+    items: [
+      { label: "Ferramentas", icon: Package, view: "ferramentas" },
+      { label: "Equipes", icon: Users, view: "equipes" },
+      { label: "Funcionários", icon: UserCog, view: "funcionarios" },
+      { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
+      { label: "Marcações de Cliente", icon: Tag, view: "cliente-marcacoes" },
       { label: "Tipos de Inspeção", icon: CheckCircle2, view: "tipos-inspecao" },
+      { label: "Categorias Equip.", icon: Wrench, view: "equipamento-categorias" },
+      { label: "Segmentos", icon: LayoutGrid, view: "segmentos" },
+      { label: "Grupos de Usuário", icon: UserCog, atalhoConfigGrupos: true },
+      { label: "Palavras-chave", icon: FileText, view: "palavras-chave" },
     ],
   },
   {
@@ -502,7 +566,9 @@ export function HomePage() {
   const { mode, toggleMode } = useTheme();
   const { podeAcessar } = usePermissoes();
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
-  const [configTab, setConfigTab] = useState<"grupos" | "usuarios" | "integracoes">("grupos");
+  const [configTab, setConfigTab] = useState<
+    "grupos" | "usuarios" | "integracoes" | "ia" | "priorizacao" | "localizacao-auvo"
+  >("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   // Sub-navegação do Atendimento (E02-S02) — só "inbox" por enquanto (E02-S03+ adiciona mais).
@@ -606,14 +672,6 @@ export function HomePage() {
       .slice(0, 2)
       .map((w: string) => w[0]?.toUpperCase() ?? "")
       .join("") ?? "?";
-  const firstName = user?.nome.split(" ")[0] ?? "usuário";
-
-  const greetingSub =
-    activeModulo === "inicio"
-      ? "Sinérgica Manutenções · Visão Geral"
-      : activeModulo === "config"
-        ? "Sinérgica Manutenções · Configurações"
-        : `Sinérgica Manutenções · ${modulo?.label ?? ""}`;
   const sidebarCompacta = sidebarCollapsed && !mobileSidebarOpen;
 
   return (
@@ -733,7 +791,16 @@ export function HomePage() {
                       key={item.label}
                       type="button"
                       title={item.label}
-                      onClick={view ? () => irParaPcmView(view) : undefined}
+                      onClick={
+                        item.atalhoConfigGrupos
+                          ? () => {
+                              setConfigTab("grupos");
+                              navegarModulo("config");
+                            }
+                          : view
+                            ? () => irParaPcmView(view)
+                            : undefined
+                      }
                       className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                         isActive
                           ? "border-orange bg-white/[0.07] text-white font-medium"
@@ -978,12 +1045,6 @@ export function HomePage() {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5">
-          {/* Greeting */}
-          <div className="mb-4">
-            <h1 className="text-lg font-bold text-ink">Olá, {firstName}! 👋</h1>
-            <p className="text-sm text-ink-3 mt-0.5">{greetingSub}</p>
-          </div>
-
           {/* Conteúdo por módulo */}
           {activeModulo === "inicio" ? (
             <DashboardGeral resumos={dashboardVisivel} onSelect={navegarModulo} />
@@ -1015,6 +1076,10 @@ export function HomePage() {
               )
             ) : pcmView === "inspecoes" ? (
               <InspecoesPage />
+            ) : pcmView === "assessment" ? (
+              <AssessmentPage />
+            ) : pcmView === "cliente-marcacoes" ? (
+              <MarcacoesClientePage />
             ) : pcmView === "cliente-grupos" ? (
               <ClienteGruposPage />
             ) : pcmView === "funcionarios" ? (
@@ -1036,8 +1101,8 @@ export function HomePage() {
               />
             ) : pcmView === "tipos-inspecao" ? (
               <TiposInspecaoPage />
-            ) : pcmView === "tickets" ? (
-              <TicketsPage />
+            ) : pcmView === "chamados" ? (
+              <ChamadosPage />
             ) : pcmView === "servicos" ? (
               <ServicosPage />
             ) : pcmView === "tipos-tarefa" ? (
@@ -1046,8 +1111,6 @@ export function HomePage() {
               <SegmentosPage />
             ) : pcmView === "palavras-chave" ? (
               <PalavrasChavePage />
-            ) : pcmView === "produto-categorias" ? (
-              <ProdutoCategoriasPage />
             ) : pcmView === "equipamento-categorias" ? (
               <EquipamentoCategoriasPage />
             ) : pcmView === "laudos-spda" ? (
@@ -1106,6 +1169,12 @@ export function HomePage() {
               <GruposPage />
             ) : configTab === "usuarios" ? (
               <UsuariosPage />
+            ) : configTab === "ia" ? (
+              <ConfigIaPage />
+            ) : configTab === "priorizacao" ? (
+              <ConfigPriorizacaoPage />
+            ) : configTab === "localizacao-auvo" ? (
+              <ConfigLocalizacaoAuvoPage />
             ) : (
               <IntegracoesPage />
             )
@@ -1118,7 +1187,41 @@ export function HomePage() {
               <AtendimentoConfigPage />
             ) : null
           ) : activeModulo === "financeiro" ? (
-            <FinanceiroMockRouter view={financeiroView} />
+            financeiroView === "dashboard" ? (
+              <FinanceiroDashboardPage />
+            ) : financeiroView === "lancamentos" ? (
+              <FinanceiroLancamentosPage />
+            ) : financeiroView === "categorias" ? (
+              <FinanceiroCategoriasPage />
+            ) : financeiroView === "contas" ? (
+              <FinanceiroContasPage />
+            ) : financeiroView === "contratos" ? (
+              <FinanceiroContratosPage />
+            ) : financeiroView === "receber" ? (
+              <FinanceiroContasReceberPage />
+            ) : financeiroView === "ofx" ? (
+              <FinanceiroImportOfxPage />
+            ) : financeiroView === "pagar" ? (
+              <FinanceiroContasPagarPage />
+            ) : financeiroView === "rentabilidade" ? (
+              <FinanceiroRentabilidadePage />
+            ) : financeiroView === "pessoal" ? (
+              <FinanceiroCustosPessoalPage />
+            ) : financeiroView === "cobranca" ? (
+              <FinanceiroCobrancaPage />
+            ) : financeiroView === "impostos" ? (
+              <FinanceiroImpostosPage />
+            ) : financeiroView === "fechamento" ? (
+              <FinanceiroFechamentoPage />
+            ) : financeiroView === "dre" ? (
+              <FinanceiroDrePage />
+            ) : financeiroView === "orcamento" ? (
+              <FinanceiroOrcamentoPage />
+            ) : financeiroView === "cockpit" ? (
+              <FinanceiroCockpitPage />
+            ) : (
+              <FinanceiroMockRouter view={financeiroView} />
+            )
           ) : activeModulo === "guia" ? (
             <GuiaRouter view={guiaView} />
           ) : modulo ? (

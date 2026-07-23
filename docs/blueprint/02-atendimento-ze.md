@@ -30,7 +30,9 @@ Mensagem no grupo WhatsApp do condomínio
   → Detecta menção → coleta problema + local + urgência
   → Chama tool criar_chamado / atualizar_chamado / consultar
   → OS criada no PCM (origem = 'ze', status = 'solicitacao')
-  → Zé responde no grupo: "Chamado aberto ✅ CH-XXX"
+  → Zé responde no grupo: "Chamado aberto ✅ OS-XXXX" (E01-S88: mensagem usa "Chamado" como
+    linguagem amigável ao cliente, mas o Zé continua criando uma OS diretamente — o vínculo com a
+    entidade `pcm.chamados` de verdade é E01-S89, fora de escopo aqui)
 ```
 
 ## Regras de negócio

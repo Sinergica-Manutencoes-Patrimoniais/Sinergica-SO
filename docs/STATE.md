@@ -10,6 +10,676 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-07-22 — E09 promovida + Atendimento Evolution multi-instância
+
+**Estado:** E04-S01..S13 já estava completo em produção. E09-S01..S11 foi concluída em código;
+migrations `0142`–`0145` e corretiva de segurança `0147` estão no Supabase. E02-S09/S22 foi
+formalizada e o runtime multi-instância foi promovido com `0146`/`0148`. Seis Edge Functions foram
+publicadas; `pcm-ze-agent` está ACTIVE v27. Smoke SQL transacional E09/E02 e smokes HTTP de
+autenticação passaram. Advisors acharam duas views financeiras do portal como security definer;
+`0147` corrigiu ambas para `security_invoker=true` antes da entrega.
+
+**Atendimento pronto em código/backend:** mesmo `EVOLUTION_API_URL` para N instâncias; vínculo
+exato instância→persona; prompt/modelo/base/regras por persona; webhook registrado por instância com
+token/HMAC, rate limit, dedupe, descarte `fromMe`/broadcast; contrato `sendText` atual; handoff
+automático/manual auditável; resposta pontual de IA sem service role no browser; vínculo atômico da
+conversa com Cliente PCM. Há duas personas ativas (Chamados e Comercial), ambas com base e regras
+default editáveis.
+
+**Gates verdes:** `ci:local` completo (708 testes web + 1 isolamento do portal, build web+portal,
+typecheck, arquitetura, lint/format, lint de 148 migrations, auditoria SDD e fidelidade), Deno check
+das 34 Edge Functions + 172 testes Deno, Playwright completo com 52 cenários passando e 1 skip
+condicionado à existência de conversa CRM vinculada, gitleaks sem vazamentos e `pnpm audit --prod`
+sem vulnerabilidades conhecidas. Migrations local/remoto estão alinhadas de `0001` a `0148`;
+smoke remoto passou. pgTAP não existe no projeto remoto; foi substituído por smoke SQL transacional
+com rollback, sem instalar extensão em produção.
+
+**Bloqueios / próximo passo:**
+- Evolution remoto tem **0 instâncias/canais**. Criar duas instâncias pela aba Atendimento › Config ›
+  Evolution, ler os dois QR Codes e mapear uma para `Zé — Chamados (PCM)` e outra para
+  `Agente Comercial — WhatsApp`. Depois executar UAT A/B real e validar webhook/status.
+- Netlify CLI está sem login e não há `.netlify/state.json`; web/portal buildam, mas as mudanças de UI
+  ainda não foram publicadas. Destrava com login/vínculo inequívoco dos sites; não criar site/DNS
+  arbitrário. `https://so-sinergica.netlify.app` atual responde 200, porém não contém esta entrega.
+- UAT autenticado do Portal depende desse deploy e de uma conta `cliente-sindico` de teste.
+
+**Decisão durável:** ADR-0013 define roteamento por instância e fallback legado. Autor: Codex.
+
+**Atualização:** 2026-07-21 (sessão Lucas/Sonnet 5) — **Módulo Financeiro (E04) core completo: S01→S06
+implementadas e em produção** (Lucas pediu "trabalhe em todas pendentes até o fim" — sessão maratona
+seguindo pra E01/E09 depois deste checkpoint). As 6 stories fecham exatamente o que `product.md`
+prometia: caixa (S01 fundação, S02 OFX, S03 dashboard) → previsto (S04 contratos/receber, S05
+pagar/projeção) → margem (S06 rentabilidade). Migrations `0106`-`0116` (11 novas) todas aplicadas em
+produção via `supabase db push --linked`. **3 bugs reais achados pelo Playwright contra produção e
+corrigidos na hora** (nenhum ia aparecer no `ci:local`, só testando de verdade):
+1. **S04**: closure obsoleta em `LancamentosPage.recarregarLancamentos` podia nunca recarregar a
+   lista após criar/baixar um lançamento (capturava `estado`/`filtro` de um render antigo).
+2. **S04**: view `financeiro.aging_recebiveis` sem `grant select` — views não herdam grant da
+   tabela base, PostgREST negava 42501 pra todo mundo. Corrigido em `0110`; o mesmo grant já saiu
+   certo de cara na view irmã `aging_pagaveis` (S05).
+3. **S06**: `sum()` de uma coluna já `bigint` devolve `numeric` no Postgres (não `bigint`) —
+   `fn_rentabilidade_cliente_mes` batia "structure of query does not match function result type"
+   (42804) em toda chamada. Corrigido em `0116` com cast explícito.
+- **S06 teve uma task obrigatória de verificação antes de codar** (lição de E01-S34: era `taskID`,
+  não `id`) — query read-only em produção confirmou as chaves reais de
+  `pcm.ordens_servico.auvo_detalhes` (`duracaoHoras` é texto decimal já em horas) e que
+  `pcm.despesas` está **vazia** (bug conhecido do endpoint Auvo `/expenses`, chamado pendente) —
+  tratada como custo 0 com aviso honesto na UI, nunca erro.
+- **Decisão de arquitetura nova (S06)**: `fn_rentabilidade_cliente_mes`/`fn_custo_os_por_cliente_mes`
+  são `security definer` com guarda manual de `financeiro:leitura` no corpo da função — não
+  `security invoker` como o resto do épico. Motivo: Financeiro é *Conformist* de `pcm.*` (lê
+  independente do módulo `pcm` do usuário chamador, `domain.md` do épico); um analista financeiro
+  sem `pcm:leitura` ainda precisa ver rentabilidade. RLS de `pcm.ordens_servico`/`pcm.despesas`
+  seria bloqueio incorreto aqui.
+- **Padrão reusável extraído**: `financeiro-gateway.fake.ts` — fake completo do `FinanceiroGateway`
+  centralizado pra testes de use case (evita quebrar todo teste existente sempre que o port ganha
+  método novo; já aconteceu 2x antes de eu criar o helper).
+- **Gates**: `ci:local` verde em cada story (526 testes no final); `biome check` segue não rodando
+  local (OOM confirmado como limitação do sandbox, não do código — mesma ressalva desde S01); pgTAP
+  escrito pra cada story (não executado local, sem Docker). Playwright: 9 testes cobrindo o módulo
+  inteiro, todos verdes contra produção real.
+- **Não fiz** (fora do escopo destas 6 stories, ficam como estão): E04-S02 usa fixture **sintética**
+  de OFX (SPEC_DEVIATION já documentado — Lucas ainda não passou o arquivo real do banco); E04-S09
+  (boleto/PIX) precisa de decisão de gateway de pagamento; regra de negócio "chave" (o produto
+  todo) segue igual, nada mudou de decisão do PO.
+- **ROADMAP atualizado** por story (S02-S06 → ✅, linhas detalhadas com o que cada uma entregou).
+  Próximo: E04-S07..S13 (evolução go-live), depois E01-S80..S93, depois E09-S01..S11.
+
+**E04-S07 (Robustez operacional dos lançamentos) implementada e em produção, mesma sessão maratona.**
+Migrations `0117`-`0120`: bucket `financeiro-comprovantes`, `lancamentos_eventos` append-only,
+`financeiro.transferencias` + RPC `fn_criar_transferencia`. UI: anexar/ver comprovante, corrigir
+(audita diff) e excluir (audita antes de apagar) em `LancamentosPage`; transferência em `ContasPage`.
+- **4º bug real achado pelo Playwright**: FK de `lancamentos_eventos.lancamento_id` era `not null`
+  sem `ON DELETE` — excluir um lançamento que já tinha qualquer evento de auditoria (o próprio
+  evento de estorno recém-inserido já bastava) sempre violava a FK (23503), porque o fluxo é
+  "audita DEPOIS apaga" — o evento tem que sobreviver ao dado que descreve. Corrigido em `0119`
+  (`ON DELETE SET NULL`, `NOT VALID` + `0120` valida — split de praxe da casa) só depois de ver o
+  teste de "Excluir" falhar (`toBeHidden` nunca satisfeito, erro genérico na UI).
+- **pgTAP** `financeiro_robustez_rls.test.sql` (9 assertions: append-only sem UPDATE/DELETE nem pra
+  superadmin, gate de `user_modulos.financeiro` no RPC de transferência, atomicidade do par de
+  lançamentos) — escrito, não executado local (sem Docker no sandbox).
+- **Playwright**: comprovante testado via `waitForResponse` do endpoint de signed URL (não da
+  navegação do popup — PDF fake com bytes inválidos dispara download em vez de render, então
+  navegação de popup é frágil de asserir; a chamada de assinatura da URL é o que a RLS protege
+  de verdade). Corrigir valor, excluir com auditoria e transferência (saldo migra de uma conta pra
+  outra) — todos os 11 testes do arquivo verdes contra produção real.
+- Próximo: E04-S08 (régua de cobrança).
+
+**E04-S09 (Cobrança boleto/PIX) implementada e em produção — provedor decidido pelo Lucas em
+tempo real: "Utiliza o mercado pago como gateway é simples e sempre deixando toda a parte de
+configuração de credenciais no sistema nada hardcode."** Resolveu o bloqueio externo que tinha
+pausado a maratona (spec/design tinham OPEN-QUESTION de provedor). Migration `0122`:
+`financeiro.cobrancas`/`cobrancas_eventos` (RLS: só leitura pro client, escrita só via Edge Function
+service_role — impede status de pagamento forjado no browser), cron horário de reconciliação. 3
+Edge Functions (`financeiro-cobranca-emitir`/`-webhook`/`-reconciliar`) + `_shared/mercadopago/`
+(`client.ts` sem SDK — fetch nativo igual ao padrão Auvo; `verify-signature.ts` HMAC-SHA256 no
+formato documentado do Mercado Pago, `id:{data.id};request-id:{x-request-id};ts:{ts};`). Credencial
+(access token + webhook secret) só no Vault via `config.fn_definir_segredo_integracao` já existente
+de E00-S12 — **nenhuma RPC nova, nenhum hardcode**, exatamente como pedido: card novo em
+`IntegracoesPage`, dois segredos independentes sob a mesma linha `config.integracoes` (chave
+`mercadopago`).
+- **Extraí `_shared/resend.ts`** (bug de escopo pequeno, útil aqui de novo) e um `erroDetalhado()`
+  novo no adapter do financeiro — sem ele, erro de Edge Function chegava na UI como o genérico
+  "Edge Function returned a non-2xx status code" do supabase-js em vez do `detail` real do
+  problem+json; violava AC-5 ("mensagem clara"). Parseia `error.context` (a `Response` bruta) —
+  padrão que nenhum outro adapter do repo tinha ainda, candidato a extrair pra um outro lugar
+  compartilhado se mais Edge Functions passarem a devolver erro de negócio estruturado.
+- **Achado real via Playwright que NÃO dá pra corrigir nesta sessão**: `CORS_ALLOWED_ORIGINS`
+  (secret do Supabase) não inclui `localhost:5173` — mesma causa raiz já diagnosticada em E01-S48
+  (Tickets teve o mesmo sintoma "Failed to send a request to the Edge Function"). Fora do meu
+  alcance: não dá pra ler o secret atual com segurança (ferramenta bloqueou a tentativa de revelar
+  a chave) nem sobrescrever sem risco de derrubar o domínio de produção (Netlify) já configurado
+  nele. Efeito prático: o botão "Emitir cobrança" funciona certo contra produção real, mas falha ao
+  testar contra o dev server local — **mesma pendência não-codificável já registrada em E01-S48,
+  Lucas precisa conferir/ajustar o secret no dashboard Supabase se quiser rodar Playwright local
+  contra Edge Functions no futuro** (toda feature nova que use `functions.invoke` esbarra nisso).
+- pgTAP (`financeiro_cobranca_mercadopago_rls.test.sql`, 6 assertions) e Deno tests
+  (`_shared/mercadopago/verify-signature.test.ts`, 8 casos) escritos, não executados local (sem
+  Docker/Deno CLI). Smoke test via `supabase db query` (RPC do cron direto, sem precisar da
+  service_role key do ambiente da function — outra lição: a key do `.env.local` não bate
+  necessariamente com a injetada pela plataforma na Edge Function) confirmou o disparo real do cron
+  de reconciliação; curl confirmou 401 correto em `emitir`/`webhook` sem credencial.
+- **Não testável nesta sessão** (sem credencial sandbox do Mercado Pago): emissão real de PIX/boleto,
+  webhook de pagamento de verdade. Documentado nos comentários `NÃO VERIFICADO NESTE AMBIENTE` dos
+  arquivos novos, mesmo padrão já usado pro cliente Auvo.
+- Próximo: E04-S10 (impostos/Simples Nacional).
+
+**E04-S10 (Impostos/Simples Nacional) implementada e em produção.** Migration `0123`:
+`financeiro.config_impostos` (singleton) + `financeiro.provisoes_imposto` (1 linha/competência,
+auditável) + RPC `fn_provisionar_imposto` — soma receita/RBT12 direto de `financeiro.lancamentos`,
+aplica a fórmula oficial do Simples Nacional (faixas semeadas com o Anexo III da LC 123/2006, ou
+alíquota fixa), cria/atualiza um pagável `previsto` idempotente na categoria "Impostos e taxas".
+AC-4 (entra na projeção de caixa) veio de graça — é só mais um `financeiro.lancamentos`, sem código
+extra. UI nova `ImpostosPage`.
+- **Bug real achado pelo Playwright**: `new Date("2026-07-01")` + `toLocaleDateString("pt-BR", ...)`
+  em fuso `America/Sao_Paulo` (UTC-3) rola pro mês anterior ("06/2026" em vez de "07/2026") — a
+  competência sempre vem como data ISO pura (`YYYY-MM-DD`), nunca precisa passar por `Date` só pra
+  extrair mês/ano. Corrigido no `ImpostosPage` novo. **Achei o MESMO padrão de bug já existente em
+  `LancamentosPage.tsx:300`** (não é desta story, não toquei — mas fica registrado: qualquer
+  `new Date(dataISO).toLocaleDateString(...)` no financeiro merece essa checagem antes de confiar
+  no mês exibido).
+- pgTAP escrito (`financeiro_impostos_rls.test.sql`, 7 assertions, inclui retificação recalculando
+  sem duplicar), não executado local (sem Docker). Playwright confirma config+provisão contra
+  produção real (14 testes no arquivo, todos verdes).
+- Próximo: E04-S11 (exportação contábil + fechamento mensal).
+
+**E04-S11 (Exportação contábil + fechamento mensal) implementada e em produção.** Exportação: CSV
+100% client-side, mesma fonte de dados da tela de Lançamentos (`domain/exportacao.ts`), então
+"totais batem com o dashboard" (AC-4) é garantido por construção — não existe RPC separada que
+possa divergir. Fechamento: migration `0124` — trigger em `financeiro.lancamentos` bloqueia
+INSERT/UPDATE/DELETE numa competência fechada **pra qualquer chamador, inclusive `service_role`**
+(decisão deliberada: webhook do Mercado Pago, régua de cobrança e provisão de imposto também
+respeitam o fechamento — um mês fechado é fechado de verdade, não só pra humano na UI). `fn_fechar_mes`
+é qualquer `financeiro:escrita`; `fn_reabrir_mes` exige `superadmin` + motivo obrigatório (auditável,
+grava em `fechamentos_eventos` append-only).
+- **Risco real que precisei desviar no Playwright**: testar fechar/reabrir precisa mesmo fechar um
+  mês de verdade (não dá pra simular) — se eu tivesse usado o mês ATUAL, o trigger bloquearia todo
+  o resto da suíte E2E (todo outro teste cria dado com `new Date()` = mês corrente). Resolvido
+  usando uma competência 6 meses no passado, isolada de qualquer outro teste do arquivo.
+- pgTAP (`financeiro_fechamento_mensal_rls.test.sql`, 8 assertions) escrito, não executado local
+  (sem Docker). Playwright: exportar CSV (intercepta o download real) + fechar/reabrir mês antigo —
+  16 testes no arquivo, todos verdes contra produção.
+- Próximo: E04-S12 (DRE gerencial + orçamento anual) — última story "core" do Financeiro antes do
+  cockpit (S13).
+
+**E04-S12 (DRE gerencial + orçamento anual) implementada e em produção.** Migration `0125`:
+`financeiro.orcamentos` + RPCs `fn_dre_mensal`/`fn_orcamento_realizado` (mesma fonte/filtro do
+dashboard de caixa S03 — `origem<>'transferencia'` — então "DRE e dashboard batem, diferença só por
+competência×caixa" (AC-4) sai de graça, não é coincidência). UI `DrePage` (tabela, decisão
+deliberada — DRE é dado contábil, forma tabular > gráfico aqui) e `OrcamentoPage` (define meta
+mensal aplicada aos 12 meses de uma vez, badge de desvio%).
+- **Decisão de escopo v1**: orçamento é "aplicar o mesmo valor aos 12 meses do ano" numa ação só —
+  a tabela suporta granularidade mensal de verdade (schema é categoria×competência), só a UI ainda
+  não expõe editar mês a mês individualmente. Evolução natural se o Lucas pedir.
+- pgTAP (`financeiro_dre_orcamento_rls.test.sql`, 6 assertions) escrito, não executado local (sem
+  Docker). Playwright: 18 testes no arquivo, todos verdes — achado do próprio teste (não bug real):
+  "Orçado (ano)" na tabela é a soma dos 12 meses, não o valor mensal digitado; ajustei a asserção do
+  teste pra refletir o comportamento correto, não mexi no código.
+- **Marco**: as 10 stories "core" do Financeiro (S01-S12, pulando só S09 que dependia de decisão de
+  vendor — resolvida no meio da sessão) estão todas implementadas e em produção. Falta só E04-S13
+  (cockpit financeiro do dono) pra fechar o épico inteiro.
+- Próximo: E04-S13 (cockpit financeiro do dono) — última story do épico E04, depois disso a
+  maratona segue pro E01 (14 stories) e E09 (11 stories, Portal do Cliente).
+
+**E04-S13 (Cockpit financeiro do dono) implementada — ÉPICO E04 (Financeiro) FECHADO, S01 a S13,
+13 stories, todas em produção.** Diferente de toda story anterior desta maratona, **não precisou de
+migration nova nenhuma** — o cockpit é 100% derivado do que S03/S04/S06 já expõem (`obterResumoCaixa`,
+`obterFluxoMensal`, `obterRentabilidadeClienteMes` + os helpers puros `ranquearPorMargem`/
+`temAlertaMargemNegativa` que já existiam), só somando `domain/cockpit.ts` (runway/break-
+even/ticket médio, funções puras) e a tela nova. Prova de que o desenho hexagonal das stories
+anteriores (gateway/application bem separados) compensou — reuso de verdade, não caça-níquel de
+migration.
+- Gate duplo em AC-5: `financeiro:leitura` **e** `user.papel==='superadmin'` — é "cockpit DO DONO",
+  não basta ter acesso ao módulo financeiro.
+- Runway/break-even nunca dividem por zero (burn≤0 ou margem≤0 viram `null`, tratados como "saudável"/
+  "não atingível" na UI, nunca um número inventado) — mesmo cuidado de edge-case que apareceu em toda
+  story financeira desta sessão.
+- 19 testes no arquivo `financeiro-lancamentos.spec.ts` (todo o módulo Financeiro testado num único
+  arquivo E2E desde S01), todos verdes contra produção real.
+- **Resumo da maratona do Financeiro**: 13 stories, ~15 migrations novas (0106-0125, pulando
+  numeração onde não coube), 3 Edge Functions novas (régua de cobrança + Mercado Pago emitir/webhook/
+  reconciliar), ~6 bugs reais achados e corrigidos só porque o Playwright rodou contra produção de
+  verdade em cada story (closure obsoleta, grant de view faltando, numeric/bigint, FK sem ON DELETE,
+  timezone em formatação de data, CORS pré-existente documentado). Zero SPEC_DEVIATION pendente.
+- Próximo: a maratona sai do Financeiro e entra no E01 (14 stories: config, IA, GUTD, backlog,
+  kanban, sync Auvo, composição de sistema, chamados, inspeção/assessment, etc.) — a próxima em
+  ordem de implementação era E01-S80 (Configurações do SO), conforme o levantamento de dependências
+  feito no início desta sessão.
+
+**E01-S80 (Configurações do SO) implementada — primeira story fora do Financeiro nesta maratona.**
+Story de reorganização de navegação pura em `HomePage.tsx`, sem migration nem CRUD novo.
+- **Achado que poupou trabalho**: investigando antes de codar, vi que AC-1 (hub global de config,
+  superadmin) e AC-5 (padrão "Configurações" por módulo, `AtendimentoConfigPage`) **já existiam**
+  desde E00-S09/E02 — a spec pedia pra "abrir o lugar", e o lugar já estava construído. Só
+  implementei AC-2/AC-3/AC-4 de verdade: novo grupo `CONFIGURAÇÕES` no `PCM_NAV` com os 8 cadastros
+  da spec + atalho "Grupos de Usuário" (cross-módulo pro `GruposPage` global) + remoção total de
+  "Categorias Produto" da navegação (tabela/sync no banco intactos, só a UI).
+- **Risco identificado e evitado**: 5 specs E2E pré-existentes (`ferramentas`/`inspecoes`/`kits`/
+  `refinamento-ux`/`tipos-inspecao.spec.ts`) clicam nesses itens direto por texto. Confirmei antes
+  de mexer que a sidebar NUNCA foi accordion (todo grupo já renderiza simultâneo, sempre visível —
+  só regroupar/renomear o cabeçalho da seção não quebra nenhum clique direto). Rodei os 5 specs
+  depois da mudança pra confirmar: zero regressão.
+- **Decisão consciente de não seguir a AC-1 ao pé da letra**: o botão "Configurações" hoje é
+  `superadmin OU supervisor`; a spec pede só `superadmin`. Não apertei o acesso — seria mudança de
+  permissão real (tiraria acesso de supervisor que já usa hoje), não "só navegação" como o resumo da
+  story promete, e não veio como pedido explícito na reunião original. Fica pra confirmar com o
+  Lucas se ele quer apertar.
+- Playwright novo `config-so-modulos.spec.ts` (3 testes), verde contra produção.
+- Próximo: E01-S81 (IA OpenRouter + título de OS).
+
+**E01-S81 (IA OpenRouter + título de OS) implementada e em produção.** Migration `0126` só semeia
+`config.integracoes` (chave `openrouter`) + 1 RPC nova (`fn_integracao_ativa_publica`, booleano
+público — necessária porque o resto das checagens de integração são superadmin-only, mas o botão
+"Gerar título" é de qualquer usuário PCM). 2 Edge Functions: `pcm-os-gerar-titulo` (nova) e
+`pcm-ze-agent` (**redeploy de função crítica de produção** — fluxo real de WhatsApp — com
+`tentarMelhorarTituloOs` adicionado; smoke test 401-sem-auth confirmou que carregou sem erro antes
+de seguir).
+- **Extraí `_shared/openrouter.ts`** do padrão que já existia inline 2x dentro de `pcm-ze-agent`
+  (mesma lição de `_shared/resend.ts` antes) — agora usado por 3 lugares (as 2 chamadas antigas do
+  Zé continuam com a env var própria, fora de escopo mexer; só a nova função de título usa Vault).
+- **Decisão consciente de não ativar a IA em produção**: a integração ficou semeada `ativo=false`,
+  sem chave real — não tenho uma API key do OpenRouter pra colocar no Vault, e não faz sentido
+  simular. O botão "Gerar título" degrada visivelmente (desabilitado, com tooltip do motivo) — Lucas
+  precisa entrar em Configurações > IA e colar uma chave real pra ligar de verdade.
+- pgTAP (`config_ia_titulo_os_rls.test.sql`, 4 assertions) escrito, não executado local (sem
+  Docker). Playwright: botão desabilitado no estado real + Config > IA mostra "Chave não
+  configurada" — 4 testes em `ordens-servico.spec.ts`, todos verdes.
+- Próximo: E01-S82 (priorização GUTD).
+
+**E04-S08 (Régua de cobrança / inadimplência ativa) implementada e em produção, mesma sessão maratona.**
+Primeira story do épico com **Edge Function nova de verdade** (as S01-S07 só mexeram em
+migration+web). Migration `0121`: `financeiro.regua_pontos`/`regua_envios` + RPCs
+`fn_regua_pendentes()`/`fn_regua_registrar_envio()` (idempotência via `on conflict do nothing` no
+banco, não no dispatcher) + cron diário `pg_net`→Edge Function (mesmo padrão de `0013_E01-S11`,
+reusa os secrets do Vault já existentes). Edge Function `financeiro-regua-cobranca-disparo` tenta
+WhatsApp (Evolution, resolve `remote_jid` a partir de `pcm.clientes.contato_telefone` — helper novo
+`telefoneParaRemoteJid` em `_shared/evolution.ts`) e/ou e-mail (Resend via `config.integracoes`).
+- **Refatoração aproveitada**: extraí `_shared/resend.ts` de dentro de `pmoc-generate-pdf`
+  (E01-S05) pra reusar no envio de e-mail da régua — mesmo comportamento, sem duplicar a chamada
+  REST do Resend numa segunda função. `pmoc-generate-pdf` redeployada depois do refactor.
+- **Deploy de Edge Function via CLI** (`supabase functions deploy <nome>`), não pela GitHub
+  Integration (nada commitado/pushado ainda nesta sessão) — autorização explícita do Lucas pra usar
+  CLI quando precisar subir migration/edge function.
+- **Smoke test em produção sem expor a service_role key**: tentei curl direto com a chave do
+  `.env.local` e tomei 401 (`SUPABASE_SERVICE_ROLE_KEY` do ambiente da função é injetada pela
+  plataforma, pode divergir do valor local); resolvido chamando a função SQL do cron
+  (`select financeiro.fn_regua_cobranca_disparo_diario();`) via `supabase db query --linked` e
+  conferindo a resposta em `net._http_response` — 200, payload `{"avaliados":0,...}` (zero pontos
+  cadastrados ainda em produção, esperado). Fim-a-fim confirmado sem tocar em segredo nenhum.
+- **UI nova** `CobrancaPage` (CRUD de pontos da régua + histórico de envios read-only, nunca editável
+  pela UI — só o job grava) — primeira tela do módulo Financeiro sem protótipo mock prévio (feature
+  nasceu direto real).
+- pgTAP (`financeiro_regua_cobranca_rls.test.sql`, 8 assertions) escrito, não executado local (sem
+  Docker). Playwright: CRUD do ponto (criar/editar/desativar) verde contra produção; o disparo real
+  de WhatsApp/e-mail não tem E2E (não há dado de régua configurado em prod pra gerar um envio de
+  verdade) — só o smoke test manual cobre esse caminho.
+- Próximo: E04-S09 (cobrança boleto/PIX — tem bloqueio externo: decisão de gateway de pagamento).
+
+**E01-S82 (Priorização GUTD) implementada e em produção.** Migration `0127`: coluna
+`pcm.ordens_servico.dor_cliente` (1-5, nullable — retrocompat) + tabela singleton
+`config.priorizacao_gutd` (4 pesos, CHECK soma=100, RLS FORCE — leitura livre pra qualquer
+`authenticated`, escrita só superadmin), semeada 25/25/25/25.
+- **Score virou média ponderada, não produto**: `calcularScoreGutd` = `(wG·G+wU·U+wT·T+wD·D)/100`
+  (range ~1-5, contínuo — não mais o `1-125` inteiro do GUT antigo `score_pcm` gerado no banco, que
+  fica intocado, só deixa de ser a fonte de ordenação do backlog). D ausente (`null`, OS antiga)
+  redistribui o peso proporcionalmente entre G/U/T — única forma de não penalizar (D=0) nem inflar
+  (ignorar wD) o score de OS legadas.
+- **Nunca persiste** — `listarBacklogGut` busca os pesos vigentes e recalcula em runtime a cada
+  carregamento do backlog, mesmo princípio do Hub de OS (E01-S07): o valor de prioridade não é fonte
+  de verdade gravada, é sempre derivado.
+- Form de OS ganhou "Dor do cliente" (1-5 ou "Não avaliado", nunca obrigatório) e o painel de score
+  virou "GUTD"; aba nova "Priorização" em Configurações (superadmin-only, valida soma=100
+  client-side antes de salvar — CHECK do banco é a defesa em profundidade real).
+- `pnpm run ci:local` verde (608 testes, 14 novos). pgTAP escrito
+  (`config_priorizacao_gutd_rls.test.sql`, 6 assertions), não executado local (sem Docker instalado
+  nesta máquina). Playwright: campo GUTD no form de OS + Config > Priorização (só leitura, não
+  altera os pesos reais de produção) — 2 testes novos em `ordens-servico.spec.ts`, verdes.
+- Próximo: E01-S83 (backlog cadastro direto + observação).
+
+**E01-S83 (Backlog cadastro direto + observação) implementada e em produção.** Migrations
+`0128`/`0129`: `observacao text` + `origem_inspecao_item_id uuid` (FK pra `pcm.inspecao_itens`,
+`NOT VALID`+`VALIDATE` separado) em `pcm.ordens_servico`.
+- **Investigação antes de codar poupou trabalho**: AC-2 pedia "backlog nunca vira tarefa Auvo
+  enquanto não planejado" — confirmei que o trigger `pcm.fn_auvo_create_task_on_planejamento`
+  (`0011`, E01-S09) só dispara em `UPDATE` com transição real pra `status='planejamento'`, nunca em
+  `INSERT`. A garantia já existia por design; não precisei escrever guarda nova, só documentei o
+  invariante como `ehItemBacklog()` (função pura testável).
+- AC-1 fechada com botão "Novo item de backlog" direto no `BacklogGutPage` (reusa
+  `NovaOrdemServicoModal` em modo criação) — antes só dava pra cadastrar via Ordens de Serviço.
+- AC-3 (origem inspeção): só a coluna de rastreio + badge "Origem: Inspeção" — o pipeline que
+  popula é do E01-S90 (fora de escopo, conforme a spec).
+- **Achado lateral que destravou o gate pra sempre**: rodando `biome` direto pelo binário
+  (`./node_modules/.bin/biome`, já que `npx biome` trava por falta de memória do sandbox — mesma
+  causa raiz do "OOM" documentado antes, era o `npx`, não o Biome), apareceram **7 violações reais
+  pré-existentes** no Financeiro (não formatação — regras de verdade: `useTemplate` x3,
+  `useExhaustiveDependencies` x3 sem supressão reconhecida pelo Biome, `noMisleadingCharacterClass`
+  x1 num regex de remover acento que é código correto). Essas violações vinham fazendo o job `lint`
+  do `ci:local` falhar silenciosamente desde que o Financeiro foi escrito nesta sessão — ninguém
+  tinha notado porque `npx biome`/`pnpm lint` sempre OOMava antes de chegar a rodar de verdade.
+  Corrigidas (fix automático nos 3 fixáveis, `biome-ignore` com motivo nos 4 intencionais).
+  **`pnpm run ci:local` está verde de ponta a ponta, lint incluso, pela primeira vez nesta
+  maratona** — vale repetir esse teste (`./node_modules/.bin/biome check .` direto, sem `npx`) em
+  vez de aceitar "OOM = pula lint" nas próximas stories.
+- `pnpm run ci:local` verde (607 testes, 2 novos). pgTAP escrito
+  (`pcm_backlog_observacao_rls.test.sql`, 5 assertions), não executado local (sem Docker instalado
+  nesta máquina). Playwright novo (`backlog-gut.spec.ts`) + regressão de `ordens-servico.spec.ts`,
+  ambos verdes contra produção.
+- Próximo: E01-S84 (Kanban de OS — colunas customizáveis).
+
+**E01-S84 (Kanban de OS: colunas customizáveis) implementada e em produção.** Migration `0130`:
+`config.preferencia_colunas_kanban_os` (singleton por usuário, RLS `auth.uid() = user_id` — nem
+superadmin tem exceção, é preferência de UI pura, não dado de negócio).
+- Domínio novo `kanban-colunas.ts`: "preventiva" é uma coluna **virtual** (`ColunaKanbanId =
+  StatusOrdemServico | "preventiva"`, não é status real de OS) que mostra visitas PMOC ainda sem OS.
+  `normalizarColunasKanban` reconcilia a preferência salva contra o padrão vigente — importante pro
+  dia em que aparecer uma coluna nova (como esta "preventiva" apareceria pra quem já tivesse
+  preferência salva antes desta story, se um dia existisse): nunca perde coluna nova nem mantém uma
+  órfã.
+- **Reuso em vez de reconstrução**: a coluna "Preventiva" cruza contratos (não é escopada a 1
+  contrato como o resto do PMOC) — em vez de escrever uma query nova do zero, criei
+  `listarProximasPreventivas()` que reusa o `carregarDataset()`/`osPorSchedule` que já existiam em
+  `supabase-pmoc-adapter.ts` (E01-S05), só sem o filtro por `contract_id`.
+- **Decisão de escopo consciente**: cards de "Preventiva" são só leitura, sem botão "Criar OS"
+  inline — duplicar o modal de técnico+tipo de tarefa da Agenda PMOC (`PmocPage.tsx`) pra economizar
+  um clique não estava na AC-3 (que só pede exibição/posição/ocultação) e o fluxo real já existe.
+- Botões de reordenar/ocultar coluna **nunca são gated por `pcm:escrita`** — é preferência pessoal
+  de UI, qualquer um com leitura no PCM pode reorganizar como prefere ver.
+- `pnpm run ci:local` verde (625 testes, 9 novos). pgTAP escrito
+  (`config_preferencia_colunas_kanban_rls.test.sql`, 5 assertions), não executado local (sem
+  Docker). Playwright novo (`kanban-colunas.spec.ts`, 2 testes) verde contra produção — teve que
+  usar `aria-label` em vez de `getByText` porque o texto "Cancelado" também aparece dentro dos
+  `<option>` de status de cada card real já existente em produção (colisão de locator).
+- Próximo: E01-S85 (Sync de ativos PCM↔Auvo: localização + sistema — arquitetural).
+
+**E01-S85 (Sync de ativos PCM↔Auvo: localização + sistema) implementada e em produção — story
+arquitetural, `design.md` já existia aprovado, li antes de codar.** Migrations `0131`+`0132`
+(fix), ADR-0012 novo.
+- **Decisão central**: `AuvoEntityDescriptor.toAuvo(row)` é função pura sem I/O (não faz join em
+  tempo de drain) — não dava pra calcular a hierarquia Área→Local→Sublocal ali sem quebrar o
+  contrato do motor de sync inteiro. Solução: coluna denormalizada `auvo_localizacao`, recalculada
+  por trigger no PCM. Rename de Área/Local faz fan-out que só atualiza essa coluna — **o trigger de
+  enqueue genérico que já existia** (`after insert or update or delete`, E01-S22/E01-S76) já cuida
+  de reenfileirar sozinho, não precisei tocar no outbox. Mover um ativo pelo Board já funciona sem
+  nenhuma mudança de frontend, pelo mesmo motivo.
+- **Achado real de bug antes de ir pra produção** (disciplina de verificação da AC-5): rodei a
+  função SQL read-only contra 5 equipamentos reais logo depois do primeiro push da migration —
+  `max(uuid)` não existe no Postgres, function quebrava. Corrigido na hora (`0132`), reverificado,
+  só então fiz o deploy da Edge Function. Sem essa verificação, o bug só apareceria na primeira
+  vez que alguém renomeasse uma Área em produção.
+- **Decisão consciente de não fazer backfill em massa**: `equipamentos.writeEnabled` já é `true`
+  em produção (decisão de story anterior, ADR-0006) — popular a coluna nova pras ~2000 linhas
+  existentes na migration dispararia PATCH real imediato pra conta Auvo, sem verificação item a
+  item. Fica `null` (fallback pro texto livre legado) até ser tocado por um move/rename real —
+  rollout incremental, não instantâneo.
+- **Playwright deliberadamente não testa rename/move de verdade** — só a página de config
+  (separador/ordem, leitura). Fazer isso de verdade dispararia um PATCH real na conta Auvo sem
+  sandbox pra validar primeiro (mesmo cuidado do "não simular envio real" de E04-S09/E01-S81). A
+  lógica em si já está provada pelas queries read-only contra produção + pgTAP.
+- Sistema (`pcm.sistemas`) já tinha descriptor desde E01-S76 (`writeEnabled:false`) — só ganhou o
+  campo de localização agora. Aproveitei pra fechar uma lacuna que a investigação achou: o
+  descriptor de Sistema nunca tinha teste Deno (`sistemas.test.ts` novo).
+- `pnpm run ci:local` verde (627 testes, 19 novos). Testes Deno escritos, não executados local
+  (sem Deno CLI nesta máquina). pgTAP escrito (`pcm_localizacao_auvo_hierarquica.test.sql`, 10
+  assertions), não executado local (sem Docker). Edge Function `pcm-auvo-push` redeployada, smoke
+  test 401 confirmou carregamento sem erro.
+- Próximo: E01-S86 (Composição de sistema — checkbox+filtro).
+
+**E01-S86 (Composição de Sistema — checkbox+filtro) implementada e em produção. Zero migration**
+— reusa 100% o `pcm.sistema_itens` de E01-S76.
+- Componente compartilhado `SeletorItensComFiltro.tsx` (genérico, não sabe nada de "Sistema") +
+  `ComposicaoSistema.tsx` (staged: marca em memória, "Salvar composição" persiste tudo de uma vez
+  via diff — `adicionarItem`/`removerItem` só pro que realmente mudou). Usado nos dois pontos de
+  entrada pedidos: `SistemasPage.tsx` (PCM) e nova aba "Sistemas" em `VisaoClientePage.tsx` (Visão
+  360, AC-2) — mesmo componente, mesmo comportamento.
+- **Achado real ao integrar**: existia um Playwright de E01-S76 (`hierarquia-sistemas.spec.ts`) que
+  testava exatamente o fluxo antigo (`<select>`+"Adicionar") que esta story removeu — teria
+  quebrado silenciosamente se eu não tivesse rodado a regressão. Atualizado pro novo fluxo e
+  estendido com a verificação de AC-2 (item marcado no PCM aparece marcado na Visão 360).
+- `pnpm run ci:local` verde (637 testes, 10 novos). Playwright: `hierarquia-sistemas.spec.ts`
+  atualizado, verde contra produção (fluxo completo ponta a ponta: cria Sistema → compõe → confirma
+  na Visão 360).
+- Próximo: E01-S87 (Detalhe de equipamento/sistema com histórico).
+
+**E01-S87 (Detalhe equipamento/sistema com histórico) implementada e em produção. Zero
+migration** — reusa `pcm.os_equipamentos_auvo`/`pcm.ordens_servico`/`pcm.sistemas.auvo_equipment_id`.
+- **Investigação antes de codar poupou trabalho de novo**: AC-1/AC-3 (histórico por equipamento,
+  "última manutenção" em destaque, estado vazio) já estavam prontos desde E01-S78
+  (`DrawerDetalheAtivo.tsx`). Único gap real era AC-2 (histórico agregado do Sistema).
+- `SistemasGateway.listarHistoricoOsSistema`: busca OS vinculadas ao Sistema em si (sobe ao Auvo
+  como Equipment, E01-S76/S85) + às de cada Componente membro, `agregarHistoricoSistema` (domínio
+  puro) junta e deduplica as duas fontes — a mesma OS pode aparecer vinculada tanto ao Sistema
+  quanto a um Componente específico.
+- **Correção de camada aproveitada**: `OsHistoricoItem` morava em
+  `application/board-ativos-gateway.ts` — movido pra `domain/historico-ativo.ts` (domínio não pode
+  depender de application) já que agora tem lógica de domínio de verdade em cima (agregação/dedupe).
+- **Nota de ambiente**: duas rodadas de Playwright deram timeout por cold-start lento do dev server
+  sob carga do sistema — confirmado que não era bug de código reproduzindo com o dev server já
+  aquecido antes de rodar (útil registrar: se `pnpm dev` não estiver de pé, o boot pode estourar o
+  timeout do teste sob carga — melhor subir manualmente antes de rodar Playwright em lote).
+- `pnpm run ci:local` verde (645 testes, 8 novos). Playwright: `hierarquia-sistemas.spec.ts`
+  estendido (estado vazio do histórico, AC-3), verde contra produção.
+- Próximo: E01-S88 (Chamados como entidade própria — arquitetural).
+
+**E01-S88 (Chamados como entidade própria) implementada e em produção — a story mais arriscada
+da maratona, envolveu renumerar um identificador já em produção.**
+- **Bloqueio real, resolvido perguntando ao Lucas antes de codar** (não achado de código —
+  decisão de duas mãos): a spec pedia `CH-XXXX` pro Chamado, mas a OS já usava `CH-XXX` desde
+  sempre. Mapeei o blast radius inteiro (3 geradores duplicados de número, ~24 asserções de teste,
+  mocks, docs) antes de perguntar, pra dar as duas opções com custo real. Lucas escolheu: **Chamado
+  fica com `CH-XXXX`, OS vira `OS-XXXX`** (sem renumerar histórico).
+- **Corrigiu de vez um débito técnico conhecido**: os 3 geradores de número (web, import Auvo,
+  Zé/WhatsApp) usavam `count()` com race condition documentada desde E01-S02. Agora os três chamam
+  a mesma RPC (`pcm.fn_proximo_numero_os`/`fn_proximos_numeros_os`), sequence atômica de verdade.
+- **Regra decidida** (tasks.md sinalizava como divergência em aberto): cancelar um Chamado já
+  convertido em OS é bloqueado — o usuário cancela a OS pelo fluxo de status já existente, o
+  Chamado vira só rastreio histórico a partir da conversão.
+- **Ticket sai da navegação, dado não é apagado** — mesmo padrão de "Categorias Produto" (E01-S80):
+  `pcm.tickets` continua existindo (histórico Auvo), só deixou de ser alcançável pela UI.
+- `pnpm run ci:local` verde (662 testes, 17 novos). Testes Deno reescritos, não executados local
+  (sem Deno CLI). pgTAP escrito, não executado local (sem Docker). Verificação read-only das 3 RPCs
+  novas direto em produção antes de deployar as Edge Functions (sequences corretas, sem colisão).
+  3 Edge Functions redeployadas, smoke test ok. Playwright novo + regressão de 5 specs que tocam
+  número de OS, todos verdes contra produção real — nenhuma quebra na renumeração.
+- Próximo: E01-S89 (Histórico WhatsApp → Chamado).
+
+**E01-S89 (Histórico WhatsApp → Chamado) implementada e em produção — primeira story com
+Conformist bidirecional entre duas features.**
+- Migration `0136`: `atendimento.historico_chamado_snapshots` (schema de quem produz o dado, FK
+  direta pra `pcm.chamados`, mesmo padrão cross-schema de `financeiro.*`→`pcm.*`), append-only.
+- **Duas features leem a tabela uma da outra sem se importar**: `features/atendimento/` ganhou
+  `HistoricoChamadoGateway` (lê/escreve `pcm.chamados` via `.schema("pcm")`); `features/pcm/`
+  ganhou `ChamadosGateway.listarHistoricoAtendimento` (lê `atendimento.historico_chamado_snapshots`
+  via `.schema("atendimento")`) — `arch:check` confirma zero import cruzado, só FK no banco.
+- **Decisão sem perguntar, reflexo direto da RLS**: "criar Chamado na hora" (AC-2) só habilita se
+  o usuário também tiver `pcm:escrita` — a RLS de insert de `pcm.chamados` já exige isso.
+- **Caso de borda decidido**: conversa sem `client_id` — a ação "Enviar histórico" simplesmente não
+  aparece (mesmo sinal que `ConversaPerfil.tsx` já usa), em vez de abrir um modal fadado a falhar.
+- `pnpm run typecheck`/`vitest run` (673 testes, 18 novos)/`arch:check`/`biome check --write`/
+  `build` verdes. pgTAP escrito (7 assertions), não executado local (sem Docker). Playwright novo
+  (seção de histórico no Chamado + ação no inbox, esta última percorre conversas reais até achar
+  uma com cliente vinculado — dado de produção instável demais pra forçar round-trip completo de
+  envio), mais regressão de `chamados.spec.ts`, todos verdes.
+- Próximo: E01-S90 (Inspeção como assessment do cliente — arquitetural).
+
+**E01-S90 (Inspeção como assessment do cliente) implementada e em produção — Conformist
+bidirecional dentro do PRÓPRIO módulo PCM desta vez (não cross-domínio como E01-S89), estendendo
+tabela existente em vez de criar nova.**
+- Migrations `0137`/`0138`: `pcm.inspecoes` ganha `e_assessment`/`motivo_assessment`,
+  `pcm.inspecao_itens` ganha `destino`/`destino_responsavel`/`auvo_questao_chave` (+ índice único
+  parcial pra idempotência), `pcm.chamados.origem_inspecao_item_id` (simétrico ao
+  `pcm.ordens_servico.origem_inspecao_item_id` de E01-S83, que finalmente ganhou consumidor).
+- **Achado técnico**: upsert por índice único PARCIAL não funciona via Supabase JS — Postgres só
+  infere o índice em `ON CONFLICT` quando o predicado é repetido na cláusula, e o driver não expõe
+  isso. Idempotência resolvida na aplicação (busca chaves já importadas antes de inserir).
+- Mapeador do questionário Auvo (`domain/assessment.ts`) é tolerante por necessidade: não existe
+  schema fixo documentado pra `pcm.auvo_task_snapshots.checklist` (confirmado voltando no código de
+  E01-S15) — tenta várias chaves conhecidas, e quando nada bate vira item "a classificar" com o
+  JSON bruto, nunca perde a resposta.
+- **Bug pego pelo próprio Playwright antes de fechar**: "item"+"s" vira "items" (inglês) em vez do
+  plural correto "itens" — lição prática de por que testar contra produção real pega erro que
+  revisão de código sozinha não pegaria.
+- `pnpm run typecheck`/`vitest run` (687 testes, 22 novos)/`arch:check`/`build` verdes. pgTAP
+  escrito (8 assertions), não executado local (sem Docker). Playwright novo (cliente de teste
+  dedicado: cria assessment → estado vazio → importa ID Auvo inexistente sem quebrar → aparece na
+  Visão 360), mais regressão de 3 specs, todos verdes.
+- Próximo: E01-S91 (Marcações de status de cliente).
+
+**E01-S91 (Marcações de status de cliente) implementada e em produção — SESSÃO PAUSADA AQUI a
+pedido do Lucas (economizar limite de uso). Próximas stories (E01-S92/S93, E09 inteiro) ficam pro
+codex ou próxima sessão Claude.**
+- Migrations `0139`/`0140`: `pcm.marcacoes_cliente` (catálogo nome+cor) + `pcm.clientes.marcacao_id`
+  (FK simples — sem tabela de histórico, "trocar substitui a anterior" é só um UPDATE).
+- "Excluir marcação em uso → bloquear" (caso de borda da spec) resolvido de graça pela própria FK
+  sem `on delete` — nenhuma guarda de aplicação extra, só tradução do 23503 pra mensagem amigável.
+- `<input type="color">` nativo é o primeiro color picker do codebase — não existia padrão anterior.
+- **IMPORTANTE pra quem continuar**: esta story fechou com `typecheck`/`vitest run`/`arch:check`/
+  `build` verdes e migration em produção, mas **sem pgTAP nem Playwright** (diferente de toda story
+  anterior desta maratona) — escrever os dois antes de considerar E01-S91 realmente fechada.
+- Próximo: E01-S92 (Visualizações de apontamento de horas), depois E01-S93, depois épico E09
+  inteiro (S01 é fundação arquitetural de acesso/isolamento — ver plano salvo em
+  `~/.claude/plans/quero-come-ar-a-criar-steady-flurry.md`).
+
+---
+
+**Atualização:** 2026-07-21 (sessão Lucas/Sonnet 5) — **E04-S01 (Fundação do Financeiro) implementada
+e verificada em produção.** Lucas pediu pra identificar specs pendentes, traçar ordem de
+implementação e começar a codar — autorizou uso de Playwright pra testar e CLI pra subir
+migration/edge function. Escolhida E04-S01 como ponto de partida (arquitetural, maior alavancagem —
+desbloqueia as 12 stories seguintes do Financeiro).
+
+- **Migration `0106_E04-S01_fundacao_financeiro.sql` aplicada em produção** via `supabase db push
+  --linked`: 4 tabelas (`categorias`, `contas_bancarias`, `fornecedores`, `lancamentos`) com RLS
+  FORCE + policies leitura/escrita por `user_modulos.financeiro` (padrão de `0079_E01-S54`),
+  superadmin bypass. `financeiro.lancamentos` tem os 2 check constraints do domínio também no banco
+  (`previsto` exige vencimento, `realizado` exige pagamento) — defesa em profundidade além da
+  validação em TS. RPC `financeiro.fn_saldo_contas()` (`security invoker`) — saldo de conta é
+  **sempre derivado**, nunca coluna gravada (AC-6). Seed do plano de contas: 24 categorias, 2 níveis
+  (Entrada: Receita de contrato/Serviços avulsos/Laudos e inspeções/Outras receitas; Saída: Pessoal,
+  Operação, Veículos, Administrativo + subcategorias, Impostos e taxas, Tarifas e juros bancários).
+- **Schema `financeiro` exposto no PostgREST de produção** via Management API
+  (`PATCH /v1/projects/{ref}/postgrest`, `db_schema` — mesmo passo manual documentado na E00-S05;
+  `config.toml` sozinho não propaga pro projeto hospedado). Confirmado: `anon` nega acesso ao schema
+  (mesmo comportamento do `pcm`), só `authenticated`/`service_role` têm `usage`.
+- **Feature hexagonal `apps/web/src/features/financeiro/`** (domain/application/infrastructure/pages)
+  — `LancamentosPage`/`CategoriasPage`/`ContasPage` substituem o mock na sidebar; as outras 7 abas
+  (`dashboard`/`ofx`/`receber`/`contratos`/`pagar`/`rentabilidade`/`pessoal`) continuam no protótipo
+  `FinanceiroMockRouter` até suas stories (S02-S06) serem implementadas. `centavosParaReais`/
+  `reaisParaCentavos` do padrão já usado em `pcm/domain/servicos.ts`, duplicado localmente (regra do
+  repo: features de domínios diferentes não se importam). Financeiro lê `pcm.clientes` direto
+  (Conformist, `domain.md` do épico) só pro seletor de cliente do lançamento, sem importar código PCM.
+- **Bug real achado e corrigido durante a implementação** (antes de qualquer teste manual): em
+  `LancamentosPage.tsx`, `recarregarLancamentos` estava definida com `useCallback` dependendo de
+  `filtro` mas checando `estado.fase` de dentro de um closure que só era recriado quando `filtro`
+  mudava — ou seja, depois que a carga inicial terminava (`estado` virava `'pronto'`), a função podia
+  continuar presa na closure antiga com `estado.fase === 'carregando'` e nunca recarregar a lista após
+  criar/editar/baixar um lançamento. Corrigido: `recarregarLancamentos` não depende mais de `filtro`
+  nem de `estado` via closure — recebe o filtro por parâmetro e usa o updater funcional do `setState`.
+- **Gates:** `pnpm run ci:local` — typecheck, `test` (494 passando, 0 falha, 9 skip de integração),
+  `build`, `lint:migrations`, `audit:esteira`, `eval:spec`, `validate-mermaid`, `check:edge-functions`,
+  `arch:check` todos verdes. `biome check` **não rodou** — trava por OOM no sandbox desta sessão até
+  em arquivo pré-existente não tocado (`HomePage.tsx` sozinho), confirmado como limitação de ambiente,
+  não do código novo. pgTAP (`financeiro_fundacao_rls.test.sql`, 10 assertions — nega sem módulo, nega
+  escrita pra leitura, CRUD completo pra escrita, check constraint de domínio no banco, bypass
+  superadmin) escrito mas não executado local (sem Docker) — mesma ressalva de sempre neste repo, roda
+  no CI `db-tests`.
+- **Playwright verificado contra produção real** (`apps/web/e2e/financeiro-lancamentos.spec.ts`, 3
+  testes): seed do plano de contas visível; criar conta bancária + saldo derivado correto (R$
+  1000,00 = saldo inicial, sem lançamentos); ciclo completo de lançamento — criar previsto → filtrar
+  por status → dar baixa → estornar (volta a previsto). Descobertas de depuração registradas como
+  comentário no próprio spec: `<select>` aninhado dentro de `<label>` faz o texto do label incluir as
+  `<option>` (`"Status *PrevistoRealizado"`), então `getByLabel(..., {exact:true})` nunca bate — usar
+  substring; e o handler de `confirm()` nativo precisa ser registrado **antes** do clique que dispara
+  o diálogo, senão o Playwright auto-dismissa.
+- **Registrado:** ROADMAP E04-S01 → ✅ (AC-2..AC-6 verificados; AC-1/AC-7 cobertos por RLS/pgTAP não
+  confirmados no CI), linha-mestre do E04 → "Em andamento". Glossário já tinha todos os termos do
+  Financeiro documentados desde que as specs foram escritas — nenhuma edição necessária.
+- **Branch `feat/E04-S01-fundacao-financeiro`, nada commitado ainda** (regra permanente — aguarda
+  pedido explícito do Lucas). Working tree também carrega trabalho pendente de sessões anteriores
+  (S79 board/hub-os + todas as specs E01-S80..S93/E09-S01..S11/E04-S07..S13) — não mexido, não
+  commitado junto, precisa ser separado por story antes de qualquer PR.
+- **Próximo passo:** validar `pgTAP`/`biome` no CI real (job `db-tests`, ambiente sem os limites deste
+  sandbox); seguir pra E04-S02 (import OFX, precisa de fixture real do Lucas) ou E04-S03 (dashboard),
+  ambas já especificadas e prontas.
+
+---
+
+**Atualização:** 2026-07-20 (sessão Lucas/Opus) — **Evolução do Financeiro (E04): 7 stories novas
+(E04-S07..S13) especificadas pro go-live real + gestão. Só spec/tasks (+design em S09). Nada
+implementado.** Lucas pediu pra deixar o Financeiro "apto pra usar com clientes" e trazer sugestões de
+feature/dashboard.
+
+- **Diagnóstico do AS-IS:** o E04 **já está 100% especificado** — as 6 specs S01..S06 cobrem as **10
+  telas mockadas** (`apps/web/src/features/financeiro/mock/`, protótipo navegável, dados fictícios). O
+  schema `financeiro` está **vazio** (só existe desde `0001`), feature real é só `.gitkeep`+`mock/`.
+  Logo "o que falta construir" = **implementar S01→S06 na ordem** (S01 fundação → S02 OFX / S03
+  dashboard → S04 receber → S05 pagar → S06 rentabilidade). Pré-requisitos herdados: fixture OFX real
+  do Lucas (S02) e confirmar chaves do `auvo_detalhes` (S06). Não faltava spec no core — falta código.
+- **7 stories NOVAS (sugestões, não estavam no plano original):**
+  - S07 robustez operacional (comprovantes anexados + estorno/correção auditável + transferência
+    entre contas) — o caixa aguentar o dia a dia real.
+  - S08 régua de cobrança ativa (lembrete automático D-3/D+3/D+7/D+15 via WhatsApp/e-mail) — torna
+    ativo o aging só-visual de S04.
+  - S09 cobrança boleto/PIX via gateway (**arquitetural**, design.md — porta `CobrancaGateway`,
+    Vault, webhook HMAC, baixa automática). NF-e segue non-goal.
+  - S10 impostos/Simples Nacional (provisão DAS por competência, alíquota efetiva RBT12).
+  - S11 exportação contábil (CSV/Excel pro contador) + fechamento mensal com trava de período.
+  - S12 DRE gerencial (competência) + orçamento anual (realizado×orçado) — complementa o dashboard de
+    caixa de S03.
+  - S13 cockpit financeiro do dono (runway, ponto de equilíbrio, ticket médio, ranking de margem) —
+    bloco reusável pelo E08 (Gestão).
+- **Base do schema confirmada** (design.md de S01): `financeiro.lancamentos` já tem `data_competencia`
+  → DRE/imposto por competência é natural; valores em centavos; ciclo previsto→realizado, conciliado
+  derivado. As specs novas ancoram nesses nomes reais.
+- **Registrado:** ROADMAP §E04 (7 linhas S07-S13 + nota de diagnóstico), linha-mestre E04 vira "13
+  stories". **Non-goals respeitados** (NF-e, Open Finance, folha, enforcement de bloqueio de OS,
+  financeiro do Auvo) — nenhuma story nova os viola; S09 é cobrança, não NF-e. **Nada commitado.**
+
+---
+
+**Atualização:** 2026-07-20 (sessão Lucas/Opus) — **Épico E09 (Portal do Cliente / Área do Cliente)
+aberto e especificado: 11 stories (E09-S01..S11), só spec/tasks (+design em S01/S09/S11) + ADR-0011.
+Nada implementado.** Lucas pediu pra começar as specs do Portal do Cliente (síndico consulta
+assessment, abre/acompanha chamados, interage nas OS com notas/anexos, vê financeiro; auth local,
+acesso criado pelo Fabrício na tela do cliente) e trouxe ideias novas. 3 agentes Explore mapearam o
+AS-IS antes de planejar.
+
+- **Achado central (segurança):** o papel `cliente-sindico` existe ponta a ponta (tipo, constraint,
+  enum da Edge Function, dropdown, hook JWT) mas é **vazio** — `resolver_permissoes_modulo` retorna
+  `{}`, nenhuma RLS de domínio o inclui, e **não há vínculo usuário↔`pcm.clientes` nem RLS por-linha**
+  (`pcm.clientes` gateia por módulo, não por propriedade). Login funciona, destino não existe. E09 era
+  só blueprint + `.gitkeep`.
+- **4 decisões do PO travadas** (via pergunta direta): (1) financeiro = faturas/vencimentos/2ª via →
+  **depende de construir o E04** (hoje só especificado; E04 declara síndico deny-by-default e adia
+  views pra E09); (2) acesso = botão "Criar acesso" na Visão 360, vínculo **1 login ↔ 1 condomínio**;
+  (3) shell = **interna primeiro** (mesma app, iterar) → **deploy separado depois** (subdomínio, pro
+  cliente nunca alcançar dado interno do SO); (4) todas as 4 ideias extra entram.
+- **ADR-0011** (novo): tenancy do portal por **claim JWT `cliente_id`** + RLS por-linha (não subquery),
+  mesmo padrão do `user_modulos`/ADR-0003. pgTAP de isolamento é gate de merge.
+- **Breakdown:** S01 fundação (arquitetural: vínculo 1:1, claim, RLS por-linha, PortalShell isolada,
+  "Criar acesso" na 360) · S02 painel · S03 assessment (dep. E01-S90) · S04 chamados (dep. E01-S88) ·
+  S05 OS notas/anexos (**escrita nova do cliente** — `pcm.os_notas` + bucket `os-anexos`) · S06 central
+  de documentos · S07 cronograma+conformidade · S08 notificações+satisfação · S09 aprovação de
+  orçamento (**arquitetural — destrava E01-S14 Fluxo B**) · S10 financeiro (**bloqueada por E04**) ·
+  S11 deploy separado (arquitetural/infra).
+- **Docs atualizados:** ROADMAP §E09 (tabela das 11), glossário ("Portal do Cliente"), blueprint 09
+  (mecanismo RLS por claim + regra financeira que resolve a divergência com `ESCOPO-MESTRE §6.9`).
+- **Ordem sugerida:** S01 primeiro (destrava tudo); S03/S04/S09 dependem de E01-S90/S88/S14; S10
+  espera o E04. **Nada commitado.**
+
+---
+
+**Atualização:** 2026-07-20 (sessão Lucas/Opus) — **Leva de refinamentos da reunião Lucas × Fabrício
+(2026-07-16) especificada: 14 stories novas (E01-S80..S93), só spec/tasks (+design nas 3
+arquiteturais), nada implementado.** Lucas trouxe a transcrição da call de alinhamento do PCM e pediu
+pra refinar e criar as specs "pra implementar com qualquer modelo". 4 decisões de domínio travadas
+antes de escrever (via pergunta direta):
+- **GUTD (S82):** cada letra (G/U/T/D) tem peso próprio configurável somando 100%, não bloco GUT+D.
+- **Título de OS por IA (S81):** OpenRouter, key no Vault + modelo na config superadmin (estende
+  E00-S12); botão manual no form + auto no fluxo Zé.
+- **Chamado/CH (S88):** entidade própria `pcm.chamados`, semeada do schema de `pcm.tickets` mas
+  **desacoplada do sync de ticket Auvo**; tela de criação + futura exposição no Portal do Cliente +
+  cancelamento com justificativa/anexo.
+- **Status de cliente (S91):** marcações gerenciáveis (nome/cor), **1 por cliente**, listas filtráveis.
+
+Breakdown das 14 (prioridade da call: **1º PCM Ativos+OS · 2º Inspeção · 3º resto**):
+- **Config/base:** S80 (Configurações do SO global+módulo, move cadastros PCM, tira categoria de
+  produto), S81 (IA/OpenRouter+título), S82 (GUTD).
+- **OS/Board:** S83 (backlog cadastro/origem + observação), S84 (Kanban colunas customizáveis),
+  S93 (remover "Olá" do header).
+- **Ativos:** S85 (**arquitetural** — sync localização concatenada + sistema como equipamento
+  agregado no Auvo, atualiza ADR-0006), S86 (composição de sistema checkbox+filtro, PCM+360),
+  S87 (detalhe equip/sistema com histórico de OS/preventivas).
+- **Chamados/Inspeção:** S88 (**arquitetural** — Chamado entidade própria), S89 (histórico WhatsApp
+  → Chamado), S90 (**arquitetural** — inspeção como assessment: questionário Auvo → itens →
+  Chamado/Backlog/OS, integra S88/S83, reusa snapshot E01-S15).
+- **Clientes/Ops:** S91 (marcações de status), S92 (visualizações de apontamento de horas —
+  produtividade, consistência 3 fontes, anomalias, horas/cliente).
+- **Registrado no ROADMAP** (linhas E01-S80..S93, status "Especificado", owner "—" — disponíveis pra
+  qualquer sessão pegar). Ordem de implementação sugerida respeitando dependências: S80→S81/S82,
+  S88 antes de S89/S90, S85 antes de S86/S87 fazerem sentido pleno. **Nada commitado.**
+
+---
+
 **Atualização:** 2026-07-20 (sessão Lucas/Sonnet 5) — **Suíte PMOC completa (E01-S03 reconciliado,
 S04, S06, S07 Hub de OS, S08, S05) + E00-S12 (Config > Integrações) — 8 stories fechadas, 10
 commits. Migrations 0100-0105 todas em produção. As 2 Edge Functions de S05 (`pmoc-generate-pdf`
@@ -90,854 +760,65 @@ fazer deploy real de S05 (laudo PDF) + Edge Functions via CLI. PMOC já tinha MU
 
 ---
 
-**Atualização:** 2026-07-18 (sessão Lucas/Opus 4.8) — **E01-S78 (Board de ativos por Local + detalhe
-do ativo): implementado e verificado em produção.** Fase 1 da visualização espacial pedida pelo Lucas
-("ver todos os ativos de uma vez, na linha de um mapa do andar, detalhe do ativo"). Fase 2 (planta com
-pins arrastáveis) fica pra story separada.
+**Atualização:** 2026-07-20 (sessão Lucas/Opus 4.8) — **E01-S79 (Refinamentos: Board de ativos +
+Hub de OS): implementado, aguardando validação local do Lucas.** Lucas rodou o app local pra
+revisar as últimas entregas (S76-S78 + suíte PMOC) e devolveu 4 pontos de feedback num só
+recado; os 3 primeiros viraram esta story, o 4º foi só investigado (ver abaixo).
 
-- **Aba "Board" na `VisaoClientePage`** (ao lado de "Estrutura"): escolhida uma Área, colunas = Locais
-  **nível-1** (filhos diretos da Área); itens de sub-locais agrupados por sub-local dentro da coluna;
-  coluna "Sem local" pros itens sem `local_id`. Card = ícone tipo/foto/status. Clicar → **drawer** de
-  detalhe (breadcrumb Cliente>Área>Local, foto, chips de sistema, componentes filhos via
-  `obterContextoItem` de E01-S76, + histórico de OS via `os_equipamentos_auvo` por `auvo_equipment_id`;
-  fecha X/Esc; a seção de histórico degrada sozinha se falhar).
-- **Frontend-only, sem migration.** Reusa `HierarquiaGateway`, `EquipamentosGateway.obterContextoItem`,
-  `domain/hierarquia.montarArvore`. Novos: `domain/board-ativos.ts` (`montarColunasBoard` puro + 6
-  testes), `application/board-ativos-gateway.ts`+`board-ativos.ts`, `infrastructure/supabase-board-ativos-adapter.ts`,
-  `components/BoardAtivos.tsx`+`DrawerDetalheAtivo.tsx`.
-- **Decisões do PO (via AskUserQuestion):** aba na 360 (não página nova) · colunas nível-1 com subgrupos
-  (não folhas) · drawer completo com histórico de OS.
-- **Verificado:** `ci:local` verde (412 testes); Playwright `board-ativos.spec.ts` 1/1 contra Supabase de
-  produção (cria cliente>Área "Torre A">Local "3º andar">sub-local "Sala 302">item → aba Board → coluna
-  "3º andar" com subgrupo "Sala 302" + card → drawer com breadcrumb + histórico vazio honesto → Esc).
-  **Ajuste de tooling:** `test-results/`/`playwright-report/`/`e2e/.auth/` adicionados ao `files.ignore`
-  do `biome.json` (artefatos gerados pelo Playwright quebravam o gate de lint do `ci:local`). Zero
-  SPEC_DEVIATION.
-- **Branch:** `feat/E01-S78-board-ativos-por-local` (nada commitado; carrega junto os untracked de
-  S76/S77 — separar no commit/PR).
-
----
-
-**Atualização:** 2026-07-18 (sessão Lucas/Opus 4.8) — **E01-S77 (Apontamento de Horas: visão diária
-por técnico): implementado localmente, migration prod + Playwright pendentes.** Evolui a
-`ApontamentoHorasPage` (E01-S72/S75) com aba "Por dia": agrupa check-in/check-out por (técnico, dia),
-mostra a **diferença do dia** (1º check-in→último check-out) e a **soma das OS** lado a lado em
-`HHhMMmin`, sinaliza dia incompleto e falta/hora-extra vs jornada esperada, exporta CSV e mostra
-tendência semanal (8 semanas).
-
-- **Migration `0099`** (`pcm.funcionarios.jornada_diaria_horas numeric`, aditiva nullable). **Renumerada
-  de 0095**: a sessão paralela de S76 consumiu 0095-0098 — `lint:migrations` pegou a colisão, renumerei
-  pro próximo livre. Dado 100% local (não vai ao Auvo).
-- **Domínio puro** (`apontamento-horas.ts`): `formatarHorasMinutos`, `diaLocal`/`horaLocal` (fuso
-  Brasília fixo −03:00, premissa de E01-S68), `agruparPorDia` (span só conta check-in/out do próprio
-  dia; OS que cruza meia-noite fica no dia do check-in e marca incompleto; soma usa duração cheia),
-  `sinalizarJornada` (tolerância 15min; sem jornada = neutro), `gerarCsvApontamento` (separador `;`,
-  BOM p/ Excel), `agregarPorSemana`. 16 testes novos.
-- **Application:** `obterApontamentoHoras` passou a devolver `porDia` (com sinal de jornada, pulado se
-  incompleto); `obterTendenciaTecnico(gateway, tecnicoId, 8)`. **Adapters:** `listarTecnicos` expõe
-  `jornadaDiariaHoras`; funcionários lê/grava a coluna (follow-up no criar, pois a Edge Function de
-  criação não conhece o campo). `FuncionariosPage` ganhou campo "Jornada diária (horas)".
-- **UI `ApontamentoHorasPage`:** abas Por período (intacta, AC-9) / Por dia (tabela expansível com OS
-  do dia, badges incompleto/abaixo-jornada/hora-extra, export CSV, sub-visão de tendência que pede
-  técnico selecionado).
-- **Gates verdes:** typecheck, lint (biome), `test` (406, +20), build, arch:check, `lint:migrations`
-  (99). e2e `apontamento-horas-diario.spec.ts` escrito (4 casos).
-- **Verificado (2026-07-18):** migration `0099` aplicada em produção (`supabase db push`); Playwright
-  contra dado real de prod — `apontamento-horas-diario.spec.ts` 4/4 (span+soma reais tipo "15h37min ·
-  8 OS", expandir OS do dia, download CSV, tendência) + regressão `refinamento-ux.spec.ts` 5/5 (AC-9).
-  Zero SPEC_DEVIATION. Story pronta; falta só commit/PR.
-- **Branch:** `feat/E01-S77-apontamento-horas-visao-diaria` (nada commitado). Contém também os
-  untracked de S76 (sessão paralela) — separar no commit/PR.
-
----
-
-**Atualização:** 2026-07-17 (sessão Lucas/Sonnet 5, continuação do SDD do Opus 4.8) — **E01-S76
-(hierarquia de localização de ativos + Sistemas): implementada e verificada, PR pendente de
-abertura.** Modela `Cliente > Área (Torre A) > Local (árvore: andar>sala>ambiente) > Item
-(Equipamento|Componente)` + **Sistemas** transversais (N:N) que vão ao Auvo como Equipment
-(`/equipments`) para receber código de campo. Ao abrir um Item: breadcrumb de instalação + chips
-dos sistemas.
-
-- **Decisão arquitetural (ADR-0009):** estendeu `pcm.equipamentos` in-place (`local_id`, `tipo`,
-  `parent_item_id`) em vez de criar `pcm.itens` — preserva 2000+ linhas de produção e o pipeline de
-  sync Auvo. Novas tabelas: `pcm.areas`, `pcm.locais` (árvore + trigger anti-ciclo/consistência de
-  área), `pcm.sistemas` (sync-cols Auvo), `pcm.sistema_itens` (N:N).
-- **Migrations `0095`/`0096` aplicadas em produção** (`supabase db push`, dry-run conferido antes;
-  FK `NOT VALID`→`VALIDATE`, sem quebra dos 2000+ equipamentos existentes — AC-10).
-- **Camadas DDD completas** em `features/pcm/`: `domain/{hierarquia,sistemas}.ts` novos +
-  `equipamentos.ts` estendido (`ItemContexto`, `validarParentItem`), todos com `.test.ts` (29 casos
-  novos); `application/{hierarquia,sistemas}-gateway.ts`+use-cases + `equipamentos.ts` estendido
-  (`obterContextoItem`); `infrastructure/supabase-{hierarquia,sistemas}-adapter.ts` novos +
-  `supabase-equipamentos-adapter.ts` estendido (breadcrumb via join `locais`→`areas`, chips via
-  `sistema_itens`).
-- **Auvo:** `registry/sistemas.ts` — `/equipments`, `writeEnabled:false` (dry-run; flip é
-  follow-up gated após teste de contrato real + mitigação da linha-fantasma Equipment(27),
-  documentada no design.md/ADR-0009). Registrado em `registry/index.ts`.
-- **UI:** aba "Estrutura" (Área>Local, CRUD em árvore) em `VisaoClientePage.tsx`;
-  `EquipamentosPage.tsx` ganhou filtro por tipo, seletor de Local e de Equipamento-pai, modal
-  "Detalhe do Item" (breadcrumb + chips + componentes filhos); `SistemasPage.tsx` nova (CRUD +
-  seletor de itens membros + status de sync) — registrada em `HomePage.tsx`
-  (`PcmView`/`PCM_NAV`/branch/gate `podeAcessar('pcm','leitura')`).
-- **Gates:** `pnpm run ci:local` verde (lint/typecheck/test 381 casos/build/arch:check/
-  audit:esteira/eval:spec). pgTAP `supabase/tests/hierarquia_localizacao_rls.test.sql` (17
-  assertions, AC-3/7/8/9) escrito — **não rodado localmente** (sem Docker nesta máquina); roda no
-  job `db-tests` da CI. Playwright `apps/web/e2e/hierarquia-sistemas.spec.ts` **verde** no dev
-  server local contra Supabase de produção (mesmo padrão de `ferramentas.spec.ts`) — cria Área>Local
-  em árvore, instala Item, cria Sistema, confirma dry-run e breadcrumb+chip. Dados de teste
-  prefixados `[TESTE E2E]` ficam em produção (sem script de limpeza automática no repo — mesma
-  situação de outros specs e2e existentes).
-- **Revisão adversarial (achado real, corrigido):** `desativarLocal` só bloqueava Local com
-  sub-locais ativos, não com **Itens instalados** — spec.md exige bloquear nos dois casos. Corrigido
-  com `HierarquiaGateway.possuiItensInstalados` + guard em `application/hierarquia.ts` (testado em
-  `application/hierarquia.test.ts`, novo). `e2e/hierarquia-sistemas.spec.ts` também tinha bug real
-  na primeira rodada: `SistemasPage` lista Sistemas de **todos** os clientes (sem filtro), então o
-  nome fixo "Sistema de Hidrante Torre A" colidia entre execuções — corrigido com sufixo de
-  timestamp no nome do Sistema de teste.
-- **Feedback do Lucas pós-implementação (divergência de escrita):** (1) campo legado
-  `equipamentos.localizacao` (texto livre) removido do formulário de Equipamento — UI agora força
-  Local estruturado (AC-4), coluna do banco fica só como histórico; (2) `SistemasPage` não expunha
-  seletor de Área (domínio/banco já suportavam `area_id`, UI esqueceu o campo) — corrigido,
-  select carrega só as Áreas já cadastradas na Estrutura do cliente.
-- **Zero SPEC_DEVIATION.** `eval:spec`/`audit:esteira` não reconhecem a convenção `E0N-S0N-*` de
-  `specs/` (só `NNNN-*`) — gap de tooling pré-existente, não bloqueia, fora do escopo desta story.
-- **Branch:** `feat/E01-S76-hierarquia-localizacao-ativos`, ainda não commitado/PR aberto.
-- **Próximo passo:** revisão adversarial, commit, abrir PR (`@devops`), confirmar `db-tests` verde
-  na CI.
+- **Item 1 — Drag and drop no Board (E01-S78).** `BoardAtivos.tsx`: `CardAtivo` ganhou
+  `draggable` (só quando `pcm:escrita`), zonas de drop nas colunas nível-1 (`itensDiretos`) e nos
+  subgrupos de sub-local, mesmo padrão nativo HTML5 do `OsKanbanView.tsx` (sem lib — `dataTransfer`
+  com MIME custom `application/x-sinergica-item-id`). `moverItem` reusa `editarEquipamento`
+  (application/equipamentos.ts) só trocando `localId`, sem gateway/migration novo — o item completo
+  já vem carregado em `estado.itens`. Zona vazia mostra "Solte aqui" quando arrastável.
+- **Item 2 — Editar ativo pelo drawer.** `EquipamentoModal` extraído de `EquipamentosPage.tsx` pra
+  `components/EquipamentoModal.tsx` (compartilhado — mesmo padrão de extração do
+  `HistoricoMovimentacoesModal` em E01-S75). `DrawerDetalheAtivo.tsx` (antes só leitura) ganhou
+  botão "Editar" (gated por `pcm:escrita`), abre o modal pré-preenchido, salva via
+  `editarEquipamento` e chama `onAtualizado?.()` — novo prop threaded até `BoardAtivos`, que passa
+  seu próprio `carregar` (agora um `useCallback`) pra recarregar o board depois de um save.
+- **Item 3 — Hub de OS, view "lista".** Grid invertido: `xl:grid-cols-[360px_1fr]` (fila fixa
+  estreita, `DetalheOs` flexível) — antes era `minmax(420px,1fr)_460px`, o oposto do que o Lucas
+  queria. Mesmo padrão de proporção do `PmocPage.tsx`. Fila de `<div>` empilhado virou `<table>`
+  real (Nº/OS/Status/Prioridade), com `overflow-x-auto` próprio pra não vazar a largura fixa da
+  coluna. `<tr onClick>` com `biome-ignore lint/a11y/useKeyWithClickEvents` — mesmo padrão já usado
+  em `BacklogGutPage.tsx` (linha clicável, checkbox interno continua acessível via teclado).
+- **Item 4 — Inspeção/Assessment ↔ Visão 360 (SÓ INVESTIGAÇÃO, não implementado).** Pedido do
+  Lucas: "A inspeção é o documento de assessment feito no início, alteração do contrato ou
+  anualmente pra listar o estado do cliente... No PCM antigo tem essa feature... deixa no AS IS e
+  melhoro contigo." Agente em background (`isolation: worktree`) investigou
+  `/Users/lucasazevedo/Documents/GitHub/Sinergica/pcm-sinergica-v2/src` (repo antigo, mesmo stack
+  React+Supabase, arquitetura "feature folder" plana em vez de DDD tático). **Achado central: o
+  módulo "Inspeção" que existe lá (`src/modules/inspecoes/`, migration `008_inspecoes_module.sql`)
+  é um checklist técnico item-a-item com foto+IA+geração de backlog — precursor direto do módulo
+  "Inspeções ABNT NBR 16747" que o PCM novo já tem (E01-S73), NÃO o conceito de assessment de
+  início/alteração/aniversário de contrato que o Lucas descreveu.** Esse assessment não foi
+  encontrado em código, docs (`MANUAL-TECNICO-PCM-v2.md`) nem histórico de commits do repo antigo —
+  aparentemente nunca foi implementado lá, só existe como ideia. A "Visão do Cliente" do sistema
+  antigo (`ClientDetailPage.tsx`) não referencia Inspeções em nenhuma seção; existe um hook pronto
+  `useInspecoesByClient(clientId)` (`src/modules/inspecoes/useInspecoes.ts:20`) que já filtra e
+  ordena inspeções por cliente/data — mas é **dead code**, nunca importado em tela nenhuma. Ou
+  seja: a intenção de ligar inspeção↔cliente existiu no repo antigo, mas nunca foi conectada.
+  **Próximo passo:** decisão conjunta com o Lucas sobre o que "assessment de contrato" deveria ser
+  no PCM novo — não é para reaproveitar código do repo antigo (não existe pra reaproveitar), é
+  criar do zero uma feature nova, possivelmente reusando o padrão de Inspeções ABNT já existente
+  (E01-S73) como base técnica, mas separada conceitualmente (é doc de estado do cliente/contrato,
+  não checklist NBR 16747). Nada commitado nem especificado ainda pra este item — fora do escopo
+  da spec de E01-S79 por decisão explícita do Lucas ("deixa no AS IS").
+- **Gates:** `pnpm run ci:local` verde (esteira/mermaid/fidelidade/lint/edge-functions/migrations/
+  testes 426/arquitetura/typecheck/build). Playwright `board-ativos.spec.ts` estendido (edição pelo
+  drawer + drag and drop, novo `test` cobrindo os dois fluxos) e `ordens-servico.spec.ts` de
+  regressão — ambos verdes no dev server local contra Supabase de produção (nunca Netlify).
+  Zero migration, zero SPEC_DEVIATION.
+- **Nada commitado ainda** (aguardando pedido explícito do Lucas, regra permanente) — branch atual
+  é `feat/E01-S76-hierarquia-localizacao-ativos`, que na prática já acumulou o trabalho de
+  S76→S79 nesta sessão longa (ver `git log`/`git status` pra estado exato antes de commitar).
+  **Próximo passo:** Lucas valida localmente as 3 mudanças (drag and drop no Board, editar pelo
+  drawer, tabela do Hub de OS); depois, criar branch(es) dedicada(s) e commitar por story antes de
+  abrir PR (fluxo obrigatório do `.claude/memory/feedback-devops-branch-pr.md` — nunca push direto
+  em `main`).
 
 ---
-
-**Atualização:** 2026-07-15 (sessão Lucas/Sonnet 5) — **E01-S75 (refinamento UX do PCM)
-implementada e verificada com Playwright contra produção real.** Sessão anterior (Opus) só
-escreveu spec+tasks; esta sessão (Sonnet) implementou as 5 tasks do zero e verificou tudo contra
-produção. Frontend-only, zero migration.
-
-- **Task 1 (horas clicável, AC-5):** `ApontamentoHorasPage.tsx` ganhou `onAbrirCliente`/
-  `onAbrirTecnico`; `AgregadoPainel` vira `<button>` por linha quando há callback (pula
-  `chave==="sem-vinculo"`). `HomePage.tsx` ganhou `clientePeriodo`/`ordensFiltrosPreset` (mesmo
-  padrão de `osDeepLink`/`clienteSelecionado`), limpos em `irParaPcmView`. `VisaoClientePage.tsx`
-  ganhou prop `periodo?` — abre na aba "OS" já filtrada **client-side por `createdAt`**
-  (`OrdemServicoResumo` não tem `dataAgendada`; rótulo da UI diz "OS criadas no período", honesto
-  sobre a diferença de semântica com o relatório de origem). `OrdensServicoPage.tsx` ganhou
-  `filtrosIniciais?` semeando o `useState` de filtros no mount. **Confirmado com Playwright contra
-  dado real de produção** — clicar num cliente e num técnico de verdade navegou certo.
-- **Task 2 (OS expandível, AC-2/AC-3):** grid da lista mudou de `minmax(520px,1fr)_380px` +
-  `self-start` (causava a área vazia que o Lucas reclamou) pra
-  `minmax(420px,1fr)_460px` com `max-h-[calc(100vh-220px)] overflow-y-auto` nos dois lados —
-  fila e detalhe rolam internamente até a mesma altura, sem buraco. `DetalheOs` ganhou botão
-  "Expandir" (`.modal-panel.max-w-4xl`, fecha por X ou Esc, **sem** clique-fora — nenhum modal do
-  repo usa esse padrão, mantive consistência). `NovaOrdemServicoModal` intocado — questionários/
-  fotos do Auvo continuam só leitura, nunca editáveis (decisão vinculante do spec).
-- **Task 3 (ferramentas lista+histórico, AC-1):** `HistoricoModal` extraído de
-  `FerramentasPorTecnicoPage.tsx` pra `components/HistoricoMovimentacoesModal.tsx` (ganhou linha de
-  `funcionarioNome` por evento — útil no histórico por unidade, onde o técnico muda a cada evento,
-  ao contrário do histórico por técnico onde é sempre o mesmo). `FerramentasPage.tsx`: card grid
-  (`xl:grid-cols-2`) virou lista densa (`FerramentaCard`→`FerramentaLinha`, `divide-y`); unidade
-  expandida mostra `atribuidaEm` ("desde DD/MM") + botão "Histórico" chamando
-  `listarHistoricoUnidade` (camada já existia inteira, só faltava caller de UI — achado da
-  exploração da sessão anterior).
-- **Task 4 (densidade, AC-4/AC-6):** `EquipamentosPage.tsx` (mesmo padrão card→lista),
-  `BacklogGutPage.tsx` (botão "Planejar" `px-4 py-2 text-sm`→`h-8 px-3 text-xs`). **Achado e
-  revertido:** tentei unificar o hex do box de erro de Backlog/OrdensServico
-  (`#F0C2BD`/`#FFF4F2`/`#A12D24`) pra família de Ferramentas/Equipamentos
-  (`#F2C0B5`/`#FFF4F1`/`#A23B25`) — mas as duas páginas de OS já eram consistentes ENTRE SI antes da
-  minha mudança; revertido pra não trocar uma inconsistência por outra. Deixado como está,
-  documentado no `tasks.md` como fora do escopo seguro desta story.
-- **Extra pedido pelo Lucas no meio da implementação (mid-turn, fora do `spec.md` original):**
-  "melhorar a visão da aba clientes, lista pra facilitar leitura, ver mais informação na mesma
-  tela". `ListaClientesPage.tsx`: `ClienteCard` (grid `xl:grid-cols-2`, cards grandes com
-  mini-indicadores) virou **tabela densa** (`table`/`thead`/`tbody`, mesmo padrão de
-  `TiposTarefaPage.tsx`) — colunas Cliente/Local/Contato/OS abertas/Ativos/Maior GUT/Última
-  atividade/Ações. Tratado com o mesmo rigor de gate/verificação do resto da story (não um
-  "só isso rapidinho" sem testar).
-- **Playwright contra produção real:** specs existentes (`ordens-servico`, `ferramentas`, `kits`)
-  precisaram de fix de locator — a lista nova de ferramentas não tem mais `<h4>` nem o texto
-  "0 unidade(s)" (virou span + "X/Y unid."); ajustado pra `xpath=ancestor::div[contains(@class,"py-2.5")]`.
-  Spec novo `refinamento-ux.spec.ts` (4 testes): OS expandir/fechar por X e Esc; ferramenta→
-  histórico de unidade (estado vazio honesto pra unidade nunca movimentada); horas→clicar cliente
-  E técnico, ambos navegaram de verdade; Clientes→tabela com colunas certas. **10/10 passando**
-  contra produção real. Dados de teste `[TESTE E2E]` criados e limpos (desativados/devolvidos) ao
-  final de cada rodada via UI.
-
-Gates rodados e verdes: `biome check --write .` (binário direto), `typecheck`, `test` (354
-passando, zero regressão), `build`, `arch:check`, `check:edge-functions`, `audit:esteira`,
-`eval:spec`, `validate-mermaid`, Playwright (10/10 contra produção real).
-
-**Não verificado:** screenshots formais de antes/depois do polimento não foram capturados (a
-verificação foi funcional via Playwright, não visual/comparativa).
-
-**Próximo passo:** commitar E01-S75 (branch `feat/E01-S68-fix-sync-tarefas`/PR #52 — mesma branch
-das stories anteriores; confirmar com Lucas se quer branch própria antes do push). Depois: roteiro
-de apresentação pro Fabrício (pedido nesta sessão, ver mensagem do Lucas) documentando o que já
-funciona e como usar — entregável separado, não faz parte do código desta story.
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **Verificação Playwright contra produção real
-de toda a leva (E01-S68..S74) — 2 bugs reais de produção achados e corrigidos, migrations
-aplicadas, suíte e2e nova commitada.** Lucas pediu explicitamente "execute com playwright os testes
-se ok, commit tudo e push"; Playwright não estava instalado — instalado nesta sessão
-(`@playwright/test`), autorização explícita do Lucas pra: (1) testar contra o Supabase de PRODUÇÃO
-real (sem staging/Docker disponível), (2) aplicar as 8 migrations pendentes (`0085`-`0092`, nunca
-deployadas — o gatilho automático do `deploy.yml` está desligado de propósito, só roda via
-`workflow_dispatch` manual), (3) criar dados de teste prefixados `[TESTE E2E]` em produção
-(limpos via UI ao final, onde existe exclusão).
-
-- **Bug real #1 — `permission denied for sequence` (42501).** `CREATE SEQUENCE` não concede
-  privilégio nenhum a `authenticated` por padrão — as migrations `0086` (E01-S63,
-  `ferramenta_unidade_codigo_seq`) e `0091` (E01-S73, `inspecao_codigo_seq`) deram GRANT na tabela
-  mas esqueceram a sequence usada pelo `nextval()` que gera os códigos `FER-NNNN`/`INSP-NNNN`.
-  Sem o fix, **toda criação de inspeção ou geração de unidade de ferramenta quebrava** (nunca
-  testado antes contra dado real). Corrigido em migration nova `0093_E01-S73_fix_grant_sequences_codigo.sql`
-  (`grant usage, select` nas 2 sequences pra `authenticated`+`service_role`) — aplicada em
-  produção, retestado, confirmado (`INSP-0001`, `FER-0006` gerados com sucesso).
-- **Bug real #2 — RPC `fn_apontamento_horas` quebrava a página inteira (22P02).**
-  `(os.auvo_detalhes ->> 'duracaoHoras')::numeric` (migration `0090`, E01-S72) não tolera string
-  vazia — pelo menos 1 OS real tem esse campo como `""` (não null, não ausente). Como a RPC é uma
-  query agregada sobre todas as OS do período, 1 linha ruim quebrava a página inteira, sem
-  fallback possível no client. Corrigido em `0094_E01-S72_fix_duracao_horas_vazia.sql`
-  (`nullif(..., '')::numeric`) — aplicada em produção, retestado com dado real (horas por
-  cliente/técnico renderizando corretamente).
-- **Confirmado funcionando de ponta a ponta contra produção real** (não só gates de código): login,
-  criar/editar OS (E01-S69), criar tipo de inspeção + checklist template + inspeção com template
-  pré-carregando item + editar cabeçalho (persistência confirmada reabrindo o form) + editar item
-  (grau de risco, resultado "não aplicável") + excluir item (E01-S73, o gap de RLS de DELETE que
-  esta story corrigiu), criar ferramenta + gerar unidade com código `FER-NNNN` (E01-S63), criar kit
-  + atribuir a técnico real + devolver — ciclo tudo-ou-nada completo, unidade volta a "disponível"
-  (E01-S66), apontamento de horas agregado por cliente/técnico com dado real (E01-S72).
-- **Achado não-bug, só confuso de primeira:** depois de atribuído, um kit continua aparecendo na
-  lista de cima como "Incompleto" (reflete estoque, não intenção) — comportamento correto, não um
-  bug; documentado em comentário no `kits.spec.ts` pra não confundir quem ler o teste depois.
-- **Suíte e2e nova em `apps/web/e2e/`** (Playwright, script `pnpm test:e2e`): `auth.setup.ts` +
-  `ordens-servico.spec.ts`, `inspecoes.spec.ts`, `tipos-inspecao.spec.ts`, `ferramentas.spec.ts`,
-  `kits.spec.ts`. `playwright.config.ts` tem aviso explícito no topo: mira produção de verdade, sem
-  staging. Credenciais de teste (`SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD`, usuário real, senha
-  corrigida pelo Lucas no meio da sessão) em `.env.local` (gitignored). `vitest.config.ts` ganhou
-  `exclude: ["e2e/**"]` pra não tentar rodar specs do Playwright como teste unitário.
-- **Dado de teste que ficou em produção (sem exclusão na UI pra limpar):** 1 OS
-  (`[TESTE E2E] OS ... (editado)`, auto-documentada na descrição: "Criada por teste automatizado
-  (Playwright, E01-S69)"); tipos de inspeção + checklist templates de teste (`TiposInspecaoPage`
-  não tem exclusão nenhuma na UI — achado de escopo, não bug desta sessão). Ferramentas e kits de
-  teste foram todos desativados (`ativo=false`) via UI antes do commit.
-- **Recusas corretas do sistema de permissão durante esta sessão** (não contornadas): bloqueou um
-  script Node com `SUPABASE_SERVICE_ROLE_KEY` pra leitura direta de diagnóstico (usei só o que a
-  UI/sessão autenticada já expunha), e bloqueou um loop de limpeza "clica no primeiro que aparecer"
-  sem verificar que o alvo era mesmo dado de teste (troquei por cliques únicos explícitos,
-  justificados um a um).
-
-Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (354 passando), `build`,
-`arch:check`, `lint:migrations` (94 migrations), `check:edge-functions`, `audit:esteira`,
-`eval:spec`, `validate-mermaid`.
-
-**Não verificado:** E01-S70 (abas ricas) e E01-S71 (imagem equipamentos) só tiveram smoke check
-(página carrega sem erro de schema) — sem dado real populado ainda (precisa de re-sync do Auvo).
-E01-S74 (serviço→Auvo) não foi retestado via UI nesta passada — o teste de contrato direto contra a
-API Auvo real já feito antes desta sessão de Playwright é a evidência que vale. Reservas
-(E01-S64) não testada nesta passada (ferramentas/kits cobriram o RLS/mecanismo mais arriscado).
-
-**Próximo passo:** commitar tudo (migrations `0093`/`0094` + suíte e2e + `playwright.config.ts` +
-`vitest.config.ts` + `package.json`) e fazer push — Lucas autorizou push explicitamente nesta
-sessão (branch `feat/E01-S68-fix-sync-tarefas`, PR #52), superando a instrução anterior de "não
-pushar ainda".
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S74 (serviço→Auvo write path)
-implementada localmente, gates Node verdes.** 11ª e última story da leva original de 7
-(E01-S68..S74), fecha o ciclo (S68→S71→S70→S63→S64→S65→S66→S69→S72→S73→S74), tudo na mesma branch.
-Só S68/S71 pushadas (PR #52); as outras 9 locais aguardando liberação.
-
-- **Teste de contrato ao vivo, autorizado explicitamente pelo Lucas nesta sessão** (mesma cautela
-  já aplicada na E01-S65 — nunca testar escrita em produção externa sem autorização pontual):
-  `GET /services` (listagem paginada) segue 404, confirma achado de 2026-07-08. Mas `POST
-  /services` → 201 (criou registro reversível de teste), `GET /services/{id}` → 200, `PATCH
-  /services/{id}` (formato JSON Patch) → 200 (usado pra desativar o registro de teste — sem lixo
-  deixado em produção). **O módulo Serviços não está desabilitado** — só a listagem 404.
-- `pcm-auvo-push` nunca chama a listagem (só POST/PATCH/GET-por-id por `auvoBasePath`/`{id}`), então
-  o push funciona independente do pull estar bloqueado. `writeEnabled:true` ligado em
-  `registry/servicos.ts` com segurança.
-- **Bug real (não hipotético) achado pelo próprio teste de contrato — exatamente o que o AC-1 da
-  spec previa:** `POST /services` devolve `result.id` como **GUID string**, não number. O extrator
-  padrão de id em `pcm-auvo-push/index.ts` (`extractCreatedAuvoId`) só aceitava `number` — sem
-  correção, toda criação de serviço real teria lançado `"Auvo criou servicos sem id na resposta"`
-  mesmo com o POST tendo funcionado (201). Corrigido: `extractCreatedAuvoId` customizado no
-  descriptor de serviços (aceita string ou number) + tipo ampliado (`number | string`) em
-  `_shared/auvo/registry/types.ts` e `pcm-auvo-push/index.ts` (`existingAuvoId`, `auvoId`). Teste
-  de regressão novo em `pcm-auvo-push/index.test.ts`.
-- Comentário "NÃO VERIFICADO NESTE AMBIENTE" em `_shared/auvo/json-patch.ts` (formato JSON Patch da
-  Auvo v2, sem barra inicial no `path`) trocado por confirmação — o `PATCH` de teste usou exatamente
-  esse formato e funcionou.
-- AC-3 (banner de bloqueio se 404) não se aplica — não é o caso binário aceita/404 que a spec
-  previa; é um terceiro caso (escrita aceita, só listagem 404), documentado como divergência no
-  `tasks.md`.
-- Limpeza: nenhum registro de teste ficou "sujando" a Auvo em estado ativo — o `PATCH` de
-  desativação (`active:false`) usou a mesma semântica de `deleteStrategy:"soft-patch"` que o app já
-  usa pra excluir serviço, então o registro de teste está no mesmo estado que um serviço apagado
-  pelo fluxo normal ficaria.
-
-Gates rodados e verdes: `biome check --write .` (binário direto), `typecheck`, `test` (354
-passando), `build`, `arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`,
-`eval:spec`, `validate-mermaid`.
-
-**Não verificado:** `deno test` (sem Deno CLI local, roda no CI); verificação end-to-end em
-produção (cadastrar um serviço real no PCM e conferir `auvo_id` gravado) — precisa de deploy.
-
-**Próximo passo:** commitar E01-S74 (local, sem push). **Fecha a leva original de 7 stories
-(E01-S68..S74) que Lucas pediu especificar+implementar nesta sessão.** São agora 9 commits locais
-na branch `feat/E01-S68-fix-sync-tarefas`/PR #52 aguardando liberação de push (S68/S71 já
-pushadas). Próximo passo natural é check-in com Lucas: revisar o que está pronto pra push/deploy,
-ou seguir pra outra prioridade (Ferramentas E01-S63..S66 e Financeiro E04-S01..S06 seguem
-especificadas mas seus PRs não foram abertos ainda — mesma branch).
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S73 (inspeções profissionais ABNT NBR
-16747) implementada localmente, todos os gates Node verdes (354 testes).** 10ª story da leva
-(S68→S71→S70→S63→S64→S65→S66→S69→S72→S73), tudo na mesma branch. Só S68/S71 pushadas (PR #52); as
-outras 8 locais aguardando liberação. **Reconstrução arquitetural** — a maior story desta leva.
-
-- Migration `0091` (aditiva, sem DROP de coluna/tabela existente) + `0092` (VALIDATE CONSTRAINT em
-  transação separada, padrão Squawk já usado em `0070/0071`, `0073/0074`, `0082/0083`): cabeçalho
-  rico em `pcm.inspecoes` (código `INSP-NNNN` via trigger BEFORE INSERT — não DEFAULT volátil,
-  tabela já tem dado; tipo_inspecao_id FK NOT VALID; edificação/endereço/hora início-fim/inspetor/
-  responsável no local/escopo/norma técnica/ART/condições/anexos); itens ricos em
-  `pcm.inspecao_itens` (categoria/elemento/identificação/grau_risco com CHECK/estado_conservacao/
-  anomalia/medições jsonb/mídias jsonb/responsável_ação/observações); CHECK de `resultado` ampliado
-  pra incluir `nao_aplicavel` (NOT VALID + validate em `0092`); 3 tabelas novas de parametrização
-  (`tipos_inspecao`, `checklist_templates`, `checklist_template_itens`) com RLS FORCE — leitura
-  aberta a `pcm:leitura`, escrita restrita a supervisor/superadmin (D-4 do design.md: parametrização
-  é configuração, não operação diária); bucket Storage privado `inspecoes-midia` (100MB, RLS por
-  módulo PCM).
-- **Achado ao implementar (gap de RLS pré-existente, não desta story):** `pcm.inspecao_itens` nunca
-  teve grant nem policy de DELETE desde a `0019` original — RLS FORCE bloqueava qualquer exclusão de
-  item mesmo com `pcm:escrita`. Corrigido nesta migration (`grant delete` + policy
-  `inspecao_itens_delete`), necessário pro AC-1 ("excluir item também disponível").
-- **SPEC_DEVIATION registrado em `tasks.md`:** a spec afirmava que este seria "o primeiro uso de
-  Supabase Storage no projeto" e pedia ADR. Falso — `0063_E02-S21_atendimento_inbox_rico.sql` já
-  criou o bucket `atendimento-midias` no mesmo padrão (privado, RLS por módulo), sem ADR próprio.
-  Decisão: seguir o padrão já estabelecido, sem ADR novo (documentado como comentário na migration
-  `0091` e formalizado no `tasks.md` da story).
-- Domínio (`inspecoes-laudos.ts`) ganhou `validarCabecalhoInspecao`/`validarItemInspecao`/
-  `validarTipoInspecao`/`validarChecklistTemplate` — 10 testes novos. `qualidade-gateway.ts`/
-  `qualidade.ts` reescritos com 12 métodos novos (editar/excluir inspeção e item, CRUD de tipos e
-  templates, `aplicarTemplate`, upload/remoção/URL assinada de mídia).
-- **Bug recorrente pego de novo (3ª vez nesta leva):** `aplicarTemplate` e mais 4 funções em
-  `qualidade.ts` (`excluirItemInspecao`, `criarTipoInspecao`, `editarTipoInspecao`, `criarTemplate`)
-  eram `function` (não `async function`) fazendo `throw` antes de qualquer `await` — quebra
-  `expect(fn(...)).rejects.toThrow()` porque o erro escapa síncrono. Mesma causa raiz já vista em
-  `editarOrdemServico` (E01-S69). Corrigidas todas de uma vez ao notar o padrão, não só a que o
-  teste pegou.
-- `InspecoesPage.tsx` reconstruída (cabeçalho rico editável, seletor de template só ao criar,
-  upload de mídia por item) + `TiposInspecaoPage.tsx` nova (admin de tipos/templates, gate por
-  `user?.papel` de `useAuth()` — não `usePermissoes()`, que não expõe papel) + entrada em
-  `HomePage.tsx` (CADASTROS).
-- **Decisão de escopo:** upload de mídia só fica ativo ao editar um item (não ao criar), porque o
-  path no Storage referencia um `item.id` real já persistido. Documentado em `tasks.md`.
-- pgTAP `supabase/tests/inspecoes_abnt_rls.test.sql` (novo, 11 asserções) — RLS de
-  tipos_inspecao/checklist_templates (supervisor/superadmin vs colaborador comum), DELETE novo de
-  item, CHECK de grau_risco/resultado, bucket privado. **Não executado localmente** (sem Docker);
-  roda no CI (`db-tests`).
-
-Gates rodados e verdes: `biome check --write .` (binário direto, `pnpm exec` deu OOM), `typecheck`,
-`test` (354 passando), `build`, `arch:check`, `lint:migrations`, `check:edge-functions`,
-`audit:esteira`, `eval:spec`, `validate-mermaid`.
-
-**Não verificado:** pgTAP `db-tests` (sem Docker local, roda no CI); verificação visual em browser
-não realizada (sem Playwright neste ambiente).
-
-**Próximo passo:** commitar E01-S73 (local, sem push — Lucas pediu "não pushar ainda, só commitar
-local"). Depois **E01-S74 (serviço→Auvo write path)** — última das 7 stories originais
-(E01-S68..S74); bloqueada por teste de contrato externo (`POST /services` na API Auvo real), mesmo
-tipo de decisão já enfrentada e adiada na E01-S65 (não testar escrita contra produção sem
-autorização explícita para aquela ação específica). Ao terminar S74 (ou decidir que está bloqueada
-de verdade), check-in com Lucas: são 8 commits locais aguardando push há uma sessão inteira.
-
-- Migration `0090`: RPC `pcm.fn_apontamento_horas(p_inicio date, p_fim date)` — `language sql
-  stable`, SECURITY INVOKER (padrão). **Decisão de arquitetura:** a RPC devolve linhas BRUTAS
-  (`duracao_horas`, `check_in_at`, `check_out_at`), não o valor de horas já calculado — o cálculo
-  em si (prioridade `duracaoHoras`, fallback diff de datas, sem dado → 0) vive em
-  `domain/apontamento-horas.ts` (`calcularHorasOs`, puro, testável), não duplicado em SQL. O
-  adapter aplica a função de domínio linha a linha ao mapear a resposta da RPC.
-- `agregarPorCliente`/`agregarPorTecnico` (mesma função genérica por baixo, `agregarPor`) somam
-  horas e contam OS por chave, ordenado do maior pro menor; `calcularCusto` só multiplica quando há
-  valor/hora (nunca inventa R$0).
-- **Ponte de custo (AC-4) com E04-S06 que ainda não existe:** `financeiro.custos_funcionario` não
-  está implementada neste repo (só especificada). `buscarValorHora` tenta a query com um schema
-  "melhor palpite" (`funcionario_id`, `valor_hora`, `vigencia_inicio`) e cai pra `null` no catch
-  (`PGRST205`/`42P01`/`PGRST106`) — hoje SEMPRE retorna null, que é o comportamento CORRETO
-  esperado (não bug), documentado no código. Quando E04-S06 existir de verdade, a ponte ativa
-  sozinha se o schema bater, ou precisa de 1 ajuste pontual de nomes de coluna se divergir.
-- `ApontamentoHorasPage.tsx` (nova) + item em `HomePage.tsx` (`PCM_NAV`, grupo RELATÓRIOS, ícone
-  `Clock`) — **única story desta leva de 9 que tocou a navegação do `HomePage.tsx`.** Kits (E01-S66)
-  e Reservas (E01-S64) viraram seção dentro de `FerramentasPage.tsx` porque tinham uma página-mãe
-  natural pra hospedar; Apontamento de Horas não tinha nenhuma página PCM existente que fizesse
-  sentido como anfitriã, então segui o padrão estabelecido (toda outra página PCM já tem entrada no
-  mesmo array) — risco baixo, mudança aditiva de 4 pontos (tipo `PcmView`, entrada no array
-  `PCM_NAV`, import, 1 ramo no switch de render).
-
-Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (340 passando), `build`,
-`arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`,
-`validate-mermaid`.
-
-**Não verificado:** verificação visual em browser não realizada (sem Playwright neste ambiente).
-
-**Próximo passo (histórico, já cumprido):** commitar E01-S72 e seguir para E01-S73 — ver entrada no
-topo deste arquivo para o estado atual.
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S72 (apontamento de horas +
-custo por cliente) implementada localmente, todos os gates Node verdes.** 9ª story da leva
-(S68→S71→S70→S63→S64→S65→S66→S69→S72), tudo na mesma branch.
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S69 (OS clicável/editável) implementada
-localmente, todos os gates Node verdes.** 8ª story da leva (S68→S71→S70→S63→S64→S65→S66→S69), tudo
-na mesma branch. Só S68/S71 pushadas (PR #52); as outras 6 locais aguardando liberação.
-
-- `application/editar-ordem-servico.ts` (novo) + `EditarOrdemServicoInput` no gateway — só os
-  campos que fazem sentido editar (título/descrição/categoria/prioridade/GUT/técnico/data prevista;
-  sem cliente/origem/solicitante/tipo de tarefa, que não mudam depois de aberta). Adapter ganha
-  `.editarOrdemServico()` via `.update()` — RLS já cobria (mesma policy `ordens_servico_update` que
-  já permitia mudar status), sem migration.
-- `NovaOrdemServicoModal.tsx` vira criar+editar: prop `ordem?` opcional. Achado ao implementar: a
-  sugestão automática de prioridade por GUT (`useEffect` que roda toda vez que `gravidade/urgencia/
-  tendencia` mudam) ia SOBRESCREVER a prioridade real da OS assim que o modal abrisse em edição —
-  corrigido setando `prioridadeManual=true` no mesmo efeito que pré-preenche o form.
-- **Decisão de escopo que simplificou a implementação inteira:** a spec original (tasks 3 e 5)
-  pedia mexer em `OsKanbanView.tsx` E na Lista de `OrdensServicoPage.tsx` separadamente pra abrir o
-  modal. Não foi preciso — o card do Kanban já chama `onSelecionar` (desde E01-S38), que já revela
-  `DetalheOs` como painel lateral, e `DetalheOs` é o MESMO componente renderizado tanto pro Kanban/
-  Timeline/Calendário quanto pra Lista (2 call sites, 1 componente). Bastar um botão "Editar" no
-  cabeçalho do `DetalheOs` cobriu Kanban+Timeline+Calendário+Lista de uma vez só, sem tocar no
-  Kanban (zero risco de conflitar com o drag-and-drop da E01-S61).
-- `BacklogGutPage.tsx`: linha ganhou `onClick` (abre o modal, estado local `editando`); botão
-  "Planejar" ganhou `event.stopPropagation()` pra não abrir o modal junto; linha agora mostra
-  descrição (2 linhas), técnico e data prevista — dado que já vinha em `OrdemServicoOperacional`,
-  sem query nova.
-
-Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (332 passando), `build`,
-`arch:check`, `check:edge-functions`, `audit:esteira`, `eval:spec`, `validate-mermaid`.
-
-**Não verificado:** clique durante drag não deveria abrir modal (não se aplica mais — Kanban não
-foi tocado, continua só `onSelecionar`); leitura não edita (botão "Editar" já é gated por
-`temEscrita`, mas não testado em browser); UI geral não verificada (sem Playwright neste ambiente).
-
-**Próximo passo:** commitar E01-S69 (local). Depois E01-S72 (apontamento de horas) → E01-S73
-(inspeções ABNT NBR 16747, **arquitetural — precisa `design.md` aprovado antes de codar**, não
-pular esse gate) → E01-S74 (serviço→Auvo, bloqueado por teste de contrato externo). Tudo local até
-Lucas liberar push; mesma branch/PR #52 quando liberar, um commit por story.
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S66 (kits de ferramentas) implementada
-localmente, todos os gates Node verdes. Fecha as 4 stories de Ferramentas (S63-S66) do feedback do
-Fabrício.** 7ª story da leva (S68→S71→S70→S63→S64→S65→S66), tudo na mesma branch. Só S68/S71
-pushadas (PR #52); as outras 5 locais aguardando liberação.
-
-- Migration `0089`: `pcm.kits` (nome/descrição, soft-delete) + `pcm.kit_itens` (kit→ferramenta→
-  quantidade, **não** append-only — composição pode ser editada, AC-5) + coluna
-  `kit_atribuicao_id uuid` em `ferramenta_movimentacoes` (correlaciona as N movimentações que 1
-  evento de atribuição/devolução de kit gerou).
-- **Atomicidade tudo-ou-nada (AC-2) via RPC, não via múltiplos inserts do client:**
-  `pcm.fn_atribuir_kit` percorre os itens do kit, tenta alocar N unidades disponíveis de cada
-  (`FOR UPDATE SKIP LOCKED`), e dá `RAISE EXCEPTION` se faltar 1 — como é tudo dentro de 1 função/1
-  transação implícita, a exceção desfaz TUDO que a chamada já tinha inserido até ali (testado no
-  pgTAP: tentativa que falha no item 2 não deixa nada atribuído do item 1).
-- **Decisão técnica:** as RPCs são `SECURITY INVOKER` (padrão, sem `security definer`) — rodam com
-  o papel de quem chama, então os INSERTs em `ferramenta_movimentacoes` e SELECTs em `kit_itens`/
-  `ferramenta_unidades` continuam sob as MESMAS RLS policies já existentes (pcm leitura/escrita),
-  sem duplicar checagem de permissão dentro da função. `fn_devolver_kit` reaproveita o trigger da
-  E01-S63 (`fn_aplicar_movimentacao_ferramenta`) pra aplicar a devolução em cada unidade — não
-  reimplementa a transição de estado.
-- `domain/kits.ts`: `kitEstaCompleto`/`itensFaltantes` (AC-1, comparação estoque×composição),
-  `kitAtribuicaoEstaCompleta` (AC-4, agrupamento por `kit_atribuicao_id` — kit fica "incompleto com
-  o técnico" se 1 unidade saiu isolada do grupo). 10 testes.
-- **Decisão de escopo (task 5/6 do tasks.md):** não criei `KitsPage.tsx` nova nem toquei na
-  navegação grande do `HomePage.tsx` — `KitsSection.tsx` é um componente auto-contido (carrega os
-  próprios dados) que vive como seção extra dentro de `FerramentasPage.tsx`, mesmo padrão da seção
-  Reservas (E01-S64). A task 6 original ("agrupamento por kit na tela por-técnico") também não foi
-  feita literalmente — a mesma informação já aparece em "Kits atribuídos" dentro do `KitsSection`,
-  evitando duplicar a UI em 2 lugares.
-
-Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (329 passando), `build`,
-`arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`,
-`validate-mermaid`.
-
-**Não verificado:** pgTAP `kits_atomicidade.test.sql` não roda local (sem Docker); UI não
-verificada em browser (sem Playwright neste ambiente).
-
-**Próximo passo:** commitar E01-S66 (local). **Ferramentas (S63-S66) completa.** Depois E01-S69
-(OS editável) → E01-S72 (horas) → E01-S73 (inspeções, arquitetural — precisa design.md aprovado
-antes de codar) → E01-S74 (serviço Auvo). Tudo local até Lucas liberar push; mesma branch/PR #52
-quando liberar, um commit por story.
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S65 (cadastro rico de ferramenta,
-caminho conservador) implementada localmente, todos os gates Node verdes.** 6ª story da leva
-(S68→S71→S70→S63→S64→S65), tudo na mesma branch. Só S68/S71 pushadas (PR #52); S70/S63/S64/S65
-locais aguardando liberação.
-
-- Migration `0088`: `pcm.ferramentas` ganha `imagem_url`/`uri_anexos`/`codigo_auvo` — **só
-  leitura**, populadas pelo pull do Auvo.
-- **AC-1 não executada — decisão consciente, não esquecimento.** A spec pedia testar
-  `PATCH /products/{id}` com `imageUrl` contra a API real do Auvo (credenciais `AUVO_API_KEY`/
-  `AUVO_USER_TOKEN` estão disponíveis em `.env.local`, tecnicamente possível). Não rodei: é uma
-  escrita em sistema de produção externo (conta Auvo real da Sinérgica), e as instruções desta
-  sessão pedem confirmação explícita antes de ações assim — não havia autorização prévia
-  específica pra esse teste. Implementei o caminho B do AC-2 (mais seguro, não tenta escrever):
-  `imageUrl`/`uriAttachments`/`code` só entram em `fromAuvo`, nunca em `toAuvo`/`toAuvoUpdate` —
-  e escrevi um teste Deno que garante isso (`"imageUrl" in toAuvo(...)` é `false`). Documentei o
-  achado no `spec.md` da story com o próximo passo exato (1 curl) se Lucas quiser destravar.
-- `domain/ferramentas.ts`: `valorUnitario`/`custoUnitario` (colunas já existiam desde a migration
-  `0033`, nunca expostas na UI — o write path pro Auvo já existia em `toAuvoUpdate`, só faltava a
-  tela mandar o dado) viram campos editáveis de verdade. `validarFerramentaInline` novo (mapa de
-  erros por campo, sem lançar — AC-4).
-- UI: card ganha thumbnail (`imagemUrl` ou placeholder `Wrench`) + valor/custo/código Auvo; modal
-  ganha preview de imagem (com aviso "cadastre no Auvo" quando ausente), categoria com busca real
-  (`<input list>` + `<datalist>` — autocomplete nativo do browser, sem lib nova), validação inline
-  por campo (botão Salvar desabilita se houver erro, sem precisar submeter).
-
-Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (320 passando), `build`,
-`arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`,
-`validate-mermaid`.
-
-**Pendências:** AC-1 (decisão de Lucas: autorizar teste de escrita de imagem no Auvo, ou manter
-permanentemente só leitura); verificação visual em browser não realizada (sem Playwright neste
-ambiente).
-
-**Próximo passo:** commitar E01-S65 (local). Depois E01-S66 (kits, depende de S63 ✓) → E01-S69 (OS
-editável) → E01-S72 (horas) → E01-S73 (inspeções, arquitetural — precisa design.md) → E01-S74
-(serviço Auvo). Tudo local até Lucas liberar push; mesma branch/PR #52 quando liberar.
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S64 (reserva de ferramenta por período)
-implementada localmente, todos os gates Node verdes.** Segue E01-S68 (`e9f58ec`), E01-S71 (`7e84430`)
-pushadas pro PR #52; E01-S70 (`c37c4f4`), E01-S63 (`2f4b22b`) e esta (E01-S64) **só locais** —
-Lucas pediu pra segurar push nesta sessão (ver nota abaixo).
-
-- Migration `0087`: `pcm.ferramenta_reservas` (unidade opcional = "qualquer disponível", período,
-  status `pendente/efetivada/cancelada`). Trigger `fn_validar_reserva_ferramenta` rejeita conflito
-  de intervalo só pra reserva de UNIDADE ESPECÍFICA — **decisão**: usar trigger em vez de exclusion
-  constraint/GiST (`EXCLUDE USING gist`), porque isso exigiria a extensão `btree_gist`, nunca usada
-  neste repo, e não dá pra confirmar daqui se está disponível/habilitada no Supabase de produção.
-  Trigger é mais simples e não introduz dependência nova.
-- `domain/ferramenta-reservas.ts` (novo): sobreposição de intervalo pra unidade específica;
-  validação "pior caso" pra reserva genérica (conta reservas já sobrepondo o período vs. unidades
-  ativas da ferramenta — se empatar, rejeita, mesmo que na prática pudesse dar certo; conservador
-  de propósito). 12 testes.
-- `application/ferramenta-reservas{-gateway}.ts` + adapter: **efetivar** orquestra 2 coisas —
-  chama `atribuirUnidadeFerramenta` (E01-S63) pra criar a movimentação de atribuição de verdade, e
-  só depois marca a reserva como `efetivada`. Cancelar é UPDATE simples (reserva não é append-only
-  como `ferramenta_movimentacoes` — muda de status via RLS update normal).
-- UI: seção "Reservas" nova em `FerramentasPage.tsx` — form (ferramenta→unidade opcional→
-  técnico→datas), agenda ordenada por data (só pendentes, `ordenarAgendaReservas`), Efetivar (modal
-  escolhe a unidade se a reserva era genérica) e Cancelar por linha.
-- pgTAP `ferramenta_reservas_rls.test.sql` (novo, 7 asserts): leitura bloqueada, reserva nasce
-  pendente, conflito de intervalo mesma unidade rejeitado (P0001), sem sobreposição aceita,
-  cancelar/efetivar via UPDATE funcionam. Escrito, não executado — sem Docker local.
-
-Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (317 passando), `build`,
-`arch:check`, `lint:migrations`, `check:edge-functions`, `audit:esteira`, `eval:spec`,
-`validate-mermaid`.
-
-**Não verificado:** pgTAP não roda local (sem Docker); UI não verificada em browser (sem
-Playwright neste ambiente).
-
-**Próximo passo:** commitar E01-S64 (local). Depois E01-S65 (cadastro rico, independente) → E01-S66
-(kits, depende de S63 ✓) → E01-S69 (OS editável) → E01-S72 (horas) → E01-S73 (inspeções,
-arquitetural — precisa design.md) → E01-S74 (serviço Auvo). Tudo local até Lucas liberar push;
-mesma branch/PR #52 quando liberar, um commit por story.
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S63 (Ferramentas: unidades
-individuais + histórico) implementada localmente, todos os gates Node verdes.**
-
-- Migration `0086`: `pcm.ferramenta_unidades` (código `FER-NNNN` via sequência global, nunca
-  reaproveitado) + `pcm.ferramenta_movimentacoes` (append-only de verdade — sem policy de
-  UPDATE/DELETE pra `authenticated`, mesmo padrão de `os_equipamentos_auvo`). Trigger
-  `fn_aplicar_movimentacao_ferramenta` deriva `status`/`atribuida_a` a partir de cada movimentação
-  inserida e valida a transição (raise exception se inválida — ex.: atribuir unidade já atribuída),
-  defesa em profundidade além da validação de domínio.
-- `domain/ferramenta-unidades.ts` (novo): validação de atribuição/devolução/baixa + cálculo de
-  divergência Auvo×PCM, puro, 10 testes.
-- **Fluxo antigo removido:** a alocação manual que passava pelo Auvo (`FerramentaAlocacoesGateway
-  .alocar` → edge function `pcm-auvo-ferramenta-alocacao`) foi tirada do client inteiro (domain/
-  application/adapter/UI) — confirmei via grep que não sobrava usage em nenhum outro lugar antes de
-  remover. Posse agora é 100% local (`ferramenta_movimentacoes`), sem round-trip pelo Auvo.
-  `pcm.ferramenta_alocacoes` (visão agregada do Auvo) não mudou de schema, só parou de ser escrita
-  pelo cliente — vira leitura pura pro badge de divergência (AC-7).
-- UI: `FerramentasPage.tsx` ganhou painel expansível de unidades por ferramenta (gerar unidades
-  top-up até `quantidade_total`, baixar unidade). `FerramentasPorTecnicoPage.tsx` reformulada —
-  form atribuir (ferramenta→unidade disponível→técnico), card por técnico com unidades atribuídas +
-  devolver (condição/motivo) + badge de divergência inline + modal de histórico completo.
-- pgTAP `ferramenta_unidades_rls.test.sql` (novo, 11 asserts): leitura bloqueada, código
-  auto-gerado, trigger de atribuição/devolução, invariante "1 atribuição ativa" (P0001),
-  append-only (UPDATE/DELETE negados). Escrito, não executado — sem Docker local.
-
-Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (305 passando), `build`,
-`arch:check`, `lint:migrations`, `check:edge-functions` (confirma remoção do invoke órfão — caiu de
-8 pra 7 invokes, sem `pcm-auvo-ferramenta-alocacao`), `audit:esteira`, `eval:spec`,
-`validate-mermaid`.
-
-**Não verificado:** pgTAP não roda local (sem Docker — depende do CI, job `db-tests`); UI não
-verificada em browser (sem Playwright neste ambiente).
-
-**Nota de processo:** pedi push da E01-S70 e o usuário negou o `git push` (permissão do harness) —
-perguntei como seguir e Lucas escolheu "não pushar ainda, só commitar local". Continuei
-implementando e commitando localmente (E01-S70 → `c37c4f4`, E01-S63 → commit desta entrada) sem
-push, aguardando liberação.
-
-**Próximo passo:** commitar E01-S63 (local). Depois seguir pra E01-S64 (reserva por
-período, depende de S63 ✓ agora disponível) → E01-S65 (cadastro rico, independente) → E01-S66 (kits,
-depende de S63 ✓) → E01-S69 (OS editável) → E01-S72 (horas) → E01-S73 (inspeções, arquitetural —
-precisa design.md) → E01-S74 (serviço Auvo). Tudo local até Lucas liberar push; todas na mesma
-branch/PR #52 quando liberar, um commit por story.
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S70 (abas ricas do Auvo) implementada
-localmente, todos os gates Node verdes.** Segue E01-S68 (`e9f58ec`) e E01-S71 (`7e84430`), ambas já
-pushadas pro PR #52. Ainda não commitada.
-
-- `pcm-auvo-tasks-import/index.ts`: `AuvoTask` ganha `questionnaires`/`keyWords`/
-  `keyWordsDescriptions`/`timeControl`/`financialCategory`; `montarDetalhes` captura tudo (nova
-  função pura `achatarQuestionarios` achata `questionnaires[].answers[]` em lista
-  pergunta/resposta/data). 5 testes Deno novos.
-- `DetalhesTarefaAuvo.tsx` (novo, `components/`): extraído da função interna de
-  `OrdensServicoPage.tsx` (~150 linhas removidas de lá), agora com 7 abas (Relato, Anexos/Fotos,
-  Questionários, Equipamentos, Pendências, Horas, Valores). Fotos renderizam `<img>` de verdade
-  (grid de thumbnail, `onError` cai pra link — payload real de `attachments[]` não está documentado
-  no repo, extração de URL tenta várias chaves comuns, a confirmar contra dado real). Questionários
-  mostra pergunta→resposta→data, não mais contagem. Produtos/serviços/custos agora é LISTA
-  (`descreverItem`), não contagem.
-- **Aba Equipamentos ficou com estado vazio fixo, decisão consciente:** `pcm.os_equipamentos_auvo`
-  (E01-S16) só é populada pelo webhook e nunca foi exposta ao frontend — wire completo seria escopo
-  maior que o resto da story; registrado pra story futura se Lucas confirmar prioridade.
-- Domain `ordens-servico.ts` **não** ganhou interface estrita pra `questionarios`/`palavrasChave`/
-  `controleHoras` — decisão consciente de manter `detalhes: Record<string, unknown>` genérico (jsonb
-  solto desde E01-S38); o componente de apresentação faz o cast pontual só onde precisa.
-
-Gates rodados e verdes: `biome check --write .`, `typecheck`, `test` (296 passando), `build`,
-`arch:check`, `check:edge-functions`, `audit:esteira`, `eval:spec`, `validate-mermaid`. Deno CLI
-ausente — os 5 testes novos de `montarDetalhes`/`achatarQuestionarios` rodam no CI.
-
-**Não verificado (sem Playwright/browser tool neste ambiente):** as 7 abas renderizando de verdade
-no browser. `questionarios`/fotos só populam em OS re-sincronizadas após o próximo pull (cron ou
-re-sync manual, mesma dependência da E01-S68/S71).
-
-**Próximo passo:** commitar E01-S70, seguir pra E01-S63..S66 (Ferramentas, specs já prontas) →
-E01-S69 (OS editável) → E01-S72 (horas) → E01-S73 (inspeções) → E01-S74 (serviço Auvo), tudo na
-mesma branch/PR #52, um commit por story.
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S71 (imagem/anexos de equipamentos)
-implementada localmente, todos os gates Node verdes.** Segue a E01-S68 (fix crítico de sync, já
-commitada como `e9f58ec` e pushada pro PR #52).
-
-- Migration `0085_E01-S71_equipamentos_imagem.sql`: `pcm.equipamentos` ganha `url_imagem text` e
-  `uri_anexos jsonb default '[]'` (aditivo, sem RLS/grant novo).
-- `registry/equipamentos.ts`: `AuvoEquipment` ganha `urlImage`/`uriAnexos` (confirmado contra a API
-  real 2026-07-14); `fromAuvo` mapeia pra `url_imagem`/`uri_anexos`. 3 testes Deno novos/ajustados.
-- UI: `EquipamentosPage.tsx` (card com thumbnail 14×14, lightbox ao clicar, placeholder `Wrench`
-  quando ausente) e `PainelEquipamentos.tsx` (usado no cliente-360, miniatura 8×8) — ambos leem da
-  mesma tabela `pcm.equipamentos`. `EquipamentoItem` (domain), `EquipamentoResumo`
-  (`cliente-360-gateway.ts`) e os 2 adapters (`supabase-equipamentos-adapter.ts`,
-  `supabase-cliente-360-adapter.ts`) expõem os novos campos.
-
-Gates rodados e verdes: `biome check --write .` (1 fix de formatação aplicado), `typecheck`,
-`test` (296 passando), `build`, `arch:check`, `lint:migrations`, `check:edge-functions`,
-`audit:esteira`, `eval:spec`, `validate-mermaid`. Deno CLI ausente — teste do `fromAuvo` roda no CI.
-**Nota operacional:** `pnpm exec biome` (via wrapper) deu OOM repetido nesta sessão por pressão de
-memória do host (SO com ~100-300MB livres, CapCut consumindo CPU); rodar o binário direto
-(`./node_modules/.bin/biome`) contornou — sem relação com o código desta story.
-
-**Não verificado (sem Playwright/browser tool neste ambiente):** renderização visual do thumbnail/
-lightbox no browser. `url_imagem` só populará em produção após o próximo pull de equipamentos do
-Auvo (cron horário ou re-sync manual) — hoje a coluna existe mas está vazia pra todo mundo.
-
-**Próximo passo:** commitar E01-S71, seguir pra E01-S70 (abas ricas do Auvo) → E01-S63..S66
-(Ferramentas, specs já prontas) → E01-S69 (OS editável) → E01-S72 (horas) → E01-S73 (inspeções) →
-E01-S74 (serviço Auvo), tudo na mesma branch/PR #52, um commit por story. E01-S68 segue com tasks
-6-8 pendentes (deploy + backfill + verificação em produção), bloqueadas em paralelo por Lucas
-confirmar se o Auvo assina webhook (`AUVO_WEBHOOK_SECRET`).
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Sonnet 5) — **E01-S68 (fix crítico de sync)
-implementada localmente — as 3 causas corrigidas no código.** PR #52 aberto
-(`feat/E01-S68-fix-sync-tarefas`), commit `e9f58ec` pushado.
-
-- `_shared/auvo/datetime.ts` (novo): `auvoNaiveToUtc` trata datetime naive do Auvo como Brasília
-  (-03:00). Aplicado no import (`pcm-auvo-tasks-import`) e no webhook (`firstIsoString`).
-- `pcm-auvo-tasks-import`: cursor da E01-S67 removido, `calcularJanelaRolante` pura no lugar
-  (-21d/+60d a partir de "agora", nunca depende do banco).
-- `pcm-auvo-webhooks-register`: reescrito — deleta webhook com URL divergente, registra o que
-  falta (incluindo **Task**, entity=4, hardcoded — não tem descriptor no registry genérico, valor
-  documentado em `registry/types.ts`). **Achado bônus:** o contrato real de `GET /webHooks` não
-  batia com o código — campo é `urlResponse` (não `targetUrl`), `entity` vem como string tipo
-  `"Customer"` (não o número do nosso registry) — corrigido, com funções puras testáveis extraídas.
-
-Gates Node verdes (typecheck, build, arch:check, check:edge-functions, audit:esteira). Deno CLI
-ausente — testes escritos (datetime 6 casos, tasks-import janela rolante, webhooks-register 9
-casos), não executados aqui, rodam no CI.
-
-**Pendente (não codificável, depende de deploy):** rodar `pcm-auvo-webhooks-register` em produção
-uma vez; backfill do histórico (datas 3h erradas); verificação real (OS de hoje aparecem, horário
-correto). Lucas está ajustando o lado Auvo manualmente em paralelo (perguntou sobre campo de
-"chave secreta"/assinatura na tela de webhook do Auvo — `AUVO_WEBHOOK_SECRET` não está configurado
-nem localmente, e os 6 webhooks mostravam `hasAuthorization:false`; se o Auvo não assinar,
-`pcm-auvo-webhook` vai rejeitar tudo com 401 mesmo com a URL certa — aguardando resposta dele sobre
-esse campo antes de decidir se ajusta o código pra aceitar sem assinatura).
-
----
-
-**Atualização anterior:** 2026-07-14 (sessão Lucas/Opus 4.8) — **PR #51 mergeado; teste de produção achou 9
-problemas; diagnóstico + 7 specs de correção (E01-S68..S74) criadas, prontas pra Sonnet 5
-implementar.** Só artefatos SDD — nenhum código de feature nesta sessão.
-
-Lucas mergeou o PR #51 (E01-S62/S67 + specs E04/Ferramentas + Guia do SO) e testou em produção.
-Diagnóstico com queries read-only (produção `nudannsrfvjggoergvyn`) + API Auvo real + 3 Explore
-agents. **Achados críticos:**
-- **#1 OS de hoje não aparecem — 2 causas:** (a) os 6 webhooks Auvo apontam pro projeto Supabase
-  **antigo** (`sfprfvltby…`, não `nudann…`) → tempo real morto desde o reprovisionamento; (b) o
-  cursor `MAX(data_agendada)` da E01-S67 pula pro futuro (preventiva agendada 22/07) e exclui as
-  tarefas de hoje. Regressão minha da E01-S67. `tasks-import` puxou só 1 tarefa na última run.
-- **#2 timezone:** Auvo devolve datetime naive Brasília (`08:00`), gravamos como UTC nos 2 caminhos
-  (import verbatim; webhook `new Date().toISOString()` com TZ=UTC) → −3h em data_agendada/check-in/out.
-- **#7 questionários VÊM no GET /tasks** (confirmado na API), só não capturamos; `DetalhesTarefaAuvo`
-  existe mas preso na página de OS e mostra produtos/anexos só como contagem, sem fotos.
-- **#9 equipamento tem `urlImage`/`uriAnexos`** no Auvo, descriptor/tabela não capturam.
-- **#3/#4** OS não abre/edita no Kanban/Backlog (só status). **#5** inspeção não edita, schema
-  enxuto sem parametrização/Storage. **#6** serviço tem infra outbound mas `writeEnabled:false`.
-- **#8** sem endpoint Auvo de horas, mas check-in/out/duração vêm no GET /tasks (derivável).
-
-**Decisões do PO (2026-07-14):** inspeções adotam Supabase Storage agora; reconstruir inspeção
-(ABNT NBR 16747); tela de admin de templates de checklist já; **fixes de sync primeiro** na
-implementação.
-
-**Criadas 7 stories (specs/E01-S68..S74/):** S68 fix sync (webhook+cursor+timezone, prioridade
-máxima), S69 OS clicável/editável, S70 abas ricas do Auvo (questionários/fotos), S71 imagem de
-equipamentos, S72 apontamento de horas+custo, S73 inspeções ABNT NBR 16747 (arquitetural,
-product+design), S74 serviço→Auvo. ROADMAP atualizado (S62/S67 marcadas mergeadas PR #51; nota que
-o cursor S67 foi superseded por S68). Glossário +3 termos (ABNT NBR 16747, Apontamento de horas,
-Template de checklist / Tipo de Inspeção). Gates de artefato verdes: `audit:esteira` 350 docs,
-`eval:spec`.
-
-**Handoff para Sonnet 5** (Lucas troca o modelo): (1) commit/push das specs + PR; (2) implementar
-na ordem — **E01-S68 primeiro** (crítico), depois S71/S70, S63-S66 (Ferramentas, specs já existem),
-S69/S72, S73/S74. Detalhes técnicos com âncoras file:line em cada `spec.md`/`tasks.md` e no plano
-`~/.claude/plans/preciso-que-fa-a-o-toasty-hellman.md`. Nada commitado ainda (regra: commit só
-quando pedido; Lucas pediu commit/push via Sonnet).
-
----
-
-**Atualização anterior:** 2026-07-13 (sessão Lucas/Claude) — **Rotação do próprio STATE.md** (este
-arquivo tinha crescido pra 1860 linhas/41 sessões acumuladas desde o início do projeto,
-`alwaysApply: true`, carregado inteiro em toda sessão nova — Lucas sinalizou que estava difícil
-de achar informação). Histórico movido pra `docs/state-historico/` em 2 arquivos por período (ver
-índice); a skill `/handoff` ganhou uma regra de rotação (abaixo) pra isso não voltar a acontecer.
-
-**Resto da sessão (2026-07-13), com detalhe:**
-
-**1. Épico E04 Financeiro especificado por completo** (6 stories, `specs/E04-S01..S06/`, product+
-design+domain+spec+tasks na S01, spec+tasks nas demais — auto-contidas, feitas pra outra
-sessão/LLM implementar sem depender desta conversa). Pedido original: entrada/saída, classificação
-de gastos, import OFX, ganho por cliente (horas × valor recebido), gráficos, visão de dono. Perguntei
-4 decisões ao Lucas antes de especificar (todas registradas em `product.md`): **caixa primeiro**
-(lançamentos+OFX+dashboard antes de receber/rentabilidade); **custo/hora por funcionário** (custo
-mensal cadastrado ÷ horas-base, não taxa única nem por cargo); **receita = contrato mensal
-cadastrado + entradas avulsas** por cliente; **previsto + realizado no V1** (vencimentos, alertas
-D+3/7/15, projeção 30/60/90). `design.md` fecha 6 decisões técnicas: parser OFX próprio
-client-side (sem lib — OFX é SGML/XML, arquivo pequeno), gráficos SVG próprios (sem lib nova, repo
-não tem nenhuma), RPCs `security invoker` pra agregação (nunca baixar tabela inteira pro browser,
-antipadrão já eliminado na E01-S44), recorrência via RPC idempotente + pg_cron + botão manual,
-contratos nascem no Financeiro até o módulo Comercial (E03) existir, zero Edge Function nova (tudo
-supabase-js + RPC SQL). Depois criei um **protótipo navegável** (Artifact HTML, dados fictícios,
-sem banco/backend) com as 10 telas do módulo pra Lucas/Fabrício/Aline visualizarem e darem ideia
-antes de qualquer linha de código real — link enviado na resposta daquele turno.
-
-**2. Evolução de Ferramentas especificada** (E01-S63–S66), a partir de 5 pontos de feedback do
-Fabrício testando o PCM: histórico de quem ficou com cada ferramenta + atribuição por código
-(hoje impossível — `pcm.ferramenta_alocacoes`, migration `0033`, é um snapshot agregado por tipo,
-sobrescrito a cada sync do Auvo via `fn_reconcile_ferramenta_alocacoes`; não existe unidade física
-individual nem no PCM nem no Auvo); reserva por data/período; cadastro mais fácil com imagem;
-criação de kits; "evoluir muito essa parte, está rasa". 3 decisões do PO antes de especificar:
-**código de unidade gerado pelo PCM** (não existe patrimônio físico prévio pra reaproveitar);
-**PCM vira dono da posse/histórico** (o agregado do Auvo passa a ser só alerta de divergência, não
-sobrescreve mais o histórico); **sem Supabase Storage agora** pra imagem — verifiquei contra a API
-real do Auvo (`GET /products`) e o campo `imageUrl`/`uriAttachments`/`code` já existe no contrato
-de leitura (hoje vazio nas ferramentas cadastradas); escrita não confirmada, vira task 1 da S65.
-`E01-S63` (fundação: `ferramenta_unidades` + `ferramenta_movimentacoes` append-only) → `E01-S64`
-(reserva, depende de S63) → `E01-S65` (cadastro rico, independente) → `E01-S66` (kits, conceito
-PCM-only — Auvo não tem bundle/kit em nenhum endpoint auditado, cada item do kit continua sendo
-seu próprio produto sincronizado individualmente).
-
-**3. Bug real diagnosticado e corrigido em produção (E01-S62):** Lucas reportou que cadastrou OS
-no Auvo e o botão "Sincronizar Auvo" não trouxe. Diagnostiquei contra produção (leitura):
-`pcm.auvo_entity_status` mostrava os pulls terminando 18:58 UTC e `tickets` só às 19:00:27; API
-real confirmou 31 tarefas na janela do dia, zero viraram OS. Causa raiz: `pull:tickets` usa janela
-fixa de 180 dias passado + 60 dias futuro (~24 páginas do Auvo), leva ~150s — o `Promise.all` dos
-pulls em `runSyncAll` esperava por ele inteiro antes de chamar `tasks-import`, estourando o
-`WORKER_RESOURCE_LIMIT` (150s) do próprio worker do `sync-all`. Fix em
-`supabase/functions/pcm-auvo-sync-all/index.ts`: `pull:clientes` roda sozinho primeiro (é a única
-dependência real do `tasks-import`, resolução de cliente em lote); todo o resto — demais pulls,
-tasks-import, deleted-tasks, gps, support — roda em paralelo com **orçamento de tempo por etapa**
-(`AbortController`+timeout em `makeSupabaseCaller`); etapa que estoura vira falha isolada e
-nomeada no resultado agregado, nunca mais trava as demais até o teto do worker. `tasks-import`
-ganhou 90s de orçamento próprio (chega sempre, mesmo se `tickets` estourar). Testes reescritos em
-`index.test.ts` (ordem clientes-primeiro, orçamento por etapa, abort real com fetch stub).
-
-**4. Melhoria de sync por ideia do Lucas, mesmo dia (E01-S67):** ele propôs — cron/pull deveriam
-consultar a última data de dado já sincronizado e puxar só dali pra frente (o passado já
-sincronizado é mantido pelo webhook em tempo real, não precisa reprocessar); tudo em lote (já
-era); sync roda em background com progresso visível, sobrevivendo a sair da página; cron pode
-subir de diário pra horário se o custo permitir. Especifiquei (`specs/E01-S67-sync-incremental-
-background/`, tier arquitetural por mudar o motor de sync já em produção com dado real) e
-implementei de ponta a ponta:
-   - **Cursor incremental em `pcm-auvo-tasks-import`:** `StartDate = MAX(data_agendada)` das OS já
-     sincronizadas do Auvo, menos 3 dias de overlap de segurança (cobre tarefa retroagendada/
-     lançada com atraso pelo técnico). Fallback pra janela fixa antiga (-14 dias) só no bootstrap
-     (tabela vazia). Função pura `calcularInicioJanelaDeCursor` — 3 casos de teste Deno escritos.
-   - **`tickets` NÃO ganhou cursor** — decisão consciente, não esquecimento: `pcm.tickets` só
-     guarda `auvo_synced_at` (metadado de QUANDO NÓS sincronizamos), não a data do ticket em si no
-     Auvo. Usar esse campo como `StartDate` filtraria "desde quando sincronizamos" em vez de
-     "desde quando o ticket aconteceu" — mesmo tipo de erro de contrato-não-verificado que já
-     causou bug real neste projeto (`taskID` vs `id`, E01-S34). Fica registrado como próximo passo
-     em `product.md`; o orçamento de tempo do fix E01-S62 continua sendo a mitigação pra `tickets`.
-   - **Botão "Sincronizar Auvo" responde imediato:** migration `0084` cria `pcm.auvo_sync_runs`
-     (RLS FORCE, leitura por módulo PCM, escrita só service_role) e sobe o cron de `tasks-import`
-     de `0 5 * * *` (diário) pra `0 * * * *` (horário) — seguro agora que cada rodada ficou barata.
-     `pcm-auvo-sync-all` cria a run, responde 202 com `{runId}` e continua via
-     `EdgeRuntime.waitUntil` (mesmo padrão já usado em `pcm-whatsapp-webhook`) — sair da página não
-     mata mais o sync no meio (antes, o fetch síncrono do browser ERA o lifecycle da requisição).
-   - **UI com polling:** `sincronizar-auvo-gateway.ts` ganhou `iniciar`/`consultarRun`/
-     `buscarUltimaRun`; `PcmDashboardPage.tsx` faz polling de 3s em `auvo_sync_runs` (select direto
-     sob RLS, sem função nova) e, ao montar, retoma o acompanhamento se já houver uma run
-     `running` há menos de 10 min (`deveRetomarAcompanhamento`, pura, 6 casos testados incluindo a
-     borda exata dos 10 min e o caso de run "travada" que não deve retomar).
-
-**5. `docs/Apontamentos/Apontamentos-Fabricio-Aline.md` criado** — Lucas pediu um lugar pro
-Fabrício e a Aline documentarem pontos achados testando o sistema, sem ser exaustivo. Template:
-bloco copiável (data/quem/tipo/o que encontrei/imagem), 1 exemplo pra guiar. Prints vão na mesma
-pasta `docs/Apontamentos/`, referenciados pelo nome do arquivo no texto.
-
-**Gates Node verdes:** `lint:migrations` (84), `typecheck`, `test` (296 pass/9 skip),
-`build`, `check:edge-functions`, `arch:check`, `audit:esteira`, `eval:spec`. Biome full-tree deu
-OOM (mesmo problema de ambiente de sempre, não é o código).
-
-**Pendências reais, não codificáveis aqui:** Deno CLI ausente — testes do cursor incremental
-escritos, não executados; pgTAP de `auvo_sync_runs` não escrito ainda; validação manual em browser
-autenticado (sync, drag-and-drop do Kanban da E01-S61) não feita; arquivo OFX real do banco pra
-fixture da E04-S02 — pedir ao Lucas; confirmar chaves de `auvo_detalhes` antes da E04-S06.
-
-Nada commitado (aguardando pedido explícito, regra permanente). **Próximo passo para outra
-sessão/LLM:** marcar owner das stories especificadas hoje (E04-S01, E01-S63, E01-S62/S67 — estas
-duas últimas já implementadas, prontas pra revisão/push) no ROADMAP e seguir os `tasks.md`.
 
 ## Bloqueios abertos
 > Só os que seguem sem sinal de resolução até esta sessão. Bloqueios antigos (pré-07/11), muitos
@@ -949,3 +830,36 @@ duas últimas já implementadas, prontas pra revisão/push) no ROADMAP e seguir 
   pedido direto.
 - [ ] **Rotacionar o JWT secret legado do projeto Supabase** — exposto sem querer num diagnóstico
   de sessão em 2026-07-02. Não catastrófico, mas é boa prática. Quem destrava: @devops/Lucas.
+
+---
+
+## Retomada Codex — 2026-07-21
+- E01-S91 fechada: pgTAP escrito; Playwright catálogo→cliente→filtro→Visão 360 verde.
+- E01-S92 implementada: migration `0141` aplicada em produção; parâmetros persistidos e painel de
+  produtividade/consistência/anomalias. Fonte ponto ausente aparece “sem dado”. Playwright verde.
+- E01-S93 implementada: saudação removida; conta/logout preservados; desktop/mobile verdes.
+- Gates: 700 testes, typecheck, arquitetura e build verdes. `ci:local` só acusa formatter em arquivo
+  alheio pré-existente `apps/web/e2e/atendimento-historico-chamado.spec.ts`, preservado.
+- Próximo: E09-S01 — fundação de acesso e isolamento do Portal do Cliente.
+
+---
+
+## Implementação E09-S01..S11 — 2026-07-21
+
+- **E04 auditado:** S01..S13 já implementados/em produção; suíte financeira 159/159 verde. Nenhuma
+  lacuna nova encontrada.
+- **E09 implementado localmente:** migrations `0142`–`0145` (vínculo 1:1, Auth Hook `cliente_id`,
+  RLS por condomínio, superfícies append-only, orçamento/aceite, views financeiras); Edge Functions
+  de provisionamento e e-mail; `PortalShell` com todas as 9 seções; `apps/portal` +
+  `packages/portal-core` + Netlify/CSP + gate anti-import.
+- **Revisão adversarial manual:** corrigiu policy ausente do Auth Hook, mutação ampla de notificação,
+  ausência de policies de signed URL, falta de anexo na UI, falta de histórico de Chamado/OS,
+  cliente já vinculado retornando 500 e ausência de e-mail opcional.
+- **Gates verdes:** build web/portal, typecheck, architecture check, Squawk/lint de 145 migrations,
+  check de 33 Edge Functions, auditoria de 456 docs, 707 testes web + 1 isolamento de bundle.
+- **Gates pendentes:** pgTAP E09 escrito com 14 assertions, mas Docker Desktop não está rodando;
+  `supabase test db` não conectou. Browser/UAT exige aplicar `0142`–`0145`. Deploy preview e CI real
+  também pendem. `ci:local` só falha no formatter alheio pré-existente
+  `apps/web/e2e/atendimento-historico-chamado.spec.ts`, preservado.
+- **Próximo:** ligar Docker e rodar `supabase test db`; aplicar migrations/Edge Function em ambiente
+  de preview; executar Playwright/UAT como `cliente-sindico`; só então marcar E09 verificado.

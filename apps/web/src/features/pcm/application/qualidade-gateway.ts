@@ -1,4 +1,9 @@
 import type {
+  DestinoItemAssessment,
+  MotivoAssessment,
+  ResponsavelDestino,
+} from "../domain/assessment";
+import type {
   ConformidadeSpda,
   GrauRisco,
   InspecaoStatus,
@@ -50,6 +55,10 @@ export interface InspecaoResumo {
   art: string | null;
   condicoes: string | null;
   anexos: MidiaItem[];
+  /** E01-S90: assessment é uma inspeção com `eAssessment=true` — mesma tabela, sinalizador
+   * distinto (design.md D1). `motivoAssessment` só é preenchido quando `eAssessment` é `true`. */
+  eAssessment: boolean;
+  motivoAssessment: MotivoAssessment | null;
 }
 
 // E01-S73: itens ricos (Parte 2 — Itens de Inspeção). Nada hardcoded — resultado/grauRisco/mídias
@@ -75,6 +84,11 @@ export interface InspecaoItem {
   midias: MidiaItem[];
   responsavelAcao: string | null;
   observacoes: string | null;
+  /** E01-S90 AC-3: destino da derivação (Chamado/Backlog/OS) e responsável — `null` enquanto o
+   * item não foi derivado. `auvoQuestaoChave` é a chave de idempotência do mapeador (D2). */
+  destino: DestinoItemAssessment | null;
+  destinoResponsavel: ResponsavelDestino | null;
+  auvoQuestaoChave: string | null;
 }
 
 export interface CriarInspecaoInput {
@@ -95,6 +109,9 @@ export interface CriarInspecaoInput {
   art?: string | null;
   condicoes?: string | null;
   createdBy: string;
+  /** E01-S90: setado só quando a inspeção nasce como assessment ("Novo assessment"). */
+  eAssessment?: boolean;
+  motivoAssessment?: MotivoAssessment | null;
 }
 
 export interface EditarInspecaoInput extends CriarInspecaoInput {
@@ -123,6 +140,8 @@ export interface CriarInspecaoItemInput {
   responsavelAcao?: string | null;
   observacoes?: string | null;
   createdBy: string;
+  /** E01-S90 D2: chave de idempotência quando o item vem do mapeador de questionário Auvo. */
+  auvoQuestaoChave?: string | null;
 }
 
 export interface EditarInspecaoItemInput extends CriarInspecaoItemInput {
@@ -283,4 +302,22 @@ export interface QualidadeGateway {
   uploadMidiaItem(itemId: string, file: File, tipo: MidiaItem["tipo"]): Promise<MidiaItem>;
   removerMidiaItem(itemId: string, midia: MidiaItem): Promise<void>;
   urlAssinadaMidia(path: string): Promise<string>;
+  // E01-S90: assessment
+  /** AC-2: lê `pcm.auvo_task_snapshots.checklist` da tarefa, mapeia cada resposta em item (D2,
+   * idempotente por `auvo_questao_chave` via upsert) e retorna os itens da inspeção pós-import. */
+  importarQuestionarioAuvo(
+    inspecaoId: string,
+    clientId: string,
+    auvoTaskId: number,
+    userId: string,
+  ): Promise<InspecaoItem[]>;
+  /** AC-3: grava o destino/responsável escolhido no item — chamado após a entidade derivada
+   * (Chamado/OS) já existir. */
+  marcarItemDerivado(
+    itemId: string,
+    destino: DestinoItemAssessment,
+    responsavel: ResponsavelDestino,
+  ): Promise<void>;
+  /** AC-4: assessment mais recente do cliente (`e_assessment=true`), ou `null` se nunca houve um. */
+  obterAssessmentVigente(clientId: string): Promise<InspecaoResumo | null>;
 }

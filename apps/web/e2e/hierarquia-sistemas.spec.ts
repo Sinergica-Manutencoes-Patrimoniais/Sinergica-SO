@@ -96,10 +96,12 @@ test("cria hierarquia Área>Local, instala Item, cria Sistema e confirma breadcr
     .getByText(nomeSistema, { exact: true })
     .locator("xpath=ancestor::section[1]");
   await linhaSistema.getByRole("button", { name: "Itens" }).click();
-  // Itens disponíveis vêm de fetch assíncrono (listarItensDisponiveis) — selecionarPorTexto faz o polling.
-  await selecionarPorTexto(linhaSistema.locator("select"), nomeItem);
-  await linhaSistema.getByRole("button", { name: "Adicionar" }).click();
-  await expect(linhaSistema.getByText(nomeItem, { exact: true })).toBeVisible({ timeout: 10_000 });
+  // E01-S86: seletor checkbox+filtro (substituiu o antigo select+"Adicionar"). Itens disponíveis
+  // vêm de fetch assíncrono — filtra pelo nome, marca o checkbox e salva a composição.
+  await linhaSistema.getByPlaceholder("Filtrar por nome…").fill(nomeItem);
+  await linhaSistema.getByLabel(nomeItem, { exact: true }).check();
+  await linhaSistema.getByRole("button", { name: "Salvar composição" }).click();
+  await expect(linhaSistema.getByLabel(nomeItem, { exact: true })).toBeChecked({ timeout: 10_000 });
 
   // ── AC-6: abre o Item e confirma breadcrumb Cliente>Área>Local + chip do Sistema ───────────
   await page.getByText("PCM · Operação", { exact: true }).first().click();
@@ -131,4 +133,24 @@ test("cria hierarquia Área>Local, instala Item, cria Sistema e confirma breadcr
   const seletorLocalAtivos = page.getByLabel(`Local de ${nomeItem}`);
   await expect(seletorLocalAtivos).toBeVisible({ timeout: 10_000 });
   await expect(seletorLocalAtivos).toHaveValue(/.+/); // já vem preenchido (atribuído via AC-4)
+
+  // ── E01-S86 AC-2/AC-3: aba "Sistemas" na Visão 360 usa o MESMO componente de composição do
+  // PCM — o Item marcado lá aparece já marcado aqui, sem repetir a composição manualmente.
+  await page.getByRole("main").getByRole("button", { name: "Sistemas", exact: true }).click();
+  await expect(page.getByText(nomeSistema, { exact: true })).toBeVisible({ timeout: 10_000 });
+  await page.getByText(nomeSistema, { exact: true }).click();
+  await expect(page.getByLabel(nomeItem, { exact: true })).toBeChecked({ timeout: 10_000 });
+
+  // ── E01-S87 AC-2/AC-3: "Histórico" do Sistema — sem OS vinculada de verdade (Item/Sistema
+  // criados manualmente aqui nunca ganharam auvo_equipment_id via sync real), o estado vazio
+  // aparece sem erro (AC-3, mesma garantia do equipamento).
+  await page.getByText("PCM · Operação", { exact: true }).first().click();
+  await page.getByRole("navigation").getByText("Sistemas", { exact: true }).click();
+  const linhaSistemaHistorico = page
+    .getByText(nomeSistema, { exact: true })
+    .locator("xpath=ancestor::section[1]");
+  await linhaSistemaHistorico.getByRole("button", { name: "Histórico" }).click();
+  await expect(
+    linhaSistemaHistorico.getByText("Nenhuma OS registrada para este sistema.", { exact: true }),
+  ).toBeVisible({ timeout: 10_000 });
 });

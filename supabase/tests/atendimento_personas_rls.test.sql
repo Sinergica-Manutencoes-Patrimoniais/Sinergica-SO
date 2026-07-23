@@ -31,7 +31,12 @@ select throws_ok(
   'tipo fora de chamados/comercial e rejeitado pelo check'
 );
 select lives_ok(
-  $$ insert into atendimento.instancias_agente (instance_id, persona_id, created_by) values ('inst-comercial-1', '36000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000362') $$,
+  $$
+    insert into atendimento.canais_externos (tipo, label, identificador_externo, created_by)
+      values ('evolution', 'Comercial teste', 'inst-comercial-1', '00000000-0000-0000-0000-000000000362');
+    insert into atendimento.instancias_agente (instance_id, persona_id, created_by)
+      values ('inst-comercial-1', '36000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000362');
+  $$,
   'atendimento escrita mapeia instancia pro agente'
 );
 reset role;

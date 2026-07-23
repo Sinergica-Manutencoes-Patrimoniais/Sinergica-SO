@@ -325,8 +325,8 @@ export const RENTABILIDADE: Array<{
     receita: 4200,
     custo: 2380,
     os: [
-      { id: "CH-2301", desc: "Preventiva mensal", horas: 6.5, rate: 42, despesa: 80 },
-      { id: "CH-2318", desc: "Corretiva — bomba", horas: 3.0, rate: 42, despesa: 220 },
+      { id: "OS-2301", desc: "Preventiva mensal", horas: 6.5, rate: 42, despesa: 80 },
+      { id: "OS-2318", desc: "Corretiva — bomba", horas: 3.0, rate: 42, despesa: 220 },
     ],
   },
   {
@@ -335,23 +335,23 @@ export const RENTABILIDADE: Array<{
     custo: 4120,
     alerta: true,
     os: [
-      { id: "CH-2244", desc: "Corretiva — quadro elétrico", horas: 9.0, rate: 42, despesa: 610 },
-      { id: "CH-2295", desc: "Corretiva — iluminação", horas: 5.5, rate: 42, despesa: 340 },
+      { id: "OS-2244", desc: "Corretiva — quadro elétrico", horas: 9.0, rate: 42, despesa: 610 },
+      { id: "OS-2295", desc: "Corretiva — iluminação", horas: 5.5, rate: 42, despesa: 340 },
     ],
   },
   {
     cliente: "Portal Encantos de Parma",
     receita: 3800,
     custo: 1650,
-    os: [{ id: "CH-2280", desc: "Preventiva mensal", horas: 5.0, rate: 42, despesa: 60 }],
+    os: [{ id: "OS-2280", desc: "Preventiva mensal", horas: 5.0, rate: 42, despesa: 60 }],
   },
   {
     cliente: "H2 Sports Bar & Poker",
     receita: 5100,
     custo: 2960,
     os: [
-      { id: "CH-2321", desc: "Preventiva mensal", horas: 7.0, rate: 42, despesa: 190 },
-      { id: "CH-2333", desc: "Vistoria técnica", horas: 2.0, rate: 42, despesa: 40 },
+      { id: "OS-2321", desc: "Preventiva mensal", horas: 7.0, rate: 42, despesa: 190 },
+      { id: "OS-2333", desc: "Vistoria técnica", horas: 2.0, rate: 42, despesa: 40 },
     ],
   },
   {
@@ -359,7 +359,7 @@ export const RENTABILIDADE: Array<{
     receita: 2900,
     custo: 3050,
     alerta: true,
-    os: [{ id: "CH-2270", desc: "Corretiva — vazamento", horas: 8.0, rate: 42, despesa: 480 }],
+    os: [{ id: "OS-2270", desc: "Corretiva — vazamento", horas: 8.0, rate: 42, despesa: 480 }],
   },
 ];
 

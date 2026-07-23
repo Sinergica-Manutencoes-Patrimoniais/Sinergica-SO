@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import type { KpisOrdensServico, OrdemServicoOperacional } from "../domain/ordens-servico";
+import { PESOS_GUTD_PADRAO } from "../domain/priorizacao-backlog";
 import { alterarStatusEmLote, listarBacklogGut, planejarOrdemServico } from "./hub-os";
 import type { HubOsGateway } from "./hub-os-gateway";
+
+const obterPesosGutd = vi.fn(async () => PESOS_GUTD_PADRAO);
 
 const KPIS_ZERADOS: KpisOrdensServico = {
   total: 0,
@@ -14,7 +17,7 @@ const KPIS_ZERADOS: KpisOrdensServico = {
 
 const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional => ({
   id: "os-1",
-  numero: "CH-001",
+  numero: "OS-0001",
   titulo: "Teste",
   descricao: null,
   clienteNome: "Cliente",
@@ -25,6 +28,9 @@ const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional
   gravidade: 3,
   urgencia: 3,
   tendencia: 3,
+  dorCliente: null,
+  observacao: null,
+  origemInspecaoItemId: null,
   auvoTaskId: null,
   auvoSyncStatus: null,
   auvoSyncError: null,
@@ -41,15 +47,16 @@ const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional
 });
 
 describe("hub-os", () => {
-  it("lista backlog GUT ordenado e sem históricos", async () => {
+  it("lista backlog GUTD ordenado (por G/U/T/D ponderados, não mais scorePcm) e sem históricos", async () => {
     const gateway: HubOsGateway = {
       listarOrdensServico: vi.fn(async () => [
-        ordem({ id: "baixa", scorePcm: 8 }),
-        ordem({ id: "finalizada", status: "finalizado", scorePcm: 125 }),
-        ordem({ id: "alta", scorePcm: 80 }),
+        ordem({ id: "baixa", gravidade: 1, urgencia: 1, tendencia: 1 }),
+        ordem({ id: "finalizada", status: "finalizado", gravidade: 5, urgencia: 5, tendencia: 5 }),
+        ordem({ id: "alta", gravidade: 4, urgencia: 5, tendencia: 5 }),
       ]),
       contarKpis: vi.fn(async () => KPIS_ZERADOS),
       alterarStatus: vi.fn(),
+      obterPesosGutd,
     };
 
     expect((await listarBacklogGut(gateway)).map((item) => item.id)).toEqual(["alta", "baixa"]);
@@ -60,6 +67,7 @@ describe("hub-os", () => {
       listarOrdensServico: vi.fn(),
       contarKpis: vi.fn(async () => KPIS_ZERADOS),
       alterarStatus: vi.fn(async (input) => ordem({ id: input.id, status: input.status })),
+      obterPesosGutd,
     };
 
     await planejarOrdemServico(gateway, { id: "os-1", updatedBy: "user-1" });
@@ -79,6 +87,7 @@ describe("hub-os", () => {
         if (input.id === "os-2") throw new Error("RLS negou");
         return ordem({ id: input.id, status: input.status });
       }),
+      obterPesosGutd,
     };
 
     const resultado = await alterarStatusEmLote(
@@ -98,6 +107,7 @@ describe("hub-os", () => {
       listarOrdensServico: vi.fn(),
       contarKpis: vi.fn(async () => KPIS_ZERADOS),
       alterarStatus: vi.fn(async (input) => ordem({ id: input.id, status: input.status })),
+      obterPesosGutd,
     };
 
     const resultado = await alterarStatusEmLote(gateway, ["os-1", "os-2"], "finalizado", "user-1");

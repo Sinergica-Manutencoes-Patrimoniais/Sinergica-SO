@@ -22,11 +22,10 @@ import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.
 import { auvoNaiveToUtc } from "../_shared/auvo/datetime.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 import {
-  contarOsExistentes,
-  formatarNumeroOs,
   montarLinhaOs,
   obterUsuarioSistema,
   type OsStatus,
+  proximosNumerosOs,
   resolverClienteIdsPorAuvoIds,
   resolverFuncionarioIdsPorAuvoIds,
 } from "../_shared/auvo/os-from-task.ts";
@@ -265,14 +264,17 @@ if (import.meta.main) serve(async (req) => {
         }
       }
 
-      const [clienteIdsPorAuvoId, baseCount, systemUserId] = await Promise.all([
+      const [clienteIdsPorAuvoId, numeros, systemUserId] = await Promise.all([
         resolverClienteIdsPorAuvoIds(db, candidatasComCliente.map((c) => c.customerId)),
-        contarOsExistentes(db),
+        // E01-S88: reserva de uma vez o número máximo possível (pode sobrar número não usado se
+        // alguma tarefa for pulada abaixo por cliente ainda não sincronizado — gap aceitável em
+        // sequence, mesmo padrão de qualquer sequence de banco).
+        proximosNumerosOs(db, candidatasComCliente.length),
         obterUsuarioSistema(db),
       ]);
 
       const linhas: Array<Record<string, unknown>> = [];
-      let sequencial = baseCount;
+      let proximoIndiceNumero = 0;
       for (const c of candidatasComCliente) {
         const clienteId = clienteIdsPorAuvoId.get(c.customerId);
         if (!clienteId) {
@@ -280,7 +282,8 @@ if (import.meta.main) serve(async (req) => {
           console.warn(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "cliente ainda não sincronizado no PCM — tarefa pulada, tenta de novo na próxima rodada", taskId: c.taskId, customerId: c.customerId }));
           continue;
         }
-        sequencial++;
+        const numero = numeros[proximoIndiceNumero++];
+        if (!numero) continue;
         const tecnicoFuncionarioId = c.tecnicoAuvoUserId != null
           ? funcionarioIdsPorAuvoId.get(c.tecnicoAuvoUserId) ?? null
           : null;
@@ -297,7 +300,7 @@ if (import.meta.main) serve(async (req) => {
               checkOutAt: c.checkOutAt,
               detalhes: c.detalhes,
             },
-            { clienteId, numero: formatarNumeroOs(sequencial), systemUserId, tecnicoFuncionarioId },
+            { clienteId, numero, systemUserId, tecnicoFuncionarioId },
           ),
         );
       }
