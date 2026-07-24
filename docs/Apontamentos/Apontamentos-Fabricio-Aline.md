@@ -28,9 +28,10 @@ nome do arquivo no campo Imagem — ex.: `tela-erro-2026-07-14.png`.
 ```
 ### 2026-07-14 — Exemplo 
 - Quem: Fabrício
-- Tipo: sugestão
-- O que encontrei: no cadastro de ferramenta, não dá pra ver o código dela — só o nome.
-- Imagem: (nenhuma)
+- Tipo: Bug
+- Erro ao fazer upload de planilha de inspeção.
+- Imagem: <img width="1910" height="1021" alt="image" src="https://github.com/user-attachments/assets/a8b6b43a-887f-44ac-a72f-aa69b8e2daba" />
+
 ```
 
 ---
