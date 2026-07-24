@@ -26,7 +26,7 @@ nome do arquivo no campo Imagem — ex.: `tela-erro-2026-07-14.png`.
 ```
 
 ```
-### 2026-07-14 — Exemplo 
+### 2026-07-24  
 - Quem: Fabrício
 - Tipo: Bug
 - Erro ao fazer upload de planilha de inspeção.
