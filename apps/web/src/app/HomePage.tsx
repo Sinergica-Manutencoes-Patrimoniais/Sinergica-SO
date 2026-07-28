@@ -13,7 +13,6 @@ import {
   ClipboardList,
   Clock,
   FileBarChart,
-  FileBarChart2,
   FileText,
   Gauge,
   HardHat,
@@ -52,6 +51,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
+import { AreaClienteAdminPage } from "../features/area-cliente/pages/AreaClienteAdminPage";
 import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
 import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
 import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
@@ -81,6 +81,7 @@ import { RentabilidadePage as FinanceiroRentabilidadePage } from "../features/fi
 import type { GuiaView } from "../features/guia/GuiaRouter";
 import { GuiaRouter } from "../features/guia/GuiaRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
+import { AgendaTecnicoPage } from "../features/pcm/pages/AgendaTecnicoPage";
 import { ApontamentoHorasPage } from "../features/pcm/pages/ApontamentoHorasPage";
 import { AssessmentPage } from "../features/pcm/pages/AssessmentPage";
 import { BacklogGutPage } from "../features/pcm/pages/BacklogGutPage";
@@ -105,7 +106,6 @@ import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
-import { ServicosPage } from "../features/pcm/pages/ServicosPage";
 import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
@@ -147,12 +147,12 @@ type PcmView =
   | "cliente-grupos"
   | "equipamentos"
   | "equipes"
+  | "agenda-tecnico"
   | "ferramentas"
   | "ferramentas-por-tecnico"
   | "funcionarios"
   | "tipos-tarefa"
   | "segmentos"
-  | "servicos"
   | "palavras-chave"
   | "equipamento-categorias"
   | "chamados"
@@ -372,7 +372,6 @@ const PCM_NAV: NavGroup[] = [
       { label: "Clientes", icon: Building2, view: "clientes" },
       { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
       { label: "Sistemas", icon: Link2, view: "sistemas" },
-      { label: "Serviços", icon: Briefcase, view: "servicos" },
       { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
     ],
   },
@@ -384,6 +383,7 @@ const PCM_NAV: NavGroup[] = [
     items: [
       { label: "Ferramentas", icon: Package, view: "ferramentas" },
       { label: "Equipes", icon: Users, view: "equipes" },
+      { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "Funcionários", icon: UserCog, view: "funcionarios" },
       { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
       { label: "Marcações de Cliente", icon: Tag, view: "cliente-marcacoes" },
@@ -405,8 +405,6 @@ const PCM_NAV: NavGroup[] = [
   {
     titulo: "RELATÓRIOS",
     items: [
-      { label: "Relatório Diário", icon: FileText },
-      { label: "Relatório Mensal", icon: FileBarChart2 },
       { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
       { label: "Apontamento de Horas", icon: Clock, view: "apontamento-horas" },
     ],
@@ -575,7 +573,7 @@ export function HomePage() {
   const [atendimentoView, setAtendimentoView] = useState<AtendimentoView>("inbox");
   // Sub-navegação do PCM (Task 18/E01-S12) — mesmo padrão useState de abas, sem lib de rotas.
   const [pcmView, setPcmView] = useState<PcmView>("dashboard");
-  // Sub-navegação do Financeiro (protótipo navegável, dados fictícios — features/financeiro/mock/).
+  // Sub-navegação do Financeiro.
   const [financeiroView, setFinanceiroView] = useState<FinanceiroView>("dashboard");
   // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
   const [guiaView, setGuiaView] = useState<GuiaView>("visao-geral");
@@ -1090,6 +1088,8 @@ export function HomePage() {
               <SistemasPage />
             ) : pcmView === "equipes" ? (
               <EquipesPage />
+            ) : pcmView === "agenda-tecnico" ? (
+              <AgendaTecnicoPage />
             ) : pcmView === "ferramentas" ? (
               <FerramentasPage />
             ) : pcmView === "ferramentas-por-tecnico" ? (
@@ -1103,8 +1103,6 @@ export function HomePage() {
               <TiposInspecaoPage />
             ) : pcmView === "chamados" ? (
               <ChamadosPage />
-            ) : pcmView === "servicos" ? (
-              <ServicosPage />
             ) : pcmView === "tipos-tarefa" ? (
               <TiposTarefaPage />
             ) : pcmView === "segmentos" ? (
@@ -1222,6 +1220,13 @@ export function HomePage() {
             ) : (
               <FinanceiroMockRouter view={financeiroView} />
             )
+          ) : activeModulo === "area-cliente" ? (
+            <AreaClienteAdminPage
+              onAbrirClientes={() => {
+                navegarModulo("pcm");
+                irParaPcmView("clientes");
+              }}
+            />
           ) : activeModulo === "guia" ? (
             <GuiaRouter view={guiaView} />
           ) : modulo ? (
