@@ -40,6 +40,12 @@ import type {
   QualidadeClienteResumo,
   ResultadoEquipamentos,
 } from "../application/cliente-360-gateway";
+import {
+  criarResponsavel,
+  editarResponsavel,
+  listarResponsaveis,
+  removerResponsavel,
+} from "../application/cliente-responsaveis";
 import { editarCliente } from "../application/clientes-crud";
 import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao-cliente";
 import { BoardAtivos } from "../components/BoardAtivos";
@@ -52,7 +58,9 @@ import { PainelHistorico } from "../components/PainelHistorico";
 import { PainelItensDoCliente } from "../components/PainelItensDoCliente";
 import { PainelSistemasCliente } from "../components/PainelSistemasCliente";
 import { MOTIVO_ASSESSMENT_LABEL } from "../domain/assessment";
+import type { ResponsavelCliente } from "../domain/cliente-responsaveis";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
+import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
 import { EstruturaClientePage } from "./EstruturaClientePage";
 
 type Estado =
@@ -259,6 +267,7 @@ export function VisaoClientePage({
           qualidade={qualidade}
           grupos={grupos}
           onAbrirOs={onAbrirOs}
+          temEscrita={temEscrita}
         />
       )}
 
@@ -432,6 +441,7 @@ function Resumo360({
   qualidade,
   grupos,
   onAbrirOs,
+  temEscrita,
 }: {
   cliente: ClienteHeader;
   metricas: Cliente360Metricas;
@@ -440,6 +450,7 @@ function Resumo360({
   qualidade: QualidadeClienteResumo;
   grupos: GrupoClienteResumo[];
   onAbrirOs?: (osId: string) => void;
+  temEscrita: boolean;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -464,6 +475,8 @@ function Resumo360({
         <PainelContatos cliente={cliente} />
         <PainelGrupos grupos={grupos} />
       </div>
+
+      <PainelResponsaveis clienteId={cliente.id} temEscrita={temEscrita} />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
         <TimelineCliente eventos={eventos} compacta onAbrirOs={onAbrirOs} />
@@ -538,6 +551,209 @@ function PainelGrupos({ grupos }: { grupos: GrupoClienteResumo[] }) {
         )}
       </div>
     </section>
+  );
+}
+
+/** E01-S103: responsável/representante do cliente (síndico, gerente predial...) — cadastro local
+ * editável, distinto de `PainelContatos` (read-only, sincronizado do Auvo). Pode ter mais de um. */
+function PainelResponsaveis({
+  clienteId,
+  temEscrita,
+}: {
+  clienteId: string;
+  temEscrita: boolean;
+}) {
+  const [responsaveis, setResponsaveis] = useState<ResponsavelCliente[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [editando, setEditando] = useState<ResponsavelCliente | "novo" | null>(null);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    try {
+      setResponsaveis(await listarResponsaveis(supabaseClienteResponsaveisAdapter, clienteId));
+    } finally {
+      setCarregando(false);
+    }
+  }, [clienteId]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  async function remover(id: string) {
+    await removerResponsavel(supabaseClienteResponsaveisAdapter, id);
+    await carregar();
+  }
+
+  return (
+    <section className="rounded-[8px] border border-line bg-card">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Responsáveis</h3>
+          <p className="mt-0.5 text-xs text-ink-3">
+            Representantes do cliente (síndico, gerente predial...) — cadastro local
+          </p>
+        </div>
+        {temEscrita && (
+          <button type="button" onClick={() => setEditando("novo")} className="btn-secondary">
+            <UserPlus className="h-4 w-4" />
+            Adicionar
+          </button>
+        )}
+      </div>
+      {carregando ? (
+        <div className="px-5 py-6 text-center text-sm text-ink-3">Carregando…</div>
+      ) : responsaveis.length === 0 ? (
+        <div className="px-5 py-6 text-center text-sm text-ink-3">
+          Nenhum responsável cadastrado.
+        </div>
+      ) : (
+        <div className="divide-y divide-line-soft">
+          {responsaveis.map((responsavel) => (
+            <div key={responsavel.id} className="flex items-center justify-between gap-3 px-5 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-ink">
+                  {responsavel.nome}
+                  {responsavel.papel && (
+                    <span className="ml-1.5 text-xs font-normal text-ink-3">
+                      · {responsavel.papel}
+                    </span>
+                  )}
+                </p>
+                {responsavel.contato && (
+                  <p className="mt-0.5 text-xs text-ink-3">{responsavel.contato}</p>
+                )}
+              </div>
+              {temEscrita && (
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditando(responsavel)}
+                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => remover(responsavel.id)}
+                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+                  >
+                    Remover
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {editando && (
+        <ResponsavelModal
+          clienteId={clienteId}
+          responsavel={editando === "novo" ? null : editando}
+          onCancel={() => setEditando(null)}
+          onSalvar={async (dados) => {
+            if (editando === "novo") {
+              await criarResponsavel(supabaseClienteResponsaveisAdapter, dados);
+            } else {
+              await editarResponsavel(supabaseClienteResponsaveisAdapter, editando.id, dados);
+            }
+            setEditando(null);
+            await carregar();
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+function ResponsavelModal({
+  clienteId,
+  responsavel,
+  onCancel,
+  onSalvar,
+}: {
+  clienteId: string;
+  responsavel: ResponsavelCliente | null;
+  onCancel: () => void;
+  onSalvar: (dados: {
+    clienteId: string;
+    nome: string;
+    papel: string | null;
+    contato: string | null;
+  }) => Promise<void>;
+}) {
+  const [nome, setNome] = useState(responsavel?.nome ?? "");
+  const [papel, setPapel] = useState(responsavel?.papel ?? "");
+  const [contato, setContato] = useState(responsavel?.contato ?? "");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function salvar() {
+    setSalvando(true);
+    setErro(null);
+    try {
+      await onSalvar({ clienteId, nome, papel: papel || null, contato: contato || null });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível salvar o responsável.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <dialog open className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <h2 className="text-lg font-semibold text-ink">
+          {responsavel ? "Editar responsável" : "Adicionar responsável"}
+        </h2>
+        <div className="mt-4 grid gap-3">
+          <label className="text-sm text-ink-2">
+            Nome *
+            <input
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+          <label className="text-sm text-ink-2">
+            Papel
+            <input
+              value={papel}
+              onChange={(e) => setPapel(e.target.value)}
+              placeholder="Ex: Síndico, Gerente predial"
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+          <label className="text-sm text-ink-2">
+            Contato
+            <input
+              value={contato}
+              onChange={(e) => setContato(e.target.value)}
+              placeholder="Telefone ou e-mail"
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+        </div>
+        {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-line px-4 py-2 text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={salvando || !nome.trim()}
+            onClick={salvar}
+            className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {salvando ? "Salvando…" : "Salvar"}
+          </button>
+        </div>
+      </div>
+    </dialog>
   );
 }
 
