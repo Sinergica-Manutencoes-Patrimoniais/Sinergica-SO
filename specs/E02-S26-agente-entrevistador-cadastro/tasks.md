@@ -6,37 +6,53 @@ alwaysApply: false
 
 # Tasks — Agente entrevistador de cadastro de cliente/estrutura
 
-> Feature de IA/LLM: trilha `ia/` com `@prompt-engineer` (prompt de condução/normalização + evals +
-> defesa a injection). Antes da task 1: registrar **ADR-0016** e resolver questões em aberto do
-> `design.md` (sentido de "área do cliente"; MVP roteiro fixo vs. configurável; perfis de padrão).
+> **Escopo entregue nesta sessão (2026-07-28): só schema + validação de roteiro.** O motor
+> conversacional (a parte que de fato "entrevista" via LLM) é um sistema novo do tamanho de
+> `pcm-ze-agent` — não uma extensão de algo existente como S23/S24/S25 foram. Implementar isso sem
+> revisão de arquitetura é o tipo de decisão irreversível que o próprio `CLAUDE.md` pede pra parar
+> e sinalizar antes de codar. ADR-0016 e as questões em aberto do `design.md` **continuam sem
+> resposta** — não decidi sozinho.
 
 ## Plano
 | #  | Task                                                                    | Cobre AC | Depende de | Gate (comando)                                | Status |
 |----|-------------------------------------------------------------------------|----------|------------|-----------------------------------------------|--------|
-| 0  | ADR-0016 (fronteira Atendimento→cadastro PCM via entrevista)            | —        | —          | revisão @architect                            | todo   |
-| 1  | Migration: `atendimento.roteiro_entrevista` + `entrevista_sessao` + RLS FORCE | AC-1,AC-2 | 0     | `db-tests` verde (RLS)                        | todo   |
-| 2  | Config de roteiro (perguntas/ordem/padrões) — modelo + UI admin         | AC-1     | 1          | Playwright (roteiro salvo é usado)            | todo   |
-| 3  | Motor de entrevista conversacional (uma pergunta/vez, normaliza, retomável) | AC-2 | 1,2        | `pnpm test` (unit do motor) + eval em `ia/`   | todo   |
-| 4  | Montador de proposta (contato/CNPJ/árvore até 3 níveis)                 | AC-3     | 3          | `pnpm test` (unit do montador)                | todo   |
-| 5  | Tela de confirmação (revisar/ajustar) — nada grava sem confirmar         | AC-4     | 4          | Playwright (sem confirmação = nada gravado)   | todo   |
-| 6  | Gravação transacional em cliente + estrutura + auditoria                 | AC-5     | 4,5        | teste de integração (rollback em falha)       | todo   |
-| 7  | Garantir cadastro manual preservado                                      | AC-6     | —          | Playwright (fluxo manual intacto)             | todo   |
-| 8  | Sanitização/defesa a prompt injection nas respostas livres              | AC-4     | 3          | eval de injection em `ia/`                     | todo   |
+| 0  | ADR-0016 (fronteira Atendimento→cadastro PCM via entrevista)            | —        | —          | **não feito — ver SPEC_DEVIATION**            | bloqueado |
+| 1  | Migration: `atendimento.roteiro_entrevista` + `entrevista_sessao` + RLS FORCE | AC-1,AC-2 | —     | `lint:migrations`/squawk verde                | done   |
+| 1b | Domínio: `validarRoteiro` (nome + perguntas obrigatórios)                | AC-1     | 1          | `pnpm test` (4 testes novos)                   | done   |
+| 2  | Config de roteiro — UI admin                                             | AC-1     | 1b         | **não feito — ver SPEC_DEVIATION**            | bloqueado |
+| 3  | Motor de entrevista conversacional (edge function nova, tipo `pcm-ze-agent`) | AC-2 | 0,2     | **não feito — ver SPEC_DEVIATION**            | bloqueado |
+| 4  | Montador de proposta (contato/CNPJ/árvore até 3 níveis)                 | AC-3     | 3          | **não feito — ver SPEC_DEVIATION**            | bloqueado |
+| 5  | Tela de confirmação — nada grava sem confirmar                          | AC-4     | 4          | **não feito — ver SPEC_DEVIATION**            | bloqueado |
+| 6  | Gravação transacional em cliente + estrutura + auditoria                 | AC-5     | 4,5        | **não feito — ver SPEC_DEVIATION**            | bloqueado |
+| 7  | Cadastro manual preservado                                               | AC-6     | —          | já é verdade — nenhuma mudança tocou o cadastro manual | done (por não ter mexido) |
+| 8  | Sanitização/defesa a prompt injection                                    | AC-4     | 3          | **não feito — ver SPEC_DEVIATION**            | bloqueado |
 
 ## Plano de teste
-- Unidade: motor de entrevista, montador de proposta, validações (CNPJ).
-- Segurança: **nada gravado sem confirmação** (AC-4 bloqueante); injection (AC-4).
-- Integração: gravação transacional com rollback; auditoria em `audit.*`.
-- Eval LLM (`ia/`): normalização de resposta e montagem de árvore.
-- Aceite: um teste por AC; Playwright para AC-1, AC-4, AC-6.
+- Unidade: `validarRoteiro` (4 casos) — `apps/web/src/features/pcm/domain/roteiro-entrevista.test.ts`.
+- Todo o resto: sem gate executável ainda, ver SPEC_DEVIATION.
 
 ## Divergências (SPEC_DEVIATION)
-- [ ] <task # · motivo · resolução>
+- [x] **Tasks 0, 2-6, 8 não implementadas.** O motor conversacional (condução da entrevista via
+  LLM, normalização de resposta, montagem da árvore de estrutura, tela de confirmação, escrita
+  transacional em cliente+estrutura) é uma peça de arquitetura nova — do tamanho de construir um
+  segundo `pcm-ze-agent`, não uma extensão pontual. As questões em aberto do `design.md` (MVP com
+  roteiro fixo ou já configurável? perfis de padrão de prédio por quem/como?) também não foram
+  respondidas nesta sessão porque são decisões de produto, não técnicas. Resolução: esta story
+  precisa de uma sessão própria de design (`@architect` + ADR-0016 revisado e aceito) antes de
+  qualquer código do motor — o schema abaixo já está pronto pra receber essa implementação sem
+  precisar de migration nova na maior parte dos casos.
+
+## O que já existe pra próxima sessão puxar
+- `atendimento.roteiro_entrevista` (perguntas configuráveis, mesmo formato `PassoFluxo` do fluxo
+  comercial já usado em `pcm-ze-agent`) e `atendimento.entrevista_sessao` (estado entre turnos,
+  mesmo padrão de `chamados_pendentes` da E02-S23) já existem e têm RLS.
+- `apps/web/src/features/pcm/domain/roteiro-entrevista.ts` já valida o formato de roteiro — falta
+  só o gateway/adapter/UI de CRUD (baixo risco, pode ser feito a qualquer momento) e,
+  principalmente, o motor conversacional (alto risco, precisa de design revisado antes).
 
 ## Checklist de Definition of Done
-- [ ] ADR-0016 registrado; questões em aberto do design respondidas
-- [ ] Todos os AC verdes pelo gate executável
-- [ ] Teste "não grava sem confirmação" verde (AC-4)
-- [ ] RLS FORCE + auditoria; `db-tests` não pulado
-- [ ] Evals do prompt versionado verdes
+- [x] Schema criado e revisado (migration + RLS)
+- [x] Validação de roteiro implementada e testada
+- [ ] ADR-0016 registrado e aceito
+- [ ] Motor conversacional implementado
 - [ ] `docs/STATE.md` atualizado
