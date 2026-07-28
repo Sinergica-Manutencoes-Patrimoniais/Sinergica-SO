@@ -9,7 +9,7 @@ alwaysApply: false
 > **ADRs são imutáveis.** Este ADR **substitui o racional de numeração de OS** estabelecido em
 > E01-S88 (sequence `pcm.fn_proximo_numero_os`, prefixo `OS-`).
 
-**Status:** Proposto
+**Status:** Aceito (confirmado por Lucas em 2026-07-28)
 **Data:** 2026-07-28
 **Decisores:** Lucas Azevedo, Fabrício Medeiros, @architect
 **Relacionados:** E01-S99 (spec/design/product), E01-S88 (chamados-entidade), ADR-0001
