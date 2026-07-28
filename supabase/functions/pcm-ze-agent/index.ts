@@ -15,6 +15,7 @@ import {
   interpretarConfirmacao,
   montarResumoPendentes,
 } from "../_shared/confirmacao-texto.ts";
+import { comporContextoCliente } from "../_shared/memoria-cliente.ts";
 import {
   avaliarMotivoHandoff,
   comporPromptPersona,
@@ -252,8 +253,16 @@ async function processarChamados(
   const conhecimentoRag = persona.rag_enabled
     ? await buscarConhecimentoRelevante(db, persona.id, contexto)
     : "";
+  // E02-S24: alma+resumo SEMPRE buscados pelo `config.client_id` desta conversa — nunca de outro
+  // cliente (AC-4, isolamento). `comporContextoCliente` só concatena o que já veio filtrado.
+  const memoriaCliente = await buscarMemoriaCliente(db, config.client_id);
   const extraido = await extrairChamadoViaOpenRouter(
-    comporPromptPersona(persona.prompt_sistema, persona.base_conhecimento, conhecimentoRag),
+    comporPromptPersona(
+      persona.prompt_sistema,
+      persona.base_conhecimento,
+      conhecimentoRag,
+      comporContextoCliente(memoriaCliente.alma, memoriaCliente.resumo),
+    ),
     contexto,
     config.client_id,
     remoteJid,
@@ -798,6 +807,24 @@ function personaDisponivelAgora(persona: PersonaRuntime, agora: Date): boolean {
   if (!persona.janela_inicio || !persona.janela_fim) return true;
   const atual = `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`;
   return atual >= persona.janela_inicio.slice(0, 5) && atual <= persona.janela_fim.slice(0, 5);
+}
+
+/** E02-S24 AC-1/AC-4: alma+resumo SEMPRE filtrados por `clienteId` — nunca lidos "de todos os
+ * clientes". `.maybeSingle()` porque cliente novo ainda não tem linha (fallback `null`, sem erro). */
+async function buscarMemoriaCliente(
+  db: UntypedSupabaseClient,
+  clienteId: string,
+): Promise<{ alma: string | null; resumo: string | null }> {
+  const [{ data: alma, error: almaError }, { data: resumo, error: resumoError }] = await Promise.all([
+    db.schema("atendimento").from("cliente_alma").select("conteudo").eq("cliente_id", clienteId).maybeSingle(),
+    db.schema("atendimento").from("cliente_memoria_resumo").select("resumo").eq("cliente_id", clienteId).maybeSingle(),
+  ]);
+  if (almaError) throw almaError;
+  if (resumoError) throw resumoError;
+  return {
+    alma: (alma?.conteudo as string | null) ?? null,
+    resumo: (resumo?.resumo as string | null) ?? null,
+  };
 }
 
 async function buscarConhecimentoRelevante(

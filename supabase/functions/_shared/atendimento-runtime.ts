@@ -57,12 +57,17 @@ export function avaliarMotivoHandoff(input: {
   return null;
 }
 
+/** E02-S24: `contextoCliente` (alma + resumo de memória, já resolvidos pelo `clienteId` da
+ * conversa) é opcional — persona sem cliente vinculado (ex.: agente comercial) não passa nada.
+ * AC-4: isolamento é responsabilidade de quem BUSCA o dado (sempre por `clienteId` específico) —
+ * esta função só concatena o que já veio pronto, nunca mistura clientes. */
 export function comporPromptPersona(
   promptSistema: string,
   baseConhecimento: string | null,
   conhecimentoRag: string,
+  contextoCliente?: string | null,
 ): string {
-  const conhecimento = [baseConhecimento, conhecimentoRag]
+  const conhecimento = [baseConhecimento, conhecimentoRag, contextoCliente]
     .map((parte) => parte?.trim())
     .filter((parte): parte is string => Boolean(parte))
     .join("\n\n");

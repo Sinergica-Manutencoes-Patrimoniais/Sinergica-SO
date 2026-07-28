@@ -40,6 +40,7 @@ import type {
   QualidadeClienteResumo,
   ResultadoEquipamentos,
 } from "../application/cliente-360-gateway";
+import { obterAlma, salvarAlma } from "../application/cliente-alma";
 import {
   criarResponsavel,
   editarResponsavel,
@@ -67,6 +68,7 @@ import { MOTIVO_ASSESSMENT_LABEL } from "../domain/assessment";
 import type { ResponsavelCliente } from "../domain/cliente-responsaveis";
 import type { AlocacaoFerramentaCliente } from "../domain/ferramenta-alocacao-cliente";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
+import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
 import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
 import { supabaseFerramentaAlocacaoClienteAdapter } from "../infrastructure/supabase-ferramenta-alocacao-cliente-adapter";
 import { EstruturaClientePage } from "./EstruturaClientePage";
@@ -333,7 +335,9 @@ export function VisaoClientePage({
         <PainelFinanceiro cliente={cliente} backlog={backlog} historico={historico} />
       )}
 
-      {aba === "comunicacao" && <PainelComunicacao cliente={cliente} eventos={eventos} />}
+      {aba === "comunicacao" && (
+        <PainelComunicacao cliente={cliente} eventos={eventos} temEscrita={temEscrita} />
+      )}
     </div>
   );
 }
@@ -1335,25 +1339,30 @@ function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
 function PainelComunicacao({
   cliente,
   eventos,
+  temEscrita,
 }: {
   cliente: ClienteHeader;
   eventos: Cliente360Evento[];
+  temEscrita: boolean;
 }) {
   const comunicacao = eventos.filter((evento) => evento.tipo === "whatsapp");
   return (
-    <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
-      <h3 className="text-sm font-semibold text-ink">Comunicação</h3>
-      <div className="mt-4 grid gap-3 text-sm">
-        <ResumoLinha label="Telefone" value={cliente.contatoTelefone ?? "Não informado"} />
-        <ResumoLinha label="Email" value={cliente.contatoEmail ?? "Não informado"} />
-        <ResumoLinha label="Mensagens vinculadas" value={String(comunicacao.length)} />
-      </div>
-      {cliente.observacoes && (
-        <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
-          {cliente.observacoes}
+    <div className="flex flex-col gap-4">
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+        <h3 className="text-sm font-semibold text-ink">Comunicação</h3>
+        <div className="mt-4 grid gap-3 text-sm">
+          <ResumoLinha label="Telefone" value={cliente.contatoTelefone ?? "Não informado"} />
+          <ResumoLinha label="Email" value={cliente.contatoEmail ?? "Não informado"} />
+          <ResumoLinha label="Mensagens vinculadas" value={String(comunicacao.length)} />
         </div>
-      )}
-    </section>
+        {cliente.observacoes && (
+          <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+            {cliente.observacoes}
+          </div>
+        )}
+      </section>
+      <PainelAlmaCliente clienteId={cliente.id} temEscrita={temEscrita} />
+    </div>
   );
 }
 
@@ -1429,6 +1438,92 @@ function PainelFinanceiro({
         </p>
       </section>
     </div>
+  );
+}
+
+/** E02-S24: "alma" do cliente — particularidades de comunicação que o Zé consome como contexto
+ * (ex.: "síndico prefere áudio, é direto"). Texto livre, editável; isolado por `clienteId`. */
+function PainelAlmaCliente({
+  clienteId,
+  temEscrita,
+}: {
+  clienteId: string;
+  temEscrita: boolean;
+}) {
+  const { user } = useAuth();
+  const [conteudo, setConteudo] = useState("");
+  const [editando, setEditando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    obterAlma(supabaseClienteAlmaAdapter, clienteId)
+      .then(setConteudo)
+      .finally(() => setCarregando(false));
+  }, [clienteId]);
+
+  async function salvar() {
+    if (!user) return;
+    setSalvando(true);
+    setErro(null);
+    try {
+      await salvarAlma(supabaseClienteAlmaAdapter, clienteId, conteudo, user.id);
+      setEditando(false);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Alma do cliente</h3>
+          <p className="mt-0.5 text-xs text-ink-3">
+            Particularidades de comunicação que o Zé usa como contexto (ex.: "prefere áudio, é
+            direto")
+          </p>
+        </div>
+        {temEscrita && !editando && (
+          <button type="button" onClick={() => setEditando(true)} className="btn-secondary">
+            Editar
+          </button>
+        )}
+      </div>
+      <div className="mt-3">
+        {carregando ? (
+          <p className="text-sm text-ink-3">Carregando…</p>
+        ) : editando ? (
+          <div className="flex flex-col gap-2">
+            <textarea
+              value={conteudo}
+              onChange={(e) => setConteudo(e.target.value)}
+              className="input min-h-24 w-full resize-y"
+              placeholder="Ex: Síndico prefere áudio a texto, é direto e não gosta de rodeio."
+            />
+            {erro && <p className="text-sm text-red-600">{erro}</p>}
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setEditando(false)} className="btn-secondary">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={salvando}
+                onClick={salvar}
+                className="h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              >
+                {salvando ? "Salvando…" : "Salvar"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-ink-2">{conteudo || "Nenhuma alma cadastrada ainda."}</p>
+        )}
+      </div>
+    </section>
   );
 }
 
