@@ -36,4 +36,14 @@ export interface ChamadosGateway {
   /** E01-S89: histórico de conversa anexado pelo Atendimento — leitura direta de
    * `atendimento.historico_chamado_snapshots`, sem importar código de `features/atendimento/`. */
   listarHistoricoAtendimento(chamadoId: string): Promise<HistoricoAtendimentoChamado[]>;
+  /** E01-S101 AC-3: define/reagenda a data planejada — `incrementarReplanejamento` já vem
+   * calculado pelo caso de uso (`deveIncrementarReplanejamento`), o adapter só persiste. */
+  definirDataPlanejada(
+    chamadoId: string,
+    dataPlanejada: string,
+    incrementarReplanejamento: boolean,
+    userId: string,
+  ): Promise<void>;
+  /** E01-S101 AC-4: marca a execução real — SLA conta `createdAt` → esta data. */
+  marcarExecucao(chamadoId: string, dataExecucao: string, userId: string): Promise<void>;
 }

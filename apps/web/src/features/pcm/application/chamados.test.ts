@@ -10,6 +10,7 @@ const CHAMADO_ABERTO: Chamado = {
   clienteId: "cli-1",
   titulo: "Vazamento no térreo",
   descricao: "Água acumulando perto da garagem",
+  local: null,
   origem: "manual",
   status: "aberto",
   solicitante: null,
@@ -17,6 +18,9 @@ const CHAMADO_ABERTO: Chamado = {
   cancelamentoJustificativa: null,
   cancelamentoAnexoPath: null,
   createdAt: "2026-07-21T10:00:00Z",
+  dataPlanejada: null,
+  dataExecucao: null,
+  replanejamentos: 0,
 };
 
 function gatewayChamadosFake(): ChamadosGateway {
@@ -28,6 +32,8 @@ function gatewayChamadosFake(): ChamadosGateway {
     cancelar: vi.fn(async () => undefined),
     uploadAnexoCancelamento: vi.fn(async () => "cha-1/print.png"),
     listarHistoricoAtendimento: vi.fn(async () => []),
+    definirDataPlanejada: vi.fn(async () => undefined),
+    marcarExecucao: vi.fn(async () => undefined),
   };
 }
 

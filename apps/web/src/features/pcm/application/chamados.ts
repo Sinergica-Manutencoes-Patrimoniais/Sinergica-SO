@@ -1,5 +1,7 @@
 import {
+  deveIncrementarReplanejamento,
   validarCancelamento,
+  validarDataExecucao,
   validarNovoChamado,
   validarTransicaoParaOs,
 } from "../domain/chamados";
@@ -51,6 +53,28 @@ export async function gerarOsDoChamado(
   });
   await gatewayChamados.marcarStatusComOs(chamado.id, destino, criada.id, userId);
   return criada;
+}
+
+/** E01-S101 AC-3: decide se conta como replanejamento (regra de domínio) antes de persistir. */
+export async function definirDataPlanejadaChamado(
+  gateway: ChamadosGateway,
+  chamado: Chamado,
+  novaDataPlanejada: string,
+  userId: string,
+): Promise<void> {
+  const incrementar = deveIncrementarReplanejamento(chamado.dataPlanejada, novaDataPlanejada);
+  await gateway.definirDataPlanejada(chamado.id, novaDataPlanejada, incrementar, userId);
+}
+
+/** E01-S101 AC-4: valida que a execução não é anterior à abertura antes de persistir. */
+export async function marcarExecucaoChamado(
+  gateway: ChamadosGateway,
+  chamado: Chamado,
+  dataExecucao: string,
+  userId: string,
+): Promise<void> {
+  validarDataExecucao(chamado.createdAt, dataExecucao);
+  await gateway.marcarExecucao(chamado.id, dataExecucao, userId);
 }
 
 /** AC-4: valida a justificativa (obrigatória) antes do round-trip; `anexo` já vem upado (se houver). */

@@ -9,8 +9,10 @@ import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import {
   cancelarChamado,
   criarChamado,
+  definirDataPlanejadaChamado,
   gerarOsDoChamado,
   listarChamados,
+  marcarExecucaoChamado,
 } from "../application/chamados";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { HistoricoAtendimentoChamado } from "../components/HistoricoAtendimentoChamado";
@@ -50,6 +52,7 @@ export function ChamadosPage() {
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [dadosOs, setDadosOs] = useState<DadosAberturaOs | null>(null);
   const [historicoAbertoId, setHistoricoAbertoId] = useState<string | null>(null);
+  const [detalheAbertoId, setDetalheAbertoId] = useState<string | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -91,7 +94,14 @@ export function ChamadosPage() {
   async function confirmarGerarOs(
     chamado: Chamado,
     destino: "convertido_os" | "backlog",
-    campos: { tipoTarefaId: string; tecnicoId: string | null; dataPrevista: string | null },
+    campos: {
+      tipoTarefaId: string;
+      tecnicoId: string | null;
+      dataPrevista: string | null;
+      gravidade: number;
+      urgencia: number;
+      tendencia: number;
+    },
   ) {
     if (!user) return;
     setErroAcao(null);
@@ -102,9 +112,9 @@ export function ChamadosPage() {
       {
         categoria: "corretiva",
         prioridade: "media",
-        gravidade: 3,
-        urgencia: 3,
-        tendencia: 3,
+        gravidade: campos.gravidade,
+        urgencia: campos.urgencia,
+        tendencia: campos.tendencia,
         dorCliente: null,
         observacao: null,
         localDescricao: null,
@@ -127,6 +137,30 @@ export function ChamadosPage() {
     await cancelarChamado(supabaseChamadosAdapter, chamado, justificativa, anexo, user.id);
     setModal(null);
     await carregar();
+  }
+
+  async function salvarDataPlanejada(chamado: Chamado, novaData: string) {
+    if (!user) return;
+    setErroAcao(null);
+    try {
+      await definirDataPlanejadaChamado(supabaseChamadosAdapter, chamado, novaData, user.id);
+      await carregar();
+    } catch (error) {
+      setErroAcao(
+        error instanceof Error ? error.message : "Não foi possível salvar o planejamento.",
+      );
+    }
+  }
+
+  async function salvarExecucao(chamado: Chamado, dataExecucao: string) {
+    if (!user) return;
+    setErroAcao(null);
+    try {
+      await marcarExecucaoChamado(supabaseChamadosAdapter, chamado, dataExecucao, user.id);
+      await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível marcar a execução.");
+    }
   }
 
   if (permissoesCarregando) {
@@ -249,6 +283,20 @@ export function ChamadosPage() {
                 <button
                   type="button"
                   onClick={() =>
+                    setDetalheAbertoId(detalheAbertoId === chamado.id ? null : chamado.id)
+                  }
+                  className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                >
+                  {detalheAbertoId === chamado.id ? (
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  )}
+                  Detalhes
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
                     setHistoricoAbertoId(historicoAbertoId === chamado.id ? null : chamado.id)
                   }
                   className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
@@ -261,6 +309,14 @@ export function ChamadosPage() {
                   Histórico de atendimento
                 </button>
               </div>
+              {detalheAbertoId === chamado.id && (
+                <DetalheChamado
+                  chamado={chamado}
+                  podeEditar={temEscrita}
+                  onSalvarPlanejamento={(data) => salvarDataPlanejada(chamado, data)}
+                  onSalvarExecucao={(data) => salvarExecucao(chamado, data)}
+                />
+              )}
               {historicoAbertoId === chamado.id && (
                 <div className="border-t border-line-soft px-4 py-3">
                   <HistoricoAtendimentoChamado
@@ -305,6 +361,117 @@ export function ChamadosPage() {
   );
 }
 
+/** E01-S101 AC-5/AC-2/AC-3/AC-4: Solicitação + Local completos (sem truncar) e as 3 datas
+ * (abertura=imutável, planejada=editável/replanejável, execução=real). */
+function DetalheChamado({
+  chamado,
+  podeEditar,
+  onSalvarPlanejamento,
+  onSalvarExecucao,
+}: {
+  chamado: Chamado;
+  podeEditar: boolean;
+  onSalvarPlanejamento: (data: string) => Promise<void>;
+  onSalvarExecucao: (data: string) => Promise<void>;
+}) {
+  const [planejada, setPlanejada] = useState(chamado.dataPlanejada?.slice(0, 10) ?? "");
+  const [execucao, setExecucao] = useState(chamado.dataExecucao?.slice(0, 10) ?? "");
+  const [salvandoPlanejada, setSalvandoPlanejada] = useState(false);
+  const [salvandoExecucao, setSalvandoExecucao] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-line-soft px-4 py-3 text-sm">
+      <div>
+        <span className="block text-xs font-semibold text-ink-3">Solicitação</span>
+        <p className="whitespace-pre-wrap text-ink-2">{chamado.descricao || "—"}</p>
+      </div>
+      <div>
+        <span className="block text-xs font-semibold text-ink-3">Local</span>
+        <p className="whitespace-pre-wrap text-ink-2">{chamado.local || "—"}</p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <span className="block text-xs font-semibold text-ink-3">Abertura</span>
+          <p className="text-ink-2">{new Date(chamado.createdAt).toLocaleDateString("pt-BR")}</p>
+        </div>
+        <div>
+          <span className="mb-1 block text-xs font-semibold text-ink-3">
+            Planejada{" "}
+            {chamado.replanejamentos > 0 && (
+              <span className="text-ink-3">({chamado.replanejamentos}x replanejada)</span>
+            )}
+          </span>
+          {podeEditar ? (
+            <div className="flex items-center gap-1.5">
+              <input
+                type="date"
+                value={planejada}
+                onChange={(e) => setPlanejada(e.target.value)}
+                className="input h-8 w-full text-xs"
+              />
+              <button
+                type="button"
+                disabled={!planejada || salvandoPlanejada}
+                onClick={async () => {
+                  setSalvandoPlanejada(true);
+                  try {
+                    await onSalvarPlanejamento(new Date(planejada).toISOString());
+                  } finally {
+                    setSalvandoPlanejada(false);
+                  }
+                }}
+                className="btn-secondary h-8 shrink-0 px-2 text-xs"
+              >
+                Salvar
+              </button>
+            </div>
+          ) : (
+            <p className="text-ink-2">
+              {chamado.dataPlanejada
+                ? new Date(chamado.dataPlanejada).toLocaleDateString("pt-BR")
+                : "—"}
+            </p>
+          )}
+        </div>
+        <div>
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Execução (real)</span>
+          {podeEditar ? (
+            <div className="flex items-center gap-1.5">
+              <input
+                type="date"
+                value={execucao}
+                onChange={(e) => setExecucao(e.target.value)}
+                className="input h-8 w-full text-xs"
+              />
+              <button
+                type="button"
+                disabled={!execucao || salvandoExecucao}
+                onClick={async () => {
+                  setSalvandoExecucao(true);
+                  try {
+                    await onSalvarExecucao(new Date(execucao).toISOString());
+                  } finally {
+                    setSalvandoExecucao(false);
+                  }
+                }}
+                className="btn-secondary h-8 shrink-0 px-2 text-xs"
+              >
+                Salvar
+              </button>
+            </div>
+          ) : (
+            <p className="text-ink-2">
+              {chamado.dataExecucao
+                ? new Date(chamado.dataExecucao).toLocaleDateString("pt-BR")
+                : "—"}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function NovoChamadoModal({
   clientes,
   onCancel,
@@ -317,6 +484,7 @@ function NovoChamadoModal({
   const [clienteId, setClienteId] = useState(clientes[0]?.id ?? "");
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [local, setLocal] = useState("");
   const [solicitante, setSolicitante] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -329,6 +497,7 @@ function NovoChamadoModal({
         clienteId,
         titulo,
         descricao: descricao || null,
+        local: local || null,
         solicitante: solicitante || null,
       });
     } catch (e) {
@@ -384,6 +553,15 @@ function NovoChamadoModal({
             />
           </label>
           <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-3">Local</span>
+            <input
+              value={local}
+              onChange={(e) => setLocal(e.target.value)}
+              className="input w-full"
+              placeholder="Ex: Hall térreo, torre B"
+            />
+          </label>
+          <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Solicitante</span>
             <input
               value={solicitante}
@@ -431,15 +609,26 @@ function GerarOsModal({
     tipoTarefaId: string;
     tecnicoId: string | null;
     dataPrevista: string | null;
+    gravidade: number;
+    urgencia: number;
+    tendencia: number;
   }) => Promise<void>;
 }) {
   const [tipoTarefaId, setTipoTarefaId] = useState(dadosOs.tiposTarefa[0]?.id ?? "");
   const [tecnicoId, setTecnicoId] = useState("");
   const [dataPrevista, setDataPrevista] = useState("");
+  // E01-S94: no fluxo "Gerar OS" (convertido_os) o GUT continua default 3/3/3, fora de escopo desta
+  // story; só "Enviar ao backlog" exige escolha real do usuário (sem priorização real sem isso).
+  const [gravidade, setGravidade] = useState<number | "">(destino === "backlog" ? "" : 3);
+  const [urgencia, setUrgencia] = useState<number | "">(destino === "backlog" ? "" : 3);
+  const [tendencia, setTendencia] = useState<number | "">(destino === "backlog" ? "" : 3);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  const gutCompleto = gravidade !== "" && urgencia !== "" && tendencia !== "";
+
   async function confirmar() {
+    if (!gutCompleto) return;
     setSalvando(true);
     setErro(null);
     try {
@@ -447,6 +636,9 @@ function GerarOsModal({
         tipoTarefaId,
         tecnicoId: tecnicoId || null,
         dataPrevista: dataPrevista || null,
+        gravidade: gravidade as number,
+        urgencia: urgencia as number,
+        tendencia: tendencia as number,
       });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível gerar a OS.");
@@ -520,6 +712,13 @@ function GerarOsModal({
               className="input w-full"
             />
           </label>
+          {destino === "backlog" && (
+            <div className="grid grid-cols-3 gap-2">
+              <GutSelect label="Gravidade *" value={gravidade} onChange={setGravidade} />
+              <GutSelect label="Urgência *" value={urgencia} onChange={setUrgencia} />
+              <GutSelect label="Tendência *" value={tendencia} onChange={setTendencia} />
+            </div>
+          )}
           {erro && (
             <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
               {erro}
@@ -533,7 +732,7 @@ function GerarOsModal({
           <button
             type="button"
             onClick={confirmar}
-            disabled={salvando || !tipoTarefaId}
+            disabled={salvando || !tipoTarefaId || !gutCompleto}
             className="h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             {salvando ? "Salvando…" : "Confirmar"}
@@ -541,6 +740,34 @@ function GerarOsModal({
         </div>
       </div>
     </div>
+  );
+}
+
+function GutSelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number | "";
+  onChange: (v: number | "") => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : "")}
+        className="input w-full"
+      >
+        <option value="">—</option>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
