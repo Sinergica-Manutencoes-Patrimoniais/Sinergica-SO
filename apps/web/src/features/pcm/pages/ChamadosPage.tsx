@@ -53,14 +53,21 @@ export function ChamadosPage() {
   const [dadosOs, setDadosOs] = useState<DadosAberturaOs | null>(null);
   const [historicoAbertoId, setHistoricoAbertoId] = useState<string | null>(null);
   const [detalheAbertoId, setDetalheAbertoId] = useState<string | null>(null);
+  const [clienteFiltro, setClienteFiltro] = useState("");
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
 
-  const carregar = useCallback(async () => {
+  const carregar = useCallback(async (clienteId?: string) => {
     setEstado({ fase: "carregando" });
     try {
-      setEstado({ fase: "pronto", chamados: await listarChamados(supabaseChamadosAdapter) });
+      setEstado({
+        fase: "pronto",
+        chamados: await listarChamados(
+          supabaseChamadosAdapter,
+          clienteId ? { clienteId } : undefined,
+        ),
+      });
     } catch (error) {
       setEstado({
         fase: "erro",
@@ -70,8 +77,16 @@ export function ChamadosPage() {
   }, []);
 
   useEffect(() => {
-    if (!permissoesCarregando && temLeitura) carregar();
-  }, [permissoesCarregando, temLeitura, carregar]);
+    if (!permissoesCarregando && temLeitura) carregar(clienteFiltro || undefined);
+  }, [permissoesCarregando, temLeitura, carregar, clienteFiltro]);
+
+  // E01-S102: clientes carregados de antemão pro seletor do filtro (antes só carregava sob
+  // demanda ao abrir um modal).
+  useEffect(() => {
+    if (!permissoesCarregando && temLeitura && !dadosOs) {
+      carregarDadosAberturaOs(supabaseOrdemServicoAdapter).then(setDadosOs);
+    }
+  }, [permissoesCarregando, temLeitura, dadosOs]);
 
   async function abrirModalNovo() {
     setModal({ modo: "novo" });
@@ -88,7 +103,7 @@ export function ChamadosPage() {
     setErroAcao(null);
     await criarChamado(supabaseChamadosAdapter, { ...dados, userId: user.id });
     setModal(null);
-    await carregar();
+    await carregar(clienteFiltro || undefined);
   }
 
   async function confirmarGerarOs(
@@ -128,7 +143,7 @@ export function ChamadosPage() {
       destino,
     );
     setModal(null);
-    await carregar();
+    await carregar(clienteFiltro || undefined);
   }
 
   async function confirmarCancelar(chamado: Chamado, justificativa: string, anexo: File | null) {
@@ -136,7 +151,7 @@ export function ChamadosPage() {
     setErroAcao(null);
     await cancelarChamado(supabaseChamadosAdapter, chamado, justificativa, anexo, user.id);
     setModal(null);
-    await carregar();
+    await carregar(clienteFiltro || undefined);
   }
 
   async function salvarDataPlanejada(chamado: Chamado, novaData: string) {
@@ -144,7 +159,7 @@ export function ChamadosPage() {
     setErroAcao(null);
     try {
       await definirDataPlanejadaChamado(supabaseChamadosAdapter, chamado, novaData, user.id);
-      await carregar();
+      await carregar(clienteFiltro || undefined);
     } catch (error) {
       setErroAcao(
         error instanceof Error ? error.message : "Não foi possível salvar o planejamento.",
@@ -157,7 +172,7 @@ export function ChamadosPage() {
     setErroAcao(null);
     try {
       await marcarExecucaoChamado(supabaseChamadosAdapter, chamado, dataExecucao, user.id);
-      await carregar();
+      await carregar(clienteFiltro || undefined);
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível marcar a execução.");
     }
@@ -182,7 +197,11 @@ export function ChamadosPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <button
+          type="button"
+          onClick={() => carregar(clienteFiltro || undefined)}
+          className="mt-4 text-sm font-semibold text-orange"
+        >
           <RefreshCw className="mr-1 inline h-4 w-4" />
           Tentar novamente
         </button>
@@ -200,6 +219,21 @@ export function ChamadosPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {dadosOs && dadosOs.clientes.length > 0 && (
+            <select
+              aria-label="Filtrar por cliente"
+              value={clienteFiltro}
+              onChange={(e) => setClienteFiltro(e.target.value)}
+              className="input h-9 w-48 text-xs"
+            >
+              <option value="">Todos os clientes</option>
+              {dadosOs.clientes.map((cliente) => (
+                <option key={cliente.id} value={cliente.id}>
+                  {cliente.nome}
+                </option>
+              ))}
+            </select>
+          )}
           {temEscrita && (
             <button
               type="button"
@@ -210,7 +244,11 @@ export function ChamadosPage() {
               Novo Chamado
             </button>
           )}
-          <button type="button" onClick={carregar} className="btn-secondary">
+          <button
+            type="button"
+            onClick={() => carregar(clienteFiltro || undefined)}
+            className="btn-secondary"
+          >
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </button>
