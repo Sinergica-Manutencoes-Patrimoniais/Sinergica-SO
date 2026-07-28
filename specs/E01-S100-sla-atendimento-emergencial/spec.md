@@ -10,48 +10,41 @@ alwaysApply: true
 > Origem: reunião Fabrício × Lucas (2026-07-27). Item 10.
 
 ## Resumo
-Introduzir o conceito de **Atendimento Emergencial**: chamados/OS marcados como emergenciais têm
-SLA de **2 horas** para o técnico estar no local. Segundo o Fabrício, este é o **único SLA que ele
-compromete com o cliente**; os demais tipos (C1/C2/P1/P2/IN) permanecem como métrica interna, sem
-compromisso contratual de SLA.
+Chamados/OS de categoria "Atendimento Emergencial" têm SLA de **2 horas** para o técnico estar no
+local. Segundo o Fabrício, este é o **único SLA que ele compromete com o cliente**; os demais tipos
+(C2/P1/P2/IN) permanecem métrica interna, sem compromisso contratual.
 
-## Contexto de código
-- E01-S07 (Hub de OS) já tem `calcularPrazoSlaOs` com janelas por `tipo_os` (C1/C2/P1/P2/IN:
-  4h/72h/janelas ±3–7d). Esta story **estende** esse mecanismo, não cria SLA do zero.
-- **Decidido (Lucas, 2026-07-28): Emergencial é um `tipo_os` novo**, não uma flag ortogonal.
-  `CategoriaOs` já tem o valor `"emergencial"` (`abertura-os.ts`, label "Atendimento Emergencial") e
-  `inferirTipoOsHub` já mapeia essa categoria para `tipo_os = "C1"` (`hub-os.ts:25`) — hoje o
-  emergencial cai dentro do C1 (SLA 4h). Esta story separa: `TipoOsHub` ganha um valor próprio
-  (`"EM"`) para emergencial, com seu SLA dedicado de 2h, distinto do C1 (que continua 4h para
-  corretivas urgentes não-emergenciais).
+## Contexto de código (correção após investigar, 2026-07-28)
+- `CategoriaOs` já tem o valor `"emergencial"` (`abertura-os.ts`, label "Atendimento Emergencial").
+- `inferirTipoOsHub` já mapeia essa categoria **exclusivamente** para `tipo_os = "C1"`
+  (`hub-os.ts:25`) — nenhuma outra categoria vira `"C1"`. Ou seja, **`C1` já é 100% sinônimo de
+  Emergencial** (`TIPO_OS_HUB_LABEL.C1 === "Emergencial"`, `hub-os.ts:11`).
+- Não existe tipo novo pra criar: **o gap real é só o SLA de C1 estar em 4h e precisar virar 2h**
+  (`calcularPrazoSlaOs`, `hub-os.ts:67`). A primeira versão desta spec propôs um `tipo_os` novo
+  (`"EM"`) por engano, antes de confirmar que C1 já era exclusivo do emergencial — descartado.
 
 ## Critérios de aceite
 
-### AC-1: Categoria "emergencial" gera `tipo_os = "EM"`, não mais `"C1"`
-- **Dado** um chamado/OS com categoria `"emergencial"` (já existente, `abertura-os.ts`)
-- **Quando** `inferirTipoOsHub` calcula o tipo do Hub
-- **Então** o resultado é `"EM"` (novo valor de `TipoOsHub`), não mais `"C1"`; **e** o badge de tipo
-  na UI mostra "Emergencial" distinto de "C1".
-
-### AC-2: SLA de 2h a partir da abertura
-- **Dado** um chamado/OS com `tipo_os = "EM"`
+### AC-1: SLA de C1 (Emergencial) passa de 4h para 2h
+- **Dado** um chamado/OS com `tipo_os = "C1"`
 - **Quando** `calcularPrazoSlaOs` calcula o prazo
-- **Então** o prazo é **2 horas contadas a partir da data de abertura** do chamado (não 4h como C1);
-  **e** o prazo aparece na UI com contagem/estado (dentro do prazo / atrasado).
+- **Então** o prazo é **2 horas** a partir da data de abertura (era 4h); **e** o prazo aparece na UI
+  com contagem/estado (dentro do prazo / atrasado).
 
-### AC-3: Emergencial tem precedência de exibição
+### AC-2: Emergencial tem precedência de exibição
 - **Dado** a fila/lista de chamados e OS
-- **Quando** há itens emergenciais
-- **Então** eles são destacados (ordenação/priorização e badge) acima dos não-emergenciais.
+- **Quando** há itens `tipo_os = "C1"` (Emergencial)
+- **Então** eles são destacados (já herdam `calcularPrioridadeHub === 1`, a maior prioridade —
+  confirmar que a UI já reflete isso ou reforçar o destaque visual/badge).
 
-### AC-4: Demais tipos sem compromisso de SLA com cliente
-- **Dado** um chamado não-emergencial
+### AC-3: Demais tipos sem compromisso de SLA com cliente
+- **Dado** um chamado não-emergencial (C2/P1/P2/IN)
 - **Quando** exibido
-- **Então** seu SLA (se houver) é tratado como **métrica interna** — não é apresentado como
-  compromisso contratual; nenhum alerta "violação de SLA com cliente" é disparado para não-emergenciais.
+- **Então** seu SLA é tratado como **métrica interna** — não é apresentado como compromisso
+  contratual; nenhum alerta "violação de SLA com cliente" é disparado para não-emergenciais.
 
 ## Casos de borda e erros
-- Emergencial sem data de abertura válida → não calcula prazo (não deve acontecer: abertura é sempre
+- C1 sem data de abertura válida → não calcula prazo (não deve acontecer: abertura é sempre
   registrada; se faltar, sinalizar).
 - Emergencial que vira OS → o prazo de 2h continua ancorado na **abertura do chamado**, não na
   criação da OS (coerente com E01-S99: chamado é o ID ponta a ponta).
@@ -59,11 +52,10 @@ compromisso contratual de SLA.
 
 ## Fora de escopo
 - Alertas/notificações automáticas de violação de SLA (feature futura de observabilidade).
-- Reformular os SLAs internos dos tipos C1/C2/P1/P2/IN.
-- As 3 datas do chamado (abertura/planejada/execução) — definidas na E01-S101/E01-S99.
+- Reformular os SLAs internos dos tipos C2/P1/P2/IN.
+- As 3 datas do chamado (abertura/planejada/execução) — E01-S101/E01-S99.
 
 ## Rastreabilidade
-- Código: `domain/hub-os.ts` (`TipoOsHub`, `inferirTipoOsHub`, `calcularPrazoSlaOs` — E01-S07),
-  `domain/abertura-os.ts` (`CategoriaOs`, já tem `"emergencial"`).
+- Código: `domain/hub-os.ts` (`calcularPrazoSlaOs`, E01-S07).
 - Depende conceitualmente de E01-S99 (abertura como âncora do SLA).
 - ADRs relacionados: —

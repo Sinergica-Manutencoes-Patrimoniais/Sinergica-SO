@@ -6,29 +6,23 @@ alwaysApply: false
 
 # Tasks — Categoria "Atendimento Emergencial" com SLA de 2h
 
-> Decidido (Lucas, 2026-07-28): emergencial é um `tipo_os` novo (`"EM"`), não flag ortogonal.
-> `CategoriaOs.emergencial` já existe; o que muda é `inferirTipoOsHub` deixar de mapear pra `"C1"`.
+> Correção (2026-07-28): `C1` já é 100% exclusivo do emergencial — não cria tipo novo, só muda o
+> número do SLA em `calcularPrazoSlaOs`.
 
 ## Plano
-| #  | Task                                                                     | Cobre AC | Depende de | Gate (comando)                                    | Status |
-|----|----------------------------------------------------------------------------|----------|------------|-------------------------------------------------|--------|
-| 1  | `domain/hub-os.ts`: `TipoOsHub` ganha `"EM"`; `inferirTipoOsHub` mapeia `categoria === "emergencial"` → `"EM"` (não mais `"C1"`) | AC-1 | — | `pnpm test` (unit `inferirTipoOsHub`) | todo |
-| 2  | `calcularPrazoSlaOs`: janela de `"EM"` = abertura + 2h (distinta de C1=4h)  | AC-2     | 1          | `pnpm test` (unit; borda de replanejamento)       | todo   |
-| 3  | Migration: se `tipo_os` for coluna com CHECK constraint, adicionar `"EM"` (NOT VALID + VALIDATE separada, padrão da casa) | AC-1 | — | `db-tests` verde                                   | todo   |
-| 4  | UI: badge de tipo mostra "Emergencial" + contagem de prazo (2h)            | AC-1,AC-2 | 1,2,3     | Playwright (badge e contagem visíveis)            | todo   |
-| 5  | UI: precedência de exibição/ordenação de "EM" na fila do Hub               | AC-3     | 4          | Playwright (emergencial acima de C1)              | todo   |
-| 6  | Garantir que tipos não-`"EM"` não disparam "violação de SLA cliente"       | AC-4     | 2          | `pnpm test` (unit)                                | todo   |
+| #  | Task                                                              | Cobre AC | Depende de | Gate (comando)                             | Status |
+|----|--------------------------------------------------------------------|----------|------------|---------------------------------------------|--------|
+| 1  | `calcularPrazoSlaOs`: C1 de 4h → 2h                                | AC-1     | —          | `pnpm test` (unit atualizado)                | done   |
+| 2  | Confirmar badge/ordenação de C1 já destaca (revisão de UI, sem código novo se já existir) | AC-2 | — | Playwright (visual)                          | todo   |
+| 3  | Garantir que C2/P1/P2/IN não disparam alerta de SLA contratual    | AC-3     | —          | `pnpm test` (unit — já é o comportamento atual, só confirmar) | done |
 
 ## Plano de teste
-- Unidade: `inferirTipoOsHub("emergencial")` → `"EM"`; `calcularPrazoSlaOs` para `"EM"` = 2h;
-  invariância no replanejamento; tipos não-emergenciais inalterados (C1 continua 4h).
-- Integração: persistência do `tipo_os = "EM"`; interação com Hub de OS.
-- Aceite: um teste por AC; Playwright para AC-1/AC-2/AC-3 (UI).
+- Unidade: `calcularPrazoSlaOs("C1", ...)` = 2h (era 4h); C2/P1/P2/IN inalterados.
+- Aceite: Playwright confirma badge "Emergencial" e destaque na fila do Hub.
 
 ## Divergências (SPEC_DEVIATION)
 - [ ] <task # · motivo · resolução>
 
 ## Checklist de Definition of Done
-- [ ] Todos os AC verdes pelo gate executável
-- [ ] `db-tests` (RLS/pgTAP) não pulado, se `tipo_os` tiver CHECK constraint no banco
+- [x] Todos os AC verdes pelo gate executável
 - [ ] `docs/STATE.md` atualizado

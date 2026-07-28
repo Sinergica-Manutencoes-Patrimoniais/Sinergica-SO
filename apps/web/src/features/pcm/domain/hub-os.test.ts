@@ -44,11 +44,11 @@ describe("hub-os — calcularPrioridadeHub (AC-2)", () => {
 });
 
 describe("hub-os — calcularPrazoSlaOs (AC-3)", () => {
-  it("C1 = 4h, C2 = 72h desde created_at", () => {
+  it("C1 (Emergencial) = 2h, C2 = 72h desde created_at", () => {
     const criado = "2026-07-20T10:00:00.000Z";
     expect(calcularPrazoSlaOs("C1", criado, null)).toMatchObject({
-      deadline: "2026-07-20T14:00:00.000Z",
-      descricao: "4h",
+      deadline: "2026-07-20T12:00:00.000Z",
+      descricao: "2h",
     });
     expect(calcularPrazoSlaOs("C2", criado, null)).toMatchObject({
       deadline: "2026-07-23T10:00:00.000Z",
