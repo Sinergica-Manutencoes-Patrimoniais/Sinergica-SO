@@ -108,25 +108,78 @@ export async function resolverFuncionarioIdsPorAuvoIds(
   return mapa;
 }
 
-/** E01-S88: numeração atômica via sequence (RPC `pcm.fn_proximo_numero_os`) — substitui o
- * `count()` com race condition conhecida sob concorrência real (E01-S02). Prefixo "OS-" — "CH-"
- * agora é do Chamado (`pcm.chamados`). */
-export async function proximoNumeroOs(db: UntypedSupabaseClient): Promise<string> {
-  const { data, error } = await db.schema("pcm").rpc("fn_proximo_numero_os");
-  if (error) throw error;
-  return data as string;
+export interface ChamadoAutomatico {
+  id: string;
+  numero: string;
 }
 
-/** Reserva `quantidade` números atomicamente numa chamada só (RPC `pcm.fn_proximos_numeros_os`) —
- * usado pelo import em lote de `pcm-auvo-tasks-import`, que precisa de N números sem N round-trips. */
-export async function proximosNumerosOs(
+/** E01-S99/ADR-0014: toda OS que nasce de uma tarefa Auvo sem Chamado de origem (técnico criou a
+ * tarefa direto no app Auvo, sem passar pelo fluxo de Chamado do PCM) ganha um Chamado automático
+ * (`origem="auvo_sync"`) — mantém o `CH-XXXX` como identificador único de ponta a ponta, mesmo
+ * quando o gatilho é o Auvo. Substitui a antiga `proximoNumeroOs` (E01-S88, prefixo "OS-"). */
+export async function criarChamadoAutomatico(
+  db: UntypedSupabaseClient,
+  input: { clienteId: string; titulo: string; systemUserId: string },
+): Promise<ChamadoAutomatico> {
+  const { data: numero, error: numeroError } = await db
+    .schema("pcm")
+    .rpc("fn_proximo_numero_chamado");
+  if (numeroError) throw numeroError;
+  const { data, error } = await db
+    .schema("pcm")
+    .from("chamados")
+    .insert({
+      numero,
+      cliente_id: input.clienteId,
+      titulo: input.titulo,
+      origem: "auvo_sync",
+      created_by: input.systemUserId,
+      updated_by: input.systemUserId,
+    })
+    .select("id,numero")
+    .single();
+  if (error) throw error;
+  await db
+    .schema("pcm")
+    .from("chamados_eventos")
+    .insert({ chamado_id: data.id, tipo: "criado", metadata: { numero, auto: true } });
+  return { id: data.id as string, numero: data.numero as string };
+}
+
+/** Fecha o ciclo do Chamado criado por `criarChamadoAutomatico`/em lote — mesma transição que o
+ * app web faz em `marcarStatusComOs` no fluxo "Gerar OS a partir do Chamado". */
+export async function marcarChamadoAutomaticoComOs(
+  db: UntypedSupabaseClient,
+  chamadoId: string,
+  ordemServicoId: string,
+): Promise<void> {
+  const { error } = await db
+    .schema("pcm")
+    .from("chamados")
+    .update({
+      status: "convertido_os",
+      ordem_servico_id: ordemServicoId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", chamadoId);
+  if (error) throw error;
+  await db
+    .schema("pcm")
+    .from("chamados_eventos")
+    .insert({ chamado_id: chamadoId, tipo: "os_gerada", metadata: { ordemServicoId } });
+}
+
+/** Reserva `quantidade` números de Chamado atomicamente numa chamada só (RPC
+ * `pcm.fn_proximos_numeros_chamado`) — usado pelo import em lote de `pcm-auvo-tasks-import`, que
+ * precisa de N números sem N round-trips. Substitui a antiga `proximosNumerosOs` (E01-S88). */
+export async function proximosNumerosChamado(
   db: UntypedSupabaseClient,
   quantidade: number,
 ): Promise<string[]> {
   if (quantidade <= 0) return [];
   const { data, error } = await db
     .schema("pcm")
-    .rpc("fn_proximos_numeros_os", { p_quantidade: quantidade });
+    .rpc("fn_proximos_numeros_chamado", { p_quantidade: quantidade });
   if (error) throw error;
   return (data ?? []) as string[];
 }
@@ -154,7 +207,9 @@ export async function obterUsuarioSistema(db: UntypedSupabaseClient): Promise<st
 
 export interface OsRowParams {
   clienteId: string;
-  numero: string;
+  /** E01-S99/ADR-0014: Chamado de origem — o `numero` da OS (CH-XXXX) vem sempre daqui, nunca é
+   * enviado explicitamente (trigger `fn_ordens_servico_sync_numero_chamado`, migration 0151). */
+  chamadoId: string;
   systemUserId: string;
   /** E01-S38: null quando o técnico ainda não está sincronizado no PCM (não bloqueia a OS). */
   tecnicoFuncionarioId?: string | null;
@@ -169,7 +224,7 @@ export function montarLinhaOs(
 ): Record<string, unknown> {
   return {
     client_id: params.clienteId,
-    numero: params.numero,
+    chamado_id: params.chamadoId,
     titulo: input.titulo,
     categoria: "corretiva", // AUTO-DECISION: Auvo não tem campo equivalente a categoria do PCM — ver design.md
     status: input.status,
@@ -197,21 +252,28 @@ export async function criarOsDaTarefa(
   const clienteId = await resolverClienteIdPorAuvoId(db, input.customerId);
   if (!clienteId) return null;
 
-  const [numero, systemUserId, tecnicoFuncionarioId] = await Promise.all([
-    proximoNumeroOs(db),
+  const [systemUserId, tecnicoFuncionarioId] = await Promise.all([
     obterUsuarioSistema(db),
     input.tecnicoAuvoUserId != null
       ? resolverFuncionarioIdPorAuvoId(db, input.tecnicoAuvoUserId)
       : Promise.resolve(null),
   ]);
 
+  const chamado = await criarChamadoAutomatico(db, {
+    clienteId,
+    titulo: input.titulo,
+    systemUserId,
+  });
+
   const { data, error } = await db
     .schema("pcm")
     .from("ordens_servico")
-    .insert(montarLinhaOs(input, { clienteId, numero, systemUserId, tecnicoFuncionarioId }))
+    .insert(montarLinhaOs(input, { clienteId, chamadoId: chamado.id, systemUserId, tecnicoFuncionarioId }))
     .select("id")
     .single();
   if (error) throw error;
+
+  await marcarChamadoAutomaticoComOs(db, chamado.id, data.id as string);
 
   return { id: data.id as string, status: input.status };
 }

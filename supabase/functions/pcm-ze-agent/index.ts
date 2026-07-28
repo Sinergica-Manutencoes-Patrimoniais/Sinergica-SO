@@ -9,6 +9,7 @@ import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared
 import { responderEvolution } from "../_shared/evolution.ts";
 import { gerarTituloOsViaOpenRouter } from "../_shared/openrouter.ts";
 import { sanearTituloGerado } from "../_shared/titulo-os.ts";
+import { criarChamadoAutomatico, marcarChamadoAutomaticoComOs } from "../_shared/auvo/os-from-task.ts";
 import {
   avaliarMotivoHandoff,
   comporPromptPersona,
@@ -241,13 +242,21 @@ async function processarChamados(
     return { queueId: item.id, status: "asked" };
   }
 
-  const numero = await proximoNumeroOs(db);
+  // E01-S99/ADR-0014: o Zé sempre cria um Chamado (origem="whatsapp") antes da OS — o CH-XXXX
+  // dele é quem vira o `numero` da OS (trigger `fn_ordens_servico_sync_numero_chamado`, migration
+  // 0151), nunca uma numeração própria de OS. Fecha o mesmo desenho de E02-S23 (Zé abre Chamado).
+  const criadorId = await systemUserId(db);
+  const chamadoAutomatico = await criarChamadoAutomatico(db, {
+    clienteId: chamado.client_id,
+    titulo: chamado.titulo,
+    systemUserId: criadorId,
+  });
   const { data: os, error: osError } = await db
     .schema("pcm")
     .from("ordens_servico")
     .insert({
       client_id: chamado.client_id,
-      numero,
+      chamado_id: chamadoAutomatico.id,
       titulo: chamado.titulo,
       descricao: chamado.descricao,
       categoria: chamado.categoria,
@@ -257,11 +266,12 @@ async function processarChamados(
       origem: "ze",
       origem_ref_id: remoteJid,
       status: "solicitacao",
-      created_by: await systemUserId(db),
+      created_by: criadorId,
     })
     .select("id,numero")
     .single();
   if (osError) throw osError;
+  await marcarChamadoAutomaticoComOs(db, chamadoAutomatico.id, os.id as string);
 
   // E01-S81 AC-3/AC-4: se a extração não produziu um título declarativo de verdade (só o
   // fallback genérico), tenta melhorar via IA — nunca bloqueia a confirmação ao cliente nem
@@ -876,16 +886,6 @@ function normalizeCategoria(value: unknown): "corretiva" | "preventiva" | "emerg
 
 function normalizePrioridade(value: unknown): "baixa" | "normal" | "media" | "alta" | "critica" {
   return value === "baixa" || value === "media" || value === "alta" || value === "critica" ? value : "normal";
-}
-
-/** E01-S88: numeração atômica via sequence (RPC `pcm.fn_proximo_numero_os`) — substitui o
- * `count()` com race condition conhecida (E01-S02). Renomeada de `proximoNumeroChamado` — esta
- * função numera a OS que o Zé cria direto (fluxo WhatsApp→OS de E01-S89 continua fora de escopo
- * aqui), não o Chamado (`pcm.chamados`, que tem sua própria numeração CH-XXXX). Prefixo "OS-". */
-async function proximoNumeroOs(db: UntypedSupabaseClient): Promise<string> {
-  const { data, error } = await db.schema("pcm").rpc("fn_proximo_numero_os");
-  if (error) throw error;
-  return data as string;
 }
 
 async function systemUserId(_db: UntypedSupabaseClient): Promise<string> {

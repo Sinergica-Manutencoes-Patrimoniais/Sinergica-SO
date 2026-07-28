@@ -275,7 +275,7 @@ export function NovaOrdemServicoModal({
         <div className="px-5 py-4 border-b border-line-soft flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-bold text-ink">
-              {editando ? `Editar OS ${ordem?.numero ?? ""}` : "Nova Ordem de Serviço"}
+              {editando ? `Editar Chamado ${ordem?.numero ?? ""}` : "Nova Ordem de Serviço"}
             </h2>
             <p className="text-xs text-ink-3 mt-0.5">
               {editando

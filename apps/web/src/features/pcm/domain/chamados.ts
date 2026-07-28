@@ -2,7 +2,7 @@
 // OS (solicitações, itens de inspeção). Desacoplado do sync Auvo (design.md D1) — schema próprio,
 // sem metadata de ticket.
 
-export type OrigemChamado = "manual" | "cliente_portal" | "whatsapp" | "inspecao";
+export type OrigemChamado = "manual" | "cliente_portal" | "whatsapp" | "inspecao" | "auvo_sync";
 export type StatusChamado = "aberto" | "convertido_os" | "backlog" | "cancelado";
 
 export interface Chamado {
@@ -42,6 +42,7 @@ export const ORIGEM_CHAMADO_LABEL: Record<OrigemChamado, string> = {
   cliente_portal: "Portal do Cliente",
   whatsapp: "WhatsApp",
   inspecao: "Inspeção",
+  auvo_sync: "Sincronizado do Auvo",
 };
 
 /** E01-S89: leitura do snapshot de conversa anexado pelo Atendimento — PCM é Conformist aqui,
