@@ -11,6 +11,11 @@ import { gerarTituloOsViaOpenRouter } from "../_shared/openrouter.ts";
 import { sanearTituloGerado } from "../_shared/titulo-os.ts";
 import { criarChamadoAutomatico, marcarChamadoAutomaticoComOs } from "../_shared/auvo/os-from-task.ts";
 import {
+  type ItemChamadoPendente,
+  interpretarConfirmacao,
+  montarResumoPendentes,
+} from "../_shared/confirmacao-texto.ts";
+import {
   avaliarMotivoHandoff,
   comporPromptPersona,
   resolverRotaAtendimento,
@@ -193,6 +198,26 @@ async function processarChamados(
   now: string,
   forcar: boolean,
 ): Promise<Record<string, unknown>> {
+  // E02-S23 AC-4: se há uma proposta de chamado aguardando confirmação, a resposta do solicitante
+  // é interpretada ANTES de qualquer gate de acionamento (a pergunta já foi feita pelo Zé — o
+  // solicitante não precisa mencioná-lo de novo pra responder "sim"/"não").
+  const conversaId = await buscarConversaId(db, instanceId, remoteJid);
+  if (conversaId) {
+    const pendentes = await buscarChamadosPendentes(db, conversaId);
+    if (pendentes) {
+      return await processarConfirmacaoPendente(
+        db,
+        item,
+        instanceId,
+        remoteJid,
+        messages,
+        conversaId,
+        pendentes,
+        now,
+      );
+    }
+  }
+
   if (!forcar) {
     // E02-S01: pausa POR CONVERSA (humano assumiu) — distinta de config.modo, que é por
     // condomínio inteiro. 'pausado' vira 'off' só pra esta conversa.
@@ -227,67 +252,171 @@ async function processarChamados(
   const conhecimentoRag = persona.rag_enabled
     ? await buscarConhecimentoRelevante(db, persona.id, contexto)
     : "";
-  const chamado = await extrairChamadoViaOpenRouter(
+  const extraido = await extrairChamadoViaOpenRouter(
     comporPromptPersona(persona.prompt_sistema, persona.base_conhecimento, conhecimentoRag),
     contexto,
     config.client_id,
     remoteJid,
-    messages.at(-1)?.sender_jid ?? undefined,
     persona.modelo_llm,
   );
-  if (!chamado.pronto) {
-    await responderEvolution(instanceId, remoteJid, chamado.pergunta);
-    await registrarMensagemAgente(db, instanceId, remoteJid, chamado.pergunta, "ze");
+  if (!extraido.pronto) {
+    await responderEvolution(instanceId, remoteJid, extraido.pergunta);
+    await registrarMensagemAgente(db, instanceId, remoteJid, extraido.pergunta, "ze");
     await finalizarFila(db, item.id, "done", now);
     return { queueId: item.id, status: "asked" };
   }
 
-  // E01-S99/ADR-0014: o Zé sempre cria um Chamado (origem="whatsapp") antes da OS — o CH-XXXX
-  // dele é quem vira o `numero` da OS (trigger `fn_ordens_servico_sync_numero_chamado`, migration
-  // 0151), nunca uma numeração própria de OS. Fecha o mesmo desenho de E02-S23 (Zé abre Chamado).
-  const criadorId = await systemUserId(db);
-  const chamadoAutomatico = await criarChamadoAutomatico(db, {
-    clienteId: chamado.client_id,
-    titulo: chamado.titulo,
-    systemUserId: criadorId,
-  });
-  const { data: os, error: osError } = await db
-    .schema("pcm")
-    .from("ordens_servico")
-    .insert({
-      client_id: chamado.client_id,
-      chamado_id: chamadoAutomatico.id,
-      titulo: chamado.titulo,
-      descricao: chamado.descricao,
-      categoria: chamado.categoria,
-      prioridade: chamado.prioridade,
-      local_descricao: chamado.local_descricao,
-      solicitante: chamado.solicitante ?? null,
-      origem: "ze",
-      origem_ref_id: remoteJid,
-      status: "solicitacao",
-      created_by: criadorId,
-    })
-    .select("id,numero")
-    .single();
-  if (osError) throw osError;
-  await marcarChamadoAutomaticoComOs(db, chamadoAutomatico.id, os.id as string);
+  const solicitante = messages.at(-1)?.sender_jid ?? undefined;
 
-  // E01-S81 AC-3/AC-4: se a extração não produziu um título declarativo de verdade (só o
-  // fallback genérico), tenta melhorar via IA — nunca bloqueia a confirmação ao cliente nem
-  // derruba o fluxo se a IA estiver indisponível/desligada (mesmo princípio de E01-S05/e-mail).
-  if (!chamado.titulo?.trim() || chamado.titulo.trim() === "Chamado via Zé") {
-    await tentarMelhorarTituloOs(db, os.id as string, chamado.descricao ?? contexto);
+  // E02-S23 AC-4: sem conversa persistida não há onde guardar a proposta pendente — cai pro
+  // caminho antigo (cria direto) como degradação segura, em vez de perder a extração já feita.
+  if (!conversaId) {
+    return await criarChamadosConfirmados(
+      db,
+      item,
+      instanceId,
+      remoteJid,
+      config.client_id,
+      solicitante,
+      extraido.itens,
+      contexto,
+      now,
+    );
   }
 
-  const confirmacao = `Chamado ${os.numero} aberto. Vou acompanhar por aqui.`;
+  await salvarChamadosPendentes(db, conversaId, extraido.itens);
+  const pergunta = montarResumoPendentes(extraido.itens);
+  await responderEvolution(instanceId, remoteJid, pergunta);
+  await registrarMensagemAgente(db, instanceId, remoteJid, pergunta, "ze");
+  await finalizarFila(db, item.id, "done", now);
+  return { queueId: item.id, status: "waiting_confirmation", itens: extraido.itens.length };
+}
+
+/** E02-S23 AC-4: interpreta a resposta a uma proposta pendente — confirma (cria tudo), nega
+ * (descarta e pede pra recomeçar) ou ambíguo (repete a pergunta sem rodar a IA de novo). */
+async function processarConfirmacaoPendente(
+  db: UntypedSupabaseClient,
+  item: QueueItem,
+  instanceId: string,
+  remoteJid: string,
+  messages: WaMessage[],
+  conversaId: string,
+  pendentes: ItemChamadoPendente[],
+  now: string,
+): Promise<Record<string, unknown>> {
+  const ultimaMensagem = messages.at(-1)?.content ?? "";
+  const decisao = interpretarConfirmacao(ultimaMensagem);
+
+  if (decisao === "nega") {
+    await limparChamadosPendentes(db, conversaId);
+    const msg = "Sem problema, me conta de novo o que você precisa.";
+    await responderEvolution(instanceId, remoteJid, msg);
+    await registrarMensagemAgente(db, instanceId, remoteJid, msg, "ze");
+    await finalizarFila(db, item.id, "done", now);
+    return { queueId: item.id, status: "cancelled" };
+  }
+
+  if (decisao === "ambiguo") {
+    const pergunta = `${montarResumoPendentes(pendentes)}\n(responda "sim" ou "não")`;
+    await responderEvolution(instanceId, remoteJid, pergunta);
+    await registrarMensagemAgente(db, instanceId, remoteJid, pergunta, "ze");
+    await finalizarFila(db, item.id, "done", now);
+    return { queueId: item.id, status: "asked" };
+  }
+
+  const conversa = await buscarConversa(db, instanceId, remoteJid);
+  const clientId = conversa?.clientId ?? null;
+  if (!clientId) {
+    await limparChamadosPendentes(db, conversaId);
+    await finalizarFila(db, item.id, "skipped", now);
+    return { queueId: item.id, status: "transferred", reason: "Cliente PCM não vinculado" };
+  }
+
+  const contexto = pendentes.map((p) => p.descricao).join("\n");
+  const solicitante = messages.at(-1)?.sender_jid ?? undefined;
+  const resultado = await criarChamadosConfirmados(
+    db,
+    item,
+    instanceId,
+    remoteJid,
+    clientId,
+    solicitante,
+    pendentes,
+    contexto,
+    now,
+  );
+  await limparChamadosPendentes(db, conversaId);
+  return resultado;
+}
+
+/** Cria N pares Chamado+OS (um por item extraído/confirmado) e devolve a confirmação final ao
+ * solicitante com todos os CH-XXXX abertos. Mesmo desenho de E01-S99/ADR-0014 (Chamado sempre
+ * antes da OS) aplicado por item. */
+async function criarChamadosConfirmados(
+  db: UntypedSupabaseClient,
+  item: QueueItem,
+  instanceId: string,
+  remoteJid: string,
+  clientId: string,
+  solicitante: string | undefined,
+  itens: ItemChamadoPendente[],
+  contexto: string,
+  now: string,
+): Promise<Record<string, unknown>> {
+  const criadorId = await systemUserId(db);
+  const numeros: string[] = [];
+  let ultimaOsId: string | null = null;
+  for (const chamadoExtraido of itens) {
+    const chamadoAutomatico = await criarChamadoAutomatico(db, {
+      clienteId: clientId,
+      titulo: chamadoExtraido.titulo,
+      systemUserId: criadorId,
+    });
+    const { data: os, error: osError } = await db
+      .schema("pcm")
+      .from("ordens_servico")
+      .insert({
+        client_id: clientId,
+        chamado_id: chamadoAutomatico.id,
+        titulo: chamadoExtraido.titulo,
+        descricao: chamadoExtraido.descricao,
+        categoria: chamadoExtraido.categoria,
+        prioridade: chamadoExtraido.prioridade,
+        local_descricao: chamadoExtraido.local_descricao,
+        solicitante: solicitante ?? null,
+        origem: "ze",
+        origem_ref_id: remoteJid,
+        status: "solicitacao",
+        created_by: criadorId,
+      })
+      .select("id,numero")
+      .single();
+    if (osError) throw osError;
+    await marcarChamadoAutomaticoComOs(db, chamadoAutomatico.id, os.id as string);
+
+    // E01-S81 AC-3/AC-4: se a extração não produziu um título declarativo de verdade (só o
+    // fallback genérico), tenta melhorar via IA — nunca bloqueia a confirmação ao cliente nem
+    // derruba o fluxo se a IA estiver indisponível/desligada (mesmo princípio de E01-S05/e-mail).
+    if (!chamadoExtraido.titulo?.trim() || chamadoExtraido.titulo.trim() === "Chamado via Zé") {
+      await tentarMelhorarTituloOs(db, os.id as string, chamadoExtraido.descricao ?? contexto);
+    }
+    numeros.push(os.numero as string);
+    ultimaOsId = os.id as string;
+  }
+
+  const confirmacao =
+    numeros.length === 1
+      ? `Chamado ${numeros[0]} aberto. Vou acompanhar por aqui.`
+      : `Chamados abertos: ${numeros.join(", ")}. Vou acompanhar por aqui.`;
   await responderEvolution(instanceId, remoteJid, confirmacao);
   await registrarMensagemAgente(db, instanceId, remoteJid, confirmacao, "ze");
   await db.schema("atendimento").from("wa_messages").update({ replied_at: now }).eq("remote_jid", remoteJid).is("replied_at", null);
-  // E02-S01: liga a OS criada de volta à conversa, pro Inbox humano exibir o deep-link.
-  await db.schema("atendimento").from("conversas").update({ ordem_servico_id: os.id }).eq("instance_id", instanceId).eq("remote_jid", remoteJid);
+  // E02-S01: liga a última OS criada de volta à conversa, pro Inbox humano exibir o deep-link.
+  if (ultimaOsId) {
+    await db.schema("atendimento").from("conversas").update({ ordem_servico_id: ultimaOsId }).eq("instance_id", instanceId).eq("remote_jid", remoteJid);
+  }
   await finalizarFila(db, item.id, "done", now);
-  return { queueId: item.id, status: "done", osId: os.id, numero: os.numero };
+  return { queueId: item.id, status: "done", numeros };
 }
 
 /** E01-S81 AC-3/AC-4: melhora o título de uma OS recém-criada pelo Zé quando a extração só
@@ -493,6 +622,45 @@ async function buscarModoConversa(db: UntypedSupabaseClient, instanceId: string,
 async function buscarConversaId(db: UntypedSupabaseClient, instanceId: string, remoteJid: string): Promise<string | null> {
   const conversa = await buscarConversa(db, instanceId, remoteJid);
   return conversa?.id ?? null;
+}
+
+/** E02-S23 AC-4: proposta de chamados aguardando confirmação — sobrevive entre a mensagem que
+ * gerou a proposta e a próxima (a fila processa 1 mensagem por vez). `null` = nada pendente. */
+async function buscarChamadosPendentes(
+  db: UntypedSupabaseClient,
+  conversaId: string,
+): Promise<ItemChamadoPendente[] | null> {
+  const { data, error } = await db
+    .schema("atendimento")
+    .from("conversas")
+    .select("chamados_pendentes")
+    .eq("id", conversaId)
+    .maybeSingle();
+  if (error) throw error;
+  const pendentes = data?.chamados_pendentes as ItemChamadoPendente[] | null | undefined;
+  return pendentes && pendentes.length > 0 ? pendentes : null;
+}
+
+async function salvarChamadosPendentes(
+  db: UntypedSupabaseClient,
+  conversaId: string,
+  itens: ItemChamadoPendente[],
+): Promise<void> {
+  const { error } = await db
+    .schema("atendimento")
+    .from("conversas")
+    .update({ chamados_pendentes: itens })
+    .eq("id", conversaId);
+  if (error) throw error;
+}
+
+async function limparChamadosPendentes(db: UntypedSupabaseClient, conversaId: string): Promise<void> {
+  const { error } = await db
+    .schema("atendimento")
+    .from("conversas")
+    .update({ chamados_pendentes: null })
+    .eq("id", conversaId);
+  if (error) throw error;
 }
 
 async function buscarConversa(
@@ -745,26 +913,25 @@ async function buscarFluxoAtivo(
   };
 }
 
+interface ItemChamadoExtraido {
+  titulo: string;
+  descricao: string;
+  categoria: "corretiva" | "preventiva" | "emergencial";
+  prioridade: "baixa" | "normal" | "media" | "alta" | "critica";
+  local_descricao: string;
+}
+
+/** E02-S23 AC-2: um objeto por solicitação distinta na conversa (ex.: "trocar lâmpada" e
+ * "verificar registro" viram 2 itens, nunca aglutinados). O prompt novo (migration 0157) já pede
+ * `itens: [...]`; `parsed.itens` ausente com `parsed.titulo` presente é o formato antigo
+ * (pré-E02-S23) — tratado como item único, tolerância a cache de prompt não migrado. */
 async function extrairChamadoViaOpenRouter(
   promptSistema: string,
   contexto: string,
   clientId: string,
   remoteJid: string,
-  solicitante?: string,
   modelo?: string,
-): Promise<
-  | { pronto: false; pergunta: string }
-  | {
-      pronto: true;
-      client_id: string;
-      titulo: string;
-      descricao: string;
-      categoria: "corretiva" | "preventiva" | "emergencial";
-      prioridade: "baixa" | "normal" | "media" | "alta" | "critica";
-      local_descricao: string;
-      solicitante?: string;
-    }
-> {
+): Promise<{ pronto: false; pergunta: string } | { pronto: true; itens: ItemChamadoExtraido[] }> {
   const apiKey = Deno.env.get("OPENROUTER_API_KEY") ?? "";
   if (!apiKey) throw new Error("OPENROUTER_API_KEY ausente");
 
@@ -796,16 +963,15 @@ async function extrairChamadoViaOpenRouter(
   if (parsed?.pronto === false) {
     return { pronto: false, pergunta: String(parsed.pergunta ?? "Pode me informar o problema, o local e a urgência?") };
   }
-  return {
-    pronto: true,
-    client_id: clientId,
-    titulo: String(parsed.titulo ?? "Chamado via Zé").slice(0, 120),
-    descricao: String(parsed.descricao ?? contexto).slice(0, 4000),
-    categoria: normalizeCategoria(parsed.categoria),
-    prioridade: normalizePrioridade(parsed.prioridade),
-    local_descricao: String(parsed.local_descricao ?? parsed.local ?? "Não informado").slice(0, 500),
-    solicitante,
-  };
+  const brutos = Array.isArray(parsed.itens) && parsed.itens.length > 0 ? parsed.itens : [parsed];
+  const itens: ItemChamadoExtraido[] = brutos.map((bruto: Record<string, unknown>) => ({
+    titulo: String(bruto.titulo ?? "Chamado via Zé").slice(0, 120),
+    descricao: String(bruto.descricao ?? contexto).slice(0, 4000),
+    categoria: normalizeCategoria(bruto.categoria),
+    prioridade: normalizePrioridade(bruto.prioridade),
+    local_descricao: String(bruto.local_descricao ?? bruto.local ?? "Não informado").slice(0, 500),
+  }));
+  return { pronto: true, itens };
 }
 
 /** E02-S08: mesmo padrão de `extrairChamadoViaOpenRouter`, mas pro agente comercial — qualifica

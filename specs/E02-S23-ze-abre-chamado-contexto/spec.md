@@ -23,9 +23,10 @@ PCM (`origem = "whatsapp"`).
 - Informação essencial do chamado: **solicitação (texto livre)** + **local** + cliente/solicitante.
 - Confirmação é **síncrona**: o Zé resume o que entendeu e pede "confirma?" antes de gravar.
 
-## Parâmetro a definir
-- `X` = tamanho da janela de contexto lida ao ser acionado. **Default proposto: últimas 20
-  mensagens OU 24h da janela atual, o que vier primeiro.** Confirmar com Lucas antes de implementar.
+## Parâmetro (resolvido, 2026-07-28)
+- `X` = **20 mensagens** — já era o comportamento existente (`buscarMensagens` em
+  `pcm-ze-agent/index.ts` já usava `.limit(20)` antes desta story). Não precisou de migration/config
+  nova pra esse ponto.
 
 ## Critérios de aceite
 
