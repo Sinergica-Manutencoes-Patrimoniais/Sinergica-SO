@@ -56,7 +56,7 @@ describe("E01-S60 — contrato visual V1", () => {
   it("torna os resumos de OS focáveis por teclado", () => {
     const dashboard = fonte("../features/pcm/pages/PcmDashboardPage.tsx");
 
-    expect(dashboard.match(/aria-label=\{`Resumo da OS/g)).toHaveLength(2);
-    expect(dashboard).toContain("Resumo da OS");
+    expect(dashboard.match(/aria-label=\{`Resumo do Chamado/g)).toHaveLength(2);
+    expect(dashboard).toContain("Resumo do Chamado");
   });
 });

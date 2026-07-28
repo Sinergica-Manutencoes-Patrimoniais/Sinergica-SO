@@ -1234,7 +1234,7 @@ export function HomePage() {
           aberto={novaOsAberta}
           onFechar={() => setNovaOsAberta(false)}
           onCriada={(numero) => {
-            setFeedbackOs(`OS ${numero} criada em solicitação.`);
+            setFeedbackOs(`Chamado ${numero} criado em solicitação.`);
             setPcmView("ordens");
             setClienteSelecionado(null);
             setPcmRefreshKey((atual) => atual + 1);

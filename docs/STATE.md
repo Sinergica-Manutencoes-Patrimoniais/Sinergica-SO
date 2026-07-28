@@ -10,6 +10,127 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-07-28 — Reunião Fabrício × Lucas: 12 stories novas especificadas (E01-S99..S106, E02-S23..S26)
+
+Lucas trouxe a transcrição + anotações da reunião de alinhamento com o Fabrício (2026-07-27) e pediu
+pra rodar `/nova-feature` em todos os pontos — ele implementa depois com um modelo focado em dev.
+16 pontos discutidos viraram 12 stories (2 pontos = chore/fix absorvidos; 1 descartado):
+
+**E02 — Atendimento · Zé**
+- `E02-S23` (pequeno, IA): Zé abre chamado do contexto do WhatsApp; 1 solicitação = 1 chamado.
+- `E02-S24` (**arquitetural**, IA, ADR-0015): memória+alma por cliente, prompt base único, retenção
+  1mês cru + 2-3 meses resumo, RAG adiado. Isolamento entre clientes é requisito de segurança.
+- `E02-S25` (pequeno): trigger de resposta automática, regra global unilateral (horário + inatividade).
+- `E02-S26` (**arquitetural**, IA, ADR-0016): agente entrevistador de cadastro; confirmação obrigatória
+  antes de gravar; escreve em PCM via caso de uso.
+
+**E01 — PCM · Operação**
+- `E01-S99` (**arquitetural**, ADR-0014): **reverte a numeração de OS de E01-S88** — `CH-XXXX` vira
+  ID único de ponta a ponta, OS sem número próprio, código externo Auvo = `CH-XXXX`.
+- `E01-S100` (pequeno): categoria Atendimento Emergencial, SLA 2h (único SLA com cliente).
+- `E01-S101` (pequeno): abertura de chamado com campos da OS + 3 datas (abertura/planejada/execução);
+  absorve o fix do modal que perde dados ao trocar aba.
+- `E01-S102` filtro por cliente; `E01-S103` responsável pelo cliente; `E01-S104` board semanal de
+  agenda do técnico (foto de referência); `E01-S105` inspeção Excel→IA→GUT→chamado; `E01-S106`
+  ferramenta alocável em cliente.
+
+**Descartado:** QR code / Área do Cliente externa (item 14) — inviável gestão de login de morador;
+portal sem auth é risco pior (recomendação de segurança do Lucas).
+
+**Próximo passo (bloqueantes antes de codar):**
+1. `E01-S99`: confirmar se as migrations de E01-S88 já rodaram em produção + decidir regra da OS
+   importada do Auvo sem chamado de origem (questões em aberto no design.md).
+2. Parâmetros a confirmar: X da janela de contexto (S23), horário comercial + X min (S25),
+   emergencial=flag vs tipo_os (S100), formato/frequência da memória (S24).
+3. ADRs 0014/0015/0016 estão em **Proposto** — revisar/aceitar antes da implementação.
+
+Todas as 12 stories estão no ROADMAP como "Especificado", Owner "— (livre)". Nenhuma implementação
+feita nesta sessão — só a esteira SDD (spec/tasks/design/ADR).
+
+## 2026-07-24 (cont. 2) — E01-S98: análise IA também no import de questionário Auvo (Assessment)
+
+Lucas pediu pra estender "esse mesmo fluxo de análise" (IA do import de XLS, E01-S96) pro Assessment,
+onde a informação vem do questionário Auvo em vez de planilha. Investigação achou o mesmo padrão de
+dívida técnica: `importarQuestionarioAuvo` inseria pergunta/resposta 1:1 sem nenhuma IA (severidade
+sempre "media", sem GUT/título). Antes de implementar, identifiquei um problema real de design —
+rodar a IA quebra a idempotência atual (baseada em chave 1:1 por pergunta, e a IA filtra/reagrupa
+livremente) — e perguntei ao Lucas em vez de decidir sozinho:
+1. IA processa todas as perguntas ou só as negativas? → **Todas** (igual ao XLS, a IA decide o que
+   é inconformidade real).
+2. Como resolver a idempotência quebrada? → **Bloqueio por importação inteira** (não por pergunta) —
+   reimportar exige apagar os itens antigos manualmente primeiro.
+
+- Extraí `linhaItemImportado` (helper compartilhado: score/severidade/fotos → linha de
+  `inspecao_itens`) de dentro de `criarInspecaoImportada`, reusado agora também por
+  `importarQuestionarioAuvo` — mesmo texto formatado (Pergunta/Resposta/Fotos) que o XLS usa
+  (Local/Fotos/Relato), mesma Edge Function `importar-relatorio-pdf` (genérica, não sabe a origem).
+- Gates verdes (typecheck/718 testes/build/arch:check/audit:esteira/eval:spec/biome). Playwright
+  real (`assessment.spec.ts`) confirma o caminho de questionário vazio/inexistente continua sem
+  quebrar. **Não testado**: o caminho real de classificação por IA nem o bloqueio de reimportação —
+  precisam de um `auvo_task_id` real com checklist de verdade em produção, mesmo cuidado de "não
+  simular IA real" já registrado em E01-S81/E04-S09/E01-S85. Fica para validação manual do Lucas
+  (ou próxima sessão) com um assessment real.
+
+## 2026-07-24 (cont.) — E01-S97: galeria de fotos no item importado + migration aplicada em produção
+
+Lucas perguntou sobre a IA do import de XLS (E01-S96) e notou que a foto é exibida direto pela URL
+do S3 do Auvo, sem subir pro Storage — confirmado por código. Em seguida pediu pra exibir mais de
+uma foto quando a ocorrência tiver várias (Auvo separa por `;`); só a primeira estava sendo
+gravada/exibida. Aberta `E01-S97` (spec+tasks antes de codar, migration aditiva).
+
+- Migration `0150`: `pcm.inspecao_itens.foto_urls jsonb not null default '[]'`. `InspecaoItem`
+  ganhou `fotoUrls: string[]`; `criarInspecaoImportada` agora grava a lista completa (antes só
+  `fotos[0]`); `InspecoesPage.tsx` mostra galeria de thumbnails quando há mais de uma foto, mantém
+  o comportamento antigo pra 0/1 (sem regressão).
+- **Achado real ao rodar Playwright**: `inspecoes.spec.ts` (fluxo de template pré-carregado) passou
+  a falhar — investigação mostrou que a migration só existia local; o dev server aponta pro
+  Supabase de produção de verdade (`nudannsrfvjggoergvyn`), então o `SELECT` de `foto_urls` falhava
+  antes do push (`supabase migration list --linked` confirmou `remote` vazio pra `0150`).
+  **Perguntei ao Lucas antes de mexer em schema de produção** (ação difícil de reverter/afeta
+  sistema real) — autorizado, apliquei via `supabase db push --linked`, confirmado
+  `local:0150/remote:0150`. `inspecoes.spec.ts`/`chamados.spec.ts` voltaram a passar.
+- **Não testado via Playwright real**: a galeria em si só é populável pelo fluxo de import de XLS
+  (dependente da IA da OpenRouter) — mesmo cuidado de "não simular IA real" já usado em
+  E01-S81/E04-S09. Lógica validada por revisão de código + regressão dos specs existentes.
+- Lição registrada: sempre que uma story tocar migration nesta sessão, checar
+  `supabase migration list --linked` **antes** de rodar Playwright — dev server local aponta pro
+  banco de produção real, não Docker local.
+
+## 2026-07-24 — 3 apontamentos de Lucas resolvidos (E01-S94/S95/S96)
+
+**Contexto:** Lucas trouxe 3 pontos em `docs/Apontamentos/Apontamentos-Fabricio-Aline.md` (2 sugestões
+de 2026-07-22 ainda sem story + 1 bug novo de 2026-07-24) e pediu "resolva os problemas". Processo
+seguido: 3 stories novas abertas (`E01-S94`/`S95`/`S96`, próximas livres depois de `E01-S93`),
+spec.md+tasks.md criados antes de codar, owner marcado no ROADMAP.
+
+- **E01-S94 (GUT obrigatório pro Backlog):** investigação achou o bug exato — `ChamadosPage.tsx`
+  mandava `gravidade: 3, urgencia: 3, tendencia: 3` hardcoded no "Enviar ao backlog", sem o usuário
+  escolher nada. `GerarOsModal` ganhou 3 selects (1-5, sem default) só nesse modo; "Confirmar"
+  desabilitado até completar. Fluxo "Gerar OS" direto não muda (fora de escopo da spec).
+- **E01-S95 (aba Serviços):** investigação mostrou que o apontamento já estava parcialmente
+  resolvido — `ServicosPage.tsx` não estava mais em `PCM_NAV` (saiu numa reorganização anterior,
+  provavelmente E01-S80), só ficou o arquivo órfão no repo. Deletado, zero referência restante.
+- **E01-S96 (bug 502 no import de XLS):** print do Lucas mostrava "Edge Function returned a non-2xx
+  status code" + 502 no console pra `importar-relatorio-pdf`. Achado real: a Edge Function já
+  devolve `detail` estruturado (`problem+json`) quando a OpenRouter falha, mas
+  `processarRelatorioInspecao` (adapter de qualidade) jogava o erro bruto do `supabase-js` — que só
+  expõe a mensagem genérica, escondendo o motivo real. Mesmo bug já resolvido uma vez em
+  `financeiro` (E04-S09, `erroDetalhado` inline) — desta vez extraí pra
+  `apps/web/src/lib/http/edge-function-error.ts` (compartilhado) e usei no adapter de qualidade.
+  **Não investigado**: a causa raiz do próprio 502 (por que a OpenRouter está falhando em
+  produção — chave/quota/modelo) exige olhar logs reais da function, sem acesso nesta sessão (sem
+  MCP Supabase conectado); fica para o Lucas conferir `OPENROUTER_API_KEY`/`OPENROUTER_IMPORT_MODEL`
+  no dashboard. A partir de agora a UI vai mostrar o motivo real, não mais o texto genérico.
+- Zero migration nas 3 stories. Gates rodados manualmente (lefthook `pre-push` não detecta nada
+  fora de um push real): `typecheck` (turbo, todos os pacotes), `test` (718 passed/9 skip),
+  `build` (web+portal), `arch:check` (0 violação), `audit:esteira` (476 docs), `eval:spec`
+  (rastreabilidade OK, 10 SPEC_DEVIATION pré-existentes, nenhum novo), `check:edge-functions` (33
+  funções/8 invokes OK), `biome check .` direto no binário (577 arquivos, 0 erro) — todos verdes.
+  Sem Playwright rodado (sem dev server de pé nesta sessão); recomendação: rodar
+  `inspecoes.spec.ts`/`chamados.spec.ts` (se existirem) antes de considerar fechado de verdade.
+- Próximo: validar em browser (dev server) os 3 fluxos; depois retomar a maratona no ponto onde
+  parou (E09 inteiro, ver entrada de 2026-07-21 abaixo).
+
 ## 2026-07-22 — E09 promovida + Atendimento Evolution multi-instância
 
 **Estado:** PR #53 contém E04-S01..S13, E09-S01..S11 e E02-S09/S22. O código está merge-ready após
