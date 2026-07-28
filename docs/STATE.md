@@ -10,6 +10,60 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-07-28 (cont.) — Implementação de 10 das 12 stories da reunião, branch `feat/E01-S99-chamado-id-unico`
+
+Depois de especificar as 12 stories (ver entrada abaixo), Lucas pediu pra seguir todas até o fim,
+sempre commitando — PR só depois de rodar as migrations, subir as edge functions e testar
+localmente. Implementei 10 (todas E01 exceto S105, todas E02), uma por commit, gates locais
+(typecheck/vitest/biome/`lint:migrations` squawk) verdes em cada uma. **Nada foi pusheado; nenhuma
+migration rodou em produção.**
+
+**Implementadas e verificadas (gates locais verdes):**
+- `E01-S99` — Chamado (`CH-XXXX`) único ID ponta a ponta, reverte numeração `OS-XXXX` de E01-S88.
+  Migrations `0151`/`0152`. **Achado fora do design original:** `pcm.portal_decidir_orcamento`
+  (SQL puro) também gerava `OS-XXXX` — corrigido junto.
+- `E01-S100` — SLA do C1 (Emergencial) de 4h→2h. Achado: C1 já era 100% exclusivo do emergencial,
+  não precisou de `tipo_os` novo (spec original propôs isso por engano, corrigida).
+- `E01-S101` — `local` + 3 datas (abertura/planejada/execução) no Chamado. Migration `0153`.
+- `E01-S102` — filtro por cliente em Chamados (gap só de UI, gateway já suportava).
+- `E01-S103` — responsável/representante do cliente. Migration `0154`.
+- `E01-S104` — board semanal de agenda do técnico (`AgendaTecnicoPage`, nova). Migration `0155`.
+- `E01-S106` — ferramenta alocável em cliente (índice único parcial garante 1 ativa por vez no
+  banco). Migration `0156`.
+- `E02-S23` — Zé extrai N chamados por rodada + confirma antes de gravar. Migration `0157`
+  (`atendimento.conversas.chamados_pendentes`, prompt novo da persona 'chamados').
+- `E02-S24` — alma+resumo por cliente injetados no prompt do Zé (MVP textual, ADR-0015). Migration
+  `0159`.
+- `E02-S25` — schema + função pura de decisão do trigger automático. Migration `0158`.
+
+**Não implementadas (documentado como SPEC_DEVIATION nos `tasks.md` de cada uma, não decidi sozinho):**
+- `E01-S105` (Excel→IA→GUT→chamado) — não deu tempo, fora do escopo priorizado desta sessão.
+- `E02-S24` — job de resumo rolante automático (decisão de frequência/custo, produto) e tool de
+  consulta de chamados via LLM (exigiria function calling, não usado hoje).
+- `E02-S25` — wiring real no `pcm-ze-agent` (falta confirmar de onde vem "último reply humano" no
+  schema de `atendimento.mensagens`/`wa_messages` — risco alto demais pra decidir sozinho numa
+  function que já atende clientes reais).
+- `E02-S26` (agente entrevistador) — só schema/domínio (migration `0160`). O motor conversacional é
+  uma peça de arquitetura nova (tamanho de um 2º `pcm-ze-agent`) — ADR-0016 e as perguntas de
+  produto do `design.md` continuam sem resposta, não é decisão pra tomar sozinho no meio da sessão.
+
+**Limitações reais desta sessão (mesmas de sempre, registradas caso a caso):**
+- Sem Docker local → nenhum `db-tests`/pgTAP rodado; RLS FORCE aplicado em todas as tabelas novas
+  mas não validado por teste.
+- Sem Deno CLI → testes das edge functions (`_shared/confirmacao-texto.test.ts`,
+  `_shared/trigger-automatico.test.ts`, `_shared/memoria-cliente.test.ts`, e os já existentes de
+  `os-from-task.test.ts`) escritos mas não executados; lógica validada manualmente via Node onde
+  fazia sentido (mesma semântica JS/Deno).
+- Nenhuma migration aplicada em produção (`0150` era a última confirmada antes desta sessão).
+- `E02-S23`/`E02-S24`/`E02-S25` mexem no `pcm-ze-agent`, que já atende clientes reais no WhatsApp —
+  **testar manualmente antes do PR é obrigatório**, não opcional. Risco real de o prompt novo
+  (`itens:[...]`, migration 0157) não se comportar como esperado até validar contra OpenRouter de
+  verdade.
+
+**Próximo passo:** Lucas roda as migrations (`0151`→`0160`, nessa ordem) localmente/staging, sobe
+as edge functions alteradas (`pcm-ze-agent`, `_shared/*`), testa o WhatsApp de verdade (E02-S23
+especialmente) e as telas novas (Agenda do Técnico, painéis na Visão 360). PR só depois disso.
+
 ## 2026-07-28 — Reunião Fabrício × Lucas: 12 stories novas especificadas (E01-S99..S106, E02-S23..S26)
 
 Lucas trouxe a transcrição + anotações da reunião de alinhamento com o Fabrício (2026-07-27) e pediu
