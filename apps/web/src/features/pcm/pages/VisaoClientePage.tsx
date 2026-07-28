@@ -47,6 +47,12 @@ import {
   removerResponsavel,
 } from "../application/cliente-responsaveis";
 import { editarCliente } from "../application/clientes-crud";
+import {
+  alocarFerramenta,
+  devolverFerramenta,
+  listarAlocacoesCliente,
+  listarFerramentasDisponiveis,
+} from "../application/ferramenta-alocacao-cliente";
 import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao-cliente";
 import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
@@ -59,8 +65,10 @@ import { PainelItensDoCliente } from "../components/PainelItensDoCliente";
 import { PainelSistemasCliente } from "../components/PainelSistemasCliente";
 import { MOTIVO_ASSESSMENT_LABEL } from "../domain/assessment";
 import type { ResponsavelCliente } from "../domain/cliente-responsaveis";
+import type { AlocacaoFerramentaCliente } from "../domain/ferramenta-alocacao-cliente";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
+import { supabaseFerramentaAlocacaoClienteAdapter } from "../infrastructure/supabase-ferramenta-alocacao-cliente-adapter";
 import { EstruturaClientePage } from "./EstruturaClientePage";
 
 type Estado =
@@ -477,6 +485,7 @@ function Resumo360({
       </div>
 
       <PainelResponsaveis clienteId={cliente.id} temEscrita={temEscrita} />
+      <PainelFerramentasCliente clienteId={cliente.id} temEscrita={temEscrita} />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
         <TimelineCliente eventos={eventos} compacta onAbrirOs={onAbrirOs} />
@@ -750,6 +759,203 @@ function ResponsavelModal({
             className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
             {salvando ? "Salvando…" : "Salvar"}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
+/** E01-S106: ferramenta da Sinérgica alocada temporariamente a um cliente — distinto da alocação
+ * ferramenta→técnico já existente (E01-S65, tela Ferramentas). Uma alocação ativa por ferramenta. */
+function PainelFerramentasCliente({
+  clienteId,
+  temEscrita,
+}: {
+  clienteId: string;
+  temEscrita: boolean;
+}) {
+  const { user } = useAuth();
+  const [alocacoes, setAlocacoes] = useState<AlocacaoFerramentaCliente[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [alocando, setAlocando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    try {
+      setAlocacoes(
+        await listarAlocacoesCliente(supabaseFerramentaAlocacaoClienteAdapter, clienteId),
+      );
+    } finally {
+      setCarregando(false);
+    }
+  }, [clienteId]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  async function devolver(alocacaoId: string) {
+    if (!temEscrita || !user) return;
+    await devolverFerramenta(supabaseFerramentaAlocacaoClienteAdapter, alocacaoId, user.id);
+    await carregar();
+  }
+
+  const ativas = alocacoes.filter((a) => a.devolvidaEm === null);
+  const historico = alocacoes.filter((a) => a.devolvidaEm !== null);
+
+  return (
+    <section className="rounded-[8px] border border-line bg-card">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Ferramentas alocadas</h3>
+          <p className="mt-0.5 text-xs text-ink-3">
+            Ferramentas da Sinérgica emprestadas/em uso neste cliente
+          </p>
+        </div>
+        {temEscrita && (
+          <button type="button" onClick={() => setAlocando(true)} className="btn-secondary">
+            <Wrench className="h-4 w-4" />
+            Alocar ferramenta
+          </button>
+        )}
+      </div>
+      {carregando ? (
+        <div className="px-5 py-6 text-center text-sm text-ink-3">Carregando…</div>
+      ) : ativas.length === 0 && historico.length === 0 ? (
+        <div className="px-5 py-6 text-center text-sm text-ink-3">Nenhuma ferramenta alocada.</div>
+      ) : (
+        <div className="divide-y divide-line-soft">
+          {ativas.map((alocacao) => (
+            <div key={alocacao.id} className="flex items-center justify-between gap-3 px-5 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-ink">{alocacao.ferramentaNome}</p>
+                <p className="mt-0.5 text-xs text-ink-3">
+                  Alocada em {new Date(alocacao.alocadaEm).toLocaleDateString("pt-BR")}
+                </p>
+              </div>
+              {temEscrita && (
+                <button
+                  type="button"
+                  onClick={() => devolver(alocacao.id)}
+                  className="shrink-0 rounded-[6px] px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                >
+                  Devolver
+                </button>
+              )}
+            </div>
+          ))}
+          {historico.slice(0, 5).map((alocacao) => (
+            <div key={alocacao.id} className="px-5 py-3 opacity-60">
+              <p className="truncate text-sm text-ink-2">{alocacao.ferramentaNome}</p>
+              <p className="mt-0.5 text-xs text-ink-3">
+                {new Date(alocacao.alocadaEm).toLocaleDateString("pt-BR")} até{" "}
+                {alocacao.devolvidaEm && new Date(alocacao.devolvidaEm).toLocaleDateString("pt-BR")}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+      {alocando && (
+        <AlocarFerramentaModal
+          onCancel={() => setAlocando(false)}
+          onErro={setErro}
+          onAlocar={async (ferramentaId, userId) => {
+            await alocarFerramenta(
+              supabaseFerramentaAlocacaoClienteAdapter,
+              ferramentaId,
+              clienteId,
+              userId,
+            );
+            setAlocando(false);
+            await carregar();
+          }}
+        />
+      )}
+      {erro && <p className="px-5 pb-3 text-sm text-red-600">{erro}</p>}
+    </section>
+  );
+}
+
+function AlocarFerramentaModal({
+  onCancel,
+  onAlocar,
+  onErro,
+}: {
+  onCancel: () => void;
+  onAlocar: (ferramentaId: string, userId: string) => Promise<void>;
+  onErro: (mensagem: string) => void;
+}) {
+  const { user } = useAuth();
+  const [opcoes, setOpcoes] = useState<Array<{ id: string; nome: string }>>([]);
+  const [ferramentaId, setFerramentaId] = useState("");
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    listarFerramentasDisponiveis(supabaseFerramentaAlocacaoClienteAdapter).then((lista) => {
+      setOpcoes(lista);
+      setFerramentaId(lista[0]?.id ?? "");
+      setCarregando(false);
+    });
+  }, []);
+
+  async function confirmar() {
+    if (!user) return;
+    setSalvando(true);
+    try {
+      await onAlocar(ferramentaId, user.id);
+    } catch (e) {
+      onErro(e instanceof Error ? e.message : "Não foi possível alocar a ferramenta.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <dialog open className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <h2 className="text-lg font-semibold text-ink">Alocar ferramenta</h2>
+        <div className="mt-4">
+          {carregando ? (
+            <p className="text-sm text-ink-3">Carregando…</p>
+          ) : opcoes.length === 0 ? (
+            <p className="text-sm text-ink-3">
+              Nenhuma ferramenta disponível (todas já estão alocadas em algum cliente).
+            </p>
+          ) : (
+            <label className="text-sm text-ink-2">
+              Ferramenta
+              <select
+                value={ferramentaId}
+                onChange={(e) => setFerramentaId(e.target.value)}
+                className="input mt-1 w-full"
+              >
+                {opcoes.map((opcao) => (
+                  <option key={opcao.id} value={opcao.id}>
+                    {opcao.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-line px-4 py-2 text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={salvando || !ferramentaId}
+            onClick={confirmar}
+            className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {salvando ? "Alocando…" : "Alocar"}
           </button>
         </div>
       </div>
