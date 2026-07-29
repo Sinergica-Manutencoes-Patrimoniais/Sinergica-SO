@@ -111,6 +111,7 @@ import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
+import { useNavGuard } from "./nav-guard-context";
 import { usePermissoes } from "./permissoes-context";
 import { useTheme } from "./theme-context";
 
@@ -563,6 +564,7 @@ export function HomePage() {
   const { user, logout } = useAuth();
   const { mode, toggleMode } = useTheme();
   const { podeAcessar } = usePermissoes();
+  const { confirmarSaida } = useNavGuard();
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
   const [configTab, setConfigTab] = useState<
     "grupos" | "usuarios" | "integracoes" | "ia" | "priorizacao" | "localizacao-auvo"
@@ -604,11 +606,13 @@ export function HomePage() {
   } | null>(null);
 
   function navegarModulo(area: AreaAtiva) {
+    if (area !== activeModulo && !confirmarSaida()) return;
     setActiveModulo(area);
     setMobileSidebarOpen(false);
   }
 
   function irParaPcmView(view: PcmView) {
+    if (view !== pcmView && !confirmarSaida()) return;
     setPcmView(view);
     setClienteSelecionado(null); // ao trocar de sub-tela, sai da Visão 360 de um cliente específico
     setClientePeriodo(null);

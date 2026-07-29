@@ -29,6 +29,7 @@ import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { useFormularioSujo } from "../../../app/use-formulario-sujo";
 import { supabaseConfigAdapter } from "../../config/infrastructure/supabase-config-adapter";
 import type {
   AssessmentClienteResumo,
@@ -356,6 +357,8 @@ function CriarAcessoPortalModal({
   const [senha, setSenha] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  useFormularioSujo({ nome: "", email: "", senha: "" }, { nome, email, senha });
 
   const criar = async () => {
     setErro(null);
@@ -701,6 +704,15 @@ function ResponsavelModal({
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  useFormularioSujo(
+    {
+      nome: responsavel?.nome ?? "",
+      papel: responsavel?.papel ?? "",
+      contato: responsavel?.contato ?? "",
+    },
+    { nome, papel, contato },
+  );
+
   async function salvar() {
     setSalvando(true);
     setErro(null);
@@ -896,6 +908,11 @@ function AlocarFerramentaModal({
   const [ferramentaId, setFerramentaId] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+
+  // `carregando` como chave de reset: o valor inicial só fica pronto após o fetch (1º item da
+  // lista), então a linha de base do formulário precisa recapturar nesse momento — senão o
+  // auto-select dispararia o aviso de "alterações não salvas" sem o operador ter feito nada.
+  useFormularioSujo({ ferramentaId: opcoes[0]?.id ?? "" }, { ferramentaId }, carregando);
 
   useEffect(() => {
     listarFerramentasDisponiveis(supabaseFerramentaAlocacaoClienteAdapter).then((lista) => {

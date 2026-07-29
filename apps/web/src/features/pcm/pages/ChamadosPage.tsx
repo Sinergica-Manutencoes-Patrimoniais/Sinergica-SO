@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Headset, Plus, RefreshCw, X } from "lucide-reac
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { useFormularioSujo } from "../../../app/use-formulario-sujo";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import {
   cancelarChamado,
@@ -528,6 +529,11 @@ function NovoChamadoModal({
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  useFormularioSujo(
+    { clienteId: clientes[0]?.id ?? "", titulo: "", descricao: "", local: "", solicitante: "" },
+    { clienteId, titulo, descricao, local, solicitante },
+  );
+
   async function salvar() {
     setSalvando(true);
     setErro(null);
@@ -655,6 +661,18 @@ function GerarOsModal({
   const [tendencia, setTendencia] = useState<number | "">(destino === "backlog" ? "" : 3);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  useFormularioSujo(
+    {
+      tipoTarefaId: dadosOs.tiposTarefa[0]?.id ?? "",
+      tecnicoId: "",
+      dataPrevista: "",
+      gravidade: destino === "backlog" ? "" : 3,
+      urgencia: destino === "backlog" ? "" : 3,
+      tendencia: destino === "backlog" ? "" : 3,
+    },
+    { tipoTarefaId, tecnicoId, dataPrevista, gravidade, urgencia, tendencia },
+  );
 
   const gutCompleto = gravidade !== "" && urgencia !== "" && tendencia !== "";
 
