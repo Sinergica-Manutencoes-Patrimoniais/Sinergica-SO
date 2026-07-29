@@ -7,8 +7,16 @@ export function listarAlocacoesCliente(
   return gateway.listarPorCliente(clienteId);
 }
 
+export function listarAlocacoesAtivas(gateway: FerramentaAlocacaoClienteGateway) {
+  return gateway.listarAtivas();
+}
+
 export function listarFerramentasDisponiveis(gateway: FerramentaAlocacaoClienteGateway) {
   return gateway.listarDisponiveis();
+}
+
+export function listarClientesParaAlocacao(gateway: FerramentaAlocacaoClienteGateway) {
+  return gateway.listarClientesAtivos();
 }
 
 export function alocarFerramenta(

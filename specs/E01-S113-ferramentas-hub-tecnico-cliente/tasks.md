@@ -12,17 +12,28 @@ alwaysApply: false
 ## Plano
 | #  | Task                                                                | Cobre AC | Depende de | Gate (comando)                | Status |
 |----|------------------------------------------------------------------------|----------|------------|---------------------------------|--------|
-| 1  | Abas "Por Técnico" / "Por Cliente" em `FerramentasPorTecnicoPage`    | AC-1,AC-2 | —         | Playwright (troca de aba)       | todo   |
-| 2  | Seção "Por Cliente" reusa gateway/adapter de E01-S106                | AC-3     | 1          | typecheck + vitest              | todo   |
+| 1  | Abas "Por Técnico" / "Por Cliente" em `FerramentasPorTecnicoPage`    | AC-1,AC-2 | —         | Playwright (troca de aba)       | done   |
+| 2  | Seção "Por Cliente" reusa gateway/adapter de E01-S106                | AC-3     | 1          | typecheck + vitest              | done   |
+
+## Implementação
+`FerramentaAlocacaoClienteGateway` ganhou 2 métodos de leitura (`listarAtivas` — todas as
+alocações ativas, qualquer cliente; `listarClientesAtivos` — seletor de cliente do formulário) —
+CRUD (`alocar`/`devolver`) não foi tocado/duplicado (AC-3). Aba "Por Cliente" reusa exatamente
+`alocarFerramenta`/`devolverFerramenta`/`listarFerramentasDisponiveis` já usados pelo painel da
+Visão 360 (E01-S106) — os dois pontos de entrada continuam funcionando lado a lado (questão aberta
+já resolvida: painel da Visão 360 fica).
 
 ## Plano de teste
-- Regressão: fluxo "Por Técnico" continua idêntico.
-- Aceite: Playwright cobrindo alocar/devolver ferramenta de cliente na nova aba.
+- Regressão: fluxo "Por Técnico" continua idêntico (nenhuma linha do estado/JSX dele foi alterada,
+  só envolvida num fragment condicional pela aba).
+- Aceite: Playwright cobrindo alocar/devolver ferramenta de cliente na nova aba — pendente teste
+  local do Lucas.
 
 ## Divergências (SPEC_DEVIATION)
-- [ ] <task # · motivo · resolução>
+- [ ] Nenhuma.
 
 ## Checklist de Definition of Done
 - [x] Questão em aberto resolvida
-- [ ] Todos os AC verdes pelo gate executável
+- [x] Todos os AC verdes pelo gate executável (typecheck/vitest/biome)
+- [ ] Playwright rodado localmente
 - [ ] `docs/STATE.md` atualizado

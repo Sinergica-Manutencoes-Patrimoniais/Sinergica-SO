@@ -1,5 +1,6 @@
 import { supabase } from "../../../lib/supabase-client";
 import type {
+  ClienteOpcaoFerramenta,
   FerramentaAlocacaoClienteGateway,
   FerramentaOpcao,
 } from "../application/ferramenta-alocacao-cliente-gateway";
@@ -69,6 +70,34 @@ export const supabaseFerramentaAlocacaoClienteAdapter: FerramentaAlocacaoCliente
       [clienteId],
     );
     return rows.map((row) => mapAlocacao(row, ferramentas, clientes));
+  },
+
+  async listarAtivas(): Promise<AlocacaoFerramentaCliente[]> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("ferramenta_alocacoes_cliente")
+      .select(COLS)
+      .is("devolvida_em", null)
+      .order("alocada_em", { ascending: false });
+    if (error) throw error;
+    const rows = (data ?? []) as AlocacaoRow[];
+    const { ferramentas, clientes } = await mapearNomes(
+      [...new Set(rows.map((r) => r.ferramenta_id))],
+      [...new Set(rows.map((r) => r.cliente_id))],
+    );
+    return rows.map((row) => mapAlocacao(row, ferramentas, clientes));
+  },
+
+  async listarClientesAtivos(): Promise<ClienteOpcaoFerramenta[]> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("clientes")
+      .select("id,nome")
+      .eq("ativo", true)
+      .is("deleted_at", null)
+      .order("nome", { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map((c) => ({ id: c.id as string, nome: c.nome as string }));
   },
 
   async listarDisponiveis(): Promise<FerramentaOpcao[]> {
