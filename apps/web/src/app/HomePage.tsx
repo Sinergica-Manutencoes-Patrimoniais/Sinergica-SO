@@ -180,6 +180,9 @@ interface NavItem {
   // módulo-scoped (fora do componente), então o clique de fato é resolvido no render (tem acesso a
   // `navegarModulo`/`setConfigTab`); esta flag só marca a intenção nos dados estáticos.
   atalhoConfigGrupos?: boolean;
+  // E01-S114: submenu simples (1 nível só) — item com `filhos` não navega por si (sem `view`
+  // próprio), só expande/colapsa; os filhos é que navegam.
+  filhos?: NavItem[];
 }
 
 interface NavGroup {
@@ -359,12 +362,20 @@ const PCM_NAV: NavGroup[] = [
     titulo: "OPERAÇÃO",
     items: [
       { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
-      { label: "Ordens de Serviço", icon: ClipboardList, view: "ordens" },
-      { label: "Backlog GUT", icon: LayoutGrid, view: "backlog" },
+      // E01-S114: Ordens de Serviço/Backlog GUT viram subitens de Chamados — reflete o fluxo real
+      // (Chamado → GUT/Backlog → OS), em vez de 3 itens soltos no mesmo nível.
+      {
+        label: "Chamados",
+        icon: Headset,
+        view: "chamados",
+        filhos: [
+          { label: "Ordens de Serviço", icon: ClipboardList, view: "ordens" },
+          { label: "Backlog GUT", icon: LayoutGrid, view: "backlog" },
+        ],
+      },
       { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
       { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
-      { label: "Chamados", icon: Headset, view: "chamados" },
     ],
   },
   {
@@ -786,32 +797,63 @@ export function HomePage() {
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const view = item.view;
-                  // Item ativo: com `view`, reflete a sub-tela atual; sem `view`, mantém o mock.
-                  const isActive = view ? view === pcmView : item.active;
+                  // E01-S114 AC-3: com filhos, também ativo se o pcmView atual for de um filho —
+                  // mantém o contexto visível (submenu sempre expandido, ver AC-1 "padrão simples").
+                  const filhoAtivo = item.filhos?.some((filho) => filho.view === pcmView) ?? false;
+                  const isActive = view ? view === pcmView || filhoAtivo : item.active;
                   return (
-                    <button
-                      key={item.label}
-                      type="button"
-                      title={item.label}
-                      onClick={
-                        item.atalhoConfigGrupos
-                          ? () => {
-                              setConfigTab("grupos");
-                              navegarModulo("config");
-                            }
-                          : view
-                            ? () => irParaPcmView(view)
-                            : undefined
-                      }
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
-                        isActive
-                          ? "border-orange bg-white/[0.07] text-white font-medium"
-                          : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                      {!sidebarCompacta && <span className="truncate">{item.label}</span>}
-                    </button>
+                    <div key={item.label}>
+                      <button
+                        type="button"
+                        title={item.label}
+                        onClick={
+                          item.atalhoConfigGrupos
+                            ? () => {
+                                setConfigTab("grupos");
+                                navegarModulo("config");
+                              }
+                            : view
+                              ? () => irParaPcmView(view)
+                              : undefined
+                        }
+                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                          isActive
+                            ? "border-orange bg-white/[0.07] text-white font-medium"
+                            : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                        {!sidebarCompacta && <span className="truncate">{item.label}</span>}
+                      </button>
+                      {item.filhos && !sidebarCompacta && (
+                        <div className="ml-4 border-l border-navy-line pl-2">
+                          {item.filhos.map((filho) => {
+                            const FilhoIcon = filho.icon;
+                            const filhoIsActive = filho.view === pcmView;
+                            return (
+                              <button
+                                key={filho.label}
+                                type="button"
+                                title={filho.label}
+                                onClick={
+                                  filho.view
+                                    ? () => irParaPcmView(filho.view as PcmView)
+                                    : undefined
+                                }
+                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${
+                                  filhoIsActive
+                                    ? "border-orange bg-white/[0.07] text-white font-medium"
+                                    : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                                }`}
+                              >
+                                <FilhoIcon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
+                                <span className="truncate">{filho.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
