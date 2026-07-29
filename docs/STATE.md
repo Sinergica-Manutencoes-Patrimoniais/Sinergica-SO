@@ -10,6 +10,31 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-07-29 (cont. 4) — E01-S118: reestruturação da Operação (unifica Chamados no board) — PARCIAL
+
+Lucas pediu reestruturação maior (6 pontos) depois de testar S117: unificar menu Chamados+Operação
+num board só; Backlog GUT vira aba; clique no card abre modal; enriquecer métricas; filtro por
+Cliente. 3 decisões travadas com ele (AskUserQuestion): (0) tudo vai pro board; (2) aba+coluna
+Backlog coexistem; (5) clique abre o modal direto.
+
+**Implementado (T1-T6, T8), gates verdes (typecheck/vitest 758/biome):**
+- Nav: 1 item "Chamados" → board (`OrdensServicoPage`). `ChamadosPage`/`BacklogGutPage` saíram da
+  nav; `view=chamados`/`view=backlog` redirecionam pro board (backlog abre já na aba).
+- Aba "Backlog" (5ª, ao lado do Calendário) reusa `BacklogGutPage`. Coluna Backlog do Kanban
+  (S117) coexiste.
+- Clique no card (Kanban/Timeline/Calendário) abre o modal de detalhe (`aberturaModalSeq`).
+- "Novo Chamado" no topo do board — extraiu `NovoChamadoModal` pra componente compartilhado.
+- Filtro por Cliente (empurrado pro WHERE; KPIs viram client-side quando cliente ativo, o RPC de
+  KPI não tem esse param — evita migration).
+- Métricas operacionais (`calcularMetricasOperacao`: backlog / sem técnico / sync Auvo c/ erro).
+- Removido "Ver Chamado" (S116) e o estado `chamadoFoco` órfão.
+
+**T7 pendente (próximo chunk):** migrar as ações POR-Chamado (gerar OS/enviar backlog, cancelar
+com justificativa, histórico WhatsApp/Zé, datas planejada/execução) pro modal de detalhe do card —
+hoje esses componentes ainda vivem em `ChamadosPage` (não mais renderizada, mantida como
+referência). Até o T7, `chamados.spec.ts`/`atendimento-historico-chamado.spec.ts` ficam vermelhos
+(testam a tela antiga) — reescrita junto com o T7. Nada pusheado; PR só depois do T7 + Playwright.
+
 ## 2026-07-29 (cont. 3) — E01-S116/S117: unificação UX Chamado↔OS na tela Operação
 
 Lucas testou o Kanban de OS e trouxe pontos de unificação Chamado↔OS. Duas stories, code-only,

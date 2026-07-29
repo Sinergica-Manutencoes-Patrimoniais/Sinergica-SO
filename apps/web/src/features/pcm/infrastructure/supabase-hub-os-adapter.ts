@@ -134,6 +134,7 @@ async function buscarTodasOrdens(filtros?: FiltrosServidorOrdens): Promise<Ordem
     if (filtros?.tecnicoFuncionarioId) {
       query = query.eq("tecnico_funcionario_id", filtros.tecnicoFuncionarioId);
     }
+    if (filtros?.clienteId) query = query.eq("client_id", filtros.clienteId);
     if (filtros?.categoria) query = query.eq("categoria", filtros.categoria);
     if (filtros?.dataInicio) query = query.gte("created_at", filtros.dataInicio);
     if (filtros?.dataFim) query = query.lte("created_at", `${filtros.dataFim}T23:59:59.999`);

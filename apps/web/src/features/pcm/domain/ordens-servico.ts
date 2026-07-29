@@ -252,10 +252,36 @@ export function resumoTooltipOrdem(ordem: OrdemServicoOperacional): string | nul
   return linhas.join("\n");
 }
 
+// E01-S118 AC-4: métricas operacionais acionáveis, além dos KPIs de status. Puras/testáveis.
+export interface MetricasOperacao {
+  /** OS na raia de Backlog (aguardando priorização/planejamento). */
+  backlog: number;
+  /** OS aberta (não histórica) ainda sem técnico atribuído — gargalo de planejamento. */
+  semTecnico: number;
+  /** OS com erro de sync no Auvo — precisa de intervenção. */
+  syncAuvoErro: number;
+}
+
+export function calcularMetricasOperacao(
+  ordens: readonly OrdemServicoOperacional[],
+): MetricasOperacao {
+  let backlog = 0;
+  let semTecnico = 0;
+  let syncAuvoErro = 0;
+  for (const ordem of ordens) {
+    if (ordem.status === "backlog") backlog++;
+    if (ehOsAberta(ordem.status) && ordem.tecnicoFuncionarioId === null) semTecnico++;
+    if (ordem.auvoSyncError !== null) syncAuvoErro++;
+  }
+  return { backlog, semTecnico, syncAuvoErro };
+}
+
 export interface FiltrosOrdens {
   busca: string;
   status: string;
   tecnicoFuncionarioId: string;
+  /** E01-S118 AC-5: filtro por Cliente ("todos" = sem filtro). */
+  clienteId: string;
   categoria: string;
   dataInicio: string | null;
   dataFim: string | null;
@@ -265,6 +291,7 @@ export const FILTROS_ORDENS_VAZIO: FiltrosOrdens = {
   busca: "",
   status: "todas",
   tecnicoFuncionarioId: "todos",
+  clienteId: "todos",
   categoria: "todas",
   dataInicio: null,
   dataFim: null,

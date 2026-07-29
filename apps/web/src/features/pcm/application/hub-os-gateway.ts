@@ -16,6 +16,8 @@ export interface AlterarStatusOsInput {
 export interface FiltrosServidorOrdens {
   status?: string;
   tecnicoFuncionarioId?: string;
+  /** E01-S118 AC-5: filtro por Cliente empurrado pro `WHERE` (client_id). */
+  clienteId?: string;
   categoria?: string;
   dataInicio?: string | null;
   dataFim?: string | null;

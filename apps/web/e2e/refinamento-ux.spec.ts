@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 test("OS: expandir abre modal grande, fecha por X e por Esc", async ({ page }) => {
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByTitle("Operação", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
   await page.waitForTimeout(800);
 
   await page.getByRole("button", { name: "Expandir detalhe da OS" }).click();

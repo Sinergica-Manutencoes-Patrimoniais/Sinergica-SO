@@ -10,7 +10,7 @@ import { expect, test } from "@playwright/test";
 test("ocultar/reexibir coluna do Kanban persiste entre reloads", async ({ page }) => {
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByTitle("Operação", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
   await page.getByRole("button", { name: "Kanban" }).click();
 
   const ocultarCancelado = page.getByRole("button", { name: "Ocultar coluna Cancelado" });
@@ -23,7 +23,7 @@ test("ocultar/reexibir coluna do Kanban persiste entre reloads", async ({ page }
 
   await page.reload();
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByTitle("Operação", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
   await page.getByRole("button", { name: "Kanban" }).click();
 
   await expect(page.getByRole("button", { name: "Ocultar coluna Cancelado" })).not.toBeVisible({
@@ -41,7 +41,7 @@ test("ocultar/reexibir coluna do Kanban persiste entre reloads", async ({ page }
 test("coluna Preventiva aparece entre Corretiva e Planejamento", async ({ page }) => {
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByTitle("Operação", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
   await page.getByRole("button", { name: "Kanban" }).click();
 
   await expect(page.getByRole("button", { name: "Ocultar coluna Preventiva" })).toBeVisible({

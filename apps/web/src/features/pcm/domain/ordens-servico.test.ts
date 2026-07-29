@@ -3,6 +3,7 @@ import {
   FILTROS_ORDENS_VAZIO,
   agruparPorTecnico,
   calcularKpisOrdens,
+  calcularMetricasOperacao,
   deveAlterarStatusPorDrop,
   ehItemBacklog,
   filtrarBacklogGut,
@@ -55,6 +56,48 @@ describe("rotuloNumeroOrdem", () => {
   });
   it("mantém o numero cru quando não é CH e não tem Auvo", () => {
     expect(rotuloNumeroOrdem({ numero: "OS-0067", auvoTaskId: null })).toBe("OS-0067");
+  });
+});
+
+describe("calcularMetricasOperacao", () => {
+  it("conta backlog, sem técnico (aberta) e erro de sync Auvo", () => {
+    const comum = { scorePcm: 27, createdAt: "2026-07-04T10:00:00Z" };
+    const m = calcularMetricasOperacao([
+      {
+        ...base,
+        ...comum,
+        id: "1",
+        status: "backlog",
+        tecnicoFuncionarioId: null,
+        auvoSyncError: null,
+      },
+      {
+        ...base,
+        ...comum,
+        id: "2",
+        status: "solicitacao",
+        tecnicoFuncionarioId: null,
+        auvoSyncError: null,
+      },
+      {
+        ...base,
+        ...comum,
+        id: "3",
+        status: "em_execucao",
+        tecnicoFuncionarioId: "t1",
+        auvoSyncError: "x",
+      },
+      {
+        ...base,
+        ...comum,
+        id: "4",
+        status: "finalizado",
+        tecnicoFuncionarioId: null,
+        auvoSyncError: null,
+      },
+    ]);
+    // backlog: id 1. sem técnico (aberta): id 1 e 2 (finalizado não conta). erro sync: id 3.
+    expect(m).toEqual({ backlog: 1, semTecnico: 2, syncAuvoErro: 1 });
   });
 });
 
