@@ -1,16 +1,22 @@
 import { supabase } from "../../../lib/supabase-client";
 import type { ClienteResponsaveisGateway } from "../application/cliente-responsaveis-gateway";
-import type { ResponsavelCliente, ResponsavelFormData } from "../domain/cliente-responsaveis";
+import type {
+  PreferenciaContato,
+  ResponsavelCliente,
+  ResponsavelFormData,
+} from "../domain/cliente-responsaveis";
 
 interface ResponsavelRow {
   id: string;
   cliente_id: string;
   nome: string;
   papel: string | null;
-  contato: string | null;
+  email: string | null;
+  telefone: string | null;
+  preferencia_contato: PreferenciaContato | null;
 }
 
-const COLS = "id,cliente_id,nome,papel,contato" as const;
+const COLS = "id,cliente_id,nome,papel,email,telefone,preferencia_contato" as const;
 
 function mapResponsavel(row: ResponsavelRow): ResponsavelCliente {
   return {
@@ -18,7 +24,9 @@ function mapResponsavel(row: ResponsavelRow): ResponsavelCliente {
     clienteId: row.cliente_id,
     nome: row.nome,
     papel: row.papel,
-    contato: row.contato,
+    email: row.email,
+    telefone: row.telefone,
+    preferenciaContato: row.preferencia_contato,
   };
 }
 
@@ -43,7 +51,9 @@ export const supabaseClienteResponsaveisAdapter: ClienteResponsaveisGateway = {
         cliente_id: input.clienteId,
         nome: input.nome,
         papel: input.papel ?? null,
-        contato: input.contato ?? null,
+        email: input.email ?? null,
+        telefone: input.telefone ?? null,
+        preferencia_contato: input.preferenciaContato ?? null,
       })
       .select(COLS)
       .single();
@@ -58,7 +68,9 @@ export const supabaseClienteResponsaveisAdapter: ClienteResponsaveisGateway = {
       .update({
         nome: input.nome,
         papel: input.papel ?? null,
-        contato: input.contato ?? null,
+        email: input.email ?? null,
+        telefone: input.telefone ?? null,
+        preferencia_contato: input.preferenciaContato ?? null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

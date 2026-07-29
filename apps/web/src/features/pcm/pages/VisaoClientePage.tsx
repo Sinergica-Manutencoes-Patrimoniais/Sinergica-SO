@@ -66,7 +66,11 @@ import { PainelHistorico } from "../components/PainelHistorico";
 import { PainelItensDoCliente } from "../components/PainelItensDoCliente";
 import { PainelSistemasCliente } from "../components/PainelSistemasCliente";
 import { MOTIVO_ASSESSMENT_LABEL } from "../domain/assessment";
-import type { ResponsavelCliente } from "../domain/cliente-responsaveis";
+import {
+  PREFERENCIAS_CONTATO,
+  type PreferenciaContato,
+  type ResponsavelCliente,
+} from "../domain/cliente-responsaveis";
 import type { AlocacaoFerramentaCliente } from "../domain/ferramenta-alocacao-cliente";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
@@ -91,6 +95,14 @@ type Aba360 =
   | "board"
   | "financeiro"
   | "comunicacao";
+
+// E01-S111: rótulos de exibição da preferência de contato de um responsável do cliente.
+const PREFERENCIA_CONTATO_LABEL: Record<PreferenciaContato, string> = {
+  whatsapp: "WhatsApp",
+  ligacao: "Ligação",
+  email: "E-mail",
+  outro: "Outro",
+};
 
 const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   { id: "resumo", label: "Resumo", icon: Activity },
@@ -636,8 +648,16 @@ function PainelResponsaveis({
                     </span>
                   )}
                 </p>
-                {responsavel.contato && (
-                  <p className="mt-0.5 text-xs text-ink-3">{responsavel.contato}</p>
+                {(responsavel.telefone || responsavel.email) && (
+                  <p className="mt-0.5 text-xs text-ink-3">
+                    {[responsavel.telefone, responsavel.email].filter(Boolean).join(" · ")}
+                    {responsavel.preferenciaContato && (
+                      <span className="text-ink-3">
+                        {" "}
+                        (prefere {PREFERENCIA_CONTATO_LABEL[responsavel.preferenciaContato]})
+                      </span>
+                    )}
+                  </p>
                 )}
               </div>
               {temEscrita && (
@@ -695,12 +715,18 @@ function ResponsavelModal({
     clienteId: string;
     nome: string;
     papel: string | null;
-    contato: string | null;
+    email: string | null;
+    telefone: string | null;
+    preferenciaContato: PreferenciaContato | null;
   }) => Promise<void>;
 }) {
   const [nome, setNome] = useState(responsavel?.nome ?? "");
   const [papel, setPapel] = useState(responsavel?.papel ?? "");
-  const [contato, setContato] = useState(responsavel?.contato ?? "");
+  const [email, setEmail] = useState(responsavel?.email ?? "");
+  const [telefone, setTelefone] = useState(responsavel?.telefone ?? "");
+  const [preferenciaContato, setPreferenciaContato] = useState<PreferenciaContato | "">(
+    responsavel?.preferenciaContato ?? "",
+  );
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -708,16 +734,25 @@ function ResponsavelModal({
     {
       nome: responsavel?.nome ?? "",
       papel: responsavel?.papel ?? "",
-      contato: responsavel?.contato ?? "",
+      email: responsavel?.email ?? "",
+      telefone: responsavel?.telefone ?? "",
+      preferenciaContato: responsavel?.preferenciaContato ?? "",
     },
-    { nome, papel, contato },
+    { nome, papel, email, telefone, preferenciaContato },
   );
 
   async function salvar() {
     setSalvando(true);
     setErro(null);
     try {
-      await onSalvar({ clienteId, nome, papel: papel || null, contato: contato || null });
+      await onSalvar({
+        clienteId,
+        nome,
+        papel: papel || null,
+        email: email || null,
+        telefone: telefone || null,
+        preferenciaContato: preferenciaContato || null,
+      });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível salvar o responsável.");
     } finally {
@@ -750,13 +785,36 @@ function ResponsavelModal({
             />
           </label>
           <label className="text-sm text-ink-2">
-            Contato
+            E-mail
             <input
-              value={contato}
-              onChange={(e) => setContato(e.target.value)}
-              placeholder="Telefone ou e-mail"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
             />
+          </label>
+          <label className="text-sm text-ink-2">
+            Telefone
+            <input
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+          <label className="text-sm text-ink-2">
+            Preferência de contato
+            <select
+              value={preferenciaContato}
+              onChange={(e) => setPreferenciaContato(e.target.value as PreferenciaContato | "")}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            >
+              <option value="">Sem preferência</option>
+              {PREFERENCIAS_CONTATO.map((preferencia) => (
+                <option key={preferencia} value={preferencia}>
+                  {PREFERENCIA_CONTATO_LABEL[preferencia]}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
         {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
