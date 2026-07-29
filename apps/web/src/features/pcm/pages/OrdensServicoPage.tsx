@@ -65,11 +65,14 @@ type Estado =
 export function OrdensServicoPage({
   refreshKey = 0,
   onNovaOs,
+  onAbrirChamado,
   osIdInicialToken,
   filtrosIniciais,
 }: {
   refreshKey?: number;
   onNovaOs: () => void;
+  /** E01-S116: navega pro Chamado de origem (botão "Ver Chamado" no painel de detalhe). */
+  onAbrirChamado: (chamadoId: string) => void;
   /** Formato `${osId}::${seq}` (E01-S49) — `seq` muda a cada clique no cliente-360, mesmo pra
    * mesma OS, forçando o efeito abaixo a reagir mesmo quando o id não muda de valor. */
   osIdInicialToken?: string;
@@ -564,6 +567,7 @@ export function OrdensServicoPage({
             salvando={salvando}
             onAlterarStatus={onAlterarStatus}
             onEditar={() => setEditando(true)}
+            onAbrirChamado={onAbrirChamado}
           />
         </section>
       )}
@@ -682,6 +686,7 @@ export function OrdensServicoPage({
                 salvando={salvando}
                 onAlterarStatus={onAlterarStatus}
                 onEditar={() => setEditando(true)}
+                onAbrirChamado={onAbrirChamado}
               />
             ) : (
               <div className="p-8 text-sm text-ink-3">Selecione uma OS.</div>
@@ -744,12 +749,16 @@ function DetalheOs({
   salvando,
   onAlterarStatus,
   onEditar,
+  onAbrirChamado,
 }: {
   selecionada: OrdemServicoOperacional;
   temEscrita: boolean;
   salvando: boolean;
   onAlterarStatus: (status: StatusOrdemServico) => void;
   onEditar: () => void;
+  /** E01-S116: Chamado e OS são a mesma entidade em fase distinta desde E01-S99 — atalho pra ver o
+   * Chamado de origem (histórico de atendimento, local, datas) sem sair da lógica de OS. */
+  onAbrirChamado: (chamadoId: string) => void;
 }) {
   // E01-S75 AC-2: "Expandir" abre a mesma info + abas ricas do Auvo (questionários/fotos) num
   // modal grande — o painel inline continua compacto (master-detail), o modal é onde dá pra ler
@@ -889,6 +898,15 @@ function DetalheOs({
                 Editar
               </button>
             )}
+            <button
+              type="button"
+              disabled={!selecionada.chamadoId}
+              onClick={() => selecionada.chamadoId && onAbrirChamado(selecionada.chamadoId)}
+              title={selecionada.chamadoId ? undefined : "Esta OS não tem Chamado vinculado."}
+              className="text-xs font-semibold text-ink-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Ver Chamado
+            </button>
           </div>
         </div>
         <Tooltip content="Numeração interna do PCM (Chamado) — não é o ticket/task do Auvo.">

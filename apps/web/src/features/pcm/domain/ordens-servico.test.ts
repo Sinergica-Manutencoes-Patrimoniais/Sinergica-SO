@@ -39,6 +39,7 @@ const base = {
   detalhes: null,
   tipoOs: null,
   pmocScheduleId: null,
+  chamadoId: null,
 };
 
 describe("ordens-servico", () => {

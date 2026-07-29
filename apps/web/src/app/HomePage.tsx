@@ -615,6 +615,10 @@ export function HomePage() {
     dataInicio: string;
     dataFim: string;
   } | null>(null);
+  // E01-S116: deep-link de Ordens de Serviço pro Chamado correspondente — mesmo padrão de
+  // `osDeepLink` (E01-S49), sentido oposto. `seq` força o efeito em `ChamadosPage` a reagir mesmo
+  // clicando duas vezes seguidas no MESMO chamado.
+  const [chamadoFoco, setChamadoFoco] = useState<{ chamadoId: string; seq: number } | null>(null);
 
   function navegarModulo(area: AreaAtiva) {
     if (area !== activeModulo && !confirmarSaida()) return;
@@ -665,6 +669,13 @@ export function HomePage() {
     setClienteSelecionado(osDeepLink.origemClienteId);
     setPcmView("clientes");
     setOsDeepLink(null);
+  }
+
+  // E01-S116 AC-1: clicar num item de OS (qualquer visão) navega pro Chamado correspondente —
+  // Chamado e OS são a mesma entidade em fase distinta desde E01-S99, não telas paralelas.
+  function abrirChamadoDaOs(chamadoId: string) {
+    setChamadoFoco((atual) => ({ chamadoId, seq: (atual?.seq ?? 0) + 1 }));
+    irParaPcmView("chamados");
   }
 
   // AC-4: superadmin sempre vê tudo (claim user_modulos vem vazio pra ele — bypass, igual RLS);
@@ -1148,7 +1159,11 @@ export function HomePage() {
             ) : pcmView === "tipos-inspecao" ? (
               <TiposInspecaoPage />
             ) : pcmView === "chamados" ? (
-              <ChamadosPage />
+              <ChamadosPage
+                chamadoFocoToken={
+                  chamadoFoco ? `${chamadoFoco.chamadoId}::${chamadoFoco.seq}` : undefined
+                }
+              />
             ) : pcmView === "tipos-tarefa" ? (
               <TiposTarefaPage />
             ) : pcmView === "segmentos" ? (
@@ -1176,6 +1191,7 @@ export function HomePage() {
                 <OrdensServicoPage
                   refreshKey={pcmRefreshKey}
                   onNovaOs={() => setNovaOsAberta(true)}
+                  onAbrirChamado={abrirChamadoDaOs}
                   osIdInicialToken={
                     osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
                   }

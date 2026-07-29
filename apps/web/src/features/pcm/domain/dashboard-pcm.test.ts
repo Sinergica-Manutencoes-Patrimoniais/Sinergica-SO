@@ -31,6 +31,7 @@ const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional
   detalhes: null,
   tipoOs: null,
   pmocScheduleId: null,
+  chamadoId: null,
   ...patch,
 });
 

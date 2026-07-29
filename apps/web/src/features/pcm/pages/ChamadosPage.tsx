@@ -46,7 +46,7 @@ const STATUS_COR: Record<StatusChamado, string> = {
   cancelado: "bg-[#FBEAEA] text-[#C5362B]",
 };
 
-export function ChamadosPage() {
+export function ChamadosPage({ chamadoFocoToken }: { chamadoFocoToken?: string } = {}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
@@ -56,6 +56,16 @@ export function ChamadosPage() {
   const [historicoAbertoId, setHistoricoAbertoId] = useState<string | null>(null);
   const [detalheAbertoId, setDetalheAbertoId] = useState<string | null>(null);
   const [clienteFiltro, setClienteFiltro] = useState("");
+
+  // E01-S116 AC-1/AC-3: veio de "abrir Chamado" a partir de uma OS (Kanban/Lista/Timeline/
+  // Calendário) — limpa filtro de cliente (senão o chamado pode ficar escondido) e expande o card.
+  useEffect(() => {
+    if (!chamadoFocoToken) return;
+    const [chamadoId] = chamadoFocoToken.split("::");
+    if (!chamadoId) return;
+    setClienteFiltro("");
+    setDetalheAbertoId(chamadoId);
+  }, [chamadoFocoToken]);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");

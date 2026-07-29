@@ -45,6 +45,9 @@ export interface OrdemServicoOperacional {
   /** E01-S07: tipo do Hub (C1/C2/P1/P2/IN), gravado — `null` = fora do Hub (melhoria/outro). */
   tipoOs: TipoOsHub | null;
   pmocScheduleId: string | null;
+  /** E01-S116: Chamado de origem — desde E01-S99, é a mesma entidade em fase distinta; `null`
+   * defensivamente (não deveria existir depois de E01-S99), usado pra navegar Kanban→Chamado. */
+  chamadoId: string | null;
 }
 
 export interface KpisOrdensServico {
