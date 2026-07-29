@@ -15,6 +15,10 @@ de perguntas **configurável**, e monta uma proposta de cadastro (contato, CNPJ,
 em árvore). A proposta é apresentada para **confirmação do entrevistado**; só após o "confirma" os
 cadastros são efetivados. O cadastro manual continua disponível.
 
+**Dois pontos de entrada (Lucas, 2026-07-29, item 7):** (a) onboarding — entrevista do zero pra um
+cliente novo; (b) edição — botão "Editar com IA" ao lado do "Editar" manual no cadastro do cliente
+já existente, mesmo agente, sempre em modo dry-run (nunca aplica sem mostrar antes o que vai mudar).
+
 ## Critérios de aceite
 
 ### AC-1: Roteiro de perguntas configurável
@@ -50,6 +54,13 @@ cadastros são efetivados. O cadastro manual continua disponível.
 - **Dado** o cadastro do cliente/estrutura
 - **Quando** o operador opta por editar na mão
 - **Então** o fluxo manual continua funcionando independentemente do agente.
+
+### AC-7: Entrada por edição de cliente existente (item 7)
+- **Dado** um cliente já cadastrado
+- **Quando** o operador clica em "Editar com IA" (ao lado do "Editar" manual)
+- **Então** o mesmo agente abre com o cadastro atual como contexto; o operador pede ajustes em
+  linguagem natural (dados, estrutura); o agente sempre responde em modo **dry-run** — apresenta o
+  que vai mudar (diff/resumo) — e só aplica após confirmação (mesma regra de AC-4).
 
 ## Casos de borda e erros
 - Entrevistado nega a confirmação → nada gravado; proposta descartada ou salva como rascunho.

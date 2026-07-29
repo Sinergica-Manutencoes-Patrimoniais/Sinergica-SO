@@ -6,6 +6,12 @@ alwaysApply: false
 
 # Tasks — Agente entrevistador de cadastro de cliente/estrutura
 
+> **Atualização 2026-07-29:** Lucas confirmou que já esperava usar isso pelo botão "Editar com IA"
+> no cadastro do cliente (item 7 do feedback de teste local) — ver `product.md`/`spec.md` AC-7.
+> Não muda o SPEC_DEVIATION abaixo (motor continua não implementado), só reforça a prioridade: os
+> dois pontos de entrada (onboarding e edição) usam o mesmo motor, então construir o motor uma vez
+> resolve os dois.
+
 > **Escopo entregue nesta sessão (2026-07-28): só schema + validação de roteiro.** O motor
 > conversacional (a parte que de fato "entrevista" via LLM) é um sistema novo do tamanho de
 > `pcm-ze-agent` — não uma extensão de algo existente como S23/S24/S25 foram. Implementar isso sem

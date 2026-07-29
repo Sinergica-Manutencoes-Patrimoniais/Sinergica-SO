@@ -10,6 +10,37 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-07-29 — Feedback do Lucas testando localmente: 9 stories novas especificadas (não implementadas)
+
+Depois do deploy de migrations `0151`-`0160` + edge functions (`pcm-ze-agent`,
+`pcm-auvo-webhook`, `pcm-auvo-tasks-import`) e dev server local, Lucas testou e trouxe 12 pontos.
+Especifiquei todos (só spec — pediu "planeje", não implementou ainda):
+
+- **`E01-S109` (bug crítico, bloqueado):** Auvo 500 ao criar task na transição de OS pra
+  Planejamento — `pcm-auvo-create-task` usa UUID da OS como `externalId`. Hipótese forte: deveria
+  ser `CH-XXXX` (já previsto no design de E01-S99, eu tinha deferido por falta de validação —
+  agora tem falha real confirmando o risco). **Preciso do Lucas reproduzir e trazer o log completo
+  do Auvo antes de codar o fix** (task 0, bloqueante).
+- `E01-S108`: bug de UX confirmado — páginas do PCM desmontam ao trocar `pcmView`, destruindo
+  modal filho aberto (reabre E01-S101 AC-6, que eu tinha marcado "não reproduzido" por só ter
+  checado o modal errado).
+- `E01-S107`: seleção de Local por lista do cliente (`listarLocaisDoCliente`, E01-S76, já existe)
+  + "Outro" — no Chamado e na OS.
+- `E01-S110`: todas listagens/seletores de cliente só Ativos (auditoria cross-cutting).
+- `E01-S111`: estende E01-S103 — contatos completos (nome/email/telefone/função/preferência).
+- `E01-S112`: estende E01-S104 — agenda ganha horário início+fim (hoje só tem um horário).
+- `E01-S113`: estende E01-S106 — "Ferramentas por Técnico" vira hub único (técnico+cliente).
+  Questão em aberto: painel na Visão 360 sai ou fica.
+- `E01-S114`: nav — Backlog GUT/Ordens de Serviço viram submenu de Chamados.
+- `E01-S115`: limpar dados de teste E2E do banco (linked, sem Postgres local) — **ação destrutiva
+  em banco compartilhado, não faço sozinho sem o Lucas revisar a lista antes** (AC-1/AC-2).
+- `E02-S26` (já existia, atualizada): item 7 ("Editar cliente com IA") é o mesmo motor conversacional
+  já especificado, só um segundo ponto de entrada (editar cliente existente, sempre dry-run). Não
+  muda o SPEC_DEVIATION (motor ainda não implementado), só reforça a prioridade.
+
+**Próximo passo:** aguardando o Lucas revisar as specs e decidir prioridade/ordem — provável
+começar pelo `E01-S109` (bug crítico) assim que ele trouxer o log do Auvo.
+
 ## 2026-07-28 (cont.) — Implementação de 10 das 12 stories da reunião, branch `feat/E01-S99-chamado-id-unico`
 
 Depois de especificar as 12 stories (ver entrada abaixo), Lucas pediu pra seguir todas até o fim,

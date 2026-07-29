@@ -19,6 +19,18 @@ respostas — como um copiloto que "vai montando a estrutura desse condomínio" 
 Operação da Sinérgica no onboarding/atualização de um cliente: o colaborador que visita o prédio e
 o próprio Fabrício. Frequência: a cada novo cliente e em atualizações de estrutura.
 
+## Segundo ponto de entrada: "Editar cliente com IA" (Lucas, 2026-07-29, item 7)
+Testando localmente, o Lucas esperava encontrar um botão de edição via IA ao lado do "Editar"
+manual no cadastro do cliente — **é o mesmo motor desta story**, só que entrando por "editar um
+cliente que já existe" em vez de "cadastrar um cliente novo". Mesmo agente, mesmo fluxo
+(pergunta/responde → monta proposta → **sempre dry-run**, mostra o que vai mudar → só aplica após
+confirmar), diferença é só o ponto de entrada:
+- **Onboarding** (fluxo original): entrevista do zero, sem dado prévio.
+- **Edição**: botão "Editar com IA" ao lado do "Editar" manual em `PainelCadastroAuvo`/
+  `ClienteFormModal` (`VisaoClientePage.tsx`) abre o mesmo chat, já com o cadastro atual como
+  contexto — o operador pode pedir qualquer ajuste (dados, estrutura) em linguagem natural, o
+  agente sempre responde em modo dry-run (apresenta o que vai mudar) antes de gravar.
+
 ## Resultado esperado / métrica de sucesso
 - Métrica: tempo/esforço para cadastrar estrutura completa de um cliente.
 - Baseline: cadastro manual campo a campo → Alvo: entrevista guiada que pré-preenche o cadastro,
