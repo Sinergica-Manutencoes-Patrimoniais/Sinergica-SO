@@ -19,6 +19,12 @@ export function listarAreas(gateway: HierarquiaGateway, clienteId: string) {
   return gateway.listarAreas(clienteId);
 }
 
+/** E01-S107: lista flat de Locais do cliente (todas as Áreas) — usado pelo seletor de Local no
+ * Chamado/OS, sem precisar montar a árvore inteira. */
+export function listarLocaisDoCliente(gateway: HierarquiaGateway, clienteId: string) {
+  return gateway.listarLocaisDoCliente(clienteId);
+}
+
 export function criarArea(gateway: HierarquiaGateway, input: AreaCommand) {
   const validado = validarArea(input);
   return gateway.criarArea({ ...validado, userId: input.userId });

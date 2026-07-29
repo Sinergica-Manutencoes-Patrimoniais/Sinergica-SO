@@ -16,6 +16,7 @@ import {
 } from "../application/chamados";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { HistoricoAtendimentoChamado } from "../components/HistoricoAtendimentoChamado";
+import { SeletorLocal } from "../components/SeletorLocal";
 import {
   type Chamado,
   type ChamadoFormData,
@@ -590,15 +591,7 @@ function NovoChamadoModal({
               className="input min-h-20 w-full resize-y"
             />
           </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Local</span>
-            <input
-              value={local}
-              onChange={(e) => setLocal(e.target.value)}
-              className="input w-full"
-              placeholder="Ex: Hall térreo, torre B"
-            />
-          </label>
+          <SeletorLocal clienteId={clienteId} value={local} onChange={setLocal} />
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Solicitante</span>
             <input

@@ -22,6 +22,7 @@ import {
 } from "../domain/priorizacao-backlog";
 import { podeGerarTitulo } from "../domain/titulo-os";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
+import { SeletorLocal } from "./SeletorLocal";
 
 const GUT_OPCOES = [1, 2, 3, 4, 5];
 const PRIORIDADES: Array<{ value: PrioridadeBacklog; label: string }> = [
@@ -501,14 +502,11 @@ export function NovaOrdemServicoModal({
             </Field>
 
             {!editando && (
-              <Field label="Localização">
-                <input
-                  value={form.localDescricao}
-                  onChange={(e) => setForm((f) => ({ ...f, localDescricao: e.target.value }))}
-                  className="input"
-                  placeholder="Ex: Térreo — Garagem B"
-                />
-              </Field>
+              <SeletorLocal
+                clienteId={form.clientId}
+                value={form.localDescricao}
+                onChange={(localDescricao) => setForm((f) => ({ ...f, localDescricao }))}
+              />
             )}
 
             <Field label="Data prevista">
