@@ -169,8 +169,12 @@ export function AgendaTecnicoPage() {
                         />
                         <p className="truncate text-xs font-semibold text-ink">
                           {alocacao.funcionarioNome}
-                          {alocacao.hora && (
-                            <span className="ml-1 font-normal text-ink-3">{alocacao.hora}</span>
+                          {alocacao.horaInicio && (
+                            <span className="ml-1 font-normal text-ink-3">
+                              {alocacao.horaFim
+                                ? `${alocacao.horaInicio}–${alocacao.horaFim}`
+                                : alocacao.horaInicio}
+                            </span>
                           )}
                         </p>
                       </div>
@@ -227,7 +231,8 @@ function AlocacaoModal({
     funcionarioId: string;
     clienteId: string;
     data: string;
-    hora: string | null;
+    horaInicio: string | null;
+    horaFim: string | null;
   }) => Promise<void>;
   onRemover?: () => Promise<void>;
 }) {
@@ -235,7 +240,8 @@ function AlocacaoModal({
     alocacao?.funcionarioId ?? funcionarios[0]?.id ?? "",
   );
   const [clienteId, setClienteId] = useState(alocacao?.clienteId ?? clientes[0]?.id ?? "");
-  const [hora, setHora] = useState(alocacao?.hora ?? "");
+  const [horaInicio, setHoraInicio] = useState(alocacao?.horaInicio ?? "");
+  const [horaFim, setHoraFim] = useState(alocacao?.horaFim ?? "");
   const [salvando, setSalvando] = useState(false);
   const [removendo, setRemovendo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -244,7 +250,21 @@ function AlocacaoModal({
     setSalvando(true);
     setErro(null);
     try {
-      await onSalvar({ funcionarioId, clienteId, data: dia, hora: hora || null });
+      // AC-2: valida no cliente antes do round-trip — mesma regra de `validarAlocacao`, aqui só
+      // pra dar feedback imediato sem depender do erro do domínio vir de dentro de `onSalvar`.
+      if (horaFim && !horaInicio) {
+        throw new Error("Informe o horário de início junto com o de fim.");
+      }
+      if (horaInicio && horaFim && horaFim < horaInicio) {
+        throw new Error("O horário de fim não pode ser antes do início.");
+      }
+      await onSalvar({
+        funcionarioId,
+        clienteId,
+        data: dia,
+        horaInicio: horaInicio || null,
+        horaFim: horaFim || null,
+      });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível salvar a alocação.");
     } finally {
@@ -311,15 +331,26 @@ function AlocacaoModal({
               )}
             </select>
           </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Hora</span>
-            <input
-              type="time"
-              value={hora}
-              onChange={(e) => setHora(e.target.value)}
-              className="input w-full"
-            />
-          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-ink-3">Início</span>
+              <input
+                type="time"
+                value={horaInicio}
+                onChange={(e) => setHoraInicio(e.target.value)}
+                className="input w-full"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-ink-3">Fim</span>
+              <input
+                type="time"
+                value={horaFim}
+                onChange={(e) => setHoraFim(e.target.value)}
+                className="input w-full"
+              />
+            </label>
+          </div>
           {erro && (
             <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
               {erro}

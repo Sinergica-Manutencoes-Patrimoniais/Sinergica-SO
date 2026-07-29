@@ -47,7 +47,8 @@ describe("agruparPorDia", () => {
       clienteId: "c1",
       clienteNome: "I Home",
       data: "2026-07-27",
-      hora: "14:00",
+      horaInicio: "14:00",
+      horaFim: null,
     },
     {
       id: "2",
@@ -56,7 +57,8 @@ describe("agruparPorDia", () => {
       clienteId: "c2",
       clienteNome: "Living Elegance",
       data: "2026-07-27",
-      hora: "08:00",
+      horaInicio: "08:00",
+      horaFim: null,
     },
   ];
 
@@ -86,12 +88,59 @@ describe("validarAlocacao", () => {
     );
   });
 
-  it("hora é opcional", () => {
+  it("horário de início/fim são opcionais", () => {
     expect(validarAlocacao({ funcionarioId: "f1", clienteId: "c1", data: "2026-07-27" })).toEqual({
       funcionarioId: "f1",
       clienteId: "c1",
       data: "2026-07-27",
-      hora: null,
+      horaInicio: null,
+      horaFim: null,
     });
+  });
+
+  it("aceita só início preenchido", () => {
+    expect(
+      validarAlocacao({
+        funcionarioId: "f1",
+        clienteId: "c1",
+        data: "2026-07-27",
+        horaInicio: "08:00",
+      }),
+    ).toMatchObject({ horaInicio: "08:00", horaFim: null });
+  });
+
+  it("rejeita fim antes do início", () => {
+    expect(() =>
+      validarAlocacao({
+        funcionarioId: "f1",
+        clienteId: "c1",
+        data: "2026-07-27",
+        horaInicio: "14:00",
+        horaFim: "08:00",
+      }),
+    ).toThrow(/fim não pode ser antes do início/);
+  });
+
+  it("aceita fim igual ao início", () => {
+    expect(
+      validarAlocacao({
+        funcionarioId: "f1",
+        clienteId: "c1",
+        data: "2026-07-27",
+        horaInicio: "08:00",
+        horaFim: "08:00",
+      }),
+    ).toMatchObject({ horaInicio: "08:00", horaFim: "08:00" });
+  });
+
+  it("rejeita fim sem início", () => {
+    expect(() =>
+      validarAlocacao({
+        funcionarioId: "f1",
+        clienteId: "c1",
+        data: "2026-07-27",
+        horaFim: "18:00",
+      }),
+    ).toThrow(/início.*junto com.*fim/);
   });
 });

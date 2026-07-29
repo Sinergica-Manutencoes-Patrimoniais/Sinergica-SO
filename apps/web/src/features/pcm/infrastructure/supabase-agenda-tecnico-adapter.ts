@@ -11,10 +11,11 @@ interface AgendaRow {
   funcionario_id: string;
   cliente_id: string;
   data: string;
-  hora: string | null;
+  hora_inicio: string | null;
+  hora_fim: string | null;
 }
 
-const COLS = "id,funcionario_id,cliente_id,data,hora" as const;
+const COLS = "id,funcionario_id,cliente_id,data,hora_inicio,hora_fim" as const;
 
 async function mapearNomes(
   funcionarioIds: string[],
@@ -51,7 +52,8 @@ function mapAlocacao(
     clienteId: row.cliente_id,
     clienteNome: clientes.get(row.cliente_id) ?? "Cliente",
     data: row.data,
-    hora: row.hora,
+    horaInicio: row.hora_inicio,
+    horaFim: row.hora_fim,
   };
 }
 
@@ -105,7 +107,8 @@ export const supabaseAgendaTecnicoAdapter: AgendaTecnicoGateway = {
         funcionario_id: input.funcionarioId,
         cliente_id: input.clienteId,
         data: input.data,
-        hora: input.hora ?? null,
+        hora_inicio: input.horaInicio ?? null,
+        hora_fim: input.horaFim ?? null,
         created_by: userId,
         updated_by: userId,
       })
@@ -124,7 +127,8 @@ export const supabaseAgendaTecnicoAdapter: AgendaTecnicoGateway = {
         funcionario_id: input.funcionarioId,
         cliente_id: input.clienteId,
         data: input.data,
-        hora: input.hora ?? null,
+        hora_inicio: input.horaInicio ?? null,
+        hora_fim: input.horaFim ?? null,
         updated_at: new Date().toISOString(),
         updated_by: userId,
       })

@@ -8,14 +8,16 @@ export interface AlocacaoTecnico {
   clienteId: string;
   clienteNome: string;
   data: string; // ISO yyyy-mm-dd
-  hora: string | null; // HH:mm
+  horaInicio: string | null; // HH:mm
+  horaFim: string | null; // HH:mm — E01-S112
 }
 
 export interface AlocacaoFormData {
   funcionarioId: string;
   clienteId: string;
   data: string;
-  hora?: string | null;
+  horaInicio?: string | null;
+  horaFim?: string | null;
 }
 
 /** AC-1: semana em colunas seg–sáb (6 dias, mesmo formato da referência visual da reunião).
@@ -57,7 +59,7 @@ export function agruparPorDia(
     if (lista) lista.push(alocacao);
   }
   for (const lista of mapa.values()) {
-    lista.sort((a, b) => (a.hora ?? "").localeCompare(b.hora ?? ""));
+    lista.sort((a, b) => (a.horaInicio ?? "").localeCompare(b.horaInicio ?? ""));
   }
   return mapa;
 }
@@ -78,14 +80,25 @@ function textoOuNull(valor: string | null | undefined): string | null {
   return texto.length > 0 ? texto : null;
 }
 
+/** AC-2: fim não pode vir antes do início; fim sem início também é inválido (não daria pra saber
+ * a duração da alocação). */
 export function validarAlocacao(input: AlocacaoFormData): AlocacaoFormData {
   if (!input.funcionarioId) throw new Error("Técnico é obrigatório.");
   if (!input.clienteId) throw new Error("Cliente é obrigatório.");
   if (!input.data) throw new Error("Data é obrigatória.");
+  const horaInicio = textoOuNull(input.horaInicio);
+  const horaFim = textoOuNull(input.horaFim);
+  if (horaFim && !horaInicio) {
+    throw new Error("Informe o horário de início junto com o de fim.");
+  }
+  if (horaInicio && horaFim && horaFim < horaInicio) {
+    throw new Error("O horário de fim não pode ser antes do início.");
+  }
   return {
     funcionarioId: input.funcionarioId,
     clienteId: input.clienteId,
     data: input.data,
-    hora: textoOuNull(input.hora),
+    horaInicio,
+    horaFim,
   };
 }
