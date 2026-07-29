@@ -49,7 +49,8 @@ export function ListaClientesPage({
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [busca, setBusca] = useState("");
-  const [status, setStatus] = useState<FiltroStatus>("todos");
+  // E01-S110 AC-2: padrão inicial é "Ativo" (não "Todos") — operador ainda troca manualmente.
+  const [status, setStatus] = useState<FiltroStatus>("ativo");
   const [tipo, setTipo] = useState<FiltroTipo>("todos");
   const [operacao, setOperacao] = useState<FiltroOperacao>("todos");
   const [ordenacao, setOrdenacao] = useState<Ordenacao>("atividade");
