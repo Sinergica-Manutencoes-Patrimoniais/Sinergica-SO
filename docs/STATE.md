@@ -10,6 +10,54 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-07-29 (cont.) — 7 das 9 stories especificadas implementadas (S107/S108/S110-S114), gates locais verdes
+
+Depois de especificar as 9 stories (ver entrada abaixo), Lucas respondeu as 2 perguntas em aberto
+("Auvo 500 tentei reproduzir e não consegui — trata como intermitência a priori"; "painel de
+ferramenta na Visão 360 fica, é local de fácil acesso a tudo do cliente") e disse "segue as
+informações e pode ir implantando". Implementei as 7 não-bloqueadas, uma por commit, gates locais
+(typecheck/vitest/biome/`lint:migrations` squawk) verdes em cada uma. Migrations aplicadas em
+produção (`supabase db push --linked`) a cada story que teve uma.
+
+**Implementadas e verificadas:**
+- `E01-S107` — Local do Chamado/OS vira seleção da lista de Locais do cliente (`SeletorLocal`,
+  reusa `listarLocaisDoCliente` de E01-S76) + "Outro" com texto livre. Sem migration.
+- `E01-S108` — fix do bug de perder dados do modal ao trocar de `pcmView`/módulo:
+  `NavGuardContext`+`useFormularioSujo` (novo, `apps/web/src/app/`) avisam antes de descartar
+  formulário sujo. Aplicado em `NovoChamadoModal`/`GerarOsModal` (Chamados) e
+  `CriarAcessoPortalModal`/`ResponsavelModal`/`AlocarFerramentaModal` (Visão 360). Sem migration.
+- `E01-S110` — auditoria de todo seletor de cliente (`.from("clientes")` em todo `features/pcm`):
+  **achado bom** — quase tudo já filtrava `ativo=true` (Nova OS/Chamado, Agenda, Equipamentos,
+  Apontamento de Horas, Tickets, Grupos de Cliente, PMOC); só `ListaClientesPage` tinha o filtro
+  padrão errado ("Todos"), corrigido pra "Ativo". Sem migration.
+- `E01-S111` — estende E01-S103: `pcm.cliente_responsaveis.contato` (texto livre) virou
+  `email`+`telefone`+`preferencia_contato` (lista fechada). Migrations `0161`/`0162` (rename+drop
+  de coluna existente — squawk bloqueou `ban-drop-column`, resolvido com `-- squawk-ignore` mesmo
+  padrão já usado em `0119`).
+- `E01-S112` — estende E01-S104: `pcm.agenda_tecnico.hora` virou `hora_inicio`+`hora_fim`
+  (intervalo). Migration `0163` (rename de coluna, squawk-ignore `renaming-column`). Fim antes do
+  início ou fim sem início são rejeitados no domínio e no cliente.
+- `E01-S113` — estende E01-S106: `FerramentasPorTecnicoPage` ganhou aba "Por Cliente" reusando
+  `FerramentaAlocacaoClienteGateway`/adapter sem duplicar CRUD (2 métodos de leitura novos:
+  `listarAtivas`, `listarClientesAtivos`). Painel da Visão 360 continua existindo à parte
+  (confirmado por Lucas). Sem migration.
+- `E01-S114` — `PCM_NAV`: "Ordens de Serviço"/"Backlog GUT" viram `filhos` de "Chamados" (submenu
+  sempre visível, indentado — padrão mais simples permitido pela spec, sem estado de
+  expandir/colapsar). Sem migration.
+
+**Não implementadas (explicitamente fora deste round):**
+- `E01-S109` — Lucas tentou reproduzir o bug do Auvo 500 e não conseguiu; tratando como
+  intermitência a priori, **nenhum fix codado às cegas** (spec.md atualizado, story pausada).
+- `E01-S115` — limpeza de dados de teste E2E é ação destrutiva em banco compartilhado; **não
+  implementada sem o Lucas revisar a lista antes** (não pedido ainda).
+
+**Limitações desta sessão (mesmas de sempre):** sem Docker → RLS FORCE aplicado mas não validado
+por pgTAP; Playwright não rodado (pendente teste local do Lucas em cada story, `tasks.md`
+marcado). `docs/STATE.md`/ROADMAP atualizados nesta entrada.
+
+**Próximo passo:** Lucas testa localmente as 7 stories (Playwright + uso manual); PR só depois
+(fluxo já combinado: migrations+edge functions+teste local antes do PR/merge).
+
 ## 2026-07-29 — Feedback do Lucas testando localmente: 9 stories novas especificadas (não implementadas)
 
 Depois do deploy de migrations `0151`-`0160` + edge functions (`pcm-ze-agent`,
