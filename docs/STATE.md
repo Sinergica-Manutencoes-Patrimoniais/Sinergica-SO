@@ -10,6 +10,34 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-07-29 (cont. 3) — E01-S116/S117: unificação UX Chamado↔OS na tela Operação
+
+Lucas testou o Kanban de OS e trouxe pontos de unificação Chamado↔OS. Duas stories, code-only,
+gates locais verdes, nada pusheado.
+
+- **E01-S116** (botão "Ver Chamado" no painel de detalhe da OS): escopo revisado com o Lucas em
+  tempo real — remover o painel quebraria Alterar status/Editar/Expandir(Auvo), então virou
+  aditivo: só o botão. `chamadoId` exposto no domínio/adapter; deep-link OS→Chamado (mesmo padrão
+  de `osDeepLink`). Commit `6a2900f`.
+- **E01-S117** (Operação/Kanban — "Chamado e OS são o mesmo item", 8 pontos + print):
+  - Verificado no banco linked: `ordens_servico` é a tabela unificada real (2597 linhas), só 82
+    têm `OS-XXXX` (resto já é `CH-` histórico). `status` **não tem CHECK** → coluna "backlog"
+    entrou sem migration.
+  - Menu/título "Ordens de Serviço"→"Operação"; `rotuloNumeroOrdem` (CH→CH, senão Auvo #id, senão
+    numero) mata `OS-XXXX` em Kanban/Lista/Timeline/Calendário/tooltip; coluna Backlog no Kanban;
+    card sem droplist de status (troca por Orientação Auvo, `auvo_detalhes.orientacao`); Resumo da
+    OS ganhou Local/Solicitante/Origem (campos de intake do Chamado, já na linha `OrdemRow`).
+  - **Fora de escopo (registrado):** fundir as tabelas `pcm.chamados`/`pcm.ordens_servico` — a
+    unificação é de UX/apresentação; fundir 2597 linhas de produção é outra história. E `pcm.chamados`
+    (37 linhas) segue sendo o fluxo Chamado-first paralelo.
+  - 3 e2e (`ordens-servico`/`kanban-colunas`/`refinamento-ux`) ajustados pro rename
+    (`getByText("Ordens de Serviço")`→`getByTitle("Operação")`) e pra nova ordem de colunas.
+  - **Também nesta sessão:** limpeza de dados E2E do banco (E01-S115) — inventário revisado pelo
+    Lucas (144 registros + 30 dependentes), SQL entregue e **executado por ele** direto no Supabase
+    (classificador de auto mode bloqueou o `DELETE` em produção pelo agente, mesmo aprovado).
+
+**Próximo passo:** Lucas testa localmente (Playwright + uso manual) S116/S117; PR só depois.
+
 ## 2026-07-29 (cont.) — 7 das 9 stories especificadas implementadas (S107/S108/S110-S114), gates locais verdes
 
 Depois de especificar as 9 stories (ver entrada abaixo), Lucas respondeu as 2 perguntas em aberto

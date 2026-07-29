@@ -10,10 +10,10 @@ import {
 import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
-  STATUS_OS,
   deveAlterarStatusPorDrop,
   prioridadeColor,
   resumoTooltipOrdem,
+  rotuloNumeroOrdem,
 } from "../domain/ordens-servico";
 import { TIPO_MANUTENCAO_LABEL } from "../domain/pmoc";
 
@@ -21,6 +21,15 @@ const DRAG_MIME = "application/x-sinergica-os-id";
 
 function formatarDataPreventiva(dataIso: string): string {
   return new Date(`${dataIso}T00:00:00`).toLocaleDateString("pt-BR");
+}
+
+/** E01-S117 AC-6: "Orientação" da tarefa Auvo pra exibir no card (o que a droplist de status
+ * deixou de ocupar). Truncada — só o que couber. `detalhes` é jsonb livre, então lê defensivo. */
+function orientacaoDoCard(detalhes: Record<string, unknown> | null): string | null {
+  const bruto = detalhes?.orientacao;
+  if (typeof bruto !== "string") return null;
+  const texto = bruto.trim();
+  return texto.length > 0 ? texto : null;
 }
 
 /** E01-S38 — uma coluna por status; E01-S61 adiciona arrastar-e-soltar (HTML5 DnD nativo, sem
@@ -192,7 +201,7 @@ export function OsKanbanView({
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="text-xs font-brand tabular-nums text-ink-3">
-                                {ordem.numero}
+                                {rotuloNumeroOrdem(ordem)}
                               </span>
                               <span
                                 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
@@ -207,24 +216,21 @@ export function OsKanbanView({
                                 Técnico: {ordem.tecnicoNome}
                               </p>
                             )}
+                            {/* E01-S117 AC-6: Orientação do Auvo no lugar da droplist de status. */}
+                            {orientacaoDoCard(ordem.detalhes) && (
+                              <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-ink-2">
+                                <span className="font-semibold text-ink-3">Orientação: </span>
+                                {orientacaoDoCard(ordem.detalhes)}
+                              </p>
+                            )}
+                            {/* E01-S117 AC-3: rastro do item no Auvo. */}
+                            {ordem.auvoTaskId !== null && (
+                              <p className="mt-1 text-[10px] font-brand tabular-nums text-ink-3">
+                                Auvo #{ordem.auvoTaskId}
+                              </p>
+                            )}
                           </button>
                         </Tooltip>
-                        {temEscrita && (
-                          <select
-                            className="input mt-2 h-7 w-full text-xs"
-                            value={ordem.status}
-                            disabled={salvando}
-                            onChange={(event) =>
-                              onAlterarStatus(ordem.id, event.target.value as StatusOrdemServico)
-                            }
-                          >
-                            {STATUS_OS.map((status) => (
-                              <option key={status.value} value={status.value}>
-                                {status.label}
-                              </option>
-                            ))}
-                          </select>
-                        )}
                       </div>
                     ))
                   )}

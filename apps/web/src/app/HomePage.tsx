@@ -369,7 +369,9 @@ const PCM_NAV: NavGroup[] = [
         icon: Headset,
         view: "chamados",
         filhos: [
-          { label: "Ordens de Serviço", icon: ClipboardList, view: "ordens" },
+          // E01-S117: "Ordens de Serviço" vira "Operação" — a tela é o board de evolução do
+          // Chamado (Solicitação→Corretiva/Backlog→Planejamento→Execução), não só "OS".
+          { label: "Operação", icon: ClipboardList, view: "ordens" },
           { label: "Backlog GUT", icon: LayoutGrid, view: "backlog" },
         ],
       },

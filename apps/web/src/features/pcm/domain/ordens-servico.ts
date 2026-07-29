@@ -4,6 +4,7 @@ import type { TipoOsHub } from "./hub-os";
 export type StatusOrdemServico =
   | "solicitacao"
   | "corretiva"
+  | "backlog"
   | "planejamento"
   | "em_execucao"
   | "finalizado"
@@ -48,6 +49,11 @@ export interface OrdemServicoOperacional {
   /** E01-S116: Chamado de origem — desde E01-S99, é a mesma entidade em fase distinta; `null`
    * defensivamente (não deveria existir depois de E01-S99), usado pra navegar Kanban→Chamado. */
   chamadoId: string | null;
+  /** E01-S117 AC-7: campos de intake do Chamado (a OS é a evolução dele) — exibidos no "Resumo da
+   * OS". Já existiam na linha (`OrdemRow`), só não eram mapeados pro domínio. */
+  localDescricao: string | null;
+  solicitante: string | null;
+  origem: string;
 }
 
 export interface KpisOrdensServico {
@@ -62,11 +68,36 @@ export interface KpisOrdensServico {
 export const STATUS_OS: Array<{ value: StatusOrdemServico; label: string }> = [
   { value: "solicitacao", label: "Solicitação" },
   { value: "corretiva", label: "Corretiva" },
+  { value: "backlog", label: "Backlog" },
   { value: "planejamento", label: "Planejamento" },
   { value: "em_execucao", label: "Em execução" },
   { value: "finalizado", label: "Finalizado" },
   { value: "cancelado", label: "Cancelado" },
 ];
+
+// E01-S117: rótulos das origens de intake do Chamado (mesmos valores de `OrigemChamado`).
+const ORIGEM_OS_LABEL: Record<string, string> = {
+  manual: "Manual",
+  cliente_portal: "Portal do Cliente",
+  whatsapp: "WhatsApp",
+  inspecao: "Inspeção",
+  auvo_sync: "Sincronizado do Auvo",
+};
+
+export function rotuloOrigemOs(origem: string): string {
+  return ORIGEM_OS_LABEL[origem] ?? origem;
+}
+
+/** E01-S117 AC-2/AC-3: nunca exibir `OS-XXXX`. `CH-XXXX` é a numeração única (E01-S99) — mantém.
+ * Sem CH mas com tarefa Auvo (legado importado): mostra o ID do Auvo, rastreável no Auvo. Sem
+ * nenhum dos dois (caso raro): mantém o `numero` cru, é o que existe. */
+export function rotuloNumeroOrdem(
+  ordem: Pick<OrdemServicoOperacional, "numero" | "auvoTaskId">,
+): string {
+  if (ordem.numero.startsWith("CH-")) return ordem.numero;
+  if (ordem.auvoTaskId !== null) return `Auvo #${ordem.auvoTaskId}`;
+  return ordem.numero;
+}
 
 export const PRIORIDADE_LABEL: Record<string, string> = {
   baixa: "Baixa",
@@ -85,6 +116,7 @@ export function statusOsColor(status: string): string {
   if (status === "cancelado") return "bg-[#FBEAEA] text-[#C5362B]";
   if (status === "em_execucao") return "bg-[#EAEEF8] text-[#2E3C70]";
   if (status === "planejamento") return "bg-[#FDF1DF] text-[#B26A00]";
+  if (status === "backlog") return "bg-[#F3EEFA] text-[#6B3FA0]";
   return "bg-[#EFF1F4] text-[#5A6175]";
 }
 
@@ -208,7 +240,7 @@ export function resumoTooltipOrdem(ordem: OrdemServicoOperacional): string | nul
     typeof detalhes[chave] === "string" ? (detalhes[chave] as string) : null;
   const tecnico = ordem.tecnicoNome ?? texto("tecnicoNomeAuvo") ?? "não atribuído";
   const linhas = [
-    `${ordem.numero} · ${rotuloStatusOs(ordem.status)} · ${PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}`,
+    `${rotuloNumeroOrdem(ordem)} · ${rotuloStatusOs(ordem.status)} · ${PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}`,
     `Cliente: ${ordem.clienteNome}`,
     `Categoria: ${ordem.categoria} · Técnico: ${tecnico}`,
     ordem.descricao?.trim() || null,

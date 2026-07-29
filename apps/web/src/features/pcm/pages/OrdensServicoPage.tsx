@@ -41,6 +41,8 @@ import {
   filtrarOrdens,
   prioridadeColor,
   resumoTooltipOrdem,
+  rotuloNumeroOrdem,
+  rotuloOrigemOs,
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
@@ -360,8 +362,10 @@ export function OrdensServicoPage({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Ordens de Serviço</h2>
-          <p className="text-sm text-ink-3">Fila operacional do PCM com status e sync Auvo</p>
+          <h2 className="text-base font-semibold text-ink">Operação</h2>
+          <p className="text-sm text-ink-3">
+            Chamados e OS — do intake à execução (mesmo item, em fases), com sync Auvo
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {recarregando && <span className="text-xs text-ink-3">Atualizando…</span>}
@@ -635,7 +639,7 @@ export function OrdensServicoPage({
                           </td>
                         )}
                         <td className="px-2 py-2 whitespace-nowrap font-brand tabular-nums text-ink-3">
-                          {ordem.numero}
+                          {rotuloNumeroOrdem(ordem)}
                         </td>
                         <td className="px-2 py-2">
                           <Tooltip content={resumoTooltipOrdem(ordem)}>
@@ -783,6 +787,9 @@ function DetalheOs({
           value={PRIORIDADE_LABEL[selecionada.prioridade] ?? selecionada.prioridade}
         />
         <Info label="Categoria" value={selecionada.categoria} />
+        <Info label="Origem" value={rotuloOrigemOs(selecionada.origem)} />
+        <Info label="Solicitante" value={selecionada.solicitante ?? "—"} />
+        <Info label="Local" value={selecionada.localDescricao ?? "—"} />
         <Info label="Score GUT" value={String(selecionada.scorePcm)} />
         <Info
           label="Fatores"
@@ -909,9 +916,9 @@ function DetalheOs({
             </button>
           </div>
         </div>
-        <Tooltip content="Numeração interna do PCM (Chamado) — não é o ticket/task do Auvo.">
+        <Tooltip content="Identificador do Chamado (CH) — a OS é a evolução dele. Sem CH, mostra o ID do Auvo.">
           <p className="mt-1 inline-block text-xs font-brand tabular-nums text-ink-3">
-            {selecionada.numero}
+            {rotuloNumeroOrdem(selecionada)}
           </p>
         </Tooltip>
         <h3 className="mt-1 text-base font-semibold text-ink">{selecionada.titulo}</h3>
@@ -928,9 +935,9 @@ function DetalheOs({
           <div className="modal-panel max-w-4xl">
             <div className="flex items-start justify-between gap-2 border-b border-line-soft px-5 py-3">
               <div className="min-w-0">
-                <Tooltip content="Numeração interna do PCM (Chamado) — não é o ticket/task do Auvo.">
+                <Tooltip content="Identificador do Chamado (CH) — a OS é a evolução dele. Sem CH, mostra o ID do Auvo.">
                   <p className="inline-block text-xs font-brand tabular-nums text-ink-3">
-                    {selecionada.numero}
+                    {rotuloNumeroOrdem(selecionada)}
                   </p>
                 </Tooltip>
                 <h2 className="mt-0.5 truncate text-lg font-semibold text-ink">

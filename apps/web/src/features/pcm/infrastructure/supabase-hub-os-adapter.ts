@@ -101,6 +101,9 @@ function mapearOrdem(
     tipoOs: row.tipo_os,
     pmocScheduleId: row.pmoc_schedule_id,
     chamadoId: row.chamado_id,
+    localDescricao: row.local_descricao,
+    solicitante: row.solicitante,
+    origem: row.origem,
   };
 }
 

@@ -10,10 +10,13 @@ export interface ColunaKanbanPreferencia {
   visivel: boolean;
 }
 
-/** E01-S84 AC-3: ordem padrão pede "preventiva" entre corretiva e planejamento. */
+/** E01-S84 AC-3: "preventiva" entre corretiva e planejamento.
+ * E01-S117 AC-5: "backlog" (status real, não virtual) entre corretiva e preventiva — reflete o
+ * fluxo Solicitação → Corretiva/Backlog → Planejamento → Execução. */
 export const COLUNAS_KANBAN_PADRAO: ColunaKanbanPreferencia[] = [
   { id: "solicitacao", visivel: true },
   { id: "corretiva", visivel: true },
+  { id: "backlog", visivel: true },
   { id: "preventiva", visivel: true },
   { id: "planejamento", visivel: true },
   { id: "em_execucao", visivel: true },

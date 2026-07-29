@@ -62,5 +62,10 @@ describe("kanban-colunas", () => {
   it("labelColunaKanban — status real usa STATUS_OS, virtual usa rótulo próprio", () => {
     expect(labelColunaKanban("planejamento")).toBe("Planejamento");
     expect(labelColunaKanban("preventiva")).toBe("Preventiva");
+    expect(labelColunaKanban("backlog")).toBe("Backlog");
+  });
+
+  it("COLUNAS_KANBAN_PADRAO inclui a coluna backlog (E01-S117)", () => {
+    expect(COLUNAS_KANBAN_PADRAO.some((c) => c.id === "backlog")).toBe(true);
   });
 });

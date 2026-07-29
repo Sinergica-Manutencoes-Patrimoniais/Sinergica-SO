@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
+import { rotuloNumeroOrdem } from "../domain/ordens-servico";
 import {
   formatarDiaIso,
   gerarDiasDoMes,
@@ -104,14 +105,14 @@ export function OsCalendarioView({
                   return (
                     <Tooltip
                       key={ordem.id}
-                      content={`${ordem.numero} · ${ordem.titulo}${resumo ? `\n${resumo}` : ""}`}
+                      content={`${rotuloNumeroOrdem(ordem)} · ${ordem.titulo}${resumo ? `\n${resumo}` : ""}`}
                     >
                       <button
                         type="button"
                         onClick={() => onSelecionar(ordem.id)}
                         className="w-full truncate rounded-[3px] bg-line-soft px-1 py-0.5 text-left text-[10px] font-semibold text-ink-2 hover:bg-navy hover:text-white"
                       >
-                        {ordem.numero}
+                        {rotuloNumeroOrdem(ordem)}
                       </button>
                     </Tooltip>
                   );

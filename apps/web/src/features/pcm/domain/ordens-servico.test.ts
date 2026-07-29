@@ -12,6 +12,7 @@ import {
   ordenarBacklogGut,
   ordensNoDia,
   resumoTooltipOrdem,
+  rotuloNumeroOrdem,
 } from "./ordens-servico";
 
 const base = {
@@ -40,7 +41,22 @@ const base = {
   tipoOs: null,
   pmocScheduleId: null,
   chamadoId: null,
+  localDescricao: null,
+  solicitante: null,
+  origem: "manual",
 };
+
+describe("rotuloNumeroOrdem", () => {
+  it("mantém CH-XXXX", () => {
+    expect(rotuloNumeroOrdem({ numero: "CH-0041", auvoTaskId: 999 })).toBe("CH-0041");
+  });
+  it("troca OS-XXXX pelo ID do Auvo quando há task", () => {
+    expect(rotuloNumeroOrdem({ numero: "OS-0067", auvoTaskId: 12345 })).toBe("Auvo #12345");
+  });
+  it("mantém o numero cru quando não é CH e não tem Auvo", () => {
+    expect(rotuloNumeroOrdem({ numero: "OS-0067", auvoTaskId: null })).toBe("OS-0067");
+  });
+});
 
 describe("ordens-servico", () => {
   it("ordena backlog por score desc e desempata por data mais recente", () => {
