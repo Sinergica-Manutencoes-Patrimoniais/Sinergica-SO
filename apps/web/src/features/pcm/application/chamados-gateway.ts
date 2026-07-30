@@ -1,4 +1,5 @@
 import type {
+  AnotacaoChamado,
   Chamado,
   ChamadoFormData,
   HistoricoAtendimentoChamado,
@@ -46,4 +47,7 @@ export interface ChamadosGateway {
   ): Promise<void>;
   /** E01-S101 AC-4: marca a execução real — SLA conta `createdAt` → esta data. */
   marcarExecucao(chamadoId: string, dataExecucao: string, userId: string): Promise<void>;
+  /** E01-S119: histórico interno do Chamado, independente da OS que possa ser criada depois. */
+  listarAnotacoes(chamadoId: string): Promise<AnotacaoChamado[]>;
+  adicionarAnotacao(chamadoId: string, texto: string, autorId: string): Promise<AnotacaoChamado>;
 }

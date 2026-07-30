@@ -20,6 +20,7 @@ import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { type Chamado, ORIGEM_CHAMADO_LABEL, STATUS_CHAMADO_LABEL } from "../domain/chamados";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
+import { AnotacoesChamado } from "./AnotacoesChamado";
 import { HistoricoAtendimentoChamado } from "./HistoricoAtendimentoChamado";
 
 type SubModal =
@@ -156,6 +157,14 @@ export function ChamadoPainel({
 
       <div className="border-t border-line-soft px-4 py-3">
         <HistoricoAtendimentoChamado gateway={supabaseChamadosAdapter} chamadoId={chamado.id} />
+      </div>
+
+      <div className="border-t border-line-soft px-4 py-3">
+        <AnotacoesChamado
+          chamadoId={chamado.id}
+          gateway={supabaseChamadosAdapter}
+          podeAdicionar={temEscrita}
+        />
       </div>
 
       {podeAgir && (

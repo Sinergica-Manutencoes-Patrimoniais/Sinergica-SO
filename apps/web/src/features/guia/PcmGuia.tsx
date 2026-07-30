@@ -48,34 +48,34 @@ export function PcmGuia() {
             {
               nome: "Ferramentas",
               descricao:
-                "Cadastro do que a empresa tem disponível pros técnicos (furadeira, escada, multímetro...) e quem está com o quê. Hoje é um controle simples por quantidade; está evoluindo pra ter código individual por unidade, histórico de quem já usou cada uma, reserva por data e kits prontos (conjunto de ferramentas atribuído de uma vez).",
+                "Controle por unidade, código e estado, com histórico de movimentações, reservas, kits e visão de quais ferramentas estão com cada técnico.",
             },
             {
-              nome: "Tickets",
+              nome: "Chamados",
               descricao:
-                "Chamados/solicitações do cliente, sincronizados do Auvo. Serve pra registrar contato do cliente que ainda não virou (ou não vai virar) uma Ordem de Serviço formal.",
+                "Solicitações do cliente recebidas pelo Atendimento, portal ou cadastro interno. O chamado concentra contexto antes de virar backlog ou Ordem de Serviço.",
             },
             {
               nome: "Cadastros",
               descricao:
-                "A base de tudo: Clientes (condomínios), Equipamentos, Equipes, Funcionários, Serviços, Tipos de Tarefa. É o que alimenta as outras telas — sem cadastro certo, o resto do sistema não tem em cima do que trabalhar.",
+                "A base de tudo: Clientes, Equipamentos, Sistemas, Tipos de Tarefa, Equipes, Funcionários, grupos, marcações e tipos de inspeção. Cadastro correto evita OS sem contexto e relatório incompleto.",
             },
           ]}
         />
       </Secao>
 
-      <Callout titulo="Visão do Lucas — histórico automático de contato do cliente">
+      <Callout titulo="Próxima evolução — histórico automático de contato do cliente">
         <p>
-          Ideia registrada pra evoluir os Tickets: hoje o histórico de um cliente com a Sinérgica
+          Ideia registrada pra evoluir os Chamados: hoje o histórico de um cliente com a Sinérgica
           fica espalhado — e-mail, WhatsApp, ligação. A visão é que, quando um cliente mandar um
           e-mail pra um canal da empresa ou uma mensagem no WhatsApp, o sistema registre
-          automaticamente um ticket pra aquele contato — mesmo que ainda não vire uma OS. Assim
+          automaticamente um chamado pra aquele contato — mesmo que ainda não vire uma OS. Assim
           existe um histórico completo de tudo que o cliente já falou com a Sinérgica, buscável e
           nunca perdido, mesmo antes de uma OS ser aberta.
         </p>
         <p className="text-xs text-ink-3">
           Ainda não implementado — fica registrado aqui como próximo passo de produto pro módulo de
-          Tickets/Atendimento.
+          Chamados/Atendimento.
         </p>
       </Callout>
 

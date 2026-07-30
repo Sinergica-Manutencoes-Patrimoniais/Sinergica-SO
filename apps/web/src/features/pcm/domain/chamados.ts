@@ -78,6 +78,16 @@ export interface HistoricoAtendimentoChamado {
   createdAt: string;
 }
 
+/** E01-S119: registro append-only do operador no Chamado. `autorNome` é um retrato gravado no
+ * momento da escrita; não depende da permissão de ler perfis de outros usuários. */
+export interface AnotacaoChamado {
+  id: string;
+  chamadoId: string;
+  texto: string;
+  autorNome: string;
+  createdAt: string;
+}
+
 function textoOuNull(valor: string | null | undefined): string | null {
   const texto = valor?.trim() ?? "";
   return texto.length > 0 ? texto : null;
@@ -97,6 +107,15 @@ export function validarNovoChamado(input: ChamadoFormData): ChamadoFormData {
     solicitante: textoOuNull(input.solicitante),
     origemInspecaoItemId: input.origemInspecaoItemId ?? null,
   };
+}
+
+/** E01-S119 AC-1/AC-4: evita round-trip para anotação vazia e limita abuso acidental no campo
+ * livre. O banco mantém a mesma regra de conteúdo não vazio. */
+export function validarNovaAnotacao(texto: string): string {
+  const normalizado = texto.trim();
+  if (!normalizado) throw new Error("Anotação não pode ficar vazia.");
+  if (normalizado.length > 5_000) throw new Error("Anotação pode ter no máximo 5.000 caracteres.");
+  return normalizado;
 }
 
 /** E01-S101 AC-3: replanejar só incrementa o contador quando já havia uma data planejada antes —

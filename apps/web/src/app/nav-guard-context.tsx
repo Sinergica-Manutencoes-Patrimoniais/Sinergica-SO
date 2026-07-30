@@ -1,7 +1,7 @@
 // E01-S108: qualquer modal do PCM aberto sobre uma página que pode desmontar (troca de `pcmView`
 // ou de módulo) registra aqui sua função de "estou sujo?"; a navegação consulta antes de trocar de
 // tela, em vez de destruir o formulário em silêncio.
-import { type ReactNode, createContext, useCallback, useContext, useRef } from "react";
+import { type ReactNode, createContext, useCallback, useContext, useMemo, useRef } from "react";
 
 type VerificadorSujo = () => boolean;
 
@@ -31,11 +31,17 @@ export function NavGuardProvider({ children }: { children: ReactNode }) {
     return window.confirm("Você tem alterações não salvas. Sair mesmo assim?");
   }, []);
 
-  return (
-    <NavGuardContext.Provider value={{ registrarFormularioSujo, confirmarSaida }}>
-      {children}
-    </NavGuardContext.Provider>
+  // Sem memo aqui, o objeto do `value` nasce novo a cada render do Provider — qualquer re-render
+  // do App (tema, auth, permissões) força TODO consumidor de `useNavGuard()` a re-renderizar, e
+  // o efeito de `useFormularioSujo` (depende de `registrarFormularioSujo`) re-executa à toa em
+  // todo modal aberto. `registrarFormularioSujo`/`confirmarSaida` já são estáveis (useCallback com
+  // deps `[]`), então o memo é seguro: identidade do value só muda se o Provider remontar.
+  const value = useMemo(
+    () => ({ registrarFormularioSujo, confirmarSaida }),
+    [registrarFormularioSujo, confirmarSaida],
   );
+
+  return <NavGuardContext.Provider value={value}>{children}</NavGuardContext.Provider>;
 }
 
 export function useNavGuard(): NavGuardContextValue {

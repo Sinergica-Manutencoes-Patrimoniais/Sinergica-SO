@@ -37,12 +37,12 @@ export function AtendimentoGuia() {
             {
               nome: "Inbox",
               descricao:
-                "As conversas em andamento — dá pra ver o histórico completo e, se precisar, um humano assume a conversa do Zé a qualquer momento.",
+                "Conversas em andamento, com histórico, cliente vinculado e contexto do agente. Quando necessário, use o handoff para um atendente humano assumir e depois devolver ao agente.",
             },
             {
               nome: "Config",
               descricao:
-                "Configuração de canais, personas do agente, fluxos de conversa e integrações (WhatsApp/Evolution API, Meta).",
+                "Configura canais, instâncias Evolution, agentes, base de conhecimento, regras, operação e IA. Cada instância pode usar agente e conhecimento próprios, mesmo compartilhando o mesmo servidor Evolution.",
             },
           ]}
         />
@@ -50,9 +50,10 @@ export function AtendimentoGuia() {
 
       <Callout titulo="Se conecta com PCM e Comercial">
         <p>
-          Quando o Zé identifica um chamado de manutenção, a OS nasce automaticamente no PCM. Quando
-          identifica uma oportunidade comercial (interesse de contrato novo), o contato vira lead
-          pro módulo Comercial.
+          Quando o Zé identifica manutenção, cria chamado/OS no PCM conforme o fluxo. O contato pode
+          ser vinculado ao cadastro do cliente no CRM, preservando histórico. O atendente humano
+          assume casos sensíveis sem perder contexto; oportunidades comerciais ficam preparadas para
+          o módulo Comercial.
         </p>
       </Callout>
     </div>

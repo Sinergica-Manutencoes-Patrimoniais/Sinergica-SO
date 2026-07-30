@@ -128,6 +128,8 @@ function gatewayChamadosFake(): ChamadosGateway {
     listarHistoricoAtendimento: vi.fn(),
     definirDataPlanejada: vi.fn(),
     marcarExecucao: vi.fn(),
+    listarAnotacoes: vi.fn(),
+    adicionarAnotacao: vi.fn(),
   };
 }
 

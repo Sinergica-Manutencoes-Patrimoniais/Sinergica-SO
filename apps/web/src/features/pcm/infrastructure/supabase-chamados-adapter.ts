@@ -5,6 +5,7 @@ import type {
   FiltrosChamados,
 } from "../application/chamados-gateway";
 import type {
+  AnotacaoChamado,
   Chamado,
   HistoricoAtendimentoChamado,
   MensagemHistoricoAtendimento,
@@ -67,6 +68,14 @@ interface SnapshotRow {
   created_at: string;
 }
 
+interface AnotacaoRow {
+  id: string;
+  chamado_id: string;
+  texto: string;
+  autor_nome: string;
+  created_at: string;
+}
+
 function mapSnapshot(row: SnapshotRow): HistoricoAtendimentoChamado {
   return {
     id: row.id,
@@ -75,6 +84,16 @@ function mapSnapshot(row: SnapshotRow): HistoricoAtendimentoChamado {
     dataFim: row.data_fim,
     mensagens: row.mensagens,
     totalMensagens: row.total_mensagens,
+    createdAt: row.created_at,
+  };
+}
+
+function mapAnotacao(row: AnotacaoRow): AnotacaoChamado {
+  return {
+    id: row.id,
+    chamadoId: row.chamado_id,
+    texto: row.texto,
+    autorNome: row.autor_nome,
     createdAt: row.created_at,
   };
 }
@@ -226,6 +245,32 @@ export const supabaseChamadosAdapter: ChamadosGateway = {
       })
       .eq("id", chamadoId);
     if (error) throw error;
+  },
+
+  async listarAnotacoes(chamadoId: string): Promise<AnotacaoChamado[]> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("chamados_anotacoes")
+      .select("id,chamado_id,texto,autor_nome,created_at")
+      .eq("chamado_id", chamadoId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return ((data ?? []) as AnotacaoRow[]).map(mapAnotacao);
+  },
+
+  async adicionarAnotacao(
+    chamadoId: string,
+    texto: string,
+    autorId: string,
+  ): Promise<AnotacaoChamado> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("chamados_anotacoes")
+      .insert({ chamado_id: chamadoId, texto, autor_id: autorId })
+      .select("id,chamado_id,texto,autor_nome,created_at")
+      .single();
+    if (error) throw error;
+    return mapAnotacao(data as AnotacaoRow);
   },
 
   async uploadAnexoCancelamento(chamadoId: string, arquivo: File): Promise<string> {

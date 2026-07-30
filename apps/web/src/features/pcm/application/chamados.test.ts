@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Chamado } from "../domain/chamados";
-import { cancelarChamado, criarChamado, gerarOsDoChamado, listarChamados } from "./chamados";
+import {
+  adicionarAnotacaoChamado,
+  cancelarChamado,
+  criarChamado,
+  gerarOsDoChamado,
+  listarAnotacoesChamado,
+  listarChamados,
+} from "./chamados";
 import type { ChamadosGateway } from "./chamados-gateway";
 import type { OrdemServicoGateway } from "./ordem-servico-gateway";
 
@@ -34,6 +41,14 @@ function gatewayChamadosFake(): ChamadosGateway {
     listarHistoricoAtendimento: vi.fn(async () => []),
     definirDataPlanejada: vi.fn(async () => undefined),
     marcarExecucao: vi.fn(async () => undefined),
+    listarAnotacoes: vi.fn(async () => []),
+    adicionarAnotacao: vi.fn(async (chamadoId, texto) => ({
+      id: "anot-1",
+      chamadoId,
+      texto,
+      autorNome: "Ana",
+      createdAt: "2026-07-29T10:00:00Z",
+    })),
   };
 }
 
@@ -61,6 +76,26 @@ describe("chamados (use case)", () => {
     expect(gateway.criar).toHaveBeenCalledWith(
       expect.objectContaining({ titulo: "Vazamento", userId: "user-1" }),
     );
+  });
+
+  it("E01-S119 AC-1: normaliza anotação antes de persistir", async () => {
+    const gateway = gatewayChamadosFake();
+    await adicionarAnotacaoChamado(gateway, "cha-1", "  Retorno agendado.  ", "user-1");
+    expect(gateway.adicionarAnotacao).toHaveBeenCalledWith("cha-1", "Retorno agendado.", "user-1");
+  });
+
+  it("E01-S119 AC-4: rejeita anotação vazia sem round-trip", async () => {
+    const gateway = gatewayChamadosFake();
+    await expect(adicionarAnotacaoChamado(gateway, "cha-1", "   ", "user-1")).rejects.toThrow(
+      /não pode ficar vazia/,
+    );
+    expect(gateway.adicionarAnotacao).not.toHaveBeenCalled();
+  });
+
+  it("E01-S119 AC-2: delega lista de anotações ao gateway", async () => {
+    const gateway = gatewayChamadosFake();
+    await listarAnotacoesChamado(gateway, "cha-1");
+    expect(gateway.listarAnotacoes).toHaveBeenCalledWith("cha-1");
   });
 
   describe("gerarOsDoChamado", () => {

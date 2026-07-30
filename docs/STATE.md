@@ -10,6 +10,15 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-07-29 (cont. 5) — E01-S119: Anotações do Chamado
+
+Lucas descartou E01-S109 (spec/tasks removidas e ROADMAP limpo) e pediu S119. Implementado:
+`pcm.chamados_anotacoes` (`0164`) append-only, RLS PCM, autor vinculado ao `auth.uid()` e nome
+preenchido no banco por trigger; validação de texto; gateway/adapter; seção no `ChamadoPainel` com
+estado vazio, lista mais recente primeiro e data/hora pt-BR. Continua visível após conversão para OS
+porque o vínculo é ao Chamado. `0150` já constava aplicada no Supabase remoto, portanto nenhum
+`db push` adicional foi necessário. `pnpm run ci:local` PASS (762 testes); `0164` aguarda PR/deploy.
+
 ## 2026-07-29 (cont. 4) — E01-S118: reestruturação da Operação (unifica Chamados no board) — PARCIAL
 
 Lucas pediu reestruturação maior (6 pontos) depois de testar S117: unificar menu Chamados+Operação

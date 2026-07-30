@@ -2,6 +2,7 @@ import {
   deveIncrementarReplanejamento,
   validarCancelamento,
   validarDataExecucao,
+  validarNovaAnotacao,
   validarNovoChamado,
   validarTransicaoParaOs,
 } from "../domain/chamados";
@@ -27,6 +28,21 @@ export function obterChamado(gateway: ChamadosGateway, id: string) {
 
 export function listarHistoricoAtendimento(gateway: ChamadosGateway, chamadoId: string) {
   return gateway.listarHistoricoAtendimento(chamadoId);
+}
+
+export function listarAnotacoesChamado(gateway: ChamadosGateway, chamadoId: string) {
+  return gateway.listarAnotacoes(chamadoId);
+}
+
+/** E01-S119 AC-1: normaliza antes de persistir; o adapter grava o autor da sessão e o banco
+ * preenche o nome imutável correspondente. */
+export async function adicionarAnotacaoChamado(
+  gateway: ChamadosGateway,
+  chamadoId: string,
+  texto: string,
+  autorId: string,
+) {
+  return gateway.adicionarAnotacao(chamadoId, validarNovaAnotacao(texto), autorId);
 }
 
 export async function criarChamado(gateway: ChamadosGateway, input: CriarChamadoCommand) {

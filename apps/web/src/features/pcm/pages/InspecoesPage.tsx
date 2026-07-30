@@ -773,15 +773,34 @@ function ItemInspecaoCard({
               </p>
             </div>
           )}
-          {item.fotoUrl && (
-            <a
-              href={item.fotoUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex text-xs font-semibold text-orange hover:text-orange-deep"
-            >
-              Abrir foto/referência
-            </a>
+          {item.fotoUrls.length > 1 ? (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+                Fotos ({item.fotoUrls.length})
+              </p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {item.fotoUrls.map((url) => (
+                  <a key={url} href={url} target="_blank" rel="noreferrer">
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-16 w-16 rounded-[6px] border border-line object-cover"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : (
+            item.fotoUrl && (
+              <a
+                href={item.fotoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex text-xs font-semibold text-orange hover:text-orange-deep"
+              >
+                Abrir foto/referência
+              </a>
+            )
           )}
           {temEscrita && (
             <div className="flex gap-3 border-t border-line-soft pt-3">
