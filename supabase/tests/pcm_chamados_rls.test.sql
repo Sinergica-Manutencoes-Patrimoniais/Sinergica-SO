@@ -1,4 +1,4 @@
--- pcm_chamados_rls.test.sql — pgTAP (E01-S88 AC-1/AC-3/AC-4)
+-- pcm_chamados_rls.test.sql — pgTAP (E01-S88 / E01-S99)
 -- Numeração atômica via sequence (AC-1), vínculo Chamado→OS (AC-3), append-only de eventos (AC-4),
 -- RLS por módulo pcm (leitura vs escrita).
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
@@ -68,13 +68,16 @@ select throws_ok(
   'AC-4: ninguem apaga evento de auditoria (sem policy de delete pra authenticated)'
 );
 
--- 6) AC-3: vínculo chamado_id em ordens_servico — cria uma OS ligada ao Chamado
+-- 6) AC-3: vínculo chamado_id em ordens_servico — cria uma OS ligada ao Chamado.
+-- O número informado é propositalmente descartável: o trigger deve herdar o CH do Chamado.
 insert into pcm.ordens_servico (id, client_id, numero, titulo, categoria, status, prioridade, gravidade, urgencia, tendencia, origem, created_by, chamado_id)
-values ('00000000-0000-0000-0000-000000000bc3', '00000000-0000-0000-0000-000000000bc1', pcm.fn_proximo_numero_os(), '[TESTE E2E] OS do Chamado', 'corretiva', 'solicitacao', 'media', 3, 3, 3, 'manual', '00000000-0000-0000-0000-000000000b01', '00000000-0000-0000-0000-000000000bc2');
-select is(
-  (select chamado_id from pcm.ordens_servico where id = '00000000-0000-0000-0000-000000000bc3'),
-  '00000000-0000-0000-0000-000000000bc2'::uuid,
-  'AC-3: OS grava o vinculo chamado_id'
+values ('00000000-0000-0000-0000-000000000bc3', '00000000-0000-0000-0000-000000000bc1', 'CH-DESCARTADO', '[TESTE E2E] OS do Chamado', 'corretiva', 'solicitacao', 'media', 3, 3, 3, 'manual', '00000000-0000-0000-0000-000000000b01', '00000000-0000-0000-0000-000000000bc2');
+select ok(
+  (select os.chamado_id = ch.id and os.numero = ch.numero
+   from pcm.ordens_servico os
+   join pcm.chamados ch on ch.id = os.chamado_id
+   where os.id = '00000000-0000-0000-0000-000000000bc3'),
+  'AC-3: OS grava chamado_id e herda numero do Chamado'
 );
 
 -- 7) FK rejeita chamado_id inexistente (defesa em profundidade)
