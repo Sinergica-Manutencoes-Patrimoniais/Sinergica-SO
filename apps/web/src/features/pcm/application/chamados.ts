@@ -18,6 +18,13 @@ export function listarChamados(gateway: ChamadosGateway, filtros?: FiltrosChamad
   return gateway.listar(filtros);
 }
 
+/** E01-S118 T7: carrega um Chamado pelo id — usado pelo modal de detalhe do card no board pra
+ * mostrar histórico/datas/ações mesmo depois do Chamado já ter virado OS (o vínculo é `chamadoId`
+ * na OS; o histórico do Chamado nunca deixa de ser acessível). */
+export function obterChamado(gateway: ChamadosGateway, id: string) {
+  return gateway.obter(id);
+}
+
 export function listarHistoricoAtendimento(gateway: ChamadosGateway, chamadoId: string) {
   return gateway.listarHistoricoAtendimento(chamadoId);
 }

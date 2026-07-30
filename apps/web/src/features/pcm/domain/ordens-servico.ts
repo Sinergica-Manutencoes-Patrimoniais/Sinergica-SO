@@ -1,3 +1,4 @@
+import type { Chamado } from "./chamados";
 import { STATUS_HISTORICO } from "./cliente-360";
 import type { TipoOsHub } from "./hub-os";
 
@@ -54,6 +55,60 @@ export interface OrdemServicoOperacional {
   localDescricao: string | null;
   solicitante: string | null;
   origem: string;
+}
+
+// E01-S118 T7: um Chamado recém-aberto ainda NÃO tem linha em `ordens_servico` (só nasce ao
+// "Gerar OS"/"Enviar ao backlog") — sem isso, ele desapareceria do board até alguém agir nele,
+// contradizendo o próprio ponto 1 do pedido ("sempre se abre um Chamado, que evolui pra OS").
+// Solução: exibido como card sintético na coluna Solicitação, `id` prefixado pra nunca colidir
+// com um id real de OS. Mesmo item, fase anterior — não é dado novo gravado em lugar nenhum.
+const PREFIXO_CARD_CHAMADO_ABERTO = "chamado-aberto:";
+
+export function idCardChamadoAberto(chamadoId: string): string {
+  return `${PREFIXO_CARD_CHAMADO_ABERTO}${chamadoId}`;
+}
+
+export function ehCardChamadoAberto(id: string): boolean {
+  return id.startsWith(PREFIXO_CARD_CHAMADO_ABERTO);
+}
+
+export function chamadoAbertoParaCard(
+  chamado: Pick<Chamado, "id" | "numero" | "titulo" | "descricao" | "createdAt">,
+  clienteNome: string,
+): OrdemServicoOperacional {
+  return {
+    id: idCardChamadoAberto(chamado.id),
+    numero: chamado.numero,
+    titulo: chamado.titulo,
+    descricao: chamado.descricao,
+    clienteNome,
+    categoria: "corretiva",
+    status: "solicitacao",
+    prioridade: "normal",
+    scorePcm: 0,
+    gravidade: null,
+    urgencia: null,
+    tendencia: null,
+    dorCliente: null,
+    observacao: null,
+    origemInspecaoItemId: null,
+    auvoTaskId: null,
+    auvoSyncStatus: null,
+    auvoSyncError: null,
+    createdAt: chamado.createdAt,
+    tecnicoFuncionarioId: null,
+    tecnicoNome: null,
+    dataAgendada: null,
+    checkInAt: null,
+    checkOutAt: null,
+    detalhes: null,
+    tipoOs: null,
+    pmocScheduleId: null,
+    chamadoId: chamado.id,
+    localDescricao: null,
+    solicitante: null,
+    origem: "manual",
+  };
 }
 
 export interface KpisOrdensServico {

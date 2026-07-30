@@ -29,11 +29,24 @@ Backlog coexistem; (5) clique abre o modal direto.
 - Métricas operacionais (`calcularMetricasOperacao`: backlog / sem técnico / sync Auvo c/ erro).
 - Removido "Ver Chamado" (S116) e o estado `chamadoFoco` órfão.
 
-**T7 pendente (próximo chunk):** migrar as ações POR-Chamado (gerar OS/enviar backlog, cancelar
-com justificativa, histórico WhatsApp/Zé, datas planejada/execução) pro modal de detalhe do card —
-hoje esses componentes ainda vivem em `ChamadosPage` (não mais renderizada, mantida como
-referência). Até o T7, `chamados.spec.ts`/`atendimento-historico-chamado.spec.ts` ficam vermelhos
-(testam a tela antiga) — reescrita junto com o T7. Nada pusheado; PR só depois do T7 + Playwright.
+**T7 concluído (mesma sessão, chunk seguinte):** `ChamadoPainel.tsx` (novo) carrega o Chamado por
+`chamadoId` e mostra histórico (WhatsApp/Zé)/datas/ações (Gerar OS, Enviar backlog, Cancelar) —
+sempre que a OS/card tem `chamadoId`, **independente do status**. Requisito do Lucas atendido
+explicitamente: o histórico continua acessível depois do Chamado virar OS (só as ações somem).
+
+**Achado ao integrar (fora do plano original):** um Chamado recém-criado não tinha linha em
+`ordens_servico` até "Gerar OS" — ficaria invisível no board, contradizendo o próprio ponto 1
+("sempre se abre um Chamado, que evolui pra OS"). Corrigido com `chamadoAbertoParaCard`/
+`ehCardChamadoAberto` (domínio): Chamados abertos viram cards sintéticos na coluna Solicitação
+(`id` prefixado `chamado-aberto:`, nunca colide com OS real) — mesclados só pra exibição, nada
+gravado a mais no banco. `DetalheOs` esconde as seções só-de-OS pra esses cards; mudança de status
+em lote/drag ignora esse id sintético.
+
+`ChamadosPage.tsx` removida (tudo migrado). `chamados.spec.ts`/`atendimento-historico-chamado.spec.ts`
+reescritos pro novo fluxo (nav única, Lista, clique na linha abre "Resumo do Chamado"/"Resumo da OS").
+
+Gates verdes: typecheck/vitest (759 passed)/biome. Nada pusheado; PR só depois do Playwright local
+do Lucas.
 
 ## 2026-07-29 (cont. 3) — E01-S116/S117: unificação UX Chamado↔OS na tela Operação
 

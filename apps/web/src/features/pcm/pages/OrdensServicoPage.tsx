@@ -15,7 +15,7 @@ import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { Tooltip } from "../../../components/ui/Tooltip";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
-import { criarChamado } from "../application/chamados";
+import { criarChamado, listarChamados } from "../application/chamados";
 import {
   alterarStatusEmLote,
   alterarStatusOrdemServico,
@@ -27,6 +27,7 @@ import { obterPreferenciaColunas, salvarPreferenciaColunas } from "../applicatio
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { listarProximasPreventivas } from "../application/pmoc";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
+import { ChamadoPainel } from "../components/ChamadoPainel";
 import { DetalhesTarefaAuvo } from "../components/DetalhesTarefaAuvo";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import { NovoChamadoModal } from "../components/NovoChamadoModal";
@@ -34,7 +35,7 @@ import { OsCalendarioView } from "../components/OsCalendarioView";
 import { OsKanbanView } from "../components/OsKanbanView";
 import { OsTimelineView } from "../components/OsTimelineView";
 import { CATEGORIAS_OS } from "../domain/abertura-os";
-import type { ChamadoFormData } from "../domain/chamados";
+import type { Chamado, ChamadoFormData } from "../domain/chamados";
 import { TIPO_OS_HUB_LABEL, calcularPrioridadeHub } from "../domain/hub-os";
 import {
   COLUNAS_KANBAN_PADRAO,
@@ -55,6 +56,8 @@ import {
   STATUS_OS,
   calcularKpisOrdens,
   calcularMetricasOperacao,
+  chamadoAbertoParaCard,
+  ehCardChamadoAberto,
   filtrarOrdens,
   prioridadeColor,
   resumoTooltipOrdem,
@@ -127,6 +130,9 @@ export function OrdensServicoPage({
   // E01-S118 AC-2/AC-5: clientes pro "Novo Chamado" e pro filtro por Cliente do board.
   const [dadosOs, setDadosOs] = useState<DadosAberturaOs | null>(null);
   const [novoChamadoAberto, setNovoChamadoAberto] = useState(false);
+  // E01-S118 T7: Chamados abertos ainda sem OS — exibidos como cards sintéticos na coluna
+  // Solicitação (senão um Chamado recém-criado só apareceria no board depois de "Gerar OS").
+  const [chamadosAbertos, setChamadosAbertos] = useState<Chamado[]>([]);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -163,12 +169,17 @@ export function OrdensServicoPage({
     setErroAcao(null);
     setSelecionados(new Set());
     try {
-      const [ordens, kpis] = await Promise.all([
+      const [ordens, kpis, chamadosAbertosLista] = await Promise.all([
         listarOrdensServico(supabaseHubOsAdapter, filtrosServidor),
         contarKpisOrdens(supabaseHubOsAdapter, filtrosServidor),
+        listarChamados(supabaseChamadosAdapter, {
+          status: "aberto",
+          clienteId: filtrosServidor.clienteId,
+        }),
       ]);
       setEstado({ fase: "pronto", ordens });
       setKpisServidor(kpis);
+      setChamadosAbertos(chamadosAbertosLista);
       setSelecionadaId((atual) => atual ?? ordens[0]?.id ?? null);
     } catch (error) {
       setEstado({
@@ -249,16 +260,26 @@ export function OrdensServicoPage({
   // tipoOs (melhoria/outro, fora do Hub) fica sempre por último, sem sumir da lista.
   const [ordenarPorHub, setOrdenarPorHub] = useState(false);
 
+  // E01-S118 T7: Chamados abertos (ainda sem OS) viram cards sintéticos na coluna Solicitação —
+  // resolve o nome do cliente via `dadosOs` (mesma fonte do seletor de "Novo Chamado"/filtro).
+  const cardsChamadosAbertos = useMemo(() => {
+    const nomesClientes = new Map((dadosOs?.clientes ?? []).map((c) => [c.id, c.nome]));
+    return chamadosAbertos.map((chamado) =>
+      chamadoAbertoParaCard(chamado, nomesClientes.get(chamado.clienteId) ?? "Cliente"),
+    );
+  }, [chamadosAbertos, dadosOs]);
+
   const ordensFiltradas = useMemo(() => {
     if (estado.fase !== "pronto") return [];
-    const filtradas = filtrarOrdens(estado.ordens, filtros);
+    const todas = [...estado.ordens, ...cardsChamadosAbertos];
+    const filtradas = filtrarOrdens(todas, filtros);
     if (!ordenarPorHub) return filtradas;
     return [...filtradas].sort((a, b) => {
       const prioA = calcularPrioridadeHub(a.tipoOs, a.dataAgendada) ?? Number.POSITIVE_INFINITY;
       const prioB = calcularPrioridadeHub(b.tipoOs, b.dataAgendada) ?? Number.POSITIVE_INFINITY;
       return prioA - prioB;
     });
-  }, [estado, filtros, ordenarPorHub]);
+  }, [estado, cardsChamadosAbertos, filtros, ordenarPorHub]);
 
   const tecnicosDisponiveis = useMemo(() => {
     if (estado.fase !== "pronto") return [];
@@ -275,8 +296,12 @@ export function OrdensServicoPage({
 
   const selecionada = useMemo(() => {
     if (estado.fase !== "pronto") return null;
-    return estado.ordens.find((ordem) => ordem.id === selecionadaId) ?? null;
-  }, [estado, selecionadaId]);
+    return (
+      estado.ordens.find((ordem) => ordem.id === selecionadaId) ??
+      cardsChamadosAbertos.find((card) => card.id === selecionadaId) ??
+      null
+    );
+  }, [estado, cardsChamadosAbertos, selecionadaId]);
 
   // E01-S44: com busca livre ativa, os KPIs do servidor não sabem do refinamento por nome de
   // cliente (só existe em memória) — cai pro cálculo client-side sobre o que já está carregado,
@@ -309,6 +334,8 @@ export function OrdensServicoPage({
   }
 
   function onToggleSelecionado(id: string) {
+    // E01-S118 T7: card sintético de Chamado aberto não entra em seleção em lote (não é OS real).
+    if (ehCardChamadoAberto(id)) return;
     setSelecionados((atual) => {
       const proximo = new Set(atual);
       if (proximo.has(id)) {
@@ -359,6 +386,14 @@ export function OrdensServicoPage({
 
   async function onAlterarStatusDe(id: string, status: StatusOrdemServico) {
     if (!user) return;
+    // E01-S118 T7: card sintético de Chamado aberto (sem OS ainda) — arrastar não muda status de
+    // nada real; a mudança de fase é via "Gerar OS"/"Enviar ao backlog" no painel do Chamado.
+    if (ehCardChamadoAberto(id)) {
+      setErroAcao(
+        'Este item ainda é só um Chamado — use "Gerar OS" ou "Enviar ao backlog" no detalhe dele.',
+      );
+      return;
+    }
     setSalvando(true);
     setErroAcao(null);
     try {
@@ -680,6 +715,8 @@ export function OrdensServicoPage({
                 salvando={salvando}
                 onAlterarStatus={onAlterarStatus}
                 onEditar={() => setEditando(true)}
+                dadosOs={dadosOs}
+                onRecarregar={carregar}
                 aberturaModalSeq={modalDetalheSeq}
               />
             </section>
@@ -799,6 +836,8 @@ export function OrdensServicoPage({
                     salvando={salvando}
                     onAlterarStatus={onAlterarStatus}
                     onEditar={() => setEditando(true)}
+                    dadosOs={dadosOs}
+                    onRecarregar={carregar}
                   />
                 ) : (
                   <div className="p-8 text-sm text-ink-3">Selecione uma OS.</div>
@@ -871,6 +910,8 @@ function DetalheOs({
   salvando,
   onAlterarStatus,
   onEditar,
+  dadosOs,
+  onRecarregar,
   aberturaModalSeq = 0,
 }: {
   selecionada: OrdemServicoOperacional;
@@ -878,6 +919,10 @@ function DetalheOs({
   salvando: boolean;
   onAlterarStatus: (status: StatusOrdemServico) => void;
   onEditar: () => void;
+  /** E01-S118 T7: clientes/tipos/técnicos pro "Gerar OS" do Chamado vinculado. */
+  dadosOs: DadosAberturaOs | null;
+  /** E01-S118 T7: refetch do board após uma ação do Chamado (gerar OS, cancelar). */
+  onRecarregar: () => void;
   /** E01-S118 AC-6: clicar num card do Kanban/Timeline/Calendário abre este modal direto. O pai
    * incrementa `aberturaModalSeq` a cada clique (mesmo card duas vezes seguidas ainda reabre). */
   aberturaModalSeq?: number;
@@ -901,103 +946,125 @@ function DetalheOs({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [expandido]);
 
+  // E01-S118 T7: card sintético de Chamado ainda sem OS — não faz sentido mostrar
+  // status/GUT/Auvo/técnico (nada disso existe ainda); só o painel do Chamado (abaixo) importa.
+  const ehChamadoSemOs = ehCardChamadoAberto(selecionada.id);
+
   const corpo = (
     <>
-      <div className="grid grid-cols-2 gap-2 text-sm">
-        <Info label="Status" value={rotuloStatusOs(selecionada.status)} />
-        <Info
-          label="Prioridade"
-          value={PRIORIDADE_LABEL[selecionada.prioridade] ?? selecionada.prioridade}
-        />
-        <Info label="Categoria" value={selecionada.categoria} />
-        <Info label="Origem" value={rotuloOrigemOs(selecionada.origem)} />
-        <Info label="Solicitante" value={selecionada.solicitante ?? "—"} />
-        <Info label="Local" value={selecionada.localDescricao ?? "—"} />
-        <Info label="Score GUT" value={String(selecionada.scorePcm)} />
-        <Info
-          label="Fatores"
-          value={`${selecionada.gravidade ?? 1} · ${selecionada.urgencia ?? 1} · ${
-            selecionada.tendencia ?? 1
-          }`}
-        />
-        <Info
-          label="Auvo"
-          value={
-            selecionada.auvoTaskId
-              ? `Task ${selecionada.auvoTaskId}`
-              : selecionada.auvoSyncStatus || "Sem task"
-          }
-        />
-        <Info
-          label="Técnico"
-          value={
-            selecionada.tecnicoNome ??
-            (typeof selecionada.detalhes?.tecnicoNomeAuvo === "string"
-              ? selecionada.detalhes.tecnicoNomeAuvo
-              : "Não atribuído")
-          }
-        />
-        {selecionada.dataAgendada && (
-          <Info
-            label="Agendada"
-            value={new Date(selecionada.dataAgendada).toLocaleString("pt-BR")}
-          />
-        )}
-        {selecionada.checkInAt && (
-          <Info label="Check-in" value={new Date(selecionada.checkInAt).toLocaleString("pt-BR")} />
-        )}
-        {selecionada.checkOutAt && (
-          <Info
-            label="Check-out"
-            value={new Date(selecionada.checkOutAt).toLocaleString("pt-BR")}
-          />
-        )}
-      </div>
-
-      {selecionada.auvoSyncError && (
-        <div className="rounded-[8px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#A12D24]">
-            Erro Auvo
-          </p>
-          <p className="mt-1 text-sm text-[#7A241D]">{selecionada.auvoSyncError}</p>
-        </div>
-      )}
-
-      {selecionada.detalhes && Object.keys(selecionada.detalhes).length > 0 && (
-        <DetalhesTarefaAuvo
-          detalhes={selecionada.detalhes}
-          checkInAt={selecionada.checkInAt}
-          checkOutAt={selecionada.checkOutAt}
-        />
-      )}
-
-      {temEscrita && (
-        <div className="rounded-[8px] border border-line bg-paper p-2.5">
-          <label
-            htmlFor="status-os-operacional"
-            className="text-xs font-semibold uppercase tracking-wider text-ink-3"
-          >
-            Alterar status
-          </label>
-          <div className="mt-2 flex gap-2">
-            <select
-              id="status-os-operacional"
-              className="input flex-1"
-              value={selecionada.status}
-              disabled={salvando}
-              onChange={(event) => onAlterarStatus(event.target.value as StatusOrdemServico)}
-            >
-              {STATUS_OS.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
+      {!ehChamadoSemOs && (
+        <>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <Info label="Status" value={rotuloStatusOs(selecionada.status)} />
+            <Info
+              label="Prioridade"
+              value={PRIORIDADE_LABEL[selecionada.prioridade] ?? selecionada.prioridade}
+            />
+            <Info label="Categoria" value={selecionada.categoria} />
+            <Info label="Origem" value={rotuloOrigemOs(selecionada.origem)} />
+            <Info label="Solicitante" value={selecionada.solicitante ?? "—"} />
+            <Info label="Local" value={selecionada.localDescricao ?? "—"} />
+            <Info label="Score GUT" value={String(selecionada.scorePcm)} />
+            <Info
+              label="Fatores"
+              value={`${selecionada.gravidade ?? 1} · ${selecionada.urgencia ?? 1} · ${
+                selecionada.tendencia ?? 1
+              }`}
+            />
+            <Info
+              label="Auvo"
+              value={
+                selecionada.auvoTaskId
+                  ? `Task ${selecionada.auvoTaskId}`
+                  : selecionada.auvoSyncStatus || "Sem task"
+              }
+            />
+            <Info
+              label="Técnico"
+              value={
+                selecionada.tecnicoNome ??
+                (typeof selecionada.detalhes?.tecnicoNomeAuvo === "string"
+                  ? selecionada.detalhes.tecnicoNomeAuvo
+                  : "Não atribuído")
+              }
+            />
+            {selecionada.dataAgendada && (
+              <Info
+                label="Agendada"
+                value={new Date(selecionada.dataAgendada).toLocaleString("pt-BR")}
+              />
+            )}
+            {selecionada.checkInAt && (
+              <Info
+                label="Check-in"
+                value={new Date(selecionada.checkInAt).toLocaleString("pt-BR")}
+              />
+            )}
+            {selecionada.checkOutAt && (
+              <Info
+                label="Check-out"
+                value={new Date(selecionada.checkOutAt).toLocaleString("pt-BR")}
+              />
+            )}
           </div>
-          <p className="mt-2 text-xs text-ink-3">
-            Planejamento dispara o gatilho Auvo já existente quando aplicável.
-          </p>
-        </div>
+
+          {selecionada.auvoSyncError && (
+            <div className="rounded-[8px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#A12D24]">
+                Erro Auvo
+              </p>
+              <p className="mt-1 text-sm text-[#7A241D]">{selecionada.auvoSyncError}</p>
+            </div>
+          )}
+
+          {selecionada.detalhes && Object.keys(selecionada.detalhes).length > 0 && (
+            <DetalhesTarefaAuvo
+              detalhes={selecionada.detalhes}
+              checkInAt={selecionada.checkInAt}
+              checkOutAt={selecionada.checkOutAt}
+            />
+          )}
+
+          {temEscrita && (
+            <div className="rounded-[8px] border border-line bg-paper p-2.5">
+              <label
+                htmlFor="status-os-operacional"
+                className="text-xs font-semibold uppercase tracking-wider text-ink-3"
+              >
+                Alterar status
+              </label>
+              <div className="mt-2 flex gap-2">
+                <select
+                  id="status-os-operacional"
+                  className="input flex-1"
+                  value={selecionada.status}
+                  disabled={salvando}
+                  onChange={(event) => onAlterarStatus(event.target.value as StatusOrdemServico)}
+                >
+                  {STATUS_OS.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="mt-2 text-xs text-ink-3">
+                Planejamento dispara o gatilho Auvo já existente quando aplicável.
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* E01-S118 T7: Chamado vinculado — histórico (WhatsApp/Zé), datas e ações. O histórico
+          continua acessível mesmo depois do Chamado ter virado OS (carrega sempre por chamadoId). */}
+      {selecionada.chamadoId && (
+        <ChamadoPainel
+          chamadoId={selecionada.chamadoId}
+          dadosOs={dadosOs}
+          temEscrita={temEscrita}
+          onMutou={onRecarregar}
+        />
       )}
     </>
   );
@@ -1007,19 +1074,21 @@ function DetalheOs({
       <div className="border-b border-line-soft px-4 py-3">
         <div className="flex items-start justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
-            Resumo da OS
+            {ehChamadoSemOs ? "Resumo do Chamado" : "Resumo da OS"}
           </p>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setExpandido(true)}
               className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink"
-              aria-label="Expandir detalhe da OS"
+              aria-label="Expandir detalhe"
             >
               <Expand className="h-3.5 w-3.5" />
               Expandir
             </button>
-            {temEscrita && (
+            {/* E01-S118 T7: sem OS ainda, "Editar" (campos de OS) não se aplica — a edição do
+                Chamado é pelas ações do ChamadoPainel (Gerar OS/Backlog/Cancelar/datas). */}
+            {temEscrita && !ehChamadoSemOs && (
               <button
                 type="button"
                 onClick={onEditar}

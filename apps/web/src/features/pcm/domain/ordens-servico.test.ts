@@ -4,7 +4,9 @@ import {
   agruparPorTecnico,
   calcularKpisOrdens,
   calcularMetricasOperacao,
+  chamadoAbertoParaCard,
   deveAlterarStatusPorDrop,
+  ehCardChamadoAberto,
   ehItemBacklog,
   filtrarBacklogGut,
   filtrarOrdens,
@@ -98,6 +100,26 @@ describe("calcularMetricasOperacao", () => {
     ]);
     // backlog: id 1. sem técnico (aberta): id 1 e 2 (finalizado não conta). erro sync: id 3.
     expect(m).toEqual({ backlog: 1, semTecnico: 2, syncAuvoErro: 1 });
+  });
+});
+
+describe("chamadoAbertoParaCard", () => {
+  it("mapeia pra card sintético na coluna Solicitação, com id nunca colidindo com OS real", () => {
+    const card = chamadoAbertoParaCard(
+      {
+        id: "cham-1",
+        numero: "CH-0099",
+        titulo: "Vazamento",
+        descricao: null,
+        createdAt: "2026-07-29T10:00:00Z",
+      },
+      "Cliente X",
+    );
+    expect(card.status).toBe("solicitacao");
+    expect(card.chamadoId).toBe("cham-1");
+    expect(card.clienteNome).toBe("Cliente X");
+    expect(ehCardChamadoAberto(card.id)).toBe(true);
+    expect(ehCardChamadoAberto("os-real-uuid")).toBe(false);
   });
 });
 
