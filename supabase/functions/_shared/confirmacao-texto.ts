@@ -35,6 +35,16 @@ function normalizar(texto: string): string {
     .trim();
 }
 
+/** Evita substring acidental: "disso" não pode confirmar por conter "isso". Mantém frases como
+ * "isso mesmo" e aceita pontuação entre palavras. */
+function contemExpressao(texto: string, expressao: string): boolean {
+  const padrao = expressao
+    .split(" ")
+    .map((parte) => parte.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("\\s+");
+  return new RegExp(`(^|[^a-z0-9])${padrao}($|[^a-z0-9])`).test(texto);
+}
+
 export interface ItemChamadoPendente {
   titulo: string;
   descricao: string;
@@ -67,9 +77,11 @@ export type Confirmacao = "confirma" | "nega" | "ambiguo";
 export function interpretarConfirmacao(texto: string): Confirmacao {
   const normalizado = normalizar(texto);
   if (!normalizado) return "ambiguo";
-  const temNegacao = PALAVRAS_NEGA.some((palavra) => normalizado.includes(palavra));
+  const temNegacao = PALAVRAS_NEGA.some((palavra) => contemExpressao(normalizado, palavra));
   if (temNegacao) return "nega";
-  const temConfirmacao = PALAVRAS_CONFIRMA.some((palavra) => normalizado.includes(palavra));
+  const temConfirmacao = PALAVRAS_CONFIRMA.some((palavra) =>
+    contemExpressao(normalizado, palavra),
+  );
   if (temConfirmacao) return "confirma";
   return "ambiguo";
 }
