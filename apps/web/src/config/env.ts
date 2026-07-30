@@ -10,6 +10,7 @@ const schema = z.object({
   // --- Públicas (podem ir ao client via Vite) ---
   VITE_SUPABASE_URL: z.string().url(),
   VITE_SUPABASE_ANON_KEY: z.string().min(1),
+  VITE_PORTAL_URL: z.string().url().optional(),
 
   // --- Servidor apenas (Edge Functions / scripts) — NUNCA no client ---
   // Supabase

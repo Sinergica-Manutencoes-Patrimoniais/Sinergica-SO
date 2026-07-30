@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { validarCancelamento, validarNovoChamado, validarTransicaoParaOs } from "./chamados";
+import {
+  deveIncrementarReplanejamento,
+  validarCancelamento,
+  validarDataExecucao,
+  validarNovoChamado,
+  validarTransicaoParaOs,
+} from "./chamados";
 import type { Chamado } from "./chamados";
 
 describe("chamados", () => {
@@ -16,6 +22,7 @@ describe("chamados", () => {
         clienteId: "cli-1",
         titulo: "Vazamento no térreo",
         descricao: null,
+        local: null,
         origem: "manual",
         solicitante: "João",
         origemInspecaoItemId: null,
@@ -74,6 +81,38 @@ describe("chamados", () => {
       expect(validarCancelamento({ status }, "não é mais necessário")).toBe(
         "não é mais necessário",
       );
+    });
+  });
+
+  describe("deveIncrementarReplanejamento (E01-S101 AC-3)", () => {
+    it("primeiro agendamento (null -> data) não conta como replanejamento", () => {
+      expect(deveIncrementarReplanejamento(null, "2026-08-01T00:00:00.000Z")).toBe(false);
+    });
+
+    it("mudar uma data já planejada conta como replanejamento", () => {
+      expect(
+        deveIncrementarReplanejamento("2026-08-01T00:00:00.000Z", "2026-08-05T00:00:00.000Z"),
+      ).toBe(true);
+    });
+
+    it("manter a mesma data não conta", () => {
+      expect(
+        deveIncrementarReplanejamento("2026-08-01T00:00:00.000Z", "2026-08-01T00:00:00.000Z"),
+      ).toBe(false);
+    });
+  });
+
+  describe("validarDataExecucao (E01-S101 AC-4)", () => {
+    it("aceita execução na ou após a abertura", () => {
+      expect(() =>
+        validarDataExecucao("2026-08-01T00:00:00.000Z", "2026-08-02T00:00:00.000Z"),
+      ).not.toThrow();
+    });
+
+    it("rejeita execução anterior à abertura", () => {
+      expect(() =>
+        validarDataExecucao("2026-08-02T00:00:00.000Z", "2026-08-01T00:00:00.000Z"),
+      ).toThrow(/anterior/);
     });
   });
 });

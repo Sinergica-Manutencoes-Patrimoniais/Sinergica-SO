@@ -22,10 +22,11 @@ import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.
 import { auvoNaiveToUtc } from "../_shared/auvo/datetime.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 import {
+  marcarChamadoAutomaticoComOs,
   montarLinhaOs,
   obterUsuarioSistema,
   type OsStatus,
-  proximosNumerosOs,
+  proximosNumerosChamado,
   resolverClienteIdsPorAuvoIds,
   resolverFuncionarioIdsPorAuvoIds,
 } from "../_shared/auvo/os-from-task.ts";
@@ -264,16 +265,20 @@ if (import.meta.main) serve(async (req) => {
         }
       }
 
-      const [clienteIdsPorAuvoId, numeros, systemUserId] = await Promise.all([
+      const [clienteIdsPorAuvoId, numerosChamado, systemUserId] = await Promise.all([
         resolverClienteIdsPorAuvoIds(db, candidatasComCliente.map((c) => c.customerId)),
-        // E01-S88: reserva de uma vez o número máximo possível (pode sobrar número não usado se
-        // alguma tarefa for pulada abaixo por cliente ainda não sincronizado — gap aceitável em
-        // sequence, mesmo padrão de qualquer sequence de banco).
-        proximosNumerosOs(db, candidatasComCliente.length),
+        // E01-S99/ADR-0014: reserva de uma vez o número máximo possível de Chamado (mesmo padrão
+        // da antiga `proximosNumerosOs`, E01-S88 — pode sobrar número não usado se alguma tarefa
+        // for pulada abaixo por cliente ainda não sincronizado; gap aceitável em sequence).
+        proximosNumerosChamado(db, candidatasComCliente.length),
         obterUsuarioSistema(db),
       ]);
 
-      const linhas: Array<Record<string, unknown>> = [];
+      // E01-S99: toda OS criada direto do Auvo (sem ter passado por um Chamado no PCM antes)
+      // ganha um Chamado automático (`origem="auvo_sync"`) por trás — o CH-XXXX dele é quem
+      // vira o `numero` da OS (trigger `fn_ordens_servico_sync_numero_chamado`, migration 0151).
+      const candidatasParaChamado: Array<(typeof candidatasComCliente)[number] & { clienteId: string }> = [];
+      const chamadosParaCriar: Array<Record<string, unknown>> = [];
       let proximoIndiceNumero = 0;
       for (const c of candidatasComCliente) {
         const clienteId = clienteIdsPorAuvoId.get(c.customerId);
@@ -282,8 +287,41 @@ if (import.meta.main) serve(async (req) => {
           console.warn(JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "cliente ainda não sincronizado no PCM — tarefa pulada, tenta de novo na próxima rodada", taskId: c.taskId, customerId: c.customerId }));
           continue;
         }
-        const numero = numeros[proximoIndiceNumero++];
+        const numero = numerosChamado[proximoIndiceNumero++];
         if (!numero) continue;
+        candidatasParaChamado.push({ ...c, clienteId });
+        chamadosParaCriar.push({
+          numero,
+          cliente_id: clienteId,
+          titulo: c.titulo,
+          origem: "auvo_sync",
+          created_by: systemUserId,
+          updated_by: systemUserId,
+        });
+      }
+
+      const chamadosCriados: Array<{ id: string }> = [];
+      for (let i = 0; i < chamadosParaCriar.length; i += TAMANHO_LOTE_INSERT) {
+        const lote = chamadosParaCriar.slice(i, i + TAMANHO_LOTE_INSERT);
+        const { data, error } = await db.schema("pcm").from("chamados").insert(lote).select("id");
+        if (error) throw error;
+        chamadosCriados.push(...((data ?? []) as Array<{ id: string }>));
+      }
+      if (chamadosCriados.length > 0) {
+        const eventos = chamadosCriados.map((chamado, i) => ({
+          chamado_id: chamado.id,
+          tipo: "criado" as const,
+          metadata: { numero: chamadosParaCriar[i]?.numero, auto: true },
+        }));
+        const { error } = await db.schema("pcm").from("chamados_eventos").insert(eventos);
+        if (error) throw error;
+      }
+
+      const linhas: Array<Record<string, unknown>> = [];
+      for (let i = 0; i < candidatasParaChamado.length; i++) {
+        const c = candidatasParaChamado[i];
+        const chamadoId = chamadosCriados[i]?.id;
+        if (!chamadoId) continue;
         const tecnicoFuncionarioId = c.tecnicoAuvoUserId != null
           ? funcionarioIdsPorAuvoId.get(c.tecnicoAuvoUserId) ?? null
           : null;
@@ -300,16 +338,26 @@ if (import.meta.main) serve(async (req) => {
               checkOutAt: c.checkOutAt,
               detalhes: c.detalhes,
             },
-            { clienteId, numero, systemUserId, tecnicoFuncionarioId },
+            { clienteId: c.clienteId, chamadoId, systemUserId, tecnicoFuncionarioId },
           ),
         );
       }
 
+      const osCriadas: Array<{ id: string; chamado_id: string }> = [];
       for (let i = 0; i < linhas.length; i += TAMANHO_LOTE_INSERT) {
         const lote = linhas.slice(i, i + TAMANHO_LOTE_INSERT);
-        const { error } = await db.schema("pcm").from("ordens_servico").insert(lote);
+        const { data, error } = await db
+          .schema("pcm")
+          .from("ordens_servico")
+          .insert(lote)
+          .select("id,chamado_id");
         if (error) throw error;
+        osCriadas.push(...((data ?? []) as Array<{ id: string; chamado_id: string }>));
         criadas += lote.length;
+      }
+
+      for (const os of osCriadas) {
+        await marcarChamadoAutomaticoComOs(db, os.chamado_id, os.id);
       }
     }
 

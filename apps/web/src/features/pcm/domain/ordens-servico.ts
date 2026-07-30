@@ -1,9 +1,11 @@
+import type { Chamado } from "./chamados";
 import { STATUS_HISTORICO } from "./cliente-360";
 import type { TipoOsHub } from "./hub-os";
 
 export type StatusOrdemServico =
   | "solicitacao"
   | "corretiva"
+  | "backlog"
   | "planejamento"
   | "em_execucao"
   | "finalizado"
@@ -45,6 +47,68 @@ export interface OrdemServicoOperacional {
   /** E01-S07: tipo do Hub (C1/C2/P1/P2/IN), gravado — `null` = fora do Hub (melhoria/outro). */
   tipoOs: TipoOsHub | null;
   pmocScheduleId: string | null;
+  /** E01-S116: Chamado de origem — desde E01-S99, é a mesma entidade em fase distinta; `null`
+   * defensivamente (não deveria existir depois de E01-S99), usado pra navegar Kanban→Chamado. */
+  chamadoId: string | null;
+  /** E01-S117 AC-7: campos de intake do Chamado (a OS é a evolução dele) — exibidos no "Resumo da
+   * OS". Já existiam na linha (`OrdemRow`), só não eram mapeados pro domínio. */
+  localDescricao: string | null;
+  solicitante: string | null;
+  origem: string;
+}
+
+// E01-S118 T7: um Chamado recém-aberto ainda NÃO tem linha em `ordens_servico` (só nasce ao
+// "Gerar OS"/"Enviar ao backlog") — sem isso, ele desapareceria do board até alguém agir nele,
+// contradizendo o próprio ponto 1 do pedido ("sempre se abre um Chamado, que evolui pra OS").
+// Solução: exibido como card sintético na coluna Solicitação, `id` prefixado pra nunca colidir
+// com um id real de OS. Mesmo item, fase anterior — não é dado novo gravado em lugar nenhum.
+const PREFIXO_CARD_CHAMADO_ABERTO = "chamado-aberto:";
+
+export function idCardChamadoAberto(chamadoId: string): string {
+  return `${PREFIXO_CARD_CHAMADO_ABERTO}${chamadoId}`;
+}
+
+export function ehCardChamadoAberto(id: string): boolean {
+  return id.startsWith(PREFIXO_CARD_CHAMADO_ABERTO);
+}
+
+export function chamadoAbertoParaCard(
+  chamado: Pick<Chamado, "id" | "numero" | "titulo" | "descricao" | "createdAt">,
+  clienteNome: string,
+): OrdemServicoOperacional {
+  return {
+    id: idCardChamadoAberto(chamado.id),
+    numero: chamado.numero,
+    titulo: chamado.titulo,
+    descricao: chamado.descricao,
+    clienteNome,
+    categoria: "corretiva",
+    status: "solicitacao",
+    prioridade: "normal",
+    scorePcm: 0,
+    gravidade: null,
+    urgencia: null,
+    tendencia: null,
+    dorCliente: null,
+    observacao: null,
+    origemInspecaoItemId: null,
+    auvoTaskId: null,
+    auvoSyncStatus: null,
+    auvoSyncError: null,
+    createdAt: chamado.createdAt,
+    tecnicoFuncionarioId: null,
+    tecnicoNome: null,
+    dataAgendada: null,
+    checkInAt: null,
+    checkOutAt: null,
+    detalhes: null,
+    tipoOs: null,
+    pmocScheduleId: null,
+    chamadoId: chamado.id,
+    localDescricao: null,
+    solicitante: null,
+    origem: "manual",
+  };
 }
 
 export interface KpisOrdensServico {
@@ -59,11 +123,36 @@ export interface KpisOrdensServico {
 export const STATUS_OS: Array<{ value: StatusOrdemServico; label: string }> = [
   { value: "solicitacao", label: "Solicitação" },
   { value: "corretiva", label: "Corretiva" },
+  { value: "backlog", label: "Backlog" },
   { value: "planejamento", label: "Planejamento" },
   { value: "em_execucao", label: "Em execução" },
   { value: "finalizado", label: "Finalizado" },
   { value: "cancelado", label: "Cancelado" },
 ];
+
+// E01-S117: rótulos das origens de intake do Chamado (mesmos valores de `OrigemChamado`).
+const ORIGEM_OS_LABEL: Record<string, string> = {
+  manual: "Manual",
+  cliente_portal: "Portal do Cliente",
+  whatsapp: "WhatsApp",
+  inspecao: "Inspeção",
+  auvo_sync: "Sincronizado do Auvo",
+};
+
+export function rotuloOrigemOs(origem: string): string {
+  return ORIGEM_OS_LABEL[origem] ?? origem;
+}
+
+/** E01-S117 AC-2/AC-3: nunca exibir `OS-XXXX`. `CH-XXXX` é a numeração única (E01-S99) — mantém.
+ * Sem CH mas com tarefa Auvo (legado importado): mostra o ID do Auvo, rastreável no Auvo. Sem
+ * nenhum dos dois (caso raro): mantém o `numero` cru, é o que existe. */
+export function rotuloNumeroOrdem(
+  ordem: Pick<OrdemServicoOperacional, "numero" | "auvoTaskId">,
+): string {
+  if (ordem.numero.startsWith("CH-")) return ordem.numero;
+  if (ordem.auvoTaskId !== null) return `Auvo #${ordem.auvoTaskId}`;
+  return ordem.numero;
+}
 
 export const PRIORIDADE_LABEL: Record<string, string> = {
   baixa: "Baixa",
@@ -82,6 +171,7 @@ export function statusOsColor(status: string): string {
   if (status === "cancelado") return "bg-[#FBEAEA] text-[#C5362B]";
   if (status === "em_execucao") return "bg-[#EAEEF8] text-[#2E3C70]";
   if (status === "planejamento") return "bg-[#FDF1DF] text-[#B26A00]";
+  if (status === "backlog") return "bg-[#F3EEFA] text-[#6B3FA0]";
   return "bg-[#EFF1F4] text-[#5A6175]";
 }
 
@@ -205,7 +295,7 @@ export function resumoTooltipOrdem(ordem: OrdemServicoOperacional): string | nul
     typeof detalhes[chave] === "string" ? (detalhes[chave] as string) : null;
   const tecnico = ordem.tecnicoNome ?? texto("tecnicoNomeAuvo") ?? "não atribuído";
   const linhas = [
-    `${ordem.numero} · ${rotuloStatusOs(ordem.status)} · ${PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}`,
+    `${rotuloNumeroOrdem(ordem)} · ${rotuloStatusOs(ordem.status)} · ${PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}`,
     `Cliente: ${ordem.clienteNome}`,
     `Categoria: ${ordem.categoria} · Técnico: ${tecnico}`,
     ordem.descricao?.trim() || null,
@@ -217,10 +307,36 @@ export function resumoTooltipOrdem(ordem: OrdemServicoOperacional): string | nul
   return linhas.join("\n");
 }
 
+// E01-S118 AC-4: métricas operacionais acionáveis, além dos KPIs de status. Puras/testáveis.
+export interface MetricasOperacao {
+  /** OS na raia de Backlog (aguardando priorização/planejamento). */
+  backlog: number;
+  /** OS aberta (não histórica) ainda sem técnico atribuído — gargalo de planejamento. */
+  semTecnico: number;
+  /** OS com erro de sync no Auvo — precisa de intervenção. */
+  syncAuvoErro: number;
+}
+
+export function calcularMetricasOperacao(
+  ordens: readonly OrdemServicoOperacional[],
+): MetricasOperacao {
+  let backlog = 0;
+  let semTecnico = 0;
+  let syncAuvoErro = 0;
+  for (const ordem of ordens) {
+    if (ordem.status === "backlog") backlog++;
+    if (ehOsAberta(ordem.status) && ordem.tecnicoFuncionarioId === null) semTecnico++;
+    if (ordem.auvoSyncError !== null) syncAuvoErro++;
+  }
+  return { backlog, semTecnico, syncAuvoErro };
+}
+
 export interface FiltrosOrdens {
   busca: string;
   status: string;
   tecnicoFuncionarioId: string;
+  /** E01-S118 AC-5: filtro por Cliente ("todos" = sem filtro). */
+  clienteId: string;
   categoria: string;
   dataInicio: string | null;
   dataFim: string | null;
@@ -230,6 +346,7 @@ export const FILTROS_ORDENS_VAZIO: FiltrosOrdens = {
   busca: "",
   status: "todas",
   tecnicoFuncionarioId: "todos",
+  clienteId: "todos",
   categoria: "todas",
   dataInicio: null,
   dataFim: null,

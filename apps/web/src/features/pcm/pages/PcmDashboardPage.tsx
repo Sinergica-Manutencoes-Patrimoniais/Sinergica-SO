@@ -285,7 +285,7 @@ export function PcmDashboardPage({
                 <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)} className="block">
                   <button
                     type="button"
-                    aria-label={`Resumo da OS ${ordem.numero}`}
+                    aria-label={`Resumo do Chamado ${ordem.numero}`}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-line-soft focus:bg-line-soft"
                   >
                     <span className="text-xs font-brand tabular-nums text-ink-3 w-16 shrink-0">
@@ -339,7 +339,7 @@ export function PcmDashboardPage({
                 <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)} className="block">
                   <button
                     type="button"
-                    aria-label={`Resumo da OS ${ordem.numero}`}
+                    aria-label={`Resumo do Chamado ${ordem.numero}`}
                     className="flex w-full gap-3 px-4 py-3 text-left hover:bg-line-soft focus:bg-line-soft"
                   >
                     <span className="mt-0.5 w-5 shrink-0 text-center font-brand text-base font-bold leading-none text-line">

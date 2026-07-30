@@ -13,7 +13,6 @@ import {
   ClipboardList,
   Clock,
   FileBarChart,
-  FileBarChart2,
   FileText,
   Gauge,
   HardHat,
@@ -52,6 +51,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
+import { AreaClienteAdminPage } from "../features/area-cliente/pages/AreaClienteAdminPage";
 import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
 import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
 import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
@@ -81,15 +81,14 @@ import { RentabilidadePage as FinanceiroRentabilidadePage } from "../features/fi
 import type { GuiaView } from "../features/guia/GuiaRouter";
 import { GuiaRouter } from "../features/guia/GuiaRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
+import { AgendaTecnicoPage } from "../features/pcm/pages/AgendaTecnicoPage";
 import { ApontamentoHorasPage } from "../features/pcm/pages/ApontamentoHorasPage";
 import { AssessmentPage } from "../features/pcm/pages/AssessmentPage";
-import { BacklogGutPage } from "../features/pcm/pages/BacklogGutPage";
 import {
   EquipamentoCategoriasPage,
   PalavrasChavePage,
   SegmentosPage,
 } from "../features/pcm/pages/CatalogoSimplesPage";
-import { ChamadosPage } from "../features/pcm/pages/ChamadosPage";
 import { ClienteGruposPage } from "../features/pcm/pages/ClienteGruposPage";
 import { ConfigLocalizacaoAuvoPage } from "../features/pcm/pages/ConfigLocalizacaoAuvoPage";
 import { ConfigPriorizacaoPage } from "../features/pcm/pages/ConfigPriorizacaoPage";
@@ -105,12 +104,12 @@ import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
-import { ServicosPage } from "../features/pcm/pages/ServicosPage";
 import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { useAuth } from "./auth-context";
+import { useNavGuard } from "./nav-guard-context";
 import { usePermissoes } from "./permissoes-context";
 import { useTheme } from "./theme-context";
 
@@ -147,12 +146,12 @@ type PcmView =
   | "cliente-grupos"
   | "equipamentos"
   | "equipes"
+  | "agenda-tecnico"
   | "ferramentas"
   | "ferramentas-por-tecnico"
   | "funcionarios"
   | "tipos-tarefa"
   | "segmentos"
-  | "servicos"
   | "palavras-chave"
   | "equipamento-categorias"
   | "chamados"
@@ -179,6 +178,9 @@ interface NavItem {
   // módulo-scoped (fora do componente), então o clique de fato é resolvido no render (tem acesso a
   // `navegarModulo`/`setConfigTab`); esta flag só marca a intenção nos dados estáticos.
   atalhoConfigGrupos?: boolean;
+  // E01-S114: submenu simples (1 nível só) — item com `filhos` não navega por si (sem `view`
+  // próprio), só expande/colapsa; os filhos é que navegam.
+  filhos?: NavItem[];
 }
 
 interface NavGroup {
@@ -358,12 +360,13 @@ const PCM_NAV: NavGroup[] = [
     titulo: "OPERAÇÃO",
     items: [
       { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
-      { label: "Ordens de Serviço", icon: ClipboardList, view: "ordens" },
-      { label: "Backlog GUT", icon: LayoutGrid, view: "backlog" },
+      // E01-S118: "Chamados" e "Operação" viram um menu só (o board). Sempre se abre um Chamado, que
+      // após tratativa deriva numa OS pro Auvo — é o mesmo item, em fases. Backlog GUT deixou de ser
+      // item de nav (virou aba do board, ao lado do Calendário).
+      { label: "Chamados", icon: Headset, view: "ordens" },
       { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
       { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
-      { label: "Chamados", icon: Headset, view: "chamados" },
     ],
   },
   {
@@ -372,7 +375,6 @@ const PCM_NAV: NavGroup[] = [
       { label: "Clientes", icon: Building2, view: "clientes" },
       { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
       { label: "Sistemas", icon: Link2, view: "sistemas" },
-      { label: "Serviços", icon: Briefcase, view: "servicos" },
       { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
     ],
   },
@@ -384,6 +386,7 @@ const PCM_NAV: NavGroup[] = [
     items: [
       { label: "Ferramentas", icon: Package, view: "ferramentas" },
       { label: "Equipes", icon: Users, view: "equipes" },
+      { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "Funcionários", icon: UserCog, view: "funcionarios" },
       { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
       { label: "Marcações de Cliente", icon: Tag, view: "cliente-marcacoes" },
@@ -405,8 +408,6 @@ const PCM_NAV: NavGroup[] = [
   {
     titulo: "RELATÓRIOS",
     items: [
-      { label: "Relatório Diário", icon: FileText },
-      { label: "Relatório Mensal", icon: FileBarChart2 },
       { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
       { label: "Apontamento de Horas", icon: Clock, view: "apontamento-horas" },
     ],
@@ -565,6 +566,7 @@ export function HomePage() {
   const { user, logout } = useAuth();
   const { mode, toggleMode } = useTheme();
   const { podeAcessar } = usePermissoes();
+  const { confirmarSaida } = useNavGuard();
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
   const [configTab, setConfigTab] = useState<
     "grupos" | "usuarios" | "integracoes" | "ia" | "priorizacao" | "localizacao-auvo"
@@ -575,7 +577,7 @@ export function HomePage() {
   const [atendimentoView, setAtendimentoView] = useState<AtendimentoView>("inbox");
   // Sub-navegação do PCM (Task 18/E01-S12) — mesmo padrão useState de abas, sem lib de rotas.
   const [pcmView, setPcmView] = useState<PcmView>("dashboard");
-  // Sub-navegação do Financeiro (protótipo navegável, dados fictícios — features/financeiro/mock/).
+  // Sub-navegação do Financeiro.
   const [financeiroView, setFinanceiroView] = useState<FinanceiroView>("dashboard");
   // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
   const [guiaView, setGuiaView] = useState<GuiaView>("visao-geral");
@@ -604,13 +606,14 @@ export function HomePage() {
     dataInicio: string;
     dataFim: string;
   } | null>(null);
-
   function navegarModulo(area: AreaAtiva) {
+    if (area !== activeModulo && !confirmarSaida()) return;
     setActiveModulo(area);
     setMobileSidebarOpen(false);
   }
 
   function irParaPcmView(view: PcmView) {
+    if (view !== pcmView && !confirmarSaida()) return;
     setPcmView(view);
     setClienteSelecionado(null); // ao trocar de sub-tela, sai da Visão 360 de um cliente específico
     setClientePeriodo(null);
@@ -784,32 +787,63 @@ export function HomePage() {
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const view = item.view;
-                  // Item ativo: com `view`, reflete a sub-tela atual; sem `view`, mantém o mock.
-                  const isActive = view ? view === pcmView : item.active;
+                  // E01-S114 AC-3: com filhos, também ativo se o pcmView atual for de um filho —
+                  // mantém o contexto visível (submenu sempre expandido, ver AC-1 "padrão simples").
+                  const filhoAtivo = item.filhos?.some((filho) => filho.view === pcmView) ?? false;
+                  const isActive = view ? view === pcmView || filhoAtivo : item.active;
                   return (
-                    <button
-                      key={item.label}
-                      type="button"
-                      title={item.label}
-                      onClick={
-                        item.atalhoConfigGrupos
-                          ? () => {
-                              setConfigTab("grupos");
-                              navegarModulo("config");
-                            }
-                          : view
-                            ? () => irParaPcmView(view)
-                            : undefined
-                      }
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
-                        isActive
-                          ? "border-orange bg-white/[0.07] text-white font-medium"
-                          : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                      {!sidebarCompacta && <span className="truncate">{item.label}</span>}
-                    </button>
+                    <div key={item.label}>
+                      <button
+                        type="button"
+                        title={item.label}
+                        onClick={
+                          item.atalhoConfigGrupos
+                            ? () => {
+                                setConfigTab("grupos");
+                                navegarModulo("config");
+                              }
+                            : view
+                              ? () => irParaPcmView(view)
+                              : undefined
+                        }
+                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                          isActive
+                            ? "border-orange bg-white/[0.07] text-white font-medium"
+                            : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                        {!sidebarCompacta && <span className="truncate">{item.label}</span>}
+                      </button>
+                      {item.filhos && !sidebarCompacta && (
+                        <div className="ml-4 border-l border-navy-line pl-2">
+                          {item.filhos.map((filho) => {
+                            const FilhoIcon = filho.icon;
+                            const filhoIsActive = filho.view === pcmView;
+                            return (
+                              <button
+                                key={filho.label}
+                                type="button"
+                                title={filho.label}
+                                onClick={
+                                  filho.view
+                                    ? () => irParaPcmView(filho.view as PcmView)
+                                    : undefined
+                                }
+                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${
+                                  filhoIsActive
+                                    ? "border-orange bg-white/[0.07] text-white font-medium"
+                                    : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                                }`}
+                              >
+                                <FilhoIcon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
+                                <span className="truncate">{filho.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -1090,6 +1124,8 @@ export function HomePage() {
               <SistemasPage />
             ) : pcmView === "equipes" ? (
               <EquipesPage />
+            ) : pcmView === "agenda-tecnico" ? (
+              <AgendaTecnicoPage />
             ) : pcmView === "ferramentas" ? (
               <FerramentasPage />
             ) : pcmView === "ferramentas-por-tecnico" ? (
@@ -1101,10 +1137,6 @@ export function HomePage() {
               />
             ) : pcmView === "tipos-inspecao" ? (
               <TiposInspecaoPage />
-            ) : pcmView === "chamados" ? (
-              <ChamadosPage />
-            ) : pcmView === "servicos" ? (
-              <ServicosPage />
             ) : pcmView === "tipos-tarefa" ? (
               <TiposTarefaPage />
             ) : pcmView === "segmentos" ? (
@@ -1117,7 +1149,9 @@ export function HomePage() {
               <LaudosSpdaPage />
             ) : pcmView === "pmoc" ? (
               <PmocPage />
-            ) : pcmView === "ordens" ? (
+            ) : pcmView === "ordens" || pcmView === "chamados" || pcmView === "backlog" ? (
+              // E01-S118: Chamados/Operação/Backlog são o mesmo board (o Chamado evolui pra OS);
+              // `view=backlog` (deep-link do Dashboard) abre já na aba Backlog.
               <div className="flex flex-col gap-4">
                 {osDeepLink && (
                   <button
@@ -1132,6 +1166,7 @@ export function HomePage() {
                 <OrdensServicoPage
                   refreshKey={pcmRefreshKey}
                   onNovaOs={() => setNovaOsAberta(true)}
+                  abaInicial={pcmView === "backlog" ? "backlog" : undefined}
                   osIdInicialToken={
                     osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
                   }
@@ -1146,8 +1181,6 @@ export function HomePage() {
                   }
                 />
               </div>
-            ) : pcmView === "backlog" ? (
-              <BacklogGutPage />
             ) : (
               <div className="flex flex-col gap-4">
                 {feedbackOs && (
@@ -1222,6 +1255,13 @@ export function HomePage() {
             ) : (
               <FinanceiroMockRouter view={financeiroView} />
             )
+          ) : activeModulo === "area-cliente" ? (
+            <AreaClienteAdminPage
+              onAbrirClientes={() => {
+                navegarModulo("pcm");
+                irParaPcmView("clientes");
+              }}
+            />
           ) : activeModulo === "guia" ? (
             <GuiaRouter view={guiaView} />
           ) : modulo ? (
@@ -1234,7 +1274,7 @@ export function HomePage() {
           aberto={novaOsAberta}
           onFechar={() => setNovaOsAberta(false)}
           onCriada={(numero) => {
-            setFeedbackOs(`OS ${numero} criada em solicitação.`);
+            setFeedbackOs(`Chamado ${numero} criado em solicitação.`);
             setPcmView("ordens");
             setClienteSelecionado(null);
             setPcmRefreshKey((atual) => atual + 1);

@@ -3,7 +3,10 @@ import {
   FILTROS_ORDENS_VAZIO,
   agruparPorTecnico,
   calcularKpisOrdens,
+  calcularMetricasOperacao,
+  chamadoAbertoParaCard,
   deveAlterarStatusPorDrop,
+  ehCardChamadoAberto,
   ehItemBacklog,
   filtrarBacklogGut,
   filtrarOrdens,
@@ -12,6 +15,7 @@ import {
   ordenarBacklogGut,
   ordensNoDia,
   resumoTooltipOrdem,
+  rotuloNumeroOrdem,
 } from "./ordens-servico";
 
 const base = {
@@ -39,7 +43,85 @@ const base = {
   detalhes: null,
   tipoOs: null,
   pmocScheduleId: null,
+  chamadoId: null,
+  localDescricao: null,
+  solicitante: null,
+  origem: "manual",
 };
+
+describe("rotuloNumeroOrdem", () => {
+  it("mantém CH-XXXX", () => {
+    expect(rotuloNumeroOrdem({ numero: "CH-0041", auvoTaskId: 999 })).toBe("CH-0041");
+  });
+  it("troca OS-XXXX pelo ID do Auvo quando há task", () => {
+    expect(rotuloNumeroOrdem({ numero: "OS-0067", auvoTaskId: 12345 })).toBe("Auvo #12345");
+  });
+  it("mantém o numero cru quando não é CH e não tem Auvo", () => {
+    expect(rotuloNumeroOrdem({ numero: "OS-0067", auvoTaskId: null })).toBe("OS-0067");
+  });
+});
+
+describe("calcularMetricasOperacao", () => {
+  it("conta backlog, sem técnico (aberta) e erro de sync Auvo", () => {
+    const comum = { scorePcm: 27, createdAt: "2026-07-04T10:00:00Z" };
+    const m = calcularMetricasOperacao([
+      {
+        ...base,
+        ...comum,
+        id: "1",
+        status: "backlog",
+        tecnicoFuncionarioId: null,
+        auvoSyncError: null,
+      },
+      {
+        ...base,
+        ...comum,
+        id: "2",
+        status: "solicitacao",
+        tecnicoFuncionarioId: null,
+        auvoSyncError: null,
+      },
+      {
+        ...base,
+        ...comum,
+        id: "3",
+        status: "em_execucao",
+        tecnicoFuncionarioId: "t1",
+        auvoSyncError: "x",
+      },
+      {
+        ...base,
+        ...comum,
+        id: "4",
+        status: "finalizado",
+        tecnicoFuncionarioId: null,
+        auvoSyncError: null,
+      },
+    ]);
+    // backlog: id 1. sem técnico (aberta): id 1 e 2 (finalizado não conta). erro sync: id 3.
+    expect(m).toEqual({ backlog: 1, semTecnico: 2, syncAuvoErro: 1 });
+  });
+});
+
+describe("chamadoAbertoParaCard", () => {
+  it("mapeia pra card sintético na coluna Solicitação, com id nunca colidindo com OS real", () => {
+    const card = chamadoAbertoParaCard(
+      {
+        id: "cham-1",
+        numero: "CH-0099",
+        titulo: "Vazamento",
+        descricao: null,
+        createdAt: "2026-07-29T10:00:00Z",
+      },
+      "Cliente X",
+    );
+    expect(card.status).toBe("solicitacao");
+    expect(card.chamadoId).toBe("cham-1");
+    expect(card.clienteNome).toBe("Cliente X");
+    expect(ehCardChamadoAberto(card.id)).toBe(true);
+    expect(ehCardChamadoAberto("os-real-uuid")).toBe(false);
+  });
+});
 
 describe("ordens-servico", () => {
   it("ordena backlog por score desc e desempata por data mais recente", () => {

@@ -52,6 +52,7 @@ const ITEM: InspecaoItem = {
   recomendacao: null,
   prazoRecomendado: null,
   fotoUrl: null,
+  fotoUrls: [],
   categoria: null,
   elemento: null,
   identificacao: null,
@@ -105,6 +106,7 @@ function gatewayChamadosFake(): ChamadosGateway {
     clienteId: "cli-1",
     titulo: "Hidrante funcional?: Não",
     descricao: null,
+    local: null,
     origem: "inspecao",
     status: "aberto",
     solicitante: null,
@@ -112,6 +114,9 @@ function gatewayChamadosFake(): ChamadosGateway {
     cancelamentoJustificativa: null,
     cancelamentoAnexoPath: null,
     createdAt: "2026-07-21T10:00:00Z",
+    dataPlanejada: null,
+    dataExecucao: null,
+    replanejamentos: 0,
   };
   return {
     listar: vi.fn(),
@@ -121,6 +126,10 @@ function gatewayChamadosFake(): ChamadosGateway {
     cancelar: vi.fn(),
     uploadAnexoCancelamento: vi.fn(),
     listarHistoricoAtendimento: vi.fn(),
+    definirDataPlanejada: vi.fn(),
+    marcarExecucao: vi.fn(),
+    listarAnotacoes: vi.fn(),
+    adicionarAnotacao: vi.fn(),
   };
 }
 

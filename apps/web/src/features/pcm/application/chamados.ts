@@ -1,5 +1,8 @@
 import {
+  deveIncrementarReplanejamento,
   validarCancelamento,
+  validarDataExecucao,
+  validarNovaAnotacao,
   validarNovoChamado,
   validarTransicaoParaOs,
 } from "../domain/chamados";
@@ -16,8 +19,30 @@ export function listarChamados(gateway: ChamadosGateway, filtros?: FiltrosChamad
   return gateway.listar(filtros);
 }
 
+/** E01-S118 T7: carrega um Chamado pelo id — usado pelo modal de detalhe do card no board pra
+ * mostrar histórico/datas/ações mesmo depois do Chamado já ter virado OS (o vínculo é `chamadoId`
+ * na OS; o histórico do Chamado nunca deixa de ser acessível). */
+export function obterChamado(gateway: ChamadosGateway, id: string) {
+  return gateway.obter(id);
+}
+
 export function listarHistoricoAtendimento(gateway: ChamadosGateway, chamadoId: string) {
   return gateway.listarHistoricoAtendimento(chamadoId);
+}
+
+export function listarAnotacoesChamado(gateway: ChamadosGateway, chamadoId: string) {
+  return gateway.listarAnotacoes(chamadoId);
+}
+
+/** E01-S119 AC-1: normaliza antes de persistir; o adapter grava o autor da sessão e o banco
+ * preenche o nome imutável correspondente. */
+export async function adicionarAnotacaoChamado(
+  gateway: ChamadosGateway,
+  chamadoId: string,
+  texto: string,
+  autorId: string,
+) {
+  return gateway.adicionarAnotacao(chamadoId, validarNovaAnotacao(texto), autorId);
 }
 
 export async function criarChamado(gateway: ChamadosGateway, input: CriarChamadoCommand) {
@@ -51,6 +76,28 @@ export async function gerarOsDoChamado(
   });
   await gatewayChamados.marcarStatusComOs(chamado.id, destino, criada.id, userId);
   return criada;
+}
+
+/** E01-S101 AC-3: decide se conta como replanejamento (regra de domínio) antes de persistir. */
+export async function definirDataPlanejadaChamado(
+  gateway: ChamadosGateway,
+  chamado: Chamado,
+  novaDataPlanejada: string,
+  userId: string,
+): Promise<void> {
+  const incrementar = deveIncrementarReplanejamento(chamado.dataPlanejada, novaDataPlanejada);
+  await gateway.definirDataPlanejada(chamado.id, novaDataPlanejada, incrementar, userId);
+}
+
+/** E01-S101 AC-4: valida que a execução não é anterior à abertura antes de persistir. */
+export async function marcarExecucaoChamado(
+  gateway: ChamadosGateway,
+  chamado: Chamado,
+  dataExecucao: string,
+  userId: string,
+): Promise<void> {
+  validarDataExecucao(chamado.createdAt, dataExecucao);
+  await gateway.marcarExecucao(chamado.id, dataExecucao, userId);
 }
 
 /** AC-4: valida a justificativa (obrigatória) antes do round-trip; `anexo` já vem upado (se houver). */

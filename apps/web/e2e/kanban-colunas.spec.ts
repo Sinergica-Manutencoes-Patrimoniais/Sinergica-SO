@@ -10,7 +10,7 @@ import { expect, test } from "@playwright/test";
 test("ocultar/reexibir coluna do Kanban persiste entre reloads", async ({ page }) => {
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Ordens de Serviço", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
   await page.getByRole("button", { name: "Kanban" }).click();
 
   const ocultarCancelado = page.getByRole("button", { name: "Ocultar coluna Cancelado" });
@@ -23,7 +23,7 @@ test("ocultar/reexibir coluna do Kanban persiste entre reloads", async ({ page }
 
   await page.reload();
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Ordens de Serviço", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
   await page.getByRole("button", { name: "Kanban" }).click();
 
   await expect(page.getByRole("button", { name: "Ocultar coluna Cancelado" })).not.toBeVisible({
@@ -41,7 +41,7 @@ test("ocultar/reexibir coluna do Kanban persiste entre reloads", async ({ page }
 test("coluna Preventiva aparece entre Corretiva e Planejamento", async ({ page }) => {
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Ordens de Serviço", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
   await page.getByRole("button", { name: "Kanban" }).click();
 
   await expect(page.getByRole("button", { name: "Ocultar coluna Preventiva" })).toBeVisible({
@@ -57,9 +57,15 @@ test("coluna Preventiva aparece entre Corretiva e Planejamento", async ({ page }
   }
 
   const indiceCorretiva = labels.indexOf("Corretiva");
+  const indiceBacklog = labels.indexOf("Backlog");
   const indicePreventiva = labels.indexOf("Preventiva");
   const indicePlanejamento = labels.indexOf("Planejamento");
   expect(indiceCorretiva).toBeGreaterThanOrEqual(0);
-  expect(indicePreventiva).toBe(indiceCorretiva + 1);
+  // E01-S117: "Backlog" entra entre Corretiva e Preventiva; Preventiva segue entre Corretiva e
+  // Planejamento (não mais adjacente a Corretiva — a intenção do teste é a ordem relativa).
+  expect(indiceBacklog).toBe(indiceCorretiva + 1);
+  expect(indicePreventiva).toBe(indiceBacklog + 1);
   expect(indicePlanejamento).toBe(indicePreventiva + 1);
+  expect(indicePreventiva).toBeGreaterThan(indiceCorretiva);
+  expect(indicePlanejamento).toBeGreaterThan(indicePreventiva);
 });

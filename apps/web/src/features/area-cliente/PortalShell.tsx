@@ -355,7 +355,7 @@ function OrdensServico({
             />
             <input
               type="file"
-              aria-label={`Anexo da OS ${os.numero}`}
+              aria-label={`Anexo do Chamado ${os.numero}`}
               accept="image/jpeg,image/png,application/pdf"
               onChange={(e) => setArquivos((v) => ({ ...v, [os.id]: e.target.files?.[0] }))}
               className="max-w-52 text-xs"

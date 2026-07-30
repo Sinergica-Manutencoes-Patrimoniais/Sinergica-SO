@@ -584,7 +584,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     const eventosOs = ((os.data ?? []) as OrdemServicoRow[]).map((ordem) => ({
       id: `os-${ordem.id}`,
       tipo: "os" as const,
-      titulo: `OS ${ordem.numero} · ${rotuloStatusOperacional(ordem.status)}`,
+      titulo: `Chamado ${ordem.numero} · ${rotuloStatusOperacional(ordem.status)}`,
       subtitulo: [ordem.titulo, ordem.local_descricao ?? ordem.solicitante ?? ordem.categoria]
         .filter(Boolean)
         .join(" — "),

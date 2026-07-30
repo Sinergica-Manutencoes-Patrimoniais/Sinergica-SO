@@ -1,9 +1,10 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { PortalShell } from "../features/area-cliente/PortalShell";
 import { deveUsarPortal } from "../features/area-cliente/domain/roteamento";
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { HomePage } from "./HomePage";
 import { AuthProvider, useAuth } from "./auth-context";
+import { NavGuardProvider } from "./nav-guard-context";
 import { PermissoesProvider } from "./permissoes-context";
 import { ThemeProvider } from "./theme-context";
 
@@ -41,7 +42,13 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
 
 function EntradaAutenticada() {
   const { user } = useAuth();
-  return user && deveUsarPortal(user.papel) ? <PortalShell /> : <HomePage />;
+  return user && deveUsarPortal(user.papel) ? (
+    <PortalShell />
+  ) : (
+    <NavGuardProvider>
+      <HomePage />
+    </NavGuardProvider>
+  );
 }
 
 export function App() {

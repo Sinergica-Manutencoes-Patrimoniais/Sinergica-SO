@@ -10,6 +10,335 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-07-29 (cont. 5) — E01-S119: Anotações do Chamado
+
+Lucas descartou E01-S109 (spec/tasks removidas e ROADMAP limpo) e pediu S119. Implementado:
+`pcm.chamados_anotacoes` (`0164`) append-only, RLS PCM, autor vinculado ao `auth.uid()` e nome
+preenchido no banco por trigger; validação de texto; gateway/adapter; seção no `ChamadoPainel` com
+estado vazio, lista mais recente primeiro e data/hora pt-BR. Continua visível após conversão para OS
+porque o vínculo é ao Chamado. `0150` já constava aplicada no Supabase remoto, portanto nenhum
+`db push` adicional foi necessário. `pnpm run ci:local` PASS (762 testes); `0164` aguarda PR/deploy.
+
+## 2026-07-29 (cont. 4) — E01-S118: reestruturação da Operação (unifica Chamados no board) — PARCIAL
+
+Lucas pediu reestruturação maior (6 pontos) depois de testar S117: unificar menu Chamados+Operação
+num board só; Backlog GUT vira aba; clique no card abre modal; enriquecer métricas; filtro por
+Cliente. 3 decisões travadas com ele (AskUserQuestion): (0) tudo vai pro board; (2) aba+coluna
+Backlog coexistem; (5) clique abre o modal direto.
+
+**Implementado (T1-T6, T8), gates verdes (typecheck/vitest 758/biome):**
+- Nav: 1 item "Chamados" → board (`OrdensServicoPage`). `ChamadosPage`/`BacklogGutPage` saíram da
+  nav; `view=chamados`/`view=backlog` redirecionam pro board (backlog abre já na aba).
+- Aba "Backlog" (5ª, ao lado do Calendário) reusa `BacklogGutPage`. Coluna Backlog do Kanban
+  (S117) coexiste.
+- Clique no card (Kanban/Timeline/Calendário) abre o modal de detalhe (`aberturaModalSeq`).
+- "Novo Chamado" no topo do board — extraiu `NovoChamadoModal` pra componente compartilhado.
+- Filtro por Cliente (empurrado pro WHERE; KPIs viram client-side quando cliente ativo, o RPC de
+  KPI não tem esse param — evita migration).
+- Métricas operacionais (`calcularMetricasOperacao`: backlog / sem técnico / sync Auvo c/ erro).
+- Removido "Ver Chamado" (S116) e o estado `chamadoFoco` órfão.
+
+**T7 concluído (mesma sessão, chunk seguinte):** `ChamadoPainel.tsx` (novo) carrega o Chamado por
+`chamadoId` e mostra histórico (WhatsApp/Zé)/datas/ações (Gerar OS, Enviar backlog, Cancelar) —
+sempre que a OS/card tem `chamadoId`, **independente do status**. Requisito do Lucas atendido
+explicitamente: o histórico continua acessível depois do Chamado virar OS (só as ações somem).
+
+**Achado ao integrar (fora do plano original):** um Chamado recém-criado não tinha linha em
+`ordens_servico` até "Gerar OS" — ficaria invisível no board, contradizendo o próprio ponto 1
+("sempre se abre um Chamado, que evolui pra OS"). Corrigido com `chamadoAbertoParaCard`/
+`ehCardChamadoAberto` (domínio): Chamados abertos viram cards sintéticos na coluna Solicitação
+(`id` prefixado `chamado-aberto:`, nunca colide com OS real) — mesclados só pra exibição, nada
+gravado a mais no banco. `DetalheOs` esconde as seções só-de-OS pra esses cards; mudança de status
+em lote/drag ignora esse id sintético.
+
+`ChamadosPage.tsx` removida (tudo migrado). `chamados.spec.ts`/`atendimento-historico-chamado.spec.ts`
+reescritos pro novo fluxo (nav única, Lista, clique na linha abre "Resumo do Chamado"/"Resumo da OS").
+
+Gates verdes: typecheck/vitest (759 passed)/biome. Nada pusheado; PR só depois do Playwright local
+do Lucas.
+
+## 2026-07-29 (cont. 3) — E01-S116/S117: unificação UX Chamado↔OS na tela Operação
+
+Lucas testou o Kanban de OS e trouxe pontos de unificação Chamado↔OS. Duas stories, code-only,
+gates locais verdes, nada pusheado.
+
+- **E01-S116** (botão "Ver Chamado" no painel de detalhe da OS): escopo revisado com o Lucas em
+  tempo real — remover o painel quebraria Alterar status/Editar/Expandir(Auvo), então virou
+  aditivo: só o botão. `chamadoId` exposto no domínio/adapter; deep-link OS→Chamado (mesmo padrão
+  de `osDeepLink`). Commit `6a2900f`.
+- **E01-S117** (Operação/Kanban — "Chamado e OS são o mesmo item", 8 pontos + print):
+  - Verificado no banco linked: `ordens_servico` é a tabela unificada real (2597 linhas), só 82
+    têm `OS-XXXX` (resto já é `CH-` histórico). `status` **não tem CHECK** → coluna "backlog"
+    entrou sem migration.
+  - Menu/título "Ordens de Serviço"→"Operação"; `rotuloNumeroOrdem` (CH→CH, senão Auvo #id, senão
+    numero) mata `OS-XXXX` em Kanban/Lista/Timeline/Calendário/tooltip; coluna Backlog no Kanban;
+    card sem droplist de status (troca por Orientação Auvo, `auvo_detalhes.orientacao`); Resumo da
+    OS ganhou Local/Solicitante/Origem (campos de intake do Chamado, já na linha `OrdemRow`).
+  - **Fora de escopo (registrado):** fundir as tabelas `pcm.chamados`/`pcm.ordens_servico` — a
+    unificação é de UX/apresentação; fundir 2597 linhas de produção é outra história. E `pcm.chamados`
+    (37 linhas) segue sendo o fluxo Chamado-first paralelo.
+  - 3 e2e (`ordens-servico`/`kanban-colunas`/`refinamento-ux`) ajustados pro rename
+    (`getByText("Ordens de Serviço")`→`getByTitle("Operação")`) e pra nova ordem de colunas.
+  - **Também nesta sessão:** limpeza de dados E2E do banco (E01-S115) — inventário revisado pelo
+    Lucas (144 registros + 30 dependentes), SQL entregue e **executado por ele** direto no Supabase
+    (classificador de auto mode bloqueou o `DELETE` em produção pelo agente, mesmo aprovado).
+
+**Próximo passo:** Lucas testa localmente (Playwright + uso manual) S116/S117; PR só depois.
+
+## 2026-07-29 (cont.) — 7 das 9 stories especificadas implementadas (S107/S108/S110-S114), gates locais verdes
+
+Depois de especificar as 9 stories (ver entrada abaixo), Lucas respondeu as 2 perguntas em aberto
+("Auvo 500 tentei reproduzir e não consegui — trata como intermitência a priori"; "painel de
+ferramenta na Visão 360 fica, é local de fácil acesso a tudo do cliente") e disse "segue as
+informações e pode ir implantando". Implementei as 7 não-bloqueadas, uma por commit, gates locais
+(typecheck/vitest/biome/`lint:migrations` squawk) verdes em cada uma. Migrations aplicadas em
+produção (`supabase db push --linked`) a cada story que teve uma.
+
+**Implementadas e verificadas:**
+- `E01-S107` — Local do Chamado/OS vira seleção da lista de Locais do cliente (`SeletorLocal`,
+  reusa `listarLocaisDoCliente` de E01-S76) + "Outro" com texto livre. Sem migration.
+- `E01-S108` — fix do bug de perder dados do modal ao trocar de `pcmView`/módulo:
+  `NavGuardContext`+`useFormularioSujo` (novo, `apps/web/src/app/`) avisam antes de descartar
+  formulário sujo. Aplicado em `NovoChamadoModal`/`GerarOsModal` (Chamados) e
+  `CriarAcessoPortalModal`/`ResponsavelModal`/`AlocarFerramentaModal` (Visão 360). Sem migration.
+- `E01-S110` — auditoria de todo seletor de cliente (`.from("clientes")` em todo `features/pcm`):
+  **achado bom** — quase tudo já filtrava `ativo=true` (Nova OS/Chamado, Agenda, Equipamentos,
+  Apontamento de Horas, Tickets, Grupos de Cliente, PMOC); só `ListaClientesPage` tinha o filtro
+  padrão errado ("Todos"), corrigido pra "Ativo". Sem migration.
+- `E01-S111` — estende E01-S103: `pcm.cliente_responsaveis.contato` (texto livre) virou
+  `email`+`telefone`+`preferencia_contato` (lista fechada). Migrations `0161`/`0162` (rename+drop
+  de coluna existente — squawk bloqueou `ban-drop-column`, resolvido com `-- squawk-ignore` mesmo
+  padrão já usado em `0119`).
+- `E01-S112` — estende E01-S104: `pcm.agenda_tecnico.hora` virou `hora_inicio`+`hora_fim`
+  (intervalo). Migration `0163` (rename de coluna, squawk-ignore `renaming-column`). Fim antes do
+  início ou fim sem início são rejeitados no domínio e no cliente.
+- `E01-S113` — estende E01-S106: `FerramentasPorTecnicoPage` ganhou aba "Por Cliente" reusando
+  `FerramentaAlocacaoClienteGateway`/adapter sem duplicar CRUD (2 métodos de leitura novos:
+  `listarAtivas`, `listarClientesAtivos`). Painel da Visão 360 continua existindo à parte
+  (confirmado por Lucas). Sem migration.
+- `E01-S114` — `PCM_NAV`: "Ordens de Serviço"/"Backlog GUT" viram `filhos` de "Chamados" (submenu
+  sempre visível, indentado — padrão mais simples permitido pela spec, sem estado de
+  expandir/colapsar). Sem migration.
+
+**Não implementadas (explicitamente fora deste round):**
+- `E01-S109` — Lucas tentou reproduzir o bug do Auvo 500 e não conseguiu; tratando como
+  intermitência a priori, **nenhum fix codado às cegas** (spec.md atualizado, story pausada).
+- `E01-S115` — limpeza de dados de teste E2E é ação destrutiva em banco compartilhado; **não
+  implementada sem o Lucas revisar a lista antes** (não pedido ainda).
+
+**Limitações desta sessão (mesmas de sempre):** sem Docker → RLS FORCE aplicado mas não validado
+por pgTAP; Playwright não rodado (pendente teste local do Lucas em cada story, `tasks.md`
+marcado). `docs/STATE.md`/ROADMAP atualizados nesta entrada.
+
+**Próximo passo:** Lucas testa localmente as 7 stories (Playwright + uso manual); PR só depois
+(fluxo já combinado: migrations+edge functions+teste local antes do PR/merge).
+
+## 2026-07-29 — Feedback do Lucas testando localmente: 9 stories novas especificadas (não implementadas)
+
+Depois do deploy de migrations `0151`-`0160` + edge functions (`pcm-ze-agent`,
+`pcm-auvo-webhook`, `pcm-auvo-tasks-import`) e dev server local, Lucas testou e trouxe 12 pontos.
+Especifiquei todos (só spec — pediu "planeje", não implementou ainda):
+
+- **`E01-S109` (bug crítico, bloqueado):** Auvo 500 ao criar task na transição de OS pra
+  Planejamento — `pcm-auvo-create-task` usa UUID da OS como `externalId`. Hipótese forte: deveria
+  ser `CH-XXXX` (já previsto no design de E01-S99, eu tinha deferido por falta de validação —
+  agora tem falha real confirmando o risco). **Preciso do Lucas reproduzir e trazer o log completo
+  do Auvo antes de codar o fix** (task 0, bloqueante).
+- `E01-S108`: bug de UX confirmado — páginas do PCM desmontam ao trocar `pcmView`, destruindo
+  modal filho aberto (reabre E01-S101 AC-6, que eu tinha marcado "não reproduzido" por só ter
+  checado o modal errado).
+- `E01-S107`: seleção de Local por lista do cliente (`listarLocaisDoCliente`, E01-S76, já existe)
+  + "Outro" — no Chamado e na OS.
+- `E01-S110`: todas listagens/seletores de cliente só Ativos (auditoria cross-cutting).
+- `E01-S111`: estende E01-S103 — contatos completos (nome/email/telefone/função/preferência).
+- `E01-S112`: estende E01-S104 — agenda ganha horário início+fim (hoje só tem um horário).
+- `E01-S113`: estende E01-S106 — "Ferramentas por Técnico" vira hub único (técnico+cliente).
+  Questão em aberto: painel na Visão 360 sai ou fica.
+- `E01-S114`: nav — Backlog GUT/Ordens de Serviço viram submenu de Chamados.
+- `E01-S115`: limpar dados de teste E2E do banco (linked, sem Postgres local) — **ação destrutiva
+  em banco compartilhado, não faço sozinho sem o Lucas revisar a lista antes** (AC-1/AC-2).
+- `E02-S26` (já existia, atualizada): item 7 ("Editar cliente com IA") é o mesmo motor conversacional
+  já especificado, só um segundo ponto de entrada (editar cliente existente, sempre dry-run). Não
+  muda o SPEC_DEVIATION (motor ainda não implementado), só reforça a prioridade.
+
+**Próximo passo:** aguardando o Lucas revisar as specs e decidir prioridade/ordem — provável
+começar pelo `E01-S109` (bug crítico) assim que ele trouxer o log do Auvo.
+
+## 2026-07-28 (cont.) — Implementação de 10 das 12 stories da reunião, branch `feat/E01-S99-chamado-id-unico`
+
+Depois de especificar as 12 stories (ver entrada abaixo), Lucas pediu pra seguir todas até o fim,
+sempre commitando — PR só depois de rodar as migrations, subir as edge functions e testar
+localmente. Implementei 10 (todas E01 exceto S105, todas E02), uma por commit, gates locais
+(typecheck/vitest/biome/`lint:migrations` squawk) verdes em cada uma. **Nada foi pusheado; nenhuma
+migration rodou em produção.**
+
+**Implementadas e verificadas (gates locais verdes):**
+- `E01-S99` — Chamado (`CH-XXXX`) único ID ponta a ponta, reverte numeração `OS-XXXX` de E01-S88.
+  Migrations `0151`/`0152`. **Achado fora do design original:** `pcm.portal_decidir_orcamento`
+  (SQL puro) também gerava `OS-XXXX` — corrigido junto.
+- `E01-S100` — SLA do C1 (Emergencial) de 4h→2h. Achado: C1 já era 100% exclusivo do emergencial,
+  não precisou de `tipo_os` novo (spec original propôs isso por engano, corrigida).
+- `E01-S101` — `local` + 3 datas (abertura/planejada/execução) no Chamado. Migration `0153`.
+- `E01-S102` — filtro por cliente em Chamados (gap só de UI, gateway já suportava).
+- `E01-S103` — responsável/representante do cliente. Migration `0154`.
+- `E01-S104` — board semanal de agenda do técnico (`AgendaTecnicoPage`, nova). Migration `0155`.
+- `E01-S106` — ferramenta alocável em cliente (índice único parcial garante 1 ativa por vez no
+  banco). Migration `0156`.
+- `E02-S23` — Zé extrai N chamados por rodada + confirma antes de gravar. Migration `0157`
+  (`atendimento.conversas.chamados_pendentes`, prompt novo da persona 'chamados').
+- `E02-S24` — alma+resumo por cliente injetados no prompt do Zé (MVP textual, ADR-0015). Migration
+  `0159`.
+- `E02-S25` — schema + função pura de decisão do trigger automático. Migration `0158`.
+
+**Não implementadas (documentado como SPEC_DEVIATION nos `tasks.md` de cada uma, não decidi sozinho):**
+- `E01-S105` (Excel→IA→GUT→chamado) — não deu tempo, fora do escopo priorizado desta sessão.
+- `E02-S24` — job de resumo rolante automático (decisão de frequência/custo, produto) e tool de
+  consulta de chamados via LLM (exigiria function calling, não usado hoje).
+- `E02-S25` — wiring real no `pcm-ze-agent` (falta confirmar de onde vem "último reply humano" no
+  schema de `atendimento.mensagens`/`wa_messages` — risco alto demais pra decidir sozinho numa
+  function que já atende clientes reais).
+- `E02-S26` (agente entrevistador) — só schema/domínio (migration `0160`). O motor conversacional é
+  uma peça de arquitetura nova (tamanho de um 2º `pcm-ze-agent`) — ADR-0016 e as perguntas de
+  produto do `design.md` continuam sem resposta, não é decisão pra tomar sozinho no meio da sessão.
+
+**Limitações reais desta sessão (mesmas de sempre, registradas caso a caso):**
+- Sem Docker local → nenhum `db-tests`/pgTAP rodado; RLS FORCE aplicado em todas as tabelas novas
+  mas não validado por teste.
+- Sem Deno CLI → testes das edge functions (`_shared/confirmacao-texto.test.ts`,
+  `_shared/trigger-automatico.test.ts`, `_shared/memoria-cliente.test.ts`, e os já existentes de
+  `os-from-task.test.ts`) escritos mas não executados; lógica validada manualmente via Node onde
+  fazia sentido (mesma semântica JS/Deno).
+- Nenhuma migration aplicada em produção (`0150` era a última confirmada antes desta sessão).
+- `E02-S23`/`E02-S24`/`E02-S25` mexem no `pcm-ze-agent`, que já atende clientes reais no WhatsApp —
+  **testar manualmente antes do PR é obrigatório**, não opcional. Risco real de o prompt novo
+  (`itens:[...]`, migration 0157) não se comportar como esperado até validar contra OpenRouter de
+  verdade.
+
+**Próximo passo:** Lucas roda as migrations (`0151`→`0160`, nessa ordem) localmente/staging, sobe
+as edge functions alteradas (`pcm-ze-agent`, `_shared/*`), testa o WhatsApp de verdade (E02-S23
+especialmente) e as telas novas (Agenda do Técnico, painéis na Visão 360). PR só depois disso.
+
+## 2026-07-28 — Reunião Fabrício × Lucas: 12 stories novas especificadas (E01-S99..S106, E02-S23..S26)
+
+Lucas trouxe a transcrição + anotações da reunião de alinhamento com o Fabrício (2026-07-27) e pediu
+pra rodar `/nova-feature` em todos os pontos — ele implementa depois com um modelo focado em dev.
+16 pontos discutidos viraram 12 stories (2 pontos = chore/fix absorvidos; 1 descartado):
+
+**E02 — Atendimento · Zé**
+- `E02-S23` (pequeno, IA): Zé abre chamado do contexto do WhatsApp; 1 solicitação = 1 chamado.
+- `E02-S24` (**arquitetural**, IA, ADR-0015): memória+alma por cliente, prompt base único, retenção
+  1mês cru + 2-3 meses resumo, RAG adiado. Isolamento entre clientes é requisito de segurança.
+- `E02-S25` (pequeno): trigger de resposta automática, regra global unilateral (horário + inatividade).
+- `E02-S26` (**arquitetural**, IA, ADR-0016): agente entrevistador de cadastro; confirmação obrigatória
+  antes de gravar; escreve em PCM via caso de uso.
+
+**E01 — PCM · Operação**
+- `E01-S99` (**arquitetural**, ADR-0014): **reverte a numeração de OS de E01-S88** — `CH-XXXX` vira
+  ID único de ponta a ponta, OS sem número próprio, código externo Auvo = `CH-XXXX`.
+- `E01-S100` (pequeno): categoria Atendimento Emergencial, SLA 2h (único SLA com cliente).
+- `E01-S101` (pequeno): abertura de chamado com campos da OS + 3 datas (abertura/planejada/execução);
+  absorve o fix do modal que perde dados ao trocar aba.
+- `E01-S102` filtro por cliente; `E01-S103` responsável pelo cliente; `E01-S104` board semanal de
+  agenda do técnico (foto de referência); `E01-S105` inspeção Excel→IA→GUT→chamado; `E01-S106`
+  ferramenta alocável em cliente.
+
+**Descartado:** QR code / Área do Cliente externa (item 14) — inviável gestão de login de morador;
+portal sem auth é risco pior (recomendação de segurança do Lucas).
+
+**Próximo passo (bloqueantes antes de codar):**
+1. `E01-S99`: confirmar se as migrations de E01-S88 já rodaram em produção + decidir regra da OS
+   importada do Auvo sem chamado de origem (questões em aberto no design.md).
+2. Parâmetros a confirmar: X da janela de contexto (S23), horário comercial + X min (S25),
+   emergencial=flag vs tipo_os (S100), formato/frequência da memória (S24).
+3. ADRs 0014/0015/0016 estão em **Proposto** — revisar/aceitar antes da implementação.
+
+Todas as 12 stories estão no ROADMAP como "Especificado", Owner "— (livre)". Nenhuma implementação
+feita nesta sessão — só a esteira SDD (spec/tasks/design/ADR).
+
+## 2026-07-24 (cont. 2) — E01-S98: análise IA também no import de questionário Auvo (Assessment)
+
+Lucas pediu pra estender "esse mesmo fluxo de análise" (IA do import de XLS, E01-S96) pro Assessment,
+onde a informação vem do questionário Auvo em vez de planilha. Investigação achou o mesmo padrão de
+dívida técnica: `importarQuestionarioAuvo` inseria pergunta/resposta 1:1 sem nenhuma IA (severidade
+sempre "media", sem GUT/título). Antes de implementar, identifiquei um problema real de design —
+rodar a IA quebra a idempotência atual (baseada em chave 1:1 por pergunta, e a IA filtra/reagrupa
+livremente) — e perguntei ao Lucas em vez de decidir sozinho:
+1. IA processa todas as perguntas ou só as negativas? → **Todas** (igual ao XLS, a IA decide o que
+   é inconformidade real).
+2. Como resolver a idempotência quebrada? → **Bloqueio por importação inteira** (não por pergunta) —
+   reimportar exige apagar os itens antigos manualmente primeiro.
+
+- Extraí `linhaItemImportado` (helper compartilhado: score/severidade/fotos → linha de
+  `inspecao_itens`) de dentro de `criarInspecaoImportada`, reusado agora também por
+  `importarQuestionarioAuvo` — mesmo texto formatado (Pergunta/Resposta/Fotos) que o XLS usa
+  (Local/Fotos/Relato), mesma Edge Function `importar-relatorio-pdf` (genérica, não sabe a origem).
+- Gates verdes (typecheck/718 testes/build/arch:check/audit:esteira/eval:spec/biome). Playwright
+  real (`assessment.spec.ts`) confirma o caminho de questionário vazio/inexistente continua sem
+  quebrar. **Não testado**: o caminho real de classificação por IA nem o bloqueio de reimportação —
+  precisam de um `auvo_task_id` real com checklist de verdade em produção, mesmo cuidado de "não
+  simular IA real" já registrado em E01-S81/E04-S09/E01-S85. Fica para validação manual do Lucas
+  (ou próxima sessão) com um assessment real.
+
+## 2026-07-24 (cont.) — E01-S97: galeria de fotos no item importado + migration aplicada em produção
+
+Lucas perguntou sobre a IA do import de XLS (E01-S96) e notou que a foto é exibida direto pela URL
+do S3 do Auvo, sem subir pro Storage — confirmado por código. Em seguida pediu pra exibir mais de
+uma foto quando a ocorrência tiver várias (Auvo separa por `;`); só a primeira estava sendo
+gravada/exibida. Aberta `E01-S97` (spec+tasks antes de codar, migration aditiva).
+
+- Migration `0150`: `pcm.inspecao_itens.foto_urls jsonb not null default '[]'`. `InspecaoItem`
+  ganhou `fotoUrls: string[]`; `criarInspecaoImportada` agora grava a lista completa (antes só
+  `fotos[0]`); `InspecoesPage.tsx` mostra galeria de thumbnails quando há mais de uma foto, mantém
+  o comportamento antigo pra 0/1 (sem regressão).
+- **Achado real ao rodar Playwright**: `inspecoes.spec.ts` (fluxo de template pré-carregado) passou
+  a falhar — investigação mostrou que a migration só existia local; o dev server aponta pro
+  Supabase de produção de verdade (`nudannsrfvjggoergvyn`), então o `SELECT` de `foto_urls` falhava
+  antes do push (`supabase migration list --linked` confirmou `remote` vazio pra `0150`).
+  **Perguntei ao Lucas antes de mexer em schema de produção** (ação difícil de reverter/afeta
+  sistema real) — autorizado, apliquei via `supabase db push --linked`, confirmado
+  `local:0150/remote:0150`. `inspecoes.spec.ts`/`chamados.spec.ts` voltaram a passar.
+- **Não testado via Playwright real**: a galeria em si só é populável pelo fluxo de import de XLS
+  (dependente da IA da OpenRouter) — mesmo cuidado de "não simular IA real" já usado em
+  E01-S81/E04-S09. Lógica validada por revisão de código + regressão dos specs existentes.
+- Lição registrada: sempre que uma story tocar migration nesta sessão, checar
+  `supabase migration list --linked` **antes** de rodar Playwright — dev server local aponta pro
+  banco de produção real, não Docker local.
+
+## 2026-07-24 — 3 apontamentos de Lucas resolvidos (E01-S94/S95/S96)
+
+**Contexto:** Lucas trouxe 3 pontos em `docs/Apontamentos/Apontamentos-Fabricio-Aline.md` (2 sugestões
+de 2026-07-22 ainda sem story + 1 bug novo de 2026-07-24) e pediu "resolva os problemas". Processo
+seguido: 3 stories novas abertas (`E01-S94`/`S95`/`S96`, próximas livres depois de `E01-S93`),
+spec.md+tasks.md criados antes de codar, owner marcado no ROADMAP.
+
+- **E01-S94 (GUT obrigatório pro Backlog):** investigação achou o bug exato — `ChamadosPage.tsx`
+  mandava `gravidade: 3, urgencia: 3, tendencia: 3` hardcoded no "Enviar ao backlog", sem o usuário
+  escolher nada. `GerarOsModal` ganhou 3 selects (1-5, sem default) só nesse modo; "Confirmar"
+  desabilitado até completar. Fluxo "Gerar OS" direto não muda (fora de escopo da spec).
+- **E01-S95 (aba Serviços):** investigação mostrou que o apontamento já estava parcialmente
+  resolvido — `ServicosPage.tsx` não estava mais em `PCM_NAV` (saiu numa reorganização anterior,
+  provavelmente E01-S80), só ficou o arquivo órfão no repo. Deletado, zero referência restante.
+- **E01-S96 (bug 502 no import de XLS):** print do Lucas mostrava "Edge Function returned a non-2xx
+  status code" + 502 no console pra `importar-relatorio-pdf`. Achado real: a Edge Function já
+  devolve `detail` estruturado (`problem+json`) quando a OpenRouter falha, mas
+  `processarRelatorioInspecao` (adapter de qualidade) jogava o erro bruto do `supabase-js` — que só
+  expõe a mensagem genérica, escondendo o motivo real. Mesmo bug já resolvido uma vez em
+  `financeiro` (E04-S09, `erroDetalhado` inline) — desta vez extraí pra
+  `apps/web/src/lib/http/edge-function-error.ts` (compartilhado) e usei no adapter de qualidade.
+  **Não investigado**: a causa raiz do próprio 502 (por que a OpenRouter está falhando em
+  produção — chave/quota/modelo) exige olhar logs reais da function, sem acesso nesta sessão (sem
+  MCP Supabase conectado); fica para o Lucas conferir `OPENROUTER_API_KEY`/`OPENROUTER_IMPORT_MODEL`
+  no dashboard. A partir de agora a UI vai mostrar o motivo real, não mais o texto genérico.
+- Zero migration nas 3 stories. Gates rodados manualmente (lefthook `pre-push` não detecta nada
+  fora de um push real): `typecheck` (turbo, todos os pacotes), `test` (718 passed/9 skip),
+  `build` (web+portal), `arch:check` (0 violação), `audit:esteira` (476 docs), `eval:spec`
+  (rastreabilidade OK, 10 SPEC_DEVIATION pré-existentes, nenhum novo), `check:edge-functions` (33
+  funções/8 invokes OK), `biome check .` direto no binário (577 arquivos, 0 erro) — todos verdes.
+  Sem Playwright rodado (sem dev server de pé nesta sessão); recomendação: rodar
+  `inspecoes.spec.ts`/`chamados.spec.ts` (se existirem) antes de considerar fechado de verdade.
+- Próximo: validar em browser (dev server) os 3 fluxos; depois retomar a maratona no ponto onde
+  parou (E09 inteiro, ver entrada de 2026-07-21 abaixo).
+
 ## 2026-07-22 — E09 promovida + Atendimento Evolution multi-instância
 
 **Estado:** PR #53 contém E04-S01..S13, E09-S01..S11 e E02-S09/S22. O código está merge-ready após

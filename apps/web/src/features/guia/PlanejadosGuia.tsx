@@ -90,10 +90,10 @@ export function CockpitGuia() {
   return (
     <PaginaPlanejada
       dados={{
-        titulo: "Cockpit",
+        titulo: "Cockpit geral",
         subtitulo: "Painel executivo — os números de todos os módulos num só lugar.",
         paraQueServe:
-          "Dar à liderança uma visão consolidada da empresa sem precisar abrir módulo por módulo — operação, financeiro, comercial e atendimento resumidos numa tela.",
+          "Dar à liderança uma visão consolidada da empresa sem precisar abrir módulo por módulo — operação, financeiro, comercial e atendimento resumidos numa tela. O Cockpit do Financeiro já existe e cobre apenas indicadores financeiros.",
         diaADia:
           "O gestor abre uma tela só pela manhã e já sabe: quantas OS estão atrasadas, qual a margem média dos contratos, quantos leads entraram, se algum indicador crítico pede atenção.",
         funcoes: [
@@ -117,38 +117,54 @@ export function CockpitGuia() {
 
 export function AreaClienteGuia() {
   return (
-    <PaginaPlanejada
-      dados={{
-        titulo: "Área do Cliente",
-        subtitulo: "Portal do síndico — o cliente enxergando o próprio condomínio.",
-        paraQueServe:
-          "Dar ao síndico/administradora acesso direto ao andamento do próprio condomínio, sem precisar ligar ou mandar mensagem pra saber o status de uma manutenção.",
-        diaADia:
-          'Reduz o volume de "como está minha OS?" que hoje cai no WhatsApp do escritório — o síndico confere sozinho, a qualquer hora, e ainda consegue abrir um chamado novo direto pelo portal.',
-        funcoes: [
-          {
-            nome: "Painel do condomínio",
-            descricao: "OS abertas, backlog visível, preventivo do mês.",
-          },
-          {
-            nome: "Histórico de OS",
-            descricao: "O que já foi feito, com foto antes/depois quando houver.",
-          },
-          {
-            nome: "Documentos",
-            descricao: "Laudos (SPDA, PMOC), relatórios mensais e certificados pra baixar.",
-          },
-          {
-            nome: "Situação financeira",
-            descricao:
-              "Faturas do próprio condomínio, vencimento e status — nunca custo interno da Sinérgica.",
-          },
-          {
-            nome: "Abrir chamado",
-            descricao: "Formulário alternativo ao WhatsApp do Zé, direto pelo portal.",
-          },
-        ],
-      }}
-    />
+    <div className="page-stack">
+      <GuiaTitulo
+        titulo="Área do Cliente"
+        subtitulo="Portal do síndico — acompanhamento do próprio condomínio com dados reais."
+      />
+      <StatusModulo status="real" />
+      <Secao titulo="Pra que serve">
+        <p>
+          Dá ao síndico ou administradora acesso direto às informações do próprio condomínio, sem
+          expor custo interno, margem ou dados de outro cliente.
+        </p>
+      </Secao>
+      <Secao titulo="Como usar">
+        <ListaFuncoes
+          itens={[
+            {
+              nome: "Painel do condomínio",
+              descricao:
+                "Comece aqui para ver resumo de OS, pendências, preventivos, documentos e indicadores do condomínio.",
+            },
+            {
+              nome: "Histórico de OS",
+              descricao:
+                "Consulte andamento e serviços concluídos, incluindo notas, anexos e evidências permitidas.",
+            },
+            {
+              nome: "Documentos",
+              descricao: "Baixe laudos, relatórios e certificados liberados para o cliente.",
+            },
+            {
+              nome: "Situação financeira",
+              descricao:
+                "Consulte faturas, vencimentos e status do próprio condomínio; custos internos nunca aparecem.",
+            },
+            {
+              nome: "Abrir chamado",
+              descricao:
+                "Registre uma solicitação pelo portal, acompanhe a resposta e aprove orçamento quando o fluxo exigir.",
+            },
+          ]}
+        />
+      </Secao>
+      <Secao titulo="Qual o sentido">
+        <p>
+          Reduz perguntas repetidas no WhatsApp, dá transparência ao cliente e mantém cada interação
+          ligada aos mesmos chamados, OS e documentos usados pela equipe interna.
+        </p>
+      </Secao>
+    </div>
   );
 }

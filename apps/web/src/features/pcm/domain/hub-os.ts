@@ -58,13 +58,14 @@ export interface PrazoSlaOs {
 }
 
 /** AC-3: SLA por tipo. C1/C2 contam do created_at; P1/P2 são janela em torno de data_agendada
- * (±3d/±7d); IN não tem prazo fixo (usa data_agendada quando houver, senão indefinido). */
+ * (±3d/±7d); IN não tem prazo fixo (usa data_agendada quando houver, senão indefinido).
+ * E01-S100: C1 (Emergencial, único SLA com compromisso real ao cliente — Fabrício) é 2h, não 4h. */
 export function calcularPrazoSlaOs(
   tipoOs: TipoOsHub | null,
   createdAt: string,
   dataAgendada: string | null,
 ): PrazoSlaOs {
-  if (tipoOs === "C1") return { deadline: somarHoras(createdAt, 4), descricao: "4h" };
+  if (tipoOs === "C1") return { deadline: somarHoras(createdAt, 2), descricao: "2h" };
   if (tipoOs === "C2") return { deadline: somarHoras(createdAt, 72), descricao: "72h" };
   if (tipoOs === "P1") {
     return dataAgendada

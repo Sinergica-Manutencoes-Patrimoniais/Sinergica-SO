@@ -8,7 +8,9 @@ test("Novo item de backlog cadastra direto com observação e aparece na fila", 
 
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Backlog GUT", { exact: true }).click();
+  // E01-S118: Backlog GUT deixou de ser menu e virou aba do board "Chamados".
+  await page.getByTitle("Chamados", { exact: true }).click();
+  await page.getByRole("button", { name: "Backlog", exact: true }).click();
 
   await expect(page.getByRole("heading", { name: "Backlog GUT" })).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Novo item de backlog" }).click();

@@ -62,13 +62,12 @@ export function VisaoGeralGuia() {
         </p>
       </Secao>
 
-      <Callout titulo="Nem tudo está pronto ainda">
+      <Callout titulo="O que já está em uso">
         <p>
-          O sistema está sendo construído por partes. Alguns módulos já rodam com dado real todo dia
-          (PCM, Atendimento); outros têm um protótipo navegável pra dar ideia de como vai ficar
-          antes de valer a pena construir de verdade (Financeiro); e outros ainda são só plano
-          (Comercial, Marketing, Cockpit, Área do Cliente). Cada página deste guia diz claramente em
-          qual desses três estados o módulo está.
+          PCM, Atendimento, Financeiro e Área do Cliente já trabalham com dados reais. Comercial,
+          Marketing e Cockpit geral ainda são módulos planejados. O Cockpit dentro do Financeiro já
+          existe, mas cobre somente saúde financeira — não confunda com o futuro painel executivo de
+          toda a empresa. Cada página deste guia informa o estado do módulo.
         </p>
       </Callout>
     </div>

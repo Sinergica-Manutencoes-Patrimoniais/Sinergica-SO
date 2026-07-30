@@ -13,10 +13,10 @@ module.exports = {
               "scope obrigatório no formato E0N-S0N (ex: E00-S01). Leia docs/epics/ROADMAP.md.",
             ];
           }
-          if (!/^E\d{2}-S\d{2}$/.test(scope)) {
+          if (!/^E\d{2}-S\d{2,3}$/.test(scope)) {
             return [
               false,
-              `scope inválido: "${scope}". Use o formato E0N-S0N (ex: E00-S01). Leia docs/epics/ROADMAP.md.`,
+              `scope inválido: "${scope}". Use o formato E0N-S0N (ex: E00-S01, E01-S100). Leia docs/epics/ROADMAP.md.`,
             ];
           }
           return [true, ""];

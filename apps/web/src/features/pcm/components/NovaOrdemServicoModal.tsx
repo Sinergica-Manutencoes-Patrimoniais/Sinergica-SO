@@ -22,6 +22,7 @@ import {
 } from "../domain/priorizacao-backlog";
 import { podeGerarTitulo } from "../domain/titulo-os";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
+import { SeletorLocal } from "./SeletorLocal";
 
 const GUT_OPCOES = [1, 2, 3, 4, 5];
 const PRIORIDADES: Array<{ value: PrioridadeBacklog; label: string }> = [
@@ -275,7 +276,7 @@ export function NovaOrdemServicoModal({
         <div className="px-5 py-4 border-b border-line-soft flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-bold text-ink">
-              {editando ? `Editar OS ${ordem?.numero ?? ""}` : "Nova Ordem de Serviço"}
+              {editando ? `Editar Chamado ${ordem?.numero ?? ""}` : "Nova Ordem de Serviço"}
             </h2>
             <p className="text-xs text-ink-3 mt-0.5">
               {editando
@@ -501,14 +502,11 @@ export function NovaOrdemServicoModal({
             </Field>
 
             {!editando && (
-              <Field label="Localização">
-                <input
-                  value={form.localDescricao}
-                  onChange={(e) => setForm((f) => ({ ...f, localDescricao: e.target.value }))}
-                  className="input"
-                  placeholder="Ex: Térreo — Garagem B"
-                />
-              </Field>
+              <SeletorLocal
+                clienteId={form.clientId}
+                value={form.localDescricao}
+                onChange={(localDescricao) => setForm((f) => ({ ...f, localDescricao }))}
+              />
             )}
 
             <Field label="Data prevista">

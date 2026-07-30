@@ -27,6 +27,20 @@ describe("E01-S60 — contrato visual V1", () => {
     expect(home).toContain("sidebarCollapsed && !mobileSidebarOpen");
   });
 
+  it("não exibe relatórios PCM sem tela funcional", () => {
+    const home = fonte("./HomePage.tsx");
+
+    expect(home).not.toContain('label: "Relatório Diário"');
+    expect(home).not.toContain('label: "Relatório Mensal"');
+  });
+
+  it("liga a aba Área do Cliente à central real do portal", () => {
+    const home = fonte("./HomePage.tsx");
+
+    expect(home).toContain('activeModulo === "area-cliente"');
+    expect(home).toContain("<AreaClienteAdminPage");
+  });
+
   it("mantém login seguro, responsivo e com autocomplete correto", () => {
     const login = fonte("../features/auth/pages/LoginPage.tsx");
 
@@ -56,7 +70,7 @@ describe("E01-S60 — contrato visual V1", () => {
   it("torna os resumos de OS focáveis por teclado", () => {
     const dashboard = fonte("../features/pcm/pages/PcmDashboardPage.tsx");
 
-    expect(dashboard.match(/aria-label=\{`Resumo da OS/g)).toHaveLength(2);
-    expect(dashboard).toContain("Resumo da OS");
+    expect(dashboard.match(/aria-label=\{`Resumo do Chamado/g)).toHaveLength(2);
+    expect(dashboard).toContain("Resumo do Chamado");
   });
 });

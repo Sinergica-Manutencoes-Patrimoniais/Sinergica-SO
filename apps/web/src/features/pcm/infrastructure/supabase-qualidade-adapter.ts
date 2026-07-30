@@ -1,3 +1,4 @@
+import { erroDetalhado } from "../../../lib/http/edge-function-error";
 import { supabase } from "../../../lib/supabase-client";
 import type {
   ChecklistTemplate,
@@ -77,6 +78,7 @@ interface InspecaoItemRow {
   recomendacao: string | null;
   prazo_recomendado: string | null;
   foto_url: string | null;
+  foto_urls: string[] | null;
   categoria: string | null;
   elemento: string | null;
   identificacao: string | null;
@@ -147,7 +149,7 @@ const INSPECAO_COLS =
   "id,client_id,titulo,data_inspecao,responsavel_tecnico,status,observacoes_gerais,total_itens,itens_conformes,itens_nao_conformes,itens_atencao,codigo,tipo_inspecao_id,edificacao,endereco,hora_inicio,hora_fim,inspetor,responsavel_no_local,escopo,norma_tecnica,art,condicoes,anexos,e_assessment,motivo_assessment" as const;
 
 const ITEM_COLS =
-  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes,destino,destino_responsavel,auvo_questao_chave" as const;
+  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,foto_urls,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes,destino,destino_responsavel,auvo_questao_chave" as const;
 
 const TIPO_INSPECAO_COLS = "id,nome,norma_tecnica,descricao,ativo" as const;
 const TEMPLATE_COLS = "id,tipo_inspecao_id,nome,ativo" as const;
@@ -227,6 +229,7 @@ function mapItem(row: InspecaoItemRow): InspecaoItem {
     recomendacao: row.recomendacao,
     prazoRecomendado: row.prazo_recomendado,
     fotoUrl: row.foto_url,
+    fotoUrls: row.foto_urls ?? [],
     categoria: row.categoria,
     elemento: row.elemento,
     identificacao: row.identificacao,
@@ -273,6 +276,39 @@ function severidadePorGUT(score: number): InspecaoItem["severidade"] {
   if (score >= 45) return "alta";
   if (score >= 16) return "media";
   return "baixa";
+}
+
+/** E01-S98: linha de `inspecao_itens` a partir de um item classificado pela IA
+ * (`processarRelatorioInspecao`) — reusado por `criarInspecaoImportada` (import de XLS, E01-S96) e
+ * `importarQuestionarioAuvo` (import de questionário Auvo, E01-S98), mesmo cálculo de score/
+ * severidade/fotos nos dois casos. */
+function linhaItemImportado(
+  item: ItemInspecaoImportado,
+  ctx: {
+    inspecaoId: string;
+    clientId: string;
+    ordem: number;
+    createdBy: string;
+    auvoQuestaoChave?: string | null;
+  },
+) {
+  const score = item.gravidade * item.urgencia * item.tendencia;
+  const fotos = item.fotoUrls ?? [];
+  return {
+    inspecao_id: ctx.inspecaoId,
+    client_id: ctx.clientId,
+    sistema: item.sistema,
+    localizacao: item.local || null,
+    descricao: item.descricaoTecnica || item.relatoOriginal || item.tituloBacklog,
+    resultado: "nao_conforme" as const,
+    severidade: severidadePorGUT(score),
+    recomendacao: [item.tituloBacklog, item.citacaoNormativa].filter(Boolean).join(" · ") || null,
+    foto_url: fotos[0] ?? null,
+    foto_urls: fotos,
+    ordem: ctx.ordem,
+    created_by: ctx.createdBy,
+    auvo_questao_chave: ctx.auvoQuestaoChave ?? null,
+  };
 }
 
 function mapItemImportado(raw: Record<string, unknown>): ItemInspecaoImportado {
@@ -562,7 +598,7 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
     const { data, error } = await supabase.functions.invoke("importar-relatorio-pdf", {
       body: { texto },
     });
-    if (error) throw error;
+    if (error) throw await erroDetalhado(error);
     const payload = data as { itens?: Record<string, unknown>[] } | null;
     const itens = Array.isArray(payload?.itens) ? payload.itens : [];
     return itens.map((item: Record<string, unknown>) => mapItemImportado(item));
@@ -587,24 +623,14 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
 
     const inspecaoId = (inspecao as InspecaoRow).id;
     if (input.itens.length > 0) {
-      const linhas = input.itens.map((item, index) => {
-        const score = item.gravidade * item.urgencia * item.tendencia;
-        const fotos = item.fotoUrls ?? [];
-        return {
-          inspecao_id: inspecaoId,
-          client_id: input.clientId,
-          sistema: item.sistema,
-          localizacao: item.local || null,
-          descricao: item.descricaoTecnica || item.relatoOriginal || item.tituloBacklog,
-          resultado: "nao_conforme",
-          severidade: severidadePorGUT(score),
-          recomendacao:
-            [item.tituloBacklog, item.citacaoNormativa].filter(Boolean).join(" · ") || null,
-          foto_url: fotos[0] ?? null,
+      const linhas = input.itens.map((item, index) =>
+        linhaItemImportado(item, {
+          inspecaoId,
+          clientId: input.clientId,
           ordem: index + 1,
-          created_by: input.createdBy,
-        };
-      });
+          createdBy: input.createdBy,
+        }),
+      );
       const { error: itensError } = await supabase
         .schema("pcm")
         .from("inspecao_itens")
@@ -938,46 +964,55 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
       (snapshot as { checklist: unknown } | null)?.checklist ?? [],
     );
 
-    // D2: idempotência resolvida na aplicação (não via upsert/ON CONFLICT) — o índice único de
-    // `auvo_questao_chave` é parcial (`where ... is not null`), e Postgres só infere um índice
-    // parcial em ON CONFLICT quando o predicado é repetido na cláusula, o que o cliente Supabase JS
-    // não expõe. Mais simples e igualmente correto: buscar chaves já importadas e inserir só as novas.
+    // E01-S98: idempotência por importação inteira, não mais por pergunta — a análise por IA
+    // (abaixo) filtra/reagrupa perguntas em inconformidades, perdendo o vínculo 1:1 pergunta→item
+    // que o mecanismo antigo (chave por pergunta) dependia. Bloqueia reimportar se este assessment
+    // já tiver qualquer item vindo de um questionário; reimportar exige apagar os itens antigos
+    // manualmente primeiro (fora de escopo automatizar).
     const { data: existentes, error: existentesError } = await supabase
       .schema("pcm")
       .from("inspecao_itens")
-      .select("auvo_questao_chave")
+      .select("id")
       .eq("inspecao_id", inspecaoId)
-      .not("auvo_questao_chave", "is", null);
+      .not("auvo_questao_chave", "is", null)
+      .limit(1);
     if (existentesError) throw existentesError;
-    const chavesExistentes = new Set(
-      ((existentes ?? []) as Array<{ auvo_questao_chave: string }>).map(
-        (row) => row.auvo_questao_chave,
-      ),
-    );
+    if ((existentes ?? []).length > 0) {
+      throw new Error(
+        "Este assessment já teve um questionário importado — exclua os itens antigos antes de reimportar.",
+      );
+    }
 
-    const novas = questoes.filter((questao) => !chavesExistentes.has(questao.chave));
-    if (novas.length > 0) {
-      const { error: insertError } = await supabase
-        .schema("pcm")
-        .from("inspecao_itens")
-        .insert(
-          novas.map((questao) => ({
-            inspecao_id: inspecaoId,
-            client_id: clientId,
-            sistema: "geral",
-            descricao: `${questao.pergunta}: ${questao.resposta}`.slice(0, 2000),
-            resultado: "nao_avaliado",
-            severidade: "media",
-            // D2/casos de borda: mídia do Auvo é URL externa, nunca sobe pro Storage — mesma
-            // convenção já registrada em `0091` pra `foto_url`. Só a primeira imagem é guardada
-            // (coluna única); o item nunca deixa de existir por falta de imagem.
-            foto_url: questao.fotoUrls[0] ?? null,
-            auvo_questao_chave: questao.chave,
-            ordem: Math.floor(Date.now() / 1000),
-            created_by: userId,
-          })),
+    if (questoes.length > 0) {
+      // Mesmo formato Local/Fotos/Relato do import de XLS (E01-S96) — a Edge Function
+      // `importar-relatorio-pdf` é genérica, não sabe se o texto veio de planilha ou questionário.
+      // Decisão do Lucas (2026-07-24): manda TODAS as perguntas, a IA decide o que é inconformidade
+      // real (perguntas "tudo certo" tendem a não virar item).
+      const texto = questoes
+        .map((questao) => {
+          const fotos = questao.fotoUrls.length > 0 ? `\nFotos: ${questao.fotoUrls.join(";")}` : "";
+          return `Pergunta: ${questao.pergunta}\nResposta: ${questao.resposta}${fotos}`;
+        })
+        .join("\n\n---\n\n");
+
+      const itensClassificados = await this.processarRelatorioInspecao(texto);
+      if (itensClassificados.length > 0) {
+        const base = Math.floor(Date.now() / 1000);
+        const linhas = itensClassificados.map((item, index) =>
+          linhaItemImportado(item, {
+            inspecaoId,
+            clientId,
+            ordem: base + index,
+            createdBy: userId,
+            auvoQuestaoChave: `auvo-task-${auvoTaskId}-${index}`,
+          }),
         );
-      if (insertError) throw insertError;
+        const { error: insertError } = await supabase
+          .schema("pcm")
+          .from("inspecao_itens")
+          .insert(linhas);
+        if (insertError) throw insertError;
+      }
     }
 
     const { data, error } = await supabase

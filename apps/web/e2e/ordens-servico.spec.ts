@@ -8,7 +8,7 @@ test("cria OS, abre detalhe e edita", async ({ page }) => {
 
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Ordens de Serviço", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
 
   await page.getByRole("button", { name: "Nova OS" }).click();
   await page.getByPlaceholder("Ex: Reparo vazamento tubulação — Térreo").fill(titulo);
@@ -39,7 +39,7 @@ test("cria OS, abre detalhe e edita", async ({ page }) => {
 test("botão Gerar título fica desabilitado sem IA configurada", async ({ page }) => {
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Ordens de Serviço", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
 
   await page.getByRole("button", { name: "Nova OS" }).click();
   await expect(page.getByRole("button", { name: "Gerar título" })).toBeVisible({ timeout: 15_000 });
@@ -62,7 +62,7 @@ test("Configurações > IA mostra o estado da credencial OpenRouter", async ({ p
 test("Nova OS mostra o campo GUTD com Dor do cliente opcional", async ({ page }) => {
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Ordens de Serviço", { exact: true }).click();
+  await page.getByTitle("Chamados", { exact: true }).click();
 
   await page.getByRole("button", { name: "Nova OS" }).click();
   await expect(page.getByText("GUTD", { exact: true })).toBeVisible({ timeout: 15_000 });

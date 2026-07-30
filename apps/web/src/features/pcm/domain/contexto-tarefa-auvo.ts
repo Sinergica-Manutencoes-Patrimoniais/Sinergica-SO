@@ -1,5 +1,5 @@
 export interface ContextoTarefaAuvoInput {
-  numeroOs: string;
+  numeroChamado: string;
   titulo: string;
   cliente: string;
   descricao?: string | null;
@@ -20,7 +20,7 @@ export interface ProdutoPrevistoTarefa {
  * attachments estiver validado. O gerador não faz I/O nem define o transporte (base64/URL). */
 export function montarContextoTarefaAuvo(input: ContextoTarefaAuvoInput): string {
   const linhas = [
-    `OS ${input.numeroOs} — ${input.titulo}`,
+    `Chamado ${input.numeroChamado} — ${input.titulo}`,
     `Cliente: ${input.cliente}`,
     input.endereco ? `Local: ${input.endereco}` : null,
     input.equipamento ? `Equipamento: ${input.equipamento}` : null,

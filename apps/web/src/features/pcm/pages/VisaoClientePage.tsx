@@ -29,6 +29,7 @@ import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { useFormularioSujo } from "../../../app/use-formulario-sujo";
 import { supabaseConfigAdapter } from "../../config/infrastructure/supabase-config-adapter";
 import type {
   AssessmentClienteResumo,
@@ -40,7 +41,20 @@ import type {
   QualidadeClienteResumo,
   ResultadoEquipamentos,
 } from "../application/cliente-360-gateway";
+import { obterAlma, salvarAlma } from "../application/cliente-alma";
+import {
+  criarResponsavel,
+  editarResponsavel,
+  listarResponsaveis,
+  removerResponsavel,
+} from "../application/cliente-responsaveis";
 import { editarCliente } from "../application/clientes-crud";
+import {
+  alocarFerramenta,
+  devolverFerramenta,
+  listarAlocacoesCliente,
+  listarFerramentasDisponiveis,
+} from "../application/ferramenta-alocacao-cliente";
 import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao-cliente";
 import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
@@ -52,7 +66,16 @@ import { PainelHistorico } from "../components/PainelHistorico";
 import { PainelItensDoCliente } from "../components/PainelItensDoCliente";
 import { PainelSistemasCliente } from "../components/PainelSistemasCliente";
 import { MOTIVO_ASSESSMENT_LABEL } from "../domain/assessment";
+import {
+  PREFERENCIAS_CONTATO,
+  type PreferenciaContato,
+  type ResponsavelCliente,
+} from "../domain/cliente-responsaveis";
+import type { AlocacaoFerramentaCliente } from "../domain/ferramenta-alocacao-cliente";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
+import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
+import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
+import { supabaseFerramentaAlocacaoClienteAdapter } from "../infrastructure/supabase-ferramenta-alocacao-cliente-adapter";
 import { EstruturaClientePage } from "./EstruturaClientePage";
 
 type Estado =
@@ -72,6 +95,14 @@ type Aba360 =
   | "board"
   | "financeiro"
   | "comunicacao";
+
+// E01-S111: rótulos de exibição da preferência de contato de um responsável do cliente.
+const PREFERENCIA_CONTATO_LABEL: Record<PreferenciaContato, string> = {
+  whatsapp: "WhatsApp",
+  ligacao: "Ligação",
+  email: "E-mail",
+  outro: "Outro",
+};
 
 const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   { id: "resumo", label: "Resumo", icon: Activity },
@@ -259,6 +290,7 @@ export function VisaoClientePage({
           qualidade={qualidade}
           grupos={grupos}
           onAbrirOs={onAbrirOs}
+          temEscrita={temEscrita}
         />
       )}
 
@@ -316,7 +348,9 @@ export function VisaoClientePage({
         <PainelFinanceiro cliente={cliente} backlog={backlog} historico={historico} />
       )}
 
-      {aba === "comunicacao" && <PainelComunicacao cliente={cliente} eventos={eventos} />}
+      {aba === "comunicacao" && (
+        <PainelComunicacao cliente={cliente} eventos={eventos} temEscrita={temEscrita} />
+      )}
     </div>
   );
 }
@@ -335,6 +369,8 @@ function CriarAcessoPortalModal({
   const [senha, setSenha] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  useFormularioSujo({ nome: "", email: "", senha: "" }, { nome, email, senha });
 
   const criar = async () => {
     setErro(null);
@@ -432,6 +468,7 @@ function Resumo360({
   qualidade,
   grupos,
   onAbrirOs,
+  temEscrita,
 }: {
   cliente: ClienteHeader;
   metricas: Cliente360Metricas;
@@ -440,6 +477,7 @@ function Resumo360({
   qualidade: QualidadeClienteResumo;
   grupos: GrupoClienteResumo[];
   onAbrirOs?: (osId: string) => void;
+  temEscrita: boolean;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -464,6 +502,9 @@ function Resumo360({
         <PainelContatos cliente={cliente} />
         <PainelGrupos grupos={grupos} />
       </div>
+
+      <PainelResponsaveis clienteId={cliente.id} temEscrita={temEscrita} />
+      <PainelFerramentasCliente clienteId={cliente.id} temEscrita={temEscrita} />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
         <TimelineCliente eventos={eventos} compacta onAbrirOs={onAbrirOs} />
@@ -538,6 +579,466 @@ function PainelGrupos({ grupos }: { grupos: GrupoClienteResumo[] }) {
         )}
       </div>
     </section>
+  );
+}
+
+/** E01-S103: responsável/representante do cliente (síndico, gerente predial...) — cadastro local
+ * editável, distinto de `PainelContatos` (read-only, sincronizado do Auvo). Pode ter mais de um. */
+function PainelResponsaveis({
+  clienteId,
+  temEscrita,
+}: {
+  clienteId: string;
+  temEscrita: boolean;
+}) {
+  const [responsaveis, setResponsaveis] = useState<ResponsavelCliente[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [editando, setEditando] = useState<ResponsavelCliente | "novo" | null>(null);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    try {
+      setResponsaveis(await listarResponsaveis(supabaseClienteResponsaveisAdapter, clienteId));
+    } finally {
+      setCarregando(false);
+    }
+  }, [clienteId]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  async function remover(id: string) {
+    await removerResponsavel(supabaseClienteResponsaveisAdapter, id);
+    await carregar();
+  }
+
+  return (
+    <section className="rounded-[8px] border border-line bg-card">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Responsáveis</h3>
+          <p className="mt-0.5 text-xs text-ink-3">
+            Representantes do cliente (síndico, gerente predial...) — cadastro local
+          </p>
+        </div>
+        {temEscrita && (
+          <button type="button" onClick={() => setEditando("novo")} className="btn-secondary">
+            <UserPlus className="h-4 w-4" />
+            Adicionar
+          </button>
+        )}
+      </div>
+      {carregando ? (
+        <div className="px-5 py-6 text-center text-sm text-ink-3">Carregando…</div>
+      ) : responsaveis.length === 0 ? (
+        <div className="px-5 py-6 text-center text-sm text-ink-3">
+          Nenhum responsável cadastrado.
+        </div>
+      ) : (
+        <div className="divide-y divide-line-soft">
+          {responsaveis.map((responsavel) => (
+            <div key={responsavel.id} className="flex items-center justify-between gap-3 px-5 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-ink">
+                  {responsavel.nome}
+                  {responsavel.papel && (
+                    <span className="ml-1.5 text-xs font-normal text-ink-3">
+                      · {responsavel.papel}
+                    </span>
+                  )}
+                </p>
+                {(responsavel.telefone || responsavel.email) && (
+                  <p className="mt-0.5 text-xs text-ink-3">
+                    {[responsavel.telefone, responsavel.email].filter(Boolean).join(" · ")}
+                    {responsavel.preferenciaContato && (
+                      <span className="text-ink-3">
+                        {" "}
+                        (prefere {PREFERENCIA_CONTATO_LABEL[responsavel.preferenciaContato]})
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+              {temEscrita && (
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditando(responsavel)}
+                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => remover(responsavel.id)}
+                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+                  >
+                    Remover
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {editando && (
+        <ResponsavelModal
+          clienteId={clienteId}
+          responsavel={editando === "novo" ? null : editando}
+          onCancel={() => setEditando(null)}
+          onSalvar={async (dados) => {
+            if (editando === "novo") {
+              await criarResponsavel(supabaseClienteResponsaveisAdapter, dados);
+            } else {
+              await editarResponsavel(supabaseClienteResponsaveisAdapter, editando.id, dados);
+            }
+            setEditando(null);
+            await carregar();
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+function ResponsavelModal({
+  clienteId,
+  responsavel,
+  onCancel,
+  onSalvar,
+}: {
+  clienteId: string;
+  responsavel: ResponsavelCliente | null;
+  onCancel: () => void;
+  onSalvar: (dados: {
+    clienteId: string;
+    nome: string;
+    papel: string | null;
+    email: string | null;
+    telefone: string | null;
+    preferenciaContato: PreferenciaContato | null;
+  }) => Promise<void>;
+}) {
+  const [nome, setNome] = useState(responsavel?.nome ?? "");
+  const [papel, setPapel] = useState(responsavel?.papel ?? "");
+  const [email, setEmail] = useState(responsavel?.email ?? "");
+  const [telefone, setTelefone] = useState(responsavel?.telefone ?? "");
+  const [preferenciaContato, setPreferenciaContato] = useState<PreferenciaContato | "">(
+    responsavel?.preferenciaContato ?? "",
+  );
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useFormularioSujo(
+    {
+      nome: responsavel?.nome ?? "",
+      papel: responsavel?.papel ?? "",
+      email: responsavel?.email ?? "",
+      telefone: responsavel?.telefone ?? "",
+      preferenciaContato: responsavel?.preferenciaContato ?? "",
+    },
+    { nome, papel, email, telefone, preferenciaContato },
+  );
+
+  async function salvar() {
+    setSalvando(true);
+    setErro(null);
+    try {
+      await onSalvar({
+        clienteId,
+        nome,
+        papel: papel || null,
+        email: email || null,
+        telefone: telefone || null,
+        preferenciaContato: preferenciaContato || null,
+      });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível salvar o responsável.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <dialog open className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <h2 className="text-lg font-semibold text-ink">
+          {responsavel ? "Editar responsável" : "Adicionar responsável"}
+        </h2>
+        <div className="mt-4 grid gap-3">
+          <label className="text-sm text-ink-2">
+            Nome *
+            <input
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+          <label className="text-sm text-ink-2">
+            Papel
+            <input
+              value={papel}
+              onChange={(e) => setPapel(e.target.value)}
+              placeholder="Ex: Síndico, Gerente predial"
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+          <label className="text-sm text-ink-2">
+            E-mail
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+          <label className="text-sm text-ink-2">
+            Telefone
+            <input
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            />
+          </label>
+          <label className="text-sm text-ink-2">
+            Preferência de contato
+            <select
+              value={preferenciaContato}
+              onChange={(e) => setPreferenciaContato(e.target.value as PreferenciaContato | "")}
+              className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
+            >
+              <option value="">Sem preferência</option>
+              {PREFERENCIAS_CONTATO.map((preferencia) => (
+                <option key={preferencia} value={preferencia}>
+                  {PREFERENCIA_CONTATO_LABEL[preferencia]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-line px-4 py-2 text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={salvando || !nome.trim()}
+            onClick={salvar}
+            className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {salvando ? "Salvando…" : "Salvar"}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
+/** E01-S106: ferramenta da Sinérgica alocada temporariamente a um cliente — distinto da alocação
+ * ferramenta→técnico já existente (E01-S65, tela Ferramentas). Uma alocação ativa por ferramenta. */
+function PainelFerramentasCliente({
+  clienteId,
+  temEscrita,
+}: {
+  clienteId: string;
+  temEscrita: boolean;
+}) {
+  const { user } = useAuth();
+  const [alocacoes, setAlocacoes] = useState<AlocacaoFerramentaCliente[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [alocando, setAlocando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    try {
+      setAlocacoes(
+        await listarAlocacoesCliente(supabaseFerramentaAlocacaoClienteAdapter, clienteId),
+      );
+    } finally {
+      setCarregando(false);
+    }
+  }, [clienteId]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  async function devolver(alocacaoId: string) {
+    if (!temEscrita || !user) return;
+    await devolverFerramenta(supabaseFerramentaAlocacaoClienteAdapter, alocacaoId, user.id);
+    await carregar();
+  }
+
+  const ativas = alocacoes.filter((a) => a.devolvidaEm === null);
+  const historico = alocacoes.filter((a) => a.devolvidaEm !== null);
+
+  return (
+    <section className="rounded-[8px] border border-line bg-card">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Ferramentas alocadas</h3>
+          <p className="mt-0.5 text-xs text-ink-3">
+            Ferramentas da Sinérgica emprestadas/em uso neste cliente
+          </p>
+        </div>
+        {temEscrita && (
+          <button type="button" onClick={() => setAlocando(true)} className="btn-secondary">
+            <Wrench className="h-4 w-4" />
+            Alocar ferramenta
+          </button>
+        )}
+      </div>
+      {carregando ? (
+        <div className="px-5 py-6 text-center text-sm text-ink-3">Carregando…</div>
+      ) : ativas.length === 0 && historico.length === 0 ? (
+        <div className="px-5 py-6 text-center text-sm text-ink-3">Nenhuma ferramenta alocada.</div>
+      ) : (
+        <div className="divide-y divide-line-soft">
+          {ativas.map((alocacao) => (
+            <div key={alocacao.id} className="flex items-center justify-between gap-3 px-5 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-ink">{alocacao.ferramentaNome}</p>
+                <p className="mt-0.5 text-xs text-ink-3">
+                  Alocada em {new Date(alocacao.alocadaEm).toLocaleDateString("pt-BR")}
+                </p>
+              </div>
+              {temEscrita && (
+                <button
+                  type="button"
+                  onClick={() => devolver(alocacao.id)}
+                  className="shrink-0 rounded-[6px] px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                >
+                  Devolver
+                </button>
+              )}
+            </div>
+          ))}
+          {historico.slice(0, 5).map((alocacao) => (
+            <div key={alocacao.id} className="px-5 py-3 opacity-60">
+              <p className="truncate text-sm text-ink-2">{alocacao.ferramentaNome}</p>
+              <p className="mt-0.5 text-xs text-ink-3">
+                {new Date(alocacao.alocadaEm).toLocaleDateString("pt-BR")} até{" "}
+                {alocacao.devolvidaEm && new Date(alocacao.devolvidaEm).toLocaleDateString("pt-BR")}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+      {alocando && (
+        <AlocarFerramentaModal
+          onCancel={() => setAlocando(false)}
+          onErro={setErro}
+          onAlocar={async (ferramentaId, userId) => {
+            await alocarFerramenta(
+              supabaseFerramentaAlocacaoClienteAdapter,
+              ferramentaId,
+              clienteId,
+              userId,
+            );
+            setAlocando(false);
+            await carregar();
+          }}
+        />
+      )}
+      {erro && <p className="px-5 pb-3 text-sm text-red-600">{erro}</p>}
+    </section>
+  );
+}
+
+function AlocarFerramentaModal({
+  onCancel,
+  onAlocar,
+  onErro,
+}: {
+  onCancel: () => void;
+  onAlocar: (ferramentaId: string, userId: string) => Promise<void>;
+  onErro: (mensagem: string) => void;
+}) {
+  const { user } = useAuth();
+  const [opcoes, setOpcoes] = useState<Array<{ id: string; nome: string }>>([]);
+  const [ferramentaId, setFerramentaId] = useState("");
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+
+  // `carregando` como chave de reset: o valor inicial só fica pronto após o fetch (1º item da
+  // lista), então a linha de base do formulário precisa recapturar nesse momento — senão o
+  // auto-select dispararia o aviso de "alterações não salvas" sem o operador ter feito nada.
+  useFormularioSujo({ ferramentaId: opcoes[0]?.id ?? "" }, { ferramentaId }, carregando);
+
+  useEffect(() => {
+    listarFerramentasDisponiveis(supabaseFerramentaAlocacaoClienteAdapter).then((lista) => {
+      setOpcoes(lista);
+      setFerramentaId(lista[0]?.id ?? "");
+      setCarregando(false);
+    });
+  }, []);
+
+  async function confirmar() {
+    if (!user) return;
+    setSalvando(true);
+    try {
+      await onAlocar(ferramentaId, user.id);
+    } catch (e) {
+      onErro(e instanceof Error ? e.message : "Não foi possível alocar a ferramenta.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <dialog open className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <h2 className="text-lg font-semibold text-ink">Alocar ferramenta</h2>
+        <div className="mt-4">
+          {carregando ? (
+            <p className="text-sm text-ink-3">Carregando…</p>
+          ) : opcoes.length === 0 ? (
+            <p className="text-sm text-ink-3">
+              Nenhuma ferramenta disponível (todas já estão alocadas em algum cliente).
+            </p>
+          ) : (
+            <label className="text-sm text-ink-2">
+              Ferramenta
+              <select
+                value={ferramentaId}
+                onChange={(e) => setFerramentaId(e.target.value)}
+                className="input mt-1 w-full"
+              >
+                {opcoes.map((opcao) => (
+                  <option key={opcao.id} value={opcao.id}>
+                    {opcao.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-line px-4 py-2 text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={salvando || !ferramentaId}
+            onClick={confirmar}
+            className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {salvando ? "Alocando…" : "Alocar"}
+          </button>
+        </div>
+      </div>
+    </dialog>
   );
 }
 
@@ -913,25 +1414,30 @@ function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
 function PainelComunicacao({
   cliente,
   eventos,
+  temEscrita,
 }: {
   cliente: ClienteHeader;
   eventos: Cliente360Evento[];
+  temEscrita: boolean;
 }) {
   const comunicacao = eventos.filter((evento) => evento.tipo === "whatsapp");
   return (
-    <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
-      <h3 className="text-sm font-semibold text-ink">Comunicação</h3>
-      <div className="mt-4 grid gap-3 text-sm">
-        <ResumoLinha label="Telefone" value={cliente.contatoTelefone ?? "Não informado"} />
-        <ResumoLinha label="Email" value={cliente.contatoEmail ?? "Não informado"} />
-        <ResumoLinha label="Mensagens vinculadas" value={String(comunicacao.length)} />
-      </div>
-      {cliente.observacoes && (
-        <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
-          {cliente.observacoes}
+    <div className="flex flex-col gap-4">
+      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+        <h3 className="text-sm font-semibold text-ink">Comunicação</h3>
+        <div className="mt-4 grid gap-3 text-sm">
+          <ResumoLinha label="Telefone" value={cliente.contatoTelefone ?? "Não informado"} />
+          <ResumoLinha label="Email" value={cliente.contatoEmail ?? "Não informado"} />
+          <ResumoLinha label="Mensagens vinculadas" value={String(comunicacao.length)} />
         </div>
-      )}
-    </section>
+        {cliente.observacoes && (
+          <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+            {cliente.observacoes}
+          </div>
+        )}
+      </section>
+      <PainelAlmaCliente clienteId={cliente.id} temEscrita={temEscrita} />
+    </div>
   );
 }
 
@@ -1007,6 +1513,92 @@ function PainelFinanceiro({
         </p>
       </section>
     </div>
+  );
+}
+
+/** E02-S24: "alma" do cliente — particularidades de comunicação que o Zé consome como contexto
+ * (ex.: "síndico prefere áudio, é direto"). Texto livre, editável; isolado por `clienteId`. */
+function PainelAlmaCliente({
+  clienteId,
+  temEscrita,
+}: {
+  clienteId: string;
+  temEscrita: boolean;
+}) {
+  const { user } = useAuth();
+  const [conteudo, setConteudo] = useState("");
+  const [editando, setEditando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    obterAlma(supabaseClienteAlmaAdapter, clienteId)
+      .then(setConteudo)
+      .finally(() => setCarregando(false));
+  }, [clienteId]);
+
+  async function salvar() {
+    if (!user) return;
+    setSalvando(true);
+    setErro(null);
+    try {
+      await salvarAlma(supabaseClienteAlmaAdapter, clienteId, conteudo, user.id);
+      setEditando(false);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Alma do cliente</h3>
+          <p className="mt-0.5 text-xs text-ink-3">
+            Particularidades de comunicação que o Zé usa como contexto (ex.: "prefere áudio, é
+            direto")
+          </p>
+        </div>
+        {temEscrita && !editando && (
+          <button type="button" onClick={() => setEditando(true)} className="btn-secondary">
+            Editar
+          </button>
+        )}
+      </div>
+      <div className="mt-3">
+        {carregando ? (
+          <p className="text-sm text-ink-3">Carregando…</p>
+        ) : editando ? (
+          <div className="flex flex-col gap-2">
+            <textarea
+              value={conteudo}
+              onChange={(e) => setConteudo(e.target.value)}
+              className="input min-h-24 w-full resize-y"
+              placeholder="Ex: Síndico prefere áudio a texto, é direto e não gosta de rodeio."
+            />
+            {erro && <p className="text-sm text-red-600">{erro}</p>}
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setEditando(false)} className="btn-secondary">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={salvando}
+                onClick={salvar}
+                className="h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              >
+                {salvando ? "Salvando…" : "Salvar"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-ink-2">{conteudo || "Nenhuma alma cadastrada ainda."}</p>
+        )}
+      </div>
+    </section>
   );
 }
 

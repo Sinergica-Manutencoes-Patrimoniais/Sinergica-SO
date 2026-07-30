@@ -2,7 +2,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
-import { agruparPorTecnico, formatarDiaIso, resumoTooltipOrdem } from "../domain/ordens-servico";
+import {
+  agruparPorTecnico,
+  formatarDiaIso,
+  resumoTooltipOrdem,
+  rotuloNumeroOrdem,
+} from "../domain/ordens-servico";
 
 const HORAS_DO_DIA = 24;
 const HORAS = Array.from({ length: HORAS_DO_DIA }, (_, hora) => hora);
@@ -137,12 +142,12 @@ export function OsTimelineView({
                     return (
                       <Tooltip
                         key={ordem.id}
-                        content={`${ordem.numero} · ${ordem.titulo} · agendada ${pontoHora.toFixed(0)}h${resumo ? `\n${resumo}` : ""}`}
+                        content={`${rotuloNumeroOrdem(ordem)} · ${ordem.titulo} · agendada ${pontoHora.toFixed(0)}h${resumo ? `\n${resumo}` : ""}`}
                       >
                         <button
                           type="button"
                           onClick={() => onSelecionar(ordem.id)}
-                          aria-label={`${ordem.numero} · ${ordem.titulo} · agendada ${pontoHora.toFixed(0)}h`}
+                          aria-label={`${rotuloNumeroOrdem(ordem)} · ${ordem.titulo} · agendada ${pontoHora.toFixed(0)}h`}
                           className="absolute top-3 h-3 w-3 -translate-x-1/2 rounded-full bg-orange"
                           style={{ left: `${(pontoHora / HORAS_DO_DIA) * 100}%` }}
                         />
@@ -153,7 +158,7 @@ export function OsTimelineView({
                   return (
                     <Tooltip
                       key={ordem.id}
-                      content={`${ordem.numero} · ${ordem.titulo}${resumo ? `\n${resumo}` : ""}`}
+                      content={`${rotuloNumeroOrdem(ordem)} · ${ordem.titulo}${resumo ? `\n${resumo}` : ""}`}
                     >
                       <button
                         type="button"
@@ -165,7 +170,7 @@ export function OsTimelineView({
                           minWidth: "3rem",
                         }}
                       >
-                        {ordem.numero}
+                        {rotuloNumeroOrdem(ordem)}
                       </button>
                     </Tooltip>
                   );

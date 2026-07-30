@@ -74,6 +74,9 @@ export interface InspecaoItem {
   recomendacao: string | null;
   prazoRecomendado: string | null;
   fotoUrl: string | null;
+  /** E01-S97: lista completa de fotos da ocorrência (import de XLS pode trazer várias) — `fotoUrl`
+   * continua sendo a primeira, mantido por compatibilidade com os pontos que exibem só uma capa. */
+  fotoUrls: string[];
   categoria: string | null;
   elemento: string | null;
   identificacao: string | null;

@@ -8,10 +8,14 @@ const BASE_VALID = {
 
 describe("carregarEnv", () => {
   it("aplica default de NODE_ENV e aceita config válida", () => {
-    const env = carregarEnv(BASE_VALID);
+    const env = carregarEnv({
+      ...BASE_VALID,
+      VITE_PORTAL_URL: "https://portal.sinergica.com.br",
+    });
     expect(env.NODE_ENV).toBe("development");
     expect(env.VITE_SUPABASE_URL).toBe("https://project.supabase.co");
     expect(env.VITE_SUPABASE_ANON_KEY).toBe("anon-key-example");
+    expect(env.VITE_PORTAL_URL).toBe("https://portal.sinergica.com.br");
   });
 
   it("falha (fail-fast) com mensagem legível quando a URL é inválida", () => {

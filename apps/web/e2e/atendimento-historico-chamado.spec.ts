@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-// E01-S89 AC-2: no detalhe do Chamado, a seção "Histórico de atendimento" aparece e, sem nenhum
-// snapshot anexado ainda, mostra o estado vazio — cria um Chamado novo (mesmo fluxo de
+// E01-S89 AC-2 + E01-S118 T7: no painel de detalhe do card no board da Operação (menu "Chamados"),
+// a seção de histórico de atendimento aparece sempre que há Chamado vinculado — sem nenhum
+// snapshot anexado ainda, mostra o estado vazio. Cria um Chamado novo (mesmo fluxo de
 // chamados.spec.ts) só pra garantir que a seção existe e funciona antes de qualquer anexo.
 test("Chamado exibe a seção de histórico de atendimento (estado vazio)", async ({ page }) => {
   const sufixo = Date.now();
@@ -9,8 +10,8 @@ test("Chamado exibe a seção de histórico de atendimento (estado vazio)", asyn
 
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Chamados", { exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Chamados" })).toBeVisible({ timeout: 15_000 });
+  await page.getByTitle("Chamados", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Operação" })).toBeVisible({ timeout: 15_000 });
 
   await page.getByRole("button", { name: "Novo Chamado" }).click();
   await expect(page.getByRole("heading", { name: "Novo Chamado" })).toBeVisible({
@@ -18,14 +19,17 @@ test("Chamado exibe a seção de histórico de atendimento (estado vazio)", asyn
   });
   await page.getByLabel("Título *").fill(tituloChamado);
   await page.getByRole("button", { name: "Criar Chamado" }).click();
+  await expect(page.getByRole("heading", { name: "Novo Chamado" })).not.toBeVisible({
+    timeout: 10_000,
+  });
 
-  const linha = page
-    .getByText(tituloChamado, { exact: true })
-    .locator("xpath=ancestor::section[1]");
+  const linha = page.getByRole("row", { name: tituloChamado });
   await expect(linha).toBeVisible({ timeout: 10_000 });
+  await linha.click();
 
-  await linha.getByRole("button", { name: "Histórico de atendimento" }).click();
-  await expect(linha.getByText("Nenhum histórico de conversa anexado ainda.")).toBeVisible({
+  // ChamadoPainel mostra o histórico sempre (sem toggle) — estado vazio confirma que a seção
+  // carregou de verdade (não é só ausência silenciosa de erro).
+  await expect(page.getByText("Nenhum histórico de conversa anexado ainda.")).toBeVisible({
     timeout: 10_000,
   });
 });

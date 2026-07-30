@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Chamado } from "../domain/chamados";
-import { cancelarChamado, criarChamado, gerarOsDoChamado, listarChamados } from "./chamados";
+import {
+  adicionarAnotacaoChamado,
+  cancelarChamado,
+  criarChamado,
+  gerarOsDoChamado,
+  listarAnotacoesChamado,
+  listarChamados,
+} from "./chamados";
 import type { ChamadosGateway } from "./chamados-gateway";
 import type { OrdemServicoGateway } from "./ordem-servico-gateway";
 
@@ -10,6 +17,7 @@ const CHAMADO_ABERTO: Chamado = {
   clienteId: "cli-1",
   titulo: "Vazamento no térreo",
   descricao: "Água acumulando perto da garagem",
+  local: null,
   origem: "manual",
   status: "aberto",
   solicitante: null,
@@ -17,6 +25,9 @@ const CHAMADO_ABERTO: Chamado = {
   cancelamentoJustificativa: null,
   cancelamentoAnexoPath: null,
   createdAt: "2026-07-21T10:00:00Z",
+  dataPlanejada: null,
+  dataExecucao: null,
+  replanejamentos: 0,
 };
 
 function gatewayChamadosFake(): ChamadosGateway {
@@ -28,6 +39,16 @@ function gatewayChamadosFake(): ChamadosGateway {
     cancelar: vi.fn(async () => undefined),
     uploadAnexoCancelamento: vi.fn(async () => "cha-1/print.png"),
     listarHistoricoAtendimento: vi.fn(async () => []),
+    definirDataPlanejada: vi.fn(async () => undefined),
+    marcarExecucao: vi.fn(async () => undefined),
+    listarAnotacoes: vi.fn(async () => []),
+    adicionarAnotacao: vi.fn(async (chamadoId, texto) => ({
+      id: "anot-1",
+      chamadoId,
+      texto,
+      autorNome: "Ana",
+      createdAt: "2026-07-29T10:00:00Z",
+    })),
   };
 }
 
@@ -55,6 +76,26 @@ describe("chamados (use case)", () => {
     expect(gateway.criar).toHaveBeenCalledWith(
       expect.objectContaining({ titulo: "Vazamento", userId: "user-1" }),
     );
+  });
+
+  it("E01-S119 AC-1: normaliza anotação antes de persistir", async () => {
+    const gateway = gatewayChamadosFake();
+    await adicionarAnotacaoChamado(gateway, "cha-1", "  Retorno agendado.  ", "user-1");
+    expect(gateway.adicionarAnotacao).toHaveBeenCalledWith("cha-1", "Retorno agendado.", "user-1");
+  });
+
+  it("E01-S119 AC-4: rejeita anotação vazia sem round-trip", async () => {
+    const gateway = gatewayChamadosFake();
+    await expect(adicionarAnotacaoChamado(gateway, "cha-1", "   ", "user-1")).rejects.toThrow(
+      /não pode ficar vazia/,
+    );
+    expect(gateway.adicionarAnotacao).not.toHaveBeenCalled();
+  });
+
+  it("E01-S119 AC-2: delega lista de anotações ao gateway", async () => {
+    const gateway = gatewayChamadosFake();
+    await listarAnotacoesChamado(gateway, "cha-1");
+    expect(gateway.listarAnotacoes).toHaveBeenCalledWith("cha-1");
   });
 
   describe("gerarOsDoChamado", () => {

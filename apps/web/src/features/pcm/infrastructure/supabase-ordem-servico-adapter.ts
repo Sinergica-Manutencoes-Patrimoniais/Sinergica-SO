@@ -14,12 +14,63 @@ function montarDescricao(input: CriarOrdemServicoInput): string | null {
   return blocos.length > 0 ? blocos.join("\n\n") : null;
 }
 
-/** E01-S88: numeração atômica via sequence (RPC) — substitui o `count()` com race condition
- * conhecida (E01-S02). Prefixo "OS-" — "CH-" agora é do Chamado. */
-async function proximoNumero(): Promise<string> {
-  const { data, error } = await supabase.schema("pcm").rpc("fn_proximo_numero_os");
+/** E01-S99/ADR-0014: toda OS precisa de um Chamado por trás (o número exibido é sempre o
+ * `CH-XXXX` do Chamado — ver trigger `fn_ordens_servico_sync_numero_chamado`, migration 0151).
+ * Quando a criação de OS não vem de um Chamado já existente (`input.chamadoId` ausente — criação
+ * manual direta via "Nova Ordem de Serviço"), cria um Chamado por trás pra manter o CH-XXXX como
+ * único identificador, sem mudar a UX de "Nova OS". */
+async function criarChamadoAutomatico(input: {
+  clienteId: string;
+  titulo: string;
+  createdBy: string;
+}): Promise<{ id: string; numero: string }> {
+  const { data: numero, error: numeroError } = await supabase
+    .schema("pcm")
+    .rpc("fn_proximo_numero_chamado");
+  if (numeroError) throw numeroError;
+  const { data, error } = await supabase
+    .schema("pcm")
+    .from("chamados")
+    .insert({
+      numero,
+      cliente_id: input.clienteId,
+      titulo: input.titulo,
+      origem: "manual",
+      created_by: input.createdBy,
+      updated_by: input.createdBy,
+    })
+    .select("id,numero")
+    .single();
   if (error) throw error;
-  return data as string;
+  await supabase
+    .schema("pcm")
+    .from("chamados_eventos")
+    .insert({ chamado_id: data.id, tipo: "criado", metadata: { numero, auto: true } });
+  return { id: data.id as string, numero: data.numero as string };
+}
+
+/** Fecha o ciclo do Chamado criado por `criarChamadoAutomatico` — mesma transição que
+ * `marcarStatusComOs` faz no fluxo "Gerar OS a partir do Chamado" (`chamados.ts`), só que aqui é o
+ * próprio adapter quem criou o Chamado, então quem fecha o ciclo é ele também. */
+async function marcarChamadoAutomaticoComOs(
+  chamadoId: string,
+  ordemServicoId: string,
+  updatedBy: string,
+): Promise<void> {
+  await supabase
+    .schema("pcm")
+    .from("chamados")
+    .update({
+      status: "convertido_os",
+      ordem_servico_id: ordemServicoId,
+      updated_at: new Date().toISOString(),
+      updated_by: updatedBy,
+    })
+    .eq("id", chamadoId);
+  await supabase
+    .schema("pcm")
+    .from("chamados_eventos")
+    .insert({ chamado_id: chamadoId, tipo: "os_gerada", metadata: { ordemServicoId } });
 }
 
 export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
@@ -74,13 +125,23 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
   },
 
   async criarOrdemServico(input): Promise<OrdemServicoCriada> {
-    const numero = await proximoNumero();
+    let chamadoId = input.chamadoId ?? null;
+    if (!chamadoId) {
+      const chamadoAutomatico = await criarChamadoAutomatico({
+        clienteId: input.clientId,
+        titulo: input.titulo,
+        createdBy: input.createdBy,
+      });
+      chamadoId = chamadoAutomatico.id;
+    }
+
     const { data, error } = await supabase
       .schema("pcm")
       .from("ordens_servico")
       .insert({
         client_id: input.clientId,
-        numero,
+        // `numero` não é enviado: a trigger `fn_ordens_servico_sync_numero_chamado` (0151) sempre
+        // sobrescreve com o CH-XXXX do `chamado_id` acima.
         titulo: input.titulo,
         descricao: montarDescricao(input),
         categoria: input.categoria,
@@ -100,13 +161,21 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         data_agendada: input.dataPrevista,
         tipo_os: input.tipoOs,
         pmoc_schedule_id: input.pmocScheduleId,
-        chamado_id: input.chamadoId,
+        chamado_id: chamadoId,
         origem_inspecao_item_id: input.origemInspecaoItemId,
       })
       .select("id,numero")
       .single();
 
     if (error) throw error;
+
+    // Chamado veio pronto do caller (fluxo "Gerar OS a partir do Chamado") — quem fecha o ciclo é
+    // `gerarOsDoChamado`/`marcarStatusComOs` (chamados.ts), não aqui, pra respeitar o `destino`
+    // escolhido (pode ser "backlog", não só "convertido_os").
+    if (!input.chamadoId) {
+      await marcarChamadoAutomaticoComOs(chamadoId, data.id as string, input.createdBy);
+    }
+
     return { id: data.id as string, numero: data.numero as string };
   },
 

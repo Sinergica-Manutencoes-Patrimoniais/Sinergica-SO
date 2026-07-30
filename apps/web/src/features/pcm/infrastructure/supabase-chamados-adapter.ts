@@ -5,6 +5,7 @@ import type {
   FiltrosChamados,
 } from "../application/chamados-gateway";
 import type {
+  AnotacaoChamado,
   Chamado,
   HistoricoAtendimentoChamado,
   MensagemHistoricoAtendimento,
@@ -20,6 +21,7 @@ interface ChamadoRow {
   cliente_id: string;
   titulo: string;
   descricao: string | null;
+  local: string | null;
   origem: OrigemChamado;
   status: StatusChamado;
   solicitante: string | null;
@@ -27,10 +29,13 @@ interface ChamadoRow {
   cancelamento_justificativa: string | null;
   cancelamento_anexo_path: string | null;
   created_at: string;
+  data_planejada: string | null;
+  data_execucao: string | null;
+  replanejamentos: number;
 }
 
 const CHAMADO_COLS =
-  "id,numero,cliente_id,titulo,descricao,origem,status,solicitante,ordem_servico_id,cancelamento_justificativa,cancelamento_anexo_path,created_at" as const;
+  "id,numero,cliente_id,titulo,descricao,local,origem,status,solicitante,ordem_servico_id,cancelamento_justificativa,cancelamento_anexo_path,created_at,data_planejada,data_execucao,replanejamentos" as const;
 
 function mapChamado(row: ChamadoRow): Chamado {
   return {
@@ -39,6 +44,7 @@ function mapChamado(row: ChamadoRow): Chamado {
     clienteId: row.cliente_id,
     titulo: row.titulo,
     descricao: row.descricao,
+    local: row.local,
     origem: row.origem,
     status: row.status,
     solicitante: row.solicitante,
@@ -46,6 +52,9 @@ function mapChamado(row: ChamadoRow): Chamado {
     cancelamentoJustificativa: row.cancelamento_justificativa,
     cancelamentoAnexoPath: row.cancelamento_anexo_path,
     createdAt: row.created_at,
+    dataPlanejada: row.data_planejada,
+    dataExecucao: row.data_execucao,
+    replanejamentos: row.replanejamentos,
   };
 }
 
@@ -59,6 +68,14 @@ interface SnapshotRow {
   created_at: string;
 }
 
+interface AnotacaoRow {
+  id: string;
+  chamado_id: string;
+  texto: string;
+  autor_nome: string;
+  created_at: string;
+}
+
 function mapSnapshot(row: SnapshotRow): HistoricoAtendimentoChamado {
   return {
     id: row.id,
@@ -67,6 +84,16 @@ function mapSnapshot(row: SnapshotRow): HistoricoAtendimentoChamado {
     dataFim: row.data_fim,
     mensagens: row.mensagens,
     totalMensagens: row.total_mensagens,
+    createdAt: row.created_at,
+  };
+}
+
+function mapAnotacao(row: AnotacaoRow): AnotacaoChamado {
+  return {
+    id: row.id,
+    chamadoId: row.chamado_id,
+    texto: row.texto,
+    autorNome: row.autor_nome,
     createdAt: row.created_at,
   };
 }
@@ -120,6 +147,7 @@ export const supabaseChamadosAdapter: ChamadosGateway = {
         cliente_id: input.clienteId,
         titulo: input.titulo,
         descricao: input.descricao,
+        local: input.local ?? null,
         origem: input.origem ?? "manual",
         solicitante: input.solicitante,
         origem_inspecao_item_id: input.origemInspecaoItemId ?? null,
@@ -165,6 +193,84 @@ export const supabaseChamadosAdapter: ChamadosGateway = {
       .eq("id", chamadoId);
     if (error) throw error;
     await registrarEvento(chamadoId, "cancelado", { justificativa, temAnexo: anexoPath != null });
+  },
+
+  async definirDataPlanejada(
+    chamadoId: string,
+    dataPlanejada: string,
+    incrementarReplanejamento: boolean,
+    userId: string,
+  ): Promise<void> {
+    if (incrementarReplanejamento) {
+      const { data, error: erroLeitura } = await supabase
+        .schema("pcm")
+        .from("chamados")
+        .select("replanejamentos")
+        .eq("id", chamadoId)
+        .single();
+      if (erroLeitura) throw erroLeitura;
+      const { error } = await supabase
+        .schema("pcm")
+        .from("chamados")
+        .update({
+          data_planejada: dataPlanejada,
+          replanejamentos: ((data?.replanejamentos as number) ?? 0) + 1,
+          updated_at: new Date().toISOString(),
+          updated_by: userId,
+        })
+        .eq("id", chamadoId);
+      if (error) throw error;
+      return;
+    }
+    const { error } = await supabase
+      .schema("pcm")
+      .from("chamados")
+      .update({
+        data_planejada: dataPlanejada,
+        updated_at: new Date().toISOString(),
+        updated_by: userId,
+      })
+      .eq("id", chamadoId);
+    if (error) throw error;
+  },
+
+  async marcarExecucao(chamadoId: string, dataExecucao: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .schema("pcm")
+      .from("chamados")
+      .update({
+        data_execucao: dataExecucao,
+        updated_at: new Date().toISOString(),
+        updated_by: userId,
+      })
+      .eq("id", chamadoId);
+    if (error) throw error;
+  },
+
+  async listarAnotacoes(chamadoId: string): Promise<AnotacaoChamado[]> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("chamados_anotacoes")
+      .select("id,chamado_id,texto,autor_nome,created_at")
+      .eq("chamado_id", chamadoId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return ((data ?? []) as AnotacaoRow[]).map(mapAnotacao);
+  },
+
+  async adicionarAnotacao(
+    chamadoId: string,
+    texto: string,
+    autorId: string,
+  ): Promise<AnotacaoChamado> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("chamados_anotacoes")
+      .insert({ chamado_id: chamadoId, texto, autor_id: autorId })
+      .select("id,chamado_id,texto,autor_nome,created_at")
+      .single();
+    if (error) throw error;
+    return mapAnotacao(data as AnotacaoRow);
   },
 
   async uploadAnexoCancelamento(chamadoId: string, arquivo: File): Promise<string> {
