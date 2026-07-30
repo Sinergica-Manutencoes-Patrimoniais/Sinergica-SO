@@ -38,6 +38,10 @@ function normalizar(texto: string): string {
 export interface ItemChamadoPendente {
   titulo: string;
   descricao: string;
+  /** Campos persistidos junto da proposta para a OS criada na confirmação. Opcionais para
+   * compatibilidade com propostas pendentes gravadas antes de E02-S23. */
+  categoria?: "corretiva" | "preventiva" | "emergencial";
+  prioridade?: "baixa" | "normal" | "media" | "alta" | "critica";
   local_descricao: string;
 }
 
