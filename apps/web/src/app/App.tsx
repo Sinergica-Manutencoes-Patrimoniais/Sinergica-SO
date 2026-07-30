@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { PortalShell } from "../features/area-cliente/PortalShell";
 import { deveUsarPortal } from "../features/area-cliente/domain/roteamento";
 import { LoginPage } from "../features/auth/pages/LoginPage";

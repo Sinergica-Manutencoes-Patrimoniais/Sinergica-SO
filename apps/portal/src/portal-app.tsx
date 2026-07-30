@@ -1,4 +1,4 @@
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import { AuthProvider, useAuth } from "../../web/src/app/auth-context";
 import { ThemeProvider } from "../../web/src/app/theme-context";
 import { PortalShell } from "../../web/src/features/area-cliente/PortalShell";
