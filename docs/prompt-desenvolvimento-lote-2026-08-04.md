@@ -1,3 +1,9 @@
+---
+name: prompt-desenvolvimento-lote-2026-08-04
+description: Roteiro de retomada e implementação do lote de specs pendentes de 2026-08-04.
+alwaysApply: false
+---
+
 # Prompt de desenvolvimento — lote de specs 2026-08-04
 
 > Model-agnostic: serve pra Claude **ou** Codex. Foi feito pra retomada entre sessões — quando um
