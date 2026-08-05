@@ -434,6 +434,8 @@ verify_jwt = true
 verify_jwt = true
 [functions.pcm-auvo-ferramenta-alocacao]
 verify_jwt = true
+[functions.pcm-auvo-task-checklist]
+verify_jwt = true
 [functions.pcm-auvo-pull]
 verify_jwt = true
 [functions.pcm-auvo-push]
