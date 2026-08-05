@@ -28,6 +28,13 @@ alwaysApply: false
 ## Divergências (SPEC_DEVIATION)
 - [ ] Se a API Auvo não aceitar algum campo da proposta, remover do modal e anotar aqui.
 
+## Bloqueio de descoberta (2026-08-05)
+- A busca pela documentação oficial pública do Auvo não retornou a referência de atualização de
+  tarefas. No código, `pcm-auvo-push` só processa entidades declaradas no registry e não há
+  descriptor para `ordens_servico`/`tasks`; portanto não existe payload ou endpoint verificado
+  para implementar o `PUT` sem adivinhação. Retomar quando houver acesso à documentação oficial
+  ou um exemplo autenticado de request/response do Auvo.
+
 ## Checklist de Definition of Done
 - [ ] AC verdes pelo gate
 - [ ] Playwright local (Lucas)
