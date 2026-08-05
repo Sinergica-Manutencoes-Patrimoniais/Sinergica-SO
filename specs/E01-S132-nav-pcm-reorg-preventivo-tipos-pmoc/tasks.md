@@ -11,7 +11,7 @@ alwaysApply: false
 ## Plano
 | #  | Task | Cobre AC | Gate (comando) | Status |
 |----|------|----------|----------------|--------|
-| 1 | Mover `Tipos de Tarefa` de CADASTROS → CONFIGURAÇÕES | AC-1 | typecheck | todo |
+| 1 | Mover `Tipos de Tarefa` de CADASTROS → CONFIGURAÇÕES | AC-1 | typecheck | done |
 | 2 | Mover `PMOC` de PREVENTIVO → OPERAÇÃO | AC-2 | typecheck | todo |
 | 3 | Remover o grupo PREVENTIVO (Cronograma/Preventivas — itens mortos sem `view`) | AC-3 | typecheck | todo |
 | 4 | Confirmar zero `view`/rota órfã apontando pra itens removidos; ajustar testes de nav | AC-4 | vitest/biome | todo |

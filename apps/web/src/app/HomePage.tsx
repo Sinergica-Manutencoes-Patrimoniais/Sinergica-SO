@@ -375,7 +375,6 @@ const PCM_NAV: NavGroup[] = [
       { label: "Clientes", icon: Building2, view: "clientes" },
       { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
       { label: "Sistemas", icon: Link2, view: "sistemas" },
-      { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
     ],
   },
   {
@@ -388,6 +387,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Equipes", icon: Users, view: "equipes" },
       { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "Funcionários", icon: UserCog, view: "funcionarios" },
+      { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
       { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
       { label: "Marcações de Cliente", icon: Tag, view: "cliente-marcacoes" },
       { label: "Tipos de Inspeção", icon: CheckCircle2, view: "tipos-inspecao" },
