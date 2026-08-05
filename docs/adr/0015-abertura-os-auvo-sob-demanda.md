@@ -1,3 +1,9 @@
+---
+name: adr-0015-abertura-os-auvo-sob-demanda
+description: Abertura de OS no Auvo deixa de ser automática e passa a exigir ação explícita com dry-run.
+alwaysApply: false
+---
+
 # ADR-0015 — Abertura de OS no Auvo passa de automática (trigger) para sob demanda
 
 - **Status:** Aceito (Lucas aprovou o design em 2026-08-04; implementação em E01-S125, após auditar produtores de task Auvo)
