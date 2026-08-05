@@ -34,6 +34,23 @@ describe("E01-S60 — contrato visual V1", () => {
     expect(home).not.toContain('label: "Relatório Mensal"');
   });
 
+  it("organiza PMOC e tipos de tarefa sem manter o grupo preventivo morto", () => {
+    const home = fonte("./HomePage.tsx");
+
+    expect(home).toMatch(
+      /titulo: "OPERAÇÃO",[\s\S]{0,1200}label: "PMOC", icon: Snowflake, view: "pmoc"/,
+    );
+    expect(home).toMatch(
+      /titulo: "CONFIGURAÇÕES",[\s\S]{0,1800}label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa"/,
+    );
+    expect(home).not.toMatch(/titulo: "CADASTROS",[\s\S]{0,800}label: "Tipos de Tarefa"/);
+    expect(home).not.toContain('titulo: "PREVENTIVO"');
+    expect(home).not.toContain('label: "Cronograma"');
+    expect(home).not.toContain('label: "Preventivas"');
+    expect(home).toContain('pcmView === "tipos-tarefa" ?');
+    expect(home).toContain('pcmView === "pmoc" ?');
+  });
+
   it("liga a aba Área do Cliente à central real do portal", () => {
     const home = fonte("./HomePage.tsx");
 
