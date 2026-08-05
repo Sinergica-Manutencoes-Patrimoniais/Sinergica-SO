@@ -35,7 +35,10 @@ import {
   statusOsColor,
 } from "../domain/ordens-servico";
 import { supabaseDashboardPcmAdapter } from "../infrastructure/supabase-dashboard-pcm-adapter";
-import type { AuvoSyncHealthItem } from "../infrastructure/supabase-dashboard-pcm-adapter";
+import type {
+  AuvoSyncErrorItem,
+  AuvoSyncHealthItem,
+} from "../infrastructure/supabase-dashboard-pcm-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 import { supabaseSincronizarAuvoAdapter } from "../infrastructure/supabase-sincronizar-auvo-adapter";
@@ -69,6 +72,9 @@ export function PcmDashboardPage({
     fase: "ocioso",
   });
   const [saudeSync, setSaudeSync] = useState<AuvoSyncHealthItem[]>([]);
+  const [errosSync, setErrosSync] = useState<AuvoSyncErrorItem[] | null>(null);
+  const [erroDetalheSync, setErroDetalheSync] = useState<string | null>(null);
+  const [carregandoErrosSync, setCarregandoErrosSync] = useState(false);
   const pollingRef = useRef<number | null>(null);
 
   const carregar = useCallback(async () => {
@@ -180,6 +186,21 @@ export function PcmDashboardPage({
     }
   }, [acompanharRun]);
 
+  const abrirErrosSync = useCallback(async () => {
+    setErrosSync([]);
+    setErroDetalheSync(null);
+    setCarregandoErrosSync(true);
+    try {
+      setErrosSync(await supabaseDashboardPcmAdapter.listarErrosSyncAuvo());
+    } catch (error) {
+      setErroDetalheSync(
+        error instanceof Error ? error.message : "Não foi possível carregar os erros do Auvo.",
+      );
+    } finally {
+      setCarregandoErrosSync(false);
+    }
+  }, []);
+
   if (estado.fase === "carregando") {
     return <div className="p-8 text-center text-sm text-ink-3">Carregando dashboard PCM…</div>;
   }
@@ -246,7 +267,7 @@ export function PcmDashboardPage({
             )}
           </div>
           <StatusSincronizacaoAuvo estado={sincronizacaoAuvo} />
-          <BadgeSaudeSync itens={saudeSync} />
+          <BadgeSaudeSync itens={saudeSync} onAbrirErros={abrirErrosSync} />
         </div>
       </div>
 
@@ -259,6 +280,15 @@ export function PcmDashboardPage({
       {dashboard.auvo && <PainelAuvo dashboard={dashboard.auvo} />}
       {dashboard.auvo && <PainelCampoAuvo dashboard={dashboard.auvo} />}
       <PainelDadosOperacionaisAuvo />
+
+      {errosSync !== null && (
+        <DetalheErrosSyncAuvo
+          itens={errosSync}
+          carregando={carregandoErrosSync}
+          erro={erroDetalheSync}
+          onFechar={() => setErrosSync(null)}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-card rounded-[10px] border border-line">
@@ -374,7 +404,13 @@ export function PcmDashboardPage({
   );
 }
 
-function BadgeSaudeSync({ itens }: { itens: AuvoSyncHealthItem[] }) {
+function BadgeSaudeSync({
+  itens,
+  onAbrirErros,
+}: {
+  itens: AuvoSyncHealthItem[];
+  onAbrirErros: () => void;
+}) {
   if (itens.length === 0) {
     return <span className="text-[11px] text-ink-3">Saúde Auvo: sem dados</span>;
   }
@@ -383,19 +419,75 @@ function BadgeSaudeSync({ itens }: { itens: AuvoSyncHealthItem[] }) {
   const titulo = comErro
     .map((item) => `${item.entity}: ${item.lastError ?? `${item.errorCount} erro(s)`}`)
     .join("\n");
+  const conteudo = `Saúde Auvo: ${comErro.length > 0 ? `${comErro.length} com erro` : `${dryRun.length} dry-run`}`;
+  if (comErro.length > 0) {
+    return (
+      <button
+        type="button"
+        onClick={onAbrirErros}
+        title={titulo}
+        className="rounded-full bg-[#FFF4F2] px-2 py-0.5 text-[11px] font-semibold text-[#A12D24] hover:underline focus:outline-none focus:ring-2 focus:ring-orange"
+      >
+        {conteudo}
+      </button>
+    );
+  }
   return (
     <span
       title={titulo || `${itens.length} entidades monitoradas`}
       className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-        comErro.length > 0
-          ? "bg-[#FFF4F2] text-[#A12D24]"
-          : dryRun.length > 0
-            ? "bg-[#FFF8E6] text-[#8A5A00]"
-            : "bg-[#E7F5EC] text-[#1E8E45]"
+        dryRun.length > 0 ? "bg-[#FFF8E6] text-[#8A5A00]" : "bg-[#E7F5EC] text-[#1E8E45]"
       }`}
     >
-      Saúde Auvo: {comErro.length > 0 ? `${comErro.length} com erro` : `${dryRun.length} dry-run`}
+      {conteudo}
     </span>
+  );
+}
+
+function DetalheErrosSyncAuvo({
+  itens,
+  carregando,
+  erro,
+  onFechar,
+}: {
+  itens: AuvoSyncErrorItem[];
+  carregando: boolean;
+  erro: string | null;
+  onFechar: () => void;
+}) {
+  return (
+    <section className="rounded-[10px] border border-[#F2C0B5] bg-card" aria-live="polite">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Erros de sincronização Auvo</h3>
+          <p className="text-xs text-ink-3">Última falha por entidade e registro local.</p>
+        </div>
+        <button type="button" onClick={onFechar} className="btn-secondary text-xs">
+          Fechar
+        </button>
+      </div>
+      {carregando ? (
+        <p className="px-4 py-5 text-sm text-ink-3">Carregando erros…</p>
+      ) : erro ? (
+        <p className="px-4 py-5 text-sm text-[#A12D24]">{erro}</p>
+      ) : itens.length === 0 ? (
+        <p className="px-4 py-5 text-sm text-ink-3">Nenhum erro pendente de detalhamento.</p>
+      ) : (
+        <ul className="divide-y divide-line-soft">
+          {itens.map((item, indice) => (
+            <li key={`${item.entity}:${item.rowId ?? "pull"}:${indice}`} className="px-4 py-3">
+              <p className="text-sm font-semibold text-ink">
+                {item.entity} · {item.rowId ?? "ID local indisponível"}
+              </p>
+              <p className="mt-0.5 text-sm text-[#A12D24]">{item.lastError}</p>
+              <p className="mt-1 text-[11px] text-ink-3">
+                Última falha: {formatarDataHoraCurta(item.lastErrorAt)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

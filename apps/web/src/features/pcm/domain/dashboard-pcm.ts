@@ -68,6 +68,20 @@ export interface CampoAuvoOrdem {
   checkOutAt: string | null;
 }
 
+/** Defesa em profundidade para erros já higienizados pela view: a UI nunca deve renderizar stack
+ * trace ou possível segredo caso uma migration antiga ainda esteja em uso. */
+export function mensagemErroSyncAuvoLegivel(mensagem: string | null): string {
+  const texto = mensagem?.trim().replace(/\s+/g, " ") ?? "";
+  if (!texto) return "Falha de sincronização sem detalhe.";
+  if (
+    /(authorization|bearer|api[_ -]?key|token|secret|senha|password)/i.test(texto) ||
+    /\bat\s+.+\(/i.test(texto)
+  ) {
+    return "Detalhe técnico protegido. Consulte os logs de sincronização.";
+  }
+  return texto.slice(0, 500);
+}
+
 function temConteudo(valor: unknown): boolean {
   if (Array.isArray(valor)) return valor.length > 0;
   if (valor && typeof valor === "object") return Object.keys(valor).length > 0;

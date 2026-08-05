@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { InspecaoResumo } from "../application/qualidade-gateway";
-import { consolidarSinaisCampoAuvo, montarDashboardPcm } from "./dashboard-pcm";
+import {
+  consolidarSinaisCampoAuvo,
+  mensagemErroSyncAuvoLegivel,
+  montarDashboardPcm,
+} from "./dashboard-pcm";
 import type { OrdemServicoOperacional } from "./ordens-servico";
 
 const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional => ({
@@ -70,6 +74,18 @@ const inspecao = (dataInspecao: string): InspecaoResumo => ({
 });
 
 describe("dashboard-pcm", () => {
+  it("mantém mensagem operacional e protege stack ou segredo", () => {
+    expect(mensagemErroSyncAuvoLegivel("Cliente Auvo inexistente")).toBe(
+      "Cliente Auvo inexistente",
+    );
+    expect(mensagemErroSyncAuvoLegivel("Bearer token-privado")).toBe(
+      "Detalhe técnico protegido. Consulte os logs de sincronização.",
+    );
+    expect(mensagemErroSyncAuvoLegivel("Error: falhou at push (index.ts:12)")).toBe(
+      "Detalhe técnico protegido. Consulte os logs de sincronização.",
+    );
+  });
+
   it("monta KPIs e listas a partir de OS/inspeções reais", () => {
     const dashboard = montarDashboardPcm(
       [
