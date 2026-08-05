@@ -21,6 +21,6 @@ alwaysApply: false
 - Aceite: Playwright — Tipos de Tarefa em Config, PMOC em Operação, sem grupo Preventivo; PMOC abre igual.
 
 ## Checklist de Definition of Done
-- [ ] AC verdes pelo gate
-- [ ] Playwright local (Lucas)
-- [ ] ROADMAP.md + STATE.md atualizados
+- [x] AC verdes pelo gate
+- [x] Playwright local
+- [x] ROADMAP.md + STATE.md atualizados

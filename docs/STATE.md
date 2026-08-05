@@ -10,6 +10,17 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-04 — E01-S132 concluída (Codex)
+
+- `PCM_NAV`: Tipos de Tarefa foi para Configurações; PMOC para Operação; grupo Preventivo e seus
+  itens mortos foram removidos. Testes estático e Playwright local cobrem a navegação.
+- Gates: `pnpm run ci:local` PASS (763 testes, 9 skipped); Playwright Chromium local PASS;
+  `graphify update .` PASS. Corrigido frontmatter preexistente de ADR-0015 e do prompt do lote;
+  auditoria passou com 581 documentos.
+- Próximo passo: E01-S122/T1 — marcar owner no ROADMAP e mapear os badges nas telas de cliente
+  antes de implementar tooltips.
+- Bloqueio: navegador integrado indisponível; Playwright local foi usado como fallback.
+
 ## 2026-08-04 (cont. 3) — S137/S138 + branch de desenvolvimento
 
 **E01-S137** (Ferramentas por Técnico rico: todos os técnicos + histórico + atribuição por
