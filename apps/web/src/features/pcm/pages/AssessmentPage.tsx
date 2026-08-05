@@ -259,6 +259,11 @@ export function AssessmentPage() {
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink">{item.descricao}</p>
+                  {item.auvoImportacaoProvisoria && (
+                    <p className="mt-0.5 text-xs font-semibold text-orange">
+                      Provisório — será atualizado quando a tarefa Auvo for concluída.
+                    </p>
+                  )}
                   {item.destino && (
                     <p className="mt-0.5 text-xs text-ink-3">
                       Derivado: {DESTINO_ITEM_LABEL[item.destino]}

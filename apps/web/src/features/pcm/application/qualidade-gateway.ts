@@ -92,6 +92,7 @@ export interface InspecaoItem {
   destino: DestinoItemAssessment | null;
   destinoResponsavel: ResponsavelDestino | null;
   auvoQuestaoChave: string | null;
+  auvoImportacaoProvisoria?: boolean;
 }
 
 export interface CriarInspecaoInput {

@@ -14,8 +14,8 @@ alwaysApply: false
 |----|------|----------|------------|----------------|--------|
 | 1 | Edge: buscar checklist da tarefa Auvo por id ao vivo (`_shared/auvo/client.ts`), formato igual ao `mapearQuestionarioParaQuestoes` | AC-1 | — | (deno CI) | done |
 | 2 | Adapter `importarQuestionarioAuvo`: fonte passa a ser o fetch ao vivo (snapshot vira fallback); questoes vazias → erro claro, não no-op | AC-1,AC-2 | 1 | vitest | done |
-| 3 | Domínio/coluna: flag `provisorio` no item de assessment importado antes da conclusão | AC-3 | — | lint:migrations | todo |
-| 4 | UI `AssessmentPage`: mensagem de vazio/erro; badge "provisório" nos itens | AC-2,AC-3 | 2,3 | typecheck | todo |
+| 3 | Domínio/coluna: flag `provisorio` no item de assessment importado antes da conclusão | AC-3 | — | lint:migrations | done |
+| 4 | UI `AssessmentPage`: mensagem de vazio/erro; badge "provisório" nos itens | AC-2,AC-3 | 2,3 | typecheck | done |
 | 5 | Webhook `pcm-auvo-webhook`: ao concluir a tarefa, re-sync do assessment (atualiza itens, marca definitivo, preserva derivações) | AC-4 | 3 | (deno CI) | todo |
 | 6 | e2e: importar tarefa não concluída traz itens; sem checklist mostra mensagem | AC-1,AC-2 | — | playwright (Lucas) | todo |
 

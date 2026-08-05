@@ -92,6 +92,7 @@ interface InspecaoItemRow {
   destino: DestinoItemAssessment | null;
   destino_responsavel: ResponsavelDestino | null;
   auvo_questao_chave: string | null;
+  auvo_importacao_provisoria: boolean;
 }
 
 interface TipoInspecaoRow {
@@ -149,7 +150,7 @@ const INSPECAO_COLS =
   "id,client_id,titulo,data_inspecao,responsavel_tecnico,status,observacoes_gerais,total_itens,itens_conformes,itens_nao_conformes,itens_atencao,codigo,tipo_inspecao_id,edificacao,endereco,hora_inicio,hora_fim,inspetor,responsavel_no_local,escopo,norma_tecnica,art,condicoes,anexos,e_assessment,motivo_assessment" as const;
 
 const ITEM_COLS =
-  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,foto_urls,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes,destino,destino_responsavel,auvo_questao_chave" as const;
+  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,foto_urls,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes,destino,destino_responsavel,auvo_questao_chave,auvo_importacao_provisoria" as const;
 
 const TIPO_INSPECAO_COLS = "id,nome,norma_tecnica,descricao,ativo" as const;
 const TEMPLATE_COLS = "id,tipo_inspecao_id,nome,ativo" as const;
@@ -243,6 +244,7 @@ function mapItem(row: InspecaoItemRow): InspecaoItem {
     destino: row.destino,
     destinoResponsavel: row.destino_responsavel,
     auvoQuestaoChave: row.auvo_questao_chave,
+    auvoImportacaoProvisoria: row.auvo_importacao_provisoria,
   };
 }
 
@@ -290,6 +292,7 @@ function linhaItemImportado(
     ordem: number;
     createdBy: string;
     auvoQuestaoChave?: string | null;
+    auvoImportacaoProvisoria?: boolean;
   },
 ) {
   const score = item.gravidade * item.urgencia * item.tendencia;
@@ -308,6 +311,7 @@ function linhaItemImportado(
     ordem: ctx.ordem,
     created_by: ctx.createdBy,
     auvo_questao_chave: ctx.auvoQuestaoChave ?? null,
+    auvo_importacao_provisoria: ctx.auvoImportacaoProvisoria ?? false,
   };
 }
 
@@ -968,7 +972,8 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
 
     // E01-S130: a tarefa em andamento ainda não recebeu webhook de conclusão; usa a leitura ao
     // vivo primeiro e conserva o snapshot final apenas como fallback de disponibilidade.
-    const checklistAoVivo = (tarefaAoVivo as { checklist?: unknown } | null)?.checklist ?? [];
+    const respostaAoVivo = tarefaAoVivo as { checklist?: unknown; provisorio?: boolean } | null;
+    const checklistAoVivo = respostaAoVivo?.checklist ?? [];
     const questoes: QuestaoAuvo[] = mapearQuestionarioParaQuestoes(
       Array.isArray(checklistAoVivo) && checklistAoVivo.length > 0
         ? checklistAoVivo
@@ -1018,6 +1023,7 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
           ordem: base + index,
           createdBy: userId,
           auvoQuestaoChave: `auvo-task-${auvoTaskId}-${index}`,
+          auvoImportacaoProvisoria: respostaAoVivo?.provisorio ?? false,
         }),
       );
       const { error: insertError } = await supabase

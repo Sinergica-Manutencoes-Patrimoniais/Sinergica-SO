@@ -38,6 +38,11 @@ export function extrairChecklistAoVivo(payload: unknown): unknown[] {
   return [];
 }
 
+function tarefaEstaConcluida(payload: unknown): boolean {
+  const root = isObject(payload) && isObject(payload.result) ? payload.result : payload;
+  return isObject(root) && (root.taskStatus === 5 || root.status === 5);
+}
+
 function taskIdFrom(body: unknown): number {
   const taskId = isObject(body) ? body.taskId : null;
   if (typeof taskId !== "number" || !Number.isInteger(taskId) || taskId <= 0) {
@@ -62,7 +67,11 @@ if (import.meta.main) {
       const taskId = taskIdFrom(await req.json().catch(() => null));
       const resposta = await auvoGet<unknown>(`/tasks/${taskId}`);
       return new Response(
-        JSON.stringify({ taskId, checklist: extrairChecklistAoVivo(resposta) }),
+        JSON.stringify({
+          taskId,
+          checklist: extrairChecklistAoVivo(resposta),
+          provisorio: !tarefaEstaConcluida(resposta),
+        }),
         { status: 200, headers: { "Content-Type": "application/json", ...cors } },
       );
     } catch (error) {
