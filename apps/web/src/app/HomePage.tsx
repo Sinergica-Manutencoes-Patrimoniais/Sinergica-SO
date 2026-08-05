@@ -367,6 +367,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
       { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
+      { label: "PMOC", icon: Snowflake, view: "pmoc" },
     ],
   },
   {
@@ -400,7 +401,6 @@ const PCM_NAV: NavGroup[] = [
   {
     titulo: "PREVENTIVO",
     items: [
-      { label: "PMOC", icon: Snowflake, view: "pmoc" },
       { label: "Cronograma", icon: Calendar },
       { label: "Preventivas", icon: Wrench },
     ],
