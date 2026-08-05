@@ -107,16 +107,22 @@ export function AssessmentPage() {
   async function confirmarImportar(auvoTaskId: number) {
     if (!user || !selecionado) return;
     setErroAcao(null);
-    setItens(
-      await importarQuestionario(
-        supabaseQualidadeAdapter,
-        selecionado.id,
-        selecionado.clientId,
-        auvoTaskId,
-        user.id,
-      ),
-    );
-    setModalImportar(false);
+    try {
+      setItens(
+        await importarQuestionario(
+          supabaseQualidadeAdapter,
+          selecionado.id,
+          selecionado.clientId,
+          auvoTaskId,
+          user.id,
+        ),
+      );
+      setModalImportar(false);
+    } catch (error) {
+      setErroAcao(
+        error instanceof Error ? error.message : "Não foi possível importar o questionário Auvo.",
+      );
+    }
   }
 
   async function abrirModalDerivar(item: InspecaoItem, destino: DestinoItemAssessment) {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Chamado } from "../domain/chamados";
+import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   adicionarAnotacaoChamado,
   cancelarChamado,
@@ -174,7 +175,9 @@ describe("chamados (use case)", () => {
     it("E01-S124 AC-1: após converter, move a OS para a coluna de destino", async () => {
       const gatewayChamados = gatewayChamadosFake();
       const gatewayOs = gatewayOsFake();
-      const gatewayHub = { alterarStatus: vi.fn(async () => undefined) };
+      const gatewayHub = {
+        alterarStatus: vi.fn(async () => ({}) as OrdemServicoOperacional),
+      };
 
       await gerarOsDoChamadoNoStatus(
         gatewayChamados,
