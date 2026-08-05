@@ -24,6 +24,17 @@ alwaysApply: true
 - Bloqueios: E01-S122 ambígua sobre "contrato"; navegador integrado indisponível (Playwright local
   foi usado como fallback).
 
+## 2026-08-04 — Lote em andamento (Codex)
+
+- E01-S124: conversão por drop concluída localmente (T1–T5); falta Playwright com dado temporário
+  e limpeza posterior. O drop abre o formulário existente pré-direcionado, sem inventar GUT/tipo.
+- E01-S130: Edge autenticada busca `GET /tasks/{id}` ao vivo; adapter usa-a antes do snapshot e
+  exibe erro em checklist vazio; migration `0165` e badge de importação provisória concluídos.
+- Próximo passo: E01-S120/T1 — marcar owner e localizar os estados de sync Auvo no Chamado/OS.
+- Bloqueios: S122 não possui dado/badge de contrato; S124 falta UAT Playwright sem recriar dados
+  `[TESTE E2E]`; S130/T5 precisa separar a classificação IA para chamada service-role/HMAC no
+  webhook, preservando os itens derivados antes de reprocessar os provisórios.
+
 ## 2026-08-04 (cont. 3) — S137/S138 + branch de desenvolvimento
 
 **E01-S137** (Ferramentas por Técnico rico: todos os técnicos + histórico + atribuição por
