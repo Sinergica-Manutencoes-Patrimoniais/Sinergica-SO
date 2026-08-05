@@ -18,8 +18,11 @@ alwaysApply: true
   `graphify update .` PASS. Corrigido frontmatter preexistente de ADR-0015 e do prompt do lote;
   auditoria passou com 581 documentos.
 - Próximo passo: E01-S122/T1 — marcar owner no ROADMAP e mapear os badges nas telas de cliente
-  antes de implementar tooltips.
-- Bloqueio: navegador integrado indisponível; Playwright local foi usado como fallback.
+  antes de implementar tooltips. Mapeamento encontrou status operacional, tipo, status comercial,
+  marcação e Auvo; não há contrato. Aguardar definição se `status_comercial` representa contrato ou
+  se o contrato deve ficar fora desta story.
+- Bloqueios: E01-S122 ambígua sobre "contrato"; navegador integrado indisponível (Playwright local
+  foi usado como fallback).
 
 ## 2026-08-04 (cont. 3) — S137/S138 + branch de desenvolvimento
 
