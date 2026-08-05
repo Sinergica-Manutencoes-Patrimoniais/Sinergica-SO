@@ -12,11 +12,11 @@ alwaysApply: false
 ## Plano
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|----------------|--------|
-| 1 | Roteador de drop: se `ehCardChamadoAberto(id)` → conversão (Gerar OS no status destino); senão troca de status normal | AC-1 | — | typecheck | todo |
-| 2 | Application: `gerarOsDoChamado(chamadoId, statusDestino)` reusa fluxo de E01-S118; mapeia coluna→status | AC-1 | 1 | vitest | todo |
-| 3 | Feedback: OS aparece na coluna destino após refetch; erro de conversão exibido (não engolido) | AC-2,AC-3 | 2 | typecheck | todo |
-| 4 | Guardas: só-leitura não converte (AC-4); drop na própria coluna = no-op (AC-borda) | AC-4 | 1 | vitest | todo |
-| 5 | Destino Backlog usa caminho GUT obrigatório (E01-S94); destino Planejamento aciona E01-S125 | AC-borda | 1 | typecheck | todo |
+| 1 | Roteador de drop: se `ehCardChamadoAberto(id)` → conversão (Gerar OS no status destino); senão troca de status normal | AC-1 | — | typecheck | done |
+| 2 | Application: `gerarOsDoChamado(chamadoId, statusDestino)` reusa fluxo de E01-S118; mapeia coluna→status | AC-1 | 1 | vitest | done |
+| 3 | Feedback: OS aparece na coluna destino após refetch; erro de conversão exibido (não engolido) | AC-2,AC-3 | 2 | typecheck | done |
+| 4 | Guardas: só-leitura não converte (AC-4); drop na própria coluna = no-op (AC-borda) | AC-4 | 1 | vitest | done |
+| 5 | Destino Backlog usa caminho GUT obrigatório (E01-S94); destino Planejamento aciona E01-S125 | AC-borda | 1 | typecheck | done |
 | 6 | e2e: arrastar Chamado da Solicitação pra Corretiva vira OS real com mesmo CH | AC-1 | — | playwright (Lucas) | todo |
 
 ## Plano de teste

@@ -112,6 +112,10 @@ export function OrdensServicoPage({
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
+  const [conversaoPendente, setConversaoPendente] = useState<{
+    chamadoId: string;
+    statusDestino: Exclude<StatusOrdemServico, "solicitacao">;
+  } | null>(null);
   // E01-S118 AC-6: incrementa a cada clique de card pra reabrir o modal de detalhe (mesmo card 2x).
   const [modalDetalheSeq, setModalDetalheSeq] = useState(0);
   const [visao, setVisao] = useState<Visao>(abaInicial ?? "lista");
@@ -386,12 +390,11 @@ export function OrdensServicoPage({
 
   async function onAlterarStatusDe(id: string, status: StatusOrdemServico) {
     if (!user) return;
-    // E01-S118 T7: card sintético de Chamado aberto (sem OS ainda) — arrastar não muda status de
-    // nada real; a mudança de fase é via "Gerar OS"/"Enviar ao backlog" no painel do Chamado.
     if (ehCardChamadoAberto(id)) {
-      setErroAcao(
-        'Este item ainda é só um Chamado — use "Gerar OS" ou "Enviar ao backlog" no detalhe dele.',
-      );
+      if (status === "solicitacao") return;
+      const chamadoId = id.replace("chamado-aberto:", "");
+      setSelecionadaId(id);
+      setConversaoPendente({ chamadoId, statusDestino: status });
       return;
     }
     setSalvando(true);
@@ -718,6 +721,12 @@ export function OrdensServicoPage({
                 dadosOs={dadosOs}
                 onRecarregar={carregar}
                 aberturaModalSeq={modalDetalheSeq}
+                destinoConversao={
+                  selecionada.chamadoId === conversaoPendente?.chamadoId
+                    ? conversaoPendente.statusDestino
+                    : null
+                }
+                onConversaoFinalizada={() => setConversaoPendente(null)}
               />
             </section>
           )}
@@ -838,6 +847,12 @@ export function OrdensServicoPage({
                     onEditar={() => setEditando(true)}
                     dadosOs={dadosOs}
                     onRecarregar={carregar}
+                    destinoConversao={
+                      selecionada.chamadoId === conversaoPendente?.chamadoId
+                        ? conversaoPendente.statusDestino
+                        : null
+                    }
+                    onConversaoFinalizada={() => setConversaoPendente(null)}
                   />
                 ) : (
                   <div className="p-8 text-sm text-ink-3">Selecione uma OS.</div>
@@ -913,6 +928,8 @@ function DetalheOs({
   dadosOs,
   onRecarregar,
   aberturaModalSeq = 0,
+  destinoConversao = null,
+  onConversaoFinalizada,
 }: {
   selecionada: OrdemServicoOperacional;
   temEscrita: boolean;
@@ -926,6 +943,8 @@ function DetalheOs({
   /** E01-S118 AC-6: clicar num card do Kanban/Timeline/Calendário abre este modal direto. O pai
    * incrementa `aberturaModalSeq` a cada clique (mesmo card duas vezes seguidas ainda reabre). */
   aberturaModalSeq?: number;
+  destinoConversao?: Exclude<StatusOrdemServico, "solicitacao"> | null;
+  onConversaoFinalizada?: () => void;
 }) {
   // E01-S75 AC-2: "Expandir" abre a mesma info + abas ricas do Auvo (questionários/fotos) num
   // modal grande — o painel inline continua compacto (master-detail), o modal é onde dá pra ler
@@ -1064,6 +1083,8 @@ function DetalheOs({
           dadosOs={dadosOs}
           temEscrita={temEscrita}
           onMutou={onRecarregar}
+          destinoConversao={destinoConversao}
+          onConversaoFinalizada={onConversaoFinalizada}
         />
       )}
     </>

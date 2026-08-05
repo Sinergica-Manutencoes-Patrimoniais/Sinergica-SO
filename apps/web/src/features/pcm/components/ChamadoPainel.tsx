@@ -13,18 +13,25 @@ import {
   cancelarChamado,
   definirDataPlanejadaChamado,
   gerarOsDoChamado,
+  gerarOsDoChamadoNoStatus,
   marcarExecucaoChamado,
   obterChamado,
 } from "../application/chamados";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { type Chamado, ORIGEM_CHAMADO_LABEL, STATUS_CHAMADO_LABEL } from "../domain/chamados";
+import type { StatusOrdemServico } from "../domain/ordens-servico";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
+import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 import { AnotacoesChamado } from "./AnotacoesChamado";
 import { HistoricoAtendimentoChamado } from "./HistoricoAtendimentoChamado";
 
 type SubModal =
-  | { modo: "gerar-os"; destino: "convertido_os" | "backlog" }
+  | {
+      modo: "gerar-os";
+      destino: "convertido_os" | "backlog";
+      statusDestino?: Exclude<StatusOrdemServico, "solicitacao">;
+    }
   | { modo: "cancelar" }
   | null;
 
@@ -33,12 +40,17 @@ export function ChamadoPainel({
   dadosOs,
   temEscrita,
   onMutou,
+  destinoConversao = null,
+  onConversaoFinalizada,
 }: {
   chamadoId: string;
   dadosOs: DadosAberturaOs | null;
   temEscrita: boolean;
   /** Chamado ao qual a ação alterou algo relevante pro board (gerou OS, cancelou) — refetch. */
   onMutou: () => void;
+  /** E01-S124: drop de card sintético abre o formulário já com a coluna de destino. */
+  destinoConversao?: Exclude<StatusOrdemServico, "solicitacao"> | null;
+  onConversaoFinalizada?: () => void;
 }) {
   const { user } = useAuth();
   const [chamado, setChamado] = useState<Chamado | null>(null);
@@ -60,6 +72,15 @@ export function ChamadoPainel({
   useEffect(() => {
     carregarChamado();
   }, [carregarChamado]);
+
+  useEffect(() => {
+    if (!destinoConversao || !dadosOs || !temEscrita || chamado?.status !== "aberto") return;
+    setSubModal({
+      modo: "gerar-os",
+      destino: destinoConversao === "backlog" ? "backlog" : "convertido_os",
+      statusDestino: destinoConversao,
+    });
+  }, [chamado?.status, dadosOs, destinoConversao, temEscrita]);
 
   async function salvarPlanejamento(data: string) {
     if (!user || !chamado) return;
@@ -83,33 +104,48 @@ export function ChamadoPainel({
       urgencia: number;
       tendencia: number;
     },
+    statusDestino?: Exclude<StatusOrdemServico, "solicitacao">,
   ) {
     if (!user || !chamado) return;
-    await gerarOsDoChamado(
-      supabaseChamadosAdapter,
-      supabaseOrdemServicoAdapter,
-      chamado,
-      {
-        categoria: "corretiva",
-        prioridade: "media",
-        gravidade: campos.gravidade,
-        urgencia: campos.urgencia,
-        tendencia: campos.tendencia,
-        dorCliente: null,
-        observacao: null,
-        localDescricao: null,
-        solicitante: chamado.solicitante,
-        origem: "manual",
-        tecnicoId: campos.tecnicoId,
-        tipoTarefaId: campos.tipoTarefaId,
-        dataPrevista: campos.dataPrevista,
-      },
-      user.id,
-      destino,
-    );
+    const input = {
+      categoria: "corretiva" as const,
+      prioridade: "media" as const,
+      gravidade: campos.gravidade,
+      urgencia: campos.urgencia,
+      tendencia: campos.tendencia,
+      dorCliente: null,
+      observacao: null,
+      localDescricao: null,
+      solicitante: chamado.solicitante,
+      origem: "manual" as const,
+      tecnicoId: campos.tecnicoId,
+      tipoTarefaId: campos.tipoTarefaId,
+      dataPrevista: campos.dataPrevista,
+    };
+    if (statusDestino) {
+      await gerarOsDoChamadoNoStatus(
+        supabaseChamadosAdapter,
+        supabaseOrdemServicoAdapter,
+        supabaseHubOsAdapter,
+        chamado,
+        input,
+        user.id,
+        statusDestino,
+      );
+    } else {
+      await gerarOsDoChamado(
+        supabaseChamadosAdapter,
+        supabaseOrdemServicoAdapter,
+        chamado,
+        input,
+        user.id,
+        destino,
+      );
+    }
     setSubModal(null);
     await carregarChamado();
     onMutou();
+    onConversaoFinalizada?.();
   }
 
   async function confirmarCancelar(justificativa: string, anexo: File | null) {
@@ -200,8 +236,13 @@ export function ChamadoPainel({
           chamado={chamado}
           destino={subModal.destino}
           dadosOs={dadosOs}
-          onCancel={() => setSubModal(null)}
-          onConfirmar={(campos) => confirmarGerarOs(subModal.destino, campos)}
+          onCancel={() => {
+            setSubModal(null);
+            onConversaoFinalizada?.();
+          }}
+          onConfirmar={(campos) =>
+            confirmarGerarOs(subModal.destino, campos, subModal.statusDestino)
+          }
         />
       )}
       {subModal?.modo === "cancelar" && (
