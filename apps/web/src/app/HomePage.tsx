@@ -399,13 +399,6 @@ const PCM_NAV: NavGroup[] = [
     ],
   },
   {
-    titulo: "PREVENTIVO",
-    items: [
-      { label: "Cronograma", icon: Calendar },
-      { label: "Preventivas", icon: Wrench },
-    ],
-  },
-  {
     titulo: "RELATÓRIOS",
     items: [
       { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
