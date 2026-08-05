@@ -10,7 +10,7 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { Tooltip } from "../../../components/ui/Tooltip";
@@ -54,6 +54,7 @@ import {
   FILTROS_ORDENS_VAZIO,
   PRIORIDADE_LABEL,
   STATUS_OS,
+  auvoTaskDeepLink,
   calcularKpisOrdens,
   calcularMetricasOperacao,
   chamadoAbertoParaCard,
@@ -910,7 +911,7 @@ function BadgeHubOs({
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-[7px] border border-line bg-paper px-2.5 py-2">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
@@ -993,9 +994,18 @@ function DetalheOs({
             <Info
               label="Auvo"
               value={
-                selecionada.auvoTaskId
-                  ? `Task ${selecionada.auvoTaskId}`
-                  : selecionada.auvoSyncStatus || "Sem task"
+                auvoTaskDeepLink(selecionada.auvoTaskId) ? (
+                  <a
+                    href={auvoTaskDeepLink(selecionada.auvoTaskId) ?? undefined}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-orange hover:underline"
+                  >
+                    Auvo #{selecionada.auvoTaskId}
+                  </a>
+                ) : (
+                  "Sem OS no Auvo"
+                )
               }
             />
             <Info
@@ -1083,6 +1093,7 @@ function DetalheOs({
           dadosOs={dadosOs}
           temEscrita={temEscrita}
           onMutou={onRecarregar}
+          auvoTaskId={selecionada.auvoTaskId}
           destinoConversao={destinoConversao}
           onConversaoFinalizada={onConversaoFinalizada}
         />

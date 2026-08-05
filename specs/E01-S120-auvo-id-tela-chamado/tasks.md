@@ -11,9 +11,9 @@ alwaysApply: false
 ## Plano
 | #  | Task | Cobre AC | Gate (comando) | Status |
 |----|------|----------|----------------|--------|
-| 1 | Domínio: helper `auvoTaskDeepLink(auvoTaskId)` (retorna URL ou `null`) + teste | AC-2, AC-3 | vitest | todo |
-| 2 | `DetalheOs` (OrdensServicoPage): troca `Task ${auvoTaskId}` por badge `Auvo #<id>` clicável; estado neutro "Sem OS no Auvo" quando null | AC-1, AC-2, AC-3 | typecheck | todo |
-| 3 | `ChamadoPainel`: seção de vínculo Auvo — `Auvo #<id>` clicável quando a OS ligada tem `auvoTaskId`; senão "Sem OS no Auvo" | AC-1, AC-2, AC-3 | typecheck | todo |
+| 1 | Domínio: helper `auvoTaskDeepLink(auvoTaskId)` (retorna URL ou `null`) + teste | AC-2, AC-3 | vitest | done |
+| 2 | `DetalheOs` (OrdensServicoPage): troca `Task ${auvoTaskId}` por badge `Auvo #<id>` clicável; estado neutro "Sem OS no Auvo" quando null | AC-1, AC-2, AC-3 | typecheck | done |
+| 3 | `ChamadoPainel`: seção de vínculo Auvo — `Auvo #<id>` clicável quando a OS ligada tem `auvoTaskId`; senão "Sem OS no Auvo" | AC-1, AC-2, AC-3 | typecheck | done |
 | 4 | Regressão visual/e2e: badge aparece no painel; clique abre nova aba (verificar `target=_blank`) | AC-2 | playwright (Lucas) | todo |
 
 ## Plano de teste

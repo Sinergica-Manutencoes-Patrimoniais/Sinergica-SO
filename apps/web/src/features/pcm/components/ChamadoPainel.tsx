@@ -19,7 +19,7 @@ import {
 } from "../application/chamados";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { type Chamado, ORIGEM_CHAMADO_LABEL, STATUS_CHAMADO_LABEL } from "../domain/chamados";
-import type { StatusOrdemServico } from "../domain/ordens-servico";
+import { type StatusOrdemServico, auvoTaskDeepLink } from "../domain/ordens-servico";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
@@ -40,6 +40,7 @@ export function ChamadoPainel({
   dadosOs,
   temEscrita,
   onMutou,
+  auvoTaskId,
   destinoConversao = null,
   onConversaoFinalizada,
 }: {
@@ -48,6 +49,7 @@ export function ChamadoPainel({
   temEscrita: boolean;
   /** Chamado ao qual a ação alterou algo relevante pro board (gerou OS, cancelou) — refetch. */
   onMutou: () => void;
+  auvoTaskId: number | null;
   /** E01-S124: drop de card sintético abre o formulário já com a coluna de destino. */
   destinoConversao?: Exclude<StatusOrdemServico, "solicitacao"> | null;
   onConversaoFinalizada?: () => void;
@@ -168,6 +170,7 @@ export function ChamadoPainel({
   }
 
   const podeAgir = temEscrita && chamado.status === "aberto";
+  const linkAuvo = auvoTaskDeepLink(auvoTaskId);
 
   return (
     <div className="rounded-[8px] border border-line bg-paper">
@@ -182,6 +185,20 @@ export function ChamadoPainel({
         <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
           {ORIGEM_CHAMADO_LABEL[chamado.origem]}
         </span>
+        {linkAuvo ? (
+          <a
+            href={linkAuvo}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full bg-orange-soft px-2 py-0.5 text-[11px] font-semibold text-orange hover:underline"
+          >
+            Auvo #{auvoTaskId}
+          </a>
+        ) : (
+          <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+            Sem OS no Auvo
+          </span>
+        )}
       </div>
 
       <DetalheChamado
