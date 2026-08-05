@@ -10,6 +10,22 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-05 — Lote de specs em andamento (Codex)
+
+- E01-S120 T1–T3: `Auvo #<id>` clicável no detalhe da OS e no painel do Chamado; fallback
+  `Sem OS no Auvo`; commit `82a88d1`. Playwright permanece pendente para não recriar dados E2E.
+- E01-S123 T1–T4: migration `0166` cria `pcm.auvo_sync_error_details`, uma view mínima e
+  autorizada para detalhar erros sem abrir a outbox; UI sob demanda e defesa contra stack/segredo;
+  pgTAP escrito para a CI; commit `f74e4e4`.
+- E01-S121 T1: bloqueada por descoberta (`33d1dba`). Busca não encontrou documentação oficial
+  pública de atualização de task; o registry atual não tem descriptor de task/OS. Não implementar
+  payload `PUT /tasks` por inferência.
+- Próximo passo: E01-S126/T1 — marcar owner no ROADMAP, mapear Agenda/OS e implementar união,
+  dedupe e ordenação no domínio com vitest.
+- Bloqueios ativos: S122 (badge/dado de contrato ausente); S124 (UAT Playwright sem resíduos);
+  S130/T5 (classificação IA do webhook service-role/HMAC); S121 (contrato Auvo não verificado);
+  S123/T5 (diagnóstico dos seis erros requer consulta autenticada em produção, não executada).
+
 ## 2026-08-04 — E01-S132 concluída (Codex)
 
 - `PCM_NAV`: Tipos de Tarefa foi para Configurações; PMOC para Operação; grupo Preventivo e seus
