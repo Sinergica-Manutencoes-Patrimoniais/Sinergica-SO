@@ -10,6 +10,69 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-04 (cont. 3) — S137/S138 + branch de desenvolvimento
+
+**E01-S137** (Ferramentas por Técnico rico: todos os técnicos + histórico + atribuição por
+transfer-list no modal) e **E01-S138** (Funcionário perfil completo: cadastro + alocação dia/semana +
+OS atendidas + ferramentas em posse) especificadas. Lucas pediu abrir **branch de desenvolvimento**
+pra todas as specs pendentes — feito; specs commitadas. Prompt de desenvolvimento entregue (implementa
+specs + deploy edge/migration Supabase).
+
+**Specs pendentes de implementação (owner livre):** E00-S13; E01-S120..S138 (exceto revisões já
+implementadas); E02-S27. Todas com spec+tasks. Arquitetural com ADR aprovado: E01-S125 (ADR-0015).
+
+## 2026-08-04 (cont. 2) — E01-S136: dashboard cockpit "bom dia"
+
+Lucas pediu revisão do dashboard do PCM como tela de bom dia do gestor. **E01-S136** especificada:
+blocos pedidos (OS de hoje, onde os técnicos estarão alocados, funcionário livre no dia, chamados
+sem tratamento = status `aberto` fora de backlog/planejamento/preventiva/planejado) + 9 sugestões
+opcionais (C1/SLA, OS atrasadas, capacidade×demanda, PMOC vencendo, top backlog GUT, saúde Auvo,
+resumo de ontem, inspeções pendentes, ferramentas) a priorizar com o PO. Blocos acionáveis (clique →
+tela filtrada). Revisa E01-S21. Ainda só spec, sem branch.
+
+## 2026-08-04 (cont.) — Planejamento parte 2 (8 pontos) → 6 stories + E00-S13
+
+Ainda só especificação. Mais dois pedidos avulsos viraram story antes: **E00-S13** (configurar
+OpenRouter na UI — chave sai de `Deno.env` pra Vault via Configurações>Integrações, `_shared/openrouter.ts`
+lê do Vault) e **E02-S27 reescrita** (o print era do painel Evolution/cloudfy, não do SO; escopo real
+= configurar URL+chave no SO + expor webhook `pcm-whatsapp-webhook`).
+
+Lote parte 2 (8 pontos) → **6 stories** (3 decisões travadas via AskUserQuestion: ferramenta
+item-cêntrico reusa unidades sem migração destrutiva; relatório diário sob demanda tela+PDF;
+relatório do cliente interno HTML+PDF **e** publica no Portal E09):
+- **E01-S130** Assessment ao vivo (causa do "nada acontece": só lia snapshot de conclusão; busca
+  checklist ao vivo da Auvo + re-sync na conclusão).
+- **E01-S131** Ferramenta cadastro item-cêntrico (reusa `ferramenta_unidades`).
+- **E01-S132** Reorg nav PCM (Tipos de Tarefa→Config; PMOC→Operação; remove grupo Preventivo — itens
+  Cronograma/Preventivas eram mortos, sem `view`). Cobre itens 3+7+8.
+- **E01-S133** Redesign apontamento de horas (UI).
+- **E01-S134** Relatório diário da operação (Fabricio, sob demanda tela+PDF).
+- **E01-S135** Relatório do cliente (HTML+PDF + Portal E09, RLS por condomínio).
+
+Próximo passo: implementar (outro modelo). Lucas segue passando mais pontos; não abrir branch ainda.
+
+## 2026-08-04 — Planejamento: lote de 10 pontos (Lucas + Aline) → 10 stories especificadas
+
+Sessão **só de especificação** (implementação vai com outro modelo). Lucas passou 10 itens; entendi,
+mapeei e escrevi spec+tasks. 4 decisões travadas via AskUserQuestion: item 6 pergunta só ao ir p/
+Planejamento; item 7 saída tela+copiável+PDF e fonte Agenda∪OS planejadas; item 10 é checklist de
+release (sem feature nova).
+
+**Stories abertas (owner livre):** E01-S120 (Auvo #id na tela do Chamado), E01-S121 (editar campos +
+sync Auvo), E01-S122 (tooltips badges cliente), E01-S123 (drill-down saúde Auvo), E01-S124 (mover
+Chamado→Corretiva converte OS — achado: card sintético de S118 faz no-op no drag), **E01-S125 (arq.
++ ADR-0015: desliga trigger auto `fn_auvo_create_task_on_planejamento`, abertura Auvo sob demanda com
+dry-run)**, E01-S126 (relatório planejamento/execução), E01-S127 (Guia SO/Financeiro), E01-S129
+(release PCM prod), E02-S27 (fix cadastro Evolution — bloqueado até ter o erro exato).
+
+**Cortes de escopo (já entregues, sem story nova):** 8a=E01-S94 (GUT obrigatório), 8b=E01-S95
+(remover Serviços), 8d (nav Relatório Diário/Mensal já removida — `visual-v1.test.ts` trava),
+8e (aba Área do Cliente já renderiza `AreaClienteAdminPage`, não `EmConstrucao`).
+
+**Próximo passo:** implementar as stories (outro modelo), uma por vez, um commit por task. Item 9
+precisa do texto exato do erro Evolution. E01-S125 precisa aprovar design+ADR e auditar produtores
+de task Auvo antes de remover o trigger.
+
 ## 2026-07-29 (cont. 5) — E01-S119: Anotações do Chamado
 
 Lucas descartou E01-S109 (spec/tasks removidas e ROADMAP limpo) e pediu S119. Implementado:
