@@ -68,6 +68,8 @@ export function FerramentasPorTecnicoPage() {
     nome: string;
     itens: MovimentacaoFerramentaItem[];
   } | null>(null);
+  const [tecnicoModal, setTecnicoModal] = useState<FuncionarioFerramentaOpcao | null>(null);
+  const [selecionadas, setSelecionadas] = useState<string[]>([]);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -170,6 +172,29 @@ export function FerramentasPorTecnicoPage() {
       setHistoricoFuncionario({ nome: funcionario.nome, itens });
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível carregar histórico.");
+    }
+  }
+
+  async function atribuirSelecionadas() {
+    if (!user || !tecnicoModal || selecionadas.length === 0) return;
+    try {
+      setSalvando(true);
+      setErroAcao(null);
+      for (const unidadeId of selecionadas) {
+        await atribuirUnidadeFerramenta(supabaseFerramentaUnidadesAdapter, {
+          unidadeId,
+          funcionarioId: tecnicoModal.id,
+          userId: user.id,
+        });
+      }
+      setSelecionadas([]);
+      await carregar();
+    } catch (error) {
+      setErroAcao(
+        error instanceof Error ? error.message : "Não foi possível atribuir as unidades.",
+      );
+    } finally {
+      setSalvando(false);
     }
   }
 
@@ -313,11 +338,14 @@ export function FerramentasPorTecnicoPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => verHistorico(funcionario)}
+                      onClick={() => {
+                        setTecnicoModal(funcionario);
+                        setSelecionadas([]);
+                      }}
                       className="inline-flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep"
                     >
                       <History className="h-3.5 w-3.5" />
-                      Histórico
+                      Ver técnico
                     </button>
                   </div>
                   {unidades.length === 0 ? (
@@ -397,8 +425,132 @@ export function FerramentasPorTecnicoPage() {
               onFechar={() => setHistoricoFuncionario(null)}
             />
           )}
+          {tecnicoModal && (
+            <TecnicoFerramentasModal
+              funcionario={tecnicoModal}
+              unidades={estado.unidades}
+              selecionadas={selecionadas}
+              temEscrita={temEscrita}
+              salvando={salvando}
+              onSelecionar={(id) =>
+                setSelecionadas((atual) =>
+                  atual.includes(id) ? atual.filter((item) => item !== id) : [...atual, id],
+                )
+              }
+              onFechar={() => setTecnicoModal(null)}
+              onAtribuir={() => void atribuirSelecionadas()}
+              onHistorico={() => void verHistorico(tecnicoModal)}
+              onDevolver={(unidade) => setDevolucao(unidade)}
+            />
+          )}
         </>
       )}
+    </div>
+  );
+}
+
+function TecnicoFerramentasModal({
+  funcionario,
+  unidades,
+  selecionadas,
+  temEscrita,
+  salvando,
+  onSelecionar,
+  onFechar,
+  onAtribuir,
+  onHistorico,
+  onDevolver,
+}: {
+  funcionario: FuncionarioFerramentaOpcao;
+  unidades: FerramentaUnidadeItem[];
+  selecionadas: string[];
+  temEscrita: boolean;
+  salvando: boolean;
+  onSelecionar: (id: string) => void;
+  onFechar: () => void;
+  onAtribuir: () => void;
+  onHistorico: () => void;
+  onDevolver: (unidade: FerramentaUnidadeItem) => void;
+}) {
+  const disponiveis = unidades.filter((unidade) => unidade.status === "disponivel");
+  const posse = unidades.filter((unidade) => unidade.atribuidaA === funcionario.id);
+  return (
+    <div className="modal-backdrop">
+      <div className="w-full max-w-4xl rounded-[8px] border border-line bg-card shadow-xl">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <div>
+            <h3 className="text-base font-semibold text-ink">{funcionario.nome}</h3>
+            <p className="text-xs text-ink-3">Ferramentas, transferência e histórico</p>
+          </div>
+          <button type="button" onClick={onFechar} className="btn-secondary">
+            Fechar
+          </button>
+        </div>
+        <div className="grid gap-4 p-4 md:grid-cols-2">
+          <section>
+            <h4 className="text-sm font-semibold text-ink">Disponíveis</h4>
+            <div className="mt-2 max-h-64 space-y-1 overflow-y-auto">
+              {disponiveis.map((unidade) => (
+                <label
+                  key={unidade.id}
+                  className="flex items-center gap-2 rounded border border-line-soft p-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selecionadas.includes(unidade.id)}
+                    disabled={!temEscrita}
+                    onChange={() => onSelecionar(unidade.id)}
+                  />
+                  {unidade.ferramentaNome} · {unidade.codigo}
+                </label>
+              ))}
+            </div>
+          </section>
+          <section>
+            <h4 className="text-sm font-semibold text-ink">Em posse</h4>
+            <div className="mt-2 max-h-64 space-y-1 overflow-y-auto">
+              {posse.length === 0 ? (
+                <p className="text-sm text-ink-3">Sem unidade atribuída.</p>
+              ) : (
+                posse.map((unidade) => (
+                  <div
+                    key={unidade.id}
+                    className="flex justify-between rounded border border-line-soft p-2 text-sm"
+                  >
+                    <span>
+                      {unidade.ferramentaNome} · {unidade.codigo}
+                    </span>
+                    {temEscrita && (
+                      <button
+                        type="button"
+                        onClick={() => onDevolver(unidade)}
+                        className="text-orange"
+                      >
+                        Devolver
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+        <div className="flex justify-between border-t border-line px-4 py-3">
+          <button type="button" onClick={onHistorico} className="btn-secondary">
+            Histórico
+          </button>
+          {temEscrita && (
+            <button
+              type="button"
+              disabled={salvando || selecionadas.length === 0}
+              onClick={onAtribuir}
+              className="btn-primary"
+            >
+              Atribuir {selecionadas.length || ""}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
