@@ -31,14 +31,14 @@ export function PcmGuia() {
         <ListaFuncoes
           itens={[
             {
-              nome: "Ordens de Serviço (OS)",
+              nome: "Operação — Chamados e OS",
               descricao:
-                "O trabalho em si — corretiva, preventiva, inspeção. Nasce de um chamado do cliente (via Zé no WhatsApp), de um cadastro manual, de uma inspeção que achou problema, ou automaticamente do preventivo. Tem 4 formas de visualizar: lista, Kanban (arrasta o card entre colunas pra mudar o status), linha do tempo e calendário.",
+                "É o board único do trabalho: um Chamado nasce na Solicitação e evolui para OS, backlog ou planejamento. Use Lista, Kanban, linha do tempo e calendário para decidir o próximo passo; o card concentra cliente, local, técnico, histórico e Anotações internas.",
             },
             {
-              nome: "Backlog GUT",
+              nome: "Aba Backlog GUT",
               descricao:
-                "Lista de tudo que está pendente, ordenada por um cálculo de prioridade (Gravidade × Urgência × Tendência). Mostra o que precisa de atenção primeiro sem precisar adivinhar.",
+                "Dentro de Operação, ordena o que aguarda decisão pela prioridade GUT. Use para promover primeiro os itens que têm maior impacto, em vez de tratar a fila por ordem de chegada.",
             },
             {
               nome: "Inspeções e Laudo SPDA",
@@ -53,7 +53,12 @@ export function PcmGuia() {
             {
               nome: "Chamados",
               descricao:
-                "Solicitações do cliente recebidas pelo Atendimento, portal ou cadastro interno. O chamado concentra contexto antes de virar backlog ou Ordem de Serviço.",
+                "Solicitações recebidas pelo Atendimento, Portal ou cadastro interno. Registre contexto e Anotações; depois mova para backlog ou gere a OS sem perder o histórico do Chamado.",
+            },
+            {
+              nome: "Saúde Auvo",
+              descricao:
+                "Mostra se a troca com o aplicativo de campo está saudável. Abra o detalhamento quando houver erro de sync para decidir se reprocessa ou corrige o vínculo local antes de afetar a execução.",
             },
             {
               nome: "Cadastros",
@@ -64,18 +69,12 @@ export function PcmGuia() {
         />
       </Secao>
 
-      <Callout titulo="Próxima evolução — histórico automático de contato do cliente">
+      <Callout titulo="Roteiro rápido de decisão">
         <p>
-          Ideia registrada pra evoluir os Chamados: hoje o histórico de um cliente com a Sinérgica
-          fica espalhado — e-mail, WhatsApp, ligação. A visão é que, quando um cliente mandar um
-          e-mail pra um canal da empresa ou uma mensagem no WhatsApp, o sistema registre
-          automaticamente um chamado pra aquele contato — mesmo que ainda não vire uma OS. Assim
-          existe um histórico completo de tudo que o cliente já falou com a Sinérgica, buscável e
-          nunca perdido, mesmo antes de uma OS ser aberta.
-        </p>
-        <p className="text-xs text-ink-3">
-          Ainda não implementado — fica registrado aqui como próximo passo de produto pro módulo de
-          Chamados/Atendimento.
+          Comece pelo cockpit para enxergar OS de hoje, pessoas livres e pendências. Trate Chamados
+          na Solicitação, priorize a aba Backlog GUT, planeje técnico e data, e acompanhe a execução
+          pelo Auvo. Antes de encerrar o dia, consulte os relatórios para validar o que foi
+          entregue.
         </p>
       </Callout>
 
