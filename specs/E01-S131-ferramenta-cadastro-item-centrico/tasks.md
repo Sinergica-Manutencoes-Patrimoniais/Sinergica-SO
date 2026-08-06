@@ -15,7 +15,7 @@ alwaysApply: false
 | 1 | Domínio: form de item (código/identificação obrigatório), remove `quantidadeTotal` como entrada; `quantidade` = contagem derivada de unidades | AC-1,AC-3 | — | vitest | done |
 | 2 | Migration aditiva (se necessário): `codigo` obrigatório/único no item; nada destrutivo | AC-1,AC-4 | 1 | lint:migrations | done — não necessária |
 | 3 | Adapter: criar item = criar unidade; listar por item; contagem por tipo/categoria | AC-1,AC-2,AC-3 | 1 | typecheck | done |
-| 4 | UI `FerramentasPage`: cadastro 1-item, sem campo quantidade; lista item-a-item com agrupamento por categoria | AC-1,AC-3 | 3 | typecheck | todo |
+| 4 | UI `FerramentasPage`: cadastro 1-item, sem campo quantidade; lista item-a-item com agrupamento por categoria | AC-1,AC-3 | 3 | typecheck | done |
 | 5 | Regressão: atribuir/devolver/baixar/reservar/alocar (cliente/técnico) por item continuam OK | AC-2,AC-4 | — | vitest | todo |
 | 6 | e2e: cadastrar 2 chaves de fenda vira 2 registros distintos, cada um rastreável | AC-1,AC-2 | — | playwright (Lucas) | todo |
 
