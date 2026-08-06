@@ -93,6 +93,32 @@ serve(async (req) => {
       return json(200, { ok: os.auvo_task_id != null || pendencias.length === 0, ...preview }, cors);
     }
 
+    // Reserva atômica antes da chamada remota: evita dois operadores criarem a mesma task entre
+    // o GET externalId e o POST. Falha do handler legado muda `opening` para `failed`; reserva
+    // abandonada expira no banco após 5min (migration 0169).
+    const { data: reservada, error: reservaError } = await db
+      .schema("pcm")
+      .rpc("fn_iniciar_abertura_auvo", { p_os_id: os.id });
+    if (reservaError) throw reservaError;
+    if (!reservada) {
+      const { data: atual, error: atualError } = await db
+        .schema("pcm")
+        .from("ordens_servico")
+        .select("auvo_task_id")
+        .eq("id", os.id)
+        .maybeSingle();
+      if (atualError) throw atualError;
+      if (atual?.auvo_task_id != null) {
+        return json(200, { ok: true, taskId: atual.auvo_task_id, created: false, preview }, cors);
+      }
+      return json(200, {
+        ok: false,
+        reason: "opening_in_progress",
+        detail: "Abertura no Auvo já está em andamento. Aguarde alguns segundos e atualize.",
+        preview,
+      }, cors);
+    }
+
     const response = await fetch(`${url}/functions/v1/pcm-auvo-create-task`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
