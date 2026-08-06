@@ -144,7 +144,8 @@ export function AreaClienteGuia() {
             },
             {
               nome: "Documentos",
-              descricao: "Baixe laudos, relatórios e certificados liberados para o cliente.",
+              descricao:
+                "Baixe laudos, certificados e relatórios publicados especificamente para o condomínio.",
             },
             {
               nome: "Situação financeira",
