@@ -16,9 +16,9 @@ alwaysApply: false
 | 2 | Application/adapters: OS executadas+evidências, PMOC/inspeções, cronograma (PMOC/agenda/OS planejadas) por cliente/período | AC-2,AC-3 | 1 | typecheck | todo |
 | 3 | UI interna `RelatorioClientePage`: seletor cliente+período, render HTML de apresentação | AC-1 | 2 | typecheck | done |
 | 4 | Exportar PDF (`pdf-lib`) com identidade Sinérgica | AC-4 | 3 | typecheck | done |
-| 5 | Migration: tabela de relatórios publicados por cliente (RLS FORCE, isolamento por condomínio) | AC-5,AC-6 | — | lint:migrations | todo |
-| 6 | Publicar: gravar versão imutável + superfície no Portal (E09) pro síndico ver/baixar só o seu | AC-5,AC-6 | 5 | typecheck | todo |
-| 7 | Estados vazios (sem passado/sem futuro/sem evidência) | AC-borda | — | vitest | todo |
+| 5 | Migration: tabela de relatórios publicados por cliente (RLS FORCE, isolamento por condomínio) | AC-5,AC-6 | — | lint:migrations | done |
+| 6 | Publicar: gravar versão imutável + superfície no Portal (E09) pro síndico ver/baixar só o seu | AC-5,AC-6 | 5 | typecheck | done |
+| 7 | Estados vazios (sem passado/sem futuro/sem evidência) | AC-borda | — | vitest | done |
 | 8 | e2e: gerar relatório de um cliente, exportar PDF, publicar; síndico vê só o dele | AC-1..AC-6 | — | playwright (Lucas) | todo |
 
 ## Plano de teste

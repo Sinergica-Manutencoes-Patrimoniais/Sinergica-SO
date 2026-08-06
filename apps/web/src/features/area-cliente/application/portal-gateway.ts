@@ -62,11 +62,12 @@ export interface PortalConformidade {
 
 export interface PortalDocumento {
   id: string;
-  tipo: "PMOC" | "SPDA" | "Assessment";
+  tipo: "PMOC" | "SPDA" | "Assessment" | "Relatório";
   titulo: string;
   data: string;
   bucket: string | null;
   path: string | null;
+  conteudo: string | null;
 }
 
 export interface PortalNotificacao {

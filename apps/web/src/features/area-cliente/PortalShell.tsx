@@ -405,6 +405,22 @@ function Documentos({ data }: { data: PortalSnapshot }) {
               >
                 Baixar
               </button>
+            ) : d.conteudo ? (
+              <details className="text-sm">
+                <summary className="cursor-pointer font-semibold text-orange">
+                  Ver relatório
+                </summary>
+                <pre className="mt-3 max-w-xl whitespace-pre-wrap rounded border border-line-soft bg-paper p-3 text-xs text-ink-2">
+                  {d.conteudo}
+                </pre>
+                <button
+                  type="button"
+                  onClick={() => baixarTexto(d.titulo, d.conteudo ?? "")}
+                  className="mt-2 font-semibold text-orange"
+                >
+                  Baixar
+                </button>
+              </details>
             ) : (
               <span className="text-xs text-ink-3">Registro sem arquivo</span>
             )}
@@ -413,6 +429,15 @@ function Documentos({ data }: { data: PortalSnapshot }) {
       </div>
     </section>
   );
+}
+
+function baixarTexto(titulo: string, conteudo: string) {
+  const url = URL.createObjectURL(new Blob([conteudo], { type: "text/plain;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${titulo.replaceAll(/[^a-z0-9]+/gi, "-")}.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function Cronograma({ data }: { data: PortalSnapshot }) {
