@@ -15,9 +15,9 @@ alwaysApply: false
 | 1 | Domínio: agregações do dia — OS hoje, alocação técnico→cliente, técnicos livres, chamados sem tratamento (status `aberto` fora de backlog/planejamento/preventiva/planejado) | AC-1..AC-4,AC-6 | vitest | done |
 | 2 | Application/adapters: buscar OS por `data_planejada`=hoje, agenda do dia, técnicos ativos, chamados abertos | AC-1..AC-4 | typecheck | done |
 | 3 | UI: 4 blocos pedidos, acionáveis (clique → tela filtrada), estados vazios | AC-1..AC-5,AC-7 | typecheck | done |
-| 4 | Application/adapters dos blocos S1-S9 (C1/SLA, atrasadas, capacidade, PMOC, backlog, saúde, ontem, inspeções, ferramentas) | AC-8 | typecheck | todo |
+| 4 | Application/adapters dos blocos S1-S9 (C1/SLA, atrasadas, capacidade, PMOC, backlog, saúde, ontem, inspeções, ferramentas) | AC-8 | typecheck | done — PMOC e reservas/devoluções agora têm contagem real; typecheck PASS |
 | 5 | UI: os 9 blocos sugeridos, cada um acionável (clique → tela filtrada) | AC-5,AC-8 | typecheck | done |
-| 6 | Regressão: KPIs existentes que continuam não regridem | AC-6 | vitest | todo |
+| 6 | Regressão: KPIs existentes que continuam não regridem | AC-6 | vitest | done — `dashboard-pcm.test.ts` PASS, inclusive data local e blocos PMOC/ferramentas |
 | 7 | e2e: dashboard mostra OS hoje/alocação/livres/sem tratamento; clique navega | AC-1..AC-5 | playwright (Lucas) | todo |
 
 ## Plano de teste
