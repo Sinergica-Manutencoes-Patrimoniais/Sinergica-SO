@@ -174,6 +174,7 @@ export const supabaseFerramentaUnidadesAdapter: FerramentaUnidadesGateway = {
   async gerarUnidades(input: GerarUnidadesCommand) {
     const linhas = Array.from({ length: input.quantidade }, () => ({
       ferramenta_id: input.ferramentaId,
+      ...(input.codigo ? { codigo: input.codigo } : {}),
       created_by: input.userId,
       updated_by: input.userId,
     }));

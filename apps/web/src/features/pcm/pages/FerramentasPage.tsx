@@ -127,7 +127,17 @@ export function FerramentasPage() {
         userId: user.id,
       });
     } else {
-      await criarFerramenta(supabaseFerramentasAdapter, { ...input, userId: user.id });
+      if (!input.codigoItem?.trim()) throw new Error("Código ou patrimônio do item é obrigatório.");
+      const criada = await criarFerramenta(supabaseFerramentasAdapter, {
+        ...input,
+        userId: user.id,
+      });
+      await gerarUnidadesFerramenta(supabaseFerramentaUnidadesAdapter, {
+        ferramentaId: criada.id,
+        quantidade: 1,
+        codigo: input.codigoItem,
+        userId: user.id,
+      });
     }
     setModal(null);
     await carregar();
@@ -798,6 +808,7 @@ function FerramentaModal({
     quantidadeMinima: ferramenta?.quantidadeMinima ?? 0,
     valorUnitario: ferramenta?.valorUnitario ?? null,
     custoUnitario: ferramenta?.custoUnitario ?? null,
+    codigoItem: "",
   });
   const [categoriaTexto, setCategoriaTexto] = useState(ferramenta?.categoriaNome ?? "");
   const [salvando, setSalvando] = useState(false);
@@ -867,6 +878,13 @@ function FerramentaModal({
             onChange={(v) => setDados((a) => ({ ...a, nome: v }))}
             erro={errosInline.nome}
           />
+          {!ferramenta && (
+            <Field
+              label="Código / patrimônio *"
+              value={dados.codigoItem ?? ""}
+              onChange={(v) => setDados((a) => ({ ...a, codigoItem: v }))}
+            />
+          )}
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria</span>
             <input

@@ -33,6 +33,8 @@ export interface FerramentaFormData {
   quantidadeMinima: number;
   valorUnitario?: number | null;
   custoUnitario?: number | null;
+  /** E01-S131: informado só no cadastro novo; vira o código da primeira unidade física. */
+  codigoItem?: string;
 }
 
 /** E01-S131: cadastro de uma unidade física; quantidade deixa de ser entrada manual. */
@@ -97,6 +99,7 @@ export function validarFerramenta(input: FerramentaFormData): FerramentaFormData
     quantidadeMinima,
     valorUnitario: numeroNaoNegativoOuNull(input.valorUnitario, "Valor unitário"),
     custoUnitario: numeroNaoNegativoOuNull(input.custoUnitario, "Custo unitário"),
+    ...(input.codigoItem?.trim() ? { codigoItem: input.codigoItem.trim() } : {}),
   };
 }
 

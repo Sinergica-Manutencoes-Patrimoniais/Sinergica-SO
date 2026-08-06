@@ -9,6 +9,8 @@ import type {
 export interface GerarUnidadesCommand {
   ferramentaId: string;
   quantidade: number;
+  /** E01-S131: código patrimonial manual para o cadastro unitário (uma unidade por chamada). */
+  codigo?: string;
   userId: string;
 }
 

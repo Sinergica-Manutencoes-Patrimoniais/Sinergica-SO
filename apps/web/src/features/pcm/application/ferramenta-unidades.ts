@@ -31,6 +31,9 @@ export function gerarUnidadesFerramenta(
   input: GerarUnidadesCommand,
 ) {
   if (input.quantidade <= 0) throw new Error("Quantidade a gerar deve ser maior que zero.");
+  if (input.codigo && input.quantidade !== 1) {
+    throw new Error("Código manual só pode criar uma unidade por vez.");
+  }
   return gateway.gerarUnidades(input);
 }
 
