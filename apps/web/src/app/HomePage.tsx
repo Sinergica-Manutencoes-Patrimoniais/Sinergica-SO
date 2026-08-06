@@ -104,6 +104,7 @@ import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
+import { RelatorioDiarioPage } from "../features/pcm/pages/RelatorioDiarioPage";
 import { RelatorioPlanejamentoPage } from "../features/pcm/pages/RelatorioPlanejamentoPage";
 import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
@@ -149,6 +150,7 @@ type PcmView =
   | "equipes"
   | "agenda-tecnico"
   | "relatorio-planejamento"
+  | "relatorio-diario"
   | "ferramentas"
   | "ferramentas-por-tecnico"
   | "funcionarios"
@@ -404,6 +406,7 @@ const PCM_NAV: NavGroup[] = [
   {
     titulo: "RELATÓRIOS",
     items: [
+      { label: "Relatório do Dia", icon: FileBarChart, view: "relatorio-diario" },
       { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
       { label: "Apontamento de Horas", icon: Clock, view: "apontamento-horas" },
     ],
@@ -1124,6 +1127,8 @@ export function HomePage() {
               <AgendaTecnicoPage />
             ) : pcmView === "relatorio-planejamento" ? (
               <RelatorioPlanejamentoPage />
+            ) : pcmView === "relatorio-diario" ? (
+              <RelatorioDiarioPage />
             ) : pcmView === "ferramentas" ? (
               <FerramentasPage />
             ) : pcmView === "ferramentas-por-tecnico" ? (
