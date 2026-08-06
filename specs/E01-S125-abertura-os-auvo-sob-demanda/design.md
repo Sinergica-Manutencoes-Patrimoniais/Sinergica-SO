@@ -16,6 +16,22 @@ alwaysApply: true
   push `pcm-auvo-push`.
 - Criar via `abrirOrdemServico` **não** dispara Auvo — só a transição pra `planejamento` (via trigger).
 
+## Auditoria de produtores Auvo (2026-08-06)
+
+| Produtor | Cria/atualiza OS | Dependia do trigger? | Decisão E01-S125 |
+|---|---|---|---|
+| Board PCM, detalhe, Backlog GUT e conversão de Chamado | Atualiza status para `planejamento` | Sim | Após persistir status, abre confirmação/dry-run; lote não abre task e exige botão individual. |
+| Nova OS, Chamado e conversão de inspeção | Nasce em `solicitacao` | Não diretamente | Só entra no fluxo se operador a planejar; conversão por drop para Planejamento também abre confirmação. |
+| Zé/WhatsApp (`pcm-ze-agent`) | Insere Chamado+OS em `solicitacao` | Não | Mantido: não despacha ao Auvo sem ação humana. |
+| Portal | Abre Chamado; não cria task Auvo | Não | Mantido; eventual OS segue o mesmo fluxo humano do PCM. |
+| Webhook Auvo (`pcm-auvo-webhook`) | Atualiza OS já ligada por `auvo_task_id`, ou cria entrada Auvo | Não | Mantido: é direção Auvo para PCM e já tem task externa. |
+| Import/reconciliação Auvo (`pcm-auvo-tasks-import`) | Insere/enriquece OS com `auvo_task_id` | Não | Mantido: não pode reabrir task importada. |
+| PMOC | Só usa abertura normal de OS, iniciada em `solicitacao` | Não | Mantido; não existe produtor server-side que despache diretamente. |
+
+**Conclusão:** única dependência real era a transição local para `planejamento`. Remover apenas o
+trigger é seguro: fluxos de entrada Auvo já carregam `auvo_task_id`; fluxos locais continuam com
+caminho explícito. Esta auditoria é pré-requisito da migration `0168`.
+
 ## Solução proposta
 Mover a decisão de criar a task do **banco (automático)** para a **aplicação (ação do usuário)**,
 com dry-run obrigatório antes.
@@ -29,6 +45,10 @@ com dry-run obrigatório antes.
      tarefa, técnico, data, orientação, endereço/local, prioridade). Não grava nada.
    - `dryRun: false` → cria de fato, grava `auvoTaskId` na OS, idempotente (se já tem task, retorna
      a existente sem criar outra).
+
+   Implementação: `pcm-auvo-open-task` autentica usuário PCM com escrita, monta o preview e, na
+   confirmação, delega a criação ao handler interno existente `pcm-auvo-create-task`. Isso preserva
+   `externalId`, busca idempotente e `auvo_sync_status` sem expor service_role ao navegador.
 3. **UI — dois gatilhos:**
    - Ao mover um card pra **Planejamento**: modal "Abrir OS no Auvo?" que primeiro roda o dry-run e
      mostra os campos; operador confirma → cria; ou recusa → a OS fica em Planejamento **sem** task
@@ -47,6 +67,13 @@ com dry-run obrigatório antes.
   criação silenciosa.
 - **Observabilidade:** cada abertura confirmada registra em `audit`/`auvo_entity_status`; a Saúde
   Auvo (E01-S123) mostra pendências.
+
+### Limite de contrato Auvo
+
+O contrato verificado da integração E01-S09 envia `externalId`, `customerId`, `taskTypeId`,
+`priority` e `orientation`. O dry-run também exibe técnico, data e local para conferência do PCM,
+mas **não** inventa chaves de POST para enviá-los. Enviar esses campos exige contrato Auvo
+confirmado, mesmo bloqueio documentado em E01-S121.
 
 ## Alternativas consideradas
 - **A) Manter o trigger, só adicionar confirmação na UI** — rejeitada: o trigger é no banco, a UI não
