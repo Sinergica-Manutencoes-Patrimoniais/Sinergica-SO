@@ -68,14 +68,24 @@ export async function gerarOsDoChamado(
   destino: "convertido_os" | "backlog",
 ): Promise<OrdemServicoCriada> {
   validarTransicaoParaOs(chamado);
-  const criada = await abrirOrdemServico(gatewayOs, {
+  const existente = await gatewayOs.obterPorChamado?.(chamado.id);
+  const comando = {
     ...input,
     clientId: chamado.clienteId,
     titulo: chamado.titulo,
     descricao: chamado.descricao,
     chamadoId: chamado.id,
     createdBy: userId,
-  });
+  };
+  let criada = existente;
+  if (!criada) {
+    try {
+      criada = await abrirOrdemServico(gatewayOs, comando);
+    } catch (erro) {
+      criada = await gatewayOs.obterPorChamado?.(chamado.id);
+      if (!criada) throw erro;
+    }
+  }
   await gatewayChamados.marcarStatusComOs(chamado.id, destino, criada.id, userId);
   return criada;
 }
