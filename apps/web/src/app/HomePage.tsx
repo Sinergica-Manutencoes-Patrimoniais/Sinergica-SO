@@ -104,6 +104,7 @@ import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
+import { RelatorioPlanejamentoPage } from "../features/pcm/pages/RelatorioPlanejamentoPage";
 import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
@@ -147,6 +148,7 @@ type PcmView =
   | "equipamentos"
   | "equipes"
   | "agenda-tecnico"
+  | "relatorio-planejamento"
   | "ferramentas"
   | "ferramentas-por-tecnico"
   | "funcionarios"
@@ -368,6 +370,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
       { label: "PMOC", icon: Snowflake, view: "pmoc" },
+      { label: "Relatório", icon: FileBarChart, view: "relatorio-planejamento" },
     ],
   },
   {
@@ -1119,6 +1122,8 @@ export function HomePage() {
               <EquipesPage />
             ) : pcmView === "agenda-tecnico" ? (
               <AgendaTecnicoPage />
+            ) : pcmView === "relatorio-planejamento" ? (
+              <RelatorioPlanejamentoPage />
             ) : pcmView === "ferramentas" ? (
               <FerramentasPage />
             ) : pcmView === "ferramentas-por-tecnico" ? (
