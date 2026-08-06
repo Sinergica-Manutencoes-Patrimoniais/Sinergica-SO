@@ -1,4 +1,7 @@
 ---
+name: e01-s105-inspecao-excel-v1
+description: Prompt versionado para classificar levantamento Excel de inspeção com revisão humana.
+alwaysApply: false
 feature: E01-S105
 version: v1
 spec: specs/E01-S105-inspecao-excel-ia-gut/spec.md
