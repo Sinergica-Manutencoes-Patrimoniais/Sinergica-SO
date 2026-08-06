@@ -25,7 +25,7 @@ import {
 } from "../application/sincronizar-auvo";
 import type { SincronizacaoAuvoRun } from "../application/sincronizar-auvo-gateway";
 import { PainelDadosOperacionaisAuvo } from "../components/PainelDadosOperacionaisAuvo";
-import { montarDashboardPcm } from "../domain/dashboard-pcm";
+import { montarCockpitBomDia, montarDashboardPcm } from "../domain/dashboard-pcm";
 import type { DashboardPcmResumo, KpiDashboardPcm } from "../domain/dashboard-pcm";
 import {
   PRIORIDADE_LABEL,
@@ -34,6 +34,8 @@ import {
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
+import { supabaseAgendaTecnicoAdapter } from "../infrastructure/supabase-agenda-tecnico-adapter";
+import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseDashboardPcmAdapter } from "../infrastructure/supabase-dashboard-pcm-adapter";
 import type {
   AuvoSyncErrorItem,
@@ -80,18 +82,33 @@ export function PcmDashboardPage({
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
     try {
-      const [ordens, inspecoes] = await Promise.all([
+      const hoje = new Date().toISOString().slice(0, 10);
+      const [ordens, inspecoes, chamados, agenda, tecnicos] = await Promise.all([
         supabaseHubOsAdapter.listarOrdensServico(),
         supabaseQualidadeAdapter.listarInspecoes(),
+        supabaseChamadosAdapter.listar(),
+        supabaseAgendaTecnicoAdapter.listarSemana(hoje, hoje),
+        supabaseAgendaTecnicoAdapter.listarFuncionarios(),
       ]);
       const [resumoAuvo, saude] = await Promise.all([
         supabaseDashboardPcmAdapter.obterResumoAuvo(ordens),
         supabaseDashboardPcmAdapter.obterSaudeSync(),
       ]);
       setSaudeSync(saude);
+      const dashboard = montarDashboardPcm(ordens, inspecoes, new Date(), resumoAuvo);
+      dashboard.cockpit = montarCockpitBomDia(hoje, {
+        ordens,
+        chamados,
+        agenda,
+        tecnicos,
+        errosSyncAuvo: saude.reduce((total, item) => total + item.errorCount, 0),
+        inspecoesPendentes: inspecoes.filter(
+          (inspecao) => inspecao.status !== "concluida" && inspecao.status !== "backlog_gerado",
+        ).length,
+      });
       setEstado({
         fase: "pronto",
-        dashboard: montarDashboardPcm(ordens, inspecoes, new Date(), resumoAuvo),
+        dashboard,
       });
     } catch (error) {
       setEstado({

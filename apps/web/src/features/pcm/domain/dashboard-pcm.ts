@@ -16,6 +16,7 @@ export interface DashboardPcmResumo {
   ordensRecentes: OrdemServicoOperacional[];
   topBacklog: OrdemServicoOperacional[];
   auvo: DashboardPcmAuvoResumo | null;
+  cockpit?: CockpitBomDia;
 }
 
 export interface CockpitBomDia {
