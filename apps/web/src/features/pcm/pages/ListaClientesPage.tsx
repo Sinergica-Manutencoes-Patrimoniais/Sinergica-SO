@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { Tooltip } from "../../../components/ui/Tooltip";
 import type { ClienteFormData, ClienteResumo } from "../application/cliente-360-gateway";
 import { criarCliente, editarCliente, excluirCliente } from "../application/clientes-crud";
 import { listarClientes } from "../application/listar-clientes";
@@ -21,6 +22,7 @@ import { definirMarcacaoCliente, listarMarcacoes } from "../application/marcacoe
 import { ClienteFormModal } from "../components/ClienteFormModal";
 import { rotuloOuPlaceholder } from "../domain/cliente-360";
 import type { MarcacaoCliente } from "../domain/marcacoes-cliente";
+import { TOOLTIP_CLIENTE } from "../domain/tooltips-cliente";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { supabaseMarcacoesClienteAdapter } from "../infrastructure/supabase-marcacoes-cliente-adapter";
 
@@ -432,45 +434,87 @@ function ClienteLinha({
           <p className="truncate text-sm font-semibold text-ink">{cliente.nome}</p>
         </button>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <Badge tone={cliente.ativo ? "success" : "neutral"}>
-            {cliente.ativo ? "Ativo" : "Inativo"}
-          </Badge>
+          <Tooltip content={TOOLTIP_CLIENTE.status} className="inline-flex">
+            <button
+              type="button"
+              className="appearance-none border-0 bg-transparent p-0 text-inherit"
+            >
+              <Badge tone={cliente.ativo ? "success" : "neutral"}>
+                {cliente.ativo ? "Ativo" : "Inativo"}
+              </Badge>
+            </button>
+          </Tooltip>
           {cliente.tipo && (
-            <Badge tone="neutral">{cliente.tipo === "lead" ? "Lead" : "Cliente"}</Badge>
+            <Tooltip content={TOOLTIP_CLIENTE.tipo} className="inline-flex">
+              <button
+                type="button"
+                className="appearance-none border-0 bg-transparent p-0 text-inherit"
+              >
+                <Badge tone="neutral">{cliente.tipo === "lead" ? "Lead" : "Cliente"}</Badge>
+              </button>
+            </Tooltip>
           )}
           {cliente.statusComercial && (
-            <Badge tone={cliente.statusComercial === "ativo" ? "success" : "warning"}>
-              {STATUS_COMERCIAL_LABEL[cliente.statusComercial] ?? cliente.statusComercial}
-            </Badge>
+            <Tooltip content={TOOLTIP_CLIENTE.statusComercial} className="inline-flex">
+              <button
+                type="button"
+                className="appearance-none border-0 bg-transparent p-0 text-inherit"
+              >
+                <Badge tone={cliente.statusComercial === "ativo" ? "success" : "warning"}>
+                  {STATUS_COMERCIAL_LABEL[cliente.statusComercial] ?? cliente.statusComercial}
+                </Badge>
+              </button>
+            </Tooltip>
           )}
-          {!cliente.cadastroCompleto && <Badge tone="warning">Incompleto</Badge>}
+          {!cliente.cadastroCompleto && (
+            <Tooltip content={TOOLTIP_CLIENTE.incompleto} className="inline-flex">
+              <button
+                type="button"
+                className="appearance-none border-0 bg-transparent p-0 text-inherit"
+              >
+                <Badge tone="warning">Incompleto</Badge>
+              </button>
+            </Tooltip>
+          )}
           {cliente.marcacao && !onTrocarMarcacao && (
-            <span
-              className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
-              style={{ backgroundColor: cliente.marcacao.cor }}
-            >
-              {cliente.marcacao.nome}
-            </span>
+            <Tooltip content={TOOLTIP_CLIENTE.marcacao} className="inline-flex">
+              <button
+                type="button"
+                className="shrink-0 appearance-none rounded-full border-0 px-2 py-0.5 text-[11px] font-semibold text-white"
+                style={{ backgroundColor: cliente.marcacao.cor }}
+              >
+                {cliente.marcacao.nome}
+              </button>
+            </Tooltip>
           )}
           {onTrocarMarcacao && (
-            <select
-              value={cliente.marcacao?.id ?? ""}
-              onChange={(event) => onTrocarMarcacao(event.target.value || null)}
-              className="h-6 rounded-full border-0 px-2 py-0 text-[11px] font-semibold text-white"
-              style={{ backgroundColor: cliente.marcacao?.cor ?? "#9CA3AF" }}
-            >
-              <option value="">Sem marcação</option>
-              {marcacoes.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nome}
-                </option>
-              ))}
-            </select>
+            <Tooltip content={TOOLTIP_CLIENTE.marcacao} className="inline-flex">
+              <select
+                value={cliente.marcacao?.id ?? ""}
+                onChange={(event) => onTrocarMarcacao(event.target.value || null)}
+                className="h-6 rounded-full border-0 px-2 py-0 text-[11px] font-semibold text-white"
+                style={{ backgroundColor: cliente.marcacao?.cor ?? "#9CA3AF" }}
+              >
+                <option value="">Sem marcação</option>
+                {marcacoes.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nome}
+                  </option>
+                ))}
+              </select>
+            </Tooltip>
           )}
         </div>
         <p className="mt-1 text-[11px] tabular-nums text-ink-3">
-          CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")} · Auvo{" "}
-          {rotuloOuPlaceholder(cliente.auvoId ?? null, "—")}
+          CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")} ·{" "}
+          <Tooltip content={TOOLTIP_CLIENTE.auvo} className="inline-flex">
+            <button
+              type="button"
+              className="appearance-none border-0 bg-transparent p-0 text-inherit"
+            >
+              Auvo {rotuloOuPlaceholder(cliente.auvoId ?? null, "—")}
+            </button>
+          </Tooltip>
         </p>
       </td>
       <td className="px-4 py-2.5 text-xs text-ink-2">

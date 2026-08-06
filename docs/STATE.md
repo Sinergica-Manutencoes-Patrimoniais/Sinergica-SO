@@ -30,6 +30,9 @@ alwaysApply: true
 - E01-S105 local: importador XLS ganhou parser com erro de coluna e preview, fallback bruto quando
   IA falha, GUT editável e criação explícita de Chamados rastreados após revisão. Prompt v1 e eval
   estrutural cobrem contrato/injection. Restam Deno/OpenRouter real e Playwright.
+- E01-S122 parcial: tooltips acessíveis cobrem status, tipo, status comercial, marcação e Auvo na
+  lista e Visão 360. Contrato segue bloqueado: não há coluna nem relação de contrato no cadastro;
+  status comercial foi explicitamente descrito como distinto, sem inferência.
 - E01-S129 hardening local: `pnpm run ci:local` PASS — 776 testes, 9 skipped; build, typecheck,
   arquitetura, migrations (169), auditoria e registry de 35 Edge Functions verdes. Avisos não
   bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.
