@@ -12,6 +12,14 @@ alwaysApply: true
 
 ## 2026-08-05 — Lote de specs em andamento (Codex)
 
+- E01-S134 T1–T5: relatório diário sob demanda implementado (agregação no fuso do PCM, tela em
+  Relatórios, falha da saúde Auvo degradada e PDF); commits `b9e7bc8`, `e1670d8`, `d5e9b5d`,
+  `12a9470`. T6 Playwright ainda não roda para não criar ou reintroduzir dados `[TESTE E2E]`.
+- E01-S137 T1–T5 e E01-S138 T1–T4 implementadas localmente; T6/T5, respectivamente, aguardam
+  Playwright. E01-S133 validada pelo domínio/UI existente, task doc no commit `e544646`.
+- Próxima feature ativa: E01-S135, relatório interno por cliente + PDF + publicação no Portal;
+  confirmar primeiro os modelos/RLS já existentes do Portal antes de criar escrita.
+
 - E01-S120 T1–T3: `Auvo #<id>` clicável no detalhe da OS e no painel do Chamado; fallback
   `Sem OS no Auvo`; commit `82a88d1`. Playwright permanece pendente para não recriar dados E2E.
 - E01-S123 T1–T4: migration `0166` cria `pcm.auvo_sync_error_details`, uma view mínima e
