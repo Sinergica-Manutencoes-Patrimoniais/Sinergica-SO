@@ -19,6 +19,13 @@ alwaysApply: true
   Playwright. E01-S133 validada pelo domínio/UI existente, task doc no commit `e544646`.
 - Próxima feature ativa: E01-S135, relatório interno por cliente + PDF + publicação no Portal;
   confirmar primeiro os modelos/RLS já existentes do Portal antes de criar escrita.
+- E01-S135 T1,T3–T7: relatório de cliente interno (HTML/PDF) e publicação imutável no Portal
+  implementados, com migration `0167` e RLS FORCE; commits `67e8442`, `3d6b090`, `6851071`,
+  `0d01327`, `2076cf5`. Decisão: o retrato inicial cobre OS concluídas/planejadas e link Auvo;
+  PMOC/inspeções ainda não têm vínculo de apresentação estável, portanto T2 segue pendente.
+- E01-S136 T1 e carregamento inicial: domínio do cockpit e consultas de OS/agenda/técnicos/chamados
+  já concluídos (`0cdf4df`, `97140f7`); próximo passo concreto é renderizar os blocos obrigatórios
+  e os S1–S9 no `PcmDashboardPage`, com callbacks de navegação filtrada.
 
 - E01-S120 T1–T3: `Auvo #<id>` clicável no detalhe da OS e no painel do Chamado; fallback
   `Sem OS no Auvo`; commit `82a88d1`. Playwright permanece pendente para não recriar dados E2E.
