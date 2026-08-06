@@ -33,6 +33,9 @@ alwaysApply: true
 - E01-S122 parcial: tooltips acessíveis cobrem status, tipo, status comercial, marcação e Auvo na
   lista e Visão 360. Contrato segue bloqueado: não há coluna nem relação de contrato no cadastro;
   status comercial foi explicitamente descrito como distinto, sem inferência.
+- E01-S129 revisão adversarial local: achou janela entre criar OS e marcar Chamado; migration
+  `0171` garante uma OS ativa por Chamado e o caso de uso recupera a existente no retry. Testes
+  `chamados` verdes; produção/Playwright/smoke continuam pendentes.
 - E01-S129 hardening local: `pnpm run ci:local` PASS — 776 testes, 9 skipped; build, typecheck,
   arquitetura, migrations (169), auditoria e registry de 35 Edge Functions verdes. Avisos não
   bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.
