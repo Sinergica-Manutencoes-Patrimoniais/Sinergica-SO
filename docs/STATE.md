@@ -42,9 +42,21 @@ alwaysApply: true
 - E01-S129 hardening local: `pnpm run ci:local` PASS — 783 testes, 9 skipped; build, typecheck,
   arquitetura, migrations (171), auditoria e registry de 35 Edge Functions verdes. Avisos não
   bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.
-- Próximo: continuar specs locais pendentes; gates externos continuam: Deno/CI Edge, Playwright sem
-  resíduos `[TESTE E2E]`, migration/deploy/smoke remoto, contrato API Auvo (S121), campo contrato
-  (S122) e diagnóstico autenticado dos seis erros (S123).
+- Todas as entregas implementáveis localmente deste lote foram concluídas. Matriz de gates externos:
+  - **Credenciais/configuração real:** E00-S13 (Vault/OpenRouter) e E02-S27 (Evolution, instância,
+    QR e webhook).
+  - **Contrato Auvo ausente:** E01-S121 exige payload/documentação verificada de edição de task;
+    não foi inferido `PUT /tasks`.
+  - **Dados/diagnóstico de produção:** E01-S122 exige campo/relação de contrato; E01-S123 exige
+    sessão autenticada para classificar os seis erros reais.
+  - **Integração real Auvo/Edge:** E01-S105, S125 e S130 exigem Deno CI, segredo configurado e
+    evento/checklist real para validação final.
+  - **UAT navegador sem resíduos:** E01-S105, S120, S124, S126, S127, S130, S131, S133, S134,
+    S135, S136, S137 e S138 exigem Playwright contra ambiente autorizado e limpeza dos dados
+    temporários `[TESTE E2E]`.
+  - **Release:** E01-S129 requer inventário/aplicação remota das migrations `0165`–`0171`,
+    confirmação SQL de RLS (`SEC-001`), smoke autenticado e sign-off; nenhum push, PR, merge,
+    deploy ou banco de produção foi alterado nesta sessão.
 
 ## 2026-08-05 — Lote de specs em andamento (Codex)
 
