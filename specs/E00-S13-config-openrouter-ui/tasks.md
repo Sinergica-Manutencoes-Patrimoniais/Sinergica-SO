@@ -13,11 +13,11 @@ alwaysApply: false
 ## Plano
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|----------------|--------|
-| 1 | Migration `NNNN`: `config.fn_obter_segredo_integracao(chave)` `security definer`, só service_role, lê `vault.decrypted_secrets`; grant mínimo | AC-3,AC-4 | — | lint:migrations | todo |
-| 2 | Metadado do modelo de import em `config.integracoes` (provedor `openrouter`, campo `import_model`) | AC-2 | — | lint:migrations | todo |
-| 3 | UI `IntegracoesPage`: provedor OpenRouter — campo Chave (write-only, reusa `fn_definir_segredo_integracao`) + campo Modelo (opcional); gate superadmin | AC-1,AC-2 | — | typecheck | todo |
-| 4 | `_shared/openrouter.ts`: lê chave via RPC (Vault) com fallback `Deno.env.OPENROUTER_API_KEY`; modelo via config com default | AC-3 | 1,2 | (deno CI) | todo |
-| 5 | Erro claro quando não configurado ("configure em Configurações > Integrações"), legível | AC-5 | 4 | vitest | todo |
+| 1 | Migration `NNNN`: `config.fn_obter_segredo_integracao(chave)` `security definer`, só service_role, lê `vault.decrypted_secrets`; grant mínimo | AC-3,AC-4 | — | lint:migrations | done (reuso 0104) |
+| 2 | Metadado do modelo de import em `config.integracoes` (provedor `openrouter`, campo `import_model`) | AC-2 | — | lint:migrations | done (JSONB existente) |
+| 3 | UI `IntegracoesPage`: provedor OpenRouter — campo Chave (write-only, reusa `fn_definir_segredo_integracao`) + campo Modelo (opcional); gate superadmin | AC-1,AC-2 | — | typecheck | done (Configurações > IA) |
+| 4 | `_shared/openrouter.ts`: lê chave via RPC (Vault) com fallback `Deno.env.OPENROUTER_API_KEY`; modelo via config com default | AC-3 | 1,2 | (deno CI) | done (CI pendente) |
+| 5 | Erro claro quando não configurado ("configure em Configurações > Integrações"), legível | AC-5 | 4 | vitest | done (teste Edge/CI pendente) |
 | 6 | Validar ponta a ponta (Lucas): configurar chave pela UI → subir Excel de inspeção → classifica | AC-1,AC-3 | — | manual (Lucas) | todo |
 
 ## Plano de teste

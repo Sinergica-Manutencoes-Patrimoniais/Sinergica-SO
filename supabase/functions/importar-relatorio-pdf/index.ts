@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { HttpError, requireAuth } from "../_shared/auth.ts";
+import { obterConfiguracaoOpenRouter } from "../_shared/openrouter.ts";
 
 const InputSchema = z.object({ texto: z.string().trim().min(20).max(100_000) });
 
@@ -20,14 +21,19 @@ serve(async (req) => {
       throw new HttpError(403, "Sem permissão de leitura no PCM");
     }
     const { texto } = InputSchema.parse(await req.json());
-    const apiKey = Deno.env.get("OPENROUTER_API_KEY") ?? "";
-    if (!apiKey) throw new HttpError(500, "OPENROUTER_API_KEY ausente");
+    const configuracao = await obterConfiguracaoOpenRouter();
+    if (!configuracao) {
+      throw new HttpError(
+        422,
+        "OpenRouter não configurado — configure em Configurações > IA.",
+      );
+    }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${configuracao.apiKey}` },
       body: JSON.stringify({
-        model: Deno.env.get("OPENROUTER_IMPORT_MODEL") ?? "google/gemini-2.5-flash",
+        model: configuracao.modeloImport,
         response_format: { type: "json_object" },
         messages: [
           {

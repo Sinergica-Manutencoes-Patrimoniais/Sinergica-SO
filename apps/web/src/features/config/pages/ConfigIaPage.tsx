@@ -26,6 +26,7 @@ export function ConfigIaPage() {
   const [salvando, setSalvando] = useState(false);
 
   const [modelo, setModelo] = useState(MODELOS[0]?.value ?? "openai/gpt-4o-mini");
+  const [modeloImport, setModeloImport] = useState("google/gemini-2.5-flash");
   const [ativo, setAtivo] = useState(false);
   const [apiKey, setApiKey] = useState("");
 
@@ -43,6 +44,9 @@ export function ConfigIaPage() {
             "openai/gpt-4o-mini",
         );
         setAtivo(ia.ativo);
+        setModeloImport(
+          (ia.configPublico.import_model as string | undefined) ?? "google/gemini-2.5-flash",
+        );
       }
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar a configuração de IA.");
@@ -74,7 +78,7 @@ export function ConfigIaPage() {
         chave: CHAVE_IA,
         provedor: "openrouter",
         ativo,
-        configPublico: { modelo },
+        configPublico: { modelo, import_model: modeloImport },
       });
       await carregar();
     } catch (e) {
@@ -105,7 +109,7 @@ export function ConfigIaPage() {
         <h2 className="text-base font-semibold text-ink">IA</h2>
         <p className="text-sm text-ink-3">
           Credencial do OpenRouter usada pra gerar título de OS (E01-S81). A chave nunca é exibida
-          de novo depois de salva.
+          de novo depois de salva. A mesma credencial classifica relatórios de inspeção importados.
         </p>
       </div>
 
@@ -158,6 +162,22 @@ export function ConfigIaPage() {
               <span className="text-sm text-ink-2">
                 Ativo (habilita "Gerar título" no form de OS)
               </span>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-ink-3">
+                Modelo para importar inspeção
+              </span>
+              <select
+                className="input w-full"
+                value={modeloImport}
+                onChange={(e) => setModeloImport(e.target.value)}
+              >
+                {MODELOS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
           <button

@@ -3,6 +3,8 @@
 // `extrairLeadViaOpenRouter`) — mesma chamada REST, sem SDK. `pcm-ze-agent` continua lendo sua
 // própria key via env var `OPENROUTER_API_KEY` (fora de escopo de E01-S81 trocar isso); este
 // helper é usado por quem lê a credencial do Vault (`config.integracoes`, chave 'openrouter').
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getSupabaseServiceKey } from "./auth.ts";
 
 export class OpenRouterApiError extends Error {
   constructor(
@@ -10,6 +12,39 @@ export class OpenRouterApiError extends Error {
     message: string,
   ) {
     super(message);
+  }
+}
+
+/** E00-S13: busca a credencial exclusivamente no contexto service_role. O client nunca recebe esse
+ * valor; `null` permite a mensagem de configuração e mantém o fallback legado de env sem downtime. */
+export async function obterConfiguracaoOpenRouter(): Promise<{
+  apiKey: string;
+  modeloImport: string;
+} | null> {
+  const fallback = Deno.env.get("OPENROUTER_API_KEY")?.trim() ?? "";
+  try {
+    const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", getSupabaseServiceKey(), {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const [{ data: integracao }, { data: segredo, error }] = await Promise.all([
+      db.schema("config").from("integracoes").select("config_publico").eq("chave", "openrouter").maybeSingle(),
+      db.schema("config").rpc("fn_obter_segredo_integracao_interno", { p_chave: "openrouter_api_key" }),
+    ]);
+    if (error) throw error;
+    const apiKey = typeof segredo === "string" && segredo.trim() ? segredo.trim() : fallback;
+    if (!apiKey) return null;
+    const configPublico = (integracao?.config_publico ?? {}) as Record<string, unknown>;
+    const modeloImport =
+      typeof configPublico.import_model === "string" && configPublico.import_model.trim()
+        ? configPublico.import_model.trim()
+        : Deno.env.get("OPENROUTER_IMPORT_MODEL")?.trim() || "google/gemini-2.5-flash";
+    return { apiKey, modeloImport };
+  } catch {
+    if (!fallback) return null;
+    return {
+      apiKey: fallback,
+      modeloImport: Deno.env.get("OPENROUTER_IMPORT_MODEL")?.trim() || "google/gemini-2.5-flash",
+    };
   }
 }
 
@@ -38,8 +73,8 @@ export async function chamarOpenRouterTexto(params: {
   });
 
   if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    console.error(JSON.stringify({ nivel: "error", escopo: "openrouter-client", status: res.status, detail: detail.slice(0, 500) }));
+    await res.text().catch(() => "");
+    console.error(JSON.stringify({ nivel: "error", escopo: "openrouter-client", status: res.status }));
     throw new OpenRouterApiError(res.status, `OpenRouter respondeu ${res.status}`);
   }
 
