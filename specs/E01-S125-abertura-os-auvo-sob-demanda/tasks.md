@@ -19,7 +19,7 @@ alwaysApply: false
 | 4 | Application/adapter: `previewAberturaAuvo` (dry-run) e `abrirOsNoAuvo` (confirma) | AC-2..AC-7 | 3 | typecheck+vitest | done — modal invoca Edge; typecheck/vitest PASS |
 | 5 | UI: modal "Abrir OS no Auvo?" ao mover pra Planejamento (roda dry-run, confirma/recusa) | AC-2,AC-3 | 4 | typecheck | done — Board, Backlog e conversão por drop; typecheck PASS |
 | 6 | UI: botão "Abrir OS Auvo" no `ChamadoPainel`/`DetalheOs` quando `auvoTaskId === null`; idempotente | AC-4,AC-6 | 4 | typecheck | done — `DetalheOs`; typecheck PASS |
-| 7 | Resiliência: falha não muda status; "sync pendente"; erro legível; retentar | AC-7 | 4 | vitest | done local — handler legado grava failed, modal mantém botão; 33 testes PASS |
+| 7 | Resiliência: falha não muda status; "sync pendente"; erro legível; retentar | AC-7 | 4 | vitest | done local — handler legado grava failed, modal mantém botão; `0169` serializa confirmação concorrente e expira reserva em 5min |
 | 8 | e2e: planejar → pergunta → dry-run → confirma cria; recusa fica sem task; botão reabre | AC-2..AC-4 | — | playwright (Lucas) | todo — requer conta/task Auvo real, sem criar resíduos `[TESTE E2E]` |
 
 ## Plano de teste
