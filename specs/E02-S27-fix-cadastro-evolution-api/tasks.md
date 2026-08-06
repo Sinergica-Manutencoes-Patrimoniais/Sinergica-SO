@@ -12,11 +12,11 @@ alwaysApply: false
 ## Plano
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|----------------|--------|
-| 1 | Config store: URL de Conexão (metadado) + Chave (Vault write-only) — reusar `config.integracoes`/`fn_definir_segredo_integracao` (E00-S12) ou equivalente do Atendimento | AC-1 | — | lint:migrations | todo |
-| 2 | UI: seção "API" na config do Atendimento — campo URL + campo Chave (write-only, "configurado"/atualizar), gate escrita/superadmin | AC-1 | 1 | typecheck | todo |
-| 3 | UI: exibir endereço de webhook do SO (`.../functions/v1/pcm-whatsapp-webhook`) com botão copiar | AC-2 | — | typecheck | todo |
-| 4 | Edge `atendimento-evolution`/`evolution-admin`: ler URL/chave da config (Vault) com fallback pra `Deno.env` | AC-3 | 1 | (deno CI) | todo |
-| 5 | Erro legível: propagar motivo real da Evolution + mensagem clara quando URL/chave faltam | AC-4 | 4 | vitest | todo |
+| 1 | Config store: URL de Conexão (metadado) + Chave (Vault write-only) — reusar `config.integracoes`/`fn_definir_segredo_integracao` (E00-S12) ou equivalente do Atendimento | AC-1 | — | lint:migrations | done (reuso E00-S12) |
+| 2 | UI: seção "API" na config do Atendimento — campo URL + campo Chave (write-only, "configurado"/atualizar), gate escrita/superadmin | AC-1 | 1 | typecheck | done |
+| 3 | UI: exibir endereço de webhook do SO (`.../functions/v1/pcm-whatsapp-webhook`) com botão copiar | AC-2 | — | typecheck | done |
+| 4 | Edge `atendimento-evolution`/`evolution-admin`: ler URL/chave da config (Vault) com fallback pra `Deno.env` | AC-3 | 1 | (deno CI) | done (CI pendente) |
+| 5 | Erro legível: propagar motivo real da Evolution + mensagem clara quando URL/chave faltam | AC-4 | 4 | vitest | done |
 | 6 | Validar ponta a ponta (Lucas): configurar URL/chave reais → criar instância → QR → webhook | AC-1..AC-3 | — | manual (Lucas) | todo |
 
 ## Plano de teste

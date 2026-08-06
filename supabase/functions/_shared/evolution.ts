@@ -1,6 +1,7 @@
 // _shared/evolution.ts — E02-S01. Extraído de `pcm-ze-agent/index.ts` (função `responderEvolution`,
 // idêntica, comportamento preservado) para ser reusado também por `atendimento-whatsapp-envio`
 // (envio humano) — nenhuma das duas duplica mais a chamada HTTP ao Evolution.
+import { obterConfiguracaoEvolution } from "./evolution-config.ts";
 
 export function criarPayloadTexto(remoteJid: string, text: string): Record<string, unknown> {
   const number = remoteJid.trim();
@@ -42,14 +43,14 @@ async function chamarEvolution(
   endpoint: string,
   payload: Record<string, unknown>,
 ): Promise<void> {
-  const baseUrl = Deno.env.get("EVOLUTION_API_URL") ?? "";
-  const apiKey = Deno.env.get("EVOLUTION_API_KEY") ?? "";
-  if (!baseUrl || !apiKey) throw new Error("EVOLUTION_API_URL/EVOLUTION_API_KEY ausentes");
-  const normalizedBase = baseUrl.replace(/\/$/, "");
-  const res = await fetch(`${normalizedBase}/message/${endpoint}/${encodeURIComponent(instanceId)}`, {
+  const configuracao = await obterConfiguracaoEvolution();
+  if (!configuracao) {
+    throw new Error("Evolution não configurada — informe URL e chave em Configurações > Atendimento > Evolution");
+  }
+  const res = await fetch(`${configuracao.baseUrl}/message/${endpoint}/${encodeURIComponent(instanceId)}`, {
     method: "POST",
     signal: AbortSignal.timeout(15_000),
-    headers: { "Content-Type": "application/json", apikey: apiKey },
+    headers: { "Content-Type": "application/json", apikey: configuracao.apiKey },
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Evolution ${endpoint} falhou: ${res.status}`);
