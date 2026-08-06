@@ -13,7 +13,7 @@ alwaysApply: false
 | #  | Task | Cobre AC | Gate (comando) | Status |
 |----|------|----------|----------------|--------|
 | 1 | Domínio `relatorio-diario.ts`: monta o resumo do dia (números, por técnico, atenção, backlog) a partir dos datasets | AC-1,AC-2 | vitest | done |
-| 2 | Application/adapters: buscar OS/chamados/horas/agenda/saúde por data | AC-1,AC-2 | typecheck | todo |
+| 2 | Application/adapters: buscar OS/chamados/horas/agenda/saúde por data | AC-1,AC-2 | typecheck | done |
 | 3 | UI `RelatorioDiarioPage` (grupo RELATÓRIOS): seletor de data + render das seções | AC-1,AC-4 | typecheck | todo |
 | 4 | Exportar PDF (`pdf-lib`) com o mesmo conteúdo | AC-3 | typecheck | todo |
 | 5 | Estado "sem movimento" + fallbacks (nome técnico/cliente, saúde indisponível) | AC-4 | vitest | todo |
