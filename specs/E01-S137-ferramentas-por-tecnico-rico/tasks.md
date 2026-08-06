@@ -12,8 +12,8 @@ alwaysApply: false
 ## Plano
 | #  | Task | Cobre AC | Gate (comando) | Status |
 |----|------|----------|----------------|--------|
-| 1 | Adapter/application: listar TODOS os técnicos ativos + posse atual + histórico por técnico | AC-1,AC-2 | typecheck | todo |
-| 2 | UI: lista de todos os técnicos com resumo (posse, divergência Auvo) | AC-1 | typecheck | todo |
+| 1 | Adapter/application: listar TODOS os técnicos ativos + posse atual + histórico por técnico | AC-1,AC-2 | typecheck | done |
+| 2 | UI: lista de todos os técnicos com resumo (posse, divergência Auvo) | AC-1 | typecheck | done |
 | 3 | Componente transfer-list (dual-list: disponíveis ↔ posse do técnico), com busca/filtro | AC-3,AC-4 | vitest | todo |
 | 4 | Modal do técnico: info + ferramentas atuais + histórico + transfer-list; atribuir/devolver em lote | AC-2,AC-3,AC-4,AC-5 | typecheck | todo |
 | 5 | Guardas: só-leitura sem escrita; unidade de outro técnico não transferível; regra "só disponível atribui" | AC-5,AC-borda | vitest | todo |

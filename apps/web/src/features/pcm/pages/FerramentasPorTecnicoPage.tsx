@@ -117,12 +117,9 @@ export function FerramentasPorTecnicoPage() {
       const unidadesDoFuncionario = estado.unidades.filter(
         (unidade) => unidade.atribuidaA === funcionario.id,
       );
-      const alocacaoDoFuncionario = estado.alocacoesAuvo.some(
-        (alocacao) => alocacao.funcionarioId === funcionario.id,
-      );
-      if (unidadesDoFuncionario.length > 0 || alocacaoDoFuncionario) {
-        porTecnico.set(funcionario.id, { funcionario, unidades: unidadesDoFuncionario });
-      }
+      // E01-S137 AC-1: o hub operacional sempre mostra todos os técnicos ativos, inclusive
+      // quem ainda não recebeu unidade nem possui divergência Auvo.
+      porTecnico.set(funcionario.id, { funcionario, unidades: unidadesDoFuncionario });
     }
     return [...porTecnico.values()].sort((a, b) =>
       a.funcionario.nome.localeCompare(b.funcionario.nome),
