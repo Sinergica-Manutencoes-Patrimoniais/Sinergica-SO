@@ -43,6 +43,7 @@ export function ChamadoPainel({
   auvoTaskId,
   destinoConversao = null,
   onConversaoFinalizada,
+  onOsPlanejada,
 }: {
   chamadoId: string;
   dadosOs: DadosAberturaOs | null;
@@ -53,6 +54,8 @@ export function ChamadoPainel({
   /** E01-S124: drop de card sintético abre o formulário já com a coluna de destino. */
   destinoConversao?: Exclude<StatusOrdemServico, "solicitacao"> | null;
   onConversaoFinalizada?: () => void;
+  /** E01-S125: conversão por drop para Planejamento ainda pede abertura Auvo, sem trigger. */
+  onOsPlanejada?: (osId: string) => void;
 }) {
   const { user } = useAuth();
   const [chamado, setChamado] = useState<Chamado | null>(null);
@@ -125,7 +128,7 @@ export function ChamadoPainel({
       dataPrevista: campos.dataPrevista,
     };
     if (statusDestino) {
-      await gerarOsDoChamadoNoStatus(
+      const criada = await gerarOsDoChamadoNoStatus(
         supabaseChamadosAdapter,
         supabaseOrdemServicoAdapter,
         supabaseHubOsAdapter,
@@ -134,6 +137,7 @@ export function ChamadoPainel({
         user.id,
         statusDestino,
       );
+      if (statusDestino === "planejamento") onOsPlanejada?.(criada.id);
     } else {
       await gerarOsDoChamado(
         supabaseChamadosAdapter,

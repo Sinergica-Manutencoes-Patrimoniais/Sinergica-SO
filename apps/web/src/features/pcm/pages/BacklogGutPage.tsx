@@ -4,6 +4,7 @@ import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { Tooltip } from "../../../components/ui/Tooltip";
 import { listarBacklogGut, planejarOrdemServico } from "../application/hub-os";
+import { AbrirOsAuvoModal } from "../components/AbrirOsAuvoModal";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
@@ -28,6 +29,7 @@ export function BacklogGutPage() {
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [editando, setEditando] = useState<OrdemServicoOperacional | null>(null);
   const [criando, setCriando] = useState(false);
+  const [aberturaAuvoOsId, setAberturaAuvoOsId] = useState<string | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -65,6 +67,7 @@ export function BacklogGutPage() {
     try {
       await planejarOrdemServico(supabaseHubOsAdapter, { id: ordem.id, updatedBy: user.id });
       await carregar();
+      if (ordem.auvoTaskId == null) setAberturaAuvoOsId(ordem.id);
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível planejar OS.");
     } finally {
@@ -243,6 +246,13 @@ export function BacklogGutPage() {
             setCriando(false);
             carregar();
           }}
+        />
+      )}
+      {aberturaAuvoOsId && (
+        <AbrirOsAuvoModal
+          osId={aberturaAuvoOsId}
+          onFechar={() => setAberturaAuvoOsId(null)}
+          onAberta={carregar}
         />
       )}
     </div>

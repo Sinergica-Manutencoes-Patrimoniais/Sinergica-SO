@@ -27,6 +27,7 @@ import { obterPreferenciaColunas, salvarPreferenciaColunas } from "../applicatio
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { listarProximasPreventivas } from "../application/pmoc";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
+import { AbrirOsAuvoModal } from "../components/AbrirOsAuvoModal";
 import { ChamadoPainel } from "../components/ChamadoPainel";
 import { DetalhesTarefaAuvo } from "../components/DetalhesTarefaAuvo";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
@@ -135,6 +136,7 @@ export function OrdensServicoPage({
   // E01-S118 AC-2/AC-5: clientes pro "Novo Chamado" e pro filtro por Cliente do board.
   const [dadosOs, setDadosOs] = useState<DadosAberturaOs | null>(null);
   const [novoChamadoAberto, setNovoChamadoAberto] = useState(false);
+  const [aberturaAuvoOsId, setAberturaAuvoOsId] = useState<string | null>(null);
   // E01-S118 T7: Chamados abertos ainda sem OS — exibidos como cards sintéticos na coluna
   // Solicitação (senão um Chamado recém-criado só apareceria no board depois de "Gerar OS").
   const [chamadosAbertos, setChamadosAbertos] = useState<Chamado[]>([]);
@@ -414,6 +416,9 @@ export function OrdensServicoPage({
           ),
         });
       }
+      // E01-S125: status persiste primeiro; criação Auvo nunca é efeito colateral. Só a
+      // transição individual abre a confirmação (lote fica manual, por OS, no detalhe).
+      if (status === "planejamento" && atualizada.auvoTaskId == null) setAberturaAuvoOsId(id);
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível alterar status.");
     } finally {
@@ -721,6 +726,7 @@ export function OrdensServicoPage({
                 onEditar={() => setEditando(true)}
                 dadosOs={dadosOs}
                 onRecarregar={carregar}
+                onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
                 aberturaModalSeq={modalDetalheSeq}
                 destinoConversao={
                   selecionada.chamadoId === conversaoPendente?.chamadoId
@@ -848,6 +854,7 @@ export function OrdensServicoPage({
                     onEditar={() => setEditando(true)}
                     dadosOs={dadosOs}
                     onRecarregar={carregar}
+                    onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
                     destinoConversao={
                       selecionada.chamadoId === conversaoPendente?.chamadoId
                         ? conversaoPendente.statusDestino
@@ -881,6 +888,13 @@ export function OrdensServicoPage({
           clientes={dadosOs?.clientes ?? []}
           onCancel={() => setNovoChamadoAberto(false)}
           onSalvar={salvarNovoChamado}
+        />
+      )}
+      {aberturaAuvoOsId && (
+        <AbrirOsAuvoModal
+          osId={aberturaAuvoOsId}
+          onFechar={() => setAberturaAuvoOsId(null)}
+          onAberta={carregar}
         />
       )}
     </div>
@@ -928,6 +942,7 @@ function DetalheOs({
   onEditar,
   dadosOs,
   onRecarregar,
+  onAbrirAuvo,
   aberturaModalSeq = 0,
   destinoConversao = null,
   onConversaoFinalizada,
@@ -941,6 +956,7 @@ function DetalheOs({
   dadosOs: DadosAberturaOs | null;
   /** E01-S118 T7: refetch do board após uma ação do Chamado (gerar OS, cancelar). */
   onRecarregar: () => void;
+  onAbrirAuvo: (osId?: string) => void;
   /** E01-S118 AC-6: clicar num card do Kanban/Timeline/Calendário abre este modal direto. O pai
    * incrementa `aberturaModalSeq` a cada clique (mesmo card duas vezes seguidas ainda reabre). */
   aberturaModalSeq?: number;
@@ -1046,6 +1062,16 @@ function DetalheOs({
             </div>
           )}
 
+          {temEscrita && selecionada.auvoTaskId == null && (
+            <button
+              type="button"
+              onClick={() => onAbrirAuvo()}
+              className="h-8 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+            >
+              Abrir OS Auvo
+            </button>
+          )}
+
           {selecionada.detalhes && Object.keys(selecionada.detalhes).length > 0 && (
             <DetalhesTarefaAuvo
               detalhes={selecionada.detalhes}
@@ -1078,7 +1104,7 @@ function DetalheOs({
                 </select>
               </div>
               <p className="mt-2 text-xs text-ink-3">
-                Planejamento dispara o gatilho Auvo já existente quando aplicável.
+                Planejamento não abre task automaticamente. Confirme pelo botão Auvo.
               </p>
             </div>
           )}
@@ -1093,6 +1119,7 @@ function DetalheOs({
           dadosOs={dadosOs}
           temEscrita={temEscrita}
           onMutou={onRecarregar}
+          onOsPlanejada={onAbrirAuvo}
           auvoTaskId={selecionada.auvoTaskId}
           destinoConversao={destinoConversao}
           onConversaoFinalizada={onConversaoFinalizada}
