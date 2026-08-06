@@ -10,6 +10,52 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-06 (cont. 2) — Release em produção + PR aberto + doc Auvo desbloqueia E01-S121 (Claude/Sonnet 5)
+
+Lucas pediu pra checar as specs pendentes e seguir o desenvolvimento. Achado: o lote inteiro
+(E00-S13, E01-S120–S138 exceto S121, E02-S27) já estava "implementado localmente"; só faltavam
+gates externos. Lucas então: (1) mandou a chave OpenRouter real pra testar inspeção, (2) mandou o
+link da doc oficial Auvo (`auvoapiv2.docs.apiary.io`) que desbloqueia E01-S121, (3) pediu pra subir
+pra main com merge.
+
+**OpenRouter (E00-S13):** `OPENROUTER_API_KEY` setada como secret de Edge Function em produção via
+`supabase secrets set --project-ref nudannsrfvjggoergvyn` — path já previsto no fallback de
+`_shared/openrouter.ts`. Import de inspeção XLS já roda com IA real.
+
+**Merge direto em main recusado** (regra travada em sessão anterior, `.claude/memory/feedback-devops-branch-pr.md`
+— nunca push direto). Em vez disso: branch `feat/planejamento-lote-2026-08-04` pushada (gates
+pre-push verdes) e **PR #55 aberto**: https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/pull/55
+
+**E01-S121 desbloqueada por descoberta:** a doc trazida pelo Lucas confirma `PATCH /tasks/{id}`
+(JSONPatchDocument) e `PUT /tasks/` (upsert) do Auvo API v2, com os campos reais (`orientation`,
+`priority`, `idUserTo`, `taskDate`, etc). Achado: task Auvo **não tem campo "título"**, só
+`orientation` — a proposta original do spec precisa reconciliar isso antes da task 2 (ver
+`tasks.md`, SPEC_DEVIATION a registrar). Task 1 fechada; implementação (tasks 2–6) ainda não feita.
+
+**Release de produção (E01-S129), autorizado explicitamente pelo Lucas:**
+- Migrations `0165`–`0171` revisadas uma a uma (todas aditivas: coluna com default, view,
+  tabela nova com RLS FORCE, trigger removido com comentário de reversão, função nova, backfill,
+  índice único — checado sem duplicata de `chamado_id` antes) e aplicadas via `supabase db push
+  --linked`. Confirmado `migration list --linked` local=remote em todas.
+- **SEC-001 fechado:** RLS FORCE confirmado via SQL não só nas 3 tabelas tocadas, mas varrendo
+  **todos os schemas de domínio** (pcm/config/comercial/atendimento/financeiro/area_cliente/
+  marketing/growth/gestao/audit) — zero tabela sem `relrowsecurity`/`relforcerowsecurity`.
+- **Achado real:** `pcm-auvo-open-task` (E01-S125) e `pcm-auvo-task-checklist` (E01-S130) estavam
+  no repo mas **nunca tinham sido deployadas** — sem isso as duas stories não funcionariam em
+  produção mesmo com a migration aplicada (a UI chamaria uma function inexistente, 404). Deploy
+  bloqueado uma vez pelo classificador de permissão do auto mode (ação de blast radius maior,
+  código novo em produção) — perguntei ao Lucas, autorizado, deployado via `--use-api` (sem
+  Docker, mesmo padrão de E01-S05). Smoke confirma as duas `ACTIVE`: 401 sem auth (não 404).
+- **Playwright não rodou** — não é falha do código: a porta 5173 já estava ocupada por um dev
+  server de **outro projeto do Lucas** (`Akros`, ~18h de uptime); `reuseExistingServer: true` do
+  Playwright conectou nele por engano (404 no router errado). Não derrubei o processo de outro
+  projeto sem perguntar. Fica pendente — mesma lacuna já repetida em quase toda story do lote.
+
+**Próximo passo:** Lucas decide sobre o merge do PR #55 (Netlify checks verdes; sem GH Actions CI
+configurado neste repo — ver `feedback-sempre-rodar-playwright.md`, motivo de sempre rodar
+Playwright manualmente). Depois do merge: liberar a porta 5173 pra rodar Playwright de verdade,
+implementar E01-S121 (tasks 2–6, contrato já confirmado), decidir E01-S122 (campo de contrato).
+
 ## 2026-08-06 — Lote continua (Codex)
 
 - E01-S125 local concluída: auditoria dos produtores, migration `0168` remove trigger automático,
