@@ -92,6 +92,7 @@ interface InspecaoItemRow {
   destino: DestinoItemAssessment | null;
   destino_responsavel: ResponsavelDestino | null;
   auvo_questao_chave: string | null;
+  auvo_importacao_provisoria: boolean;
 }
 
 interface TipoInspecaoRow {
@@ -149,7 +150,7 @@ const INSPECAO_COLS =
   "id,client_id,titulo,data_inspecao,responsavel_tecnico,status,observacoes_gerais,total_itens,itens_conformes,itens_nao_conformes,itens_atencao,codigo,tipo_inspecao_id,edificacao,endereco,hora_inicio,hora_fim,inspetor,responsavel_no_local,escopo,norma_tecnica,art,condicoes,anexos,e_assessment,motivo_assessment" as const;
 
 const ITEM_COLS =
-  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,foto_urls,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes,destino,destino_responsavel,auvo_questao_chave" as const;
+  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,foto_urls,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes,destino,destino_responsavel,auvo_questao_chave,auvo_importacao_provisoria" as const;
 
 const TIPO_INSPECAO_COLS = "id,nome,norma_tecnica,descricao,ativo" as const;
 const TEMPLATE_COLS = "id,tipo_inspecao_id,nome,ativo" as const;
@@ -243,6 +244,7 @@ function mapItem(row: InspecaoItemRow): InspecaoItem {
     destino: row.destino,
     destinoResponsavel: row.destino_responsavel,
     auvoQuestaoChave: row.auvo_questao_chave,
+    auvoImportacaoProvisoria: row.auvo_importacao_provisoria,
   };
 }
 
@@ -290,6 +292,8 @@ function linhaItemImportado(
     ordem: number;
     createdBy: string;
     auvoQuestaoChave?: string | null;
+    auvoImportacaoProvisoria?: boolean;
+    auvoTaskId?: number | null;
   },
 ) {
   const score = item.gravidade * item.urgencia * item.tendencia;
@@ -308,6 +312,8 @@ function linhaItemImportado(
     ordem: ctx.ordem,
     created_by: ctx.createdBy,
     auvo_questao_chave: ctx.auvoQuestaoChave ?? null,
+    auvo_importacao_provisoria: ctx.auvoImportacaoProvisoria ?? false,
+    auvo_task_id: ctx.auvoTaskId ?? null,
   };
 }
 
@@ -952,6 +958,12 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
     auvoTaskId: number,
     userId: string,
   ): Promise<InspecaoItem[]> {
+    const { data: tarefaAoVivo, error: tarefaAoVivoError } = await supabase.functions.invoke(
+      "pcm-auvo-task-checklist",
+      { body: { taskId: auvoTaskId } },
+    );
+    if (tarefaAoVivoError) throw tarefaAoVivoError;
+
     const { data: snapshot, error: snapshotError } = await supabase
       .schema("pcm")
       .from("auvo_task_snapshots")
@@ -960,9 +972,18 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
       .maybeSingle();
     if (snapshotError) throw snapshotError;
 
+    // E01-S130: a tarefa em andamento ainda não recebeu webhook de conclusão; usa a leitura ao
+    // vivo primeiro e conserva o snapshot final apenas como fallback de disponibilidade.
+    const respostaAoVivo = tarefaAoVivo as { checklist?: unknown; provisorio?: boolean } | null;
+    const checklistAoVivo = respostaAoVivo?.checklist ?? [];
     const questoes: QuestaoAuvo[] = mapearQuestionarioParaQuestoes(
-      (snapshot as { checklist: unknown } | null)?.checklist ?? [],
+      Array.isArray(checklistAoVivo) && checklistAoVivo.length > 0
+        ? checklistAoVivo
+        : ((snapshot as { checklist: unknown } | null)?.checklist ?? []),
     );
+    if (questoes.length === 0) {
+      throw new Error("Tarefa sem questionário preenchido ainda.");
+    }
 
     // E01-S98: idempotência por importação inteira, não mais por pergunta — a análise por IA
     // (abaixo) filtra/reagrupa perguntas em inconformidades, perdendo o vínculo 1:1 pergunta→item
@@ -983,36 +1004,36 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
       );
     }
 
-    if (questoes.length > 0) {
-      // Mesmo formato Local/Fotos/Relato do import de XLS (E01-S96) — a Edge Function
-      // `importar-relatorio-pdf` é genérica, não sabe se o texto veio de planilha ou questionário.
-      // Decisão do Lucas (2026-07-24): manda TODAS as perguntas, a IA decide o que é inconformidade
-      // real (perguntas "tudo certo" tendem a não virar item).
-      const texto = questoes
-        .map((questao) => {
-          const fotos = questao.fotoUrls.length > 0 ? `\nFotos: ${questao.fotoUrls.join(";")}` : "";
-          return `Pergunta: ${questao.pergunta}\nResposta: ${questao.resposta}${fotos}`;
-        })
-        .join("\n\n---\n\n");
+    // Mesmo formato Local/Fotos/Relato do import de XLS (E01-S96) — a Edge Function
+    // `importar-relatorio-pdf` é genérica, não sabe se o texto veio de planilha ou questionário.
+    // Decisão do Lucas (2026-07-24): manda TODAS as perguntas, a IA decide o que é inconformidade
+    // real (perguntas "tudo certo" tendem a não virar item).
+    const texto = questoes
+      .map((questao) => {
+        const fotos = questao.fotoUrls.length > 0 ? `\nFotos: ${questao.fotoUrls.join(";")}` : "";
+        return `Pergunta: ${questao.pergunta}\nResposta: ${questao.resposta}${fotos}`;
+      })
+      .join("\n\n---\n\n");
 
-      const itensClassificados = await this.processarRelatorioInspecao(texto);
-      if (itensClassificados.length > 0) {
-        const base = Math.floor(Date.now() / 1000);
-        const linhas = itensClassificados.map((item, index) =>
-          linhaItemImportado(item, {
-            inspecaoId,
-            clientId,
-            ordem: base + index,
-            createdBy: userId,
-            auvoQuestaoChave: `auvo-task-${auvoTaskId}-${index}`,
-          }),
-        );
-        const { error: insertError } = await supabase
-          .schema("pcm")
-          .from("inspecao_itens")
-          .insert(linhas);
-        if (insertError) throw insertError;
-      }
+    const itensClassificados = await this.processarRelatorioInspecao(texto);
+    if (itensClassificados.length > 0) {
+      const base = Math.floor(Date.now() / 1000);
+      const linhas = itensClassificados.map((item, index) =>
+        linhaItemImportado(item, {
+          inspecaoId,
+          clientId,
+          ordem: base + index,
+          createdBy: userId,
+          auvoQuestaoChave: `auvo-task-${auvoTaskId}-${index}`,
+          auvoImportacaoProvisoria: respostaAoVivo?.provisorio ?? false,
+          auvoTaskId,
+        }),
+      );
+      const { error: insertError } = await supabase
+        .schema("pcm")
+        .from("inspecao_itens")
+        .insert(linhas);
+      if (insertError) throw insertError;
     }
 
     const { data, error } = await supabase

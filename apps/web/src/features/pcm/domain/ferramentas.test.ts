@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { validarFerramenta, validarFerramentaInline } from "./ferramentas";
+import {
+  quantidadeDerivadaUnidades,
+  validarCadastroItemFerramenta,
+  validarFerramenta,
+  validarFerramentaInline,
+} from "./ferramentas";
 
 describe("ferramentas", () => {
+  it("valida item físico e deriva quantidade das unidades", () => {
+    expect(validarCadastroItemFerramenta({ nome: " Chave ", codigo: " PAT-1 " })).toEqual({
+      nome: "Chave",
+      codigo: "PAT-1",
+      descricao: null,
+      categoriaId: null,
+    });
+    expect(() => validarCadastroItemFerramenta({ nome: "Chave", codigo: "" })).toThrow("Código");
+    expect(quantidadeDerivadaUnidades([{ status: "disponivel" }, { status: "baixada" }])).toBe(1);
+  });
+
   it("normaliza cadastro de ferramenta", () => {
     expect(
       validarFerramenta({

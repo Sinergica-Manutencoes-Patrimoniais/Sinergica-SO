@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Tooltip } from "../../../components/ui/Tooltip";
+import { listarReservasFerramenta } from "../application/ferramenta-reservas";
+import { listarProximasPreventivas } from "../application/pmoc";
 import {
   buscarUltimaRunSincronizacaoAuvo,
   consultarRunSincronizacaoAuvo,
@@ -25,7 +27,7 @@ import {
 } from "../application/sincronizar-auvo";
 import type { SincronizacaoAuvoRun } from "../application/sincronizar-auvo-gateway";
 import { PainelDadosOperacionaisAuvo } from "../components/PainelDadosOperacionaisAuvo";
-import { montarDashboardPcm } from "../domain/dashboard-pcm";
+import { montarCockpitBomDia, montarDashboardPcm } from "../domain/dashboard-pcm";
 import type { DashboardPcmResumo, KpiDashboardPcm } from "../domain/dashboard-pcm";
 import {
   PRIORIDADE_LABEL,
@@ -34,9 +36,16 @@ import {
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
+import { supabaseAgendaTecnicoAdapter } from "../infrastructure/supabase-agenda-tecnico-adapter";
+import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseDashboardPcmAdapter } from "../infrastructure/supabase-dashboard-pcm-adapter";
-import type { AuvoSyncHealthItem } from "../infrastructure/supabase-dashboard-pcm-adapter";
+import type {
+  AuvoSyncErrorItem,
+  AuvoSyncHealthItem,
+} from "../infrastructure/supabase-dashboard-pcm-adapter";
+import { supabaseFerramentaReservasAdapter } from "../infrastructure/supabase-ferramenta-reservas-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
+import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 import { supabaseSincronizarAuvoAdapter } from "../infrastructure/supabase-sincronizar-auvo-adapter";
 
@@ -51,41 +60,81 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; dashboard: DashboardPcmResumo };
 
+function hojeLocalIso(data = new Date()): string {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
 export function PcmDashboardPage({
   refreshKey = 0,
   podeCriarOs,
   onNovaOs,
   onVerOrdens,
+  onVerOrdensHoje,
   onVerBacklog,
+  onVerAgenda,
+  onVerInspecoes,
+  onVerFerramentas,
+  onVerRelatorioDiario,
 }: {
   refreshKey?: number;
   podeCriarOs: boolean;
   onNovaOs: () => void;
   onVerOrdens: () => void;
+  onVerOrdensHoje: () => void;
   onVerBacklog: () => void;
+  onVerAgenda: () => void;
+  onVerInspecoes: () => void;
+  onVerFerramentas: () => void;
+  onVerRelatorioDiario: (data?: string) => void;
 }) {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [sincronizacaoAuvo, setSincronizacaoAuvo] = useState<EstadoSincronizacaoAuvo>({
     fase: "ocioso",
   });
   const [saudeSync, setSaudeSync] = useState<AuvoSyncHealthItem[]>([]);
+  const [errosSync, setErrosSync] = useState<AuvoSyncErrorItem[] | null>(null);
+  const [erroDetalheSync, setErroDetalheSync] = useState<string | null>(null);
+  const [carregandoErrosSync, setCarregandoErrosSync] = useState(false);
   const pollingRef = useRef<number | null>(null);
 
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
     try {
-      const [ordens, inspecoes] = await Promise.all([
-        supabaseHubOsAdapter.listarOrdensServico(),
-        supabaseQualidadeAdapter.listarInspecoes(),
-      ]);
+      const hoje = hojeLocalIso();
+      const [ordens, inspecoes, chamados, agenda, tecnicos, preventivas, reservasFerramenta] =
+        await Promise.all([
+          supabaseHubOsAdapter.listarOrdensServico(),
+          supabaseQualidadeAdapter.listarInspecoes(),
+          supabaseChamadosAdapter.listar(),
+          supabaseAgendaTecnicoAdapter.listarSemana(hoje, hoje),
+          supabaseAgendaTecnicoAdapter.listarFuncionarios(),
+          listarProximasPreventivas(supabasePmocAdapter),
+          listarReservasFerramenta(supabaseFerramentaReservasAdapter),
+        ]);
       const [resumoAuvo, saude] = await Promise.all([
         supabaseDashboardPcmAdapter.obterResumoAuvo(ordens),
         supabaseDashboardPcmAdapter.obterSaudeSync(),
       ]);
       setSaudeSync(saude);
+      const dashboard = montarDashboardPcm(ordens, inspecoes, new Date(), resumoAuvo);
+      dashboard.cockpit = montarCockpitBomDia(hoje, {
+        ordens,
+        chamados,
+        agenda,
+        tecnicos,
+        errosSyncAuvo: saude.reduce((total, item) => total + item.errorCount, 0),
+        inspecoesPendentes: inspecoes.filter(
+          (inspecao) => inspecao.status !== "concluida" && inspecao.status !== "backlog_gerado",
+        ).length,
+        preventivas,
+        reservasFerramenta,
+      });
       setEstado({
         fase: "pronto",
-        dashboard: montarDashboardPcm(ordens, inspecoes, new Date(), resumoAuvo),
+        dashboard,
       });
     } catch (error) {
       setEstado({
@@ -180,6 +229,21 @@ export function PcmDashboardPage({
     }
   }, [acompanharRun]);
 
+  const abrirErrosSync = useCallback(async () => {
+    setErrosSync([]);
+    setErroDetalheSync(null);
+    setCarregandoErrosSync(true);
+    try {
+      setErrosSync(await supabaseDashboardPcmAdapter.listarErrosSyncAuvo());
+    } catch (error) {
+      setErroDetalheSync(
+        error instanceof Error ? error.message : "Não foi possível carregar os erros do Auvo.",
+      );
+    } finally {
+      setCarregandoErrosSync(false);
+    }
+  }, []);
+
   if (estado.fase === "carregando") {
     return <div className="p-8 text-center text-sm text-ink-3">Carregando dashboard PCM…</div>;
   }
@@ -246,7 +310,7 @@ export function PcmDashboardPage({
             )}
           </div>
           <StatusSincronizacaoAuvo estado={sincronizacaoAuvo} />
-          <BadgeSaudeSync itens={saudeSync} />
+          <BadgeSaudeSync itens={saudeSync} onAbrirErros={abrirErrosSync} />
         </div>
       </div>
 
@@ -256,9 +320,32 @@ export function PcmDashboardPage({
         ))}
       </div>
 
+      {dashboard.cockpit ? (
+        <CockpitBomDiaCards
+          cockpit={dashboard.cockpit}
+          onVerOrdensHoje={onVerOrdensHoje}
+          onVerOrdens={onVerOrdens}
+          onVerBacklog={onVerBacklog}
+          onVerAgenda={onVerAgenda}
+          onVerInspecoes={onVerInspecoes}
+          onVerFerramentas={onVerFerramentas}
+          onVerRelatorioDiario={onVerRelatorioDiario}
+          onVerErrosSync={abrirErrosSync}
+        />
+      ) : null}
+
       {dashboard.auvo && <PainelAuvo dashboard={dashboard.auvo} />}
       {dashboard.auvo && <PainelCampoAuvo dashboard={dashboard.auvo} />}
       <PainelDadosOperacionaisAuvo />
+
+      {errosSync !== null && (
+        <DetalheErrosSyncAuvo
+          itens={errosSync}
+          carregando={carregandoErrosSync}
+          erro={erroDetalheSync}
+          onFechar={() => setErrosSync(null)}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-card rounded-[10px] border border-line">
@@ -374,7 +461,186 @@ export function PcmDashboardPage({
   );
 }
 
-function BadgeSaudeSync({ itens }: { itens: AuvoSyncHealthItem[] }) {
+function CockpitBomDiaCards({
+  cockpit,
+  onVerOrdensHoje,
+  onVerOrdens,
+  onVerBacklog,
+  onVerAgenda,
+  onVerInspecoes,
+  onVerFerramentas,
+  onVerRelatorioDiario,
+  onVerErrosSync,
+}: {
+  cockpit: NonNullable<DashboardPcmResumo["cockpit"]>;
+  onVerOrdensHoje: () => void;
+  onVerOrdens: () => void;
+  onVerBacklog: () => void;
+  onVerAgenda: () => void;
+  onVerInspecoes: () => void;
+  onVerFerramentas: () => void;
+  onVerRelatorioDiario: (data?: string) => void;
+  onVerErrosSync: () => void;
+}) {
+  return (
+    <section className="rounded-[10px] border border-line bg-card p-4" aria-label="Cockpit bom dia">
+      <div className="mb-3">
+        <h3 className="text-sm font-semibold text-ink">Bom dia · operação de hoje</h3>
+        <p className="text-xs text-ink-3">Decisões e pontos de atenção para {cockpit.dia}</p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <CockpitCard
+          titulo="OS previstas hoje"
+          valor={cockpit.osHoje.length}
+          detalhe={cockpit.osHoje.length ? "Ver board do dia" : "Nada para hoje"}
+          onClick={onVerOrdensHoje}
+        />
+        <CockpitCard
+          titulo="Técnicos alocados"
+          valor={cockpit.alocacoes.length}
+          detalhe={
+            cockpit.alocacoes.length
+              ? cockpit.alocacoes
+                  .slice(0, 2)
+                  .map((item) => `${item.tecnicoNome} · ${item.clienteNome}`)
+                  .join("; ")
+              : "Sem alocações"
+          }
+          onClick={onVerAgenda}
+        />
+        <CockpitCard
+          titulo="Funcionários livres"
+          valor={cockpit.tecnicosLivres.length}
+          detalhe={
+            cockpit.tecnicosLivres.length
+              ? cockpit.tecnicosLivres.slice(0, 3).join(", ")
+              : "Todos alocados"
+          }
+          onClick={onVerAgenda}
+        />
+        <CockpitCard
+          titulo="Chamados sem tratativa"
+          valor={cockpit.chamadosSemTratativa}
+          detalhe={cockpit.chamadosSemTratativa ? "Abrir Solicitação" : "Sem chamados parados"}
+          onClick={onVerOrdens}
+          alerta={cockpit.chamadosSemTratativa > 0}
+        />
+        <CockpitCard
+          titulo="C1 / SLA"
+          valor={cockpit.emergenciaisAbertas}
+          detalhe={cockpit.emergenciaisAbertas ? "Emergenciais abertas" : "Sem emergência aberta"}
+          onClick={onVerOrdens}
+          alerta={cockpit.emergenciaisAbertas > 0}
+        />
+        <CockpitCard
+          titulo="OS atrasadas"
+          valor={cockpit.osAtrasadas}
+          detalhe={cockpit.osAtrasadas ? "Replanejar ou executar" : "Nenhum atraso"}
+          onClick={onVerOrdens}
+          alerta={cockpit.osAtrasadas > 0}
+        />
+        <CockpitCard
+          titulo="Capacidade × demanda"
+          valor={`${cockpit.capacidadeDemanda.os}/${cockpit.capacidadeDemanda.tecnicos}`}
+          detalhe="OS previstas / técnicos ativos"
+          onClick={onVerAgenda}
+        />
+        <CockpitCard
+          titulo="PMOC da semana"
+          valor={cockpit.preventivasSemana}
+          detalhe={cockpit.preventivasSemana ? "Visitas preventivas abertas" : "Nenhuma preventiva"}
+          onClick={onVerAgenda}
+        />
+        <CockpitCard
+          titulo="Top backlog GUT"
+          valor={cockpit.topBacklog.length}
+          detalhe={
+            cockpit.topBacklog[0] ? `Maior score: ${cockpit.topBacklog[0].scorePcm}` : "Fila vazia"
+          }
+          onClick={onVerBacklog}
+        />
+        <CockpitCard
+          titulo="Saúde Auvo"
+          valor={cockpit.errosSyncAuvo == null ? "—" : cockpit.errosSyncAuvo}
+          detalhe={
+            cockpit.errosSyncAuvo == null
+              ? "Indisponível"
+              : cockpit.errosSyncAuvo
+                ? "Erros para investigar"
+                : "Sync saudável"
+          }
+          onClick={onVerErrosSync}
+          alerta={(cockpit.errosSyncAuvo ?? 0) > 0}
+        />
+        <CockpitCard
+          titulo="Resumo de ontem"
+          valor="Ver"
+          detalhe="Relatório diário"
+          onClick={() => onVerRelatorioDiario(diaAnterior(cockpit.dia))}
+        />
+        <CockpitCard
+          titulo="Inspeções pendentes"
+          valor={cockpit.inspecoesPendentes}
+          detalhe={cockpit.inspecoesPendentes ? "Itens para fechar" : "Nenhuma pendência"}
+          onClick={onVerInspecoes}
+        />
+        <CockpitCard
+          titulo="Ferramentas"
+          valor={cockpit.ferramentasHoje}
+          detalhe={
+            cockpit.ferramentasAtrasadas
+              ? `${cockpit.ferramentasAtrasadas} devolução(ões) atrasada(s)`
+              : "Reservas e devoluções em dia"
+          }
+          onClick={onVerFerramentas}
+          alerta={cockpit.ferramentasAtrasadas > 0}
+        />
+      </div>
+    </section>
+  );
+}
+
+function diaAnterior(dia: string): string {
+  const data = new Date(`${dia}T12:00:00`);
+  data.setDate(data.getDate() - 1);
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+}
+
+function CockpitCard({
+  titulo,
+  valor,
+  detalhe,
+  onClick,
+  alerta = false,
+}: {
+  titulo: string;
+  valor: string | number;
+  detalhe: string;
+  onClick: () => void;
+  alerta?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-[8px] border p-3 text-left transition-colors hover:bg-line-soft ${alerta ? "border-[#F2C0B5] bg-[#FFF8F6]" : "border-line bg-paper"}`}
+    >
+      <p className="text-xs font-semibold text-ink-3">{titulo}</p>
+      <p className={`mt-1 text-xl font-semibold ${alerta ? "text-[#C5362B]" : "text-ink"}`}>
+        {valor}
+      </p>
+      <p className="mt-1 line-clamp-2 text-xs text-ink-3">{detalhe}</p>
+    </button>
+  );
+}
+
+function BadgeSaudeSync({
+  itens,
+  onAbrirErros,
+}: {
+  itens: AuvoSyncHealthItem[];
+  onAbrirErros: () => void;
+}) {
   if (itens.length === 0) {
     return <span className="text-[11px] text-ink-3">Saúde Auvo: sem dados</span>;
   }
@@ -383,19 +649,75 @@ function BadgeSaudeSync({ itens }: { itens: AuvoSyncHealthItem[] }) {
   const titulo = comErro
     .map((item) => `${item.entity}: ${item.lastError ?? `${item.errorCount} erro(s)`}`)
     .join("\n");
+  const conteudo = `Saúde Auvo: ${comErro.length > 0 ? `${comErro.length} com erro` : `${dryRun.length} dry-run`}`;
+  if (comErro.length > 0) {
+    return (
+      <button
+        type="button"
+        onClick={onAbrirErros}
+        title={titulo}
+        className="rounded-full bg-[#FFF4F2] px-2 py-0.5 text-[11px] font-semibold text-[#A12D24] hover:underline focus:outline-none focus:ring-2 focus:ring-orange"
+      >
+        {conteudo}
+      </button>
+    );
+  }
   return (
     <span
       title={titulo || `${itens.length} entidades monitoradas`}
       className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-        comErro.length > 0
-          ? "bg-[#FFF4F2] text-[#A12D24]"
-          : dryRun.length > 0
-            ? "bg-[#FFF8E6] text-[#8A5A00]"
-            : "bg-[#E7F5EC] text-[#1E8E45]"
+        dryRun.length > 0 ? "bg-[#FFF8E6] text-[#8A5A00]" : "bg-[#E7F5EC] text-[#1E8E45]"
       }`}
     >
-      Saúde Auvo: {comErro.length > 0 ? `${comErro.length} com erro` : `${dryRun.length} dry-run`}
+      {conteudo}
     </span>
+  );
+}
+
+function DetalheErrosSyncAuvo({
+  itens,
+  carregando,
+  erro,
+  onFechar,
+}: {
+  itens: AuvoSyncErrorItem[];
+  carregando: boolean;
+  erro: string | null;
+  onFechar: () => void;
+}) {
+  return (
+    <section className="rounded-[10px] border border-[#F2C0B5] bg-card" aria-live="polite">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Erros de sincronização Auvo</h3>
+          <p className="text-xs text-ink-3">Última falha por entidade e registro local.</p>
+        </div>
+        <button type="button" onClick={onFechar} className="btn-secondary text-xs">
+          Fechar
+        </button>
+      </div>
+      {carregando ? (
+        <p className="px-4 py-5 text-sm text-ink-3">Carregando erros…</p>
+      ) : erro ? (
+        <p className="px-4 py-5 text-sm text-[#A12D24]">{erro}</p>
+      ) : itens.length === 0 ? (
+        <p className="px-4 py-5 text-sm text-ink-3">Nenhum erro pendente de detalhamento.</p>
+      ) : (
+        <ul className="divide-y divide-line-soft">
+          {itens.map((item, indice) => (
+            <li key={`${item.entity}:${item.rowId ?? "pull"}:${indice}`} className="px-4 py-3">
+              <p className="text-sm font-semibold text-ink">
+                {item.entity} · {item.rowId ?? "ID local indisponível"}
+              </p>
+              <p className="mt-0.5 text-sm text-[#A12D24]">{item.lastError}</p>
+              <p className="mt-1 text-[11px] text-ink-3">
+                Última falha: {formatarDataHoraCurta(item.lastErrorAt)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

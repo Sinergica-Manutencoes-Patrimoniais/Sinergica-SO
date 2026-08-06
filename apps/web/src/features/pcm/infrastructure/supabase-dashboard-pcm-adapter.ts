@@ -3,6 +3,7 @@ import {
   type ClienteEquipamentosAuvo,
   type DashboardPcmAuvoResumo,
   consolidarSinaisCampoAuvo,
+  mensagemErroSyncAuvoLegivel,
 } from "../domain/dashboard-pcm";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 
@@ -54,6 +55,13 @@ export interface AuvoSyncHealthItem {
   lastError: string | null;
   pendingCount: number;
   errorCount: number;
+}
+
+export interface AuvoSyncErrorItem {
+  entity: string;
+  rowId: string | null;
+  lastError: string;
+  lastErrorAt: string | null;
 }
 
 function maxIso(datas: Array<string | null | undefined>): string | null {
@@ -131,6 +139,21 @@ export const supabaseDashboardPcmAdapter = {
       lastError: row.last_error as string | null,
       pendingCount: Number(row.push_pending_count ?? 0),
       errorCount: Number(row.push_error_count ?? 0),
+    }));
+  },
+
+  async listarErrosSyncAuvo(): Promise<AuvoSyncErrorItem[]> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("auvo_sync_error_details")
+      .select("entity,row_id,last_error,last_error_at")
+      .order("last_error_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((row) => ({
+      entity: row.entity as string,
+      rowId: row.row_id as string | null,
+      lastError: mensagemErroSyncAuvoLegivel(row.last_error as string | null),
+      lastErrorAt: row.last_error_at as string | null,
     }));
   },
 

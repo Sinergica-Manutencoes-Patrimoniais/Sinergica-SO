@@ -6,4 +6,5 @@ import { carregarEnv } from "../config/env";
 
 const env = carregarEnv(import.meta.env as unknown as Record<string, string | undefined>);
 
+export const supabaseUrl = env.VITE_SUPABASE_URL;
 export const supabase = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);

@@ -179,6 +179,18 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
     return { id: data.id as string, numero: data.numero as string };
   },
 
+  async obterPorChamado(chamadoId): Promise<OrdemServicoCriada | null> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select("id,numero")
+      .eq("chamado_id", chamadoId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? { id: data.id as string, numero: data.numero as string } : null;
+  },
+
   async editarOrdemServico(input: EditarOrdemServicoInput): Promise<void> {
     const { error } = await supabase
       .schema("pcm")

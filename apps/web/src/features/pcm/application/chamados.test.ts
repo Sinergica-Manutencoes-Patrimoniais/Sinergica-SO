@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Chamado } from "../domain/chamados";
+import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   adicionarAnotacaoChamado,
   cancelarChamado,
   criarChamado,
   gerarOsDoChamado,
+  gerarOsDoChamadoNoStatus,
   listarAnotacoesChamado,
   listarChamados,
 } from "./chamados";
@@ -168,6 +170,86 @@ describe("chamados (use case)", () => {
         ),
       ).rejects.toThrow();
       expect(gatewayOs.criarOrdemServico).not.toHaveBeenCalled();
+    });
+
+    it("E01-S129: recupera OS existente sem duplicar após falha entre as escritas", async () => {
+      const gatewayChamados = gatewayChamadosFake();
+      const gatewayOs = gatewayOsFake();
+      gatewayOs.obterPorChamado = vi.fn(async () => ({ id: "os-existente", numero: "CH-0001" }));
+      const criada = await gerarOsDoChamado(
+        gatewayChamados,
+        gatewayOs,
+        CHAMADO_ABERTO,
+        {
+          categoria: "corretiva",
+          prioridade: "media",
+          gravidade: 3,
+          urgencia: 3,
+          tendencia: 3,
+          dorCliente: null,
+          observacao: null,
+          localDescricao: null,
+          solicitante: null,
+          origem: "manual",
+          tecnicoId: null,
+          tipoTarefaId: "tipo-1",
+          dataPrevista: null,
+        },
+        "user-1",
+        "convertido_os",
+      );
+      expect(criada.id).toBe("os-existente");
+      expect(gatewayOs.criarOrdemServico).not.toHaveBeenCalled();
+      expect(gatewayChamados.marcarStatusComOs).toHaveBeenCalledWith(
+        "cha-1",
+        "convertido_os",
+        "os-existente",
+        "user-1",
+      );
+    });
+
+    it("E01-S124 AC-1: após converter, move a OS para a coluna de destino", async () => {
+      const gatewayChamados = gatewayChamadosFake();
+      const gatewayOs = gatewayOsFake();
+      const gatewayHub = {
+        alterarStatus: vi.fn(async () => ({}) as OrdemServicoOperacional),
+      };
+
+      await gerarOsDoChamadoNoStatus(
+        gatewayChamados,
+        gatewayOs,
+        gatewayHub,
+        CHAMADO_ABERTO,
+        {
+          categoria: "corretiva",
+          prioridade: "media",
+          gravidade: 3,
+          urgencia: 3,
+          tendencia: 3,
+          dorCliente: null,
+          observacao: null,
+          localDescricao: null,
+          solicitante: null,
+          origem: "manual",
+          tecnicoId: null,
+          tipoTarefaId: "tipo-1",
+          dataPrevista: null,
+        },
+        "user-1",
+        "corretiva",
+      );
+
+      expect(gatewayChamados.marcarStatusComOs).toHaveBeenCalledWith(
+        "cha-1",
+        "convertido_os",
+        "os-1",
+        "user-1",
+      );
+      expect(gatewayHub.alterarStatus).toHaveBeenCalledWith({
+        id: "os-1",
+        status: "corretiva",
+        updatedBy: "user-1",
+      });
     });
   });
 

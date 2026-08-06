@@ -10,6 +10,225 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-06 (cont. 2) — Release em produção + PR aberto + doc Auvo desbloqueia E01-S121 (Claude/Sonnet 5)
+
+Lucas pediu pra checar as specs pendentes e seguir o desenvolvimento. Achado: o lote inteiro
+(E00-S13, E01-S120–S138 exceto S121, E02-S27) já estava "implementado localmente"; só faltavam
+gates externos. Lucas então: (1) mandou a chave OpenRouter real pra testar inspeção, (2) mandou o
+link da doc oficial Auvo (`auvoapiv2.docs.apiary.io`) que desbloqueia E01-S121, (3) pediu pra subir
+pra main com merge.
+
+**OpenRouter (E00-S13):** `OPENROUTER_API_KEY` setada como secret de Edge Function em produção via
+`supabase secrets set --project-ref nudannsrfvjggoergvyn` — path já previsto no fallback de
+`_shared/openrouter.ts`. Import de inspeção XLS já roda com IA real.
+
+**Merge direto em main recusado** (regra travada em sessão anterior, `.claude/memory/feedback-devops-branch-pr.md`
+— nunca push direto). Em vez disso: branch `feat/planejamento-lote-2026-08-04` pushada (gates
+pre-push verdes) e **PR #55 aberto**: https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/pull/55
+
+**E01-S121 desbloqueada por descoberta:** a doc trazida pelo Lucas confirma `PATCH /tasks/{id}`
+(JSONPatchDocument) e `PUT /tasks/` (upsert) do Auvo API v2, com os campos reais (`orientation`,
+`priority`, `idUserTo`, `taskDate`, etc). Achado: task Auvo **não tem campo "título"**, só
+`orientation` — a proposta original do spec precisa reconciliar isso antes da task 2 (ver
+`tasks.md`, SPEC_DEVIATION a registrar). Task 1 fechada; implementação (tasks 2–6) ainda não feita.
+
+**Release de produção (E01-S129), autorizado explicitamente pelo Lucas:**
+- Migrations `0165`–`0171` revisadas uma a uma (todas aditivas: coluna com default, view,
+  tabela nova com RLS FORCE, trigger removido com comentário de reversão, função nova, backfill,
+  índice único — checado sem duplicata de `chamado_id` antes) e aplicadas via `supabase db push
+  --linked`. Confirmado `migration list --linked` local=remote em todas.
+- **SEC-001 fechado:** RLS FORCE confirmado via SQL não só nas 3 tabelas tocadas, mas varrendo
+  **todos os schemas de domínio** (pcm/config/comercial/atendimento/financeiro/area_cliente/
+  marketing/growth/gestao/audit) — zero tabela sem `relrowsecurity`/`relforcerowsecurity`.
+- **Achado real:** `pcm-auvo-open-task` (E01-S125) e `pcm-auvo-task-checklist` (E01-S130) estavam
+  no repo mas **nunca tinham sido deployadas** — sem isso as duas stories não funcionariam em
+  produção mesmo com a migration aplicada (a UI chamaria uma function inexistente, 404). Deploy
+  bloqueado uma vez pelo classificador de permissão do auto mode (ação de blast radius maior,
+  código novo em produção) — perguntei ao Lucas, autorizado, deployado via `--use-api` (sem
+  Docker, mesmo padrão de E01-S05). Smoke confirma as duas `ACTIVE`: 401 sem auth (não 404).
+- **Playwright não rodou** — não é falha do código: a porta 5173 já estava ocupada por um dev
+  server de **outro projeto do Lucas** (`Akros`, ~18h de uptime); `reuseExistingServer: true` do
+  Playwright conectou nele por engano (404 no router errado). Não derrubei o processo de outro
+  projeto sem perguntar. Fica pendente — mesma lacuna já repetida em quase toda story do lote.
+
+**Próximo passo:** Lucas decide sobre o merge do PR #55 (Netlify checks verdes; sem GH Actions CI
+configurado neste repo — ver `feedback-sempre-rodar-playwright.md`, motivo de sempre rodar
+Playwright manualmente). Depois do merge: liberar a porta 5173 pra rodar Playwright de verdade,
+implementar E01-S121 (tasks 2–6, contrato já confirmado), decidir E01-S122 (campo de contrato).
+
+## 2026-08-06 — Lote continua (Codex)
+
+- E01-S125 local concluída: auditoria dos produtores, migration `0168` remove trigger automático,
+  Edge `pcm-auvo-open-task` autenticada faz dry-run e confirmação, UI no Board/Backlog/conversão e
+  botão no detalhe. `0169` reserva abertura por 5min para não duplicar task em clique concorrente.
+  Commits `aaac967`, `e5426f9`, `88dca95`, `7f1064e`, `09d2d65`, `9ed7522`, `5d8dc41`, `cf76b2c`.
+- E01-S136: PMOC semanal e reservas/devoluções agora têm contagem real; data do cockpit usa dia
+  local, não UTC. Commit `190e1f5`; Saúde Auvo abre o diagnóstico (`04402aa`) e o resumo de ontem
+  abre o relatório já filtrado (`1eb1e80`). Resta Playwright.
+- E01-S130 AC-4 local: migration `0170` vincula itens importados à tarefa Auvo (com backfill); ao
+  receber finalização, o webhook busca o checklist final, usa a mesma classificação Vault/IA e
+  atualiza as linhas existentes, mantendo IDs/destinos derivados. Falha externa retorna erro para
+  reentrega do webhook, sem deixar o assessment silenciosamente provisório. Deno/CI, evento Auvo e
+  Playwright continuam externos.
+- E01-S135 T2 local: relatório passa a incluir inspeções no período e preventivas PMOC/agenda no
+  futuro, todos filtrados pelo ID do cliente (PMOC ganhou `clienteId`, não há associação pelo
+  nome). Restam Playwright, CI de RLS e produção.
+- E01-S105 local: importador XLS ganhou parser com erro de coluna e preview, fallback bruto quando
+  IA falha, GUT editável e criação explícita de Chamados rastreados após revisão. Prompt v1 e eval
+  estrutural cobrem contrato/injection. Restam Deno/OpenRouter real e Playwright.
+- E01-S122 parcial: tooltips acessíveis cobrem status, tipo, status comercial, marcação e Auvo na
+  lista e Visão 360. Contrato segue bloqueado: não há coluna nem relação de contrato no cadastro;
+  status comercial foi explicitamente descrito como distinto, sem inferência.
+- E01-S129 revisão adversarial local: achou janela entre criar OS e marcar Chamado; migration
+  `0171` garante uma OS ativa por Chamado e o caso de uso recupera a existente no retry. Testes
+  `chamados` verdes; produção/Playwright/smoke continuam pendentes.
+- E01-S129 segurança local: migrations novas de tabela usam RLS FORCE (`0167`); `0166` é view com
+  detalhe Auvo higienizado; Edges revisadas exigem auth/HMAC e usam Vault/service-role só no
+  servidor. A confirmação direta de RLS em produção permanece `SEC-001`.
+- E01-S129 hardening local: `pnpm run ci:local` PASS — 783 testes, 9 skipped; build, typecheck,
+  arquitetura, migrations (171), auditoria e registry de 35 Edge Functions verdes. Avisos não
+  bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.
+- Revalidação final do worktree em 2026-08-06: `pnpm run ci:local` PASS com o mesmo escopo (783
+  testes, 9 skipped; 130 arquivos de teste verdes e 3 de integração skipped). ROADMAP reconciliado
+  com commits e tasks; `audit:esteira` confirma 582 documentos válidos.
+- Todas as entregas implementáveis localmente deste lote foram concluídas. Matriz de gates externos:
+  - **Credenciais/configuração real:** E00-S13 (Vault/OpenRouter) e E02-S27 (Evolution, instância,
+    QR e webhook).
+  - **Contrato Auvo ausente:** E01-S121 exige payload/documentação verificada de edição de task;
+    não foi inferido `PUT /tasks`.
+  - **Dados/diagnóstico de produção:** E01-S122 exige campo/relação de contrato; E01-S123 exige
+    sessão autenticada para classificar os seis erros reais.
+  - **Integração real Auvo/Edge:** E01-S105, S125 e S130 exigem Deno CI, segredo configurado e
+    evento/checklist real para validação final.
+  - **UAT navegador sem resíduos:** E01-S105, S120, S124, S126, S127, S130, S131, S133, S134,
+    S135, S136, S137 e S138 exigem Playwright contra ambiente autorizado e limpeza dos dados
+    temporários `[TESTE E2E]`.
+  - **Release:** E01-S129 requer inventário/aplicação remota das migrations `0165`–`0171`,
+    confirmação SQL de RLS (`SEC-001`), smoke autenticado e sign-off; nenhum push, PR, merge,
+    deploy ou banco de produção foi alterado nesta sessão.
+
+## 2026-08-05 — Lote de specs em andamento (Codex)
+
+- E01-S134 T1–T5: relatório diário sob demanda implementado (agregação no fuso do PCM, tela em
+  Relatórios, falha da saúde Auvo degradada e PDF); commits `b9e7bc8`, `e1670d8`, `d5e9b5d`,
+  `12a9470`. T6 Playwright ainda não roda para não criar ou reintroduzir dados `[TESTE E2E]`.
+- E01-S137 T1–T5 e E01-S138 T1–T4 implementadas localmente; T6/T5, respectivamente, aguardam
+  Playwright. E01-S133 validada pelo domínio/UI existente, task doc no commit `e544646`.
+- Próxima feature ativa: E01-S135, relatório interno por cliente + PDF + publicação no Portal;
+  confirmar primeiro os modelos/RLS já existentes do Portal antes de criar escrita.
+- E01-S135 T1,T3–T7: relatório de cliente interno (HTML/PDF) e publicação imutável no Portal
+  implementados, com migration `0167` e RLS FORCE; commits `67e8442`, `3d6b090`, `6851071`,
+  `0d01327`, `2076cf5`. Decisão: o retrato inicial cobre OS concluídas/planejadas e link Auvo;
+  PMOC/inspeções ainda não têm vínculo de apresentação estável, portanto T2 segue pendente.
+- E01-S136 T1 e carregamento inicial: domínio do cockpit e consultas de OS/agenda/técnicos/chamados
+  já concluídos (`0cdf4df`, `97140f7`); próximo passo concreto é renderizar os blocos obrigatórios
+  e os S1–S9 no `PcmDashboardPage`, com callbacks de navegação filtrada.
+
+- E01-S120 T1–T3: `Auvo #<id>` clicável no detalhe da OS e no painel do Chamado; fallback
+  `Sem OS no Auvo`; commit `82a88d1`. Playwright permanece pendente para não recriar dados E2E.
+- E01-S123 T1–T4: migration `0166` cria `pcm.auvo_sync_error_details`, uma view mínima e
+  autorizada para detalhar erros sem abrir a outbox; UI sob demanda e defesa contra stack/segredo;
+  pgTAP escrito para a CI; commit `f74e4e4`.
+- E01-S121 T1: bloqueada por descoberta (`33d1dba`). Busca não encontrou documentação oficial
+  pública de atualização de task; o registry atual não tem descriptor de task/OS. Não implementar
+  payload `PUT /tasks` por inferência.
+- E01-S126 T1–T5: domínio, busca Agenda/OS, tela em Operação, copiar e PDF (`pdf-lib`); commits
+  `5d8a8df`, `4d5ddc1`, `0a2c665`, `1777283`, `b4b9254`, `6fb002b`. Falta T6/T7 (fallback/e2e).
+- E01-S131: próxima story ativa. Diagnóstico concluído: o cadastro ainda usa tipo+quantidade,
+  enquanto `ferramenta_unidades` já preserva o rastreio físico. Próxima ação: T1, criar validação
+  item-cêntrica (código obrigatório, quantidade derivada), testes e commit.
+- Bloqueios ativos: S122 (badge/dado de contrato ausente); S124 (UAT Playwright sem resíduos);
+  S130/T5 (classificação IA do webhook service-role/HMAC); S121 (contrato Auvo não verificado);
+  S123/T5 (diagnóstico dos seis erros requer consulta autenticada em produção, não executada).
+
+## 2026-08-04 — E01-S132 concluída (Codex)
+
+- `PCM_NAV`: Tipos de Tarefa foi para Configurações; PMOC para Operação; grupo Preventivo e seus
+  itens mortos foram removidos. Testes estático e Playwright local cobrem a navegação.
+- Gates: `pnpm run ci:local` PASS (763 testes, 9 skipped); Playwright Chromium local PASS;
+  `graphify update .` PASS. Corrigido frontmatter preexistente de ADR-0015 e do prompt do lote;
+  auditoria passou com 581 documentos.
+- Próximo passo: E01-S122/T1 — marcar owner no ROADMAP e mapear os badges nas telas de cliente
+  antes de implementar tooltips. Mapeamento encontrou status operacional, tipo, status comercial,
+  marcação e Auvo; não há contrato. Aguardar definição se `status_comercial` representa contrato ou
+  se o contrato deve ficar fora desta story.
+- Bloqueios: E01-S122 ambígua sobre "contrato"; navegador integrado indisponível (Playwright local
+  foi usado como fallback).
+
+## 2026-08-04 — Lote em andamento (Codex)
+
+- E01-S124: conversão por drop concluída localmente (T1–T5); falta Playwright com dado temporário
+  e limpeza posterior. O drop abre o formulário existente pré-direcionado, sem inventar GUT/tipo.
+- E01-S130: Edge autenticada busca `GET /tasks/{id}` ao vivo; adapter usa-a antes do snapshot e
+  exibe erro em checklist vazio; migration `0165` e badge de importação provisória concluídos.
+- Próximo passo: E01-S120/T1 — marcar owner e localizar os estados de sync Auvo no Chamado/OS.
+- Bloqueios: S122 não possui dado/badge de contrato; S124 falta UAT Playwright sem recriar dados
+  `[TESTE E2E]`; S130/T5 precisa separar a classificação IA para chamada service-role/HMAC no
+  webhook, preservando os itens derivados antes de reprocessar os provisórios.
+
+## 2026-08-04 (cont. 3) — S137/S138 + branch de desenvolvimento
+
+**E01-S137** (Ferramentas por Técnico rico: todos os técnicos + histórico + atribuição por
+transfer-list no modal) e **E01-S138** (Funcionário perfil completo: cadastro + alocação dia/semana +
+OS atendidas + ferramentas em posse) especificadas. Lucas pediu abrir **branch de desenvolvimento**
+pra todas as specs pendentes — feito; specs commitadas. Prompt de desenvolvimento entregue (implementa
+specs + deploy edge/migration Supabase).
+
+**Specs pendentes de implementação (owner livre):** E00-S13; E01-S120..S138 (exceto revisões já
+implementadas); E02-S27. Todas com spec+tasks. Arquitetural com ADR aprovado: E01-S125 (ADR-0015).
+
+## 2026-08-04 (cont. 2) — E01-S136: dashboard cockpit "bom dia"
+
+Lucas pediu revisão do dashboard do PCM como tela de bom dia do gestor. **E01-S136** especificada:
+blocos pedidos (OS de hoje, onde os técnicos estarão alocados, funcionário livre no dia, chamados
+sem tratamento = status `aberto` fora de backlog/planejamento/preventiva/planejado) + 9 sugestões
+opcionais (C1/SLA, OS atrasadas, capacidade×demanda, PMOC vencendo, top backlog GUT, saúde Auvo,
+resumo de ontem, inspeções pendentes, ferramentas) a priorizar com o PO. Blocos acionáveis (clique →
+tela filtrada). Revisa E01-S21. Ainda só spec, sem branch.
+
+## 2026-08-04 (cont.) — Planejamento parte 2 (8 pontos) → 6 stories + E00-S13
+
+Ainda só especificação. Mais dois pedidos avulsos viraram story antes: **E00-S13** (configurar
+OpenRouter na UI — chave sai de `Deno.env` pra Vault via Configurações>Integrações, `_shared/openrouter.ts`
+lê do Vault) e **E02-S27 reescrita** (o print era do painel Evolution/cloudfy, não do SO; escopo real
+= configurar URL+chave no SO + expor webhook `pcm-whatsapp-webhook`).
+
+Lote parte 2 (8 pontos) → **6 stories** (3 decisões travadas via AskUserQuestion: ferramenta
+item-cêntrico reusa unidades sem migração destrutiva; relatório diário sob demanda tela+PDF;
+relatório do cliente interno HTML+PDF **e** publica no Portal E09):
+- **E01-S130** Assessment ao vivo (causa do "nada acontece": só lia snapshot de conclusão; busca
+  checklist ao vivo da Auvo + re-sync na conclusão).
+- **E01-S131** Ferramenta cadastro item-cêntrico (reusa `ferramenta_unidades`).
+- **E01-S132** Reorg nav PCM (Tipos de Tarefa→Config; PMOC→Operação; remove grupo Preventivo — itens
+  Cronograma/Preventivas eram mortos, sem `view`). Cobre itens 3+7+8.
+- **E01-S133** Redesign apontamento de horas (UI).
+- **E01-S134** Relatório diário da operação (Fabricio, sob demanda tela+PDF).
+- **E01-S135** Relatório do cliente (HTML+PDF + Portal E09, RLS por condomínio).
+
+Próximo passo: implementar (outro modelo). Lucas segue passando mais pontos; não abrir branch ainda.
+
+## 2026-08-04 — Planejamento: lote de 10 pontos (Lucas + Aline) → 10 stories especificadas
+
+Sessão **só de especificação** (implementação vai com outro modelo). Lucas passou 10 itens; entendi,
+mapeei e escrevi spec+tasks. 4 decisões travadas via AskUserQuestion: item 6 pergunta só ao ir p/
+Planejamento; item 7 saída tela+copiável+PDF e fonte Agenda∪OS planejadas; item 10 é checklist de
+release (sem feature nova).
+
+**Stories abertas (owner livre):** E01-S120 (Auvo #id na tela do Chamado), E01-S121 (editar campos +
+sync Auvo), E01-S122 (tooltips badges cliente), E01-S123 (drill-down saúde Auvo), E01-S124 (mover
+Chamado→Corretiva converte OS — achado: card sintético de S118 faz no-op no drag), **E01-S125 (arq.
++ ADR-0015: desliga trigger auto `fn_auvo_create_task_on_planejamento`, abertura Auvo sob demanda com
+dry-run)**, E01-S126 (relatório planejamento/execução), E01-S127 (Guia SO/Financeiro), E01-S129
+(release PCM prod), E02-S27 (fix cadastro Evolution — bloqueado até ter o erro exato).
+
+**Cortes de escopo (já entregues, sem story nova):** 8a=E01-S94 (GUT obrigatório), 8b=E01-S95
+(remover Serviços), 8d (nav Relatório Diário/Mensal já removida — `visual-v1.test.ts` trava),
+8e (aba Área do Cliente já renderiza `AreaClienteAdminPage`, não `EmConstrucao`).
+
+**Próximo passo:** implementar as stories (outro modelo), uma por vez, um commit por task. Item 9
+precisa do texto exato do erro Evolution. E01-S125 precisa aprovar design+ADR e auditar produtores
+de task Auvo antes de remover o trigger.
+
 ## 2026-07-29 (cont. 5) — E01-S119: Anotações do Chamado
 
 Lucas descartou E01-S109 (spec/tasks removidas e ROADMAP limpo) e pediu S119. Implementado:

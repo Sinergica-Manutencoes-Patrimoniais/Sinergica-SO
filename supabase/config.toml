@@ -426,6 +426,8 @@ verify_jwt = true
 verify_jwt = true
 [functions.pcm-auvo-create-task]
 verify_jwt = true
+[functions.pcm-auvo-open-task]
+verify_jwt = true
 [functions.pcm-auvo-customers-import]
 verify_jwt = true
 [functions.pcm-auvo-customers-sync]
@@ -433,6 +435,8 @@ verify_jwt = true
 [functions.pcm-auvo-equipment-sync]
 verify_jwt = true
 [functions.pcm-auvo-ferramenta-alocacao]
+verify_jwt = true
+[functions.pcm-auvo-task-checklist]
 verify_jwt = true
 [functions.pcm-auvo-pull]
 verify_jwt = true

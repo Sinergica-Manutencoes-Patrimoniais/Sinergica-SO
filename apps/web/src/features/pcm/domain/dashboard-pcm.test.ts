@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { InspecaoResumo } from "../application/qualidade-gateway";
-import { consolidarSinaisCampoAuvo, montarDashboardPcm } from "./dashboard-pcm";
+import {
+  consolidarSinaisCampoAuvo,
+  mensagemErroSyncAuvoLegivel,
+  montarCockpitBomDia,
+  montarDashboardPcm,
+} from "./dashboard-pcm";
 import type { OrdemServicoOperacional } from "./ordens-servico";
 
 const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional => ({
@@ -70,6 +75,18 @@ const inspecao = (dataInspecao: string): InspecaoResumo => ({
 });
 
 describe("dashboard-pcm", () => {
+  it("mantém mensagem operacional e protege stack ou segredo", () => {
+    expect(mensagemErroSyncAuvoLegivel("Cliente Auvo inexistente")).toBe(
+      "Cliente Auvo inexistente",
+    );
+    expect(mensagemErroSyncAuvoLegivel("Bearer token-privado")).toBe(
+      "Detalhe técnico protegido. Consulte os logs de sincronização.",
+    );
+    expect(mensagemErroSyncAuvoLegivel("Error: falhou at push (index.ts:12)")).toBe(
+      "Detalhe técnico protegido. Consulte os logs de sincronização.",
+    );
+  });
+
   it("monta KPIs e listas a partir de OS/inspeções reais", () => {
     const dashboard = montarDashboardPcm(
       [
@@ -186,6 +203,56 @@ describe("dashboard-pcm", () => {
       controlesHoras: 2,
       osComEquipamentoVinculado: 1,
       ultimaExecucaoCampo: "2026-07-10T11:00:00Z",
+    });
+  });
+
+  it("monta leitura do dia com alocados, livres e chamados ainda sem tratativa", () => {
+    const cockpit = montarCockpitBomDia("2026-08-06", {
+      ordens: [
+        ordem({
+          id: "hoje",
+          dataAgendada: "2026-08-06",
+          tecnicoFuncionarioId: "ana",
+          tecnicoNome: "Ana",
+          clienteNome: "Condomínio Azul",
+          localDescricao: "Casa de máquinas",
+          tipoOs: "C1",
+        }),
+        ordem({ id: "atrasada", dataAgendada: "2026-08-05" }),
+      ],
+      chamados: [{ status: "aberto" } as never, { status: "backlog" } as never],
+      tecnicos: [
+        { id: "ana", nome: "Ana" },
+        { id: "bia", nome: "Bia" },
+      ],
+      agenda: [],
+      errosSyncAuvo: 2,
+      inspecoesPendentes: 3,
+      preventivas: [
+        { scheduledDate: "2026-08-06", status: "agendado" },
+        { scheduledDate: "2026-08-10", status: "atrasado" },
+        { scheduledDate: "2026-08-17", status: "agendado" },
+      ],
+      reservasFerramenta: [
+        { dataInicio: "2026-08-06", dataFim: "2026-08-06", status: "pendente" },
+        { dataInicio: "2026-08-01", dataFim: "2026-08-05", status: "efetivada" },
+        { dataInicio: "2026-08-01", dataFim: "2026-08-05", status: "cancelada" },
+      ],
+    });
+    expect(cockpit.osHoje).toHaveLength(1);
+    expect(cockpit.alocacoes).toEqual([
+      { tecnicoNome: "Ana", clienteNome: "Condomínio Azul", local: "Casa de máquinas" },
+    ]);
+    expect(cockpit.tecnicosLivres).toEqual(["Bia"]);
+    expect(cockpit).toMatchObject({
+      chamadosSemTratativa: 1,
+      emergenciaisAbertas: 1,
+      osAtrasadas: 1,
+      preventivasSemana: 1,
+      ferramentasHoje: 1,
+      ferramentasAtrasadas: 1,
+      errosSyncAuvo: 2,
+      inspecoesPendentes: 3,
     });
   });
 });

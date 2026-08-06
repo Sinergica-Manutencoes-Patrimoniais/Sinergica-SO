@@ -104,6 +104,9 @@ import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
+import { RelatorioClientePage } from "../features/pcm/pages/RelatorioClientePage";
+import { RelatorioDiarioPage } from "../features/pcm/pages/RelatorioDiarioPage";
+import { RelatorioPlanejamentoPage } from "../features/pcm/pages/RelatorioPlanejamentoPage";
 import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
@@ -147,6 +150,9 @@ type PcmView =
   | "equipamentos"
   | "equipes"
   | "agenda-tecnico"
+  | "relatorio-planejamento"
+  | "relatorio-diario"
+  | "relatorio-cliente"
   | "ferramentas"
   | "ferramentas-por-tecnico"
   | "funcionarios"
@@ -367,6 +373,8 @@ const PCM_NAV: NavGroup[] = [
       { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
       { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
+      { label: "PMOC", icon: Snowflake, view: "pmoc" },
+      { label: "Relatório", icon: FileBarChart, view: "relatorio-planejamento" },
     ],
   },
   {
@@ -375,7 +383,6 @@ const PCM_NAV: NavGroup[] = [
       { label: "Clientes", icon: Building2, view: "clientes" },
       { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
       { label: "Sistemas", icon: Link2, view: "sistemas" },
-      { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
     ],
   },
   {
@@ -388,6 +395,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Equipes", icon: Users, view: "equipes" },
       { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "Funcionários", icon: UserCog, view: "funcionarios" },
+      { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
       { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
       { label: "Marcações de Cliente", icon: Tag, view: "cliente-marcacoes" },
       { label: "Tipos de Inspeção", icon: CheckCircle2, view: "tipos-inspecao" },
@@ -398,16 +406,10 @@ const PCM_NAV: NavGroup[] = [
     ],
   },
   {
-    titulo: "PREVENTIVO",
-    items: [
-      { label: "PMOC", icon: Snowflake, view: "pmoc" },
-      { label: "Cronograma", icon: Calendar },
-      { label: "Preventivas", icon: Wrench },
-    ],
-  },
-  {
     titulo: "RELATÓRIOS",
     items: [
+      { label: "Relatório do Dia", icon: FileBarChart, view: "relatorio-diario" },
+      { label: "Relatório do Cliente", icon: FileText, view: "relatorio-cliente" },
       { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
       { label: "Apontamento de Horas", icon: Clock, view: "apontamento-horas" },
     ],
@@ -577,6 +579,9 @@ export function HomePage() {
   const [atendimentoView, setAtendimentoView] = useState<AtendimentoView>("inbox");
   // Sub-navegação do PCM (Task 18/E01-S12) — mesmo padrão useState de abas, sem lib de rotas.
   const [pcmView, setPcmView] = useState<PcmView>("dashboard");
+  const [relatorioDiarioDataInicial, setRelatorioDiarioDataInicial] = useState<
+    string | undefined
+  >();
   // Sub-navegação do Financeiro.
   const [financeiroView, setFinanceiroView] = useState<FinanceiroView>("dashboard");
   // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
@@ -636,6 +641,12 @@ export function HomePage() {
       dataInicio: periodo.inicio,
       dataFim: periodo.fim,
     });
+    setPcmView("ordens");
+  }
+
+  function abrirOrdensHoje() {
+    const hoje = new Date().toISOString().slice(0, 10);
+    setOrdensFiltrosPreset({ tecnicoFuncionarioId: "", dataInicio: hoje, dataFim: hoje });
     setPcmView("ordens");
   }
 
@@ -1126,6 +1137,12 @@ export function HomePage() {
               <EquipesPage />
             ) : pcmView === "agenda-tecnico" ? (
               <AgendaTecnicoPage />
+            ) : pcmView === "relatorio-planejamento" ? (
+              <RelatorioPlanejamentoPage />
+            ) : pcmView === "relatorio-diario" ? (
+              <RelatorioDiarioPage dataInicial={relatorioDiarioDataInicial} />
+            ) : pcmView === "relatorio-cliente" ? (
+              <RelatorioClientePage />
             ) : pcmView === "ferramentas" ? (
               <FerramentasPage />
             ) : pcmView === "ferramentas-por-tecnico" ? (
@@ -1193,7 +1210,15 @@ export function HomePage() {
                   podeCriarOs={podeCriarOs}
                   onNovaOs={() => setNovaOsAberta(true)}
                   onVerOrdens={() => irParaPcmView("ordens")}
+                  onVerOrdensHoje={abrirOrdensHoje}
                   onVerBacklog={() => irParaPcmView("backlog")}
+                  onVerAgenda={() => irParaPcmView("agenda-tecnico")}
+                  onVerInspecoes={() => irParaPcmView("inspecoes")}
+                  onVerFerramentas={() => irParaPcmView("ferramentas-por-tecnico")}
+                  onVerRelatorioDiario={(data) => {
+                    setRelatorioDiarioDataInicial(data);
+                    irParaPcmView("relatorio-diario");
+                  }}
                 />
               </div>
             )

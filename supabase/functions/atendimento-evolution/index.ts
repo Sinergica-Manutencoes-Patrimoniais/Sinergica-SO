@@ -7,6 +7,7 @@ import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { HttpError, requireAuth } from "../_shared/auth.ts";
+import { obterConfiguracaoEvolution } from "../_shared/evolution-config.ts";
 import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import {
   criarConfiguracaoWebhook,
@@ -46,8 +47,8 @@ interface EstadoRemoto {
 }
 
 class EvolutionApiError extends Error {
-  constructor(public status: number) {
-    super(`Evolution API respondeu ${status}`);
+  constructor(public status: number, detalhe = "") {
+    super(`Evolution API respondeu ${status}${detalhe ? `: ${detalhe}` : ""}`);
   }
 }
 
@@ -277,24 +278,41 @@ async function consultarEstado(instanceName: string): Promise<EstadoRemoto> {
 }
 
 async function evolutionRequest(path: string, init: RequestInit = {}): Promise<unknown> {
-  const baseUrl = (Deno.env.get("EVOLUTION_API_URL") ?? "").replace(/\/+$/, "");
-  const apiKey = Deno.env.get("EVOLUTION_API_KEY") ?? "";
-  if (!baseUrl || !apiKey) throw new Error("EVOLUTION_API_URL/EVOLUTION_API_KEY ausentes");
+  const configuracao = await obterConfiguracaoEvolution();
+  if (!configuracao) {
+    throw new Error("Evolution não configurada — informe URL e chave em Configurações > Atendimento > Evolution");
+  }
 
-  const response = await fetch(`${baseUrl}${path}`, {
+  const response = await fetch(`${configuracao.baseUrl}${path}`, {
     ...init,
     signal: AbortSignal.timeout(15_000),
     headers: {
       "Content-Type": "application/json",
-      apikey: apiKey,
+      apikey: configuracao.apiKey,
       ...init.headers,
     },
   });
   if (!response.ok) {
-    throw new EvolutionApiError(response.status);
+    throw new EvolutionApiError(response.status, detalheEvolution(await response.text()));
   }
   const text = await response.text();
   return text ? JSON.parse(text) : {};
+}
+
+function detalheEvolution(corpo: string): string {
+  const texto = corpo.replace(/\s+/g, " ").trim();
+  if (!texto || /(apikey|authorization|bearer|token|secret|senha|password)/i.test(texto)) {
+    return "";
+  }
+  try {
+    const json = JSON.parse(texto) as Record<string, unknown>;
+    const mensagem = [json.message, json.error, json.detail].find(
+      (valor): valor is string => typeof valor === "string" && valor.trim().length > 0,
+    );
+    return (mensagem ?? texto).slice(0, 300);
+  } catch {
+    return texto.slice(0, 300);
+  }
 }
 
 function configuracaoWebhook() {

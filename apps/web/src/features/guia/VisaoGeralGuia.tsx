@@ -24,11 +24,12 @@ export function VisaoGeralGuia() {
         <p>
           No topo da tela ficam as abas dos módulos — cada uma é uma frente diferente do negócio. Do
           lado esquerdo, dentro de cada módulo, fica a navegação das telas específicas daquele
-          módulo (por exemplo, dentro de PCM tem Ordens de Serviço, Backlog, Ferramentas...).
+          módulo (por exemplo, dentro de PCM há o board Operação, Ferramentas e Relatórios).
         </p>
         <p>
           <strong className="text-ink">PCM (Planejamento e Controle de Manutenção)</strong> é o
-          coração do sistema — é lá que toda Ordem de Serviço nasce e é decidida. O aplicativo
+          coração do sistema — é lá que Chamados e Ordens de Serviço são decididos no mesmo board. O
+          aplicativo
           <strong className="text-ink"> Auvo</strong> continua sendo usado pelos técnicos em campo
           (check-in, fotos, assinatura) — o PCM não substitui o Auvo, ele decide o que vira trabalho
           e acompanha o que já foi feito, sincronizando os dois automaticamente.

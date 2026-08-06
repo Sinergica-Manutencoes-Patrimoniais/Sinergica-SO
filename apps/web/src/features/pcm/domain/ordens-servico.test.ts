@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   FILTROS_ORDENS_VAZIO,
   agruparPorTecnico,
+  auvoTaskDeepLink,
   calcularKpisOrdens,
   calcularMetricasOperacao,
   chamadoAbertoParaCard,
@@ -58,6 +59,15 @@ describe("rotuloNumeroOrdem", () => {
   });
   it("mantém o numero cru quando não é CH e não tem Auvo", () => {
     expect(rotuloNumeroOrdem({ numero: "OS-0067", auvoTaskId: null })).toBe("OS-0067");
+  });
+});
+
+describe("auvoTaskDeepLink", () => {
+  it("gera link apenas para task Auvo válida", () => {
+    expect(auvoTaskDeepLink(123)).toBe("https://app.auvo.com.br/informacoes/tarefa/123");
+    expect(auvoTaskDeepLink(null)).toBeNull();
+    expect(auvoTaskDeepLink(0)).toBeNull();
+    expect(auvoTaskDeepLink(-1)).toBeNull();
   });
 });
 

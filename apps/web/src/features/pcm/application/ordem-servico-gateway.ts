@@ -95,6 +95,8 @@ export interface EditarOrdemServicoInput {
 export interface OrdemServicoGateway {
   carregarDadosAbertura(): Promise<DadosAberturaOs>;
   criarOrdemServico(input: CriarOrdemServicoCommand): Promise<OrdemServicoCriada>;
+  /** E01-S129: recupera conversão interrompida antes de criar outra OS para o mesmo Chamado. */
+  obterPorChamado?(chamadoId: string): Promise<OrdemServicoCriada | null>;
   editarOrdemServico(input: EditarOrdemServicoInput): Promise<void>;
   /** E01-S81 AC-4: sinaliza se a IA de título está configurada/ativa — booleano público, nunca
    * expõe a credencial (checagem separada de `fn_integracao_tem_segredo`, que é superadmin-only). */

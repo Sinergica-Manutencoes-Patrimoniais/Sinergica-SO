@@ -717,6 +717,7 @@ export const supabasePmocAdapter: PmocGateway = {
         return {
           id: item.id,
           contractId: item.contract_id,
+          clienteId: property?.client_id ?? null,
           clienteNome: cliente?.nome ?? property?.name ?? "Cliente não identificado",
           imovelNome: property?.name ?? "Imóvel PMOC",
           scheduledDate: item.scheduled_date,

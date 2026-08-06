@@ -7,8 +7,10 @@ import {
   validarTransicaoParaOs,
 } from "../domain/chamados";
 import type { Chamado } from "../domain/chamados";
+import type { StatusOrdemServico } from "../domain/ordens-servico";
 import { abrirOrdemServico } from "./abrir-ordem-servico";
 import type { ChamadosGateway, CriarChamadoCommand, FiltrosChamados } from "./chamados-gateway";
+import type { HubOsGateway } from "./hub-os-gateway";
 import type {
   CriarOrdemServicoInput,
   OrdemServicoCriada,
@@ -66,15 +68,51 @@ export async function gerarOsDoChamado(
   destino: "convertido_os" | "backlog",
 ): Promise<OrdemServicoCriada> {
   validarTransicaoParaOs(chamado);
-  const criada = await abrirOrdemServico(gatewayOs, {
+  const existente = await gatewayOs.obterPorChamado?.(chamado.id);
+  const comando = {
     ...input,
     clientId: chamado.clienteId,
     titulo: chamado.titulo,
     descricao: chamado.descricao,
     chamadoId: chamado.id,
     createdBy: userId,
-  });
+  };
+  let criada = existente;
+  if (!criada) {
+    try {
+      criada = await abrirOrdemServico(gatewayOs, comando);
+    } catch (erro) {
+      criada = await gatewayOs.obterPorChamado?.(chamado.id);
+      if (!criada) throw erro;
+    }
+  }
   await gatewayChamados.marcarStatusComOs(chamado.id, destino, criada.id, userId);
+  return criada;
+}
+
+/** E01-S124: o drop de um card sintético abre o mesmo formulário de conversão. Depois da criação,
+ * move a OS real à coluna solicitada; Backlog preserva o estado próprio do Chamado. */
+export async function gerarOsDoChamadoNoStatus(
+  gatewayChamados: ChamadosGateway,
+  gatewayOs: OrdemServicoGateway,
+  gatewayHub: Pick<HubOsGateway, "alterarStatus">,
+  chamado: Chamado,
+  input: Omit<
+    CriarOrdemServicoInput,
+    "clientId" | "titulo" | "descricao" | "chamadoId" | "createdBy"
+  >,
+  userId: string,
+  statusDestino: Exclude<StatusOrdemServico, "solicitacao">,
+): Promise<OrdemServicoCriada> {
+  const criada = await gerarOsDoChamado(
+    gatewayChamados,
+    gatewayOs,
+    chamado,
+    input,
+    userId,
+    statusDestino === "backlog" ? "backlog" : "convertido_os",
+  );
+  await gatewayHub.alterarStatus({ id: criada.id, status: statusDestino, updatedBy: userId });
   return criada;
 }
 

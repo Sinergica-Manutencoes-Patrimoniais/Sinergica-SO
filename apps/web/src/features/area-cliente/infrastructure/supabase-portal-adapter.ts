@@ -1,4 +1,8 @@
 import { supabase } from "../../../lib/supabase-client";
+import {
+  type RelatorioCliente,
+  formatarTextoRelatorioCliente,
+} from "../../pcm/domain/relatorio-cliente";
 import type {
   PortalAssessment,
   PortalChamado,
@@ -71,6 +75,7 @@ export const supabasePortalAdapter: PortalGateway = {
       satisfacaoR,
       faturasR,
       cobrancasR,
+      relatoriosR,
     ] = await Promise.all([
       pcm.from("clientes").select("id,nome,cnpj").eq("id", clienteId).single(),
       pcm
@@ -119,6 +124,10 @@ export const supabasePortalAdapter: PortalGateway = {
         .schema("financeiro")
         .from("portal_cobrancas")
         .select("lancamento_id,tipo,linha_digitavel,qr_code,link_pagamento,status"),
+      pcm
+        .from("relatorios_cliente_publicados")
+        .select("id,titulo,conteudo,created_at")
+        .order("created_at", { ascending: false }),
     ]);
 
     for (const [r, nome] of [
@@ -133,6 +142,7 @@ export const supabasePortalAdapter: PortalGateway = {
       [notificacoesR, "notificações"],
       [orcamentosR, "orçamentos"],
       [faturasR, "financeiro"],
+      [relatoriosR, "relatórios"],
     ] as const) {
       falha(r.error, `Falha ao carregar ${nome}`);
     }
@@ -253,6 +263,7 @@ export const supabasePortalAdapter: PortalGateway = {
         data: row.executed_date,
         bucket: row.pdf_url ? "pmoc-laudos" : null,
         path: row.pdf_url,
+        conteudo: null,
       })),
       ...(spdaR.data ?? []).map((row) => ({
         id: row.id,
@@ -261,6 +272,16 @@ export const supabasePortalAdapter: PortalGateway = {
         data: row.data_vistoria,
         bucket: null,
         path: null,
+        conteudo: null,
+      })),
+      ...(relatoriosR.data ?? []).map((row) => ({
+        id: row.id,
+        tipo: "Relatório" as const,
+        titulo: row.titulo,
+        data: row.created_at,
+        bucket: null,
+        path: null,
+        conteudo: textoRelatorioPublicado(row.conteudo),
       })),
     ].sort((a, b) => b.data.localeCompare(a.data));
 
@@ -444,3 +465,18 @@ export const supabasePortalAdapter: PortalGateway = {
     return data.signedUrl;
   },
 };
+
+function textoRelatorioPublicado(conteudo: unknown): string {
+  if (!conteudo || typeof conteudo !== "object") return "Relatório publicado sem conteúdo legível.";
+  const relatorio = conteudo as Partial<RelatorioCliente>;
+  if (
+    typeof relatorio.clienteNome !== "string" ||
+    typeof relatorio.inicio !== "string" ||
+    typeof relatorio.fim !== "string" ||
+    !Array.isArray(relatorio.atividades) ||
+    !Array.isArray(relatorio.cronograma)
+  ) {
+    return "Relatório publicado sem conteúdo legível.";
+  }
+  return formatarTextoRelatorioCliente(relatorio as RelatorioCliente);
+}

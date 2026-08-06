@@ -33,6 +33,36 @@ export interface FerramentaFormData {
   quantidadeMinima: number;
   valorUnitario?: number | null;
   custoUnitario?: number | null;
+  /** E01-S131: informado só no cadastro novo; vira o código da primeira unidade física. */
+  codigoItem?: string;
+}
+
+/** E01-S131: cadastro de uma unidade física; quantidade deixa de ser entrada manual. */
+export interface CadastroItemFerramentaFormData {
+  nome: string;
+  codigo: string;
+  descricao?: string | null;
+  categoriaId?: string | null;
+}
+
+export function validarCadastroItemFerramenta(
+  input: CadastroItemFerramentaFormData,
+): CadastroItemFerramentaFormData {
+  const nome = input.nome.trim();
+  const codigo = input.codigo.trim();
+  if (!nome) throw new Error("Nome do item é obrigatório.");
+  if (!codigo) throw new Error("Código ou patrimônio do item é obrigatório.");
+  return {
+    nome,
+    codigo,
+    descricao: textoOuNull(input.descricao),
+    categoriaId: textoOuNull(input.categoriaId),
+  };
+}
+
+/** Quantidade exibida é derivada, nunca digitada: unidades baixadas não compõem estoque ativo. */
+export function quantidadeDerivadaUnidades(unidades: readonly { status: string }[]): number {
+  return unidades.filter((unidade) => unidade.status !== "baixada").length;
 }
 
 export interface FerramentaAlocacaoItem {
@@ -69,6 +99,7 @@ export function validarFerramenta(input: FerramentaFormData): FerramentaFormData
     quantidadeMinima,
     valorUnitario: numeroNaoNegativoOuNull(input.valorUnitario, "Valor unitário"),
     custoUnitario: numeroNaoNegativoOuNull(input.custoUnitario, "Custo unitário"),
+    ...(input.codigoItem?.trim() ? { codigoItem: input.codigoItem.trim() } : {}),
   };
 }
 

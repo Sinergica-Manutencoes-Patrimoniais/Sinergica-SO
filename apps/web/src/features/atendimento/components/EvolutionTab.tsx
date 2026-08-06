@@ -1,5 +1,14 @@
-import { Plus, RefreshCw, Unplug } from "lucide-react";
-import { useState } from "react";
+import { Copy, KeyRound, Plus, RefreshCw, Unplug } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../../../app/auth-context";
+import { supabaseUrl } from "../../../lib/supabase-client";
+import {
+  definirSegredoIntegracao,
+  listarIntegracoes,
+  salvarMetadadoIntegracao,
+} from "../../config/application/integracoes";
+import type { Integracao } from "../../config/application/integracoes-gateway";
+import { supabaseIntegracoesAdapter } from "../../config/infrastructure/supabase-integracoes-adapter";
 import type {
   EvolutionAcaoResultado,
   EvolutionCriarForm,
@@ -11,6 +20,130 @@ const CORES_STATUS: Record<EvolutionInstancia["status"], string> = {
   desconectado: "bg-line-soft text-ink-3",
   erro: "bg-[#FFF4F2] text-[#A12D24]",
 };
+
+const CHAVE_EVOLUTION = "evolution";
+
+function ConfiguracaoEvolution({ temEscrita }: { temEscrita: boolean }) {
+  const { user } = useAuth();
+  const [integracao, setIntegracao] = useState<Integracao | null>(null);
+  const [url, setUrl] = useState("");
+  const [chave, setChave] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
+  const [salvando, setSalvando] = useState(false);
+  const webhookUrl = `${supabaseUrl.replace(/\/+$/, "")}/functions/v1/pcm-whatsapp-webhook`;
+
+  const carregar = useCallback(async () => {
+    const item = (await listarIntegracoes(supabaseIntegracoesAdapter)).find(
+      (candidata) => candidata.chave === CHAVE_EVOLUTION,
+    );
+    setIntegracao(item ?? null);
+    setUrl(typeof item?.configPublico.api_url === "string" ? item.configPublico.api_url : "");
+  }, []);
+
+  useEffect(() => {
+    if (user?.papel === "superadmin") void carregar().catch(() => undefined);
+  }, [carregar, user?.papel]);
+
+  if (user?.papel !== "superadmin") return null;
+
+  async function salvar() {
+    setErro(null);
+    let apiUrl: string;
+    try {
+      apiUrl = new URL(url.trim()).toString().replace(/\/+$/, "");
+    } catch {
+      setErro("Informe uma URL válida da Evolution, incluindo https://.");
+      return;
+    }
+    setSalvando(true);
+    try {
+      await salvarMetadadoIntegracao(supabaseIntegracoesAdapter, {
+        chave: CHAVE_EVOLUTION,
+        provedor: "evolution",
+        ativo: true,
+        configPublico: { api_url: apiUrl },
+      });
+      if (chave.trim()) {
+        await definirSegredoIntegracao(supabaseIntegracoesAdapter, "evolution_api_key", chave);
+        setChave("");
+      }
+      await carregar();
+    } catch (causa) {
+      setErro(causa instanceof Error ? causa.message : "Não foi possível salvar a configuração.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function copiarWebhook() {
+    try {
+      await navigator.clipboard.writeText(webhookUrl);
+    } catch {
+      setErro("Não foi possível copiar o endereço do webhook.");
+    }
+  }
+
+  return (
+    <section className="rounded-[10px] border border-line bg-card p-4">
+      <h3 className="text-sm font-semibold text-ink">API Evolution</h3>
+      <p className="mt-1 text-xs text-ink-3">
+        URL e chave são usadas para criar e administrar instâncias. A chave vai ao Vault e nunca
+        volta para esta tela.
+      </p>
+      {erro ? <p className="mt-3 text-sm text-[#A12D24]">{erro}</p> : null}
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">URL de conexão</span>
+          <input
+            className="input w-full"
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            placeholder="https://api.evolution.exemplo"
+            disabled={!temEscrita}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 flex items-center gap-1 text-xs font-semibold text-ink-3">
+            <KeyRound className="h-3.5 w-3.5" />
+            Chave {integracao?.temSegredo ? "(substituir)" : ""}
+          </span>
+          <input
+            type="password"
+            className="input w-full"
+            value={chave}
+            onChange={(event) => setChave(event.target.value)}
+            placeholder={integracao?.temSegredo ? "•••••••• (configurada)" : "Chave da Evolution"}
+            disabled={!temEscrita}
+          />
+        </label>
+      </div>
+      <button
+        type="button"
+        onClick={() => void salvar()}
+        disabled={!temEscrita || salvando || !url.trim()}
+        className="mt-3 btn-primary"
+      >
+        {salvando ? "Salvando…" : "Salvar API"}
+      </button>
+      <div className="mt-4 border-t border-line-soft pt-3">
+        <p className="text-xs font-semibold text-ink-3">Webhook do SO</p>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <code className="break-all rounded bg-paper px-2 py-1 text-xs text-ink">
+            {webhookUrl}
+          </code>
+          <button
+            type="button"
+            onClick={() => void copiarWebhook()}
+            className="btn-secondary text-xs"
+          >
+            <Copy className="h-3.5 w-3.5" />
+            Copiar
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export function EvolutionTab({
   instancias,
@@ -59,6 +192,7 @@ export function EvolutionTab({
 
   return (
     <div className="flex flex-col gap-4">
+      <ConfiguracaoEvolution temEscrita={temEscrita} />
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-ink-2">Conexões Evolution</h2>

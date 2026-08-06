@@ -154,6 +154,13 @@ export function rotuloNumeroOrdem(
   return ordem.numero;
 }
 
+/** E01-S120: só um identificador Auvo positivo gera deep-link; legados nulos, zero ou negativos
+ * permanecem sem link para não oferecer uma navegação quebrada. */
+export function auvoTaskDeepLink(auvoTaskId: number | null | undefined): string | null {
+  if (!Number.isInteger(auvoTaskId) || (auvoTaskId ?? 0) <= 0) return null;
+  return `https://app.auvo.com.br/informacoes/tarefa/${auvoTaskId}`;
+}
+
 export const PRIORIDADE_LABEL: Record<string, string> = {
   baixa: "Baixa",
   normal: "Normal",

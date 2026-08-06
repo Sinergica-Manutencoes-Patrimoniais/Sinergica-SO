@@ -29,6 +29,8 @@ import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
 import { resolveWebhookDispatch } from "../_shared/auvo/webhook-dispatch.ts";
 import { criarOsDaTarefa, resolverFuncionarioIdPorAuvoId } from "../_shared/auvo/os-from-task.ts";
 import { auvoNaiveToUtc } from "../_shared/auvo/datetime.ts";
+import { auvoGet } from "../_shared/auvo/client.ts";
+import { classificarRelatorioInspecao } from "../_shared/classificar-relatorio-inspecao.ts";
 
 const FN = "pcm-auvo-webhook";
 
@@ -279,6 +281,15 @@ serve(async (req) => {
     // URLs/referências do Auvo quando existirem, e sempre preserva o payload bruto.
     await upsertTaskSnapshot(db, os.id, taskId, payload, targetStatus);
 
+    // E01-S130 AC-4: o import de questionário feito antes da finalização é provisório. Quando a
+    // tarefa fecha, busca a versão final na API (o payload do webhook não é contrato de checklist),
+    // reclassifica pelo mesmo caminho da IA e atualiza as mesmas linhas — assim IDs/destinos das
+    // derivações já feitas continuam válidos. Uma falha é propagada: o Auvo pode reentregar o
+    // webhook e não deixa o assessment silenciosamente desatualizado.
+    const assessmentResync = targetStatus === "finalizado"
+      ? await ressincronizarAssessmentsProvisorios(db, taskId, logBase)
+      : { encontrados: 0, atualizados: 0, criados: 0 };
+
     // E01-S16: relacionamento OS ↔ equipamento Auvo. O PCM NÃO duplica identificador/categoria/
     // garantia do equipamento; guarda apenas o vínculo de domínio PCM quando o payload trouxer ID.
     const auvoEquipmentId = extractEquipmentId(evento);
@@ -354,7 +365,7 @@ serve(async (req) => {
       }
     }
 
-    return json(200, { ok: true, osId: os.id, taskId, status: targetStatus, transitioned: transicionou, created: criadaAgora }, cors);
+    return json(200, { ok: true, osId: os.id, taskId, status: targetStatus, transitioned: transicionou, created: criadaAgora, assessmentResync }, cors);
   } catch (e) {
     if (e instanceof HttpError) return problem(e.status, e.message, reqId, cors);
     console.error(JSON.stringify({ ...logBase, nivel: "error", msg: "erro inesperado", detail: String(e) }));
@@ -511,6 +522,139 @@ async function upsertTaskSnapshot(
       { onConflict: "auvo_task_id" },
     );
   if (error) throw error;
+}
+
+type AssessmentProvisorioRow = {
+  id: string;
+  inspecao_id: string;
+  client_id: string;
+  created_by: string;
+  ordem: number;
+};
+
+/** Reclassifica apenas os itens ainda provisórios da tarefa concluída. Não remove linhas: uma
+ * delas pode já ter originado chamado/backlog/OS; atualizar a própria linha preserva tais FKs. */
+async function ressincronizarAssessmentsProvisorios(
+  db: UntypedSupabaseClient,
+  taskId: number,
+  logBase: Record<string, unknown>,
+): Promise<{ encontrados: number; atualizados: number; criados: number }> {
+  const { data, error } = await db
+    .schema("pcm")
+    .from("inspecao_itens")
+    .select("id,inspecao_id,client_id,created_by,ordem")
+    .eq("auvo_task_id", taskId)
+    .eq("auvo_importacao_provisoria", true)
+    .order("ordem", { ascending: true });
+  if (error) throw error;
+
+  const provisiorios = (data ?? []) as AssessmentProvisorioRow[];
+  if (provisiorios.length === 0) return { encontrados: 0, atualizados: 0, criados: 0 };
+
+  const tarefaFinal = await auvoGet<unknown>(`/tasks/${taskId}`);
+  const checklist = extrairChecklistDoTask(tarefaFinal);
+  if (checklist.length === 0) {
+    throw new HttpError(502, "Tarefa finalizada sem questionário disponível para re-sync");
+  }
+  const classificados = await classificarRelatorioInspecao(textoDoChecklist(checklist));
+  const porInspecao = new Map<string, AssessmentProvisorioRow[]>();
+  for (const item of provisiorios) {
+    const grupo = porInspecao.get(item.inspecao_id) ?? [];
+    grupo.push(item);
+    porInspecao.set(item.inspecao_id, grupo);
+  }
+  let atualizados = 0;
+  let criados = 0;
+  const agora = new Date().toISOString();
+
+  for (const [inspecaoId, itens] of porInspecao) {
+    for (const [indice, existente] of itens.entries()) {
+      const classificado = classificados[indice];
+      const patch = classificado
+        ? patchItemAssessment(classificado, false, agora)
+        : { auvo_importacao_provisoria: false, resultado: "conforme", updated_at: agora };
+      const { error: updateError } = await db
+        .schema("pcm")
+        .from("inspecao_itens")
+        .update(patch)
+        .eq("id", existente.id);
+      if (updateError) throw updateError;
+      atualizados += 1;
+    }
+
+    const base = itens[0];
+    for (const [indice, classificado] of classificados.slice(itens.length).entries()) {
+      const { error: insertError } = await db
+        .schema("pcm")
+        .from("inspecao_itens")
+        .insert({
+          ...patchItemAssessment(classificado, false, agora),
+          inspecao_id: inspecaoId,
+          client_id: base.client_id,
+          created_by: base.created_by,
+          ordem: base.ordem + itens.length + indice + 1,
+          auvo_task_id: taskId,
+          auvo_questao_chave: `auvo-task-${taskId}-${itens.length + indice}`,
+        });
+      if (insertError) throw insertError;
+      criados += 1;
+    }
+  }
+
+  console.log(JSON.stringify({ ...logBase, nivel: "info", msg: "assessment provisório re-sincronizado", taskId, encontrados: provisiorios.length, atualizados, criados }));
+  return { encontrados: provisiorios.length, atualizados, criados };
+}
+
+function extrairChecklistDoTask(payload: unknown): unknown[] {
+  const root = isObject(payload) && isObject(payload.result) ? payload.result : payload;
+  if (!isObject(root)) return [];
+  for (const chave of ["checklist", "questionnaire", "questionario", "questions", "answers", "respostas"]) {
+    if (Array.isArray(root[chave])) return root[chave] as unknown[];
+  }
+  return [];
+}
+
+function textoDoChecklist(checklist: unknown[]): string {
+  return checklist.map((item) => JSON.stringify(item)).join("\n\n---\n\n");
+}
+
+function patchItemAssessment(item: Record<string, unknown>, provisorio: boolean, agora: string): Record<string, unknown> {
+  const gravidade = numeroEntre(item.gravidade, 1, 5, 3);
+  const urgencia = numeroEntre(item.urgencia, 1, 5, 3);
+  const tendencia = numeroEntre(item.tendencia, 1, 5, 3);
+  const score = gravidade * urgencia * tendencia;
+  const fotos = Array.isArray(item.foto_urls)
+    ? item.foto_urls.filter((foto): foto is string => typeof foto === "string" && foto.trim().length > 0)
+    : [];
+  const titulo = texto(item.titulo_backlog) || "Inconformidade importada";
+  const descricao = texto(item.descricao_tecnica) || texto(item.relato_original) || titulo;
+  const citacao = texto(item.citacao_normativa);
+  return {
+    sistema: sistemaValido(item.sistema),
+    localizacao: texto(item.local) || texto(item.localizacao) || null,
+    descricao,
+    resultado: "nao_conforme",
+    severidade: score >= 80 ? "critica" : score >= 45 ? "alta" : score >= 16 ? "media" : "baixa",
+    recomendacao: [titulo, citacao].filter(Boolean).join(" · ") || null,
+    foto_url: fotos[0] ?? null,
+    foto_urls: fotos,
+    auvo_importacao_provisoria: provisorio,
+    updated_at: agora,
+  };
+}
+
+function texto(value: unknown): string {
+  return typeof value === "string" ? value.trim() : typeof value === "number" ? String(value) : "";
+}
+
+function numeroEntre(value: unknown, min: number, max: number, fallback: number): number {
+  const numero = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numero) && numero >= min && numero <= max ? numero : fallback;
+}
+
+function sistemaValido(value: unknown): string {
+  const sistemas = new Set(["estrutural", "hidrossanitario", "eletrico", "spda", "cobertura", "fachada", "areas_comuns", "equipamentos", "incendio", "ar_condicionado", "elevadores", "geral"]);
+  return typeof value === "string" && sistemas.has(value) ? value : "geral";
 }
 
 function normalizeTimeline(root: JsonObject): JsonObject {

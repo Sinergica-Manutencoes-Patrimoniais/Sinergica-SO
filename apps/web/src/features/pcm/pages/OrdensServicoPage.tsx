@@ -10,7 +10,7 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { Tooltip } from "../../../components/ui/Tooltip";
@@ -27,6 +27,7 @@ import { obterPreferenciaColunas, salvarPreferenciaColunas } from "../applicatio
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { listarProximasPreventivas } from "../application/pmoc";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
+import { AbrirOsAuvoModal } from "../components/AbrirOsAuvoModal";
 import { ChamadoPainel } from "../components/ChamadoPainel";
 import { DetalhesTarefaAuvo } from "../components/DetalhesTarefaAuvo";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
@@ -54,6 +55,7 @@ import {
   FILTROS_ORDENS_VAZIO,
   PRIORIDADE_LABEL,
   STATUS_OS,
+  auvoTaskDeepLink,
   calcularKpisOrdens,
   calcularMetricasOperacao,
   chamadoAbertoParaCard,
@@ -112,6 +114,10 @@ export function OrdensServicoPage({
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
+  const [conversaoPendente, setConversaoPendente] = useState<{
+    chamadoId: string;
+    statusDestino: Exclude<StatusOrdemServico, "solicitacao">;
+  } | null>(null);
   // E01-S118 AC-6: incrementa a cada clique de card pra reabrir o modal de detalhe (mesmo card 2x).
   const [modalDetalheSeq, setModalDetalheSeq] = useState(0);
   const [visao, setVisao] = useState<Visao>(abaInicial ?? "lista");
@@ -130,6 +136,7 @@ export function OrdensServicoPage({
   // E01-S118 AC-2/AC-5: clientes pro "Novo Chamado" e pro filtro por Cliente do board.
   const [dadosOs, setDadosOs] = useState<DadosAberturaOs | null>(null);
   const [novoChamadoAberto, setNovoChamadoAberto] = useState(false);
+  const [aberturaAuvoOsId, setAberturaAuvoOsId] = useState<string | null>(null);
   // E01-S118 T7: Chamados abertos ainda sem OS — exibidos como cards sintéticos na coluna
   // Solicitação (senão um Chamado recém-criado só apareceria no board depois de "Gerar OS").
   const [chamadosAbertos, setChamadosAbertos] = useState<Chamado[]>([]);
@@ -386,12 +393,11 @@ export function OrdensServicoPage({
 
   async function onAlterarStatusDe(id: string, status: StatusOrdemServico) {
     if (!user) return;
-    // E01-S118 T7: card sintético de Chamado aberto (sem OS ainda) — arrastar não muda status de
-    // nada real; a mudança de fase é via "Gerar OS"/"Enviar ao backlog" no painel do Chamado.
     if (ehCardChamadoAberto(id)) {
-      setErroAcao(
-        'Este item ainda é só um Chamado — use "Gerar OS" ou "Enviar ao backlog" no detalhe dele.',
-      );
+      if (status === "solicitacao") return;
+      const chamadoId = id.replace("chamado-aberto:", "");
+      setSelecionadaId(id);
+      setConversaoPendente({ chamadoId, statusDestino: status });
       return;
     }
     setSalvando(true);
@@ -410,6 +416,9 @@ export function OrdensServicoPage({
           ),
         });
       }
+      // E01-S125: status persiste primeiro; criação Auvo nunca é efeito colateral. Só a
+      // transição individual abre a confirmação (lote fica manual, por OS, no detalhe).
+      if (status === "planejamento" && atualizada.auvoTaskId == null) setAberturaAuvoOsId(id);
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível alterar status.");
     } finally {
@@ -717,7 +726,14 @@ export function OrdensServicoPage({
                 onEditar={() => setEditando(true)}
                 dadosOs={dadosOs}
                 onRecarregar={carregar}
+                onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
                 aberturaModalSeq={modalDetalheSeq}
+                destinoConversao={
+                  selecionada.chamadoId === conversaoPendente?.chamadoId
+                    ? conversaoPendente.statusDestino
+                    : null
+                }
+                onConversaoFinalizada={() => setConversaoPendente(null)}
               />
             </section>
           )}
@@ -838,6 +854,13 @@ export function OrdensServicoPage({
                     onEditar={() => setEditando(true)}
                     dadosOs={dadosOs}
                     onRecarregar={carregar}
+                    onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
+                    destinoConversao={
+                      selecionada.chamadoId === conversaoPendente?.chamadoId
+                        ? conversaoPendente.statusDestino
+                        : null
+                    }
+                    onConversaoFinalizada={() => setConversaoPendente(null)}
                   />
                 ) : (
                   <div className="p-8 text-sm text-ink-3">Selecione uma OS.</div>
@@ -865,6 +888,13 @@ export function OrdensServicoPage({
           clientes={dadosOs?.clientes ?? []}
           onCancel={() => setNovoChamadoAberto(false)}
           onSalvar={salvarNovoChamado}
+        />
+      )}
+      {aberturaAuvoOsId && (
+        <AbrirOsAuvoModal
+          osId={aberturaAuvoOsId}
+          onFechar={() => setAberturaAuvoOsId(null)}
+          onAberta={carregar}
         />
       )}
     </div>
@@ -895,7 +925,7 @@ function BadgeHubOs({
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-[7px] border border-line bg-paper px-2.5 py-2">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
@@ -912,7 +942,10 @@ function DetalheOs({
   onEditar,
   dadosOs,
   onRecarregar,
+  onAbrirAuvo,
   aberturaModalSeq = 0,
+  destinoConversao = null,
+  onConversaoFinalizada,
 }: {
   selecionada: OrdemServicoOperacional;
   temEscrita: boolean;
@@ -923,9 +956,12 @@ function DetalheOs({
   dadosOs: DadosAberturaOs | null;
   /** E01-S118 T7: refetch do board após uma ação do Chamado (gerar OS, cancelar). */
   onRecarregar: () => void;
+  onAbrirAuvo: (osId?: string) => void;
   /** E01-S118 AC-6: clicar num card do Kanban/Timeline/Calendário abre este modal direto. O pai
    * incrementa `aberturaModalSeq` a cada clique (mesmo card duas vezes seguidas ainda reabre). */
   aberturaModalSeq?: number;
+  destinoConversao?: Exclude<StatusOrdemServico, "solicitacao"> | null;
+  onConversaoFinalizada?: () => void;
 }) {
   // E01-S75 AC-2: "Expandir" abre a mesma info + abas ricas do Auvo (questionários/fotos) num
   // modal grande — o painel inline continua compacto (master-detail), o modal é onde dá pra ler
@@ -974,9 +1010,18 @@ function DetalheOs({
             <Info
               label="Auvo"
               value={
-                selecionada.auvoTaskId
-                  ? `Task ${selecionada.auvoTaskId}`
-                  : selecionada.auvoSyncStatus || "Sem task"
+                auvoTaskDeepLink(selecionada.auvoTaskId) ? (
+                  <a
+                    href={auvoTaskDeepLink(selecionada.auvoTaskId) ?? undefined}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-orange hover:underline"
+                  >
+                    Auvo #{selecionada.auvoTaskId}
+                  </a>
+                ) : (
+                  "Sem OS no Auvo"
+                )
               }
             />
             <Info
@@ -1017,6 +1062,16 @@ function DetalheOs({
             </div>
           )}
 
+          {temEscrita && selecionada.auvoTaskId == null && (
+            <button
+              type="button"
+              onClick={() => onAbrirAuvo()}
+              className="h-8 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+            >
+              Abrir OS Auvo
+            </button>
+          )}
+
           {selecionada.detalhes && Object.keys(selecionada.detalhes).length > 0 && (
             <DetalhesTarefaAuvo
               detalhes={selecionada.detalhes}
@@ -1049,7 +1104,7 @@ function DetalheOs({
                 </select>
               </div>
               <p className="mt-2 text-xs text-ink-3">
-                Planejamento dispara o gatilho Auvo já existente quando aplicável.
+                Planejamento não abre task automaticamente. Confirme pelo botão Auvo.
               </p>
             </div>
           )}
@@ -1064,6 +1119,10 @@ function DetalheOs({
           dadosOs={dadosOs}
           temEscrita={temEscrita}
           onMutou={onRecarregar}
+          onOsPlanejada={onAbrirAuvo}
+          auvoTaskId={selecionada.auvoTaskId}
+          destinoConversao={destinoConversao}
+          onConversaoFinalizada={onConversaoFinalizada}
         />
       )}
     </>
