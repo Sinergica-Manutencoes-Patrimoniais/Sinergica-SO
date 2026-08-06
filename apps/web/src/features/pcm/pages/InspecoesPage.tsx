@@ -16,9 +16,19 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { derivarItemParaChamado } from "../application/assessment";
 import {
   aplicarTemplate,
   criarInspecao,
@@ -37,6 +47,10 @@ import type {
   TipoInspecao,
 } from "../application/qualidade-gateway";
 import {
+  parsearPlanilhaLevantamento,
+  prepararRevisaoImportacaoExcel,
+} from "../domain/inspecao-excel";
+import {
   GRAUS_RISCO,
   GRAU_RISCO_LABEL,
   type GrauRisco,
@@ -52,6 +66,7 @@ import {
   rotuloSistema,
   statusColor,
 } from "../domain/inspecoes-laudos";
+import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 
 type Estado =
@@ -328,6 +343,25 @@ export function InspecoesPage() {
       setEstado({ ...estado, inspecoes: [criada, ...estado.inspecoes] });
       setSelecionadaId(criada.id);
       setModalAtivo(null);
+      const itensCriados = await supabaseQualidadeAdapter.listarItensInspecao(criada.id);
+      if (input.criarChamados) {
+        try {
+          for (const item of itensCriados) {
+            await derivarItemParaChamado(
+              supabaseQualidadeAdapter,
+              supabaseChamadosAdapter,
+              item,
+              input.clientId,
+              "sinergica",
+              user.id,
+            );
+          }
+        } catch (error) {
+          setErroAcao(
+            `Inspeção importada, mas parte dos chamados não foi criada: ${error instanceof Error ? error.message : "erro desconhecido"}`,
+          );
+        }
+      }
       await carregarItens(criada.id);
       void carregar();
     } catch (error) {
@@ -1379,6 +1413,7 @@ interface ImportarConfirmacao {
   responsavelTecnico: string;
   observacoesGerais: string;
   itens: ItemInspecaoImportado[];
+  criarChamados: boolean;
 }
 
 function ImportarRelatorioModal({
@@ -1397,7 +1432,9 @@ function ImportarRelatorioModal({
   const fileRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<"upload" | "processando" | "revisao">("upload");
   const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [itens, setItens] = useState<ItemInspecaoImportado[]>([]);
+  const [criarChamados, setCriarChamados] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<number>>(new Set());
   const [expandido, setExpandido] = useState<number | null>(null);
   const [form, setForm] = useState({
@@ -1410,12 +1447,27 @@ function ImportarRelatorioModal({
 
   async function handleFile(file: File) {
     setErro(null);
+    setAviso(null);
     setStep("processando");
     try {
-      const texto =
-        tipo === "xls" ? await extrairTextoXls(file) : await extrairTextoPdfOuTexto(file);
-      const processados = await supabaseQualidadeAdapter.processarRelatorioInspecao(texto);
-      if (processados.length === 0) throw new Error("Nenhum item encontrado no relatório.");
+      const extraido =
+        tipo === "xls"
+          ? await extrairPlanilhaXls(file)
+          : { textoParaClassificacao: await extrairTextoPdfOuTexto(file), itensBrutos: [] };
+      let processados: ItemInspecaoImportado[];
+      try {
+        processados = await supabaseQualidadeAdapter.processarRelatorioInspecao(
+          extraido.textoParaClassificacao,
+        );
+        const revisao = prepararRevisaoImportacaoExcel(processados, extraido.itensBrutos);
+        processados = revisao.itens;
+        setAviso(revisao.aviso);
+      } catch (error) {
+        if (tipo !== "xls" || extraido.itensBrutos.length === 0) throw error;
+        const revisao = prepararRevisaoImportacaoExcel([], extraido.itensBrutos);
+        processados = revisao.itens;
+        setAviso(revisao.aviso);
+      }
       setItens(processados);
       setSelecionados(new Set(processados.map((_, index) => index)));
       setForm((atual) => ({
@@ -1495,6 +1547,11 @@ function ImportarRelatorioModal({
 
       {step === "revisao" && (
         <div className="space-y-4">
+          {aviso ? (
+            <p className="rounded-[6px] border border-[#E9C98C] bg-[#FFF8E7] px-3 py-2 text-sm text-[#805600]">
+              {aviso}
+            </p>
+          ) : null}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <Field label="Cliente *">
               <select
@@ -1555,6 +1612,19 @@ function ImportarRelatorioModal({
               </button>
             </div>
           </div>
+
+          <label className="flex items-start gap-2 rounded-[8px] border border-line bg-paper px-3 py-2 text-sm text-ink-2">
+            <input
+              type="checkbox"
+              checked={criarChamados}
+              onChange={(event) => setCriarChamados(event.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-[#1E2D62]"
+            />
+            <span>
+              Após revisar, criar um Chamado por item selecionado. A origem fica vinculada à
+              inspeção; deixe desmarcado para apenas gravar os itens.
+            </span>
+          </label>
 
           <div className="max-h-[46vh] space-y-2 overflow-y-auto pr-1">
             {itens.map((item, index) => {
@@ -1625,6 +1695,29 @@ function ImportarRelatorioModal({
                           )
                         }
                       />
+                      <div className="grid grid-cols-3 gap-2">
+                        <GutImportado
+                          label="Gravidade"
+                          value={item.gravidade}
+                          onChange={(value) =>
+                            atualizarGutImportado(setItens, index, "gravidade", value)
+                          }
+                        />
+                        <GutImportado
+                          label="Urgência"
+                          value={item.urgencia}
+                          onChange={(value) =>
+                            atualizarGutImportado(setItens, index, "urgencia", value)
+                          }
+                        />
+                        <GutImportado
+                          label="Tendência"
+                          value={item.tendencia}
+                          onChange={(value) =>
+                            atualizarGutImportado(setItens, index, "tendencia", value)
+                          }
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1643,6 +1736,7 @@ function ImportarRelatorioModal({
                 ...form,
                 observacoesGerais: `Importado de relatório ${tipo.toUpperCase()} Auvo.`,
                 itens: itensSelecionados,
+                criarChamados,
               })
             }
           />
@@ -1672,6 +1766,46 @@ function TextareaImportado({
         onChange={(event) => onChange(event.target.value)}
       />
     </label>
+  );
+}
+
+function GutImportado({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+        {label}
+      </span>
+      <select
+        className="input mt-1"
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+      >
+        {[1, 2, 3, 4, 5].map((opcao) => (
+          <option key={opcao} value={opcao}>
+            {opcao}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function atualizarGutImportado(
+  setItens: Dispatch<SetStateAction<ItemInspecaoImportado[]>>,
+  index: number,
+  campo: "gravidade" | "urgencia" | "tendencia",
+  value: number,
+) {
+  setItens((atuais) =>
+    atuais.map((atual, i) => (i === index ? { ...atual, [campo]: value } : atual)),
   );
 }
 
@@ -1818,7 +1952,7 @@ async function carregarPdfJs(): Promise<PdfJsLib> {
   return win.pdfjsLib;
 }
 
-async function extrairTextoXls(file: File): Promise<string> {
+async function extrairPlanilhaXls(file: File) {
   const XLSX = await carregarSheetJs();
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
@@ -1826,34 +1960,7 @@ async function extrairTextoXls(file: File): Promise<string> {
   if (!firstSheetName) throw new Error("Planilha sem abas.");
   const sheet = workbook.Sheets[firstSheetName];
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" }) as unknown[][];
-  if (rows.length < 2) throw new Error("Planilha vazia ou sem dados.");
-
-  const normalizar = (valor: unknown) =>
-    String(valor)
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .toLowerCase()
-      .trim();
-  const headerRow = rows[0];
-  if (!headerRow) throw new Error("Planilha sem cabeçalho.");
-  const header = headerRow.map(normalizar);
-  const colLocal = header.findIndex((h) => h.includes("local"));
-  const colFotos = header.findIndex((h) => h.includes("ocorr"));
-  const colRelato = header.findIndex((h) => h.includes("relato"));
-  const iLocal = colLocal >= 0 ? colLocal : 4;
-  const iFotos = colFotos >= 0 ? colFotos : 5;
-  const iRelato = colRelato >= 0 ? colRelato : 6;
-
-  return rows
-    .slice(1)
-    .map((row) => ({
-      local: String(row[iLocal] ?? "").trim(),
-      fotos: String(row[iFotos] ?? "").trim(),
-      relato: String(row[iRelato] ?? "").trim(),
-    }))
-    .filter((row) => row.local || row.relato)
-    .map((row) => `Local: ${row.local}\nFotos: ${row.fotos}\nRelato: ${row.relato}`)
-    .join("\n\n---\n\n");
+  return parsearPlanilhaLevantamento(rows);
 }
 
 async function carregarSheetJs(): Promise<{

@@ -27,6 +27,9 @@ alwaysApply: true
 - E01-S135 T2 local: relatório passa a incluir inspeções no período e preventivas PMOC/agenda no
   futuro, todos filtrados pelo ID do cliente (PMOC ganhou `clienteId`, não há associação pelo
   nome). Restam Playwright, CI de RLS e produção.
+- E01-S105 local: importador XLS ganhou parser com erro de coluna e preview, fallback bruto quando
+  IA falha, GUT editável e criação explícita de Chamados rastreados após revisão. Prompt v1 e eval
+  estrutural cobrem contrato/injection. Restam Deno/OpenRouter real e Playwright.
 - E01-S129 hardening local: `pnpm run ci:local` PASS — 776 testes, 9 skipped; build, typecheck,
   arquitetura, migrations (169), auditoria e registry de 35 Edge Functions verdes. Avisos não
   bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.
