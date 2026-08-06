@@ -34,6 +34,36 @@ export interface ItemRelatorioPlanejamento {
   horaInicio: string | null;
   descricao: string;
   origem: "agenda" | "os";
+  statusExecucao?: string | null;
+  evidênciaAuvoUrl?: string | null;
+}
+
+export type ModoRelatorioPlanejamento = "planejamento" | "execucao";
+
+function dataPtBr(data: string): string {
+  const [ano, mes, dia] = data.split("-");
+  return ano && mes && dia ? `${dia}/${mes}` : data;
+}
+
+export function formatarTextoRelatorioPlanejamento(
+  modo: ModoRelatorioPlanejamento,
+  itens: readonly ItemRelatorioPlanejamento[],
+): string {
+  if (itens.length === 0) return "";
+  const primeiro = itens[0];
+  if (!primeiro) return "";
+  const linhas = [
+    `${modo === "planejamento" ? "Planejamento" : "Relatório"} - ${primeiro.clienteNome} - ${dataPtBr(primeiro.data)}`,
+    `Técnico - ${primeiro.tecnicoNome || "Sem técnico"}`,
+  ];
+  itens.forEach((item, indice) => {
+    linhas.push(`${indice + 1}º - ${item.descricao}`);
+    if (modo === "execucao") {
+      linhas.push(`• Status: ${item.statusExecucao ?? "Pendente"}`);
+      if (item.evidênciaAuvoUrl) linhas.push(`OS Evidência: ${item.evidênciaAuvoUrl}`);
+    }
+  });
+  return linhas.join("\n");
 }
 
 function normalizar(valor: string | null | undefined): string {

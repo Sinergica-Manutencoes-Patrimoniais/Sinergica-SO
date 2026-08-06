@@ -13,7 +13,7 @@ alwaysApply: false
 | #  | Task | Cobre AC | Gate (comando) | Status |
 |----|------|----------|----------------|--------|
 | 1 | Domínio `relatorio-planejamento.ts`: união Agenda ∪ OS planejadas + dedupe (chave cliente/local/serviço) + ordenação por hora | AC-2 | vitest | done |
-| 2 | Domínio: formatação do texto (Planejamento e Execução) no formato exato do exemplo | AC-3,AC-4 | vitest | todo |
+| 2 | Domínio: formatação do texto (Planejamento e Execução) no formato exato do exemplo | AC-3,AC-4 | vitest | done |
 | 3 | Application/adapters: buscar Agenda + OS planejadas por dia/técnico/cliente; anexar execução/link Auvo | AC-1,AC-4 | typecheck | todo |
 | 4 | UI `RelatorioPlanejamentoPage` (aba na Operação): filtros dia/técnico/cliente, toggle Planejamento/Execução, render numerado | AC-1,AC-3,AC-4 | typecheck | todo |
 | 5 | Botão Copiar (clipboard, texto exato) + Baixar PDF (`pdf-lib`) | AC-5 | typecheck | todo |
