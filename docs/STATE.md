@@ -20,10 +20,11 @@ alwaysApply: true
 - E01-S121 T1: bloqueada por descoberta (`33d1dba`). Busca não encontrou documentação oficial
   pública de atualização de task; o registry atual não tem descriptor de task/OS. Não implementar
   payload `PUT /tasks` por inferência.
-- E01-S126 T1/T2: domínio de união/dedupe conservador e texto WhatsApp Planejamento/Execução;
-  commits `5d8a8df` e `4d5ddc1`. A Agenda não tem serviço/local; sem descrição, não deduplicar.
-- Próximo passo: E01-S126/T3 — application/adapters devem buscar Agenda + OS planejadas por
-  dia/técnico/cliente e anexar status/link Auvo.
+- E01-S126 T1–T5: domínio, busca Agenda/OS, tela em Operação, copiar e PDF (`pdf-lib`); commits
+  `5d8a8df`, `4d5ddc1`, `0a2c665`, `1777283`, `b4b9254`, `6fb002b`. Falta T6/T7 (fallback/e2e).
+- E01-S131: próxima story ativa. Diagnóstico concluído: o cadastro ainda usa tipo+quantidade,
+  enquanto `ferramenta_unidades` já preserva o rastreio físico. Próxima ação: T1, criar validação
+  item-cêntrica (código obrigatório, quantidade derivada), testes e commit.
 - Bloqueios ativos: S122 (badge/dado de contrato ausente); S124 (UAT Playwright sem resíduos);
   S130/T5 (classificação IA do webhook service-role/HMAC); S121 (contrato Auvo não verificado);
   S123/T5 (diagnóstico dos seis erros requer consulta autenticada em produção, não executada).
