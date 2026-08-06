@@ -330,6 +330,7 @@ export function PcmDashboardPage({
           onVerInspecoes={onVerInspecoes}
           onVerFerramentas={onVerFerramentas}
           onVerRelatorioDiario={onVerRelatorioDiario}
+          onVerErrosSync={abrirErrosSync}
         />
       ) : null}
 
@@ -469,6 +470,7 @@ function CockpitBomDiaCards({
   onVerInspecoes,
   onVerFerramentas,
   onVerRelatorioDiario,
+  onVerErrosSync,
 }: {
   cockpit: NonNullable<DashboardPcmResumo["cockpit"]>;
   onVerOrdensHoje: () => void;
@@ -478,6 +480,7 @@ function CockpitBomDiaCards({
   onVerInspecoes: () => void;
   onVerFerramentas: () => void;
   onVerRelatorioDiario: () => void;
+  onVerErrosSync: () => void;
 }) {
   return (
     <section className="rounded-[10px] border border-line bg-card p-4" aria-label="Cockpit bom dia">
@@ -566,7 +569,7 @@ function CockpitBomDiaCards({
                 ? "Erros para investigar"
                 : "Sync saudável"
           }
-          onClick={onVerOrdens}
+          onClick={onVerErrosSync}
           alerta={(cockpit.errosSyncAuvo ?? 0) > 0}
         />
         <CockpitCard
