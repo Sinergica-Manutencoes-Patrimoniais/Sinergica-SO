@@ -900,18 +900,10 @@ function FerramentaModal({
               ))}
             </datalist>
           </label>
-          <NumberField
-            label="Quantidade total"
-            value={dados.quantidadeTotal}
-            onChange={(v) => setDados((a) => ({ ...a, quantidadeTotal: v }))}
-            erro={errosInline.quantidadeTotal}
-          />
-          <NumberField
-            label="Quantidade mínima"
-            value={dados.quantidadeMinima}
-            onChange={(v) => setDados((a) => ({ ...a, quantidadeMinima: v }))}
-            erro={errosInline.quantidadeMinima}
-          />
+          <p className="rounded-[6px] border border-line-soft bg-paper px-3 py-2 text-xs text-ink-3 md:col-span-2">
+            Estoque é calculado pelas unidades físicas cadastradas. Cada item recebe um código
+            próprio.
+          </p>
           <NumberField
             label="Valor unitário (R$)"
             value={dados.valorUnitario ?? 0}
