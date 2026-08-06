@@ -1,3 +1,4 @@
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { useCallback, useEffect, useState } from "react";
 import { listarOpcoesAgenda } from "../application/agenda-tecnico";
 import type { OpcaoClienteAgenda, OpcaoFuncionario } from "../application/agenda-tecnico-gateway";
@@ -23,6 +24,7 @@ export function RelatorioPlanejamentoPage() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [baixandoPdf, setBaixandoPdf] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -55,6 +57,44 @@ export function RelatorioPlanejamentoPage() {
       setCopiado(true);
     } catch {
       setErro("Não foi possível copiar o relatório.");
+    }
+  }
+  async function baixarPdf() {
+    setBaixandoPdf(true);
+    try {
+      const pdf = await PDFDocument.create();
+      const fonte = await pdf.embedFont(StandardFonts.Helvetica);
+      let pagina = pdf.addPage();
+      let y = pagina.getHeight() - 48;
+      for (const linha of texto.split("\n")) {
+        const partes = linha.match(/.{1,90}(?:\s|$)/g) ?? [linha];
+        for (const parte of partes) {
+          if (y < 42) {
+            pagina = pdf.addPage();
+            y = pagina.getHeight() - 48;
+          }
+          pagina.drawText(parte.trim(), {
+            x: 42,
+            y,
+            size: 10,
+            font: fonte,
+            color: rgb(0.1, 0.12, 0.16),
+          });
+          y -= 16;
+        }
+      }
+      const bytes = await pdf.save();
+      const conteudo = Uint8Array.from(bytes).buffer;
+      const url = URL.createObjectURL(new Blob([conteudo], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `relatorio-${data}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setErro("Não foi possível gerar o PDF do relatório.");
+    } finally {
+      setBaixandoPdf(false);
     }
   }
 
@@ -119,6 +159,14 @@ export function RelatorioPlanejamentoPage() {
           className="btn-secondary"
         >
           {copiado ? "Copiado" : "Copiar"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void baixarPdf()}
+          disabled={!texto || baixandoPdf}
+          className="btn-secondary"
+        >
+          {baixandoPdf ? "Gerando PDF…" : "Baixar PDF"}
         </button>
       </div>
       {erro ? (
