@@ -102,3 +102,14 @@ export function calcularDivergenciaAuvo(
   const diferenca = quantidadeAuvo - quantidadePcm;
   return { divergente: diferenca !== 0, diferenca };
 }
+
+/** Base pura da dual-list E01-S137: unidades ocupadas nunca entram na seleção de transferência. */
+export function selecionarUnidadesDisponiveis(
+  unidades: readonly FerramentaUnidadeItem[],
+  ids: readonly string[],
+): FerramentaUnidadeItem[] {
+  const permitidos = new Set(ids);
+  return unidades.filter(
+    (unidade) => permitidos.has(unidade.id) && unidade.status === "disponivel",
+  );
+}

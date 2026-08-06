@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type FerramentaUnidadeItem,
   calcularDivergenciaAuvo,
+  selecionarUnidadesDisponiveis,
   validarAtribuicaoUnidade,
   validarBaixaUnidade,
   validarDevolucaoUnidade,
@@ -23,6 +24,15 @@ function unidade(overrides: Partial<FerramentaUnidadeItem> = {}): FerramentaUnid
 }
 
 describe("ferramenta-unidades", () => {
+  it("seleciona somente unidades disponíveis para transferência", () => {
+    expect(
+      selecionarUnidadesDisponiveis(
+        [unidade(), unidade({ id: "u2", status: "atribuida" })],
+        ["u1", "u2"],
+      ).map((item) => item.id),
+    ).toEqual(["u1"]);
+  });
+
   it("atribui unidade disponível", () => {
     expect(
       validarAtribuicaoUnidade({ unidadeId: "u1", funcionarioId: "func1" }, unidade()),
