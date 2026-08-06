@@ -17,8 +17,13 @@ alwaysApply: true
   botão no detalhe. `0169` reserva abertura por 5min para não duplicar task em clique concorrente.
   Commits `aaac967`, `e5426f9`, `88dca95`, `7f1064e`, `09d2d65`, `9ed7522`, `5d8dc41`, `cf76b2c`.
 - E01-S136: PMOC semanal e reservas/devoluções agora têm contagem real; data do cockpit usa dia
-  local, não UTC. Commit `190e1f5`; task doc `d0f6c42`. Restam Playwright e ajuste fino de
-  links/fonte para Saúde Auvo e relatório de ontem.
+  local, não UTC. Commit `190e1f5`; Saúde Auvo abre o diagnóstico (`04402aa`) e o resumo de ontem
+  abre o relatório já filtrado (`1eb1e80`). Resta Playwright.
+- E01-S130 AC-4 local: migration `0170` vincula itens importados à tarefa Auvo (com backfill); ao
+  receber finalização, o webhook busca o checklist final, usa a mesma classificação Vault/IA e
+  atualiza as linhas existentes, mantendo IDs/destinos derivados. Falha externa retorna erro para
+  reentrega do webhook, sem deixar o assessment silenciosamente provisório. Deno/CI, evento Auvo e
+  Playwright continuam externos.
 - E01-S129 hardening local: `pnpm run ci:local` PASS — 776 testes, 9 skipped; build, typecheck,
   arquitetura, migrations (169), auditoria e registry de 35 Edge Functions verdes. Avisos não
   bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.

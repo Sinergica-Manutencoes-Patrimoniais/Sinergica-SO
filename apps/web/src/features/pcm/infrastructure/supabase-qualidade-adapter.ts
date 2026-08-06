@@ -293,6 +293,7 @@ function linhaItemImportado(
     createdBy: string;
     auvoQuestaoChave?: string | null;
     auvoImportacaoProvisoria?: boolean;
+    auvoTaskId?: number | null;
   },
 ) {
   const score = item.gravidade * item.urgencia * item.tendencia;
@@ -312,6 +313,7 @@ function linhaItemImportado(
     created_by: ctx.createdBy,
     auvo_questao_chave: ctx.auvoQuestaoChave ?? null,
     auvo_importacao_provisoria: ctx.auvoImportacaoProvisoria ?? false,
+    auvo_task_id: ctx.auvoTaskId ?? null,
   };
 }
 
@@ -1024,6 +1026,7 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
           createdBy: userId,
           auvoQuestaoChave: `auvo-task-${auvoTaskId}-${index}`,
           auvoImportacaoProvisoria: respostaAoVivo?.provisorio ?? false,
+          auvoTaskId,
         }),
       );
       const { error: insertError } = await supabase
