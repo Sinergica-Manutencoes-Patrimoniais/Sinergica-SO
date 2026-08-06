@@ -228,6 +228,16 @@ describe("dashboard-pcm", () => {
       agenda: [],
       errosSyncAuvo: 2,
       inspecoesPendentes: 3,
+      preventivas: [
+        { scheduledDate: "2026-08-06", status: "agendado" },
+        { scheduledDate: "2026-08-10", status: "atrasado" },
+        { scheduledDate: "2026-08-17", status: "agendado" },
+      ],
+      reservasFerramenta: [
+        { dataInicio: "2026-08-06", dataFim: "2026-08-06", status: "pendente" },
+        { dataInicio: "2026-08-01", dataFim: "2026-08-05", status: "efetivada" },
+        { dataInicio: "2026-08-01", dataFim: "2026-08-05", status: "cancelada" },
+      ],
     });
     expect(cockpit.osHoje).toHaveLength(1);
     expect(cockpit.alocacoes).toEqual([
@@ -238,6 +248,9 @@ describe("dashboard-pcm", () => {
       chamadosSemTratativa: 1,
       emergenciaisAbertas: 1,
       osAtrasadas: 1,
+      preventivasSemana: 1,
+      ferramentasHoje: 1,
+      ferramentasAtrasadas: 1,
       errosSyncAuvo: 2,
       inspecoesPendentes: 3,
     });

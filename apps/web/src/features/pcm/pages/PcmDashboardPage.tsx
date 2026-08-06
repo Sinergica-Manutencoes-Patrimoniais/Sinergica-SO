@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Tooltip } from "../../../components/ui/Tooltip";
+import { listarReservasFerramenta } from "../application/ferramenta-reservas";
+import { listarProximasPreventivas } from "../application/pmoc";
 import {
   buscarUltimaRunSincronizacaoAuvo,
   consultarRunSincronizacaoAuvo,
@@ -41,7 +43,9 @@ import type {
   AuvoSyncErrorItem,
   AuvoSyncHealthItem,
 } from "../infrastructure/supabase-dashboard-pcm-adapter";
+import { supabaseFerramentaReservasAdapter } from "../infrastructure/supabase-ferramenta-reservas-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
+import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 import { supabaseSincronizarAuvoAdapter } from "../infrastructure/supabase-sincronizar-auvo-adapter";
 
@@ -55,6 +59,13 @@ type Estado =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; dashboard: DashboardPcmResumo };
+
+function hojeLocalIso(data = new Date()): string {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
 
 export function PcmDashboardPage({
   refreshKey = 0,
@@ -92,14 +103,17 @@ export function PcmDashboardPage({
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
     try {
-      const hoje = new Date().toISOString().slice(0, 10);
-      const [ordens, inspecoes, chamados, agenda, tecnicos] = await Promise.all([
-        supabaseHubOsAdapter.listarOrdensServico(),
-        supabaseQualidadeAdapter.listarInspecoes(),
-        supabaseChamadosAdapter.listar(),
-        supabaseAgendaTecnicoAdapter.listarSemana(hoje, hoje),
-        supabaseAgendaTecnicoAdapter.listarFuncionarios(),
-      ]);
+      const hoje = hojeLocalIso();
+      const [ordens, inspecoes, chamados, agenda, tecnicos, preventivas, reservasFerramenta] =
+        await Promise.all([
+          supabaseHubOsAdapter.listarOrdensServico(),
+          supabaseQualidadeAdapter.listarInspecoes(),
+          supabaseChamadosAdapter.listar(),
+          supabaseAgendaTecnicoAdapter.listarSemana(hoje, hoje),
+          supabaseAgendaTecnicoAdapter.listarFuncionarios(),
+          listarProximasPreventivas(supabasePmocAdapter),
+          listarReservasFerramenta(supabaseFerramentaReservasAdapter),
+        ]);
       const [resumoAuvo, saude] = await Promise.all([
         supabaseDashboardPcmAdapter.obterResumoAuvo(ordens),
         supabaseDashboardPcmAdapter.obterSaudeSync(),
@@ -115,6 +129,8 @@ export function PcmDashboardPage({
         inspecoesPendentes: inspecoes.filter(
           (inspecao) => inspecao.status !== "concluida" && inspecao.status !== "backlog_gerado",
         ).length,
+        preventivas,
+        reservasFerramenta,
       });
       setEstado({
         fase: "pronto",
@@ -528,8 +544,8 @@ function CockpitBomDiaCards({
         />
         <CockpitCard
           titulo="PMOC da semana"
-          valor="Ver"
-          detalhe="Preventivas e visitas programadas"
+          valor={cockpit.preventivasSemana}
+          detalhe={cockpit.preventivasSemana ? "Visitas preventivas abertas" : "Nenhuma preventiva"}
           onClick={onVerAgenda}
         />
         <CockpitCard
@@ -567,9 +583,14 @@ function CockpitBomDiaCards({
         />
         <CockpitCard
           titulo="Ferramentas"
-          valor="Ver"
-          detalhe="Reservas e devoluções"
+          valor={cockpit.ferramentasHoje}
+          detalhe={
+            cockpit.ferramentasAtrasadas
+              ? `${cockpit.ferramentasAtrasadas} devolução(ões) atrasada(s)`
+              : "Reservas e devoluções em dia"
+          }
           onClick={onVerFerramentas}
+          alerta={cockpit.ferramentasAtrasadas > 0}
         />
       </div>
     </section>

@@ -31,6 +31,9 @@ export interface CockpitBomDia {
   topBacklog: OrdemServicoOperacional[];
   errosSyncAuvo: number | null;
   inspecoesPendentes: number;
+  preventivasSemana: number;
+  ferramentasHoje: number;
+  ferramentasAtrasadas: number;
 }
 
 /** E01-S136 AC-1..4, S1..S8: leitura operacional de uma manhã no dia local já normalizado pelo
@@ -44,6 +47,8 @@ export function montarCockpitBomDia(
     agenda: readonly AlocacaoTecnico[];
     errosSyncAuvo?: number | null;
     inspecoesPendentes?: number;
+    preventivas?: readonly { scheduledDate: string; status: string }[];
+    reservasFerramenta?: readonly { dataInicio: string; dataFim: string; status: string }[];
   },
 ): CockpitBomDia {
   const osHoje = dados.ordens.filter(
@@ -73,6 +78,16 @@ export function montarCockpitBomDia(
       ) === indice,
   );
   const nomesAlocados = new Set(alocacoes.map((alocacao) => alocacao.tecnicoNome));
+  const dataLocal = new Date(`${dia}T12:00:00`);
+  const inicioSemana = new Date(dataLocal);
+  inicioSemana.setDate(dataLocal.getDate() - ((dataLocal.getDay() + 6) % 7));
+  const fimSemana = new Date(inicioSemana);
+  fimSemana.setDate(inicioSemana.getDate() + 6);
+  const inicioSemanaIso = dataIsoLocal(inicioSemana);
+  const fimSemanaIso = dataIsoLocal(fimSemana);
+  const reservasAtivas = (dados.reservasFerramenta ?? []).filter(
+    (reserva) => reserva.status !== "cancelada",
+  );
   return {
     dia,
     osHoje,
@@ -96,7 +111,24 @@ export function montarCockpitBomDia(
     topBacklog: filtrarBacklogGut([...dados.ordens]).slice(0, 5),
     errosSyncAuvo: dados.errosSyncAuvo ?? null,
     inspecoesPendentes: dados.inspecoesPendentes ?? 0,
+    preventivasSemana: (dados.preventivas ?? []).filter(
+      (preventiva) =>
+        (preventiva.status === "agendado" || preventiva.status === "atrasado") &&
+        preventiva.scheduledDate >= inicioSemanaIso &&
+        preventiva.scheduledDate <= fimSemanaIso,
+    ).length,
+    ferramentasHoje: reservasAtivas.filter(
+      (reserva) => reserva.dataInicio <= dia && reserva.dataFim >= dia,
+    ).length,
+    ferramentasAtrasadas: reservasAtivas.filter((reserva) => reserva.dataFim < dia).length,
   };
+}
+
+function dataIsoLocal(data: Date): string {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
 }
 
 export interface ClienteEquipamentosAuvo {
