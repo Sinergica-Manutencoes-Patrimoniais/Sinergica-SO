@@ -11,9 +11,9 @@ alwaysApply: false
 ## Plano
 | #  | Task | Cobre AC | Gate (comando) | Status |
 |----|------|----------|----------------|--------|
-| 1 | Application/adapters: consolidar por funcionário — cadastro + alocação dia/semana + OS atendidas + ferramentas em posse | AC-1..AC-4 | typecheck | todo |
+| 1 | Application/adapters: consolidar por funcionário — cadastro + alocação dia/semana + OS atendidas + ferramentas em posse | AC-1..AC-4 | typecheck | done |
 | 2 | Domínio: agregações (contagem de OS por período, alocação da semana) puras/testáveis | AC-2,AC-3 | vitest | todo |
-| 3 | UI: perfil/detalhe do funcionário com as 4 seções + atalhos (lista de OS, histórico ferramenta) | AC-1..AC-4 | typecheck | todo |
+| 3 | UI: perfil/detalhe do funcionário com as 4 seções + atalhos (lista de OS, histórico ferramenta) | AC-1..AC-4 | typecheck | done |
 | 4 | Estados vazios + degradação (inativo, sem Auvo) | AC-5,AC-borda | vitest | todo |
 | 5 | e2e: abrir funcionário mostra dados/alocação/OS/ferramentas | AC-1..AC-4 | playwright (Lucas) | todo |
 

@@ -12,18 +12,24 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { listarSemanaAgenda } from "../application/agenda-tecnico";
+import { listarUnidadesFerramenta } from "../application/ferramenta-unidades";
 import {
   criarFuncionario,
   desativarFuncionario,
   editarFuncionario,
   listarFuncionarios,
 } from "../application/funcionarios";
+import { diasDaSemana } from "../domain/agenda-tecnico";
 import type {
   CriarFuncionarioFormData,
   FuncionarioFormData,
   FuncionarioItem,
 } from "../domain/funcionarios";
+import { supabaseAgendaTecnicoAdapter } from "../infrastructure/supabase-agenda-tecnico-adapter";
+import { supabaseFerramentaUnidadesAdapter } from "../infrastructure/supabase-ferramenta-unidades-adapter";
 import { supabaseFuncionariosAdapter } from "../infrastructure/supabase-funcionarios-adapter";
+import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 
 type Estado =
   | { fase: "carregando" }
@@ -41,6 +47,12 @@ export function FuncionariosPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [perfil, setPerfil] = useState<FuncionarioItem | null>(null);
+  const [perfilDados, setPerfilDados] = useState<{
+    agenda: string[];
+    os: number;
+    ferramentas: string[];
+  } | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -97,6 +109,26 @@ export function FuncionariosPage() {
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
     }
+  }
+
+  async function abrirPerfil(funcionario: FuncionarioItem) {
+    setPerfil(funcionario);
+    setPerfilDados(null);
+    const dias = diasDaSemana(new Date());
+    const [agenda, ordens, unidades] = await Promise.all([
+      listarSemanaAgenda(supabaseAgendaTecnicoAdapter, dias[0] as string, dias.at(-1) as string),
+      supabaseHubOsAdapter.listarOrdensServico({ tecnicoFuncionarioId: funcionario.id }),
+      listarUnidadesFerramenta(supabaseFerramentaUnidadesAdapter),
+    ]);
+    setPerfilDados({
+      agenda: agenda
+        .filter((item) => item.funcionarioId === funcionario.id)
+        .map((item) => `${item.data} · ${item.clienteNome} ${item.horaInicio ?? ""}`),
+      os: ordens.length,
+      ferramentas: unidades
+        .filter((item) => item.atribuidaA === funcionario.id)
+        .map((item) => `${item.ferramentaNome} · ${item.codigo}`),
+    });
   }
 
   if (permissoesCarregando) {
@@ -172,6 +204,7 @@ export function FuncionariosPage() {
             <FuncionarioCard
               key={funcionario.id}
               funcionario={funcionario}
+              onVerPerfil={() => void abrirPerfil(funcionario)}
               onEditar={temEscrita ? () => setModal({ modo: "editar", funcionario }) : undefined}
               onDesativar={
                 temEscrita && funcionario.ativo ? () => desativar(funcionario) : undefined
@@ -188,16 +221,25 @@ export function FuncionariosPage() {
           onSalvar={salvar}
         />
       )}
+      {perfil && (
+        <PerfilFuncionarioModal
+          funcionario={perfil}
+          dados={perfilDados}
+          onFechar={() => setPerfil(null)}
+        />
+      )}
     </div>
   );
 }
 
 function FuncionarioCard({
   funcionario,
+  onVerPerfil,
   onEditar,
   onDesativar,
 }: {
   funcionario: FuncionarioItem;
+  onVerPerfil: () => void;
   onEditar?: () => void;
   onDesativar?: () => void;
 }) {
@@ -240,6 +282,9 @@ function FuncionarioCard({
         <p className="mt-2 text-xs text-[#A23B25]">{funcionario.auvoSyncError}</p>
       )}
       <div className="mt-4 flex justify-end gap-2">
+        <button type="button" onClick={onVerPerfil} className="btn-secondary">
+          Ver perfil
+        </button>
         {onEditar && (
           <button
             type="button"
@@ -259,6 +304,59 @@ function FuncionarioCard({
             <Trash2 className="h-3.5 w-3.5" />
             Desativar
           </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PerfilFuncionarioModal({
+  funcionario,
+  dados,
+  onFechar,
+}: {
+  funcionario: FuncionarioItem;
+  dados: { agenda: string[]; os: number; ferramentas: string[] } | null;
+  onFechar: () => void;
+}) {
+  return (
+    <div className="modal-backdrop">
+      <div className="w-full max-w-3xl rounded-[8px] border border-line bg-card shadow-xl">
+        <div className="flex justify-between border-b border-line px-4 py-3">
+          <div>
+            <h3 className="text-base font-semibold text-ink">{funcionario.nome}</h3>
+            <p className="text-xs text-ink-3">
+              {funcionario.cargo ?? "Sem cargo"} · {funcionario.ativo ? "Ativo" : "Inativo"} · Auvo{" "}
+              {funcionario.auvoId ?? "sem vínculo"}
+            </p>
+          </div>
+          <button type="button" onClick={onFechar} className="btn-secondary">
+            Fechar
+          </button>
+        </div>
+        {!dados ? (
+          <p className="p-5 text-sm text-ink-3">Carregando perfil…</p>
+        ) : (
+          <div className="grid gap-3 p-4 md:grid-cols-2">
+            <section className="rounded border border-line p-3">
+              <h4 className="font-semibold text-ink">Alocação da semana</h4>
+              <p className="mt-2 text-sm text-ink-3">
+                {dados.agenda.length ? dados.agenda.join("\n") : "Sem alocação esta semana"}
+              </p>
+            </section>
+            <section className="rounded border border-line p-3">
+              <h4 className="font-semibold text-ink">OS atendidas</h4>
+              <p className="mt-2 text-sm text-ink-3">{dados.os} OS no PCM</p>
+            </section>
+            <section className="rounded border border-line p-3 md:col-span-2">
+              <h4 className="font-semibold text-ink">Ferramentas em posse</h4>
+              <p className="mt-2 whitespace-pre-line text-sm text-ink-3">
+                {dados.ferramentas.length
+                  ? dados.ferramentas.join("\n")
+                  : "Nenhuma ferramenta em posse"}
+              </p>
+            </section>
+          </div>
         )}
       </div>
     </div>
