@@ -36,6 +36,9 @@ alwaysApply: true
 - E01-S129 revisão adversarial local: achou janela entre criar OS e marcar Chamado; migration
   `0171` garante uma OS ativa por Chamado e o caso de uso recupera a existente no retry. Testes
   `chamados` verdes; produção/Playwright/smoke continuam pendentes.
+- E01-S129 segurança local: migrations novas de tabela usam RLS FORCE (`0167`); `0166` é view com
+  detalhe Auvo higienizado; Edges revisadas exigem auth/HMAC e usam Vault/service-role só no
+  servidor. A confirmação direta de RLS em produção permanece `SEC-001`.
 - E01-S129 hardening local: `pnpm run ci:local` PASS — 776 testes, 9 skipped; build, typecheck,
   arquitetura, migrations (169), auditoria e registry de 35 Edge Functions verdes. Avisos não
   bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.
