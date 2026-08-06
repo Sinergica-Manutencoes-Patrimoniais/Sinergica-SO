@@ -22,6 +22,7 @@ export function RelatorioPlanejamentoPage() {
   const [clientes, setClientes] = useState<OpcaoClienteAgenda[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -48,6 +49,14 @@ export function RelatorioPlanejamentoPage() {
     void carregar();
   }, [carregar]);
   const texto = formatarTextoRelatorioPlanejamento(modo, itens);
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(true);
+    } catch {
+      setErro("Não foi possível copiar o relatório.");
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,6 +111,14 @@ export function RelatorioPlanejamentoPage() {
           className={modo === "execucao" ? "btn-primary" : "btn-secondary"}
         >
           Execução
+        </button>
+        <button
+          type="button"
+          onClick={() => void copiar()}
+          disabled={!texto}
+          className="btn-secondary"
+        >
+          {copiado ? "Copiado" : "Copiar"}
         </button>
       </div>
       {erro ? (
