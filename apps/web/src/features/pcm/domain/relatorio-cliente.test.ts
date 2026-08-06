@@ -76,4 +76,44 @@ describe("montarRelatorioCliente", () => {
       "Sem preventivas ou visitas agendadas no momento.",
     );
   });
+
+  it("inclui inspeção passada e visitas PMOC/agenda futuras do mesmo cliente", () => {
+    const relatorio = montarRelatorioCliente(
+      { id: "cliente-1", nome: "Condomínio Azul" },
+      "2026-08-01",
+      "2026-08-31",
+      [],
+      {
+        atividades: [
+          {
+            numero: "INS-1",
+            titulo: "Inspeção: Cobertura",
+            descricao: "Sem infiltrações",
+            data: "2026-08-12",
+            evidenciaUrl: null,
+          },
+        ],
+        cronograma: [
+          {
+            numero: "PMOC-1",
+            titulo: "Preventiva PMOC: mensal",
+            descricao: "Torre A",
+            data: "2026-09-02",
+            evidenciaUrl: null,
+          },
+          {
+            numero: "AGENDA-1",
+            titulo: "Visita técnica programada",
+            descricao: "Ana Técnica",
+            data: "2026-09-03",
+            evidenciaUrl: null,
+          },
+        ],
+      },
+    );
+    expect(relatorio.atividades).toEqual(
+      expect.arrayContaining([expect.objectContaining({ numero: "INS-1" })]),
+    );
+    expect(relatorio.cronograma.map((item) => item.numero)).toEqual(["PMOC-1", "AGENDA-1"]);
+  });
 });

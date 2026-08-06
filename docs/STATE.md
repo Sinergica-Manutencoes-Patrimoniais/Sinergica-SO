@@ -24,6 +24,9 @@ alwaysApply: true
   atualiza as linhas existentes, mantendo IDs/destinos derivados. Falha externa retorna erro para
   reentrega do webhook, sem deixar o assessment silenciosamente provisório. Deno/CI, evento Auvo e
   Playwright continuam externos.
+- E01-S135 T2 local: relatório passa a incluir inspeções no período e preventivas PMOC/agenda no
+  futuro, todos filtrados pelo ID do cliente (PMOC ganhou `clienteId`, não há associação pelo
+  nome). Restam Playwright, CI de RLS e produção.
 - E01-S129 hardening local: `pnpm run ci:local` PASS — 776 testes, 9 skipped; build, typecheck,
   arquitetura, migrations (169), auditoria e registry de 35 Edge Functions verdes. Avisos não
   bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.

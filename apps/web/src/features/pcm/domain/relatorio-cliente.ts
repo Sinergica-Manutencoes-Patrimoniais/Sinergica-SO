@@ -19,6 +19,11 @@ export interface RelatorioCliente {
   preventivasRealizadas: number;
 }
 
+export interface FontesRelatorioCliente {
+  atividades?: readonly AtividadeRelatorioCliente[];
+  cronograma?: readonly AtividadeRelatorioCliente[];
+}
+
 function diaEvento(iso: string | null): string | null {
   return diaLocal(iso);
 }
@@ -44,12 +49,13 @@ export function montarRelatorioCliente(
   inicio: string,
   fim: string,
   ordens: readonly OrdemServicoOperacional[],
+  fontes: FontesRelatorioCliente = {},
 ): RelatorioCliente {
-  const atividades = ordens
+  const atividadesOs = ordens
     .filter((ordem) => estaNoPeriodo(diaEvento(ordem.checkOutAt), inicio, fim))
     .map((ordem) => paraAtividade(ordem, diaEvento(ordem.checkOutAt) ?? inicio))
     .sort((a, b) => b.data.localeCompare(a.data));
-  const cronograma = ordens
+  const cronogramaOs = ordens
     .filter(
       (ordem) =>
         ordem.dataAgendada !== null &&
@@ -59,6 +65,12 @@ export function montarRelatorioCliente(
     )
     .map((ordem) => paraAtividade(ordem, ordem.dataAgendada ?? fim))
     .sort((a, b) => a.data.localeCompare(b.data));
+  const atividades = [...atividadesOs, ...(fontes.atividades ?? [])].sort((a, b) =>
+    b.data.localeCompare(a.data),
+  );
+  const cronograma = [...cronogramaOs, ...(fontes.cronograma ?? [])].sort((a, b) =>
+    a.data.localeCompare(b.data),
+  );
   return {
     clienteId: cliente.id,
     clienteNome: cliente.nome,

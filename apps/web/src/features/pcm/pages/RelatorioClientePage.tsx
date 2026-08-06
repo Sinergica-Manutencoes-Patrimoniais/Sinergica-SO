@@ -5,8 +5,11 @@ import { useAuth } from "../../../app/auth-context";
 import type { ClienteResumo } from "../application/cliente-360-gateway";
 import { obterRelatorioCliente } from "../application/relatorio-cliente";
 import { type RelatorioCliente, formatarTextoRelatorioCliente } from "../domain/relatorio-cliente";
+import { supabaseAgendaTecnicoAdapter } from "../infrastructure/supabase-agenda-tecnico-adapter";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
+import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
+import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 import { supabaseRelatorioClienteAdapter } from "../infrastructure/supabase-relatorio-cliente-adapter";
 
 function hoje(): string {
@@ -51,7 +54,16 @@ export function RelatorioClientePage() {
     setErro(null);
     setPublicado(false);
     try {
-      setRelatorio(await obterRelatorioCliente(supabaseHubOsAdapter, cliente, { inicio, fim }));
+      setRelatorio(
+        await obterRelatorioCliente(
+          supabaseHubOsAdapter,
+          supabaseAgendaTecnicoAdapter,
+          supabasePmocAdapter,
+          supabaseQualidadeAdapter,
+          cliente,
+          { inicio, fim },
+        ),
+      );
     } catch (causa) {
       setErro(causa instanceof Error ? causa.message : "Não foi possível gerar o relatório.");
     } finally {

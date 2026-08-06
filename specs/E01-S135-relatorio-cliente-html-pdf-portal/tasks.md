@@ -13,7 +13,7 @@ alwaysApply: false
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|----------------|--------|
 | 1 | Domínio `relatorio-cliente.ts`: monta passado (trabalho+evidências) + futuro (cronograma) por cliente/período | AC-1,AC-2,AC-3 | — | vitest | done |
-| 2 | Application/adapters: OS executadas+evidências, PMOC/inspeções, cronograma (PMOC/agenda/OS planejadas) por cliente/período | AC-2,AC-3 | 1 | typecheck | todo |
+| 2 | Application/adapters: OS executadas+evidências, PMOC/inspeções, cronograma (PMOC/agenda/OS planejadas) por cliente/período | AC-2,AC-3 | 1 | typecheck | done |
 | 3 | UI interna `RelatorioClientePage`: seletor cliente+período, render HTML de apresentação | AC-1 | 2 | typecheck | done |
 | 4 | Exportar PDF (`pdf-lib`) com identidade Sinérgica | AC-4 | 3 | typecheck | done |
 | 5 | Migration: tabela de relatórios publicados por cliente (RLS FORCE, isolamento por condomínio) | AC-5,AC-6 | — | lint:migrations | done |

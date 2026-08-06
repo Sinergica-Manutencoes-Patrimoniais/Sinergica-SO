@@ -99,6 +99,8 @@ export interface PmocAgenda {
 export interface PmocPreventivaResumo {
   id: string;
   contractId: string;
+  /** Chave estável para consumidores que precisam filtrar por cliente; o nome é só apresentação. */
+  clienteId: string | null;
   clienteNome: string;
   imovelNome: string;
   scheduledDate: string;
