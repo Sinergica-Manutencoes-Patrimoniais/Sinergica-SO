@@ -12,11 +12,11 @@ alwaysApply: false
 ## Plano
 | #  | Task | Cobre AC | Gate (comando) | Status |
 |----|------|----------|----------------|--------|
-| 1 | Auditar a tela atual e listar os problemas de layout (o "bagunçado") + oportunidades | AC-1 | revisão | todo |
-| 2 | Domínio: agregações de totais por técnico/dia/cliente (se ainda não existem) | AC-2 | vitest | todo |
-| 3 | Redesign: hierarquia (filtros → grupos → linhas), agrupamentos, totais, tokens do design system | AC-1,AC-2 | typecheck | todo |
-| 4 | Responsivo: sem overflow horizontal; scroll interno onde preciso; estado vazio | AC-3 | typecheck | todo |
-| 5 | Regressão: valores idênticos aos de antes (só apresentação mudou) | AC-4 | vitest | todo |
+| 1 | Auditar a tela atual e listar os problemas de layout (o "bagunçado") + oportunidades | AC-1 | revisão | done |
+| 2 | Domínio: agregações de totais por técnico/dia/cliente (se ainda não existem) | AC-2 | vitest | done |
+| 3 | Redesign: hierarquia (filtros → grupos → linhas), agrupamentos, totais, tokens do design system | AC-1,AC-2 | typecheck | done |
+| 4 | Responsivo: sem overflow horizontal; scroll interno onde preciso; estado vazio | AC-3 | typecheck | done |
+| 5 | Regressão: valores idênticos aos de antes (só apresentação mudou) | AC-4 | vitest | done |
 
 ## Plano de teste
 - Unidade: agregações de totais.
