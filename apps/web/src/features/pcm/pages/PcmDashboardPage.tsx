@@ -61,13 +61,23 @@ export function PcmDashboardPage({
   podeCriarOs,
   onNovaOs,
   onVerOrdens,
+  onVerOrdensHoje,
   onVerBacklog,
+  onVerAgenda,
+  onVerInspecoes,
+  onVerFerramentas,
+  onVerRelatorioDiario,
 }: {
   refreshKey?: number;
   podeCriarOs: boolean;
   onNovaOs: () => void;
   onVerOrdens: () => void;
+  onVerOrdensHoje: () => void;
   onVerBacklog: () => void;
+  onVerAgenda: () => void;
+  onVerInspecoes: () => void;
+  onVerFerramentas: () => void;
+  onVerRelatorioDiario: () => void;
 }) {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [sincronizacaoAuvo, setSincronizacaoAuvo] = useState<EstadoSincronizacaoAuvo>({
@@ -294,6 +304,19 @@ export function PcmDashboardPage({
         ))}
       </div>
 
+      {dashboard.cockpit ? (
+        <CockpitBomDiaCards
+          cockpit={dashboard.cockpit}
+          onVerOrdensHoje={onVerOrdensHoje}
+          onVerOrdens={onVerOrdens}
+          onVerBacklog={onVerBacklog}
+          onVerAgenda={onVerAgenda}
+          onVerInspecoes={onVerInspecoes}
+          onVerFerramentas={onVerFerramentas}
+          onVerRelatorioDiario={onVerRelatorioDiario}
+        />
+      ) : null}
+
       {dashboard.auvo && <PainelAuvo dashboard={dashboard.auvo} />}
       {dashboard.auvo && <PainelCampoAuvo dashboard={dashboard.auvo} />}
       <PainelDadosOperacionaisAuvo />
@@ -418,6 +441,166 @@ export function PcmDashboardPage({
         </div>
       </div>
     </div>
+  );
+}
+
+function CockpitBomDiaCards({
+  cockpit,
+  onVerOrdensHoje,
+  onVerOrdens,
+  onVerBacklog,
+  onVerAgenda,
+  onVerInspecoes,
+  onVerFerramentas,
+  onVerRelatorioDiario,
+}: {
+  cockpit: NonNullable<DashboardPcmResumo["cockpit"]>;
+  onVerOrdensHoje: () => void;
+  onVerOrdens: () => void;
+  onVerBacklog: () => void;
+  onVerAgenda: () => void;
+  onVerInspecoes: () => void;
+  onVerFerramentas: () => void;
+  onVerRelatorioDiario: () => void;
+}) {
+  return (
+    <section className="rounded-[10px] border border-line bg-card p-4" aria-label="Cockpit bom dia">
+      <div className="mb-3">
+        <h3 className="text-sm font-semibold text-ink">Bom dia · operação de hoje</h3>
+        <p className="text-xs text-ink-3">Decisões e pontos de atenção para {cockpit.dia}</p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <CockpitCard
+          titulo="OS previstas hoje"
+          valor={cockpit.osHoje.length}
+          detalhe={cockpit.osHoje.length ? "Ver board do dia" : "Nada para hoje"}
+          onClick={onVerOrdensHoje}
+        />
+        <CockpitCard
+          titulo="Técnicos alocados"
+          valor={cockpit.alocacoes.length}
+          detalhe={
+            cockpit.alocacoes.length
+              ? cockpit.alocacoes
+                  .slice(0, 2)
+                  .map((item) => `${item.tecnicoNome} · ${item.clienteNome}`)
+                  .join("; ")
+              : "Sem alocações"
+          }
+          onClick={onVerAgenda}
+        />
+        <CockpitCard
+          titulo="Funcionários livres"
+          valor={cockpit.tecnicosLivres.length}
+          detalhe={
+            cockpit.tecnicosLivres.length
+              ? cockpit.tecnicosLivres.slice(0, 3).join(", ")
+              : "Todos alocados"
+          }
+          onClick={onVerAgenda}
+        />
+        <CockpitCard
+          titulo="Chamados sem tratativa"
+          valor={cockpit.chamadosSemTratativa}
+          detalhe={cockpit.chamadosSemTratativa ? "Abrir Solicitação" : "Sem chamados parados"}
+          onClick={onVerOrdens}
+          alerta={cockpit.chamadosSemTratativa > 0}
+        />
+        <CockpitCard
+          titulo="C1 / SLA"
+          valor={cockpit.emergenciaisAbertas}
+          detalhe={cockpit.emergenciaisAbertas ? "Emergenciais abertas" : "Sem emergência aberta"}
+          onClick={onVerOrdens}
+          alerta={cockpit.emergenciaisAbertas > 0}
+        />
+        <CockpitCard
+          titulo="OS atrasadas"
+          valor={cockpit.osAtrasadas}
+          detalhe={cockpit.osAtrasadas ? "Replanejar ou executar" : "Nenhum atraso"}
+          onClick={onVerOrdens}
+          alerta={cockpit.osAtrasadas > 0}
+        />
+        <CockpitCard
+          titulo="Capacidade × demanda"
+          valor={`${cockpit.capacidadeDemanda.os}/${cockpit.capacidadeDemanda.tecnicos}`}
+          detalhe="OS previstas / técnicos ativos"
+          onClick={onVerAgenda}
+        />
+        <CockpitCard
+          titulo="PMOC da semana"
+          valor="Ver"
+          detalhe="Preventivas e visitas programadas"
+          onClick={onVerAgenda}
+        />
+        <CockpitCard
+          titulo="Top backlog GUT"
+          valor={cockpit.topBacklog.length}
+          detalhe={
+            cockpit.topBacklog[0] ? `Maior score: ${cockpit.topBacklog[0].scorePcm}` : "Fila vazia"
+          }
+          onClick={onVerBacklog}
+        />
+        <CockpitCard
+          titulo="Saúde Auvo"
+          valor={cockpit.errosSyncAuvo == null ? "—" : cockpit.errosSyncAuvo}
+          detalhe={
+            cockpit.errosSyncAuvo == null
+              ? "Indisponível"
+              : cockpit.errosSyncAuvo
+                ? "Erros para investigar"
+                : "Sync saudável"
+          }
+          onClick={onVerOrdens}
+          alerta={(cockpit.errosSyncAuvo ?? 0) > 0}
+        />
+        <CockpitCard
+          titulo="Resumo de ontem"
+          valor="Ver"
+          detalhe="Relatório diário"
+          onClick={onVerRelatorioDiario}
+        />
+        <CockpitCard
+          titulo="Inspeções pendentes"
+          valor={cockpit.inspecoesPendentes}
+          detalhe={cockpit.inspecoesPendentes ? "Itens para fechar" : "Nenhuma pendência"}
+          onClick={onVerInspecoes}
+        />
+        <CockpitCard
+          titulo="Ferramentas"
+          valor="Ver"
+          detalhe="Reservas e devoluções"
+          onClick={onVerFerramentas}
+        />
+      </div>
+    </section>
+  );
+}
+
+function CockpitCard({
+  titulo,
+  valor,
+  detalhe,
+  onClick,
+  alerta = false,
+}: {
+  titulo: string;
+  valor: string | number;
+  detalhe: string;
+  onClick: () => void;
+  alerta?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-[8px] border p-3 text-left transition-colors hover:bg-line-soft ${alerta ? "border-[#F2C0B5] bg-[#FFF8F6]" : "border-line bg-paper"}`}
+    >
+      <p className="text-xs font-semibold text-ink-3">{titulo}</p>
+      <p className={`mt-1 text-xl font-semibold ${alerta ? "text-[#C5362B]" : "text-ink"}`}>
+        {valor}
+      </p>
+      <p className="mt-1 line-clamp-2 text-xs text-ink-3">{detalhe}</p>
+    </button>
   );
 }
 

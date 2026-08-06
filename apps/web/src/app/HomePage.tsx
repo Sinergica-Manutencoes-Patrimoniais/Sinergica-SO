@@ -641,6 +641,12 @@ export function HomePage() {
     setPcmView("ordens");
   }
 
+  function abrirOrdensHoje() {
+    const hoje = new Date().toISOString().slice(0, 10);
+    setOrdensFiltrosPreset({ tecnicoFuncionarioId: "", dataInicio: hoje, dataFim: hoje });
+    setPcmView("ordens");
+  }
+
   function abrirOsDoCliente(osId: string) {
     if (clienteSelecionado) {
       setOsDeepLink((atual) => ({
@@ -1201,7 +1207,12 @@ export function HomePage() {
                   podeCriarOs={podeCriarOs}
                   onNovaOs={() => setNovaOsAberta(true)}
                   onVerOrdens={() => irParaPcmView("ordens")}
+                  onVerOrdensHoje={abrirOrdensHoje}
                   onVerBacklog={() => irParaPcmView("backlog")}
+                  onVerAgenda={() => irParaPcmView("agenda-tecnico")}
+                  onVerInspecoes={() => irParaPcmView("inspecoes")}
+                  onVerFerramentas={() => irParaPcmView("ferramentas-por-tecnico")}
+                  onVerRelatorioDiario={() => irParaPcmView("relatorio-diario")}
                 />
               </div>
             )
