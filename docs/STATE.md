@@ -39,8 +39,8 @@ alwaysApply: true
 - E01-S129 segurança local: migrations novas de tabela usam RLS FORCE (`0167`); `0166` é view com
   detalhe Auvo higienizado; Edges revisadas exigem auth/HMAC e usam Vault/service-role só no
   servidor. A confirmação direta de RLS em produção permanece `SEC-001`.
-- E01-S129 hardening local: `pnpm run ci:local` PASS — 776 testes, 9 skipped; build, typecheck,
-  arquitetura, migrations (169), auditoria e registry de 35 Edge Functions verdes. Avisos não
+- E01-S129 hardening local: `pnpm run ci:local` PASS — 783 testes, 9 skipped; build, typecheck,
+  arquitetura, migrations (171), auditoria e registry de 35 Edge Functions verdes. Avisos não
   bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.
 - Próximo: continuar specs locais pendentes; gates externos continuam: Deno/CI Edge, Playwright sem
   resíduos `[TESTE E2E]`, migration/deploy/smoke remoto, contrato API Auvo (S121), campo contrato
