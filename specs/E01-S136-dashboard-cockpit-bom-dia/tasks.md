@@ -12,7 +12,7 @@ alwaysApply: false
 ## Plano
 | #  | Task | Cobre AC | Gate (comando) | Status |
 |----|------|----------|----------------|--------|
-| 1 | Domínio: agregações do dia — OS hoje, alocação técnico→cliente, técnicos livres, chamados sem tratamento (status `aberto` fora de backlog/planejamento/preventiva/planejado) | AC-1..AC-4,AC-6 | vitest | todo |
+| 1 | Domínio: agregações do dia — OS hoje, alocação técnico→cliente, técnicos livres, chamados sem tratamento (status `aberto` fora de backlog/planejamento/preventiva/planejado) | AC-1..AC-4,AC-6 | vitest | done |
 | 2 | Application/adapters: buscar OS por `data_planejada`=hoje, agenda do dia, técnicos ativos, chamados abertos | AC-1..AC-4 | typecheck | todo |
 | 3 | UI: 4 blocos pedidos, acionáveis (clique → tela filtrada), estados vazios | AC-1..AC-5,AC-7 | typecheck | todo |
 | 4 | Application/adapters dos blocos S1-S9 (C1/SLA, atrasadas, capacidade, PMOC, backlog, saúde, ontem, inspeções, ferramentas) | AC-8 | typecheck | todo |

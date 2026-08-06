@@ -3,6 +3,7 @@ import type { InspecaoResumo } from "../application/qualidade-gateway";
 import {
   consolidarSinaisCampoAuvo,
   mensagemErroSyncAuvoLegivel,
+  montarCockpitBomDia,
   montarDashboardPcm,
 } from "./dashboard-pcm";
 import type { OrdemServicoOperacional } from "./ordens-servico";
@@ -202,6 +203,43 @@ describe("dashboard-pcm", () => {
       controlesHoras: 2,
       osComEquipamentoVinculado: 1,
       ultimaExecucaoCampo: "2026-07-10T11:00:00Z",
+    });
+  });
+
+  it("monta leitura do dia com alocados, livres e chamados ainda sem tratativa", () => {
+    const cockpit = montarCockpitBomDia("2026-08-06", {
+      ordens: [
+        ordem({
+          id: "hoje",
+          dataAgendada: "2026-08-06",
+          tecnicoFuncionarioId: "ana",
+          tecnicoNome: "Ana",
+          clienteNome: "Condomínio Azul",
+          localDescricao: "Casa de máquinas",
+          tipoOs: "C1",
+        }),
+        ordem({ id: "atrasada", dataAgendada: "2026-08-05" }),
+      ],
+      chamados: [{ status: "aberto" } as never, { status: "backlog" } as never],
+      tecnicos: [
+        { id: "ana", nome: "Ana" },
+        { id: "bia", nome: "Bia" },
+      ],
+      agenda: [],
+      errosSyncAuvo: 2,
+      inspecoesPendentes: 3,
+    });
+    expect(cockpit.osHoje).toHaveLength(1);
+    expect(cockpit.alocacoes).toEqual([
+      { tecnicoNome: "Ana", clienteNome: "Condomínio Azul", local: "Casa de máquinas" },
+    ]);
+    expect(cockpit.tecnicosLivres).toEqual(["Bia"]);
+    expect(cockpit).toMatchObject({
+      chamadosSemTratativa: 1,
+      emergenciaisAbertas: 1,
+      osAtrasadas: 1,
+      errosSyncAuvo: 2,
+      inspecoesPendentes: 3,
     });
   });
 });

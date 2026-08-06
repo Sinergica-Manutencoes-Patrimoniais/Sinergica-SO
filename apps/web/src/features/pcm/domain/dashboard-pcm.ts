@@ -1,4 +1,6 @@
 import type { InspecaoResumo } from "../application/qualidade-gateway";
+import type { AlocacaoTecnico } from "./agenda-tecnico";
+import type { Chamado } from "./chamados";
 import type { OrdemServicoOperacional } from "./ordens-servico";
 import { filtrarBacklogGut } from "./ordens-servico";
 
@@ -14,6 +16,86 @@ export interface DashboardPcmResumo {
   ordensRecentes: OrdemServicoOperacional[];
   topBacklog: OrdemServicoOperacional[];
   auvo: DashboardPcmAuvoResumo | null;
+}
+
+export interface CockpitBomDia {
+  dia: string;
+  osHoje: OrdemServicoOperacional[];
+  alocacoes: Array<{ tecnicoNome: string; clienteNome: string; local: string }>;
+  tecnicosLivres: string[];
+  chamadosSemTratativa: number;
+  emergenciaisAbertas: number;
+  osAtrasadas: number;
+  capacidadeDemanda: { tecnicos: number; os: number };
+  topBacklog: OrdemServicoOperacional[];
+  errosSyncAuvo: number | null;
+  inspecoesPendentes: number;
+}
+
+/** E01-S136 AC-1..4, S1..S8: leitura operacional de uma manhã no dia local já normalizado pelo
+ * caller. Agenda e OS se complementam; a mesma pessoa aparece uma vez por destino conhecido. */
+export function montarCockpitBomDia(
+  dia: string,
+  dados: {
+    ordens: readonly OrdemServicoOperacional[];
+    chamados: readonly Chamado[];
+    tecnicos: readonly { id: string; nome: string }[];
+    agenda: readonly AlocacaoTecnico[];
+    errosSyncAuvo?: number | null;
+    inspecoesPendentes?: number;
+  },
+): CockpitBomDia {
+  const osHoje = dados.ordens.filter(
+    (ordem) =>
+      ordem.dataAgendada === dia && ordem.status !== "finalizado" && ordem.status !== "cancelado",
+  );
+  const alocacoesAgenda = dados.agenda.filter((alocacao) => alocacao.data === dia);
+  const alocacoes = [
+    ...alocacoesAgenda.map((alocacao) => ({
+      tecnicoNome: alocacao.funcionarioNome || "Técnico",
+      clienteNome: alocacao.clienteNome || "Cliente a definir",
+      local: "local a definir",
+    })),
+    ...osHoje
+      .filter((ordem) => ordem.tecnicoFuncionarioId !== null)
+      .map((ordem) => ({
+        tecnicoNome: ordem.tecnicoNome ?? "Técnico",
+        clienteNome: ordem.clienteNome || "Cliente a definir",
+        local: ordem.localDescricao || "local a definir",
+      })),
+  ].filter(
+    (alocacao, indice, lista) =>
+      lista.findIndex(
+        (candidata) =>
+          candidata.tecnicoNome === alocacao.tecnicoNome &&
+          candidata.clienteNome === alocacao.clienteNome,
+      ) === indice,
+  );
+  const nomesAlocados = new Set(alocacoes.map((alocacao) => alocacao.tecnicoNome));
+  return {
+    dia,
+    osHoje,
+    alocacoes,
+    tecnicosLivres: dados.tecnicos
+      .filter((tecnico) => !nomesAlocados.has(tecnico.nome))
+      .map((tecnico) => tecnico.nome),
+    chamadosSemTratativa: dados.chamados.filter((chamado) => chamado.status === "aberto").length,
+    emergenciaisAbertas: dados.ordens.filter(
+      (ordem) =>
+        ordem.tipoOs === "C1" && ordem.status !== "finalizado" && ordem.status !== "cancelado",
+    ).length,
+    osAtrasadas: dados.ordens.filter(
+      (ordem) =>
+        ordem.dataAgendada !== null &&
+        ordem.dataAgendada < dia &&
+        ordem.status !== "finalizado" &&
+        ordem.status !== "cancelado",
+    ).length,
+    capacidadeDemanda: { tecnicos: dados.tecnicos.length, os: osHoje.length },
+    topBacklog: filtrarBacklogGut([...dados.ordens]).slice(0, 5),
+    errosSyncAuvo: dados.errosSyncAuvo ?? null,
+    inspecoesPendentes: dados.inspecoesPendentes ?? 0,
+  };
 }
 
 export interface ClienteEquipamentosAuvo {
