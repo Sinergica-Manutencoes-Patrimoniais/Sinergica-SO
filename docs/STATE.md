@@ -42,6 +42,9 @@ alwaysApply: true
 - E01-S129 hardening local: `pnpm run ci:local` PASS — 783 testes, 9 skipped; build, typecheck,
   arquitetura, migrations (171), auditoria e registry de 35 Edge Functions verdes. Avisos não
   bloqueantes: bundle web grande e invoke dinâmico de Qualidade. Produção não foi tocada.
+- Revalidação final do worktree em 2026-08-06: `pnpm run ci:local` PASS com o mesmo escopo (783
+  testes, 9 skipped; 130 arquivos de teste verdes e 3 de integração skipped). ROADMAP reconciliado
+  com commits e tasks; `audit:esteira` confirma 582 documentos válidos.
 - Todas as entregas implementáveis localmente deste lote foram concluídas. Matriz de gates externos:
   - **Credenciais/configuração real:** E00-S13 (Vault/OpenRouter) e E02-S27 (Evolution, instância,
     QR e webhook).
