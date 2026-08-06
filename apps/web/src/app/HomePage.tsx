@@ -579,6 +579,9 @@ export function HomePage() {
   const [atendimentoView, setAtendimentoView] = useState<AtendimentoView>("inbox");
   // Sub-navegação do PCM (Task 18/E01-S12) — mesmo padrão useState de abas, sem lib de rotas.
   const [pcmView, setPcmView] = useState<PcmView>("dashboard");
+  const [relatorioDiarioDataInicial, setRelatorioDiarioDataInicial] = useState<
+    string | undefined
+  >();
   // Sub-navegação do Financeiro.
   const [financeiroView, setFinanceiroView] = useState<FinanceiroView>("dashboard");
   // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
@@ -1137,7 +1140,7 @@ export function HomePage() {
             ) : pcmView === "relatorio-planejamento" ? (
               <RelatorioPlanejamentoPage />
             ) : pcmView === "relatorio-diario" ? (
-              <RelatorioDiarioPage />
+              <RelatorioDiarioPage dataInicial={relatorioDiarioDataInicial} />
             ) : pcmView === "relatorio-cliente" ? (
               <RelatorioClientePage />
             ) : pcmView === "ferramentas" ? (
@@ -1212,7 +1215,10 @@ export function HomePage() {
                   onVerAgenda={() => irParaPcmView("agenda-tecnico")}
                   onVerInspecoes={() => irParaPcmView("inspecoes")}
                   onVerFerramentas={() => irParaPcmView("ferramentas-por-tecnico")}
-                  onVerRelatorioDiario={() => irParaPcmView("relatorio-diario")}
+                  onVerRelatorioDiario={(data) => {
+                    setRelatorioDiarioDataInicial(data);
+                    irParaPcmView("relatorio-diario");
+                  }}
                 />
               </div>
             )

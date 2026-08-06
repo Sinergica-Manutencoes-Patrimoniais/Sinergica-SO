@@ -13,7 +13,8 @@ import { supabaseDashboardPcmAdapter } from "../infrastructure/supabase-dashboar
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 
 function hoje(): string {
-  return new Date().toISOString().slice(0, 10);
+  const data = new Date();
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
 }
 
 function CardResumo({
@@ -30,12 +31,16 @@ function CardResumo({
   );
 }
 
-export function RelatorioDiarioPage() {
-  const [data, setData] = useState(hoje);
+export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
+  const [data, setData] = useState(dataInicial ?? hoje);
   const [resumo, setResumo] = useState<ResumoRelatorioDiario | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [baixandoPdf, setBaixandoPdf] = useState(false);
+
+  useEffect(() => {
+    if (dataInicial) setData(dataInicial);
+  }, [dataInicial]);
 
   const carregar = useCallback(async () => {
     setCarregando(true);

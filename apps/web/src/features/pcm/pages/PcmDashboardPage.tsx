@@ -88,7 +88,7 @@ export function PcmDashboardPage({
   onVerAgenda: () => void;
   onVerInspecoes: () => void;
   onVerFerramentas: () => void;
-  onVerRelatorioDiario: () => void;
+  onVerRelatorioDiario: (data?: string) => void;
 }) {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [sincronizacaoAuvo, setSincronizacaoAuvo] = useState<EstadoSincronizacaoAuvo>({
@@ -479,7 +479,7 @@ function CockpitBomDiaCards({
   onVerAgenda: () => void;
   onVerInspecoes: () => void;
   onVerFerramentas: () => void;
-  onVerRelatorioDiario: () => void;
+  onVerRelatorioDiario: (data?: string) => void;
   onVerErrosSync: () => void;
 }) {
   return (
@@ -576,7 +576,7 @@ function CockpitBomDiaCards({
           titulo="Resumo de ontem"
           valor="Ver"
           detalhe="Relatório diário"
-          onClick={onVerRelatorioDiario}
+          onClick={() => onVerRelatorioDiario(diaAnterior(cockpit.dia))}
         />
         <CockpitCard
           titulo="Inspeções pendentes"
@@ -598,6 +598,12 @@ function CockpitBomDiaCards({
       </div>
     </section>
   );
+}
+
+function diaAnterior(dia: string): string {
+  const data = new Date(`${dia}T12:00:00`);
+  data.setDate(data.getDate() - 1);
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
 }
 
 function CockpitCard({
