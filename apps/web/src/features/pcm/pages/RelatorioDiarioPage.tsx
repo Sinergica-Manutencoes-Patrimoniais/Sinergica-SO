@@ -1,8 +1,12 @@
-import { AlertTriangle, CalendarDays, RefreshCw, Users } from "lucide-react";
+import { AlertTriangle, CalendarDays, Download, RefreshCw, Users } from "lucide-react";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { useCallback, useEffect, useState } from "react";
 import { obterResumoRelatorioDiario } from "../application/relatorio-diario";
 import { formatarHorasMinutos } from "../domain/apontamento-horas";
-import type { ResumoRelatorioDiario } from "../domain/relatorio-diario";
+import {
+  type ResumoRelatorioDiario,
+  formatarTextoRelatorioDiario,
+} from "../domain/relatorio-diario";
 import { supabaseApontamentoHorasAdapter } from "../infrastructure/supabase-apontamento-horas-adapter";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseDashboardPcmAdapter } from "../infrastructure/supabase-dashboard-pcm-adapter";
@@ -31,6 +35,7 @@ export function RelatorioDiarioPage() {
   const [resumo, setResumo] = useState<ResumoRelatorioDiario | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [baixandoPdf, setBaixandoPdf] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -54,6 +59,47 @@ export function RelatorioDiarioPage() {
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  async function baixarPdf() {
+    if (!resumo) return;
+    setBaixandoPdf(true);
+    try {
+      const pdf = await PDFDocument.create();
+      const fonte = await pdf.embedFont(StandardFonts.Helvetica);
+      let pagina = pdf.addPage();
+      let y = pagina.getHeight() - 48;
+      for (const linha of formatarTextoRelatorioDiario(resumo).split("\n")) {
+        const partes = linha.match(/.{1,90}(?:\s|$)/g) ?? [linha];
+        for (const parte of partes) {
+          if (y < 42) {
+            pagina = pdf.addPage();
+            y = pagina.getHeight() - 48;
+          }
+          pagina.drawText(parte.trim(), {
+            x: 42,
+            y,
+            size: 10,
+            font: fonte,
+            color: rgb(0.1, 0.12, 0.16),
+          });
+          y -= 16;
+        }
+      }
+      const bytes = await pdf.save();
+      const url = URL.createObjectURL(
+        new Blob([Uint8Array.from(bytes).buffer], { type: "application/pdf" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `relatorio-diario-${data}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setErro("Não foi possível gerar o PDF do relatório.");
+    } finally {
+      setBaixandoPdf(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -81,6 +127,14 @@ export function RelatorioDiarioPage() {
             disabled={carregando}
           >
             <RefreshCw className="h-4 w-4" /> Atualizar
+          </button>
+          <button
+            type="button"
+            onClick={() => void baixarPdf()}
+            className="btn-secondary"
+            disabled={!resumo || baixandoPdf}
+          >
+            <Download className="h-4 w-4" /> {baixandoPdf ? "Gerando PDF…" : "Exportar PDF"}
           </button>
         </div>
       </header>
