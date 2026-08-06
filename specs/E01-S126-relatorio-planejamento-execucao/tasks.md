@@ -17,7 +17,7 @@ alwaysApply: false
 | 3 | Application/adapters: buscar Agenda + OS planejadas por dia/técnico/cliente; anexar execução/link Auvo | AC-1,AC-4 | typecheck | done |
 | 4 | UI `RelatorioPlanejamentoPage` (aba na Operação): filtros dia/técnico/cliente, toggle Planejamento/Execução, render numerado | AC-1,AC-3,AC-4 | typecheck | done |
 | 5 | Botão Copiar (clipboard, texto exato) + Baixar PDF (`pdf-lib`) | AC-5 | typecheck | done |
-| 6 | Estado vazio + fallbacks (sem itens / sem técnico) | AC-borda | vitest | todo |
+| 6 | Estado vazio + fallbacks (sem itens / sem técnico) | AC-borda | vitest | done |
 | 7 | e2e: gerar planejamento de um dia/técnico, copiar, baixar PDF | AC-1,AC-5 | playwright (Lucas) | todo |
 
 ## Plano de teste
