@@ -95,13 +95,16 @@ Achado: `criarPayloadTexto` mandava `{ number, textMessage: { text } }` (coment�
 formato e quer `{ number, text }` plano. Corrigido, comentário atualizado com a evidência real
 (prioridade sobre suposição de doc nunca validada). `evolution.test.ts` ajustado.
 
-**502 do "Responder com IA agora" segue sem causa raiz confirmada** — o toast genérico do SDK
-(`Edge Function returned a non-2xx status code`) indica que a chamada externa a
-`atendimento-whatsapp-envio` morreu antes de qualquer resposta controlada (não é um erro capturado
-pelo try/catch novo). Hipótese: `pcm-ze-agent` roda OpenRouter + RAG + várias queries em série,
-síncrono, dentro do tempo de execução de `atendimento-whatsapp-envio` — plausível estourar timeout.
-Não investigado a fundo; precisa de decisão de arquitetura (ex.: acionar_ia virar fire-and-forget)
-antes de mexer, não é fix de 1 linha.
+**502 do "Responder com IA agora" — causa raiz achada e corrigida.** Com a query de log funcionando
+(`function_edge_logs`, mesma técnica acima), achei o padrão real: `pcm-ze-agent` respondia **401**
+("Chamada interna não autorizada") milissegundos antes do 502 que o Lucas via — não era timeout.
+Confirmado com teste direto (curl usando `SUPABASE_SERVICE_ROLE_KEY` local) que a chave em si não
+era o problema (a validação usa o mesmo helper `_shared/auth.ts` dos dois lados, não tem como
+divergir). O achado real: `atendimento-whatsapp-envio` era o **único lugar no repo** chamando outra
+Edge Function via `supabase-js` `.functions.invoke()` — todo o resto (`pcm-auvo-open-task` →
+`pcm-auvo-create-task`) usa `fetch()` direto com `Authorization` explícito. `.invoke()` não repassa
+esse header de forma confiável entre Edge Functions. Trocado pro padrão que já funciona (`fetch()`
++ header explícito); deploy feito, `atendimento-whatsapp-envio` redeployada.
 
 ## 2026-08-07 (cont.) — Fix: formulário perdido ao trocar de aba (39 telas afetadas)
 
