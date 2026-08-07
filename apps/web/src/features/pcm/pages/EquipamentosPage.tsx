@@ -278,11 +278,11 @@ function EquipamentoLinha({
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <span className="truncate text-sm font-semibold text-ink">{equipamento.nome}</span>
           <span
-            className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${equipamento.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
+            className={`shrink-0 rounded-full px-1.5 py-0.5 text-micro font-semibold ${equipamento.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
           >
             {equipamento.ativo ? "Ativo" : "Inativo"}
           </span>
-          <span className="shrink-0 rounded-full bg-line-soft px-1.5 py-0.5 text-[10px] font-semibold text-ink-2">
+          <span className="shrink-0 rounded-full bg-line-soft px-1.5 py-0.5 text-micro font-semibold text-ink-2">
             {equipamento.tipo === "componente" ? "Componente" : "Equipamento"}
           </span>
         </div>

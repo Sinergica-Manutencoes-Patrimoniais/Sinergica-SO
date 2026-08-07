@@ -56,7 +56,7 @@ export function SeletorItensComFiltro({
           </ul>
         )}
       </div>
-      <p className="text-[11px] text-ink-3">
+      <p className="text-micro text-ink-3">
         {selecionadosIds.size} selecionado{selecionadosIds.size === 1 ? "" : "s"}
       </p>
     </div>

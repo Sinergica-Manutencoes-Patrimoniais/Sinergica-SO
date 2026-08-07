@@ -57,7 +57,7 @@ export function DashboardMock() {
         </Card>
         <Card title="Projeção de caixa">
           <ProjecaoStrip posicao={posicao} />
-          <p className="mt-2 text-[11px] text-ink-3">
+          <p className="mt-2 text-micro text-ink-3">
             Posição atual + previstos de entrada − previstos de saída na janela.
           </p>
         </Card>
@@ -85,11 +85,11 @@ function FluxoChart() {
                 title={`Saídas ${brl(d.saida)}`}
               />
             </div>
-            <span className="text-[10px] font-semibold text-ink-3">{d.m}</span>
+            <span className="text-micro font-semibold text-ink-3">{d.m}</span>
           </div>
         ))}
       </div>
-      <div className="mt-3 flex gap-4 text-[11px] text-ink-2">
+      <div className="mt-3 flex gap-4 text-micro text-ink-2">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-sm bg-success" /> Entradas
         </span>
@@ -145,12 +145,12 @@ function PrevistoRealizado() {
               style={{ left: `${Math.round((i.meta / max) * 100)}%` }}
             />
           </div>
-          <span className="text-right text-[11px] tabular-nums text-ink-3">
+          <span className="text-right text-micro tabular-nums text-ink-3">
             {brl(i.real)} / {brl(i.meta)}
           </span>
         </div>
       ))}
-      <p className="text-[11px] text-ink-3">Traço = valor previsto do mês · barra = já realizado</p>
+      <p className="text-micro text-ink-3">Traço = valor previsto do mês · barra = já realizado</p>
     </div>
   );
 }
@@ -165,7 +165,7 @@ function ProjecaoStrip({ posicao }: { posicao: number }) {
     <div className="flex gap-2.5">
       {pontos.map((p) => (
         <div key={p.d} className="flex-1 rounded-lg bg-line-soft px-3 py-2.5 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-3">{p.d}</p>
+          <p className="text-micro font-bold uppercase tracking-wider text-ink-3">{p.d}</p>
           <p
             className={`mt-1 text-sm font-bold tabular-nums ${p.v < 0 ? "text-danger" : "text-ink"}`}
           >

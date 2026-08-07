@@ -109,7 +109,7 @@ export function DetalhesTarefaAuvo({
           <div className="space-y-3 text-sm">
             {endereco && (
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-ink-3">Endereço</p>
+                <p className="text-micro uppercase tracking-wider text-ink-3">Endereço</p>
                 <p className="text-ink-2">
                   {endereco}
                   {lat != null && lon != null && (
@@ -129,17 +129,13 @@ export function DetalhesTarefaAuvo({
               <div className="grid grid-cols-2 gap-2">
                 {tecnicoNomeAuvo && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-ink-3">
-                      Técnico (Auvo)
-                    </p>
+                    <p className="text-micro uppercase tracking-wider text-ink-3">Técnico (Auvo)</p>
                     <p className="text-ink-2">{tecnicoNomeAuvo}</p>
                   </div>
                 )}
                 {clienteNomeAuvo && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-ink-3">
-                      Cliente (Auvo)
-                    </p>
+                    <p className="text-micro uppercase tracking-wider text-ink-3">Cliente (Auvo)</p>
                     <p className="text-ink-2">{clienteNomeAuvo}</p>
                   </div>
                 )}
@@ -147,25 +143,25 @@ export function DetalhesTarefaAuvo({
             )}
             {orientacao && (
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-ink-3">Orientação</p>
+                <p className="text-micro uppercase tracking-wider text-ink-3">Orientação</p>
                 <p className="text-ink-2">{orientacao}</p>
               </div>
             )}
             {relato && (
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-ink-3">Relato do técnico</p>
+                <p className="text-micro uppercase tracking-wider text-ink-3">Relato do técnico</p>
                 <p className="text-ink-2">{relato}</p>
               </div>
             )}
             {palavrasChave.length > 0 && (
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-ink-3">Palavras-chave</p>
+                <p className="text-micro uppercase tracking-wider text-ink-3">Palavras-chave</p>
                 <p className="text-ink-2">{palavrasChave.join(", ")}</p>
               </div>
             )}
             {ticketId != null && (
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-ink-3">Ticket vinculado</p>
+                <p className="text-micro uppercase tracking-wider text-ink-3">Ticket vinculado</p>
                 <p className="text-ink-2">
                   #{ticketId}
                   {ticketTitulo ? ` · ${ticketTitulo}` : ""}
@@ -211,7 +207,7 @@ export function DetalhesTarefaAuvo({
             )}
             {assinaturaUrl && (
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-ink-3">Assinatura</p>
+                <p className="text-micro uppercase tracking-wider text-ink-3">Assinatura</p>
                 <a href={assinaturaUrl} target="_blank" rel="noreferrer" className="mt-1 block">
                   <img
                     src={assinaturaUrl}
@@ -239,7 +235,7 @@ export function DetalhesTarefaAuvo({
                   <p className="text-ink-2 font-medium">{item.pergunta}</p>
                   <p className="mt-1 text-ink">{item.resposta || "Sem resposta"}</p>
                   {item.data && (
-                    <p className="mt-1 text-[10px] text-ink-3">
+                    <p className="mt-1 text-micro text-ink-3">
                       {new Date(item.data).toLocaleString("pt-BR")}
                     </p>
                   )}
@@ -312,7 +308,7 @@ function ListaValores({ titulo, itens }: { titulo: string; itens: unknown[] }) {
   if (itens.length === 0) return null;
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-ink-3">{titulo}</p>
+      <p className="text-micro uppercase tracking-wider text-ink-3">{titulo}</p>
       <ul className="mt-1 space-y-1">
         {itens.map((item, indice) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: item do Auvo não tem id estável no payload
@@ -353,7 +349,7 @@ function AnexoThumb({ anexo }: { anexo: unknown }) {
         href={url}
         target="_blank"
         rel="noreferrer"
-        className="flex h-20 items-center justify-center rounded-md border border-line bg-card px-2 text-center text-[10px] font-semibold text-orange"
+        className="flex h-20 items-center justify-center rounded-md border border-line bg-card px-2 text-center text-micro font-semibold text-orange"
       >
         Ver anexo
       </a>
@@ -392,7 +388,7 @@ function EstadoVazio({ texto }: { texto: string }) {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-ink-3">{label}</p>
+      <p className="text-micro uppercase tracking-wider text-ink-3">{label}</p>
       <p className="text-ink-2">{value}</p>
     </div>
   );

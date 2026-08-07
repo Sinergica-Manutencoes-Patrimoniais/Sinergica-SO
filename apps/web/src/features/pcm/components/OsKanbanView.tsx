@@ -124,14 +124,14 @@ export function OsKanbanView({
                           key={preventiva.id}
                           className="rounded-md border border-line bg-card p-3"
                         >
-                          <span className="rounded-full bg-info-soft px-2 py-0.5 text-[10px] font-semibold text-info">
+                          <span className="rounded-full bg-info-soft px-2 py-0.5 text-micro font-semibold text-info">
                             {TIPO_MANUTENCAO_LABEL[preventiva.maintenanceType]}
                           </span>
                           <p className="mt-1.5 text-sm font-semibold text-ink">
                             {preventiva.imovelNome}
                           </p>
                           <p className="mt-1 text-xs text-ink-3">{preventiva.clienteNome}</p>
-                          <p className="mt-1 text-[11px] text-ink-3">
+                          <p className="mt-1 text-micro text-ink-3">
                             {formatarDataPreventiva(preventiva.scheduledDate)}
                           </p>
                         </div>
@@ -204,7 +204,7 @@ export function OsKanbanView({
                                 {rotuloNumeroOrdem(ordem)}
                               </span>
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
                               >
                                 {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                               </span>
@@ -212,20 +212,20 @@ export function OsKanbanView({
                             <p className="mt-1.5 text-sm font-semibold text-ink">{ordem.titulo}</p>
                             <p className="mt-1 text-xs text-ink-3">{ordem.clienteNome}</p>
                             {ordem.tecnicoNome && (
-                              <p className="mt-1 text-[11px] text-ink-3">
+                              <p className="mt-1 text-micro text-ink-3">
                                 Técnico: {ordem.tecnicoNome}
                               </p>
                             )}
                             {/* E01-S117 AC-6: Orientação do Auvo no lugar da droplist de status. */}
                             {orientacaoDoCard(ordem.detalhes) && (
-                              <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-ink-2">
+                              <p className="mt-1.5 line-clamp-2 text-micro leading-snug text-ink-2">
                                 <span className="font-semibold text-ink-3">Orientação: </span>
                                 {orientacaoDoCard(ordem.detalhes)}
                               </p>
                             )}
                             {/* E01-S117 AC-3: rastro do item no Auvo. */}
                             {ordem.auvoTaskId !== null && (
-                              <p className="mt-1 text-[10px] font-brand tabular-nums text-ink-3">
+                              <p className="mt-1 text-micro font-brand tabular-nums text-ink-3">
                                 Auvo #{ordem.auvoTaskId}
                               </p>
                             )}
@@ -286,7 +286,7 @@ function ColunaHeader({
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+        <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
           {total}
         </span>
         <button

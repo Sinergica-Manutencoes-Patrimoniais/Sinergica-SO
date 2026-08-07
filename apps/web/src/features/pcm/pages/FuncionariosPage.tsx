@@ -253,7 +253,7 @@ function FuncionarioCard({
           </p>
         </div>
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+          className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
             funcionario.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"
           }`}
         >
@@ -493,7 +493,7 @@ function FuncionarioModal({
               placeholder="ex.: 8"
               className="input w-full"
             />
-            <span className="mt-1 block text-[11px] text-ink-3">
+            <span className="mt-1 block text-micro text-ink-3">
               Usada na visão diária de horas para sinalizar falta/hora-extra. Vazio = sem
               sinalização.
             </span>

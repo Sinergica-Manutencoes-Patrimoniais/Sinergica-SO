@@ -213,7 +213,7 @@ function GrupoCard({
             Auvo {grupo.auvoId ?? "-"} · {grupo.clienteIds.length} cliente(s)
           </p>
         </div>
-        <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+        <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
           {grupo.auvoSyncStatus ?? "pending"}
         </span>
       </div>

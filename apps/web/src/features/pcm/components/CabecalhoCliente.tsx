@@ -66,7 +66,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
             type="button"
             className="shrink-0 appearance-none rounded-lg border-0 bg-card/10 px-4 py-3 text-left text-sm text-inherit"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/55">Auvo</p>
+            <p className="text-micro font-semibold uppercase tracking-wider text-white/55">Auvo</p>
             <p className="mt-1 font-brand text-lg tabular-nums">
               {rotuloOuPlaceholder(cliente.auvoId, "não sincronizado")}
             </p>
@@ -107,7 +107,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">{label}</p>
+      <p className="text-micro font-semibold uppercase tracking-wider text-white/45">{label}</p>
       <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
     </div>
   );

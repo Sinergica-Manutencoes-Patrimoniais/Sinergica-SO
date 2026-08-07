@@ -46,7 +46,7 @@ export function ImportOfxMock() {
               {brl(r.valor)}
             </td>
             <td className="px-4 py-3">
-              <span className="inline-flex rounded-full bg-orange-soft px-2 py-0.5 text-[11px] font-semibold text-orange-deep">
+              <span className="inline-flex rounded-full bg-orange-soft px-2 py-0.5 text-micro font-semibold text-orange-deep">
                 {r.sugestao}
               </span>
             </td>

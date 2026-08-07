@@ -40,11 +40,11 @@ export function ContratosMock() {
             </td>
             <td className="px-4 py-3">
               {c.status === "ativo" ? (
-                <span className="inline-flex rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">
+                <span className="inline-flex rounded-full bg-success-soft px-2 py-0.5 text-micro font-semibold text-success">
                   Ativo
                 </span>
               ) : (
-                <span className="inline-flex rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+                <span className="inline-flex rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
                   Suspenso
                 </span>
               )}

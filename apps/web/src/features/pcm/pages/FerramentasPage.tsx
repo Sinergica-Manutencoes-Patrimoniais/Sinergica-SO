@@ -634,7 +634,7 @@ function FerramentaLinha({
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</span>
               <span
-                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ferramenta.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
+                className={`shrink-0 rounded-full px-1.5 py-0.5 text-micro font-semibold ${ferramenta.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
               >
                 {ferramenta.ativo ? "Ativa" : "Inativa"}
               </span>

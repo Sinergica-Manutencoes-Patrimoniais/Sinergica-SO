@@ -62,13 +62,13 @@ export function PainelBacklog({
                       {os.tecnicoNome ? ` · Técnico: ${os.tecnicoNome}` : ""}
                     </p>
                   </div>
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium shrink-0">
+                  <span className="hidden sm:inline-flex items-center gap-1 text-micro font-medium shrink-0">
                     <span className={`w-1.5 h-1.5 rounded-full ${prio.dot}`} />
                     <span className="text-ink-2">{prio.label}</span>
                   </span>
                   <span className="text-xs font-bold font-brand text-ink-2 tabular-nums shrink-0 w-16 text-right">
                     {os.gravidade ?? 1}·{os.urgencia ?? 1}·{os.tendencia ?? 1}
-                    <span className="block text-[10px] font-normal text-ink-3">
+                    <span className="block text-micro font-normal text-ink-3">
                       score {os.scorePcm}
                     </span>
                   </span>

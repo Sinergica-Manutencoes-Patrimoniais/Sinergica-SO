@@ -29,7 +29,7 @@ const STATUS_LABEL: Record<string, string> = {
 export function StatusModulo({ status }: { status: "real" | "prototipo" | "planejado" }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_CLASS[status]}`}
+      className={`inline-flex rounded-full px-2.5 py-1 text-micro font-semibold ${STATUS_CLASS[status]}`}
     >
       {STATUS_LABEL[status]}
     </span>

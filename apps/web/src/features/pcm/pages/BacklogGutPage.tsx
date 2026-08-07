@@ -171,17 +171,17 @@ export function BacklogGutPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
+                        className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusOsColor(ordem.status)}`}
                       >
                         {rotuloStatusOs(ordem.status)}
                       </span>
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                        className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
                       >
                         {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                       </span>
                       {ordem.origemInspecaoItemId && (
-                        <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-info-soft text-info">
+                        <span className="rounded-full px-2 py-0.5 text-micro font-semibold bg-info-soft text-info">
                           Origem: Inspeção
                         </span>
                       )}
@@ -193,7 +193,7 @@ export function BacklogGutPage() {
                     {ordem.descricao?.trim() && (
                       <p className="mt-1 line-clamp-2 text-xs text-ink-3">{ordem.descricao}</p>
                     )}
-                    <p className="mt-1 text-[11px] text-ink-3">
+                    <p className="mt-1 text-micro text-ink-3">
                       {ordem.tecnicoNome ?? "sem técnico"}
                       {ordem.dataAgendada
                         ? ` · prevista ${new Date(ordem.dataAgendada).toLocaleDateString("pt-BR")}`
@@ -262,7 +262,7 @@ export function BacklogGutPage() {
 function Resumo({ label, valor }: { label: string; valor: number }) {
   return (
     <div className="rounded-lg border border-line bg-card px-4 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
+      <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-1 text-xl font-bold text-ink">{valor}</p>
     </div>
   );
@@ -271,7 +271,7 @@ function Resumo({ label, valor }: { label: string; valor: number }) {
 function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-md bg-paper px-2 py-1 text-center">
-      <p className="text-[10px] font-semibold uppercase text-ink-3">{label}</p>
+      <p className="text-micro font-semibold uppercase text-ink-3">{label}</p>
       <p className="text-sm font-bold text-ink tabular-nums">{value}</p>
     </div>
   );

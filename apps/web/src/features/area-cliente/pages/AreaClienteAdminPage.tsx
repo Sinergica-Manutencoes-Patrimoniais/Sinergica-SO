@@ -34,7 +34,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
           <div>
             <div className="flex items-center gap-2">
               <h2 className="page-title">Área do Cliente</h2>
-              <span className="rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-semibold text-success">
+              <span className="rounded-full bg-success-soft px-2.5 py-1 text-micro font-semibold text-success">
                 Portal implementado
               </span>
             </div>

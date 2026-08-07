@@ -200,7 +200,7 @@ export function IntegracoesPage() {
               <h3 className="text-sm font-semibold text-ink">Provedor de e-mail</h3>
             </div>
             <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+              className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
                 emailIntegracao?.temSegredo
                   ? "bg-success-soft text-success"
                   : "bg-line-soft text-ink-3"
@@ -295,7 +295,7 @@ export function IntegracoesPage() {
               <h3 className="text-sm font-semibold text-ink">Cobrança — Mercado Pago</h3>
             </div>
             <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+              className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
                 temAccessTokenMp ? "bg-success-soft text-success" : "bg-line-soft text-ink-3"
               }`}
             >
@@ -389,7 +389,7 @@ export function IntegracoesPage() {
                   Salvar
                 </button>
               </div>
-              <span className="mt-1 block text-[11px] text-ink-3">
+              <span className="mt-1 block text-micro text-ink-3">
                 Painel Mercado Pago → Suas integrações → Webhooks → Assinatura secreta.
               </span>
             </label>

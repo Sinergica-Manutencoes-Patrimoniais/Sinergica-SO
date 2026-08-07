@@ -49,6 +49,8 @@ pre-push:
       run: node scripts/check-sombras.mjs # 0 shadow-(sm|md|lg|xl|2xl) default do Tailwind (E00-S20)
     movimento:
       run: node scripts/check-movimento.mjs # 0 transition-all, 0 lib de animação (E00-S19/ADR-0018)
+    tipografia:
+      run: node scripts/check-tipografia.mjs # 0 text-[Npx] arbitrário (E00-S18)
     lint:
       run: pnpm exec biome check .
     typecheck:

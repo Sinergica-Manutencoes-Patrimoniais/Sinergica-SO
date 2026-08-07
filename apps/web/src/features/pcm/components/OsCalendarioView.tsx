@@ -76,7 +76,7 @@ export function OsCalendarioView({
         {DIAS_SEMANA.map((rotulo) => (
           <div
             key={rotulo}
-            className="bg-paper px-2 py-1.5 text-center text-[11px] font-semibold text-ink-3"
+            className="bg-paper px-2 py-1.5 text-center text-micro font-semibold text-ink-3"
           >
             {rotulo}
           </div>
@@ -91,7 +91,7 @@ export function OsCalendarioView({
               className={`min-h-[92px] bg-card p-1.5 ${doMesAtual ? "" : "opacity-40"}`}
             >
               <p
-                className={`text-[11px] font-semibold ${
+                className={`text-micro font-semibold ${
                   diaIso === hojeIso
                     ? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-navy text-white"
                     : "text-ink-3"
@@ -110,7 +110,7 @@ export function OsCalendarioView({
                       <button
                         type="button"
                         onClick={() => onSelecionar(ordem.id)}
-                        className="w-full truncate rounded-sm bg-line-soft px-1 py-0.5 text-left text-[10px] font-semibold text-ink-2 hover:bg-navy hover:text-white"
+                        className="w-full truncate rounded-sm bg-line-soft px-1 py-0.5 text-left text-micro font-semibold text-ink-2 hover:bg-navy hover:text-white"
                       >
                         {rotuloNumeroOrdem(ordem)}
                       </button>
@@ -118,7 +118,7 @@ export function OsCalendarioView({
                   );
                 })}
                 {ordensDoDia.length > MAX_CHIPS_POR_DIA && (
-                  <p className="text-[10px] text-ink-3">
+                  <p className="text-micro text-ink-3">
                     +{ordensDoDia.length - MAX_CHIPS_POR_DIA} mais
                   </p>
                 )}

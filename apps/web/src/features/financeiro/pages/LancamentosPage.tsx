@@ -384,7 +384,7 @@ export function LancamentosPage() {
                   </td>
                   <td className="px-3 py-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${lancamento.tipo === "entrada" ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${lancamento.tipo === "entrada" ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
                     >
                       {lancamento.tipo === "entrada" ? "Entrada" : "Saída"}
                     </span>
@@ -527,20 +527,20 @@ export function LancamentosPage() {
 function StatusBadge({ lancamento }: { lancamento: LancamentoItem }) {
   if (lancamento.status === "previsto") {
     return (
-      <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
+      <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
         Previsto
       </span>
     );
   }
   if (estaConciliado(lancamento)) {
     return (
-      <span className="rounded-full bg-info-soft px-2 py-0.5 text-[11px] font-semibold text-info">
+      <span className="rounded-full bg-info-soft px-2 py-0.5 text-micro font-semibold text-info">
         Conciliado
       </span>
     );
   }
   return (
-    <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">
+    <span className="rounded-full bg-success-soft px-2 py-0.5 text-micro font-semibold text-success">
       Realizado
     </span>
   );
@@ -579,7 +579,7 @@ function FiltrosBar({
   return (
     <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">De</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">De</span>
         <input
           type="date"
           value={filtro.competenciaInicio ?? ""}
@@ -588,7 +588,7 @@ function FiltrosBar({
         />
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Até</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Até</span>
         <input
           type="date"
           value={filtro.competenciaFim ?? ""}
@@ -597,7 +597,7 @@ function FiltrosBar({
         />
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Tipo</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Tipo</span>
         <select
           value={filtro.tipo ?? ""}
           onChange={(e) =>
@@ -614,7 +614,7 @@ function FiltrosBar({
         </select>
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Status</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Status</span>
         <select
           value={filtro.status ?? ""}
           onChange={(e) =>
@@ -631,7 +631,7 @@ function FiltrosBar({
         </select>
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Categoria</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Categoria</span>
         <select
           value={filtro.categoriaId ?? ""}
           onChange={(e) => onChange({ ...filtro, categoriaId: e.target.value || undefined })}
@@ -646,7 +646,7 @@ function FiltrosBar({
         </select>
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Conta</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Conta</span>
         <select
           value={filtro.contaId ?? ""}
           onChange={(e) => onChange({ ...filtro, contaId: e.target.value || undefined })}
@@ -661,7 +661,7 @@ function FiltrosBar({
         </select>
       </label>
       <label className="block sm:col-span-2 lg:col-span-2">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Cliente</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Cliente</span>
         <select
           value={filtro.clienteId ?? ""}
           onChange={(e) => onChange({ ...filtro, clienteId: e.target.value || undefined })}

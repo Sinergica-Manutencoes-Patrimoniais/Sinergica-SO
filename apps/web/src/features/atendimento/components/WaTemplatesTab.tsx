@@ -67,11 +67,11 @@ export function WaTemplatesTab({
                 <p className="truncate text-xs text-ink-3">{t.corpo}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2 pl-3">
-                <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] text-ink-2">
+                <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro text-ink-2">
                   {t.categoria}
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${CORES_STATUS[t.status]}`}
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${CORES_STATUS[t.status]}`}
                 >
                   {t.status}
                 </span>

@@ -671,7 +671,7 @@ function LinhaDia({ dia }: { dia: DiaTecnico }) {
 function BadgeStatus({ dia }: { dia: DiaTecnico }) {
   if (dia.incompleto) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
+      <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
         <AlertTriangle className="h-3 w-3" />
         Incompleto
       </span>
@@ -685,12 +685,12 @@ function BadgeStatus({ dia }: { dia: DiaTecnico }) {
   if (dia.sinalJornada) {
     const s = mapa[dia.sinalJornada];
     return (
-      <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${s.cls}`}>
+      <span className={`inline-flex rounded-full px-2 py-0.5 text-micro font-semibold ${s.cls}`}>
         {s.label}
       </span>
     );
   }
-  return <span className="text-[11px] text-ink-3">—</span>;
+  return <span className="text-micro text-ink-3">—</span>;
 }
 
 type EstadoTendencia =

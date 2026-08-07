@@ -382,7 +382,7 @@ function LinhaPendente({
           </button>
         </div>
       )}
-      {sugestao && <p className="mt-1 text-[11px] text-ink-3">Classificação sugerida por regra.</p>}
+      {sugestao && <p className="mt-1 text-micro text-ink-3">Classificação sugerida por regra.</p>}
     </div>
   );
 }

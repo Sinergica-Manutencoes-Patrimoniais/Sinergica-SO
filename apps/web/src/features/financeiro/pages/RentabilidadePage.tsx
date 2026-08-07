@@ -219,10 +219,10 @@ function DetalheMensal({ cliente }: { cliente: ClienteAgregado }) {
           {mesExpandido === m.mes && (
             <div className="mt-2 flex flex-col gap-1 pl-3">
               {osDoMes.length === 0 ? (
-                <p className="text-[11px] text-ink-3">Sem OS finalizadas neste mês.</p>
+                <p className="text-micro text-ink-3">Sem OS finalizadas neste mês.</p>
               ) : (
                 osDoMes.map((os) => (
-                  <div key={os.osId} className="flex justify-between text-[11px] text-ink-3">
+                  <div key={os.osId} className="flex justify-between text-micro text-ink-3">
                     <span>
                       OS {os.numero} · {os.horas.toFixed(2)}h {!os.valorado && "(não valorado)"}
                     </span>

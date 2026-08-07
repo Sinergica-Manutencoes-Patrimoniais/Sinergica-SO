@@ -141,7 +141,7 @@ export function FinanceiroDashboardPage() {
         <Kpi label="A receber (30d)" valorCentavos={resumo.aReceber30dCentavos} tom="positivo" />
         <Kpi label="A pagar (30d)" valorCentavos={resumo.aPagar30dCentavos} tom="negativo" />
         <div className="rounded-lg border border-line bg-card p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+          <p className="text-micro font-semibold uppercase tracking-wide text-ink-3">
             Inadimplência
           </p>
           <p
@@ -187,7 +187,7 @@ export function FinanceiroDashboardPage() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           {projecao.map((p) => (
             <div key={p.diasHorizonte} className="rounded-lg border border-line p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+              <p className="text-micro font-semibold uppercase tracking-wide text-ink-3">
                 +{p.diasHorizonte}d
               </p>
               <p
@@ -195,7 +195,7 @@ export function FinanceiroDashboardPage() {
               >
                 R$ {centavosParaReais(p.saldoProjetadoCentavos)}
               </p>
-              <p className="mt-0.5 text-[10px] text-ink-3">
+              <p className="mt-0.5 text-micro text-ink-3">
                 {new Date(p.dataLimite).toLocaleDateString("pt-BR")}
               </p>
             </div>
@@ -215,7 +215,7 @@ function Kpi({
   const cor = destaque ? "text-ink" : tom === "positivo" ? "text-success" : "text-danger";
   return (
     <div className="rounded-lg border border-line bg-card p-3">
-      <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+      <p className="flex items-center gap-1 text-micro font-semibold uppercase tracking-wide text-ink-3">
         {destaque && <Wallet className="h-3 w-3" />}
         {label}
       </p>

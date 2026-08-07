@@ -521,7 +521,7 @@ export function OrdensServicoPage({
             ["Críticas", kpis.criticas],
           ].map(([label, valor]) => (
             <div key={label} className="rounded-lg border border-line bg-card px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
+              <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">
                 {label}
               </p>
               <p className="mt-0.5 text-xl font-bold leading-none text-ink">{valor}</p>
@@ -744,10 +744,10 @@ export function OrdensServicoPage({
                 <div className="flex items-center justify-between border-b border-line-soft bg-paper px-4 py-2.5">
                   <div>
                     <h3 className="text-xs font-semibold text-ink">Fila de ordens</h3>
-                    <p className="text-[11px] text-ink-3">Selecione uma OS para ver o resumo</p>
+                    <p className="text-micro text-ink-3">Selecione uma OS para ver o resumo</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-2">
+                    <label className="flex items-center gap-1.5 text-micro font-semibold text-ink-2">
                       <input
                         type="checkbox"
                         checked={ordenarPorHub}
@@ -756,7 +756,7 @@ export function OrdensServicoPage({
                       />
                       Ordenar por Hub
                     </label>
-                    <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink-2">
+                    <span className="rounded-full border border-line bg-card px-2 py-0.5 text-micro font-semibold tabular-nums text-ink-2">
                       {ordensFiltradas.length}
                     </span>
                   </div>
@@ -766,7 +766,7 @@ export function OrdensServicoPage({
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
-                      <thead className="sticky top-0 bg-paper text-[11px] text-ink-3">
+                      <thead className="sticky top-0 bg-paper text-micro text-ink-3">
                         <tr className="border-b border-line-soft">
                           {temEscrita && <th className="w-8 px-2 py-2" />}
                           <th className="px-2 py-2 text-left font-semibold">Nº</th>
@@ -807,7 +807,7 @@ export function OrdensServicoPage({
                               <Tooltip content={resumoTooltipOrdem(ordem)}>
                                 <div className="min-w-[180px]">
                                   <p className="truncate font-semibold text-ink">{ordem.titulo}</p>
-                                  <p className="mt-0.5 truncate text-[11px] text-ink-3">
+                                  <p className="mt-0.5 truncate text-micro text-ink-3">
                                     {ordem.clienteNome} · {ordem.categoria} ·{" "}
                                     {ordem.tecnicoNome ?? "sem técnico"}
                                   </p>
@@ -824,14 +824,14 @@ export function OrdensServicoPage({
                             </td>
                             <td className="px-2 py-2 whitespace-nowrap">
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
+                                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusOsColor(ordem.status)}`}
                               >
                                 {rotuloStatusOs(ordem.status)}
                               </span>
                             </td>
                             <td className="px-2 py-2 whitespace-nowrap">
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
                               >
                                 {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                               </span>
@@ -914,7 +914,7 @@ function BadgeHubOs({
     tipoOs === "P1" && dataAgendada != null && new Date(dataAgendada).getTime() < Date.now();
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
         atrasada ? "bg-danger-line text-danger" : "bg-info-soft text-navy"
       }`}
       title={TIPO_OS_HUB_LABEL[tipoOs]}
@@ -928,7 +928,7 @@ function BadgeHubOs({
 function Info({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-lg border border-line bg-paper px-2.5 py-2">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
+      <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-0.5 text-xs font-medium text-ink">{value}</p>
     </div>
   );
@@ -1055,7 +1055,7 @@ function DetalheOs({
 
           {selecionada.auvoSyncError && (
             <div className="rounded-lg border border-danger-line bg-danger-soft px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-danger">
+              <p className="text-micro font-semibold uppercase tracking-wider text-danger">
                 Erro Auvo
               </p>
               <p className="mt-1 text-sm text-danger">{selecionada.auvoSyncError}</p>
@@ -1132,7 +1132,7 @@ function DetalheOs({
     <div>
       <div className="border-b border-line-soft px-4 py-3">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+          <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
             {ehChamadoSemOs ? "Resumo do Chamado" : "Resumo da OS"}
           </p>
           <div className="flex items-center gap-3">

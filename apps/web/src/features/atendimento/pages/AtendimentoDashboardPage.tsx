@@ -208,7 +208,7 @@ function Kpi({
     <div
       className={`rounded-lg border px-3 py-2.5 shadow-raised ${alerta ? "border-danger-line bg-danger-line" : "border-line bg-card"}`}
     >
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+      <div className="flex items-center gap-1.5 text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
         {alerta && <AlertTriangle className="h-3 w-3 text-danger" />}
         {label}
       </div>
@@ -217,7 +217,7 @@ function Kpi({
       >
         {valor}
       </p>
-      <p className="mt-1 text-[11px] text-ink-3">{sub}</p>
+      <p className="mt-1 text-micro text-ink-3">{sub}</p>
     </div>
   );
 }
@@ -372,12 +372,12 @@ function VolumeTrendCard({ volumeDiario }: { volumeDiario: WidgetsAtendimento["v
                   style={{ height: `${(v.saida / max) * 100}%` }}
                 />
               </div>
-              <span className="text-[10px] text-ink-3">{formatarDiaCurto(v.dia)}</span>
+              <span className="text-micro text-ink-3">{formatarDiaCurto(v.dia)}</span>
             </div>
           ))}
         </div>
       )}
-      <div className="mt-3 flex items-center gap-4 text-[11px] text-ink-3">
+      <div className="mt-3 flex items-center gap-4 text-micro text-ink-3">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-orange" /> Recebidas
         </span>
@@ -437,13 +437,13 @@ function HourlyHeatmapCard({ heatmap }: { heatmap: HeatmapCelula[] }) {
         >
           <div />
           {HORAS_DIA.map((hora) => (
-            <div key={hora} className="text-center text-[9px] text-ink-3">
+            <div key={hora} className="text-center text-micro text-ink-3">
               {hora % 6 === 0 ? hora : ""}
             </div>
           ))}
           {DIAS_SEMANA.map((dia, dow) => (
             <div key={dia} className="contents">
-              <div className="pr-1 text-right text-[10px] text-ink-3">{dia}</div>
+              <div className="pr-1 text-right text-micro text-ink-3">{dia}</div>
               {HORAS_DIA.map((hora) => {
                 const total = porCelula.get(`${dow}-${hora}`) ?? 0;
                 const alpha = total === 0 ? 0.08 : 0.2 + 0.8 * (total / max);

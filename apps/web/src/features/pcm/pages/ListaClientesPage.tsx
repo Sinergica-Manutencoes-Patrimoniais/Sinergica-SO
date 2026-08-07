@@ -480,7 +480,7 @@ function ClienteLinha({
             <Tooltip content={TOOLTIP_CLIENTE.marcacao} className="inline-flex">
               <button
                 type="button"
-                className="shrink-0 appearance-none rounded-full border-0 px-2 py-0.5 text-[11px] font-semibold text-white"
+                className="shrink-0 appearance-none rounded-full border-0 px-2 py-0.5 text-micro font-semibold text-white"
                 style={{ backgroundColor: cliente.marcacao.cor }}
               >
                 {cliente.marcacao.nome}
@@ -492,7 +492,7 @@ function ClienteLinha({
               <select
                 value={cliente.marcacao?.id ?? ""}
                 onChange={(event) => onTrocarMarcacao(event.target.value || null)}
-                className="h-6 rounded-full border-0 px-2 py-0 text-[11px] font-semibold text-white"
+                className="h-6 rounded-full border-0 px-2 py-0 text-micro font-semibold text-white"
                 style={{ backgroundColor: cliente.marcacao?.cor ?? "#9CA3AF" }}
               >
                 <option value="">Sem marcação</option>
@@ -505,7 +505,7 @@ function ClienteLinha({
             </Tooltip>
           )}
         </div>
-        <p className="mt-1 text-[11px] tabular-nums text-ink-3">
+        <p className="mt-1 text-micro tabular-nums text-ink-3">
           CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")} ·{" "}
           <Tooltip content={TOOLTIP_CLIENTE.auvo} className="inline-flex">
             <button
@@ -607,7 +607,7 @@ function IconButton({
 function ResumoCarteira({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-line-soft px-3 py-2">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
+      <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
       <p className="mt-1 font-brand text-xl font-bold text-ink tabular-nums">{value}</p>
     </div>
   );
@@ -650,9 +650,7 @@ function Badge({ tone, children }: { tone: "success" | "warning" | "neutral"; ch
     neutral: "bg-line-soft text-ink-2",
   };
   return (
-    <span
-      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${classes[tone]}`}
-    >
+    <span className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${classes[tone]}`}>
       {children}
     </span>
   );

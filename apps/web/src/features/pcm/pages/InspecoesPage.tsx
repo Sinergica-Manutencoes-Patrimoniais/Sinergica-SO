@@ -493,7 +493,7 @@ export function InspecoesPage() {
                     </p>
                   </div>
                   <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusColor(inspecao.status)}`}
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${statusColor(inspecao.status)}`}
                   >
                     {INSPECAO_STATUS_LABEL[inspecao.status]}
                   </span>
@@ -701,7 +701,7 @@ function KpiInspecao({
   return (
     <div className={`text-center ${className}`}>
       <div className={`text-base font-bold tabular-nums ${colors[tone]}`}>{value}</div>
-      <div className="text-[10px] text-white/55">{label}</div>
+      <div className="text-micro text-white/55">{label}</div>
     </div>
   );
 }
@@ -756,17 +756,17 @@ function ItemInspecaoCard({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] font-semibold text-ink-3">
+            <span className="rounded-full bg-paper px-2 py-0.5 text-micro font-semibold text-ink-3">
               {rotuloSistema(item.sistema)}
             </span>
             <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${resultadoColor(item.resultado)}`}
+              className={`rounded-full px-2 py-0.5 text-micro font-semibold ${resultadoColor(item.resultado)}`}
             >
               {RESULTADO_LABEL[item.resultado]}
             </span>
             {item.grauRisco && (
               <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${grauRiscoColor(item.grauRisco)}`}
+                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${grauRiscoColor(item.grauRisco)}`}
               >
                 Risco {GRAU_RISCO_LABEL[item.grauRisco]}
               </span>
@@ -799,7 +799,7 @@ function ItemInspecaoCard({
           <DetalheItem label="Observações" value={item.observacoes} />
           {item.midias.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+              <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
                 Mídias ({item.midias.length})
               </p>
               <p className="mt-1 text-xs text-ink-3">
@@ -809,7 +809,7 @@ function ItemInspecaoCard({
           )}
           {item.fotoUrls.length > 1 ? (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+              <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
                 Fotos ({item.fotoUrls.length})
               </p>
               <div className="mt-1 flex flex-wrap gap-2">
@@ -864,7 +864,7 @@ function ItemInspecaoCard({
 function DetalheItem({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
+      <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
       <p className="mt-1 text-sm text-ink">{value || "—"}</p>
     </div>
   );
@@ -1647,10 +1647,10 @@ function ImportarRelatorioModal({
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] font-semibold text-ink-3">
+                        <span className="rounded-full bg-paper px-2 py-0.5 text-micro font-semibold text-ink-3">
                           {SISTEMA_ICONE[item.sistema]} {rotuloSistema(item.sistema)}
                         </span>
-                        <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
+                        <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
                           GUT {score}
                         </span>
                       </div>
@@ -1757,7 +1757,7 @@ function TextareaImportado({
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+      <span className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
         {label}
       </span>
       <textarea
@@ -1780,7 +1780,7 @@ function GutImportado({
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+      <span className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
         {label}
       </span>
       <select

@@ -52,7 +52,7 @@ export function PainelHistorico({
                     </p>
                   </div>
                   <span
-                    className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${status.cls}`}
+                    className={`text-micro font-medium px-2 py-0.5 rounded-full shrink-0 ${status.cls}`}
                   >
                     {status.label}
                   </span>

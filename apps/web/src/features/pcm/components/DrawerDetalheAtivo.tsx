@@ -203,7 +203,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
             {sistemas.map((s) => (
               <span
                 key={s.id}
-                className="inline-flex items-center gap-1 rounded-full bg-orange-soft px-2 py-0.5 text-[11px] font-semibold text-orange-deep"
+                className="inline-flex items-center gap-1 rounded-full bg-orange-soft px-2 py-0.5 text-micro font-semibold text-orange-deep"
               >
                 {s.nome}
                 {s.codigo && <span className="font-normal text-ink-3">· {s.codigo}</span>}
@@ -261,7 +261,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section>
-      <h5 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+      <h5 className="mb-1.5 text-micro font-semibold uppercase tracking-wide text-ink-3">
         {titulo}
       </h5>
       {children}

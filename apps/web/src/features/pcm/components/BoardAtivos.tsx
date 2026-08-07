@@ -203,7 +203,7 @@ function ColunaLocal({
     <section className="flex w-64 shrink-0 flex-col rounded-lg border border-line bg-card">
       <header className="flex items-center justify-between border-b border-line-soft px-3 py-2">
         <h4 className="truncate text-sm font-semibold text-ink">{coluna.localNome}</h4>
-        <span className="shrink-0 rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-3">
+        <span className="shrink-0 rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-3">
           {coluna.totalItens}
         </span>
       </header>
@@ -218,7 +218,7 @@ function ColunaLocal({
             <CardAtivo key={item.id} item={item} onAbrir={onAbrir} arrastavel={arrastavel} />
           ))}
           {coluna.itensDiretos.length === 0 && arrastavel && (
-            <p className="px-1 py-1 text-center text-[10px] text-ink-3">Solte aqui</p>
+            <p className="px-1 py-1 text-center text-micro text-ink-3">Solte aqui</p>
           )}
         </div>
         {coluna.subgrupos.map((sg) => (
@@ -229,7 +229,7 @@ function ColunaLocal({
             }`}
             {...zonaProps(sg.localId, sg.localId)}
           >
-            <p className="px-1 pt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+            <p className="px-1 pt-1 text-micro font-semibold uppercase tracking-wide text-ink-3">
               {sg.localNome}
             </p>
             {sg.itens.map((item) => (
@@ -238,7 +238,7 @@ function ColunaLocal({
           </div>
         ))}
         {coluna.totalItens === 0 && (
-          <p className="px-1 py-3 text-center text-[11px] text-ink-3">Sem ativos</p>
+          <p className="px-1 py-3 text-center text-micro text-ink-3">Sem ativos</p>
         )}
       </div>
     </section>
@@ -282,7 +282,7 @@ function CardAtivo({
       )}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs font-semibold text-ink">{item.nome}</span>
-        <span className="flex items-center gap-1 text-[10px] text-ink-3">
+        <span className="flex items-center gap-1 text-micro text-ink-3">
           <Package className="h-3 w-3" />
           {item.tipo === "componente" ? "Componente" : "Equipamento"}
           {!item.ativo && " · inativo"}

@@ -125,7 +125,7 @@ export function ConfigLocalizacaoAuvoPage() {
           </div>
 
           <div className="mt-4 rounded-md border border-line bg-paper px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
+            <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">
               Preview (Torre A · 1º andar · Sala 001)
             </p>
             <p className="mt-1 text-sm font-semibold text-ink">{preview || "—"}</p>

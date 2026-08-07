@@ -179,14 +179,14 @@ export function ChamadoPainel({
   return (
     <div className="rounded-lg border border-line bg-paper">
       <div className="flex flex-wrap items-center gap-2 border-b border-line-soft px-4 py-2.5">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
+        <span className="text-micro font-semibold uppercase tracking-wider text-ink-3">
           Chamado
         </span>
         <span className="font-brand text-xs tabular-nums text-ink-3">{chamado.numero}</span>
-        <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+        <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
           {STATUS_CHAMADO_LABEL[chamado.status]}
         </span>
-        <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+        <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
           {ORIGEM_CHAMADO_LABEL[chamado.origem]}
         </span>
         {linkAuvo ? (
@@ -194,12 +194,12 @@ export function ChamadoPainel({
             href={linkAuvo}
             target="_blank"
             rel="noreferrer"
-            className="rounded-full bg-orange-soft px-2 py-0.5 text-[11px] font-semibold text-orange hover:underline"
+            className="rounded-full bg-orange-soft px-2 py-0.5 text-micro font-semibold text-orange hover:underline"
           >
             Auvo #{auvoTaskId}
           </a>
         ) : (
-          <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+          <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
             Sem OS no Auvo
           </span>
         )}

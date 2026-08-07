@@ -186,7 +186,7 @@ export function TicketsPage() {
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ticket.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${ticket.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
                 >
                   {ticket.ativo ? "Ativo" : "Arquivado"}
                 </span>

@@ -527,7 +527,7 @@ function DashboardGeral({
                 {modulo.label}
               </span>
               {resumo.alerta && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-warning bg-amber rounded-full px-2 py-0.5 shrink-0">
+                <span className="inline-flex items-center gap-1 text-micro font-semibold text-warning bg-amber rounded-full px-2 py-0.5 shrink-0">
                   ⚠ {resumo.alerta}
                 </span>
               )}
@@ -736,7 +736,7 @@ export function HomePage() {
           {activeModulo === "inicio" ? (
             <div>
               {!sidebarCompacta && (
-                <p className="px-2 text-[10px] font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                   MÓDULOS
                 </p>
               )}
@@ -759,7 +759,7 @@ export function HomePage() {
           ) : activeModulo === "config" ? (
             <div>
               {!sidebarCompacta && (
-                <p className="px-2 text-[10px] font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                   CONFIGURAÇÕES
                 </p>
               )}
@@ -791,7 +791,7 @@ export function HomePage() {
             PCM_NAV.map((group) => (
               <div key={group.titulo}>
                 {!sidebarCompacta && (
-                  <p className="px-2 text-[10px] font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                  <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                     {group.titulo}
                   </p>
                 )}
@@ -863,7 +863,7 @@ export function HomePage() {
             ATENDIMENTO_NAV.map((group) => (
               <div key={group.titulo}>
                 {!sidebarCompacta && (
-                  <p className="px-2 text-[10px] font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                  <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                     {group.titulo}
                   </p>
                 )}
@@ -896,7 +896,7 @@ export function HomePage() {
             FINANCEIRO_NAV.map((group) => (
               <div key={group.titulo}>
                 {!sidebarCompacta && (
-                  <p className="px-2 text-[10px] font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                  <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                     {group.titulo}
                   </p>
                 )}
@@ -928,7 +928,7 @@ export function HomePage() {
           ) : activeModulo === "guia" ? (
             <div>
               {!sidebarCompacta && (
-                <p className="px-2 text-[10px] font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                   GUIA DO SO
                 </p>
               )}

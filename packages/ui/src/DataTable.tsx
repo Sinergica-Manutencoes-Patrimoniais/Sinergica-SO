@@ -120,7 +120,7 @@ export function DataTable<T>({
                   {colunas.map((coluna) => (
                     <td
                       key={coluna.chave}
-                      className={`px-2 py-2 ${coluna.numerica ? "text-right tabular-nums" : ""}`}
+                      className={`px-2 py-2 ${coluna.numerica ? "text-right font-brand tabular-nums" : ""}`}
                     >
                       {coluna.render(item)}
                     </td>

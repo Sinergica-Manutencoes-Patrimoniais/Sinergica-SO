@@ -96,7 +96,7 @@ export function CanalExternoTab({
               </div>
               <div className="flex items-center gap-2">
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${CORES_STATUS[c.statusConexao]}`}
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${CORES_STATUS[c.statusConexao]}`}
                 >
                   {c.statusConexao}
                 </span>
@@ -147,7 +147,7 @@ export function CanalExternoTab({
               />
             )}
           </div>
-          <p className="mt-2 text-[11px] text-ink-3">
+          <p className="mt-2 text-micro text-ink-3">
             Token de acesso (secreto) é configurado fora daqui, no Vault/secrets — nunca digitado no
             navegador.
           </p>

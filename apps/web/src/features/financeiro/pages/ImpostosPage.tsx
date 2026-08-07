@@ -151,7 +151,7 @@ export function ImpostosPage() {
             {temEscrita && (
               <div className="flex items-end gap-2">
                 <label className="block">
-                  <span className="mb-1 block text-[11px] font-semibold text-ink-3">
+                  <span className="mb-1 block text-micro font-semibold text-ink-3">
                     Competência
                   </span>
                   <input

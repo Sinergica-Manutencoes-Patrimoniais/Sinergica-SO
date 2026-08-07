@@ -226,7 +226,7 @@ export function LaudosSpdaPage() {
                       <p className="text-xs text-ink-3 truncate">{laudo.clienteNome}</p>
                     </div>
                     <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusColor(laudo.status)}`}
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${statusColor(laudo.status)}`}
                     >
                       {LAUDO_STATUS_LABEL[laudo.status]}
                     </span>
@@ -358,12 +358,12 @@ export function LaudosSpdaPage() {
                           Ponto {ponto.numeroPonto}
                         </span>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${resultadoColor(ponto.statusConformidade)}`}
+                          className={`rounded-full px-2 py-0.5 text-micro font-semibold ${resultadoColor(ponto.statusConformidade)}`}
                         >
                           {CONFORMIDADE_SPDA_LABEL[ponto.statusConformidade]}
                         </span>
                         {ponto.resistenciaOhm !== null && (
-                          <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] font-semibold text-ink-3">
+                          <span className="rounded-full bg-paper px-2 py-0.5 text-micro font-semibold text-ink-3">
                             {ponto.resistenciaOhm} Ω
                           </span>
                         )}

@@ -380,18 +380,18 @@ export function PcmDashboardPage({
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-ink truncate">{ordem.titulo}</p>
-                      <p className="truncate text-[11px] text-ink-3">
+                      <p className="truncate text-micro text-ink-3">
                         {ordem.clienteNome} · {ordem.categoria} ·{" "}
                         {ordem.tecnicoNome ?? "sem técnico"}
                       </p>
                     </div>
                     <span
-                      className={`hidden sm:inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                      className={`hidden sm:inline-flex rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
                     >
                       {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                     </span>
                     <span
-                      className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${statusOsColor(ordem.status)}`}
+                      className={`text-micro font-medium px-2 py-0.5 rounded-full shrink-0 ${statusOsColor(ordem.status)}`}
                     >
                       {rotuloStatusOs(ordem.status)}
                     </span>
@@ -436,7 +436,7 @@ export function PcmDashboardPage({
                       <p className="text-xs font-semibold leading-snug text-ink-2">
                         {ordem.numero} · {ordem.titulo}
                       </p>
-                      <p className="mt-1 text-[11px] text-ink-3">
+                      <p className="mt-1 text-micro text-ink-3">
                         {ordem.clienteNome} · {ordem.categoria}
                       </p>
                       <div className="mt-1.5 flex items-center gap-2">
@@ -444,7 +444,7 @@ export function PcmDashboardPage({
                           Score {ordem.scorePcm}
                         </span>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                          className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
                         >
                           {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                         </span>
@@ -640,7 +640,7 @@ function BadgeSaudeSync({
   onAbrirErros: () => void;
 }) {
   if (itens.length === 0) {
-    return <span className="text-[11px] text-ink-3">Saúde Auvo: sem dados</span>;
+    return <span className="text-micro text-ink-3">Saúde Auvo: sem dados</span>;
   }
   const comErro = itens.filter((item) => item.lastErrorAt || item.errorCount > 0);
   const dryRun = itens.filter((item) => item.writeEnabled === false);
@@ -654,7 +654,7 @@ function BadgeSaudeSync({
         type="button"
         onClick={onAbrirErros}
         title={titulo}
-        className="rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-semibold text-danger hover:underline focus:outline-none focus:ring-2 focus:ring-orange"
+        className="rounded-full bg-danger-soft px-2 py-0.5 text-micro font-semibold text-danger hover:underline focus:outline-none focus:ring-2 focus:ring-orange"
       >
         {conteudo}
       </button>
@@ -663,7 +663,7 @@ function BadgeSaudeSync({
   return (
     <span
       title={titulo || `${itens.length} entidades monitoradas`}
-      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
         dryRun.length > 0 ? "bg-warning-soft text-warning" : "bg-success-soft text-success"
       }`}
     >
@@ -708,7 +708,7 @@ function DetalheErrosSyncAuvo({
                 {item.entity} · {item.rowId ?? "ID local indisponível"}
               </p>
               <p className="mt-0.5 text-sm text-danger">{item.lastError}</p>
-              <p className="mt-1 text-[11px] text-ink-3">
+              <p className="mt-1 text-micro text-ink-3">
                 Última falha: {formatarDataHoraCurta(item.lastErrorAt)}
               </p>
             </li>
@@ -940,7 +940,7 @@ function CampoAuvoItem({
     <div className="rounded-lg border border-line-soft px-4 py-3">
       <div className="flex items-center gap-2 text-ink-3">
         <Icon className="h-4 w-4 text-orange" />
-        <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em]">
+        <span className="truncate text-micro font-semibold uppercase tracking-[0.14em]">
           {label}
         </span>
       </div>
@@ -967,7 +967,7 @@ function AuvoResumoItem({
     <div className="min-w-0">
       <div className="flex items-center gap-2 text-ink-3">
         <Icon className="h-4 w-4 text-orange" />
-        <span className="truncate text-[10px] font-semibold uppercase tracking-[0.16em]">
+        <span className="truncate text-micro font-semibold uppercase tracking-[0.16em]">
           {label}
         </span>
       </div>
@@ -982,14 +982,14 @@ function AuvoResumoItem({
 function KpiCard({ kpi }: { kpi: KpiDashboardPcm }) {
   return (
     <div className="flex min-h-20 flex-col gap-1 rounded-md border border-line bg-card px-3 py-2.5">
-      <span className="text-[10px] font-semibold text-ink-3 uppercase tracking-[0.16em] font-brand">
+      <span className="text-micro font-semibold text-ink-3 uppercase tracking-[0.16em] font-brand">
         {kpi.label}
       </span>
       <span className="mt-0.5 font-brand text-xl font-bold leading-none tabular-nums text-ink">
         {kpi.valor}
       </span>
       <span
-        className={`inline-flex items-center gap-1 text-[11px] font-medium ${
+        className={`inline-flex items-center gap-1 text-micro font-medium ${
           kpi.trend === "up" ? "text-success" : kpi.trend === "down" ? "text-danger" : "text-ink-3"
         }`}
       >

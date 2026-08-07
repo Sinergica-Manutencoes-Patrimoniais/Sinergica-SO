@@ -329,7 +329,7 @@ function Indicador({
     <div className="rounded-lg border border-line bg-card p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</p>
       <p className={`mt-1 text-xl font-semibold ${cores[tom]}`}>{valor}</p>
-      <p className="mt-1 text-[11px] text-ink-3">{detalhe}</p>
+      <p className="mt-1 text-micro text-ink-3">{detalhe}</p>
     </div>
   );
 }

@@ -451,7 +451,7 @@ export function PmocPage() {
                       <p className="mt-1 truncate text-xs text-ink-3">{contrato.clienteNome}</p>
                     </div>
                     <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusContratoColor(contrato.status)}`}
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${statusContratoColor(contrato.status)}`}
                     >
                       {STATUS_CONTRATO_LABEL[contrato.status]}
                     </span>
@@ -632,12 +632,12 @@ function DetalhePmoc({
                         }
                       </p>
                     </div>
-                    <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] font-semibold text-ink-3">
+                    <span className="rounded-full bg-paper px-2 py-0.5 text-micro font-semibold text-ink-3">
                       {equipamento.condition}
                     </span>
                   </div>
                   {equipamento.auvoEquipmentId && (
-                    <span className="mt-2 inline-flex rounded-full bg-info-soft px-2 py-0.5 text-[11px] font-semibold text-navy">
+                    <span className="mt-2 inline-flex rounded-full bg-info-soft px-2 py-0.5 text-micro font-semibold text-navy">
                       Auvo #{equipamento.auvoEquipmentId}
                     </span>
                   )}
@@ -685,7 +685,7 @@ function DetalhePmoc({
                         <p className="text-xs text-ink-3">Auvo #{sugestao.auvoEquipmentId}</p>
                       </div>
                       {sugestao.jaImportado ? (
-                        <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">
+                        <span className="rounded-full bg-success-soft px-2 py-0.5 text-micro font-semibold text-success">
                           PMOC
                         </span>
                       ) : (
@@ -718,7 +718,7 @@ function DetalhePmoc({
               <>
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusAgendaColor(proxima.status)}`}
+                    className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusAgendaColor(proxima.status)}`}
                   >
                     {STATUS_AGENDA_LABEL[proxima.status]}
                   </span>
@@ -766,11 +766,11 @@ function DetalhePmoc({
           {detalhe.agenda.map((agenda) => (
             <div key={agenda.id} className="rounded-lg border border-line px-3 py-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
+                <span className="text-micro font-semibold uppercase tracking-[0.12em] text-ink-3">
                   Mês {agenda.monthRef}
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusAgendaColor(agenda.status)}`}
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusAgendaColor(agenda.status)}`}
                 >
                   {STATUS_AGENDA_LABEL[agenda.status]}
                 </span>
@@ -782,14 +782,14 @@ function DetalhePmoc({
                 {TIPO_MANUTENCAO_LABEL[agenda.maintenanceType]}
               </p>
               {agenda.ordemServicoId ? (
-                <p className="mt-2 text-[11px] font-semibold text-success">OS criada</p>
+                <p className="mt-2 text-micro font-semibold text-success">OS criada</p>
               ) : (
                 podeEditar &&
                 agenda.status !== "cancelado" && (
                   <button
                     type="button"
                     onClick={() => onCriarOsVisita(agenda)}
-                    className="mt-2 w-full rounded-md border border-line px-2 py-1 text-[11px] font-semibold text-ink-2 hover:bg-line-soft"
+                    className="mt-2 w-full rounded-md border border-line px-2 py-1 text-micro font-semibold text-ink-2 hover:bg-line-soft"
                   >
                     Criar OS
                   </button>
@@ -831,7 +831,7 @@ function DetalhePmoc({
                       <p className="text-xs text-ink-3">{analise.labName || "Laboratório —"}</p>
                     </div>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusMicrobioColor(analise.status)}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusMicrobioColor(analise.status)}`}
                     >
                       {STATUS_MICROBIO_LABEL[analise.status]}
                     </span>
@@ -879,14 +879,14 @@ function DetalhePmoc({
                       </p>
                     </div>
                     <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${severidadeNcColor(nc.severity)}`}
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${severidadeNcColor(nc.severity)}`}
                     >
                       {SEVERIDADE_NC_LABEL[nc.severity]}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusNcColor(nc.status)}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusNcColor(nc.status)}`}
                     >
                       {STATUS_NC_LABEL[nc.status]}
                     </span>
@@ -965,7 +965,7 @@ function Kpi({
   return (
     <div className="rounded-lg border border-line bg-card px-4 py-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
+        <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
         <Icon className={`h-4 w-4 ${danger && value > 0 ? "text-orange" : "text-ink-3"}`} />
       </div>
       <p
@@ -980,7 +980,7 @@ function Kpi({
 function MiniMetric({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-md border border-line-soft px-2 py-1.5">
-      <p className="text-[10px] font-semibold uppercase text-ink-3">{label}</p>
+      <p className="text-micro font-semibold uppercase text-ink-3">{label}</p>
       <p className="font-brand text-lg font-bold text-ink">{value}</p>
     </div>
   );
@@ -989,7 +989,7 @@ function MiniMetric({ label, value }: { label: string; value: number }) {
 function HeaderMetric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">{label}</p>
+      <p className="text-micro font-semibold uppercase tracking-[0.16em] text-white/45">{label}</p>
       <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
     </div>
   );

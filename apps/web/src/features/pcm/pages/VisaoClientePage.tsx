@@ -1053,7 +1053,7 @@ function MetricCard({
 }) {
   return (
     <div className="rounded-lg border border-line bg-card p-4">
-      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-ink-3">
+      <div className="flex items-center gap-2 text-micro font-semibold uppercase tracking-wider text-ink-3">
         <Icon className="h-4 w-4" />
         {label}
       </div>
@@ -1215,7 +1215,7 @@ function TimelineCliente({
                       <p className="mt-0.5 line-clamp-2 text-xs text-ink-3">{evento.subtitulo}</p>
                     )}
                     {evento.tecnicoNome && (
-                      <p className="mt-0.5 text-[11px] font-medium text-ink-2">
+                      <p className="mt-0.5 text-micro font-medium text-ink-2">
                         Técnico: {evento.tecnicoNome}
                       </p>
                     )}

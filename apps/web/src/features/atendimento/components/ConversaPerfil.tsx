@@ -108,7 +108,7 @@ export function ConversaPerfil({
             {conversa.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] text-ink-2"
+                className="rounded-full bg-line-soft px-2 py-0.5 text-micro text-ink-2"
               >
                 {tag}
               </span>

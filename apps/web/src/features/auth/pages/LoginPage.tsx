@@ -47,7 +47,7 @@ export function LoginPage() {
           className="relative h-9 w-fit object-contain"
         />
         <div className="relative max-w-lg">
-          <p className="font-brand text-[11px] font-semibold uppercase tracking-[0.22em] text-orange">
+          <p className="font-brand text-micro font-semibold uppercase tracking-[0.22em] text-orange">
             Sistema Operacional
           </p>
           <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.035em] xl:text-4xl">
@@ -72,7 +72,7 @@ export function LoginPage() {
           </div>
 
           <div className="surface-card p-5 sm:p-6">
-            <p className="font-brand text-[10px] font-semibold uppercase tracking-[0.18em] text-orange">
+            <p className="font-brand text-micro font-semibold uppercase tracking-[0.18em] text-orange">
               Área segura
             </p>
             <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-ink">
@@ -129,7 +129,7 @@ export function LoginPage() {
             </form>
           </div>
 
-          <p className="mt-5 text-center text-[11px] text-ink-3">
+          <p className="mt-5 text-center text-micro text-ink-3">
             Acesso restrito · Ambiente monitorado
           </p>
         </div>

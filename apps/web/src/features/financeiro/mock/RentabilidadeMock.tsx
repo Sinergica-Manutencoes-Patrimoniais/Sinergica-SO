@@ -47,7 +47,7 @@ export function RentabilidadeMock() {
                     />
                     <span className="font-medium text-ink">{r.cliente}</span>
                     {r.alerta && (
-                      <span className="ml-1 inline-flex items-center rounded-full bg-danger-line px-2 py-0.5 text-[10px] font-semibold text-danger">
+                      <span className="ml-1 inline-flex items-center rounded-full bg-danger-line px-2 py-0.5 text-micro font-semibold text-danger">
                         ⚠ margem negativa 2m
                       </span>
                     )}

@@ -144,7 +144,7 @@ export function FechamentoPage() {
                   <td className="px-3 py-2 font-semibold text-ink">{`${mes}/${ano}`}</td>
                   <td className="px-3 py-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status === "fechado" ? "bg-line-soft text-ink-2" : "bg-success-soft text-success"}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${status === "fechado" ? "bg-line-soft text-ink-2" : "bg-success-soft text-success"}`}
                     >
                       {status === "fechado" ? "Fechado" : "Aberto"}
                     </span>

@@ -569,7 +569,7 @@ function GutSelect({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium text-ink-3">{label}</span>
+      <span className="text-micro font-medium text-ink-3">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
@@ -594,7 +594,7 @@ function DorClienteSelect({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium text-ink-3">Dor do cliente</span>
+      <span className="text-micro font-medium text-ink-3">Dor do cliente</span>
       <select
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}

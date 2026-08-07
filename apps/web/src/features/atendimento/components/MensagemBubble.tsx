@@ -14,13 +14,13 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
     <div className={`flex ${minha ? "justify-end" : "justify-start"}`}>
       <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${cor}`}>
         {deAgente && (
-          <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] opacity-70">
+          <div className="mb-1 flex items-center gap-1 text-micro font-semibold uppercase tracking-[0.12em] opacity-70">
             <Bot className="h-3 w-3" />
             {mensagem.remetenteTipo === "ze" ? "Agente Zé" : "Agente"}
           </div>
         )}
         {mensagem.remetenteTipo === "humano" && minha && (
-          <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] opacity-80">
+          <div className="mb-1 flex items-center gap-1 text-micro font-semibold uppercase tracking-[0.12em] opacity-80">
             <User className="h-3 w-3" />
             Você
           </div>

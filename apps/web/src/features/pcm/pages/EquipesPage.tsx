@@ -150,7 +150,7 @@ export function EquipesPage() {
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${equipe.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${equipe.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
                 >
                   {equipe.ativo ? "Ativa" : "Inativa"}
                 </span>

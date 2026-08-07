@@ -130,7 +130,7 @@ export function AgendaTecnicoPage() {
             <div key={dia} className="flex flex-col rounded-lg border border-line bg-card">
               <div className="flex items-center justify-between border-b border-line-soft px-3 py-2">
                 <div>
-                  <p className="text-[11px] font-semibold tracking-wide text-ink-3">
+                  <p className="text-micro font-semibold tracking-wide text-ink-3">
                     {DIA_LABEL[index]}
                   </p>
                   <p className="text-sm font-semibold text-ink">

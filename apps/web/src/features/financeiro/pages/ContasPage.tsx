@@ -163,7 +163,7 @@ export function ContasPage() {
                   <p className="mt-1 text-xs text-ink-3">{conta.banco ?? "Sem banco informado"}</p>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${conta.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${conta.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
                 >
                   {conta.ativo ? "Ativa" : "Inativa"}
                 </span>

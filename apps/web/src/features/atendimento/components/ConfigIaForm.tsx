@@ -177,7 +177,7 @@ export function ConfigIaForm({
           />
         </div>
       </div>
-      <p className="mt-1 text-[11px] text-ink-3">
+      <p className="mt-1 text-micro text-ink-3">
         Em branco = atende o dia todo, sem restrição de horário.
       </p>
 

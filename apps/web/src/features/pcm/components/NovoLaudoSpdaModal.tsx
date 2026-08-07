@@ -811,7 +811,7 @@ function EtapaPontos({
                   <div>
                     <p className="text-sm font-semibold text-white">Ponto #{index + 1}</p>
                     <span
-                      className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${resultadoColor(status)}`}
+                      className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-micro font-semibold ${resultadoColor(status)}`}
                     >
                       {CONFORMIDADE_SPDA_LABEL[status]}
                     </span>

@@ -44,7 +44,7 @@ export function Kpi({
 }: { eyebrow: string; value: string; sub?: string; tone?: "good" | "critical" }) {
   return (
     <div className="surface-card p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-ink-3">{eyebrow}</p>
+      <p className="text-micro font-semibold uppercase tracking-widest text-ink-3">{eyebrow}</p>
       <p
         className={`mt-2 text-xl font-bold tabular-nums tracking-tight ${
           tone === "good" ? "text-success" : tone === "critical" ? "text-danger" : "text-ink"
@@ -52,7 +52,7 @@ export function Kpi({
       >
         {value}
       </p>
-      {sub && <p className="mt-1 text-[11px] text-ink-3">{sub}</p>}
+      {sub && <p className="mt-1 text-micro text-ink-3">{sub}</p>}
     </div>
   );
 }
@@ -74,7 +74,7 @@ const AGING_CLASS: Record<FaixaAging, string> = {
 export function AgingChip({ faixa }: { faixa: FaixaAging }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${AGING_CLASS[faixa]}`}
+      className={`inline-flex rounded-full px-2 py-0.5 text-micro font-semibold ${AGING_CLASS[faixa]}`}
     >
       {AGING_LABEL[faixa]}
     </span>
@@ -83,11 +83,11 @@ export function AgingChip({ faixa }: { faixa: FaixaAging }) {
 
 export function StatusChip({ status }: { status: "previsto" | "realizado" }) {
   return status === "realizado" ? (
-    <span className="inline-flex rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">
+    <span className="inline-flex rounded-full bg-success-soft px-2 py-0.5 text-micro font-semibold text-success">
       Realizado
     </span>
   ) : (
-    <span className="inline-flex rounded-full bg-orange-soft px-2 py-0.5 text-[11px] font-semibold text-orange-deep">
+    <span className="inline-flex rounded-full bg-orange-soft px-2 py-0.5 text-micro font-semibold text-orange-deep">
       Previsto
     </span>
   );

@@ -191,7 +191,7 @@ export function TiposInspecaoPage() {
                 {tipo.descricao && <p className="mt-2 text-xs text-ink-3">{tipo.descricao}</p>}
 
                 <div className="mt-3 border-t border-line-soft pt-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
+                  <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">
                     Checklists ({templatesDoTipo.length})
                   </p>
                   {templatesDoTipo.length === 0 ? (

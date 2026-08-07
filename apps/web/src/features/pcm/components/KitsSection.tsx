@@ -199,7 +199,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${completo ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${completo ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
                     >
                       {completo ? "Completo agora" : "Incompleto"}
                     </span>

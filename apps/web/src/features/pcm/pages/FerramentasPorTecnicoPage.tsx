@@ -366,7 +366,7 @@ export function FerramentasPorTecnicoPage() {
                                 {unidade.ferramentaNome} ·{" "}
                                 <span className="font-brand">{unidade.codigo}</span>
                               </p>
-                              <p className="text-[10px] text-ink-3">
+                              <p className="text-micro text-ink-3">
                                 desde{" "}
                                 {unidade.atribuidaEm
                                   ? new Date(unidade.atribuidaEm).toLocaleDateString("pt-BR")

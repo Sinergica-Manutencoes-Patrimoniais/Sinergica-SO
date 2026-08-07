@@ -134,7 +134,7 @@ export function PainelDadosOperacionaisAuvo() {
             <Icon className="h-4 w-4 text-ink-3" />
             <p className="mt-2 text-xs font-semibold text-ink-3">{label}</p>
             <p className="mt-1 text-lg font-bold text-ink">{valor}</p>
-            <p className="mt-1 text-[11px] text-ink-3">{sub}</p>
+            <p className="mt-1 text-micro text-ink-3">{sub}</p>
           </div>
         ))}
       </div>

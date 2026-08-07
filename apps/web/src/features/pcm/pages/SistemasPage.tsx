@@ -168,12 +168,12 @@ export function SistemasPage() {
                         {sistema.nome}
                       </span>
                       <span
-                        className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${status.classe}`}
+                        className={`shrink-0 rounded-full px-1.5 py-0.5 text-micro font-semibold ${status.classe}`}
                       >
                         {status.texto}
                       </span>
                       {sistema.codigo && (
-                        <span className="shrink-0 rounded-full bg-line-soft px-1.5 py-0.5 text-[10px] font-semibold text-ink-2">
+                        <span className="shrink-0 rounded-full bg-line-soft px-1.5 py-0.5 text-micro font-semibold text-ink-2">
                           {sistema.codigo}
                         </span>
                       )}

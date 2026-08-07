@@ -155,7 +155,7 @@ export function GruposPage() {
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-ink truncate">{grupo.nome}</p>
                   {!grupo.ativo && (
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-line-soft text-ink-2">
+                    <span className="text-micro font-medium px-2 py-0.5 rounded-full bg-line-soft text-ink-2">
                       Inativo
                     </span>
                   )}

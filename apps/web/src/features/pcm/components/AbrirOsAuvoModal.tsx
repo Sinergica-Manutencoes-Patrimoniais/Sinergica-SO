@@ -131,7 +131,7 @@ export function AbrirOsAuvoModal({
                     {pendencia}
                   </p>
                 ))}
-                <p className="text-[11px] text-ink-3">
+                <p className="text-micro text-ink-3">
                   Técnico, data e local são exibidos para conferência. Contrato Auvo atual não
                   confirma envio desses campos.
                 </p>
@@ -163,7 +163,7 @@ export function AbrirOsAuvoModal({
 function Campos({ titulo, itens }: { titulo: string; itens: Array<[string, string]> }) {
   return (
     <div>
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-3">{titulo}</p>
+      <p className="mb-1 text-micro font-semibold uppercase tracking-wider text-ink-3">{titulo}</p>
       {itens.map(([rotulo, valor]) => (
         <p
           key={rotulo}

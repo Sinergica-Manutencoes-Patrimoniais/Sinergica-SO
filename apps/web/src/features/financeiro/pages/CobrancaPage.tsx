@@ -188,7 +188,7 @@ export function CobrancaPage() {
                   </td>
                   <td className="px-3 py-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ponto.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${ponto.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
                     >
                       {ponto.ativo ? "Ativo" : "Inativo"}
                     </span>
@@ -327,7 +327,7 @@ function PontoModal({
               className="input w-full"
               placeholder="-3"
             />
-            <span className="mt-1 block text-[11px] text-ink-3">
+            <span className="mt-1 block text-micro text-ink-3">
               Negativo = antes (D-3), positivo = depois (D+7). Preview: {labelDiaOffset(diaOffset)}
             </span>
           </label>
@@ -350,7 +350,7 @@ function PontoModal({
               onChange={(e) => setMensagemModelo(e.target.value)}
               className="input min-h-[96px] w-full resize-y"
             />
-            <span className="mt-1 block text-[11px] text-ink-3">
+            <span className="mt-1 block text-micro text-ink-3">
               Placeholders: <code>{"{{cliente}}"}</code>, <code>{"{{valor}}"}</code>,{" "}
               <code>{"{{vencimento}}"}</code>
             </span>

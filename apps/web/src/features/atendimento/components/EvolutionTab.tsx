@@ -294,7 +294,7 @@ export function EvolutionTab({
                   {instancia.instanceName} · {instancia.numeroVinculado ?? "sem número vinculado"}
                 </p>
                 <p
-                  className={`mt-1 text-[11px] ${
+                  className={`mt-1 text-micro ${
                     instancia.webhookRegistrado ? "text-success" : "text-danger"
                   }`}
                 >
@@ -306,7 +306,7 @@ export function EvolutionTab({
               </div>
               <div className="flex items-center gap-2">
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${CORES_STATUS[instancia.status]}`}
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${CORES_STATUS[instancia.status]}`}
                 >
                   {instancia.status}
                 </span>

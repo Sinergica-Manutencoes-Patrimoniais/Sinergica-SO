@@ -109,7 +109,7 @@ export function ConversaChat({
                 : "Agente Zé ativo"}
           </p>
           <div className="mt-1 flex flex-wrap gap-1">
-            <span className="rounded-full bg-line-soft px-2 py-0.5 text-[10px] font-semibold text-ink-2">
+            <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
               {labelCanal(conversa.canal)}
             </span>
             {conversa.tags.map((tag) => (
@@ -118,7 +118,7 @@ export function ConversaChat({
                 type="button"
                 disabled={!temEscrita}
                 onClick={() => onAtualizarTags(conversa.tags.filter((item) => item !== tag))}
-                className="rounded-full bg-orange-soft px-2 py-0.5 text-[10px] text-ink-2"
+                className="rounded-full bg-orange-soft px-2 py-0.5 text-micro text-ink-2"
                 title="Remover tag"
               >
                 {tag} ×
@@ -131,7 +131,7 @@ export function ConversaChat({
                   if (event.target.value)
                     void onAtualizarTags([...conversa.tags, event.target.value]);
                 }}
-                className="rounded border border-line bg-card text-[10px]"
+                className="rounded border border-line bg-card text-micro"
               >
                 <option value="">+ tag</option>
                 {tagsDisponiveis

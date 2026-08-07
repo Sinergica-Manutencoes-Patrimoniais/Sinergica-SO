@@ -129,7 +129,7 @@ export function ConfigIaPage() {
               <h3 className="text-sm font-semibold text-ink">OpenRouter</h3>
             </div>
             <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+              className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
                 iaIntegracao?.temSegredo
                   ? "bg-success-soft text-success"
                   : "bg-line-soft text-ink-3"

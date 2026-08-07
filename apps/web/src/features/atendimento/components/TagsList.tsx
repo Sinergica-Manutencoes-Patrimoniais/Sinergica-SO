@@ -100,7 +100,7 @@ export function TagsList({
                 <TagIcon className="h-4 w-4 text-ink-3" />
                 <span className="font-semibold text-ink">{tag.nome}</span>
                 {!tag.ativo && (
-                  <span className="rounded-full bg-line-soft px-2 py-0.5 text-[10px] font-semibold text-ink-2">
+                  <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
                     Inativa
                   </span>
                 )}
