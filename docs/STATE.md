@@ -76,6 +76,15 @@ salvar a chave — o badge "configurado" da UI provavelmente lê esse campo em v
 `fn_integracao_tem_segredo`, explicando "continua dizendo que não está configurado". Achado na
 sessão, não investigado a fundo nem corrigido — pendente pra quando a UI for revisada.
 
+## 2026-08-06 (cont. 4) — Limpeza de dados `[TESTE E2E]` em produção
+
+Lucas pediu pra limpar dados com `[TESTE E2E]` no nome (poluindo produção). Varredura por todos os
+schemas de domínio (colunas text/varchar/jsonb) achou 50 `pcm.clientes`, 33 `pcm.equipamentos`, 33
+`pcm.ferramentas` — todos de um único lote inserido em 2026-07-30 06:00 UTC (specs S76/S78/S90/S91).
+Checadas todas as tabelas com FK pra `clientes`/`ferramentas` (chamados, OS, inspeções, sistemas,
+tickets, alocações etc.) — zero dependência real. Deletado (`equipamentos` → `ferramentas` →
+`clientes`, ordem por FK) via `supabase db query --linked`; confirmado 0 restante nas três tabelas.
+
 ## 2026-08-06 — Lote continua (Codex)
 
 - E01-S125 local concluída: auditoria dos produtores, migration `0168` remove trigger automático,
