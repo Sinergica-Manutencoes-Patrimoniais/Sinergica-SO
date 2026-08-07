@@ -83,20 +83,22 @@ serve(async (req) => {
       if (conversa.canal !== "whatsapp") {
         throw new HttpError(409, "Resposta com IA está disponível apenas para conversas de WhatsApp");
       }
-      const serviceClient = createClient(url, getSupabaseServiceKey());
       const queueKey = `${conversa.instance_id}:${conversa.remote_jid}`;
-      const { error } = await serviceClient.functions.invoke("pcm-ze-agent", {
-        body: { queueKey, forcar: true },
+      // `supabase-js` .functions.invoke() não repassa de forma confiável um Authorization
+      // explícito de service role entre Edge Functions (confirmado: pcm-ze-agent respondia 401
+      // "Chamada interna não autorizada" mesmo com a chave certa) — fetch() direto com o header
+      // explícito é o padrão já usado e comprovado em pcm-auvo-open-task → pcm-auvo-create-task.
+      const respostaIa = await fetch(`${url}/functions/v1/pcm-ze-agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getSupabaseServiceKey()}` },
+        body: JSON.stringify({ queueKey, forcar: true }),
       });
-      if (error) {
-        // `error.context` é a Response bruta do gateway de Functions — pode trazer o corpo
-        // (`{detail: "..."}`) que a mensagem genérica do SDK (`FunctionsHttpError`) esconde.
-        const contexto = (error as { context?: Response }).context;
-        const corpo = contexto ? await contexto.clone().text().catch(() => "") : "";
+      if (!respostaIa.ok) {
+        const corpo = await respostaIa.text().catch(() => "");
         console.error(
-          JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "acionar_ia falhou", detail: error.message, corpo: corpo.slice(0, 1000) }),
+          JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "acionar_ia falhou", status: respostaIa.status, corpo: corpo.slice(0, 1000) }),
         );
-        const detalhe = corpo.trim() || error.message;
+        const detalhe = corpo.trim() || `status ${respostaIa.status}`;
         throw new HttpError(502, `Não foi possível acionar a IA — ${detalhe.slice(0, 200)}`);
       }
       return json(200, { ok: true }, cors);
