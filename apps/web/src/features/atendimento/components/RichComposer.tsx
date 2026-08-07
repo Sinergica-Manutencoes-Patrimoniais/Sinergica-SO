@@ -2,6 +2,7 @@ import { FileUp, Mic, Square } from "lucide-react";
 import { useRef, useState } from "react";
 import type { WaTemplateItem } from "../domain/canais-externos";
 import type { MensagemRicaInput } from "../domain/mensagens";
+import { EmojiPicker } from "./EmojiPicker";
 
 export function RichComposer({
   templates,
@@ -21,6 +22,7 @@ export function RichComposer({
   const [gravando, setGravando] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const textoRef = useRef<HTMLInputElement>(null);
 
   async function gravar() {
     try {
@@ -157,12 +159,16 @@ export function RichComposer({
               />
             </>
           ) : (
-            <input
-              value={texto}
-              onChange={(event) => setTexto(event.target.value)}
-              placeholder={arquivo?.name ?? "Texto da mensagem"}
-              className="input flex-1 text-sm"
-            />
+            <>
+              <EmojiPicker inputRef={textoRef} valor={texto} onMudar={setTexto} />
+              <input
+                ref={textoRef}
+                value={texto}
+                onChange={(event) => setTexto(event.target.value)}
+                placeholder={arquivo?.name ?? "Texto da mensagem"}
+                className="input flex-1 text-sm"
+              />
+            </>
           )}
           {modo === "interativa" && (
             <input

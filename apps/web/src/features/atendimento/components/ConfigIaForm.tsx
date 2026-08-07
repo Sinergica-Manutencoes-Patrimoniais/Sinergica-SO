@@ -124,8 +124,11 @@ export function ConfigIaForm({
         className="mt-1 w-full rounded-md border border-line p-2 text-sm"
       />
       <label className="mt-4 block text-xs font-semibold text-ink-2" htmlFor="config-ia-prompt">
-        Prompt base
+        Alma do agente
       </label>
+      <p className="mt-0.5 text-xs text-ink-3">
+        Como o agente fala e se comporta — o prompt de sistema desta persona.
+      </p>
       <textarea
         id="config-ia-prompt"
         value={identidade.promptSistema}

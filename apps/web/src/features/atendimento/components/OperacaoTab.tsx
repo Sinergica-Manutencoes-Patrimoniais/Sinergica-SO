@@ -192,8 +192,11 @@ export function OperacaoTab({
           htmlFor="op-palavra-transferencia"
           className="mt-3 block text-xs font-semibold text-ink-2"
         >
-          Palavras que transferem
+          Textos que ativam handoff
         </label>
+        <p className="mt-0.5 text-xs text-ink-3">
+          Se o cliente escrever qualquer um destes textos, a conversa passa pra um atendente humano.
+        </p>
         <div className="mt-1 flex flex-wrap gap-1.5">
           {form.palavrasTransferencia.map((palavra) => (
             <span
@@ -335,10 +338,14 @@ export function OperacaoTab({
       </section>
 
       <section className="rounded-xl border border-line bg-card p-5">
-        <h3 className="text-sm font-semibold text-ink">Especialistas</h3>
+        <h3 className="text-sm font-semibold text-ink">Skills</h3>
+        <p className="mt-0.5 text-xs text-ink-3">
+          Especialistas que o agente sabe que existem e quando chamar — hoje é orientação de texto,
+          o agente ainda não executa a ação sozinho (isso é E02-S30, comunicação com MCP).
+        </p>
         <div className="mt-3 space-y-2">
           {especialistas.length === 0 ? (
-            <p className="text-sm text-ink-3">Nenhum especialista vinculado ainda.</p>
+            <p className="text-sm text-ink-3">Nenhuma skill vinculada ainda.</p>
           ) : (
             especialistas.map((e) => (
               <div

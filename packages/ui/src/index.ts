@@ -16,6 +16,8 @@ export { Input, Select, Textarea } from "./Input";
 export { Modal } from "./Modal";
 export type { ModalProps } from "./Modal";
 export { NumeroTabular } from "./NumeroTabular";
+export { Popover } from "./Popover";
+export type { PopoverProps } from "./Popover";
 export { Skeleton } from "./Skeleton";
 export { useCargaVisivel } from "./use-carga-visivel";
 export { ToastProvider, useToast } from "./Toast";

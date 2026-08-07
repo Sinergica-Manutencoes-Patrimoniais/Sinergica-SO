@@ -6,6 +6,7 @@ import type { ConversaItem } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
 import type { MensagemRicaInput } from "../domain/mensagens";
 import type { TagItem } from "../domain/tags";
+import { EmojiPicker } from "./EmojiPicker";
 import { MensagemBubble } from "./MensagemBubble";
 import { RichComposer } from "./RichComposer";
 
@@ -41,6 +42,7 @@ export function ConversaChat({
   const [acao, setAcao] = useState<"assumir" | "devolver" | "ia" | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const fimRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (mensagens.length > 0) fimRef.current?.scrollIntoView({ block: "end" });
@@ -223,7 +225,14 @@ export function ConversaChat({
 
       {temEscrita && (
         <div className="flex items-center gap-2 border-t border-line p-3">
+          <EmojiPicker
+            inputRef={textareaRef}
+            valor={texto}
+            onMudar={setTexto}
+            disabled={enviando}
+          />
           <textarea
+            ref={textareaRef}
             value={texto}
             onChange={(event) => setTexto(event.target.value)}
             onKeyDown={(event) => {
