@@ -59,11 +59,12 @@
      escura. Achado real ao migrar `HomePage.tsx` (E00-S14) — não usar `--color-ink-*` aqui. */
   --color-nav-ink: #a8b0cc;
 
-  /* ── Raio (E00-S15) ────────────────────────────────────────────────────── */
+  /* ── Raio (E00-S15) ── escala evidenciada pelo uso real (não a suposição original da spec:
+     8px tem 250 ocorrências — quase tanto quanto 6px — e 14px não existia em lugar nenhum). */
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-lg: 10px;
-  --radius-xl: 14px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
 
   /* ── Elevação (E00-S20) — duas camadas, derivadas do navy (20,28,54), nunca
      preto puro; cresce monotonicamente de raised → drawer. ────────────────── */
@@ -201,7 +202,7 @@
   }
 
   .surface-card {
-    @apply overflow-hidden rounded-lg border border-line bg-card shadow-raised;
+    @apply overflow-hidden rounded-xl border border-line bg-card shadow-raised;
   }
 
   .surface-header {
@@ -225,7 +226,7 @@
   }
 
   .empty-state {
-    @apply flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-line bg-card px-5 py-8 text-center text-xs text-ink-3;
+    @apply flex min-h-32 flex-col items-center justify-center rounded-xl border border-dashed border-line bg-card px-5 py-8 text-center text-xs text-ink-3;
   }
 
   .status-error {
@@ -246,6 +247,96 @@
 
   .modal-panel {
     @apply max-h-[calc(100vh-1.5rem)] w-full overflow-y-auto rounded-xl border border-line bg-card shadow-modal sm:max-h-[calc(100vh-2rem)];
+  }
+}
+
+/* ── Movimento de overlay/superfície centrada (E00-S15 Modal/ConfirmDialog) ──────────────────
+   CSS puro, sem plugin (ADR-0018) — dirigido pelo `data-state` do Radix. Nada aparece do nada
+   (parte de scale 0.96, nunca 0) e a saída espelha a entrada (E00-S19 §7/§8, aplicado cedo).
+   Toast (E00-S16) usa keyframe própria — não é centrado, desliza de um lado. */
+@layer utilities {
+  @keyframes overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes overlay-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes surface-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  @keyframes surface-out {
+    from {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+  }
+
+  /* `forwards` obrigatório: sem ele o navegador reverte pro estado sem transform ao fim da
+     animação — o modal saltaria pro canto superior esquerdo assim que a entrada terminasse. */
+  .anim-overlay {
+    animation: overlay-in var(--duration-base) var(--ease-out) forwards;
+  }
+  .anim-overlay[data-state="closed"] {
+    animation: overlay-out var(--duration-base) var(--ease-out) forwards;
+  }
+  .anim-surface {
+    animation: surface-in var(--duration-base) var(--ease-out) forwards;
+  }
+  .anim-surface[data-state="closed"] {
+    animation: surface-out var(--duration-base) var(--ease-out) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .anim-overlay,
+    .anim-overlay[data-state="closed"],
+    .anim-surface,
+    .anim-surface[data-state="closed"] {
+      animation-duration: 1ms;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  /* E00-S17 — skeleton com shimmer; vira bloco estático sob movimento reduzido. */
+  @keyframes skeleton-shimmer {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  .skeleton {
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton {
+      animation: none;
+      opacity: 0.7;
+    }
   }
 }
 

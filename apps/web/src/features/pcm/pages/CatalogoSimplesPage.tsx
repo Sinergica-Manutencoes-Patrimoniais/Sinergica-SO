@@ -192,12 +192,12 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
 
-      <section className="rounded-[10px] border border-line bg-card">
+      <section className="rounded-xl border border-line bg-card">
         <div className="border-b border-line-soft px-4 py-3">
           <input
             className="input"
@@ -234,7 +234,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
                     <button
                       type="button"
                       onClick={() => abrirModal({ modo: "editar", item })}
-                      className="rounded-[6px] border border-line p-2 text-ink-2 hover:bg-line-soft"
+                      className="rounded-md border border-line p-2 text-ink-2 hover:bg-line-soft"
                       title="Editar"
                     >
                       <Edit3 className="h-4 w-4" />
@@ -243,7 +243,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
                       type="button"
                       disabled={salvando}
                       onClick={() => onExcluir(item)}
-                      className="rounded-[6px] border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
+                      className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                       title="Excluir"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -258,7 +258,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
 
       {modal && (
         <div className="modal-backdrop">
-          <div className="w-full max-w-lg rounded-[10px] border border-line bg-card shadow-xl">
+          <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-xl">
             <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
               <h3 className="text-base font-semibold text-ink">
                 {modal.modo === "criar" ? `Novo ${titulo}` : `Editar ${titulo}`}
@@ -266,7 +266,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
               <button
                 type="button"
                 onClick={() => setModal(null)}
-                className="rounded-[6px] p-2 text-ink-3 hover:bg-line-soft"
+                className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
                 title="Fechar"
               >
                 <X className="h-4 w-4" />
@@ -292,7 +292,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
               </label>
 
               {erroAcao && (
-                <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+                <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
                   {erroAcao}
                 </div>
               )}
@@ -301,14 +301,14 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
                 <button
                   type="button"
                   onClick={() => setModal(null)}
-                  className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                  className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={salvando}
-                  className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
                 >
                   {salvando ? "Salvando…" : "Salvar"}
                 </button>

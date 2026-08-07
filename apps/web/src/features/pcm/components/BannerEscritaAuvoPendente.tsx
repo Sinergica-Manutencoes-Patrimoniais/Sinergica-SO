@@ -6,7 +6,7 @@ import { Info } from "lucide-react";
  * contra a API real pra essa entidade), não descuido. */
 export function BannerEscritaAuvoPendente({ entidade }: { entidade: string }) {
   return (
-    <div className="flex items-start gap-2 rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
+    <div className="flex items-start gap-2 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
       <Info className="mt-0.5 h-4 w-4 shrink-0" />
       <p>
         Alterações em {entidade} aqui gravam só no PCM. Sincronização automática de volta pro Auvo

@@ -1,6 +1,6 @@
+import { Tooltip } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import { rotuloNumeroOrdem } from "../domain/ordens-servico";
 import {
@@ -41,7 +41,7 @@ export function OsCalendarioView({
           <button
             type="button"
             onClick={() => mudarMes(-1)}
-            className="rounded-[6px] border border-line p-1.5 hover:bg-line-soft"
+            className="rounded-md border border-line p-1.5 hover:bg-line-soft"
             aria-label="Mês anterior"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -54,14 +54,14 @@ export function OsCalendarioView({
                 return new Date(hoje.getFullYear(), hoje.getMonth(), 1);
               })
             }
-            className="rounded-[6px] border border-line px-3 py-1.5 text-xs font-semibold hover:bg-line-soft"
+            className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold hover:bg-line-soft"
           >
             Hoje
           </button>
           <button
             type="button"
             onClick={() => mudarMes(1)}
-            className="rounded-[6px] border border-line p-1.5 hover:bg-line-soft"
+            className="rounded-md border border-line p-1.5 hover:bg-line-soft"
             aria-label="Próximo mês"
           >
             <ChevronRight className="h-4 w-4" />
@@ -72,7 +72,7 @@ export function OsCalendarioView({
         </p>
       </div>
 
-      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-[8px] border border-line bg-line-soft">
+      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-line bg-line-soft">
         {DIAS_SEMANA.map((rotulo) => (
           <div
             key={rotulo}
@@ -110,7 +110,7 @@ export function OsCalendarioView({
                       <button
                         type="button"
                         onClick={() => onSelecionar(ordem.id)}
-                        className="w-full truncate rounded-[3px] bg-line-soft px-1 py-0.5 text-left text-[10px] font-semibold text-ink-2 hover:bg-navy hover:text-white"
+                        className="w-full truncate rounded-sm bg-line-soft px-1 py-0.5 text-left text-[10px] font-semibold text-ink-2 hover:bg-navy hover:text-white"
                       >
                         {rotuloNumeroOrdem(ordem)}
                       </button>

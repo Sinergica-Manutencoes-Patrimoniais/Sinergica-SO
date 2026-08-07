@@ -84,14 +84,14 @@ export function ConfigIaForm({
 
   if (personas.length === 0) {
     return (
-      <div className="rounded-[10px] border border-line bg-card p-8 text-center text-sm text-ink-3">
+      <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
         Crie uma persona na aba "Personas" antes de configurar o modelo/janela de IA.
       </div>
     );
   }
 
   return (
-    <div className="max-w-xl rounded-[10px] border border-line bg-card p-5">
+    <div className="max-w-xl rounded-xl border border-line bg-card p-5">
       <h3 className="text-sm font-semibold text-ink">Identidade e modelo</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Modelo LLM e janela de atendimento por persona (número/instância continua na aba Agentes).
@@ -104,7 +104,7 @@ export function ConfigIaForm({
         id="config-ia-persona"
         value={personaId}
         onChange={(e) => setPersonaId(e.target.value)}
-        className="mt-1 w-full rounded-[6px] border border-line p-2 text-sm text-ink"
+        className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink"
       >
         {personas.map((p) => (
           <option key={p.id} value={p.id}>
@@ -121,7 +121,7 @@ export function ConfigIaForm({
         value={identidade.nome}
         onChange={(e) => setIdentidade((atual) => ({ ...atual, nome: e.target.value }))}
         disabled={!temEscrita}
-        className="mt-1 w-full rounded-[6px] border border-line p-2 text-sm"
+        className="mt-1 w-full rounded-md border border-line p-2 text-sm"
       />
       <label className="mt-4 block text-xs font-semibold text-ink-2" htmlFor="config-ia-prompt">
         Prompt base
@@ -131,7 +131,7 @@ export function ConfigIaForm({
         value={identidade.promptSistema}
         onChange={(e) => setIdentidade((atual) => ({ ...atual, promptSistema: e.target.value }))}
         disabled={!temEscrita}
-        className="mt-1 min-h-24 w-full rounded-[6px] border border-line p-2 text-sm"
+        className="mt-1 min-h-24 w-full rounded-md border border-line p-2 text-sm"
       />
 
       <label className="mt-4 block text-xs font-semibold text-ink-2" htmlFor="config-ia-modelo">
@@ -143,7 +143,7 @@ export function ConfigIaForm({
         onChange={(e) => setForm((f) => ({ ...f, modeloLlm: e.target.value }))}
         disabled={!temEscrita}
         placeholder="openai/gpt-4o-mini"
-        className="mt-1 w-full rounded-[6px] border border-line p-2 text-sm text-ink disabled:opacity-60"
+        className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
       />
 
       <div className="mt-4 grid grid-cols-2 gap-3">
@@ -160,7 +160,7 @@ export function ConfigIaForm({
             value={form.janelaInicio}
             onChange={(e) => setForm((f) => ({ ...f, janelaInicio: e.target.value }))}
             disabled={!temEscrita}
-            className="mt-1 w-full rounded-[6px] border border-line p-2 text-sm text-ink disabled:opacity-60"
+            className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
           />
         </div>
         <div>
@@ -173,7 +173,7 @@ export function ConfigIaForm({
             value={form.janelaFim}
             onChange={(e) => setForm((f) => ({ ...f, janelaFim: e.target.value }))}
             disabled={!temEscrita}
-            className="mt-1 w-full rounded-[6px] border border-line p-2 text-sm text-ink disabled:opacity-60"
+            className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
           />
         </div>
       </div>
@@ -188,7 +188,7 @@ export function ConfigIaForm({
             type="button"
             disabled={!temEscrita}
             onClick={() => toggleDia(d.valor)}
-            className={`rounded-[6px] border px-2.5 py-1 text-xs font-semibold disabled:opacity-60 ${
+            className={`rounded-md border px-2.5 py-1 text-xs font-semibold disabled:opacity-60 ${
               form.janelaDias.includes(d.valor)
                 ? "border-navy bg-navy text-white"
                 : "border-line text-ink-2 hover:bg-line-soft"
@@ -200,7 +200,7 @@ export function ConfigIaForm({
       </div>
 
       {erro && (
-        <div className="mt-4 rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -213,7 +213,7 @@ export function ConfigIaForm({
           type="button"
           onClick={salvar}
           disabled={salvando}
-          className="mt-4 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+          className="mt-4 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
         >
           {salvando ? "Salvando…" : "Salvar"}
         </button>

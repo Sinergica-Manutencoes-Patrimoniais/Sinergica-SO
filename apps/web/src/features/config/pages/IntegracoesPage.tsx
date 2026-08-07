@@ -185,7 +185,7 @@ export function IntegracoesPage() {
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -193,7 +193,7 @@ export function IntegracoesPage() {
       {carregando ? (
         <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
       ) : (
-        <section className="rounded-[10px] border border-line bg-card p-4">
+        <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-3">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-ink-3" />
@@ -252,7 +252,7 @@ export function IntegracoesPage() {
             type="button"
             onClick={salvarMetadado}
             disabled={salvando}
-            className="mt-3 h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="mt-3 h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             Salvar configurações
           </button>
@@ -277,7 +277,7 @@ export function IntegracoesPage() {
                   type="button"
                   onClick={salvarChave}
                   disabled={salvando || !apiKey.trim()}
-                  className="h-9 shrink-0 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
                   Salvar chave
                 </button>
@@ -288,7 +288,7 @@ export function IntegracoesPage() {
       )}
 
       {!carregando && (
-        <section className="rounded-[10px] border border-line bg-card p-4">
+        <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-3">
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-ink-3" />
@@ -334,7 +334,7 @@ export function IntegracoesPage() {
             type="button"
             onClick={salvarMetadadoMp}
             disabled={salvando}
-            className="mt-3 h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="mt-3 h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             Salvar configurações
           </button>
@@ -357,7 +357,7 @@ export function IntegracoesPage() {
                   type="button"
                   onClick={salvarAccessTokenMp}
                   disabled={salvando || !accessTokenMp.trim()}
-                  className="h-9 shrink-0 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
                   Salvar
                 </button>
@@ -384,7 +384,7 @@ export function IntegracoesPage() {
                   type="button"
                   onClick={salvarWebhookSecretMp}
                   disabled={salvando || !webhookSecretMp.trim()}
-                  className="h-9 shrink-0 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
                   Salvar
                 </button>

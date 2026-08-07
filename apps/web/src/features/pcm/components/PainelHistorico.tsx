@@ -1,6 +1,6 @@
 // AC-4 (histórico de OS concluídas/canceladas, status refletindo a sincronização do Auvo) e
 // AC-5 (estado vazio). Read-only — sem nenhuma ação de mutação.
-import { Tooltip } from "../../../components/ui/Tooltip";
+import { Tooltip } from "@sinergica/ui";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
@@ -16,7 +16,7 @@ export function PainelHistorico({
   onSelecionar?: (id: string) => void;
 }) {
   return (
-    <div className="bg-card rounded-[10px] border border-line">
+    <div className="bg-card rounded-xl border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
         <h3 className="text-sm font-semibold text-ink">Histórico de OS</h3>
         <p className="text-xs text-ink-3 mt-0.5">

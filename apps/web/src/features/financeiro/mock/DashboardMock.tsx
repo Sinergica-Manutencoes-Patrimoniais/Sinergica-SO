@@ -91,10 +91,10 @@ function FluxoChart() {
       </div>
       <div className="mt-3 flex gap-4 text-[11px] text-ink-2">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-[2px] bg-success" /> Entradas
+          <span className="h-2 w-2 rounded-sm bg-success" /> Entradas
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-[2px] bg-navy" /> Saídas
+          <span className="h-2 w-2 rounded-sm bg-navy" /> Saídas
         </span>
       </div>
     </div>
@@ -164,7 +164,7 @@ function ProjecaoStrip({ posicao }: { posicao: number }) {
   return (
     <div className="flex gap-2.5">
       {pontos.map((p) => (
-        <div key={p.d} className="flex-1 rounded-[8px] bg-line-soft px-3 py-2.5 text-center">
+        <div key={p.d} className="flex-1 rounded-lg bg-line-soft px-3 py-2.5 text-center">
           <p className="text-[10px] font-bold uppercase tracking-wider text-ink-3">{p.d}</p>
           <p
             className={`mt-1 text-sm font-bold tabular-nums ${p.v < 0 ? "text-danger" : "text-ink"}`}

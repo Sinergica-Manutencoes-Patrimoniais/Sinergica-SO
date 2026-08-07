@@ -4,7 +4,7 @@ import type { FaixaAging } from "./mock-data";
 
 export function MockBanner() {
   return (
-    <div className="mb-4 flex items-center gap-2 rounded-[6px] border border-orange-deep/30 bg-orange-soft px-3 py-2 text-xs font-semibold text-orange-deep">
+    <div className="mb-4 flex items-center gap-2 rounded-md border border-orange-deep/30 bg-orange-soft px-3 py-2 text-xs font-semibold text-orange-deep">
       <AlertTriangle className="h-4 w-4 shrink-0" />
       Protótipo navegável — dados fictícios, nada é gravado. Só pra visualizar telas e dar ideias.
     </div>

@@ -110,7 +110,7 @@ export function ComposicaoSistema({
           type="button"
           onClick={salvar}
           disabled={salvando || !houveMudanca}
-          className="h-9 self-start rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+          className="h-9 self-start rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
         >
           {salvando ? "Salvando…" : "Salvar composição"}
         </button>

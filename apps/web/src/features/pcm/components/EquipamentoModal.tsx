@@ -77,7 +77,7 @@ export function EquipamentoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-3xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-3xl rounded-lg border border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {equipamento ? "Editar equipamento" : "Novo equipamento"}
@@ -178,7 +178,7 @@ export function EquipamentoModal({
             />
           </label>
           {erro && (
-            <div className="md:col-span-2 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -187,7 +187,7 @@ export function EquipamentoModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -195,7 +195,7 @@ export function EquipamentoModal({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             {salvando ? "Salvando..." : "Salvar"}
           </button>

@@ -1,3 +1,4 @@
+import { Tooltip } from "@sinergica/ui";
 import {
   Calendar,
   ClipboardList,
@@ -13,7 +14,6 @@ import {
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { Tooltip } from "../../../components/ui/Tooltip";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import { criarChamado, listarChamados } from "../application/chamados";
 import {
@@ -475,7 +475,7 @@ export function OrdensServicoPage({
             type="button"
             onClick={carregar}
             disabled={recarregando}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
           >
             <RefreshCw className="h-4 w-4" />
             Atualizar
@@ -486,7 +486,7 @@ export function OrdensServicoPage({
               <button
                 type="button"
                 onClick={() => setNovoChamadoAberto(true)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
               >
                 <Headset className="h-4 w-4" />
                 Novo Chamado
@@ -494,7 +494,7 @@ export function OrdensServicoPage({
               <button
                 type="button"
                 onClick={onNovaOs}
-                className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <ClipboardList className="h-4 w-4" />
                 Nova OS
@@ -505,7 +505,7 @@ export function OrdensServicoPage({
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
@@ -520,7 +520,7 @@ export function OrdensServicoPage({
             ["Finalizadas", kpis.finalizadas],
             ["Críticas", kpis.criticas],
           ].map(([label, valor]) => (
-            <div key={label} className="rounded-[8px] border border-line bg-card px-3 py-2">
+            <div key={label} className="rounded-lg border border-line bg-card px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
                 {label}
               </p>
@@ -571,7 +571,7 @@ export function OrdensServicoPage({
         <BacklogGutPage />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-2 rounded-[10px] border border-line bg-card p-3 md:grid-cols-6">
+          <div className="grid grid-cols-1 gap-2 rounded-xl border border-line bg-card p-3 md:grid-cols-6">
             <input
               className="input md:col-span-2"
               placeholder="Buscar por número, cliente ou título"
@@ -660,7 +660,7 @@ export function OrdensServicoPage({
           </div>
 
           {temEscrita && selecionados.size > 0 && (visao === "lista" || visao === "kanban") && (
-            <div className="flex flex-wrap items-center gap-3 rounded-[10px] border border-orange bg-orange-soft px-4 py-3">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-orange bg-orange-soft px-4 py-3">
               <p className="text-sm font-semibold text-warning">
                 {selecionados.size} selecionada{selecionados.size > 1 ? "s" : ""}
               </p>
@@ -691,7 +691,7 @@ export function OrdensServicoPage({
           )}
 
           {visao !== "lista" && (
-            <div className="bg-card rounded-[10px] border border-line p-4">
+            <div className="bg-card rounded-xl border border-line p-4">
               {visao === "kanban" && (
                 <OsKanbanView
                   ordens={ordensFiltradas}
@@ -717,7 +717,7 @@ export function OrdensServicoPage({
           )}
 
           {visao !== "lista" && selecionada && (
-            <section className="bg-card rounded-[10px] border border-line">
+            <section className="bg-card rounded-xl border border-line">
               <DetalheOs
                 selecionada={selecionada}
                 temEscrita={temEscrita}
@@ -740,7 +740,7 @@ export function OrdensServicoPage({
 
           {visao === "lista" && (
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-[360px_1fr]">
-              <section className="bg-card rounded-[10px] border border-line overflow-hidden max-h-[calc(100vh-220px)] overflow-y-auto">
+              <section className="bg-card rounded-xl border border-line overflow-hidden max-h-[calc(100vh-220px)] overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-line-soft bg-paper px-4 py-2.5">
                   <div>
                     <h3 className="text-xs font-semibold text-ink">Fila de ordens</h3>
@@ -844,7 +844,7 @@ export function OrdensServicoPage({
                 )}
               </section>
 
-              <section className="rounded-[10px] border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">
+              <section className="rounded-xl border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">
                 {selecionada ? (
                   <DetalheOs
                     selecionada={selecionada}
@@ -927,7 +927,7 @@ function BadgeHubOs({
 
 function Info({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-[7px] border border-line bg-paper px-2.5 py-2">
+    <div className="rounded-lg border border-line bg-paper px-2.5 py-2">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-0.5 text-xs font-medium text-ink">{value}</p>
     </div>
@@ -1054,7 +1054,7 @@ function DetalheOs({
           </div>
 
           {selecionada.auvoSyncError && (
-            <div className="rounded-[8px] border border-danger-line bg-danger-soft px-3 py-2">
+            <div className="rounded-lg border border-danger-line bg-danger-soft px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-danger">
                 Erro Auvo
               </p>
@@ -1066,7 +1066,7 @@ function DetalheOs({
             <button
               type="button"
               onClick={() => onAbrirAuvo()}
-              className="h-8 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+              className="h-8 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
             >
               Abrir OS Auvo
             </button>
@@ -1081,7 +1081,7 @@ function DetalheOs({
           )}
 
           {temEscrita && (
-            <div className="rounded-[8px] border border-line bg-paper p-2.5">
+            <div className="rounded-lg border border-line bg-paper p-2.5">
               <label
                 htmlFor="status-os-operacional"
                 className="text-xs font-semibold uppercase tracking-wider text-ink-3"
@@ -1190,7 +1190,7 @@ function DetalheOs({
               <button
                 type="button"
                 onClick={() => setExpandido(false)}
-                className="shrink-0 rounded-[6px] p-1.5 text-ink-3 hover:bg-line-soft hover:text-ink"
+                className="shrink-0 rounded-md p-1.5 text-ink-3 hover:bg-line-soft hover:text-ink"
                 aria-label="Fechar"
               >
                 <X className="h-5 w-5" />

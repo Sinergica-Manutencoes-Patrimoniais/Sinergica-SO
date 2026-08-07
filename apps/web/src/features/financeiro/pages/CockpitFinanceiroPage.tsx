@@ -150,7 +150,7 @@ export function CockpitFinanceiroPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex items-center gap-2">
           <Gauge className="h-4 w-4 text-ink-3" />
           <h3 className="text-base font-semibold text-ink">Cockpit financeiro</h3>
@@ -159,7 +159,7 @@ export function CockpitFinanceiroPage() {
           Saúde financeira — visão executiva, exclusiva do dono.
         </p>
         {amostraPeq && (
-          <div className="mt-3 flex items-center gap-2 rounded-[6px] border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
+          <div className="mt-3 flex items-center gap-2 rounded-md border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             Amostra pequena ({fluxoFechado.length}{" "}
             {fluxoFechado.length === 1 ? "mês fechado" : "meses fechados"}) — runway/break-even
@@ -215,7 +215,7 @@ export function CockpitFinanceiroPage() {
         />
       </div>
 
-      <section className="rounded-[8px] border border-line bg-card p-4">
+      <section className="rounded-lg border border-line bg-card p-4">
         <h3 className="text-sm font-semibold text-ink">
           Ranking de margem por cliente{" "}
           {mesMaisRecenteFechado
@@ -269,7 +269,7 @@ export function CockpitFinanceiroPage() {
         )}
       </section>
 
-      <section className="rounded-[8px] border border-line bg-card p-4">
+      <section className="rounded-lg border border-line bg-card p-4">
         <h3 className="text-sm font-semibold text-ink">
           Tendência de resultado (últimos {MESES_JANELA} meses)
         </h3>
@@ -326,7 +326,7 @@ function Indicador({
     neutro: "text-ink",
   };
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</p>
       <p className={`mt-1 text-xl font-semibold ${cores[tom]}`}>{valor}</p>
       <p className="mt-1 text-[11px] text-ink-3">{detalhe}</p>

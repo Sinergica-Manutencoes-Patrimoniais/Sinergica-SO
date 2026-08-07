@@ -175,7 +175,7 @@ export function RichComposer({
           <button
             type="button"
             onClick={enviar}
-            className="rounded-[6px] bg-orange px-3 py-1.5 text-xs font-semibold text-white"
+            className="rounded-md bg-orange px-3 py-1.5 text-xs font-semibold text-white"
           >
             Enviar
           </button>

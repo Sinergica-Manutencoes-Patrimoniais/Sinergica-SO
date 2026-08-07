@@ -92,7 +92,7 @@ export function FluxosManager({
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[10px] border border-line bg-card">
+      <section className="rounded-xl border border-line bg-card">
         <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
           <div>
             <h3 className="text-base font-semibold text-ink">Fluxos de qualificação</h3>
@@ -164,14 +164,14 @@ export function FluxosManager({
               <button
                 type="button"
                 onClick={() => setCriando(false)}
-                className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={salvando}
-                className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
               >
                 Criar
               </button>
@@ -203,7 +203,7 @@ export function FluxosManager({
       </section>
 
       {erro && (
-        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -228,7 +228,7 @@ export function FluxosManager({
                   setMostrarLogs((valor) => !valor);
                   await onCarregarLogs(selecionado.id);
                 }}
-                className="rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2"
+                className="rounded-md border border-line px-3 py-2 text-sm font-semibold text-ink-2"
               >
                 Logs
               </button>
@@ -239,7 +239,7 @@ export function FluxosManager({
                   type="button"
                   disabled={salvando}
                   onClick={desativar}
-                  className="inline-flex items-center gap-2 rounded-[6px] border border-danger-line px-3 py-2 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-md border border-danger-line px-3 py-2 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
                 >
                   <X className="h-4 w-4" />
                   Desativar fluxo
@@ -248,7 +248,7 @@ export function FluxosManager({
                   type="button"
                   disabled={salvando}
                   onClick={salvar}
-                  className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
                 >
                   {salvando ? "Salvando…" : "Salvar passos"}
                 </button>
@@ -261,7 +261,7 @@ export function FluxosManager({
             onChange={setPassosLocais}
           />
           {mostrarLogs && (
-            <section className="rounded-[10px] border border-line bg-card p-4">
+            <section className="rounded-xl border border-line bg-card p-4">
               <h4 className="text-sm font-semibold text-ink">Execuções recentes</h4>
               {logs.length === 0 ? (
                 <p className="mt-2 text-sm text-ink-3">Nenhuma execução registrada.</p>

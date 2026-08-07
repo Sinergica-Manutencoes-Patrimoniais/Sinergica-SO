@@ -402,7 +402,7 @@ export function InspecoesPage() {
 
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_1fr]">
-      <section className="rounded-[10px] border border-line bg-card p-4">
+      <section className="rounded-xl border border-line bg-card p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-ink">Relatórios de Inspeção</h2>
@@ -411,7 +411,7 @@ export function InspecoesPage() {
           <button
             type="button"
             onClick={carregar}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-[6px] border border-line text-ink-3 hover:bg-line-soft"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-line text-ink-3 hover:bg-line-soft"
             aria-label="Atualizar inspeções"
           >
             <RefreshCw className="h-4 w-4" />
@@ -423,7 +423,7 @@ export function InspecoesPage() {
             <button
               type="button"
               onClick={() => setModalAtivo("importar-xls")}
-              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-[8px] border border-success px-2 text-xs font-semibold text-success hover:bg-success-soft"
+              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-success px-2 text-xs font-semibold text-success hover:bg-success-soft"
             >
               <Sheet className="h-4 w-4" />
               XLS
@@ -431,7 +431,7 @@ export function InspecoesPage() {
             <button
               type="button"
               onClick={() => setModalAtivo("importar-pdf")}
-              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-[8px] border border-navy px-2 text-xs font-semibold text-navy hover:bg-info-soft"
+              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-navy px-2 text-xs font-semibold text-navy hover:bg-info-soft"
             >
               <FileText className="h-4 w-4" />
               PDF
@@ -440,7 +440,7 @@ export function InspecoesPage() {
               type="button"
               onClick={() => setModalAtivo("nova-inspecao")}
               disabled={semClientes}
-              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-[8px] bg-navy px-2 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-navy px-2 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               Nova
@@ -449,7 +449,7 @@ export function InspecoesPage() {
         )}
 
         {semClientes && (
-          <div className="mt-4 rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
+          <div className="mt-4 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
             Execute o import Auvo de clientes antes de criar inspeções.
           </div>
         )}
@@ -467,7 +467,7 @@ export function InspecoesPage() {
 
         <div className="mt-4 space-y-2">
           {inspecoesFiltradas.length === 0 ? (
-            <div className="rounded-[8px] border border-dashed border-line px-4 py-8 text-center text-sm text-ink-3">
+            <div className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-sm text-ink-3">
               Nenhuma inspeção encontrada.
             </div>
           ) : (
@@ -476,7 +476,7 @@ export function InspecoesPage() {
                 key={inspecao.id}
                 type="button"
                 onClick={() => setSelecionadaId(inspecao.id)}
-                className={`w-full rounded-[8px] border p-4 text-left transition-colors hover:border-orange/60 ${
+                className={`w-full rounded-lg border p-4 text-left transition-colors hover:border-orange/60 ${
                   inspecao.id === selecionadaId
                     ? "border-orange/60 bg-orange-soft/35"
                     : "border-line"
@@ -509,7 +509,7 @@ export function InspecoesPage() {
         </div>
       </section>
 
-      <section className="min-h-[680px] rounded-[10px] border border-line bg-card">
+      <section className="min-h-[680px] rounded-xl border border-line bg-card">
         {inspecaoSelecionada ? (
           <div className="flex min-h-[680px] flex-col">
             <div className="sticky top-0 z-10 rounded-t-[10px] bg-navy px-4 py-3 text-white shadow-sm">
@@ -517,7 +517,7 @@ export function InspecoesPage() {
                 <button
                   type="button"
                   onClick={() => setSelecionadaId(null)}
-                  className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-[6px] text-white/75 hover:bg-card/10 hover:text-white xl:hidden"
+                  className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md text-white/75 hover:bg-card/10 hover:text-white xl:hidden"
                   aria-label="Voltar para lista"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -542,7 +542,7 @@ export function InspecoesPage() {
                   <button
                     type="button"
                     onClick={() => setModalAtivo("editar-inspecao")}
-                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-white/85 hover:bg-card/10 hover:text-white"
+                    className="rounded-md px-2 py-1 text-xs font-semibold text-white/85 hover:bg-card/10 hover:text-white"
                   >
                     Editar
                   </button>
@@ -618,7 +618,7 @@ export function InspecoesPage() {
                     setItemEditando(null);
                     setModalAtivo("novo-item");
                   }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-navy px-4 py-3 text-sm font-semibold text-white hover:bg-navy-deep"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-navy px-4 py-3 text-sm font-semibold text-white hover:bg-navy-deep"
                 >
                   <Plus className="h-4 w-4" />
                   Adicionar item
@@ -672,7 +672,7 @@ export function InspecoesPage() {
       )}
 
       {erroAcao && (
-        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-[8px] border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger shadow-lg">
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger shadow-lg">
           {erroAcao}
         </div>
       )}
@@ -741,16 +741,16 @@ function ItemInspecaoCard({
 }) {
   const [aberto, setAberto] = useState(false);
   return (
-    <article className="rounded-[8px] border border-line bg-card p-4">
+    <article className="rounded-lg border border-line bg-card p-4">
       <div className="flex items-start gap-3">
         {item.fotoUrl ? (
           <img
             src={item.fotoUrl}
             alt=""
-            className="h-16 w-16 shrink-0 rounded-[6px] border border-line object-cover"
+            className="h-16 w-16 shrink-0 rounded-md border border-line object-cover"
           />
         ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[6px] border border-line bg-paper text-xl">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border border-line bg-paper text-xl">
             {SISTEMA_ICONE[item.sistema]}
           </div>
         )}
@@ -781,7 +781,7 @@ function ItemInspecaoCard({
         <button
           type="button"
           onClick={() => setAberto((atual) => !atual)}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] text-ink-3 hover:bg-line-soft hover:text-ink"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-3 hover:bg-line-soft hover:text-ink"
           aria-label={aberto ? "Recolher detalhes" : "Expandir detalhes"}
         >
           {aberto ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -818,7 +818,7 @@ function ItemInspecaoCard({
                     <img
                       src={url}
                       alt=""
-                      className="h-16 w-16 rounded-[6px] border border-line object-cover"
+                      className="h-16 w-16 rounded-md border border-line object-cover"
                     />
                   </a>
                 ))}
@@ -1204,7 +1204,7 @@ function NovoItemModal({
               key={sistema}
               type="button"
               onClick={() => setForm((atual) => ({ ...atual, sistema }))}
-              className={`flex min-h-18 flex-col items-center justify-center gap-1 rounded-[8px] border px-2 py-3 text-sm font-semibold transition-colors ${
+              className={`flex min-h-18 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-3 text-sm font-semibold transition-colors ${
                 form.sistema === sistema
                   ? "border-navy bg-info-soft text-navy"
                   : "border-line text-ink-3 hover:border-navy/40 hover:text-ink"
@@ -1340,7 +1340,7 @@ function NovoItemModal({
       </div>
 
       {item && (
-        <div className="rounded-[8px] border border-line-soft bg-paper p-3">
+        <div className="rounded-lg border border-line-soft bg-paper p-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">
               Mídias (foto/vídeo/documento)
@@ -1501,7 +1501,7 @@ function ImportarRelatorioModal({
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="flex w-full flex-col items-center justify-center rounded-[10px] border-2 border-dashed border-line px-6 py-12 text-center hover:border-orange hover:bg-orange-soft/25"
+            className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-line px-6 py-12 text-center hover:border-orange hover:bg-orange-soft/25"
           >
             <Upload className="h-10 w-10 text-ink-3" />
             <span className="mt-3 text-sm font-semibold text-ink">
@@ -1524,11 +1524,11 @@ function ImportarRelatorioModal({
             }}
           />
           {erro && (
-            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
-          <div className="rounded-[8px] bg-info-soft px-4 py-3 text-sm text-info">
+          <div className="rounded-lg bg-info-soft px-4 py-3 text-sm text-info">
             A importação usa o modelo do PCM antigo: extrai local, relato/fotos no XLS e envia o
             texto para a análise IA da função `importar-relatorio-pdf`.
           </div>
@@ -1548,7 +1548,7 @@ function ImportarRelatorioModal({
       {step === "revisao" && (
         <div className="space-y-4">
           {aviso ? (
-            <p className="rounded-[6px] border border-warning-line bg-warning-soft px-3 py-2 text-sm text-warning">
+            <p className="rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-sm text-warning">
               {aviso}
             </p>
           ) : null}
@@ -1599,21 +1599,21 @@ function ImportarRelatorioModal({
               <button
                 type="button"
                 onClick={() => setSelecionados(new Set(itens.map((_, index) => index)))}
-                className="rounded-[6px] border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
               >
                 Todos
               </button>
               <button
                 type="button"
                 onClick={() => setSelecionados(new Set())}
-                className="rounded-[6px] border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
               >
                 Limpar
               </button>
             </div>
           </div>
 
-          <label className="flex items-start gap-2 rounded-[8px] border border-line bg-paper px-3 py-2 text-sm text-ink-2">
+          <label className="flex items-start gap-2 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink-2">
             <input
               type="checkbox"
               checked={criarChamados}
@@ -1634,7 +1634,7 @@ function ImportarRelatorioModal({
               return (
                 <div
                   key={`${item.local}-${index}`}
-                  className={`rounded-[8px] border p-3 ${
+                  className={`rounded-lg border p-3 ${
                     selecionado ? "border-orange/45 bg-orange-soft/20" : "border-line opacity-60"
                   }`}
                 >
@@ -1662,7 +1662,7 @@ function ImportarRelatorioModal({
                     <button
                       type="button"
                       onClick={() => setExpandido(aberto ? null : index)}
-                      className="rounded-[6px] p-1 text-ink-3 hover:bg-line-soft"
+                      className="rounded-md p-1 text-ink-3 hover:bg-line-soft"
                     >
                       {aberto ? (
                         <ChevronUp className="h-4 w-4" />
@@ -1823,7 +1823,7 @@ function ModalBase({
   return (
     <div className="modal-backdrop">
       <div
-        className={`max-h-[92vh] w-full overflow-hidden rounded-[10px] bg-card shadow-2xl ${
+        className={`max-h-[92vh] w-full overflow-hidden rounded-xl bg-card shadow-2xl ${
           size === "lg" ? "max-w-4xl" : "max-w-2xl"
         }`}
       >
@@ -1832,7 +1832,7 @@ function ModalBase({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[6px] p-1 text-ink-3 hover:bg-line-soft hover:text-ink"
+            className="rounded-md p-1 text-ink-3 hover:bg-line-soft hover:text-ink"
           >
             <X className="h-4 w-4" />
           </button>
@@ -1860,7 +1860,7 @@ function BottomSheet({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[6px] p-1 text-white/75 hover:bg-card/10 hover:text-white"
+            className="rounded-md p-1 text-white/75 hover:bg-card/10 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
@@ -1906,14 +1906,14 @@ function ModalActions({
         type="button"
         onClick={onPrimary}
         disabled={disabled}
-        className="inline-flex items-center justify-center rounded-[8px] bg-navy px-4 py-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center justify-center rounded-lg bg-navy px-4 py-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50"
       >
         {primaryLabel}
       </button>
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex items-center justify-center rounded-[8px] border border-line px-4 py-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+        className="inline-flex items-center justify-center rounded-lg border border-line px-4 py-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
       >
         Cancelar
       </button>

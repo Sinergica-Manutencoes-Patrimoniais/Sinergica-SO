@@ -73,7 +73,7 @@ export function CanalExternoTab({
           <button
             type="button"
             onClick={() => setMostrarForm(true)}
-            className="inline-flex items-center gap-1.5 rounded-[6px] bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+            className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
           >
             <Plus className="h-4 w-4" /> Adicionar
           </button>
@@ -81,11 +81,11 @@ export function CanalExternoTab({
       </div>
 
       {canais.length === 0 ? (
-        <div className="rounded-[10px] border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
           Nenhuma conexão de {titulo} configurada ainda.
         </div>
       ) : (
-        <div className="divide-y divide-line-soft rounded-[10px] border border-line bg-card">
+        <div className="divide-y divide-line-soft rounded-xl border border-line bg-card">
           {canais.map((c) => (
             <div key={c.id} className="flex items-center justify-between px-4 py-3">
               <div>
@@ -116,25 +116,25 @@ export function CanalExternoTab({
       )}
 
       {mostrarForm && (
-        <div className="rounded-[10px] border border-line bg-card p-4">
+        <div className="rounded-xl border border-line bg-card p-4">
           <div className="grid grid-cols-2 gap-3">
             <input
               value={form.label}
               onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
               placeholder="Nome da conta"
-              className="rounded-[6px] border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-sm"
             />
             <input
               value={form.identificadorExterno}
               onChange={(e) => setForm((f) => ({ ...f, identificadorExterno: e.target.value }))}
               placeholder={LABEL_IDENTIFICADOR[tipo]}
-              className="rounded-[6px] border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-sm"
             />
             <input
               value={form.verifyToken}
               onChange={(e) => setForm((f) => ({ ...f, verifyToken: e.target.value }))}
               placeholder="Verify Token"
-              className="col-span-2 rounded-[6px] border border-line p-2 text-sm"
+              className="col-span-2 rounded-md border border-line p-2 text-sm"
             />
             {tipo === "meta_wa" && (
               <input
@@ -143,7 +143,7 @@ export function CanalExternoTab({
                   setForm((f) => ({ ...f, identificadorSecundario: e.target.value }))
                 }
                 placeholder="WhatsApp Business Account ID (WABA)"
-                className="col-span-2 rounded-[6px] border border-line p-2 text-sm"
+                className="col-span-2 rounded-md border border-line p-2 text-sm"
               />
             )}
           </div>
@@ -152,7 +152,7 @@ export function CanalExternoTab({
             navegador.
           </p>
           {erro && (
-            <div className="mt-2 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="mt-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -161,14 +161,14 @@ export function CanalExternoTab({
               type="button"
               onClick={salvar}
               disabled={salvando}
-              className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+              className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
             >
               {salvando ? "Salvando…" : "Salvar"}
             </button>
             <button
               type="button"
               onClick={() => setMostrarForm(false)}
-              className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+              className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
               Cancelar
             </button>

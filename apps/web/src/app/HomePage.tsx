@@ -516,7 +516,7 @@ function DashboardGeral({
         return (
           <div
             key={resumo.moduloId}
-            className="group flex min-h-44 flex-col overflow-hidden rounded-[10px] border border-line bg-card shadow-[0_1px_2px_rgba(20,28,54,0.04)] transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-[0_10px_26px_rgba(20,28,54,0.08)]"
+            className="group flex min-h-44 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-[0_1px_2px_rgba(20,28,54,0.04)] transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-[0_10px_26px_rgba(20,28,54,0.08)]"
           >
             {/* Header */}
             <div className="flex items-center gap-2.5 bg-navy px-3.5 py-2.5">
@@ -550,7 +550,7 @@ function DashboardGeral({
               <button
                 type="button"
                 onClick={() => onSelect(resumo.moduloId)}
-                className="w-full cursor-pointer rounded-[5px] py-1.5 text-center text-xs font-semibold text-orange transition-colors hover:bg-orange-soft hover:text-orange-deep"
+                className="w-full cursor-pointer rounded-md py-1.5 text-center text-xs font-semibold text-orange transition-colors hover:bg-orange-soft hover:text-orange-deep"
               >
                 Ver módulo →
               </button>
@@ -725,7 +725,7 @@ export function HomePage() {
             type="button"
             aria-label="Fechar menu"
             onClick={() => setMobileSidebarOpen(false)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] text-nav-ink hover:bg-card/[0.07] hover:text-white lg:hidden"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-nav-ink hover:bg-card/[0.07] hover:text-white lg:hidden"
           >
             <X className="h-4 w-4" />
           </button>
@@ -748,7 +748,7 @@ export function HomePage() {
                     type="button"
                     title={m.label}
                     onClick={() => navegarModulo(m.id)}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white ${sidebarCompacta ? "justify-center" : ""}`}
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white ${sidebarCompacta ? "justify-center" : ""}`}
                   >
                     <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
                     {!sidebarCompacta && <span className="truncate">{m.label}</span>}
@@ -775,7 +775,7 @@ export function HomePage() {
                       setConfigTab(item.id);
                       setMobileSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                       isActive
                         ? "border-orange bg-card/[0.07] text-white font-medium"
                         : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -817,7 +817,7 @@ export function HomePage() {
                               ? () => irParaPcmView(view)
                               : undefined
                         }
-                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                           isActive
                             ? "border-orange bg-card/[0.07] text-white font-medium"
                             : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -841,7 +841,7 @@ export function HomePage() {
                                     ? () => irParaPcmView(filho.view as PcmView)
                                     : undefined
                                 }
-                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${
+                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${
                                   filhoIsActive
                                     ? "border-orange bg-card/[0.07] text-white font-medium"
                                     : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -879,7 +879,7 @@ export function HomePage() {
                         setAtendimentoView(item.view);
                         setMobileSidebarOpen(false);
                       }}
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                         isActive
                           ? "border-orange bg-card/[0.07] text-white font-medium"
                           : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -912,7 +912,7 @@ export function HomePage() {
                         setFinanceiroView(item.view);
                         setMobileSidebarOpen(false);
                       }}
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                         isActive
                           ? "border-orange bg-card/[0.07] text-white font-medium"
                           : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -944,7 +944,7 @@ export function HomePage() {
                       setGuiaView(item.view);
                       setMobileSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                       isActive
                         ? "border-orange bg-card/[0.07] text-white font-medium"
                         : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -973,7 +973,7 @@ export function HomePage() {
             type="button"
             title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`hidden w-full items-center gap-2.5 rounded-[4px] border-l-2 border-transparent px-2 py-1.5 text-sm text-nav-ink transition-colors hover:bg-card/[0.04] hover:text-white lg:flex ${sidebarCompacta ? "justify-center" : ""}`}
+            className={`hidden w-full items-center gap-2.5 rounded-sm border-l-2 border-transparent px-2 py-1.5 text-sm text-nav-ink transition-colors hover:bg-card/[0.04] hover:text-white lg:flex ${sidebarCompacta ? "justify-center" : ""}`}
           >
             {sidebarCompacta ? (
               <ChevronRight className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -989,7 +989,7 @@ export function HomePage() {
               type="button"
               title="Configurações"
               onClick={() => navegarModulo("config")}
-              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                 activeModulo === "config"
                   ? "border-orange bg-card/[0.07] text-white font-medium"
                   : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -1003,7 +1003,7 @@ export function HomePage() {
             type="button"
             title="Sair"
             onClick={logout}
-            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-nav-ink hover:bg-card/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCompacta ? "justify-center" : ""}`}
+            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm text-nav-ink hover:bg-card/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCompacta ? "justify-center" : ""}`}
           >
             <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.8} />
             {!sidebarCompacta && <span>Sair</span>}
@@ -1020,7 +1020,7 @@ export function HomePage() {
               type="button"
               aria-label="Abrir menu"
               onClick={() => setMobileSidebarOpen(true)}
-              className="sticky left-0 z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] border border-line bg-card text-ink-2 hover:bg-line-soft lg:hidden"
+              className="sticky left-0 z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line bg-card text-ink-2 hover:bg-line-soft lg:hidden"
             >
               <Menu className="h-4 w-4" />
             </button>
@@ -1073,7 +1073,7 @@ export function HomePage() {
                 title={mode === "dark" ? "Usar modo dia" : "Usar modo noite"}
                 aria-label={mode === "dark" ? "Usar modo dia" : "Usar modo noite"}
                 onClick={toggleMode}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-line text-ink-3 transition-colors hover:bg-line-soft hover:text-ink"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-ink-3 transition-colors hover:bg-line-soft hover:text-ink"
               >
                 {mode === "dark" ? (
                   <Sun className="h-4 w-4" strokeWidth={2} />
@@ -1201,7 +1201,7 @@ export function HomePage() {
             ) : (
               <div className="flex flex-col gap-4">
                 {feedbackOs && (
-                  <div className="rounded-[6px] border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
+                  <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
                     {feedbackOs}
                   </div>
                 )}

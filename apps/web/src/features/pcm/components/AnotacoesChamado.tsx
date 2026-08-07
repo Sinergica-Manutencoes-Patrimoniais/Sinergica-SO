@@ -72,7 +72,7 @@ export function AnotacoesChamado({
               type="button"
               disabled={salvando || !texto.trim()}
               onClick={adicionar}
-              className="h-8 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              className="h-8 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
             >
               {salvando ? "Salvando…" : "Adicionar anotação"}
             </button>
@@ -86,10 +86,7 @@ export function AnotacoesChamado({
       ) : (
         <ol className="flex flex-col gap-2">
           {anotacoes.map((anotacao) => (
-            <li
-              key={anotacao.id}
-              className="rounded-[6px] border border-line-soft bg-card px-3 py-2"
-            >
+            <li key={anotacao.id} className="rounded-md border border-line-soft bg-card px-3 py-2">
               <p className="whitespace-pre-wrap text-sm text-ink-2">{anotacao.texto}</p>
               <p className="mt-1 text-xs text-ink-3">
                 {anotacao.autorNome} · {new Date(anotacao.createdAt).toLocaleString("pt-BR")}

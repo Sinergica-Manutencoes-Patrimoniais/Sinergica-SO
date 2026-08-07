@@ -121,7 +121,7 @@ export function ImpostosPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex items-center gap-2">
           <Landmark className="h-4 w-4 text-ink-3" />
           <h3 className="text-base font-semibold text-ink">Impostos — provisão gerencial</h3>
@@ -131,7 +131,7 @@ export function ImpostosPage() {
           oficial.
         </p>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -140,7 +140,7 @@ export function ImpostosPage() {
       {temEscrita && <ConfigForm config={config} onSalvar={salvar} />}
 
       {config && (
-        <section className="rounded-[8px] border border-line bg-card p-4">
+        <section className="rounded-lg border border-line bg-card p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h3 className="text-sm font-semibold text-ink">Provisionar competência</h3>
@@ -165,7 +165,7 @@ export function ImpostosPage() {
                   type="button"
                   onClick={provisionar}
                   disabled={provisionando}
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
                   {provisionando ? "Calculando..." : "Provisionar"}
@@ -177,12 +177,12 @@ export function ImpostosPage() {
       )}
 
       {provisoes.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Landmark className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhuma provisão calculada ainda.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-[8px] border border-line bg-card">
+        <div className="overflow-x-auto rounded-lg border border-line bg-card">
           <table className="w-full min-w-[560px] text-left text-sm">
             <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
               <tr>
@@ -257,7 +257,7 @@ function ConfigForm({
   }
 
   return (
-    <section className="rounded-[8px] border border-line bg-card p-4">
+    <section className="rounded-lg border border-line bg-card p-4">
       <h3 className="text-sm font-semibold text-ink">Configuração</h3>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
@@ -381,7 +381,7 @@ function ConfigForm({
       )}
 
       {erro && (
-        <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+        <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -390,7 +390,7 @@ function ConfigForm({
         type="button"
         onClick={salvar}
         disabled={salvando}
-        className="mt-4 h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+        className="mt-4 h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
       >
         {salvando ? "Salvando..." : "Salvar configuração"}
       </button>

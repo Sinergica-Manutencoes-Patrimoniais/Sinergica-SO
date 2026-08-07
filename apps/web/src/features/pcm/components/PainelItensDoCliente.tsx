@@ -86,14 +86,14 @@ export function PainelItensDoCliente({
 
   if (carregando) {
     return (
-      <div className="bg-card rounded-[10px] border border-line px-5 py-8 text-center text-sm text-ink-3">
+      <div className="bg-card rounded-xl border border-line px-5 py-8 text-center text-sm text-ink-3">
         Carregando…
       </div>
     );
   }
 
   return (
-    <div className="bg-card rounded-[10px] border border-line">
+    <div className="bg-card rounded-xl border border-line">
       <div className="border-b border-line-soft px-5 py-4">
         <h3 className="text-sm font-semibold text-ink">Itens PCM (estrutura)</h3>
         <p className="mt-0.5 text-xs text-ink-3">

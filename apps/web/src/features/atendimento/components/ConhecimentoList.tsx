@@ -85,7 +85,7 @@ export function ConhecimentoList({
           <button
             type="button"
             onClick={() => abrirModal({ modo: "criar" })}
-            className="inline-flex items-center gap-1.5 rounded-[6px] bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+            className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
           >
             <Plus className="h-4 w-4" /> Nova entrada
           </button>
@@ -93,12 +93,12 @@ export function ConhecimentoList({
       </div>
 
       {entradas.length === 0 ? (
-        <div className="rounded-[10px] border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
           Nenhuma entrada de conhecimento ainda.
         </div>
       ) : (
         [...porCategoria.entries()].map(([categoria, itens]) => (
-          <div key={categoria} className="rounded-[10px] border border-line bg-card">
+          <div key={categoria} className="rounded-xl border border-line bg-card">
             <div className="border-b border-line-soft px-4 py-2.5">
               <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-3">
                 {categoria}
@@ -120,7 +120,7 @@ export function ConhecimentoList({
                       <button
                         type="button"
                         onClick={() => abrirModal({ modo: "editar", item })}
-                        className="rounded-[6px] border border-line p-1.5 text-xs text-ink-2 hover:bg-line-soft"
+                        className="rounded-md border border-line p-1.5 text-xs text-ink-2 hover:bg-line-soft"
                       >
                         Editar
                       </button>
@@ -128,7 +128,7 @@ export function ConhecimentoList({
                         <button
                           type="button"
                           onClick={() => onDesativar(item.id)}
-                          className="rounded-[6px] border border-danger-line p-1.5 text-xs text-danger hover:bg-danger-soft"
+                          className="rounded-md border border-danger-line p-1.5 text-xs text-danger hover:bg-danger-soft"
                         >
                           Desativar
                         </button>
@@ -144,7 +144,7 @@ export function ConhecimentoList({
 
       {modal && (
         <div className="modal-backdrop">
-          <div className="w-full max-w-lg rounded-[10px] bg-card p-5 shadow-xl">
+          <div className="w-full max-w-lg rounded-xl bg-card p-5 shadow-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-ink">
                 {modal.modo === "criar" ? "Nova entrada" : "Editar entrada"}
@@ -162,26 +162,26 @@ export function ConhecimentoList({
                 value={form.titulo}
                 onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
                 placeholder="Título"
-                className="w-full rounded-[6px] border border-line p-2 text-sm"
+                className="w-full rounded-md border border-line p-2 text-sm"
               />
               <textarea
                 value={form.conteudo}
                 onChange={(e) => setForm((f) => ({ ...f, conteudo: e.target.value }))}
                 placeholder="Conteúdo"
                 rows={4}
-                className="w-full rounded-[6px] border border-line p-2 text-sm"
+                className="w-full rounded-md border border-line p-2 text-sm"
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
                   value={form.categoria}
                   onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value }))}
                   placeholder="Categoria"
-                  className="w-full rounded-[6px] border border-line p-2 text-sm"
+                  className="w-full rounded-md border border-line p-2 text-sm"
                 />
                 <select
                   value={form.personaId}
                   onChange={(e) => setForm((f) => ({ ...f, personaId: e.target.value }))}
-                  className="w-full rounded-[6px] border border-line p-2 text-sm"
+                  className="w-full rounded-md border border-line p-2 text-sm"
                 >
                   <option value="">Todas as personas</option>
                   {personas.map((p) => (
@@ -209,7 +209,7 @@ export function ConhecimentoList({
                 />
               </div>
               {erro && (
-                <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+                <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
                   {erro}
                 </div>
               )}
@@ -218,7 +218,7 @@ export function ConhecimentoList({
               <button
                 type="button"
                 onClick={() => setModal(null)}
-                className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
               >
                 Cancelar
               </button>
@@ -226,7 +226,7 @@ export function ConhecimentoList({
                 type="button"
                 onClick={salvar}
                 disabled={salvando}
-                className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
               >
                 {salvando ? "Salvando…" : "Salvar"}
               </button>

@@ -72,20 +72,20 @@ export function PainelDadosOperacionaisAuvo() {
   }, []);
   if (estado.fase === "carregando")
     return (
-      <section className="rounded-[10px] border border-line bg-card p-4 text-sm text-ink-3">
+      <section className="rounded-xl border border-line bg-card p-4 text-sm text-ink-3">
         Carregando dados operacionais Auvo…
       </section>
     );
   if (estado.fase === "indisponivel")
     return (
-      <section className="rounded-[10px] border border-warning-line bg-orange-soft p-4 text-sm text-warning">
+      <section className="rounded-xl border border-warning-line bg-orange-soft p-4 text-sm text-warning">
         <strong>Dados operacionais aguardando sincronização.</strong> GPS, despesas, satisfação e
         questionários aparecerão aqui depois que as migrations e os pulls do Auvo estiverem ativos.
       </section>
     );
   if (estado.fase === "erro")
     return (
-      <section className="rounded-[10px] border border-danger-line bg-danger-soft p-4 text-sm text-danger">
+      <section className="rounded-xl border border-danger-line bg-danger-soft p-4 text-sm text-danger">
         <strong>Não foi possível carregar os dados operacionais.</strong> Erro ao consultar o banco
         (não é ausência de sincronização) — recarregue a página ou verifique sua permissão no módulo
         PCM.
@@ -120,7 +120,7 @@ export function PainelDadosOperacionaisAuvo() {
     },
   ];
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4">
+    <section className="rounded-xl border border-line bg-card p-4">
       <div className="mb-3 flex items-center gap-2">
         <Battery className="h-4 w-4 text-orange" />
         <div>
@@ -130,7 +130,7 @@ export function PainelDadosOperacionaisAuvo() {
       </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {cards.map(({ Icon, label, valor, sub }) => (
-          <div key={label} className="rounded-[8px] border border-line-soft p-3">
+          <div key={label} className="rounded-lg border border-line-soft p-3">
             <Icon className="h-4 w-4 text-ink-3" />
             <p className="mt-2 text-xs font-semibold text-ink-3">{label}</p>
             <p className="mt-1 text-lg font-bold text-ink">{valor}</p>

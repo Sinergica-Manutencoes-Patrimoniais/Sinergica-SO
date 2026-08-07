@@ -158,7 +158,7 @@ export function ApontamentoHorasPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <h3 className="text-base font-semibold text-ink">Apontamento de Horas</h3>
         <p className="mt-0.5 text-sm text-ink-3">
           Horas por OS derivadas do Auvo (check-in/out) — liga tarefa, técnico e cliente
@@ -290,7 +290,7 @@ export function ApontamentoHorasPage({
           </p>
         )}
 
-        <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+        <section className="rounded-lg border border-line bg-card overflow-hidden">
           <div className="border-b border-line-soft px-4 py-3">
             <h4 className="text-sm font-semibold text-ink">OS no período</h4>
             <p className="text-xs text-ink-3">{estado.itens.length} ordem(ns) de serviço</p>
@@ -361,7 +361,7 @@ function InsightsApontamento({
   const consistencia = analisarConsistencia(dias, itens, parametros.toleranciaMinutos);
   const anomalias = listarAnomalias(itens, parametros.limiarAnomaliaMinutos);
   return (
-    <section className="rounded-[8px] border border-line bg-card p-4">
+    <section className="rounded-lg border border-line bg-card p-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h4 className="text-sm font-semibold text-ink">Produtividade e consistência</h4>
@@ -469,7 +469,7 @@ function AgregadoPainel({
   onSelecionar?: (chave: string) => void;
 }) {
   return (
-    <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+    <section className="rounded-lg border border-line bg-card overflow-hidden">
       <div className="border-b border-line-soft px-4 py-3">
         <h4 className="text-sm font-semibold text-ink">{titulo}</h4>
       </div>
@@ -554,7 +554,7 @@ function VisaoPorDia({
 
   return (
     <div className="flex flex-col gap-3">
-      <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+      <section className="rounded-lg border border-line bg-card overflow-hidden">
         <div className="flex items-center justify-between gap-2 border-b border-line-soft px-4 py-3">
           <div>
             <h4 className="text-sm font-semibold text-ink">Por dia</h4>
@@ -567,7 +567,7 @@ function VisaoPorDia({
             type="button"
             onClick={exportarCsv}
             disabled={dias.length === 0}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
           >
             <Download className="h-3.5 w-3.5" />
             Exportar CSV
@@ -722,7 +722,7 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
 
   if (!tecnicoFuncionarioId) {
     return (
-      <section className="rounded-[8px] border border-dashed border-line bg-card px-4 py-3 text-xs text-ink-3">
+      <section className="rounded-lg border border-dashed border-line bg-card px-4 py-3 text-xs text-ink-3">
         <TrendingUp className="mr-1 inline h-3.5 w-3.5" />
         Selecione um técnico no filtro acima para ver a tendência semanal (últimas 8 semanas).
       </section>
@@ -733,7 +733,7 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
     estado.fase === "pronto" ? Math.max(1, ...estado.semanas.map((s) => s.totalHoras)) : 1;
 
   return (
-    <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+    <section className="rounded-lg border border-line bg-card overflow-hidden">
       <div className="flex items-center justify-between gap-2 border-b border-line-soft px-4 py-3">
         <h4 className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink">
           <TrendingUp className="h-4 w-4" />
@@ -743,7 +743,7 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
           type="button"
           onClick={carregar}
           disabled={estado.fase === "carregando"}
-          className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           {estado.fase === "carregando" ? "Carregando..." : "Carregar"}

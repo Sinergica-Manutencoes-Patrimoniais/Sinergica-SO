@@ -138,21 +138,21 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
 
   if (estado.fase === "carregando") {
     return (
-      <section className="rounded-[8px] border border-line bg-card p-4">
+      <section className="rounded-lg border border-line bg-card p-4">
         <p className="text-sm text-ink-3">Carregando kits...</p>
       </section>
     );
   }
   if (estado.fase === "erro") {
     return (
-      <section className="rounded-[8px] border border-line bg-card p-4">
+      <section className="rounded-lg border border-line bg-card p-4">
         <p className="text-sm text-danger">{estado.mensagem}</p>
       </section>
     );
   }
 
   return (
-    <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-base font-semibold text-ink">Kits</h3>
@@ -165,7 +165,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
           <button
             type="button"
             onClick={() => setModal({ modo: "novo" })}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
           >
             <Plus className="h-4 w-4" />
             Novo kit
@@ -174,7 +174,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
       </div>
 
       {erroAcao && (
-        <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+        <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
@@ -187,7 +187,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
             const completo = kitEstaCompleto(kit.itens, estado.disponivelPorFerramenta);
             const faltando = itensFaltantes(kit.itens, estado.disponivelPorFerramenta);
             return (
-              <li key={kit.id} className="rounded-[6px] border border-line-soft bg-paper p-3">
+              <li key={kit.id} className="rounded-md border border-line-soft bg-paper p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-semibold text-ink">{kit.nome}</p>
@@ -253,7 +253,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
               return (
                 <li
                   key={atribuicao.kitAtribuicaoId}
-                  className="flex items-center justify-between gap-2 rounded-[6px] border border-line-soft bg-paper px-3 py-2 text-sm"
+                  className="flex items-center justify-between gap-2 rounded-md border border-line-soft bg-paper px-3 py-2 text-sm"
                 >
                   <span className="text-ink-2">
                     <Package className="mr-1.5 inline h-3.5 w-3.5 text-ink-3" />
@@ -350,7 +350,7 @@ function KitModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">{kit ? "Editar kit" : "Novo kit"}</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -421,7 +421,7 @@ function KitModal({
             </button>
           </div>
           {erro && (
-            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -430,7 +430,7 @@ function KitModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -438,7 +438,7 @@ function KitModal({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             {salvando ? "Salvando..." : "Salvar"}
           </button>
@@ -477,7 +477,7 @@ function AtribuirKitModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-xl">
         <div className="border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Atribuir kit {kit.nome}</h3>
         </div>
@@ -498,7 +498,7 @@ function AtribuirKitModal({
             </select>
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -507,7 +507,7 @@ function AtribuirKitModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -515,7 +515,7 @@ function AtribuirKitModal({
             type="button"
             onClick={confirmar}
             disabled={salvando || !funcionarioId}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             {salvando ? "Salvando..." : "Atribuir"}
           </button>

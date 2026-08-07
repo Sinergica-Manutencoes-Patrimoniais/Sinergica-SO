@@ -1,3 +1,4 @@
+import { Tooltip } from "@sinergica/ui";
 import {
   Building2,
   Filter,
@@ -14,7 +15,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { Tooltip } from "../../../components/ui/Tooltip";
 import type { ClienteFormData, ClienteResumo } from "../application/cliente-360-gateway";
 import { criarCliente, editarCliente, excluirCliente } from "../application/clientes-crud";
 import { listarClientes } from "../application/listar-clientes";
@@ -232,7 +232,7 @@ export function ListaClientesPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Clientes</h3>
@@ -251,7 +251,7 @@ export function ListaClientesPage({
               <button
                 type="button"
                 onClick={() => setModal({ modo: "novo" })}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
               >
                 <Plus className="h-4 w-4" />
                 Novo cliente
@@ -331,7 +331,7 @@ export function ListaClientesPage({
             type="button"
             onClick={limparFiltros}
             disabled={!filtrosAtivos}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:cursor-not-allowed disabled:opacity-45"
           >
             <X className="h-4 w-4" />
             Limpar
@@ -343,23 +343,23 @@ export function ListaClientesPage({
           {clientesFiltrados.length} de {clientes.length} cadastro(s) visíveis
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
       </section>
 
       {clientes.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Building2 className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhum cliente cadastrado</p>
         </div>
       ) : clientesFiltrados.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center text-sm text-ink-3">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center text-sm text-ink-3">
           Nenhum cliente encontrado para os filtros atuais.
         </div>
       ) : (
-        <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+        <section className="rounded-lg border border-line bg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-line-soft text-sm">
               <thead className="bg-line-soft/60 text-left text-xs font-semibold uppercase tracking-wider text-ink-3">
@@ -556,7 +556,7 @@ function ClienteLinha({
           <button
             type="button"
             onClick={() => onSelecionar(cliente.id)}
-            className="inline-flex h-8 items-center justify-center rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+            className="inline-flex h-8 items-center justify-center rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
           >
             Ver 360
           </button>
@@ -596,7 +596,7 @@ function IconButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-2.5 text-xs font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
+      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
     >
       {icon}
       {label}
@@ -606,7 +606,7 @@ function IconButton({
 
 function ResumoCarteira({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[6px] border border-line-soft px-3 py-2">
+    <div className="rounded-md border border-line-soft px-3 py-2">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
       <p className="mt-1 font-brand text-xl font-bold text-ink tabular-nums">{value}</p>
     </div>

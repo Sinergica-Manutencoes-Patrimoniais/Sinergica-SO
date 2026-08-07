@@ -117,7 +117,7 @@ export function RelatorioClientePage() {
           Apresentação de atividades e próximos passos para o condomínio
         </p>
       </div>
-      <div className="flex flex-wrap gap-2 rounded-[8px] border border-line bg-card p-3">
+      <div className="flex flex-wrap gap-2 rounded-lg border border-line bg-card p-3">
         <select
           aria-label="Cliente"
           className="input"
@@ -172,13 +172,11 @@ export function RelatorioClientePage() {
         </button>
       </div>
       {erro ? (
-        <p className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm text-danger">
-          {erro}
-        </p>
+        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-danger">{erro}</p>
       ) : null}
       {carregando ? <p className="text-sm text-ink-3">Carregando…</p> : null}
       {relatorio ? (
-        <article className="rounded-[8px] border border-line bg-card p-6">
+        <article className="rounded-lg border border-line bg-card p-6">
           <p className="text-xs font-semibold uppercase tracking-widest text-orange">Sinérgica</p>
           <h3 className="mt-2 text-2xl font-semibold text-ink">Relatório de Atividades</h3>
           <p className="mt-1 text-ink-2">

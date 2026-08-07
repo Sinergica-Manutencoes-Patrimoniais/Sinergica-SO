@@ -1,6 +1,6 @@
+import { Tooltip } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { type DragEvent, useState } from "react";
-import { Tooltip } from "../../../components/ui/Tooltip";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
 import {
   type ColunaKanbanId,
@@ -102,7 +102,7 @@ export function OsKanbanView({
               return (
                 <div
                   key="preventiva"
-                  className="flex w-72 shrink-0 flex-col rounded-[8px] border border-line bg-paper"
+                  className="flex w-72 shrink-0 flex-col rounded-lg border border-line bg-paper"
                 >
                   <ColunaHeader
                     label="Preventiva"
@@ -122,7 +122,7 @@ export function OsKanbanView({
                       preventivas.map((preventiva) => (
                         <div
                           key={preventiva.id}
-                          className="rounded-[6px] border border-line bg-card p-3"
+                          className="rounded-md border border-line bg-card p-3"
                         >
                           <span className="rounded-full bg-info-soft px-2 py-0.5 text-[10px] font-semibold text-info">
                             {TIPO_MANUTENCAO_LABEL[preventiva.maintenanceType]}
@@ -155,7 +155,7 @@ export function OsKanbanView({
                 onDrop={(event) =>
                   temEscrita && onDropNaColuna(coluna.id as StatusOrdemServico, event)
                 }
-                className={`flex w-72 shrink-0 flex-col rounded-[8px] border bg-paper transition-colors ${
+                className={`flex w-72 shrink-0 flex-col rounded-lg border bg-paper transition-colors ${
                   colunaAlvo === coluna.id ? "border-orange bg-orange-soft/40" : "border-line"
                 }`}
               >
@@ -180,7 +180,7 @@ export function OsKanbanView({
                           event.dataTransfer.setData(DRAG_MIME, ordem.id);
                           event.dataTransfer.effectAllowed = "move";
                         }}
-                        className={`rounded-[6px] border border-line bg-card p-3 hover:border-ink-3 ${
+                        className={`rounded-md border border-line bg-card p-3 hover:border-ink-3 ${
                           temEscrita && !salvando ? "cursor-grab active:cursor-grabbing" : ""
                         }`}
                       >
@@ -268,7 +268,7 @@ function ColunaHeader({
           onClick={onSubir}
           disabled={!podeSubir}
           aria-label={`Mover coluna ${label} para a esquerda`}
-          className="rounded-[4px] p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink disabled:opacity-30"
+          className="rounded-sm p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink disabled:opacity-30"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </button>
@@ -277,7 +277,7 @@ function ColunaHeader({
           onClick={onDescer}
           disabled={!podeDescer}
           aria-label={`Mover coluna ${label} para a direita`}
-          className="rounded-[4px] p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink disabled:opacity-30"
+          className="rounded-sm p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink disabled:opacity-30"
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
@@ -293,7 +293,7 @@ function ColunaHeader({
           type="button"
           onClick={onOcultar}
           aria-label={`Ocultar coluna ${label}`}
-          className="rounded-[4px] p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink"
+          className="rounded-sm p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink"
         >
           <EyeOff className="h-3.5 w-3.5" />
         </button>

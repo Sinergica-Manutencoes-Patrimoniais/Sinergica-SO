@@ -100,7 +100,7 @@ export function BoardAtivos({
   }
   if (estado.areas.length === 0) {
     return (
-      <div className="rounded-[8px] border border-dashed border-line bg-card px-5 py-10 text-center">
+      <div className="rounded-lg border border-dashed border-line bg-card px-5 py-10 text-center">
         <LayoutGrid className="mx-auto h-9 w-9 text-ink-3" />
         <p className="mt-3 text-sm text-ink-2">Este cliente ainda não tem Áreas cadastradas.</p>
         <p className="mt-1 text-xs text-ink-3">
@@ -110,7 +110,7 @@ export function BoardAtivos({
           <button
             type="button"
             onClick={onIrParaEstrutura}
-            className="mt-4 inline-flex h-9 items-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+            className="mt-4 inline-flex h-9 items-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
           >
             Ir para Estrutura
           </button>
@@ -128,7 +128,7 @@ export function BoardAtivos({
             key={a.id}
             type="button"
             onClick={() => setAreaId(a.id)}
-            className={`h-8 rounded-[6px] border px-3 text-xs font-semibold ${
+            className={`h-8 rounded-md border px-3 text-xs font-semibold ${
               a.id === areaId
                 ? "border-orange bg-orange-soft text-orange-deep"
                 : "border-line text-ink-2 hover:bg-line-soft"
@@ -140,7 +140,7 @@ export function BoardAtivos({
       </div>
 
       {erroMover && (
-        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erroMover}
         </div>
       )}
@@ -200,7 +200,7 @@ function ColunaLocal({
   }
 
   return (
-    <section className="flex w-64 shrink-0 flex-col rounded-[8px] border border-line bg-card">
+    <section className="flex w-64 shrink-0 flex-col rounded-lg border border-line bg-card">
       <header className="flex items-center justify-between border-b border-line-soft px-3 py-2">
         <h4 className="truncate text-sm font-semibold text-ink">{coluna.localNome}</h4>
         <span className="shrink-0 rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-3">
@@ -209,7 +209,7 @@ function ColunaLocal({
       </header>
       <div className="flex flex-col gap-2 p-2">
         <div
-          className={`flex flex-col gap-2 rounded-[6px] ${
+          className={`flex flex-col gap-2 rounded-md ${
             alvo === "direto" ? "bg-orange-soft/40 outline outline-dashed outline-orange" : ""
           }`}
           {...zonaProps("direto", coluna.localId)}
@@ -224,7 +224,7 @@ function ColunaLocal({
         {coluna.subgrupos.map((sg) => (
           <div
             key={sg.localId}
-            className={`flex flex-col gap-1 rounded-[6px] ${
+            className={`flex flex-col gap-1 rounded-md ${
               alvo === sg.localId ? "bg-orange-soft/40 outline outline-dashed outline-orange" : ""
             }`}
             {...zonaProps(sg.localId, sg.localId)}
@@ -264,7 +264,7 @@ function CardAtivo({
         event.dataTransfer.effectAllowed = "move";
       }}
       onClick={() => onAbrir(item.id)}
-      className={`flex items-center gap-2 rounded-[6px] border border-line px-2 py-1.5 text-left hover:border-orange hover:bg-orange-soft/40 ${
+      className={`flex items-center gap-2 rounded-md border border-line px-2 py-1.5 text-left hover:border-orange hover:bg-orange-soft/40 ${
         item.ativo ? "" : "opacity-60"
       } ${arrastavel ? "cursor-grab active:cursor-grabbing" : ""}`}
     >

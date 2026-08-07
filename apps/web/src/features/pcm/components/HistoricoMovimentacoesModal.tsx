@@ -19,7 +19,7 @@ export function HistoricoMovimentacoesModal({
 }) {
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">{titulo}</h3>
           <button type="button" onClick={onFechar} className="text-ink-3 hover:text-ink">
@@ -33,7 +33,7 @@ export function HistoricoMovimentacoesModal({
             itens.map((item) => (
               <div
                 key={item.id}
-                className="rounded-[6px] border border-line-soft bg-paper p-2.5 text-sm"
+                className="rounded-md border border-line-soft bg-paper p-2.5 text-sm"
               >
                 <p className="font-semibold text-ink-2">
                   {ROTULO_TIPO[item.tipo]} · {item.ferramentaNome} ({item.unidadeCodigo})

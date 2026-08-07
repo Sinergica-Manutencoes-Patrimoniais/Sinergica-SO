@@ -526,7 +526,7 @@ function PainelContatos({ cliente }: { cliente: ClienteHeader }) {
     : [];
 
   return (
-    <section className="rounded-[8px] border border-line bg-card">
+    <section className="rounded-lg border border-line bg-card">
       <div className="border-b border-line-soft px-4 py-3">
         <h3 className="text-sm font-semibold text-ink">Contatos</h3>
         <p className="mt-0.5 text-xs text-ink-3">Todos os contatos cadastrados no Auvo</p>
@@ -555,7 +555,7 @@ function PainelContatos({ cliente }: { cliente: ClienteHeader }) {
 
 function PainelGrupos({ grupos }: { grupos: GrupoClienteResumo[] }) {
   return (
-    <section className="rounded-[8px] border border-line bg-card">
+    <section className="rounded-lg border border-line bg-card">
       <div className="border-b border-line-soft px-4 py-3">
         <h3 className="text-sm font-semibold text-ink">Grupos</h3>
         <p className="mt-0.5 text-xs text-ink-3">
@@ -614,7 +614,7 @@ function PainelResponsaveis({
   }
 
   return (
-    <section className="rounded-[8px] border border-line bg-card">
+    <section className="rounded-lg border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
           <h3 className="text-sm font-semibold text-ink">Responsáveis</h3>
@@ -665,14 +665,14 @@ function PainelResponsaveis({
                   <button
                     type="button"
                     onClick={() => setEditando(responsavel)}
-                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                    className="rounded-md px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                   >
                     Editar
                   </button>
                   <button
                     type="button"
                     onClick={() => remover(responsavel.id)}
-                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-danger hover:bg-danger-soft"
+                    className="rounded-md px-2 py-1 text-xs font-semibold text-danger hover:bg-danger-soft"
                   >
                     Remover
                   </button>
@@ -880,7 +880,7 @@ function PainelFerramentasCliente({
   const historico = alocacoes.filter((a) => a.devolvidaEm !== null);
 
   return (
-    <section className="rounded-[8px] border border-line bg-card">
+    <section className="rounded-lg border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
           <h3 className="text-sm font-semibold text-ink">Ferramentas alocadas</h3>
@@ -913,7 +913,7 @@ function PainelFerramentasCliente({
                 <button
                   type="button"
                   onClick={() => devolver(alocacao.id)}
-                  className="shrink-0 rounded-[6px] px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                  className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                 >
                   Devolver
                 </button>
@@ -1052,7 +1052,7 @@ function MetricCard({
   value: string;
 }) {
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-ink-3">
         <Icon className="h-4 w-4" />
         {label}
@@ -1084,7 +1084,7 @@ function PainelCadastroAuvo({
   }
 
   return (
-    <section className="rounded-[8px] border border-line bg-card px-4 py-3">
+    <section className="rounded-lg border border-line bg-card px-4 py-3">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -1115,7 +1115,7 @@ function PainelCadastroAuvo({
           <button
             type="button"
             onClick={() => window.open("https://app.auvo.com.br", "_blank", "noopener,noreferrer")}
-            className="inline-flex items-center gap-2 rounded-[6px] bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+            className="inline-flex items-center gap-2 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
           >
             <ExternalLink className="h-4 w-4" />
             Editar no Auvo
@@ -1127,7 +1127,7 @@ function PainelCadastroAuvo({
         {itens.map((item) => (
           <div
             key={item.label}
-            className={`rounded-[6px] border px-3 py-2 text-xs font-semibold ${
+            className={`rounded-md border px-3 py-2 text-xs font-semibold ${
               item.ok
                 ? "border-success-line bg-success-soft text-success"
                 : "border-warning-line bg-warning-soft text-warning"
@@ -1156,7 +1156,7 @@ function TimelineCliente({
   const eventosVisiveis = compacta ? eventosFiltrados.slice(0, 6) : eventosFiltrados;
 
   return (
-    <section className="rounded-[8px] border border-line bg-card">
+    <section className="rounded-lg border border-line bg-card">
       <div className="border-b border-line-soft px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -1287,7 +1287,7 @@ function ResumoOperacional({
     qualidade.laudos.filter((laudo) => !["concluido", "assinado"].includes(laudo.status)).length;
 
   return (
-    <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">Operação</h3>
       <div className="mt-4 grid gap-3">
         <ResumoLinha
@@ -1327,7 +1327,7 @@ function ResumoLinha({
 
 function PainelAssessment({ assessment }: { assessment: AssessmentClienteResumo | null }) {
   return (
-    <section className="rounded-[8px] border border-line bg-card">
+    <section className="rounded-lg border border-line bg-card">
       <div className="border-b border-line-soft px-4 py-3">
         <h3 className="text-sm font-semibold text-ink">Assessment</h3>
         <p className="mt-0.5 text-xs text-ink-3">Documento de estado vigente do cliente</p>
@@ -1356,7 +1356,7 @@ function PainelAssessment({ assessment }: { assessment: AssessmentClienteResumo 
 function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      <section className="rounded-[8px] border border-line bg-card">
+      <section className="rounded-lg border border-line bg-card">
         <div className="border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">Inspeções</h3>
         </div>
@@ -1382,7 +1382,7 @@ function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
         )}
       </section>
 
-      <section className="rounded-[8px] border border-line bg-card">
+      <section className="rounded-lg border border-line bg-card">
         <div className="border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">Laudos SPDA</h3>
         </div>
@@ -1423,7 +1423,7 @@ function PainelComunicacao({
   const comunicacao = eventos.filter((evento) => evento.tipo === "whatsapp");
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <h3 className="text-sm font-semibold text-ink">Comunicação</h3>
         <div className="mt-4 grid gap-3 text-sm">
           <ResumoLinha label="Telefone" value={cliente.contatoTelefone ?? "Não informado"} />
@@ -1431,7 +1431,7 @@ function PainelComunicacao({
           <ResumoLinha label="Mensagens vinculadas" value={String(comunicacao.length)} />
         </div>
         {cliente.observacoes && (
-          <div className="mt-4 rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
+          <div className="mt-4 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
             {cliente.observacoes}
           </div>
         )}
@@ -1473,7 +1473,7 @@ function PainelFinanceiro({
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <h3 className="text-sm font-semibold text-ink">Status comercial</h3>
         <p className="mt-2 inline-flex rounded-full bg-line-soft px-3 py-1 text-sm font-semibold text-ink-2">
           {cliente.statusComercial
@@ -1482,7 +1482,7 @@ function PainelFinanceiro({
         </p>
       </section>
 
-      <section className="rounded-[8px] border border-line bg-card">
+      <section className="rounded-lg border border-line bg-card">
         <div className="border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">OS por categoria — últimos 12 meses</h3>
           <p className="mt-0.5 text-xs text-ink-3">
@@ -1506,7 +1506,7 @@ function PainelFinanceiro({
         )}
       </section>
 
-      <section className="rounded-[8px] border border-dashed border-line bg-card px-5 py-6 text-center">
+      <section className="rounded-lg border border-dashed border-line bg-card px-5 py-6 text-center">
         <p className="text-sm text-ink-3">
           Contrato, faturamento e inadimplência ainda não têm dado real vinculado ao cliente — o
           catálogo de preços não está ligado às OS. Sai do ar assim que o módulo Financeiro existir.
@@ -1553,7 +1553,7 @@ function PainelAlmaCliente({
   }
 
   return (
-    <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-ink">Alma do cliente</h3>
@@ -1588,7 +1588,7 @@ function PainelAlmaCliente({
                 type="button"
                 disabled={salvando}
                 onClick={salvar}
-                className="h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
               >
                 {salvando ? "Salvando…" : "Salvar"}
               </button>

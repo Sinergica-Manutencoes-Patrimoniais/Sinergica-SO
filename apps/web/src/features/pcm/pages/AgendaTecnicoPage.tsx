@@ -117,7 +117,7 @@ export function AgendaTecnicoPage() {
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -127,7 +127,7 @@ export function AgendaTecnicoPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {dias.map((dia, index) => (
-            <div key={dia} className="flex flex-col rounded-[8px] border border-line bg-card">
+            <div key={dia} className="flex flex-col rounded-lg border border-line bg-card">
               <div className="flex items-center justify-between border-b border-line-soft px-3 py-2">
                 <div>
                   <p className="text-[11px] font-semibold tracking-wide text-ink-3">
@@ -144,7 +144,7 @@ export function AgendaTecnicoPage() {
                   <button
                     type="button"
                     onClick={() => setModal({ dia, alocacao: null })}
-                    className="rounded-[6px] p-1 text-ink-3 hover:bg-line-soft hover:text-ink"
+                    className="rounded-md p-1 text-ink-3 hover:bg-line-soft hover:text-ink"
                     aria-label={`Adicionar alocação em ${dia}`}
                   >
                     <Plus className="h-4 w-4" />
@@ -160,7 +160,7 @@ export function AgendaTecnicoPage() {
                       key={alocacao.id}
                       type="button"
                       onClick={() => temEscrita && setModal({ dia, alocacao })}
-                      className="rounded-[6px] border border-line-soft px-2.5 py-2 text-left hover:bg-line-soft"
+                      className="rounded-md border border-line-soft px-2.5 py-2 text-left hover:bg-line-soft"
                     >
                       <div className="flex items-center gap-1.5">
                         <span
@@ -284,7 +284,7 @@ function AlocacaoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {alocacao ? "Editar alocação" : "Nova alocação"} ·{" "}
@@ -352,7 +352,7 @@ function AlocacaoModal({
             </label>
           </div>
           {erro && (
-            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -363,7 +363,7 @@ function AlocacaoModal({
               type="button"
               onClick={remover}
               disabled={removendo}
-              className="h-9 rounded-[6px] border border-danger-line px-3 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
+              className="h-9 rounded-md border border-danger-line px-3 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
             >
               {removendo ? "Removendo…" : "Remover"}
             </button>
@@ -378,7 +378,7 @@ function AlocacaoModal({
               type="button"
               onClick={salvar}
               disabled={salvando || !funcionarioId || !clienteId}
-              className="h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
             >
               {salvando ? "Salvando…" : "Salvar"}
             </button>

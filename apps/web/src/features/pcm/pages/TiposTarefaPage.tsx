@@ -166,12 +166,12 @@ export function TiposTarefaPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
 
-      <section className="rounded-[10px] border border-line bg-card">
+      <section className="rounded-xl border border-line bg-card">
         <div className="grid grid-cols-1 gap-3 border-b border-line-soft px-4 py-3 md:grid-cols-[minmax(240px,1fr)_180px]">
           <input
             className="input"
@@ -179,7 +179,7 @@ export function TiposTarefaPage() {
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
           />
-          <label className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2">
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
             <input
               type="checkbox"
               checked={somenteAtivos}
@@ -239,7 +239,7 @@ export function TiposTarefaPage() {
                           <button
                             type="button"
                             onClick={() => setModal({ modo: "editar", tipo })}
-                            className="rounded-[6px] border border-line p-2 text-ink-2 hover:bg-line-soft"
+                            className="rounded-md border border-line p-2 text-ink-2 hover:bg-line-soft"
                             title="Editar"
                           >
                             <Edit3 className="h-4 w-4" />
@@ -248,7 +248,7 @@ export function TiposTarefaPage() {
                             type="button"
                             disabled={salvando}
                             onClick={() => onExcluir(tipo)}
-                            className="rounded-[6px] border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
+                            className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                             title="Excluir"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -312,7 +312,7 @@ function TipoTarefaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-[10px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-xl border border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {modal.modo === "criar" ? "Novo Tipo de Tarefa" : "Editar Tipo de Tarefa"}
@@ -320,7 +320,7 @@ function TipoTarefaModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[6px] p-2 text-ink-3 hover:bg-line-soft"
+            className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
             title="Fechar"
           >
             <X className="h-4 w-4" />
@@ -344,7 +344,7 @@ function TipoTarefaModal({
           </label>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <label className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2">
+            <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
               <input
                 type="checkbox"
                 checked={form.preencheRelato}
@@ -354,7 +354,7 @@ function TipoTarefaModal({
               />
               Exige relato
             </label>
-            <label className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2">
+            <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
               <input
                 type="checkbox"
                 checked={form.exigeAssinatura}
@@ -384,7 +384,7 @@ function TipoTarefaModal({
             </label>
           </div>
 
-          <label className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2">
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
             <input
               type="checkbox"
               checked={form.ativo ?? true}
@@ -394,7 +394,7 @@ function TipoTarefaModal({
           </label>
 
           {erro && (
-            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -403,14 +403,14 @@ function TipoTarefaModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+              className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={salvando}
-              className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
             >
               {salvando ? "Salvando…" : "Salvar"}
             </button>

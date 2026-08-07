@@ -113,20 +113,20 @@ export function FechamentoPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <h3 className="text-base font-semibold text-ink">Fechamento mensal</h3>
         <p className="mt-0.5 text-sm text-ink-3">
           Mês fechado trava novos lançamentos/edições naquela competência. Reabertura exige motivo e
           fica auditada.
         </p>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
       </section>
 
-      <div className="overflow-x-auto rounded-[8px] border border-line bg-card">
+      <div className="overflow-x-auto rounded-lg border border-line bg-card">
         <table className="w-full min-w-[480px] text-left text-sm">
           <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
             <tr>

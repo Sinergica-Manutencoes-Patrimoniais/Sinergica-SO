@@ -53,7 +53,7 @@ export function HistoricoAtendimentoChamado({
             </span>
             <span className="shrink-0 tabular-nums text-ink-3">{dataHoraBr(snap.createdAt)}</span>
           </div>
-          <div className="mt-1.5 flex flex-col gap-1 rounded-[6px] bg-line-soft/50 p-2">
+          <div className="mt-1.5 flex flex-col gap-1 rounded-md bg-line-soft/50 p-2">
             {snap.mensagens.map((msg) => (
               <p key={msg.id} className="text-ink-3">
                 <span className="font-semibold text-ink-2">{msg.remetenteTipo}:</span>{" "}

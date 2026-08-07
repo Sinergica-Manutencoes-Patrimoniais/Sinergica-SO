@@ -84,7 +84,7 @@ function ConfiguracaoEvolution({ temEscrita }: { temEscrita: boolean }) {
   }
 
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4">
+    <section className="rounded-xl border border-line bg-card p-4">
       <h3 className="text-sm font-semibold text-ink">API Evolution</h3>
       <p className="mt-1 text-xs text-ink-3">
         URL e chave são usadas para criar e administrar instâncias. A chave vai ao Vault e nunca
@@ -210,7 +210,7 @@ export function EvolutionTab({
               })
             }
             disabled={processando !== null}
-            className="inline-flex items-center gap-1.5 rounded-[6px] border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
           >
             <RefreshCw className="h-4 w-4" /> Atualizar status
           </button>
@@ -218,7 +218,7 @@ export function EvolutionTab({
             <button
               type="button"
               onClick={() => setMostrarForm((valor) => !valor)}
-              className="inline-flex items-center gap-1.5 rounded-[6px] bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+              className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
             >
               <Plus className="h-4 w-4" /> Nova instância
             </button>
@@ -227,18 +227,18 @@ export function EvolutionTab({
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
 
       {mostrarForm && (
-        <div className="grid gap-3 rounded-[10px] border border-line bg-card p-4 sm:grid-cols-2">
+        <div className="grid gap-3 rounded-xl border border-line bg-card p-4 sm:grid-cols-2">
           <input
             value={form.label}
             onChange={(event) => setForm((atual) => ({ ...atual, label: event.target.value }))}
             placeholder="Nome, ex.: Atendimento"
-            className="rounded-[6px] border border-line p-2 text-sm"
+            className="rounded-md border border-line p-2 text-sm"
           />
           <input
             value={form.instanceName}
@@ -246,13 +246,13 @@ export function EvolutionTab({
               setForm((atual) => ({ ...atual, instanceName: event.target.value }))
             }
             placeholder="Instance ID, ex.: sinergica_atendimento"
-            className="rounded-[6px] border border-line p-2 text-sm"
+            className="rounded-md border border-line p-2 text-sm"
           />
           <button
             type="button"
             onClick={criar}
             disabled={processando !== null}
-            className="w-fit rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="w-fit rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
             {processando === "nova" ? "Criando…" : "Criar e exibir QR"}
           </button>
@@ -260,7 +260,7 @@ export function EvolutionTab({
       )}
 
       {qrCode && (
-        <div className="rounded-[10px] border border-line bg-card p-4 text-center">
+        <div className="rounded-xl border border-line bg-card p-4 text-center">
           <p className="mb-3 text-sm font-semibold text-ink-2">Leia este QR no WhatsApp</p>
           {qrCode.startsWith("data:image") ? (
             <img src={qrCode} alt="QR Code da instância Evolution" className="mx-auto h-64 w-64" />
@@ -278,11 +278,11 @@ export function EvolutionTab({
       )}
 
       {instancias.length === 0 ? (
-        <div className="rounded-[10px] border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
           Nenhuma instância Evolution cadastrada.
         </div>
       ) : (
-        <div className="divide-y divide-line-soft rounded-[10px] border border-line bg-card">
+        <div className="divide-y divide-line-soft rounded-xl border border-line bg-card">
           {instancias.map((instancia) => (
             <div
               key={instancia.id}

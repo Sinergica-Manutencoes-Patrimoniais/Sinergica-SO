@@ -81,7 +81,7 @@ export function DetalhesTarefaAuvo({
   const duracaoHoras = numero("duracaoHoras");
 
   return (
-    <div className="rounded-[8px] border border-line bg-paper">
+    <div className="rounded-lg border border-line bg-paper">
       <div className="border-b border-line-soft overflow-x-auto">
         <div className="flex min-w-max gap-1 px-1">
           {ABAS.map((item) => {
@@ -216,7 +216,7 @@ export function DetalhesTarefaAuvo({
                   <img
                     src={assinaturaUrl}
                     alt={assinaturaNome ?? "Assinatura"}
-                    className="h-20 w-32 rounded-[6px] border border-line object-contain bg-card"
+                    className="h-20 w-32 rounded-md border border-line object-contain bg-card"
                   />
                 </a>
                 <p className="mt-1 text-xs text-ink-3">{assinaturaNome ?? "Sem nome"}</p>
@@ -234,7 +234,7 @@ export function DetalhesTarefaAuvo({
                 <div
                   // biome-ignore lint/suspicious/noArrayIndexKey: resposta achatada não tem id estável no payload
                   key={indice}
-                  className="rounded-[6px] border border-line-soft bg-card p-2.5 text-sm"
+                  className="rounded-md border border-line-soft bg-card p-2.5 text-sm"
                 >
                   <p className="text-ink-2 font-medium">{item.pergunta}</p>
                   <p className="mt-1 text-ink">{item.resposta || "Sem resposta"}</p>
@@ -353,7 +353,7 @@ function AnexoThumb({ anexo }: { anexo: unknown }) {
         href={url}
         target="_blank"
         rel="noreferrer"
-        className="flex h-20 items-center justify-center rounded-[6px] border border-line bg-card px-2 text-center text-[10px] font-semibold text-orange"
+        className="flex h-20 items-center justify-center rounded-md border border-line bg-card px-2 text-center text-[10px] font-semibold text-orange"
       >
         Ver anexo
       </a>
@@ -365,7 +365,7 @@ function AnexoThumb({ anexo }: { anexo: unknown }) {
         src={url}
         alt="Anexo da tarefa"
         onError={() => setFalhouCarregar(true)}
-        className="h-20 w-full rounded-[6px] border border-line object-cover"
+        className="h-20 w-full rounded-md border border-line object-cover"
       />
     </a>
   );

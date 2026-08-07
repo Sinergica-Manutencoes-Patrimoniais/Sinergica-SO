@@ -1,7 +1,9 @@
+import { TooltipProvider } from "@sinergica/ui";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { PortalShell } from "../features/area-cliente/PortalShell";
 import { deveUsarPortal } from "../features/area-cliente/domain/roteamento";
 import { LoginPage } from "../features/auth/pages/LoginPage";
+import { UiGaleriaPage } from "../features/guia/UiGaleriaPage";
 import { HomePage } from "./HomePage";
 import { AuthProvider, useAuth } from "./auth-context";
 import { NavGuardProvider } from "./nav-guard-context";
@@ -51,32 +53,50 @@ function EntradaAutenticada() {
   );
 }
 
+// E00-S15 AC-10 — galeria de primitivas, gate visual antes de qualquer PR de UI. Só em dev ou
+// pra `superadmin` em produção (não é conteúdo de negócio, mas também não é público).
+function GaleriaUiProtegida() {
+  const { user } = useAuth();
+  if (!import.meta.env.DEV && user?.papel !== "superadmin") return <Navigate to="/" replace />;
+  return <UiGaleriaPage />;
+}
+
 export function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <PermissoesProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route
-                path="/login"
-                element={
-                  <PublicOnly>
-                    <LoginPage />
-                  </PublicOnly>
-                }
-              />
-              <Route
-                path="/"
-                element={
-                  <RequireAuth>
-                    <EntradaAutenticada />
-                  </RequireAuth>
-                }
-              />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
+          <TooltipProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route
+                  path="/login"
+                  element={
+                    <PublicOnly>
+                      <LoginPage />
+                    </PublicOnly>
+                  }
+                />
+                <Route
+                  path="/"
+                  element={
+                    <RequireAuth>
+                      <EntradaAutenticada />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/ui"
+                  element={
+                    <RequireAuth>
+                      <GaleriaUiProtegida />
+                    </RequireAuth>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
         </PermissoesProvider>
       </AuthProvider>
     </ThemeProvider>

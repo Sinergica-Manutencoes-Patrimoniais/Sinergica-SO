@@ -118,13 +118,13 @@ export function RentabilidadePage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <h3 className="text-base font-semibold text-ink">Rentabilidade por cliente</h3>
         <p className="mt-0.5 text-sm text-ink-3">
           Receita − custo real (horas + despesas), últimos 12 meses.
         </p>
         {semDespesasSincronizadas && (
-          <p className="mt-3 flex items-center gap-1.5 rounded-[6px] border border-line bg-line-soft px-3 py-2 text-xs text-ink-3">
+          <p className="mt-3 flex items-center gap-1.5 rounded-md border border-line bg-line-soft px-3 py-2 text-xs text-ink-3">
             <AlertTriangle className="h-3.5 w-3.5" />
             Despesas de campo ainda sem sincronização do Auvo — custo considera só horas por
             enquanto.
@@ -133,7 +133,7 @@ export function RentabilidadePage() {
       </section>
 
       {agregados.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <PieChart className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Sem dados de rentabilidade no período.</p>
         </div>
@@ -142,7 +142,7 @@ export function RentabilidadePage() {
           {agregados.map((a) => {
             const cob = cobertura({ horasTotais: a.horasTotais, horasValoradas: a.horasValoradas });
             return (
-              <div key={a.clienteId} className="rounded-[8px] border border-line bg-card">
+              <div key={a.clienteId} className="rounded-lg border border-line bg-card">
                 <button
                   type="button"
                   onClick={() => setExpandido(expandido === a.clienteId ? null : a.clienteId)}

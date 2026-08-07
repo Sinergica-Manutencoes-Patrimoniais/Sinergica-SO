@@ -12,7 +12,7 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
 
   return (
     <div className={`flex ${minha ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[75%] rounded-[8px] px-3 py-2 text-sm ${cor}`}>
+      <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${cor}`}>
         {deAgente && (
           <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] opacity-70">
             <Bot className="h-3 w-3" />

@@ -60,7 +60,7 @@ export function ListaFuncoes({ itens }: { itens: Array<{ nome: string; descricao
 
 export function Callout({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
-    <div className="rounded-[8px] border border-orange-deep/25 bg-orange-soft/60 p-4">
+    <div className="rounded-lg border border-orange-deep/25 bg-orange-soft/60 p-4">
       <p className="text-xs font-bold uppercase tracking-wide text-orange-deep">{titulo}</p>
       <div className="mt-1.5 flex flex-col gap-2 text-sm leading-relaxed text-ink-2">
         {children}

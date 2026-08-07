@@ -34,7 +34,7 @@ export function PainelSistemasCliente({
 
   if (sistemas.length === 0) {
     return (
-      <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+      <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
         <Link2 className="mx-auto h-9 w-9 text-ink-3" />
         <p className="mt-3 text-sm text-ink-3">
           Nenhum Sistema cadastrado para este cliente. Cadastre em PCM → Configurações → Sistemas.
@@ -46,7 +46,7 @@ export function PainelSistemasCliente({
   return (
     <div className="flex flex-col gap-3">
       {sistemas.map((sistema) => (
-        <section key={sistema.id} className="rounded-[8px] border border-line bg-card">
+        <section key={sistema.id} className="rounded-lg border border-line bg-card">
           <button
             type="button"
             onClick={() => setSistemaAbertoId(sistemaAbertoId === sistema.id ? null : sistema.id)}

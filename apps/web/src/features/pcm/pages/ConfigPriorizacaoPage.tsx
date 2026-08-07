@@ -75,12 +75,12 @@ export function ConfigPriorizacaoPage() {
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
       {sucesso && (
-        <div className="rounded-[6px] border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
+        <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
           Pesos salvos.
         </div>
       )}
@@ -88,7 +88,7 @@ export function ConfigPriorizacaoPage() {
       {carregando ? (
         <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
       ) : (
-        <section className="rounded-[10px] border border-line bg-card p-4">
+        <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center gap-2 border-b border-line-soft pb-3">
             <SlidersHorizontal className="h-4 w-4 text-ink-3" />
             <h3 className="text-sm font-semibold text-ink">Pesos (%)</h3>
@@ -120,7 +120,7 @@ export function ConfigPriorizacaoPage() {
             type="button"
             onClick={salvar}
             disabled={salvando || soma !== 100}
-            className="mt-3 h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="mt-3 h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             Salvar pesos
           </button>

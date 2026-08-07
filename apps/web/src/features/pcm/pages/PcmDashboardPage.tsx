@@ -1,3 +1,4 @@
+import { Tooltip } from "@sinergica/ui";
 import {
   Activity,
   AlertTriangle,
@@ -16,7 +17,6 @@ import {
   Wrench,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Tooltip } from "../../../components/ui/Tooltip";
 import { listarReservasFerramenta } from "../application/ferramenta-reservas";
 import { listarProximasPreventivas } from "../application/pmoc";
 import {
@@ -250,7 +250,7 @@ export function PcmDashboardPage({
 
   if (estado.fase === "erro") {
     return (
-      <div className="rounded-[10px] border border-line bg-card p-8 text-center">
+      <div className="rounded-xl border border-line bg-card p-8 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Dashboard indisponível</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
         <button type="button" onClick={carregar} className="mt-4 btn-secondary">
@@ -278,7 +278,7 @@ export function PcmDashboardPage({
               type="button"
               onClick={carregar}
               title="Relê os dados já sincronizados localmente (rápido, não chama o Auvo)"
-              className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
             >
               <RefreshCw className="h-4 w-4" />
               Atualizar
@@ -288,7 +288,7 @@ export function PcmDashboardPage({
               onClick={sincronizar}
               disabled={sincronizacaoAuvo.fase === "sincronizando"}
               title="Puxa os dados do Auvo agora (clientes, equipe, tarefas viram OS aberta) — os cadastros feitos aqui já vão pro Auvo na hora, isto é só para trazer o que mudou lá"
-              className="inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-navy px-2.5 text-xs font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-2.5 text-xs font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Loader2
                 className={`h-4 w-4 ${sincronizacaoAuvo.fase === "sincronizando" ? "animate-spin" : "hidden"}`}
@@ -302,7 +302,7 @@ export function PcmDashboardPage({
               <button
                 type="button"
                 onClick={onNovaOs}
-                className="inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
               >
                 <ClipboardList className="w-4 h-4" />
                 Nova OS
@@ -348,7 +348,7 @@ export function PcmDashboardPage({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-card rounded-[10px] border border-line">
+        <div className="lg:col-span-2 bg-card rounded-xl border border-line">
           <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
             <div>
               <h3 className="text-sm font-semibold text-ink">Ordens de Serviço Recentes</h3>
@@ -402,7 +402,7 @@ export function PcmDashboardPage({
           </div>
         </div>
 
-        <div className="bg-card rounded-[10px] border border-line">
+        <div className="bg-card rounded-xl border border-line">
           <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
             <div>
               <h3 className="text-sm font-semibold text-ink">Top Backlog GUT</h3>
@@ -483,7 +483,7 @@ function CockpitBomDiaCards({
   onVerErrosSync: () => void;
 }) {
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4" aria-label="Cockpit bom dia">
+    <section className="rounded-xl border border-line bg-card p-4" aria-label="Cockpit bom dia">
       <div className="mb-3">
         <h3 className="text-sm font-semibold text-ink">Bom dia · operação de hoje</h3>
         <p className="text-xs text-ink-3">Decisões e pontos de atenção para {cockpit.dia}</p>
@@ -623,7 +623,7 @@ function CockpitCard({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-[8px] border p-3 text-left transition-colors hover:bg-line-soft ${alerta ? "border-danger-line bg-danger-soft" : "border-line bg-paper"}`}
+      className={`rounded-lg border p-3 text-left transition-colors hover:bg-line-soft ${alerta ? "border-danger-line bg-danger-soft" : "border-line bg-paper"}`}
     >
       <p className="text-xs font-semibold text-ink-3">{titulo}</p>
       <p className={`mt-1 text-xl font-semibold ${alerta ? "text-danger" : "text-ink"}`}>{valor}</p>
@@ -684,7 +684,7 @@ function DetalheErrosSyncAuvo({
   onFechar: () => void;
 }) {
   return (
-    <section className="rounded-[10px] border border-danger-line bg-card" aria-live="polite">
+    <section className="rounded-xl border border-danger-line bg-card" aria-live="polite">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
           <h3 className="text-sm font-semibold text-ink">Erros de sincronização Auvo</h3>
@@ -777,7 +777,7 @@ function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["
     : "sem sync";
 
   return (
-    <section className="bg-card rounded-[10px] border border-line overflow-hidden">
+    <section className="bg-card rounded-xl border border-line overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
           <h3 className="text-sm font-semibold text-ink">Operação Auvo</h3>
@@ -858,7 +858,7 @@ function PainelCampoAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmRes
   const ultimaExecucao = formatarDataHoraCurta(campo.ultimaExecucaoCampo);
 
   return (
-    <section className="rounded-[10px] border border-line bg-card">
+    <section className="rounded-xl border border-line bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
           <h3 className="text-sm font-semibold text-ink">Sinais de campo Auvo</h3>
@@ -937,7 +937,7 @@ function CampoAuvoItem({
   detail: string;
 }) {
   return (
-    <div className="rounded-[8px] border border-line-soft px-4 py-3">
+    <div className="rounded-lg border border-line-soft px-4 py-3">
       <div className="flex items-center gap-2 text-ink-3">
         <Icon className="h-4 w-4 text-orange" />
         <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em]">
@@ -981,7 +981,7 @@ function AuvoResumoItem({
 
 function KpiCard({ kpi }: { kpi: KpiDashboardPcm }) {
   return (
-    <div className="flex min-h-20 flex-col gap-1 rounded-[6px] border border-line bg-card px-3 py-2.5">
+    <div className="flex min-h-20 flex-col gap-1 rounded-md border border-line bg-card px-3 py-2.5">
       <span className="text-[10px] font-semibold text-ink-3 uppercase tracking-[0.16em] font-brand">
         {kpi.label}
       </span>

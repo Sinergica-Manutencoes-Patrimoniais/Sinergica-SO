@@ -26,7 +26,7 @@ export function ContasPagarMock() {
           const itens = PAGAR.filter((p) => p.faixa === f.key);
           const total = itens.reduce((s, p) => s + p.valor, 0);
           return (
-            <div key={f.key} className={`rounded-[8px] border border-line p-3 ${f.cls}`}>
+            <div key={f.key} className={`rounded-lg border border-line p-3 ${f.cls}`}>
               <p className="text-[11px] font-bold text-ink-2">{f.label}</p>
               <p className="mt-1.5 text-base font-bold tabular-nums text-ink">{brl(total)}</p>
               <p className="mt-0.5 text-[11px] text-ink-3">

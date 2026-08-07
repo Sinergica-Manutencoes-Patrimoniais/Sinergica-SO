@@ -271,7 +271,7 @@ export function NovaOrdemServicoModal({
     <div className="modal-backdrop">
       <form
         onSubmit={submit}
-        className="w-full max-w-4xl max-h-[92vh] overflow-hidden bg-card rounded-[10px] border border-line shadow-xl flex flex-col"
+        className="w-full max-w-4xl max-h-[92vh] overflow-hidden bg-card rounded-xl border border-line shadow-xl flex flex-col"
       >
         <div className="px-5 py-4 border-b border-line-soft flex items-start justify-between gap-4">
           <div>
@@ -287,7 +287,7 @@ export function NovaOrdemServicoModal({
           <button
             type="button"
             onClick={onFechar}
-            className="w-8 h-8 rounded-[6px] border border-line flex items-center justify-center text-ink-3 hover:text-ink hover:bg-line-soft"
+            className="w-8 h-8 rounded-md border border-line flex items-center justify-center text-ink-3 hover:text-ink hover:bg-line-soft"
             aria-label="Fechar"
           >
             <X className="w-4 h-4" />
@@ -296,12 +296,12 @@ export function NovaOrdemServicoModal({
 
         <div className="overflow-y-auto p-5 space-y-5">
           {erro && (
-            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
           {!carregando && semClientes && (
-            <div className="rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
+            <div className="rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
               Nenhum cliente disponível no PCM. Conclua o import Auvo antes de abrir OS, inspeções
               ou laudos para um condomínio.
             </div>
@@ -375,7 +375,7 @@ export function NovaOrdemServicoModal({
                         ? "Preencha a descrição primeiro"
                         : "Gerar título a partir da descrição"
                   }
-                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
                   {gerandoTitulo ? "Gerando..." : "Gerar título"}
@@ -434,7 +434,7 @@ export function NovaOrdemServicoModal({
               </select>
             </Field>
 
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-5 gap-3 rounded-[8px] border border-line bg-paper p-3">
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-5 gap-3 rounded-lg border border-line bg-paper p-3">
               <div className="sm:col-span-1">
                 <p className="text-xs font-semibold text-ink-2">GUTD</p>
                 <p className="text-xs text-ink-3 mt-0.5">
@@ -524,14 +524,14 @@ export function NovaOrdemServicoModal({
           <button
             type="button"
             onClick={onFechar}
-            className="px-4 py-2 rounded-[6px] border border-line text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="px-4 py-2 rounded-md border border-line text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={salvando || carregando || semClientes || semTiposTarefa}
-            className="px-4 py-2 rounded-[6px] bg-navy text-white text-sm font-semibold hover:bg-navy-deep disabled:opacity-60"
+            className="px-4 py-2 rounded-md bg-navy text-white text-sm font-semibold hover:bg-navy-deep disabled:opacity-60"
           >
             {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Criar OS"}
           </button>

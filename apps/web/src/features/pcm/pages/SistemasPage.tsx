@@ -120,7 +120,7 @@ export function SistemasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Sistemas</h3>
@@ -133,7 +133,7 @@ export function SistemasPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Novo Sistema
@@ -141,14 +141,14 @@ export function SistemasPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
       </section>
 
       {estado.sistemas.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Link2 className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhum Sistema cadastrado.</p>
         </div>
@@ -160,7 +160,7 @@ export function SistemasPage() {
             const clienteNome =
               estado.clientes.find((c) => c.id === sistema.clienteId)?.nome ?? "—";
             return (
-              <section key={sistema.id} className="rounded-[8px] border border-line bg-card">
+              <section key={sistema.id} className="rounded-lg border border-line bg-card">
                 <div className="flex items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -188,7 +188,7 @@ export function SistemasPage() {
                     onClick={() =>
                       setMembrosAbertoId(membrosAbertoId === sistema.id ? null : sistema.id)
                     }
-                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                   >
                     <Link2 className="h-3.5 w-3.5" />
                     Itens
@@ -198,7 +198,7 @@ export function SistemasPage() {
                     onClick={() =>
                       setHistoricoAbertoId(historicoAbertoId === sistema.id ? null : sistema.id)
                     }
-                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                   >
                     <Clock3 className="h-3.5 w-3.5" />
                     Histórico
@@ -208,7 +208,7 @@ export function SistemasPage() {
                       <button
                         type="button"
                         onClick={() => setModal({ modo: "editar", sistema })}
-                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         Editar
@@ -216,7 +216,7 @@ export function SistemasPage() {
                       <button
                         type="button"
                         onClick={() => desativar(sistema)}
-                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border border-danger-line px-2.5 text-xs font-semibold text-danger hover:bg-danger-soft"
+                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-danger-line px-2.5 text-xs font-semibold text-danger hover:bg-danger-soft"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -308,7 +308,7 @@ function SistemaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {sistema ? "Editar Sistema" : "Novo Sistema"}
@@ -369,7 +369,7 @@ function SistemaModal({
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -382,7 +382,7 @@ function SistemaModal({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             {salvando ? "Salvando..." : "Salvar"}
           </button>

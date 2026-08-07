@@ -30,7 +30,7 @@ interface ModuloPermissaoGridProps {
 
 export function ModuloPermissaoGrid({ permissoes, onChange, disabled }: ModuloPermissaoGridProps) {
   return (
-    <div className="border border-line rounded-[10px] overflow-hidden divide-y divide-line-soft">
+    <div className="border border-line rounded-xl overflow-hidden divide-y divide-line-soft">
       {MODULOS_PERMISSIONAVEIS.map((modulo) => {
         const atual = permissoes[modulo] ?? null;
         return (

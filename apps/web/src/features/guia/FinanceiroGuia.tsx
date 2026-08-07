@@ -229,7 +229,7 @@ const GRUPOS_FINANCEIRO: GrupoFinanceiro[] = [
 
 function OpcaoCard({ opcao }: { opcao: OpcaoFinanceiro }) {
   return (
-    <li className="rounded-[8px] border border-line p-4">
+    <li className="rounded-lg border border-line p-4">
       <h4 className="text-sm font-semibold text-ink">{opcao.nome}</h4>
       <dl className="mt-3 grid gap-3 text-sm leading-relaxed md:grid-cols-3">
         <div>
@@ -246,7 +246,7 @@ function OpcaoCard({ opcao }: { opcao: OpcaoFinanceiro }) {
         </div>
       </dl>
       {opcao.atencao && (
-        <p className="mt-3 rounded-[6px] bg-line-soft px-3 py-2 text-xs leading-relaxed text-ink-3">
+        <p className="mt-3 rounded-md bg-line-soft px-3 py-2 text-xs leading-relaxed text-ink-3">
           <strong className="text-ink-2">Atenção:</strong> {opcao.atencao}
         </p>
       )}
@@ -273,28 +273,28 @@ export function FinanceiroGuia() {
 
       <Secao titulo="Quatro conceitos antes de começar">
         <dl className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-[6px] border border-line p-3">
+          <div className="rounded-md border border-line p-3">
             <dt className="font-semibold text-ink">Previsto × realizado</dt>
             <dd>
               Previsto é compromisso futuro. Realizado significa dinheiro recebido ou pago. Dar
               baixa transforma previsão em fato.
             </dd>
           </div>
-          <div className="rounded-[6px] border border-line p-3">
+          <div className="rounded-md border border-line p-3">
             <dt className="font-semibold text-ink">Competência × caixa</dt>
             <dd>
               Competência diz a qual mês receita/despesa pertence. Caixa diz quando dinheiro
               movimentou. DRE usa competência; Dashboard usa caixa.
             </dd>
           </div>
-          <div className="rounded-[6px] border border-line p-3">
+          <div className="rounded-md border border-line p-3">
             <dt className="font-semibold text-ink">Categoria × conta bancária</dt>
             <dd>
               Categoria explica o motivo do dinheiro. Conta bancária explica onde ele está. Um
               lançamento precisa das duas dimensões quando realizado.
             </dd>
           </div>
-          <div className="rounded-[6px] border border-line p-3">
+          <div className="rounded-md border border-line p-3">
             <dt className="font-semibold text-ink">Receita × rentabilidade</dt>
             <dd>
               Faturar não significa lucrar. Rentabilidade desconta horas e despesas das OS para

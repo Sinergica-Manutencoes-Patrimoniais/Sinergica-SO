@@ -19,7 +19,7 @@ export function ConversaLista({
   );
 
   return (
-    <div className="flex h-full flex-col rounded-[8px] border border-line bg-card">
+    <div className="flex h-full flex-col rounded-lg border border-line bg-card">
       <div className="border-b border-line p-3">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />

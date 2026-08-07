@@ -132,7 +132,7 @@ function NovoLancamentoModal({ onFechar }: { onFechar: () => void }) {
           </button>
         </div>
 
-        <div className="mb-3 flex overflow-hidden rounded-[7px] border border-line">
+        <div className="mb-3 flex overflow-hidden rounded-lg border border-line">
           <button
             type="button"
             onClick={() => setTipo("entrada")}

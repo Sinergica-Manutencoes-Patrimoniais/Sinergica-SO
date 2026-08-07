@@ -1,7 +1,7 @@
 // AC-3 (backlog em aberto, já ordenado pelo servidor — NÃO reordena aqui) e AC-5 (estado vazio).
 // Badge de prioridade REAPROVEITA classificarPrioridade(score_pcm) de priorizacao-backlog.ts —
 // não duplica a lógica de faixas GUT (E01-S01).
-import { Tooltip } from "../../../components/ui/Tooltip";
+import { Tooltip } from "@sinergica/ui";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 import {
   type PrioridadeBacklog,
@@ -32,7 +32,7 @@ export function PainelBacklog({
   onSelecionar?: (id: string) => void;
 }) {
   return (
-    <div className="bg-card rounded-[10px] border border-line">
+    <div className="bg-card rounded-xl border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
         <h3 className="text-sm font-semibold text-ink">Backlog (OS em aberto)</h3>
         <p className="text-xs text-ink-3 mt-0.5">Priorizadas por score GUT</p>

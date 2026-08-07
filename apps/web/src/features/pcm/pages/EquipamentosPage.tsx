@@ -132,7 +132,7 @@ export function EquipamentosPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Equipamentos</h3>
@@ -144,7 +144,7 @@ export function EquipamentosPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Novo equipamento
@@ -152,7 +152,7 @@ export function EquipamentosPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -176,12 +176,12 @@ export function EquipamentosPage() {
       </section>
 
       {estado.equipamentos.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Wrench className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhum equipamento cadastrado.</p>
         </div>
       ) : (
-        <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+        <section className="rounded-lg border border-line bg-card overflow-hidden">
           <div className="divide-y divide-line-soft">
             {estado.equipamentos
               .filter((equipamento) => filtroTipo === "todos" || equipamento.tipo === filtroTipo)
@@ -232,7 +232,7 @@ export function EquipamentosPage() {
             <img
               src={imagemAmpliada}
               alt="Equipamento ampliado"
-              className="max-h-[75vh] w-full rounded-[8px] object-contain"
+              className="max-h-[75vh] w-full rounded-lg object-contain"
             />
           </div>
         </div>
@@ -260,7 +260,7 @@ function EquipamentoLinha({
         <button
           type="button"
           onClick={() => onAmpliarImagem(equipamento.urlImagem as string)}
-          className="h-9 w-9 shrink-0 overflow-hidden rounded-[6px] border border-line"
+          className="h-9 w-9 shrink-0 overflow-hidden rounded-md border border-line"
         >
           <img
             src={equipamento.urlImagem}
@@ -269,7 +269,7 @@ function EquipamentoLinha({
           />
         </button>
       ) : (
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] border border-line bg-line-soft">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-line-soft">
           <Wrench className="h-4 w-4 text-ink-3" />
         </div>
       )}
@@ -296,7 +296,7 @@ function EquipamentoLinha({
       <button
         type="button"
         onClick={onVerDetalhe}
-        className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+        className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
       >
         <Layers className="h-3.5 w-3.5" />
         Detalhe
@@ -306,7 +306,7 @@ function EquipamentoLinha({
         <button
           type="button"
           onClick={onEditar}
-          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
         >
           <Pencil className="h-3.5 w-3.5" />
           Editar
@@ -316,7 +316,7 @@ function EquipamentoLinha({
         <button
           type="button"
           onClick={onDesativar}
-          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border border-danger-line px-2.5 text-xs font-semibold text-danger hover:bg-danger-soft"
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-danger-line px-2.5 text-xs font-semibold text-danger hover:bg-danger-soft"
         >
           <Trash2 className="h-3.5 w-3.5" />
           Desativar
@@ -338,7 +338,7 @@ function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () =
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Detalhe do Item</h3>
           <button
@@ -404,7 +404,7 @@ function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () =
                     {contexto.componentesFilhos.map((componente) => (
                       <div
                         key={componente.id}
-                        className="flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2"
+                        className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2"
                       >
                         <Boxes className="h-3.5 w-3.5 text-ink-3" />
                         {componente.nome}

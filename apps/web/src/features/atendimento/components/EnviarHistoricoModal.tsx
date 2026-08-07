@@ -58,7 +58,7 @@ export function EnviarHistoricoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Enviar histórico ao Chamado</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -124,7 +124,7 @@ export function EnviarHistoricoModal({
           )}
 
           {erro && (
-            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -137,7 +137,7 @@ export function EnviarHistoricoModal({
             type="button"
             onClick={confirmar}
             disabled={enviando || !podeConfirmar}
-            className="h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             {enviando ? "Enviando…" : "Enviar histórico"}
           </button>
