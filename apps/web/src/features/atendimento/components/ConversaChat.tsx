@@ -83,6 +83,17 @@ export function ConversaChat({
     }
   }
 
+  // `RichComposer` não tem estado de erro próprio — sem este wrapper, falha de upload/envio
+  // (mídia, áudio, template, botões) desaparecia como promise rejeitada sem nenhum feedback.
+  async function enviarRico(input: MensagemRicaInput) {
+    try {
+      setErro(null);
+      await onEnviarRico(input);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível enviar o conteúdo.");
+    }
+  }
+
   return (
     <div className="flex h-full flex-col rounded-[8px] border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
@@ -206,7 +217,7 @@ export function ConversaChat({
         <RichComposer
           templates={templates}
           disabled={conversa.canal !== "whatsapp"}
-          onEnviar={onEnviarRico}
+          onEnviar={enviarRico}
         />
       )}
 
