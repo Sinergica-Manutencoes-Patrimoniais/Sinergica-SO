@@ -76,6 +76,34 @@ salvar a chave — o badge "configurado" da UI provavelmente lê esse campo em v
 `fn_integracao_tem_segredo`, explicando "continua dizendo que não está configurado". Achado na
 sessão, não investigado a fundo nem corrigido — pendente pra quando a UI for revisada.
 
+## 2026-08-07 (cont.) — Fix: formulário perdido ao trocar de aba (39 telas afetadas)
+
+Lucas reportou perda de formulário não salvo ao trocar de aba do navegador, reproduzido na tela de
+configuração de instância. Análise (sem implementar ainda) achou a causa raiz sistêmica, não
+localizada: Supabase revalida sessão sozinho ao a aba reganhar foco (`autoRefreshToken` default) →
+`onAuthStateChange` em `auth-context.tsx` ignorava o tipo do evento e sempre recriava o objeto
+`user` → `permissoes-context.tsx` tinha `useEffect(..., [status, user])` (objeto inteiro) →
+`setCarregando(true)` disparava de novo → **39 páginas** (`if (permissoesCarregando || carregando)
+return ...`) desmontavam o formulário nesse instante. `NavGuardContext`/`useFormularioSujo`
+(E01-S108) não cobre isso — só guarda navegação voluntária, não remount involuntário.
+
+Apresentadas 4 opções (A: filtrar evento/estabilizar referência; B: efeito de permissões por
+`user?.id`; C: desligar auto-refresh — não recomendado; D: reescrever as 39 telas). Lucas escolheu
+**A+B**.
+
+**Implementado:**
+- `role.ts`: `mesmoUsuario()` (igualdade por valor, domínio puro) + 6 testes novos.
+- `auth-context.tsx`: `setUser` usa forma funcional com `mesmoUsuario` — mantém a mesma referência
+  quando o perfil resolvido é idêntico ao atual (revalidação silenciosa não recria o objeto).
+- `permissoes-context.tsx`: `useEffect` passa a depender de `user?.id` (primitivo) em vez de `user`
+  (objeto) — não recarrega permissões nem desmonta a tela por uma referência que não mudou de
+  usuário de verdade. `biome-ignore` justificado inline.
+- Gates: `build`/`typecheck`/`test` (792 passed, +6)/`biome check` (576 arquivos) verdes.
+
+**Não verificado:** reprodução manual do bug antes/depois no navegador (mesma limitação de porta
+5173 desta sessão) — a correção é rastreada até a causa raiz por leitura de código, não observada
+ao vivo. Tier trivial (CLAUDE.md): decisão já travada com o Lucas, sem `spec.md`/`tasks.md` formal.
+
 ## 2026-08-07 — E01-S139: identidade visual nos PDFs de relatório
 
 Lucas pediu melhoria visual nos PDFs gerados (logo, cabeçalho, "tom profissional"). Escopo

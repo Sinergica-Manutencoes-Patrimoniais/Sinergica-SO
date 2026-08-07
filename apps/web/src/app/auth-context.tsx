@@ -7,7 +7,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { getSession } from "../features/auth/application/get-session";
 import { signIn } from "../features/auth/application/sign-in";
 import { signOut } from "../features/auth/application/sign-out";
-import type { UsuarioAutenticado } from "../features/auth/domain/role";
+import { type UsuarioAutenticado, mesmoUsuario } from "../features/auth/domain/role";
 import { supabaseAuthAdapter } from "../features/auth/infrastructure/supabase-auth-adapter";
 
 export type StatusSessao = "carregando" | "autenticado" | "nao-autenticado";
@@ -38,7 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!ativo) return;
 
         if (resultado.status === "autenticado") {
-          setUser(resultado.usuario);
+          // Mantém a mesma referência quando o perfil resolvido é idêntico ao atual — evita
+          // re-render em cascata (ex.: PermissoesProvider) a cada revalidação silenciosa de
+          // sessão (token renovado ao voltar o foco da aba), que não muda nada de verdade.
+          setUser((atual) => (mesmoUsuario(atual, resultado.usuario) ? atual : resultado.usuario));
           setStatus("autenticado");
           return;
         }

@@ -21,3 +21,13 @@ export interface UsuarioAutenticado {
   nome: string;
   papel: Papel;
 }
+
+/** Igualdade por valor — usada para não trocar a referência de `UsuarioAutenticado` quando o
+ * refresh de sessão (ex.: token renovado ao voltar o foco da aba) resolve o mesmo perfil de novo.
+ * Contextos que dependem da identidade do usuário (ex.: permissões) não devem re-disparar efeitos
+ * por uma revalidação sem mudança real. */
+export function mesmoUsuario(a: UsuarioAutenticado | null, b: UsuarioAutenticado | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.id === b.id && a.email === b.email && a.nome === b.nome && a.papel === b.papel;
+}
