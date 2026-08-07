@@ -146,6 +146,20 @@
     outline-offset: 2px;
   }
 
+  /* E00-S19 AC-6 — rede de segurança universal: cobre toda `transition`/`animation` do projeto,
+     existente ou futura, sem precisar auditar caso a caso. As overrides específicas de cada
+     `.anim-*` (mais acima) continuam existindo — redundante de propósito, nunca conflitante. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   html[data-theme="dark"] {
     --color-navy: #27365f;
     --color-navy-deep: #10172d;
