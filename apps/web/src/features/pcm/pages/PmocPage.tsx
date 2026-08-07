@@ -1776,7 +1776,7 @@ function ModalBase({
   return (
     <div className="modal-backdrop">
       <div
-        className={`max-h-[92vh] w-full overflow-hidden rounded-xl bg-card shadow-xl ${size === "lg" ? "max-w-5xl" : "max-w-2xl"}`}
+        className={`max-h-[92vh] w-full overflow-hidden rounded-xl bg-card shadow-modal ${size === "lg" ? "max-w-5xl" : "max-w-2xl"}`}
       >
         <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">{title}</h3>

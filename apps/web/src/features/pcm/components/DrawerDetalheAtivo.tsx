@@ -109,7 +109,7 @@ export function DrawerDetalheAtivo({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: Esc já fecha via listener global acima. */}
       <div className="absolute inset-0 bg-black/30" onClick={onClose} aria-hidden="true" />
-      <div className="drawer-panel relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-line bg-card shadow-xl">
+      <div className="drawer-panel relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Detalhe do ativo</h3>
           <div className="flex items-center gap-3">

@@ -25,7 +25,7 @@ interface PassoNodeData extends Record<string, unknown> {
 function PassoNode({ data }: NodeProps<Node<PassoNodeData>>) {
   const { passo, readOnly, onEditar, onExcluir } = data;
   return (
-    <div className="w-64 rounded-lg border border-line bg-card p-3 shadow-sm">
+    <div className="w-64 rounded-lg border border-line bg-card p-3 shadow-raised">
       <Handle type="target" position={Position.Top} />
       <div className="flex items-center justify-between gap-2">
         <input

@@ -45,6 +45,8 @@ pre-push:
       run: node scripts/check-catch-silencioso.mjs # 0 catch vazio/só-console em pages/components (E00-S16)
     reticencia:
       run: node scripts/check-reticencia.mjs # 0 '...' ASCII em texto de UI, só '…' (E00-S17)
+    sombras:
+      run: node scripts/check-sombras.mjs # 0 shadow-(sm|md|lg|xl|2xl) default do Tailwind (E00-S20)
     lint:
       run: pnpm exec biome check .
     typecheck:

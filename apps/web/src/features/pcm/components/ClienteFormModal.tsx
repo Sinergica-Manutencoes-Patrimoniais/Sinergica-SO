@@ -59,7 +59,7 @@ export function ClienteFormModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-3xl rounded-lg border border-line bg-card shadow-xl">
+      <div className="w-full max-w-3xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <h3 className="text-base font-semibold text-ink">
             {cliente ? "Editar cliente" : "Novo cliente"}

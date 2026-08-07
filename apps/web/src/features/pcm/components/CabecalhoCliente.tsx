@@ -11,7 +11,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
   const contato = cliente.contatoNome ?? cliente.contatoTelefone ?? cliente.contatoEmail;
 
   return (
-    <div className="rounded-lg bg-navy text-white p-5 md:p-6 shadow-sm">
+    <div className="rounded-lg bg-navy text-white p-5 md:p-6 shadow-raised">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold truncate">{cliente.nome}</h1>

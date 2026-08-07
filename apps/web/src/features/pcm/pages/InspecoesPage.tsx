@@ -512,7 +512,7 @@ export function InspecoesPage() {
       <section className="min-h-[680px] rounded-xl border border-line bg-card">
         {inspecaoSelecionada ? (
           <div className="flex min-h-[680px] flex-col">
-            <div className="sticky top-0 z-10 rounded-t-[10px] bg-navy px-4 py-3 text-white shadow-sm">
+            <div className="sticky top-0 z-10 rounded-t-[10px] bg-navy px-4 py-3 text-white shadow-raised">
               <div className="flex items-start gap-3">
                 <button
                   type="button"
@@ -672,7 +672,7 @@ export function InspecoesPage() {
       )}
 
       {erroAcao && (
-        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger shadow-lg">
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger shadow-overlay">
           {erroAcao}
         </div>
       )}
@@ -1823,7 +1823,7 @@ function ModalBase({
   return (
     <div className="modal-backdrop">
       <div
-        className={`max-h-[92vh] w-full overflow-hidden rounded-xl bg-card shadow-2xl ${
+        className={`max-h-[92vh] w-full overflow-hidden rounded-xl bg-card shadow-drawer ${
           size === "lg" ? "max-w-4xl" : "max-w-2xl"
         }`}
       >
@@ -1855,7 +1855,7 @@ function BottomSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45">
       <button type="button" className="absolute inset-0" onClick={onClose} aria-label="Fechar" />
-      <div className="relative max-h-[88vh] w-full overflow-y-auto rounded-t-[14px] bg-card shadow-2xl">
+      <div className="relative max-h-[88vh] w-full overflow-y-auto rounded-t-[14px] bg-card shadow-drawer">
         <div className="sticky top-0 z-10 flex items-center gap-3 bg-navy px-4 py-3 text-white">
           <button
             type="button"

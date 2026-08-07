@@ -373,7 +373,7 @@ export function NovoLaudoSpdaModal({
       <dialog
         open
         aria-labelledby="novo-laudo-spda-title"
-        className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-line bg-card shadow-xl"
+        className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-line bg-card shadow-modal"
       >
         <header className="border-b border-line-soft bg-card px-4 py-3 md:px-5">
           <div className="flex items-start justify-between gap-3">

@@ -315,7 +315,7 @@ function TipoTarefaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-xl border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-xl border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {modal.modo === "criar" ? "Novo Tipo de Tarefa" : "Editar Tipo de Tarefa"}

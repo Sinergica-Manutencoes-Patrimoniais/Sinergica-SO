@@ -271,7 +271,7 @@ export function NovaOrdemServicoModal({
     <div className="modal-backdrop">
       <form
         onSubmit={submit}
-        className="w-full max-w-4xl max-h-[92vh] overflow-hidden bg-card rounded-xl border border-line shadow-xl flex flex-col"
+        className="w-full max-w-4xl max-h-[92vh] overflow-hidden bg-card rounded-xl border border-line shadow-modal flex flex-col"
       >
         <div className="px-5 py-4 border-b border-line-soft flex items-start justify-between gap-4">
           <div>

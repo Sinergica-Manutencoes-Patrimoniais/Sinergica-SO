@@ -206,7 +206,7 @@ function Kpi({
 }: { label: string; valor: string | number; sub: string; alerta?: boolean }) {
   return (
     <div
-      className={`rounded-lg border px-3 py-2.5 shadow-[0_1px_2px_rgba(20,28,54,0.03)] ${alerta ? "border-danger-line bg-danger-line" : "border-line bg-card"}`}
+      className={`rounded-lg border px-3 py-2.5 shadow-raised ${alerta ? "border-danger-line bg-danger-line" : "border-line bg-card"}`}
     >
       <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
         {alerta && <AlertTriangle className="h-3 w-3 text-danger" />}
@@ -231,7 +231,7 @@ function QueueHealthCard({ aging }: { aging: PainelAtendimento["aging"] }) {
     "+24h": "bg-danger",
   };
   return (
-    <section className="rounded-xl border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Saúde da fila — tempo de espera</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Conversas abertas não lidas, por quanto tempo aguardam resposta.
@@ -260,7 +260,7 @@ function AiHealthCard({ painel }: { painel: PainelAtendimento }) {
   const total = painel.autonomiaZe + painel.autonomiaHumano;
   const iaPct = painel.autonomiaPct ?? 0;
   return (
-    <section className="rounded-xl border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">IA — autonomia e escalonamento</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Modo das conversas abertas e quanto passa para humano.
@@ -301,7 +301,7 @@ function AiHealthCard({ painel }: { painel: PainelAtendimento }) {
 function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] }) {
   const max = Math.max(...mixCanal.map((m) => m.total), 1);
   return (
-    <section className="rounded-xl border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Mix de canal</h3>
       <p className="mt-0.5 text-xs text-ink-3">De onde vem a demanda no período.</p>
       {mixCanal.length === 0 ? (
@@ -332,7 +332,7 @@ function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] 
 
 function CsatCard({ csat }: { csat: PainelAtendimento["csat"] }) {
   return (
-    <section className="rounded-xl border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Satisfação (CSAT)</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Notas de pesquisas ligadas ao atendimento no período.
@@ -349,7 +349,7 @@ function CsatCard({ csat }: { csat: PainelAtendimento["csat"] }) {
 function VolumeTrendCard({ volumeDiario }: { volumeDiario: WidgetsAtendimento["volumeDiario"] }) {
   const max = Math.max(...volumeDiario.flatMap((v) => [v.entrada, v.saida]), 1);
   return (
-    <section className="rounded-xl border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Volume por dia</h3>
       <p className="mt-0.5 text-xs text-ink-3">Mensagens recebidas vs enviadas no período.</p>
       {volumeDiario.length === 0 ? (
@@ -403,7 +403,7 @@ function SlaDeliveryCard({
   const cor = pct >= 90 ? "text-success" : pct >= 70 ? "text-warning" : "text-danger";
   const corBarra = pct >= 90 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-danger";
   return (
-    <section className="rounded-xl border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">SLA & entrega</h3>
       <p className="mt-0.5 text-xs text-ink-3">1ª resposta dentro da meta de 5 minutos.</p>
       <p className={`font-brand mt-3 text-3xl font-bold ${cor}`}>
@@ -427,7 +427,7 @@ function HourlyHeatmapCard({ heatmap }: { heatmap: HeatmapCelula[] }) {
   const max = Math.max(...heatmap.map((h) => h.total), 1);
   const porCelula = new Map(heatmap.map((h) => [`${h.diaSemana}-${h.hora}`, h.total]));
   return (
-    <section className="rounded-xl border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Pico por hora</h3>
       <p className="mt-0.5 text-xs text-ink-3">Mensagens recebidas por dia da semana e hora.</p>
       <div className="mt-4 overflow-x-auto">
@@ -477,7 +477,7 @@ function RankingCard({
 }) {
   const max = Math.max(...itens.map((i) => i.total), 1);
   return (
-    <section className="rounded-xl border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">{titulo}</h3>
       <p className="mt-0.5 text-xs text-ink-3">{subtitulo}</p>
       {itens.length === 0 ? (

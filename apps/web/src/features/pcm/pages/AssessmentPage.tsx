@@ -417,7 +417,7 @@ function NovoAssessmentModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Novo assessment</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -506,7 +506,7 @@ function ImportarQuestionarioModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Importar questionário Auvo</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -589,7 +589,7 @@ function DerivarItemModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">{DESTINO_ITEM_LABEL[destino]}</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">

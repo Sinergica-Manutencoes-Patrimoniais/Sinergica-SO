@@ -516,7 +516,7 @@ function DashboardGeral({
         return (
           <div
             key={resumo.moduloId}
-            className="group flex min-h-44 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-[0_1px_2px_rgba(20,28,54,0.04)] transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-[0_10px_26px_rgba(20,28,54,0.08)]"
+            className="group flex min-h-44 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-raised transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-overlay"
           >
             {/* Header */}
             <div className="flex items-center gap-2.5 bg-navy px-3.5 py-2.5">
@@ -700,7 +700,7 @@ export function HomePage() {
       )}
       {/* ── Sidebar ──────────────────────────────────────────── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col overflow-hidden border-r border-navy-line bg-navy-deep shadow-2xl transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col overflow-hidden border-r border-navy-line bg-navy-deep shadow-drawer transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } ${sidebarCollapsed ? "lg:w-14" : "lg:w-56"}`}
       >

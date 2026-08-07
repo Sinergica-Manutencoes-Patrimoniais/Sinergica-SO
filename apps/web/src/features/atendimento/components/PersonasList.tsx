@@ -147,7 +147,7 @@ export function PersonasList({
 
       {modal && (
         <div className="modal-backdrop">
-          <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-xl">
+          <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-modal">
             <div className="flex items-center justify-between border-b border-line-soft px-5 py-4">
               <h3 className="text-base font-semibold text-ink">
                 {modal.modo === "criar" ? "Nova persona" : "Editar persona"}

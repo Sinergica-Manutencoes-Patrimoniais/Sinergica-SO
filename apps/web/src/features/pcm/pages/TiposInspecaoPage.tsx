@@ -130,7 +130,7 @@ export function TiposInspecaoPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-ink">Tipos de Inspeção</h3>
@@ -264,7 +264,7 @@ function TipoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {tipo ? "Editar tipo de inspeção" : "Novo tipo de inspeção"}
@@ -373,7 +373,7 @@ function TemplateModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Novo checklist</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">

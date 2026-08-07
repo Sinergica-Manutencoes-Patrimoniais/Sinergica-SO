@@ -121,7 +121,7 @@ export function OrcamentoPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-ink-3" />

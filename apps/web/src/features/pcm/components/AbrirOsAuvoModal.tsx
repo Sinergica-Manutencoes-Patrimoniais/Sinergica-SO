@@ -77,7 +77,7 @@ export function AbrirOsAuvoModal({
       className="fixed inset-0 z-50 flex h-full w-full max-w-none items-center justify-center bg-black/40 p-4"
       aria-label="Abrir OS no Auvo"
     >
-      <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-modal">
         <div className="border-b border-line-soft px-5 py-4">
           <h2 className="text-base font-semibold text-ink">Abrir OS no Auvo?</h2>
           <p className="mt-1 text-xs text-ink-3">

@@ -127,7 +127,7 @@ export function CobrancaPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Régua de cobrança</h3>
@@ -306,7 +306,7 @@ function PontoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {ponto ? "Editar ponto da régua" : "Novo ponto da régua"}

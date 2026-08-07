@@ -394,7 +394,7 @@ function CriarAcessoPortalModal({
 
   return (
     <dialog open className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4">
-      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-modal">
         <h2 className="text-lg font-semibold text-ink">Criar acesso ao Portal do Cliente</h2>
         <p className="mt-1 text-sm text-ink-3">Condomínio: {clienteNome}</p>
         <div className="mt-5 grid gap-3">
@@ -762,7 +762,7 @@ function ResponsavelModal({
 
   return (
     <dialog open className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4">
-      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-modal">
         <h2 className="text-lg font-semibold text-ink">
           {responsavel ? "Editar responsável" : "Adicionar responsável"}
         </h2>
@@ -994,7 +994,7 @@ function AlocarFerramentaModal({
 
   return (
     <dialog open className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4">
-      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-modal">
         <h2 className="text-lg font-semibold text-ink">Alocar ferramenta</h2>
         <div className="mt-4">
           {carregando ? (
@@ -1287,7 +1287,7 @@ function ResumoOperacional({
     qualidade.laudos.filter((laudo) => !["concluido", "assinado"].includes(laudo.status)).length;
 
   return (
-    <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Operação</h3>
       <div className="mt-4 grid gap-3">
         <ResumoLinha
@@ -1423,7 +1423,7 @@ function PainelComunicacao({
   const comunicacao = eventos.filter((evento) => evento.tipo === "whatsapp");
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <h3 className="text-sm font-semibold text-ink">Comunicação</h3>
         <div className="mt-4 grid gap-3 text-sm">
           <ResumoLinha label="Telefone" value={cliente.contatoTelefone ?? "Não informado"} />
@@ -1473,7 +1473,7 @@ function PainelFinanceiro({
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <h3 className="text-sm font-semibold text-ink">Status comercial</h3>
         <p className="mt-2 inline-flex rounded-full bg-line-soft px-3 py-1 text-sm font-semibold text-ink-2">
           {cliente.statusComercial
@@ -1553,7 +1553,7 @@ function PainelAlmaCliente({
   }
 
   return (
-    <section className="rounded-lg border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-ink">Alma do cliente</h3>
