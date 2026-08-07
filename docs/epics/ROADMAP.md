@@ -205,6 +205,7 @@ alwaysApply: true
 
 | E01-S137 | **Ferramentas por Técnico rico** — lista TODOS os técnicos; modal com info + histórico de alocação + atribuição por transfer-list (selecionar e enviar pro lado). Item 1 (2026-08-04, print) | [spec](../../specs/E01-S137-ferramentas-por-tecnico-rico/spec.md) · [tasks](../../specs/E01-S137-ferramentas-por-tecnico-rico/tasks.md) | **Implementado localmente (2026-08-06).** Lista, histórico e transferência; Playwright pendente | Codex | AC local ✅ |
 | E01-S138 | **Funcionário: perfil completo** — clique mostra tudo: cadastro + alocação dia/semana + OS atendidas + ferramentas em posse. Item 2 (2026-08-04) | [spec](../../specs/E01-S138-funcionario-detalhe-completo/spec.md) · [tasks](../../specs/E01-S138-funcionario-detalhe-completo/tasks.md) | **Implementado localmente (2026-08-06).** Perfil, alocação, OS e ferramentas; Playwright pendente | Codex | AC local ✅ |
+| E01-S139 | **Identidade visual nos PDFs de relatório** — cabeçalho com logo/faixa navy/filete laranja e rodapé (página/data) nos 3 geradores do frontend (Relatório do Cliente, Diário, Planejamento); Laudo PMOC (Deno) fica para story futura. Pedido do Lucas (2026-08-07) | [spec](../../specs/E01-S139-identidade-visual-pdf/spec.md) · [tasks](../../specs/E01-S139-identidade-visual-pdf/tasks.md) | **Implementado localmente (2026-08-07).** Helper `relatorio-pdf.ts` compartilhado; conferência visual pendente | Claude (sessão Lucas) | AC local ✅ |
 
 ### E02 — Atendimento · Zé
 E01-S02 (Agente Zé) já implementada — épica destravada. Plano completo da épica (8 stories,

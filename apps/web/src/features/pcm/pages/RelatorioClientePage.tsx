@@ -1,7 +1,7 @@
 import { Download, Send } from "lucide-react";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
+import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import type { ClienteResumo } from "../application/cliente-360-gateway";
 import { obterRelatorioCliente } from "../application/relatorio-cliente";
 import { type RelatorioCliente, formatarTextoRelatorioCliente } from "../domain/relatorio-cliente";
@@ -75,28 +75,13 @@ export function RelatorioClientePage() {
     if (!relatorio) return;
     setBaixando(true);
     try {
-      const pdf = await PDFDocument.create();
-      const fonte = await pdf.embedFont(StandardFonts.Helvetica);
-      let pagina = pdf.addPage();
-      let y = pagina.getHeight() - 48;
-      for (const linha of formatarTextoRelatorioCliente(relatorio).split("\n")) {
-        for (const parte of linha.match(/.{1,88}(?:\s|$)/g) ?? [linha]) {
-          if (y < 42) {
-            pagina = pdf.addPage();
-            y = pagina.getHeight() - 48;
-          }
-          pagina.drawText(parte.trim(), {
-            x: 42,
-            y,
-            size: 10,
-            font: fonte,
-            color: rgb(0.1, 0.12, 0.16),
-          });
-          y -= 16;
-        }
-      }
+      const pdf = await criarRelatorioPdf({
+        titulo: "Relatório de Atividades",
+        subtitulo: `${relatorio.clienteNome} · ${relatorio.inicio} a ${relatorio.fim}`,
+      });
+      pdf.escreverTexto(formatarTextoRelatorioCliente(relatorio));
       const url = URL.createObjectURL(
-        new Blob([Uint8Array.from(await pdf.save()).buffer], { type: "application/pdf" }),
+        new Blob([Uint8Array.from(await pdf.finalizar()).buffer], { type: "application/pdf" }),
       );
       const link = document.createElement("a");
       link.href = url;

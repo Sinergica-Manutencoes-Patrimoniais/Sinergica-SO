@@ -1,6 +1,6 @@
 import { AlertTriangle, CalendarDays, Download, RefreshCw, Users } from "lucide-react";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { useCallback, useEffect, useState } from "react";
+import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import { obterResumoRelatorioDiario } from "../application/relatorio-diario";
 import { formatarHorasMinutos } from "../domain/apontamento-horas";
 import {
@@ -69,28 +69,9 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
     if (!resumo) return;
     setBaixandoPdf(true);
     try {
-      const pdf = await PDFDocument.create();
-      const fonte = await pdf.embedFont(StandardFonts.Helvetica);
-      let pagina = pdf.addPage();
-      let y = pagina.getHeight() - 48;
-      for (const linha of formatarTextoRelatorioDiario(resumo).split("\n")) {
-        const partes = linha.match(/.{1,90}(?:\s|$)/g) ?? [linha];
-        for (const parte of partes) {
-          if (y < 42) {
-            pagina = pdf.addPage();
-            y = pagina.getHeight() - 48;
-          }
-          pagina.drawText(parte.trim(), {
-            x: 42,
-            y,
-            size: 10,
-            font: fonte,
-            color: rgb(0.1, 0.12, 0.16),
-          });
-          y -= 16;
-        }
-      }
-      const bytes = await pdf.save();
+      const pdf = await criarRelatorioPdf({ titulo: "Relatório do Dia", subtitulo: data });
+      pdf.escreverTexto(formatarTextoRelatorioDiario(resumo));
+      const bytes = await pdf.finalizar();
       const url = URL.createObjectURL(
         new Blob([Uint8Array.from(bytes).buffer], { type: "application/pdf" }),
       );

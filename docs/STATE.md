@@ -76,6 +76,26 @@ salvar a chave — o badge "configurado" da UI provavelmente lê esse campo em v
 `fn_integracao_tem_segredo`, explicando "continua dizendo que não está configurado". Achado na
 sessão, não investigado a fundo nem corrigido — pendente pra quando a UI for revisada.
 
+## 2026-08-07 — E01-S139: identidade visual nos PDFs de relatório
+
+Lucas pediu melhoria visual nos PDFs gerados (logo, cabeçalho, "tom profissional"). Escopo
+confirmado (AskUserQuestion): os 3 geradores do frontend (`RelatorioClientePage`,
+`RelatorioDiarioPage`, `RelatorioPlanejamentoPage`) agora; Laudo PMOC (`pmoc-generate-pdf`, Deno)
+fica para story futura. Achado: cada página duplicava sua própria lógica de `PDFDocument`/
+`drawText`, sem logo/cabeçalho/rodapé — só texto corrido.
+
+Extraído `apps/web/src/lib/pdf/relatorio-pdf.ts`: cabeçalho (faixa navy + logo branco de
+`public/logos/` + filete laranja + título/subtítulo) e rodapé ("Sinérgica Manutenções" + "Página X
+de Y" + data), com paginação automática. As 3 páginas passaram a usar o helper. Teste do helper
+(`relatorio-pdf.test.ts`, mock de `fetch` do logo) **pegou um bug real antes do commit**: typo
+`font` (variável inexistente) em vez de `fonte` no rodapé — `ReferenceError` que só apareceria ao
+gerar PDF de verdade. Corrigido. `pnpm run build`/`typecheck`/`test` (786 passed) verdes; `biome
+check --write` aplicou formatação.
+
+**Não verificado:** abertura visual dos 3 PDFs num navegador real — porta 5173 segue ocupada pelo
+dev server do projeto Akros (mesma limitação já registrada), e uma tentativa de subir noutra porta
+não ficou de pé a tempo. Fica pendente conferência visual do Lucas, como as demais stories do lote.
+
 ## 2026-08-06 (cont. 4) — Limpeza de dados `[TESTE E2E]` em produção
 
 Lucas pediu pra limpar dados com `[TESTE E2E]` no nome (poluindo produção). Varredura por todos os
