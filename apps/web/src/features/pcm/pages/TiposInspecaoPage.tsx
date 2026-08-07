@@ -108,7 +108,7 @@ export function TiposInspecaoPage() {
   }
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -118,7 +118,7 @@ export function TiposInspecaoPage() {
     );
   }
   if (estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
@@ -135,7 +135,7 @@ export function TiposInspecaoPage() {
           <div>
             <h3 className="text-base font-semibold text-ink">Tipos de Inspeção</h3>
             <p className="mt-0.5 text-sm text-ink-3">
-              Parametrização ABNT NBR 16747 — cada tipo (predial, elétrica, SPDA...) tem seus
+              Parametrização ABNT NBR 16747 — cada tipo (predial, elétrica, SPDA…) tem seus
               checklists configuráveis. Só supervisor/superadmin edita.
             </p>
           </div>
@@ -319,7 +319,7 @@ function TipoModal({
             disabled={salvando || !nome.trim()}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>
@@ -473,7 +473,7 @@ function TemplateModal({
             disabled={salvando || !nome.trim()}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar checklist"}
+            {salvando ? "Salvando…" : "Salvar checklist"}
           </button>
         </div>
       </div>

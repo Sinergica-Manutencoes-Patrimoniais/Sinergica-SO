@@ -127,7 +127,7 @@ export function ApontamentoHorasPage({
   );
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -137,7 +137,7 @@ export function ApontamentoHorasPage({
     );
   }
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   }
   if (estado.fase === "erro") {
     return (
@@ -746,7 +746,7 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
           className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          {estado.fase === "carregando" ? "Carregando..." : "Carregar"}
+          {estado.fase === "carregando" ? "Carregando…" : "Carregar"}
         </button>
       </div>
       {estado.fase === "inicial" && (

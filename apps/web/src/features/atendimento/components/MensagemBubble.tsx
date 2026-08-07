@@ -70,7 +70,7 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
           </p>
         )}
         {mensagem.statusEntrega === "enviando" && (
-          <p className="mt-1 text-xs opacity-70">Enviando...</p>
+          <p className="mt-1 text-xs opacity-70">Enviando…</p>
         )}
       </div>
     </div>

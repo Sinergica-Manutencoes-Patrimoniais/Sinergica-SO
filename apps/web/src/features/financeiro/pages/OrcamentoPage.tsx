@@ -74,7 +74,7 @@ export function OrcamentoPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -154,7 +154,7 @@ export function OrcamentoPage() {
                 onChange={(e) => setCategoriaSelecionada(e.target.value)}
                 className="input w-64"
               >
-                <option value="">Selecione...</option>
+                <option value="">Selecione…</option>
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nome}
@@ -177,7 +177,7 @@ export function OrcamentoPage() {
               disabled={salvando || !categoriaSelecionada}
               className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
             >
-              {salvando ? "Salvando..." : "Aplicar aos 12 meses"}
+              {salvando ? "Salvando…" : "Aplicar aos 12 meses"}
             </button>
           </div>
         </section>

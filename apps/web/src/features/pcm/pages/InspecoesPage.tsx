@@ -461,7 +461,7 @@ export function InspecoesPage() {
             onChange={(event) => setBusca(event.target.value)}
             className="input w-full"
             style={{ paddingLeft: "2.25rem" }}
-            placeholder="Buscar por cliente ou título..."
+            placeholder="Buscar por cliente ou título…"
           />
         </div>
 
@@ -1352,7 +1352,7 @@ function NovoItemModal({
               className="inline-flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep disabled:opacity-50"
             >
               <Upload className="h-3.5 w-3.5" />
-              {enviandoMidia ? "Enviando..." : "Adicionar"}
+              {enviandoMidia ? "Enviando…" : "Adicionar"}
             </button>
             <input
               ref={fileRef}

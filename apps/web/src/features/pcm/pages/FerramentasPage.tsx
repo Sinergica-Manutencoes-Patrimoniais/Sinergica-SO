@@ -251,7 +251,7 @@ export function FerramentasPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -575,7 +575,7 @@ function EfetivarReservaModal({
             disabled={salvando || !unidadeId}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Efetivar (atribuir agora)"}
+            {salvando ? "Salvando…" : "Efetivar (atribuir agora)"}
           </button>
         </div>
       </div>
@@ -758,7 +758,7 @@ function BaixaModal({
               value={motivo}
               onChange={(event) => setMotivo(event.target.value)}
               className="input min-h-[80px] w-full resize-y"
-              placeholder="Ex.: extraviada em campo, quebrada sem conserto..."
+              placeholder="Ex.: extraviada em campo, quebrada sem conserto…"
             />
           </label>
           {erro && (
@@ -781,7 +781,7 @@ function BaixaModal({
             disabled={salvando}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Confirmar baixa"}
+            {salvando ? "Salvando…" : "Confirmar baixa"}
           </button>
         </div>
       </div>
@@ -891,7 +891,7 @@ function FerramentaModal({
               list="ferramenta-categorias-lista"
               value={categoriaTexto}
               onChange={(event) => selecionarCategoriaPorTexto(event.target.value)}
-              placeholder="Buscar categoria..."
+              placeholder="Buscar categoria…"
               className="input w-full"
             />
             <datalist id="ferramenta-categorias-lista">
@@ -944,7 +944,7 @@ function FerramentaModal({
             disabled={salvando || Object.keys(errosInline).length > 0}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>

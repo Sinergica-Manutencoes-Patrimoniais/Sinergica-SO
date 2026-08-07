@@ -75,7 +75,7 @@ export function ContasReceberPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -345,7 +345,7 @@ function BaixaModal({
             disabled={confirmando}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {confirmando ? "Confirmando..." : "Confirmar recebimento"}
+            {confirmando ? "Confirmando…" : "Confirmar recebimento"}
           </button>
         </div>
       </div>
@@ -422,7 +422,7 @@ function CobrancaModal({
         </div>
         <div className="flex flex-col gap-3 p-4">
           {carregando ? (
-            <p className="text-sm text-ink-3">Carregando...</p>
+            <p className="text-sm text-ink-3">Carregando…</p>
           ) : cobrancaAtiva ? (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-ink-2">
@@ -465,7 +465,7 @@ function CobrancaModal({
                   disabled={emitindo !== null}
                   className="h-9 flex-1 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
-                  {emitindo === "pix" ? "Emitindo..." : "Emitir PIX"}
+                  {emitindo === "pix" ? "Emitindo…" : "Emitir PIX"}
                 </button>
                 <button
                   type="button"
@@ -473,7 +473,7 @@ function CobrancaModal({
                   disabled={emitindo !== null}
                   className="h-9 flex-1 rounded-md border border-line text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
                 >
-                  {emitindo === "boleto" ? "Emitindo..." : "Emitir boleto"}
+                  {emitindo === "boleto" ? "Emitindo…" : "Emitir boleto"}
                 </button>
               </div>
             </>

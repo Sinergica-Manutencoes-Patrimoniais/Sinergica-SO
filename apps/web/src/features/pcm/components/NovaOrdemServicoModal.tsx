@@ -378,7 +378,7 @@ export function NovaOrdemServicoModal({
                   className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
-                  {gerandoTitulo ? "Gerando..." : "Gerar título"}
+                  {gerandoTitulo ? "Gerando…" : "Gerar título"}
                 </button>
               </div>
             </Field>
@@ -533,7 +533,7 @@ export function NovaOrdemServicoModal({
             disabled={salvando || carregando || semClientes || semTiposTarefa}
             className="px-4 py-2 rounded-md bg-navy text-white text-sm font-semibold hover:bg-navy-deep disabled:opacity-60"
           >
-            {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Criar OS"}
+            {salvando ? "Salvando…" : editando ? "Salvar alterações" : "Criar OS"}
           </button>
         </div>
       </form>

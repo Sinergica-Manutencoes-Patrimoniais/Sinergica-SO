@@ -14,7 +14,7 @@ export interface TransacaoOfx {
   data: string; // ISO yyyy-mm-dd (de DTPOSTED)
   valorCentavos: number; // com sinal — negativo = débito, como vem no OFX
   memo: string;
-  tipoOfx: string; // TRNTYPE cru (DEBIT/CREDIT/PIX/...)
+  tipoOfx: string; // TRNTYPE cru (DEBIT/CREDIT/PIX/…)
 }
 
 export interface OfxParseResult {

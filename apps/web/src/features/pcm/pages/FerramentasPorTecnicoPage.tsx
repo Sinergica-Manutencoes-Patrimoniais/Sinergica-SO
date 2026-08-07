@@ -199,7 +199,7 @@ export function FerramentasPorTecnicoPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -787,7 +787,7 @@ function DevolucaoModal({
             disabled={salvando}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Confirmar devolução"}
+            {salvando ? "Salvando…" : "Confirmar devolução"}
           </button>
         </div>
       </div>

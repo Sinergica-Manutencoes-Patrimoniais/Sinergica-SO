@@ -116,7 +116,7 @@ export function ImportOfxPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -163,7 +163,7 @@ export function ImportOfxPage() {
               onChange={(e) => setContaSelecionada(e.target.value)}
               className="input"
             >
-              <option value="">Selecione a conta...</option>
+              <option value="">Selecione a conta…</option>
               {contas.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nome}
@@ -218,7 +218,7 @@ export function ImportOfxPage() {
                 disabled={importando}
                 className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
               >
-                {importando ? "Importando..." : "Confirmar importação"}
+                {importando ? "Importando…" : "Confirmar importação"}
               </button>
             )}
           </div>
@@ -355,7 +355,7 @@ function LinhaPendente({
             onChange={(e) => setCategoriaId(e.target.value)}
             className="input h-8 text-xs"
           >
-            <option value="">Categoria...</option>
+            <option value="">Categoria…</option>
             {categorias.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nome}

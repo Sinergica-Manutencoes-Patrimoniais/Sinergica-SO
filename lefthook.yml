@@ -43,6 +43,8 @@ pre-push:
       run: node scripts/check-tokens-cor.mjs # 0 hex cru fora dos tokens semânticos (E00-S14)
     catch-silencioso:
       run: node scripts/check-catch-silencioso.mjs # 0 catch vazio/só-console em pages/components (E00-S16)
+    reticencia:
+      run: node scripts/check-reticencia.mjs # 0 '...' ASCII em texto de UI, só '…' (E00-S17)
     lint:
       run: pnpm exec biome check .
     typecheck:

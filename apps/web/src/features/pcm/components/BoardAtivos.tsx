@@ -93,7 +93,7 @@ export function BoardAtivos({
   }, [estado, area]);
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando board...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando board…</div>;
   }
   if (estado.fase === "erro") {
     return <div className="p-8 text-center text-sm text-danger">{estado.mensagem}</div>;

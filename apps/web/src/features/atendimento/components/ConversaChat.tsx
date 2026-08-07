@@ -232,7 +232,7 @@ export function ConversaChat({
                 enviar();
               }
             }}
-            placeholder="Escreva uma mensagem..."
+            placeholder="Escreva uma mensagem…"
             className="input min-h-[40px] flex-1 resize-none"
             rows={1}
           />

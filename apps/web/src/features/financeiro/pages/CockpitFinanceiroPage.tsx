@@ -76,7 +76,7 @@ export function CockpitFinanceiroPage() {
   }, [permissoesCarregando, temLeitura, ehSuperadmin, carregar]);
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
 
   // AC-5: só gestão (superadmin) — nem o gate de módulo financeiro basta aqui.
   if (!temLeitura || !ehSuperadmin) {

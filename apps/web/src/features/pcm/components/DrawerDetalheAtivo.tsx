@@ -136,7 +136,7 @@ export function DrawerDetalheAtivo({
         </div>
 
         {estado.fase === "carregando" && (
-          <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>
+          <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
         )}
         {estado.fase === "erro" && (
           <div className="p-8 text-center text-sm text-danger">{estado.mensagem}</div>

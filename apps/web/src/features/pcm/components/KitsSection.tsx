@@ -139,7 +139,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
   if (estado.fase === "carregando") {
     return (
       <section className="rounded-lg border border-line bg-card p-4">
-        <p className="text-sm text-ink-3">Carregando kits...</p>
+        <p className="text-sm text-ink-3">Carregando kits…</p>
       </section>
     );
   }
@@ -440,7 +440,7 @@ function KitModal({
             disabled={salvando}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>
@@ -517,7 +517,7 @@ function AtribuirKitModal({
             disabled={salvando || !funcionarioId}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Atribuir"}
+            {salvando ? "Salvando…" : "Atribuir"}
           </button>
         </div>
       </div>

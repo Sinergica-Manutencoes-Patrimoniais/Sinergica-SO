@@ -96,7 +96,7 @@ export function ContratosPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -147,7 +147,7 @@ export function ContratosPage() {
                 className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
               >
                 <Wand2 className="h-4 w-4" />
-                {gerando ? "Gerando..." : "Gerar previstos do mês"}
+                {gerando ? "Gerando…" : "Gerar previstos do mês"}
               </button>
             )}
             {temEscrita && (
@@ -311,7 +311,7 @@ function ContratoModal({
               onChange={(e) => setClienteId(e.target.value)}
               className="input w-full"
             >
-              <option value="">Selecione...</option>
+              <option value="">Selecione…</option>
               {clientes.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nome}
@@ -407,7 +407,7 @@ function ContratoModal({
             disabled={salvando || !clienteId}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>

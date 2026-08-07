@@ -616,7 +616,7 @@ function EtapaDados({
           <FieldLabel>Observações gerais</FieldLabel>
           <DarkTextarea
             rows={4}
-            placeholder="Condições climáticas, acesso, acompanhante responsável..."
+            placeholder="Condições climáticas, acesso, acompanhante responsável…"
             value={dados.observacoesGerais}
             onChange={(event) => onChange({ ...dados, observacoesGerais: event.target.value })}
           />
@@ -762,7 +762,7 @@ function EtapaEdificio({
         <div>
           <FieldLabel>Tipo de cobertura</FieldLabel>
           <DarkInput
-            placeholder="Ex: laje impermeabilizada, telha metálica..."
+            placeholder="Ex: laje impermeabilizada, telha metálica…"
             value={edificio.cobertura}
             onChange={(event) => onEdificioChange({ ...edificio, cobertura: event.target.value })}
           />

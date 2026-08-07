@@ -57,7 +57,7 @@ export function CustosPessoalPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -221,7 +221,7 @@ function CustoModal({
               onChange={(e) => setFuncionarioId(e.target.value)}
               className="input w-full"
             >
-              <option value="">Selecione...</option>
+              <option value="">Selecione…</option>
               {funcionarios.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.nome}
@@ -276,7 +276,7 @@ function CustoModal({
             disabled={salvando}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>

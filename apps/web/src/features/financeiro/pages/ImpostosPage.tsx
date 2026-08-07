@@ -89,7 +89,7 @@ export function ImpostosPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -168,7 +168,7 @@ export function ImpostosPage() {
                   className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
-                  {provisionando ? "Calculando..." : "Provisionar"}
+                  {provisionando ? "Calculando…" : "Provisionar"}
                 </button>
               </div>
             )}
@@ -392,7 +392,7 @@ function ConfigForm({
         disabled={salvando}
         className="mt-4 h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
       >
-        {salvando ? "Salvando..." : "Salvar configuração"}
+        {salvando ? "Salvando…" : "Salvar configuração"}
       </button>
     </section>
   );

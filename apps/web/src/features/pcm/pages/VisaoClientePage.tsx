@@ -582,7 +582,7 @@ function PainelGrupos({ grupos }: { grupos: GrupoClienteResumo[] }) {
   );
 }
 
-/** E01-S103: responsável/representante do cliente (síndico, gerente predial...) — cadastro local
+/** E01-S103: responsável/representante do cliente (síndico, gerente predial…) — cadastro local
  * editável, distinto de `PainelContatos` (read-only, sincronizado do Auvo). Pode ter mais de um. */
 function PainelResponsaveis({
   clienteId,
@@ -619,7 +619,7 @@ function PainelResponsaveis({
         <div>
           <h3 className="text-sm font-semibold text-ink">Responsáveis</h3>
           <p className="mt-0.5 text-xs text-ink-3">
-            Representantes do cliente (síndico, gerente predial...) — cadastro local
+            Representantes do cliente (síndico, gerente predial…) — cadastro local
           </p>
         </div>
         {temEscrita && (

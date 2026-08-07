@@ -265,7 +265,7 @@ export function LancamentosPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -463,7 +463,7 @@ export function LancamentosPage() {
                             className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink disabled:opacity-50"
                           >
                             <Paperclip className="h-3.5 w-3.5" />
-                            {anexandoId === lancamento.id ? "Enviando..." : "Anexar comprovante"}
+                            {anexandoId === lancamento.id ? "Enviando…" : "Anexar comprovante"}
                           </button>
                         )}
                       {lancamento.comprovantePath && (
@@ -838,7 +838,7 @@ function LancamentoModal({
               onChange={(e) => setCategoriaId(e.target.value)}
               className="input w-full"
             >
-              <option value="">Selecione...</option>
+              <option value="">Selecione…</option>
               {raizesDoTipo.map((raiz) => (
                 <optgroup key={raiz.id} label={raiz.nome}>
                   <option value={raiz.id}>{raiz.nome}</option>
@@ -910,7 +910,7 @@ function LancamentoModal({
             disabled={salvando || !categoriaId}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>
@@ -973,7 +973,7 @@ function BaixaModal({
             disabled={confirmando}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {confirmando ? "Confirmando..." : "Confirmar baixa"}
+            {confirmando ? "Confirmando…" : "Confirmar baixa"}
           </button>
         </div>
       </div>
@@ -1091,7 +1091,7 @@ function CorrigirModal({
             disabled={salvando}
             className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar correção"}
+            {salvando ? "Salvando…" : "Salvar correção"}
           </button>
         </div>
       </div>
