@@ -8,8 +8,10 @@ export function criarPayloadTexto(remoteJid: string, text: string): Record<strin
   const conteudo = text.trim();
   if (!number) throw new Error("Destinatário Evolution é obrigatório");
   if (!conteudo) throw new Error("Texto Evolution é obrigatório");
-  // Evolution API 2.3+: `textMessage.text`, não o payload legado `{ text }`.
-  return { number, textMessage: { text: conteudo } };
+  // Confirmado contra a instância real em produção (2026-08-07): rejeita `textMessage.text`
+  // ("instance requires property \"text\"") — a doc/suposição de `textMessage.text` (Evolution
+  // 2.3+) não bate com esta instância. Corpo plano `{ number, text }` é o que funciona de fato.
+  return { number, text: conteudo };
 }
 
 export async function responderEvolution(

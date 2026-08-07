@@ -1,10 +1,10 @@
 import { assertEquals, assertThrows } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { criarPayloadTexto, telefoneParaRemoteJid } from "./evolution.ts";
 
-Deno.test("Evolution 2.3 — texto usa number + textMessage.text", () => {
+Deno.test("Evolution — texto usa number + text (payload plano, confirmado contra instância real)", () => {
   assertEquals(criarPayloadTexto("5511999999999@s.whatsapp.net", " Olá "), {
     number: "5511999999999@s.whatsapp.net",
-    textMessage: { text: "Olá" },
+    text: "Olá",
   });
 });
 

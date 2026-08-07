@@ -76,6 +76,33 @@ salvar a chave — o badge "configurado" da UI provavelmente lê esse campo em v
 `fn_integracao_tem_segredo`, explicando "continua dizendo que não está configurado". Achado na
 sessão, não investigado a fundo nem corrigido — pendente pra quando a UI for revisada.
 
+## 2026-08-07 (cont. 2) — E02-S01: payload de texto do Evolution corrigido contra instância real
+
+Lucas testou o Inbox de Atendimento em produção (`so-sinergica.netlify.app`) e achou dois 5xx: envio
+de texto (400 do Evolution) e "Responder com IA agora" (502). Sem acesso a log do Supabase
+inicialmente (CLI desta versão não tem `functions logs`); Lucas forneceu Personal Access Token
+próprio (`.env.local` já tinha um, `SUPABASE_ACCESS_TOKEN`) — consulta via Management API
+(`analytics/endpoints/logs.all`, tabela `function_edge_logs`, precisa de `iso_timestamp_start/end`
+explícito) não achou rastro das chamadas reais nas últimas 24h, então priorizei melhorar a
+observabilidade em vez de continuar caçando log: `_shared/evolution.ts` e o branch `acionar_ia` de
+`atendimento-whatsapp-envio` passaram a capturar e propagar o corpo real da resposta de erro
+(deploy autorizado, smoke 401 confirmado).
+
+**Resultado: funcionou.** Lucas testou de novo e a bolha do chat mostrou o corpo real do Evolution:
+`{"status":400,"error":"Bad Request","response":{"message":["instance requires property \"text\""]}}`.
+Achado: `criarPayloadTexto` mandava `{ number, textMessage: { text } }` (comentário dizia "Evolution
+2.3+ usa textMessage.text, não o payload legado") — a instância real da Sinérgica rejeita esse
+formato e quer `{ number, text }` plano. Corrigido, comentário atualizado com a evidência real
+(prioridade sobre suposição de doc nunca validada). `evolution.test.ts` ajustado.
+
+**502 do "Responder com IA agora" segue sem causa raiz confirmada** — o toast genérico do SDK
+(`Edge Function returned a non-2xx status code`) indica que a chamada externa a
+`atendimento-whatsapp-envio` morreu antes de qualquer resposta controlada (não é um erro capturado
+pelo try/catch novo). Hipótese: `pcm-ze-agent` roda OpenRouter + RAG + várias queries em série,
+síncrono, dentro do tempo de execução de `atendimento-whatsapp-envio` — plausível estourar timeout.
+Não investigado a fundo; precisa de decisão de arquitetura (ex.: acionar_ia virar fire-and-forget)
+antes de mexer, não é fix de 1 linha.
+
 ## 2026-08-07 (cont.) — Fix: formulário perdido ao trocar de aba (39 telas afetadas)
 
 Lucas reportou perda de formulário não salvo ao trocar de aba do navegador, reproduzido na tela de
