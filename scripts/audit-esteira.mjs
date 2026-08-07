@@ -18,6 +18,9 @@ const IGNORE_DIRS = new Set([
   // Definições de subagente (.claude/agents) e auto-memory (.claude/agent-memory) — geradas/
   // gerenciadas pelo harness, não são docs da esteira SDD e não seguem nenhum dos dois dialetos.
   "agents", "agent-memory",
+  // Skills instaladas pelo harness (.claude/skills, .agents/skills) — mesmo raciocínio acima,
+  // formato próprio do Claude Code, não é doc da esteira SDD deste projeto.
+  "skills",
 ]);
 const NO_FRONTMATTER_OK = new Set([
   "README.md", "CHANGELOG.md", "Definition-of-Done.md", "pull_request_template.md",
