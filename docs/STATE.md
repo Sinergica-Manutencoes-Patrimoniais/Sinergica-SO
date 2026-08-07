@@ -56,6 +56,26 @@ configurado neste repo — ver `feedback-sempre-rodar-playwright.md`, motivo de 
 Playwright manualmente). Depois do merge: liberar a porta 5173 pra rodar Playwright de verdade,
 implementar E01-S121 (tasks 2–6, contrato já confirmado), decidir E01-S122 (campo de contrato).
 
+**PR #55 mergeado em main (`5e6d170`).**
+
+## 2026-08-06 (cont. 3) — Import de inspeção não funcionava: função em produção estava desatualizada
+
+Lucas configurou a chave OpenRouter pela UI (`Configurações > Integrações`) e a inspeção continuou
+sem funcionar. Diagnóstico: `importar-relatorio-pdf` (v26) e `pcm-auvo-webhook` estavam rodando o
+bundle de antes da integração Vault (E00-S13) existir no `_shared/openrouter.ts` — Edge Function
+empacota `_shared/*` no deploy, não lê o arquivo em runtime; sem redeploy, o código novo nunca ia
+pro ar mesmo com o secret certo nos dois lugares (Vault via UI, confirmado em `vault.secrets`
+`updated_at` recente; env fallback setado por mim mais cedo). Autorizado pelo Lucas, redeployado
+`importar-relatorio-pdf` e `pcm-auvo-webhook` via `--use-api`; smoke 401 (não 404) nas duas.
+
+**Bug real encontrado, não corrigido (Lucas pediu pra resolver depois):** `config.integracoes`
+grava `config_publico.modelo`, mas `_shared/openrouter.ts` lê `config_publico.import_model` — o
+seletor de modelo da UI nunca chega no código (sempre cai no fallback `OPENROUTER_IMPORT_MODEL`/
+`google/gemini-2.5-flash`). Também: `ativo`/`configurado_em` continuam `false`/`null` mesmo após
+salvar a chave — o badge "configurado" da UI provavelmente lê esse campo em vez de
+`fn_integracao_tem_segredo`, explicando "continua dizendo que não está configurado". Achado na
+sessão, não investigado a fundo nem corrigido — pendente pra quando a UI for revisada.
+
 ## 2026-08-06 — Lote continua (Codex)
 
 - E01-S125 local concluída: auditoria dos produtores, migration `0168` remove trigger automático,
