@@ -1521,3 +1521,83 @@ recado; os 3 primeiros viraram esta story, o 4º foi só investigado (ver abaixo
   `apps/web/e2e/atendimento-historico-chamado.spec.ts`, preservado.
 - **Próximo:** ligar Docker e rodar `supabase test db`; aplicar migrations/Edge Function em ambiente
   de preview; executar Playwright/UAT como `cliente-sindico`; só então marcar E09 verificado.
+
+---
+
+## 2026-08-07 — Lote visual E00-S14..S23: análise + fundação completa (Claude Opus 5)
+
+Lucas instalou skills de design (`apple-design`, `emil-design-eng`, etc.) e pediu revisão da UI
+do produto pra "tirar a cara de IA". Análise não achou o estereótipo (zero gradiente, zero emoji)
+— achou 812 hex cru fora dos tokens, 1 primitiva de UI compartilhada (`Tooltip`), diálogo nativo
+do browser (`window.confirm`/`alert`), zero skeleton, zero movimento. Virou 10 stories
+(E00-S14..S23) com spec+tasks, 2 ADRs (0017: primitivas em `packages/ui` + Radix headless nas de
+sobreposição; 0018: CSS+WAAPI, sem lib de mola). Lucas: "implemente todas as specs e depois
+subimos tudo".
+
+**Implementado e commitado nesta sessão (9 commits em `feat/planejamento-lote-2026-08-04`):**
+
+- **E00-S14** — 12 tokens de status (success/warning/danger/info × main/soft/line) + escalas de
+  raio/sombra/movimento/tipografia em `index.css`. Codemod por distância **HSL** (não RGB — RGB
+  confundia marrom-aviso com vermelho-erro num caso real) migrou 812 hex em 105 arquivos.
+  Achados: sidebar navy precisa de token fixo (`--color-nav-ink`, não flipa no escuro, senão o
+  texto sumiria contra a sidebar que continua escura); success/warning originais não batiam
+  contraste AA contra o próprio `-soft` (3.75:1/3.80:1) — escurecidos até 4.5:1+; gate cobria só
+  `.tsx`, 3 arquivos `.ts` de domínio escapavam. Projeto não tinha `jsdom`/`testing-library` —
+  instalado (necessário pro resto do lote).
+- **E00-S15** — `packages/ui` saiu de placeholder (existia desde a fundação do projeto, nunca
+  construído) pra: `Button`, `Badge`, `Card`/`EmptyState`, `Field`, `Input`/`Select`/`Textarea`,
+  `Modal` (Radix Dialog — **Radix 1.1 não seta `aria-modal` sozinho**, precisou explícito),
+  `DataTable` (sticky, scroll contido, ordenação, skeleton nas linhas, navegável por teclado —
+  `onClick` sem `onKeyDown` pegou no lint), `Skeleton`, `Tooltip` (migrado de `apps/web`, 10
+  chamadores), `useValidacaoCampo` (zod, valida no blur), galeria `/ui`. Migração completa:
+  Tooltip + radius (879 ocorrências). Migração pendente: 92 botões/56 modais/17 tabelas crus —
+  gate escrito (`check-primitivas.mjs`), não plugado no lefthook até migrar.
+- **E00-S16** — `ToastProvider`/`useToast`, `ConfirmDialog` (foco no Cancelar via
+  `data-autofoco` — Radix focaria o X do cabeçalho por padrão), `useAcaoComDesfazer`.
+  **Achado que revisou a spec:** nenhuma entidade "Desativar" (equipe, tag, categoria, kit…) tem
+  operação de reativar no backend hoje — `useAcaoComDesfazer` fica pronto e testado, mas seu uso
+  real depende de trabalho de backend fora de escopo. Migrados de ponta a ponta:
+  `TiposTarefaPage`, `EquipesPage`, `MarcacoesClientePage`. Pendente: 28 `confirm()`/`alert()`
+  em 24 arquivos.
+- **E00-S17** — `useCargaVisivel` (200ms delay / 400ms mínimo), `EmptyState` com variante
+  vazio/filtrado. Codemod de reticência (100 ocorrências `...`→`…`) — regra exclui spread/rest
+  (`...props`, `[...(expr)]`) por não seguir letra/`_`/`$`/`(`, achado real no dry-run.
+- **E00-S20** — codemod de sombra (108 ocorrências: `shadow-xl`→`shadow-modal`,
+  `shadow-2xl`→`shadow-drawer`, duplicatas manuais→`shadow-raised`), mapeado por contexto real
+  de uso, não só valor mais próximo.
+- **E00-S19** — rede de segurança universal de `prefers-reduced-motion` (seletor `*` em vez de
+  auditar caso a caso), gate anti-biblioteca-de-animação (ADR-0018).
+- **E00-S18** — 232 ocorrências de `text-[9/10/11px]`→`text-micro` (11px — AC-1 exige não ficar
+  abaixo disso), `NumeroTabular`. Pendente: ~2500 usos de `text-xs/sm/base/lg/xl` — diferente de
+  cor/raio/sombra, o valor em pixel já bate, então não é codemod de valor-mais-próximo, é
+  julgamento de hierarquia por site.
+- **E00-S22** — `check-div-clicavel.mjs` (rastreia profundidade de `{}` pra achar o fim real da
+  tag JSX — `=>` de arrow function tem um `>` no meio do caminho, scanner ingênuo erra). Achou 2
+  casos: 1 falso positivo legítimo (scrim `aria-hidden`, Esc já cobre teclado), 1 bug real em
+  `BacklogGutPage.tsx` (linha inteira clicável sem alcance por teclado — corrigido com
+  `role="button"`+`tabIndex`+`onKeyDown`, não virou `<button>` porque tem um `<button>` aninhado
+  mais abaixo). `theme-context` já implementava troca de tema corretamente (localStorage vence,
+  senão segue o sistema) — só faltava a transição suave.
+- **E00-S21** — `design.md` (tier arquitetural, exigido antes de implementar). Decisão: `nav-guard`
+  troca `window.confirm` síncrono por `unstable_useBlocker` do react-router — resolve ao mesmo
+  tempo o `window.confirm` pendente de E00-S16 e a integração de rota. Achado: `netlify.toml` já
+  tem o rewrite SPA, não é prerequisito novo. **Implementação não iniciada** (lote 2).
+- **E00-S23** — spec escrita, implementação não iniciada (precisa de navegador real pra testar
+  gesto de arrasto, indisponível nesta sessão).
+
+**7 gates novos no pre-push** (todos verdes): `tokens-cor`, `catch-silencioso`, `reticencia`,
+`sombras`, `movimento`, `tipografia`, `div-clicavel`. `ci:local` completo (17 gates) verde —
+`testes` deu falha uma vez isolada (flaky, provável timing Radix+jsdom), limpo em duas rodadas
+seguintes e via `pnpm test` direto.
+
+**Não feito, documentado explicitamente em cada commit:** migração exaustiva de botão/modal/
+tabela cru (S15), `confirm()`/`alert()` restantes (S16), rollout de skeleton pras 70 páginas
+(S17), rollout da escala tipográfica nomeada (S18), chrome translúcido + borda de rolagem (S20),
+`axe-core`/Playwright real (S22, mesmo bloqueio de porta 5173 de sessões anteriores — sem
+navegador disponível nesta sessão pra testar visualmente nada do lote), implementação de S21/S23.
+
+**Próximo passo:** Lucas decide sobre dar push do que foi commitado nesta sessão — 10 commits à
+frente do remoto, mesma branch do **PR #56** (`E01-S139: identidade visual nos PDFs de
+relatório`, ainda aberto, https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/pull/56).
+Depois: escolher entre continuar a migração exaustiva de cada story (S15/S16/S17/S18) ou avançar
+pro lote 2 (S21/S23).
