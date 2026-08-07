@@ -157,10 +157,19 @@ export function BacklogGutPage() {
           ) : (
             estado.ordens.map((ordem, index) => (
               <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)}>
-                {/* biome-ignore lint/a11y/useKeyWithClickEvents: linha tem foco/teclado via Tooltip + botões internos já acessíveis */}
+                {/* biome-ignore lint/a11y/useSemanticElements: não pode virar <button> — a linha
+                    tem um <button> aninhado mais abaixo, e botão dentro de botão é HTML inválido. */}
                 <div
-                  className="px-4 py-3 flex flex-col gap-3 lg:flex-row lg:items-center cursor-pointer hover:bg-line-soft"
+                  role="button"
+                  tabIndex={0}
+                  className="px-4 py-3 flex flex-col gap-3 lg:flex-row lg:items-center cursor-pointer hover:bg-line-soft focus-visible:outline-2 focus-visible:outline-orange/75 focus-visible:-outline-offset-2"
                   onClick={() => setEditando(ordem)}
+                  onKeyDown={(evento) => {
+                    if (evento.key === "Enter" || evento.key === " ") {
+                      evento.preventDefault();
+                      setEditando(ordem);
+                    }
+                  }}
                 >
                   <div className="flex items-center gap-3 lg:w-20">
                     <span className="text-xl font-bold text-line font-brand">{index + 1}</span>

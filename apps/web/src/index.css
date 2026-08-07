@@ -124,6 +124,13 @@
     font-family: "Poppins", system-ui, sans-serif;
     background: var(--color-paper);
     color: var(--color-ink);
+    /* E00-S22 AC-2 — troca de tema sem salto brusco de brilho. */
+    transition: background-color var(--duration-slow) var(--ease-out);
+  }
+  html,
+  html * {
+    transition: background-color var(--duration-slow) var(--ease-out), border-color
+      var(--duration-slow) var(--ease-out), color var(--duration-slow) var(--ease-out);
   }
 
   body {

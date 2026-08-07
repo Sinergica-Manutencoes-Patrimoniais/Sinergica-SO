@@ -51,6 +51,8 @@ pre-push:
       run: node scripts/check-movimento.mjs # 0 transition-all, 0 lib de animação (E00-S19/ADR-0018)
     tipografia:
       run: node scripts/check-tipografia.mjs # 0 text-[Npx] arbitrário (E00-S18)
+    div-clicavel:
+      run: node scripts/check-div-clicavel.mjs # 0 div/span com onClick sem role+tabIndex (E00-S22)
     lint:
       run: pnpm exec biome check .
     typecheck:
