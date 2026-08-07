@@ -338,6 +338,41 @@
       opacity: 0.7;
     }
   }
+
+  /* E00-S16 — toast entra/sai pelo canto onde vive (inferior direito), nunca centrado. */
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes toast-out {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+  }
+  .anim-toast {
+    animation: toast-in var(--duration-base) var(--ease-out) forwards;
+  }
+  .anim-toast[data-state="closed"] {
+    animation: toast-out var(--duration-fast) var(--ease-out) forwards;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .anim-toast,
+    .anim-toast[data-state="closed"] {
+      animation-duration: 1ms;
+      transform: none;
+    }
+  }
 }
 
 @layer utilities {

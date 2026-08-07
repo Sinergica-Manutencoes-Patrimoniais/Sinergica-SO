@@ -1,5 +1,6 @@
 // MarcacoesClientePage.tsx — E01-S91 AC-1. Catálogo gerenciável de marcações de status de cliente
 // (nome+cor) — Configurações → PCM.
+import { ConfirmDialog } from "@sinergica/ui";
 import { Edit3, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -34,6 +35,7 @@ export function MarcacoesClientePage() {
   const [cor, setCor] = useState(COR_PADRAO);
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [itemParaExcluir, setItemParaExcluir] = useState<MarcacaoCliente | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -86,18 +88,10 @@ export function MarcacoesClientePage() {
     }
   }
 
-  async function onExcluir(item: MarcacaoCliente) {
-    if (!window.confirm(`Excluir "${item.nome}"?`)) return;
-    setSalvando(true);
-    setErroAcao(null);
-    try {
-      await excluirMarcacao(supabaseMarcacoesClienteAdapter, item.id);
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir.");
-    } finally {
-      setSalvando(false);
-    }
+  async function onExcluir() {
+    if (!itemParaExcluir) return;
+    await excluirMarcacao(supabaseMarcacoesClienteAdapter, itemParaExcluir.id);
+    await carregar();
   }
 
   if (permissoesCarregando) {
@@ -190,7 +184,7 @@ export function MarcacoesClientePage() {
                     <button
                       type="button"
                       disabled={salvando}
-                      onClick={() => onExcluir(item)}
+                      onClick={() => setItemParaExcluir(item)}
                       className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                       title="Excluir"
                     >
@@ -276,6 +270,16 @@ export function MarcacoesClientePage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={itemParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaExcluir(null);
+        }}
+        titulo={`Excluir "${itemParaExcluir?.nome}"`}
+        descricao="Esta ação não pode ser desfeita."
+        onConfirmar={onExcluir}
+      />
     </div>
   );
 }

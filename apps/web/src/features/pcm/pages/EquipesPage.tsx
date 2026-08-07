@@ -1,3 +1,4 @@
+import { ConfirmDialog } from "@sinergica/ui";
 import { Pencil, Plus, RefreshCw, Trash2, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -26,6 +27,7 @@ export function EquipesPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [equipeParaDesativar, setEquipeParaDesativar] = useState<EquipeItem | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -66,15 +68,10 @@ export function EquipesPage() {
     await carregar();
   }
 
-  async function desativar(equipe: EquipeItem) {
-    if (!user || !confirm(`Desativar ${equipe.nome}? A exclusão será apenas local no PCM.`)) return;
-    try {
-      setErroAcao(null);
-      await desativarEquipe(supabaseEquipesAdapter, { id: equipe.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
-    }
+  async function desativar() {
+    if (!user || !equipeParaDesativar) return;
+    await desativarEquipe(supabaseEquipesAdapter, { id: equipeParaDesativar.id, userId: user.id });
+    await carregar();
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
@@ -180,7 +177,7 @@ export function EquipesPage() {
                     label="Desativar local"
                     danger
                     icon={<Trash2 className="h-3.5 w-3.5" />}
-                    onClick={() => desativar(equipe)}
+                    onClick={() => setEquipeParaDesativar(equipe)}
                   />
                 )}
               </div>
@@ -197,6 +194,17 @@ export function EquipesPage() {
           onSalvar={salvar}
         />
       )}
+
+      <ConfirmDialog
+        open={equipeParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setEquipeParaDesativar(null);
+        }}
+        titulo={`Desativar "${equipeParaDesativar?.nome}"`}
+        descricao="A exclusão será apenas local no PCM — o histórico não é apagado."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
     </div>
   );
 }

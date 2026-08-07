@@ -31,6 +31,18 @@ export function Modal({
         <Dialog.Overlay className="anim-overlay fixed inset-0 z-50 bg-navy-deep/60 p-3 backdrop-blur-[2px] sm:p-4" />
         <Dialog.Content
           aria-modal="true"
+          onOpenAutoFocus={(evento) => {
+            // Foco padrão do Radix cai no primeiro elemento focável (o X do cabeçalho) — quando
+            // o chamador marca um elemento com `data-autofoco` (ex.: o botão Cancelar de um
+            // ConfirmDialog, nunca o destrutivo), o foco vai pra ele em vez do padrão.
+            const alvo = (evento.target as HTMLElement).querySelector<HTMLElement>(
+              "[data-autofoco]",
+            );
+            if (alvo) {
+              evento.preventDefault();
+              alvo.focus();
+            }
+          }}
           className={`anim-surface fixed top-1/2 left-1/2 z-50 w-[calc(100vw-1.5rem)] rounded-xl border border-line bg-card shadow-modal focus:outline-none ${TAMANHO[tamanho]}`}
         >
           <div className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden">

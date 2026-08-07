@@ -1,3 +1,4 @@
+import { ConfirmDialog } from "@sinergica/ui";
 import { Edit3, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -39,6 +40,7 @@ export function TiposTarefaPage() {
   const [modal, setModal] = useState<ModalState | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [tipoParaExcluir, setTipoParaExcluir] = useState<TipoTarefa | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -94,21 +96,13 @@ export function TiposTarefaPage() {
     }
   }
 
-  async function onExcluir(tipo: TipoTarefa) {
-    if (!user) return;
-    const confirmado = window.confirm(`Excluir "${tipo.nome}"?`);
-    if (!confirmado) return;
-
-    setSalvando(true);
-    setErroAcao(null);
-    try {
-      await excluirTipoTarefa(supabaseTiposTarefaAdapter, { id: tipo.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir.");
-    } finally {
-      setSalvando(false);
-    }
+  async function onExcluir() {
+    if (!user || !tipoParaExcluir) return;
+    await excluirTipoTarefa(supabaseTiposTarefaAdapter, {
+      id: tipoParaExcluir.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   if (permissoesCarregando) {
@@ -246,8 +240,7 @@ export function TiposTarefaPage() {
                           </button>
                           <button
                             type="button"
-                            disabled={salvando}
-                            onClick={() => onExcluir(tipo)}
+                            onClick={() => setTipoParaExcluir(tipo)}
                             className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                             title="Excluir"
                           >
@@ -273,6 +266,16 @@ export function TiposTarefaPage() {
           onSalvar={onSalvar}
         />
       )}
+
+      <ConfirmDialog
+        open={tipoParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setTipoParaExcluir(null);
+        }}
+        titulo={`Excluir "${tipoParaExcluir?.nome}"`}
+        descricao="Esta ação não pode ser desfeita."
+        onConfirmar={onExcluir}
+      />
     </div>
   );
 }

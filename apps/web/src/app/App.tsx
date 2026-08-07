@@ -1,4 +1,4 @@
-import { TooltipProvider } from "@sinergica/ui";
+import { ToastProvider, TooltipProvider } from "@sinergica/ui";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { PortalShell } from "../features/area-cliente/PortalShell";
 import { deveUsarPortal } from "../features/area-cliente/domain/roteamento";
@@ -66,37 +66,39 @@ export function App() {
     <ThemeProvider>
       <AuthProvider>
         <PermissoesProvider>
-          <TooltipProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route
-                  path="/login"
-                  element={
-                    <PublicOnly>
-                      <LoginPage />
-                    </PublicOnly>
-                  }
-                />
-                <Route
-                  path="/"
-                  element={
-                    <RequireAuth>
-                      <EntradaAutenticada />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/ui"
-                  element={
-                    <RequireAuth>
-                      <GaleriaUiProtegida />
-                    </RequireAuth>
-                  }
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
+          <ToastProvider>
+            <TooltipProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route
+                    path="/login"
+                    element={
+                      <PublicOnly>
+                        <LoginPage />
+                      </PublicOnly>
+                    }
+                  />
+                  <Route
+                    path="/"
+                    element={
+                      <RequireAuth>
+                        <EntradaAutenticada />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/ui"
+                    element={
+                      <RequireAuth>
+                        <GaleriaUiProtegida />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </ToastProvider>
         </PermissoesProvider>
       </AuthProvider>
     </ThemeProvider>
