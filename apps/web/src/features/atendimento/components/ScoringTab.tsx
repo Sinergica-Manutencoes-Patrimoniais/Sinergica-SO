@@ -74,7 +74,7 @@ export function ScoringTab({
         />
       </div>
       {erro && (
-        <div className="mt-4 rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2 text-sm text-[#A12D24]">
+        <div className="mt-4 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erro}
         </div>
       )}

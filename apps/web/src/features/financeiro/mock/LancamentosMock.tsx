@@ -101,7 +101,7 @@ export function LancamentosMock() {
                 <StatusChip status={l.status} />
               </td>
               <td
-                className={`px-4 py-3 text-right tabular-nums font-semibold ${l.tipo === "entrada" ? "text-[#1E8E45]" : "text-ink"}`}
+                className={`px-4 py-3 text-right tabular-nums font-semibold ${l.tipo === "entrada" ? "text-success" : "text-ink"}`}
               >
                 {l.tipo === "entrada" ? "+ " : "− "}
                 {brl(l.valor)}
@@ -136,7 +136,7 @@ function NovoLancamentoModal({ onFechar }: { onFechar: () => void }) {
           <button
             type="button"
             onClick={() => setTipo("entrada")}
-            className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "entrada" ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-card text-ink-2"}`}
+            className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "entrada" ? "bg-success-soft text-success" : "bg-card text-ink-2"}`}
           >
             ↓ Entrada
           </button>

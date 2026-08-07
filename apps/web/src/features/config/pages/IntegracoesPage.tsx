@@ -185,7 +185,7 @@ export function IntegracoesPage() {
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -202,7 +202,7 @@ export function IntegracoesPage() {
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                 emailIntegracao?.temSegredo
-                  ? "bg-[#EAF8EF] text-[#267343]"
+                  ? "bg-success-soft text-success"
                   : "bg-line-soft text-ink-3"
               }`}
             >
@@ -296,7 +296,7 @@ export function IntegracoesPage() {
             </div>
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                temAccessTokenMp ? "bg-[#EAF8EF] text-[#267343]" : "bg-line-soft text-ink-3"
+                temAccessTokenMp ? "bg-success-soft text-success" : "bg-line-soft text-ink-3"
               }`}
             >
               {temAccessTokenMp ? "Access token configurado" : "Access token não configurado"}

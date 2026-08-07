@@ -189,13 +189,13 @@ export function LaudosSpdaPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
 
       {temEscrita && semClientes && (
-        <div className="rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+        <div className="rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
           Nenhum cliente disponível no PCM. Execute o import Auvo para liberar laudos SPDA
           vinculados a condomínios reais.
         </div>

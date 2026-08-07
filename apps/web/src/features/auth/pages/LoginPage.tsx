@@ -53,11 +53,11 @@ export function LoginPage() {
           <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.035em] xl:text-4xl">
             Operação, atendimento e gestão em um só lugar.
           </h1>
-          <p className="mt-4 max-w-md text-sm leading-7 text-[#B9C1D8]">
+          <p className="mt-4 max-w-md text-sm leading-7 text-info-line">
             Informação operacional clara para a equipe decidir mais rápido e executar melhor.
           </p>
         </div>
-        <p className="relative text-xs text-[#8792B2]">Sinérgica Manutenções Patrimoniais</p>
+        <p className="relative text-xs text-ink-3">Sinérgica Manutenções Patrimoniais</p>
       </section>
 
       <section className="flex min-h-screen items-center justify-center p-4 sm:p-8">

@@ -39,7 +39,7 @@ function PassoNode({ data }: NodeProps<Node<PassoNodeData>>) {
           <button
             type="button"
             onClick={() => onExcluir(passo.id)}
-            className="shrink-0 rounded-[6px] p-1.5 text-ink-3 hover:bg-line-soft hover:text-[#A12D24]"
+            className="shrink-0 rounded-[6px] p-1.5 text-ink-3 hover:bg-line-soft hover:text-danger"
             title="Excluir passo"
           >
             <Trash2 className="h-3.5 w-3.5" />

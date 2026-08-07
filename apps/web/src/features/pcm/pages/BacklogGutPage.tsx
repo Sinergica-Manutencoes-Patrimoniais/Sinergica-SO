@@ -132,7 +132,7 @@ export function BacklogGutPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
@@ -181,7 +181,7 @@ export function BacklogGutPage() {
                         {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                       </span>
                       {ordem.origemInspecaoItemId && (
-                        <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-[#EAEEF8] text-[#2E3C70]">
+                        <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-info-soft text-info">
                           Origem: Inspeção
                         </span>
                       )}

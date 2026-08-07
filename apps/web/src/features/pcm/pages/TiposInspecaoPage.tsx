@@ -157,7 +157,7 @@ export function TiposInspecaoPage() {
           </p>
         )}
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -300,7 +300,7 @@ function TipoModal({
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -433,7 +433,7 @@ function TemplateModal({
                   <button
                     type="button"
                     onClick={() => setItens((atual) => atual.filter((_, i) => i !== indice))}
-                    className="text-xs font-semibold text-[#A23B25] hover:underline"
+                    className="text-xs font-semibold text-danger hover:underline"
                   >
                     Remover
                   </button>
@@ -454,7 +454,7 @@ function TemplateModal({
             </button>
           </div>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

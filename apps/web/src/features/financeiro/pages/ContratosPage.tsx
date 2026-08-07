@@ -164,7 +164,7 @@ export function ContratosPage() {
         </div>
         {mensagemGeracao && <p className="mt-3 text-sm text-ink-3">{mensagemGeracao}</p>}
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -195,7 +195,7 @@ export function ContratosPage() {
                 <p className="mt-3 text-sm text-ink-3">{contrato.descricao}</p>
               )}
               {contrato.bloqueiaOsEmAtraso && (
-                <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#9A6B00]">
+                <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-warning">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   Bloqueia OS em atraso (aviso — sem enforcement no PCM)
                 </p>
@@ -231,9 +231,9 @@ export function ContratosPage() {
 
 function StatusBadge({ status }: { status: ContratoStatus }) {
   const estilos: Record<ContratoStatus, string> = {
-    ativo: "bg-[#E7F6EC] text-[#1E8E45]",
-    suspenso: "bg-[#FFF6E5] text-[#9A6B00]",
-    encerrado: "bg-[#EFF1F4] text-[#5A6175]",
+    ativo: "bg-success-soft text-success",
+    suspenso: "bg-warning-soft text-warning",
+    encerrado: "bg-line-soft text-ink-2",
   };
   const rotulos: Record<ContratoStatus, string> = {
     ativo: "Ativo",
@@ -388,7 +388,7 @@ function ContratoModal({
             />
           </label>
           {erro && (
-            <div className="sm:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="sm:col-span-2 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

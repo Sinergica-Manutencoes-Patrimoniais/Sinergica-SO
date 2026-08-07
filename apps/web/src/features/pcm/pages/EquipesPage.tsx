@@ -125,12 +125,12 @@ export function EquipesPage() {
             </button>
           )}
         </div>
-        <div className="mt-3 rounded-[6px] border border-[#F4D28C] bg-[#FFF8E8] px-3 py-2 text-sm text-[#7A4D00]">
+        <div className="mt-3 rounded-[6px] border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
           Alterações em Equipes já sincronizadas não refletem no Auvo. Para mudar participantes lá,
           use o app Auvo.
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -153,7 +153,7 @@ export function EquipesPage() {
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${equipe.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${equipe.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
                 >
                   {equipe.ativo ? "Ativa" : "Inativa"}
                 </span>
@@ -165,7 +165,7 @@ export function EquipesPage() {
                 Gestores: {equipe.gestoresNomes.join(", ") || "nenhum"}
               </p>
               {equipe.auvoSyncError && (
-                <p className="mt-2 text-xs text-[#A23B25]">{equipe.auvoSyncError}</p>
+                <p className="mt-2 text-xs text-danger">{equipe.auvoSyncError}</p>
               )}
               <div className="mt-4 flex justify-end gap-2">
                 {temEscrita && (
@@ -258,7 +258,7 @@ function EquipeModal({
         </div>
         <div className="max-h-[70vh] overflow-y-auto p-4">
           {equipe?.auvoId && (
-            <div className="mb-3 rounded-[6px] border border-[#F4D28C] bg-[#FFF8E8] px-3 py-2 text-sm text-[#7A4D00]">
+            <div className="mb-3 rounded-[6px] border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
               Esta edição será apenas local no PCM.
             </div>
           )}
@@ -283,7 +283,7 @@ function EquipeModal({
             onToggle={(id) => toggle("gestorIds", id)}
           />
           {erro && (
-            <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -354,7 +354,7 @@ function IconButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-3 text-xs font-semibold ${danger ? "border-[#F2C0B5] text-[#A23B25] hover:bg-[#FFF4F1]" : "border-line text-ink-2 hover:bg-line-soft"}`}
+      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-3 text-xs font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
     >
       {icon}
       {label}

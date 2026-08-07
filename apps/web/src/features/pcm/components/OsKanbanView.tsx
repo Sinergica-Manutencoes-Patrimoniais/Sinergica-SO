@@ -124,7 +124,7 @@ export function OsKanbanView({
                           key={preventiva.id}
                           className="rounded-[6px] border border-line bg-card p-3"
                         >
-                          <span className="rounded-full bg-[#EAEEF8] px-2 py-0.5 text-[10px] font-semibold text-[#2E3C70]">
+                          <span className="rounded-full bg-info-soft px-2 py-0.5 text-[10px] font-semibold text-info">
                             {TIPO_MANUTENCAO_LABEL[preventiva.maintenanceType]}
                           </span>
                           <p className="mt-1.5 text-sm font-semibold text-ink">

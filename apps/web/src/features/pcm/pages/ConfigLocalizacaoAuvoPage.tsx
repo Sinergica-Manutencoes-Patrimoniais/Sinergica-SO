@@ -77,12 +77,12 @@ export function ConfigLocalizacaoAuvoPage() {
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
       {sucesso && (
-        <div className="rounded-[6px] border border-[#C7E8D2] bg-[#EAF8EF] px-4 py-2 text-sm text-[#267343]">
+        <div className="rounded-[6px] border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
           Preferência salva.
         </div>
       )}

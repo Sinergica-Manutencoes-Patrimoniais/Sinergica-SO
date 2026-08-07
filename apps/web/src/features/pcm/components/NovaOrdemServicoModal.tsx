@@ -296,12 +296,12 @@ export function NovaOrdemServicoModal({
 
         <div className="overflow-y-auto p-5 space-y-5">
           {erro && (
-            <div className="rounded-[6px] border border-[#F0C9C4] bg-[#FFF3F1] px-3 py-2 text-sm text-[#A72E24]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
           {!carregando && semClientes && (
-            <div className="rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+            <div className="rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
               Nenhum cliente disponível no PCM. Conclua o import Auvo antes de abrir OS, inspeções
               ou laudos para um condomínio.
             </div>

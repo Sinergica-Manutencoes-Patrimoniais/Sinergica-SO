@@ -98,7 +98,7 @@ export function AnotacoesChamado({
           ))}
         </ol>
       )}
-      {erro && <p className="text-xs text-[#A23B25]">{erro}</p>}
+      {erro && <p className="text-xs text-danger">{erro}</p>}
     </section>
   );
 }

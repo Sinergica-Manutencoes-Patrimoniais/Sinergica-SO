@@ -82,7 +82,7 @@ export function TagsList({
       </div>
 
       {erro && !modal && (
-        <div className="mx-5 mt-4 rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="mx-5 mt-4 rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -100,7 +100,7 @@ export function TagsList({
                 <TagIcon className="h-4 w-4 text-ink-3" />
                 <span className="font-semibold text-ink">{tag.nome}</span>
                 {!tag.ativo && (
-                  <span className="rounded-full bg-[#EFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#5A6175]">
+                  <span className="rounded-full bg-line-soft px-2 py-0.5 text-[10px] font-semibold text-ink-2">
                     Inativa
                   </span>
                 )}
@@ -120,7 +120,7 @@ export function TagsList({
                       type="button"
                       disabled={salvando}
                       onClick={() => desativar(tag)}
-                      className="rounded-[6px] border border-[#F0C2BD] p-2 text-[#A12D24] hover:bg-[#FFF4F2] disabled:opacity-50"
+                      className="rounded-[6px] border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                       title="Desativar"
                     >
                       <X className="h-4 w-4" />
@@ -167,7 +167,7 @@ export function TagsList({
                 />
               </label>
               {erro && (
-                <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+                <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
                   {erro}
                 </div>
               )}

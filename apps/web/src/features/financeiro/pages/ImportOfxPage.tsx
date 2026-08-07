@@ -188,7 +188,7 @@ export function ImportOfxPage() {
         </div>
 
         {erroImport && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroImport}
           </div>
         )}
@@ -205,7 +205,7 @@ export function ImportOfxPage() {
                   <span className="truncate">
                     {t.data} · {t.memo}
                   </span>
-                  <span className={t.valorCentavos < 0 ? "text-[#A23B25]" : "text-[#1E8E45]"}>
+                  <span className={t.valorCentavos < 0 ? "text-danger" : "text-success"}>
                     R$ {centavosParaReais(t.valorCentavos)}
                   </span>
                 </li>
@@ -329,13 +329,13 @@ function LinhaPendente({
           </p>
         </div>
         <span
-          className={`text-sm font-semibold ${transacao.valorCentavos < 0 ? "text-[#A23B25]" : "text-[#1E8E45]"}`}
+          className={`text-sm font-semibold ${transacao.valorCentavos < 0 ? "text-danger" : "text-success"}`}
         >
           R$ {centavosParaReais(transacao.valorCentavos)}
         </span>
       </div>
 
-      {erro && <p className="mt-2 text-xs text-[#A23B25]">{erro}</p>}
+      {erro && <p className="mt-2 text-xs text-danger">{erro}</p>}
 
       {temEscrita && (
         <div className="mt-3 flex flex-wrap items-center gap-2">

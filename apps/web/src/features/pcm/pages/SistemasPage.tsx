@@ -27,11 +27,14 @@ type Estado =
 
 type Modal = { modo: "novo" } | { modo: "editar"; sistema: Sistema } | null;
 
-const STATUS_LABEL_DEFAULT = { texto: "Pendente (dry-run)", classe: "bg-[#FDF1DF] text-[#9A5A00]" };
+const STATUS_LABEL_DEFAULT = {
+  texto: "Pendente (dry-run)",
+  classe: "bg-warning-soft text-warning",
+};
 const STATUS_LABEL: Record<string, { texto: string; classe: string }> = {
   pending: STATUS_LABEL_DEFAULT,
-  synced: { texto: "Sincronizado", classe: "bg-[#E7F6EC] text-[#1E8E45]" },
-  error: { texto: "Erro", classe: "bg-[#FFF4F1] text-[#A23B25]" },
+  synced: { texto: "Sincronizado", classe: "bg-success-soft text-success" },
+  error: { texto: "Erro", classe: "bg-danger-soft text-danger" },
 };
 
 export function SistemasPage() {
@@ -138,7 +141,7 @@ export function SistemasPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -213,7 +216,7 @@ export function SistemasPage() {
                       <button
                         type="button"
                         onClick={() => desativar(sistema)}
-                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-2.5 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border border-danger-line px-2.5 text-xs font-semibold text-danger hover:bg-danger-soft"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -366,7 +369,7 @@ function SistemaModal({
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

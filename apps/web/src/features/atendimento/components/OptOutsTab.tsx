@@ -85,7 +85,7 @@ export function OptOutsTab({
                 <button
                   type="button"
                   onClick={() => onRemover(o.id)}
-                  className="text-xs text-[#A12D24] hover:underline"
+                  className="text-xs text-danger hover:underline"
                 >
                   Remover
                 </button>

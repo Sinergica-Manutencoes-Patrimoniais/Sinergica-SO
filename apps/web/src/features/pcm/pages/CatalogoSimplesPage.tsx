@@ -192,7 +192,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
@@ -225,7 +225,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
                   </p>
                 </div>
                 <div>
-                  <span className="rounded-full bg-[#EFF1F4] px-2 py-1 text-xs font-semibold text-[#5A6175]">
+                  <span className="rounded-full bg-line-soft px-2 py-1 text-xs font-semibold text-ink-2">
                     {syncStatusLabel(item.auvoSyncStatus)}
                   </span>
                 </div>
@@ -243,7 +243,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
                       type="button"
                       disabled={salvando}
                       onClick={() => onExcluir(item)}
-                      className="rounded-[6px] border border-[#F0C2BD] p-2 text-[#A12D24] hover:bg-[#FFF4F2] disabled:opacity-50"
+                      className="rounded-[6px] border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                       title="Excluir"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -292,7 +292,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
               </label>
 
               {erroAcao && (
-                <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+                <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
                   {erroAcao}
                 </div>
               )}

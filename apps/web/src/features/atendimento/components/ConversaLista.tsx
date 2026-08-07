@@ -62,16 +62,16 @@ export function ConversaLista({
                 {conversa.ultimaMensagemPreview ?? "sem mensagens"}
               </p>
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#EFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#5A6175]">
+                <span className="rounded-full bg-line-soft px-2 py-0.5 text-[10px] font-semibold text-ink-2">
                   {labelCanal(conversa.canal)}
                 </span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                     !canalSuportaIa(conversa.canal)
-                      ? "bg-[#EEF2FF] text-[#4056A1]"
+                      ? "bg-info-soft text-info"
                       : conversa.modo === "pausado"
-                        ? "bg-[#FDF1DF] text-[#B26A00]"
-                        : "bg-[#E7F6EC] text-[#1E8E45]"
+                        ? "bg-warning-soft text-warning"
+                        : "bg-success-soft text-success"
                   }`}
                 >
                   {!canalSuportaIa(conversa.canal)
@@ -81,7 +81,7 @@ export function ConversaLista({
                       : "Zé ativo"}
                 </span>
                 {!conversa.clienteNome && (
-                  <span className="rounded-full bg-[#EFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#5A6175]">
+                  <span className="rounded-full bg-line-soft px-2 py-0.5 text-[10px] font-semibold text-ink-2">
                     Sem cliente vinculado
                   </span>
                 )}

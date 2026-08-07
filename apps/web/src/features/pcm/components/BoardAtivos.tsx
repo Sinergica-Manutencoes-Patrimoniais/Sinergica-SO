@@ -96,7 +96,7 @@ export function BoardAtivos({
     return <div className="p-8 text-center text-sm text-ink-3">Carregando board...</div>;
   }
   if (estado.fase === "erro") {
-    return <div className="p-8 text-center text-sm text-[#A23B25]">{estado.mensagem}</div>;
+    return <div className="p-8 text-center text-sm text-danger">{estado.mensagem}</div>;
   }
   if (estado.areas.length === 0) {
     return (
@@ -140,7 +140,7 @@ export function BoardAtivos({
       </div>
 
       {erroMover && (
-        <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erroMover}
         </div>
       )}

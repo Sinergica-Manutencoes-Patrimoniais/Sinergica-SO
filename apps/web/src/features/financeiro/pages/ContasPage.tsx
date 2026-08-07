@@ -142,7 +142,7 @@ export function ContasPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -163,7 +163,7 @@ export function ContasPage() {
                   <p className="mt-1 text-xs text-ink-3">{conta.banco ?? "Sem banco informado"}</p>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${conta.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${conta.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
                 >
                   {conta.ativo ? "Ativa" : "Inativa"}
                 </span>
@@ -303,7 +303,7 @@ function ContaModal({
             />
           </label>
           {erro && (
-            <div className="sm:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="sm:col-span-2 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -434,7 +434,7 @@ function TransferenciaModal({
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -471,7 +471,7 @@ function IconButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-3 text-xs font-semibold ${danger ? "border-[#F2C0B5] text-[#A23B25] hover:bg-[#FFF4F1]" : "border-line text-ink-2 hover:bg-line-soft"}`}
+      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-3 text-xs font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
     >
       {icon}
       {label}

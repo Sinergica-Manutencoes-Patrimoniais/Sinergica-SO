@@ -411,7 +411,7 @@ function InsightsApontamento({
                   <span>
                     {d.tecnicoNome} · {formatarDiaBr(d.dia)}
                   </span>
-                  <strong className={d.desvioHoras < 0 ? "text-[#A23B25]" : "text-[#1E8E45]"}>
+                  <strong className={d.desvioHoras < 0 ? "text-danger" : "text-success"}>
                     {formatarHorasMinutos(d.somaOsHoras)} / {d.metaDiariaHoras}h
                   </strong>
                 </li>
@@ -422,7 +422,7 @@ function InsightsApontamento({
             <h5 className="text-xs font-semibold uppercase text-ink-3">Consistência das fontes</h5>
             <ul className="mt-2 space-y-1 text-xs">
               {consistencia.slice(0, 8).map((d) => (
-                <li key={d.chave} className={d.divergente ? "text-[#A23B25]" : "text-ink-2"}>
+                <li key={d.chave} className={d.divergente ? "text-danger" : "text-ink-2"}>
                   {d.tecnicoNome}: OS {formatarHorasMinutos(d.horasOs)} · visita{" "}
                   {d.janelaVisitaHoras == null
                     ? "sem dado"
@@ -671,16 +671,16 @@ function LinhaDia({ dia }: { dia: DiaTecnico }) {
 function BadgeStatus({ dia }: { dia: DiaTecnico }) {
   if (dia.incompleto) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF3E7] px-2 py-0.5 text-[11px] font-semibold text-[#8A4B00]">
+      <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
         <AlertTriangle className="h-3 w-3" />
         Incompleto
       </span>
     );
   }
   const mapa: Record<Exclude<SinalJornada, null>, { label: string; cls: string }> = {
-    falta: { label: "Abaixo da jornada", cls: "bg-[#FCE9E6] text-[#A23B25]" },
-    "hora-extra": { label: "Hora extra", cls: "bg-[#EAF3FF] text-[#1F5FA6]" },
-    ok: { label: "Completo", cls: "bg-[#E7F6EC] text-[#1E8E45]" },
+    falta: { label: "Abaixo da jornada", cls: "bg-danger-line text-danger" },
+    "hora-extra": { label: "Hora extra", cls: "bg-info-soft text-info" },
+    ok: { label: "Completo", cls: "bg-success-soft text-success" },
   };
   if (dia.sinalJornada) {
     const s = mapa[dia.sinalJornada];
@@ -754,9 +754,7 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
           Clique em "Carregar" para ver as horas de OS por semana.
         </p>
       )}
-      {estado.fase === "erro" && (
-        <p className="px-4 py-6 text-sm text-[#A23B25]">{estado.mensagem}</p>
-      )}
+      {estado.fase === "erro" && <p className="px-4 py-6 text-sm text-danger">{estado.mensagem}</p>}
       {estado.fase === "pronto" &&
         (estado.semanas.length === 0 ? (
           <p className="px-4 py-6 text-sm text-ink-3">Sem horas nas últimas 8 semanas.</p>

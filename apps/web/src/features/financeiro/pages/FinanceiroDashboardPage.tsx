@@ -145,7 +145,7 @@ export function FinanceiroDashboardPage() {
             Inadimplência
           </p>
           <p
-            className={`mt-1 text-lg font-semibold ${percentualInadimplencia > 10 ? "text-[#A23B25]" : "text-ink"}`}
+            className={`mt-1 text-lg font-semibold ${percentualInadimplencia > 10 ? "text-danger" : "text-ink"}`}
           >
             {percentualInadimplencia.toFixed(0)}%
           </p>
@@ -178,7 +178,7 @@ export function FinanceiroDashboardPage() {
       <div className="rounded-[8px] border border-line bg-card p-4">
         <h4 className="mb-3 text-sm font-semibold text-ink">Projeção de caixa</h4>
         {pontoNegativo && (
-          <p className="mb-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm font-semibold text-[#A23B25]">
+          <p className="mb-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
             Saldo projetado fica negativo em{" "}
             {new Date(pontoNegativo.dataLimite).toLocaleDateString("pt-BR")} (+
             {pontoNegativo.diasHorizonte}d)
@@ -191,7 +191,7 @@ export function FinanceiroDashboardPage() {
                 +{p.diasHorizonte}d
               </p>
               <p
-                className={`mt-1 text-sm font-semibold ${p.saldoProjetadoCentavos < 0 ? "text-[#A23B25]" : "text-ink"}`}
+                className={`mt-1 text-sm font-semibold ${p.saldoProjetadoCentavos < 0 ? "text-danger" : "text-ink"}`}
               >
                 R$ {centavosParaReais(p.saldoProjetadoCentavos)}
               </p>
@@ -212,7 +212,7 @@ function Kpi({
   tom,
   destaque,
 }: { label: string; valorCentavos: number; tom?: "positivo" | "negativo"; destaque?: boolean }) {
-  const cor = destaque ? "text-ink" : tom === "positivo" ? "text-[#1E8E45]" : "text-[#A23B25]";
+  const cor = destaque ? "text-ink" : tom === "positivo" ? "text-success" : "text-danger";
   return (
     <div className="rounded-[8px] border border-line bg-card p-3">
       <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-ink-3">

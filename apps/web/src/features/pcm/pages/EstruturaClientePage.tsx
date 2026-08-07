@@ -228,7 +228,7 @@ export function EstruturaClientePage({
                     <button
                       type="button"
                       onClick={() => excluirArea(area)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[#A23B25] hover:bg-[#FFF4F1]"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-danger hover:bg-danger-soft"
                       aria-label="Desativar Área"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -336,7 +336,7 @@ function TiposDeLocalPainel({
                 type="button"
                 onClick={() => onRemover(tipo)}
                 aria-label={`Remover ${tipo.nome}`}
-                className="text-ink-3 hover:text-[#A23B25]"
+                className="text-ink-3 hover:text-danger"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -423,7 +423,7 @@ function LocalTree({
                 <button
                   type="button"
                   onClick={() => onExcluir(node)}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-[4px] text-[#A23B25] hover:bg-[#FFF4F1]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-[4px] text-danger hover:bg-danger-soft"
                   aria-label="Desativar Local"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -503,7 +503,7 @@ function AreaModal({
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -600,7 +600,7 @@ function LocalModal({
             )}
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

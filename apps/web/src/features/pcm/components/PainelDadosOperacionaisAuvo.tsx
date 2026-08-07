@@ -78,14 +78,14 @@ export function PainelDadosOperacionaisAuvo() {
     );
   if (estado.fase === "indisponivel")
     return (
-      <section className="rounded-[10px] border border-[#F0D4B0] bg-orange-soft p-4 text-sm text-[#7A3F00]">
+      <section className="rounded-[10px] border border-warning-line bg-orange-soft p-4 text-sm text-warning">
         <strong>Dados operacionais aguardando sincronização.</strong> GPS, despesas, satisfação e
         questionários aparecerão aqui depois que as migrations e os pulls do Auvo estiverem ativos.
       </section>
     );
   if (estado.fase === "erro")
     return (
-      <section className="rounded-[10px] border border-[#F0C2BD] bg-[#FFF4F2] p-4 text-sm text-[#A12D24]">
+      <section className="rounded-[10px] border border-danger-line bg-danger-soft p-4 text-sm text-danger">
         <strong>Não foi possível carregar os dados operacionais.</strong> Erro ao consultar o banco
         (não é ausência de sincronização) — recarregue a página ou verifique sua permissão no módulo
         PCM.

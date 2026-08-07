@@ -159,7 +159,7 @@ export function RentabilidadePage() {
                         {clientePorId.get(a.clienteId) ?? "Cliente"}
                         {a.temAlerta && (
                           <span title="Margem negativa em 2 meses consecutivos — revisar contrato">
-                            <AlertTriangle className="h-3.5 w-3.5 text-[#A23B25]" />
+                            <AlertTriangle className="h-3.5 w-3.5 text-danger" />
                           </span>
                         )}
                       </p>
@@ -170,7 +170,7 @@ export function RentabilidadePage() {
                     </div>
                   </div>
                   <span
-                    className={`shrink-0 text-sm font-semibold ${a.margemTotal >= 0 ? "text-[#1E8E45]" : "text-[#A23B25]"}`}
+                    className={`shrink-0 text-sm font-semibold ${a.margemTotal >= 0 ? "text-success" : "text-danger"}`}
                   >
                     R$ {centavosParaReais(a.margemTotal)}
                   </span>
@@ -211,7 +211,7 @@ function DetalheMensal({ cliente }: { cliente: ClienteAgregado }) {
             <span className="text-ink-2">
               {new Date(m.mes).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
             </span>
-            <span className={m.margemCentavos >= 0 ? "text-[#1E8E45]" : "text-[#A23B25]"}>
+            <span className={m.margemCentavos >= 0 ? "text-success" : "text-danger"}>
               R$ {centavosParaReais(m.margemCentavos)} (
               {m.margemPercentual !== null ? `${m.margemPercentual}%` : "—"})
             </span>

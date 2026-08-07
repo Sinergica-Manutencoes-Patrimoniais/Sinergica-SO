@@ -127,7 +127,7 @@ export function AbrirOsAuvoModal({
                   ]}
                 />
                 {preview.pendencias.map((pendencia) => (
-                  <p key={pendencia} className="text-xs text-[#A23B25]">
+                  <p key={pendencia} className="text-xs text-danger">
                     {pendencia}
                   </p>
                 ))}
@@ -139,7 +139,7 @@ export function AbrirOsAuvoModal({
             )}
           </div>
         )}
-        {erro && <p className="px-5 pb-3 text-sm text-[#A23B25]">{erro}</p>}
+        {erro && <p className="px-5 pb-3 text-sm text-danger">{erro}</p>}
         <div className="flex justify-end gap-2 border-t border-line-soft px-5 py-3">
           <button type="button" onClick={onFechar} className="btn-secondary h-9 px-3 text-sm">
             {preview?.jaAberta ? "Fechar" : "Agora não"}

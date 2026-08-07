@@ -154,7 +154,7 @@ export function RelatorioPlanejamentoPage() {
         </button>
       </div>
       {erro ? (
-        <p className="text-sm text-[#A12D24]">{erro}</p>
+        <p className="text-sm text-danger">{erro}</p>
       ) : carregando ? (
         <p className="text-sm text-ink-3">Carregando…</p>
       ) : itens.length === 0 ? (

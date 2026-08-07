@@ -253,11 +253,11 @@ export function OperacaoTab({
       </section>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
-      {salvo && !erro && <p className="text-sm font-medium text-[#1E8E45]">Configuração salva.</p>}
+      {salvo && !erro && <p className="text-sm font-medium text-success">Configuração salva.</p>}
       {temEscrita && (
         <button
           type="button"
@@ -284,7 +284,7 @@ export function OperacaoTab({
                   <button
                     type="button"
                     onClick={() => onDesativarLicao(l.id)}
-                    className="mt-1 text-xs text-[#A12D24] hover:underline"
+                    className="mt-1 text-xs text-danger hover:underline"
                   >
                     Desativar
                   </button>
@@ -353,7 +353,7 @@ export function OperacaoTab({
                   <button
                     type="button"
                     onClick={() => onDesativarEspecialista(e.id)}
-                    className="text-xs text-[#A12D24] hover:underline"
+                    className="text-xs text-danger hover:underline"
                   >
                     Desativar
                   </button>
@@ -429,7 +429,7 @@ function Toggle({
         }`}
       >
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-card transition-transform ${
             checked ? "translate-x-5" : "translate-x-0.5"
           }`}
         />

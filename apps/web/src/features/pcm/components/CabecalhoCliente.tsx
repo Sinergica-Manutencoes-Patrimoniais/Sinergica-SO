@@ -23,7 +23,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
             <Tooltip content={TOOLTIP_CLIENTE.tipo} className="inline-flex">
               <button
                 type="button"
-                className="appearance-none rounded-full border-0 bg-white/12 px-2.5 py-1 font-semibold text-inherit"
+                className="appearance-none rounded-full border-0 bg-card/12 px-2.5 py-1 font-semibold text-inherit"
               >
                 {cliente.tipo === "lead" ? "Lead" : "Cliente"}
               </button>
@@ -32,7 +32,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
               <button
                 type="button"
                 className={`appearance-none rounded-full border-0 px-2.5 py-1 font-semibold text-inherit ${
-                  cliente.ativo ? "bg-[#1E8E45]/25 text-[#B9F4CB]" : "bg-white/12 text-white/70"
+                  cliente.ativo ? "bg-success/25 text-success-line" : "bg-card/12 text-white/70"
                 }`}
               >
                 {cliente.ativo ? "Ativo" : "Inativo"}
@@ -42,7 +42,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
               <Tooltip content={TOOLTIP_CLIENTE.statusComercial} className="inline-flex">
                 <button
                   type="button"
-                  className="appearance-none rounded-full border-0 bg-white/12 px-2.5 py-1 font-semibold text-inherit"
+                  className="appearance-none rounded-full border-0 bg-card/12 px-2.5 py-1 font-semibold text-inherit"
                 >
                   {cliente.statusComercial}
                 </button>
@@ -64,7 +64,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
         <Tooltip content={TOOLTIP_CLIENTE.auvo} className="inline-flex">
           <button
             type="button"
-            className="shrink-0 appearance-none rounded-[8px] border-0 bg-white/10 px-4 py-3 text-left text-sm text-inherit"
+            className="shrink-0 appearance-none rounded-[8px] border-0 bg-card/10 px-4 py-3 text-left text-sm text-inherit"
           >
             <p className="text-[10px] font-semibold uppercase tracking-wider text-white/55">Auvo</p>
             <p className="mt-1 font-brand text-lg tabular-nums">

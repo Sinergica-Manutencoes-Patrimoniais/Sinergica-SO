@@ -174,19 +174,19 @@ export function rotuloStatusOs(status: string): string {
 }
 
 export function statusOsColor(status: string): string {
-  if (status === "finalizado") return "bg-[#E7F6EC] text-[#1E8E45]";
-  if (status === "cancelado") return "bg-[#FBEAEA] text-[#C5362B]";
-  if (status === "em_execucao") return "bg-[#EAEEF8] text-[#2E3C70]";
-  if (status === "planejamento") return "bg-[#FDF1DF] text-[#B26A00]";
-  if (status === "backlog") return "bg-[#F3EEFA] text-[#6B3FA0]";
-  return "bg-[#EFF1F4] text-[#5A6175]";
+  if (status === "finalizado") return "bg-success-soft text-success";
+  if (status === "cancelado") return "bg-danger-line text-danger";
+  if (status === "em_execucao") return "bg-info-soft text-info";
+  if (status === "planejamento") return "bg-warning-soft text-warning";
+  if (status === "backlog") return "bg-info-line text-info";
+  return "bg-line-soft text-ink-2";
 }
 
 export function prioridadeColor(prioridade: string): string {
-  if (prioridade === "critica") return "bg-[#FCE9E7] text-[#C5362B]";
-  if (prioridade === "alta") return "bg-[#FDF1DF] text-[#B26A00]";
-  if (prioridade === "media" || prioridade === "normal") return "bg-[#FFF7E6] text-[#8A5A00]";
-  return "bg-[#EFF1F4] text-[#5A6175]";
+  if (prioridade === "critica") return "bg-danger-line text-danger";
+  if (prioridade === "alta") return "bg-warning-soft text-warning";
+  if (prioridade === "media" || prioridade === "normal") return "bg-warning-soft text-warning";
+  return "bg-line-soft text-ink-2";
 }
 
 export function ehOsHistorica(status: string): boolean {

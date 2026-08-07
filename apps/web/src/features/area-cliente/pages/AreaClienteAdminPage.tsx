@@ -34,7 +34,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
           <div>
             <div className="flex items-center gap-2">
               <h2 className="page-title">Área do Cliente</h2>
-              <span className="rounded-full bg-[#E7F6EC] px-2.5 py-1 text-[11px] font-semibold text-[#1E8E45]">
+              <span className="rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-semibold text-success">
                 Portal implementado
               </span>
             </div>
@@ -129,7 +129,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
           <ul className="mt-4 flex flex-col gap-2">
             {RECURSOS_PORTAL.map((recurso) => (
               <li key={recurso} className="flex items-start gap-2 text-sm text-ink-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#1E8E45]" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                 {recurso}
               </li>
             ))}

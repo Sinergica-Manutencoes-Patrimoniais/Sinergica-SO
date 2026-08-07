@@ -206,14 +206,14 @@ function Kpi({
 }: { label: string; valor: string | number; sub: string; alerta?: boolean }) {
   return (
     <div
-      className={`rounded-[8px] border px-3 py-2.5 shadow-[0_1px_2px_rgba(20,28,54,0.03)] ${alerta ? "border-[#F0C6B8] bg-[#FDF1EE]" : "border-line bg-card"}`}
+      className={`rounded-[8px] border px-3 py-2.5 shadow-[0_1px_2px_rgba(20,28,54,0.03)] ${alerta ? "border-danger-line bg-danger-line" : "border-line bg-card"}`}
     >
       <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
-        {alerta && <AlertTriangle className="h-3 w-3 text-[#C5362B]" />}
+        {alerta && <AlertTriangle className="h-3 w-3 text-danger" />}
         {label}
       </div>
       <p
-        className={`mt-1 font-brand text-xl font-bold leading-none tabular-nums ${alerta ? "text-[#C5362B]" : "text-ink"}`}
+        className={`mt-1 font-brand text-xl font-bold leading-none tabular-nums ${alerta ? "text-danger" : "text-ink"}`}
       >
         {valor}
       </p>
@@ -225,10 +225,10 @@ function Kpi({
 function QueueHealthCard({ aging }: { aging: PainelAtendimento["aging"] }) {
   const max = Math.max(...aging.map((a) => a.total), 1);
   const cores: Record<string, string> = {
-    "0-1h": "bg-[#2E9E5B]",
-    "1-4h": "bg-[#E0A62C]",
-    "4-24h": "bg-[#E07A2C]",
-    "+24h": "bg-[#C5362B]",
+    "0-1h": "bg-success",
+    "1-4h": "bg-orange",
+    "4-24h": "bg-orange",
+    "+24h": "bg-danger",
   };
   return (
     <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
@@ -400,8 +400,8 @@ function SlaDeliveryCard({
   frtMedioLabel,
 }: { slaDentroMetaPct: number | null; frtMedioLabel: string }) {
   const pct = slaDentroMetaPct ?? 0;
-  const cor = pct >= 90 ? "text-[#1E8E45]" : pct >= 70 ? "text-[#B26A00]" : "text-[#C5362B]";
-  const corBarra = pct >= 90 ? "bg-[#1E8E45]" : pct >= 70 ? "bg-[#B26A00]" : "bg-[#C5362B]";
+  const cor = pct >= 90 ? "text-success" : pct >= 70 ? "text-warning" : "text-danger";
+  const corBarra = pct >= 90 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-danger";
   return (
     <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
       <h3 className="text-sm font-semibold text-ink">SLA & entrega</h3>

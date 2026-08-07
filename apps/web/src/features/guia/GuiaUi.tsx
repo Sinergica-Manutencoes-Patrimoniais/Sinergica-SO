@@ -15,7 +15,7 @@ export function GuiaTitulo({ titulo, subtitulo }: { titulo: string; subtitulo: s
 }
 
 const STATUS_CLASS: Record<string, string> = {
-  real: "bg-[#E7F6EC] text-[#1E8E45] dark:bg-[#12301E] dark:text-[#6FCB8E]",
+  real: "bg-success-soft text-success",
   prototipo: "bg-orange-soft text-orange-deep",
   planejado: "bg-line-soft text-ink-2",
 };

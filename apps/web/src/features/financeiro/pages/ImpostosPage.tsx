@@ -131,7 +131,7 @@ export function ImpostosPage() {
           oficial.
         </p>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -356,7 +356,7 @@ function ConfigForm({
                     <button
                       type="button"
                       onClick={() => setFaixas((atual) => atual.filter((_, idx) => idx !== i))}
-                      className="text-ink-3 hover:text-[#A23B25]"
+                      className="text-ink-3 hover:text-danger"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -381,7 +381,7 @@ function ConfigForm({
       )}
 
       {erro && (
-        <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+        <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erro}
         </div>
       )}

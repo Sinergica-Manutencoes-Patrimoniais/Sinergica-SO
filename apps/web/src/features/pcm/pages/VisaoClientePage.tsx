@@ -672,7 +672,7 @@ function PainelResponsaveis({
                   <button
                     type="button"
                     onClick={() => remover(responsavel.id)}
-                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-danger hover:bg-danger-soft"
                   >
                     Remover
                   </button>
@@ -1129,8 +1129,8 @@ function PainelCadastroAuvo({
             key={item.label}
             className={`rounded-[6px] border px-3 py-2 text-xs font-semibold ${
               item.ok
-                ? "border-[#BFE9CC] bg-[#E7F6EC] text-[#1E8E45]"
-                : "border-[#F3D8AD] bg-[#FDF1DF] text-[#9A5A00]"
+                ? "border-success-line bg-success-soft text-success"
+                : "border-warning-line bg-warning-soft text-warning"
             }`}
           >
             {item.label}: {item.ok ? "ok" : "pendente"}
@@ -1268,9 +1268,9 @@ function EventoIcone({ tipo }: { tipo: Cliente360Evento["tipo"] }) {
 }
 
 function corEvento(criticidade: Cliente360Evento["criticidade"]): string {
-  if (criticidade === "critica") return "border-[#F2B8B0] text-[#C4271A]";
-  if (criticidade === "sucesso") return "border-[#BFE9CC] text-[#1E8E45]";
-  if (criticidade === "atencao") return "border-[#F3D8AD] text-[#B26A00]";
+  if (criticidade === "critica") return "border-danger-line text-danger";
+  if (criticidade === "sucesso") return "border-success-line text-success";
+  if (criticidade === "atencao") return "border-warning-line text-warning";
   return "border-line text-ink-3";
 }
 
@@ -1431,7 +1431,7 @@ function PainelComunicacao({
           <ResumoLinha label="Mensagens vinculadas" value={String(comunicacao.length)} />
         </div>
         {cliente.observacoes && (
-          <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+          <div className="mt-4 rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
             {cliente.observacoes}
           </div>
         )}

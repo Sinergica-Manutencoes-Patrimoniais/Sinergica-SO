@@ -400,7 +400,7 @@ export function PmocPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
@@ -584,7 +584,7 @@ function DetalhePmoc({
             <h3 className="mt-1 text-xl font-bold">{contrato.imovelNome}</h3>
             <p className="mt-1 text-sm text-white/70">{formatarEndereco(contrato)}</p>
           </div>
-          <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-semibold">
+          <span className="rounded-full bg-card/12 px-3 py-1 text-xs font-semibold">
             Vigência {formatarData(contrato.startDate)} a {formatarData(contrato.endDate)}
           </span>
         </div>
@@ -637,7 +637,7 @@ function DetalhePmoc({
                     </span>
                   </div>
                   {equipamento.auvoEquipmentId && (
-                    <span className="mt-2 inline-flex rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-semibold text-navy">
+                    <span className="mt-2 inline-flex rounded-full bg-info-soft px-2 py-0.5 text-[11px] font-semibold text-navy">
                       Auvo #{equipamento.auvoEquipmentId}
                     </span>
                   )}
@@ -685,7 +685,7 @@ function DetalhePmoc({
                         <p className="text-xs text-ink-3">Auvo #{sugestao.auvoEquipmentId}</p>
                       </div>
                       {sugestao.jaImportado ? (
-                        <span className="rounded-full bg-[#EAF8EF] px-2 py-0.5 text-[11px] font-semibold text-[#267343]">
+                        <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">
                           PMOC
                         </span>
                       ) : (
@@ -782,7 +782,7 @@ function DetalhePmoc({
                 {TIPO_MANUTENCAO_LABEL[agenda.maintenanceType]}
               </p>
               {agenda.ordemServicoId ? (
-                <p className="mt-2 text-[11px] font-semibold text-[#267343]">OS criada</p>
+                <p className="mt-2 text-[11px] font-semibold text-success">OS criada</p>
               ) : (
                 podeEditar &&
                 agenda.status !== "cancelado" && (
@@ -837,7 +837,7 @@ function DetalhePmoc({
                     </span>
                   </div>
                   {analise.correctiveActionNeeded && (
-                    <div className="mt-2 flex items-center gap-2 rounded-[6px] bg-[#FDECEB] px-3 py-2 text-xs font-semibold text-[#B42318]">
+                    <div className="mt-2 flex items-center gap-2 rounded-[6px] bg-danger-line px-3 py-2 text-xs font-semibold text-danger">
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                       Fora dos limites legais — ação corretiva necessária.
                     </div>
@@ -922,8 +922,8 @@ const STATUS_MICROBIO_LABEL: Record<"conforme" | "nao_conforme" | "pendente", st
 };
 
 function statusMicrobioColor(status: "conforme" | "nao_conforme" | "pendente"): string {
-  if (status === "conforme") return "bg-[#EAF8EF] text-[#267343]";
-  if (status === "nao_conforme") return "bg-[#FDECEB] text-[#B42318]";
+  if (status === "conforme") return "bg-success-soft text-success";
+  if (status === "nao_conforme") return "bg-danger-line text-danger";
   return "bg-line-soft text-ink-2";
 }
 
@@ -934,7 +934,7 @@ const SEVERIDADE_NC_LABEL: Record<PmocSeveridadeNc, string> = {
 };
 
 function severidadeNcColor(severity: PmocSeveridadeNc): string {
-  if (severity === "alta") return "bg-[#FDECEB] text-[#B42318]";
+  if (severity === "alta") return "bg-danger-line text-danger";
   if (severity === "media") return "bg-orange-soft text-orange-deep";
   return "bg-line-soft text-ink-2";
 }
@@ -946,8 +946,8 @@ const STATUS_NC_LABEL: Record<PmocStatusNc, string> = {
 };
 
 function statusNcColor(status: PmocStatusNc): string {
-  if (status === "fechado") return "bg-[#EAF8EF] text-[#267343]";
-  if (status === "em_andamento") return "bg-[#EEF2FF] text-navy";
+  if (status === "fechado") return "bg-success-soft text-success";
+  if (status === "em_andamento") return "bg-info-soft text-navy";
   return "bg-line-soft text-ink-2";
 }
 
@@ -1005,8 +1005,8 @@ function PainelAlertasPmoc({
   if (alertas.length === 0) {
     return (
       <div className="flex items-center gap-2 rounded-[8px] border border-line bg-card px-4 py-3 text-sm">
-        <CheckCircle2 className="h-4 w-4 shrink-0 text-[#267343]" />
-        <span className="font-semibold text-[#267343]">Tudo em dia</span>
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+        <span className="font-semibold text-success">Tudo em dia</span>
         <span className="text-ink-3">— nenhum contrato PMOC precisa de atenção agora.</span>
       </div>
     );
@@ -1058,7 +1058,7 @@ function AlertaLinha({ ativo, label }: { ativo: boolean; label: string }) {
       {ativo ? (
         <AlertTriangle className="h-4 w-4 text-orange" />
       ) : (
-        <CheckCircle2 className="h-4 w-4 text-[#267343]" />
+        <CheckCircle2 className="h-4 w-4 text-success" />
       )}
       <span className={ativo ? "font-semibold text-orange-deep" : "text-ink-3"}>{label}</span>
     </div>

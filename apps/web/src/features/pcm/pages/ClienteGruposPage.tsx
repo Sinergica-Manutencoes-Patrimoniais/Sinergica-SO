@@ -141,7 +141,7 @@ export function ClienteGruposPage() {
             </button>
           )}
         </div>
-        <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#8A4B00]">
+        <div className="mt-4 rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
           Renomear ou trocar clientes aqui não altera um grupo já existente no Auvo; a API v2
           documenta criação e exclusão, mas não edição de grupos.
         </div>
@@ -151,7 +151,7 @@ export function ClienteGruposPage() {
           </div>
         )}
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -213,12 +213,12 @@ function GrupoCard({
             Auvo {grupo.auvoId ?? "-"} · {grupo.clienteIds.length} cliente(s)
           </p>
         </div>
-        <span className="rounded-full bg-[#EFF1F4] px-2 py-0.5 text-[11px] font-semibold text-[#5A6175]">
+        <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
           {grupo.auvoSyncStatus ?? "pending"}
         </span>
       </div>
       <p className="mt-3 line-clamp-2 text-sm text-ink-3">{nomes || "Clientes não encontrados"}</p>
-      {grupo.auvoSyncError && <p className="mt-2 text-xs text-[#A23B25]">{grupo.auvoSyncError}</p>}
+      {grupo.auvoSyncError && <p className="mt-2 text-xs text-danger">{grupo.auvoSyncError}</p>}
       <div className="mt-4 flex justify-end gap-2">
         {onEditar && (
           <button
@@ -234,7 +234,7 @@ function GrupoCard({
           <button
             type="button"
             onClick={onExcluir}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-3 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Excluir
@@ -324,12 +324,12 @@ function GrupoModal({
             </div>
           </div>
           {grupo && (
-            <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#8A4B00]">
+            <div className="mt-4 rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
               Esta alteração fica local. Para refletir no Auvo, exclua e crie um novo grupo.
             </div>
           )}
           {erro && (
-            <div className="mt-4 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="mt-4 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

@@ -159,7 +159,7 @@ export function CockpitFinanceiroPage() {
           Saúde financeira — visão executiva, exclusiva do dono.
         </p>
         {amostraPeq && (
-          <div className="mt-3 flex items-center gap-2 rounded-[6px] border border-[#FFE1A8] bg-[#FFF6E5] px-3 py-2 text-sm text-[#9A6B00]">
+          <div className="mt-3 flex items-center gap-2 rounded-[6px] border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             Amostra pequena ({fluxoFechado.length}{" "}
             {fluxoFechado.length === 1 ? "mês fechado" : "meses fechados"}) — runway/break-even
@@ -243,7 +243,7 @@ export function CockpitFinanceiroPage() {
                         {clientePorId.get(r.clienteId) ?? "Cliente"}
                       </td>
                       <td
-                        className={`px-3 py-2 text-right font-semibold ${r.margemCentavos >= 0 ? "text-[#1E8E45]" : "text-[#A23B25]"}`}
+                        className={`px-3 py-2 text-right font-semibold ${r.margemCentavos >= 0 ? "text-success" : "text-danger"}`}
                       >
                         {r.margemCentavos >= 0 ? (
                           <TrendingUp className="mr-1 inline h-3.5 w-3.5" />
@@ -254,7 +254,7 @@ export function CockpitFinanceiroPage() {
                       </td>
                       <td className="px-3 py-2 text-right">
                         {alerta && (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#A23B25]">
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-danger">
                             <AlertTriangle className="h-3.5 w-3.5" />2 meses negativo — revisar
                             contrato
                           </span>
@@ -287,14 +287,14 @@ export function CockpitFinanceiroPage() {
               {fluxo.map((p) => (
                 <tr key={p.mes} className="border-b border-line last:border-0">
                   <td className="px-3 py-2 text-ink-2">{`${p.mes.slice(5, 7)}/${p.mes.slice(0, 4)}`}</td>
-                  <td className="px-3 py-2 text-right text-[#1E8E45]">
+                  <td className="px-3 py-2 text-right text-success">
                     R$ {centavosParaReais(p.entradasCentavos)}
                   </td>
-                  <td className="px-3 py-2 text-right text-[#A23B25]">
+                  <td className="px-3 py-2 text-right text-danger">
                     R$ {centavosParaReais(p.saidasCentavos)}
                   </td>
                   <td
-                    className={`px-3 py-2 text-right font-semibold ${p.resultadoCentavos >= 0 ? "text-[#1E8E45]" : "text-[#A23B25]"}`}
+                    className={`px-3 py-2 text-right font-semibold ${p.resultadoCentavos >= 0 ? "text-success" : "text-danger"}`}
                   >
                     R$ {centavosParaReais(Math.abs(p.resultadoCentavos))}
                   </td>
@@ -320,9 +320,9 @@ function Indicador({
   tom: "positivo" | "negativo" | "atencao" | "neutro";
 }) {
   const cores: Record<typeof tom, string> = {
-    positivo: "text-[#1E8E45]",
-    negativo: "text-[#A23B25]",
-    atencao: "text-[#9A6B00]",
+    positivo: "text-success",
+    negativo: "text-danger",
+    atencao: "text-warning",
     neutro: "text-ink",
   };
   return (

@@ -203,7 +203,7 @@ export function FluxosManager({
       </section>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -239,7 +239,7 @@ export function FluxosManager({
                   type="button"
                   disabled={salvando}
                   onClick={desativar}
-                  className="inline-flex items-center gap-2 rounded-[6px] border border-[#F0C2BD] px-3 py-2 text-sm font-semibold text-[#A12D24] hover:bg-[#FFF4F2] disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-[6px] border border-danger-line px-3 py-2 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
                 >
                   <X className="h-4 w-4" />
                   Desativar fluxo

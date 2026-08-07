@@ -139,7 +139,7 @@ export function DrawerDetalheAtivo({
           <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>
         )}
         {estado.fase === "erro" && (
-          <div className="p-8 text-center text-sm text-[#A23B25]">{estado.mensagem}</div>
+          <div className="p-8 text-center text-sm text-danger">{estado.mensagem}</div>
         )}
         {estado.fase === "pronto" && <Conteudo detalhe={estado.detalhe} />}
       </div>

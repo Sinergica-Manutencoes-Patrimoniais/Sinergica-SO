@@ -11,10 +11,10 @@ import {
 } from "../domain/priorizacao-backlog";
 
 const PRIO_MAP: Record<PrioridadeBacklog, { label: string; dot: string }> = {
-  critica: { label: "Crítica", dot: "bg-[#E23B2E]" },
-  alta: { label: "Alta", dot: "bg-[#EF7E25]" },
-  media: { label: "Média", dot: "bg-[#F7A600]" },
-  baixa: { label: "Baixa", dot: "bg-[#C2C7D2]" },
+  critica: { label: "Crítica", dot: "bg-danger" },
+  alta: { label: "Alta", dot: "bg-orange" },
+  media: { label: "Média", dot: "bg-amber" },
+  baixa: { label: "Baixa", dot: "bg-ink-4" },
 };
 
 // score_pcm é GENERATED (coalesce → sempre 1..125), mas guardamos a faixa para não deixar um dado

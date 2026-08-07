@@ -187,7 +187,7 @@ export function FuncionariosPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -254,7 +254,7 @@ function FuncionarioCard({
         </div>
         <span
           className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-            funcionario.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"
+            funcionario.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"
           }`}
         >
           {funcionario.ativo ? "Ativo" : "Inativo"}
@@ -279,7 +279,7 @@ function FuncionarioCard({
         <span>Sync: {funcionario.auvoSyncStatus ?? "pending"}</span>
       </div>
       {funcionario.auvoSyncError && (
-        <p className="mt-2 text-xs text-[#A23B25]">{funcionario.auvoSyncError}</p>
+        <p className="mt-2 text-xs text-danger">{funcionario.auvoSyncError}</p>
       )}
       <div className="mt-4 flex justify-end gap-2">
         <button type="button" onClick={onVerPerfil} className="btn-secondary">
@@ -299,7 +299,7 @@ function FuncionarioCard({
           <button
             type="button"
             onClick={onDesativar}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-3 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Desativar
@@ -429,7 +429,7 @@ function FuncionarioModal({
         </div>
         <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto p-4 md:grid-cols-2">
           {!funcionario && (
-            <div className="md:col-span-2 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#8A4B00]">
+            <div className="md:col-span-2 rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
               <span className="inline-flex items-center gap-2 font-semibold">
                 <ShieldAlert className="h-4 w-4" />
                 Este cadastro cria acesso real ao app Auvo.
@@ -499,7 +499,7 @@ function FuncionarioModal({
             </span>
           </label>
           {erro && (
-            <div className="md:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="md:col-span-2 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

@@ -134,7 +134,7 @@ export function ConfigCanalForm({
             </label>
 
             {erro && (
-              <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+              <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
                 {erro}
               </div>
             )}
@@ -149,7 +149,7 @@ export function ConfigCanalForm({
                   {salvando ? "Salvando…" : "Salvar"}
                 </button>
                 {salvo && (
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#1E8E45]">
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-success">
                     <Check className="h-4 w-4" />
                     Salvo
                   </span>

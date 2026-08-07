@@ -4,8 +4,8 @@ import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  finalizado: { label: "Finalizado", cls: "bg-[#E7F6EC] text-[#1E8E45]" },
-  cancelado: { label: "Cancelado", cls: "bg-[#FBEAEA] text-[#C5362B]" },
+  finalizado: { label: "Finalizado", cls: "bg-success-soft text-success" },
+  cancelado: { label: "Cancelado", cls: "bg-danger-line text-danger" },
 };
 
 export function PainelHistorico({
@@ -31,7 +31,7 @@ export function PainelHistorico({
           {ordens.map((os) => {
             const status = STATUS_LABEL[os.status] ?? {
               label: os.status,
-              cls: "bg-[#EFF1F4] text-[#5A6175]",
+              cls: "bg-line-soft text-ink-2",
             };
             return (
               <Tooltip key={os.id} content={os.descricao ?? null}>

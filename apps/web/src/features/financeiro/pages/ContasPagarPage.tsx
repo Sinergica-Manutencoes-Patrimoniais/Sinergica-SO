@@ -162,7 +162,7 @@ export function ContasPagarPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -200,7 +200,7 @@ export function ContasPagarPage() {
                       <button
                         type="button"
                         onClick={() => desativar(r)}
-                        className="text-ink-3 hover:text-[#A23B25]"
+                        className="text-ink-3 hover:text-danger"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -222,7 +222,7 @@ export function ContasPagarPage() {
             <div key={faixa} className="rounded-[8px] border border-line bg-card p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h4 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
-                  {ehAlerta(faixa) && <AlertCircle className="h-3.5 w-3.5 text-[#A23B25]" />}
+                  {ehAlerta(faixa) && <AlertCircle className="h-3.5 w-3.5 text-danger" />}
                   {LABEL_FAIXA[faixa]}
                   <span className="text-xs font-normal text-ink-3">({itens.length})</span>
                 </h4>
@@ -405,7 +405,7 @@ function RecorrenciaModal({
             </select>
           </label>
           {erro && (
-            <div className="sm:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="sm:col-span-2 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

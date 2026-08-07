@@ -200,12 +200,12 @@ export function ConfigIaForm({
       </div>
 
       {erro && (
-        <div className="mt-4 rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="mt-4 rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
       {salvo && !erro && (
-        <p className="mt-4 text-sm font-medium text-[#1E8E45]">Configuração salva.</p>
+        <p className="mt-4 text-sm font-medium text-success">Configuração salva.</p>
       )}
 
       {temEscrita && (

@@ -152,7 +152,7 @@ export function EquipamentosPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -278,7 +278,7 @@ function EquipamentoLinha({
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <span className="truncate text-sm font-semibold text-ink">{equipamento.nome}</span>
           <span
-            className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${equipamento.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
+            className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${equipamento.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
           >
             {equipamento.ativo ? "Ativo" : "Inativo"}
           </span>
@@ -316,7 +316,7 @@ function EquipamentoLinha({
         <button
           type="button"
           onClick={onDesativar}
-          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-2.5 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border border-danger-line px-2.5 text-xs font-semibold text-danger hover:bg-danger-soft"
         >
           <Trash2 className="h-3.5 w-3.5" />
           Desativar

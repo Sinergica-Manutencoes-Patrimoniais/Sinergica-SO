@@ -137,7 +137,7 @@ export function ContasReceberPage() {
           </div>
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -177,7 +177,7 @@ export function ContasReceberPage() {
                     <td className="px-3 py-2 text-ink-2">
                       {clientePorId.get(i.clienteId) ?? "Cliente"}
                     </td>
-                    <td className="px-3 py-2 text-right font-semibold text-[#A23B25]">
+                    <td className="px-3 py-2 text-right font-semibold text-danger">
                       R$ {centavosParaReais(i.totalAtrasoCentavos)}
                     </td>
                     <td className="px-3 py-2 text-right text-ink-2">{i.quantidade}</td>
@@ -231,7 +231,7 @@ function FaixaSection({
     <div className="rounded-[8px] border border-line bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <h4 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
-          {ehAlerta(faixa) && <AlertCircle className="h-3.5 w-3.5 text-[#A23B25]" />}
+          {ehAlerta(faixa) && <AlertCircle className="h-3.5 w-3.5 text-danger" />}
           {LABEL_FAIXA[faixa]}
           <span className="text-xs font-normal text-ink-3">({itens.length})</span>
         </h4>
@@ -479,7 +479,7 @@ function CobrancaModal({
             </>
           )}
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

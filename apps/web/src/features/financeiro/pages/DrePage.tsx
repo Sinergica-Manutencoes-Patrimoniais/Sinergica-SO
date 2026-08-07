@@ -111,7 +111,7 @@ export function DrePage() {
           </thead>
           <tbody>
             <tr className="border-b border-line">
-              <td className="px-3 py-2 font-semibold text-[#1E8E45]">Receita</td>
+              <td className="px-3 py-2 font-semibold text-success">Receita</td>
               {dres.map((d) => (
                 <td key={d.mes} className="px-3 py-2 text-right text-ink-2">
                   R$ {centavosParaReais(d.receitaCentavos)}
@@ -132,7 +132,7 @@ export function DrePage() {
               </tr>
             ))}
             <tr className="border-b border-line">
-              <td className="px-3 py-2 font-semibold text-[#A23B25]">Despesas (total)</td>
+              <td className="px-3 py-2 font-semibold text-danger">Despesas (total)</td>
               {dres.map((d) => (
                 <td key={d.mes} className="px-3 py-2 text-right font-semibold text-ink-2">
                   R$ {centavosParaReais(d.despesasTotalCentavos)}
@@ -144,7 +144,7 @@ export function DrePage() {
               {dres.map((d) => (
                 <td
                   key={d.mes}
-                  className={`px-3 py-2 text-right text-base font-semibold ${d.resultadoCentavos >= 0 ? "text-[#1E8E45]" : "text-[#A23B25]"}`}
+                  className={`px-3 py-2 text-right text-base font-semibold ${d.resultadoCentavos >= 0 ? "text-success" : "text-danger"}`}
                 >
                   R$ {centavosParaReais(Math.abs(d.resultadoCentavos))}
                   {d.resultadoCentavos < 0 ? " (neg.)" : ""}

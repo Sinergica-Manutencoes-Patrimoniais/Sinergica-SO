@@ -343,7 +343,7 @@ export function ListaClientesPage({
           {clientesFiltrados.length} de {clientes.length} cadastro(s) visíveis
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -596,7 +596,7 @@ function IconButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-2.5 text-xs font-semibold ${danger ? "border-[#F2C0B5] text-[#A23B25] hover:bg-[#FFF4F1]" : "border-line text-ink-2 hover:bg-line-soft"}`}
+      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-2.5 text-xs font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
     >
       {icon}
       {label}
@@ -645,9 +645,9 @@ function SelectFiltro({
 
 function Badge({ tone, children }: { tone: "success" | "warning" | "neutral"; children: string }) {
   const classes = {
-    success: "bg-[#E7F6EC] text-[#1E8E45]",
-    warning: "bg-[#FDF1DF] text-[#B26A00]",
-    neutral: "bg-[#EFF1F4] text-[#5A6175]",
+    success: "bg-success-soft text-success",
+    warning: "bg-warning-soft text-warning",
+    neutral: "bg-line-soft text-ink-2",
   };
   return (
     <span

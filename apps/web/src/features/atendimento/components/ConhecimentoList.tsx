@@ -128,7 +128,7 @@ export function ConhecimentoList({
                         <button
                           type="button"
                           onClick={() => onDesativar(item.id)}
-                          className="rounded-[6px] border border-[#F0C2BD] p-1.5 text-xs text-[#A12D24] hover:bg-[#FFF4F2]"
+                          className="rounded-[6px] border border-danger-line p-1.5 text-xs text-danger hover:bg-danger-soft"
                         >
                           Desativar
                         </button>
@@ -209,7 +209,7 @@ export function ConhecimentoList({
                 />
               </div>
               {erro && (
-                <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2 text-sm text-[#A12D24]">
+                <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
                   {erro}
                 </div>
               )}

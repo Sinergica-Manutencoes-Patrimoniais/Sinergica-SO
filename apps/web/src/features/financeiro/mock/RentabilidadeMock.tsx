@@ -47,7 +47,7 @@ export function RentabilidadeMock() {
                     />
                     <span className="font-medium text-ink">{r.cliente}</span>
                     {r.alerta && (
-                      <span className="ml-1 inline-flex items-center rounded-full bg-[#FADCD8] px-2 py-0.5 text-[10px] font-semibold text-[#A23B25] dark:bg-[#3E1F1B] dark:text-[#F2988A]">
+                      <span className="ml-1 inline-flex items-center rounded-full bg-danger-line px-2 py-0.5 text-[10px] font-semibold text-danger">
                         ⚠ margem negativa 2m
                       </span>
                     )}
@@ -56,12 +56,12 @@ export function RentabilidadeMock() {
                 <td className="px-4 py-3 text-right tabular-nums text-ink">{brl(r.receita)}</td>
                 <td className="px-4 py-3 text-right tabular-nums text-ink">{brl(r.custo)}</td>
                 <td
-                  className={`px-4 py-3 text-right tabular-nums font-semibold ${margem < 0 ? "text-[#C5362B]" : "text-[#1E8E45]"}`}
+                  className={`px-4 py-3 text-right tabular-nums font-semibold ${margem < 0 ? "text-danger" : "text-success"}`}
                 >
                   {brl(margem)}
                 </td>
                 <td
-                  className={`px-4 py-3 text-right tabular-nums font-semibold ${pct < 0 ? "text-[#C5362B]" : "text-ink"}`}
+                  className={`px-4 py-3 text-right tabular-nums font-semibold ${pct < 0 ? "text-danger" : "text-ink"}`}
                 >
                   {pct}%
                 </td>

@@ -14,9 +14,9 @@ const LABEL_IDENTIFICADOR: Record<TipoCanalExterno, string> = {
 };
 
 const CORES_STATUS: Record<CanalExternoItem["statusConexao"], string> = {
-  conectado: "bg-[#E7F5EC] text-[#1E8E45]",
+  conectado: "bg-success-soft text-success",
   desconectado: "bg-line-soft text-ink-3",
-  erro: "bg-[#FFF4F2] text-[#A12D24]",
+  erro: "bg-danger-soft text-danger",
 };
 
 export function CanalExternoTab({
@@ -104,7 +104,7 @@ export function CanalExternoTab({
                   <button
                     type="button"
                     onClick={() => onDesativar(c.id)}
-                    className="text-xs text-[#A12D24] hover:underline"
+                    className="text-xs text-danger hover:underline"
                   >
                     Desativar
                   </button>
@@ -152,7 +152,7 @@ export function CanalExternoTab({
             navegador.
           </p>
           {erro && (
-            <div className="mt-2 rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2 text-sm text-[#A12D24]">
+            <div className="mt-2 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

@@ -146,7 +146,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
   if (estado.fase === "erro") {
     return (
       <section className="rounded-[8px] border border-line bg-card p-4">
-        <p className="text-sm text-[#A23B25]">{estado.mensagem}</p>
+        <p className="text-sm text-danger">{estado.mensagem}</p>
       </section>
     );
   }
@@ -174,7 +174,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
       </div>
 
       {erroAcao && (
-        <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+        <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
@@ -199,7 +199,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${completo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#FFF4F1] text-[#A23B25]"}`}
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${completo ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
                     >
                       {completo ? "Completo agora" : "Incompleto"}
                     </span>
@@ -223,7 +223,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                         <button
                           type="button"
                           onClick={() => desativar(kit)}
-                          className="text-xs font-semibold text-[#A23B25] hover:underline"
+                          className="text-xs font-semibold text-danger hover:underline"
                         >
                           Desativar
                         </button>
@@ -232,7 +232,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                   </div>
                 </div>
                 {!completo && faltando.length > 0 && (
-                  <p className="mt-1 text-xs text-[#A23B25]">
+                  <p className="mt-1 text-xs text-danger">
                     Falta: {faltando.map((item) => item.ferramentaNome).join(", ")}
                   </p>
                 )}
@@ -260,7 +260,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                     {atribuicao.funcionarioNome} · {atribuicao.itensAindaComTecnico}/
                     {atribuicao.totalItens} unidade(s)
                     {!completa && (
-                      <span className="ml-2 text-xs text-[#A16B0B]">
+                      <span className="ml-2 text-xs text-warning">
                         kit incompleto com o técnico
                       </span>
                     )}
@@ -405,7 +405,7 @@ function KitModal({
                   <button
                     type="button"
                     onClick={() => removerItem(indice)}
-                    className="text-xs font-semibold text-[#A23B25] hover:underline"
+                    className="text-xs font-semibold text-danger hover:underline"
                   >
                     Remover
                   </button>
@@ -421,7 +421,7 @@ function KitModal({
             </button>
           </div>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -498,7 +498,7 @@ function AtribuirKitModal({
             </select>
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

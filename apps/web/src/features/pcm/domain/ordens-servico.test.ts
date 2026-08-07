@@ -15,8 +15,10 @@ import {
   gerarDiasDoMes,
   ordenarBacklogGut,
   ordensNoDia,
+  prioridadeColor,
   resumoTooltipOrdem,
   rotuloNumeroOrdem,
+  statusOsColor,
 } from "./ordens-servico";
 
 const base = {
@@ -369,5 +371,25 @@ describe("ordens-servico", () => {
     expect(deveAlterarStatusPorDrop("planejamento", "em_execucao")).toBe(true);
     expect(deveAlterarStatusPorDrop("planejamento", "planejamento")).toBe(false);
     expect(deveAlterarStatusPorDrop("finalizado", "cancelado")).toBe(true);
+  });
+});
+
+describe("statusOsColor / prioridadeColor — E00-S14 AC-3: só token, nunca hex", () => {
+  const status = [
+    "finalizado",
+    "cancelado",
+    "em_execucao",
+    "planejamento",
+    "backlog",
+    "desconhecido",
+  ];
+  const prioridades = ["critica", "alta", "media", "normal", "desconhecida"];
+
+  it.each(status)("statusOsColor(%s) não contém hex cru", (s) => {
+    expect(statusOsColor(s)).not.toMatch(/#[0-9A-Fa-f]{3,8}/);
+  });
+
+  it.each(prioridades)("prioridadeColor(%s) não contém hex cru", (p) => {
+    expect(prioridadeColor(p)).not.toMatch(/#[0-9A-Fa-f]{3,8}/);
   });
 });

@@ -137,7 +137,7 @@ export function OrcamentoPage() {
           </label>
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -212,7 +212,7 @@ export function OrcamentoPage() {
                   <td className="px-3 py-2 text-right">
                     {d.temOrcamento ? (
                       <span
-                        className={`inline-flex items-center gap-1 font-semibold ${d.estourou ? "text-[#A23B25]" : "text-[#1E8E45]"}`}
+                        className={`inline-flex items-center gap-1 font-semibold ${d.estourou ? "text-danger" : "text-success"}`}
                       >
                         {d.estourou && <AlertTriangle className="h-3.5 w-3.5" />}
                         {d.desvioPercentual !== null

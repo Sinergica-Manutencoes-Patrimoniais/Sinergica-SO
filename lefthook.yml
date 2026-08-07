@@ -39,6 +39,8 @@ pre-push:
       run: pnpm run lint:migrations # RLS-GRANT (custom) + Squawk se instalado
     edge-functions:
       run: pnpm run check:edge-functions # função órfã / functions.invoke sem função declarada (E00-S11)
+    tokens-cor:
+      run: node scripts/check-tokens-cor.mjs # 0 hex cru fora dos tokens semânticos (E00-S14)
     lint:
       run: pnpm exec biome check .
     typecheck:

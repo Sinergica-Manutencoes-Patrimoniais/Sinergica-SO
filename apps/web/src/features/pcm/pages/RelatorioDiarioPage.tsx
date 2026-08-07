@@ -126,7 +126,7 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
       </header>
 
       {erro ? (
-        <p className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm text-[#A12D24]">
+        <p className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm text-danger">
           {erro}
         </p>
       ) : null}
@@ -197,10 +197,10 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
 
           <section
             aria-label="Atenção"
-            className="rounded-[8px] border border-[#F2D2A7] bg-[#FFF8EE] p-4"
+            className="rounded-[8px] border border-warning-line bg-warning-soft p-4"
           >
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-[#B26A00]" />
+              <AlertTriangle className="h-4 w-4 text-warning" />
               <h3 className="font-semibold text-ink">Atenção</h3>
             </div>
             <div className="mt-3 grid gap-2 text-sm text-ink-2 sm:grid-cols-2">

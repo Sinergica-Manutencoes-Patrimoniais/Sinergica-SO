@@ -243,14 +243,14 @@ export function ChamadoPainel({
           <button
             type="button"
             onClick={() => setSubModal({ modo: "cancelar" })}
-            className="h-8 rounded-[6px] border border-[#F2C0B5] px-3 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+            className="h-8 rounded-[6px] border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
           >
             Cancelar Chamado
           </button>
         </div>
       )}
 
-      {erro && <p className="px-4 pb-3 text-xs text-[#A23B25]">{erro}</p>}
+      {erro && <p className="px-4 pb-3 text-xs text-danger">{erro}</p>}
 
       {subModal?.modo === "gerar-os" && dadosOs && (
         <GerarOsModal
@@ -524,7 +524,7 @@ function GerarOsModal({
             </div>
           )}
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -642,7 +642,7 @@ function CancelarChamadoModal({
             />
           </div>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -655,7 +655,7 @@ function CancelarChamadoModal({
             type="button"
             onClick={confirmar}
             disabled={salvando || !justificativa.trim()}
-            className="h-9 rounded-[6px] bg-[#C5362B] px-3 text-sm font-semibold text-white hover:bg-[#A12D24] disabled:opacity-50"
+            className="h-9 rounded-[6px] bg-danger px-3 text-sm font-semibold text-white hover:bg-danger disabled:opacity-50"
           >
             {salvando ? "Cancelando…" : "Confirmar cancelamento"}
           </button>

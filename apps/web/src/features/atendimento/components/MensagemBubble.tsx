@@ -64,7 +64,7 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
           </div>
         )}
         {mensagem.statusEntrega === "erro" && (
-          <p className="mt-1 flex items-center gap-1 text-xs text-[#A23B25]">
+          <p className="mt-1 flex items-center gap-1 text-xs text-danger">
             <AlertTriangle className="h-3 w-3" />
             Falha ao enviar{mensagem.erroDetalhe ? `: ${mensagem.erroDetalhe}` : ""}
           </p>

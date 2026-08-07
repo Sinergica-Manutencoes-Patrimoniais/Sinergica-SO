@@ -16,9 +16,9 @@ import type {
 } from "../domain/evolution";
 
 const CORES_STATUS: Record<EvolutionInstancia["status"], string> = {
-  conectado: "bg-[#E7F5EC] text-[#1E8E45]",
+  conectado: "bg-success-soft text-success",
   desconectado: "bg-line-soft text-ink-3",
-  erro: "bg-[#FFF4F2] text-[#A12D24]",
+  erro: "bg-danger-soft text-danger",
 };
 
 const CHAVE_EVOLUTION = "evolution";
@@ -90,7 +90,7 @@ function ConfiguracaoEvolution({ temEscrita }: { temEscrita: boolean }) {
         URL e chave são usadas para criar e administrar instâncias. A chave vai ao Vault e nunca
         volta para esta tela.
       </p>
-      {erro ? <p className="mt-3 text-sm text-[#A12D24]">{erro}</p> : null}
+      {erro ? <p className="mt-3 text-sm text-danger">{erro}</p> : null}
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="mb-1 block text-xs font-semibold text-ink-3">URL de conexão</span>
@@ -227,7 +227,7 @@ export function EvolutionTab({
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -295,14 +295,14 @@ export function EvolutionTab({
                 </p>
                 <p
                   className={`mt-1 text-[11px] ${
-                    instancia.webhookRegistrado ? "text-[#1E8E45]" : "text-[#A12D24]"
+                    instancia.webhookRegistrado ? "text-success" : "text-danger"
                   }`}
                 >
                   {instancia.webhookRegistrado
                     ? "Webhook de mensagens registrado"
                     : "Webhook pendente — reconecte a instância"}
                 </p>
-                {instancia.erro && <p className="mt-1 text-xs text-[#A12D24]">{instancia.erro}</p>}
+                {instancia.erro && <p className="mt-1 text-xs text-danger">{instancia.erro}</p>}
               </div>
               <div className="flex items-center gap-2">
                 <span
@@ -345,7 +345,7 @@ export function EvolutionTab({
                       })
                     }
                     disabled={processando !== null}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#A12D24] disabled:opacity-60"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-danger disabled:opacity-60"
                   >
                     <Unplug className="h-3.5 w-3.5" /> Desconectar
                   </button>

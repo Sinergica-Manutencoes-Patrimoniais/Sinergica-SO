@@ -423,7 +423,7 @@ export function InspecoesPage() {
             <button
               type="button"
               onClick={() => setModalAtivo("importar-xls")}
-              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-[8px] border border-[#1E8E45] px-2 text-xs font-semibold text-[#0D7A35] hover:bg-[#E7F6EC]"
+              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-[8px] border border-success px-2 text-xs font-semibold text-success hover:bg-success-soft"
             >
               <Sheet className="h-4 w-4" />
               XLS
@@ -431,7 +431,7 @@ export function InspecoesPage() {
             <button
               type="button"
               onClick={() => setModalAtivo("importar-pdf")}
-              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-[8px] border border-navy px-2 text-xs font-semibold text-navy hover:bg-[#EAEEF8]"
+              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-[8px] border border-navy px-2 text-xs font-semibold text-navy hover:bg-info-soft"
             >
               <FileText className="h-4 w-4" />
               PDF
@@ -449,7 +449,7 @@ export function InspecoesPage() {
         )}
 
         {semClientes && (
-          <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+          <div className="mt-4 rounded-[6px] border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
             Execute o import Auvo de clientes antes de criar inspeções.
           </div>
         )}
@@ -500,8 +500,8 @@ export function InspecoesPage() {
                 </div>
                 <div className="mt-3 flex gap-2 text-xs">
                   <span className="text-ink-3">{inspecao.totalItens} itens</span>
-                  <span className="text-[#C5362B]">{inspecao.itensNaoConformes} NC</span>
-                  <span className="text-[#B26A00]">{inspecao.itensAtencao} atenção</span>
+                  <span className="text-danger">{inspecao.itensNaoConformes} NC</span>
+                  <span className="text-warning">{inspecao.itensAtencao} atenção</span>
                 </div>
               </button>
             ))
@@ -517,7 +517,7 @@ export function InspecoesPage() {
                 <button
                   type="button"
                   onClick={() => setSelecionadaId(null)}
-                  className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-[6px] text-white/75 hover:bg-white/10 hover:text-white xl:hidden"
+                  className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-[6px] text-white/75 hover:bg-card/10 hover:text-white xl:hidden"
                   aria-label="Voltar para lista"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -535,14 +535,14 @@ export function InspecoesPage() {
                       : ""}
                   </p>
                 </div>
-                <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">
+                <span className="rounded-full bg-card/20 px-2 py-0.5 text-xs font-semibold">
                   {INSPECAO_STATUS_LABEL[inspecaoSelecionada.status]}
                 </span>
                 {temEscrita && (
                   <button
                     type="button"
                     onClick={() => setModalAtivo("editar-inspecao")}
-                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-white/85 hover:bg-white/10 hover:text-white"
+                    className="rounded-[6px] px-2 py-1 text-xs font-semibold text-white/85 hover:bg-card/10 hover:text-white"
                   >
                     Editar
                   </button>
@@ -672,7 +672,7 @@ export function InspecoesPage() {
       )}
 
       {erroAcao && (
-        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-[8px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-3 text-sm text-[#A12D24] shadow-lg">
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-[8px] border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger shadow-lg">
           {erroAcao}
         </div>
       )}
@@ -692,9 +692,9 @@ function KpiInspecao({
   className?: string;
 }) {
   const colors = {
-    danger: "text-[#FFB4AA]",
-    warning: "text-[#FFD891]",
-    success: "text-[#B9F4CB]",
+    danger: "text-danger-soft",
+    warning: "text-warning-soft",
+    success: "text-success-line",
     muted: "text-white/45",
     white: "text-white",
   };
@@ -848,7 +848,7 @@ function ItemInspecaoCard({
               <button
                 type="button"
                 onClick={onExcluir}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-[#A23B25] hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:underline"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Excluir
@@ -1206,7 +1206,7 @@ function NovoItemModal({
               onClick={() => setForm((atual) => ({ ...atual, sistema }))}
               className={`flex min-h-18 flex-col items-center justify-center gap-1 rounded-[8px] border px-2 py-3 text-sm font-semibold transition-colors ${
                 form.sistema === sistema
-                  ? "border-navy bg-[#EAEEF8] text-navy"
+                  ? "border-navy bg-info-soft text-navy"
                   : "border-line text-ink-3 hover:border-navy/40 hover:text-ink"
               }`}
             >
@@ -1366,7 +1366,7 @@ function NovoItemModal({
               }}
             />
           </div>
-          {erroMidia && <p className="mt-2 text-xs text-[#A23B25]">{erroMidia}</p>}
+          {erroMidia && <p className="mt-2 text-xs text-danger">{erroMidia}</p>}
           {midias.length === 0 ? (
             <p className="mt-2 text-xs text-ink-3">Nenhuma mídia anexada.</p>
           ) : (
@@ -1383,7 +1383,7 @@ function NovoItemModal({
                   <button
                     type="button"
                     onClick={() => handleRemoverMidia(midia)}
-                    className="shrink-0 text-[#A23B25] hover:underline"
+                    className="shrink-0 text-danger hover:underline"
                   >
                     Remover
                   </button>
@@ -1524,11 +1524,11 @@ function ImportarRelatorioModal({
             }}
           />
           {erro && (
-            <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2 text-sm text-[#A12D24]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
-          <div className="rounded-[8px] bg-[#EAEEF8] px-4 py-3 text-sm text-[#2E3C70]">
+          <div className="rounded-[8px] bg-info-soft px-4 py-3 text-sm text-info">
             A importação usa o modelo do PCM antigo: extrai local, relato/fotos no XLS e envia o
             texto para a análise IA da função `importar-relatorio-pdf`.
           </div>
@@ -1548,7 +1548,7 @@ function ImportarRelatorioModal({
       {step === "revisao" && (
         <div className="space-y-4">
           {aviso ? (
-            <p className="rounded-[6px] border border-[#E9C98C] bg-[#FFF8E7] px-3 py-2 text-sm text-[#805600]">
+            <p className="rounded-[6px] border border-warning-line bg-warning-soft px-3 py-2 text-sm text-warning">
               {aviso}
             </p>
           ) : null}
@@ -1618,7 +1618,7 @@ function ImportarRelatorioModal({
               type="checkbox"
               checked={criarChamados}
               onChange={(event) => setCriarChamados(event.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-[#1E2D62]"
+              className="mt-0.5 h-4 w-4 accent-navy"
             />
             <span>
               Após revisar, criar um Chamado por item selecionado. A origem fica vinculada à
@@ -1643,14 +1643,14 @@ function ImportarRelatorioModal({
                       type="checkbox"
                       checked={selecionado}
                       onChange={() => toggleItem(index)}
-                      className="mt-1 h-4 w-4 accent-[#1E2D62]"
+                      className="mt-1 h-4 w-4 accent-navy"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] font-semibold text-ink-3">
                           {SISTEMA_ICONE[item.sistema]} {rotuloSistema(item.sistema)}
                         </span>
-                        <span className="rounded-full bg-[#FDF1DF] px-2 py-0.5 text-[11px] font-semibold text-[#B26A00]">
+                        <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
                           GUT {score}
                         </span>
                       </div>
@@ -1860,7 +1860,7 @@ function BottomSheet({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[6px] p-1 text-white/75 hover:bg-white/10 hover:text-white"
+            className="rounded-[6px] p-1 text-white/75 hover:bg-card/10 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>

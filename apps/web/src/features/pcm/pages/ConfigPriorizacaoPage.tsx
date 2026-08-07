@@ -75,12 +75,12 @@ export function ConfigPriorizacaoPage() {
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
       {sucesso && (
-        <div className="rounded-[6px] border border-[#C7E8D2] bg-[#EAF8EF] px-4 py-2 text-sm text-[#267343]">
+        <div className="rounded-[6px] border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
           Pesos salvos.
         </div>
       )}
@@ -111,7 +111,7 @@ export function ConfigPriorizacaoPage() {
           </div>
 
           <p
-            className={`mt-3 text-xs font-semibold ${soma === 100 ? "text-ink-3" : "text-[#A12D24]"}`}
+            className={`mt-3 text-xs font-semibold ${soma === 100 ? "text-ink-3" : "text-danger"}`}
           >
             Soma atual: {soma}% {soma !== 100 && "(precisa somar 100%)"}
           </p>

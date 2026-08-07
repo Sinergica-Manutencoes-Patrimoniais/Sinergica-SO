@@ -4,8 +4,8 @@ import { type FaixaAging, PAGAR, brl, dataCurta } from "./mock-data";
 
 const FAIXAS: Array<{ key: FaixaAging; label: string; cls: string }> = [
   { key: "a-vencer", label: "A vencer", cls: "bg-line-soft" },
-  { key: "d7", label: "D+7", cls: "bg-[#FCE3D6] dark:bg-[#3D2417]" },
-  { key: "d15", label: "D+15+", cls: "bg-[#FADCD8] dark:bg-[#3E1F1B]" },
+  { key: "d7", label: "D+7", cls: "bg-orange-soft" },
+  { key: "d15", label: "D+15+", cls: "bg-danger-line" },
 ];
 
 export function ContasPagarMock() {

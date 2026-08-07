@@ -49,7 +49,7 @@ export function ConversaPerfil({
         </div>
         {conversa.contatoNome && <p className="mt-1 text-xs text-ink-3">{conversa.contatoNome}</p>}
         {!conversa.clientId && (
-          <p className="mt-2 rounded-[6px] border border-[#F4D28C] bg-[#FFF8E8] px-2 py-1.5 text-xs text-[#7A4D00]">
+          <p className="mt-2 rounded-[6px] border border-warning-soft bg-warning-soft px-2 py-1.5 text-xs text-warning">
             Este contato ainda não está vinculado a um cliente cadastrado no PCM.
           </p>
         )}
@@ -77,15 +77,15 @@ export function ConversaPerfil({
               <Link2 className="h-3.5 w-3.5" />
               {salvando ? "Vinculando…" : "Vincular ao CRM"}
             </button>
-            {erro && <p className="text-xs text-[#A23B25]">{erro}</p>}
+            {erro && <p className="text-xs text-danger">{erro}</p>}
           </div>
         )}
       </div>
 
       {conversa.handoffMotivo && (
-        <div className="rounded-[6px] border border-[#F4D28C] bg-[#FFF8E8] px-2.5 py-2">
-          <p className="text-xs font-semibold text-[#7A4D00]">Aguardando atendimento humano</p>
-          <p className="mt-1 text-xs text-[#7A4D00]">{conversa.handoffMotivo}</p>
+        <div className="rounded-[6px] border border-warning-soft bg-warning-soft px-2.5 py-2">
+          <p className="text-xs font-semibold text-warning">Aguardando atendimento humano</p>
+          <p className="mt-1 text-xs text-warning">{conversa.handoffMotivo}</p>
         </div>
       )}
 

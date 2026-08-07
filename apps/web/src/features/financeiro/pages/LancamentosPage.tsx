@@ -327,7 +327,7 @@ export function LancamentosPage() {
           </div>
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -384,7 +384,7 @@ export function LancamentosPage() {
                   </td>
                   <td className="px-3 py-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${lancamento.tipo === "entrada" ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#FFF4F1] text-[#A23B25]"}`}
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${lancamento.tipo === "entrada" ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
                     >
                       {lancamento.tipo === "entrada" ? "Entrada" : "Saída"}
                     </span>
@@ -446,7 +446,7 @@ export function LancamentosPage() {
                             <button
                               type="button"
                               onClick={() => excluirRealizado(lancamento)}
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-[#A23B25] hover:text-[#7A2C1B]"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                               Excluir
@@ -527,20 +527,20 @@ export function LancamentosPage() {
 function StatusBadge({ lancamento }: { lancamento: LancamentoItem }) {
   if (lancamento.status === "previsto") {
     return (
-      <span className="rounded-full bg-[#FFF6E5] px-2 py-0.5 text-[11px] font-semibold text-[#9A6B00]">
+      <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
         Previsto
       </span>
     );
   }
   if (estaConciliado(lancamento)) {
     return (
-      <span className="rounded-full bg-[#E7F0FF] px-2 py-0.5 text-[11px] font-semibold text-[#1D4ED8]">
+      <span className="rounded-full bg-info-soft px-2 py-0.5 text-[11px] font-semibold text-info">
         Conciliado
       </span>
     );
   }
   return (
-    <span className="rounded-full bg-[#E7F6EC] px-2 py-0.5 text-[11px] font-semibold text-[#1E8E45]">
+    <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">
       Realizado
     </span>
   );
@@ -555,7 +555,7 @@ function Totalizador({
     <div className="rounded-[8px] border border-line bg-card p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</p>
       <p
-        className={`mt-1 text-xl font-semibold ${tom === "positivo" ? "text-[#1E8E45]" : "text-[#A23B25]"}`}
+        className={`mt-1 text-xl font-semibold ${tom === "positivo" ? "text-success" : "text-danger"}`}
       >
         R$ {centavosParaReais(Math.abs(valorCentavos))}
       </p>
@@ -891,7 +891,7 @@ function LancamentoModal({
             />
           </label>
           {erro && (
-            <div className="sm:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="sm:col-span-2 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -1072,7 +1072,7 @@ function CorrigirModal({
             </select>
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

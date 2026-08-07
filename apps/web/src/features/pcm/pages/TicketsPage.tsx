@@ -157,12 +157,12 @@ export function TicketsPage() {
             </button>
           )}
         </div>
-        <div className="mt-3 rounded-[6px] border border-[#F4D28C] bg-[#FFF8E8] px-3 py-2 text-sm text-[#7A4D00]">
+        <div className="mt-3 rounded-[6px] border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
           Só o status propaga ao Auvo. Título/descrição, se editados depois de criados, ficam só
           locais — a API do Auvo não documenta edição desses campos.
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -186,7 +186,7 @@ export function TicketsPage() {
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ticket.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${ticket.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
                 >
                   {ticket.ativo ? "Ativo" : "Arquivado"}
                 </span>
@@ -216,14 +216,14 @@ export function TicketsPage() {
                 )}
               </div>
               {ticket.auvoSyncError && (
-                <p className="mt-2 text-xs text-[#A23B25]">{ticket.auvoSyncError}</p>
+                <p className="mt-2 text-xs text-danger">{ticket.auvoSyncError}</p>
               )}
               {temEscrita && ticket.ativo && (
                 <div className="mt-4 flex justify-end">
                   <button
                     type="button"
                     onClick={() => arquivar(ticket)}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-3 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
                   >
                     <Archive className="h-3.5 w-3.5" />
                     Arquivar
@@ -406,7 +406,7 @@ function NovoTicketModal({
             />
           </label>
           {erro && (
-            <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

@@ -6,9 +6,9 @@ import type {
 } from "../domain/canais-externos";
 
 const CORES_STATUS: Record<WaTemplateItem["status"], string> = {
-  approved: "bg-[#E7F5EC] text-[#1E8E45]",
-  pending: "bg-[#FDF1DF] text-[#B26A00]",
-  rejected: "bg-[#FFF4F2] text-[#A12D24]",
+  approved: "bg-success-soft text-success",
+  pending: "bg-warning-soft text-warning",
+  rejected: "bg-danger-soft text-danger",
 };
 
 export function WaTemplatesTab({
@@ -151,7 +151,7 @@ export function WaTemplatesTab({
                 className="w-full rounded-[6px] border border-line p-2 text-sm"
               />
               {erro && (
-                <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2 text-sm text-[#A12D24]">
+                <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
                   {erro}
                 </div>
               )}

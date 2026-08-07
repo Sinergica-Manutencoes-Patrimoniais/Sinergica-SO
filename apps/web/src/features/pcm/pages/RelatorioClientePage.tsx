@@ -172,7 +172,7 @@ export function RelatorioClientePage() {
         </button>
       </div>
       {erro ? (
-        <p className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm text-[#A12D24]">
+        <p className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm text-danger">
           {erro}
         </p>
       ) : null}

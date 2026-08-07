@@ -29,6 +29,89 @@
   --color-ink-2: #585e72; /* texto secundário */
   --color-ink-3: #8c8f9b; /* texto terciário / legendas */
   --color-ink-4: #b4b6be; /* placeholder */
+
+  /* ── Status semântico (E00-S14) ───────────────────────────────────────────
+     Nomeia o par texto/fundo/borda que já dominava o código em hex cru (812
+     ocorrências, ver specs/E00-S14-tokens-semanticos/spec.md). Consumir sempre
+     por nome — nunca hex — pra responder ao tema sem `dark:` por chamada. */
+  /* success/warning escurecidos em relação ao hex original (#1e8e45/#b26a00) — o par original
+     contra o próprio -soft só batia 3.75:1/3.80:1, abaixo do mínimo AA de 4.5:1 (E00-S14 AC-5).
+     Mesma família de matiz, luminância ajustada até passar. */
+  --color-success: #1a7a3b;
+  --color-success-soft: #e7f6ec;
+  --color-success-line: #bfe9cc;
+
+  --color-warning: #9a5a00;
+  --color-warning-soft: #fdf1df;
+  --color-warning-line: #f0d4b0;
+
+  --color-danger: #a23b25;
+  --color-danger-soft: #fff4f1;
+  --color-danger-line: #f2c0b5;
+
+  --color-info: #2e3c70;
+  --color-info-soft: #eaeef8;
+  --color-info-line: #c7d0ec;
+
+  /* Texto sobre a sidebar navy — a chrome fica escura nos dois temas (a diferença de tom do
+     `--color-navy` entre claro/escuro é pequena), então este token **não flipa** no escuro:
+     flipar faria o texto escurecer junto com o papel e sumir contra a sidebar, que continua
+     escura. Achado real ao migrar `HomePage.tsx` (E00-S14) — não usar `--color-ink-*` aqui. */
+  --color-nav-ink: #a8b0cc;
+
+  /* ── Raio (E00-S15) ────────────────────────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* ── Elevação (E00-S20) — duas camadas, derivadas do navy (20,28,54), nunca
+     preto puro; cresce monotonicamente de raised → drawer. ────────────────── */
+  --shadow-raised: 0 1px 2px rgba(20, 28, 54, 0.06), 0 1px 1px rgba(20, 28, 54, 0.04);
+  --shadow-overlay: 0 4px 10px rgba(20, 28, 54, 0.1), 0 2px 4px rgba(20, 28, 54, 0.06);
+  --shadow-modal: 0 16px 32px rgba(20, 28, 54, 0.16), 0 4px 10px rgba(20, 28, 54, 0.08);
+  --shadow-drawer: 0 24px 48px rgba(20, 28, 54, 0.2), 0 8px 16px rgba(20, 28, 54, 0.1);
+
+  /* ── Movimento (E00-S19) — curvas próprias; CSS + WAAPI, sem lib (ADR-0018) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+
+  /* ── Tipografia (E00-S18) — degrau nomeado gera a utility `text-{nome}`
+     (sintaxe de chave composta do Tailwind v4: `--text-{nome}--line-height`
+     e `--text-{nome}--letter-spacing`, nunca sufixo solto). Tamanho em rem
+     (respeita o tamanho de fonte do usuário); tracking negativo no topo
+     (letras se afastam ao crescer), positivo na base (legibilidade). */
+  --text-display: 2rem;
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.01em;
+
+  --text-heading: 1rem;
+  --text-heading--line-height: 1.25;
+  --text-heading--letter-spacing: -0.006em;
+
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.5;
+  --text-body--letter-spacing: 0em;
+
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.5;
+  --text-body-sm--letter-spacing: 0.002em;
+
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.01em;
+
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.35;
+  --text-micro--letter-spacing: 0.02em;
 }
 
 @layer base {
@@ -75,6 +158,28 @@
     --color-ink-2: #c8cedb;
     --color-ink-3: #939cad;
     --color-ink-4: #697285;
+
+    --color-success: #6fcb8e;
+    --color-success-soft: #12301e;
+    --color-success-line: #1f4a30;
+
+    --color-warning: #f4c767;
+    --color-warning-soft: #3a2c0e;
+    --color-warning-line: #4f3a12;
+
+    --color-danger: #f2988a;
+    --color-danger-soft: #3e1f1b;
+    --color-danger-line: #5a2e27;
+
+    --color-info: #a8b6e8;
+    --color-info-soft: #202b4d;
+    --color-info-line: #35427a;
+
+    /* Sombra some no escuro — separação passa a vir de borda/superfície (E00-S20 AC-1). */
+    --shadow-raised: 0 0 0 1px rgba(255, 255, 255, 0.03);
+    --shadow-overlay: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 10px rgba(0, 0, 0, 0.3);
+    --shadow-modal: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 16px 32px rgba(0, 0, 0, 0.4);
+    --shadow-drawer: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 48px rgba(0, 0, 0, 0.45);
   }
 }
 
@@ -88,15 +193,15 @@
   }
 
   .page-title {
-    @apply text-base font-semibold tracking-[-0.01em] text-ink;
+    @apply text-title font-semibold text-ink;
   }
 
   .page-subtitle {
-    @apply mt-0.5 max-w-3xl text-xs leading-relaxed text-ink-3 sm:text-sm;
+    @apply mt-0.5 max-w-3xl text-body-sm leading-relaxed text-ink-3;
   }
 
   .surface-card {
-    @apply overflow-hidden rounded-[10px] border border-line bg-card shadow-[0_1px_2px_rgba(20,28,54,0.035)];
+    @apply overflow-hidden rounded-lg border border-line bg-card shadow-raised;
   }
 
   .surface-header {
@@ -104,27 +209,35 @@
   }
 
   .btn-primary {
-    @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white transition-colors hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white transition-colors hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-accent {
-    @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] bg-orange px-3 text-xs font-semibold text-white transition-colors hover:bg-orange-deep disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-orange px-3 text-xs font-semibold text-white transition-colors hover:bg-orange-deep disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-line bg-card px-2.5 text-xs font-semibold text-ink-2 transition-colors hover:bg-line-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-line bg-card px-2.5 text-xs font-semibold text-ink-2 transition-colors hover:bg-line-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-icon {
-    @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] border border-line bg-card text-ink-2 transition-colors hover:bg-line-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line bg-card text-ink-2 transition-colors hover:bg-line-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .empty-state {
-    @apply flex min-h-32 flex-col items-center justify-center rounded-[10px] border border-dashed border-line bg-card px-5 py-8 text-center text-xs text-ink-3;
+    @apply flex min-h-32 flex-col items-center justify-center rounded-lg border border-dashed border-line bg-card px-5 py-8 text-center text-xs text-ink-3;
   }
 
   .status-error {
-    @apply rounded-[6px] border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200;
+    @apply rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-xs text-danger;
+  }
+
+  .status-success {
+    @apply rounded-md border border-success-line bg-success-soft px-3 py-2 text-xs text-success;
+  }
+
+  .status-warning {
+    @apply rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-xs text-warning;
   }
 
   .modal-backdrop {
@@ -132,13 +245,13 @@
   }
 
   .modal-panel {
-    @apply max-h-[calc(100vh-1.5rem)] w-full overflow-y-auto rounded-[12px] border border-line bg-card shadow-2xl sm:max-h-[calc(100vh-2rem)];
+    @apply max-h-[calc(100vh-1.5rem)] w-full overflow-y-auto rounded-xl border border-line bg-card shadow-modal sm:max-h-[calc(100vh-2rem)];
   }
 }
 
 @layer utilities {
   .input {
-    @apply h-9 w-full rounded-[6px] border border-line bg-card px-2.5 py-1.5 text-xs text-ink outline-none transition-[border-color,box-shadow,background-color] placeholder:text-ink-4 focus:border-navy focus:ring-2 focus:ring-navy/10 disabled:bg-line-soft disabled:text-ink-3;
+    @apply h-9 w-full rounded-md border border-line bg-card px-2.5 py-1.5 text-xs text-ink outline-none transition-[border-color,box-shadow,background-color] placeholder:text-ink-4 focus:border-navy focus:ring-2 focus:ring-navy/10 disabled:bg-line-soft disabled:text-ink-3;
   }
 
   .no-scrollbar::-webkit-scrollbar {

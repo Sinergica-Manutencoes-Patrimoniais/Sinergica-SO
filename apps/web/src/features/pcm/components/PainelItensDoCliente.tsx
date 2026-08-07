@@ -147,7 +147,7 @@ export function PainelItensDoCliente({
                 )}
               </div>
               {erroLinha[item.id] && (
-                <span className="text-xs text-[#A23B25]">{erroLinha[item.id]}</span>
+                <span className="text-xs text-danger">{erroLinha[item.id]}</span>
               )}
             </div>
           ))}

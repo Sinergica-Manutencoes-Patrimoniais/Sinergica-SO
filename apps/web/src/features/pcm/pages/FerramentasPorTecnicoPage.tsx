@@ -316,7 +316,7 @@ export function FerramentasPorTecnicoPage() {
               )}
             </div>
             {erroAcao && (
-              <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+              <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
                 {erroAcao}
               </div>
             )}
@@ -372,7 +372,7 @@ export function FerramentasPorTecnicoPage() {
                                   ? new Date(unidade.atribuidaEm).toLocaleDateString("pt-BR")
                                   : "—"}
                                 {divergencia?.divergente && (
-                                  <span className="ml-2 inline-flex items-center gap-1 text-[#A16B0B]">
+                                  <span className="ml-2 inline-flex items-center gap-1 text-warning">
                                     <AlertTriangle className="h-3 w-3" />
                                     Auvo diverge ({divergencia.diferenca > 0 ? "+" : ""}
                                     {divergencia.diferenca})
@@ -667,7 +667,7 @@ function AbaPorCliente({ temEscrita }: { temEscrita: boolean }) {
         )}
       </div>
       {erro && (
-        <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+        <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -768,7 +768,7 @@ function DevolucaoModal({
             </label>
           )}
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}

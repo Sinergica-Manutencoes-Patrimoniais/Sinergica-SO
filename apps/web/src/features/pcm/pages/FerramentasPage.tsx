@@ -299,7 +299,7 @@ export function FerramentasPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -450,7 +450,7 @@ export function FerramentasPage() {
                     <button
                       type="button"
                       onClick={() => cancelarReserva(reserva)}
-                      className="text-xs font-semibold text-[#A23B25] hover:underline"
+                      className="text-xs font-semibold text-danger hover:underline"
                     >
                       Cancelar
                     </button>
@@ -556,7 +556,7 @@ function EfetivarReservaModal({
             </select>
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -634,7 +634,7 @@ function FerramentaLinha({
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</span>
               <span
-                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ferramenta.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
+                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ferramenta.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
               >
                 {ferramenta.ativo ? "Ativa" : "Inativa"}
               </span>
@@ -703,7 +703,7 @@ function FerramentaLinha({
                       <button
                         type="button"
                         onClick={() => onBaixarUnidade(unidade)}
-                        className="text-[#A23B25] hover:underline"
+                        className="text-danger hover:underline"
                       >
                         Baixar
                       </button>
@@ -762,7 +762,7 @@ function BaixaModal({
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -925,7 +925,7 @@ function FerramentaModal({
             />
           </label>
           {erro && (
-            <div className="md:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="md:col-span-2 rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -966,7 +966,7 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className="input w-full"
       />
-      {erro && <span className="mt-1 block text-xs text-[#A23B25]">{erro}</span>}
+      {erro && <span className="mt-1 block text-xs text-danger">{erro}</span>}
     </label>
   );
 }
@@ -995,7 +995,7 @@ function NumberField({
         onChange={(event) => onChange(Number(event.target.value))}
         className="input w-full"
       />
-      {erro && <span className="mt-1 block text-xs text-[#A23B25]">{erro}</span>}
+      {erro && <span className="mt-1 block text-xs text-danger">{erro}</span>}
     </label>
   );
 }
@@ -1010,7 +1010,7 @@ function IconButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-3 text-xs font-semibold ${danger ? "border-[#F2C0B5] text-[#A23B25] hover:bg-[#FFF4F1]" : "border-line text-ink-2 hover:bg-line-soft"}`}
+      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-3 text-xs font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
     >
       {icon}
       {label}

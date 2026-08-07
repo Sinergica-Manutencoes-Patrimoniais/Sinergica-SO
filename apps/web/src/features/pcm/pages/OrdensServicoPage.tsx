@@ -505,7 +505,7 @@ export function OrdensServicoPage({
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
@@ -533,9 +533,9 @@ export function OrdensServicoPage({
       {/* E01-S118 AC-4: métricas operacionais acionáveis (gargalos), abaixo dos KPIs de status. */}
       <div className="flex flex-wrap gap-2">
         {[
-          ["Backlog", metricasExtra.backlog, "text-[#6B3FA0]"],
-          ["Sem técnico", metricasExtra.semTecnico, "text-[#B26A00]"],
-          ["Sync Auvo c/ erro", metricasExtra.syncAuvoErro, "text-[#C5362B]"],
+          ["Backlog", metricasExtra.backlog, "text-info"],
+          ["Sem técnico", metricasExtra.semTecnico, "text-warning"],
+          ["Sync Auvo c/ erro", metricasExtra.syncAuvoErro, "text-danger"],
         ].map(([label, valor, cor]) => (
           <span
             key={label as string}
@@ -661,7 +661,7 @@ export function OrdensServicoPage({
 
           {temEscrita && selecionados.size > 0 && (visao === "lista" || visao === "kanban") && (
             <div className="flex flex-wrap items-center gap-3 rounded-[10px] border border-orange bg-orange-soft px-4 py-3">
-              <p className="text-sm font-semibold text-[#7A3F00]">
+              <p className="text-sm font-semibold text-warning">
                 {selecionados.size} selecionada{selecionados.size > 1 ? "s" : ""}
               </p>
               <select
@@ -683,7 +683,7 @@ export function OrdensServicoPage({
               <button
                 type="button"
                 onClick={() => setSelecionados(new Set())}
-                className="text-xs font-semibold text-[#7A3F00] hover:underline"
+                className="text-xs font-semibold text-warning hover:underline"
               >
                 Limpar seleção
               </button>
@@ -915,7 +915,7 @@ function BadgeHubOs({
   return (
     <span
       className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-        atrasada ? "bg-[#FDECEB] text-[#B42318]" : "bg-[#EEF2FF] text-navy"
+        atrasada ? "bg-danger-line text-danger" : "bg-info-soft text-navy"
       }`}
       title={TIPO_OS_HUB_LABEL[tipoOs]}
     >
@@ -1054,11 +1054,11 @@ function DetalheOs({
           </div>
 
           {selecionada.auvoSyncError && (
-            <div className="rounded-[8px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#A12D24]">
+            <div className="rounded-[8px] border border-danger-line bg-danger-soft px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-danger">
                 Erro Auvo
               </p>
-              <p className="mt-1 text-sm text-[#7A241D]">{selecionada.auvoSyncError}</p>
+              <p className="mt-1 text-sm text-danger">{selecionada.auvoSyncError}</p>
             </div>
           )}
 

@@ -117,7 +117,7 @@ export function AgendaTecnicoPage() {
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-[6px] border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -352,7 +352,7 @@ function AlocacaoModal({
             </label>
           </div>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-[6px] border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -363,7 +363,7 @@ function AlocacaoModal({
               type="button"
               onClick={remover}
               disabled={removendo}
-              className="h-9 rounded-[6px] border border-[#F2C0B5] px-3 text-sm font-semibold text-[#A23B25] hover:bg-[#FFF4F1] disabled:opacity-50"
+              className="h-9 rounded-[6px] border border-danger-line px-3 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
             >
               {removendo ? "Removendo…" : "Remover"}
             </button>

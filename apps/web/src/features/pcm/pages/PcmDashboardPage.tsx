@@ -623,12 +623,10 @@ function CockpitCard({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-[8px] border p-3 text-left transition-colors hover:bg-line-soft ${alerta ? "border-[#F2C0B5] bg-[#FFF8F6]" : "border-line bg-paper"}`}
+      className={`rounded-[8px] border p-3 text-left transition-colors hover:bg-line-soft ${alerta ? "border-danger-line bg-danger-soft" : "border-line bg-paper"}`}
     >
       <p className="text-xs font-semibold text-ink-3">{titulo}</p>
-      <p className={`mt-1 text-xl font-semibold ${alerta ? "text-[#C5362B]" : "text-ink"}`}>
-        {valor}
-      </p>
+      <p className={`mt-1 text-xl font-semibold ${alerta ? "text-danger" : "text-ink"}`}>{valor}</p>
       <p className="mt-1 line-clamp-2 text-xs text-ink-3">{detalhe}</p>
     </button>
   );
@@ -656,7 +654,7 @@ function BadgeSaudeSync({
         type="button"
         onClick={onAbrirErros}
         title={titulo}
-        className="rounded-full bg-[#FFF4F2] px-2 py-0.5 text-[11px] font-semibold text-[#A12D24] hover:underline focus:outline-none focus:ring-2 focus:ring-orange"
+        className="rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-semibold text-danger hover:underline focus:outline-none focus:ring-2 focus:ring-orange"
       >
         {conteudo}
       </button>
@@ -666,7 +664,7 @@ function BadgeSaudeSync({
     <span
       title={titulo || `${itens.length} entidades monitoradas`}
       className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-        dryRun.length > 0 ? "bg-[#FFF8E6] text-[#8A5A00]" : "bg-[#E7F5EC] text-[#1E8E45]"
+        dryRun.length > 0 ? "bg-warning-soft text-warning" : "bg-success-soft text-success"
       }`}
     >
       {conteudo}
@@ -686,7 +684,7 @@ function DetalheErrosSyncAuvo({
   onFechar: () => void;
 }) {
   return (
-    <section className="rounded-[10px] border border-[#F2C0B5] bg-card" aria-live="polite">
+    <section className="rounded-[10px] border border-danger-line bg-card" aria-live="polite">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
           <h3 className="text-sm font-semibold text-ink">Erros de sincronização Auvo</h3>
@@ -699,7 +697,7 @@ function DetalheErrosSyncAuvo({
       {carregando ? (
         <p className="px-4 py-5 text-sm text-ink-3">Carregando erros…</p>
       ) : erro ? (
-        <p className="px-4 py-5 text-sm text-[#A12D24]">{erro}</p>
+        <p className="px-4 py-5 text-sm text-danger">{erro}</p>
       ) : itens.length === 0 ? (
         <p className="px-4 py-5 text-sm text-ink-3">Nenhum erro pendente de detalhamento.</p>
       ) : (
@@ -709,7 +707,7 @@ function DetalheErrosSyncAuvo({
               <p className="text-sm font-semibold text-ink">
                 {item.entity} · {item.rowId ?? "ID local indisponível"}
               </p>
-              <p className="mt-0.5 text-sm text-[#A12D24]">{item.lastError}</p>
+              <p className="mt-0.5 text-sm text-danger">{item.lastError}</p>
               <p className="mt-1 text-[11px] text-ink-3">
                 Última falha: {formatarDataHoraCurta(item.lastErrorAt)}
               </p>
@@ -729,12 +727,12 @@ function StatusSincronizacaoAuvo({ estado }: { estado: EstadoSincronizacaoAuvo }
   }
 
   if (estado.fase === "erro") {
-    return <p className="text-xs font-medium text-[#C5362B]">{estado.mensagem}</p>;
+    return <p className="text-xs font-medium text-danger">{estado.mensagem}</p>;
   }
 
   if (estado.etapasComErro.length > 0) {
     return (
-      <p className="text-xs font-medium text-[#B26A00]">
+      <p className="text-xs font-medium text-warning">
         Sincronizado às {formatarDataHoraCurta(estado.syncedAt)} — falhou em:{" "}
         {estado.etapasComErro.join(", ")}
       </p>
@@ -788,7 +786,7 @@ function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["
           </p>
         </div>
         {dashboard.equipamentosSemCliente > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FDF1DF] px-3 py-1 text-xs font-semibold text-[#B26A00]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold text-warning">
             <AlertTriangle className="h-3.5 w-3.5" />
             {dashboard.equipamentosSemCliente} ativos sem cliente
           </span>
@@ -868,7 +866,7 @@ function PainelCampoAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmRes
             Consolidado do pull de tarefas e dos webhooks de execução
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF2FF] px-3 py-1 text-xs font-semibold text-navy">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-info-soft px-3 py-1 text-xs font-semibold text-navy">
           <Activity className="h-3.5 w-3.5" />
           última execução {ultimaExecucao}
         </span>
@@ -992,11 +990,7 @@ function KpiCard({ kpi }: { kpi: KpiDashboardPcm }) {
       </span>
       <span
         className={`inline-flex items-center gap-1 text-[11px] font-medium ${
-          kpi.trend === "up"
-            ? "text-[#1E8E45]"
-            : kpi.trend === "down"
-              ? "text-[#C5362B]"
-              : "text-ink-3"
+          kpi.trend === "up" ? "text-success" : kpi.trend === "down" ? "text-danger" : "text-ink-3"
         }`}
       >
         {kpi.trend === "up" && <TrendingUp className="w-3 h-3" />}
