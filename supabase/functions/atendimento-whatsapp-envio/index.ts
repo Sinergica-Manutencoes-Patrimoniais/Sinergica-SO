@@ -88,7 +88,17 @@ serve(async (req) => {
       const { error } = await serviceClient.functions.invoke("pcm-ze-agent", {
         body: { queueKey, forcar: true },
       });
-      if (error) throw new HttpError(502, "Não foi possível acionar a IA");
+      if (error) {
+        // `error.context` é a Response bruta do gateway de Functions — pode trazer o corpo
+        // (`{detail: "..."}`) que a mensagem genérica do SDK (`FunctionsHttpError`) esconde.
+        const contexto = (error as { context?: Response }).context;
+        const corpo = contexto ? await contexto.clone().text().catch(() => "") : "";
+        console.error(
+          JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "acionar_ia falhou", detail: error.message, corpo: corpo.slice(0, 1000) }),
+        );
+        const detalhe = corpo.trim() || error.message;
+        throw new HttpError(502, `Não foi possível acionar a IA — ${detalhe.slice(0, 200)}`);
+      }
       return json(200, { ok: true }, cors);
     }
 

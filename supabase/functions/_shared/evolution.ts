@@ -53,5 +53,13 @@ async function chamarEvolution(
     headers: { "Content-Type": "application/json", apikey: configuracao.apiKey },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Evolution ${endpoint} falhou: ${res.status}`);
+  if (!res.ok) {
+    // Corpo é a resposta do próprio Evolution (nunca inclui nossa apikey) — propagar até o
+    // detalhe da mensagem é o que permite diagnosticar 400 (payload rejeitado) sem log de servidor.
+    const corpo = await res.text().catch(() => "");
+    console.error(
+      JSON.stringify({ nivel: "error", escopo: "evolution-client", endpoint, instanceId, status: res.status, corpo: corpo.slice(0, 1000) }),
+    );
+    throw new Error(`Evolution ${endpoint} falhou: ${res.status}${corpo ? ` — ${corpo.slice(0, 300)}` : ""}`);
+  }
 }
