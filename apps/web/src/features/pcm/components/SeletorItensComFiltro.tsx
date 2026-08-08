@@ -34,7 +34,7 @@ export function SeletorItensComFiltro({
           className="input h-9 w-full pl-8 text-sm"
         />
       </div>
-      <div className="max-h-64 overflow-y-auto rounded-[6px] border border-line">
+      <div className="max-h-64 overflow-y-auto rounded-md border border-line">
         {itensFiltrados.length === 0 ? (
           <p className="px-3 py-4 text-center text-xs text-ink-3">Nenhum item encontrado.</p>
         ) : (
@@ -56,7 +56,7 @@ export function SeletorItensComFiltro({
           </ul>
         )}
       </div>
-      <p className="text-[11px] text-ink-3">
+      <p className="text-micro text-ink-3">
         {selecionadosIds.size} selecionado{selecionadosIds.size === 1 ? "" : "s"}
       </p>
     </div>

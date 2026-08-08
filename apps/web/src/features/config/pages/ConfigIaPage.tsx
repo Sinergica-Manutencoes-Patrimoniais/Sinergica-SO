@@ -114,7 +114,7 @@ export function ConfigIaPage() {
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -122,15 +122,17 @@ export function ConfigIaPage() {
       {carregando ? (
         <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
       ) : (
-        <section className="rounded-[10px] border border-line bg-card p-4">
+        <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-ink-3" />
               <h3 className="text-sm font-semibold text-ink">OpenRouter</h3>
             </div>
             <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                iaIntegracao?.temSegredo ? "bg-[#EAF8EF] text-[#267343]" : "bg-line-soft text-ink-3"
+              className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
+                iaIntegracao?.temSegredo
+                  ? "bg-success-soft text-success"
+                  : "bg-line-soft text-ink-3"
               }`}
             >
               {iaIntegracao?.temSegredo ? "Chave configurada" : "Chave não configurada"}
@@ -184,7 +186,7 @@ export function ConfigIaPage() {
             type="button"
             onClick={salvarMetadado}
             disabled={salvando}
-            className="mt-3 h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="mt-3 h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             Salvar configurações
           </button>
@@ -209,7 +211,7 @@ export function ConfigIaPage() {
                   type="button"
                   onClick={salvarChave}
                   disabled={salvando || !apiKey.trim()}
-                  className="h-9 shrink-0 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
                   Salvar chave
                 </button>

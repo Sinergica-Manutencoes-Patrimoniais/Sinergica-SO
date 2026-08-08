@@ -34,7 +34,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
           <div>
             <div className="flex items-center gap-2">
               <h2 className="page-title">Área do Cliente</h2>
-              <span className="rounded-full bg-[#E7F6EC] px-2.5 py-1 text-[11px] font-semibold text-[#1E8E45]">
+              <span className="rounded-full bg-success-soft px-2.5 py-1 text-micro font-semibold text-success">
                 Portal implementado
               </span>
             </div>
@@ -45,7 +45,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
           <button
             type="button"
             onClick={onAbrirClientes}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
           >
             <Building2 className="h-4 w-4" />
             Abrir Clientes
@@ -53,7 +53,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
         </div>
       </section>
 
-      <section className="rounded-[8px] border border-orange-deep/25 bg-orange-soft/60 p-4">
+      <section className="rounded-lg border border-orange-deep/25 bg-orange-soft/60 p-4">
         <div className="flex gap-3">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-orange-deep" />
           <div>
@@ -90,7 +90,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
             />
           </ol>
 
-          <div className="mt-5 rounded-[6px] border border-line bg-paper p-3">
+          <div className="mt-5 rounded-md border border-line bg-paper p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">
               Endereço do portal
             </p>
@@ -99,7 +99,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
               <button
                 type="button"
                 onClick={copiarEndereco}
-                className="inline-flex h-9 items-center gap-2 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <Copy className="h-4 w-4" />
                 {copiado ? "Copiado" : "Copiar endereço"}
@@ -109,7 +109,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
                   href={urlPortal}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex h-9 items-center gap-2 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                  className="inline-flex h-9 items-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
                 >
                   <ExternalLink className="h-4 w-4" />
                   Abrir portal
@@ -129,12 +129,12 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
           <ul className="mt-4 flex flex-col gap-2">
             {RECURSOS_PORTAL.map((recurso) => (
               <li key={recurso} className="flex items-start gap-2 text-sm text-ink-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#1E8E45]" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                 {recurso}
               </li>
             ))}
           </ul>
-          <div className="mt-5 rounded-[6px] border border-line p-3">
+          <div className="mt-5 rounded-md border border-line p-3">
             <div className="flex items-center gap-2">
               <UserPlus className="h-4 w-4 text-ink-3" />
               <p className="text-sm font-semibold text-ink">Regra de acesso</p>

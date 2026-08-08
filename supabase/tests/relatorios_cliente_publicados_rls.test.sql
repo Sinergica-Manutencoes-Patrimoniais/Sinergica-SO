@@ -4,9 +4,9 @@ select plan(3);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
-  ('00000000-0000-0000-0000-00000000d135', '00000000-0000-0000-0000-000000000000', 'authenticated', 'relatorio-interno@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
-  ('00000000-0000-0000-0000-00000000d136', '00000000-0000-0000-0000-000000000000', 'authenticated', 'sindico-a@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
-  ('00000000-0000-0000-0000-00000000d137', '00000000-0000-0000-0000-000000000000', 'authenticated', 'sindico-b@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
+  ('00000000-0000-0000-0000-00000000d135', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'relatorio-interno@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
+  ('00000000-0000-0000-0000-00000000d136', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sindico-a@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
+  ('00000000-0000-0000-0000-00000000d137', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sindico-b@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
 insert into pcm.clientes (id, nome, created_by)

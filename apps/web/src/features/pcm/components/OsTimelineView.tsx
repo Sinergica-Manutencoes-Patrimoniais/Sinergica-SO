@@ -1,6 +1,6 @@
+import { Tooltip } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Tooltip } from "../../../components/ui/Tooltip";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   agruparPorTecnico,
@@ -66,7 +66,7 @@ export function OsTimelineView({
           <button
             type="button"
             onClick={() => mudarDia(-1)}
-            className="rounded-[6px] border border-line p-1.5 hover:bg-line-soft"
+            className="rounded-md border border-line p-1.5 hover:bg-line-soft"
             aria-label="Dia anterior"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -80,14 +80,14 @@ export function OsTimelineView({
                 return hoje;
               })
             }
-            className="rounded-[6px] border border-line px-3 py-1.5 text-xs font-semibold hover:bg-line-soft"
+            className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold hover:bg-line-soft"
           >
             Hoje
           </button>
           <button
             type="button"
             onClick={() => mudarDia(1)}
-            className="rounded-[6px] border border-line p-1.5 hover:bg-line-soft"
+            className="rounded-md border border-line p-1.5 hover:bg-line-soft"
             aria-label="Próximo dia"
           >
             <ChevronRight className="h-4 w-4" />
@@ -104,13 +104,13 @@ export function OsTimelineView({
       </div>
 
       {grupos.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
+        <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
           Nenhuma OS com data/check-in nesse dia.
         </div>
       ) : (
-        <div className="rounded-[8px] border border-line bg-card">
+        <div className="rounded-lg border border-line bg-card">
           {/* Régua de horas */}
-          <div className="flex border-b border-line-soft pl-40 text-[10px] text-ink-3">
+          <div className="flex border-b border-line-soft pl-40 text-micro text-ink-3">
             {HORAS.map((hora) => (
               <div
                 key={`hora-${hora}`}
@@ -127,7 +127,7 @@ export function OsTimelineView({
             >
               <div className="w-40 shrink-0 border-r border-line-soft px-3 py-3">
                 <p className="text-sm font-semibold text-ink">{grupo.tecnicoNome}</p>
-                <p className="text-[11px] text-ink-3">{grupo.ordens.length} OS</p>
+                <p className="text-micro text-ink-3">{grupo.ordens.length} OS</p>
               </div>
               <div className="relative flex-1 py-3" style={{ minHeight: "3rem" }}>
                 {grupo.ordens.map((ordem) => {
@@ -163,7 +163,7 @@ export function OsTimelineView({
                       <button
                         type="button"
                         onClick={() => onSelecionar(ordem.id)}
-                        className="absolute top-2 flex h-8 items-center overflow-hidden rounded-[4px] bg-navy px-2 text-[11px] font-semibold text-white"
+                        className="absolute top-2 flex h-8 items-center overflow-hidden rounded-sm bg-navy px-2 text-micro font-semibold text-white"
                         style={{
                           left: `${(inicio / HORAS_DO_DIA) * 100}%`,
                           width: `${(larguraHoras / HORAS_DO_DIA) * 100}%`,

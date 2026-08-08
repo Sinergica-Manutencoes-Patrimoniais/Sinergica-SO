@@ -94,7 +94,7 @@ export function OperacaoTab({
 
   if (personas.length === 0) {
     return (
-      <div className="rounded-[10px] border border-line bg-card p-8 text-center text-sm text-ink-3">
+      <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
         Crie uma persona na aba "Personas" antes de configurar a operação.
       </div>
     );
@@ -105,7 +105,7 @@ export function OperacaoTab({
       <select
         value={personaId}
         onChange={(e) => setPersonaId(e.target.value)}
-        className="w-full max-w-xs rounded-[6px] border border-line p-2 text-sm text-ink"
+        className="w-full max-w-xs rounded-md border border-line p-2 text-sm text-ink"
       >
         {personas.map((p) => (
           <option key={p.id} value={p.id}>
@@ -114,7 +114,7 @@ export function OperacaoTab({
         ))}
       </select>
 
-      <section className="rounded-[10px] border border-line bg-card p-5">
+      <section className="rounded-xl border border-line bg-card p-5">
         <h3 className="text-sm font-semibold text-ink">Inteligência</h3>
         <p className="mt-0.5 text-xs text-ink-3">
           Os motores do agente. Cada um mostra o que precisa para funcionar.
@@ -157,7 +157,7 @@ export function OperacaoTab({
         </div>
       </section>
 
-      <section className="rounded-[10px] border border-line bg-card p-5">
+      <section className="rounded-xl border border-line bg-card p-5">
         <h3 className="text-sm font-semibold text-ink">Regras de atendimento</h3>
         <p className="mt-0.5 text-xs text-ink-3">Quando o agente para, transfere ou se contém.</p>
         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -171,7 +171,7 @@ export function OperacaoTab({
               onChange={(e) => setForm((f) => ({ ...f, limiteDiarioMensagens: e.target.value }))}
               disabled={!temEscrita}
               placeholder="sem limite"
-              className="mt-1 w-full rounded-[6px] border border-line p-2 text-sm text-ink disabled:opacity-60"
+              className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
             />
           </div>
           <div>
@@ -184,7 +184,7 @@ export function OperacaoTab({
               onChange={(e) => setForm((f) => ({ ...f, transferirAposNRespostas: e.target.value }))}
               disabled={!temEscrita}
               placeholder="sem limite"
-              className="mt-1 w-full rounded-[6px] border border-line p-2 text-sm text-ink disabled:opacity-60"
+              className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
             />
           </div>
         </div>
@@ -192,8 +192,11 @@ export function OperacaoTab({
           htmlFor="op-palavra-transferencia"
           className="mt-3 block text-xs font-semibold text-ink-2"
         >
-          Palavras que transferem
+          Textos que ativam handoff
         </label>
+        <p className="mt-0.5 text-xs text-ink-3">
+          Se o cliente escrever qualquer um destes textos, a conversa passa pra um atendente humano.
+        </p>
         <div className="mt-1 flex flex-wrap gap-1.5">
           {form.palavrasTransferencia.map((palavra) => (
             <span
@@ -235,48 +238,48 @@ export function OperacaoTab({
                 }
               }}
               placeholder="ex.: cancelar, reclamação"
-              className="flex-1 rounded-[6px] border border-line p-2 text-sm text-ink"
+              className="flex-1 rounded-md border border-line p-2 text-sm text-ink"
             />
           </div>
         )}
       </section>
 
-      <section className="rounded-[10px] border border-line bg-card p-5">
+      <section className="rounded-xl border border-line bg-card p-5">
         <h3 className="text-sm font-semibold text-ink">Orçamento do mês</h3>
         <input
           value={form.orcamentoMensalUsd}
           onChange={(e) => setForm((f) => ({ ...f, orcamentoMensalUsd: e.target.value }))}
           disabled={!temEscrita}
           placeholder="sem teto (USD)"
-          className="mt-2 w-48 rounded-[6px] border border-line p-2 text-sm text-ink disabled:opacity-60"
+          className="mt-2 w-48 rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
         />
       </section>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
-      {salvo && !erro && <p className="text-sm font-medium text-[#1E8E45]">Configuração salva.</p>}
+      {salvo && !erro && <p className="text-sm font-medium text-success">Configuração salva.</p>}
       {temEscrita && (
         <button
           type="button"
           onClick={salvar}
           disabled={salvando}
-          className="w-fit rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+          className="w-fit rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
         >
           {salvando ? "Salvando…" : "Salvar operação"}
         </button>
       )}
 
-      <section className="rounded-[10px] border border-line bg-card p-5">
+      <section className="rounded-xl border border-line bg-card p-5">
         <h3 className="text-sm font-semibold text-ink">Lições aprendidas</h3>
         <div className="mt-3 space-y-2">
           {licoes.length === 0 ? (
             <p className="text-sm text-ink-3">Nenhuma lição registrada ainda.</p>
           ) : (
             licoes.map((l) => (
-              <div key={l.id} className="rounded-[6px] border border-line-soft p-3 text-sm">
+              <div key={l.id} className="rounded-md border border-line-soft p-3 text-sm">
                 <p className="font-medium text-ink-2">{l.contexto}</p>
                 <p className="mt-1 text-ink-3">Errado: {l.respostaErrada}</p>
                 <p className="text-ink-2">Certo: {l.respostaCerta}</p>
@@ -284,7 +287,7 @@ export function OperacaoTab({
                   <button
                     type="button"
                     onClick={() => onDesativarLicao(l.id)}
-                    className="mt-1 text-xs text-[#A12D24] hover:underline"
+                    className="mt-1 text-xs text-danger hover:underline"
                   >
                     Desativar
                   </button>
@@ -299,20 +302,20 @@ export function OperacaoTab({
               value={licaoForm.contexto}
               onChange={(e) => setLicaoForm((f) => ({ ...f, contexto: e.target.value }))}
               placeholder="Quando (contexto)"
-              className="w-full rounded-[6px] border border-line p-2 text-sm"
+              className="w-full rounded-md border border-line p-2 text-sm"
             />
             <textarea
               value={licaoForm.respostaErrada}
               onChange={(e) => setLicaoForm((f) => ({ ...f, respostaErrada: e.target.value }))}
               placeholder="O que estava errado"
-              className="w-full rounded-[6px] border border-line p-2 text-sm"
+              className="w-full rounded-md border border-line p-2 text-sm"
               rows={2}
             />
             <textarea
               value={licaoForm.respostaCerta}
               onChange={(e) => setLicaoForm((f) => ({ ...f, respostaCerta: e.target.value }))}
               placeholder="O certo a fazer"
-              className="w-full rounded-[6px] border border-line p-2 text-sm"
+              className="w-full rounded-md border border-line p-2 text-sm"
               rows={2}
             />
             <button
@@ -326,7 +329,7 @@ export function OperacaoTab({
                 );
                 setLicaoForm({ contexto: "", respostaErrada: "", respostaCerta: "" });
               }}
-              className="rounded-[6px] border border-line px-3 py-1.5 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+              className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
               Adicionar lição
             </button>
@@ -334,16 +337,20 @@ export function OperacaoTab({
         )}
       </section>
 
-      <section className="rounded-[10px] border border-line bg-card p-5">
-        <h3 className="text-sm font-semibold text-ink">Especialistas</h3>
+      <section className="rounded-xl border border-line bg-card p-5">
+        <h3 className="text-sm font-semibold text-ink">Skills</h3>
+        <p className="mt-0.5 text-xs text-ink-3">
+          Especialistas que o agente sabe que existem e quando chamar — hoje é orientação de texto,
+          o agente ainda não executa a ação sozinho (isso é E02-S30, comunicação com MCP).
+        </p>
         <div className="mt-3 space-y-2">
           {especialistas.length === 0 ? (
-            <p className="text-sm text-ink-3">Nenhum especialista vinculado ainda.</p>
+            <p className="text-sm text-ink-3">Nenhuma skill vinculada ainda.</p>
           ) : (
             especialistas.map((e) => (
               <div
                 key={e.id}
-                className="flex items-center justify-between rounded-[6px] border border-line-soft p-3 text-sm"
+                className="flex items-center justify-between rounded-md border border-line-soft p-3 text-sm"
               >
                 <div>
                   <p className="font-medium text-ink-2">{e.nome}</p>
@@ -353,7 +360,7 @@ export function OperacaoTab({
                   <button
                     type="button"
                     onClick={() => onDesativarEspecialista(e.id)}
-                    className="text-xs text-[#A12D24] hover:underline"
+                    className="text-xs text-danger hover:underline"
                   >
                     Desativar
                   </button>
@@ -368,7 +375,7 @@ export function OperacaoTab({
               value={especialistaForm.nome}
               onChange={(ev) => setEspecialistaForm((f) => ({ ...f, nome: ev.target.value }))}
               placeholder="Nome"
-              className="w-40 rounded-[6px] border border-line p-2 text-sm"
+              className="w-40 rounded-md border border-line p-2 text-sm"
             />
             <input
               value={especialistaForm.quandoChamar}
@@ -376,7 +383,7 @@ export function OperacaoTab({
                 setEspecialistaForm((f) => ({ ...f, quandoChamar: ev.target.value }))
               }
               placeholder="Quando chamar"
-              className="flex-1 rounded-[6px] border border-line p-2 text-sm"
+              className="flex-1 rounded-md border border-line p-2 text-sm"
             />
             <button
               type="button"
@@ -388,7 +395,7 @@ export function OperacaoTab({
                 );
                 setEspecialistaForm({ nome: "", quandoChamar: "" });
               }}
-              className="rounded-[6px] border border-line px-3 py-1.5 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+              className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
               Adicionar
             </button>
@@ -429,7 +436,7 @@ function Toggle({
         }`}
       >
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-card transition-transform ${
             checked ? "translate-x-5" : "translate-x-0.5"
           }`}
         />

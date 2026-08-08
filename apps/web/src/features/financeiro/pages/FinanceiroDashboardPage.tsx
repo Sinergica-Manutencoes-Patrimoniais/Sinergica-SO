@@ -78,7 +78,7 @@ export function FinanceiroDashboardPage() {
   }, [permissoesCarregando, temLeitura, carregar]);
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -112,7 +112,7 @@ export function FinanceiroDashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Dashboard Financeiro</h3>
@@ -140,12 +140,12 @@ export function FinanceiroDashboardPage() {
         />
         <Kpi label="A receber (30d)" valorCentavos={resumo.aReceber30dCentavos} tom="positivo" />
         <Kpi label="A pagar (30d)" valorCentavos={resumo.aPagar30dCentavos} tom="negativo" />
-        <div className="rounded-[8px] border border-line bg-card p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+        <div className="rounded-lg border border-line bg-card p-3">
+          <p className="text-micro font-semibold uppercase tracking-wide text-ink-3">
             Inadimplência
           </p>
           <p
-            className={`mt-1 text-lg font-semibold ${percentualInadimplencia > 10 ? "text-[#A23B25]" : "text-ink"}`}
+            className={`mt-1 text-lg font-semibold ${percentualInadimplencia > 10 ? "text-danger" : "text-ink"}`}
           >
             {percentualInadimplencia.toFixed(0)}%
           </p>
@@ -153,11 +153,11 @@ export function FinanceiroDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="rounded-[8px] border border-line bg-card p-4">
+        <div className="rounded-lg border border-line bg-card p-4">
           <h4 className="mb-3 text-sm font-semibold text-ink">Fluxo mensal (12 meses)</h4>
           <FluxoMensalChart pontos={fluxo} />
         </div>
-        <div className="rounded-[8px] border border-line bg-card p-4">
+        <div className="rounded-lg border border-line bg-card p-4">
           <h4 className="mb-3 text-sm font-semibold text-ink">
             Gasto por categoria — mês corrente
           </h4>
@@ -165,7 +165,7 @@ export function FinanceiroDashboardPage() {
         </div>
       </div>
 
-      <div className="rounded-[8px] border border-line bg-card p-4">
+      <div className="rounded-lg border border-line bg-card p-4">
         <h4 className="mb-3 text-sm font-semibold text-ink">Previsto × realizado — mês corrente</h4>
         <PrevistoRealizadoCard
           entradaPrevista={resumo.entradasPrevistasMesCentavos}
@@ -175,10 +175,10 @@ export function FinanceiroDashboardPage() {
         />
       </div>
 
-      <div className="rounded-[8px] border border-line bg-card p-4">
+      <div className="rounded-lg border border-line bg-card p-4">
         <h4 className="mb-3 text-sm font-semibold text-ink">Projeção de caixa</h4>
         {pontoNegativo && (
-          <p className="mb-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm font-semibold text-[#A23B25]">
+          <p className="mb-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
             Saldo projetado fica negativo em{" "}
             {new Date(pontoNegativo.dataLimite).toLocaleDateString("pt-BR")} (+
             {pontoNegativo.diasHorizonte}d)
@@ -186,16 +186,16 @@ export function FinanceiroDashboardPage() {
         )}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           {projecao.map((p) => (
-            <div key={p.diasHorizonte} className="rounded-[8px] border border-line p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+            <div key={p.diasHorizonte} className="rounded-lg border border-line p-3">
+              <p className="text-micro font-semibold uppercase tracking-wide text-ink-3">
                 +{p.diasHorizonte}d
               </p>
               <p
-                className={`mt-1 text-sm font-semibold ${p.saldoProjetadoCentavos < 0 ? "text-[#A23B25]" : "text-ink"}`}
+                className={`mt-1 text-sm font-semibold ${p.saldoProjetadoCentavos < 0 ? "text-danger" : "text-ink"}`}
               >
                 R$ {centavosParaReais(p.saldoProjetadoCentavos)}
               </p>
-              <p className="mt-0.5 text-[10px] text-ink-3">
+              <p className="mt-0.5 text-micro text-ink-3">
                 {new Date(p.dataLimite).toLocaleDateString("pt-BR")}
               </p>
             </div>
@@ -212,10 +212,10 @@ function Kpi({
   tom,
   destaque,
 }: { label: string; valorCentavos: number; tom?: "positivo" | "negativo"; destaque?: boolean }) {
-  const cor = destaque ? "text-ink" : tom === "positivo" ? "text-[#1E8E45]" : "text-[#A23B25]";
+  const cor = destaque ? "text-ink" : tom === "positivo" ? "text-success" : "text-danger";
   return (
-    <div className="rounded-[8px] border border-line bg-card p-3">
-      <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+    <div className="rounded-lg border border-line bg-card p-3">
+      <p className="flex items-center gap-1 text-micro font-semibold uppercase tracking-wide text-ink-3">
         {destaque && <Wallet className="h-3 w-3" />}
         {label}
       </p>

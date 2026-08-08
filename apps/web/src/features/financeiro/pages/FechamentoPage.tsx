@@ -80,7 +80,7 @@ export function FechamentoPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -113,20 +113,20 @@ export function FechamentoPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <h3 className="text-base font-semibold text-ink">Fechamento mensal</h3>
         <p className="mt-0.5 text-sm text-ink-3">
           Mês fechado trava novos lançamentos/edições naquela competência. Reabertura exige motivo e
           fica auditada.
         </p>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
       </section>
 
-      <div className="overflow-x-auto rounded-[8px] border border-line bg-card">
+      <div className="overflow-x-auto rounded-lg border border-line bg-card">
         <table className="w-full min-w-[480px] text-left text-sm">
           <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
             <tr>
@@ -144,7 +144,7 @@ export function FechamentoPage() {
                   <td className="px-3 py-2 font-semibold text-ink">{`${mes}/${ano}`}</td>
                   <td className="px-3 py-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status === "fechado" ? "bg-[#EFF1F4] text-[#5A6175]" : "bg-[#E7F6EC] text-[#1E8E45]"}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${status === "fechado" ? "bg-line-soft text-ink-2" : "bg-success-soft text-success"}`}
                     >
                       {status === "fechado" ? "Fechado" : "Aberto"}
                     </span>

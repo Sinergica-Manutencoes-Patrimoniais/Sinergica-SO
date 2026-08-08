@@ -73,7 +73,7 @@ export function PersonasList({
   }
 
   return (
-    <section className="rounded-[10px] border border-line bg-card">
+    <section className="rounded-xl border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
         <div>
           <h3 className="text-base font-semibold text-ink">Personas de IA</h3>
@@ -94,7 +94,7 @@ export function PersonasList({
       </div>
 
       {erro && !modal && (
-        <div className="mx-5 mt-4 rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -122,7 +122,7 @@ export function PersonasList({
                   <button
                     type="button"
                     onClick={() => abrirModal({ modo: "editar", item: persona })}
-                    className="rounded-[6px] border border-line p-2 text-ink-2 hover:bg-line-soft"
+                    className="rounded-md border border-line p-2 text-ink-2 hover:bg-line-soft"
                     title="Editar"
                   >
                     <Edit3 className="h-4 w-4" />
@@ -132,7 +132,7 @@ export function PersonasList({
                       type="button"
                       disabled={salvando}
                       onClick={() => desativar(persona)}
-                      className="rounded-[6px] border border-[#F0C2BD] p-2 text-[#A12D24] hover:bg-[#FFF4F2] disabled:opacity-50"
+                      className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                       title="Desativar"
                     >
                       <X className="h-4 w-4" />
@@ -147,7 +147,7 @@ export function PersonasList({
 
       {modal && (
         <div className="modal-backdrop">
-          <div className="w-full max-w-lg rounded-[10px] border border-line bg-card shadow-xl">
+          <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-modal">
             <div className="flex items-center justify-between border-b border-line-soft px-5 py-4">
               <h3 className="text-base font-semibold text-ink">
                 {modal.modo === "criar" ? "Nova persona" : "Editar persona"}
@@ -155,7 +155,7 @@ export function PersonasList({
               <button
                 type="button"
                 onClick={() => setModal(null)}
-                className="rounded-[6px] p-2 text-ink-3 hover:bg-line-soft"
+                className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
                 title="Fechar"
               >
                 <X className="h-4 w-4" />
@@ -218,7 +218,7 @@ export function PersonasList({
                 />
               </label>
               {erro && (
-                <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+                <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
                   {erro}
                 </div>
               )}
@@ -226,14 +226,14 @@ export function PersonasList({
                 <button
                   type="button"
                   onClick={() => setModal(null)}
-                  className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                  className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={salvando}
-                  className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
                 >
                   {salvando ? "Salvando…" : "Salvar"}
                 </button>

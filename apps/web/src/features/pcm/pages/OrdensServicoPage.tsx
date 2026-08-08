@@ -1,3 +1,4 @@
+import { Tooltip } from "@sinergica/ui";
 import {
   Calendar,
   ClipboardList,
@@ -13,7 +14,6 @@ import {
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { Tooltip } from "../../../components/ui/Tooltip";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import { criarChamado, listarChamados } from "../application/chamados";
 import {
@@ -475,7 +475,7 @@ export function OrdensServicoPage({
             type="button"
             onClick={carregar}
             disabled={recarregando}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
           >
             <RefreshCw className="h-4 w-4" />
             Atualizar
@@ -486,7 +486,7 @@ export function OrdensServicoPage({
               <button
                 type="button"
                 onClick={() => setNovoChamadoAberto(true)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
               >
                 <Headset className="h-4 w-4" />
                 Novo Chamado
@@ -494,7 +494,7 @@ export function OrdensServicoPage({
               <button
                 type="button"
                 onClick={onNovaOs}
-                className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <ClipboardList className="h-4 w-4" />
                 Nova OS
@@ -505,7 +505,7 @@ export function OrdensServicoPage({
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
@@ -520,8 +520,8 @@ export function OrdensServicoPage({
             ["Finalizadas", kpis.finalizadas],
             ["Críticas", kpis.criticas],
           ].map(([label, valor]) => (
-            <div key={label} className="rounded-[8px] border border-line bg-card px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
+            <div key={label} className="rounded-lg border border-line bg-card px-3 py-2">
+              <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">
                 {label}
               </p>
               <p className="mt-0.5 text-xl font-bold leading-none text-ink">{valor}</p>
@@ -533,9 +533,9 @@ export function OrdensServicoPage({
       {/* E01-S118 AC-4: métricas operacionais acionáveis (gargalos), abaixo dos KPIs de status. */}
       <div className="flex flex-wrap gap-2">
         {[
-          ["Backlog", metricasExtra.backlog, "text-[#6B3FA0]"],
-          ["Sem técnico", metricasExtra.semTecnico, "text-[#B26A00]"],
-          ["Sync Auvo c/ erro", metricasExtra.syncAuvoErro, "text-[#C5362B]"],
+          ["Backlog", metricasExtra.backlog, "text-info"],
+          ["Sem técnico", metricasExtra.semTecnico, "text-warning"],
+          ["Sync Auvo c/ erro", metricasExtra.syncAuvoErro, "text-danger"],
         ].map(([label, valor, cor]) => (
           <span
             key={label as string}
@@ -571,7 +571,7 @@ export function OrdensServicoPage({
         <BacklogGutPage />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-2 rounded-[10px] border border-line bg-card p-3 md:grid-cols-6">
+          <div className="grid grid-cols-1 gap-2 rounded-xl border border-line bg-card p-3 md:grid-cols-6">
             <input
               className="input md:col-span-2"
               placeholder="Buscar por número, cliente ou título"
@@ -660,8 +660,8 @@ export function OrdensServicoPage({
           </div>
 
           {temEscrita && selecionados.size > 0 && (visao === "lista" || visao === "kanban") && (
-            <div className="flex flex-wrap items-center gap-3 rounded-[10px] border border-orange bg-orange-soft px-4 py-3">
-              <p className="text-sm font-semibold text-[#7A3F00]">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-orange bg-orange-soft px-4 py-3">
+              <p className="text-sm font-semibold text-warning">
                 {selecionados.size} selecionada{selecionados.size > 1 ? "s" : ""}
               </p>
               <select
@@ -683,7 +683,7 @@ export function OrdensServicoPage({
               <button
                 type="button"
                 onClick={() => setSelecionados(new Set())}
-                className="text-xs font-semibold text-[#7A3F00] hover:underline"
+                className="text-xs font-semibold text-warning hover:underline"
               >
                 Limpar seleção
               </button>
@@ -691,7 +691,7 @@ export function OrdensServicoPage({
           )}
 
           {visao !== "lista" && (
-            <div className="bg-card rounded-[10px] border border-line p-4">
+            <div className="bg-card rounded-xl border border-line p-4">
               {visao === "kanban" && (
                 <OsKanbanView
                   ordens={ordensFiltradas}
@@ -717,7 +717,7 @@ export function OrdensServicoPage({
           )}
 
           {visao !== "lista" && selecionada && (
-            <section className="bg-card rounded-[10px] border border-line">
+            <section className="bg-card rounded-xl border border-line">
               <DetalheOs
                 selecionada={selecionada}
                 temEscrita={temEscrita}
@@ -740,14 +740,14 @@ export function OrdensServicoPage({
 
           {visao === "lista" && (
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-[360px_1fr]">
-              <section className="bg-card rounded-[10px] border border-line overflow-hidden max-h-[calc(100vh-220px)] overflow-y-auto">
+              <section className="bg-card rounded-xl border border-line overflow-hidden max-h-[calc(100vh-220px)] overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-line-soft bg-paper px-4 py-2.5">
                   <div>
                     <h3 className="text-xs font-semibold text-ink">Fila de ordens</h3>
-                    <p className="text-[11px] text-ink-3">Selecione uma OS para ver o resumo</p>
+                    <p className="text-micro text-ink-3">Selecione uma OS para ver o resumo</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-2">
+                    <label className="flex items-center gap-1.5 text-micro font-semibold text-ink-2">
                       <input
                         type="checkbox"
                         checked={ordenarPorHub}
@@ -756,7 +756,7 @@ export function OrdensServicoPage({
                       />
                       Ordenar por Hub
                     </label>
-                    <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink-2">
+                    <span className="rounded-full border border-line bg-card px-2 py-0.5 text-micro font-semibold tabular-nums text-ink-2">
                       {ordensFiltradas.length}
                     </span>
                   </div>
@@ -766,7 +766,7 @@ export function OrdensServicoPage({
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
-                      <thead className="sticky top-0 bg-paper text-[11px] text-ink-3">
+                      <thead className="sticky top-0 bg-paper text-micro text-ink-3">
                         <tr className="border-b border-line-soft">
                           {temEscrita && <th className="w-8 px-2 py-2" />}
                           <th className="px-2 py-2 text-left font-semibold">Nº</th>
@@ -807,7 +807,7 @@ export function OrdensServicoPage({
                               <Tooltip content={resumoTooltipOrdem(ordem)}>
                                 <div className="min-w-[180px]">
                                   <p className="truncate font-semibold text-ink">{ordem.titulo}</p>
-                                  <p className="mt-0.5 truncate text-[11px] text-ink-3">
+                                  <p className="mt-0.5 truncate text-micro text-ink-3">
                                     {ordem.clienteNome} · {ordem.categoria} ·{" "}
                                     {ordem.tecnicoNome ?? "sem técnico"}
                                   </p>
@@ -824,14 +824,14 @@ export function OrdensServicoPage({
                             </td>
                             <td className="px-2 py-2 whitespace-nowrap">
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusOsColor(ordem.status)}`}
+                                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusOsColor(ordem.status)}`}
                               >
                                 {rotuloStatusOs(ordem.status)}
                               </span>
                             </td>
                             <td className="px-2 py-2 whitespace-nowrap">
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
                               >
                                 {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                               </span>
@@ -844,7 +844,7 @@ export function OrdensServicoPage({
                 )}
               </section>
 
-              <section className="rounded-[10px] border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">
+              <section className="rounded-xl border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">
                 {selecionada ? (
                   <DetalheOs
                     selecionada={selecionada}
@@ -914,8 +914,8 @@ function BadgeHubOs({
     tipoOs === "P1" && dataAgendada != null && new Date(dataAgendada).getTime() < Date.now();
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-        atrasada ? "bg-[#FDECEB] text-[#B42318]" : "bg-[#EEF2FF] text-navy"
+      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
+        atrasada ? "bg-danger-line text-danger" : "bg-info-soft text-navy"
       }`}
       title={TIPO_OS_HUB_LABEL[tipoOs]}
     >
@@ -927,8 +927,8 @@ function BadgeHubOs({
 
 function Info({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-[7px] border border-line bg-paper px-2.5 py-2">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">{label}</p>
+    <div className="rounded-lg border border-line bg-paper px-2.5 py-2">
+      <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">{label}</p>
       <p className="mt-0.5 text-xs font-medium text-ink">{value}</p>
     </div>
   );
@@ -1054,11 +1054,11 @@ function DetalheOs({
           </div>
 
           {selecionada.auvoSyncError && (
-            <div className="rounded-[8px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#A12D24]">
+            <div className="rounded-lg border border-danger-line bg-danger-soft px-3 py-2">
+              <p className="text-micro font-semibold uppercase tracking-wider text-danger">
                 Erro Auvo
               </p>
-              <p className="mt-1 text-sm text-[#7A241D]">{selecionada.auvoSyncError}</p>
+              <p className="mt-1 text-sm text-danger">{selecionada.auvoSyncError}</p>
             </div>
           )}
 
@@ -1066,7 +1066,7 @@ function DetalheOs({
             <button
               type="button"
               onClick={() => onAbrirAuvo()}
-              className="h-8 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+              className="h-8 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
             >
               Abrir OS Auvo
             </button>
@@ -1081,7 +1081,7 @@ function DetalheOs({
           )}
 
           {temEscrita && (
-            <div className="rounded-[8px] border border-line bg-paper p-2.5">
+            <div className="rounded-lg border border-line bg-paper p-2.5">
               <label
                 htmlFor="status-os-operacional"
                 className="text-xs font-semibold uppercase tracking-wider text-ink-3"
@@ -1132,7 +1132,7 @@ function DetalheOs({
     <div>
       <div className="border-b border-line-soft px-4 py-3">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+          <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
             {ehChamadoSemOs ? "Resumo do Chamado" : "Resumo da OS"}
           </p>
           <div className="flex items-center gap-3">
@@ -1190,7 +1190,7 @@ function DetalheOs({
               <button
                 type="button"
                 onClick={() => setExpandido(false)}
-                className="shrink-0 rounded-[6px] p-1.5 text-ink-3 hover:bg-line-soft hover:text-ink"
+                className="shrink-0 rounded-md p-1.5 text-ink-3 hover:bg-line-soft hover:text-ink"
                 aria-label="Fechar"
               >
                 <X className="h-5 w-5" />

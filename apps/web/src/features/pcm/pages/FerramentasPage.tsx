@@ -251,7 +251,7 @@ export function FerramentasPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -279,7 +279,7 @@ export function FerramentasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Ferramentas</h3>
@@ -291,7 +291,7 @@ export function FerramentasPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Nova ferramenta
@@ -299,19 +299,19 @@ export function FerramentasPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
       </section>
 
       {estado.ferramentas.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Wrench className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhuma ferramenta cadastrada.</p>
         </div>
       ) : (
-        <section className="rounded-[8px] border border-line bg-card overflow-hidden">
+        <section className="rounded-lg border border-line bg-card overflow-hidden">
           <div className="divide-y divide-line-soft">
             {estado.ferramentas.map((ferramenta) => (
               <FerramentaLinha
@@ -339,7 +339,7 @@ export function FerramentasPage() {
         </section>
       )}
 
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <h3 className="text-base font-semibold text-ink">Reservas</h3>
         <p className="mt-0.5 text-sm text-ink-3">
           Reserva uma unidade (ou "qualquer disponível") pra um técnico num período — sem mover a
@@ -416,7 +416,7 @@ export function FerramentasPage() {
                 !reservaForm.funcionarioId ||
                 !reservaForm.dataInicio
               }
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
             >
               Reservar
             </button>
@@ -430,7 +430,7 @@ export function FerramentasPage() {
             {ordenarAgendaReservas(estado.reservas).map((reserva) => (
               <li
                 key={reserva.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-[6px] border border-line-soft bg-paper px-3 py-2 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line-soft bg-paper px-3 py-2 text-sm"
               >
                 <span className="text-ink-2">
                   {reserva.ferramentaNome}{" "}
@@ -450,7 +450,7 @@ export function FerramentasPage() {
                     <button
                       type="button"
                       onClick={() => cancelarReserva(reserva)}
-                      className="text-xs font-semibold text-[#A23B25] hover:underline"
+                      className="text-xs font-semibold text-danger hover:underline"
                     >
                       Cancelar
                     </button>
@@ -532,7 +532,7 @@ function EfetivarReservaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
         <div className="border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Efetivar reserva</h3>
           <p className="text-xs text-ink-3">
@@ -556,7 +556,7 @@ function EfetivarReservaModal({
             </select>
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -565,7 +565,7 @@ function EfetivarReservaModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -573,9 +573,9 @@ function EfetivarReservaModal({
             type="button"
             onClick={confirmar}
             disabled={salvando || !unidadeId}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Efetivar (atribuir agora)"}
+            {salvando ? "Salvando…" : "Efetivar (atribuir agora)"}
           </button>
         </div>
       </div>
@@ -612,10 +612,10 @@ function FerramentaLinha({
           <img
             src={ferramenta.imagemUrl}
             alt={ferramenta.nome}
-            className="h-9 w-9 shrink-0 rounded-[6px] border border-line object-cover"
+            className="h-9 w-9 shrink-0 rounded-md border border-line object-cover"
           />
         ) : (
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] border border-line bg-line-soft">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-line-soft">
             <Wrench className="h-4 w-4 text-ink-3" />
           </div>
         )}
@@ -634,7 +634,7 @@ function FerramentaLinha({
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</span>
               <span
-                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ferramenta.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"}`}
+                className={`shrink-0 rounded-full px-1.5 py-0.5 text-micro font-semibold ${ferramenta.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
               >
                 {ferramenta.ativo ? "Ativa" : "Inativa"}
               </span>
@@ -664,7 +664,7 @@ function FerramentaLinha({
       </div>
 
       {expandida && (
-        <div className="mt-2 ml-12 space-y-2 rounded-[6px] border border-line-soft bg-paper p-2.5">
+        <div className="mt-2 ml-12 space-y-2 rounded-md border border-line-soft bg-paper p-2.5">
           {onGerarUnidades && faltamGerar > 0 && (
             <button
               type="button"
@@ -703,7 +703,7 @@ function FerramentaLinha({
                       <button
                         type="button"
                         onClick={() => onBaixarUnidade(unidade)}
-                        className="text-[#A23B25] hover:underline"
+                        className="text-danger hover:underline"
                       >
                         Baixar
                       </button>
@@ -746,7 +746,7 @@ function BaixaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
         <div className="border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Dar baixa em {unidade.codigo}</h3>
           <p className="text-xs text-ink-3">{unidade.ferramentaNome} — ação permanente</p>
@@ -758,11 +758,11 @@ function BaixaModal({
               value={motivo}
               onChange={(event) => setMotivo(event.target.value)}
               className="input min-h-[80px] w-full resize-y"
-              placeholder="Ex.: extraviada em campo, quebrada sem conserto..."
+              placeholder="Ex.: extraviada em campo, quebrada sem conserto…"
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -771,7 +771,7 @@ function BaixaModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -779,9 +779,9 @@ function BaixaModal({
             type="button"
             onClick={confirmar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Confirmar baixa"}
+            {salvando ? "Salvando…" : "Confirmar baixa"}
           </button>
         </div>
       </div>
@@ -835,7 +835,7 @@ function FerramentaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-2xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {ferramenta ? "Editar ferramenta" : "Nova ferramenta"}
@@ -852,7 +852,7 @@ function FerramentaModal({
                   <img
                     src={ferramenta.imagemUrl}
                     alt={ferramenta.nome}
-                    className="h-16 w-16 rounded-[6px] border border-line object-cover"
+                    className="h-16 w-16 rounded-md border border-line object-cover"
                   />
                   <p className="text-xs text-ink-3">
                     Imagem vinda do Auvo. Pra trocar, cadastre direto no app Auvo — o PCM ainda não
@@ -860,7 +860,7 @@ function FerramentaModal({
                   </p>
                 </div>
               ) : (
-                <p className="rounded-[6px] border border-line-soft bg-paper px-3 py-2 text-xs text-ink-3">
+                <p className="rounded-md border border-line-soft bg-paper px-3 py-2 text-xs text-ink-3">
                   Sem imagem. Cadastre a foto direto no Auvo — o PCM só exibe quando o Auvo tiver.
                 </p>
               )}
@@ -891,7 +891,7 @@ function FerramentaModal({
               list="ferramenta-categorias-lista"
               value={categoriaTexto}
               onChange={(event) => selecionarCategoriaPorTexto(event.target.value)}
-              placeholder="Buscar categoria..."
+              placeholder="Buscar categoria…"
               className="input w-full"
             />
             <datalist id="ferramenta-categorias-lista">
@@ -900,7 +900,7 @@ function FerramentaModal({
               ))}
             </datalist>
           </label>
-          <p className="rounded-[6px] border border-line-soft bg-paper px-3 py-2 text-xs text-ink-3 md:col-span-2">
+          <p className="rounded-md border border-line-soft bg-paper px-3 py-2 text-xs text-ink-3 md:col-span-2">
             Estoque é calculado pelas unidades físicas cadastradas. Cada item recebe um código
             próprio.
           </p>
@@ -925,7 +925,7 @@ function FerramentaModal({
             />
           </label>
           {erro && (
-            <div className="md:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -934,7 +934,7 @@ function FerramentaModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -942,9 +942,9 @@ function FerramentaModal({
             type="button"
             onClick={salvar}
             disabled={salvando || Object.keys(errosInline).length > 0}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>
@@ -966,7 +966,7 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className="input w-full"
       />
-      {erro && <span className="mt-1 block text-xs text-[#A23B25]">{erro}</span>}
+      {erro && <span className="mt-1 block text-xs text-danger">{erro}</span>}
     </label>
   );
 }
@@ -995,7 +995,7 @@ function NumberField({
         onChange={(event) => onChange(Number(event.target.value))}
         className="input w-full"
       />
-      {erro && <span className="mt-1 block text-xs text-[#A23B25]">{erro}</span>}
+      {erro && <span className="mt-1 block text-xs text-danger">{erro}</span>}
     </label>
   );
 }
@@ -1010,7 +1010,7 @@ function IconButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border px-3 text-xs font-semibold ${danger ? "border-[#F2C0B5] text-[#A23B25] hover:bg-[#FFF4F1]" : "border-line text-ink-2 hover:bg-line-soft"}`}
+      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
     >
       {icon}
       {label}

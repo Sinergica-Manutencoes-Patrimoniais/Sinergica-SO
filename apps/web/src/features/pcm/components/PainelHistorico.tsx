@@ -1,11 +1,11 @@
 // AC-4 (histórico de OS concluídas/canceladas, status refletindo a sincronização do Auvo) e
 // AC-5 (estado vazio). Read-only — sem nenhuma ação de mutação.
-import { Tooltip } from "../../../components/ui/Tooltip";
+import { Tooltip } from "@sinergica/ui";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  finalizado: { label: "Finalizado", cls: "bg-[#E7F6EC] text-[#1E8E45]" },
-  cancelado: { label: "Cancelado", cls: "bg-[#FBEAEA] text-[#C5362B]" },
+  finalizado: { label: "Finalizado", cls: "bg-success-soft text-success" },
+  cancelado: { label: "Cancelado", cls: "bg-danger-line text-danger" },
 };
 
 export function PainelHistorico({
@@ -16,7 +16,7 @@ export function PainelHistorico({
   onSelecionar?: (id: string) => void;
 }) {
   return (
-    <div className="bg-card rounded-[10px] border border-line">
+    <div className="bg-card rounded-xl border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
         <h3 className="text-sm font-semibold text-ink">Histórico de OS</h3>
         <p className="text-xs text-ink-3 mt-0.5">
@@ -31,7 +31,7 @@ export function PainelHistorico({
           {ordens.map((os) => {
             const status = STATUS_LABEL[os.status] ?? {
               label: os.status,
-              cls: "bg-[#EFF1F4] text-[#5A6175]",
+              cls: "bg-line-soft text-ink-2",
             };
             return (
               <Tooltip key={os.id} content={os.descricao ?? null}>
@@ -52,7 +52,7 @@ export function PainelHistorico({
                     </p>
                   </div>
                   <span
-                    className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${status.cls}`}
+                    className={`text-micro font-medium px-2 py-0.5 rounded-full shrink-0 ${status.cls}`}
                   >
                     {status.label}
                   </span>

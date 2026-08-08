@@ -75,12 +75,12 @@ export function ConfigPriorizacaoPage() {
       </div>
 
       {erro && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
       {sucesso && (
-        <div className="rounded-[6px] border border-[#C7E8D2] bg-[#EAF8EF] px-4 py-2 text-sm text-[#267343]">
+        <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
           Pesos salvos.
         </div>
       )}
@@ -88,7 +88,7 @@ export function ConfigPriorizacaoPage() {
       {carregando ? (
         <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
       ) : (
-        <section className="rounded-[10px] border border-line bg-card p-4">
+        <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center gap-2 border-b border-line-soft pb-3">
             <SlidersHorizontal className="h-4 w-4 text-ink-3" />
             <h3 className="text-sm font-semibold text-ink">Pesos (%)</h3>
@@ -111,7 +111,7 @@ export function ConfigPriorizacaoPage() {
           </div>
 
           <p
-            className={`mt-3 text-xs font-semibold ${soma === 100 ? "text-ink-3" : "text-[#A12D24]"}`}
+            className={`mt-3 text-xs font-semibold ${soma === 100 ? "text-ink-3" : "text-danger"}`}
           >
             Soma atual: {soma}% {soma !== 100 && "(precisa somar 100%)"}
           </p>
@@ -120,7 +120,7 @@ export function ConfigPriorizacaoPage() {
             type="button"
             onClick={salvar}
             disabled={salvando || soma !== 100}
-            className="mt-3 h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="mt-3 h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             Salvar pesos
           </button>

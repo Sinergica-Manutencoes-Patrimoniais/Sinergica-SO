@@ -140,25 +140,25 @@ export function rotuloSistema(sistema: SistemaInspecao): string {
 
 export function statusColor(status: InspecaoStatus | LaudoSpdaStatus): string {
   if (status === "concluida" || status === "concluido" || status === "assinado") {
-    return "bg-[#E7F6EC] text-[#1E8E45]";
+    return "bg-success-soft text-success";
   }
-  if (status === "em_andamento") return "bg-[#FDF1DF] text-[#B26A00]";
-  if (status === "backlog_gerado") return "bg-[#EAEEF8] text-[#2E3C70]";
-  return "bg-[#EFF1F4] text-[#5A6175]";
+  if (status === "em_andamento") return "bg-warning-soft text-warning";
+  if (status === "backlog_gerado") return "bg-info-soft text-info";
+  return "bg-line-soft text-ink-2";
 }
 
 export function resultadoColor(resultado: ItemResultado | ConformidadeSpda): string {
-  if (resultado === "conforme") return "bg-[#E7F6EC] text-[#1E8E45]";
-  if (resultado === "nao_conforme") return "bg-[#FCE9E7] text-[#C5362B]";
-  if (resultado === "atencao") return "bg-[#FDF1DF] text-[#B26A00]";
-  return "bg-[#EFF1F4] text-[#5A6175]";
+  if (resultado === "conforme") return "bg-success-soft text-success";
+  if (resultado === "nao_conforme") return "bg-danger-line text-danger";
+  if (resultado === "atencao") return "bg-warning-soft text-warning";
+  return "bg-line-soft text-ink-2";
 }
 
 export function grauRiscoColor(grauRisco: GrauRisco): string {
-  if (grauRisco === "critico") return "bg-[#FCE9E7] text-[#C5362B]";
-  if (grauRisco === "alto") return "bg-[#FDF1DF] text-[#B26A00]";
-  if (grauRisco === "medio") return "bg-[#EAEEF8] text-[#2E3C70]";
-  return "bg-[#E7F6EC] text-[#1E8E45]";
+  if (grauRisco === "critico") return "bg-danger-line text-danger";
+  if (grauRisco === "alto") return "bg-warning-soft text-warning";
+  if (grauRisco === "medio") return "bg-info-soft text-info";
+  return "bg-success-soft text-success";
 }
 
 export function consolidarTotaisInspecao(

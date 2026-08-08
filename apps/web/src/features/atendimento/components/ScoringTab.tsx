@@ -42,7 +42,7 @@ export function ScoringTab({
   }
 
   return (
-    <div className="max-w-xl rounded-[10px] border border-line bg-card p-5">
+    <div className="max-w-xl rounded-xl border border-line bg-card p-5">
       <h3 className="text-sm font-semibold text-ink">Lead scoring por comportamento</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Regras globais de pontuação de lead (superadmin edita).
@@ -74,7 +74,7 @@ export function ScoringTab({
         />
       </div>
       {erro && (
-        <div className="mt-4 rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2 text-sm text-[#A12D24]">
+        <div className="mt-4 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -83,7 +83,7 @@ export function ScoringTab({
           type="button"
           onClick={salvar}
           disabled={salvando}
-          className="mt-4 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+          className="mt-4 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
         >
           {salvando ? "Salvando…" : "Salvar configuração"}
         </button>
@@ -109,7 +109,7 @@ function Campo({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="mt-1 w-full rounded-[6px] border border-line p-2 text-sm disabled:opacity-60"
+        className="mt-1 w-full rounded-md border border-line p-2 text-sm disabled:opacity-60"
       />
     </div>
   );

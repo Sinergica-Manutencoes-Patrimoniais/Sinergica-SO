@@ -109,7 +109,7 @@ export function DrawerDetalheAtivo({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: Esc já fecha via listener global acima. */}
       <div className="absolute inset-0 bg-black/30" onClick={onClose} aria-hidden="true" />
-      <div className="drawer-panel relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-line bg-card shadow-xl">
+      <div className="drawer-panel relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Detalhe do ativo</h3>
           <div className="flex items-center gap-3">
@@ -136,10 +136,10 @@ export function DrawerDetalheAtivo({
         </div>
 
         {estado.fase === "carregando" && (
-          <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>
+          <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
         )}
         {estado.fase === "erro" && (
-          <div className="p-8 text-center text-sm text-[#A23B25]">{estado.mensagem}</div>
+          <div className="p-8 text-center text-sm text-danger">{estado.mensagem}</div>
         )}
         {estado.fase === "pronto" && <Conteudo detalhe={estado.detalhe} />}
       </div>
@@ -203,7 +203,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
             {sistemas.map((s) => (
               <span
                 key={s.id}
-                className="inline-flex items-center gap-1 rounded-full bg-orange-soft px-2 py-0.5 text-[11px] font-semibold text-orange-deep"
+                className="inline-flex items-center gap-1 rounded-full bg-orange-soft px-2 py-0.5 text-micro font-semibold text-orange-deep"
               >
                 {s.nome}
                 {s.codigo && <span className="font-normal text-ink-3">· {s.codigo}</span>}
@@ -261,7 +261,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section>
-      <h5 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+      <h5 className="mb-1.5 text-micro font-semibold uppercase tracking-wide text-ink-3">
         {titulo}
       </h5>
       {children}

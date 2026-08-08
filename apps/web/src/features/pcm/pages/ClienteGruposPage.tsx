@@ -82,7 +82,7 @@ export function ClienteGruposPage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   }
 
   if (!temLeitura) {
@@ -97,7 +97,7 @@ export function ClienteGruposPage() {
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   }
 
   if (estado.fase === "erro") {
@@ -121,7 +121,7 @@ export function ClienteGruposPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Grupos de Clientes</h3>
@@ -134,31 +134,31 @@ export function ClienteGruposPage() {
               type="button"
               onClick={() => setModal({ modo: "novo" })}
               disabled={clientes.length === 0}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               Novo grupo
             </button>
           )}
         </div>
-        <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#8A4B00]">
+        <div className="mt-4 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
           Renomear ou trocar clientes aqui não altera um grupo já existente no Auvo; a API v2
           documenta criação e exclusão, mas não edição de grupos.
         </div>
         {clientes.length === 0 && (
-          <div className="mt-3 rounded-[6px] border border-line bg-line-soft px-3 py-2 text-sm text-ink-3">
+          <div className="mt-3 rounded-md border border-line bg-line-soft px-3 py-2 text-sm text-ink-3">
             Cadastre ou sincronize clientes antes de criar grupos.
           </div>
         )}
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
       </section>
 
       {grupos.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Users className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhum grupo de clientes cadastrado.</p>
         </div>
@@ -205,7 +205,7 @@ function GrupoCard({
     .join(", ");
 
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h4 className="truncate text-sm font-semibold text-ink">{grupo.nome}</h4>
@@ -213,18 +213,18 @@ function GrupoCard({
             Auvo {grupo.auvoId ?? "-"} · {grupo.clienteIds.length} cliente(s)
           </p>
         </div>
-        <span className="rounded-full bg-[#EFF1F4] px-2 py-0.5 text-[11px] font-semibold text-[#5A6175]">
+        <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
           {grupo.auvoSyncStatus ?? "pending"}
         </span>
       </div>
       <p className="mt-3 line-clamp-2 text-sm text-ink-3">{nomes || "Clientes não encontrados"}</p>
-      {grupo.auvoSyncError && <p className="mt-2 text-xs text-[#A23B25]">{grupo.auvoSyncError}</p>}
+      {grupo.auvoSyncError && <p className="mt-2 text-xs text-danger">{grupo.auvoSyncError}</p>}
       <div className="mt-4 flex justify-end gap-2">
         {onEditar && (
           <button
             type="button"
             onClick={onEditar}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
           >
             <Pencil className="h-3.5 w-3.5" />
             Renomear local
@@ -234,7 +234,7 @@ function GrupoCard({
           <button
             type="button"
             onClick={onExcluir}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-3 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Excluir
@@ -283,7 +283,7 @@ function GrupoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-2xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {grupo ? "Renomear grupo" : "Novo grupo de clientes"}
@@ -307,7 +307,7 @@ function GrupoModal({
               {clientes.map((cliente) => (
                 <label
                   key={cliente.id}
-                  className="flex items-start gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2"
+                  className="flex items-start gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2"
                 >
                   <input
                     type="checkbox"
@@ -324,12 +324,12 @@ function GrupoModal({
             </div>
           </div>
           {grupo && (
-            <div className="mt-4 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#8A4B00]">
+            <div className="mt-4 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
               Esta alteração fica local. Para refletir no Auvo, exclua e crie um novo grupo.
             </div>
           )}
           {erro && (
-            <div className="mt-4 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="mt-4 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -338,7 +338,7 @@ function GrupoModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -346,9 +346,9 @@ function GrupoModal({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>

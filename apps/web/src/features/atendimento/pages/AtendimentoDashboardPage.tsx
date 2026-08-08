@@ -75,7 +75,7 @@ export function AtendimentoDashboardPage() {
 
   if (estado.fase === "erro") {
     return (
-      <div className="rounded-[10px] border border-line bg-card p-8 text-center">
+      <div className="rounded-xl border border-line bg-card p-8 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Dashboard indisponível</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
         <button type="button" onClick={() => carregar(periodo)} className="mt-4 btn-secondary">
@@ -98,13 +98,13 @@ export function AtendimentoDashboardPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-[6px] border border-line p-0.5">
+          <div className="flex rounded-md border border-line p-0.5">
             {PERIODOS.map((p) => (
               <button
                 key={p.valor}
                 type="button"
                 onClick={() => setPeriodo(p.valor)}
-                className={`rounded-[4px] px-2.5 py-1 text-xs font-semibold ${
+                className={`rounded-sm px-2.5 py-1 text-xs font-semibold ${
                   periodo === p.valor ? "bg-navy text-white" : "text-ink-2 hover:bg-line-soft"
                 }`}
               >
@@ -206,18 +206,18 @@ function Kpi({
 }: { label: string; valor: string | number; sub: string; alerta?: boolean }) {
   return (
     <div
-      className={`rounded-[8px] border px-3 py-2.5 shadow-[0_1px_2px_rgba(20,28,54,0.03)] ${alerta ? "border-[#F0C6B8] bg-[#FDF1EE]" : "border-line bg-card"}`}
+      className={`rounded-lg border px-3 py-2.5 shadow-raised ${alerta ? "border-danger-line bg-danger-line" : "border-line bg-card"}`}
     >
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">
-        {alerta && <AlertTriangle className="h-3 w-3 text-[#C5362B]" />}
+      <div className="flex items-center gap-1.5 text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
+        {alerta && <AlertTriangle className="h-3 w-3 text-danger" />}
         {label}
       </div>
       <p
-        className={`mt-1 font-brand text-xl font-bold leading-none tabular-nums ${alerta ? "text-[#C5362B]" : "text-ink"}`}
+        className={`mt-1 font-brand text-xl font-bold leading-none tabular-nums ${alerta ? "text-danger" : "text-ink"}`}
       >
         {valor}
       </p>
-      <p className="mt-1 text-[11px] text-ink-3">{sub}</p>
+      <p className="mt-1 text-micro text-ink-3">{sub}</p>
     </div>
   );
 }
@@ -225,13 +225,13 @@ function Kpi({
 function QueueHealthCard({ aging }: { aging: PainelAtendimento["aging"] }) {
   const max = Math.max(...aging.map((a) => a.total), 1);
   const cores: Record<string, string> = {
-    "0-1h": "bg-[#2E9E5B]",
-    "1-4h": "bg-[#E0A62C]",
-    "4-24h": "bg-[#E07A2C]",
-    "+24h": "bg-[#C5362B]",
+    "0-1h": "bg-success",
+    "1-4h": "bg-orange",
+    "4-24h": "bg-orange",
+    "+24h": "bg-danger",
   };
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Saúde da fila — tempo de espera</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Conversas abertas não lidas, por quanto tempo aguardam resposta.
@@ -260,7 +260,7 @@ function AiHealthCard({ painel }: { painel: PainelAtendimento }) {
   const total = painel.autonomiaZe + painel.autonomiaHumano;
   const iaPct = painel.autonomiaPct ?? 0;
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">IA — autonomia e escalonamento</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Modo das conversas abertas e quanto passa para humano.
@@ -301,7 +301,7 @@ function AiHealthCard({ painel }: { painel: PainelAtendimento }) {
 function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] }) {
   const max = Math.max(...mixCanal.map((m) => m.total), 1);
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Mix de canal</h3>
       <p className="mt-0.5 text-xs text-ink-3">De onde vem a demanda no período.</p>
       {mixCanal.length === 0 ? (
@@ -332,7 +332,7 @@ function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] 
 
 function CsatCard({ csat }: { csat: PainelAtendimento["csat"] }) {
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Satisfação (CSAT)</h3>
       <p className="mt-0.5 text-xs text-ink-3">
         Notas de pesquisas ligadas ao atendimento no período.
@@ -349,7 +349,7 @@ function CsatCard({ csat }: { csat: PainelAtendimento["csat"] }) {
 function VolumeTrendCard({ volumeDiario }: { volumeDiario: WidgetsAtendimento["volumeDiario"] }) {
   const max = Math.max(...volumeDiario.flatMap((v) => [v.entrada, v.saida]), 1);
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Volume por dia</h3>
       <p className="mt-0.5 text-xs text-ink-3">Mensagens recebidas vs enviadas no período.</p>
       {volumeDiario.length === 0 ? (
@@ -372,12 +372,12 @@ function VolumeTrendCard({ volumeDiario }: { volumeDiario: WidgetsAtendimento["v
                   style={{ height: `${(v.saida / max) * 100}%` }}
                 />
               </div>
-              <span className="text-[10px] text-ink-3">{formatarDiaCurto(v.dia)}</span>
+              <span className="text-micro text-ink-3">{formatarDiaCurto(v.dia)}</span>
             </div>
           ))}
         </div>
       )}
-      <div className="mt-3 flex items-center gap-4 text-[11px] text-ink-3">
+      <div className="mt-3 flex items-center gap-4 text-micro text-ink-3">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-orange" /> Recebidas
         </span>
@@ -400,10 +400,10 @@ function SlaDeliveryCard({
   frtMedioLabel,
 }: { slaDentroMetaPct: number | null; frtMedioLabel: string }) {
   const pct = slaDentroMetaPct ?? 0;
-  const cor = pct >= 90 ? "text-[#1E8E45]" : pct >= 70 ? "text-[#B26A00]" : "text-[#C5362B]";
-  const corBarra = pct >= 90 ? "bg-[#1E8E45]" : pct >= 70 ? "bg-[#B26A00]" : "bg-[#C5362B]";
+  const cor = pct >= 90 ? "text-success" : pct >= 70 ? "text-warning" : "text-danger";
+  const corBarra = pct >= 90 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-danger";
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">SLA & entrega</h3>
       <p className="mt-0.5 text-xs text-ink-3">1ª resposta dentro da meta de 5 minutos.</p>
       <p className={`font-brand mt-3 text-3xl font-bold ${cor}`}>
@@ -427,7 +427,7 @@ function HourlyHeatmapCard({ heatmap }: { heatmap: HeatmapCelula[] }) {
   const max = Math.max(...heatmap.map((h) => h.total), 1);
   const porCelula = new Map(heatmap.map((h) => [`${h.diaSemana}-${h.hora}`, h.total]));
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">Pico por hora</h3>
       <p className="mt-0.5 text-xs text-ink-3">Mensagens recebidas por dia da semana e hora.</p>
       <div className="mt-4 overflow-x-auto">
@@ -437,13 +437,13 @@ function HourlyHeatmapCard({ heatmap }: { heatmap: HeatmapCelula[] }) {
         >
           <div />
           {HORAS_DIA.map((hora) => (
-            <div key={hora} className="text-center text-[9px] text-ink-3">
+            <div key={hora} className="text-center text-micro text-ink-3">
               {hora % 6 === 0 ? hora : ""}
             </div>
           ))}
           {DIAS_SEMANA.map((dia, dow) => (
             <div key={dia} className="contents">
-              <div className="pr-1 text-right text-[10px] text-ink-3">{dia}</div>
+              <div className="pr-1 text-right text-micro text-ink-3">{dia}</div>
               {HORAS_DIA.map((hora) => {
                 const total = porCelula.get(`${dow}-${hora}`) ?? 0;
                 const alpha = total === 0 ? 0.08 : 0.2 + 0.8 * (total / max);
@@ -451,7 +451,7 @@ function HourlyHeatmapCard({ heatmap }: { heatmap: HeatmapCelula[] }) {
                   <div
                     key={hora}
                     title={`${dia} ${hora}h — ${total}`}
-                    className="h-3.5 w-3.5 rounded-[2px]"
+                    className="h-3.5 w-3.5 rounded-sm"
                     style={{ backgroundColor: `rgba(30, 58, 138, ${alpha})` }}
                   />
                 );
@@ -477,7 +477,7 @@ function RankingCard({
 }) {
   const max = Math.max(...itens.map((i) => i.total), 1);
   return (
-    <section className="rounded-[10px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+    <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-sm font-semibold text-ink">{titulo}</h3>
       <p className="mt-0.5 text-xs text-ink-3">{subtitulo}</p>
       {itens.length === 0 ? (

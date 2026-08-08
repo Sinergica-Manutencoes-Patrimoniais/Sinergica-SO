@@ -183,14 +183,14 @@ export function EstruturaClientePage({
       />
 
       {areas.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <FolderTree className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhuma Área cadastrada.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
           {areas.map((area) => (
-            <section key={area.id} className="rounded-[8px] border border-line bg-card">
+            <section key={area.id} className="rounded-lg border border-line bg-card">
               <div className="flex items-center gap-2 border-b border-line-soft px-4 py-3">
                 <button
                   type="button"
@@ -212,7 +212,7 @@ export function EstruturaClientePage({
                       onClick={() =>
                         setModalLocal({ modo: "novo", areaId: area.id, parentId: null })
                       }
-                      className="inline-flex h-7 items-center gap-1 rounded-[6px] border border-line px-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                      className="inline-flex h-7 items-center gap-1 rounded-md border border-line px-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Local
@@ -220,7 +220,7 @@ export function EstruturaClientePage({
                     <button
                       type="button"
                       onClick={() => setModalArea({ modo: "editar", area })}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-ink-3 hover:bg-line-soft"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-ink-3 hover:bg-line-soft"
                       aria-label="Editar Área"
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -228,7 +228,7 @@ export function EstruturaClientePage({
                     <button
                       type="button"
                       onClick={() => excluirArea(area)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[#A23B25] hover:bg-[#FFF4F1]"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-danger hover:bg-danger-soft"
                       aria-label="Desativar Área"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -315,7 +315,7 @@ function TiposDeLocalPainel({
   }
 
   return (
-    <section className="rounded-[8px] border border-line bg-card p-3">
+    <section className="rounded-lg border border-line bg-card p-3">
       <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
         <Tag className="h-3.5 w-3.5" />
         Tipos de Local
@@ -336,7 +336,7 @@ function TiposDeLocalPainel({
                 type="button"
                 onClick={() => onRemover(tipo)}
                 aria-label={`Remover ${tipo.nome}`}
-                className="text-ink-3 hover:text-[#A23B25]"
+                className="text-ink-3 hover:text-danger"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -358,7 +358,7 @@ function TiposDeLocalPainel({
               type="button"
               onClick={adicionar}
               disabled={salvando || !novoNome.trim()}
-              className="inline-flex h-7 items-center gap-1 rounded-[6px] border border-line px-2 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+              className="inline-flex h-7 items-center gap-1 rounded-md border border-line px-2 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
             >
               <Plus className="h-3.5 w-3.5" />
               Adicionar
@@ -392,7 +392,7 @@ function LocalTree({
       {nodes.map((node) => (
         <li key={node.id}>
           <div
-            className="flex items-center gap-2 rounded-[6px] py-1.5 hover:bg-line-soft"
+            className="flex items-center gap-2 rounded-md py-1.5 hover:bg-line-soft"
             style={{ paddingLeft: `${nivel * 20}px` }}
           >
             <span className="flex-1 text-sm text-ink-2">
@@ -406,7 +406,7 @@ function LocalTree({
                 <button
                   type="button"
                   onClick={() => onNovoFilho(node.id)}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-[4px] text-ink-3 hover:bg-line hover:text-ink"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-ink-3 hover:bg-line hover:text-ink"
                   aria-label="Novo sub-local"
                   title="Novo sub-local"
                 >
@@ -415,7 +415,7 @@ function LocalTree({
                 <button
                   type="button"
                   onClick={() => onEditar(node)}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-[4px] text-ink-3 hover:bg-line hover:text-ink"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-ink-3 hover:bg-line hover:text-ink"
                   aria-label="Editar Local"
                 >
                   <Pencil className="h-3.5 w-3.5" />
@@ -423,7 +423,7 @@ function LocalTree({
                 <button
                   type="button"
                   onClick={() => onExcluir(node)}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-[4px] text-[#A23B25] hover:bg-[#FFF4F1]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-danger hover:bg-danger-soft"
                   aria-label="Desativar Local"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -478,7 +478,7 @@ function AreaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">{area ? "Editar Área" : "Nova Área"}</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -503,7 +503,7 @@ function AreaModal({
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -516,9 +516,9 @@ function AreaModal({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>
@@ -560,7 +560,7 @@ function LocalModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {local ? "Editar Local" : parentId ? "Novo sub-local" : "Novo Local"}
@@ -600,7 +600,7 @@ function LocalModal({
             )}
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -613,9 +613,9 @@ function LocalModal({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>

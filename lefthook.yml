@@ -39,6 +39,20 @@ pre-push:
       run: pnpm run lint:migrations # RLS-GRANT (custom) + Squawk se instalado
     edge-functions:
       run: pnpm run check:edge-functions # função órfã / functions.invoke sem função declarada (E00-S11)
+    tokens-cor:
+      run: node scripts/check-tokens-cor.mjs # 0 hex cru fora dos tokens semânticos (E00-S14)
+    catch-silencioso:
+      run: node scripts/check-catch-silencioso.mjs # 0 catch vazio/só-console em pages/components (E00-S16)
+    reticencia:
+      run: node scripts/check-reticencia.mjs # 0 '...' ASCII em texto de UI, só '…' (E00-S17)
+    sombras:
+      run: node scripts/check-sombras.mjs # 0 shadow-(sm|md|lg|xl|2xl) default do Tailwind (E00-S20)
+    movimento:
+      run: node scripts/check-movimento.mjs # 0 transition-all, 0 lib de animação (E00-S19/ADR-0018)
+    tipografia:
+      run: node scripts/check-tipografia.mjs # 0 text-[Npx] arbitrário (E00-S18)
+    div-clicavel:
+      run: node scripts/check-div-clicavel.mjs # 0 div/span com onClick sem role+tabIndex (E00-S22)
     lint:
       run: pnpm exec biome check .
     typecheck:

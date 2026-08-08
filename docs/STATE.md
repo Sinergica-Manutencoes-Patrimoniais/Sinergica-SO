@@ -56,6 +56,113 @@ configurado neste repo — ver `feedback-sempre-rodar-playwright.md`, motivo de 
 Playwright manualmente). Depois do merge: liberar a porta 5173 pra rodar Playwright de verdade,
 implementar E01-S121 (tasks 2–6, contrato já confirmado), decidir E01-S122 (campo de contrato).
 
+**PR #55 mergeado em main (`5e6d170`).**
+
+## 2026-08-06 (cont. 3) — Import de inspeção não funcionava: função em produção estava desatualizada
+
+Lucas configurou a chave OpenRouter pela UI (`Configurações > Integrações`) e a inspeção continuou
+sem funcionar. Diagnóstico: `importar-relatorio-pdf` (v26) e `pcm-auvo-webhook` estavam rodando o
+bundle de antes da integração Vault (E00-S13) existir no `_shared/openrouter.ts` — Edge Function
+empacota `_shared/*` no deploy, não lê o arquivo em runtime; sem redeploy, o código novo nunca ia
+pro ar mesmo com o secret certo nos dois lugares (Vault via UI, confirmado em `vault.secrets`
+`updated_at` recente; env fallback setado por mim mais cedo). Autorizado pelo Lucas, redeployado
+`importar-relatorio-pdf` e `pcm-auvo-webhook` via `--use-api`; smoke 401 (não 404) nas duas.
+
+**Bug real encontrado, não corrigido (Lucas pediu pra resolver depois):** `config.integracoes`
+grava `config_publico.modelo`, mas `_shared/openrouter.ts` lê `config_publico.import_model` — o
+seletor de modelo da UI nunca chega no código (sempre cai no fallback `OPENROUTER_IMPORT_MODEL`/
+`google/gemini-2.5-flash`). Também: `ativo`/`configurado_em` continuam `false`/`null` mesmo após
+salvar a chave — o badge "configurado" da UI provavelmente lê esse campo em vez de
+`fn_integracao_tem_segredo`, explicando "continua dizendo que não está configurado". Achado na
+sessão, não investigado a fundo nem corrigido — pendente pra quando a UI for revisada.
+
+## 2026-08-07 (cont. 2) — E02-S01: payload de texto do Evolution corrigido contra instância real
+
+Lucas testou o Inbox de Atendimento em produção (`so-sinergica.netlify.app`) e achou dois 5xx: envio
+de texto (400 do Evolution) e "Responder com IA agora" (502). Sem acesso a log do Supabase
+inicialmente (CLI desta versão não tem `functions logs`); Lucas forneceu Personal Access Token
+próprio (`.env.local` já tinha um, `SUPABASE_ACCESS_TOKEN`) — consulta via Management API
+(`analytics/endpoints/logs.all`, tabela `function_edge_logs`, precisa de `iso_timestamp_start/end`
+explícito) não achou rastro das chamadas reais nas últimas 24h, então priorizei melhorar a
+observabilidade em vez de continuar caçando log: `_shared/evolution.ts` e o branch `acionar_ia` de
+`atendimento-whatsapp-envio` passaram a capturar e propagar o corpo real da resposta de erro
+(deploy autorizado, smoke 401 confirmado).
+
+**Resultado: funcionou.** Lucas testou de novo e a bolha do chat mostrou o corpo real do Evolution:
+`{"status":400,"error":"Bad Request","response":{"message":["instance requires property \"text\""]}}`.
+Achado: `criarPayloadTexto` mandava `{ number, textMessage: { text } }` (comentário dizia "Evolution
+2.3+ usa textMessage.text, não o payload legado") — a instância real da Sinérgica rejeita esse
+formato e quer `{ number, text }` plano. Corrigido, comentário atualizado com a evidência real
+(prioridade sobre suposição de doc nunca validada). `evolution.test.ts` ajustado.
+
+**502 do "Responder com IA agora" — causa raiz achada e corrigida.** Com a query de log funcionando
+(`function_edge_logs`, mesma técnica acima), achei o padrão real: `pcm-ze-agent` respondia **401**
+("Chamada interna não autorizada") milissegundos antes do 502 que o Lucas via — não era timeout.
+Confirmado com teste direto (curl usando `SUPABASE_SERVICE_ROLE_KEY` local) que a chave em si não
+era o problema (a validação usa o mesmo helper `_shared/auth.ts` dos dois lados, não tem como
+divergir). O achado real: `atendimento-whatsapp-envio` era o **único lugar no repo** chamando outra
+Edge Function via `supabase-js` `.functions.invoke()` — todo o resto (`pcm-auvo-open-task` →
+`pcm-auvo-create-task`) usa `fetch()` direto com `Authorization` explícito. `.invoke()` não repassa
+esse header de forma confiável entre Edge Functions. Trocado pro padrão que já funciona (`fetch()`
++ header explícito); deploy feito, `atendimento-whatsapp-envio` redeployada.
+
+## 2026-08-07 (cont.) — Fix: formulário perdido ao trocar de aba (39 telas afetadas)
+
+Lucas reportou perda de formulário não salvo ao trocar de aba do navegador, reproduzido na tela de
+configuração de instância. Análise (sem implementar ainda) achou a causa raiz sistêmica, não
+localizada: Supabase revalida sessão sozinho ao a aba reganhar foco (`autoRefreshToken` default) →
+`onAuthStateChange` em `auth-context.tsx` ignorava o tipo do evento e sempre recriava o objeto
+`user` → `permissoes-context.tsx` tinha `useEffect(..., [status, user])` (objeto inteiro) →
+`setCarregando(true)` disparava de novo → **39 páginas** (`if (permissoesCarregando || carregando)
+return ...`) desmontavam o formulário nesse instante. `NavGuardContext`/`useFormularioSujo`
+(E01-S108) não cobre isso — só guarda navegação voluntária, não remount involuntário.
+
+Apresentadas 4 opções (A: filtrar evento/estabilizar referência; B: efeito de permissões por
+`user?.id`; C: desligar auto-refresh — não recomendado; D: reescrever as 39 telas). Lucas escolheu
+**A+B**.
+
+**Implementado:**
+- `role.ts`: `mesmoUsuario()` (igualdade por valor, domínio puro) + 6 testes novos.
+- `auth-context.tsx`: `setUser` usa forma funcional com `mesmoUsuario` — mantém a mesma referência
+  quando o perfil resolvido é idêntico ao atual (revalidação silenciosa não recria o objeto).
+- `permissoes-context.tsx`: `useEffect` passa a depender de `user?.id` (primitivo) em vez de `user`
+  (objeto) — não recarrega permissões nem desmonta a tela por uma referência que não mudou de
+  usuário de verdade. `biome-ignore` justificado inline.
+- Gates: `build`/`typecheck`/`test` (792 passed, +6)/`biome check` (576 arquivos) verdes.
+
+**Não verificado:** reprodução manual do bug antes/depois no navegador (mesma limitação de porta
+5173 desta sessão) — a correção é rastreada até a causa raiz por leitura de código, não observada
+ao vivo. Tier trivial (CLAUDE.md): decisão já travada com o Lucas, sem `spec.md`/`tasks.md` formal.
+
+## 2026-08-07 — E01-S139: identidade visual nos PDFs de relatório
+
+Lucas pediu melhoria visual nos PDFs gerados (logo, cabeçalho, "tom profissional"). Escopo
+confirmado (AskUserQuestion): os 3 geradores do frontend (`RelatorioClientePage`,
+`RelatorioDiarioPage`, `RelatorioPlanejamentoPage`) agora; Laudo PMOC (`pmoc-generate-pdf`, Deno)
+fica para story futura. Achado: cada página duplicava sua própria lógica de `PDFDocument`/
+`drawText`, sem logo/cabeçalho/rodapé — só texto corrido.
+
+Extraído `apps/web/src/lib/pdf/relatorio-pdf.ts`: cabeçalho (faixa navy + logo branco de
+`public/logos/` + filete laranja + título/subtítulo) e rodapé ("Sinérgica Manutenções" + "Página X
+de Y" + data), com paginação automática. As 3 páginas passaram a usar o helper. Teste do helper
+(`relatorio-pdf.test.ts`, mock de `fetch` do logo) **pegou um bug real antes do commit**: typo
+`font` (variável inexistente) em vez de `fonte` no rodapé — `ReferenceError` que só apareceria ao
+gerar PDF de verdade. Corrigido. `pnpm run build`/`typecheck`/`test` (786 passed) verdes; `biome
+check --write` aplicou formatação.
+
+**Não verificado:** abertura visual dos 3 PDFs num navegador real — porta 5173 segue ocupada pelo
+dev server do projeto Akros (mesma limitação já registrada), e uma tentativa de subir noutra porta
+não ficou de pé a tempo. Fica pendente conferência visual do Lucas, como as demais stories do lote.
+
+## 2026-08-06 (cont. 4) — Limpeza de dados `[TESTE E2E]` em produção
+
+Lucas pediu pra limpar dados com `[TESTE E2E]` no nome (poluindo produção). Varredura por todos os
+schemas de domínio (colunas text/varchar/jsonb) achou 50 `pcm.clientes`, 33 `pcm.equipamentos`, 33
+`pcm.ferramentas` — todos de um único lote inserido em 2026-07-30 06:00 UTC (specs S76/S78/S90/S91).
+Checadas todas as tabelas com FK pra `clientes`/`ferramentas` (chamados, OS, inspeções, sistemas,
+tickets, alocações etc.) — zero dependência real. Deletado (`equipamentos` → `ferramentas` →
+`clientes`, ordem por FK) via `supabase db query --linked`; confirmado 0 restante nas três tabelas.
+
 ## 2026-08-06 — Lote continua (Codex)
 
 - E01-S125 local concluída: auditoria dos produtores, migration `0168` remove trigger automático,
@@ -1414,3 +1521,140 @@ recado; os 3 primeiros viraram esta story, o 4º foi só investigado (ver abaixo
   `apps/web/e2e/atendimento-historico-chamado.spec.ts`, preservado.
 - **Próximo:** ligar Docker e rodar `supabase test db`; aplicar migrations/Edge Function em ambiente
   de preview; executar Playwright/UAT como `cliente-sindico`; só então marcar E09 verificado.
+
+---
+
+## 2026-08-07 — Lote visual E00-S14..S23: análise + fundação completa (Claude Opus 5)
+
+Lucas instalou skills de design (`apple-design`, `emil-design-eng`, etc.) e pediu revisão da UI
+do produto pra "tirar a cara de IA". Análise não achou o estereótipo (zero gradiente, zero emoji)
+— achou 812 hex cru fora dos tokens, 1 primitiva de UI compartilhada (`Tooltip`), diálogo nativo
+do browser (`window.confirm`/`alert`), zero skeleton, zero movimento. Virou 10 stories
+(E00-S14..S23) com spec+tasks, 2 ADRs (0017: primitivas em `packages/ui` + Radix headless nas de
+sobreposição; 0018: CSS+WAAPI, sem lib de mola). Lucas: "implemente todas as specs e depois
+subimos tudo".
+
+**Implementado e commitado nesta sessão (9 commits em `feat/planejamento-lote-2026-08-04`):**
+
+- **E00-S14** — 12 tokens de status (success/warning/danger/info × main/soft/line) + escalas de
+  raio/sombra/movimento/tipografia em `index.css`. Codemod por distância **HSL** (não RGB — RGB
+  confundia marrom-aviso com vermelho-erro num caso real) migrou 812 hex em 105 arquivos.
+  Achados: sidebar navy precisa de token fixo (`--color-nav-ink`, não flipa no escuro, senão o
+  texto sumiria contra a sidebar que continua escura); success/warning originais não batiam
+  contraste AA contra o próprio `-soft` (3.75:1/3.80:1) — escurecidos até 4.5:1+; gate cobria só
+  `.tsx`, 3 arquivos `.ts` de domínio escapavam. Projeto não tinha `jsdom`/`testing-library` —
+  instalado (necessário pro resto do lote).
+- **E00-S15** — `packages/ui` saiu de placeholder (existia desde a fundação do projeto, nunca
+  construído) pra: `Button`, `Badge`, `Card`/`EmptyState`, `Field`, `Input`/`Select`/`Textarea`,
+  `Modal` (Radix Dialog — **Radix 1.1 não seta `aria-modal` sozinho**, precisou explícito),
+  `DataTable` (sticky, scroll contido, ordenação, skeleton nas linhas, navegável por teclado —
+  `onClick` sem `onKeyDown` pegou no lint), `Skeleton`, `Tooltip` (migrado de `apps/web`, 10
+  chamadores), `useValidacaoCampo` (zod, valida no blur), galeria `/ui`. Migração completa:
+  Tooltip + radius (879 ocorrências). Migração pendente: 92 botões/56 modais/17 tabelas crus —
+  gate escrito (`check-primitivas.mjs`), não plugado no lefthook até migrar.
+- **E00-S16** — `ToastProvider`/`useToast`, `ConfirmDialog` (foco no Cancelar via
+  `data-autofoco` — Radix focaria o X do cabeçalho por padrão), `useAcaoComDesfazer`.
+  **Achado que revisou a spec:** nenhuma entidade "Desativar" (equipe, tag, categoria, kit…) tem
+  operação de reativar no backend hoje — `useAcaoComDesfazer` fica pronto e testado, mas seu uso
+  real depende de trabalho de backend fora de escopo. Migrados de ponta a ponta:
+  `TiposTarefaPage`, `EquipesPage`, `MarcacoesClientePage`. Pendente: 28 `confirm()`/`alert()`
+  em 24 arquivos.
+- **E00-S17** — `useCargaVisivel` (200ms delay / 400ms mínimo), `EmptyState` com variante
+  vazio/filtrado. Codemod de reticência (100 ocorrências `...`→`…`) — regra exclui spread/rest
+  (`...props`, `[...(expr)]`) por não seguir letra/`_`/`$`/`(`, achado real no dry-run.
+- **E00-S20** — codemod de sombra (108 ocorrências: `shadow-xl`→`shadow-modal`,
+  `shadow-2xl`→`shadow-drawer`, duplicatas manuais→`shadow-raised`), mapeado por contexto real
+  de uso, não só valor mais próximo.
+- **E00-S19** — rede de segurança universal de `prefers-reduced-motion` (seletor `*` em vez de
+  auditar caso a caso), gate anti-biblioteca-de-animação (ADR-0018).
+- **E00-S18** — 232 ocorrências de `text-[9/10/11px]`→`text-micro` (11px — AC-1 exige não ficar
+  abaixo disso), `NumeroTabular`. Pendente: ~2500 usos de `text-xs/sm/base/lg/xl` — diferente de
+  cor/raio/sombra, o valor em pixel já bate, então não é codemod de valor-mais-próximo, é
+  julgamento de hierarquia por site.
+- **E00-S22** — `check-div-clicavel.mjs` (rastreia profundidade de `{}` pra achar o fim real da
+  tag JSX — `=>` de arrow function tem um `>` no meio do caminho, scanner ingênuo erra). Achou 2
+  casos: 1 falso positivo legítimo (scrim `aria-hidden`, Esc já cobre teclado), 1 bug real em
+  `BacklogGutPage.tsx` (linha inteira clicável sem alcance por teclado — corrigido com
+  `role="button"`+`tabIndex`+`onKeyDown`, não virou `<button>` porque tem um `<button>` aninhado
+  mais abaixo). `theme-context` já implementava troca de tema corretamente (localStorage vence,
+  senão segue o sistema) — só faltava a transição suave.
+- **E00-S21** — `design.md` (tier arquitetural, exigido antes de implementar). Decisão: `nav-guard`
+  troca `window.confirm` síncrono por `unstable_useBlocker` do react-router — resolve ao mesmo
+  tempo o `window.confirm` pendente de E00-S16 e a integração de rota. Achado: `netlify.toml` já
+  tem o rewrite SPA, não é prerequisito novo. **Implementação não iniciada** (lote 2).
+- **E00-S23** — spec escrita, implementação não iniciada (precisa de navegador real pra testar
+  gesto de arrasto, indisponível nesta sessão).
+
+**7 gates novos no pre-push** (todos verdes): `tokens-cor`, `catch-silencioso`, `reticencia`,
+`sombras`, `movimento`, `tipografia`, `div-clicavel`. `ci:local` completo (17 gates) verde —
+`testes` deu falha uma vez isolada (flaky, provável timing Radix+jsdom), limpo em duas rodadas
+seguintes e via `pnpm test` direto.
+
+**Não feito, documentado explicitamente em cada commit:** migração exaustiva de botão/modal/
+tabela cru (S15), `confirm()`/`alert()` restantes (S16), rollout de skeleton pras 70 páginas
+(S17), rollout da escala tipográfica nomeada (S18), chrome translúcido + borda de rolagem (S20),
+`axe-core`/Playwright real (S22, mesmo bloqueio de porta 5173 de sessões anteriores — sem
+navegador disponível nesta sessão pra testar visualmente nada do lote), implementação de S21/S23.
+
+**Próximo passo:** Lucas decide sobre dar push do que foi commitado nesta sessão — 10 commits à
+frente do remoto, mesma branch do **PR #56** (`E01-S139: identidade visual nos PDFs de
+relatório`, ainda aberto, https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/pull/56).
+Depois: escolher entre continuar a migração exaustiva de cada story (S15/S16/S17/S18) ou avançar
+pro lote 2 (S21/S23).
+
+## 2026-08-07 (cont.) — Atendimento (skills/alma/handoff/emoji), MCP design, limpeza E2E, merge
+
+Lucas pediu pra fazer todas as pendências, ajustar backend, trazer "Skills, Alma do agente,
+Mensagem de handoff, textos que ativaram handoff, comunicação com MCPs" pro Atendimento, e emoji
+no composer. Investigação antes de codar (per CLAUDE.md, spec antes de feature nova) achou que
+**Alma e Skills e os textos de handoff já existiam** desde E02-S06/S13/S14
+(`promptSistema`/`Especialista`/`palavrasTransferencia`, CRUD completo em `ConfigIaForm.tsx`/
+`OperacaoTab.tsx`) — perguntado ao Lucas, confirmado que só faltava o rótulo certo na UI, não
+schema novo.
+
+**E02-S28 (implementado):** relabel `Prompt base`→"Alma do agente", `Especialistas`→"Skills",
+`Palavras que transferem`→"Textos que ativam handoff". Zero mudança de schema/tipo. 3 entradas
+novas em `docs/glossary.md`.
+
+**E02-S29 (implementado):** `Popover` genérico em `packages/ui` (usa
+`@radix-ui/react-popover`, instalado desde E00-S15/ADR-0017, nunca usado até agora).
+`EmojiPicker` com conjunto curado por categoria, insere na posição do cursor via
+`inputRef.selectionStart/End` — não sempre no fim. Mesmo componente no composer principal
+(`ConversaChat`) e no `RichComposer`.
+
+**E02-S30 (só design, achado real):** `toolUseEnabled` existe desde E02-S14 e **nunca foi lido
+por nenhuma Edge Function** — grep em `supabase/functions/` deu vazio. O toggle "Ferramentas" na
+UI não faz nada hoje. MCP (pedido do Lucas: "Zé ganha acesso a MCP como ferramenta") é tier
+arquitetural — `product.md`+`design.md`+`tasks.md` escritos: MCP remoto (Edge Function não
+sustenta stdio), allowlist por persona (`atendimento.persona_mcp_servers`) com
+`CHECK (somente_leitura = true)` travando escrita **no schema**, não só na aplicação, audit
+append-only de toda chamada. MVP: 1 ferramenta, só leitura, persona Zé, validado manualmente
+antes de generalizar — mesma ressalva de sempre (E02-S23/S25/S26): sem LLM/MCP server/WhatsApp
+reais nesta sessão pra validar, implementação não começou.
+
+**Backend "reativar" (E00-S16, NÃO implementado):** 21 arquivos de aplicação têm
+`desativar*` sem `reativar*`/`ativar*` correspondente (equipes, tags, categorias, kits,
+ferramentas, personas, fluxos, sistemas, áreas, locais, contas, scoring-clusters,
+instância-agente...). Decisão desta sessão: **não escrever 21 endpoints de mutação novos, não
+testados contra Supabase real, na janela imediatamente antes de um merge pra main.** Fica
+documentado como pendente, mesma disciplina de todo o resto do lote — `useAcaoComDesfazer`
+(E00-S16) continua sem uso real até esse trabalho acontecer numa sessão própria, com tempo pra
+testar cada endpoint.
+
+**Limpeza de dados `[TESTE E2E]`:** achado 116 linhas — 50 `pcm.clientes`, 33
+`pcm.equipamentos`, 33 `pcm.ferramentas`. Checados dependentes de FK nos dois sentidos antes de
+apagar (ordens_servico/chamados/areas/componentes referenciando os ids de teste — zero em
+todos). `ferramentas`/`equipamentos` apagados de verdade (`DELETE`). `clientes` **não aceita
+DELETE nem pro `service_role`** (`GRANT DELETE ON pcm.clientes` ausente — proteção deliberada do
+schema, achado real): usado soft-delete (`ativo=false`, `deleted_at`), o mesmo padrão que o
+resto do PCM já usa pra remoção. Confirmado: 0 linhas de teste ativas restantes nas 3 tabelas.
+
+**Gates:** 2 pegos pelo próprio `ci:local` antes do push — `check-tipografia.mjs` achou um
+`text-[11px]` arbitrário que eu mesmo introduzi no `EmojiPicker` (fix: `text-micro`);
+`audit:esteira` achou os 3 links quebrados de `E02-S30` no ROADMAP antes de eu terminar de
+escrever o `design.md` (ordem errada: linkei antes de criar o arquivo). Os dois confirmam que os
+gates escritos nesta sessão pegam erro de verdade, inclusive erro meu, não só o pré-existente.
+17 gates verdes na rodada final.
+
+**Push feito, PR #56 mergeado em main a pedido explícito do Lucas** ("continue, finalize...push
+e merge para a main").

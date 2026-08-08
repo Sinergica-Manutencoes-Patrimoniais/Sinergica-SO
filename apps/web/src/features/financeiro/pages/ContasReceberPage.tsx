@@ -75,7 +75,7 @@ export function ContasReceberPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -111,7 +111,7 @@ export function ContasReceberPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Contas a receber</h3>
@@ -119,25 +119,25 @@ export function ContasReceberPage() {
               {percentualAtraso.toFixed(0)}% da carteira em atraso (D+3 ou mais)
             </p>
           </div>
-          <div className="flex gap-1 rounded-[6px] border border-line p-0.5">
+          <div className="flex gap-1 rounded-md border border-line p-0.5">
             <button
               type="button"
               onClick={() => setVisao("faixa")}
-              className={`rounded-[4px] px-3 py-1 text-xs font-semibold ${visao === "faixa" ? "bg-orange text-white" : "text-ink-2"}`}
+              className={`rounded-sm px-3 py-1 text-xs font-semibold ${visao === "faixa" ? "bg-orange text-white" : "text-ink-2"}`}
             >
               Por faixa
             </button>
             <button
               type="button"
               onClick={() => setVisao("cliente")}
-              className={`rounded-[4px] px-3 py-1 text-xs font-semibold ${visao === "cliente" ? "bg-orange text-white" : "text-ink-2"}`}
+              className={`rounded-sm px-3 py-1 text-xs font-semibold ${visao === "cliente" ? "bg-orange text-white" : "text-ink-2"}`}
             >
               Por cliente
             </button>
           </div>
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -158,7 +158,7 @@ export function ContasReceberPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-[8px] border border-line bg-card p-4">
+        <div className="rounded-lg border border-line bg-card p-4">
           {inadimplencia.length === 0 ? (
             <p className="py-6 text-center text-sm text-ink-3">Nenhum cliente inadimplente.</p>
           ) : (
@@ -177,7 +177,7 @@ export function ContasReceberPage() {
                     <td className="px-3 py-2 text-ink-2">
                       {clientePorId.get(i.clienteId) ?? "Cliente"}
                     </td>
-                    <td className="px-3 py-2 text-right font-semibold text-[#A23B25]">
+                    <td className="px-3 py-2 text-right font-semibold text-danger">
                       R$ {centavosParaReais(i.totalAtrasoCentavos)}
                     </td>
                     <td className="px-3 py-2 text-right text-ink-2">{i.quantidade}</td>
@@ -228,10 +228,10 @@ function FaixaSection({
   const total = itens.reduce((soma, i) => soma + i.valorCentavos, 0);
 
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <h4 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
-          {ehAlerta(faixa) && <AlertCircle className="h-3.5 w-3.5 text-[#A23B25]" />}
+          {ehAlerta(faixa) && <AlertCircle className="h-3.5 w-3.5 text-danger" />}
           {LABEL_FAIXA[faixa]}
           <span className="text-xs font-normal text-ink-3">({itens.length})</span>
         </h4>
@@ -241,7 +241,7 @@ function FaixaSection({
         {itens.map((item) => (
           <div
             key={item.lancamentoId}
-            className="flex items-center justify-between gap-2 rounded-[6px] border border-line px-3 py-2"
+            className="flex items-center justify-between gap-2 rounded-md border border-line px-3 py-2"
           >
             <div className="min-w-0">
               <p className="truncate text-sm text-ink-2">
@@ -305,7 +305,7 @@ function BaixaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-sm rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-sm rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="flex items-center gap-1.5 text-base font-semibold text-ink">
             <TrendingUp className="h-4 w-4" />
@@ -335,7 +335,7 @@ function BaixaModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -343,9 +343,9 @@ function BaixaModal({
             type="button"
             onClick={confirmar}
             disabled={confirmando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {confirmando ? "Confirmando..." : "Confirmar recebimento"}
+            {confirmando ? "Confirmando…" : "Confirmar recebimento"}
           </button>
         </div>
       </div>
@@ -410,7 +410,7 @@ function CobrancaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="flex items-center gap-1.5 text-base font-semibold text-ink">
             <QrCode className="h-4 w-4" />
@@ -422,7 +422,7 @@ function CobrancaModal({
         </div>
         <div className="flex flex-col gap-3 p-4">
           {carregando ? (
-            <p className="text-sm text-ink-3">Carregando...</p>
+            <p className="text-sm text-ink-3">Carregando…</p>
           ) : cobrancaAtiva ? (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-ink-2">
@@ -433,7 +433,7 @@ function CobrancaModal({
                 <img
                   src={`data:image/png;base64,${cobrancaAtiva.qrCodeBase64}`}
                   alt="QR Code PIX"
-                  className="h-40 w-40 self-center rounded-[6px] border border-line"
+                  className="h-40 w-40 self-center rounded-md border border-line"
                 />
               )}
               {cobrancaAtiva.qrCode && (
@@ -463,23 +463,23 @@ function CobrancaModal({
                   type="button"
                   onClick={() => emitir("pix")}
                   disabled={emitindo !== null}
-                  className="h-9 flex-1 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  className="h-9 flex-1 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
-                  {emitindo === "pix" ? "Emitindo..." : "Emitir PIX"}
+                  {emitindo === "pix" ? "Emitindo…" : "Emitir PIX"}
                 </button>
                 <button
                   type="button"
                   onClick={() => emitir("boleto")}
                   disabled={emitindo !== null}
-                  className="h-9 flex-1 rounded-[6px] border border-line text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                  className="h-9 flex-1 rounded-md border border-line text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
                 >
-                  {emitindo === "boleto" ? "Emitindo..." : "Emitir boleto"}
+                  {emitindo === "boleto" ? "Emitindo…" : "Emitir boleto"}
                 </button>
               </div>
             </>
           )}
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -488,7 +488,7 @@ function CobrancaModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Fechar
           </button>
@@ -512,7 +512,7 @@ function CopiavelField({ label, valor }: { label: string; valor: string }) {
             setCopiado(true);
             setTimeout(() => setCopiado(false), 2000);
           }}
-          className="inline-flex h-9 shrink-0 items-center gap-1 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+          className="inline-flex h-9 shrink-0 items-center gap-1 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
         >
           <Copy className="h-3.5 w-3.5" />
           {copiado ? "Copiado!" : "Copiar"}

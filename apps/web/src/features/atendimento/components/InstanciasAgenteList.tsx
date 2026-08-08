@@ -53,7 +53,7 @@ export function InstanciasAgenteList({
   }
 
   return (
-    <section className="rounded-[10px] border border-line bg-card">
+    <section className="rounded-xl border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
         <div>
           <h3 className="text-base font-semibold text-ink">Instâncias de agente</h3>
@@ -71,7 +71,7 @@ export function InstanciasAgenteList({
       </div>
 
       {erro && (
-        <div className="mx-5 mt-4 rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
         </div>
       )}
@@ -116,14 +116,14 @@ export function InstanciasAgenteList({
             <button
               type="button"
               onClick={() => setCriando(false)}
-              className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+              className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={salvando}
-              className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
             >
               {salvando ? "Salvando…" : "Vincular"}
             </button>
@@ -154,7 +154,7 @@ export function InstanciasAgenteList({
                   type="button"
                   disabled={salvando}
                   onClick={() => desativar(item)}
-                  className="rounded-[6px] border border-[#F0C2BD] p-2 text-[#A12D24] hover:bg-[#FFF4F2] disabled:opacity-50"
+                  className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                   title="Desligar"
                 >
                   <X className="h-4 w-4" />

@@ -588,7 +588,7 @@ export function AtendimentoConfigPage() {
 
   return (
     <div className="page-stack">
-      <div className="no-scrollbar flex gap-1 overflow-x-auto rounded-[8px] border border-line bg-card px-1.5 pt-1.5 shadow-[0_1px_2px_rgba(20,28,54,0.03)]">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto rounded-lg border border-line bg-card px-1.5 pt-1.5 shadow-raised">
         <button
           type="button"
           onClick={() => setAba("ia")}

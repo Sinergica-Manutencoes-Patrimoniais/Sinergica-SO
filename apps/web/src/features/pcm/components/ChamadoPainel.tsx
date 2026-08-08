@@ -177,16 +177,16 @@ export function ChamadoPainel({
   const linkAuvo = auvoTaskDeepLink(auvoTaskId);
 
   return (
-    <div className="rounded-[8px] border border-line bg-paper">
+    <div className="rounded-lg border border-line bg-paper">
       <div className="flex flex-wrap items-center gap-2 border-b border-line-soft px-4 py-2.5">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
+        <span className="text-micro font-semibold uppercase tracking-wider text-ink-3">
           Chamado
         </span>
         <span className="font-brand text-xs tabular-nums text-ink-3">{chamado.numero}</span>
-        <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+        <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
           {STATUS_CHAMADO_LABEL[chamado.status]}
         </span>
-        <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+        <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
           {ORIGEM_CHAMADO_LABEL[chamado.origem]}
         </span>
         {linkAuvo ? (
@@ -194,12 +194,12 @@ export function ChamadoPainel({
             href={linkAuvo}
             target="_blank"
             rel="noreferrer"
-            className="rounded-full bg-orange-soft px-2 py-0.5 text-[11px] font-semibold text-orange hover:underline"
+            className="rounded-full bg-orange-soft px-2 py-0.5 text-micro font-semibold text-orange hover:underline"
           >
             Auvo #{auvoTaskId}
           </a>
         ) : (
-          <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+          <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
             Sem OS no Auvo
           </span>
         )}
@@ -229,7 +229,7 @@ export function ChamadoPainel({
           <button
             type="button"
             onClick={() => setSubModal({ modo: "gerar-os", destino: "convertido_os" })}
-            className="h-8 rounded-[6px] bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+            className="h-8 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
           >
             Gerar OS
           </button>
@@ -243,14 +243,14 @@ export function ChamadoPainel({
           <button
             type="button"
             onClick={() => setSubModal({ modo: "cancelar" })}
-            className="h-8 rounded-[6px] border border-[#F2C0B5] px-3 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+            className="h-8 rounded-md border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
           >
             Cancelar Chamado
           </button>
         </div>
       )}
 
-      {erro && <p className="px-4 pb-3 text-xs text-[#A23B25]">{erro}</p>}
+      {erro && <p className="px-4 pb-3 text-xs text-danger">{erro}</p>}
 
       {subModal?.modo === "gerar-os" && dadosOs && (
         <GerarOsModal
@@ -453,7 +453,7 @@ function GerarOsModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {destino === "convertido_os" ? "Gerar OS" : "Enviar ao backlog"}
@@ -524,7 +524,7 @@ function GerarOsModal({
             </div>
           )}
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -537,7 +537,7 @@ function GerarOsModal({
             type="button"
             onClick={confirmar}
             disabled={salvando || !tipoTarefaId || !gutCompleto}
-            className="h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             {salvando ? "Salvando…" : "Confirmar"}
           </button>
@@ -604,7 +604,7 @@ function CancelarChamadoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Cancelar Chamado</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -642,7 +642,7 @@ function CancelarChamadoModal({
             />
           </div>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -655,7 +655,7 @@ function CancelarChamadoModal({
             type="button"
             onClick={confirmar}
             disabled={salvando || !justificativa.trim()}
-            className="h-9 rounded-[6px] bg-[#C5362B] px-3 text-sm font-semibold text-white hover:bg-[#A12D24] disabled:opacity-50"
+            className="h-9 rounded-md bg-danger px-3 text-sm font-semibold text-white hover:bg-danger disabled:opacity-50"
           >
             {salvando ? "Cancelando…" : "Confirmar cancelamento"}
           </button>

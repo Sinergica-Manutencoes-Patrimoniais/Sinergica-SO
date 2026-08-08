@@ -15,7 +15,7 @@ export function GuiaTitulo({ titulo, subtitulo }: { titulo: string; subtitulo: s
 }
 
 const STATUS_CLASS: Record<string, string> = {
-  real: "bg-[#E7F6EC] text-[#1E8E45] dark:bg-[#12301E] dark:text-[#6FCB8E]",
+  real: "bg-success-soft text-success",
   prototipo: "bg-orange-soft text-orange-deep",
   planejado: "bg-line-soft text-ink-2",
 };
@@ -29,7 +29,7 @@ const STATUS_LABEL: Record<string, string> = {
 export function StatusModulo({ status }: { status: "real" | "prototipo" | "planejado" }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_CLASS[status]}`}
+      className={`inline-flex rounded-full px-2.5 py-1 text-micro font-semibold ${STATUS_CLASS[status]}`}
     >
       {STATUS_LABEL[status]}
     </span>
@@ -60,7 +60,7 @@ export function ListaFuncoes({ itens }: { itens: Array<{ nome: string; descricao
 
 export function Callout({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
-    <div className="rounded-[8px] border border-orange-deep/25 bg-orange-soft/60 p-4">
+    <div className="rounded-lg border border-orange-deep/25 bg-orange-soft/60 p-4">
       <p className="text-xs font-bold uppercase tracking-wide text-orange-deep">{titulo}</p>
       <div className="mt-1.5 flex flex-col gap-2 text-sm leading-relaxed text-ink-2">
         {children}

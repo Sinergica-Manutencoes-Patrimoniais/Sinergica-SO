@@ -49,7 +49,7 @@ export function NovoChamadoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Novo Chamado</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -103,7 +103,7 @@ export function NovoChamadoModal({
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -116,7 +116,7 @@ export function NovoChamadoModal({
             type="button"
             onClick={salvar}
             disabled={salvando || !clienteId || !titulo.trim()}
-            className="h-9 rounded-[6px] bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             {salvando ? "Salvando…" : "Criar Chamado"}
           </button>

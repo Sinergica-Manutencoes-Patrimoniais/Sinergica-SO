@@ -132,7 +132,7 @@ export function FuncionariosPage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   }
 
   if (!temLeitura) {
@@ -145,7 +145,7 @@ export function FuncionariosPage() {
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   }
 
   if (estado.fase === "erro") {
@@ -167,7 +167,7 @@ export function FuncionariosPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Funcionários</h3>
@@ -179,7 +179,7 @@ export function FuncionariosPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Novo funcionário
@@ -187,14 +187,14 @@ export function FuncionariosPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
       </section>
 
       {estado.funcionarios.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <UserCog className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhum funcionário cadastrado.</p>
         </div>
@@ -244,7 +244,7 @@ function FuncionarioCard({
   onDesativar?: () => void;
 }) {
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h4 className="truncate text-sm font-semibold text-ink">{funcionario.nome}</h4>
@@ -253,8 +253,8 @@ function FuncionarioCard({
           </p>
         </div>
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-            funcionario.ativo ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#EFF1F4] text-[#5A6175]"
+          className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
+            funcionario.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"
           }`}
         >
           {funcionario.ativo ? "Ativo" : "Inativo"}
@@ -279,7 +279,7 @@ function FuncionarioCard({
         <span>Sync: {funcionario.auvoSyncStatus ?? "pending"}</span>
       </div>
       {funcionario.auvoSyncError && (
-        <p className="mt-2 text-xs text-[#A23B25]">{funcionario.auvoSyncError}</p>
+        <p className="mt-2 text-xs text-danger">{funcionario.auvoSyncError}</p>
       )}
       <div className="mt-4 flex justify-end gap-2">
         <button type="button" onClick={onVerPerfil} className="btn-secondary">
@@ -289,7 +289,7 @@ function FuncionarioCard({
           <button
             type="button"
             onClick={onEditar}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
           >
             <Pencil className="h-3.5 w-3.5" />
             Editar
@@ -299,7 +299,7 @@ function FuncionarioCard({
           <button
             type="button"
             onClick={onDesativar}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-[6px] border border-[#F2C0B5] px-3 text-xs font-semibold text-[#A23B25] hover:bg-[#FFF4F1]"
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Desativar
@@ -321,7 +321,7 @@ function PerfilFuncionarioModal({
 }) {
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-3xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-3xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex justify-between border-b border-line px-4 py-3">
           <div>
             <h3 className="text-base font-semibold text-ink">{funcionario.nome}</h3>
@@ -418,7 +418,7 @@ function FuncionarioModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-3xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-3xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {funcionario ? "Editar funcionário" : "Novo funcionário"}
@@ -429,7 +429,7 @@ function FuncionarioModal({
         </div>
         <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto p-4 md:grid-cols-2">
           {!funcionario && (
-            <div className="md:col-span-2 rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#8A4B00]">
+            <div className="md:col-span-2 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
               <span className="inline-flex items-center gap-2 font-semibold">
                 <ShieldAlert className="h-4 w-4" />
                 Este cadastro cria acesso real ao app Auvo.
@@ -493,13 +493,13 @@ function FuncionarioModal({
               placeholder="ex.: 8"
               className="input w-full"
             />
-            <span className="mt-1 block text-[11px] text-ink-3">
+            <span className="mt-1 block text-micro text-ink-3">
               Usada na visão diária de horas para sinalizar falta/hora-extra. Vazio = sem
               sinalização.
             </span>
           </label>
           {erro && (
-            <div className="md:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -508,7 +508,7 @@ function FuncionarioModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -516,9 +516,9 @@ function FuncionarioModal({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>

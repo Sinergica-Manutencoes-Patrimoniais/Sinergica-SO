@@ -1,7 +1,7 @@
+import { Tooltip } from "@sinergica/ui";
 // AC-2: cabeçalho de cadastro do cliente. Cadastro incompleto (cnpj/auvo_id nulos) usa rótulo
 // neutro via rotuloOuPlaceholder — nunca quebra a renderização.
 import { Mail, MapPin, Phone } from "lucide-react";
-import { Tooltip } from "../../../components/ui/Tooltip";
 import type { ClienteHeader } from "../application/cliente-360-gateway";
 import { rotuloOuPlaceholder } from "../domain/cliente-360";
 import { TOOLTIP_CLIENTE } from "../domain/tooltips-cliente";
@@ -11,7 +11,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
   const contato = cliente.contatoNome ?? cliente.contatoTelefone ?? cliente.contatoEmail;
 
   return (
-    <div className="rounded-[8px] bg-navy text-white p-5 md:p-6 shadow-sm">
+    <div className="rounded-lg bg-navy text-white p-5 md:p-6 shadow-raised">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold truncate">{cliente.nome}</h1>
@@ -23,7 +23,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
             <Tooltip content={TOOLTIP_CLIENTE.tipo} className="inline-flex">
               <button
                 type="button"
-                className="appearance-none rounded-full border-0 bg-white/12 px-2.5 py-1 font-semibold text-inherit"
+                className="appearance-none rounded-full border-0 bg-card/12 px-2.5 py-1 font-semibold text-inherit"
               >
                 {cliente.tipo === "lead" ? "Lead" : "Cliente"}
               </button>
@@ -32,7 +32,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
               <button
                 type="button"
                 className={`appearance-none rounded-full border-0 px-2.5 py-1 font-semibold text-inherit ${
-                  cliente.ativo ? "bg-[#1E8E45]/25 text-[#B9F4CB]" : "bg-white/12 text-white/70"
+                  cliente.ativo ? "bg-success/25 text-success-line" : "bg-card/12 text-white/70"
                 }`}
               >
                 {cliente.ativo ? "Ativo" : "Inativo"}
@@ -42,7 +42,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
               <Tooltip content={TOOLTIP_CLIENTE.statusComercial} className="inline-flex">
                 <button
                   type="button"
-                  className="appearance-none rounded-full border-0 bg-white/12 px-2.5 py-1 font-semibold text-inherit"
+                  className="appearance-none rounded-full border-0 bg-card/12 px-2.5 py-1 font-semibold text-inherit"
                 >
                   {cliente.statusComercial}
                 </button>
@@ -64,9 +64,9 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
         <Tooltip content={TOOLTIP_CLIENTE.auvo} className="inline-flex">
           <button
             type="button"
-            className="shrink-0 appearance-none rounded-[8px] border-0 bg-white/10 px-4 py-3 text-left text-sm text-inherit"
+            className="shrink-0 appearance-none rounded-lg border-0 bg-card/10 px-4 py-3 text-left text-sm text-inherit"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/55">Auvo</p>
+            <p className="text-micro font-semibold uppercase tracking-wider text-white/55">Auvo</p>
             <p className="mt-1 font-brand text-lg tabular-nums">
               {rotuloOuPlaceholder(cliente.auvoId, "não sincronizado")}
             </p>
@@ -107,7 +107,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">{label}</p>
+      <p className="text-micro font-semibold uppercase tracking-wider text-white/45">{label}</p>
       <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
     </div>
   );

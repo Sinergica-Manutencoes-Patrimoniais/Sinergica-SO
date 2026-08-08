@@ -8,8 +8,10 @@ export function criarPayloadTexto(remoteJid: string, text: string): Record<strin
   const conteudo = text.trim();
   if (!number) throw new Error("Destinatário Evolution é obrigatório");
   if (!conteudo) throw new Error("Texto Evolution é obrigatório");
-  // Evolution API 2.3+: `textMessage.text`, não o payload legado `{ text }`.
-  return { number, textMessage: { text: conteudo } };
+  // Confirmado contra a instância real em produção (2026-08-07): rejeita `textMessage.text`
+  // ("instance requires property \"text\"") — a doc/suposição de `textMessage.text` (Evolution
+  // 2.3+) não bate com esta instância. Corpo plano `{ number, text }` é o que funciona de fato.
+  return { number, text: conteudo };
 }
 
 export async function responderEvolution(
@@ -53,5 +55,13 @@ async function chamarEvolution(
     headers: { "Content-Type": "application/json", apikey: configuracao.apiKey },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Evolution ${endpoint} falhou: ${res.status}`);
+  if (!res.ok) {
+    // Corpo é a resposta do próprio Evolution (nunca inclui nossa apikey) — propagar até o
+    // detalhe da mensagem é o que permite diagnosticar 400 (payload rejeitado) sem log de servidor.
+    const corpo = await res.text().catch(() => "");
+    console.error(
+      JSON.stringify({ nivel: "error", escopo: "evolution-client", endpoint, instanceId, status: res.status, corpo: corpo.slice(0, 1000) }),
+    );
+    throw new Error(`Evolution ${endpoint} falhou: ${res.status}${corpo ? ` — ${corpo.slice(0, 300)}` : ""}`);
+  }
 }

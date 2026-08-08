@@ -108,7 +108,7 @@ export function TiposInspecaoPage() {
   }
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -118,7 +118,7 @@ export function TiposInspecaoPage() {
     );
   }
   if (estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
@@ -130,12 +130,12 @@ export function TiposInspecaoPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-ink">Tipos de Inspeção</h3>
             <p className="mt-0.5 text-sm text-ink-3">
-              Parametrização ABNT NBR 16747 — cada tipo (predial, elétrica, SPDA...) tem seus
+              Parametrização ABNT NBR 16747 — cada tipo (predial, elétrica, SPDA…) tem seus
               checklists configuráveis. Só supervisor/superadmin edita.
             </p>
           </div>
@@ -143,7 +143,7 @@ export function TiposInspecaoPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "tipo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Novo tipo
@@ -157,14 +157,14 @@ export function TiposInspecaoPage() {
           </p>
         )}
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
       </section>
 
       {estado.tipos.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <p className="text-sm text-ink-3">Nenhum tipo de inspeção cadastrado.</p>
         </div>
       ) : (
@@ -172,7 +172,7 @@ export function TiposInspecaoPage() {
           {estado.tipos.map((tipo) => {
             const templatesDoTipo = estado.templates.filter((t) => t.tipoInspecaoId === tipo.id);
             return (
-              <div key={tipo.id} className="rounded-[8px] border border-line bg-card p-4">
+              <div key={tipo.id} className="rounded-lg border border-line bg-card p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="text-sm font-semibold text-ink">{tipo.nome}</h4>
@@ -191,7 +191,7 @@ export function TiposInspecaoPage() {
                 {tipo.descricao && <p className="mt-2 text-xs text-ink-3">{tipo.descricao}</p>}
 
                 <div className="mt-3 border-t border-line-soft pt-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
+                  <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">
                     Checklists ({templatesDoTipo.length})
                   </p>
                   {templatesDoTipo.length === 0 ? (
@@ -264,7 +264,7 @@ function TipoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {tipo ? "Editar tipo de inspeção" : "Novo tipo de inspeção"}
@@ -300,7 +300,7 @@ function TipoModal({
             />
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -309,7 +309,7 @@ function TipoModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -317,9 +317,9 @@ function TipoModal({
             type="button"
             onClick={salvar}
             disabled={salvando || !nome.trim()}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>
@@ -373,7 +373,7 @@ function TemplateModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Novo checklist</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -433,7 +433,7 @@ function TemplateModal({
                   <button
                     type="button"
                     onClick={() => setItens((atual) => atual.filter((_, i) => i !== indice))}
-                    className="text-xs font-semibold text-[#A23B25] hover:underline"
+                    className="text-xs font-semibold text-danger hover:underline"
                   >
                     Remover
                   </button>
@@ -454,7 +454,7 @@ function TemplateModal({
             </button>
           </div>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -463,7 +463,7 @@ function TemplateModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -471,9 +471,9 @@ function TemplateModal({
             type="button"
             onClick={salvar}
             disabled={salvando || !nome.trim()}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar checklist"}
+            {salvando ? "Salvando…" : "Salvar checklist"}
           </button>
         </div>
       </div>

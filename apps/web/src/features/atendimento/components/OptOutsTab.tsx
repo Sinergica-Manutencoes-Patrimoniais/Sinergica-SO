@@ -23,7 +23,7 @@ export function OptOutsTab({
   const [canal, setCanal] = useState<CanalOptOut>("todos");
   const [motivo, setMotivo] = useState("");
   return (
-    <div className="rounded-[10px] border border-line bg-card">
+    <div className="rounded-xl border border-line bg-card">
       <div className="border-b border-line-soft px-5 py-3">
         <h3 className="text-sm font-semibold text-ink">Opt-outs</h3>
         <p className="mt-0.5 text-xs text-ink-3">
@@ -85,7 +85,7 @@ export function OptOutsTab({
                 <button
                   type="button"
                   onClick={() => onRemover(o.id)}
-                  className="text-xs text-[#A12D24] hover:underline"
+                  className="text-xs text-danger hover:underline"
                 >
                   Remover
                 </button>

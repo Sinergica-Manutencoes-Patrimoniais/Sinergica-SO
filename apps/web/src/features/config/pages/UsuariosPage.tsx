@@ -240,7 +240,7 @@ export function UsuariosPage() {
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-ink truncate">{usuario.nome}</p>
                   {!usuario.ativo && (
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#EFF1F4] text-[#5A6175]">
+                    <span className="text-micro font-medium px-2 py-0.5 rounded-full bg-line-soft text-ink-2">
                       Inativo
                     </span>
                   )}

@@ -74,7 +74,7 @@ export function OrcamentoPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -121,7 +121,7 @@ export function OrcamentoPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-ink-3" />
@@ -137,14 +137,14 @@ export function OrcamentoPage() {
           </label>
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
       </section>
 
       {temEscrita && (
-        <section className="rounded-[8px] border border-line bg-card p-4">
+        <section className="rounded-lg border border-line bg-card p-4">
           <h3 className="text-sm font-semibold text-ink">Definir meta mensal</h3>
           <div className="mt-3 flex flex-wrap items-end gap-2">
             <label className="block">
@@ -154,7 +154,7 @@ export function OrcamentoPage() {
                 onChange={(e) => setCategoriaSelecionada(e.target.value)}
                 className="input w-64"
               >
-                <option value="">Selecione...</option>
+                <option value="">Selecione…</option>
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nome}
@@ -175,21 +175,21 @@ export function OrcamentoPage() {
               type="button"
               onClick={salvar}
               disabled={salvando || !categoriaSelecionada}
-              className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+              className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
             >
-              {salvando ? "Salvando..." : "Aplicar aos 12 meses"}
+              {salvando ? "Salvando…" : "Aplicar aos 12 meses"}
             </button>
           </div>
         </section>
       )}
 
       {resumoAnual.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Target className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhum orçamento ou lançamento neste ano ainda.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-[8px] border border-line bg-card">
+        <div className="overflow-x-auto rounded-lg border border-line bg-card">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
               <tr>
@@ -212,7 +212,7 @@ export function OrcamentoPage() {
                   <td className="px-3 py-2 text-right">
                     {d.temOrcamento ? (
                       <span
-                        className={`inline-flex items-center gap-1 font-semibold ${d.estourou ? "text-[#A23B25]" : "text-[#1E8E45]"}`}
+                        className={`inline-flex items-center gap-1 font-semibold ${d.estourou ? "text-danger" : "text-success"}`}
                       >
                         {d.estourou && <AlertTriangle className="h-3.5 w-3.5" />}
                         {d.desvioPercentual !== null

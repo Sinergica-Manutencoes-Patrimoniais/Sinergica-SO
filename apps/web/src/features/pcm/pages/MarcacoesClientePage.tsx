@@ -1,5 +1,6 @@
 // MarcacoesClientePage.tsx — E01-S91 AC-1. Catálogo gerenciável de marcações de status de cliente
 // (nome+cor) — Configurações → PCM.
+import { ConfirmDialog } from "@sinergica/ui";
 import { Edit3, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -34,6 +35,7 @@ export function MarcacoesClientePage() {
   const [cor, setCor] = useState(COR_PADRAO);
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [itemParaExcluir, setItemParaExcluir] = useState<MarcacaoCliente | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -86,18 +88,10 @@ export function MarcacoesClientePage() {
     }
   }
 
-  async function onExcluir(item: MarcacaoCliente) {
-    if (!window.confirm(`Excluir "${item.nome}"?`)) return;
-    setSalvando(true);
-    setErroAcao(null);
-    try {
-      await excluirMarcacao(supabaseMarcacoesClienteAdapter, item.id);
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir.");
-    } finally {
-      setSalvando(false);
-    }
+  async function onExcluir() {
+    if (!itemParaExcluir) return;
+    await excluirMarcacao(supabaseMarcacoesClienteAdapter, itemParaExcluir.id);
+    await carregar();
   }
 
   if (permissoesCarregando) {
@@ -154,12 +148,12 @@ export function MarcacoesClientePage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
 
-      <section className="rounded-[10px] border border-line bg-card">
+      <section className="rounded-xl border border-line bg-card">
         <div className="divide-y divide-line-soft">
           {estado.marcacoes.length === 0 ? (
             <div className="px-5 py-8 text-center text-sm text-ink-3">
@@ -182,7 +176,7 @@ export function MarcacoesClientePage() {
                     <button
                       type="button"
                       onClick={() => abrirModal({ modo: "editar", item })}
-                      className="rounded-[6px] border border-line p-2 text-ink-2 hover:bg-line-soft"
+                      className="rounded-md border border-line p-2 text-ink-2 hover:bg-line-soft"
                       title="Editar"
                     >
                       <Edit3 className="h-4 w-4" />
@@ -190,8 +184,8 @@ export function MarcacoesClientePage() {
                     <button
                       type="button"
                       disabled={salvando}
-                      onClick={() => onExcluir(item)}
-                      className="rounded-[6px] border border-[#F0C2BD] p-2 text-[#A12D24] hover:bg-[#FFF4F2] disabled:opacity-50"
+                      onClick={() => setItemParaExcluir(item)}
+                      className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                       title="Excluir"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -206,7 +200,7 @@ export function MarcacoesClientePage() {
 
       {modal && (
         <div className="modal-backdrop">
-          <div className="w-full max-w-lg rounded-[10px] border border-line bg-card shadow-xl">
+          <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-modal">
             <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
               <h3 className="text-base font-semibold text-ink">
                 {modal.modo === "criar" ? "Nova marcação" : "Editar marcação"}
@@ -214,7 +208,7 @@ export function MarcacoesClientePage() {
               <button
                 type="button"
                 onClick={() => setModal(null)}
-                className="rounded-[6px] p-2 text-ink-3 hover:bg-line-soft"
+                className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
                 title="Fechar"
               >
                 <X className="h-4 w-4" />
@@ -244,14 +238,14 @@ export function MarcacoesClientePage() {
                 </span>
                 <input
                   type="color"
-                  className="mt-1 h-10 w-20 cursor-pointer rounded-[6px] border border-line"
+                  className="mt-1 h-10 w-20 cursor-pointer rounded-md border border-line"
                   value={cor}
                   onChange={(event) => setCor(event.target.value)}
                 />
               </label>
 
               {erroAcao && (
-                <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+                <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
                   {erroAcao}
                 </div>
               )}
@@ -260,14 +254,14 @@ export function MarcacoesClientePage() {
                 <button
                   type="button"
                   onClick={() => setModal(null)}
-                  className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                  className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={salvando}
-                  className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
                 >
                   {salvando ? "Salvando…" : "Salvar"}
                 </button>
@@ -276,6 +270,16 @@ export function MarcacoesClientePage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={itemParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaExcluir(null);
+        }}
+        titulo={`Excluir "${itemParaExcluir?.nome}"`}
+        descricao="Esta ação não pode ser desfeita."
+        onConfirmar={onExcluir}
+      />
     </div>
   );
 }

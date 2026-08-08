@@ -75,7 +75,7 @@ export function PortalShell() {
               {item.id === "notificacoes" &&
                 snapshot &&
                 snapshot.notificacoes.some((n) => !n.lidaAt) && (
-                  <span className="ml-2 rounded-full bg-orange px-1.5 py-0.5 text-[10px] text-white">
+                  <span className="ml-2 rounded-full bg-orange px-1.5 py-0.5 text-micro text-white">
                     nova
                   </span>
                 )}

@@ -22,6 +22,7 @@ export function PermissoesProvider({ children }: { children: React.ReactNode }) 
   const [permissoes, setPermissoes] = useState<PermissaoModulo[]>([]);
   const [carregando, setCarregando] = useState(true);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: depende só de user?.id de propósito — troca de referência sem troca de id não deve recarregar permissões nem desmontar telas de config.
   useEffect(() => {
     let ativo = true;
 
@@ -48,7 +49,7 @@ export function PermissoesProvider({ children }: { children: React.ReactNode }) 
     return () => {
       ativo = false;
     };
-  }, [status, user]);
+  }, [status, user?.id]);
 
   const podeAcessar = useCallback(
     (modulo: ModuloId, nivel: NivelAcesso): boolean =>

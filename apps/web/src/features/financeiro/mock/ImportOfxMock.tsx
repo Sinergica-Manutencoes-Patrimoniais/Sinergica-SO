@@ -41,12 +41,12 @@ export function ImportOfxMock() {
             <td className="px-4 py-3 text-ink-3">{dataCurta(r.data)}</td>
             <td className="px-4 py-3 font-mono text-xs text-ink-2">{r.memo}</td>
             <td
-              className={`px-4 py-3 text-right tabular-nums font-semibold ${r.valor > 0 ? "text-[#1E8E45]" : "text-ink"}`}
+              className={`px-4 py-3 text-right tabular-nums font-semibold ${r.valor > 0 ? "text-success" : "text-ink"}`}
             >
               {brl(r.valor)}
             </td>
             <td className="px-4 py-3">
-              <span className="inline-flex rounded-full bg-orange-soft px-2 py-0.5 text-[11px] font-semibold text-orange-deep">
+              <span className="inline-flex rounded-full bg-orange-soft px-2 py-0.5 text-micro font-semibold text-orange-deep">
                 {r.sugestao}
               </span>
             </td>

@@ -373,14 +373,14 @@ export function NovoLaudoSpdaModal({
       <dialog
         open
         aria-labelledby="novo-laudo-spda-title"
-        className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-[10px] border border-line bg-card shadow-xl"
+        className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-line bg-card shadow-modal"
       >
         <header className="border-b border-line-soft bg-card px-4 py-3 md:px-5">
           <div className="flex items-start justify-between gap-3">
             <button
               type="button"
               onClick={etapaIndex === 0 ? onClose : voltar}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-line text-ink-3 hover:bg-line-soft hover:text-ink"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-ink-3 hover:bg-line-soft hover:text-ink"
               aria-label={etapaIndex === 0 ? "Fechar" : "Voltar"}
             >
               <ArrowLeft className="h-4 w-4" />
@@ -396,7 +396,7 @@ export function NovoLaudoSpdaModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-line text-ink-3 hover:bg-line-soft hover:text-ink"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-ink-3 hover:bg-line-soft hover:text-ink"
               aria-label="Fechar modal"
             >
               <X className="h-4 w-4" />
@@ -424,12 +424,12 @@ export function NovoLaudoSpdaModal({
 
         <div className="overflow-y-auto bg-paper p-4 md:p-5">
           {erro && (
-            <div className="mb-4 rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+            <div className="mb-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
 
-          <section className="mx-auto max-w-4xl rounded-[8px] bg-navy p-4 text-white md:p-6">
+          <section className="mx-auto max-w-4xl rounded-lg bg-navy p-4 text-white md:p-6">
             {etapa.id === "dados" && (
               <EtapaDados clientes={clientes} dados={dados} onChange={setDados} />
             )}
@@ -478,7 +478,7 @@ export function NovoLaudoSpdaModal({
           <button
             type="button"
             onClick={etapaIndex === 0 ? onClose : voltar}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             <ArrowLeft className="h-4 w-4" />
             {etapaIndex === 0 ? "Cancelar" : "Voltar"}
@@ -488,7 +488,7 @@ export function NovoLaudoSpdaModal({
               type="button"
               onClick={salvar}
               disabled={salvando || !dados.clientId}
-              className="inline-flex items-center gap-2 rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
             >
               <Save className="h-4 w-4" />
               Salvar laudo
@@ -503,7 +503,7 @@ export function NovoLaudoSpdaModal({
                 type="button"
                 onClick={salvar}
                 disabled={salvando || !dados.clientId}
-                className="inline-flex items-center gap-2 rounded-[6px] bg-orange px-4 py-2 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-md bg-orange px-4 py-2 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-60"
               >
                 <FileSignature className="h-4 w-4" />
                 Assinar e salvar
@@ -533,7 +533,7 @@ function DarkInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`w-full rounded-[6px] border border-white/15 bg-white/8 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
+      className={`w-full rounded-md border border-white/15 bg-card/8 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
     />
   );
 }
@@ -542,7 +542,7 @@ function DarkTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) 
   return (
     <textarea
       {...props}
-      className={`w-full rounded-[6px] border border-white/15 bg-white/8 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
+      className={`w-full rounded-md border border-white/15 bg-card/8 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
     />
   );
 }
@@ -551,7 +551,7 @@ function DarkSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
-      className={`w-full rounded-[6px] border border-white/15 bg-white/8 px-3 py-2 text-sm text-white outline-none focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
+      className={`w-full rounded-md border border-white/15 bg-card/8 px-3 py-2 text-sm text-white outline-none focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
     />
   );
 }
@@ -616,7 +616,7 @@ function EtapaDados({
           <FieldLabel>Observações gerais</FieldLabel>
           <DarkTextarea
             rows={4}
-            placeholder="Condições climáticas, acesso, acompanhante responsável..."
+            placeholder="Condições climáticas, acesso, acompanhante responsável…"
             value={dados.observacoesGerais}
             onChange={(event) => onChange({ ...dados, observacoesGerais: event.target.value })}
           />
@@ -762,7 +762,7 @@ function EtapaEdificio({
         <div>
           <FieldLabel>Tipo de cobertura</FieldLabel>
           <DarkInput
-            placeholder="Ex: laje impermeabilizada, telha metálica..."
+            placeholder="Ex: laje impermeabilizada, telha metálica…"
             value={edificio.cobertura}
             onChange={(event) => onEdificioChange({ ...edificio, cobertura: event.target.value })}
           />
@@ -798,7 +798,7 @@ function EtapaPontos({
       />
       <div className="space-y-3">
         {pontos.length === 0 ? (
-          <div className="rounded-[8px] border border-dashed border-white/20 px-4 py-10 text-center text-sm text-white/45">
+          <div className="rounded-lg border border-dashed border-white/20 px-4 py-10 text-center text-sm text-white/45">
             Nenhum ponto adicionado
           </div>
         ) : (
@@ -806,12 +806,12 @@ function EtapaPontos({
             const resistencia = ponto.resistenciaOhm ? Number(ponto.resistenciaOhm) : null;
             const status = classificarPontoSpda(resistencia);
             return (
-              <div key={ponto.id} className="rounded-[8px] border border-white/15 bg-white/5 p-4">
+              <div key={ponto.id} className="rounded-lg border border-white/15 bg-card/5 p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-white">Ponto #{index + 1}</p>
                     <span
-                      className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${resultadoColor(status)}`}
+                      className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-micro font-semibold ${resultadoColor(status)}`}
                     >
                       {CONFORMIDADE_SPDA_LABEL[status]}
                     </span>
@@ -819,7 +819,7 @@ function EtapaPontos({
                   <button
                     type="button"
                     onClick={() => onChange(pontos.filter((item) => item.id !== ponto.id))}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-white/15 text-white/55 hover:bg-white/10 hover:text-white"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/55 hover:bg-card/10 hover:text-white"
                     aria-label={`Remover ponto ${index + 1}`}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -886,7 +886,7 @@ function EtapaPontos({
         <button
           type="button"
           onClick={() => onChange([...pontos, novoPonto()])}
-          className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-dashed border-white/25 px-4 py-3 text-sm font-semibold text-white/75 hover:bg-white/8 hover:text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/25 px-4 py-3 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Adicionar ponto de medição
@@ -969,10 +969,10 @@ function RadioGrupo({
         {opcoes.map((opcao) => (
           <label
             key={opcao.valor}
-            className={`flex items-center gap-3 rounded-[8px] border px-3 py-3 text-sm ${
+            className={`flex items-center gap-3 rounded-lg border px-3 py-3 text-sm ${
               value === opcao.valor
-                ? "border-orange bg-white/10 text-white"
-                : "border-white/15 bg-white/5 text-white/75"
+                ? "border-orange bg-card/10 text-white"
+                : "border-white/15 bg-card/5 text-white/75"
             }`}
           >
             <input
@@ -1004,7 +1004,7 @@ function ListaLinhas({
       <p className="text-sm font-medium text-white">Linhas externas conectadas ao edifício</p>
       <div className="mt-3 space-y-3">
         {linhas.map((linha, index) => (
-          <div key={linha.id} className="rounded-[8px] border border-white/15 bg-white/5 p-4">
+          <div key={linha.id} className="rounded-lg border border-white/15 bg-card/5 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-white">
                 {linha.tipo === "energia" ? "Linha de Energia" : "Linha de Sinal"} #{index + 1}
@@ -1012,7 +1012,7 @@ function ListaLinhas({
               <button
                 type="button"
                 onClick={() => onChange(linhas.filter((item) => item.id !== linha.id))}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-white/15 text-white/55 hover:bg-white/10 hover:text-white"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/55 hover:bg-card/10 hover:text-white"
                 aria-label={`Remover linha ${index + 1}`}
               >
                 <Trash2 className="h-4 w-4" />
@@ -1089,7 +1089,7 @@ function ListaLinhas({
         <button
           type="button"
           onClick={() => onChange([...linhas, novaLinha("energia")])}
-          className="inline-flex items-center gap-2 rounded-[6px] border border-white/15 px-3 py-2 text-sm font-semibold text-white/75 hover:bg-white/8 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Energia
@@ -1097,7 +1097,7 @@ function ListaLinhas({
         <button
           type="button"
           onClick={() => onChange([...linhas, novaLinha("sinal")])}
-          className="inline-flex items-center gap-2 rounded-[6px] border border-white/15 px-3 py-2 text-sm font-semibold text-white/75 hover:bg-white/8 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Sinal
@@ -1133,8 +1133,8 @@ function EtapaSeguranca({
                 key={valor}
                 type="button"
                 onClick={() => onDescidasChange(valor)}
-                className={`rounded-[6px] px-3 py-2 text-sm font-semibold ${
-                  descidas === valor ? "bg-orange text-white" : "bg-white/8 text-white/60"
+                className={`rounded-md px-3 py-2 text-sm font-semibold ${
+                  descidas === valor ? "bg-orange text-white" : "bg-card/8 text-white/60"
                 }`}
               >
                 {valor}
@@ -1143,7 +1143,7 @@ function EtapaSeguranca({
           </div>
         </div>
         {pontosCriticos.map((ponto, index) => (
-          <div key={ponto.id} className="rounded-[8px] border border-white/15 bg-white/5 p-4">
+          <div key={ponto.id} className="rounded-lg border border-white/15 bg-card/5 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-white">Ponto crítico #{index + 1}</p>
               <button
@@ -1151,7 +1151,7 @@ function EtapaSeguranca({
                 onClick={() =>
                   onPontosCriticosChange(pontosCriticos.filter((item) => item.id !== ponto.id))
                 }
-                className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-white/15 text-white/55 hover:bg-white/10 hover:text-white"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/55 hover:bg-card/10 hover:text-white"
                 aria-label={`Remover ponto crítico ${index + 1}`}
               >
                 <Trash2 className="h-4 w-4" />
@@ -1238,7 +1238,7 @@ function EtapaSeguranca({
         <button
           type="button"
           onClick={() => onPontosCriticosChange([...pontosCriticos, novoPontoCritico()])}
-          className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-dashed border-white/25 px-4 py-3 text-sm font-semibold text-white/75 hover:bg-white/8 hover:text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/25 px-4 py-3 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Adicionar ponto crítico
@@ -1263,13 +1263,13 @@ function EtapaDps({
       />
       <div className="space-y-3">
         {quadros.map((quadro, index) => (
-          <div key={quadro.id} className="rounded-[8px] border border-white/15 bg-white/5 p-4">
+          <div key={quadro.id} className="rounded-lg border border-white/15 bg-card/5 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-white">Quadro / ponto #{index + 1}</p>
               <button
                 type="button"
                 onClick={() => onChange(quadros.filter((item) => item.id !== quadro.id))}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-white/15 text-white/55 hover:bg-white/10 hover:text-white"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/55 hover:bg-card/10 hover:text-white"
                 aria-label={`Remover quadro ${index + 1}`}
               >
                 <Trash2 className="h-4 w-4" />
@@ -1388,7 +1388,7 @@ function EtapaDps({
         <button
           type="button"
           onClick={() => onChange([...quadros, novoQuadroDps()])}
-          className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-dashed border-white/25 px-4 py-3 text-sm font-semibold text-white/75 hover:bg-white/8 hover:text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/25 px-4 py-3 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Adicionar quadro
@@ -1483,7 +1483,7 @@ function EtapaAssinatura({
             onChange={(event) => onChange({ ...assinatura, assinaturaTexto: event.target.value })}
           />
         </div>
-        <div className="rounded-[8px] border border-white/15 bg-white/5 p-4 md:col-span-2">
+        <div className="rounded-lg border border-white/15 bg-card/5 p-4 md:col-span-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-white/45">
             Resumo do laudo
           </p>

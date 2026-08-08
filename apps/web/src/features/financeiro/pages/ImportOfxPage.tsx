@@ -116,7 +116,7 @@ export function ImportOfxPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -148,7 +148,7 @@ export function ImportOfxPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <h3 className="text-base font-semibold text-ink">Importar extrato (OFX)</h3>
         <p className="mt-0.5 text-sm text-ink-3">
           Upload → prévia → dedupe por FITID → classificação sugerida → conciliar ou criar
@@ -163,7 +163,7 @@ export function ImportOfxPage() {
               onChange={(e) => setContaSelecionada(e.target.value)}
               className="input"
             >
-              <option value="">Selecione a conta...</option>
+              <option value="">Selecione a conta…</option>
               {contas.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nome}
@@ -172,7 +172,7 @@ export function ImportOfxPage() {
             </select>
           </label>
           {temEscrita && (
-            <label className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft">
+            <label className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft">
               <Upload className="h-4 w-4" />
               Escolher arquivo .ofx
               <input
@@ -188,14 +188,14 @@ export function ImportOfxPage() {
         </div>
 
         {erroImport && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroImport}
           </div>
         )}
         {mensagemImport && <p className="mt-3 text-sm text-ink-3">{mensagemImport}</p>}
 
         {previa && (
-          <div className="mt-3 rounded-[6px] border border-line p-3">
+          <div className="mt-3 rounded-md border border-line p-3">
             <p className="text-sm font-semibold text-ink">
               Prévia — {previa.length} transação(ões) lida(s)
             </p>
@@ -205,7 +205,7 @@ export function ImportOfxPage() {
                   <span className="truncate">
                     {t.data} · {t.memo}
                   </span>
-                  <span className={t.valorCentavos < 0 ? "text-[#A23B25]" : "text-[#1E8E45]"}>
+                  <span className={t.valorCentavos < 0 ? "text-danger" : "text-success"}>
                     R$ {centavosParaReais(t.valorCentavos)}
                   </span>
                 </li>
@@ -216,16 +216,16 @@ export function ImportOfxPage() {
                 type="button"
                 onClick={confirmarImportacao}
                 disabled={importando}
-                className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
               >
-                {importando ? "Importando..." : "Confirmar importação"}
+                {importando ? "Importando…" : "Confirmar importação"}
               </button>
             )}
           </div>
         )}
       </section>
 
-      <div className="rounded-[8px] border border-line bg-card p-4">
+      <div className="rounded-lg border border-line bg-card p-4">
         <h4 className="mb-3 text-sm font-semibold text-ink">Pendentes ({pendentes.length})</h4>
         {pendentes.length === 0 ? (
           <p className="py-6 text-center text-sm text-ink-3">Nenhuma transação pendente.</p>
@@ -320,7 +320,7 @@ function LinhaPendente({
   }
 
   return (
-    <div className="rounded-[6px] border border-line p-3">
+    <div className="rounded-md border border-line p-3">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm text-ink-2">{transacao.memo ?? "Sem memo"}</p>
@@ -329,13 +329,13 @@ function LinhaPendente({
           </p>
         </div>
         <span
-          className={`text-sm font-semibold ${transacao.valorCentavos < 0 ? "text-[#A23B25]" : "text-[#1E8E45]"}`}
+          className={`text-sm font-semibold ${transacao.valorCentavos < 0 ? "text-danger" : "text-success"}`}
         >
           R$ {centavosParaReais(transacao.valorCentavos)}
         </span>
       </div>
 
-      {erro && <p className="mt-2 text-xs text-[#A23B25]">{erro}</p>}
+      {erro && <p className="mt-2 text-xs text-danger">{erro}</p>}
 
       {temEscrita && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -344,7 +344,7 @@ function LinhaPendente({
               type="button"
               onClick={() => candidatos[0] && conciliar(candidatos[0].id)}
               disabled={processando}
-              className="inline-flex items-center gap-1 rounded-[6px] border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
             >
               <Link2 className="h-3.5 w-3.5" />
               Conciliar com previsto ({candidatos.length})
@@ -355,7 +355,7 @@ function LinhaPendente({
             onChange={(e) => setCategoriaId(e.target.value)}
             className="input h-8 text-xs"
           >
-            <option value="">Categoria...</option>
+            <option value="">Categoria…</option>
             {categorias.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nome}
@@ -366,7 +366,7 @@ function LinhaPendente({
             type="button"
             onClick={criarLancamento}
             disabled={processando || !categoriaId}
-            className="inline-flex items-center gap-1 rounded-[6px] bg-orange px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-md bg-orange px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
             Criar lançamento
@@ -375,14 +375,14 @@ function LinhaPendente({
             type="button"
             onClick={onIgnorar}
             disabled={processando}
-            className="inline-flex items-center gap-1 rounded-[6px] px-3 py-1.5 text-xs font-semibold text-ink-3 hover:bg-line-soft disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold text-ink-3 hover:bg-line-soft disabled:opacity-50"
           >
             <EyeOff className="h-3.5 w-3.5" />
             Ignorar
           </button>
         </div>
       )}
-      {sugestao && <p className="mt-1 text-[11px] text-ink-3">Classificação sugerida por regra.</p>}
+      {sugestao && <p className="mt-1 text-micro text-ink-3">Classificação sugerida por regra.</p>}
     </div>
   );
 }

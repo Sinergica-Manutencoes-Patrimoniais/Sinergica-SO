@@ -347,14 +347,14 @@ export function contratosComAlerta(contratos: ContratoParaAlerta[]): ContratoCom
 }
 
 export function statusContratoColor(status: PmocStatusContrato): string {
-  if (status === "ativo") return "bg-[#EAF8EF] text-[#267343]";
+  if (status === "ativo") return "bg-success-soft text-success";
   if (status === "renovar") return "bg-orange-soft text-orange-deep";
   return "bg-line-soft text-ink-2";
 }
 
 export function statusAgendaColor(status: PmocStatusAgenda): string {
-  if (status === "realizado") return "bg-[#EAF8EF] text-[#267343]";
-  if (status === "atrasado") return "bg-[#FDECEB] text-[#B42318]";
+  if (status === "realizado") return "bg-success-soft text-success";
+  if (status === "atrasado") return "bg-danger-line text-danger";
   if (status === "cancelado") return "bg-line-soft text-ink-3";
-  return "bg-[#EEF2FF] text-navy";
+  return "bg-info-soft text-navy";
 }

@@ -8,7 +8,7 @@ import type { ResultadoEquipamentos } from "../application/cliente-360-gateway";
 
 export function PainelEquipamentos({ equipamentos }: { equipamentos: ResultadoEquipamentos }) {
   return (
-    <div className="bg-card rounded-[10px] border border-line">
+    <div className="bg-card rounded-xl border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
         <h3 className="text-sm font-semibold text-ink">Equipamentos vinculados</h3>
         <p className="text-xs text-ink-3 mt-0.5">Cache de campo (Auvo)</p>
@@ -31,10 +31,10 @@ export function PainelEquipamentos({ equipamentos }: { equipamentos: ResultadoEq
                 <img
                   src={eq.urlImagem}
                   alt={eq.nome}
-                  className="h-8 w-8 shrink-0 rounded-[4px] border border-line object-cover"
+                  className="h-8 w-8 shrink-0 rounded-sm border border-line object-cover"
                 />
               ) : (
-                <div className="h-8 w-8 shrink-0 rounded-[4px] border border-line bg-line-soft" />
+                <div className="h-8 w-8 shrink-0 rounded-sm border border-line bg-line-soft" />
               )}
               <span className="text-sm text-ink truncate">{eq.nome}</span>
             </div>

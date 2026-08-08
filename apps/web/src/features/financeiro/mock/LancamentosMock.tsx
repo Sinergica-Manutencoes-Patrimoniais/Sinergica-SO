@@ -101,7 +101,7 @@ export function LancamentosMock() {
                 <StatusChip status={l.status} />
               </td>
               <td
-                className={`px-4 py-3 text-right tabular-nums font-semibold ${l.tipo === "entrada" ? "text-[#1E8E45]" : "text-ink"}`}
+                className={`px-4 py-3 text-right tabular-nums font-semibold ${l.tipo === "entrada" ? "text-success" : "text-ink"}`}
               >
                 {l.tipo === "entrada" ? "+ " : "− "}
                 {brl(l.valor)}
@@ -132,11 +132,11 @@ function NovoLancamentoModal({ onFechar }: { onFechar: () => void }) {
           </button>
         </div>
 
-        <div className="mb-3 flex overflow-hidden rounded-[7px] border border-line">
+        <div className="mb-3 flex overflow-hidden rounded-lg border border-line">
           <button
             type="button"
             onClick={() => setTipo("entrada")}
-            className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "entrada" ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-card text-ink-2"}`}
+            className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "entrada" ? "bg-success-soft text-success" : "bg-card text-ink-2"}`}
           >
             ↓ Entrada
           </button>
@@ -150,7 +150,7 @@ function NovoLancamentoModal({ onFechar }: { onFechar: () => void }) {
         </div>
 
         <label className="mb-3 block">
-          <span className="mb-1 block text-[11px] font-semibold text-ink-2">Descrição</span>
+          <span className="mb-1 block text-micro font-semibold text-ink-2">Descrição</span>
           <input
             className="input"
             type="text"
@@ -159,17 +159,17 @@ function NovoLancamentoModal({ onFechar }: { onFechar: () => void }) {
         </label>
         <div className="mb-3 grid grid-cols-2 gap-2.5">
           <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold text-ink-2">Valor (R$)</span>
+            <span className="mb-1 block text-micro font-semibold text-ink-2">Valor (R$)</span>
             <input className="input" type="text" placeholder="0,00" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold text-ink-2">Competência</span>
+            <span className="mb-1 block text-micro font-semibold text-ink-2">Competência</span>
             <input className="input" type="date" />
           </label>
         </div>
         <div className="mb-3 grid grid-cols-2 gap-2.5">
           <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold text-ink-2">Categoria</span>
+            <span className="mb-1 block text-micro font-semibold text-ink-2">Categoria</span>
             <select className="input">
               <option>Serviços avulsos</option>
               <option>Peças e materiais</option>
@@ -178,7 +178,7 @@ function NovoLancamentoModal({ onFechar }: { onFechar: () => void }) {
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold text-ink-2">
+            <span className="mb-1 block text-micro font-semibold text-ink-2">
               Cliente (opcional)
             </span>
             <select className="input">
@@ -190,7 +190,7 @@ function NovoLancamentoModal({ onFechar }: { onFechar: () => void }) {
           </label>
         </div>
         <label className="mb-4 block">
-          <span className="mb-1 block text-[11px] font-semibold text-ink-2">Status</span>
+          <span className="mb-1 block text-micro font-semibold text-ink-2">Status</span>
           <select className="input">
             <option value="previsto">Previsto</option>
             <option value="realizado">Realizado</option>

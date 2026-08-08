@@ -1,3 +1,4 @@
+import { ConfirmDialog } from "@sinergica/ui";
 import { Edit3, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -39,6 +40,7 @@ export function TiposTarefaPage() {
   const [modal, setModal] = useState<ModalState | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [tipoParaExcluir, setTipoParaExcluir] = useState<TipoTarefa | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -94,21 +96,13 @@ export function TiposTarefaPage() {
     }
   }
 
-  async function onExcluir(tipo: TipoTarefa) {
-    if (!user) return;
-    const confirmado = window.confirm(`Excluir "${tipo.nome}"?`);
-    if (!confirmado) return;
-
-    setSalvando(true);
-    setErroAcao(null);
-    try {
-      await excluirTipoTarefa(supabaseTiposTarefaAdapter, { id: tipo.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir.");
-    } finally {
-      setSalvando(false);
-    }
+  async function onExcluir() {
+    if (!user || !tipoParaExcluir) return;
+    await excluirTipoTarefa(supabaseTiposTarefaAdapter, {
+      id: tipoParaExcluir.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   if (permissoesCarregando) {
@@ -166,12 +160,12 @@ export function TiposTarefaPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
 
-      <section className="rounded-[10px] border border-line bg-card">
+      <section className="rounded-xl border border-line bg-card">
         <div className="grid grid-cols-1 gap-3 border-b border-line-soft px-4 py-3 md:grid-cols-[minmax(240px,1fr)_180px]">
           <input
             className="input"
@@ -179,7 +173,7 @@ export function TiposTarefaPage() {
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
           />
-          <label className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2">
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
             <input
               type="checkbox"
               checked={somenteAtivos}
@@ -224,11 +218,11 @@ export function TiposTarefaPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full bg-[#EFF1F4] px-2 py-1 text-xs font-semibold text-[#5A6175]">
+                      <span className="rounded-full bg-line-soft px-2 py-1 text-xs font-semibold text-ink-2">
                         {syncStatusLabel(tipo.auvoSyncStatus)}
                       </span>
                       {tipo.auvoSyncError && (
-                        <p className="mt-1 max-w-[260px] truncate text-xs text-[#A12D24]">
+                        <p className="mt-1 max-w-[260px] truncate text-xs text-danger">
                           {tipo.auvoSyncError}
                         </p>
                       )}
@@ -239,16 +233,15 @@ export function TiposTarefaPage() {
                           <button
                             type="button"
                             onClick={() => setModal({ modo: "editar", tipo })}
-                            className="rounded-[6px] border border-line p-2 text-ink-2 hover:bg-line-soft"
+                            className="rounded-md border border-line p-2 text-ink-2 hover:bg-line-soft"
                             title="Editar"
                           >
                             <Edit3 className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
-                            disabled={salvando}
-                            onClick={() => onExcluir(tipo)}
-                            className="rounded-[6px] border border-[#F0C2BD] p-2 text-[#A12D24] hover:bg-[#FFF4F2] disabled:opacity-50"
+                            onClick={() => setTipoParaExcluir(tipo)}
+                            className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                             title="Excluir"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -273,13 +266,23 @@ export function TiposTarefaPage() {
           onSalvar={onSalvar}
         />
       )}
+
+      <ConfirmDialog
+        open={tipoParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setTipoParaExcluir(null);
+        }}
+        titulo={`Excluir "${tipoParaExcluir?.nome}"`}
+        descricao="Esta ação não pode ser desfeita."
+        onConfirmar={onExcluir}
+      />
     </div>
   );
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full bg-[#EAEEF8] px-2 py-1 text-xs font-semibold text-[#2E3C70]">
+    <span className="rounded-full bg-info-soft px-2 py-1 text-xs font-semibold text-info">
       {children}
     </span>
   );
@@ -312,7 +315,7 @@ function TipoTarefaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-[10px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-xl border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {modal.modo === "criar" ? "Novo Tipo de Tarefa" : "Editar Tipo de Tarefa"}
@@ -320,7 +323,7 @@ function TipoTarefaModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[6px] p-2 text-ink-3 hover:bg-line-soft"
+            className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
             title="Fechar"
           >
             <X className="h-4 w-4" />
@@ -344,7 +347,7 @@ function TipoTarefaModal({
           </label>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <label className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2">
+            <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
               <input
                 type="checkbox"
                 checked={form.preencheRelato}
@@ -354,7 +357,7 @@ function TipoTarefaModal({
               />
               Exige relato
             </label>
-            <label className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2">
+            <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
               <input
                 type="checkbox"
                 checked={form.exigeAssinatura}
@@ -384,7 +387,7 @@ function TipoTarefaModal({
             </label>
           </div>
 
-          <label className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-sm text-ink-2">
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
             <input
               type="checkbox"
               checked={form.ativo ?? true}
@@ -394,7 +397,7 @@ function TipoTarefaModal({
           </label>
 
           {erro && (
-            <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -403,14 +406,14 @@ function TipoTarefaModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+              className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={salvando}
-              className="rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
             >
               {salvando ? "Salvando…" : "Salvar"}
             </button>

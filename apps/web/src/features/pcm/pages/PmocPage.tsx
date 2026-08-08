@@ -362,7 +362,7 @@ export function PmocPage() {
 
   if (estado.fase === "erro") {
     return (
-      <div className="rounded-[10px] border border-line bg-card p-8 text-center">
+      <div className="rounded-xl border border-line bg-card p-8 text-center">
         <h2 className="text-lg font-semibold text-ink-2">PMOC indisponível</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
         <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
@@ -400,7 +400,7 @@ export function PmocPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
@@ -423,7 +423,7 @@ export function PmocPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_1fr]">
-        <section className="rounded-[10px] border border-line bg-card">
+        <section className="rounded-xl border border-line bg-card">
           <div className="border-b border-line-soft px-4 py-3">
             <h3 className="text-sm font-semibold text-ink">Contratos PMOC</h3>
             <p className="mt-0.5 text-xs text-ink-3">{estado.contratos.length} registros</p>
@@ -451,7 +451,7 @@ export function PmocPage() {
                       <p className="mt-1 truncate text-xs text-ink-3">{contrato.clienteNome}</p>
                     </div>
                     <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusContratoColor(contrato.status)}`}
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${statusContratoColor(contrato.status)}`}
                     >
                       {STATUS_CONTRATO_LABEL[contrato.status]}
                     </span>
@@ -473,7 +473,7 @@ export function PmocPage() {
           </div>
         </section>
 
-        <section className="min-h-[720px] rounded-[10px] border border-line bg-card">
+        <section className="min-h-[720px] rounded-xl border border-line bg-card">
           {detalhe ? (
             <DetalhePmoc
               detalhe={detalhe}
@@ -584,7 +584,7 @@ function DetalhePmoc({
             <h3 className="mt-1 text-xl font-bold">{contrato.imovelNome}</h3>
             <p className="mt-1 text-sm text-white/70">{formatarEndereco(contrato)}</p>
           </div>
-          <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-semibold">
+          <span className="rounded-full bg-card/12 px-3 py-1 text-xs font-semibold">
             Vigência {formatarData(contrato.startDate)} a {formatarData(contrato.endDate)}
           </span>
         </div>
@@ -607,7 +607,7 @@ function DetalhePmoc({
               <button
                 type="button"
                 onClick={onNovoEquipamento}
-                className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <Plus className="h-4 w-4" />
                 Equipamento
@@ -616,12 +616,12 @@ function DetalhePmoc({
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {detalhe.equipamentos.length === 0 ? (
-              <div className="rounded-[8px] border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3 md:col-span-2">
+              <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3 md:col-span-2">
                 Nenhum equipamento cadastrado.
               </div>
             ) : (
               detalhe.equipamentos.map((equipamento) => (
-                <div key={equipamento.id} className="rounded-[8px] border border-line p-4">
+                <div key={equipamento.id} className="rounded-lg border border-line p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-brand text-lg font-bold text-ink">{equipamento.tag}</p>
@@ -632,12 +632,12 @@ function DetalhePmoc({
                         }
                       </p>
                     </div>
-                    <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] font-semibold text-ink-3">
+                    <span className="rounded-full bg-paper px-2 py-0.5 text-micro font-semibold text-ink-3">
                       {equipamento.condition}
                     </span>
                   </div>
                   {equipamento.auvoEquipmentId && (
-                    <span className="mt-2 inline-flex rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-semibold text-navy">
+                    <span className="mt-2 inline-flex rounded-full bg-info-soft px-2 py-0.5 text-micro font-semibold text-navy">
                       Auvo #{equipamento.auvoEquipmentId}
                     </span>
                   )}
@@ -658,7 +658,7 @@ function DetalhePmoc({
         </div>
 
         <aside className="space-y-4">
-          <div className="rounded-[8px] border border-line p-4">
+          <div className="rounded-lg border border-line p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h4 className="text-sm font-semibold text-ink">Inventário assistido pelo Auvo</h4>
@@ -677,7 +677,7 @@ function DetalhePmoc({
                 {detalhe.sugestoesAuvo.slice(0, 6).map((sugestao) => (
                   <div
                     key={sugestao.auvoEquipmentId}
-                    className="rounded-[6px] border border-line-soft px-3 py-2"
+                    className="rounded-md border border-line-soft px-3 py-2"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -685,7 +685,7 @@ function DetalhePmoc({
                         <p className="text-xs text-ink-3">Auvo #{sugestao.auvoEquipmentId}</p>
                       </div>
                       {sugestao.jaImportado ? (
-                        <span className="rounded-full bg-[#EAF8EF] px-2 py-0.5 text-[11px] font-semibold text-[#267343]">
+                        <span className="rounded-full bg-success-soft px-2 py-0.5 text-micro font-semibold text-success">
                           PMOC
                         </span>
                       ) : (
@@ -694,7 +694,7 @@ function DetalhePmoc({
                             type="button"
                             disabled={salvando}
                             onClick={() => onImportarAuvo(sugestao)}
-                            className="shrink-0 rounded-[6px] border border-line px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                            className="shrink-0 rounded-md border border-line px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
                           >
                             Importar
                           </button>
@@ -712,13 +712,13 @@ function DetalhePmoc({
             )}
           </div>
 
-          <div className="rounded-[8px] border border-line p-4">
+          <div className="rounded-lg border border-line p-4">
             <h4 className="text-sm font-semibold text-ink">Próxima execução</h4>
             {proxima ? (
               <>
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusAgendaColor(proxima.status)}`}
+                    className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusAgendaColor(proxima.status)}`}
                   >
                     {STATUS_AGENDA_LABEL[proxima.status]}
                   </span>
@@ -733,7 +733,7 @@ function DetalhePmoc({
                   {checklistProxima.length} itens no checklist acumulado
                 </p>
                 {obrigatorios.length > 0 && (
-                  <div className="mt-3 rounded-[6px] bg-orange-soft px-3 py-2 text-xs text-orange-deep">
+                  <div className="mt-3 rounded-md bg-orange-soft px-3 py-2 text-xs text-orange-deep">
                     Inclui coleta/laudo microbiológico obrigatório.
                   </div>
                 )}
@@ -743,7 +743,7 @@ function DetalhePmoc({
             )}
           </div>
 
-          <div className="rounded-[8px] border border-line p-4">
+          <div className="rounded-lg border border-line p-4">
             <h4 className="text-sm font-semibold text-ink">Alertas legais</h4>
             <div className="mt-3 space-y-2 text-sm">
               <AlertaLinha
@@ -764,13 +764,13 @@ function DetalhePmoc({
         <h4 className="text-sm font-semibold text-ink">Cronograma anual</h4>
         <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-6">
           {detalhe.agenda.map((agenda) => (
-            <div key={agenda.id} className="rounded-[8px] border border-line px-3 py-3">
+            <div key={agenda.id} className="rounded-lg border border-line px-3 py-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-3">
+                <span className="text-micro font-semibold uppercase tracking-[0.12em] text-ink-3">
                   Mês {agenda.monthRef}
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusAgendaColor(agenda.status)}`}
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusAgendaColor(agenda.status)}`}
                 >
                   {STATUS_AGENDA_LABEL[agenda.status]}
                 </span>
@@ -782,14 +782,14 @@ function DetalhePmoc({
                 {TIPO_MANUTENCAO_LABEL[agenda.maintenanceType]}
               </p>
               {agenda.ordemServicoId ? (
-                <p className="mt-2 text-[11px] font-semibold text-[#267343]">OS criada</p>
+                <p className="mt-2 text-micro font-semibold text-success">OS criada</p>
               ) : (
                 podeEditar &&
                 agenda.status !== "cancelado" && (
                   <button
                     type="button"
                     onClick={() => onCriarOsVisita(agenda)}
-                    className="mt-2 w-full rounded-[6px] border border-line px-2 py-1 text-[11px] font-semibold text-ink-2 hover:bg-line-soft"
+                    className="mt-2 w-full rounded-md border border-line px-2 py-1 text-micro font-semibold text-ink-2 hover:bg-line-soft"
                   >
                     Criar OS
                   </button>
@@ -808,7 +808,7 @@ function DetalhePmoc({
               <button
                 type="button"
                 onClick={onNovaAnalise}
-                className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <Plus className="h-4 w-4" />
                 Nova análise
@@ -816,13 +816,13 @@ function DetalhePmoc({
             )}
           </div>
           {detalhe.microbiologia.length === 0 ? (
-            <div className="rounded-[8px] border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
+            <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
               Nenhuma análise registrada.
             </div>
           ) : (
             <div className="space-y-2">
               {detalhe.microbiologia.map((analise) => (
-                <div key={analise.id} className="rounded-[8px] border border-line p-3">
+                <div key={analise.id} className="rounded-lg border border-line p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-ink">
@@ -831,13 +831,13 @@ function DetalhePmoc({
                       <p className="text-xs text-ink-3">{analise.labName || "Laboratório —"}</p>
                     </div>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusMicrobioColor(analise.status)}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusMicrobioColor(analise.status)}`}
                     >
                       {STATUS_MICROBIO_LABEL[analise.status]}
                     </span>
                   </div>
                   {analise.correctiveActionNeeded && (
-                    <div className="mt-2 flex items-center gap-2 rounded-[6px] bg-[#FDECEB] px-3 py-2 text-xs font-semibold text-[#B42318]">
+                    <div className="mt-2 flex items-center gap-2 rounded-md bg-danger-line px-3 py-2 text-xs font-semibold text-danger">
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                       Fora dos limites legais — ação corretiva necessária.
                     </div>
@@ -855,7 +855,7 @@ function DetalhePmoc({
               <button
                 type="button"
                 onClick={onNovaNc}
-                className="inline-flex items-center gap-2 rounded-[6px] border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <Plus className="h-4 w-4" />
                 Nova NC
@@ -863,13 +863,13 @@ function DetalhePmoc({
             )}
           </div>
           {detalhe.naoConformidades.length === 0 ? (
-            <div className="rounded-[8px] border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
+            <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
               Nenhuma não-conformidade registrada.
             </div>
           ) : (
             <div className="space-y-2">
               {detalhe.naoConformidades.map((nc) => (
-                <div key={nc.id} className="rounded-[8px] border border-line p-3">
+                <div key={nc.id} className="rounded-lg border border-line p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-ink">{nc.description}</p>
@@ -879,14 +879,14 @@ function DetalhePmoc({
                       </p>
                     </div>
                     <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${severidadeNcColor(nc.severity)}`}
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${severidadeNcColor(nc.severity)}`}
                     >
                       {SEVERIDADE_NC_LABEL[nc.severity]}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusNcColor(nc.status)}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusNcColor(nc.status)}`}
                     >
                       {STATUS_NC_LABEL[nc.status]}
                     </span>
@@ -922,8 +922,8 @@ const STATUS_MICROBIO_LABEL: Record<"conforme" | "nao_conforme" | "pendente", st
 };
 
 function statusMicrobioColor(status: "conforme" | "nao_conforme" | "pendente"): string {
-  if (status === "conforme") return "bg-[#EAF8EF] text-[#267343]";
-  if (status === "nao_conforme") return "bg-[#FDECEB] text-[#B42318]";
+  if (status === "conforme") return "bg-success-soft text-success";
+  if (status === "nao_conforme") return "bg-danger-line text-danger";
   return "bg-line-soft text-ink-2";
 }
 
@@ -934,7 +934,7 @@ const SEVERIDADE_NC_LABEL: Record<PmocSeveridadeNc, string> = {
 };
 
 function severidadeNcColor(severity: PmocSeveridadeNc): string {
-  if (severity === "alta") return "bg-[#FDECEB] text-[#B42318]";
+  if (severity === "alta") return "bg-danger-line text-danger";
   if (severity === "media") return "bg-orange-soft text-orange-deep";
   return "bg-line-soft text-ink-2";
 }
@@ -946,8 +946,8 @@ const STATUS_NC_LABEL: Record<PmocStatusNc, string> = {
 };
 
 function statusNcColor(status: PmocStatusNc): string {
-  if (status === "fechado") return "bg-[#EAF8EF] text-[#267343]";
-  if (status === "em_andamento") return "bg-[#EEF2FF] text-navy";
+  if (status === "fechado") return "bg-success-soft text-success";
+  if (status === "em_andamento") return "bg-info-soft text-navy";
   return "bg-line-soft text-ink-2";
 }
 
@@ -963,9 +963,9 @@ function Kpi({
   danger?: boolean;
 }) {
   return (
-    <div className="rounded-[8px] border border-line bg-card px-4 py-3">
+    <div className="rounded-lg border border-line bg-card px-4 py-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
+        <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
         <Icon className={`h-4 w-4 ${danger && value > 0 ? "text-orange" : "text-ink-3"}`} />
       </div>
       <p
@@ -979,8 +979,8 @@ function Kpi({
 
 function MiniMetric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-[6px] border border-line-soft px-2 py-1.5">
-      <p className="text-[10px] font-semibold uppercase text-ink-3">{label}</p>
+    <div className="rounded-md border border-line-soft px-2 py-1.5">
+      <p className="text-micro font-semibold uppercase text-ink-3">{label}</p>
       <p className="font-brand text-lg font-bold text-ink">{value}</p>
     </div>
   );
@@ -989,7 +989,7 @@ function MiniMetric({ label, value }: { label: string; value: number }) {
 function HeaderMetric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">{label}</p>
+      <p className="text-micro font-semibold uppercase tracking-[0.16em] text-white/45">{label}</p>
       <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
     </div>
   );
@@ -1004,9 +1004,9 @@ function PainelAlertasPmoc({
 }) {
   if (alertas.length === 0) {
     return (
-      <div className="flex items-center gap-2 rounded-[8px] border border-line bg-card px-4 py-3 text-sm">
-        <CheckCircle2 className="h-4 w-4 shrink-0 text-[#267343]" />
-        <span className="font-semibold text-[#267343]">Tudo em dia</span>
+      <div className="flex items-center gap-2 rounded-lg border border-line bg-card px-4 py-3 text-sm">
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+        <span className="font-semibold text-success">Tudo em dia</span>
         <span className="text-ink-3">— nenhum contrato PMOC precisa de atenção agora.</span>
       </div>
     );
@@ -1020,7 +1020,7 @@ function PainelAlertasPmoc({
   }
 
   return (
-    <div className="rounded-[10px] border border-line bg-card">
+    <div className="rounded-xl border border-line bg-card">
       <div className="border-b border-line-soft px-4 py-3">
         <h3 className="text-sm font-semibold text-ink">Precisa de atenção</h3>
         <p className="mt-0.5 text-xs text-ink-3">
@@ -1029,7 +1029,7 @@ function PainelAlertasPmoc({
       </div>
       <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
         {[...grupos.entries()].map(([tipo, contratos]) => (
-          <div key={tipo} className="rounded-[8px] border border-line-soft p-3">
+          <div key={tipo} className="rounded-lg border border-line-soft p-3">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-orange-deep">
               {TIPO_ALERTA_LABEL[tipo]} ({contratos.length})
             </p>
@@ -1039,7 +1039,7 @@ function PainelAlertasPmoc({
                   key={item.contratoId}
                   type="button"
                   onClick={() => onAbrirContrato(item.contratoId)}
-                  className="block w-full truncate rounded-[6px] px-2 py-1 text-left text-sm text-ink-2 hover:bg-line-soft"
+                  className="block w-full truncate rounded-md px-2 py-1 text-left text-sm text-ink-2 hover:bg-line-soft"
                 >
                   {item.imovelNome} <span className="text-xs text-ink-3">· {item.clienteNome}</span>
                 </button>
@@ -1058,7 +1058,7 @@ function AlertaLinha({ ativo, label }: { ativo: boolean; label: string }) {
       {ativo ? (
         <AlertTriangle className="h-4 w-4 text-orange" />
       ) : (
-        <CheckCircle2 className="h-4 w-4 text-[#267343]" />
+        <CheckCircle2 className="h-4 w-4 text-success" />
       )}
       <span className={ativo ? "font-semibold text-orange-deep" : "text-ink-3"}>{label}</span>
     </div>
@@ -1235,7 +1235,7 @@ function NovoPmocModal({
         </Field>
       </div>
 
-      <div className="mt-5 rounded-[8px] border border-line p-4">
+      <div className="mt-5 rounded-lg border border-line p-4">
         <div className="mb-3 flex items-center justify-between">
           <h4 className="text-sm font-semibold text-ink">Inventário inicial</h4>
           <button
@@ -1578,7 +1578,7 @@ function NovaAnaliseMicrobioModal({
       </div>
 
       <div
-        className={`mt-4 rounded-[6px] px-3 py-2 text-sm font-semibold ${statusMicrobioColor(previaStatus)}`}
+        className={`mt-4 rounded-md px-3 py-2 text-sm font-semibold ${statusMicrobioColor(previaStatus)}`}
       >
         Status calculado: {STATUS_MICROBIO_LABEL[previaStatus]}
         {previaStatus === "nao_conforme" && " — ação corretiva será marcada como necessária"}
@@ -1776,14 +1776,14 @@ function ModalBase({
   return (
     <div className="modal-backdrop">
       <div
-        className={`max-h-[92vh] w-full overflow-hidden rounded-[10px] bg-card shadow-xl ${size === "lg" ? "max-w-5xl" : "max-w-2xl"}`}
+        className={`max-h-[92vh] w-full overflow-hidden rounded-xl bg-card shadow-modal ${size === "lg" ? "max-w-5xl" : "max-w-2xl"}`}
       >
         <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
           <h3 className="text-sm font-semibold text-ink">{title}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[6px] p-1 text-ink-3 hover:bg-line-soft hover:text-ink"
+            className="rounded-md p-1 text-ink-3 hover:bg-line-soft hover:text-ink"
           >
             <X className="h-4 w-4" />
           </button>
@@ -1819,7 +1819,7 @@ function ModalActions({
       <button
         type="button"
         onClick={onCancel}
-        className="rounded-[6px] border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+        className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
       >
         Cancelar
       </button>
@@ -1827,7 +1827,7 @@ function ModalActions({
         type="button"
         onClick={onPrimary}
         disabled={disabled}
-        className="inline-flex items-center justify-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50"
       >
         {disabled && <Loader2 className="h-4 w-4 animate-spin" />}
         {primaryLabel}

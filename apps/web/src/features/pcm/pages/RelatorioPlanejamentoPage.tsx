@@ -1,5 +1,5 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { useCallback, useEffect, useState } from "react";
+import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import { listarOpcoesAgenda } from "../application/agenda-tecnico";
 import type { OpcaoClienteAgenda, OpcaoFuncionario } from "../application/agenda-tecnico-gateway";
 import { listarItensRelatorioPlanejamento } from "../application/relatorio-planejamento";
@@ -62,28 +62,12 @@ export function RelatorioPlanejamentoPage() {
   async function baixarPdf() {
     setBaixandoPdf(true);
     try {
-      const pdf = await PDFDocument.create();
-      const fonte = await pdf.embedFont(StandardFonts.Helvetica);
-      let pagina = pdf.addPage();
-      let y = pagina.getHeight() - 48;
-      for (const linha of texto.split("\n")) {
-        const partes = linha.match(/.{1,90}(?:\s|$)/g) ?? [linha];
-        for (const parte of partes) {
-          if (y < 42) {
-            pagina = pdf.addPage();
-            y = pagina.getHeight() - 48;
-          }
-          pagina.drawText(parte.trim(), {
-            x: 42,
-            y,
-            size: 10,
-            font: fonte,
-            color: rgb(0.1, 0.12, 0.16),
-          });
-          y -= 16;
-        }
-      }
-      const bytes = await pdf.save();
+      const pdf = await criarRelatorioPdf({
+        titulo: "Relatório de Planejamento",
+        subtitulo: `${modo === "planejamento" ? "Planejamento" : "Execução"} · ${data}`,
+      });
+      pdf.escreverTexto(texto);
+      const bytes = await pdf.finalizar();
       const conteudo = Uint8Array.from(bytes).buffer;
       const url = URL.createObjectURL(new Blob([conteudo], { type: "application/pdf" }));
       const link = document.createElement("a");
@@ -104,7 +88,7 @@ export function RelatorioPlanejamentoPage() {
         <h2 className="text-base font-semibold text-ink">Relatório de planejamento</h2>
         <p className="text-sm text-ink-3">Agenda e OS planejadas por dia, técnico e cliente</p>
       </div>
-      <div className="flex flex-wrap gap-2 rounded-[8px] border border-line bg-card p-3">
+      <div className="flex flex-wrap gap-2 rounded-lg border border-line bg-card p-3">
         <input
           aria-label="Data"
           type="date"
@@ -170,15 +154,15 @@ export function RelatorioPlanejamentoPage() {
         </button>
       </div>
       {erro ? (
-        <p className="text-sm text-[#A12D24]">{erro}</p>
+        <p className="text-sm text-danger">{erro}</p>
       ) : carregando ? (
         <p className="text-sm text-ink-3">Carregando…</p>
       ) : itens.length === 0 ? (
-        <p className="rounded-[8px] border border-line p-5 text-sm text-ink-3">
+        <p className="rounded-lg border border-line p-5 text-sm text-ink-3">
           Nada planejado para este dia/técnico.
         </p>
       ) : (
-        <pre className="whitespace-pre-wrap rounded-[8px] border border-line bg-card p-4 text-sm text-ink">
+        <pre className="whitespace-pre-wrap rounded-lg border border-line bg-card p-4 text-sm text-ink">
           {texto}
         </pre>
       )}

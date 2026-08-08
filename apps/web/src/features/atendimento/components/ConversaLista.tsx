@@ -19,7 +19,7 @@ export function ConversaLista({
   );
 
   return (
-    <div className="flex h-full flex-col rounded-[8px] border border-line bg-card">
+    <div className="flex h-full flex-col rounded-lg border border-line bg-card">
       <div className="border-b border-line p-3">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
@@ -53,7 +53,7 @@ export function ConversaLista({
                   {conversa.clienteNome ?? conversa.contatoNome ?? "Contato sem nome"}
                 </span>
                 {conversa.naoLidas > 0 && (
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-orange px-1.5 text-[11px] font-semibold text-white">
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-orange px-1.5 text-micro font-semibold text-white">
                     {conversa.naoLidas}
                   </span>
                 )}
@@ -62,16 +62,16 @@ export function ConversaLista({
                 {conversa.ultimaMensagemPreview ?? "sem mensagens"}
               </p>
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#EFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#5A6175]">
+                <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
                   {labelCanal(conversa.canal)}
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
                     !canalSuportaIa(conversa.canal)
-                      ? "bg-[#EEF2FF] text-[#4056A1]"
+                      ? "bg-info-soft text-info"
                       : conversa.modo === "pausado"
-                        ? "bg-[#FDF1DF] text-[#B26A00]"
-                        : "bg-[#E7F6EC] text-[#1E8E45]"
+                        ? "bg-warning-soft text-warning"
+                        : "bg-success-soft text-success"
                   }`}
                 >
                   {!canalSuportaIa(conversa.canal)
@@ -81,7 +81,7 @@ export function ConversaLista({
                       : "Zé ativo"}
                 </span>
                 {!conversa.clienteNome && (
-                  <span className="rounded-full bg-[#EFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#5A6175]">
+                  <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
                     Sem cliente vinculado
                   </span>
                 )}

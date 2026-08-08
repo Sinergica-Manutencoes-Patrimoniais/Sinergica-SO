@@ -189,20 +189,20 @@ export function LaudosSpdaPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-4 py-2 text-sm text-[#A12D24]">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
         </div>
       )}
 
       {temEscrita && semClientes && (
-        <div className="rounded-[6px] border border-[#F0D4B0] bg-orange-soft px-3 py-2 text-sm text-[#7A3F00]">
+        <div className="rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
           Nenhum cliente disponível no PCM. Execute o import Auvo para liberar laudos SPDA
           vinculados a condomínios reais.
         </div>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4">
-        <section className="bg-card rounded-[10px] border border-line overflow-hidden">
+        <section className="bg-card rounded-xl border border-line overflow-hidden">
           <div className="px-4 py-3 border-b border-line-soft">
             <h3 className="text-sm font-semibold text-ink">Laudos</h3>
             <p className="text-xs text-ink-3 mt-0.5">{estado.laudos.length} registros recentes</p>
@@ -226,7 +226,7 @@ export function LaudosSpdaPage() {
                       <p className="text-xs text-ink-3 truncate">{laudo.clienteNome}</p>
                     </div>
                     <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusColor(laudo.status)}`}
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${statusColor(laudo.status)}`}
                     >
                       {LAUDO_STATUS_LABEL[laudo.status]}
                     </span>
@@ -241,7 +241,7 @@ export function LaudosSpdaPage() {
           </div>
         </section>
 
-        <section className="bg-card rounded-[10px] border border-line min-h-[520px]">
+        <section className="bg-card rounded-xl border border-line min-h-[520px]">
           {laudoSelecionado ? (
             <div>
               <div className="px-4 py-3 border-b border-line-soft">
@@ -256,7 +256,7 @@ export function LaudosSpdaPage() {
                         : ""}
                     </p>
                   </div>
-                  <div className="rounded-[8px] border border-line bg-paper px-4 py-3">
+                  <div className="rounded-lg border border-line bg-paper px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-orange" />
                       <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
@@ -266,7 +266,7 @@ export function LaudosSpdaPage() {
                     <p className="mt-1 text-xl font-bold text-ink">{pontos.length}</p>
                   </div>
                 </div>
-                <p className="mt-4 rounded-[6px] bg-paper px-3 py-2 text-sm text-ink-2">
+                <p className="mt-4 rounded-md bg-paper px-3 py-2 text-sm text-ink-2">
                   {laudoSelecionado.conclusao || conclusaoSugerida}
                 </p>
               </div>
@@ -318,7 +318,7 @@ export function LaudosSpdaPage() {
                       type="button"
                       onClick={onCriarPonto}
                       disabled={salvando}
-                      className="inline-flex items-center justify-center gap-2 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
                     >
                       <Plus className="h-4 w-4" />
                       Ponto
@@ -358,12 +358,12 @@ export function LaudosSpdaPage() {
                           Ponto {ponto.numeroPonto}
                         </span>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${resultadoColor(ponto.statusConformidade)}`}
+                          className={`rounded-full px-2 py-0.5 text-micro font-semibold ${resultadoColor(ponto.statusConformidade)}`}
                         >
                           {CONFORMIDADE_SPDA_LABEL[ponto.statusConformidade]}
                         </span>
                         {ponto.resistenciaOhm !== null && (
-                          <span className="rounded-full bg-paper px-2 py-0.5 text-[11px] font-semibold text-ink-3">
+                          <span className="rounded-full bg-paper px-2 py-0.5 text-micro font-semibold text-ink-3">
                             {ponto.resistenciaOhm} Ω
                           </span>
                         )}

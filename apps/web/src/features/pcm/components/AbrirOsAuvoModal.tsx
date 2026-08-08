@@ -77,7 +77,7 @@ export function AbrirOsAuvoModal({
       className="fixed inset-0 z-50 flex h-full w-full max-w-none items-center justify-center bg-black/40 p-4"
       aria-label="Abrir OS no Auvo"
     >
-      <div className="w-full max-w-lg rounded-[10px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-modal">
         <div className="border-b border-line-soft px-5 py-4">
           <h2 className="text-base font-semibold text-ink">Abrir OS no Auvo?</h2>
           <p className="mt-1 text-xs text-ink-3">
@@ -88,7 +88,7 @@ export function AbrirOsAuvoModal({
         {preview && (
           <div className="space-y-3 px-5 py-4 text-sm">
             {preview.jaAberta ? (
-              <p className="rounded-[6px] bg-orange-soft px-3 py-2 text-orange">
+              <p className="rounded-md bg-orange-soft px-3 py-2 text-orange">
                 Task Auvo #{preview.taskIdExistente} já existe. Nenhuma duplicata será criada.
               </p>
             ) : (
@@ -127,11 +127,11 @@ export function AbrirOsAuvoModal({
                   ]}
                 />
                 {preview.pendencias.map((pendencia) => (
-                  <p key={pendencia} className="text-xs text-[#A23B25]">
+                  <p key={pendencia} className="text-xs text-danger">
                     {pendencia}
                   </p>
                 ))}
-                <p className="text-[11px] text-ink-3">
+                <p className="text-micro text-ink-3">
                   Técnico, data e local são exibidos para conferência. Contrato Auvo atual não
                   confirma envio desses campos.
                 </p>
@@ -139,7 +139,7 @@ export function AbrirOsAuvoModal({
             )}
           </div>
         )}
-        {erro && <p className="px-5 pb-3 text-sm text-[#A23B25]">{erro}</p>}
+        {erro && <p className="px-5 pb-3 text-sm text-danger">{erro}</p>}
         <div className="flex justify-end gap-2 border-t border-line-soft px-5 py-3">
           <button type="button" onClick={onFechar} className="btn-secondary h-9 px-3 text-sm">
             {preview?.jaAberta ? "Fechar" : "Agora não"}
@@ -163,7 +163,7 @@ export function AbrirOsAuvoModal({
 function Campos({ titulo, itens }: { titulo: string; itens: Array<[string, string]> }) {
   return (
     <div>
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-3">{titulo}</p>
+      <p className="mb-1 text-micro font-semibold uppercase tracking-wider text-ink-3">{titulo}</p>
       {itens.map(([rotulo, valor]) => (
         <p
           key={rotulo}

@@ -1,6 +1,6 @@
+import { Tooltip } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { type DragEvent, useState } from "react";
-import { Tooltip } from "../../../components/ui/Tooltip";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
 import {
   type ColunaKanbanId,
@@ -102,7 +102,7 @@ export function OsKanbanView({
               return (
                 <div
                   key="preventiva"
-                  className="flex w-72 shrink-0 flex-col rounded-[8px] border border-line bg-paper"
+                  className="flex w-72 shrink-0 flex-col rounded-lg border border-line bg-paper"
                 >
                   <ColunaHeader
                     label="Preventiva"
@@ -122,16 +122,16 @@ export function OsKanbanView({
                       preventivas.map((preventiva) => (
                         <div
                           key={preventiva.id}
-                          className="rounded-[6px] border border-line bg-card p-3"
+                          className="rounded-md border border-line bg-card p-3"
                         >
-                          <span className="rounded-full bg-[#EAEEF8] px-2 py-0.5 text-[10px] font-semibold text-[#2E3C70]">
+                          <span className="rounded-full bg-info-soft px-2 py-0.5 text-micro font-semibold text-info">
                             {TIPO_MANUTENCAO_LABEL[preventiva.maintenanceType]}
                           </span>
                           <p className="mt-1.5 text-sm font-semibold text-ink">
                             {preventiva.imovelNome}
                           </p>
                           <p className="mt-1 text-xs text-ink-3">{preventiva.clienteNome}</p>
-                          <p className="mt-1 text-[11px] text-ink-3">
+                          <p className="mt-1 text-micro text-ink-3">
                             {formatarDataPreventiva(preventiva.scheduledDate)}
                           </p>
                         </div>
@@ -155,7 +155,7 @@ export function OsKanbanView({
                 onDrop={(event) =>
                   temEscrita && onDropNaColuna(coluna.id as StatusOrdemServico, event)
                 }
-                className={`flex w-72 shrink-0 flex-col rounded-[8px] border bg-paper transition-colors ${
+                className={`flex w-72 shrink-0 flex-col rounded-lg border bg-paper transition-colors ${
                   colunaAlvo === coluna.id ? "border-orange bg-orange-soft/40" : "border-line"
                 }`}
               >
@@ -180,7 +180,7 @@ export function OsKanbanView({
                           event.dataTransfer.setData(DRAG_MIME, ordem.id);
                           event.dataTransfer.effectAllowed = "move";
                         }}
-                        className={`rounded-[6px] border border-line bg-card p-3 hover:border-ink-3 ${
+                        className={`rounded-md border border-line bg-card p-3 hover:border-ink-3 ${
                           temEscrita && !salvando ? "cursor-grab active:cursor-grabbing" : ""
                         }`}
                       >
@@ -204,7 +204,7 @@ export function OsKanbanView({
                                 {rotuloNumeroOrdem(ordem)}
                               </span>
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
                               >
                                 {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                               </span>
@@ -212,20 +212,20 @@ export function OsKanbanView({
                             <p className="mt-1.5 text-sm font-semibold text-ink">{ordem.titulo}</p>
                             <p className="mt-1 text-xs text-ink-3">{ordem.clienteNome}</p>
                             {ordem.tecnicoNome && (
-                              <p className="mt-1 text-[11px] text-ink-3">
+                              <p className="mt-1 text-micro text-ink-3">
                                 Técnico: {ordem.tecnicoNome}
                               </p>
                             )}
                             {/* E01-S117 AC-6: Orientação do Auvo no lugar da droplist de status. */}
                             {orientacaoDoCard(ordem.detalhes) && (
-                              <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-ink-2">
+                              <p className="mt-1.5 line-clamp-2 text-micro leading-snug text-ink-2">
                                 <span className="font-semibold text-ink-3">Orientação: </span>
                                 {orientacaoDoCard(ordem.detalhes)}
                               </p>
                             )}
                             {/* E01-S117 AC-3: rastro do item no Auvo. */}
                             {ordem.auvoTaskId !== null && (
-                              <p className="mt-1 text-[10px] font-brand tabular-nums text-ink-3">
+                              <p className="mt-1 text-micro font-brand tabular-nums text-ink-3">
                                 Auvo #{ordem.auvoTaskId}
                               </p>
                             )}
@@ -268,7 +268,7 @@ function ColunaHeader({
           onClick={onSubir}
           disabled={!podeSubir}
           aria-label={`Mover coluna ${label} para a esquerda`}
-          className="rounded-[4px] p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink disabled:opacity-30"
+          className="rounded-sm p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink disabled:opacity-30"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </button>
@@ -277,7 +277,7 @@ function ColunaHeader({
           onClick={onDescer}
           disabled={!podeDescer}
           aria-label={`Mover coluna ${label} para a direita`}
-          className="rounded-[4px] p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink disabled:opacity-30"
+          className="rounded-sm p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink disabled:opacity-30"
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
@@ -286,14 +286,14 @@ function ColunaHeader({
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        <span className="rounded-full bg-line-soft px-2 py-0.5 text-[11px] font-semibold text-ink-2">
+        <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
           {total}
         </span>
         <button
           type="button"
           onClick={onOcultar}
           aria-label={`Ocultar coluna ${label}`}
-          className="rounded-[4px] p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink"
+          className="rounded-sm p-0.5 text-ink-3 hover:bg-line-soft hover:text-ink"
         >
           <EyeOff className="h-3.5 w-3.5" />
         </button>

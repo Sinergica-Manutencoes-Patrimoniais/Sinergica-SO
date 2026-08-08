@@ -1,7 +1,7 @@
 import { Download, Send } from "lucide-react";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
+import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import type { ClienteResumo } from "../application/cliente-360-gateway";
 import { obterRelatorioCliente } from "../application/relatorio-cliente";
 import { type RelatorioCliente, formatarTextoRelatorioCliente } from "../domain/relatorio-cliente";
@@ -75,28 +75,13 @@ export function RelatorioClientePage() {
     if (!relatorio) return;
     setBaixando(true);
     try {
-      const pdf = await PDFDocument.create();
-      const fonte = await pdf.embedFont(StandardFonts.Helvetica);
-      let pagina = pdf.addPage();
-      let y = pagina.getHeight() - 48;
-      for (const linha of formatarTextoRelatorioCliente(relatorio).split("\n")) {
-        for (const parte of linha.match(/.{1,88}(?:\s|$)/g) ?? [linha]) {
-          if (y < 42) {
-            pagina = pdf.addPage();
-            y = pagina.getHeight() - 48;
-          }
-          pagina.drawText(parte.trim(), {
-            x: 42,
-            y,
-            size: 10,
-            font: fonte,
-            color: rgb(0.1, 0.12, 0.16),
-          });
-          y -= 16;
-        }
-      }
+      const pdf = await criarRelatorioPdf({
+        titulo: "Relatório de Atividades",
+        subtitulo: `${relatorio.clienteNome} · ${relatorio.inicio} a ${relatorio.fim}`,
+      });
+      pdf.escreverTexto(formatarTextoRelatorioCliente(relatorio));
       const url = URL.createObjectURL(
-        new Blob([Uint8Array.from(await pdf.save()).buffer], { type: "application/pdf" }),
+        new Blob([Uint8Array.from(await pdf.finalizar()).buffer], { type: "application/pdf" }),
       );
       const link = document.createElement("a");
       link.href = url;
@@ -132,7 +117,7 @@ export function RelatorioClientePage() {
           Apresentação de atividades e próximos passos para o condomínio
         </p>
       </div>
-      <div className="flex flex-wrap gap-2 rounded-[8px] border border-line bg-card p-3">
+      <div className="flex flex-wrap gap-2 rounded-lg border border-line bg-card p-3">
         <select
           aria-label="Cliente"
           className="input"
@@ -187,13 +172,11 @@ export function RelatorioClientePage() {
         </button>
       </div>
       {erro ? (
-        <p className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm text-[#A12D24]">
-          {erro}
-        </p>
+        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-danger">{erro}</p>
       ) : null}
       {carregando ? <p className="text-sm text-ink-3">Carregando…</p> : null}
       {relatorio ? (
-        <article className="rounded-[8px] border border-line bg-card p-6">
+        <article className="rounded-lg border border-line bg-card p-6">
           <p className="text-xs font-semibold uppercase tracking-widest text-orange">Sinérgica</p>
           <h3 className="mt-2 text-2xl font-semibold text-ink">Relatório de Atividades</h3>
           <p className="mt-1 text-ink-2">

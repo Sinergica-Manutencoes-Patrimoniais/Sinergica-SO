@@ -3,9 +3,9 @@ import { type FaixaAging, RECEBIVEIS, brl, dataCurta } from "./mock-data";
 
 const FAIXAS: Array<{ key: FaixaAging; label: string; cls: string }> = [
   { key: "a-vencer", label: "A vencer", cls: "bg-line-soft" },
-  { key: "d3", label: "D+3", cls: "bg-[#FDF0D3] dark:bg-[#3A2C0E]" },
-  { key: "d7", label: "D+7", cls: "bg-[#FCE3D6] dark:bg-[#3D2417]" },
-  { key: "d15", label: "D+15+", cls: "bg-[#FADCD8] dark:bg-[#3E1F1B]" },
+  { key: "d3", label: "D+3", cls: "bg-warning-soft" },
+  { key: "d7", label: "D+7", cls: "bg-orange-soft" },
+  { key: "d15", label: "D+15+", cls: "bg-danger-line" },
 ];
 
 export function ContasReceberMock() {
@@ -20,10 +20,10 @@ export function ContasReceberMock() {
           const itens = RECEBIVEIS.filter((r) => r.faixa === f.key);
           const total = itens.reduce((s, r) => s + r.valor, 0);
           return (
-            <div key={f.key} className={`rounded-[8px] border border-line p-3 ${f.cls}`}>
-              <p className="text-[11px] font-bold text-ink-2">{f.label}</p>
+            <div key={f.key} className={`rounded-lg border border-line p-3 ${f.cls}`}>
+              <p className="text-micro font-bold text-ink-2">{f.label}</p>
               <p className="mt-1.5 text-base font-bold tabular-nums text-ink">{brl(total)}</p>
-              <p className="mt-0.5 text-[11px] text-ink-3">
+              <p className="mt-0.5 text-micro text-ink-3">
                 {itens.length} item{itens.length === 1 ? "" : "s"}
               </p>
             </div>

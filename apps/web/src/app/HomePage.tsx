@@ -492,8 +492,8 @@ function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
         <h2 className="text-lg font-semibold text-ink-2">{modulo.label}</h2>
         <p className="text-sm text-ink-3 mt-1 max-w-sm">{modulo.descricao}</p>
       </div>
-      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#B26A00] bg-orange-soft border border-[#F0D4B0] rounded-full px-3 py-1">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#E8731B]" />
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-warning bg-orange-soft border border-warning-line rounded-full px-3 py-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-orange" />
         Em construção
       </span>
     </div>
@@ -516,18 +516,18 @@ function DashboardGeral({
         return (
           <div
             key={resumo.moduloId}
-            className="group flex min-h-44 flex-col overflow-hidden rounded-[10px] border border-line bg-card shadow-[0_1px_2px_rgba(20,28,54,0.04)] transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-[0_10px_26px_rgba(20,28,54,0.08)]"
+            className="group flex min-h-44 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-raised transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-overlay"
           >
             {/* Header */}
             <div className="flex items-center gap-2.5 bg-navy px-3.5 py-2.5">
-              <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-md bg-card/10 flex items-center justify-center shrink-0">
                 <Icon className="w-4 h-4 text-white" strokeWidth={1.8} />
               </div>
               <span className="text-sm font-semibold text-white flex-1 truncate">
                 {modulo.label}
               </span>
               {resumo.alerta && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1a1000] bg-amber rounded-full px-2 py-0.5 shrink-0">
+                <span className="inline-flex items-center gap-1 text-micro font-semibold text-warning bg-amber rounded-full px-2 py-0.5 shrink-0">
                   ⚠ {resumo.alerta}
                 </span>
               )}
@@ -550,7 +550,7 @@ function DashboardGeral({
               <button
                 type="button"
                 onClick={() => onSelect(resumo.moduloId)}
-                className="w-full cursor-pointer rounded-[5px] py-1.5 text-center text-xs font-semibold text-orange transition-colors hover:bg-orange-soft hover:text-orange-deep"
+                className="w-full cursor-pointer rounded-md py-1.5 text-center text-xs font-semibold text-orange transition-colors hover:bg-orange-soft hover:text-orange-deep"
               >
                 Ver módulo →
               </button>
@@ -700,7 +700,7 @@ export function HomePage() {
       )}
       {/* ── Sidebar ──────────────────────────────────────────── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col overflow-hidden border-r border-navy-line bg-navy-deep shadow-2xl transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col overflow-hidden border-r border-navy-line bg-navy-deep shadow-drawer transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 lg:shadow-none ${
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } ${sidebarCollapsed ? "lg:w-14" : "lg:w-56"}`}
       >
@@ -725,7 +725,7 @@ export function HomePage() {
             type="button"
             aria-label="Fechar menu"
             onClick={() => setMobileSidebarOpen(false)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] text-[#A8B0CC] hover:bg-white/[0.07] hover:text-white lg:hidden"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-nav-ink hover:bg-card/[0.07] hover:text-white lg:hidden"
           >
             <X className="h-4 w-4" />
           </button>
@@ -736,7 +736,7 @@ export function HomePage() {
           {activeModulo === "inicio" ? (
             <div>
               {!sidebarCompacta && (
-                <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                   MÓDULOS
                 </p>
               )}
@@ -748,7 +748,7 @@ export function HomePage() {
                     type="button"
                     title={m.label}
                     onClick={() => navegarModulo(m.id)}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white ${sidebarCompacta ? "justify-center" : ""}`}
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white ${sidebarCompacta ? "justify-center" : ""}`}
                   >
                     <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
                     {!sidebarCompacta && <span className="truncate">{m.label}</span>}
@@ -759,7 +759,7 @@ export function HomePage() {
           ) : activeModulo === "config" ? (
             <div>
               {!sidebarCompacta && (
-                <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                   CONFIGURAÇÕES
                 </p>
               )}
@@ -775,10 +775,10 @@ export function HomePage() {
                       setConfigTab(item.id);
                       setMobileSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                       isActive
-                        ? "border-orange bg-white/[0.07] text-white font-medium"
-                        : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                        ? "border-orange bg-card/[0.07] text-white font-medium"
+                        : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -791,7 +791,7 @@ export function HomePage() {
             PCM_NAV.map((group) => (
               <div key={group.titulo}>
                 {!sidebarCompacta && (
-                  <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                  <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                     {group.titulo}
                   </p>
                 )}
@@ -817,10 +817,10 @@ export function HomePage() {
                               ? () => irParaPcmView(view)
                               : undefined
                         }
-                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                           isActive
-                            ? "border-orange bg-white/[0.07] text-white font-medium"
-                            : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                            ? "border-orange bg-card/[0.07] text-white font-medium"
+                            : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
                         }`}
                       >
                         <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -841,10 +841,10 @@ export function HomePage() {
                                     ? () => irParaPcmView(filho.view as PcmView)
                                     : undefined
                                 }
-                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${
+                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${
                                   filhoIsActive
-                                    ? "border-orange bg-white/[0.07] text-white font-medium"
-                                    : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                                    ? "border-orange bg-card/[0.07] text-white font-medium"
+                                    : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
                                 }`}
                               >
                                 <FilhoIcon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
@@ -863,7 +863,7 @@ export function HomePage() {
             ATENDIMENTO_NAV.map((group) => (
               <div key={group.titulo}>
                 {!sidebarCompacta && (
-                  <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                  <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                     {group.titulo}
                   </p>
                 )}
@@ -879,10 +879,10 @@ export function HomePage() {
                         setAtendimentoView(item.view);
                         setMobileSidebarOpen(false);
                       }}
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                         isActive
-                          ? "border-orange bg-white/[0.07] text-white font-medium"
-                          : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                          ? "border-orange bg-card/[0.07] text-white font-medium"
+                          : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
                       }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -896,7 +896,7 @@ export function HomePage() {
             FINANCEIRO_NAV.map((group) => (
               <div key={group.titulo}>
                 {!sidebarCompacta && (
-                  <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                  <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                     {group.titulo}
                   </p>
                 )}
@@ -912,10 +912,10 @@ export function HomePage() {
                         setFinanceiroView(item.view);
                         setMobileSidebarOpen(false);
                       }}
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                         isActive
-                          ? "border-orange bg-white/[0.07] text-white font-medium"
-                          : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                          ? "border-orange bg-card/[0.07] text-white font-medium"
+                          : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
                       }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -928,7 +928,7 @@ export function HomePage() {
           ) : activeModulo === "guia" ? (
             <div>
               {!sidebarCompacta && (
-                <p className="px-2 text-[10px] font-semibold text-[#A8B0CC] uppercase tracking-widest mb-1">
+                <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
                   GUIA DO SO
                 </p>
               )}
@@ -944,10 +944,10 @@ export function HomePage() {
                       setGuiaView(item.view);
                       setMobileSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                       isActive
-                        ? "border-orange bg-white/[0.07] text-white font-medium"
-                        : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                        ? "border-orange bg-card/[0.07] text-white font-medium"
+                        : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -959,7 +959,7 @@ export function HomePage() {
           ) : (
             !sidebarCompacta && (
               <div className="px-2 pt-4 text-center">
-                <p className="text-xs text-[#A8B0CC]">
+                <p className="text-xs text-nav-ink">
                   Navegação disponível quando o módulo for construído.
                 </p>
               </div>
@@ -973,7 +973,7 @@ export function HomePage() {
             type="button"
             title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`hidden w-full items-center gap-2.5 rounded-[4px] border-l-2 border-transparent px-2 py-1.5 text-sm text-[#A8B0CC] transition-colors hover:bg-white/[0.04] hover:text-white lg:flex ${sidebarCompacta ? "justify-center" : ""}`}
+            className={`hidden w-full items-center gap-2.5 rounded-sm border-l-2 border-transparent px-2 py-1.5 text-sm text-nav-ink transition-colors hover:bg-card/[0.04] hover:text-white lg:flex ${sidebarCompacta ? "justify-center" : ""}`}
           >
             {sidebarCompacta ? (
               <ChevronRight className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -989,10 +989,10 @@ export function HomePage() {
               type="button"
               title="Configurações"
               onClick={() => navegarModulo("config")}
-              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                 activeModulo === "config"
-                  ? "border-orange bg-white/[0.07] text-white font-medium"
-                  : "border-transparent text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white"
+                  ? "border-orange bg-card/[0.07] text-white font-medium"
+                  : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
               }`}
             >
               <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -1003,7 +1003,7 @@ export function HomePage() {
             type="button"
             title="Sair"
             onClick={logout}
-            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-sm text-[#A8B0CC] hover:bg-white/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCompacta ? "justify-center" : ""}`}
+            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm text-nav-ink hover:bg-card/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCompacta ? "justify-center" : ""}`}
           >
             <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.8} />
             {!sidebarCompacta && <span>Sair</span>}
@@ -1020,7 +1020,7 @@ export function HomePage() {
               type="button"
               aria-label="Abrir menu"
               onClick={() => setMobileSidebarOpen(true)}
-              className="sticky left-0 z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] border border-line bg-card text-ink-2 hover:bg-line-soft lg:hidden"
+              className="sticky left-0 z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line bg-card text-ink-2 hover:bg-line-soft lg:hidden"
             >
               <Menu className="h-4 w-4" />
             </button>
@@ -1073,7 +1073,7 @@ export function HomePage() {
                 title={mode === "dark" ? "Usar modo dia" : "Usar modo noite"}
                 aria-label={mode === "dark" ? "Usar modo dia" : "Usar modo noite"}
                 onClick={toggleMode}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-line text-ink-3 transition-colors hover:bg-line-soft hover:text-ink"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-ink-3 transition-colors hover:bg-line-soft hover:text-ink"
               >
                 {mode === "dark" ? (
                   <Sun className="h-4 w-4" strokeWidth={2} />
@@ -1201,7 +1201,7 @@ export function HomePage() {
             ) : (
               <div className="flex flex-col gap-4">
                 {feedbackOs && (
-                  <div className="rounded-[6px] border border-[#BFE5CB] bg-[#EFFAF2] px-4 py-2 text-sm text-[#1E7A3A]">
+                  <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
                     {feedbackOs}
                   </div>
                 )}

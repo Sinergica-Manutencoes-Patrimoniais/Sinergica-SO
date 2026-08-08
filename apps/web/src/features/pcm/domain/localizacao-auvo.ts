@@ -15,7 +15,7 @@ export const PREFERENCIA_LOCALIZACAO_PADRAO: PreferenciaLocalizacaoAuvo = {
 };
 
 /** `nomeArea` é sempre o primeiro nível (Área é obrigatória em `pcm.locais`/`pcm.areas`);
- * `nomesLocais` vai do mais externo pro mais interno (Local, depois Sublocal, ...). Filtra vazios
+ * `nomesLocais` vai do mais externo pro mais interno (Local, depois Sublocal, …). Filtra vazios
  * (ex.: sublocal ausente) e aplica separador/ordem configuráveis. */
 export function montarLocalizacaoAuvo(
   nomeArea: string | null | undefined,

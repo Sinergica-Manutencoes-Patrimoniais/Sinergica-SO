@@ -39,11 +39,11 @@ export function ClustersTab({
   return (
     <div className="flex flex-col gap-4">
       {clusters.length === 0 ? (
-        <div className="rounded-[10px] border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
           Nenhum cluster cadastrado ainda.
         </div>
       ) : (
-        <div className="divide-y divide-line-soft rounded-[10px] border border-line bg-card">
+        <div className="divide-y divide-line-soft rounded-xl border border-line bg-card">
           {clusters.map((c) => (
             <div key={c.id} className="flex items-center justify-between px-4 py-3">
               <div>
@@ -58,7 +58,7 @@ export function ClustersTab({
                 <button
                   type="button"
                   onClick={() => onDesativar(c.id)}
-                  className="text-xs text-[#A12D24] hover:underline"
+                  className="text-xs text-danger hover:underline"
                 >
                   Desativar
                 </button>
@@ -69,21 +69,21 @@ export function ClustersTab({
       )}
 
       {temEscrita && (
-        <div className="rounded-[10px] border border-line bg-card p-4">
+        <div className="rounded-xl border border-line bg-card p-4">
           <h3 className="text-sm font-semibold text-ink">Novo cluster</h3>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <input
               value={form.nome}
               onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
               placeholder="Nome do cluster"
-              className="rounded-[6px] border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-sm"
             />
             <select
               value={form.leadTier}
               onChange={(e) =>
                 setForm((f) => ({ ...f, leadTier: e.target.value as LeadTier | "" }))
               }
-              className="rounded-[6px] border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-sm"
             >
               <option value="">Qualquer tier</option>
               {TIERS.map((t) => (
@@ -96,17 +96,17 @@ export function ClustersTab({
               value={form.segmento}
               onChange={(e) => setForm((f) => ({ ...f, segmento: e.target.value }))}
               placeholder="Segmento (opcional)"
-              className="rounded-[6px] border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-sm"
             />
             <input
               value={form.subsegmento}
               onChange={(e) => setForm((f) => ({ ...f, subsegmento: e.target.value }))}
               placeholder="Subsegmento (opcional)"
-              className="rounded-[6px] border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-sm"
             />
           </div>
           {erro && (
-            <div className="mt-2 rounded-[6px] border border-[#F0C2BD] bg-[#FFF4F2] px-3 py-2 text-sm text-[#A12D24]">
+            <div className="mt-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -114,7 +114,7 @@ export function ClustersTab({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="mt-3 rounded-[6px] bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+            className="mt-3 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
           >
             {salvando ? "Salvando…" : "Criar cluster"}
           </button>

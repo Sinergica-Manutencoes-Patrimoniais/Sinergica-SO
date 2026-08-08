@@ -265,7 +265,7 @@ export function LancamentosPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -297,7 +297,7 @@ export function LancamentosPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Lançamentos</h3>
@@ -309,7 +309,7 @@ export function LancamentosPage() {
             <button
               type="button"
               onClick={exportarCsv}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
               <Download className="h-4 w-4" />
               Exportar CSV
@@ -318,7 +318,7 @@ export function LancamentosPage() {
               <button
                 type="button"
                 onClick={() => setModal({ modo: "novo" })}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
               >
                 <Plus className="h-4 w-4" />
                 Novo lançamento
@@ -327,7 +327,7 @@ export function LancamentosPage() {
           </div>
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -352,12 +352,12 @@ export function LancamentosPage() {
       </div>
 
       {lancamentos.length === 0 ? (
-        <div className="rounded-[8px] border border-line bg-card px-5 py-10 text-center">
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <ClipboardList className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-sm text-ink-3">Nenhum lançamento encontrado para este filtro.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-[8px] border border-line bg-card">
+        <div className="overflow-x-auto rounded-lg border border-line bg-card">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
               <tr>
@@ -384,7 +384,7 @@ export function LancamentosPage() {
                   </td>
                   <td className="px-3 py-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${lancamento.tipo === "entrada" ? "bg-[#E7F6EC] text-[#1E8E45]" : "bg-[#FFF4F1] text-[#A23B25]"}`}
+                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${lancamento.tipo === "entrada" ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
                     >
                       {lancamento.tipo === "entrada" ? "Entrada" : "Saída"}
                     </span>
@@ -446,7 +446,7 @@ export function LancamentosPage() {
                             <button
                               type="button"
                               onClick={() => excluirRealizado(lancamento)}
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-[#A23B25] hover:text-[#7A2C1B]"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                               Excluir
@@ -463,7 +463,7 @@ export function LancamentosPage() {
                             className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink disabled:opacity-50"
                           >
                             <Paperclip className="h-3.5 w-3.5" />
-                            {anexandoId === lancamento.id ? "Enviando..." : "Anexar comprovante"}
+                            {anexandoId === lancamento.id ? "Enviando…" : "Anexar comprovante"}
                           </button>
                         )}
                       {lancamento.comprovantePath && (
@@ -527,20 +527,20 @@ export function LancamentosPage() {
 function StatusBadge({ lancamento }: { lancamento: LancamentoItem }) {
   if (lancamento.status === "previsto") {
     return (
-      <span className="rounded-full bg-[#FFF6E5] px-2 py-0.5 text-[11px] font-semibold text-[#9A6B00]">
+      <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
         Previsto
       </span>
     );
   }
   if (estaConciliado(lancamento)) {
     return (
-      <span className="rounded-full bg-[#E7F0FF] px-2 py-0.5 text-[11px] font-semibold text-[#1D4ED8]">
+      <span className="rounded-full bg-info-soft px-2 py-0.5 text-micro font-semibold text-info">
         Conciliado
       </span>
     );
   }
   return (
-    <span className="rounded-full bg-[#E7F6EC] px-2 py-0.5 text-[11px] font-semibold text-[#1E8E45]">
+    <span className="rounded-full bg-success-soft px-2 py-0.5 text-micro font-semibold text-success">
       Realizado
     </span>
   );
@@ -552,10 +552,10 @@ function Totalizador({
   tom,
 }: { label: string; valorCentavos: number; tom: "positivo" | "negativo" }) {
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</p>
       <p
-        className={`mt-1 text-xl font-semibold ${tom === "positivo" ? "text-[#1E8E45]" : "text-[#A23B25]"}`}
+        className={`mt-1 text-xl font-semibold ${tom === "positivo" ? "text-success" : "text-danger"}`}
       >
         R$ {centavosParaReais(Math.abs(valorCentavos))}
       </p>
@@ -579,7 +579,7 @@ function FiltrosBar({
   return (
     <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">De</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">De</span>
         <input
           type="date"
           value={filtro.competenciaInicio ?? ""}
@@ -588,7 +588,7 @@ function FiltrosBar({
         />
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Até</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Até</span>
         <input
           type="date"
           value={filtro.competenciaFim ?? ""}
@@ -597,7 +597,7 @@ function FiltrosBar({
         />
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Tipo</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Tipo</span>
         <select
           value={filtro.tipo ?? ""}
           onChange={(e) =>
@@ -614,7 +614,7 @@ function FiltrosBar({
         </select>
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Status</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Status</span>
         <select
           value={filtro.status ?? ""}
           onChange={(e) =>
@@ -631,7 +631,7 @@ function FiltrosBar({
         </select>
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Categoria</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Categoria</span>
         <select
           value={filtro.categoriaId ?? ""}
           onChange={(e) => onChange({ ...filtro, categoriaId: e.target.value || undefined })}
@@ -646,7 +646,7 @@ function FiltrosBar({
         </select>
       </label>
       <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Conta</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Conta</span>
         <select
           value={filtro.contaId ?? ""}
           onChange={(e) => onChange({ ...filtro, contaId: e.target.value || undefined })}
@@ -661,7 +661,7 @@ function FiltrosBar({
         </select>
       </label>
       <label className="block sm:col-span-2 lg:col-span-2">
-        <span className="mb-1 block text-[11px] font-semibold text-ink-3">Cliente</span>
+        <span className="mb-1 block text-micro font-semibold text-ink-3">Cliente</span>
         <select
           value={filtro.clienteId ?? ""}
           onChange={(e) => onChange({ ...filtro, clienteId: e.target.value || undefined })}
@@ -755,7 +755,7 @@ function LancamentoModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-2xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {lancamento ? "Editar lançamento" : "Novo lançamento"}
@@ -838,7 +838,7 @@ function LancamentoModal({
               onChange={(e) => setCategoriaId(e.target.value)}
               className="input w-full"
             >
-              <option value="">Selecione...</option>
+              <option value="">Selecione…</option>
               {raizesDoTipo.map((raiz) => (
                 <optgroup key={raiz.id} label={raiz.nome}>
                   <option value={raiz.id}>{raiz.nome}</option>
@@ -891,7 +891,7 @@ function LancamentoModal({
             />
           </label>
           {erro && (
-            <div className="sm:col-span-2 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -900,7 +900,7 @@ function LancamentoModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -908,9 +908,9 @@ function LancamentoModal({
             type="button"
             onClick={salvar}
             disabled={salvando || !categoriaId}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>
@@ -938,7 +938,7 @@ function BaixaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-sm rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-sm rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Dar baixa</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -963,7 +963,7 @@ function BaixaModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -971,9 +971,9 @@ function BaixaModal({
             type="button"
             onClick={confirmar}
             disabled={confirmando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {confirmando ? "Confirmando..." : "Confirmar baixa"}
+            {confirmando ? "Confirmando…" : "Confirmar baixa"}
           </button>
         </div>
       </div>
@@ -1022,7 +1022,7 @@ function CorrigirModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">Corrigir lançamento realizado</h3>
           <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
@@ -1072,7 +1072,7 @@ function CorrigirModal({
             </select>
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -1081,7 +1081,7 @@ function CorrigirModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -1089,9 +1089,9 @@ function CorrigirModal({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar correção"}
+            {salvando ? "Salvando…" : "Salvar correção"}
           </button>
         </div>
       </div>

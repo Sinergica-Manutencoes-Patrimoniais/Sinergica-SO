@@ -1,6 +1,6 @@
 import { AlertTriangle, CalendarDays, Download, RefreshCw, Users } from "lucide-react";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { useCallback, useEffect, useState } from "react";
+import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import { obterResumoRelatorioDiario } from "../application/relatorio-diario";
 import { formatarHorasMinutos } from "../domain/apontamento-horas";
 import {
@@ -23,7 +23,7 @@ function CardResumo({
   detalhe,
 }: { label: string; valor: string | number; detalhe?: string }) {
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-ink">{valor}</p>
       {detalhe ? <p className="mt-1 text-xs text-ink-3">{detalhe}</p> : null}
@@ -69,28 +69,9 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
     if (!resumo) return;
     setBaixandoPdf(true);
     try {
-      const pdf = await PDFDocument.create();
-      const fonte = await pdf.embedFont(StandardFonts.Helvetica);
-      let pagina = pdf.addPage();
-      let y = pagina.getHeight() - 48;
-      for (const linha of formatarTextoRelatorioDiario(resumo).split("\n")) {
-        const partes = linha.match(/.{1,90}(?:\s|$)/g) ?? [linha];
-        for (const parte of partes) {
-          if (y < 42) {
-            pagina = pdf.addPage();
-            y = pagina.getHeight() - 48;
-          }
-          pagina.drawText(parte.trim(), {
-            x: 42,
-            y,
-            size: 10,
-            font: fonte,
-            color: rgb(0.1, 0.12, 0.16),
-          });
-          y -= 16;
-        }
-      }
-      const bytes = await pdf.save();
+      const pdf = await criarRelatorioPdf({ titulo: "Relatório do Dia", subtitulo: data });
+      pdf.escreverTexto(formatarTextoRelatorioDiario(resumo));
+      const bytes = await pdf.finalizar();
       const url = URL.createObjectURL(
         new Blob([Uint8Array.from(bytes).buffer], { type: "application/pdf" }),
       );
@@ -145,15 +126,13 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
       </header>
 
       {erro ? (
-        <p className="rounded-[8px] border border-red-200 bg-red-50 p-4 text-sm text-[#A12D24]">
-          {erro}
-        </p>
+        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-danger">{erro}</p>
       ) : null}
       {carregando ? <p className="text-sm text-ink-3">Gerando relatório…</p> : null}
       {!carregando && resumo ? (
         <>
           {resumo.semMovimento ? (
-            <div className="rounded-[8px] border border-line bg-card p-6 text-center">
+            <div className="rounded-lg border border-line bg-card p-6 text-center">
               <CalendarDays className="mx-auto mb-2 h-6 w-6 text-ink-3" />
               <p className="font-semibold text-ink">Sem movimento neste dia</p>
               <p className="mt-1 text-sm text-ink-3">
@@ -190,7 +169,7 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
             />
           </section>
 
-          <section className="rounded-[8px] border border-line bg-card">
+          <section className="rounded-lg border border-line bg-card">
             <div className="flex items-center gap-2 border-b border-line px-4 py-3">
               <Users className="h-4 w-4 text-ink-3" />
               <h3 className="font-semibold text-ink">Por técnico</h3>
@@ -216,10 +195,10 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
 
           <section
             aria-label="Atenção"
-            className="rounded-[8px] border border-[#F2D2A7] bg-[#FFF8EE] p-4"
+            className="rounded-lg border border-warning-line bg-warning-soft p-4"
           >
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-[#B26A00]" />
+              <AlertTriangle className="h-4 w-4 text-warning" />
               <h3 className="font-semibold text-ink">Atenção</h3>
             </div>
             <div className="mt-3 grid gap-2 text-sm text-ink-2 sm:grid-cols-2">

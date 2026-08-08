@@ -76,7 +76,7 @@ export function CategoriasPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando...</div>;
+    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -110,7 +110,7 @@ export function CategoriasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-[8px] border border-line bg-card p-4 shadow-[0_1px_2px_rgba(20,28,54,0.035)]">
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-ink">Plano de contas</h3>
@@ -123,7 +123,7 @@ export function CategoriasPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Nova categoria
@@ -131,7 +131,7 @@ export function CategoriasPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
             {erroAcao}
           </div>
         )}
@@ -184,7 +184,7 @@ function ArvoreCategorias({
   onDesativar: (categoria: CategoriaItem) => void;
 }) {
   return (
-    <div className="rounded-[8px] border border-line bg-card p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <h4 className="text-sm font-semibold text-ink">{titulo}</h4>
       {raizes.length === 0 ? (
         <p className="mt-3 text-sm text-ink-3">Nenhuma categoria de {titulo.toLowerCase()}.</p>
@@ -232,7 +232,7 @@ function LinhaCategoria({
   onDesativar: (categoria: CategoriaItem) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-[6px] px-2 py-1.5 hover:bg-line-soft">
+    <div className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-line-soft">
       <span className={`text-sm ${categoria.ativo ? "text-ink" : "text-ink-3 line-through"}`}>
         {categoria.nome}
       </span>
@@ -251,7 +251,7 @@ function LinhaCategoria({
               type="button"
               title="Desativar"
               onClick={() => onDesativar(categoria)}
-              className="text-ink-3 hover:text-[#A23B25]"
+              className="text-ink-3 hover:text-danger"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -295,7 +295,7 @@ function CategoriaModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-[8px] border border-line bg-card shadow-xl">
+      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-base font-semibold text-ink">
             {categoria ? "Editar categoria" : "Nova categoria"}
@@ -345,7 +345,7 @@ function CategoriaModal({
             </select>
           </label>
           {erro && (
-            <div className="rounded-[6px] border border-[#F2C0B5] bg-[#FFF4F1] px-3 py-2 text-sm text-[#A23B25]">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {erro}
             </div>
           )}
@@ -354,7 +354,7 @@ function CategoriaModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 rounded-[6px] border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
           >
             Cancelar
           </button>
@@ -362,9 +362,9 @@ function CategoriaModal({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="h-9 rounded-[6px] bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </div>
       </div>
