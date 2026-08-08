@@ -68,7 +68,7 @@ export function EmojiPicker({ inputRef, valor, onMudar, disabled }: EmojiPickerP
       <div className="flex max-w-64 flex-col gap-2">
         {CATEGORIAS.map((categoria) => (
           <div key={categoria.titulo}>
-            <p className="px-1 text-[11px] font-semibold text-ink-3">{categoria.titulo}</p>
+            <p className="px-1 text-micro font-semibold text-ink-3">{categoria.titulo}</p>
             <div className="mt-1 grid grid-cols-6 gap-0.5">
               {categoria.emoji.map((emoji) => (
                 <button
