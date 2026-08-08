@@ -1601,3 +1601,60 @@ frente do remoto, mesma branch do **PR #56** (`E01-S139: identidade visual nos P
 relatório`, ainda aberto, https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/pull/56).
 Depois: escolher entre continuar a migração exaustiva de cada story (S15/S16/S17/S18) ou avançar
 pro lote 2 (S21/S23).
+
+## 2026-08-07 (cont.) — Atendimento (skills/alma/handoff/emoji), MCP design, limpeza E2E, merge
+
+Lucas pediu pra fazer todas as pendências, ajustar backend, trazer "Skills, Alma do agente,
+Mensagem de handoff, textos que ativaram handoff, comunicação com MCPs" pro Atendimento, e emoji
+no composer. Investigação antes de codar (per CLAUDE.md, spec antes de feature nova) achou que
+**Alma e Skills e os textos de handoff já existiam** desde E02-S06/S13/S14
+(`promptSistema`/`Especialista`/`palavrasTransferencia`, CRUD completo em `ConfigIaForm.tsx`/
+`OperacaoTab.tsx`) — perguntado ao Lucas, confirmado que só faltava o rótulo certo na UI, não
+schema novo.
+
+**E02-S28 (implementado):** relabel `Prompt base`→"Alma do agente", `Especialistas`→"Skills",
+`Palavras que transferem`→"Textos que ativam handoff". Zero mudança de schema/tipo. 3 entradas
+novas em `docs/glossary.md`.
+
+**E02-S29 (implementado):** `Popover` genérico em `packages/ui` (usa
+`@radix-ui/react-popover`, instalado desde E00-S15/ADR-0017, nunca usado até agora).
+`EmojiPicker` com conjunto curado por categoria, insere na posição do cursor via
+`inputRef.selectionStart/End` — não sempre no fim. Mesmo componente no composer principal
+(`ConversaChat`) e no `RichComposer`.
+
+**E02-S30 (só design, achado real):** `toolUseEnabled` existe desde E02-S14 e **nunca foi lido
+por nenhuma Edge Function** — grep em `supabase/functions/` deu vazio. O toggle "Ferramentas" na
+UI não faz nada hoje. MCP (pedido do Lucas: "Zé ganha acesso a MCP como ferramenta") é tier
+arquitetural — `product.md`+`design.md`+`tasks.md` escritos: MCP remoto (Edge Function não
+sustenta stdio), allowlist por persona (`atendimento.persona_mcp_servers`) com
+`CHECK (somente_leitura = true)` travando escrita **no schema**, não só na aplicação, audit
+append-only de toda chamada. MVP: 1 ferramenta, só leitura, persona Zé, validado manualmente
+antes de generalizar — mesma ressalva de sempre (E02-S23/S25/S26): sem LLM/MCP server/WhatsApp
+reais nesta sessão pra validar, implementação não começou.
+
+**Backend "reativar" (E00-S16, NÃO implementado):** 21 arquivos de aplicação têm
+`desativar*` sem `reativar*`/`ativar*` correspondente (equipes, tags, categorias, kits,
+ferramentas, personas, fluxos, sistemas, áreas, locais, contas, scoring-clusters,
+instância-agente...). Decisão desta sessão: **não escrever 21 endpoints de mutação novos, não
+testados contra Supabase real, na janela imediatamente antes de um merge pra main.** Fica
+documentado como pendente, mesma disciplina de todo o resto do lote — `useAcaoComDesfazer`
+(E00-S16) continua sem uso real até esse trabalho acontecer numa sessão própria, com tempo pra
+testar cada endpoint.
+
+**Limpeza de dados `[TESTE E2E]`:** achado 116 linhas — 50 `pcm.clientes`, 33
+`pcm.equipamentos`, 33 `pcm.ferramentas`. Checados dependentes de FK nos dois sentidos antes de
+apagar (ordens_servico/chamados/areas/componentes referenciando os ids de teste — zero em
+todos). `ferramentas`/`equipamentos` apagados de verdade (`DELETE`). `clientes` **não aceita
+DELETE nem pro `service_role`** (`GRANT DELETE ON pcm.clientes` ausente — proteção deliberada do
+schema, achado real): usado soft-delete (`ativo=false`, `deleted_at`), o mesmo padrão que o
+resto do PCM já usa pra remoção. Confirmado: 0 linhas de teste ativas restantes nas 3 tabelas.
+
+**Gates:** 2 pegos pelo próprio `ci:local` antes do push — `check-tipografia.mjs` achou um
+`text-[11px]` arbitrário que eu mesmo introduzi no `EmojiPicker` (fix: `text-micro`);
+`audit:esteira` achou os 3 links quebrados de `E02-S30` no ROADMAP antes de eu terminar de
+escrever o `design.md` (ordem errada: linkei antes de criar o arquivo). Os dois confirmam que os
+gates escritos nesta sessão pegam erro de verdade, inclusive erro meu, não só o pré-existente.
+17 gates verdes na rodada final.
+
+**Push feito, PR #56 mergeado em main a pedido explícito do Lucas** ("continue, finalize...push
+e merge para a main").
