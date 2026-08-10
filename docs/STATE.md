@@ -10,6 +10,210 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-10 — E01-S140..S144: 5 melhorias no PCM (Agenda timeline, Inspeção→backlog com IA, ocultar OS de ponto, fix import Excel) (Claude/Sonnet 5)
+
+Lucas pediu 3 melhorias pontuais no PCM (prints da Agenda do Técnico e do Relatório de Inspeção).
+Sem story aberta pra nenhuma — segui o processo: abri as 3 (`E01-S140`, `E01-S141`, `E01-S142`),
+criei `spec.md`+`tasks.md` em `specs/`, marquei owner no ROADMAP, implementei, rodei os gates.
+
+**E01-S140 — Agenda do Técnico: visão timeline por técnico.** A visão existente (`AgendaTecnicoPage.tsx`,
+E01-S104) só tinha board por dia. Adicionei toggle "Por dia"/"Por técnico" (default "Por dia",
+comportamento preservado) + `agruparAlocacoesPorTecnico` em `domain/agenda-tecnico.ts` (linha por
+técnico com alocação na semana, ordem alfabética, célula por dia) + componente `TimelinePorTecnico`
+(grid, reusa `corDoTecnico` e o modal de criar/editar já existente).
+
+**E01-S141 — Relatório de Inspeção: item vira Chamado pendente.** Descoberta: `derivarItemParaChamado`
+(`application/assessment.ts`) já existia desde E01-S90 e já é genérica (não depende de `eAssessment`)
+— só era chamada no fluxo de importação em lote. Só precisei ligar UI por item: botão "Abrir chamado"
++ selo "Chamado aberto" em `ItemInspecaoCard` (`pages/InspecoesPage.tsx`), guardado por
+`item.destino === null` e `temEscrita`. Nenhuma mudança de domínio/aplicação. **Depois da entrega,
+Lucas corrigiu o rumo** (ver E01-S143 abaixo) — "Abrir chamado" continua no código, mas deixou de ser
+o fluxo principal.
+
+**E01-S142 — Chamados/OS: ocultar registros de ponto (INICIO/FIM VISITA).** Técnico bate ponto abrindo
+tarefa no Auvo com título literal "INICIO VISITA"/"FIM VISITA" — vira OS normal (usada no apontamento
+de horas, E01-S133/S134), mas nunca deveria aparecer como item a tratar. Adicionei
+`ehOsRegistroVisita(titulo)` em `domain/ordens-servico.ts` (match exato normalizado — trim+lowercase,
+não esconde títulos só parecidos) e apliquei em `filtrarOrdens` (ponto único que alimenta board/lista/
+timeline/calendário em `OrdensServicoPage.tsx`), `calcularKpisOrdens`, `calcularMetricasOperacao`
+(também usadas pelo cockpit `dashboard-pcm.ts`, E01-S136) e `listarBacklogGut`
+(`application/hub-os.ts` — descobri que `filtrarBacklogGut` do domínio, que a spec original citava,
+**não tem uso em produção hoje**; corrigi a spec pra apontar a função real).
+**SPEC_DEVIATION SD-1** (documentada na spec): os KPIs padrão da tela (sem busca/filtro de cliente
+ativo) vêm da RPC agregada `pcm.fn_kpis_ordens_servico` (migration `0076`), não do array já filtrado
+no cliente — sem tocar nela o AC-2 ficaria inconsistente. Criei
+`supabase/migrations/0173_E01-S142_kpis_exclui_registro_visita.sql` (recria a função com a mesma
+exclusão, `create or replace`, reversível) mas **não apliquei em produção** — precisa
+`supabase db diff`/`db push` revisado pelo Lucas (ver `db/README.md`).
+
+**E01-S144 — Import Excel: coluna "Ocorrência" do Auvo é foto, não relato.** Lucas confirmou
+(exemplo real: `.../anexos_tarefas/<uuid>.jpg;.../<uuid>.jpg`): no export do Auvo, "Ocorrência" é a
+coluna do link público da foto, mas `inspecao-excel.ts` tratava "ocorrencia" como alias da coluna de
+texto/relato — a URL virava descrição, nunca chegava a `fotoUrls`. Fix: tirei "ocorrencia" dos
+aliases de relato, botei nos aliases de foto. `fotosDoTexto` (split por `;`, filtro por URL) já
+fazia o resto certo. Sem migration, sem mudança de UI (o card já exibe `fotoUrls` desde E01-S97).
+
+**E01-S143 — Relatório de Inspeção: revisão em lote (IA calcula GUT/esforço/embasamento, backlog ou
+descarte).** Correção grande sobre a S141: Lucas foi claro — Fabrício revisa os itens e manda pro
+backlog só o que faz sentido, resto vira "descarte"; quando vai pro backlog, a IA calcula GUT +
+esforço + embasamento normativo. Perguntei o timing (resposta: **em lote**, só ao clicar "Gerar
+backlog", não automático por item) e confirmei o caso real da coluna Ocorrência (vira S144 acima).
+
+Achado que mudou o escopo pra "reusar, não inventar": a Edge Function `importar-relatorio-pdf`
+(`classificarRelatorioInspecao`, `supabase/functions/_shared/`) **já é exatamente o motor pedido**
+— já calcula gravidade/urgência/tendência/esforço/citação normativa via OpenRouter, já em produção
+desde E01-S105, hoje só usada no import de planilha. Reusei sem tocar no prompt/Edge Function:
+`domain/inspecao-revisao-lote.ts` (novo — `montarTextoParaClassificacao`,
+`parearClassificacaoComItens` por índice com fallback 3/3/3 se a contagem não bater,
+`formatarObservacaoBacklog`), `application/assessment.ts` (`classificarItensParaBacklog`,
+`confirmarGerarBacklog` — reusa `derivarItemParaOsOuBacklog` já existente, agora com GUT real em vez
+do 3/3/3 hardcoded que `AssessmentPage.tsx` ainda usa por fora desta story). `DestinoItemAssessment`
+ganhou `"descarte"`. UI em `InspecoesPage.tsx`: ribbon de resultado inline, checkbox "Selecionar p/
+backlog"/"Descartar" por item, selo "No backlog"/"Descartado", badge Score PCM (GUT)+esforço quando
+já classificado, barra "Gerar backlog (N)" e `RevisaoBacklogModal` (GUT/esforço/citação editáveis
+antes de confirmar — mesmo princípio de revisão humana do import).
+
+**Decisão de escopo registrada na spec:** esforço/citação normativa não viraram coluna própria em
+`pcm.ordens_servico` (afetaria o board de OS inteiro, fora do pedido) — ficam como colunas
+estruturadas no item de inspeção + texto formatado embutido em `observacao` da OS.
+
+**Gates rodados:** `pnpm run typecheck` verde · `pnpm vitest run src/features/pcm` verde
+(449 testes, 0 falha, 4 skip) · `./node_modules/.bin/biome check` verde nos arquivos tocados
+(uso o binário direto — `npx biome` já deu OOM neste sandbox antes) · `pnpm vite build` limpo.
+
+**Migrations aplicadas em produção (2026-08-10):** `0173` (S142) e `0174` (S143), via
+`supabase db push` — Lucas pediu explicitamente ("realize as migrations"). `supabase migration
+list` confirmou remoto sincronizado até `0174` antes e depois do push, sem drift. Edge Function
+`importar-relatorio-pdf` **não foi alterada** — reusada como está, de propósito (S143 não cria
+prompt/IA novo).
+
+**Próximo passo:** Playwright/E2E manual (dev server) — não rodei nesta sessão, é o gate que falta
+pras 5 stories antes de marcar "Done" de verdade (ver `feedback-sempre-rodar-playwright` na
+memória).
+
+**Bloqueios:** nenhum. Nada commitado nem enviado a PR — branch já estava fora de `main`
+(`feat/planejamento-lote-2026-08-04`, com trabalho paralelo de outra sessão em E03/E04 nos mesmos
+docs; só editei código/specs/ROADMAP, não toquei no que essa outra sessão já tinha mudado).
+
+## 2026-08-10 — Épico E03 (Comercial) especificado + mapa de domínio de dados (Claude/Opus 5)
+
+Lucas abriu a especificação do Comercial. Ponto central que ele levantou: **"as decisões estão
+centradas na ideia de domínio dos dados — quais módulos detêm os dados, quais consomem, e quais
+têm tabelas de enriquecimento."** Isso virou o trabalho principal antes de qualquer spec.
+
+**Auditoria do schema real (132 tabelas em 8 schemas povoados)** — três achados que mudaram o
+desenho:
+1. **`ARCHITECTURE.md` §Dados era ficção** — listava `pcm.visitas`, `pcm.backlog_items`,
+   `financeiro.faturas`, `comercial.proposals`… nenhuma existe. Reescrita com o mapa real
+   (dono, classe, matriz dono × consumidor).
+2. **O Fluxo B da E01-S14 já estava implementado** e ninguém sabia: a **E09-S09** criou
+   `pcm.requisicoes_servico`/`orcamentos_servico`/`orcamento_decisoes` + RPC de aceite que gera OS
+   (`0144`). O ROADMAP ainda marcava "⛔ implementação parada". Corrigido.
+3. **Violações de fronteira herdadas**: colunas comerciais em `pcm.clientes` (`tipo`,
+   `status_comercial`); `comercial.leads` escrita só pelo Atendimento;
+   `atendimento.historico_chamado_snapshots` criada pelo PCM; e **satisfação duplicada** —
+   `pcm.satisfacao_respostas` (Auvo) e `pcm.portal_satisfacao` (portal) medem o mesmo conceito
+   sobre a mesma OS, então o dashboard de qualidade reporta número diferente conforme a tela.
+
+**Decidido com o Lucas (ele delegou as duas primeiras, escolheu as demais):**
+- **ADR-0019 — regras de propriedade:** R1 dono = autoridade de escrita do ciclo de vida · R2
+  consumidor lê por view/RPC do dono, nunca `select` cross-schema · R3 enriquecimento mora no
+  schema de quem enriquece. `pcm.clientes` declarada **Shared Kernel** (35 FKs de 4 contextos),
+  fica fisicamente onde está, ganha view `relacionamento.contas` como interface pública.
+- **ADR-0020 — Conta única:** lead, prospecto, ativo e antigo são a **mesma linha** em
+  `pcm.clientes`; o funil vive em `comercial.oportunidades` (FK), nunca como coluna no PCM.
+  `comercial.leads` é absorvida. Revoga `entidade_tipo='comercial_lead'` do ADR-0007.
+  Substituiu minha própria recomendação inicial (que deixava o funil dentro de `pcm.clientes` e
+  violava o R3 que eu tinha acabado de propor).
+- 4 tipos de proposta do ESCOPO-MESTRE (não os 2 do blueprint) · motor de preço por fórmula com
+  piso e desconto máximo · MO lida de `financeiro.custos_funcionario` · levantamento reusa o
+  Assessment do PCM · etapas de funil configuráveis (padrão E01-S84) · saída em PDF + aprovação
+  no portal E09-S09 (DOCX fora) · `comercial.contratos` vira dono e o Financeiro consome ·
+  **Proposta ≠ Orçamento de Serviço** (duas entidades) · passivo de fronteira corrigido dentro
+  do próprio E03.
+
+**Escrito:** `docs/ARCHITECTURE.md` (mapa real + 3 regras), ADR-0019, ADR-0020,
+`specs/E03-S01-fundacao-comercial/product.md` (11 telas, 11 decisões vinculantes, non-goals,
+6 riscos), `.../design.md` (schema `comercial` completo, motor de preço, plano de migração em
+5 passos reversíveis, correção do passivo), ROADMAP com **13 stories E03**, glossário
+(Conta, Oportunidade, Proposta, Orçamento de Serviço, Orçamento anual, Piso, Contrato ×2).
+
+**Verificação em produção (read-only, encerra as dúvidas da S01):** `comercial.leads` = **0 linhas**,
+`pcm.clientes` com `tipo='lead'` = **0**, com `status_comercial='prospecto'` = **0**, vínculos
+`comercial_lead` = **0**, marcação preenchida em **1 de 105** Contas. **Não há dado para migrar** —
+o risco R1 (que eu tinha classificado como o passo mais arriscado do épico, com plano de 5 passos
+reversíveis) **foi eliminado**: a S01 vira criar schema + view, depreciar duas colunas vazias e
+fazer duas telas. Produção: 105 Contas (47 ativas, 51 inativas, **6 com `ativo=false` mas
+`status_comercial='ativo'`** — divergência que morre junto com o drop da coluna deprecada).
+
+**E03-S01 especificada e pronta para implementar** — `spec.md` (10 AC em Given/When/Then, matriz
+permissão × ação, casos de borda, fora de escopo vinculante) e `tasks.md` (13 tasks com gate
+executável, plano de teste unit/pgTAP/Playwright, tabela de riscos). Migrations previstas:
+`0173` (schema+seed), `0174` (trigger de motivo de perda), `0175` (view + depreciação).
+
+**Achado que corrigiu o escopo da S01:** `comercial.leads` está **vazia mas viva** — a Edge Function
+`pcm-ze-agent` está **deployada em produção** e insere nela (`index.ts:543`), além de gravar
+`atendimento.conversas.lead_id` e upsert em `relacionamento.vinculos`. Zero linhas só significa que
+o UAT de WhatsApp da E02-S09 nunca rodou. **Dropar na S01 deixaria falha armada** esperando o
+primeiro lead real — o drop foi movido para a S10, depois da S09. Também descobertas 2 colunas que
+o design não tinha (`lead_tier`, `cluster_nome`, do scoring da E02-S18): são 18 colunas, não 14 —
+já refletidas em `comercial.oportunidades` para a S09 não perder dado na transição.
+
+**Épico E03 especificado por completo (14 stories com `spec.md` + `tasks.md`).** Lucas pediu para
+especificar tudo antes de mandar implementar o Comercial inteiro, incluindo o ajuste no **Guia do
+SO**. `audit:esteira`: 643 docs OK.
+
+| Story | O que é | Observação |
+|---|---|---|
+| S01 | Fundação + Conta única | bloqueia as demais; sem migração de dados |
+| S02 | Funil Kanban + etapas configuráveis | reusa drag-and-drop da E01-S61 |
+| S03 | Precificação + catálogo | **story-ilha — paralela à S01** |
+| S04 | Editor de proposta | 4 tipos, versão append-only, piso travado no banco |
+| S05 | Levantamento pré-venda | reusa Assessment do PCM (`pcm.inspecoes.e_assessment`) |
+| S06 | PDF + aprovação no portal | reusa E09-S09; aceite move a oportunidade sozinho |
+| S07 | Contratos | **arquitetural** — cria plano de faturamento no Financeiro atomicamente |
+| S08 | Dashboard comercial | RPC server-side; degrada honesto sem S04/S07 |
+| S09 | Agente entrega lead no funil | fecha a E02-S09; bloqueia a S10 |
+| S10 | Aposentar `comercial.leads` | trava explícita: só depois da S09 em produção |
+| S11 | Satisfação: portal é fonte única | desliga só o recurso `satisfactions` do sync |
+| S12 | Dono do Orçamento de Serviço | fecha formalmente a E01-S14 |
+| S13 | `historico_chamado_snapshots` | **reclassificada — não era dívida** |
+| S14 | **Guia do SO — módulo Comercial** | teste que quebra o build se tela ficar sem doc |
+
+**Duas das quatro "violações de fronteira" da auditoria não sobreviveram à leitura do código:**
+(1) as tabelas do portal em `pcm.*` — o portal é **canal de escrita**, não dono; (2)
+`historico_chamado_snapshots` — a migration `0136` já justificava a escolha, e o snapshot é
+conversa de WhatsApp (dado do Atendimento). Viraram **dois corolários do ADR-0019**: *canal de
+escrita não é propriedade* e *épico de origem não determina propriedade*. A regra serviu para
+evitar trabalho, não só para gerar.
+
+**Próximo passo:** implementar. Ordem sugerida: **S01** (branch `feat/E03-S01-fundacao-comercial`)
+com a **S03** em paralelo em outra sessão. A **S14 (Guia) é a última** — documenta só o que foi
+entregue de fato. Nada implementado ainda; zero migration escrita (próxima livre: `0173`).
+
+**Duas correções de rumo pedidas pelo Lucas ao revisar** (aplicadas nos artefatos):
+1. **Alíquota configurável, não decisão de spec.** `financeiro.config_impostos` já aceita alíquota
+   fixa ou faixas de RBT12 editáveis na UI (E04-S10) — trocar Anexo III→IV é digitar as faixas,
+   sem migration. Deixou de ser bloqueio: o motor nunca embute alíquota, a tela de proposta mostra
+   a que está aplicada e avisa se as faixas ainda estão no seed padrão. Sobrou uma conferência
+   única (risco R7): no Anexo IV o INSS patronal fica fora do DAS, então precisa saber se os
+   encargos de `financeiro.custos_funcionario` já o incluem — flag `mo_inclui_inss_patronal`.
+2. **A S11 ("tirar o portal de `pcm.*`") estava superdimensionada — descartada.** Olhando as
+   tabelas: `chamados_interacoes`/`os_notas` têm `autor_tipo ∈ ('cliente','interno')`, são dados
+   sobre entidades do PCM com o portal como um dos canais de escrita. Por R1 o PCM é dono legítimo;
+   mover só criaria FK de volta sem ganho. Virou corolário do ADR-0019 (**canal de escrita não é
+   propriedade**) e a S11 foi reapontada para a satisfação.
+3. **Satisfação: desativar a do Auvo, portal é fonte única.** Lucas: *"eles não utilizam essa parte
+   do Auvo, deixe desativado, mantenha o do portal do cliente"*. A S11 desliga **só o recurso
+   `satisfactions`** de `pcm-auvo-support-pull` (a function atende 3 — `questionnaires`/`expenses`
+   seguem ativos; `satisfactions` era 1 GET por OS finalizada, o mais caro); `pcm.satisfacao_respostas`
+   vira espelho inativo com histórico preservado; `pcm.portal_satisfacao` é declarada canônica.
+   **Correção minha:** eu havia afirmado que "o dashboard de qualidade reporta número diferente
+   conforme a tela" — não procede. Verificado no código: `satisfacao_respostas` só alimenta uma
+   contagem no painel de diagnóstico de sync, nenhum dashboard. O problema era menor do que descrevi.
+
+---
+
 ## 2026-08-06 (cont. 2) — Release em produção + PR aberto + doc Auvo desbloqueia E01-S121 (Claude/Sonnet 5)
 
 Lucas pediu pra checar as specs pendentes e seguir o desenvolvimento. Achado: o lote inteiro
