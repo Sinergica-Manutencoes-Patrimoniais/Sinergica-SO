@@ -133,10 +133,7 @@ export function NovaOportunidadeModal({
           <Button variant="ghost" onClick={onFechar}>
             Cancelar
           </Button>
-          <Button
-            onClick={salvar}
-            disabled={salvando || !titulo.trim() || abertas.length === 0}
-          >
+          <Button onClick={salvar} disabled={salvando || !titulo.trim() || abertas.length === 0}>
             {salvando ? "Criando…" : "Criar oportunidade"}
           </Button>
         </div>

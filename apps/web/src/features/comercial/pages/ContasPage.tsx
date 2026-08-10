@@ -4,14 +4,11 @@
  * O PCM mostra quem está em operação; o Comercial precisa ver lead, prospecto, cliente ativo e
  * cliente antigo na mesma lista — é a "visão 360 de todo mundo" que motivou o ADR-0020. */
 
-import { Badge, Button, Card, EmptyState, Input, Select } from "@sinergica/ui";
+import { Badge, Button, Card, EmptyState, Field, Input, Select } from "@sinergica/ui";
 import { Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
-import type {
-  ContaComFunil,
-  FiltroSituacaoConta,
-} from "../application/comercial-gateway";
+import type { ContaComFunil, FiltroSituacaoConta } from "../application/comercial-gateway";
 import { NovaOportunidadeModal } from "../components/NovaOportunidadeModal";
 import type { Etapa } from "../domain/funil";
 import { etapasVisiveis } from "../domain/funil";
@@ -98,36 +95,43 @@ export function ContasPage({
 
       <Card>
         <div className="flex flex-wrap items-end gap-3 p-3">
-          <label className="flex-1 min-w-52 text-xs font-semibold text-ink-2">
-            Buscar
-            <Input
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              placeholder="Nome ou CNPJ"
-            />
-          </label>
-          <label className="text-xs font-semibold text-ink-2">
-            Situação
-            <Select
-              value={situacao}
-              onChange={(e) => setSituacao(e.target.value as FiltroSituacaoConta)}
-            >
-              <option value="todas">Todas</option>
-              <option value="ativas">Ativas</option>
-              <option value="inativas">Inativas</option>
-            </Select>
-          </label>
-          <label className="text-xs font-semibold text-ink-2">
-            Etapa do funil
-            <Select value={etapaId} onChange={(e) => setEtapaId(e.target.value)}>
-              <option value="">Todas</option>
-              {etapasParaFiltro.map((etapa) => (
-                <option key={etapa.id} value={etapa.id}>
-                  {etapa.nome}
-                </option>
-              ))}
-            </Select>
-          </label>
+          <div className="min-w-52 flex-1">
+            <Field label="Buscar">
+              {(props) => (
+                <Input
+                  {...props}
+                  value={texto}
+                  onChange={(e) => setTexto(e.target.value)}
+                  placeholder="Nome ou CNPJ"
+                />
+              )}
+            </Field>
+          </div>
+          <Field label="Situação">
+            {(props) => (
+              <Select
+                {...props}
+                value={situacao}
+                onChange={(e) => setSituacao(e.target.value as FiltroSituacaoConta)}
+              >
+                <option value="todas">Todas</option>
+                <option value="ativas">Ativas</option>
+                <option value="inativas">Inativas</option>
+              </Select>
+            )}
+          </Field>
+          <Field label="Etapa do funil">
+            {(props) => (
+              <Select {...props} value={etapaId} onChange={(e) => setEtapaId(e.target.value)}>
+                <option value="">Todas</option>
+                {etapasParaFiltro.map((etapa) => (
+                  <option key={etapa.id} value={etapa.id}>
+                    {etapa.nome}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
         </div>
       </Card>
 

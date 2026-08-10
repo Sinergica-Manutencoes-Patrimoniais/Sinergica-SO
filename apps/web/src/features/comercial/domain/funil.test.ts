@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  aplicarTransicao,
   type Etapa,
+  aplicarTransicao,
   etapaPadrao,
   etapasVisiveis,
   exigeMotivo,

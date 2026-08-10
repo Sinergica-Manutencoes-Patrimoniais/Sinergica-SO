@@ -4,7 +4,7 @@
  * (`aberta`/`ganha`/`perdida`) é o que segura as métricas: o dashboard agrega por tipo, então
  * renomear "Ganho" para "Fechado" não quebra a taxa de conversão. */
 
-import { Badge, Button, Card, Input, Select } from "@sinergica/ui";
+import { Badge, Button, Card, Field, Input } from "@sinergica/ui";
 import { Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -171,14 +171,18 @@ export function ConfigFunilPage() {
             </ul>
             {temEscrita && (
               <div className="flex items-end gap-2 border-t border-line p-3">
-                <label className="flex-1 text-xs font-semibold text-ink-2">
-                  Nova etapa
-                  <Input
-                    value={novaEtapa}
-                    onChange={(e) => setNovaEtapa(e.target.value)}
-                    placeholder="Nome da etapa"
-                  />
-                </label>
+                <div className="flex-1">
+                  <Field label="Nova etapa">
+                    {(props) => (
+                      <Input
+                        {...props}
+                        value={novaEtapa}
+                        onChange={(e) => setNovaEtapa(e.target.value)}
+                        placeholder="Nome da etapa"
+                      />
+                    )}
+                  </Field>
+                </div>
                 <Button onClick={() => criarEtapa(estado.etapas)} disabled={!novaEtapa.trim()}>
                   <Plus className="size-4" aria-hidden />
                   Adicionar
@@ -219,14 +223,18 @@ export function ConfigFunilPage() {
             </ul>
             {temEscrita && (
               <div className="flex items-end gap-2 border-t border-line p-3">
-                <label className="flex-1 text-xs font-semibold text-ink-2">
-                  Novo motivo
-                  <Input
-                    value={novoMotivo}
-                    onChange={(e) => setNovoMotivo(e.target.value)}
-                    placeholder="Ex.: Prazo de execução"
-                  />
-                </label>
+                <div className="flex-1">
+                  <Field label="Novo motivo">
+                    {(props) => (
+                      <Input
+                        {...props}
+                        value={novoMotivo}
+                        onChange={(e) => setNovoMotivo(e.target.value)}
+                        placeholder="Ex.: Prazo de execução"
+                      />
+                    )}
+                  </Field>
+                </div>
                 <Button onClick={criarMotivo} disabled={!novoMotivo.trim()}>
                   <Plus className="size-4" aria-hidden />
                   Adicionar

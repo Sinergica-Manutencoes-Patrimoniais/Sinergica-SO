@@ -114,9 +114,7 @@ export function aplicarTransicao(
  * já aplicado aqui porque a configuração de etapas nasce nesta story). */
 export function podeDesativarEtapa(etapa: Etapa, etapas: Etapa[]): string | null {
   if (etapa.tipo !== "aberta") return null;
-  const outrasAbertas = etapas.filter(
-    (e) => e.ativo && e.tipo === "aberta" && e.id !== etapa.id,
-  );
+  const outrasAbertas = etapas.filter((e) => e.ativo && e.tipo === "aberta" && e.id !== etapa.id);
   if (outrasAbertas.length === 0) {
     return "Esta é a última etapa aberta do funil — o funil precisa de ao menos uma.";
   }

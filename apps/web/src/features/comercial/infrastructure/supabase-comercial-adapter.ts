@@ -18,11 +18,11 @@ import type {
   MoverOportunidadeCommand,
 } from "../application/comercial-gateway";
 import {
-  aplicarTransicao,
   type Etapa,
-  etapaPadrao,
   type MotivoPerda,
   type Oportunidade,
+  aplicarTransicao,
+  etapaPadrao,
   transicaoInvalida,
   validarTituloOportunidade,
   validarValorEstimado,
@@ -308,9 +308,7 @@ export const supabaseComercialAdapter: ComercialGateway = {
     const etapas = await carregarEtapas();
     // Sem etapa escolhida, nasce na primeira aberta. `etapaPadrao` lança se o funil não tiver
     // nenhuma — mensagem clara em vez de FK violation vinda do banco.
-    const etapa = input.etapaId
-      ? etapas.find((e) => e.id === input.etapaId)
-      : etapaPadrao(etapas);
+    const etapa = input.etapaId ? etapas.find((e) => e.id === input.etapaId) : etapaPadrao(etapas);
     if (!etapa) throw new Error("Etapa informada não existe no funil.");
 
     const problema = transicaoInvalida({ destino: etapa });

@@ -55,14 +55,14 @@ import { AreaClienteAdminPage } from "../features/area-cliente/pages/AreaCliente
 import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
 import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
 import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
+import { PainelComercialCliente } from "../features/comercial/components/PainelComercialCliente";
+import { ConfigFunilPage as ComercialConfigFunilPage } from "../features/comercial/pages/ConfigFunilPage";
+import { ContasPage as ComercialContasPage } from "../features/comercial/pages/ContasPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
 import { IntegracoesPage } from "../features/config/pages/IntegracoesPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
-import { PainelComercialCliente } from "../features/comercial/components/PainelComercialCliente";
-import { ConfigFunilPage as ComercialConfigFunilPage } from "../features/comercial/pages/ConfigFunilPage";
-import { ContasPage as ComercialContasPage } from "../features/comercial/pages/ContasPage";
 import type { FinanceiroView } from "../features/financeiro/mock/FinanceiroMockRouter";
 import { FinanceiroMockRouter } from "../features/financeiro/mock/FinanceiroMockRouter";
 import { CategoriasPage as FinanceiroCategoriasPage } from "../features/financeiro/pages/CategoriasPage";
