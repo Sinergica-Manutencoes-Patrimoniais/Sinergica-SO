@@ -12,7 +12,13 @@ test("Cria levantamento a partir da oportunidade e ele aparece na Visão 360", a
   await expect(page.getByRole("heading", { name: "Contas" })).toBeVisible({ timeout: 15_000 });
 
   // AC-1: o atalho "novo levantamento" só existe a partir de uma oportunidade — cria uma primeiro.
-  await page.getByRole("button", { name: "Oportunidade" }).first().click();
+  // Fixa o nome da Conta antes de clicar — precisa dele pra abrir a Visão 360 da MESMA Conta.
+  const linha = page
+    .getByRole("row")
+    .filter({ has: page.getByRole("button", { name: "Oportunidade" }) })
+    .first();
+  const nomeConta = await linha.locator("td").first().locator("button").innerText();
+  await linha.getByRole("button", { name: "Oportunidade" }).click();
   await expect(page.getByRole("heading", { name: /Nova oportunidade/ })).toBeVisible({
     timeout: 15_000,
   });
@@ -21,6 +27,26 @@ test("Cria levantamento a partir da oportunidade e ele aparece na Visão 360", a
   await expect(page.getByRole("heading", { name: /Nova oportunidade/ })).toBeHidden({
     timeout: 15_000,
   });
+  // Radix Dialog.Overlay ("anim-overlay") some com fade animado - o DOM pode continuar
+  // clicavel um instante depois do heading sumir, engolindo o proximo clique (achado real).
+  await expect(page.locator(".anim-overlay")).toHaveCount(0);
+  await expect(page.getByRole("row").filter({ hasText: nomeConta })).not.toContainText(
+    "Sem oportunidade",
+    { timeout: 15_000 },
+  );
+
+  // "Novo levantamento" e "Propostas" não têm mais botão inline na ContasPage desde a consolidação
+  // da Visão 360 (ADR-0020) — ambos moraram pra dentro da aba Comercial da Visão 360 do PCM. Existem
+  // 2 elementos com texto exato "Comercial" na tela (o tab do MÓDULO no topo + a aba da 360) —
+  // `.last()` pega a aba, que só existe depois de entrar na 360 do cliente.
+  await page.getByRole("button", { name: nomeConta, exact: true }).click();
+  await page.getByRole("button", { name: "Comercial", exact: true }).last().click();
+  // Espera a query de oportunidades da Conta (query key diferente da lista de Contas) resolver
+  // de verdade antes de procurar botoes que so renderizam com oportunidades.length > 0.
+  await expect(page.getByRole("heading", { name: "Oportunidades" })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText("Nenhuma oportunidade nesta conta")).toBeHidden({ timeout: 15_000 });
 
   // AC-1/AC-7: pede o levantamento e ele aparece na lista da Conta, na aba Comercial da Visão 360.
   await page.getByRole("button", { name: "Novo levantamento" }).click();

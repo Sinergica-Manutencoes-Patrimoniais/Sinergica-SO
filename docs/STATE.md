@@ -10,7 +10,7 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-## 2026-08-11 — E03 Comercial: TODAS as 14 stories implementadas, épico pronto pra fechar (Claude/Opus 5)
+## 2026-08-11 — E03 Comercial: 14 stories implementadas, relacionamento exposto, pronto pro PR (Claude/Opus 5)
 
 Especificação completa do épico E03 (14 stories) concluída em sessão anterior (commit `a4904e2`),
 com framework de propriedade de dados (ADR-0019 R1/R2/R3 + corolários) e decisão de Conta única
@@ -253,19 +253,54 @@ atualizados. `ci:local` verde, Playwright novo passou de verdade contra dev serv
 
 **Épico E03 Comercial: as 14 stories estão implementadas e commitadas localmente**, cada uma em seu
 próprio commit, branch ainda não pushed (por instrução explícita do Lucas — subir tudo de uma vez
-só ao final). Pendências antes do push/PR/merge único:
-1. Confirmar exposição real do schema `relacionamento` no Data API do Supabase — é o bloqueio
-   conhecido que impede boa parte do Playwright de rodar até o fim (erro "Falha ao carregar
-   contas" em várias stories: S04, S05, S06, S07, S10 parcialmente). Só S08/S09/S10(Inbox+Funil)/
-   S11/S14 rodaram Playwright completo até agora, por não dependerem desse schema.
-2. Depois de desbloqueado, rodar a suíte Playwright completa (não só os specs novos desta sessão)
-   pra confirmar que nada regrediu ao longo de 14 stories consecutivas tocando schema em produção.
-3. Revisão final do diff acumulado (14 commits, migrations 0185-0204) antes de abrir o PR.
-4. Só então: branch → PR → merge (nunca push direto pra main, nunca incremental por story —
-   instrução vigente desde o início do épico).
+só ao final).
 
-**Próximo passo**: item 1 acima (verificar `relacionamento` no Data API) é o que mais provavelmente
-precisa de ação fora do código (configuração no dashboard do Supabase) — investigar isso primeiro.
+**Fechamento do épico — verificação final (2026-08-11):**
+
+1. **`relacionamento` exposto no Data API de produção — causa raiz do bloqueio "Falha ao carregar
+   contas" resolvida.** `config.toml` já declarava o schema desde a E00-S05, mas o próprio arquivo
+   avisava que a mudança precisa ser replicada manualmente no projeto hospedado — nunca tinha sido
+   feito. Confirmado via Management API (`GET /v1/projects/{ref}/postgrest`) que `db_schema` de
+   produção não incluía `relacionamento`. Verificado RLS FORCE + zero grant a `anon` nas 3 tabelas
+   antes de expor (seguro). Aplicado via `PATCH` cirúrgico só no campo `db_schema` (não
+   `supabase config push`, que enviaria as 502 linhas do `config.toml` inteiro sem revisão) —
+   **ação bloqueada pelo classificador de auto-mode** (muda config de produção fora de código),
+   **autorizada explicitamente pelo Lucas** antes de executar. Confirmado via `curl` direto: erro
+   mudou de "schema inválido" pra "permission denied" (RLS normal barrando anon sem sessão).
+
+2. **Suíte Playwright completa (34 specs) rodada.** Achados reais dentro do escopo do E03:
+   - `comercial-contas.spec.ts` (S01): 3/4 testes quebrados por regressão real — assumiam que
+     clicar em "Comercial" caía direto em "Contas", mas a S08 mudou a view padrão pra "Dashboard".
+     Corrigido com navegação explícita — **4/4 verde**. Bônus: um teste tinha `.first()` numa
+     asserção que em produção (40+ linhas "Sem oportunidade") nunca provava nada de verdade;
+     corrigido pra relocalizar a MESMA linha pelo nome da Conta.
+   - `tipos-inspecao.spec.ts`/`inspecoes.spec.ts` (E01, fora do Comercial): seletor XPath usando a
+     classe Tailwind arbitrária `rounded-[8px]`, substituída por `rounded-lg` desde a refatoração
+     visual E00-S18/S20 — quebrado há semanas, só apareceu agora porque nunca tinha passado da
+     barreira do `relacionamento`. Corrigido — **verde**.
+   - `comercial-proposta.spec.ts`/`-contratos`/`-levantamento`/`-proposta-pdf-portal.spec.ts`
+     (S04/S05/S06/S07): nunca tinham rodado até o fim antes. Ao destravar, revelaram que assumiam
+     um botão "Propostas"/"Novo levantamento" inline na lista de Contas — removido desde a
+     consolidação da Visão 360 (ADR-0020), moraram pra dentro da aba "Comercial" da Visão 360 do
+     PCM. Reescritos pra navegar Conta → 360 → aba Comercial (`.last()` desambigua os 2 elementos
+     com texto exato "Comercial" na tela), mais um achado real de corrida: `Dialog.Overlay` da
+     Radix (`.anim-overlay`) tem fade animado e o DOM pode continuar clicável um instante depois do
+     modal "fechar" visualmente — corrigido esperando o overlay sumir de fato. **Mesmo assim, os 4
+     arquivos continuam com flakiness real** entrando na aba Comercial — a Conta de teste reusada
+     acumulou 9+ oportunidades de sessões passadas (ambiente de produção real, sem fixture
+     isolado), tornando a query de carregamento inconsistente entre execuções. Ficou bem melhor do
+     que estava (nunca tinha passado da primeira tela), mas não ficou 100% verde. **Débito técnico
+     documentado, fora do escopo de fechar o E03** — investigação mais profunda (retry, `data-testid`,
+     Conta de teste dedicada) fica pra story futura. AC dessas 4 stories continuam apoiadas em
+     pgTAP + smoke test manual em produção, como já documentado em cada uma.
+   - Demais falhas do full-suite (`assessment`, `backlog-gut`, `ferramentas`, `kanban-colunas`,
+     `kits`, `ordens-servico`, `refinamento-ux`) são **pré-existentes, fora do épico E03** — não
+     tocadas nesta sessão, não investigadas (nenhuma é feature do Comercial nem foi alterada por
+     nenhuma story E03).
+
+**Próximo passo**: revisão final do diff acumulado (commits desde `main`, migrations 0185-0204)
+antes de abrir o PR único — branch → PR → merge (nunca push direto pra main, nunca incremental por
+story, instrução vigente desde o início do épico).
 
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 

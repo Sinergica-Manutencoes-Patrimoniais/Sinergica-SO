@@ -13,17 +13,46 @@ test("Proposta aceita gera contrato, ativa (cria plano no Financeiro) e encerra"
   await page.getByTitle("Contas", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Contas" })).toBeVisible({ timeout: 15_000 });
 
-  await page.getByRole("button", { name: "Oportunidade" }).first().click();
+  const titulo = `[TESTE E2E] Oportunidade contrato ${Date.now()}`;
+  const linha = page
+    .getByRole("row")
+    .filter({ has: page.getByRole("button", { name: "Oportunidade" }) })
+    .first();
+  const nomeConta = await linha.locator("td").first().locator("button").innerText();
+  await linha.getByRole("button", { name: "Oportunidade" }).click();
   await expect(page.getByRole("heading", { name: /Nova oportunidade/ })).toBeVisible({
     timeout: 15_000,
   });
-  await page.getByLabel("Título").fill(`[TESTE E2E] Oportunidade contrato ${Date.now()}`);
+  await page.getByLabel("Título").fill(titulo);
   await page.getByRole("button", { name: "Criar oportunidade" }).click();
   await expect(page.getByRole("heading", { name: /Nova oportunidade/ })).toBeHidden({
     timeout: 15_000,
   });
+  // Radix Dialog.Overlay ("anim-overlay") some com fade animado - o DOM pode continuar
+  // clicavel um instante depois do heading sumir, engolindo o proximo clique (achado real).
+  await expect(page.locator(".anim-overlay")).toHaveCount(0);
+  await expect(page.getByRole("row").filter({ hasText: nomeConta })).not.toContainText(
+    "Sem oportunidade",
+    { timeout: 15_000 },
+  );
 
-  await page.getByRole("button", { name: "Propostas" }).first().click();
+  // ContasPage não tem mais botão inline "Propostas" por linha desde a consolidação da Visão 360
+  // (ADR-0020) — Propostas mora dentro da aba Comercial da Visão 360 do PCM (mesma Conta). Existem
+  // 2 elementos com texto exato "Comercial" na tela (o tab do MÓDULO no topo + a aba da 360) —
+  // `.last()` pega a aba, que só existe depois de entrar na 360 do cliente.
+  await page.getByRole("button", { name: nomeConta, exact: true }).click();
+  await page.getByRole("button", { name: "Comercial", exact: true }).last().click();
+  // Espera a query de oportunidades da Conta (query key diferente da lista de Contas) resolver
+  // de verdade antes de procurar botoes que so renderizam com oportunidades.length > 0.
+  await expect(page.getByRole("heading", { name: "Oportunidades" })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText("Nenhuma oportunidade nesta conta")).toBeHidden({ timeout: 15_000 });
+  await page
+    .getByRole("listitem")
+    .filter({ hasText: titulo })
+    .getByRole("button", { name: "Propostas" })
+    .click();
   await page.getByLabel("Tipo da proposta").selectOption("residente");
   await page.getByRole("button", { name: "Nova proposta" }).click();
   await expect(page.getByText(/Rascunho/).first()).toBeVisible({ timeout: 15_000 });

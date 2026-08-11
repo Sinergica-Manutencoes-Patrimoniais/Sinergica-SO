@@ -9,6 +9,8 @@ test("Lista de Contas mostra contas inativas — o que a Lista de Clientes do PC
 }) => {
   await page.goto("/");
   await page.getByText("Comercial", { exact: true }).first().click();
+  // E03-S08: Dashboard virou a view padrão do módulo (era Contas na S01) — navegar explícito.
+  await page.getByTitle("Contas", { exact: true }).click();
 
   await expect(page.getByRole("heading", { name: "Contas" })).toBeVisible({ timeout: 15_000 });
 
@@ -53,10 +55,21 @@ test("Cria oportunidade e ela aparece na aba Comercial da Visão 360", async ({ 
 
   await page.goto("/");
   await page.getByText("Comercial", { exact: true }).first().click();
+  // E03-S08: Dashboard virou a view padrão do módulo (era Contas na S01) — navegar explícito.
+  await page.getByTitle("Contas", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Contas" })).toBeVisible({ timeout: 15_000 });
 
-  // AC-4: criar a partir da linha da Conta.
-  await page.getByRole("button", { name: "Oportunidade" }).first().click();
+  // AC-4: criar a partir da linha da Conta. Fixa o nome da Conta antes de clicar — em produção há
+  // dezenas de Contas sem oportunidade, então reusar ".first()" depois de criar pegaria uma linha
+  // qualquer, não necessariamente a que acabou de ganhar oportunidade (achado real: o `.first()`
+  // antigo nunca provava o que a asserção dizia provar). Relocaliza a MESMA linha pelo nome da
+  // Conta pra confirmar que ela especificamente deixou de mostrar "Sem oportunidade".
+  const linhaSemOportunidade = page
+    .getByRole("row")
+    .filter({ hasText: "Sem oportunidade" })
+    .first();
+  const nomeConta = await linhaSemOportunidade.locator("td").first().locator("button").innerText();
+  await linhaSemOportunidade.getByRole("button", { name: "Oportunidade" }).click();
   await expect(page.getByRole("heading", { name: /Nova oportunidade/ })).toBeVisible({
     timeout: 15_000,
   });
@@ -68,7 +81,8 @@ test("Cria oportunidade e ela aparece na aba Comercial da Visão 360", async ({ 
   await expect(page.getByRole("heading", { name: /Nova oportunidade/ })).toBeHidden({
     timeout: 15_000,
   });
-  await expect(page.getByText("Sem oportunidade").first()).toBeHidden({ timeout: 15_000 });
+  const linhaAtualizada = page.getByRole("row").filter({ hasText: nomeConta });
+  await expect(linhaAtualizada.getByText("Sem oportunidade")).toBeHidden({ timeout: 15_000 });
 });
 
 test("Busca com debounce não deixa resultado antigo sobrescrever o filtro novo", async ({
@@ -76,6 +90,8 @@ test("Busca com debounce não deixa resultado antigo sobrescrever o filtro novo"
 }) => {
   await page.goto("/");
   await page.getByText("Comercial", { exact: true }).first().click();
+  // E03-S08: Dashboard virou a view padrão do módulo (era Contas na S01) — navegar explícito.
+  await page.getByTitle("Contas", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Contas" })).toBeVisible({ timeout: 15_000 });
 
   // Digitação rápida: só a última busca vale. Antes do TanStack + debounce, uma resposta lenta

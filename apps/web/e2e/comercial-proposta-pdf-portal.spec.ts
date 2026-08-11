@@ -13,7 +13,12 @@ test("Aprova proposta, gera PDF e envia — status vira 'enviada' (publica no po
   await page.getByTitle("Contas", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Contas" })).toBeVisible({ timeout: 15_000 });
 
-  await page.getByRole("button", { name: "Oportunidade" }).first().click();
+  const linha = page
+    .getByRole("row")
+    .filter({ has: page.getByRole("button", { name: "Oportunidade" }) })
+    .first();
+  const nomeConta = await linha.locator("td").first().locator("button").innerText();
+  await linha.getByRole("button", { name: "Oportunidade" }).click();
   await expect(page.getByRole("heading", { name: /Nova oportunidade/ })).toBeVisible({
     timeout: 15_000,
   });
@@ -22,7 +27,25 @@ test("Aprova proposta, gera PDF e envia — status vira 'enviada' (publica no po
   await expect(page.getByRole("heading", { name: /Nova oportunidade/ })).toBeHidden({
     timeout: 15_000,
   });
+  // Radix Dialog.Overlay ("anim-overlay") some com fade animado - o DOM pode continuar
+  // clicavel um instante depois do heading sumir, engolindo o proximo clique (achado real).
+  await expect(page.locator(".anim-overlay")).toHaveCount(0);
+  await expect(page.getByRole("row").filter({ hasText: nomeConta })).not.toContainText(
+    "Sem oportunidade",
+    { timeout: 15_000 },
+  );
 
+  // Propostas não tem mais botão inline na ContasPage desde a consolidação da Visão 360
+  // (ADR-0020) — mora dentro da aba Comercial da Visão 360 do PCM. `.last()` desambigua entre o
+  // tab do MÓDULO no topo e a aba da 360 (ambos com texto exato "Comercial").
+  await page.getByRole("button", { name: nomeConta, exact: true }).click();
+  await page.getByRole("button", { name: "Comercial", exact: true }).last().click();
+  // Espera a query de oportunidades da Conta (query key diferente da lista de Contas) resolver
+  // de verdade antes de procurar botoes que so renderizam com oportunidades.length > 0.
+  await expect(page.getByRole("heading", { name: "Oportunidades" })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText("Nenhuma oportunidade nesta conta")).toBeHidden({ timeout: 15_000 });
   await page.getByRole("button", { name: "Propostas" }).first().click();
   await page.getByRole("button", { name: "Nova proposta" }).click();
   await expect(page.getByText(/Rascunho/).first()).toBeVisible({ timeout: 15_000 });
