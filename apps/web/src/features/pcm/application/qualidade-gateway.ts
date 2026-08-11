@@ -93,6 +93,24 @@ export interface InspecaoItem {
   destinoResponsavel: ResponsavelDestino | null;
   auvoQuestaoChave: string | null;
   auvoImportacaoProvisoria?: boolean;
+  /** E01-S143: GUT/esforço/embasamento calculados pela IA ao enviar o item pra backlog (mesmo
+   * motor de classificação da E01-S105) — `null` até a IA rodar (ou pro item nunca ir a backlog). */
+  gravidade: number | null;
+  urgencia: number | null;
+  tendencia: number | null;
+  esforcoHoras: number | null;
+  justificativaEsforco: string | null;
+  citacaoNormativa: string | null;
+}
+
+/** E01-S143: GUT/esforço/embasamento revisados (editáveis) antes de confirmar "Gerar backlog". */
+export interface GutEsforcoItem {
+  gravidade: number;
+  urgencia: number;
+  tendencia: number;
+  esforcoHoras: number;
+  justificativaEsforco: string | null;
+  citacaoNormativa: string | null;
 }
 
 export interface CriarInspecaoInput {
@@ -324,4 +342,12 @@ export interface QualidadeGateway {
   ): Promise<void>;
   /** AC-4: assessment mais recente do cliente (`e_assessment=true`), ou `null` se nunca houve um. */
   obterAssessmentVigente(clientId: string): Promise<InspecaoResumo | null>;
+  /** E01-S143 AC-1: troca só o `resultado` do item (ribbon rápido no card), sem abrir o form completo. */
+  atualizarResultadoItem(
+    itemId: string,
+    resultado: ItemResultado,
+    updatedBy: string,
+  ): Promise<InspecaoItem>;
+  /** E01-S143 AC-5: persiste o GUT/esforço/embasamento revisado antes de gerar o backlog. */
+  atualizarGutEsforcoItem(itemId: string, gutEsforco: GutEsforcoItem): Promise<InspecaoItem>;
 }

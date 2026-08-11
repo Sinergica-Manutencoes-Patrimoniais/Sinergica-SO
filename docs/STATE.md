@@ -10,6 +10,37 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
+
+Implementação local concluída em `specs/E01-S145-fluidez-performance-chamados/` (tier
+arquitetural, sem `domain.md`). ADR-0021 e migration aditiva `0178` criam o read model
+`pcm.operacao_itens` (`security_invoker`), cinco índices parciais, KPIs globais sem status e RPC de
+status em lote. A migration preserva todos os contratos antigos; `0178` foi usada porque `0175`–
+`0177` já pertenciam ao trabalho Comercial paralelo.
+
+Frontend: `@tanstack/react-query`, cursor estável, `AbortSignal` no Supabase, busca com debounce de
+250 ms, Ativos como padrão, lista/backlog 50, Kanban 30 por coluna, Agenda 200 por intervalo,
+detalhes/catálogos lazy, skeleton, dados anteriores em refetch, retry e status otimista com rollback
+inclusive em falha parcial. O Calendário agora cria um índice por dia em O(N), em vez de 42
+varreduras. Marcas: `chamados:navigation-start`, `chamados:data-ready` e
+`chamados:content-painted`; E2E coleta requests, payload e long tasks.
+
+Evidências: 883 testes web verdes (9 skips de integração preexistentes), typecheck/build/arquitetura/
+lint verdes; pgTAP E01-S145 com 17 assertions verdes, incluindo RLS, união, cursor, lote, Index Scan
+e `<100 ms`; audit:esteira 649 docs e eval:spec verdes. Bundle: 700,19 KB gzip contra baseline
+680,22 KB, crescimento **19,97 KB** (budget da story atendido; redução total continua E00-S21).
+Graphify atualizado.
+
+Pendências/bloqueios externos: E2E não executado porque o Supabase conectado ainda não possui a
+migration `0178`; `ci:local` para no Squawk da migration paralela `0174` (3 `smallint` + constraint
+sem `NOT VALID`); a suíte pgTAP global tem uma falha paralela em
+`comercial_fundacao_rls.test.sql` (`created_by` nulo), enquanto os outros 58 arquivos passam. Não
+houve commit por task porque o worktree já continha mudanças paralelas nos mesmos arquivos.
+
+Próximo passo seguro: revisar/aplicar `0178` no ambiente antes do frontend e então executar
+`chamados.spec.ts`, `backlog-gut.spec.ts` e `ordens-servico.spec.ts`; capturar p95/INP/payload no
+ambiente-alvo antes da promoção.
+
 ## 2026-08-10 — E01-S140..S144: 5 melhorias no PCM (Agenda timeline, Inspeção→backlog com IA, ocultar OS de ponto, fix import Excel) (Claude/Sonnet 5)
 
 Lucas pediu 3 melhorias pontuais no PCM (prints da Agenda do Técnico e do Relatório de Inspeção).

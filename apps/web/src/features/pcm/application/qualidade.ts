@@ -14,6 +14,7 @@ import type {
   EditarInspecaoInput,
   EditarInspecaoItemInput,
   EditarTipoInspecaoInput,
+  InspecaoItem,
   QualidadeGateway,
 } from "./qualidade-gateway";
 
@@ -124,6 +125,25 @@ export async function editarItemInspecao(
 export async function excluirItemInspecao(gateway: QualidadeGateway, id: string) {
   if (!id) throw new Error("Item é obrigatório.");
   return gateway.excluirItemInspecao(id);
+}
+
+/** E01-S143 AC-1: ribbon rápido de resultado no card, sem abrir o form completo de edição. */
+export async function atualizarResultadoItem(
+  gateway: QualidadeGateway,
+  itemId: string,
+  resultado: InspecaoItem["resultado"],
+  updatedBy: string,
+) {
+  if (!itemId) throw new Error("Item é obrigatório.");
+  return gateway.atualizarResultadoItem(itemId, resultado, updatedBy);
+}
+
+/** E01-S143 AC-2: descarte não cria entidade nenhuma — só marca o item, reusa a trava de
+ * `marcarItemDerivado` (bloqueia segunda derivação, mesma regra de E01-S90). Sem responsável real
+ * (nada é executado), "sinergica" é só o valor exigido pela assinatura existente. */
+export async function descartarItem(gateway: QualidadeGateway, itemId: string) {
+  if (!itemId) throw new Error("Item é obrigatório.");
+  return gateway.marcarItemDerivado(itemId, "descarte", "sinergica");
 }
 
 export async function criarLaudoSpda(gateway: QualidadeGateway, input: CriarLaudoSpdaInput) {

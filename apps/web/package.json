@@ -22,6 +22,7 @@
     "@sinergica/ui": "workspace:*",
     "@supabase/supabase-js": "^2.45.0",
     "@tailwindcss/vite": "^4.3.1",
+    "@tanstack/react-query": "^5.90.21",
     "@xyflow/react": "^12.11.2",
     "lucide-react": "^1.21.0",
     "pdf-lib": "^1.17.1",

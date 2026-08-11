@@ -9,10 +9,12 @@ import {
   deveAlterarStatusPorDrop,
   ehCardChamadoAberto,
   ehItemBacklog,
+  ehOsRegistroVisita,
   filtrarBacklogGut,
   filtrarOrdens,
   formatarDiaIso,
   gerarDiasDoMes,
+  indexarOrdensPorDia,
   ordenarBacklogGut,
   ordensNoDia,
   prioridadeColor,
@@ -113,6 +115,29 @@ describe("calcularMetricasOperacao", () => {
     // backlog: id 1. sem técnico (aberta): id 1 e 2 (finalizado não conta). erro sync: id 3.
     expect(m).toEqual({ backlog: 1, semTecnico: 2, syncAuvoErro: 1 });
   });
+
+  it("E01-S142: ignora OS de registro de ponto (INICIO/FIM VISITA)", () => {
+    const comum = { scorePcm: 27, createdAt: "2026-07-04T10:00:00Z" };
+    const m = calcularMetricasOperacao([
+      { ...base, ...comum, id: "1", status: "backlog", titulo: "INICIO VISITA" },
+      { ...base, ...comum, id: "2", status: "backlog", titulo: "Trocar disjuntor" },
+    ]);
+    expect(m).toEqual({ backlog: 1, semTecnico: 1, syncAuvoErro: 0 });
+  });
+});
+
+describe("ehOsRegistroVisita — E01-S142", () => {
+  it("reconhece INICIO VISITA / FIM VISITA, tolerante a caixa e espaço", () => {
+    expect(ehOsRegistroVisita("INICIO VISITA")).toBe(true);
+    expect(ehOsRegistroVisita("Fim Visita")).toBe(true);
+    expect(ehOsRegistroVisita("  inicio visita  ")).toBe(true);
+  });
+
+  it("não reconhece títulos parecidos mas diferentes", () => {
+    expect(ehOsRegistroVisita("Inicio Visita Extra")).toBe(false);
+    expect(ehOsRegistroVisita("Visita Inicio")).toBe(false);
+    expect(ehOsRegistroVisita("Trocar disjuntor")).toBe(false);
+  });
 });
 
 describe("chamadoAbertoParaCard", () => {
@@ -148,9 +173,55 @@ describe("ordens-servico", () => {
 
   it("backlog exclui status históricos", () => {
     const ordens = [
-      { id: "a", status: "solicitacao", scorePcm: 20, createdAt: "2026-07-03T10:00:00Z" },
-      { id: "b", status: "finalizado", scorePcm: 125, createdAt: "2026-07-04T10:00:00Z" },
-      { id: "c", status: "cancelado", scorePcm: 90, createdAt: "2026-07-04T09:00:00Z" },
+      {
+        id: "a",
+        titulo: "Teste",
+        status: "solicitacao",
+        scorePcm: 20,
+        createdAt: "2026-07-03T10:00:00Z",
+      },
+      {
+        id: "b",
+        titulo: "Teste",
+        status: "finalizado",
+        scorePcm: 125,
+        createdAt: "2026-07-04T10:00:00Z",
+      },
+      {
+        id: "c",
+        titulo: "Teste",
+        status: "cancelado",
+        scorePcm: 90,
+        createdAt: "2026-07-04T09:00:00Z",
+      },
+    ];
+
+    expect(filtrarBacklogGut(ordens).map((ordem) => ordem.id)).toEqual(["a"]);
+  });
+
+  it("E01-S142: backlog exclui registro de ponto (INICIO/FIM VISITA)", () => {
+    const ordens = [
+      {
+        id: "a",
+        titulo: "Trocar disjuntor",
+        status: "solicitacao",
+        scorePcm: 20,
+        createdAt: "2026-07-03T10:00:00Z",
+      },
+      {
+        id: "b",
+        titulo: "INICIO VISITA",
+        status: "solicitacao",
+        scorePcm: 125,
+        createdAt: "2026-07-04T10:00:00Z",
+      },
+      {
+        id: "c",
+        titulo: " fim visita ",
+        status: "solicitacao",
+        scorePcm: 90,
+        createdAt: "2026-07-04T09:00:00Z",
+      },
     ];
 
     expect(filtrarBacklogGut(ordens).map((ordem) => ordem.id)).toEqual(["a"]);
@@ -180,6 +251,30 @@ describe("ordens-servico", () => {
     });
   });
 
+  it("E01-S142: calcularKpisOrdens ignora registro de ponto", () => {
+    expect(
+      calcularKpisOrdens([
+        { ...base, id: "1", status: "solicitacao", scorePcm: 27, createdAt: "2026-07-04" },
+        {
+          ...base,
+          id: "2",
+          titulo: "FIM VISITA",
+          status: "planejamento",
+          prioridade: "critica",
+          scorePcm: 125,
+          createdAt: "2026-07-04",
+        },
+      ]),
+    ).toEqual({
+      total: 1,
+      abertas: 1,
+      emPlanejamento: 0,
+      emExecucao: 0,
+      finalizadas: 0,
+      criticas: 0,
+    });
+  });
+
   it("agrupa por técnico — 'Sem técnico' sempre por último", () => {
     const grupos = agruparPorTecnico([
       { ...base, id: "1", tecnicoFuncionarioId: "tec-2", tecnicoNome: "Weslei" },
@@ -202,6 +297,16 @@ describe("ordens-servico", () => {
     ] as never;
 
     expect(ordensNoDia(ordens, "2026-06-25").map((o: { id: string }) => o.id)).toEqual(["1", "2"]);
+  });
+
+  it("E01-S145: indexa calendário em uma passagem", () => {
+    const indice = indexarOrdensPorDia([
+      { ...base, id: "1", dataAgendada: "2026-06-25T08:00:00" },
+      { ...base, id: "2", dataAgendada: "2026-06-25T18:30:00" },
+      { ...base, id: "3", dataAgendada: null },
+    ] as never);
+    expect(indice.get("2026-06-25")?.map((ordem) => ordem.id)).toEqual(["1", "2"]);
+    expect(indice.size).toBe(1);
   });
 
   it("E01-S42: filtrarOrdens — cada filtro isolado", () => {
@@ -277,6 +382,45 @@ describe("ordens-servico", () => {
         tecnicoFuncionarioId: "tec-1",
       }).map((o: { id: string }) => o.id),
     ).toEqual(["1"]);
+  });
+
+  it("E01-S142: filtrarOrdens exclui registro de ponto (INICIO/FIM VISITA) mesmo sem outros filtros", () => {
+    const ordens = [
+      {
+        ...base,
+        id: "1",
+        titulo: "INICIO VISITA",
+        status: "solicitacao",
+        createdAt: "2026-07-04T10:00:00Z",
+      },
+      {
+        ...base,
+        id: "2",
+        titulo: "Trocar disjuntor",
+        status: "solicitacao",
+        createdAt: "2026-07-04T10:00:00Z",
+      },
+    ] as never;
+
+    expect(filtrarOrdens(ordens, FILTROS_ORDENS_VAZIO).map((o: { id: string }) => o.id)).toEqual([
+      "2",
+    ]);
+  });
+
+  it("E01-S145: pseudofiltro Ativos preserva histórico fora do resultado padrão", () => {
+    const ordens = [
+      { ...base, id: "1", status: "solicitacao", createdAt: "2026-07-04T10:00:00Z" },
+      { ...base, id: "2", status: "finalizado", createdAt: "2026-07-04T10:00:00Z" },
+      { ...base, id: "3", status: "cancelado", createdAt: "2026-07-04T10:00:00Z" },
+    ] as never;
+    expect(
+      filtrarOrdens(ordens, { ...FILTROS_ORDENS_VAZIO, status: "ativos" }).map((ordem) => ordem.id),
+    ).toEqual(["1"]);
+    expect(
+      filtrarOrdens(ordens, { ...FILTROS_ORDENS_VAZIO, status: "finalizado" }).map(
+        (ordem) => ordem.id,
+      ),
+    ).toEqual(["2"]);
   });
 
   it("gerarDiasDoMes — grade de 42 dias (6 semanas) começando no domingo", () => {

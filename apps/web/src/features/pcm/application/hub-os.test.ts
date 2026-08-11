@@ -66,6 +66,33 @@ describe("hub-os", () => {
     expect((await listarBacklogGut(gateway)).map((item) => item.id)).toEqual(["alta", "baixa"]);
   });
 
+  it("E01-S142: backlog GUTD exclui registro de ponto (INICIO/FIM VISITA)", async () => {
+    const gateway: HubOsGateway = {
+      listarOrdensServico: vi.fn(async () => [
+        ordem({ id: "trabalho", gravidade: 3, urgencia: 3, tendencia: 3 }),
+        ordem({
+          id: "ponto-inicio",
+          titulo: "INICIO VISITA",
+          gravidade: 5,
+          urgencia: 5,
+          tendencia: 5,
+        }),
+        ordem({
+          id: "ponto-fim",
+          titulo: "  Fim Visita ",
+          gravidade: 5,
+          urgencia: 5,
+          tendencia: 5,
+        }),
+      ]),
+      contarKpis: vi.fn(async () => KPIS_ZERADOS),
+      alterarStatus: vi.fn(),
+      obterPesosGutd,
+    };
+
+    expect((await listarBacklogGut(gateway)).map((item) => item.id)).toEqual(["trabalho"]);
+  });
+
   it("planejar OS altera status para planejamento", async () => {
     const gateway: HubOsGateway = {
       listarOrdensServico: vi.fn(),

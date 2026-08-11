@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   aplicarTemplate,
+  atualizarResultadoItem,
   criarInspecao,
   criarItemInspecao,
   criarLaudoSpda,
   criarTemplate,
   criarTipoInspecao,
+  descartarItem,
   editarInspecao,
   editarItemInspecao,
   editarTipoInspecao,
@@ -103,6 +105,12 @@ function gatewayFake(): QualidadeGateway {
       destino: null,
       destinoResponsavel: null,
       auvoQuestaoChave: input.auvoQuestaoChave ?? null,
+      gravidade: null,
+      urgencia: null,
+      tendencia: null,
+      esforcoHoras: null,
+      justificativaEsforco: null,
+      citacaoNormativa: null,
     })),
     editarItemInspecao: vi.fn(async (input) => ({
       id: input.id,
@@ -129,6 +137,12 @@ function gatewayFake(): QualidadeGateway {
       destino: null,
       destinoResponsavel: null,
       auvoQuestaoChave: input.auvoQuestaoChave ?? null,
+      gravidade: null,
+      urgencia: null,
+      tendencia: null,
+      esforcoHoras: null,
+      justificativaEsforco: null,
+      citacaoNormativa: null,
     })),
     excluirItemInspecao: vi.fn(async () => undefined),
     processarRelatorioInspecao: vi.fn(async () => []),
@@ -214,6 +228,8 @@ function gatewayFake(): QualidadeGateway {
     importarQuestionarioAuvo: vi.fn(async () => []),
     marcarItemDerivado: vi.fn(async () => undefined),
     obterAssessmentVigente: vi.fn(async () => null),
+    atualizarResultadoItem: vi.fn(),
+    atualizarGutEsforcoItem: vi.fn(),
   };
 }
 
@@ -394,5 +410,21 @@ describe("qualidade", () => {
     await expect(aplicarTemplate(gateway, "ins-1", "", "user-1")).rejects.toThrow(
       "Template é obrigatório.",
     );
+  });
+
+  it("E01-S143: atualizarResultadoItem exige item e repassa ao gateway", async () => {
+    const gateway = gatewayFake();
+    await expect(atualizarResultadoItem(gateway, "", "conforme", "user-1")).rejects.toThrow(
+      "Item é obrigatório.",
+    );
+    await atualizarResultadoItem(gateway, "item-1", "nao_conforme", "user-1");
+    expect(gateway.atualizarResultadoItem).toHaveBeenCalledWith("item-1", "nao_conforme", "user-1");
+  });
+
+  it("E01-S143: descartarItem marca destino='descarte' sem responsável real", async () => {
+    const gateway = gatewayFake();
+    await expect(descartarItem(gateway, "")).rejects.toThrow("Item é obrigatório.");
+    await descartarItem(gateway, "item-1");
+    expect(gateway.marcarItemDerivado).toHaveBeenCalledWith("item-1", "descarte", "sinergica");
   });
 });

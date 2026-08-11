@@ -146,7 +146,7 @@ export function AssessmentPage() {
         responsavel,
         user.id,
       );
-    } else if (campos) {
+    } else if (campos && (destino === "backlog" || destino === "os")) {
       await derivarItemParaOsOuBacklog(
         supabaseQualidadeAdapter,
         supabaseOrdemServicoAdapter,

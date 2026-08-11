@@ -28,11 +28,19 @@ import {
 } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { derivarItemParaChamado } from "../application/assessment";
+import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
+import {
+  classificarItensParaBacklog,
+  confirmarGerarBacklog,
+  derivarItemParaChamado,
+} from "../application/assessment";
+import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import {
   aplicarTemplate,
+  atualizarResultadoItem,
   criarInspecao,
   criarItemInspecao,
+  descartarItem,
   editarInspecao,
   editarItemInspecao,
   excluirItemInspecao,
@@ -50,6 +58,7 @@ import {
   parsearPlanilhaLevantamento,
   prepararRevisaoImportacaoExcel,
 } from "../domain/inspecao-excel";
+import type { ItemClassificado } from "../domain/inspecao-revisao-lote";
 import {
   GRAUS_RISCO,
   GRAU_RISCO_LABEL,
@@ -66,7 +75,10 @@ import {
   rotuloSistema,
   statusColor,
 } from "../domain/inspecoes-laudos";
+import { PRIORIDADE_LABEL, prioridadeColor } from "../domain/ordens-servico";
+import { calcularScoreGut, classificarPrioridade } from "../domain/priorizacao-backlog";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
+import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 
 type Estado =
@@ -128,6 +140,15 @@ export function InspecoesPage() {
   const [filtroSistema, setFiltroSistema] = useState<FiltroSistema>("todos");
   const [modalAtivo, setModalAtivo] = useState<ModalAtivo>(null);
   const [itemEditando, setItemEditando] = useState<InspecaoItem | null>(null);
+  // E01-S143: triagem — seleção local (nada gravado até "Gerar backlog"), revisão editável da IA.
+  const [selecionadosBacklog, setSelecionadosBacklog] = useState<Set<string>>(new Set());
+  const [dadosOs, setDadosOs] = useState<DadosAberturaOs | null>(null);
+  const [classificandoBacklog, setClassificandoBacklog] = useState(false);
+  const [revisaoBacklog, setRevisaoBacklog] = useState<{
+    itens: ItemClassificado[];
+    correlacionou: boolean;
+  } | null>(null);
+  const [confirmandoBacklog, setConfirmandoBacklog] = useState(false);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -176,6 +197,7 @@ export function InspecoesPage() {
 
   useEffect(() => {
     if (selecionadaId) void carregarItens(selecionadaId);
+    setSelecionadosBacklog(new Set());
   }, [selecionadaId, carregarItens]);
 
   const inspecoesFiltradas = useMemo(() => {
@@ -269,6 +291,152 @@ export function InspecoesPage() {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir item.");
     } finally {
       setSalvando(false);
+    }
+  }
+
+  // E01-S141 AC-2: mesma função usada na importação em lote, disparada por item individual.
+  async function handleAbrirChamado(item: InspecaoItem) {
+    if (!user || !inspecaoSelecionada) return;
+    if (!confirm("Abrir um Chamado a partir deste item?")) return;
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      await derivarItemParaChamado(
+        supabaseQualidadeAdapter,
+        supabaseChamadosAdapter,
+        item,
+        inspecaoSelecionada.clientId,
+        "sinergica",
+        user.id,
+      );
+      setItens((atuais) =>
+        atuais.map((atual) => (atual.id === item.id ? { ...atual, destino: "chamado" } : atual)),
+      );
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível abrir o Chamado.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  // E01-S143 AC-1: ribbon rápido de resultado, sem abrir o form completo.
+  async function handleMudarResultado(item: InspecaoItem, resultado: ItemResultado) {
+    if (!user) return;
+    setErroAcao(null);
+    try {
+      const atualizado = await atualizarResultadoItem(
+        supabaseQualidadeAdapter,
+        item.id,
+        resultado,
+        user.id,
+      );
+      setItens((atuais) => atuais.map((atual) => (atual.id === item.id ? atualizado : atual)));
+    } catch (error) {
+      setErroAcao(
+        error instanceof Error ? error.message : "Não foi possível atualizar o resultado.",
+      );
+    }
+  }
+
+  // E01-S143 AC-2: descarte é direto — sem IA, sem passar pela revisão em lote.
+  async function handleDescartar(item: InspecaoItem) {
+    if (!confirm("Descartar este item? Ele não vai para o backlog.")) return;
+    setErroAcao(null);
+    try {
+      await descartarItem(supabaseQualidadeAdapter, item.id);
+      setItens((atuais) =>
+        atuais.map((atual) => (atual.id === item.id ? { ...atual, destino: "descarte" } : atual)),
+      );
+      setSelecionadosBacklog((atuais) => {
+        const proximo = new Set(atuais);
+        proximo.delete(item.id);
+        return proximo;
+      });
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível descartar o item.");
+    }
+  }
+
+  function handleToggleSelecaoBacklog(itemId: string) {
+    setSelecionadosBacklog((atuais) => {
+      const proximo = new Set(atuais);
+      if (proximo.has(itemId)) proximo.delete(itemId);
+      else proximo.add(itemId);
+      return proximo;
+    });
+  }
+
+  // E01-S143 AC-4: monta o lote selecionado, chama a IA (mesmo endpoint do import) e abre a revisão.
+  async function handleAbrirRevisaoBacklog() {
+    const selecionados = itens.filter((item) => selecionadosBacklog.has(item.id));
+    if (selecionados.length === 0) return;
+    setClassificandoBacklog(true);
+    setErroAcao(null);
+    try {
+      if (!dadosOs) setDadosOs(await carregarDadosAberturaOs(supabaseOrdemServicoAdapter));
+      const resultado = await classificarItensParaBacklog(
+        supabaseQualidadeAdapter,
+        selecionados.map((item) => ({
+          id: item.id,
+          localizacao: item.localizacao,
+          descricao: item.descricao,
+        })),
+      );
+      setRevisaoBacklog(resultado);
+    } catch (error) {
+      setErroAcao(
+        error instanceof Error ? error.message : "Não foi possível classificar os itens.",
+      );
+    } finally {
+      setClassificandoBacklog(false);
+    }
+  }
+
+  // E01-S143 AC-5: confirma a revisão (já editada pelo operador) — grava GUT/esforço e gera 1 OS
+  // de backlog por item.
+  async function handleConfirmarBacklog(itensRevisados: ItemClassificado[]) {
+    if (!user || !inspecaoSelecionada) return;
+    setConfirmandoBacklog(true);
+    setErroAcao(null);
+    try {
+      const dados = dadosOs ?? (await carregarDadosAberturaOs(supabaseOrdemServicoAdapter));
+      if (!dadosOs) setDadosOs(dados);
+      const tipoTarefaId = dados.tiposTarefa[0]?.id;
+      if (!tipoTarefaId)
+        throw new Error("Nenhum tipo de tarefa cadastrado — configure antes de gerar backlog.");
+      const porId = new Map(itens.map((item) => [item.id, item]));
+      await confirmarGerarBacklog(
+        supabaseQualidadeAdapter,
+        supabaseOrdemServicoAdapter,
+        itensRevisados.map((classificacao) => {
+          const item = porId.get(classificacao.itemId);
+          if (!item) throw new Error("Item não encontrado.");
+          return { item, classificacao };
+        }),
+        { clientId: inspecaoSelecionada.clientId, tipoTarefaId, userId: user.id },
+      );
+      setItens((atuais) =>
+        atuais.map((atual) => {
+          const classificacao = itensRevisados.find((c) => c.itemId === atual.id);
+          if (!classificacao) return atual;
+          return {
+            ...atual,
+            destino: "backlog",
+            gravidade: classificacao.gravidade,
+            urgencia: classificacao.urgencia,
+            tendencia: classificacao.tendencia,
+            esforcoHoras: classificacao.esforcoHoras,
+            justificativaEsforco: classificacao.justificativaEsforco,
+            citacaoNormativa: classificacao.citacaoNormativa,
+          };
+        }),
+      );
+      setSelecionadosBacklog(new Set());
+      setRevisaoBacklog(null);
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível gerar o backlog.");
+    } finally {
+      setConfirmandoBacklog(false);
     }
   }
 
@@ -599,11 +767,16 @@ export function InspecoesPage() {
                       key={item.id}
                       item={item}
                       temEscrita={temEscrita}
+                      selecionadoBacklog={selecionadosBacklog.has(item.id)}
                       onEditar={() => {
                         setItemEditando(item);
                         setModalAtivo("novo-item");
                       }}
                       onExcluir={() => handleExcluirItem(item)}
+                      onAbrirChamado={() => handleAbrirChamado(item)}
+                      onMudarResultado={(resultado) => handleMudarResultado(item, resultado)}
+                      onToggleSelecaoBacklog={() => handleToggleSelecaoBacklog(item.id)}
+                      onDescartar={() => handleDescartar(item)}
                     />
                   ))}
                 </div>
@@ -611,7 +784,19 @@ export function InspecoesPage() {
             </div>
 
             {temEscrita && (
-              <div className="sticky bottom-0 rounded-b-[10px] border-t border-line bg-card px-4 py-3">
+              <div className="sticky bottom-0 flex flex-col gap-2 rounded-b-[10px] border-t border-line bg-card px-4 py-3">
+                {selecionadosBacklog.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleAbrirRevisaoBacklog}
+                    disabled={classificandoBacklog}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange px-4 py-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  >
+                    {classificandoBacklog
+                      ? "Calculando GUT/esforço…"
+                      : `Gerar backlog (${selecionadosBacklog.size})`}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -668,6 +853,15 @@ export function InspecoesPage() {
           salvando={salvando}
           onClose={() => setModalAtivo(null)}
           onSubmit={handleImportar}
+        />
+      )}
+      {revisaoBacklog && (
+        <RevisaoBacklogModal
+          itens={revisaoBacklog.itens}
+          correlacionou={revisaoBacklog.correlacionou}
+          confirmando={confirmandoBacklog}
+          onClose={() => setRevisaoBacklog(null)}
+          onConfirmar={handleConfirmarBacklog}
         />
       )}
 
@@ -731,17 +925,30 @@ function FiltroSistemaButton({
 function ItemInspecaoCard({
   item,
   temEscrita,
+  selecionadoBacklog,
   onEditar,
   onExcluir,
+  onAbrirChamado,
+  onMudarResultado,
+  onToggleSelecaoBacklog,
+  onDescartar,
 }: {
   item: InspecaoItem;
   temEscrita: boolean;
+  selecionadoBacklog: boolean;
   onEditar: () => void;
   onExcluir: () => void;
+  onAbrirChamado: () => void;
+  onMudarResultado: (resultado: ItemResultado) => void;
+  onToggleSelecaoBacklog: () => void;
+  onDescartar: () => void;
 }) {
   const [aberto, setAberto] = useState(false);
+  const emTriagem = item.destino === null;
   return (
-    <article className="rounded-lg border border-line bg-card p-4">
+    <article
+      className={`rounded-lg border p-4 ${selecionadoBacklog ? "border-orange bg-orange-soft/30" : "border-line bg-card"}`}
+    >
       <div className="flex items-start gap-3">
         {item.fotoUrl ? (
           <img
@@ -771,12 +978,88 @@ function ItemInspecaoCard({
                 Risco {GRAU_RISCO_LABEL[item.grauRisco]}
               </span>
             )}
+            {/* E01-S143 AC-6: destino decidido (backlog/os/chamado) = "No backlog"; descarte = "Descartado". */}
+            {item.destino !== null && item.destino !== "descarte" && (
+              <span className="rounded-full bg-info-soft px-2 py-0.5 text-micro font-semibold text-info">
+                No backlog
+              </span>
+            )}
+            {item.destino === "descarte" && (
+              <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-3">
+                Descartado
+              </span>
+            )}
           </div>
+          {/* E01-S143 AC-1: ribbon rápido de resultado, só enquanto o item não foi triado. */}
+          {emTriagem && temEscrita && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {RESULTADOS_INSPECAO.filter((opcao) => opcao.valor !== "nao_aplicavel").map(
+                (opcao) => (
+                  <button
+                    key={opcao.valor}
+                    type="button"
+                    onClick={() => onMudarResultado(opcao.valor)}
+                    className={`rounded-full border px-2.5 py-1 text-micro font-semibold transition-colors ${
+                      item.resultado === opcao.valor
+                        ? "border-navy bg-navy text-white"
+                        : "border-line text-ink-3 hover:text-ink"
+                    }`}
+                  >
+                    {opcao.rotulo}
+                  </button>
+                ),
+              )}
+            </div>
+          )}
           <p className="mt-2 line-clamp-2 text-sm font-medium text-ink">{item.descricao}</p>
           <p className="mt-1 truncate text-xs text-ink-3">
             {[item.categoria, item.elemento, item.localizacao].filter(Boolean).join(" · ") ||
               "Localização não informada"}
           </p>
+          {/* E01-S143 AC-4/AC-7: Score PCM (GUT) + esforço, só depois que a IA classificou. */}
+          {item.gravidade !== null && item.urgencia !== null && item.tendencia !== null && (
+            <div className="mt-2 flex items-center gap-2 rounded-md bg-paper px-2.5 py-1.5 text-xs">
+              <span
+                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(
+                  classificarPrioridade(
+                    calcularScoreGut(item.gravidade, item.urgencia, item.tendencia),
+                  ),
+                )}`}
+              >
+                {
+                  PRIORIDADE_LABEL[
+                    classificarPrioridade(
+                      calcularScoreGut(item.gravidade, item.urgencia, item.tendencia),
+                    )
+                  ]
+                }
+              </span>
+              <span className="text-ink-3">
+                GUT: {calcularScoreGut(item.gravidade, item.urgencia, item.tendencia)}
+                {item.esforcoHoras !== null && ` · ${item.esforcoHoras}h est.`}
+              </span>
+            </div>
+          )}
+          {emTriagem && temEscrita && (
+            <div className="mt-2 flex items-center gap-3">
+              <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-orange">
+                <input
+                  type="checkbox"
+                  checked={selecionadoBacklog}
+                  onChange={onToggleSelecaoBacklog}
+                  className="h-3.5 w-3.5"
+                />
+                Selecionar p/ backlog
+              </label>
+              <button
+                type="button"
+                onClick={onDescartar}
+                className="text-xs font-semibold text-ink-3 hover:text-danger"
+              >
+                Descartar
+              </button>
+            </div>
+          )}
         </div>
         <button
           type="button"
@@ -845,6 +1128,15 @@ function ItemInspecaoCard({
               >
                 Editar
               </button>
+              {item.destino === null && (
+                <button
+                  type="button"
+                  onClick={onAbrirChamado}
+                  className="text-xs font-semibold text-orange hover:text-orange-deep"
+                >
+                  Abrir chamado
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onExcluir}
@@ -858,6 +1150,131 @@ function ItemInspecaoCard({
         </div>
       )}
     </article>
+  );
+}
+
+// E01-S143 AC-4/AC-5: revisão editável do que a IA calculou antes de confirmar o backlog — mesmo
+// princípio do `ImportarRelatorioModal` (IA é copiloto, humano confirma antes de gravar).
+function RevisaoBacklogModal({
+  itens,
+  correlacionou,
+  confirmando,
+  onClose,
+  onConfirmar,
+}: {
+  itens: ItemClassificado[];
+  correlacionou: boolean;
+  confirmando: boolean;
+  onClose: () => void;
+  onConfirmar: (itens: ItemClassificado[]) => void;
+}) {
+  const [edicoes, setEdicoes] = useState<ItemClassificado[]>(itens);
+
+  function atualizar(itemId: string, patch: Partial<ItemClassificado>) {
+    setEdicoes((atuais) =>
+      atuais.map((item) => (item.itemId === itemId ? { ...item, ...patch } : item)),
+    );
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-lg border border-line bg-card shadow-modal">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <h3 className="text-base font-semibold text-ink">Revisar antes de gerar backlog</h3>
+          <button type="button" onClick={onClose} className="text-ink-3 hover:text-ink">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        {!correlacionou && (
+          <div className="mx-4 mt-3 rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-xs text-warning">
+            A IA não retornou o mesmo número de itens enviados — usamos GUT 3/3/3 e esforço 0 como
+            ponto de partida. Revise cada item antes de confirmar.
+          </div>
+        )}
+        <div className="flex-1 space-y-3 overflow-y-auto p-4">
+          {edicoes.map((item) => {
+            const score = calcularScoreGut(item.gravidade, item.urgencia, item.tendencia);
+            return (
+              <div key={item.itemId} className="rounded-md border border-line-soft p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(classificarPrioridade(score))}`}
+                  >
+                    {PRIORIDADE_LABEL[classificarPrioridade(score)]}
+                  </span>
+                  <span className="text-xs font-semibold text-ink-3">Score PCM (GUT): {score}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["gravidade", "urgencia", "tendencia"] as const).map((campo) => (
+                    <label key={campo} className="block">
+                      <span className="mb-1 block text-micro font-semibold capitalize text-ink-3">
+                        {campo}
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={item[campo]}
+                        onChange={(e) =>
+                          atualizar(item.itemId, {
+                            [campo]: Math.min(5, Math.max(1, Number(e.target.value) || 1)),
+                          })
+                        }
+                        className="input w-full"
+                      />
+                    </label>
+                  ))}
+                </div>
+                <label className="mt-2 block">
+                  <span className="mb-1 block text-micro font-semibold text-ink-3">
+                    Esforço estimado (horas)
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={item.esforcoHoras}
+                    onChange={(e) =>
+                      atualizar(item.itemId, {
+                        esforcoHoras: Math.max(0, Number(e.target.value) || 0),
+                      })
+                    }
+                    className="input w-full"
+                  />
+                </label>
+                <label className="mt-2 block">
+                  <span className="mb-1 block text-micro font-semibold text-ink-3">
+                    Embasamento normativo
+                  </span>
+                  <textarea
+                    value={item.citacaoNormativa ?? ""}
+                    onChange={(e) =>
+                      atualizar(item.itemId, { citacaoNormativa: e.target.value || null })
+                    }
+                    rows={2}
+                    className="input w-full"
+                    placeholder="Ex.: NBR 17240:2010 item 5.4.3"
+                  />
+                </label>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
+          <button type="button" onClick={onClose} className="btn-secondary">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirmar(edicoes)}
+            disabled={confirmando}
+            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+          >
+            {confirmando ? "Gerando…" : `Gerar backlog (${edicoes.length})`}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
