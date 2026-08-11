@@ -31,8 +31,13 @@ select is(
 );
 
 -- fixture: cliente + requisição + orçamento
-insert into pcm.clientes (id, nome, ativo)
-values ('00000000-0000-0000-0000-0000000e0301', 'Cliente Teste S12 pgTAP', true)
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+values
+  ('00000000-0000-0000-0000-0000000e0300', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'orcamento-s12@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
+on conflict (id) do nothing;
+
+insert into pcm.clientes (id, nome, ativo, created_by)
+values ('00000000-0000-0000-0000-0000000e0301', 'Cliente Teste S12 pgTAP', true, '00000000-0000-0000-0000-0000000e0300')
 on conflict (id) do nothing;
 insert into pcm.requisicoes_servico (id, cliente_id, titulo, status)
 values ('00000000-0000-0000-0000-0000000e0302', '00000000-0000-0000-0000-0000000e0301', 'Requisição Teste S12', 'em_orcamento')

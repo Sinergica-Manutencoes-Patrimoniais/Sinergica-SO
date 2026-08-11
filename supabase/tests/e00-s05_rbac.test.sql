@@ -177,7 +177,9 @@ select lives_ok(
   $$ insert into pcm.clientes (nome, created_by) values ('pcm escrita', '00000000-0000-0000-0000-000000000004') $$,
   'pcm escrita insere pcm.clientes'
 );
-select is((select count(*) from comercial.motivos_perda)::int, 1, 'comercial leitura le comercial.motivos_perda');
+-- Tabela de referência compartilhada com seed próprio (migration + outras suítes) — não é
+-- exclusiva deste teste, então conta >= 1 (o registro inserido acima), não um total exato.
+select ok((select count(*) from comercial.motivos_perda)::int >= 1, 'comercial leitura le comercial.motivos_perda');
 select throws_ok(
   $$ insert into comercial.motivos_perda (nome) values ('motivo proibido') $$,
   '42501', null, 'comercial leitura NAO insere comercial.motivos_perda'

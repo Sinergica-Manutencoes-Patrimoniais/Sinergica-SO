@@ -34,7 +34,10 @@ select throws_ok(
 );
 
 -- 2) score fora de 0-100
-set local request.jwt.claims = '{"role":"service_role"}';
+-- role service_role de verdade (não authenticated fingindo a claim "role") — a função só tem
+-- EXECUTE concedido a service_role (migration 0197); fingir a claim não basta, o próprio GRANT
+-- barra a chamada como authenticated antes mesmo da guarda interna rodar.
+set local role service_role;
 select throws_ok(
   $$ select comercial.fn_registrar_oportunidade('X', '5511900000000', 150, null, 'x@s.whatsapp.net', 'A', null, null, null, '00000000-0000-0000-0000-000000000f01') $$,
   '23514',

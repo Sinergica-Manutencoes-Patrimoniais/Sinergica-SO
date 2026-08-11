@@ -14,10 +14,10 @@ values
   ('00000000-0000-0000-0000-000000000803', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'interno-comercial-s06@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
-insert into pcm.clientes (id, nome, ativo)
+insert into pcm.clientes (id, nome, ativo, created_by)
 values
-  ('00000000-0000-0000-0000-0000000009c1', 'Condomínio A — Teste E03-S06', true),
-  ('00000000-0000-0000-0000-0000000009c2', 'Condomínio B — Teste E03-S06', true)
+  ('00000000-0000-0000-0000-0000000009c1', 'Condomínio A — Teste E03-S06', true, '00000000-0000-0000-0000-000000000803'),
+  ('00000000-0000-0000-0000-0000000009c2', 'Condomínio B — Teste E03-S06', true, '00000000-0000-0000-0000-000000000803')
 on conflict (id) do nothing;
 
 insert into comercial.etapas_funil (id, nome, ordem, cor, tipo)

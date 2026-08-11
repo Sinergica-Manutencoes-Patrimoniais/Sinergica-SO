@@ -14,8 +14,8 @@ values
   ('00000000-0000-0000-0000-000000000a02', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'leitura-s08@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
-insert into pcm.clientes (id, nome, ativo)
-values ('00000000-0000-0000-0000-0000000009b9', 'Condomínio Teste E03-S08', true)
+insert into pcm.clientes (id, nome, ativo, created_by)
+values ('00000000-0000-0000-0000-0000000009b9', 'Condomínio Teste E03-S08', true, '00000000-0000-0000-0000-000000000a01')
 on conflict (id) do nothing;
 
 insert into comercial.etapas_funil (id, nome, ordem, cor, tipo)

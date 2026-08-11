@@ -4,7 +4,7 @@
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
 
 begin;
-select plan(13);
+select plan(14);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -14,8 +14,8 @@ values
   ('00000000-0000-0000-0000-000000000604', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'prop-superadmin-s04@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
-insert into pcm.clientes (id, nome, ativo)
-values ('00000000-0000-0000-0000-0000000006c1', 'Condomínio Teste E03-S04', true)
+insert into pcm.clientes (id, nome, ativo, created_by)
+values ('00000000-0000-0000-0000-0000000006c1', 'Condomínio Teste E03-S04', true, '00000000-0000-0000-0000-000000000601')
 on conflict (id) do nothing;
 
 insert into comercial.etapas_funil (id, nome, ordem, cor, tipo)
@@ -46,12 +46,14 @@ select is(
   1,
   'leitura comercial: select enxerga a proposta'
 );
-select throws_ok(
-  $$ update comercial.propostas set status = 'em_revisao'
-     where id = '00000000-0000-0000-0000-0000000006b1' $$,
-  '42501',
-  null,
-  'leitura comercial NAO atualiza proposta'
+-- UPDATE sob RLS não lança erro quando a policy USING filtra a linha (diferente de INSERT, cujo
+-- WITH CHECK lança 42501) — vira "0 linhas afetadas" silencioso. Confirma pelo status inalterado.
+update comercial.propostas set status = 'em_revisao'
+   where id = '00000000-0000-0000-0000-0000000006b1';
+select is(
+  (select status from comercial.propostas where id = '00000000-0000-0000-0000-0000000006b1'),
+  'rascunho',
+  'leitura comercial NAO atualiza proposta (status segue rascunho)'
 );
 
 -- 3) AC-4: preço abaixo do piso é recusado NO BANCO, mesmo por quem tem escrita

@@ -15,8 +15,8 @@ values
   ('00000000-0000-0000-0000-000000000903', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'escrita-s07@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
-insert into pcm.clientes (id, nome, ativo)
-values ('00000000-0000-0000-0000-0000000009d1', 'Condomínio Teste E03-S07', true)
+insert into pcm.clientes (id, nome, ativo, created_by)
+values ('00000000-0000-0000-0000-0000000009d1', 'Condomínio Teste E03-S07', true, '00000000-0000-0000-0000-000000000901')
 on conflict (id) do nothing;
 
 insert into comercial.etapas_funil (id, nome, ordem, cor, tipo)
@@ -67,11 +67,14 @@ select is(
   2,
   'leitura comercial: enxerga os 2 contratos criados'
 );
-select throws_ok(
-  $$ update comercial.contratos set tipo = 'avulso' where cliente_id = '00000000-0000-0000-0000-0000000009d1' $$,
-  '42501',
-  null,
-  'leitura comercial NAO atualiza contrato'
+-- UPDATE sob RLS não lança erro quando a policy USING filtra a linha (diferente de INSERT, cujo
+-- WITH CHECK lança 42501) — vira "0 linhas afetadas" silencioso. Confirma pelo tipo inalterado do
+-- contrato residente (o outro já nasceu 'avulso', não serviria de sinal de mudança).
+update comercial.contratos set tipo = 'avulso' where cliente_id = '00000000-0000-0000-0000-0000000009d1';
+select is(
+  (select count(*)::int from comercial.contratos where cliente_id = '00000000-0000-0000-0000-0000000009d1' and tipo = 'residente'),
+  1,
+  'leitura comercial NAO atualiza contrato (o residente segue residente)'
 );
 
 -- ─────────────────────────── AC-3: unicidade ─────────────────────────────────

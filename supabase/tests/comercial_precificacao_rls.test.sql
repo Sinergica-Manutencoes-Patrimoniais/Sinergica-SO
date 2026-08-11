@@ -43,11 +43,13 @@ select throws_ok(
   null,
   'leitura comercial NAO insere nivel_tecnico'
 );
-select throws_ok(
-  $$ update comercial.parametros_preco set margem_alvo_pct = 99 where id = 1 $$,
-  '42501',
-  null,
-  'leitura comercial NAO atualiza parametros_preco'
+-- UPDATE sob RLS não lança erro quando a policy USING filtra a linha (diferente de INSERT, cujo
+-- WITH CHECK lança 42501) — vira "0 linhas afetadas" silencioso. Confirma pelo valor inalterado.
+update comercial.parametros_preco set margem_alvo_pct = 99 where id = 1;
+select is(
+  (select margem_alvo_pct from comercial.parametros_preco where id = 1),
+  20::numeric,
+  'leitura comercial NAO atualiza parametros_preco (valor segue o default do seed)'
 );
 
 -- 3) escrita: cria nível e material

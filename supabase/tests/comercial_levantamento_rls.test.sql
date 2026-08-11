@@ -19,10 +19,10 @@ values
   ('00000000-0000-0000-0000-000000000703', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'lev-comercial-leitura-s05@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
-insert into pcm.clientes (id, nome, ativo)
+insert into pcm.clientes (id, nome, ativo, created_by)
 values
-  ('00000000-0000-0000-0000-0000000007c1', 'Condomínio Teste E03-S05', true),
-  ('00000000-0000-0000-0000-0000000007c2', 'Condomínio Teste E03-S05 (outra conta)', true)
+  ('00000000-0000-0000-0000-0000000007c1', 'Condomínio Teste E03-S05', true, '00000000-0000-0000-0000-000000000701'),
+  ('00000000-0000-0000-0000-0000000007c2', 'Condomínio Teste E03-S05 (outra conta)', true, '00000000-0000-0000-0000-000000000701')
 on conflict (id) do nothing;
 
 set local role authenticated;

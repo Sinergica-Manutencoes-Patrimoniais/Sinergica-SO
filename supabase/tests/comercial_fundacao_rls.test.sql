@@ -5,7 +5,7 @@
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
 
 begin;
-select plan(14);
+select plan(15);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -16,8 +16,8 @@ values
 on conflict (id) do nothing;
 
 -- Conta de apoio (o Comercial não cria Conta; ela é do PCM).
-insert into pcm.clientes (id, nome, ativo)
-values ('00000000-0000-0000-0000-0000000003c1', 'Condomínio Teste E03-S01', true)
+insert into pcm.clientes (id, nome, ativo, created_by)
+values ('00000000-0000-0000-0000-0000000003c1', 'Condomínio Teste E03-S01', true, '00000000-0000-0000-0000-000000000301')
 on conflict (id) do nothing;
 
 set local role authenticated;

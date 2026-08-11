@@ -43,15 +43,26 @@ select lives_ok(
 
 -- Regressão positiva: oportunidade com origem=whatsapp aparece na timeline como 'lead' (mesma
 -- categoria de antes, fonte de dado diferente).
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+values
+  ('00000000-0000-0000-0000-000000000fa0', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'teste-s10@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
+on conflict (id) do nothing;
+
+-- role service_role de verdade (não authenticated fingindo claim) — bypassa RLS igual ao Edge
+-- Function real em produção. Fingir a claim "role":"service_role" com o role PG authenticated não
+-- basta: a policy de insert de relacionamento.contatos só olha user_role/user_modulos.
+set local role service_role;
 insert into relacionamento.contatos (id, nome, telefone_principal, origem)
 values ('00000000-0000-0000-0000-000000000fa1', 'Contato Teste S10', '5511977770000', 'whatsapp')
 on conflict (id) do nothing;
-insert into pcm.clientes (id, nome, ativo)
-values ('00000000-0000-0000-0000-000000000fa2', 'Conta Teste S10', true)
+insert into pcm.clientes (id, nome, ativo, created_by)
+values ('00000000-0000-0000-0000-000000000fa2', 'Conta Teste S10', true, '00000000-0000-0000-0000-000000000fa0')
 on conflict (id) do nothing;
 insert into comercial.etapas_funil (id, nome, ordem, cor, tipo)
 values ('00000000-0000-0000-0000-000000000fa3', 'Etapa Teste S10', 999, '#000000', 'aberta')
 on conflict (id) do nothing;
+
+set local role authenticated;
 set local request.jwt.claims = '{"role":"service_role","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
 insert into comercial.oportunidades (cliente_id, etapa_id, titulo, origem, contato_id)
 values ('00000000-0000-0000-0000-000000000fa2', '00000000-0000-0000-0000-000000000fa3', 'Lead WhatsApp — Teste S10', 'whatsapp', '00000000-0000-0000-0000-000000000fa1');
