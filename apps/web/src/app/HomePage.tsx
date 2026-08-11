@@ -5,6 +5,7 @@ import {
   Bot,
   Briefcase,
   Building2,
+  Calculator,
   Calendar,
   CheckCircle2,
   ChevronLeft,
@@ -60,6 +61,7 @@ import { PainelComercialCliente } from "../features/comercial/components/PainelC
 import { ConfigFunilPage as ComercialConfigFunilPage } from "../features/comercial/pages/ConfigFunilPage";
 import { ContasPage as ComercialContasPage } from "../features/comercial/pages/ContasPage";
 import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
+import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features/comercial/pages/ParametrosPrecoPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
@@ -225,7 +227,7 @@ interface FinanceiroNavGroup {
 
 // Sub-navegação do Comercial — E03-S01 (specs/E03-S01-fundacao-comercial/). Mesmo padrão useState
 // de abas. Cresce com o épico: funil (S02), propostas (S04), contratos (S07), dashboard (S08).
-type ComercialView = "funil" | "contas" | "config-funil";
+type ComercialView = "funil" | "contas" | "precificacao" | "config-funil";
 
 interface ComercialNavItem {
   label: string;
@@ -367,6 +369,7 @@ const FINANCEIRO_NAV: FinanceiroNavGroup[] = [
 const COMERCIAL_NAV: ComercialNavItem[] = [
   { label: "Funil", icon: Columns3, view: "funil" },
   { label: "Contas", icon: Briefcase, view: "contas" },
+  { label: "Precificação", icon: Calculator, view: "precificacao" },
   { label: "Configuração do funil", icon: SlidersHorizontal, view: "config-funil" },
 ];
 
@@ -1346,6 +1349,8 @@ export function HomePage() {
             // Comercial de lá mostra o funil. Nada de reconstruir a 360 dentro do Comercial.
             comercialView === "config-funil" ? (
               <ComercialConfigFunilPage />
+            ) : comercialView === "precificacao" ? (
+              <ComercialParametrosPrecoPage />
             ) : comercialView === "funil" ? (
               <ComercialFunilPage
                 onAbrirConta={(clienteId) => {
