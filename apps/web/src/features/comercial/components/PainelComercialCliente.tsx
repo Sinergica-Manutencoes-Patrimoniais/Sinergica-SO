@@ -6,11 +6,12 @@
  * (ADR-0020). */
 
 import { Badge, Button, Card, EmptyState } from "@sinergica/ui";
-import { Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useEtapas, useOportunidadesDaConta } from "../application/comercial-queries";
 import { supabaseComercialAdapter } from "../infrastructure/supabase-comercial-adapter";
+import { PropostaEditorPage } from "../pages/PropostaEditorPage";
 import { NovaOportunidadeModal } from "./NovaOportunidadeModal";
 
 function formatarValor(centavos: number | null): string {
@@ -36,6 +37,7 @@ export function PainelComercialCliente({
 }) {
   const { podeAcessar } = usePermissoes();
   const [criando, setCriando] = useState(false);
+  const [oportunidadeAberta, setOportunidadeAberta] = useState<string | null>(null);
 
   const temLeitura = podeAcessar("comercial", "leitura");
   const temEscrita = podeAcessar("comercial", "escrita");
@@ -74,6 +76,15 @@ export function PainelComercialCliente({
   const oportunidades = oportunidadesQuery.data ?? [];
   const etapas = etapasQuery.data ?? [];
   const etapaPorId = new Map(etapas.map((e) => [e.id, e]));
+
+  if (oportunidadeAberta) {
+    return (
+      <PropostaEditorPage
+        oportunidadeId={oportunidadeAberta}
+        onVoltar={() => setOportunidadeAberta(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -127,6 +138,10 @@ export function PainelComercialCliente({
                   <span className="tabular-nums text-sm text-ink">
                     {formatarValor(op.valorEstimadoCentavos)}
                   </span>
+                  <Button variant="ghost" size="sm" onClick={() => setOportunidadeAberta(op.id)}>
+                    <FileText className="size-4" aria-hidden />
+                    Propostas
+                  </Button>
                 </li>
               );
             })}
