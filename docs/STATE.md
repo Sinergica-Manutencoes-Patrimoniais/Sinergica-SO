@@ -10,7 +10,7 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-## 2026-08-11 — E03 Comercial: S01-S12 implementadas, épico segue em andamento (Claude/Opus 5)
+## 2026-08-11 — E03 Comercial: S01-S13 implementadas, épico segue em andamento (Claude/Opus 5)
 
 Especificação completa do épico E03 (14 stories) concluída em sessão anterior (commit `a4904e2`),
 com framework de propriedade de dados (ADR-0019 R1/R2/R3 + corolários) e decisão de Conta única
@@ -223,11 +223,24 @@ login-ável em E2E hoje (mesma lacuna já documentada na S06, `comercial-propost
 tem a mesma nota); a regressão real (AC-5) foi coberta pelos 4 cenários de RLS reproduzindo
 exatamente a query do adapter, mais forte que um mock de UI.
 
-**Próximo passo**: S13 (`historico_chamado_snapshots`, story trivial de reclassificação — já
-determinado que NÃO é dívida, código não muda), depois S14 (Guia do SO). Ao fechar o épico inteiro:
-confirmar exposição real de `relacionamento` no Data API, rodar Playwright completo (as demais
-stories seguem bloqueadas nele), só então branch → PR → merge (nunca push direto, nunca por
-story).
+**S13 — `historico_chamado_snapshots`: confirmar dono e documentar — implementada nesta sessão.**
+Story trivial de reclassificação, sem migration de schema além de um `comment on table` (`0204`).
+A auditoria de 2026-08-10 tinha classificado `atendimento.historico_chamado_snapshots` como
+violação de R1 por ter sido criada pela E01-S89 (épico do PCM) — mas a migration de origem (`0136`)
+já declarava e justificava a escolha ("tabela vive no schema de quem PRODUZ o dado"): o snapshot é
+conversa de WhatsApp, dado do Atendimento anexado a um Chamado do PCM. Pelo R1 o Atendimento é dono
+e o schema estava certo desde o início — **classificação revogada**. O erro foi confundir épico da
+story com dono do dado. Confirmado por grep (task 1, AC-3): zero import cruzado entre
+`features/pcm/infrastructure/supabase-chamados-adapter.ts` e
+`features/atendimento/infrastructure/supabase-historico-chamado-adapter.ts` — só a tabela é
+compartilhada, cada lado lê sob RLS própria. `ARCHITECTURE.md` (seção "Não é dívida — caso 2") e o
+corolário do ADR-0019 ("épico de origem não determina propriedade") já estavam redigidos
+corretamente de uma sessão anterior — conferidos contra esta story, batem, sem reescrita. `ci:local`
+verde, nenhum código de runtime tocado.
+
+**Próximo passo**: S14 (Guia do SO — módulo Comercial), última story do épico. Depois: confirmar
+exposição real de `relacionamento` no Data API, rodar Playwright completo (as demais stories
+seguem bloqueadas nele), só então branch → PR → merge (nunca push direto, nunca por story).
 
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 

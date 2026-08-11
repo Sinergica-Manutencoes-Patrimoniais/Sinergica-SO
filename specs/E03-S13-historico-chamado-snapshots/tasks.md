@@ -13,11 +13,11 @@ alwaysApply: false
 
 | # | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |---|------|----------|------------|----------------|--------|
-| 1 | Reler `0136_E01-S89_historico_chamado_snapshots.sql` e os dois adapters que a leem (`features/pcm/infrastructure/supabase-chamados-adapter.ts:289`, `features/atendimento/infrastructure/supabase-historico-chamado-adapter.ts:122,142`) e confirmar: nenhuma feature importa código da outra, só a tabela é compartilhada | AC-3 | — | leitura + anotação nesta tabela | todo |
-| 2 | Migration `NNNN_E03-S13_comment_dono_snapshots.sql`: **só `comment on table`** registrando que o dono é o Atendimento (produz o dado), que o PCM lê sob RLS própria, e apontando o ADR-0019 | AC-1, AC-4 | 1 | `pnpm run lint:migrations` | todo |
-| 3 | `ARCHITECTURE.md`: remover a tabela do item 4 da "Dívida de fronteira"; registrá-la como Core do Atendimento, com a nota de que o épico da story (E01) difere do dono do dado | AC-1 | 2 | `pnpm run audit:esteira` | todo |
-| 4 | `ADR-0019`: acrescentar ao corolário o critério que faltava — **épico de origem da story não determina o dono**; usar este caso como exemplo documentado de reclassificação | AC-2 | 3 | `pnpm run audit:esteira` | todo |
-| 5 | `pnpm run ci:local` + ROADMAP/STATE atualizados (marcar a story como reclassificada, não como correção de dívida) | todos | 1–4 | `pnpm run ci:local` | todo |
+| 1 | Reler `0136_E01-S89_historico_chamado_snapshots.sql` e os dois adapters que a leem (`features/pcm/infrastructure/supabase-chamados-adapter.ts:289`, `features/atendimento/infrastructure/supabase-historico-chamado-adapter.ts:122,142`) e confirmar: nenhuma feature importa código da outra, só a tabela é compartilhada | AC-3 | — | leitura + anotação nesta tabela | done — confirmado por grep, zero import cruzado entre os dois adapters |
+| 2 | Migration `0204_E03-S13_comment_dono_snapshots.sql`: **só `comment on table`** registrando que o dono é o Atendimento (produz o dado), que o PCM lê sob RLS própria, e apontando o ADR-0019 | AC-1, AC-4 | 1 | `pnpm run lint:migrations` | done |
+| 3 | `ARCHITECTURE.md`: remover a tabela do item 4 da "Dívida de fronteira"; registrá-la como Core do Atendimento, com a nota de que o épico da story (E01) difere do dono do dado | AC-1 | 2 | `pnpm run audit:esteira` | done (já feito em sessão anterior — seção "Não é dívida — caso 2", conferida contra esta story, bate) |
+| 4 | `ADR-0019`: acrescentar ao corolário o critério que faltava — **épico de origem da story não determina o dono**; usar este caso como exemplo documentado de reclassificação | AC-2 | 3 | `pnpm run audit:esteira` | done (já feito em sessão anterior — corolário em `0019-propriedade-de-dados-r1-r2-r3.md`, conferido, bate) |
+| 5 | `pnpm run ci:local` + ROADMAP/STATE atualizados (marcar a story como reclassificada, não como correção de dívida) | todos | 1–4 | `pnpm run ci:local` | done |
 
 ## Plano de teste
 - Sem teste de comportamento: nada muda em runtime (AC-4). Os gates são `lint:migrations`,
@@ -34,7 +34,7 @@ alwaysApply: false
 - [ ] Nenhuma divergência aberta.
 
 ## Checklist de Definition of Done
-- [ ] AC verdes pelo gate
-- [ ] `pnpm run ci:local` verde
-- [ ] `ARCHITECTURE.md`: item 4 da "Dívida de fronteira" removido · ADR-0019 com o critério novo
-- [ ] ROADMAP/STATE atualizados
+- [x] AC verdes pelo gate
+- [x] `pnpm run ci:local` verde
+- [x] `ARCHITECTURE.md`: item 4 da "Dívida de fronteira" removido · ADR-0019 com o critério novo
+- [x] ROADMAP/STATE atualizados
