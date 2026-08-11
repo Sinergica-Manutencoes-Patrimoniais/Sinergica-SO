@@ -71,6 +71,7 @@ const ITEM: InspecaoItem = {
   gravidade: null,
   urgencia: null,
   tendencia: null,
+  dorCliente: null,
   esforcoHoras: null,
   justificativaEsforco: null,
   citacaoNormativa: null,
@@ -87,6 +88,7 @@ function gatewayQualidadeFake(): QualidadeGateway {
     editarItemInspecao: vi.fn(),
     excluirItemInspecao: vi.fn(),
     processarRelatorioInspecao: vi.fn(),
+    classificarItensGutd: vi.fn(),
     criarInspecaoImportada: vi.fn(),
     listarLaudosSpda: vi.fn(),
     criarLaudoSpda: vi.fn(),
@@ -267,23 +269,19 @@ describe("assessment (use case)", () => {
   });
 
   describe("classificarItensParaBacklog — E01-S143", () => {
-    it("AC-4: chama a IA (mesmo endpoint do import) e pareia por índice", async () => {
+    it("AC-4: chama o endpoint próprio de classificação e pareia pelo índice devolvido", async () => {
       const gatewayQualidade = gatewayQualidadeFake();
-      gatewayQualidade.processarRelatorioInspecao = vi.fn(async () => [
+      // Contrato novo: só os fatores GUTd + o índice do item, nada de campos de extração.
+      gatewayQualidade.classificarItensGutd = vi.fn(async () => [
         {
-          local: "Hall",
-          relatoOriginal: "Cabos expostos",
-          sistema: "incendio" as const,
-          tituloBacklog: "Cabos expostos",
-          descricaoTecnica: "Cabos expostos",
-          citacaoNormativa: "NBR 17240:2010",
-          prioridade: "alta",
-          categoria: "corretiva",
+          indice: 1,
           gravidade: 5,
           urgencia: 4,
           tendencia: 4,
+          dorCliente: 3,
           esforcoHoras: 4,
           justificativaEsforco: "Precisa eletricista",
+          citacaoNormativa: "NBR 17240:2010",
         },
       ]);
       const resultado = await classificarItensParaBacklog(gatewayQualidade, [
@@ -296,6 +294,7 @@ describe("assessment (use case)", () => {
           gravidade: 5,
           urgencia: 4,
           tendencia: 4,
+          dorCliente: 3,
           esforcoHoras: 4,
           justificativaEsforco: "Precisa eletricista",
           citacaoNormativa: "NBR 17240:2010",
@@ -305,7 +304,7 @@ describe("assessment (use case)", () => {
 
     it("IA indisponível cai pro fallback 3/3/3, não lança", async () => {
       const gatewayQualidade = gatewayQualidadeFake();
-      gatewayQualidade.processarRelatorioInspecao = vi.fn(async () => {
+      gatewayQualidade.classificarItensGutd = vi.fn(async () => {
         throw new Error("OpenRouter não configurado");
       });
       const resultado = await classificarItensParaBacklog(gatewayQualidade, [
@@ -319,7 +318,7 @@ describe("assessment (use case)", () => {
       const gatewayQualidade = gatewayQualidadeFake();
       const resultado = await classificarItensParaBacklog(gatewayQualidade, []);
       expect(resultado).toEqual({ itens: [], correlacionou: true });
-      expect(gatewayQualidade.processarRelatorioInspecao).not.toHaveBeenCalled();
+      expect(gatewayQualidade.classificarItensGutd).not.toHaveBeenCalled();
     });
   });
 
@@ -332,6 +331,7 @@ describe("assessment (use case)", () => {
         gravidade: 5,
         urgencia: 5,
         tendencia: 4,
+        dorCliente: 4,
         esforcoHoras: 4,
         justificativaEsforco: "Precisa eletricista",
         citacaoNormativa: "NBR 17240:2010",

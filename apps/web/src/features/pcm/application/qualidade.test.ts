@@ -18,6 +18,7 @@ import type { QualidadeGateway } from "./qualidade-gateway";
 function gatewayFake(): QualidadeGateway {
   return {
     listarClientes: vi.fn(),
+    classificarItensGutd: vi.fn(),
     listarInspecoes: vi.fn(),
     criarInspecao: vi.fn(async (input) => ({
       id: "ins-1",
@@ -108,6 +109,7 @@ function gatewayFake(): QualidadeGateway {
       gravidade: null,
       urgencia: null,
       tendencia: null,
+      dorCliente: null,
       esforcoHoras: null,
       justificativaEsforco: null,
       citacaoNormativa: null,
@@ -140,6 +142,7 @@ function gatewayFake(): QualidadeGateway {
       gravidade: null,
       urgencia: null,
       tendencia: null,
+      dorCliente: null,
       esforcoHoras: null,
       justificativaEsforco: null,
       citacaoNormativa: null,

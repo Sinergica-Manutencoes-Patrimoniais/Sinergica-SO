@@ -76,7 +76,13 @@ import {
   statusColor,
 } from "../domain/inspecoes-laudos";
 import { PRIORIDADE_LABEL, prioridadeColor } from "../domain/ordens-servico";
-import { calcularScoreGut, classificarPrioridade } from "../domain/priorizacao-backlog";
+import {
+  PESOS_GUTD_PADRAO,
+  calcularScoreGut,
+  calcularScoreGutd,
+  classificarPrioridade,
+  classificarPrioridadeGutd,
+} from "../domain/priorizacao-backlog";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
@@ -102,6 +108,15 @@ type ModalAtivo =
 type FiltroSistema = SistemaInspecao | "todos";
 
 const SISTEMAS: SistemaInspecao[] = SISTEMAS_INSPECAO.map((item) => item.valor);
+
+/** Rótulos dos 4 fatores do GUTd (E01-S82). "dorCliente" precisa de rótulo próprio — capitalizar
+ * a chave sairia como "Dorcliente". */
+const ROTULO_FATOR_GUTD: Record<"gravidade" | "urgencia" | "tendencia" | "dorCliente", string> = {
+  gravidade: "Gravidade",
+  urgencia: "Urgência",
+  tendencia: "Tendência",
+  dorCliente: "Dor do cliente",
+};
 
 type PdfJsLib = {
   getDocument: (input: unknown) => {
@@ -1187,39 +1202,56 @@ function RevisaoBacklogModal({
         </div>
         {!correlacionou && (
           <div className="mx-4 mt-3 rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-xs text-warning">
-            A IA não retornou o mesmo número de itens enviados — usamos GUT 3/3/3 e esforço 0 como
-            ponto de partida. Revise cada item antes de confirmar.
+            A IA não classificou todos os itens — os que faltaram vieram com 3/3/3/3 e esforço 0
+            como ponto de partida. Revise cada item antes de confirmar.
           </div>
         )}
         <div className="flex-1 space-y-3 overflow-y-auto p-4">
           {edicoes.map((item) => {
-            const score = calcularScoreGut(item.gravidade, item.urgencia, item.tendencia);
+            // GUTd (E01-S82): média ponderada dos quatro fatores na escala 1..5 — não o produto
+            // G×U×T de 1..125, que é o critério antigo.
+            const score = calcularScoreGutd(
+              item.gravidade,
+              item.urgencia,
+              item.tendencia,
+              item.dorCliente,
+              PESOS_GUTD_PADRAO,
+            );
             return (
               <div key={item.itemId} className="rounded-md border border-line-soft p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(classificarPrioridade(score))}`}
+                    className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(classificarPrioridadeGutd(score))}`}
                   >
-                    {PRIORIDADE_LABEL[classificarPrioridade(score)]}
+                    {PRIORIDADE_LABEL[classificarPrioridadeGutd(score)]}
                   </span>
-                  <span className="text-xs font-semibold text-ink-3">Score PCM (GUT): {score}</span>
+                  <span className="text-xs font-semibold text-ink-3">
+                    Score PCM (GUTd): {score.toFixed(2)}
+                  </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["gravidade", "urgencia", "tendencia"] as const).map((campo) => (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {(["gravidade", "urgencia", "tendencia", "dorCliente"] as const).map((campo) => (
                     <label key={campo} className="block">
-                      <span className="mb-1 block text-micro font-semibold capitalize text-ink-3">
-                        {campo}
+                      <span className="mb-1 block text-micro font-semibold text-ink-3">
+                        {ROTULO_FATOR_GUTD[campo]}
                       </span>
                       <input
                         type="number"
                         min={1}
                         max={5}
-                        value={item[campo]}
-                        onChange={(e) =>
+                        // `dorCliente` é anulável (item antigo, ou IA que não soube dizer). Vazio
+                        // não penaliza: `calcularScoreGutd` redistribui o peso entre G/U/T.
+                        value={item[campo] ?? ""}
+                        onChange={(e) => {
+                          const bruto = e.target.value;
+                          if (campo === "dorCliente" && bruto === "") {
+                            atualizar(item.itemId, { dorCliente: null });
+                            return;
+                          }
                           atualizar(item.itemId, {
-                            [campo]: Math.min(5, Math.max(1, Number(e.target.value) || 1)),
-                          })
-                        }
+                            [campo]: Math.min(5, Math.max(1, Number(bruto) || 1)),
+                          });
+                        }}
                         className="input w-full"
                       />
                     </label>

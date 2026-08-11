@@ -98,6 +98,7 @@ export interface InspecaoItem {
   gravidade: number | null;
   urgencia: number | null;
   tendencia: number | null;
+  dorCliente: number | null;
   esforcoHoras: number | null;
   justificativaEsforco: string | null;
   citacaoNormativa: string | null;
@@ -108,6 +109,8 @@ export interface GutEsforcoItem {
   gravidade: number;
   urgencia: number;
   tendencia: number;
+  /** Quarto fator do GUTd (E01-S82). Anulável: item antigo não tem, e ausência não penaliza. */
+  dorCliente: number | null;
   esforcoHoras: number;
   justificativaEsforco: string | null;
   citacaoNormativa: string | null;
@@ -297,6 +300,19 @@ export interface CriarChecklistTemplateInput {
   createdBy: string;
 }
 
+/** Resposta crua da IA de classificação GUTd — `indice` é o número do item enviado, e é ele que
+ * pareia com o item original (não a posição no array). */
+export interface ClassificacaoGutdBruta {
+  indice: number;
+  gravidade: number;
+  urgencia: number;
+  tendencia: number;
+  dorCliente: number | null;
+  esforcoHoras: number;
+  justificativaEsforco: string | null;
+  citacaoNormativa: string | null;
+}
+
 export interface QualidadeGateway {
   listarClientes(): Promise<ClienteOpcao[]>;
   listarInspecoes(): Promise<InspecaoResumo[]>;
@@ -307,6 +323,11 @@ export interface QualidadeGateway {
   editarItemInspecao(input: EditarInspecaoItemInput): Promise<InspecaoItem>;
   excluirItemInspecao(id: string): Promise<void>;
   processarRelatorioInspecao(texto: string): Promise<ItemInspecaoImportado[]>;
+
+  /** E01-S143: classifica em GUTd itens de inspeção que JÁ existem. Endpoint próprio, separado do
+   * import — lá a IA extrai itens de texto bruto e decide quantos são; aqui a contagem é dada e a
+   * resposta traz o índice de cada item de volta, para o pareamento não depender da ordem. */
+  classificarItensGutd(texto: string): Promise<ClassificacaoGutdBruta[]>;
   criarInspecaoImportada(input: CriarInspecaoImportadaInput): Promise<InspecaoResumo>;
   listarLaudosSpda(): Promise<LaudoSpdaResumo[]>;
   criarLaudoSpda(input: CriarLaudoSpdaInput): Promise<LaudoSpdaResumo>;

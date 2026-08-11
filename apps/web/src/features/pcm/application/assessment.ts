@@ -4,7 +4,7 @@ import type { DestinoItemAssessment, ResponsavelDestino } from "../domain/assess
 import { validarDerivarItem, validarNovoAssessment } from "../domain/assessment";
 import type { NovoAssessmentInput } from "../domain/assessment";
 import type {
-  ClassificacaoGutEsforco,
+  ClassificacaoIndexada,
   ItemClassificado,
   ItemParaClassificar,
 } from "../domain/inspecao-revisao-lote";
@@ -13,7 +13,12 @@ import {
   montarTextoParaClassificacao,
   parearClassificacaoComItens,
 } from "../domain/inspecao-revisao-lote";
-import { calcularScoreGut, classificarPrioridade } from "../domain/priorizacao-backlog";
+import type { PesosGutd } from "../domain/priorizacao-backlog";
+import {
+  PESOS_GUTD_PADRAO,
+  calcularScoreGutd,
+  classificarPrioridadeGutd,
+} from "../domain/priorizacao-backlog";
 import { abrirOrdemServico } from "./abrir-ordem-servico";
 import type { ChamadosGateway } from "./chamados-gateway";
 import type { CriarOrdemServicoInput, OrdemServicoGateway } from "./ordem-servico-gateway";
@@ -117,10 +122,22 @@ export async function classificarItensParaBacklog(
 ): Promise<{ itens: ItemClassificado[]; correlacionou: boolean }> {
   if (itens.length === 0) return { itens: [], correlacionou: true };
   const texto = montarTextoParaClassificacao(itens);
-  let classificados: ClassificacaoGutEsforco[] = [];
+  // Endpoint próprio de classificação (E01-S143 corrigida): o de import EXTRAI itens e decide
+  // quantos são, o que fazia toda classificação cair no fallback.
+  //
+  // O catch continua existindo porque a IA é copiloto e não pode bloquear a revisão — mas o erro
+  // vai pro console em vez de sumir: antes, uma falha de credencial ou 502 ficava indistinguível
+  // de "a IA respondeu mal", e foi isso que escondeu a causa real do bug.
+  //
+  // `console.error`, não `lib/log.ts`: aquele logger escreve em `process.stdout` — server-side
+  // (Edge Functions, scripts). Este módulo é bundlado no client (browser), e importar o logger de
+  // borda aqui quebra em runtime com "process is not defined" (achado ao rodar Playwright contra
+  // este mesmo fluxo).
+  let classificados: ClassificacaoIndexada[] = [];
   try {
-    classificados = await gatewayQualidade.processarRelatorioInspecao(texto);
-  } catch {
+    classificados = await gatewayQualidade.classificarItensGutd(texto);
+  } catch (erro) {
+    console.error("[assessment] classificarItensGutd falhou", { erro, itens: itens.length });
     classificados = [];
   }
   return parearClassificacaoComItens(itens, classificados);
@@ -137,15 +154,26 @@ export async function confirmarGerarBacklog(
     item: Pick<InspecaoItem, "id" | "destino" | "descricao">;
     classificacao: ItemClassificado;
   }>,
-  contexto: { clientId: string; tipoTarefaId: string; userId: string },
+  contexto: {
+    clientId: string;
+    tipoTarefaId: string;
+    userId: string;
+    /** Pesos vindos de `config.priorizacao_gutd`. O padrão (25% cada) é fallback para o caso de a
+     * config não ter carregado — nunca motivo para bloquear a geração do backlog. */
+    pesos?: PesosGutd;
+  },
 ) {
+  const pesos = contexto.pesos ?? PESOS_GUTD_PADRAO;
   const criadas = [];
   for (const { item, classificacao } of itens) {
     await gatewayQualidade.atualizarGutEsforcoItem(item.id, classificacao);
-    const score = calcularScoreGut(
+    // GUTd (E01-S82), não o produto G×U×T: média ponderada dos quatro fatores, escala 1..5.
+    const score = calcularScoreGutd(
       classificacao.gravidade,
       classificacao.urgencia,
       classificacao.tendencia,
+      classificacao.dorCliente,
+      pesos,
     );
     const criada = await derivarItemParaOsOuBacklog(
       gatewayQualidade,
@@ -156,11 +184,11 @@ export async function confirmarGerarBacklog(
         titulo: item.descricao,
         descricao: null,
         categoria: "corretiva",
-        prioridade: classificarPrioridade(score),
+        prioridade: classificarPrioridadeGutd(score),
         gravidade: classificacao.gravidade,
         urgencia: classificacao.urgencia,
         tendencia: classificacao.tendencia,
-        dorCliente: null,
+        dorCliente: classificacao.dorCliente,
         observacao: formatarObservacaoBacklog(classificacao),
         localDescricao: null,
         solicitante: null,
