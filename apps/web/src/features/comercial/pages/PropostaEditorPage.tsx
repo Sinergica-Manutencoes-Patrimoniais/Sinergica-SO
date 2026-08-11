@@ -7,9 +7,10 @@
  * isso é aceitável porque salvar sempre recalcula de novo no servidor com os valores atuais. */
 
 import { Badge, Button, Card, EmptyState, Field, Input, Select } from "@sinergica/ui";
-import { ArrowLeft, FileSearch, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, FileSearch, Plus, Send, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import { useItensLevantamento, useLevantamentosDaConta } from "../application/levantamento-queries";
 import {
   useAliquotaVigente,
@@ -40,6 +41,7 @@ import {
   somarCustoItens,
   transicaoStatusInvalida,
 } from "../domain/proposta";
+import { type PropostaPdfPayload, formatarTextoProposta } from "../domain/proposta-pdf";
 import { supabaseLevantamentoAdapter } from "../infrastructure/supabase-levantamento-adapter";
 import { supabasePrecificacaoAdapter } from "../infrastructure/supabase-precificacao-adapter";
 import { supabasePropostaAdapter } from "../infrastructure/supabase-proposta-adapter";
@@ -82,12 +84,15 @@ interface ItemRascunho extends ItemCommand {
 export function PropostaEditorPage({
   oportunidadeId,
   clienteId,
+  clienteNome,
   onVoltar,
 }: {
   oportunidadeId: string;
   /** E03-S05: a Conta da oportunidade — só pra listar os levantamentos DELA (AC-4 exige "mesma
    * Conta"; a RPC também reforça isso no banco, este prop é só o filtro do picker). */
   clienteId: string;
+  /** E03-S06 AC-1: só pro cabeçalho do PDF — a proposta em si não sabe o nome da Conta. */
+  clienteNome?: string;
   onVoltar: () => void;
 }) {
   const { podeAcessar } = usePermissoes();
@@ -119,6 +124,8 @@ export function PropostaEditorPage({
   const [levantamentoEscolhido, setLevantamentoEscolhido] = useState("");
   const [importandoLevantamento, setImportandoLevantamento] = useState(false);
   const [avisoImportacao, setAvisoImportacao] = useState<string | null>(null);
+  const [gerandoPdf, setGerandoPdf] = useState(false);
+  const [enviando, setEnviando] = useState(false);
 
   const [itensRascunho, setItensRascunho] = useState<ItemRascunho[] | null>(null);
   const [precoManual, setPrecoManual] = useState("");
@@ -264,6 +271,71 @@ export function PropostaEditorPage({
       setPrecoManual("");
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao salvar composição.");
+    }
+  }
+
+  // E03-S06, AC-1/AC-2: sempre a partir do SNAPSHOT da versão vigente (`proposta_versoes`), nunca
+  // dos itens ao vivo na tela — reflete exatamente o que foi salvo, mesmo que a composição em
+  // edição tenha mudanças ainda não persistidas. `versoesQuery` já vem ordenada desc (versao),
+  // então o índice 0 é sempre a mais recente.
+  async function baixarPdf() {
+    if (!propostaSelecionada) return;
+    const versao = (versoesQuery.data ?? [])[0];
+    if (!versao) {
+      setErro("Nenhuma versão salva ainda — salve a composição antes de gerar o PDF.");
+      return;
+    }
+    setGerandoPdf(true);
+    setErro(null);
+    try {
+      const pdf = await criarRelatorioPdf({
+        titulo: "Proposta Comercial",
+        subtitulo: `${clienteNome ?? "Conta"} · v${versao.versao}`,
+      });
+      pdf.escreverTexto(
+        formatarTextoProposta(versao.payload as PropostaPdfPayload, clienteNome ?? "Conta"),
+      );
+      const bytes = await pdf.finalizar();
+      const url = URL.createObjectURL(
+        new Blob([Uint8Array.from(bytes).buffer], { type: "application/pdf" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `proposta-${(clienteNome ?? "conta").toLowerCase().replaceAll(/[^a-z0-9]+/gi, "-")}-v${versao.versao}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setErro("Não foi possível gerar o PDF da proposta.");
+    } finally {
+      setGerandoPdf(false);
+    }
+  }
+
+  // AC-1/AC-3, task 5: a ORDEM importa — gera o PDF primeiro; só muda o status se a geração
+  // funcionar. "Publicar no portal" não é um passo à parte: `comercial.portal_propostas` (0188) é
+  // uma view filtrada por status, então virar 'enviada' já É a publicação.
+  async function enviarProposta() {
+    if (!propostaSelecionada) return;
+    setErro(null);
+    setEnviando(true);
+    try {
+      const versao = (versoesQuery.data ?? [])[0];
+      if (!versao) {
+        throw new Error("Salve a composição antes de enviar — nenhuma versão encontrada.");
+      }
+      const pdf = await criarRelatorioPdf({
+        titulo: "Proposta Comercial",
+        subtitulo: `${clienteNome ?? "Conta"} · v${versao.versao}`,
+      });
+      pdf.escreverTexto(
+        formatarTextoProposta(versao.payload as PropostaPdfPayload, clienteNome ?? "Conta"),
+      );
+      await pdf.finalizar(); // se isto lançar, o catch abaixo pega — mudarStatus nunca roda.
+      await mudarStatus.mutateAsync({ propostaId: propostaSelecionada.id, status: "enviada" });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao enviar a proposta.");
+    } finally {
+      setEnviando(false);
     }
   }
 
@@ -734,6 +806,17 @@ export function PropostaEditorPage({
             )}
         </div>
 
+        {/* PDF — E03-S06 AC-1/AC-2. Disponível sempre que existir ao menos uma versão salva,
+            independente do status: quem decide se está pronto pra baixar é quem trabalha nela. */}
+        {(versoesQuery.data ?? []).length > 0 && (
+          <div className="flex items-center gap-2 border-b border-line p-3">
+            <Button variant="ghost" size="sm" onClick={baixarPdf} disabled={gerandoPdf}>
+              <Download className="size-4" aria-hidden />
+              {gerandoPdf ? "Gerando PDF…" : "Baixar PDF"}
+            </Button>
+          </div>
+        )}
+
         {/* Status */}
         {temEscrita && (
           <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
@@ -754,11 +837,27 @@ export function PropostaEditorPage({
                   transicaoStatusInvalida(propostaSelecionada.status, s) === null &&
                   s !== propostaSelecionada.status,
               )
-              .map((status) => (
-                <Button key={status} variant="ghost" size="sm" onClick={() => mudar(status)}>
-                  {STATUS_LABEL[status]}
-                </Button>
-              ))}
+              .map((status) =>
+                // AC-1/AC-3, task 5: "enviada" tem caminho próprio — gera o PDF ANTES de mudar o
+                // status (mudarStatus genérico não faz isso, mudaria o status mesmo se o PDF
+                // falhasse). Os outros status continuam pelo caminho genérico de sempre.
+                status === "enviada" ? (
+                  <Button
+                    key={status}
+                    variant="ghost"
+                    size="sm"
+                    onClick={enviarProposta}
+                    disabled={enviando}
+                  >
+                    <Send className="size-4" aria-hidden />
+                    {enviando ? "Enviando…" : "Enviar (gera PDF + publica no portal)"}
+                  </Button>
+                ) : (
+                  <Button key={status} variant="ghost" size="sm" onClick={() => mudar(status)}>
+                    {STATUS_LABEL[status]}
+                  </Button>
+                ),
+              )}
             {!podeEditar(propostaSelecionada.status) && (
               <Button
                 variant="ghost"

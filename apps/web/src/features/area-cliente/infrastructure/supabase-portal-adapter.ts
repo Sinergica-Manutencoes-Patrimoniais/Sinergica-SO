@@ -14,6 +14,7 @@ import type {
   PortalNotificacao,
   PortalOrcamento,
   PortalOs,
+  PortalProposta,
   PortalSnapshot,
   PortalVisita,
 } from "../application/portal-gateway";
@@ -72,6 +73,7 @@ export const supabasePortalAdapter: PortalGateway = {
       spdaR,
       notificacoesR,
       orcamentosR,
+      propostasR,
       satisfacaoR,
       faturasR,
       cobrancasR,
@@ -114,6 +116,13 @@ export const supabasePortalAdapter: PortalGateway = {
         .from("orcamentos_servico")
         .select("id,numero,titulo,itens,valor_total_centavos,status,valido_ate")
         .order("created_at", { ascending: false }),
+      // E03-S06: view já filtra pelo síndico da Conta (0188) — não precisa `.eq("cliente_id", …)`
+      // aqui, o filtro é embutido na própria view (embarca `auth.jwt() ->> 'cliente_id'`).
+      supabase
+        .schema("comercial")
+        .from("portal_propostas")
+        .select("id,tipo,status,escopo,preco_centavos,valido_ate,versao_atual,payload,created_at")
+        .order("created_at", { ascending: false }),
       pcm.from("portal_satisfacao").select("ordem_servico_id"),
       supabase
         .schema("financeiro")
@@ -141,6 +150,7 @@ export const supabasePortalAdapter: PortalGateway = {
       [propsR, "PMOC"],
       [notificacoesR, "notificações"],
       [orcamentosR, "orçamentos"],
+      [propostasR, "propostas comerciais"],
       [faturasR, "financeiro"],
       [relatoriosR, "relatórios"],
     ] as const) {
@@ -302,6 +312,16 @@ export const supabasePortalAdapter: PortalGateway = {
       status: row.status,
       validoAte: row.valido_ate,
     }));
+    const propostas: PortalProposta[] = (propostasR.data ?? []).map((row) => ({
+      id: row.id,
+      tipo: row.tipo,
+      status: row.status,
+      escopo: row.escopo,
+      precoCentavos: row.preco_centavos,
+      validoAte: row.valido_ate,
+      versaoAtual: row.versao_atual,
+      payload: row.payload,
+    }));
     const cobrancas = new Map((cobrancasR.data ?? []).map((c) => [c.lancamento_id, c]));
     const faturas: PortalFatura[] = (faturasR.data ?? []).map((row) => {
       const c = cobrancas.get(row.id);
@@ -338,6 +358,7 @@ export const supabasePortalAdapter: PortalGateway = {
       documentos,
       notificacoes,
       orcamentos,
+      propostas,
       faturas,
       osAguardandoAvaliacao: os.filter(
         (item) => item.status === "concluida" && !avaliadas.has(item.id),
@@ -456,6 +477,15 @@ export const supabasePortalAdapter: PortalGateway = {
       p_motivo: motivo?.trim() || null,
     });
     falha(error, "Falha ao decidir orçamento");
+  },
+
+  async decidirProposta(id, decisao, motivo) {
+    const { error } = await supabase.schema("comercial").rpc("fn_decidir_proposta", {
+      p_proposta_id: id,
+      p_decisao: decisao,
+      p_motivo: motivo?.trim() || null,
+    });
+    falha(error, "Falha ao decidir proposta");
   },
 
   async urlAssinada(bucket, path) {

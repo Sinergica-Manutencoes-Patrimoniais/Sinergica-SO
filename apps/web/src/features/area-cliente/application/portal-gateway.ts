@@ -79,6 +79,20 @@ export interface PortalNotificacao {
   createdAt: string;
 }
 
+// E03-S06: proposta comercial vista pelo síndico (via `comercial.portal_propostas`, migration
+// 0188). `payload` é o snapshot da versão vigente (`proposta_versoes.payload`) — é dele que o
+// PDF é montado (AC-2), com `formatarTextoProposta` do domínio `comercial`.
+export interface PortalProposta {
+  id: string;
+  tipo: string;
+  status: string;
+  escopo: string | null;
+  precoCentavos: number;
+  validoAte: string | null;
+  versaoAtual: number;
+  payload: unknown;
+}
+
 export interface PortalOrcamento {
   id: string;
   numero: string;
@@ -117,6 +131,7 @@ export interface PortalSnapshot {
   documentos: PortalDocumento[];
   notificacoes: PortalNotificacao[];
   orcamentos: PortalOrcamento[];
+  propostas: PortalProposta[];
   faturas: PortalFatura[];
   osAguardandoAvaliacao: PortalOs[];
 }
@@ -129,5 +144,8 @@ export interface PortalGateway {
   marcarNotificacaoLida(id: string): Promise<void>;
   responderSatisfacao(osId: string, csat: number, nps: number, comentario: string): Promise<void>;
   decidirOrcamento(id: string, decisao: "aprovado" | "recusado", motivo?: string): Promise<void>;
+  /** E03-S06 AC-5/AC-6/AC-7/AC-8: aceite/recusa da proposta — RPC `comercial.fn_decidir_proposta`
+   * (migration 0189), idempotente e com a guarda de validade no próprio banco. */
+  decidirProposta(id: string, decisao: "aceita" | "recusada", motivo?: string): Promise<void>;
   urlAssinada(bucket: string, path: string): Promise<string>;
 }

@@ -54,7 +54,28 @@ novo (`comercial-levantamento.spec.ts`) roda até o bloqueio já conhecido de S0
 contas" (schema `relacionamento` não resolvido via PostgREST apesar de exposto no dashboard) —
 aceito por instrução do Lucas, não é bug novo desta story.
 
-**Próximo passo**: S06 (PDF + portal), depois S07-S14, seguindo a mesma ordem do ROADMAP. Ao fechar
+**S06 — Proposta: PDF + aprovação no portal — implementada nesta sessão.** Migrations `0188`/`0189`:
+view `comercial.portal_propostas` (filtro embutido por `cliente_id`/`cliente-sindico`, não
+`security_invoker` — RLS normal exige módulo `comercial`, síndico nunca tem; `payload` da versão
+vigente via subquery, alimenta o PDF sem releitura ao vivo); `comercial.proposta_decisoes` +
+`fn_decidir_proposta` (`security definer`, `for update` serializa, `on conflict do nothing` +
+status-check dão idempotência SILENCIOSA — decisão de design diferente do padrão de
+`pcm.portal_decidir_orcamento`/E09-S09, que lança erro numa segunda decisão; aqui a spec pede
+silêncio). Recusa cria motivo dedicado `'Proposta recusada pelo cliente'` porque o trigger
+`fn_oportunidade_fechamento` (0176) exige `etapa_id`+`motivo_perda_id` juntos pra entrar em etapa
+`perdida`. Todos os 8 cenários (aceite, idempotência, recusa+motivo, recusa sem motivo, expirada,
+papel errado, Conta errada, isolamento da view) smoke-testados em produção via JWT simulado dentro
+de `rollback`. PDF client-side reusando `lib/pdf/relatorio-pdf.ts` (`pdf-lib`, mesmo builder de
+E01-S139) — `domain/proposta-pdf.ts::formatarTextoProposta` novo, monta o texto do SNAPSHOT da
+versão (AC-2). "Enviar" gera o PDF primeiro; se falhar, o status não muda; se funcionar, muda pra
+`enviada`, que já É a publicação (view status-driven, sem passo separado). Portal do Cliente ganha
+aba "Propostas" (`PortalShell.tsx` — mesmo arquivo usado tanto embutido no app quanto no build
+isolado `apps/portal`, `packages/portal-core` ganhou o valor `"propostas"` em `PortalSection`).
+`ci:local` verde (955 testes). Bundle do portal cresceu ~80KB gzip (primeira vez que `pdf-lib` entra
+nele) — trade-off aceito. pgTAP escrito (15 assertions), Playwright roda até o bloqueio conhecido de
+`relacionamento` (mesmo de S04/S05).
+
+**Próximo passo**: S07 (Contratos), depois S08-S14, seguindo a mesma ordem do ROADMAP. Ao fechar
 o épico inteiro: confirmar exposição real de `relacionamento` no Data API, rodar Playwright completo,
 só então branch → PR → merge (nunca push direto, nunca por story).
 

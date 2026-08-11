@@ -96,6 +96,7 @@ export function PainelComercialCliente({
       <PropostaEditorPage
         oportunidadeId={oportunidadeAberta}
         clienteId={clienteId}
+        clienteNome={clienteNome}
         onVoltar={() => setOportunidadeAberta(null)}
       />
     );
