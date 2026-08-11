@@ -91,9 +91,24 @@ nav novo "Contratos" no Comercial. `ci:local` verde (971 testes). pgTAP escrito 
 inclui regressão do cron pra contrato legado). Playwright roda até o bloqueio conhecido de
 `relacionamento`.
 
-**Próximo passo**: S08 (Dashboard comercial), depois S09-S14, seguindo a mesma ordem do ROADMAP. Ao
-fechar o épico inteiro: confirmar exposição real de `relacionamento` no Data API, rodar Playwright
-completo, só então branch → PR → merge (nunca push direto, nunca por story).
+**S08 — Dashboard comercial — implementada nesta sessão, primeira do épico com Playwright
+PASSANDO DE VERDADE contra produção** (não depende de `relacionamento`, que segue bloqueado).
+Migration `0196`: 6 RPCs `security invoker` (`fn_conversao_etapas`, `fn_ciclo_venda` — mediana via
+`percentile_cont`, não média —, `fn_win_loss`, `fn_ticket_medio` — cascata contrato→proposta→
+estimado com contador por fonte —, `fn_desconto_medio`, `fn_origem_leads`), sem guarda explícita —
+RLS FORCE de `comercial.*` já filtra sozinha (mesmo padrão de `financeiro.fn_resumo_caixa`,
+E04-S03). Matemática conferida à mão contra dados de teste controlados: mediana [10,4] dias = 7 ✓,
+desconto médio -25,3%/+10% = -7,67% ✓. `DashboardComercialPage` virou a view padrão do módulo
+Comercial (era o Funil). 2 gráficos SVG próprios (`ConversaoEtapasChart`, `MotivosPerdaChart`),
+skill `dataviz` seguida, padrão de `FluxoMensalChart` (E04-S03) reusado. AC-8 honesto confirmado
+contra produção real (zero oportunidades reais hoje — "sem dados" é o caminho feliz real, não
+hipotético). `ci:local` verde (979 testes). pgTAP escrito (10 assertions, inclui regressão de
+reabertura usando último fechamento).
+
+**Próximo passo**: S09 (Agente Zé entrega lead pro Comercial), depois S10-S14, seguindo a mesma
+ordem do ROADMAP. Ao fechar o épico inteiro: confirmar exposição real de `relacionamento` no Data
+API, rodar Playwright completo (as demais stories seguem bloqueadas nele), só então branch → PR →
+merge (nunca push direto, nunca por story).
 
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 

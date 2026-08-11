@@ -14,16 +14,16 @@ alwaysApply: false
 
 | # | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |---|------|----------|------------|----------------|--------|
-| 1 | Migration `NNNN_E03-S08_rpcs_dashboard.sql`: `fn_conversao_etapas(inicio, fim)`, `fn_ciclo_venda(inicio, fim)` (mediana), `fn_win_loss(inicio, fim)`, `fn_ticket_medio(inicio, fim)`, `fn_origem_leads(inicio, fim)` — com guarda de permissão `comercial:leitura`; nenhuma divide por zero | AC-1, AC-2, AC-3, AC-4, AC-5, AC-7, AC-9 | — | `pnpm run lint:migrations` | todo |
-| 2 | RPC `fn_desconto_medio(inicio, fim)` — só faz sentido com S04; retorna marcador explícito de "sem dados" quando `comercial.propostas` não existe ou está vazia | AC-6, AC-8 | 1 | `pnpm run lint:migrations` | todo |
-| 3 | `domain/metricas-comercial.ts`: formatação e classificação puras (`amostraPequena`, `taxaConversao` protegendo divisão por zero, rótulo da fonte usada no ticket médio) — reusar `amostraPequena` da E04-S13 se já estiver em `packages/` | AC-5, AC-9 | — | `pnpm run test` | todo |
-| 4 | Gateway + adapter chamando as RPCs, com o marcador de "sem dados" viajando intacto até a UI (nunca convertido em 0) | AC-1, AC-8 | 1, 2 | `pnpm run test` | todo |
-| 5 | `DashboardComercialPage`: seletor de período + blocos de conversão, ciclo, win/loss, ticket médio, desconto e origem | AC-2, AC-3, AC-4, AC-5, AC-6, AC-7 | 4 | `pnpm run test` | todo |
-| 6 | Gráficos SVG próprios seguindo a skill `dataviz` e o padrão da E04-S03 (`FluxoMensalChart` como referência) — funil de conversão e distribuição de motivos de perda; **não** introduzir biblioteca de gráfico | AC-2, AC-4 | 5 | `pnpm run test` | todo |
-| 7 | Estados honestos: "sem dados ainda" quando a story-fonte não existe (AC-8), estado vazio por bloco (AC-9), aviso de amostra pequena | AC-8, AC-9 | 5 | `pnpm run test` | todo |
-| 8 | Navegação + gate `podeAcessar('comercial', ...)`; dashboard é o item default do módulo (padrão do Financeiro, E04-S03) | AC-10 | 5 | `pnpm run test` | todo |
-| 9 | pgTAP `supabase/tests/comercial_dashboard_rls.test.sql`: cada RPC negando sem `comercial:leitura`; período vazio retornando linha zerada sem erro; oportunidade reaberta contando o último fechamento | AC-1, AC-9 | 1, 2 | CI `db-tests` | todo |
-| 10 | `pnpm run ci:local` + Playwright (dev server local): dashboard carrega sem erro de console, tema claro/escuro, período vazio mostra estado vazio + ROADMAP/STATE | todos | 1–9 | `pnpm run ci:local` | todo |
+| 1 | Migration `NNNN_E03-S08_rpcs_dashboard.sql`: `fn_conversao_etapas(inicio, fim)`, `fn_ciclo_venda(inicio, fim)` (mediana), `fn_win_loss(inicio, fim)`, `fn_ticket_medio(inicio, fim)`, `fn_origem_leads(inicio, fim)` — com guarda de permissão `comercial:leitura`; nenhuma divide por zero | AC-1, AC-2, AC-3, AC-4, AC-5, AC-7, AC-9 | — | `pnpm run lint:migrations` | done |
+| 2 | RPC `fn_desconto_medio(inicio, fim)` — só faz sentido com S04; retorna marcador explícito de "sem dados" quando `comercial.propostas` não existe ou está vazia | AC-6, AC-8 | 1 | `pnpm run lint:migrations` | done |
+| 3 | `domain/metricas-comercial.ts`: formatação e classificação puras (`amostraPequena`, `taxaConversao` protegendo divisão por zero, rótulo da fonte usada no ticket médio) — reusar `amostraPequena` da E04-S13 se já estiver em `packages/` | AC-5, AC-9 | — | `pnpm run test` | done |
+| 4 | Gateway + adapter chamando as RPCs, com o marcador de "sem dados" viajando intacto até a UI (nunca convertido em 0) | AC-1, AC-8 | 1, 2 | `pnpm run test` | done |
+| 5 | `DashboardComercialPage`: seletor de período + blocos de conversão, ciclo, win/loss, ticket médio, desconto e origem | AC-2, AC-3, AC-4, AC-5, AC-6, AC-7 | 4 | `pnpm run test` | done |
+| 6 | Gráficos SVG próprios seguindo a skill `dataviz` e o padrão da E04-S03 (`FluxoMensalChart` como referência) — funil de conversão e distribuição de motivos de perda; **não** introduzir biblioteca de gráfico | AC-2, AC-4 | 5 | `pnpm run test` | done |
+| 7 | Estados honestos: "sem dados ainda" quando a story-fonte não existe (AC-8), estado vazio por bloco (AC-9), aviso de amostra pequena | AC-8, AC-9 | 5 | `pnpm run test` | done |
+| 8 | Navegação + gate `podeAcessar('comercial', ...)`; dashboard é o item default do módulo (padrão do Financeiro, E04-S03) | AC-10 | 5 | `pnpm run test` | done |
+| 9 | pgTAP `supabase/tests/comercial_dashboard_rls.test.sql`: cada RPC negando sem `comercial:leitura`; período vazio retornando linha zerada sem erro; oportunidade reaberta contando o último fechamento | AC-1, AC-9 | 1, 2 | CI `db-tests` | done |
+| 10 | `pnpm run ci:local` + Playwright (dev server local): dashboard carrega sem erro de console, tema claro/escuro, período vazio mostra estado vazio + ROADMAP/STATE | todos | 1–9 | `pnpm run ci:local` | done |
 
 ## Plano de teste
 - **pgTAP**: as RPCs com período vazio (divisão por zero é o defeito clássico aqui) e com

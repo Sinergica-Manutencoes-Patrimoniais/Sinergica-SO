@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 test("Cria proposta, monta composição, vê cálculo ao vivo e salva", async ({ page }) => {
   await page.goto("/");
   await page.getByText("Comercial", { exact: true }).first().click();
-  // O Funil é a view padrão do módulo desde a E03-S02 — precisa navegar pra Contas explicitamente.
+  // Dashboard é a view padrão do módulo desde a E03-S08 — precisa navegar pra Contas explicitamente.
   await page.getByTitle("Contas", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Contas" })).toBeVisible({ timeout: 15_000 });
 

@@ -62,6 +62,7 @@ import { PainelComercialCliente } from "../features/comercial/components/PainelC
 import { ConfigFunilPage as ComercialConfigFunilPage } from "../features/comercial/pages/ConfigFunilPage";
 import { ContasPage as ComercialContasPage } from "../features/comercial/pages/ContasPage";
 import { ContratosPage as ComercialContratosPage } from "../features/comercial/pages/ContratosPage";
+import { DashboardComercialPage as ComercialDashboardPage } from "../features/comercial/pages/DashboardComercialPage";
 import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
 import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features/comercial/pages/ParametrosPrecoPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
@@ -229,7 +230,13 @@ interface FinanceiroNavGroup {
 
 // Sub-navegação do Comercial — E03-S01 (specs/E03-S01-fundacao-comercial/). Mesmo padrão useState
 // de abas. Cresce com o épico: funil (S02), propostas (S04), contratos (S07), dashboard (S08).
-type ComercialView = "funil" | "contas" | "precificacao" | "config-funil" | "contratos";
+type ComercialView =
+  | "dashboard"
+  | "funil"
+  | "contas"
+  | "precificacao"
+  | "config-funil"
+  | "contratos";
 
 interface ComercialNavItem {
   label: string;
@@ -369,6 +376,7 @@ const FINANCEIRO_NAV: FinanceiroNavGroup[] = [
 ];
 
 const COMERCIAL_NAV: ComercialNavItem[] = [
+  { label: "Dashboard", icon: Gauge, view: "dashboard" },
   { label: "Funil", icon: Columns3, view: "funil" },
   { label: "Contas", icon: Briefcase, view: "contas" },
   { label: "Contratos", icon: FileSignature, view: "contratos" },
@@ -611,7 +619,10 @@ export function HomePage() {
   >();
   // Sub-navegação do Financeiro.
   const [financeiroView, setFinanceiroView] = useState<FinanceiroView>("dashboard");
-  const [comercialView, setComercialView] = useState<ComercialView>("funil");
+  // E03-S08 AC-10/task 8: dashboard é o item default do módulo, mesmo padrão do Financeiro
+  // (E04-S03) — "o funil está funcionando?" é a pergunta que abriu o épico, por isso é a primeira
+  // tela, não o Kanban de trabalho (que segue disponível, só deixou de ser o default da E03-S02).
+  const [comercialView, setComercialView] = useState<ComercialView>("dashboard");
   // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
   const [guiaView, setGuiaView] = useState<GuiaView>("visao-geral");
   const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
@@ -1363,7 +1374,9 @@ export function HomePage() {
           ) : activeModulo === "comercial" ? (
             // Abrir a Conta cai na Visão 360 do PCM — é a mesma Conta (ADR-0020), e a aba
             // Comercial de lá mostra o funil. Nada de reconstruir a 360 dentro do Comercial.
-            comercialView === "config-funil" ? (
+            comercialView === "dashboard" ? (
+              <ComercialDashboardPage />
+            ) : comercialView === "config-funil" ? (
               <ComercialConfigFunilPage />
             ) : comercialView === "precificacao" ? (
               <ComercialParametrosPrecoPage />
