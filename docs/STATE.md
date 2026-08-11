@@ -10,7 +10,7 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-## 2026-08-11 — E03 Comercial: S01-S11 implementadas, épico segue em andamento (Claude/Opus 5)
+## 2026-08-11 — E03 Comercial: S01-S12 implementadas, épico segue em andamento (Claude/Opus 5)
 
 Especificação completa do épico E03 (14 stories) concluída em sessão anterior (commit `a4904e2`),
 com framework de propriedade de dados (ADR-0019 R1/R2/R3 + corolários) e decisão de Conta única
@@ -190,10 +190,44 @@ mas as próprias asserções foram conferidas manualmente contra produção via 
 --linked` antes de escrever o teste. **Playwright passou de verdade** (card "Desativada" visível
 no dashboard PCM, sem erro de console — PCM não depende do bloqueio `relacionamento`).
 
-**Próximo passo**: S12 (Dono do Orçamento de Serviço), depois S13/S14, seguindo a mesma ordem do
-ROADMAP. Ao fechar o épico inteiro: confirmar exposição real de `relacionamento` no Data API,
-rodar Playwright completo (as demais stories seguem bloqueadas nele), só então branch → PR →
-merge (nunca push direto, nunca por story).
+**S12 — Dono do Orçamento de Serviço + fechamento da E01-S14 — implementada nesta sessão.** Story
+majoritariamente de fronteira/documentação (código em produção não muda de comportamento). A
+E09-S09 já implementava o "Fluxo B" (`pcm.requisicoes_servico`/`orcamentos_servico`/
+`orcamento_decisoes`) sem que o ROADMAP registrasse — a E01-S14 ficou "bloqueada" por mais de um
+mês com o código já rodando. Migration `0202`: view `pcm.portal_orcamentos_servico` —
+**`security_invoker = true`, não `security_barrier`** como `financeiro.portal_faturas`/
+`comercial.portal_propostas`, diferença deliberada e não um desvio da spec: a RLS de
+`pcm.orcamentos_servico` (desde a 0144) já concede select direto ao `cliente-sindico` filtrado por
+`cliente_id`, então a view simplesmente herda essa RLS em vez de duplicar o filtro num mecanismo
+elevado (evita drift entre a view e a policy da tabela-base) — mais estreito e mais correto pro
+caso real. `grant select` explícito (bug real da E04-S04, não repetido). Migration `0203`:
+`comment on table` nas 3 tabelas documentando o dono (PCM, R1, decisão 10 do E03) e a origem
+(E09-S09).
+
+**4 cenários de RLS smoke-testados em produção** via JWT simulado dentro de `rollback`: síndico da
+Conta certa vê o orçamento pela view, síndico de outra Conta não vê, staff com módulo `pcm:leitura`
+vê, usuário sem módulo não vê — todos bateram exatamente igual ao comportamento anterior (AC-5).
+`supabase-portal-adapter.ts` trocado pra ler da view em vez da tabela-base, mesmas colunas
+selecionadas. `glossary.md` já tinha os 3 conceitos (Orçamento de Serviço/Proposta/Orçamento anual)
+corretos de uma sessão anterior — conferido, sem mudança. `ARCHITECTURE.md`: linha "Pré-OS" perde o
+⚠️ e ganha nota de dono resolvido; matriz dono×consumidor ganha linha nova pro Orçamento de Serviço.
+`specs/E01-S14-fluxo-b-orcamento/design.md` fechado formalmente — nota de fechamento no topo +
+respostas retroativas às 2 perguntas de negócio que bloqueavam o design original (recusa arquiva
+definitivo, sem revisão no mesmo funil; aceite/recusa nasceu direto no portal do síndico, sem fase
+intermediária via WhatsApp).
+
+`ci:local` verde. pgTAP escrito (`pcm_portal_orcamentos_servico.test.sql`, 6 assertions), não
+executado local (sem Docker), asserções conferidas manualmente contra produção antes de escrever.
+**Lacuna honesta**: sem Playwright de síndico — o codebase não tem sessão `cliente-sindico`
+login-ável em E2E hoje (mesma lacuna já documentada na S06, `comercial-proposta-pdf-portal.spec.ts`
+tem a mesma nota); a regressão real (AC-5) foi coberta pelos 4 cenários de RLS reproduzindo
+exatamente a query do adapter, mais forte que um mock de UI.
+
+**Próximo passo**: S13 (`historico_chamado_snapshots`, story trivial de reclassificação — já
+determinado que NÃO é dívida, código não muda), depois S14 (Guia do SO). Ao fechar o épico inteiro:
+confirmar exposição real de `relacionamento` no Data API, rodar Playwright completo (as demais
+stories seguem bloqueadas nele), só então branch → PR → merge (nunca push direto, nunca por
+story).
 
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 

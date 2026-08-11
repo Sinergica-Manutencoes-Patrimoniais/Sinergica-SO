@@ -112,8 +112,11 @@ export const supabasePortalAdapter: PortalGateway = {
         .from("portal_notificacoes")
         .select("id,titulo,mensagem,tipo,lida_at,created_at")
         .order("created_at", { ascending: false }),
+      // E03-S12: lê pela view de consumo (0202), não mais direto da tabela-base — o PCM é dono
+      // (R1), o portal é canal (R2). RLS efetiva é a mesma (view security_invoker), sem mudança
+      // de comportamento visível ao síndico.
       pcm
-        .from("orcamentos_servico")
+        .from("portal_orcamentos_servico")
         .select("id,numero,titulo,itens,valor_total_centavos,status,valido_ate")
         .order("created_at", { ascending: false }),
       // E03-S06: view já filtra pelo síndico da Conta (0188) — não precisa `.eq("cliente_id", …)`

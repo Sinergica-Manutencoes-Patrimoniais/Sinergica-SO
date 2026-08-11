@@ -107,7 +107,7 @@ dono. Nunca adicione coluna na tabela do outro contexto. Ex.: o funil comercial 
 |-------|---------|--------|
 | **Conta** | `clientes` ⭐, `cliente_grupos`, `cliente_responsaveis`, `marcacoes_cliente` | **Shared Kernel** |
 | OS & chamado | `ordens_servico`, `os_status_eventos`, `os_notas`, `chamados`, `chamados_eventos`, `chamados_anotacoes`, `chamados_interacoes` | Core |
-| Pré-OS (Fluxo B) | `requisicoes_servico`, `orcamentos_servico`, `orcamento_decisoes` | Core ⚠️ criadas pela E09 |
+| Pré-OS / Orçamento de Serviço (Fluxo B) | `requisicoes_servico`, `orcamentos_servico`, `orcamento_decisoes` | Core — dono é o PCM (R1, decisão 10 do E03), criadas pela E09-S09, documentado na E03-S12, fecha a E01-S14 |
 | Ativos & local | `equipamentos`, `equipamento_categorias`, `sistemas`, `sistema_itens`, `locais`, `local_tipos`, `areas`, `pcm_equipment` | Core |
 | PMOC | `pmoc_properties`, `pmoc_contracts`, `pmoc_equipment`, `pmoc_records`, `pmoc_schedules`, `pmoc_microbio_analysis`, `pmoc_nonconformity_log` | Core |
 | Inspeção & laudo | `inspecoes`, `inspecao_itens`, `tipos_inspecao`, `checklist_templates`, `checklist_template_itens`, `laudos_spda`, `laudo_spda_pontos`, `questionarios` | Core |
@@ -177,6 +177,7 @@ definição e devem consumir por view.
 | Contato (`relacionamento.*`) | Transversal | Atendimento, Comercial | FK direta |
 | Lead (`comercial.oportunidades`, `origem='whatsapp'`) | Comercial | Atendimento (timeline do contato) | RPC `security definer` `fn_registrar_oportunidade`/`get_timeline_contato` |
 | Fatura/cobrança | Financeiro | Portal | **view** `portal_faturas`/`portal_cobrancas` ✅ |
+| Orçamento de Serviço (`pcm.orcamentos_servico`/`requisicoes_servico`/`orcamento_decisoes`) | PCM | Portal | **view** `portal_orcamentos_servico` (leitura) + RPC `portal_decidir_orcamento` (decisão) ✅ |
 
 ### Dívida de fronteira (passivo herdado — corrigir no E03)
 1. **Colunas comerciais em `pcm.clientes`** — `tipo`, `status_comercial` (E01-S12) violam R3.
