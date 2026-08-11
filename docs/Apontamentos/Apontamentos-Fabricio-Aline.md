@@ -90,3 +90,31 @@ nome do arquivo no campo Imagem — ex.: `tela-erro-2026-07-14.png`.
 - Tipo: bug
 - O que encontrei: ao importar o XLS padrão do Auvo na tela "Importar Relatório XLS", a subida falha com "Edge Function returned a non-2xx status code". O console mostra `Failed to load resource: the server responded with a status of 502` na função `importar-relatorio-pdf`. Causa provável: a função encaminha 502 quando a chamada à OpenRouter não retorna `ok` (`supabase/functions/importar-relatorio-pdf/index.ts:42`) — checar logs da function em produção pra confirmar se é falha da OpenRouter (modelo/chave/quota) ou timeout por texto extraído grande.
 - Imagem: (salvar os 2 prints anexados nesta pasta, ex. `pcm-importar-xls-erro-2026-07-24-1.png` e `-2.png`)
+
+### 2026-08-11 — Chamados - Kanban
+Quem: Fabrício
+Tipo: Bug 
+O que encontrei: Preventivas  de clientes diferente do selecionado no filtro 
+Imagem: (<img width="1765" height="1010" alt="image" src="https://github.com/user-attachments/assets/d497cc9c-853c-406f-b9d7-e4257f10507e" />
+)
+
+### 2026-08-11 — Chamados - Kanban
+Quem: Fabrício
+Tipo: Bug 
+O que encontrei: Chamados com OS finalizada (chek in e check out) aparecendo em solicitação
+Imagem: (<img width="1765" height="1010" alt="image" src="https://github.com/user-attachments/assets/d497cc9c-853c-406f-b9d7-e4257f10507e" />
+)
+
+### 2026-08-11 — Chamados - Kanban
+Quem: Fabrício
+Tipo: Bug 
+O que encontrei: Início e fim de visita aparecendo na coluna solicitação do kanban
+Imagem: (<img width="1765" height="1010" alt="image" src="https://github.com/user-attachments/assets/d497cc9c-853c-406f-b9d7-e4257f10507e" />
+)
+
+### 2026-08-11 — Chamados - Kanban
+Quem: Fabrício
+Tipo: Bug 
+O que encontrei: Preventivas  de clientes diferente do selecionado no filtro 
+Imagem: (<img width="1765" height="1010" alt="image" src="https://github.com/user-attachments/assets/d497cc9c-853c-406f-b9d7-e4257f10507e" />
+)
