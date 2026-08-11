@@ -79,7 +79,10 @@ select is(
 
 -- ─────────────────────────── AC-3: unicidade ─────────────────────────────────
 
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000903","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
+-- financeiro:leitura junto — os asserts abaixo fazem join com financeiro.contratos pra conferir o
+-- plano de faturamento criado por fn_ativar_contrato (RPC é security definer e cria o plano sem
+-- depender disso, mas a LEITURA do resultado pelo teste precisa da RLS própria do Financeiro).
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000903","user_role":"colaborador","user_modulos":{"comercial":"escrita","financeiro":"leitura"}}';
 select throws_ok(
   $$ select comercial.fn_criar_contrato('00000000-0000-0000-0000-000000000cb1') $$,
   '23505',
@@ -188,6 +191,9 @@ select throws_ok(
 
 -- Contrato "legado" — inserido direto no Financeiro, sem passar pelo Comercial (comercial_contrato_id
 -- null). fn_gerar_recorrencias (E04-S04) precisa continuar funcionando pra ele sem mudança nenhuma.
+-- Insert direto em financeiro.contratos exige user_modulos.financeiro=escrita (RLS própria do
+-- Financeiro, migration 0108) — comercial:escrita, usado até aqui, não basta.
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000903","user_role":"colaborador","user_modulos":{"comercial":"escrita","financeiro":"escrita"}}';
 insert into financeiro.contratos (id, cliente_id, descricao, valor_mensal_centavos, dia_vencimento, inicio, status)
 values ('00000000-0000-0000-0000-0000000009e9', '00000000-0000-0000-0000-0000000009d1', 'Contrato legado sem origem comercial', 30000, 10, current_date - 30, 'ativo');
 select is(

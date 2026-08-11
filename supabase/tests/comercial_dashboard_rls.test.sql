@@ -35,7 +35,7 @@ select is(
   'sem modulo comercial: fn_conversao_etapas nao levanta erro, so devolve vazio (RLS filtra)'
 );
 select is(
-  (select quantidade from comercial.fn_ciclo_venda(current_date - 30, current_date)),
+  (select quantidade::int from comercial.fn_ciclo_venda(current_date - 30, current_date)),
   0,
   'sem modulo comercial: fn_ciclo_venda devolve quantidade zero'
 );
@@ -88,12 +88,12 @@ update comercial.oportunidades set etapa_id = '00000000-0000-0000-0000-000000000
 update comercial.oportunidades set fechada_em = now() - interval '5 days' where id = '00000000-0000-0000-0000-0000000009d9';
 
 select is(
-  (select quantidade from comercial.fn_ciclo_venda(current_date - 10, current_date)),
+  (select quantidade::int from comercial.fn_ciclo_venda(current_date - 10, current_date)),
   1,
   'ciclo de venda conta a oportunidade pelo fechamento MAIS RECENTE (5 dias atras), nao pelo primeiro (30 dias atras, fora desta janela)'
 );
 select is(
-  (select quantidade from comercial.fn_ciclo_venda(current_date - 35, current_date - 20)),
+  (select quantidade::int from comercial.fn_ciclo_venda(current_date - 35, current_date - 20)),
   0,
   'ciclo de venda NAO conta a oportunidade na janela do PRIMEIRO fechamento (ja superado pela reabertura)'
 );

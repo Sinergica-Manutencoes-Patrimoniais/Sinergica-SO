@@ -9,6 +9,14 @@
 begin;
 select plan(5);
 
+-- Usuário de apoio pro fixture mais abaixo — precisa ser inserido ANTES de trocar pro role
+-- `authenticated` (achado real: authenticated não tem INSERT em auth.users, só o role default
+-- da conexão do runner de teste, que é superuser/postgres).
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+values
+  ('00000000-0000-0000-0000-000000000fa0', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'teste-s10@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
+on conflict (id) do nothing;
+
 -- AC-6: a tabela não existe mais
 select is(
   (select to_regclass('comercial.leads')::text),
@@ -43,11 +51,6 @@ select lives_ok(
 
 -- Regressão positiva: oportunidade com origem=whatsapp aparece na timeline como 'lead' (mesma
 -- categoria de antes, fonte de dado diferente).
-insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
-values
-  ('00000000-0000-0000-0000-000000000fa0', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'teste-s10@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
-on conflict (id) do nothing;
-
 -- role service_role de verdade (não authenticated fingindo claim) — bypassa RLS igual ao Edge
 -- Function real em produção. Fingir a claim "role":"service_role" com o role PG authenticated não
 -- basta: a policy de insert de relacionamento.contatos só olha user_role/user_modulos.

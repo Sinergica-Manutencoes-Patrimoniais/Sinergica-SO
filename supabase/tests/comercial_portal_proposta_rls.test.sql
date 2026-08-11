@@ -89,6 +89,10 @@ select is(
   'aceita',
   'aceite muda o status da proposta pra aceita'
 );
+-- cliente-sindico não tem RLS pra ler comercial.oportunidades/oportunidade_eventos direto (só
+-- enxerga propostas pela view do portal) — service_role confirma o efeito colateral da RPC sem
+-- depender da visibilidade do chamador.
+set local role service_role;
 select is(
   (select e.tipo from comercial.oportunidades o join comercial.etapas_funil e on e.id = o.etapa_id
     where o.id = '00000000-0000-0000-0000-0000000009a1'),
@@ -105,6 +109,8 @@ select is(
   1,
   'grava exatamente 1 evento de movimentacao'
 );
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000801","user_role":"cliente-sindico","cliente_id":"00000000-0000-0000-0000-0000000009c1"}';
 
 -- AC-8: segunda decisão sobre a MESMA proposta é ignorada, sem erro, sem duplicar
 select lives_ok(
@@ -124,12 +130,16 @@ select is(
   'recusada',
   'recusa muda o status da proposta pra recusada'
 );
+-- cliente-sindico não enxerga comercial.oportunidades direto (mesmo motivo do bloco anterior).
+set local role service_role;
 select is(
   (select e.tipo from comercial.oportunidades o join comercial.etapas_funil e on e.id = o.etapa_id
     where o.id = '00000000-0000-0000-0000-0000000009a2'),
   'perdida',
   'recusa move a oportunidade pra etapa tipo=perdida'
 );
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000801","user_role":"cliente-sindico","cliente_id":"00000000-0000-0000-0000-0000000009c1"}';
 select throws_ok(
   $$ select comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'recusada', null) $$,
   '23514',

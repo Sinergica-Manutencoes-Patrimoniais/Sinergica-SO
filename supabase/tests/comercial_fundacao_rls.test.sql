@@ -92,7 +92,7 @@ select throws_ok(
   $$ update comercial.oportunidades
         set etapa_id = (select id from comercial.etapas_funil where tipo = 'perdida' limit 1)
       where id = '00000000-0000-0000-0000-0000000003a1' $$,
-  'P0001',
+  '23514',
   null,
   'mover para etapa perdida SEM motivo e recusado pelo trigger'
 );

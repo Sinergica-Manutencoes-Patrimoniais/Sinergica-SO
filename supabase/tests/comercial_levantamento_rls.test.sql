@@ -44,12 +44,18 @@ select is(
   'comercial:escrita (sem pcm): fn_criar_assessment_pre_venda cria com motivo pre_venda'
 );
 
+-- A RPC é security definer e criou a linha (test acima já prova), mas o SELECT direto aqui roda
+-- com a RLS do PRÓPRIO caller (comercial:escrita, sem pcm) — pcm.inspecoes exige módulo pcm pra
+-- leitura. service_role confirma que a linha existe de fato, sem depender da RLS do chamador.
+set local role service_role;
 select is(
   (select count(*)::int from pcm.inspecoes
     where client_id = '00000000-0000-0000-0000-0000000007c1' and motivo_assessment = 'pre_venda'),
   1,
   'o assessment foi persistido de fato (security definer chegou no insert)'
 );
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000702","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
 
 -- ADR-0019 R2: o mesmo usuário comercial NÃO enxerga a tabela por select direto — só pela RPC.
 select is(
