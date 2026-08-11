@@ -10,6 +10,54 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-11 — E03 Comercial: S01-S05 implementadas, épico segue em andamento (Claude/Opus 5)
+
+Especificação completa do épico E03 (14 stories) concluída em sessão anterior (commit `a4904e2`),
+com framework de propriedade de dados (ADR-0019 R1/R2/R3 + corolários) e decisão de Conta única
+(ADR-0020). Lucas pediu pra implementar o épico inteiro e só subir/PR/merge **de uma vez ao final**
+— nada de push incremental por story. Commits locais seguem por story; branch ainda não pushed.
+
+**S01-S04 implementadas e commitadas** (fundação, funil Kanban, precificação, editor de proposta) —
+ver commits `0a606f0`/`5673730`/`b4285d1`. No caminho, 3 bugs reais do PCM corrigidos (GUTd vs GUT
+clássico, IA de classificação caindo 100% em fallback, `dependência de nanoid` — commits `4fd3239`
+e `f77af35`).
+
+**S05 — Levantamento de pré-venda — implementada nesta sessão.** Migrations `0185`-`0187`:
+`pcm.inspecoes.motivo_assessment` ganha `'pre_venda'` (`not valid` + `validate` em transação
+separada — Squawk exige, mesmo padrão de `0091`/`0092`); `pcm.fn_criar_assessment_pre_venda`
+(`security definer`, guarda própria — comercial:escrita OU pcm:escrita OU superadmin — porque a RLS
+real de `pcm.inspecoes` exige módulo `pcm` especificamente, um comercial puro nunca passaria se a
+função rodasse `invoker`); `pcm.fn_listar_assessments_conta` (leitura, mesma guarda com
+leitura|escrita); `pcm.fn_listar_itens_assessment` (exige `p_cliente_id` batendo com o assessment —
+reforça no banco o caso de borda "Assessment de outra Conta não pode ser vinculado"). As 3 RPCs
+smoke-testadas em produção via `set_config('request.jwt.claims', ...)` dentro de transações com
+`rollback` — positivo (guarda libera, dado persiste, round-trip criar→listar funciona) e negativo
+(usuário sem módulo é negado, Conta errada é negada) — zero lixo deixado em produção.
+
+Domínio novo `importacao-levantamento.ts`: decide que só itens **achado** (`nao_conforme`/`atencao`)
+viram item de composição — conforme/não avaliado/não aplicável não geram trabalho cobrável (decisão
+de domínio, documentada no código, não é AC literal da spec). `application/proposta.ts` ganha
+`montarItensImportadosDoLevantamento` — o encontro entre esse domínio e `ItemCommand` (S04), sempre
+ACRESCENTA aos itens existentes (AC-5), nunca sobrescreve.
+
+UI: `PropostaEditorPage` ganha seção "Levantamento" (só quando `tipo === "levantamento"`) — vincular
+Assessment da mesma Conta, importar itens com aviso de quantos entraram, trata "vínculo indisponível"
+(Assessment excluído/arquivado) sem quebrar a tela. `PainelComercialCliente` ganha seção
+"Levantamentos" — "Novo levantamento" só aparece com oportunidade existente na Conta (edge case da
+spec), "Ver assessment completo" navega pro PCM via deep-link novo (`inspecaoDeepLinkId` em
+`HomePage.tsx`, mesmo padrão do `osDeepLink` de E01-S49; `InspecoesPage` ganhou prop opcional
+`inspecaoIdInicial`).
+
+`ci:local` verde (948 testes, 15 novos: 11 domínio + 4 application). pgTAP escrito
+(`comercial_levantamento_rls.test.sql`, 11 assertions), não executado local (sem Docker). Playwright
+novo (`comercial-levantamento.spec.ts`) roda até o bloqueio já conhecido de S04 — "Falha ao carregar
+contas" (schema `relacionamento` não resolvido via PostgREST apesar de exposto no dashboard) —
+aceito por instrução do Lucas, não é bug novo desta story.
+
+**Próximo passo**: S06 (PDF + portal), depois S07-S14, seguindo a mesma ordem do ROADMAP. Ao fechar
+o épico inteiro: confirmar exposição real de `relacionamento` no Data API, rodar Playwright completo,
+só então branch → PR → merge (nunca push direto, nunca por story).
+
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 
 Implementação local concluída em `specs/E01-S145-fluidez-performance-chamados/` (tier

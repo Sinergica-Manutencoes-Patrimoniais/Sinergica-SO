@@ -44,6 +44,13 @@ export interface MudarStatusCommand {
   status: PropostaStatus;
 }
 
+/** E03-S05, AC-4: vincula o Assessment (levantamento) à proposta — só a FK, `update` simples sob
+ * RLS (mesmo padrão de `mudarStatus`; não precisa de RPC porque não recalcula preço nem versiona). */
+export interface VincularAssessmentCommand {
+  propostaId: string;
+  assessmentId: string;
+}
+
 export interface ForcarPrecoCommand {
   propostaId: string;
   precoCentavos: number;
@@ -70,6 +77,9 @@ export interface PropostaGateway {
    * (transação real via RPC seria o ideal; nesta camada, sequência com rollback manual em erro). */
   salvarComposicao(input: SalvarComposicaoCommand): Promise<Proposta>;
   mudarStatus(input: MudarStatusCommand): Promise<Proposta>;
+  /** AC-4: vincula o levantamento (Assessment do PCM) à proposta — só a Conta do próprio dono
+   * (validação de "mesma Conta" é feita antes, pelo picker, contra `listarLevantamentosDaConta`). */
+  vincularAssessment(input: VincularAssessmentCommand): Promise<Proposta>;
   /** AC-4: único caminho pra preço abaixo do piso — RPC `fn_forcar_preco_abaixo_piso` (superadmin
    * apenas, guarda no banco). */
   forcarPrecoAbaixoDoPiso(input: ForcarPrecoCommand): Promise<Proposta>;

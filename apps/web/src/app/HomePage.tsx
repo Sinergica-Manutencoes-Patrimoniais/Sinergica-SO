@@ -623,6 +623,9 @@ export function HomePage() {
     origemClienteId: string;
     seq: number;
   } | null>(null);
+  // E03-S05, AC-7: deep-link da aba Comercial da Visão 360 ("ver assessment completo") pra
+  // `InspecoesPage`, mesmo padrão do `osDeepLink` acima.
+  const [inspecaoDeepLinkId, setInspecaoDeepLinkId] = useState<string | null>(null);
   // E01-S75 AC-5: período vindo do Apontamento de Horas — só setado junto com `clienteSelecionado`
   // pela navegação de "Horas por cliente"; nulo em qualquer outro caminho pra Visão 360 (clique
   // direto em ListaClientesPage não filtra nada).
@@ -649,6 +652,7 @@ export function HomePage() {
     setClientePeriodo(null);
     setOsDeepLink(null);
     setOrdensFiltrosPreset(null);
+    setInspecaoDeepLinkId(null);
   }
 
   function abrirClienteNoPeriodo(clienteId: string, periodo: { inicio: string; fim: string }) {
@@ -673,6 +677,12 @@ export function HomePage() {
     const hoje = new Date().toISOString().slice(0, 10);
     setOrdensFiltrosPreset({ tecnicoFuncionarioId: "", dataInicio: hoje, dataFim: hoje });
     setPcmView("ordens");
+  }
+
+  function abrirInspecaoDoComercial(inspecaoId: string) {
+    setInspecaoDeepLinkId(inspecaoId);
+    setClienteSelecionado(null);
+    setPcmView("inspecoes");
   }
 
   function abrirOsDoCliente(osId: string) {
@@ -1175,7 +1185,10 @@ export function HomePage() {
                     // Sem o módulo, nada é injetado e a aba não aparece.
                     painelComercial={
                       podeVerModulo("comercial") ? (
-                        <PainelComercialCliente clienteId={clienteSelecionado} />
+                        <PainelComercialCliente
+                          clienteId={clienteSelecionado}
+                          onAbrirLevantamento={abrirInspecaoDoComercial}
+                        />
                       ) : undefined
                     }
                   />
@@ -1184,7 +1197,7 @@ export function HomePage() {
                 <ListaClientesPage onSelecionar={setClienteSelecionado} />
               )
             ) : pcmView === "inspecoes" ? (
-              <InspecoesPage />
+              <InspecoesPage inspecaoIdInicial={inspecaoDeepLinkId} />
             ) : pcmView === "assessment" ? (
               <AssessmentPage />
             ) : pcmView === "cliente-marcacoes" ? (

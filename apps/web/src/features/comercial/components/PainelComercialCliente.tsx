@@ -6,11 +6,13 @@
  * (ADR-0020). */
 
 import { Badge, Button, Card, EmptyState } from "@sinergica/ui";
-import { FileText, Plus } from "lucide-react";
+import { ClipboardList, FileText, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useEtapas, useOportunidadesDaConta } from "../application/comercial-queries";
+import { useCriarLevantamento, useLevantamentosDaConta } from "../application/levantamento-queries";
 import { supabaseComercialAdapter } from "../infrastructure/supabase-comercial-adapter";
+import { supabaseLevantamentoAdapter } from "../infrastructure/supabase-levantamento-adapter";
 import { PropostaEditorPage } from "../pages/PropostaEditorPage";
 import { NovaOportunidadeModal } from "./NovaOportunidadeModal";
 
@@ -29,11 +31,15 @@ function formatarData(iso: string): string {
 export function PainelComercialCliente({
   clienteId,
   clienteNome,
+  onAbrirLevantamento,
 }: {
   clienteId: string;
   /** Só enfeita o título do modal. Opcional porque a Visão 360 já mostra o nome da Conta no
    * cabeçalho — repassá-lo daria ao shell o trabalho de carregar o cliente só para isso. */
   clienteNome?: string;
+  /** E03-S05, AC-7: "link para o Assessment completo" — o Comercial não conhece a tela do PCM, o
+   * shell (`HomePage`) é quem sabe navegar até `InspecoesPage` com a inspeção certa selecionada. */
+  onAbrirLevantamento?: (inspecaoId: string) => void;
 }) {
   const { podeAcessar } = usePermissoes();
   const [criando, setCriando] = useState(false);
@@ -48,6 +54,14 @@ export function PainelComercialCliente({
     clienteId,
     temLeitura,
   );
+  // AC-7: levantamentos aparecem junto da oportunidade na aba Comercial, independente de já
+  // estarem vinculados a uma proposta.
+  const levantamentosQuery = useLevantamentosDaConta(
+    supabaseLevantamentoAdapter,
+    clienteId,
+    temLeitura,
+  );
+  const criarLevantamento = useCriarLevantamento(supabaseLevantamentoAdapter);
 
   // Sem o módulo, a aba não mostra dado de funil — mas também não finge que a Conta não existe.
   if (!temLeitura) {
@@ -81,10 +95,13 @@ export function PainelComercialCliente({
     return (
       <PropostaEditorPage
         oportunidadeId={oportunidadeAberta}
+        clienteId={clienteId}
         onVoltar={() => setOportunidadeAberta(null)}
       />
     );
   }
+
+  const levantamentos = levantamentosQuery.data ?? [];
 
   return (
     <div className="space-y-3">
@@ -157,6 +174,58 @@ export function PainelComercialCliente({
           // Invalidação de chave na mutation atualiza a lista — sem recarga manual.
           onCriada={() => setCriando(false)}
         />
+      )}
+
+      {/* Levantamentos — E03-S05, AC-1/AC-7. O atalho "novo levantamento" só existe a partir de
+          uma oportunidade (edge case da spec): sem oportunidade nesta Conta, o botão some, mas os
+          levantamentos existentes (criados por outra Conta com oportunidade, ou herdados do PCM)
+          continuam listados aqui. */}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-semibold text-ink">Levantamentos</h2>
+        {temEscrita && oportunidades.length > 0 && (
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={criarLevantamento.isPending}
+            onClick={() => criarLevantamento.mutateAsync({ clienteId })}
+          >
+            <ClipboardList className="size-4" aria-hidden />
+            {criarLevantamento.isPending ? "Criando…" : "Novo levantamento"}
+          </Button>
+        )}
+      </div>
+
+      {levantamentosQuery.isPending ? (
+        <p className="text-sm text-ink-2">Carregando levantamentos…</p>
+      ) : levantamentos.length === 0 ? (
+        <EmptyState titulo="Nenhum levantamento nesta conta">
+          {oportunidades.length > 0
+            ? "Peça um novo levantamento para reusar a coleta do PCM como ponto de partida da proposta."
+            : "O atalho de novo levantamento aparece quando houver uma oportunidade nesta conta."}
+        </EmptyState>
+      ) : (
+        <Card>
+          <ul className="divide-y divide-line/60">
+            {levantamentos.map((l) => (
+              <li key={l.id} className="flex flex-wrap items-center gap-3 p-3">
+                <div className="min-w-48 flex-1">
+                  <p className="font-semibold text-ink">{l.titulo}</p>
+                  <p className="text-xs text-ink-2">
+                    Criado em {formatarData(l.criadoEm)} · {l.itensNaoConformes + l.itensAtencao}{" "}
+                    achado(s) de {l.totalItens} item(ns)
+                  </p>
+                </div>
+                {l.status !== "concluida" && <Badge tone="warning">Em andamento</Badge>}
+                {onAbrirLevantamento && (
+                  <Button variant="ghost" size="sm" onClick={() => onAbrirLevantamento(l.id)}>
+                    <Search className="size-4" aria-hidden />
+                    Ver assessment completo
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   );

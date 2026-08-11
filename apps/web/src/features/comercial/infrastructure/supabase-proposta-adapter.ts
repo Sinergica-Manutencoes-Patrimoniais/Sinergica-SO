@@ -13,6 +13,7 @@ import type {
   PropostaGateway,
   SalvarComposicaoCommand,
   VersaoProposta,
+  VincularAssessmentCommand,
 } from "../application/proposta-gateway";
 import type { Proposta, PropostaItem } from "../domain/proposta";
 
@@ -199,6 +200,18 @@ export const supabasePropostaAdapter: PropostaGateway = {
       .schema("comercial")
       .from("propostas")
       .update({ status: input.status, updated_at: new Date().toISOString() })
+      .eq("id", input.propostaId)
+      .select(PROPOSTA_COLS)
+      .single();
+    if (error) throw error;
+    return mapProposta(data as PropostaRow);
+  },
+
+  async vincularAssessment(input: VincularAssessmentCommand) {
+    const { data, error } = await supabase
+      .schema("comercial")
+      .from("propostas")
+      .update({ assessment_id: input.assessmentId, updated_at: new Date().toISOString() })
       .eq("id", input.propostaId)
       .select(PROPOSTA_COLS)
       .single();

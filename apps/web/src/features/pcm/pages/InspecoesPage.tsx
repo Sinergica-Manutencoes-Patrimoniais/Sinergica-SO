@@ -142,11 +142,24 @@ function formatarData(data: string): string {
   return new Intl.DateTimeFormat("pt-BR").format(parsed);
 }
 
-export function InspecoesPage() {
+export function InspecoesPage({
+  inspecaoIdInicial,
+}: {
+  /** E03-S05, AC-7: deep-link vindo da aba Comercial da Visão 360 ("ver assessment completo") —
+   * o shell (`HomePage`) já trocou a view para "inspecoes", isto só seleciona a inspeção certa
+   * assim que a lista carregar (`inspecaoSelecionada` é derivado, então reage sozinho). */
+  inspecaoIdInicial?: string | null;
+} = {}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
-  const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
+  const [selecionadaId, setSelecionadaId] = useState<string | null>(inspecaoIdInicial ?? null);
+  // O componente não remonta ao navegar de outra sub-tela PCM/Comercial pra "inspecoes" (mesma
+  // posição na árvore de `HomePage`) — o `useState` acima só pega o valor inicial na PRIMEIRA
+  // montagem. Este efeito cobre o deep-link de novo, toda vez que `inspecaoIdInicial` mudar.
+  useEffect(() => {
+    if (inspecaoIdInicial) setSelecionadaId(inspecaoIdInicial);
+  }, [inspecaoIdInicial]);
   const [itens, setItens] = useState<InspecaoItem[]>([]);
   const [carregandoItens, setCarregandoItens] = useState(false);
   const [salvando, setSalvando] = useState(false);

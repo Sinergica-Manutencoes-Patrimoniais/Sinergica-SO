@@ -7,14 +7,16 @@
  * isso é aceitável porque salvar sempre recalcula de novo no servidor com os valores atuais. */
 
 import { Badge, Button, Card, EmptyState, Field, Input, Select } from "@sinergica/ui";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, FileSearch, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { useItensLevantamento, useLevantamentosDaConta } from "../application/levantamento-queries";
 import {
   useAliquotaVigente,
   useNiveisTecnico,
   useParametrosPreco,
 } from "../application/precificacao-queries";
+import { montarItensImportadosDoLevantamento } from "../application/proposta";
 import type { ItemCommand } from "../application/proposta-gateway";
 import {
   useCriarProposta,
@@ -25,6 +27,7 @@ import {
   usePropostaVersoes,
   usePropostasDaOportunidade,
   useSalvarComposicao,
+  useVincularAssessment,
 } from "../application/proposta-queries";
 import { calcularPrecificacao, precoAbaixoDoPiso } from "../domain/precificacao";
 import {
@@ -37,6 +40,7 @@ import {
   somarCustoItens,
   transicaoStatusInvalida,
 } from "../domain/proposta";
+import { supabaseLevantamentoAdapter } from "../infrastructure/supabase-levantamento-adapter";
 import { supabasePrecificacaoAdapter } from "../infrastructure/supabase-precificacao-adapter";
 import { supabasePropostaAdapter } from "../infrastructure/supabase-proposta-adapter";
 
@@ -77,9 +81,13 @@ interface ItemRascunho extends ItemCommand {
 
 export function PropostaEditorPage({
   oportunidadeId,
+  clienteId,
   onVoltar,
 }: {
   oportunidadeId: string;
+  /** E03-S05: a Conta da oportunidade — só pra listar os levantamentos DELA (AC-4 exige "mesma
+   * Conta"; a RPC também reforça isso no banco, este prop é só o filtro do picker). */
+  clienteId: string;
   onVoltar: () => void;
 }) {
   const { podeAcessar } = usePermissoes();
@@ -103,11 +111,32 @@ export function PropostaEditorPage({
   const mudarStatus = useMudarStatusProposta(supabasePropostaAdapter);
   const forcarPreco = useForcarPrecoAbaixoPiso(supabasePropostaAdapter);
   const duplicar = useDuplicarProposta(supabasePropostaAdapter);
+  const vincularAssessment = useVincularAssessment(supabasePropostaAdapter);
+
+  // E03-S05, AC-4/AC-7: levantamentos da mesma Conta — alimenta o seletor de vínculo e também
+  // mostra se o levantamento vinculado está "em andamento" (AC-6) ou indisponível (edge case).
+  const levantamentosQuery = useLevantamentosDaConta(supabaseLevantamentoAdapter, clienteId);
+  const [levantamentoEscolhido, setLevantamentoEscolhido] = useState("");
+  const [importandoLevantamento, setImportandoLevantamento] = useState(false);
+  const [avisoImportacao, setAvisoImportacao] = useState<string | null>(null);
 
   const [itensRascunho, setItensRascunho] = useState<ItemRascunho[] | null>(null);
   const [precoManual, setPrecoManual] = useState("");
 
   const propostaSelecionada = (propostasQuery.data ?? []).find((p) => p.id === propostaId) ?? null;
+
+  // AC-6: o levantamento vinculado pode não estar na lista (excluído/arquivado depois de
+  // vinculado) — `undefined` aqui é o sinal de "vínculo indisponível", tratado sem quebrar a tela.
+  const levantamentoVinculado = (levantamentosQuery.data ?? []).find(
+    (l) => l.id === propostaSelecionada?.assessmentId,
+  );
+  const itensLevantamentoQuery = useItensLevantamento(
+    supabaseLevantamentoAdapter,
+    propostaSelecionada?.assessmentId ?? null,
+    clienteId,
+    importandoLevantamento,
+  );
+
   const itensAtuais =
     itensRascunho ??
     (itensQuery.data ?? []).map((item, i) => ({
@@ -176,6 +205,45 @@ export function PropostaEditorPage({
 
   function removerItem(chave: string) {
     setItensRascunho(itensAtuais.filter((item) => item.chave !== chave));
+  }
+
+  async function vincularLevantamento() {
+    if (!propostaSelecionada || !levantamentoEscolhido) return;
+    setErro(null);
+    try {
+      await vincularAssessment.mutateAsync({
+        propostaId: propostaSelecionada.id,
+        assessmentId: levantamentoEscolhido,
+      });
+      setLevantamentoEscolhido("");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao vincular levantamento.");
+    }
+  }
+
+  // AC-4/AC-5: converte (domínio filtra achados) e ACRESCENTA aos itens atuais — nunca troca o que
+  // já existia. `itensAtuais` já resolve pro rascunho em edição se houver um, senão pros itens
+  // salvos — então importar entra automaticamente em modo de edição.
+  function importarItensDoLevantamento() {
+    if (!itensLevantamentoQuery.data) return;
+    const resultado = montarItensImportadosDoLevantamento(itensLevantamentoQuery.data);
+    if (resultado.itens.length === 0) {
+      setAvisoImportacao(
+        "Nenhum item deste levantamento virou item de composição (só achados entram).",
+      );
+    } else {
+      setItensRascunho([
+        ...itensAtuais,
+        ...resultado.itens.map((item, i) => ({
+          ...item,
+          chave: `importado-${Date.now()}-${i}`,
+        })),
+      ]);
+      setAvisoImportacao(
+        `${resultado.itens.length} ${resultado.itens.length === 1 ? "item importado" : "itens importados"}.`,
+      );
+    }
+    setImportandoLevantamento(false);
   }
 
   async function salvarComposicao() {
@@ -334,6 +402,111 @@ export function PropostaEditorPage({
           </Badge>
           {estaExpirada(propostaSelecionada.validoAte) && <Badge tone="danger">Expirada</Badge>}
         </div>
+
+        {/* Levantamento — E03-S05, AC-4/AC-6. Só proposta tipo "levantamento" oferece o vínculo:
+            é o tipo que existe justamente para consumir o Assessment de pré-venda. */}
+        {propostaSelecionada.tipo === "levantamento" && (
+          <div className="border-b border-line p-3">
+            <h3 className="mb-2 text-sm font-semibold text-ink">Levantamento</h3>
+            {propostaSelecionada.assessmentId ? (
+              levantamentoVinculado ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-ink">
+                    {levantamentoVinculado.titulo}
+                    {levantamentoVinculado.status !== "concluida" && (
+                      <Badge tone="warning">Em andamento</Badge>
+                    )}
+                  </p>
+                  <p className="text-xs text-ink-2">
+                    {levantamentoVinculado.itensNaoConformes + levantamentoVinculado.itensAtencao}{" "}
+                    achado(s) de {levantamentoVinculado.totalItens} item(ns) no levantamento
+                  </p>
+                  {editavel && !importandoLevantamento && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setImportandoLevantamento(true)}
+                    >
+                      <FileSearch className="size-4" aria-hidden />
+                      Importar itens do levantamento
+                    </Button>
+                  )}
+                  {importandoLevantamento && (
+                    <div className="space-y-2 rounded-md border border-line-soft p-2">
+                      {itensLevantamentoQuery.isPending ? (
+                        <p className="text-xs text-ink-2">Carregando itens do levantamento…</p>
+                      ) : itensLevantamentoQuery.error ? (
+                        <p className="text-xs text-danger">
+                          Falha ao carregar itens do levantamento.
+                        </p>
+                      ) : (
+                        <p className="text-xs text-ink-2">
+                          {itensLevantamentoQuery.data?.length ?? 0} item(ns) no levantamento —
+                          achados (não conforme/atenção) entram na composição, acrescentados aos
+                          itens já existentes.
+                        </p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={importarItensDoLevantamento}>
+                          Confirmar importação
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setImportandoLevantamento(false)}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {avisoImportacao && <p className="text-xs text-ink-2">{avisoImportacao}</p>}
+                </div>
+              ) : (
+                // AC edge case: Assessment excluído/arquivado depois de vinculado — os itens já
+                // importados continuam na composição (foram copiados), só o vínculo fica indisponível.
+                <p className="text-xs text-ink-3">
+                  Levantamento vinculado está indisponível (excluído ou arquivado). Os itens já
+                  importados continuam na composição normalmente.
+                </p>
+              )
+            ) : editavel ? (
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <Field label="Vincular levantamento desta Conta">
+                    {(props) => (
+                      <Select
+                        {...props}
+                        value={levantamentoEscolhido}
+                        onChange={(e) => setLevantamentoEscolhido(e.target.value)}
+                      >
+                        <option value="">Selecione…</option>
+                        {(levantamentosQuery.data ?? []).map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.titulo}
+                            {l.status !== "concluida" ? " (em andamento)" : ""}
+                          </option>
+                        ))}
+                      </Select>
+                    )}
+                  </Field>
+                </div>
+                <Button
+                  size="sm"
+                  disabled={!levantamentoEscolhido || vincularAssessment.isPending}
+                  onClick={vincularLevantamento}
+                >
+                  Vincular
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-ink-3">Nenhum levantamento vinculado.</p>
+            )}
+            {(levantamentosQuery.data ?? []).length === 0 && !propostaSelecionada.assessmentId && (
+              <p className="mt-1 text-xs text-ink-3">Nenhum levantamento nesta Conta ainda.</p>
+            )}
+          </div>
+        )}
 
         {/* Painel de cálculo ao vivo — AC-3 */}
         <div className="grid grid-cols-2 gap-3 border-b border-line p-3 sm:grid-cols-4">

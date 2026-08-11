@@ -8,6 +8,7 @@ import type {
   ForcarPrecoCommand,
   MudarStatusCommand,
   PropostaGateway,
+  VincularAssessmentCommand,
 } from "./proposta-gateway";
 
 export const propostaQueryKeys = {
@@ -88,6 +89,19 @@ export function useMudarStatusProposta(gateway: PropostaGateway) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: MudarStatusCommand) => gateway.mudarStatus(input),
+    onSuccess: (proposta) => {
+      queryClient.invalidateQueries({ queryKey: propostaQueryKeys.proposta(proposta.id) });
+      queryClient.invalidateQueries({
+        queryKey: propostaQueryKeys.daOportunidade(proposta.oportunidadeId),
+      });
+    },
+  });
+}
+
+export function useVincularAssessment(gateway: PropostaGateway) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: VincularAssessmentCommand) => gateway.vincularAssessment(input),
     onSuccess: (proposta) => {
       queryClient.invalidateQueries({ queryKey: propostaQueryKeys.proposta(proposta.id) });
       queryClient.invalidateQueries({

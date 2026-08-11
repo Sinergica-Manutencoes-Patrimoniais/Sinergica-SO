@@ -70,7 +70,7 @@ stories E03.
   clara; com motivo preenchido, a movimentação grava também `fechada_em`
 
 ### AC-7: Lista de Contas mostra todas — inclusive as que o PCM esconde
-- **Dado** as 105 Contas de produção (47 ativas, 51 inativas, 6 divergentes)
+- **Dado** as Contas vivas de produção (49 — de 105 linhas, 56 estão soft-deleted e a view as exclui)
 - **Quando** o usuário com `comercial='leitura'` abre a Lista de Contas
 - **Então** vê **todas**, sem filtro implícito de `ativo` (ao contrário do PCM), cada uma com sua
   etapa de funil quando houver oportunidade aberta, e pode filtrar por etapa, situação

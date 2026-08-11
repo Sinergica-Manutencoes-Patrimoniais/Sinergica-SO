@@ -4,6 +4,8 @@
  *
  * Pura o suficiente pra testar sem fake de gateway (recebe os números, devolve o comando pronto). */
 
+import { importarItensDoAssessment } from "../domain/importacao-levantamento";
+import type { ItemAssessmentParaImportar } from "../domain/importacao-levantamento";
 import { calcularPrecificacao } from "../domain/precificacao";
 import { calcularTotalItem, somarCustoItens } from "../domain/proposta";
 import type { ItemCommand, SalvarComposicaoCommand } from "./proposta-gateway";
@@ -54,5 +56,34 @@ export function montarComandoSalvarComposicao(
     escopo: input.escopo,
     observacoes: input.observacoes,
     validoAte: input.validoAte,
+  };
+}
+
+export interface ItensImportadosDoLevantamento {
+  itens: ItemCommand[];
+  quantidadeImportada: number;
+  quantidadeIgnorada: number;
+}
+
+/** E03-S05, AC-4/AC-5: é aqui, e só aqui, que `importacao-levantamento.ts` (domínio) encontra
+ * `ItemCommand` (S04) — mesma regra de `montarComandoSalvarComposicao` acima. Converte os itens do
+ * Assessment em itens de composição tipo "outro" (sem nível/material, o comercial edita depois).
+ * NUNCA vê os itens que já existem na proposta — quem chama concatena (AC-5: sempre acrescenta,
+ * nunca sobrescreve). */
+export function montarItensImportadosDoLevantamento(
+  itensAssessment: readonly ItemAssessmentParaImportar[],
+): ItensImportadosDoLevantamento {
+  const resultado = importarItensDoAssessment(itensAssessment);
+  return {
+    itens: resultado.itensImportados.map((item) => ({
+      tipo: "outro" as const,
+      descricao: item.descricao,
+      nivelId: null,
+      materialId: null,
+      quantidade: item.quantidade,
+      custoUnitarioCentavos: item.custoUnitarioCentavos,
+    })),
+    quantidadeImportada: resultado.quantidadeImportada,
+    quantidadeIgnorada: resultado.quantidadeIgnorada,
   };
 }

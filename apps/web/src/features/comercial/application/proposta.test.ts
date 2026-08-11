@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { montarComandoSalvarComposicao } from "./proposta";
+import { montarComandoSalvarComposicao, montarItensImportadosDoLevantamento } from "./proposta";
 
 describe("montarComandoSalvarComposicao", () => {
   it("soma os itens, calcula preço/piso pela fórmula e usa o preço sugerido por padrão", () => {
@@ -57,5 +57,51 @@ describe("montarComandoSalvarComposicao", () => {
     expect(comando.escopo).toBe("Manutenção preventiva mensal");
     expect(comando.observacoes).toBe("Cliente pediu revisão trimestral");
     expect(comando.validoAte).toBe("2026-09-01");
+  });
+});
+
+describe("montarItensImportadosDoLevantamento", () => {
+  it("converte item importável do Assessment em ItemCommand tipo 'outro', sem nível/material", () => {
+    const resultado = montarItensImportadosDoLevantamento([
+      {
+        sistema: "eletrico",
+        localizacao: "Casa de máquinas",
+        descricao: "Quadro sem identificação",
+        resultado: "nao_conforme",
+        recomendacao: "Instalar identificação normativa",
+      },
+    ]);
+    expect(resultado.quantidadeImportada).toBe(1);
+    expect(resultado.quantidadeIgnorada).toBe(0);
+    expect(resultado.itens).toEqual([
+      {
+        tipo: "outro",
+        descricao: "Quadro sem identificação (Casa de máquinas) — Instalar identificação normativa",
+        nivelId: null,
+        materialId: null,
+        quantidade: 1,
+        custoUnitarioCentavos: 0,
+      },
+    ]);
+  });
+
+  it("levantamento vazio: nenhum item, sem lançar", () => {
+    const resultado = montarItensImportadosDoLevantamento([]);
+    expect(resultado.itens).toEqual([]);
+    expect(resultado.quantidadeImportada).toBe(0);
+  });
+
+  it("filtra itens conformes — não viram ItemCommand", () => {
+    const resultado = montarItensImportadosDoLevantamento([
+      {
+        sistema: "hidrossanitario",
+        localizacao: null,
+        descricao: "Tubulação ok",
+        resultado: "conforme",
+        recomendacao: null,
+      },
+    ]);
+    expect(resultado.itens).toEqual([]);
+    expect(resultado.quantidadeIgnorada).toBe(1);
   });
 });
