@@ -5,6 +5,7 @@
  * invalidação depois de escrever. Nenhuma tela chama `carregar()` à mão. */
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Etapa } from "../domain/funil";
 import type {
   ComercialGateway,
   CriarOportunidadeCommand,
@@ -22,6 +23,7 @@ export const comercialQueryKeys = {
   etapas: () => ["comercial", "etapas"] as const,
   motivos: () => ["comercial", "motivos"] as const,
   oportunidades: () => ["comercial", "oportunidades"] as const,
+  oportunidadesAbertas: () => ["comercial", "oportunidades", "abertas"] as const,
   oportunidadesDaConta: (clienteId: string) => ["comercial", "oportunidades", clienteId] as const,
 };
 
@@ -58,6 +60,17 @@ export function useContas(gateway: ComercialGateway, filtro: FiltroContas, habil
   });
 }
 
+/** Fonte do board (E03-S02). `staleTime` curto — o funil é a tela mais "quente" do módulo, mudança
+ * de outro usuário deve aparecer rápido; o `keepPreviousData` do board fica na página, não aqui. */
+export function useOportunidadesAbertas(gateway: ComercialGateway, habilitado = true) {
+  return useQuery({
+    queryKey: comercialQueryKeys.oportunidadesAbertas(),
+    queryFn: () => gateway.listarOportunidadesAbertas(),
+    staleTime: 15_000,
+    enabled: habilitado,
+  });
+}
+
 export function useOportunidadesDaConta(
   gateway: ComercialGateway,
   clienteId: string,
@@ -70,14 +83,18 @@ export function useOportunidadesDaConta(
   });
 }
 
-/** Criar oportunidade muda a lista de Contas (a coluna de etapa) e a aba da Conta — por isso
- * invalida as duas famílias de chave, não só a que a tela atual está olhando. */
+/** Criar oportunidade muda a lista de Contas (a coluna de etapa), a aba da Conta e o board (S02) —
+ * invalida as três, não só a que a tela atual está olhando. Invalidar o prefixo
+ * `oportunidades()` já cobre `oportunidadesAbertas()` e `oportunidadesDaConta(id)` (match parcial
+ * de chave do TanStack), mas o `clienteId` explícito garante a invalidação mesmo que a chave
+ * mude de formato no futuro. */
 export function useCriarOportunidade(gateway: ComercialGateway) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CriarOportunidadeCommand) => gateway.criarOportunidade(input),
     onSuccess: (_dado, input) => {
       queryClient.invalidateQueries({ queryKey: comercialQueryKeys.contas() });
+      queryClient.invalidateQueries({ queryKey: comercialQueryKeys.oportunidades() });
       queryClient.invalidateQueries({
         queryKey: comercialQueryKeys.oportunidadesDaConta(input.clienteId),
       });
@@ -112,6 +129,20 @@ export function useEditarEtapa(gateway: ComercialGateway) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: EditarEtapaCommand) => gateway.editarEtapa(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: comercialQueryKeys.etapas() });
+      queryClient.invalidateQueries({ queryKey: comercialQueryKeys.contas() });
+    },
+  });
+}
+
+/** E03-S02: subir/descer etapa. O chamador passa o resultado de `moverEtapa` (domínio) — a
+ * mutation só persiste; `contas()` também invalida porque a coluna de funil da Lista de Contas
+ * mostra o nome/cor/ordem da etapa. */
+export function useReordenarEtapas(gateway: ComercialGateway) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (etapas: Etapa[]) => gateway.reordenarEtapas(etapas),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: comercialQueryKeys.etapas() });
       queryClient.invalidateQueries({ queryKey: comercialQueryKeys.contas() });

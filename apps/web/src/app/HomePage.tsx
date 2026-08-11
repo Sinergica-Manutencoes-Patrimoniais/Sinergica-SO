@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   Clock,
+  Columns3,
   FileBarChart,
   FileText,
   Gauge,
@@ -58,6 +59,7 @@ import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoI
 import { PainelComercialCliente } from "../features/comercial/components/PainelComercialCliente";
 import { ConfigFunilPage as ComercialConfigFunilPage } from "../features/comercial/pages/ConfigFunilPage";
 import { ContasPage as ComercialContasPage } from "../features/comercial/pages/ContasPage";
+import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
@@ -223,7 +225,7 @@ interface FinanceiroNavGroup {
 
 // Sub-navegação do Comercial — E03-S01 (specs/E03-S01-fundacao-comercial/). Mesmo padrão useState
 // de abas. Cresce com o épico: funil (S02), propostas (S04), contratos (S07), dashboard (S08).
-type ComercialView = "contas" | "config-funil";
+type ComercialView = "funil" | "contas" | "config-funil";
 
 interface ComercialNavItem {
   label: string;
@@ -363,6 +365,7 @@ const FINANCEIRO_NAV: FinanceiroNavGroup[] = [
 ];
 
 const COMERCIAL_NAV: ComercialNavItem[] = [
+  { label: "Funil", icon: Columns3, view: "funil" },
   { label: "Contas", icon: Briefcase, view: "contas" },
   { label: "Configuração do funil", icon: SlidersHorizontal, view: "config-funil" },
 ];
@@ -602,7 +605,7 @@ export function HomePage() {
   >();
   // Sub-navegação do Financeiro.
   const [financeiroView, setFinanceiroView] = useState<FinanceiroView>("dashboard");
-  const [comercialView, setComercialView] = useState<ComercialView>("contas");
+  const [comercialView, setComercialView] = useState<ComercialView>("funil");
   // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
   const [guiaView, setGuiaView] = useState<GuiaView>("visao-geral");
   const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
@@ -1339,11 +1342,19 @@ export function HomePage() {
               <FinanceiroMockRouter view={financeiroView} />
             )
           ) : activeModulo === "comercial" ? (
+            // Abrir a Conta cai na Visão 360 do PCM — é a mesma Conta (ADR-0020), e a aba
+            // Comercial de lá mostra o funil. Nada de reconstruir a 360 dentro do Comercial.
             comercialView === "config-funil" ? (
               <ComercialConfigFunilPage />
+            ) : comercialView === "funil" ? (
+              <ComercialFunilPage
+                onAbrirConta={(clienteId) => {
+                  navegarModulo("pcm");
+                  irParaPcmView("clientes");
+                  setClienteSelecionado(clienteId);
+                }}
+              />
             ) : (
-              // Abrir a Conta cai na Visão 360 do PCM — é a mesma Conta (ADR-0020), e a aba
-              // Comercial de lá mostra o funil. Nada de reconstruir a 360 dentro do Comercial.
               <ComercialContasPage
                 onAbrirConta={(clienteId) => {
                   navegarModulo("pcm");

@@ -88,8 +88,8 @@ export function PainelComercialCliente({
       </div>
 
       {oportunidades.length === 0 ? (
-        // Conta sem oportunidade é o caso comum (105 contas existiam antes do módulo) — estado
-        // vazio explicativo, nunca erro.
+        // Conta sem oportunidade é o caso comum (as 49 contas vivas nasceram antes do módulo) —
+        // estado vazio explicativo, nunca erro.
         <EmptyState titulo="Nenhuma oportunidade nesta conta">
           Quando houver uma negociação em andamento, ela aparece aqui com a etapa do funil.
         </EmptyState>

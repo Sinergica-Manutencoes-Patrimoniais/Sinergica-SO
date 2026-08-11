@@ -147,7 +147,7 @@ export function ContasPage({
       )}
 
       {!cargaFria && !erro && contas.length === 0 && (
-        // `filtrado` e não `vazio`: existem 105 contas em produção, então lista vazia aqui é
+        // `filtrado` e não `vazio`: há 49 contas vivas em produção, então lista vazia aqui é
         // sempre resultado de filtro — a E00-S17 exige que as duas telas não se pareçam.
         <EmptyState titulo="Nenhuma conta encontrada" variante="filtrado">
           Ajuste os filtros de busca, situação ou etapa do funil.

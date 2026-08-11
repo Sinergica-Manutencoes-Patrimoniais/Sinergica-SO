@@ -5,7 +5,7 @@
  * renomear "Ganho" para "Fechado" não quebra a taxa de conversão. */
 
 import { Badge, Button, Card, Field, Input } from "@sinergica/ui";
-import { Plus, RefreshCw } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import {
@@ -15,9 +15,10 @@ import {
   useEditarMotivoPerda,
   useEtapas,
   useMotivosPerda,
+  useReordenarEtapas,
 } from "../application/comercial-queries";
 import type { Etapa } from "../domain/funil";
-import { podeDesativarEtapa } from "../domain/funil";
+import { etapasVisiveis, moverEtapa, podeDesativarEtapa } from "../domain/funil";
 import { supabaseComercialAdapter } from "../infrastructure/supabase-comercial-adapter";
 
 const TIPO_ROTULO: Record<Etapa["tipo"], string> = {
@@ -46,6 +47,7 @@ export function ConfigFunilPage() {
   const motivosQuery = useMotivosPerda(supabaseComercialAdapter, habilitado);
   const criarEtapaMutation = useCriarEtapa(supabaseComercialAdapter);
   const editarEtapaMutation = useEditarEtapa(supabaseComercialAdapter);
+  const reordenarMutation = useReordenarEtapas(supabaseComercialAdapter);
   const criarMotivoMutation = useCriarMotivoPerda(supabaseComercialAdapter);
   const editarMotivoMutation = useEditarMotivoPerda(supabaseComercialAdapter);
 
@@ -82,6 +84,22 @@ export function ConfigFunilPage() {
       setNovaEtapa("");
     } catch (e) {
       setErroAcao(e instanceof Error ? e.message : "Falha ao criar a etapa.");
+    }
+  }
+
+  async function mover(etapa: Etapa, direcao: "cima" | "baixo") {
+    setErroAcao(null);
+    const resultado = moverEtapa(etapas, etapa.id, direcao);
+    // `moverEtapa` já devolve a lista inalterada quando não há vizinha (primeira/última) — nesse
+    // caso não há o que persistir.
+    const mudou = resultado.some(
+      (nova) => nova.ordem !== etapas.find((antiga) => antiga.id === nova.id)?.ordem,
+    );
+    if (!mudou) return;
+    try {
+      await reordenarMutation.mutateAsync(resultado);
+    } catch (e) {
+      setErroAcao(e instanceof Error ? e.message : "Falha ao reordenar as etapas.");
     }
   }
 
@@ -146,23 +164,58 @@ export function ConfigFunilPage() {
               <h2 className="font-semibold text-ink">Etapas</h2>
             </div>
             <ul className="divide-y divide-line/60">
-              {etapas.map((etapa) => (
-                <li key={etapa.id} className="flex items-center gap-3 p-3">
-                  <span
-                    aria-hidden
-                    className="size-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: etapa.cor }}
-                  />
-                  <span className="flex-1 text-sm text-ink">{etapa.nome}</span>
-                  <Badge tone={TIPO_TOM[etapa.tipo]}>{TIPO_ROTULO[etapa.tipo]}</Badge>
-                  {!etapa.ativo && <Badge tone="neutral">Desativada</Badge>}
-                  {temEscrita && (
-                    <Button variant="ghost" size="sm" onClick={() => alternarEtapa(etapa, etapas)}>
-                      {etapa.ativo ? "Desativar" : "Reativar"}
-                    </Button>
-                  )}
-                </li>
-              ))}
+              {/* Ordenadas visualmente pela `ordem` real, mesmo que a query devolva outra ordem —
+               * é a lista que o AC-"reordenar" descreve. Etapas inativas ficam ao final. */}
+              {[...etapasVisiveis(etapas), ...etapas.filter((e) => !e.ativo)].map((etapa) => {
+                const visiveisAtivas = etapasVisiveis(etapas);
+                const indiceVisivel = visiveisAtivas.findIndex((e) => e.id === etapa.id);
+                const podeSubir = indiceVisivel > 0;
+                const podeDescer =
+                  indiceVisivel !== -1 && indiceVisivel < visiveisAtivas.length - 1;
+                return (
+                  <li key={etapa.id} className="flex items-center gap-2 p-3">
+                    {temEscrita && etapa.ativo && (
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          disabled={!podeSubir || reordenarMutation.isPending}
+                          onClick={() => mover(etapa, "cima")}
+                          className="text-ink-3 hover:text-ink disabled:opacity-30"
+                          aria-label={`Mover ${etapa.nome} para cima`}
+                        >
+                          <ChevronUp className="size-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!podeDescer || reordenarMutation.isPending}
+                          onClick={() => mover(etapa, "baixo")}
+                          className="text-ink-3 hover:text-ink disabled:opacity-30"
+                          aria-label={`Mover ${etapa.nome} para baixo`}
+                        >
+                          <ChevronDown className="size-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    <span
+                      aria-hidden
+                      className="size-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: etapa.cor }}
+                    />
+                    <span className="flex-1 text-sm text-ink">{etapa.nome}</span>
+                    <Badge tone={TIPO_TOM[etapa.tipo]}>{TIPO_ROTULO[etapa.tipo]}</Badge>
+                    {!etapa.ativo && <Badge tone="neutral">Desativada</Badge>}
+                    {temEscrita && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => alternarEtapa(etapa, etapas)}
+                      >
+                        {etapa.ativo ? "Desativar" : "Reativar"}
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
             {temEscrita && (
               <div className="flex items-end gap-2 border-t border-line p-3">

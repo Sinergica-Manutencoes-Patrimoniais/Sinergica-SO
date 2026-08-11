@@ -252,6 +252,22 @@ export const supabaseComercialAdapter: ComercialGateway = {
     return mapEtapa(data as EtapaRow);
   },
 
+  async reordenarEtapas(etapas: readonly Etapa[]) {
+    // `moverEtapa` no domínio já calculou o par que troca — aqui só persiste. Grava uma a uma
+    // (poucas etapas, sempre < 10) em vez de upsert em lote, mantendo o `updated_by` de auditoria
+    // por linha.
+    const autor = await usuarioAtual();
+    for (const etapa of etapas) {
+      const { error } = await supabase
+        .schema("comercial")
+        .from("etapas_funil")
+        .update({ ordem: etapa.ordem, updated_at: new Date().toISOString(), updated_by: autor })
+        .eq("id", etapa.id);
+      if (error) throw error;
+    }
+    return carregarEtapas();
+  },
+
   async listarMotivosPerda() {
     const { data, error } = await supabase
       .schema("comercial")
@@ -302,6 +318,41 @@ export const supabaseComercialAdapter: ComercialGateway = {
       .order("created_at", { ascending: false });
     if (error) throw error;
     return ((data ?? []) as OportunidadeRow[]).map(mapOportunidade);
+  },
+
+  async listarOportunidadesAbertas() {
+    // Mesma estratégia de `listarContas`: duas queries + merge client-side. supabase-js não faz
+    // join cross-schema (Conta é `relacionamento.contas`, oportunidade é `comercial.oportunidades`)
+    // — e mesmo se fizesse, seria ler a Conta por fora da view, furando o R2 do ADR-0019.
+    const abertasRes = await supabase
+      .schema("comercial")
+      .from("oportunidades")
+      .select(OPORTUNIDADE_COLS)
+      .is("fechada_em", null)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+    if (abertasRes.error) throw abertasRes.error;
+    const abertas = ((abertasRes.data ?? []) as OportunidadeRow[]).map(mapOportunidade);
+
+    const clienteIds = [...new Set(abertas.map((op) => op.clienteId))];
+    if (clienteIds.length === 0) return [];
+
+    const contasRes = await supabase
+      .schema("relacionamento")
+      .from("contas")
+      .select("id,nome")
+      .in("id", clienteIds);
+    if (contasRes.error) throw contasRes.error;
+    const nomePorCliente = new Map(
+      ((contasRes.data ?? []) as { id: string; nome: string }[]).map((c) => [c.id, c.nome]),
+    );
+
+    return abertas.map((op) => ({
+      ...op,
+      // Conta pode ter sido excluída (soft delete) sem a oportunidade ainda ter sido fechada —
+      // rótulo honesto em vez de card quebrado.
+      clienteNome: nomePorCliente.get(op.clienteId) ?? "Conta não encontrada",
+    }));
   },
 
   async criarOportunidade(input: CriarOportunidadeCommand) {

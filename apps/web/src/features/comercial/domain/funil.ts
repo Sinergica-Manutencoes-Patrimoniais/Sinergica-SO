@@ -137,3 +137,70 @@ export function validarValorEstimado(valor: number | null | undefined): number |
   if (valor < 0) throw new Error("Valor estimado não pode ser negativo.");
   return valor;
 }
+
+// ─────────────────────────── E03-S02: board Kanban ──────────────────────────
+
+/** Cabeçalho de coluna do board (AC-1): quantas oportunidades e a soma dos valores estimados —
+ * `null` só entra na contagem, nunca na soma (valor desconhecido não é zero). */
+export interface ResumoColuna {
+  etapaId: string;
+  quantidade: number;
+  somaValorCentavos: number;
+}
+
+// Genérica sobre `Oportunidade` (não travada no tipo base): o board (E03-S02) agrupa
+// `OportunidadeComConta[]` — sem o genérico, o Map perderia `clienteNome` no retorno.
+export function agruparOportunidadesPorEtapa<T extends Oportunidade>(
+  oportunidades: readonly T[],
+): Map<string, T[]> {
+  const porEtapa = new Map<string, T[]>();
+  for (const op of oportunidades) {
+    const lista = porEtapa.get(op.etapaId) ?? [];
+    lista.push(op);
+    porEtapa.set(op.etapaId, lista);
+  }
+  return porEtapa;
+}
+
+export function resumirColuna(
+  etapaId: string,
+  oportunidades: readonly Oportunidade[],
+): ResumoColuna {
+  return {
+    etapaId,
+    quantidade: oportunidades.length,
+    somaValorCentavos: oportunidades.reduce(
+      (soma, op) => soma + (op.valorEstimadoCentavos ?? 0),
+      0,
+    ),
+  };
+}
+
+/** Reordena etapas subindo/descendo uma posição, mesmo padrão de `moverColuna` do Kanban de OS
+ * (E01-S84) — troca a `ordem` das duas vizinhas, sem mexer nas demais. Opera só sobre as visíveis;
+ * a persistência (gravar `ordem` de todas) é responsabilidade do adapter. */
+export function moverEtapa(
+  etapas: readonly Etapa[],
+  id: string,
+  direcao: "cima" | "baixo",
+): Etapa[] {
+  const visiveis = etapasVisiveis([...etapas]);
+  const indice = visiveis.findIndex((e) => e.id === id);
+  if (indice === -1) return [...etapas];
+
+  const alvo = direcao === "cima" ? indice - 1 : indice + 1;
+  if (alvo < 0 || alvo >= visiveis.length) return [...etapas];
+
+  const atual = visiveis[indice];
+  const vizinha = visiveis[alvo];
+  if (!atual || !vizinha) return [...etapas];
+  const ordemAtual = atual.ordem;
+  const atualizada: Etapa = { ...atual, ordem: vizinha.ordem };
+  const vizinhaAtualizada: Etapa = { ...vizinha, ordem: ordemAtual };
+
+  return etapas.map((e) => {
+    if (e.id === atualizada.id) return atualizada;
+    if (e.id === vizinhaAtualizada.id) return vizinhaAtualizada;
+    return e;
+  });
+}

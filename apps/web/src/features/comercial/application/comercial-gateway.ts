@@ -63,6 +63,12 @@ export interface EditarEtapaCommand extends Partial<EtapaCommand> {
   ativo?: boolean;
 }
 
+/** Conta associada, só o que o card do board precisa (E03-S02, AC-2) — não a Conta inteira, pra
+ * não puxar telefone/endereço só para renderizar um card. */
+export interface OportunidadeComConta extends Oportunidade {
+  clienteNome: string;
+}
+
 export interface MotivoPerdaCommand {
   nome: string;
 }
@@ -81,12 +87,17 @@ export interface ComercialGateway {
   listarEtapas(): Promise<Etapa[]>;
   criarEtapa(input: EtapaCommand): Promise<Etapa>;
   editarEtapa(input: EditarEtapaCommand): Promise<Etapa>;
+  /** E03-S02, AC "reordenar etapas": grava a `ordem` de todas as etapas passadas de uma vez —
+   * `moverEtapa` (domínio) já calcula o par que troca, isto só persiste o resultado. */
+  reordenarEtapas(etapas: readonly Etapa[]): Promise<Etapa[]>;
 
   listarMotivosPerda(): Promise<MotivoPerda[]>;
   criarMotivoPerda(input: MotivoPerdaCommand): Promise<MotivoPerda>;
   editarMotivoPerda(input: EditarMotivoPerdaCommand): Promise<MotivoPerda>;
 
   listarOportunidadesDaConta(clienteId: string): Promise<Oportunidade[]>;
+  /** E03-S02, AC-1/AC-2: todas as oportunidades abertas, com o nome da Conta — a fonte do board. */
+  listarOportunidadesAbertas(): Promise<OportunidadeComConta[]>;
   criarOportunidade(input: CriarOportunidadeCommand): Promise<Oportunidade>;
   moverOportunidade(input: MoverOportunidadeCommand): Promise<Oportunidade>;
 }

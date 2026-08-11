@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   type Etapa,
+  type Oportunidade,
+  agruparOportunidadesPorEtapa,
   aplicarTransicao,
   etapaPadrao,
   etapasVisiveis,
   exigeMotivo,
+  moverEtapa,
   podeDesativarEtapa,
   podeReceberCard,
+  resumirColuna,
   transicaoInvalida,
   validarTituloOportunidade,
   validarValorEstimado,
@@ -172,5 +176,97 @@ describe("validarValorEstimado", () => {
   it("recusa fração e negativo", () => {
     expect(() => validarValorEstimado(10.5)).toThrow(/centavos inteiros/i);
     expect(() => validarValorEstimado(-1)).toThrow(/negativo/i);
+  });
+});
+
+function oportunidade(over: Partial<Oportunidade> = {}): Oportunidade {
+  return {
+    id: "op1",
+    clienteId: "c1",
+    etapaId: "e1",
+    titulo: "Negócio",
+    descricao: null,
+    valorEstimadoCentavos: null,
+    score: null,
+    resumo: null,
+    origem: null,
+    leadTier: null,
+    clusterNome: null,
+    conversaId: null,
+    responsavelId: null,
+    motivoPerdaId: null,
+    fechadaEm: null,
+    criadaEm: "2026-08-11T00:00:00.000Z",
+    ...over,
+  };
+}
+
+describe("agruparOportunidadesPorEtapa / resumirColuna", () => {
+  it("agrupa por etapa preservando a ordem de chegada", () => {
+    const ops = [
+      oportunidade({ id: "1", etapaId: "e1" }),
+      oportunidade({ id: "2", etapaId: "e2" }),
+      oportunidade({ id: "3", etapaId: "e1" }),
+    ];
+    const grupos = agruparOportunidadesPorEtapa(ops);
+    expect(grupos.get("e1")?.map((o) => o.id)).toEqual(["1", "3"]);
+    expect(grupos.get("e2")?.map((o) => o.id)).toEqual(["2"]);
+  });
+
+  it("etapa sem oportunidade não aparece no mapa (coluna trata como vazio)", () => {
+    const grupos = agruparOportunidadesPorEtapa([oportunidade({ etapaId: "e1" })]);
+    expect(grupos.has("e9")).toBe(false);
+  });
+
+  it("soma valores, ignorando null (valor desconhecido não é zero, mas também não soma)", () => {
+    const resumo = resumirColuna("e1", [
+      oportunidade({ valorEstimadoCentavos: 10_000 }),
+      oportunidade({ valorEstimadoCentavos: null }),
+      oportunidade({ valorEstimadoCentavos: 5_000 }),
+    ]);
+    expect(resumo).toEqual({ etapaId: "e1", quantidade: 3, somaValorCentavos: 15_000 });
+  });
+
+  it("coluna vazia soma zero sem lançar", () => {
+    expect(resumirColuna("e1", [])).toEqual({ etapaId: "e1", quantidade: 0, somaValorCentavos: 0 });
+  });
+});
+
+describe("moverEtapa", () => {
+  it("subir troca a ordem com a vizinha anterior", () => {
+    const resultado = moverEtapa([LEAD, NEGOCIACAO], "e2", "cima");
+    expect(resultado.find((e) => e.id === "e1")?.ordem).toBe(4);
+    expect(resultado.find((e) => e.id === "e2")?.ordem).toBe(1);
+  });
+
+  it("descer troca a ordem com a vizinha seguinte", () => {
+    const resultado = moverEtapa([LEAD, NEGOCIACAO], "e1", "baixo");
+    expect(resultado.find((e) => e.id === "e1")?.ordem).toBe(4);
+    expect(resultado.find((e) => e.id === "e2")?.ordem).toBe(1);
+  });
+
+  it("primeira etapa não sobe (não há vizinha acima)", () => {
+    const resultado = moverEtapa([LEAD, NEGOCIACAO], "e1", "cima");
+    expect(resultado.find((e) => e.id === "e1")?.ordem).toBe(1);
+    expect(resultado.find((e) => e.id === "e2")?.ordem).toBe(4);
+  });
+
+  it("última etapa não desce (não há vizinha abaixo)", () => {
+    const resultado = moverEtapa([LEAD, NEGOCIACAO], "e2", "baixo");
+    expect(resultado.find((e) => e.id === "e2")?.ordem).toBe(4);
+  });
+
+  it("etapa inativa não entra no reordenamento visível", () => {
+    const inativa = etapa({ id: "x", ordem: 2, ativo: false });
+    const resultado = moverEtapa([LEAD, inativa, NEGOCIACAO], "e2", "cima");
+    // e2 (ordem 4) sobe para trocar com LEAD (ordem 1) — a inativa (ordem 2) é ignorada.
+    expect(resultado.find((e) => e.id === "e2")?.ordem).toBe(1);
+    expect(resultado.find((e) => e.id === "e1")?.ordem).toBe(4);
+    expect(resultado.find((e) => e.id === "x")?.ordem).toBe(2);
+  });
+
+  it("id inexistente não altera nada", () => {
+    const resultado = moverEtapa([LEAD, NEGOCIACAO], "inexistente", "cima");
+    expect(resultado).toEqual([LEAD, NEGOCIACAO]);
   });
 });
