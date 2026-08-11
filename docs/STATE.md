@@ -75,9 +75,25 @@ isolado `apps/portal`, `packages/portal-core` ganhou o valor `"propostas"` em `P
 nele) — trade-off aceito. pgTAP escrito (15 assertions), Playwright roda até o bloqueio conhecido de
 `relacionamento` (mesmo de S04/S05).
 
-**Próximo passo**: S07 (Contratos), depois S08-S14, seguindo a mesma ordem do ROADMAP. Ao fechar
-o épico inteiro: confirmar exposição real de `relacionamento` no Data API, rodar Playwright completo,
-só então branch → PR → merge (nunca push direto, nunca por story).
+**S07 — Contratos — implementada nesta sessão.** Migrations `0190`-`0195` (tier arquitetural,
+cruza Comercial → Financeiro e Comercial → PCM): `comercial.contratos` (`unique(proposta_id)` AC-3)
++ `financeiro.contratos.comercial_contrato_id` nullable (AC-6, zero linhas legadas confirmadas em
+produção, mas nullable de qualquer forma; `fn_gerar_recorrencias` não seleciona a coluna, cron
+intocado). RPCs: `financeiro.fn_criar_plano_faturamento`/`fn_encerrar_plano_faturamento`
+(publicadas pelo Financeiro, R1/R2) + `comercial.fn_criar_contrato`/`fn_ativar_contrato`
+(ativação ATÔMICA — chama a RPC do Financeiro na mesma transação, move a oportunidade pra 'ganha')/
+`fn_encerrar_contrato`. **Bug real pego no smoke test**: a CHECK `valor_mensal_centavos > 0`
+bloqueava até a criação do rascunho (deveria bloquear só a ativação, AC-2 exige "editável antes de
+ativar") — corrigido em `0194`/`0195` com o padrão NOT VALID/VALIDATE de sempre. 'avulso' nunca
+gera plano de faturamento — confirmado. Todos os cenários smoke-testados em produção via `rollback`.
+UI: `ContratosPage` nova (lista global, ativar/encerrar) + "Gerar contrato" na proposta aceita +
+nav novo "Contratos" no Comercial. `ci:local` verde (971 testes). pgTAP escrito (20 assertions,
+inclui regressão do cron pra contrato legado). Playwright roda até o bloqueio conhecido de
+`relacionamento`.
+
+**Próximo passo**: S08 (Dashboard comercial), depois S09-S14, seguindo a mesma ordem do ROADMAP. Ao
+fechar o épico inteiro: confirmar exposição real de `relacionamento` no Data API, rodar Playwright
+completo, só então branch → PR → merge (nunca push direto, nunca por story).
 
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 

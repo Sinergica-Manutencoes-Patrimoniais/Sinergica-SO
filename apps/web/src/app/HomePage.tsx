@@ -15,6 +15,7 @@ import {
   Clock,
   Columns3,
   FileBarChart,
+  FileSignature,
   FileText,
   Gauge,
   HardHat,
@@ -60,6 +61,7 @@ import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoI
 import { PainelComercialCliente } from "../features/comercial/components/PainelComercialCliente";
 import { ConfigFunilPage as ComercialConfigFunilPage } from "../features/comercial/pages/ConfigFunilPage";
 import { ContasPage as ComercialContasPage } from "../features/comercial/pages/ContasPage";
+import { ContratosPage as ComercialContratosPage } from "../features/comercial/pages/ContratosPage";
 import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
 import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features/comercial/pages/ParametrosPrecoPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
@@ -227,7 +229,7 @@ interface FinanceiroNavGroup {
 
 // Sub-navegação do Comercial — E03-S01 (specs/E03-S01-fundacao-comercial/). Mesmo padrão useState
 // de abas. Cresce com o épico: funil (S02), propostas (S04), contratos (S07), dashboard (S08).
-type ComercialView = "funil" | "contas" | "precificacao" | "config-funil";
+type ComercialView = "funil" | "contas" | "precificacao" | "config-funil" | "contratos";
 
 interface ComercialNavItem {
   label: string;
@@ -369,6 +371,7 @@ const FINANCEIRO_NAV: FinanceiroNavGroup[] = [
 const COMERCIAL_NAV: ComercialNavItem[] = [
   { label: "Funil", icon: Columns3, view: "funil" },
   { label: "Contas", icon: Briefcase, view: "contas" },
+  { label: "Contratos", icon: FileSignature, view: "contratos" },
   { label: "Precificação", icon: Calculator, view: "precificacao" },
   { label: "Configuração do funil", icon: SlidersHorizontal, view: "config-funil" },
 ];
@@ -1364,6 +1367,8 @@ export function HomePage() {
               <ComercialConfigFunilPage />
             ) : comercialView === "precificacao" ? (
               <ComercialParametrosPrecoPage />
+            ) : comercialView === "contratos" ? (
+              <ComercialContratosPage />
             ) : comercialView === "funil" ? (
               <ComercialFunilPage
                 onAbrirConta={(clienteId) => {

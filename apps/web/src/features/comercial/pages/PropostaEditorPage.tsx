@@ -11,6 +11,7 @@ import { ArrowLeft, Download, FileSearch, Plus, Send, Trash2 } from "lucide-reac
 import { useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
+import { useCriarContrato } from "../application/contrato-queries";
 import { useItensLevantamento, useLevantamentosDaConta } from "../application/levantamento-queries";
 import {
   useAliquotaVigente,
@@ -42,6 +43,7 @@ import {
   transicaoStatusInvalida,
 } from "../domain/proposta";
 import { type PropostaPdfPayload, formatarTextoProposta } from "../domain/proposta-pdf";
+import { supabaseContratoAdapter } from "../infrastructure/supabase-contrato-adapter";
 import { supabaseLevantamentoAdapter } from "../infrastructure/supabase-levantamento-adapter";
 import { supabasePrecificacaoAdapter } from "../infrastructure/supabase-precificacao-adapter";
 import { supabasePropostaAdapter } from "../infrastructure/supabase-proposta-adapter";
@@ -117,6 +119,8 @@ export function PropostaEditorPage({
   const forcarPreco = useForcarPrecoAbaixoPiso(supabasePropostaAdapter);
   const duplicar = useDuplicarProposta(supabasePropostaAdapter);
   const vincularAssessment = useVincularAssessment(supabasePropostaAdapter);
+  const criarContrato = useCriarContrato(supabaseContratoAdapter);
+  const [contratoGerado, setContratoGerado] = useState<string | null>(null);
 
   // E03-S05, AC-4/AC-7: levantamentos da mesma Conta — alimenta o seletor de vínculo e também
   // mostra se o levantamento vinculado está "em andamento" (AC-6) ou indisponível (edge case).
@@ -474,6 +478,36 @@ export function PropostaEditorPage({
           </Badge>
           {estaExpirada(propostaSelecionada.validoAte) && <Badge tone="danger">Expirada</Badge>}
         </div>
+
+        {/* Contrato — E03-S07, AC-2. Só proposta ACEITA gera contrato (guarda real é a RPC
+            fn_criar_contrato) — o resto do fluxo (editar campos, ativar, encerrar) mora em
+            ContratosPage, não aqui, pra não duplicar a tela de gestão do contrato. */}
+        {temEscrita && propostaSelecionada.status === "aceita" && (
+          <div className="border-b border-line p-3">
+            {contratoGerado ? (
+              <p className="text-xs text-ink-2">
+                Contrato criado. Vá em Comercial → Contratos pra editar e ativar.
+              </p>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={criarContrato.isPending}
+                onClick={async () => {
+                  setErro(null);
+                  try {
+                    const contrato = await criarContrato.mutateAsync(propostaSelecionada.id);
+                    setContratoGerado(contrato.id);
+                  } catch (e) {
+                    setErro(e instanceof Error ? e.message : "Falha ao gerar contrato.");
+                  }
+                }}
+              >
+                {criarContrato.isPending ? "Gerando…" : "Gerar contrato"}
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Levantamento — E03-S05, AC-4/AC-6. Só proposta tipo "levantamento" oferece o vínculo:
             é o tipo que existe justamente para consumir o Assessment de pré-venda. */}
