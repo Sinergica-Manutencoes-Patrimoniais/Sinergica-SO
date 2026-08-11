@@ -63,12 +63,14 @@ export function parsearPlanilhaLevantamento(rows: unknown[][]): PlanilhaInspecao
   const headerRow = rows[0];
   if (!headerRow) throw new Error("Planilha sem cabeçalho.");
   const header = headerRow.map(normalizarCabecalho);
-  const relatoIndex = coluna(header, ["relato", "descricao", "ocorrencia", "inconformidade"]);
+  // E01-S144: no export do Auvo, "Ocorrência" é a coluna da foto (URL pública do anexo), não o
+  // relato em texto — fica só no grupo de fotos, nunca disputando o índice de relato.
+  const relatoIndex = coluna(header, ["relato", "descricao", "inconformidade"]);
   if (relatoIndex < 0) {
     throw new Error("Planilha sem coluna de relato/descrição da ocorrência.");
   }
   const localIndex = coluna(header, ["local", "ambiente", "setor"]);
-  const fotosIndex = coluna(header, ["foto", "imagem", "anexo"]);
+  const fotosIndex = coluna(header, ["foto", "imagem", "anexo", "ocorrencia"]);
   const linhas = rows
     .slice(1)
     .map((row) => ({

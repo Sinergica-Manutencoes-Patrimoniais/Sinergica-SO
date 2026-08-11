@@ -35,9 +35,11 @@ test("cria tipo+checklist, cria inspeção com template pré-carregado, edita ca
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByText(nomeTipo, { exact: true })).toBeVisible({ timeout: 10_000 });
 
+  // Seletor achado quebrado: TiposInspecaoPage.tsx usa "rounded-lg" (token semântico) desde a
+  // refatoração visual E00-S18/S20 — "rounded-[8px]" (valor arbitrário) não existe mais no DOM.
   const cardDoTipo = page
     .locator("h4", { hasText: nomeTipo })
-    .locator('xpath=ancestor::div[contains(@class,"rounded-[8px]")][1]');
+    .locator('xpath=ancestor::div[contains(@class,"rounded-lg")][1]');
   await cardDoTipo.getByRole("button", { name: "+ Novo checklist" }).click();
   await page.getByLabel("Nome do checklist *").fill(nomeTemplate);
   await page.getByPlaceholder("Categoria").fill("Estrutural");

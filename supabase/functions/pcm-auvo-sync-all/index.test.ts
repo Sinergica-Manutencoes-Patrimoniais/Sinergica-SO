@@ -6,7 +6,9 @@
 import { assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { type Caller, makeSupabaseCaller, runSyncAll } from "./index.ts";
 
-const ETAPAS_FIXAS = 6; // tasks-import + deleted-tasks + gps + questionnaires + expenses + satisfactions
+const ETAPAS_FIXAS = 5; // tasks-import + deleted-tasks + gps + questionnaires + expenses
+// E03-S11: "satisfactions" saiu das etapas fixas — a Sinérgica não usa a pesquisa de satisfação
+// do Auvo (migration 0201). pcm-auvo-support-pull agora só aceita questionnaires/expenses.
 
 Deno.test("runSyncAll — chama pull para cada entidade + etapas fixas, tudo ok; clientes vem primeiro", async () => {
   const chamadas: Array<{ path: string; body?: unknown }> = [];
@@ -29,7 +31,6 @@ Deno.test("runSyncAll — chama pull para cada entidade + etapas fixas, tudo ok;
     { path: "pcm-auvo-gps-pull", body: undefined },
     { path: "pcm-auvo-support-pull", body: { resource: "questionnaires" } },
     { path: "pcm-auvo-support-pull", body: { resource: "expenses" } },
-    { path: "pcm-auvo-support-pull", body: { resource: "satisfactions" } },
   ]);
   // Ordem estável do resultado: clientes, demais pulls, etapas fixas.
   assertEquals(resultado.results.map((r) => r.step), [
@@ -40,7 +41,6 @@ Deno.test("runSyncAll — chama pull para cada entidade + etapas fixas, tudo ok;
     "gps",
     "questionnaires",
     "expenses",
-    "satisfactions",
   ]);
 });
 
@@ -72,8 +72,8 @@ Deno.test("runSyncAll — falha das etapas novas (gps/support) fica isolada e no
   const caller: Caller = (path, body) => {
     if (path === "pcm-auvo-gps-pull") return Promise.reject(new Error("GPS 500 simulado"));
     const resource = (body as { resource?: string } | undefined)?.resource;
-    if (path === "pcm-auvo-support-pull" && resource === "satisfactions") {
-      return Promise.reject(new Error("Satisfação 500 simulado"));
+    if (path === "pcm-auvo-support-pull" && resource === "expenses") {
+      return Promise.reject(new Error("Expenses 500 simulado"));
     }
     return Promise.resolve({ ok: true });
   };
@@ -84,9 +84,8 @@ Deno.test("runSyncAll — falha das etapas novas (gps/support) fica isolada e no
   assertEquals(resultado.results.length, 1 + ETAPAS_FIXAS);
   assertEquals(resultado.results.find((r) => r.step === "gps")?.ok, false);
   assertEquals(resultado.results.find((r) => r.step === "gps")?.error, "GPS 500 simulado");
-  assertEquals(resultado.results.find((r) => r.step === "satisfactions")?.ok, false);
+  assertEquals(resultado.results.find((r) => r.step === "expenses")?.ok, false);
   assertEquals(resultado.results.find((r) => r.step === "questionnaires")?.ok, true);
-  assertEquals(resultado.results.find((r) => r.step === "expenses")?.ok, true);
   assertEquals(resultado.results.find((r) => r.step === "pull:funcionarios")?.ok, true);
 });
 
@@ -104,7 +103,6 @@ Deno.test("runSyncAll — lista de entidades vazia roda só as etapas fixas", as
     "pcm-auvo-tasks-import",
     "pcm-auvo-deleted-tasks-sync",
     "pcm-auvo-gps-pull",
-    "pcm-auvo-support-pull",
     "pcm-auvo-support-pull",
     "pcm-auvo-support-pull",
   ]);

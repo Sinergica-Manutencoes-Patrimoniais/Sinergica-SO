@@ -5,6 +5,7 @@ import {
   Bot,
   Briefcase,
   Building2,
+  Calculator,
   Calendar,
   CheckCircle2,
   ChevronLeft,
@@ -12,7 +13,9 @@ import {
   ClipboardCheck,
   ClipboardList,
   Clock,
+  Columns3,
   FileBarChart,
+  FileSignature,
   FileText,
   Gauge,
   HardHat,
@@ -55,6 +58,13 @@ import { AreaClienteAdminPage } from "../features/area-cliente/pages/AreaCliente
 import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
 import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
 import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
+import { PainelComercialCliente } from "../features/comercial/components/PainelComercialCliente";
+import { ConfigFunilPage as ComercialConfigFunilPage } from "../features/comercial/pages/ConfigFunilPage";
+import { ContasPage as ComercialContasPage } from "../features/comercial/pages/ContasPage";
+import { ContratosPage as ComercialContratosPage } from "../features/comercial/pages/ContratosPage";
+import { DashboardComercialPage as ComercialDashboardPage } from "../features/comercial/pages/DashboardComercialPage";
+import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
+import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features/comercial/pages/ParametrosPrecoPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
@@ -218,6 +228,22 @@ interface FinanceiroNavGroup {
   items: FinanceiroNavItem[];
 }
 
+// Sub-navegação do Comercial — E03-S01 (specs/E03-S01-fundacao-comercial/). Mesmo padrão useState
+// de abas. Cresce com o épico: funil (S02), propostas (S04), contratos (S07), dashboard (S08).
+type ComercialView =
+  | "dashboard"
+  | "funil"
+  | "contas"
+  | "precificacao"
+  | "config-funil"
+  | "contratos";
+
+interface ComercialNavItem {
+  label: string;
+  icon: LucideIcon;
+  view: ComercialView;
+}
+
 // Sub-navegação do Guia do SO — documentação de onboarding (features/guia/), último item da
 // barra de módulos. Mesmo padrão useState de abas.
 interface GuiaNavItem {
@@ -347,6 +373,15 @@ const FINANCEIRO_NAV: FinanceiroNavGroup[] = [
       { label: "Cockpit", icon: Gauge, view: "cockpit" },
     ],
   },
+];
+
+const COMERCIAL_NAV: ComercialNavItem[] = [
+  { label: "Dashboard", icon: Gauge, view: "dashboard" },
+  { label: "Funil", icon: Columns3, view: "funil" },
+  { label: "Contas", icon: Briefcase, view: "contas" },
+  { label: "Contratos", icon: FileSignature, view: "contratos" },
+  { label: "Precificação", icon: Calculator, view: "precificacao" },
+  { label: "Configuração do funil", icon: SlidersHorizontal, view: "config-funil" },
 ];
 
 const GUIA_NAV: GuiaNavItem[] = [
@@ -584,6 +619,10 @@ export function HomePage() {
   >();
   // Sub-navegação do Financeiro.
   const [financeiroView, setFinanceiroView] = useState<FinanceiroView>("dashboard");
+  // E03-S08 AC-10/task 8: dashboard é o item default do módulo, mesmo padrão do Financeiro
+  // (E04-S03) — "o funil está funcionando?" é a pergunta que abriu o épico, por isso é a primeira
+  // tela, não o Kanban de trabalho (que segue disponível, só deixou de ser o default da E03-S02).
+  const [comercialView, setComercialView] = useState<ComercialView>("dashboard");
   // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
   const [guiaView, setGuiaView] = useState<GuiaView>("visao-geral");
   const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
@@ -598,6 +637,12 @@ export function HomePage() {
     origemClienteId: string;
     seq: number;
   } | null>(null);
+  // E03-S05, AC-7: deep-link da aba Comercial da Visão 360 ("ver assessment completo") pra
+  // `InspecoesPage`, mesmo padrão do `osDeepLink` acima.
+  const [inspecaoDeepLinkId, setInspecaoDeepLinkId] = useState<string | null>(null);
+  // E03-S09, AC-5: deep-link da aba Comercial da Visão 360 ("ver conversa que originou o lead")
+  // pra `AtendimentoInboxPage` — mesmo padrão do `inspecaoDeepLinkId` acima.
+  const [conversaDeepLinkId, setConversaDeepLinkId] = useState<string | null>(null);
   // E01-S75 AC-5: período vindo do Apontamento de Horas — só setado junto com `clienteSelecionado`
   // pela navegação de "Horas por cliente"; nulo em qualquer outro caminho pra Visão 360 (clique
   // direto em ListaClientesPage não filtra nada).
@@ -624,6 +669,7 @@ export function HomePage() {
     setClientePeriodo(null);
     setOsDeepLink(null);
     setOrdensFiltrosPreset(null);
+    setInspecaoDeepLinkId(null);
   }
 
   function abrirClienteNoPeriodo(clienteId: string, periodo: { inicio: string; fim: string }) {
@@ -648,6 +694,18 @@ export function HomePage() {
     const hoje = new Date().toISOString().slice(0, 10);
     setOrdensFiltrosPreset({ tecnicoFuncionarioId: "", dataInicio: hoje, dataFim: hoje });
     setPcmView("ordens");
+  }
+
+  function abrirInspecaoDoComercial(inspecaoId: string) {
+    setInspecaoDeepLinkId(inspecaoId);
+    setClienteSelecionado(null);
+    setPcmView("inspecoes");
+  }
+
+  function abrirConversaDoComercial(conversaId: string) {
+    setConversaDeepLinkId(conversaId);
+    setAtendimentoView("inbox");
+    navegarModulo("atendimento");
   }
 
   function abrirOsDoCliente(osId: string) {
@@ -877,6 +935,9 @@ export function HomePage() {
                       title={item.label}
                       onClick={() => {
                         setAtendimentoView(item.view);
+                        // Clique manual no menu não é o deep-link do Comercial (E03-S09) — limpa
+                        // pra não reabrir uma conversa antiga se o usuário voltar pro Inbox depois.
+                        setConversaDeepLinkId(null);
                         setMobileSidebarOpen(false);
                       }}
                       className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
@@ -925,6 +986,37 @@ export function HomePage() {
                 })}
               </div>
             ))
+          ) : activeModulo === "comercial" ? (
+            <div>
+              {!sidebarCompacta && (
+                <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                  COMERCIAL
+                </p>
+              )}
+              {COMERCIAL_NAV.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.view === comercialView;
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    title={item.label}
+                    onClick={() => {
+                      setComercialView(item.view);
+                      setMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                      isActive
+                        ? "border-orange bg-card/[0.07] text-white font-medium"
+                        : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                    {!sidebarCompacta && <span className="truncate">{item.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
           ) : activeModulo === "guia" ? (
             <div>
               {!sidebarCompacta && (
@@ -1114,13 +1206,25 @@ export function HomePage() {
                     clienteId={clienteSelecionado}
                     onAbrirOs={abrirOsDoCliente}
                     periodo={clientePeriodo ?? undefined}
+                    // E03-S01 AC-9: o shell injeta a aba Comercial. `features/pcm` não importa
+                    // `features/comercial` (fronteira do CLAUDE.md) — quem compõe é o app.
+                    // Sem o módulo, nada é injetado e a aba não aparece.
+                    painelComercial={
+                      podeVerModulo("comercial") ? (
+                        <PainelComercialCliente
+                          clienteId={clienteSelecionado}
+                          onAbrirLevantamento={abrirInspecaoDoComercial}
+                          onAbrirConversa={abrirConversaDoComercial}
+                        />
+                      ) : undefined
+                    }
                   />
                 </div>
               ) : (
                 <ListaClientesPage onSelecionar={setClienteSelecionado} />
               )
             ) : pcmView === "inspecoes" ? (
-              <InspecoesPage />
+              <InspecoesPage inspecaoIdInicial={inspecaoDeepLinkId} />
             ) : pcmView === "assessment" ? (
               <AssessmentPage />
             ) : pcmView === "cliente-marcacoes" ? (
@@ -1240,7 +1344,7 @@ export function HomePage() {
             atendimentoView === "dashboard" ? (
               <AtendimentoDashboardPage />
             ) : atendimentoView === "inbox" ? (
-              <AtendimentoInboxPage />
+              <AtendimentoInboxPage conversaIdInicial={conversaDeepLinkId} />
             ) : atendimentoView === "config" ? (
               <AtendimentoConfigPage />
             ) : null
@@ -1279,6 +1383,34 @@ export function HomePage() {
               <FinanceiroCockpitPage />
             ) : (
               <FinanceiroMockRouter view={financeiroView} />
+            )
+          ) : activeModulo === "comercial" ? (
+            // Abrir a Conta cai na Visão 360 do PCM — é a mesma Conta (ADR-0020), e a aba
+            // Comercial de lá mostra o funil. Nada de reconstruir a 360 dentro do Comercial.
+            comercialView === "dashboard" ? (
+              <ComercialDashboardPage />
+            ) : comercialView === "config-funil" ? (
+              <ComercialConfigFunilPage />
+            ) : comercialView === "precificacao" ? (
+              <ComercialParametrosPrecoPage />
+            ) : comercialView === "contratos" ? (
+              <ComercialContratosPage />
+            ) : comercialView === "funil" ? (
+              <ComercialFunilPage
+                onAbrirConta={(clienteId) => {
+                  navegarModulo("pcm");
+                  irParaPcmView("clientes");
+                  setClienteSelecionado(clienteId);
+                }}
+              />
+            ) : (
+              <ComercialContasPage
+                onAbrirConta={(clienteId) => {
+                  navegarModulo("pcm");
+                  irParaPcmView("clientes");
+                  setClienteSelecionado(clienteId);
+                }}
+              />
             )
           ) : activeModulo === "area-cliente" ? (
             <AreaClienteAdminPage

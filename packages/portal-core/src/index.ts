@@ -9,6 +9,7 @@ export type PortalSection =
   | "cronograma"
   | "notificacoes"
   | "orcamentos"
+  | "propostas"
   | "financeiro";
 
 export interface PortalTenantClaim {
@@ -26,5 +27,6 @@ export const PORTAL_SECTIONS: readonly PortalSection[] = [
   "cronograma",
   "notificacoes",
   "orcamentos",
+  "propostas",
   "financeiro",
 ];

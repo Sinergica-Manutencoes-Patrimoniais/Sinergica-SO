@@ -1,9 +1,10 @@
 import type { ComponentType } from "react";
 import { AtendimentoGuia } from "./AtendimentoGuia";
+import { ComercialGuia } from "./ComercialGuia";
 import { FinanceiroGuia } from "./FinanceiroGuia";
 import { PapeisGuia } from "./PapeisGuia";
 import { PcmGuia } from "./PcmGuia";
-import { AreaClienteGuia, CockpitGuia, ComercialGuia, MarketingGuia } from "./PlanejadosGuia";
+import { AreaClienteGuia, CockpitGuia, MarketingGuia } from "./PlanejadosGuia";
 import { VisaoGeralGuia } from "./VisaoGeralGuia";
 
 export type GuiaView =

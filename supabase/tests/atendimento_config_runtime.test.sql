@@ -48,8 +48,10 @@ select has_table('atendimento', 'opt_outs', 'opt-outs existem');
 select has_table('atendimento', 'lead_scoring_config', 'config de scoring existe');
 select has_table('atendimento', 'cluster_regras', 'regras de cluster existem');
 select has_column('atendimento', 'cluster_regras', 'prioridade', 'cluster possui prioridade');
-select has_column('comercial', 'leads', 'lead_tier', 'lead guarda tier');
-select has_column('comercial', 'leads', 'cluster_nome', 'lead guarda cluster');
+-- E03-S10: comercial.leads foi dropada — comercial.oportunidades já tinha as mesmas colunas
+-- desde a E03-S01 e é quem recebe o lead do agente hoje (fn_registrar_oportunidade).
+select has_column('comercial', 'oportunidades', 'lead_tier', 'lead guarda tier');
+select has_column('comercial', 'oportunidades', 'cluster_nome', 'lead guarda cluster');
 select ok(
   to_regprocedure('atendimento.fn_calcular_lead_score(jsonb)') is not null,
   'calculo de score existe'

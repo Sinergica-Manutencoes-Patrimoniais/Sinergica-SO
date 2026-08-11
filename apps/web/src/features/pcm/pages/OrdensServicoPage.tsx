@@ -1,4 +1,5 @@
 import { Tooltip } from "@sinergica/ui";
+import { useQuery } from "@tanstack/react-query";
 import {
   Calendar,
   ClipboardList,
@@ -14,16 +15,28 @@ import {
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { useDebouncedValue } from "../../../lib/use-debounced-value";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
-import { criarChamado, listarChamados } from "../application/chamados";
-import {
-  alterarStatusEmLote,
-  alterarStatusOrdemServico,
-  contarKpisOrdens,
-  listarOrdensServico,
-} from "../application/hub-os";
-import type { FiltrosServidorOrdens } from "../application/hub-os-gateway";
+import { criarChamado } from "../application/chamados";
 import { obterPreferenciaColunas, salvarPreferenciaColunas } from "../application/kanban-colunas";
+import type { ConsultaOperacao } from "../application/operacao-gateway";
+import {
+  marcarConteudoPintadoChamados,
+  marcarDadosProntosChamados,
+  marcarInicioNavegacaoChamados,
+} from "../application/operacao-performance";
+import {
+  OPERACAO_CATALOGO_STALE_TIME,
+  OPERACAO_KPI_VAZIO,
+  dadosFeedParaOrdens,
+  mesclarDetalhe,
+  operacaoQueryKeys,
+  useAlterarStatusOperacao,
+  useDetalheOperacao,
+  useFeedOperacao,
+  useFeedsKanban,
+  useKpisOperacao,
+} from "../application/operacao-queries";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { listarProximasPreventivas } from "../application/pmoc";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
@@ -36,7 +49,7 @@ import { OsCalendarioView } from "../components/OsCalendarioView";
 import { OsKanbanView } from "../components/OsKanbanView";
 import { OsTimelineView } from "../components/OsTimelineView";
 import { CATEGORIAS_OS } from "../domain/abertura-os";
-import type { Chamado, ChamadoFormData } from "../domain/chamados";
+import type { ChamadoFormData } from "../domain/chamados";
 import { TIPO_OS_HUB_LABEL, calcularPrioridadeHub } from "../domain/hub-os";
 import {
   COLUNAS_KANBAN_PADRAO,
@@ -47,7 +60,6 @@ import {
 } from "../domain/kanban-colunas";
 import type {
   FiltrosOrdens,
-  KpisOrdensServico,
   OrdemServicoOperacional,
   StatusOrdemServico,
 } from "../domain/ordens-servico";
@@ -58,7 +70,6 @@ import {
   auvoTaskDeepLink,
   calcularKpisOrdens,
   calcularMetricasOperacao,
-  chamadoAbertoParaCard,
   ehCardChamadoAberto,
   filtrarOrdens,
   prioridadeColor,
@@ -69,8 +80,8 @@ import {
   statusOsColor,
 } from "../domain/ordens-servico";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
-import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseKanbanColunasAdapter } from "../infrastructure/supabase-kanban-colunas-adapter";
+import { supabaseOperacaoAdapter } from "../infrastructure/supabase-operacao-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { BacklogGutPage } from "./BacklogGutPage";
@@ -86,10 +97,16 @@ const VISOES: Array<{ value: Visao; label: string; Icone: typeof List }> = [
   { value: "backlog", label: "Backlog", Icone: LayoutGrid },
 ];
 
-type Estado =
-  | { fase: "carregando" }
-  | { fase: "erro"; mensagem: string }
-  | { fase: "pronto"; ordens: OrdemServicoOperacional[] };
+function intervaloAgendaInicial() {
+  const hoje = new Date();
+  const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  inicio.setDate(inicio.getDate() - inicio.getDay());
+  const fim = new Date(inicio);
+  fim.setDate(fim.getDate() + 41);
+  const isoLocal = (data: Date) =>
+    `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+  return { inicio: isoLocal(inicio), fim: isoLocal(fim) };
+}
 
 export function OrdensServicoPage({
   refreshKey = 0,
@@ -111,8 +128,8 @@ export function OrdensServicoPage({
   filtrosIniciais?: Partial<FiltrosOrdens>;
 }) {
   const { user } = useAuth();
+  useState(() => marcarInicioNavegacaoChamados());
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
-  const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
   const [conversaoPendente, setConversaoPendente] = useState<{
     chamadoId: string;
@@ -121,95 +138,109 @@ export function OrdensServicoPage({
   // E01-S118 AC-6: incrementa a cada clique de card pra reabrir o modal de detalhe (mesmo card 2x).
   const [modalDetalheSeq, setModalDetalheSeq] = useState(0);
   const [visao, setVisao] = useState<Visao>(abaInicial ?? "lista");
-  const [filtros, setFiltros] = useState<FiltrosOrdens>(() =>
-    filtrosIniciais ? { ...FILTROS_ORDENS_VAZIO, ...filtrosIniciais } : FILTROS_ORDENS_VAZIO,
-  );
+  const [intervaloAgenda, setIntervaloAgenda] = useState(intervaloAgendaInicial);
+  const [filtros, setFiltros] = useState<FiltrosOrdens>(() => ({
+    ...FILTROS_ORDENS_VAZIO,
+    status: "ativos",
+    ...filtrosIniciais,
+  }));
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
-  const [recarregando, setRecarregando] = useState(false);
-  const [kpisServidor, setKpisServidor] = useState<KpisOrdensServico | null>(null);
   const [editando, setEditando] = useState(false);
   const [colunasKanban, setColunasKanban] =
     useState<ColunaKanbanPreferencia[]>(COLUNAS_KANBAN_PADRAO);
   const [preventivas, setPreventivas] = useState<PmocPreventivaResumo[]>([]);
-  // E01-S118 AC-2/AC-5: clientes pro "Novo Chamado" e pro filtro por Cliente do board.
-  const [dadosOs, setDadosOs] = useState<DadosAberturaOs | null>(null);
   const [novoChamadoAberto, setNovoChamadoAberto] = useState(false);
   const [aberturaAuvoOsId, setAberturaAuvoOsId] = useState<string | null>(null);
-  // E01-S118 T7: Chamados abertos ainda sem OS — exibidos como cards sintéticos na coluna
-  // Solicitação (senão um Chamado recém-criado só apareceria no board depois de "Gerar OS").
-  const [chamadosAbertos, setChamadosAbertos] = useState<Chamado[]>([]);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
-
-  // E01-S44: status/técnico/categoria/data são empurrados pro WHERE do servidor (não busca livre —
-  // depende do nome do cliente, só existe depois do JOIN em memória). Sentinelas "todas"/"todos"
-  // viram `undefined` (sem filtro).
-  const filtrosServidor = useMemo<FiltrosServidorOrdens>(
+  const buscaDebounced = useDebouncedValue(filtros.busca, 250);
+  const consulta = useMemo<ConsultaOperacao>(
     () => ({
-      status: filtros.status !== "todas" ? filtros.status : undefined,
+      busca: buscaDebounced || undefined,
+      status: filtros.status === "todas" ? "todos" : (filtros.status as ConsultaOperacao["status"]),
       tecnicoFuncionarioId:
         filtros.tecnicoFuncionarioId !== "todos" ? filtros.tecnicoFuncionarioId : undefined,
       clienteId: filtros.clienteId !== "todos" ? filtros.clienteId : undefined,
       categoria: filtros.categoria !== "todas" ? filtros.categoria : undefined,
-      dataInicio: filtros.dataInicio,
-      dataFim: filtros.dataFim,
+      dataInicio:
+        filtros.dataInicio ??
+        (visao === "timeline" || visao === "calendario" ? intervaloAgenda.inicio : null),
+      dataFim:
+        filtros.dataFim ??
+        (visao === "timeline" || visao === "calendario" ? intervaloAgenda.fim : null),
+      ordem:
+        visao === "backlog"
+          ? "gutd"
+          : visao === "timeline" || visao === "calendario"
+            ? "agenda"
+            : "recentes",
+      limite: visao === "timeline" || visao === "calendario" ? 200 : visao === "kanban" ? 210 : 50,
     }),
-    [
-      filtros.status,
-      filtros.tecnicoFuncionarioId,
-      filtros.clienteId,
-      filtros.categoria,
-      filtros.dataInicio,
-      filtros.dataFim,
-    ],
+    [buscaDebounced, filtros, visao, intervaloAgenda],
   );
-
+  const consultasAtivas = !permissoesCarregando && temLeitura;
+  const consultaKpis = useMemo(
+    () => ({
+      busca: consulta.busca,
+      clienteId: consulta.clienteId,
+      tecnicoFuncionarioId: consulta.tecnicoFuncionarioId,
+      categoria: consulta.categoria,
+      dataInicio: consulta.dataInicio,
+      dataFim: consulta.dataFim,
+    }),
+    [consulta],
+  );
+  const feed = useFeedOperacao(
+    supabaseOperacaoAdapter,
+    consulta,
+    consultasAtivas && visao !== "kanban",
+  );
+  const feedsKanban = useFeedsKanban(
+    supabaseOperacaoAdapter,
+    { ...consultaKpis, status: consulta.status },
+    consultasAtivas && visao === "kanban",
+  );
+  const queryKpis = useKpisOperacao(supabaseOperacaoAdapter, consultaKpis, consultasAtivas);
+  const queryCatalogos = useQuery({
+    queryKey: [...operacaoQueryKeys.catalogos(), "abertura-os"],
+    queryFn: () => carregarDadosAberturaOs(supabaseOrdemServicoAdapter),
+    enabled: false,
+    staleTime: OPERACAO_CATALOGO_STALE_TIME,
+  });
+  const dadosOs: DadosAberturaOs | null = queryCatalogos.data ?? null;
+  const mutacaoStatus = useAlterarStatusOperacao(supabaseOperacaoAdapter);
+  const paginasFeed = visao === "kanban" ? feedsKanban.pages : feed.data?.pages;
+  const ordensCarregadas = useMemo(() => dadosFeedParaOrdens(paginasFeed), [paginasFeed]);
+  const detalhe = useDetalheOperacao(
+    supabaseOperacaoAdapter,
+    selecionadaId,
+    Boolean(selecionadaId),
+  );
+  const feedPendente = visao === "kanban" ? feedsKanban.isPending : feed.isPending;
+  const feedBuscando = visao === "kanban" ? feedsKanban.isFetching : feed.isFetching;
+  const feedErro = visao === "kanban" ? feedsKanban.isError : feed.isError;
+  const erroFeed = visao === "kanban" ? feedsKanban.error : feed.error;
+  const temProximaPagina = visao === "kanban" ? feedsKanban.hasNextPage : feed.hasNextPage;
+  const buscandoProximaPagina =
+    visao === "kanban" ? feedsKanban.isFetchingNextPage : feed.isFetchingNextPage;
+  const recarregando = feedBuscando || queryKpis.isFetching;
   const carregar = useCallback(async () => {
-    // Só mostra o spinner de página inteira na primeira carga — refetch por filtro mantém a tela
-    // (filtros/KPIs/abas) visível, só acende `recarregando` (sem isso, trocar um select apagava a
-    // tela toda a cada clique).
-    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
-    setRecarregando(true);
     setErroAcao(null);
-    setSelecionados(new Set());
-    try {
-      const [ordens, kpis, chamadosAbertosLista] = await Promise.all([
-        listarOrdensServico(supabaseHubOsAdapter, filtrosServidor),
-        contarKpisOrdens(supabaseHubOsAdapter, filtrosServidor),
-        listarChamados(supabaseChamadosAdapter, {
-          status: "aberto",
-          clienteId: filtrosServidor.clienteId,
-        }),
-      ]);
-      setEstado({ fase: "pronto", ordens });
-      setKpisServidor(kpis);
-      setChamadosAbertos(chamadosAbertosLista);
-      setSelecionadaId((atual) => atual ?? ordens[0]?.id ?? null);
-    } catch (error) {
-      setEstado({
-        fase: "erro",
-        mensagem: error instanceof Error ? error.message : "Não foi possível carregar OS.",
-      });
-    } finally {
-      setRecarregando(false);
-    }
-  }, [filtrosServidor]);
-
+    await Promise.all([
+      visao === "kanban" ? feedsKanban.refetch() : feed.refetch(),
+      queryKpis.refetch(),
+    ]);
+  }, [visao, feedsKanban.refetch, feed.refetch, queryKpis.refetch]);
+  const primeiraPinturaMarcada = useRef(false);
   useEffect(() => {
-    if (!permissoesCarregando && temLeitura) carregar();
-  }, [permissoesCarregando, temLeitura, carregar]);
-
-  // E01-S118: clientes carregados de antemão (seletor do "Novo Chamado" e filtro por Cliente).
-  useEffect(() => {
-    if (!permissoesCarregando && temLeitura && !dadosOs) {
-      carregarDadosAberturaOs(supabaseOrdemServicoAdapter)
-        .then(setDadosOs)
-        .catch(() => undefined);
-    }
-  }, [permissoesCarregando, temLeitura, dadosOs]);
+    if (!paginasFeed || primeiraPinturaMarcada.current) return;
+    primeiraPinturaMarcada.current = true;
+    marcarDadosProntosChamados();
+    requestAnimationFrame(() => marcarConteudoPintadoChamados());
+  }, [paginasFeed]);
 
   async function salvarNovoChamado(dados: ChamadoFormData) {
     if (!user) return;
@@ -267,31 +298,20 @@ export function OrdensServicoPage({
   // tipoOs (melhoria/outro, fora do Hub) fica sempre por último, sem sumir da lista.
   const [ordenarPorHub, setOrdenarPorHub] = useState(false);
 
-  // E01-S118 T7: Chamados abertos (ainda sem OS) viram cards sintéticos na coluna Solicitação —
-  // resolve o nome do cliente via `dadosOs` (mesma fonte do seletor de "Novo Chamado"/filtro).
-  const cardsChamadosAbertos = useMemo(() => {
-    const nomesClientes = new Map((dadosOs?.clientes ?? []).map((c) => [c.id, c.nome]));
-    return chamadosAbertos.map((chamado) =>
-      chamadoAbertoParaCard(chamado, nomesClientes.get(chamado.clienteId) ?? "Cliente"),
-    );
-  }, [chamadosAbertos, dadosOs]);
-
   const ordensFiltradas = useMemo(() => {
-    if (estado.fase !== "pronto") return [];
-    const todas = [...estado.ordens, ...cardsChamadosAbertos];
-    const filtradas = filtrarOrdens(todas, filtros);
+    const filtrosAplicados = { ...filtros, busca: buscaDebounced };
+    const filtradas = filtrarOrdens(ordensCarregadas, filtrosAplicados);
     if (!ordenarPorHub) return filtradas;
     return [...filtradas].sort((a, b) => {
       const prioA = calcularPrioridadeHub(a.tipoOs, a.dataAgendada) ?? Number.POSITIVE_INFINITY;
       const prioB = calcularPrioridadeHub(b.tipoOs, b.dataAgendada) ?? Number.POSITIVE_INFINITY;
       return prioA - prioB;
     });
-  }, [estado, cardsChamadosAbertos, filtros, ordenarPorHub]);
+  }, [ordensCarregadas, filtros, buscaDebounced, ordenarPorHub]);
 
   const tecnicosDisponiveis = useMemo(() => {
-    if (estado.fase !== "pronto") return [];
     const porId = new Map<string, string>();
-    for (const ordem of estado.ordens) {
+    for (const ordem of ordensCarregadas) {
       if (ordem.tecnicoFuncionarioId) {
         porId.set(ordem.tecnicoFuncionarioId, ordem.tecnicoNome ?? "Técnico");
       }
@@ -299,40 +319,33 @@ export function OrdensServicoPage({
     return [...porId.entries()]
       .map(([id, nome]) => ({ id, nome }))
       .sort((a, b) => a.nome.localeCompare(b.nome));
-  }, [estado]);
+  }, [ordensCarregadas]);
 
   const selecionada = useMemo(() => {
-    if (estado.fase !== "pronto") return null;
-    return (
-      estado.ordens.find((ordem) => ordem.id === selecionadaId) ??
-      cardsChamadosAbertos.find((card) => card.id === selecionadaId) ??
-      null
-    );
-  }, [estado, cardsChamadosAbertos, selecionadaId]);
+    const resumo = ordensCarregadas.find((ordem) => ordem.id === selecionadaId) ?? null;
+    return resumo ? mesclarDetalhe(resumo, detalhe.data) : null;
+  }, [ordensCarregadas, selecionadaId, detalhe.data]);
 
-  // E01-S44: com busca livre ativa, os KPIs do servidor não sabem do refinamento por nome de
-  // cliente (só existe em memória) — cai pro cálculo client-side sobre o que já está carregado,
-  // pra continuar batendo com a lista visível (mesma garantia da E01-S42).
-  const kpis = useMemo(() => {
-    // E01-S118: o RPC de KPIs não tem filtro por cliente — com busca livre OU filtro de Cliente
-    // ativo, calcula client-side em cima do conjunto já filtrado (bate com a lista visível).
-    if (filtros.busca.trim().length > 0 || filtros.clienteId !== "todos") {
-      return calcularKpisOrdens(ordensFiltradas);
-    }
-    return kpisServidor ?? calcularKpisOrdens(ordensFiltradas);
-  }, [filtros.busca, filtros.clienteId, ordensFiltradas, kpisServidor]);
+  const kpis = queryKpis.data ?? OPERACAO_KPI_VAZIO;
+  const totalFiltrado = visao === "kanban" ? feedsKanban.total : (feed.data?.pages[0]?.total ?? 0);
 
   // E01-S118 AC-4: métricas operacionais acionáveis, sobre o conjunto filtrado visível.
   const metricasExtra = useMemo(() => calcularMetricasOperacao(ordensFiltradas), [ordensFiltradas]);
 
   function limparFiltros() {
-    setFiltros(FILTROS_ORDENS_VAZIO);
+    setFiltros({ ...FILTROS_ORDENS_VAZIO, status: "ativos" });
   }
 
   function onMudarVisao(proxima: Visao) {
     setVisao(proxima);
     setSelecionados(new Set());
   }
+
+  const onIntervaloCalendario = useCallback((inicio: string, fim: string) => {
+    setIntervaloAgenda((atual) =>
+      atual.inicio === inicio && atual.fim === fim ? atual : { inicio, fim },
+    );
+  }, []);
 
   // E01-S118 AC-6: clicar num card (Kanban/Timeline/Calendário) seleciona e abre o modal de detalhe.
   function abrirDetalheCard(id: string) {
@@ -359,26 +372,13 @@ export function OrdensServicoPage({
     setSalvando(true);
     setErroAcao(null);
     try {
-      const resultado = await alterarStatusEmLote(
-        supabaseHubOsAdapter,
-        [...selecionados],
-        status,
-        user.id,
-      );
-      if (estado.fase === "pronto") {
-        const sucesso = new Set(resultado.sucesso);
-        setEstado({
-          fase: "pronto",
-          ordens: estado.ordens.map((ordem) =>
-            sucesso.has(ordem.id) ? { ...ordem, status } : ordem,
-          ),
-        });
-      }
-      if (resultado.falhas.length > 0) {
-        setSelecionados(new Set(resultado.falhas.map((f) => f.id)));
+      const resultado = await mutacaoStatus.mutateAsync({ ids: [...selecionados], status });
+      const falhas = resultado.filter((item) => !item.sucesso);
+      if (falhas.length > 0) {
+        setSelecionados(new Set(falhas.map((f) => f.id)));
         setErroAcao(
-          `${resultado.falhas.length} OS não atualizada(s): ${resultado.falhas
-            .map((f) => `${f.id} (${f.erro})`)
+          `${falhas.length} OS não atualizada(s): ${falhas
+            .map((f) => `${f.id} (${f.erro ?? "erro desconhecido"})`)
             .join(", ")}`,
         );
       } else {
@@ -403,22 +403,12 @@ export function OrdensServicoPage({
     setSalvando(true);
     setErroAcao(null);
     try {
-      const atualizada = await alterarStatusOrdemServico(supabaseHubOsAdapter, {
-        id,
-        status,
-        updatedBy: user.id,
-      });
-      if (estado.fase === "pronto") {
-        setEstado({
-          fase: "pronto",
-          ordens: estado.ordens.map((ordem) =>
-            ordem.id === atualizada.id ? { ...ordem, ...atualizada } : ordem,
-          ),
-        });
-      }
+      const [resultado] = await mutacaoStatus.mutateAsync({ ids: [id], status });
+      if (!resultado?.sucesso) throw new Error(resultado?.erro ?? "Status não atualizado.");
       // E01-S125: status persiste primeiro; criação Auvo nunca é efeito colateral. Só a
       // transição individual abre a confirmação (lote fica manual, por OS, no detalhe).
-      if (status === "planejamento" && atualizada.auvoTaskId == null) setAberturaAuvoOsId(id);
+      const atual = ordensCarregadas.find((ordem) => ordem.id === id);
+      if (status === "planejamento" && atual?.auvoTaskId == null) setAberturaAuvoOsId(id);
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível alterar status.");
     } finally {
@@ -444,15 +434,17 @@ export function OrdensServicoPage({
     );
   }
 
-  if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando ordens…</div>;
+  if (feedPendente) {
+    return <SkeletonOperacao />;
   }
 
-  if (estado.fase === "erro") {
+  if (feedErro && ordensCarregadas.length === 0) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="text-sm text-ink-3 mt-1">{estado.mensagem}</p>
+        <p className="text-sm text-ink-3 mt-1">
+          {erroFeed instanceof Error ? erroFeed.message : "Não foi possível carregar chamados."}
+        </p>
         <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
           Tentar novamente
         </button>
@@ -485,7 +477,10 @@ export function OrdensServicoPage({
               {/* E01-S118 AC-2: "Novo Chamado" é o intake primário — a OS é a evolução dele. */}
               <button
                 type="button"
-                onClick={() => setNovoChamadoAberto(true)}
+                onClick={async () => {
+                  if (!dadosOs) await queryCatalogos.refetch();
+                  setNovoChamadoAberto(true);
+                }}
                 className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
               >
                 <Headset className="h-4 w-4" />
@@ -507,6 +502,14 @@ export function OrdensServicoPage({
       {erroAcao && (
         <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erroAcao}
+        </div>
+      )}
+      {feedErro && ordensCarregadas.length > 0 && (
+        <div className="flex items-center justify-between rounded-md border border-warning bg-warning-soft px-4 py-2 text-sm text-warning">
+          <span>Não foi possível atualizar. Os dados anteriores foram preservados.</span>
+          <button type="button" onClick={carregar} className="font-semibold hover:underline">
+            Tentar novamente
+          </button>
         </div>
       )}
 
@@ -568,7 +571,12 @@ export function OrdensServicoPage({
       {/* E01-S118 AC-3: aba Backlog reusa a página priorizada por GUT; as demais abas seguem o
           fluxo de filtros/visões da OS. */}
       {visao === "backlog" ? (
-        <BacklogGutPage />
+        <BacklogGutPage
+          ordensControladas={ordensFiltradas}
+          onPlanejarControlado={(ordem) => onAlterarStatusDe(ordem.id, "planejamento")}
+          onAtualizarControlado={carregar}
+          totalControlado={totalFiltrado}
+        />
       ) : (
         <>
           <div className="grid grid-cols-1 gap-2 rounded-xl border border-line bg-card p-3 md:grid-cols-6">
@@ -583,6 +591,7 @@ export function OrdensServicoPage({
               value={filtros.status}
               onChange={(event) => setFiltros((f) => ({ ...f, status: event.target.value }))}
             >
+              <option value="ativos">Ativos</option>
               <option value="todas">Todos os status</option>
               {STATUS_OS.map((status) => (
                 <option key={status.value} value={status.value}>
@@ -609,6 +618,9 @@ export function OrdensServicoPage({
               className="input"
               aria-label="Filtrar por cliente"
               value={filtros.clienteId}
+              onFocus={() => {
+                if (!dadosOs) queryCatalogos.refetch();
+              }}
               onChange={(event) => setFiltros((f) => ({ ...f, clienteId: event.target.value }))}
             >
               <option value="todos">Todos os clientes</option>
@@ -711,7 +723,11 @@ export function OrdensServicoPage({
                 <OsTimelineView ordens={ordensFiltradas} onSelecionar={abrirDetalheCard} />
               )}
               {visao === "calendario" && (
-                <OsCalendarioView ordens={ordensFiltradas} onSelecionar={abrirDetalheCard} />
+                <OsCalendarioView
+                  ordens={ordensFiltradas}
+                  onSelecionar={abrirDetalheCard}
+                  onIntervaloChange={onIntervaloCalendario}
+                />
               )}
             </div>
           )}
@@ -757,7 +773,7 @@ export function OrdensServicoPage({
                       Ordenar por Hub
                     </label>
                     <span className="rounded-full border border-line bg-card px-2 py-0.5 text-micro font-semibold tabular-nums text-ink-2">
-                      {ordensFiltradas.length}
+                      {ordensFiltradas.length} de {totalFiltrado}
                     </span>
                   </div>
                 </div>
@@ -871,6 +887,17 @@ export function OrdensServicoPage({
         </>
       )}
 
+      {temProximaPagina && (
+        <button
+          type="button"
+          onClick={() => (visao === "kanban" ? feedsKanban.fetchNextPage() : feed.fetchNextPage())}
+          disabled={buscandoProximaPagina}
+          className="btn-secondary self-center"
+        >
+          {buscandoProximaPagina ? "Carregando…" : "Carregar mais"}
+        </button>
+      )}
+
       {editando && selecionada && (
         <NovaOrdemServicoModal
           aberto={editando}
@@ -897,6 +924,24 @@ export function OrdensServicoPage({
           onAberta={carregar}
         />
       )}
+    </div>
+  );
+}
+
+function SkeletonOperacao() {
+  return (
+    <div className="flex flex-col gap-4" aria-label="Carregando chamados">
+      <div className="h-14 animate-pulse rounded-xl bg-line-soft" />
+      <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-6">
+        {["total", "abertas", "planejamento", "execucao", "finalizadas", "criticas"].map((id) => (
+          <div key={id} className="h-16 animate-pulse rounded-lg bg-line-soft" />
+        ))}
+      </div>
+      <div className="h-16 animate-pulse rounded-xl bg-line-soft" />
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-[360px_1fr]">
+        <div className="h-[480px] animate-pulse rounded-xl bg-line-soft" />
+        <div className="h-[480px] animate-pulse rounded-xl bg-line-soft" />
+      </div>
     </div>
   );
 }

@@ -6,7 +6,11 @@ import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 
-type Resource = "questionnaires" | "expenses" | "satisfactions";
+// E03-S11: "satisfactions" saiu do union type — decisão do PO, a Sinérgica não usa a pesquisa de
+// satisfação do Auvo (pcm.satisfacao_respostas vira espelho inativo, migration 0201). O request
+// handler abaixo ainda reconhece o valor pra devolver um erro claro de "desativado", distinto de
+// um `resource` desconhecido/inválido.
+type Resource = "questionnaires" | "expenses";
 type ApiList = { result?: { entityList?: Record<string, unknown>[] } | Record<string, unknown>[] };
 const list = (response: ApiList) => Array.isArray(response.result) ? response.result : response.result?.entityList ?? [];
 const number = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -29,27 +33,39 @@ async function pull(resource: Resource, db: UntypedSupabaseClient) {
     if (expenseRows.length) { const { error } = await db.schema("pcm").from("despesas").upsert(expenseRows, { onConflict: "auvo_id" }); if (error) throw error; }
     return { resource, types: typeRows.length, pulled: expenses.length, upserted: expenseRows.length };
   }
-  // 1 GET por OS finalizada (o endpoint só filtra por taskId). Limite + orçamento de tempo evitam
-  // estourar o teto de ~150s do worker quando o Auvo estiver lento (mesma lição do sync-all/E01-S37).
-  const { data: orders, error: ordersError } = await db.schema("pcm").from("ordens_servico").select("auvo_task_id").eq("status", "finalizado").not("auvo_task_id", "is", null).order("updated_at", { ascending: false }).limit(20);
-  if (ordersError) throw ordersError;
-  let pulled = 0; let upserted = 0; let interrompidoEmMs: number | null = null;
-  const inicio = Date.now();
-  for (const order of orders ?? []) {
-    if (Date.now() - inicio > 45_000) { interrompidoEmMs = Date.now() - inicio; break; }
-    const taskId = number(order.auvo_task_id); if (taskId == null) continue;
-    const rows = await auvoGet<ApiList>(`/satisfactionsurveys?${buildParamFilter({ taskId })}&page=1&pageSize=100`).then(list);
-    pulled += rows.length;
-    const mapped = rows.map((row) => ({ auvo_id: number(row.id), auvo_task_id: number(row.taskId), pergunta: text(row.questionDescription), resposta: text(row.answerDescription), respondida_em: text(row.answerDate), score: number(row.scoreSum) == null ? null : Math.round(Number(row.scoreSum) / Math.max(1, number(row.totalResponse) ?? 1)), email: text(row.email), auvo_payload: row })).filter((row) => row.auvo_id != null && row.auvo_task_id != null);
-    if (mapped.length) { const { error } = await db.schema("pcm").from("satisfacao_respostas").upsert(mapped, { onConflict: "auvo_id" }); if (error) throw error; upserted += mapped.length; }
-  }
-  return { resource, pulled, upserted, ...(interrompidoEmMs == null ? {} : { truncadoPorTempoMs: interrompidoEmMs }) };
+  // Inalcançável em uso normal — `Resource` só tem 2 valores e os dois `if` acima já retornam.
+  // Fica como guarda de tipo (TS não estreita `resource` pra `never` sozinho aqui).
+  const _exhaustive: never = resource;
+  throw new HttpError(500, `recurso não implementado: ${String(_exhaustive)}`);
 }
 
 if (import.meta.main) serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin")); if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors }); const reqId = crypto.randomUUID().slice(0, 8);
-  try { if (req.method !== "POST") throw new HttpError(405, "Método não permitido"); requireServiceRole(req); const resource = ((await req.json().catch(() => ({}))) as { resource?: Resource }).resource; if (!resource || !["questionnaires", "expenses", "satisfactions"].includes(resource)) throw new HttpError(400, "resource inválido"); const url = Deno.env.get("SUPABASE_URL") ?? ""; const key = getSupabaseServiceKey(); if (!url || !key) throw new HttpError(500, "Ambiente Supabase incompleto"); const result = await pull(resource, createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })); return new Response(JSON.stringify({ ok: true, ...result }), { status: 200, headers: { "Content-Type": "application/json", ...cors } }); }
-  catch (error) { const status = error instanceof HttpError ? error.status : 502; console.error(JSON.stringify({ fn: "pcm-auvo-support-pull", reqId, detail: String(error) })); return new Response(JSON.stringify({ type: "about:blank", title: "Erro", status, detail: "Não foi possível sincronizar o recurso Auvo", reqId }), { status, headers: { "Content-Type": "application/problem+json", ...cors } }); }
+  try {
+    if (req.method !== "POST") throw new HttpError(405, "Método não permitido");
+    requireServiceRole(req);
+    const raw = ((await req.json().catch(() => ({}))) as { resource?: string }).resource;
+    // E03-S11: "satisfactions" é reconhecido à parte pra devolver erro claro de recurso
+    // desativado (AC-1) — distinto de um valor desconhecido/inválido (typo, garbage input).
+    if (raw === "satisfactions") {
+      throw new HttpError(
+        400,
+        "resource desativado — a pesquisa de satisfação do Auvo não é usada (migration 0201, E03-S11); fonte canônica de CSAT/NPS é pcm.portal_satisfacao",
+      );
+    }
+    if (!raw || !["questionnaires", "expenses"].includes(raw)) throw new HttpError(400, "resource inválido");
+    const resource = raw as Resource;
+    const url = Deno.env.get("SUPABASE_URL") ?? "";
+    const key = getSupabaseServiceKey();
+    if (!url || !key) throw new HttpError(500, "Ambiente Supabase incompleto");
+    const result = await pull(resource, createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } }));
+    return new Response(JSON.stringify({ ok: true, ...result }), { status: 200, headers: { "Content-Type": "application/json", ...cors } });
+  } catch (error) {
+    const status = error instanceof HttpError ? error.status : 502;
+    const detail = error instanceof HttpError ? error.message : "Não foi possível sincronizar o recurso Auvo";
+    console.error(JSON.stringify({ fn: "pcm-auvo-support-pull", reqId, detail: String(error) }));
+    return new Response(JSON.stringify({ type: "about:blank", title: "Erro", status, detail, reqId }), { status, headers: { "Content-Type": "application/problem+json", ...cors } });
+  }
 });
 
 export { pull as pullSupportResource };

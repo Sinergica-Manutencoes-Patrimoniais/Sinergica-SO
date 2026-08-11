@@ -3,7 +3,7 @@
 // `pcm.inspecao_itens` (mesma mecânica de E01-S73), sem tabela nova (design.md D1).
 
 export type MotivoAssessment = "inicio" | "alteracao_contrato" | "anual";
-export type DestinoItemAssessment = "chamado" | "backlog" | "os";
+export type DestinoItemAssessment = "chamado" | "backlog" | "os" | "descarte";
 export type ResponsavelDestino = "sinergica" | "terceiro" | "cliente";
 
 export const MOTIVO_ASSESSMENT_LABEL: Record<MotivoAssessment, string> = {
@@ -16,6 +16,7 @@ export const DESTINO_ITEM_LABEL: Record<DestinoItemAssessment, string> = {
   chamado: "Chamado",
   backlog: "Backlog",
   os: "OS",
+  descarte: "Descartado",
 };
 
 export const RESPONSAVEL_DESTINO_LABEL: Record<ResponsavelDestino, string> = {

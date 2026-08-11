@@ -14,6 +14,7 @@ import type {
   EditarInspecaoInput,
   EditarInspecaoItemInput,
   EditarTipoInspecaoInput,
+  GutEsforcoItem,
   InspecaoItem,
   InspecaoResumo,
   ItemInspecaoImportado,
@@ -93,6 +94,13 @@ interface InspecaoItemRow {
   destino_responsavel: ResponsavelDestino | null;
   auvo_questao_chave: string | null;
   auvo_importacao_provisoria: boolean;
+  gravidade: number | null;
+  urgencia: number | null;
+  tendencia: number | null;
+  dor_cliente: number | null;
+  esforco_horas: number | null;
+  justificativa_esforco: string | null;
+  citacao_normativa: string | null;
 }
 
 interface TipoInspecaoRow {
@@ -150,7 +158,7 @@ const INSPECAO_COLS =
   "id,client_id,titulo,data_inspecao,responsavel_tecnico,status,observacoes_gerais,total_itens,itens_conformes,itens_nao_conformes,itens_atencao,codigo,tipo_inspecao_id,edificacao,endereco,hora_inicio,hora_fim,inspetor,responsavel_no_local,escopo,norma_tecnica,art,condicoes,anexos,e_assessment,motivo_assessment" as const;
 
 const ITEM_COLS =
-  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,foto_urls,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes,destino,destino_responsavel,auvo_questao_chave,auvo_importacao_provisoria" as const;
+  "id,inspecao_id,sistema,localizacao,descricao,resultado,severidade,recomendacao,prazo_recomendado,foto_url,foto_urls,categoria,elemento,identificacao,grau_risco,estado_conservacao,anomalia,medicoes,midias,responsavel_acao,observacoes,destino,destino_responsavel,auvo_questao_chave,auvo_importacao_provisoria,gravidade,urgencia,tendencia,dor_cliente,esforco_horas,justificativa_esforco,citacao_normativa" as const;
 
 const TIPO_INSPECAO_COLS = "id,nome,norma_tecnica,descricao,ativo" as const;
 const TEMPLATE_COLS = "id,tipo_inspecao_id,nome,ativo" as const;
@@ -245,6 +253,13 @@ function mapItem(row: InspecaoItemRow): InspecaoItem {
     destinoResponsavel: row.destino_responsavel,
     auvoQuestaoChave: row.auvo_questao_chave,
     auvoImportacaoProvisoria: row.auvo_importacao_provisoria,
+    gravidade: row.gravidade,
+    urgencia: row.urgencia,
+    tendencia: row.tendencia,
+    dorCliente: row.dor_cliente,
+    esforcoHoras: row.esforco_horas,
+    justificativaEsforco: row.justificativa_esforco,
+    citacaoNormativa: row.citacao_normativa,
   };
 }
 
@@ -314,6 +329,14 @@ function linhaItemImportado(
     auvo_questao_chave: ctx.auvoQuestaoChave ?? null,
     auvo_importacao_provisoria: ctx.auvoImportacaoProvisoria ?? false,
     auvo_task_id: ctx.auvoTaskId ?? null,
+    // E01-S143: a IA já calculou isso na classificação do import — persiste em vez de descartar
+    // (antes só virava severidade/recomendacao acima e se perdia).
+    gravidade: item.gravidade,
+    urgencia: item.urgencia,
+    tendencia: item.tendencia,
+    esforco_horas: item.esforcoHoras,
+    justificativa_esforco: item.justificativaEsforco,
+    citacao_normativa: item.citacaoNormativa,
   };
 }
 
@@ -595,6 +618,42 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
     return mapItem(data as InspecaoItemRow);
   },
 
+  async atualizarResultadoItem(
+    itemId: string,
+    resultado: InspecaoItem["resultado"],
+    updatedBy: string,
+  ): Promise<InspecaoItem> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .update({ resultado, updated_at: new Date().toISOString(), updated_by: updatedBy })
+      .eq("id", itemId)
+      .select(ITEM_COLS)
+      .single();
+    if (error) throw error;
+    return mapItem(data as InspecaoItemRow);
+  },
+
+  async atualizarGutEsforcoItem(itemId: string, gutEsforco: GutEsforcoItem): Promise<InspecaoItem> {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("inspecao_itens")
+      .update({
+        gravidade: gutEsforco.gravidade,
+        urgencia: gutEsforco.urgencia,
+        tendencia: gutEsforco.tendencia,
+        dor_cliente: gutEsforco.dorCliente,
+        esforco_horas: gutEsforco.esforcoHoras,
+        justificativa_esforco: gutEsforco.justificativaEsforco,
+        citacao_normativa: gutEsforco.citacaoNormativa,
+      })
+      .eq("id", itemId)
+      .select(ITEM_COLS)
+      .single();
+    if (error) throw error;
+    return mapItem(data as InspecaoItemRow);
+  },
+
   async excluirItemInspecao(id: string): Promise<void> {
     const { error } = await supabase.schema("pcm").from("inspecao_itens").delete().eq("id", id);
     if (error) throw error;
@@ -608,6 +667,25 @@ export const supabaseQualidadeAdapter: QualidadeGateway = {
     const payload = data as { itens?: Record<string, unknown>[] } | null;
     const itens = Array.isArray(payload?.itens) ? payload.itens : [];
     return itens.map((item: Record<string, unknown>) => mapItemImportado(item));
+  },
+
+  async classificarItensGutd(texto: string) {
+    const { data, error } = await supabase.functions.invoke("pcm-classificar-itens-gutd", {
+      body: { texto },
+    });
+    if (error) throw await erroDetalhado(error);
+    const payload = data as { itens?: Record<string, unknown>[] } | null;
+    const itens = Array.isArray(payload?.itens) ? payload.itens : [];
+    return itens.map((item) => ({
+      indice: Number(item.indice),
+      gravidade: Number(item.gravidade),
+      urgencia: Number(item.urgencia),
+      tendencia: Number(item.tendencia),
+      dorCliente: item.dor_cliente === null ? null : Number(item.dor_cliente),
+      esforcoHoras: Number(item.esforco_horas ?? 0),
+      justificativaEsforco: (item.justificativa_esforco as string | null) ?? null,
+      citacaoNormativa: (item.citacao_normativa as string | null) ?? null,
+    }));
   },
 
   async criarInspecaoImportada(input: CriarInspecaoImportadaInput): Promise<InspecaoResumo> {

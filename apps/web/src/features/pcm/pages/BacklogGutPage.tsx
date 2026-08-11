@@ -21,7 +21,17 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; ordens: OrdemServicoOperacional[] };
 
-export function BacklogGutPage() {
+export function BacklogGutPage({
+  ordensControladas,
+  onPlanejarControlado,
+  onAtualizarControlado,
+  totalControlado,
+}: {
+  ordensControladas?: OrdemServicoOperacional[];
+  onPlanejarControlado?: (ordem: OrdemServicoOperacional) => Promise<void> | void;
+  onAtualizarControlado?: () => Promise<void> | void;
+  totalControlado?: number;
+} = {}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
@@ -48,25 +58,31 @@ export function BacklogGutPage() {
   }, []);
 
   useEffect(() => {
+    if (ordensControladas) return;
     if (!permissoesCarregando && temLeitura) carregar();
-  }, [permissoesCarregando, temLeitura, carregar]);
+  }, [ordensControladas, permissoesCarregando, temLeitura, carregar]);
+
+  const ordens = ordensControladas ?? (estado.fase === "pronto" ? estado.ordens : []);
 
   const resumo = useMemo(() => {
-    if (estado.fase !== "pronto") return null;
     return {
-      total: estado.ordens.length,
-      criticas: estado.ordens.filter((ordem) => ordem.prioridade === "critica").length,
-      maiorScore: estado.ordens[0]?.scorePcm ?? 0,
+      total: totalControlado ?? ordens.length,
+      criticas: ordens.filter((ordem) => ordem.prioridade === "critica").length,
+      maiorScore: ordens[0]?.scorePcm ?? 0,
     };
-  }, [estado]);
+  }, [ordens, totalControlado]);
 
   async function onPlanejar(ordem: OrdemServicoOperacional) {
     if (!user) return;
     setSalvandoId(ordem.id);
     setErroAcao(null);
     try {
-      await planejarOrdemServico(supabaseHubOsAdapter, { id: ordem.id, updatedBy: user.id });
-      await carregar();
+      if (onPlanejarControlado) {
+        await onPlanejarControlado(ordem);
+      } else {
+        await planejarOrdemServico(supabaseHubOsAdapter, { id: ordem.id, updatedBy: user.id });
+        await carregar();
+      }
       if (ordem.auvoTaskId == null) setAberturaAuvoOsId(ordem.id);
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível planejar OS.");
@@ -88,11 +104,11 @@ export function BacklogGutPage() {
     );
   }
 
-  if (estado.fase === "carregando") {
+  if (!ordensControladas && estado.fase === "carregando") {
     return <div className="p-8 text-center text-sm text-ink-3">Carregando backlog…</div>;
   }
 
-  if (estado.fase === "erro") {
+  if (!ordensControladas && estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
@@ -124,7 +140,11 @@ export function BacklogGutPage() {
               Novo item de backlog
             </button>
           )}
-          <button type="button" onClick={carregar} className="btn-secondary">
+          <button
+            type="button"
+            onClick={onAtualizarControlado ?? carregar}
+            className="btn-secondary"
+          >
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </button>
@@ -152,10 +172,10 @@ export function BacklogGutPage() {
         </div>
 
         <div className="divide-y divide-line-soft">
-          {estado.ordens.length === 0 ? (
+          {ordens.length === 0 ? (
             <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS aberta no backlog.</div>
           ) : (
-            estado.ordens.map((ordem, index) => (
+            ordens.map((ordem, index) => (
               <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)}>
                 {/* biome-ignore lint/a11y/useSemanticElements: não pode virar <button> — a linha
                     tem um <button> aninhado mais abaixo, e botão dentro de botão é HTML inválido. */}
@@ -242,7 +262,8 @@ export function BacklogGutPage() {
           onFechar={() => setEditando(null)}
           onEditada={() => {
             setEditando(null);
-            carregar();
+            if (onAtualizarControlado) onAtualizarControlado();
+            else carregar();
           }}
         />
       )}
@@ -253,7 +274,8 @@ export function BacklogGutPage() {
           onFechar={() => setCriando(false)}
           onCriada={() => {
             setCriando(false);
-            carregar();
+            if (onAtualizarControlado) onAtualizarControlado();
+            else carregar();
           }}
         />
       )}

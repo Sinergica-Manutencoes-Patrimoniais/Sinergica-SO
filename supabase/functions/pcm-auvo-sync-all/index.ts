@@ -100,7 +100,9 @@ export async function runSyncAll(
       etapa("tasks-import", "pcm-auvo-tasks-import", tasksImportBody, ORCAMENTO_TASKS_IMPORT_MS),
       etapa("deleted-tasks", "pcm-auvo-deleted-tasks-sync", tasksImportBody, ORCAMENTO_ETAPA_APOIO_MS),
       etapa("gps", "pcm-auvo-gps-pull", undefined, ORCAMENTO_ETAPA_APOIO_MS),
-      Promise.all((["questionnaires", "expenses", "satisfactions"] as const).map((resource) =>
+      // E03-S11: "satisfactions" saiu — a Sinérgica não usa a pesquisa de satisfação do Auvo
+      // (migration 0201). pcm-auvo-support-pull agora recusa esse resource com erro claro.
+      Promise.all((["questionnaires", "expenses"] as const).map((resource) =>
         etapa(resource, "pcm-auvo-support-pull", { resource }, ORCAMENTO_ETAPA_APOIO_MS)
       )),
     ]);

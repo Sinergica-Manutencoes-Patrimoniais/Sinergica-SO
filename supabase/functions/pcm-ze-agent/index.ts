@@ -455,9 +455,10 @@ async function tentarMelhorarTituloOs(db: UntypedSupabaseClient, osId: string, d
 }
 
 /** E02-S08: agente comercial — qualifica contato novo (não é síndico de condomínio já cliente)
- * chegado numa instância WhatsApp dedicada e cria comercial.leads com score/resumo pro time
- * comercial assumir. Reaproveita a mesma fila/lock/debounce de wa_queue do Zé — só o "o que fazer
- * quando pronto" muda (lead em vez de OS). */
+ * chegado numa instância WhatsApp dedicada e cria oportunidade no funil (E03-S09, RPC
+ * `comercial.fn_registrar_oportunidade`) com score/resumo pro time comercial assumir. Reaproveita
+ * a mesma fila/lock/debounce de wa_queue do Zé — só o "o que fazer quando pronto" muda (lead em
+ * vez de OS). */
 async function processarComercial(
   db: UntypedSupabaseClient,
   item: QueueItem,
@@ -539,41 +540,39 @@ async function processarComercial(
       p_subsegmento: null,
     });
   if (clusterError) throw clusterError;
-  const { data: leadRow, error: leadError } = await db
-    .schema("comercial")
-    .from("leads")
-    .insert({
-      nome: lead.nome,
-      email: lead.email ?? null,
-      telefone: lead.telefone ?? null,
-      origem: "whatsapp",
-      origem_ref: remoteJid,
-      status: "qualificado",
-      score: lead.score,
-      lead_tier: leadTier,
-      cluster_nome: (clusterNome as string | null) ?? null,
-      resumo: lead.resumo,
-      conversa_id: conversa?.id ?? null,
-      contato_id: conversa?.contatoId ?? null,
-      created_by: await systemUserId(db),
-    })
-    .select("id")
-    .single();
-  if (leadError) throw leadError;
 
-  if (conversa?.id) {
-    await db.schema("atendimento").from("conversas").update({ lead_id: leadRow.id }).eq("id", conversa.id);
-  }
-  if (conversa?.contatoId) {
-    await db.schema("relacionamento").from("vinculos").upsert(
-      {
-        contato_id: conversa.contatoId,
-        entidade_tipo: "comercial_lead",
-        entidade_id: leadRow.id,
-        papel: "lead",
-        principal: true,
-      },
-      { onConflict: "contato_id,entidade_tipo,entidade_id" },
+  // E03-S09 AC-1/AC-8: RPC publicada pelo Comercial (ADR-0019 R1/R2) — resolve a Conta pelo
+  // vínculo do contato (AC-2), é idempotente por conversa aberta (AC-6) e grava `conversa_id` na
+  // própria oportunidade (AC-5). A tabela legada do Atendimento que este fluxo escrevia antes foi
+  // dropada na E03-S10, junto com a coluna correspondente em `atendimento.conversas`.
+  //
+  // AC-7: falha aqui NUNCA derruba o atendimento — loga e segue pra confirmação normal. O cliente
+  // não pode ficar sem resposta porque o CRM falhou.
+  try {
+    const { error: rpcError } = await db.schema("comercial").rpc("fn_registrar_oportunidade", {
+      p_nome: lead.nome,
+      p_telefone: lead.telefone ?? null,
+      p_score: lead.score,
+      p_resumo: lead.resumo,
+      p_origem_ref: remoteJid,
+      p_lead_tier: leadTier,
+      p_cluster_nome: (clusterNome as string | null) ?? null,
+      p_conversa_id: conversa?.id ?? null,
+      p_contato_id: conversa?.contatoId ?? null,
+      p_created_by: await systemUserId(db),
+    });
+    if (rpcError) throw rpcError;
+  } catch (e) {
+    console.error(
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        nivel: "error",
+        fn: FN,
+        msg: "falha ao registrar oportunidade no Comercial — atendimento segue normalmente",
+        instanceId,
+        remoteJid,
+        detail: String(e),
+      }),
     );
   }
 
@@ -581,7 +580,7 @@ async function processarComercial(
   await responderEvolution(instanceId, remoteJid, confirmacao);
   await registrarMensagemAgente(db, instanceId, remoteJid, confirmacao, "agente");
   await finalizarFila(db, item.id, "done", now);
-  return { queueId: item.id, status: "done", leadId: leadRow.id };
+  return { queueId: item.id, status: "done" };
 }
 
 function splitQueueKey(queueKey: string): [string, string] {

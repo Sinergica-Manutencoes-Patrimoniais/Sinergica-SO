@@ -64,6 +64,39 @@ export function agruparPorDia(
   return mapa;
 }
 
+export interface LinhaTecnicoAgenda {
+  funcionarioId: string;
+  funcionarioNome: string;
+  porDia: Map<string, AlocacaoTecnico[]>;
+}
+
+/** E01-S140 AC-2: visão timeline — uma linha por técnico com alocação na semana, ordem alfabética.
+ * Técnico sem nenhuma alocação na semana não gera linha (evita linha vazia pra todo o quadro). */
+export function agruparAlocacoesPorTecnico(
+  alocacoes: AlocacaoTecnico[],
+  dias: string[],
+): LinhaTecnicoAgenda[] {
+  const linhas = new Map<string, LinhaTecnicoAgenda>();
+  for (const alocacao of alocacoes) {
+    let linha = linhas.get(alocacao.funcionarioId);
+    if (!linha) {
+      linha = {
+        funcionarioId: alocacao.funcionarioId,
+        funcionarioNome: alocacao.funcionarioNome,
+        porDia: new Map(dias.map((dia) => [dia, []])),
+      };
+      linhas.set(alocacao.funcionarioId, linha);
+    }
+    linha.porDia.get(alocacao.data)?.push(alocacao);
+  }
+  for (const linha of linhas.values()) {
+    for (const lista of linha.porDia.values()) {
+      lista.sort((a, b) => (a.horaInicio ?? "").localeCompare(b.horaInicio ?? ""));
+    }
+  }
+  return [...linhas.values()].sort((a, b) => a.funcionarioNome.localeCompare(b.funcionarioNome));
+}
+
 /** AC-3: cor consistente por técnico entre os dias — hash simples do id, paleta fixa. */
 const PALETA_CORES = ["#C5362B", "#1E8E45", "#2E6DB4", "#9A5A00", "#6B3FA0", "#0F8C8C", "#B23A6B"];
 

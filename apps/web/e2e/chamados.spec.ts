@@ -18,6 +18,75 @@ function linhaDoTitulo(page: import("@playwright/test").Page, titulo: string) {
   return page.getByRole("row", { name: titulo });
 }
 
+test("E01-S145: abre em Ativos com duas consultas críticas e pagina sem repetição", async ({
+  page,
+}, testInfo) => {
+  const consultasCriticas: string[] = [];
+  const respostasCriticas: Array<{ url: string; duracaoMs: number; payloadBytes: number }> = [];
+  await page.addInitScript(() => {
+    const janela = window as unknown as { __chamadosLongTasks: number[] };
+    janela.__chamadosLongTasks = [];
+    new PerformanceObserver((lista) => {
+      janela.__chamadosLongTasks.push(...lista.getEntries().map((entrada) => entrada.duration));
+    }).observe({ type: "longtask", buffered: true });
+  });
+  page.on("request", (request) => {
+    const url = request.url();
+    if (url.includes("/rest/v1/operacao_itens") || url.includes("/rpc/fn_kpis_operacao")) {
+      consultasCriticas.push(url);
+    }
+  });
+  page.on("response", async (response) => {
+    const url = response.url();
+    if (url.includes("/rest/v1/operacao_itens") || url.includes("/rpc/fn_kpis_operacao")) {
+      respostasCriticas.push({
+        url,
+        duracaoMs: response.request().timing().responseEnd,
+        payloadBytes: (await response.body()).byteLength,
+      });
+    }
+  });
+
+  await abrirBoard(page);
+  const filtroStatus = page
+    .locator("select")
+    .filter({ has: page.locator('option[value="ativos"]') });
+  await expect(filtroStatus).toHaveValue("ativos");
+  await expect.poll(() => consultasCriticas.length).toBe(2);
+  await expect.poll(() => respostasCriticas.length).toBe(2);
+  await page.waitForFunction(
+    () => performance.getEntriesByName("chamados:content-painted").length === 1,
+  );
+
+  const marcas = await page.evaluate(() =>
+    ["chamados:navigation-start", "chamados:data-ready", "chamados:content-painted"].map(
+      (nome) => performance.getEntriesByName(nome).length,
+    ),
+  );
+  expect(marcas).toEqual([1, 1, 1]);
+  const longTasks = await page.evaluate(
+    () => (window as unknown as { __chamadosLongTasks: number[] }).__chamadosLongTasks,
+  );
+  await testInfo.attach("chamados-long-tasks.json", {
+    body: JSON.stringify(longTasks),
+    contentType: "application/json",
+  });
+  await testInfo.attach("chamados-respostas-criticas.json", {
+    body: JSON.stringify(respostasCriticas),
+    contentType: "application/json",
+  });
+
+  const carregarMais = page.getByRole("button", { name: "Carregar mais" });
+  if (await carregarMais.isVisible()) {
+    const linhasAntes = await page.getByRole("row").allTextContents();
+    await carregarMais.click();
+    await expect(carregarMais).toBeEnabled({ timeout: 10_000 });
+    const linhasDepois = await page.getByRole("row").allTextContents();
+    expect(linhasDepois.length).toBeGreaterThan(linhasAntes.length);
+    expect(new Set(linhasDepois).size).toBe(linhasDepois.length);
+  }
+});
+
 // E01-S88 AC-1/AC-2/AC-3/AC-5 + E01-S118: cria um Chamado (aparece como card sem OS ainda), gera
 // uma OS a partir dele e confirma que o histórico do Chamado continua acessível.
 test("cria Chamado, gera OS a partir dele e o histórico continua acessível", async ({ page }) => {

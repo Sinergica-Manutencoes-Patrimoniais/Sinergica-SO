@@ -1,6 +1,12 @@
 import type { PortalSection } from "@sinergica/portal-core";
 import { useCallback, useEffect, useId, useState } from "react";
 import { useAuth } from "../../app/auth-context";
+import { criarRelatorioPdf } from "../../lib/pdf/relatorio-pdf";
+// E03-S06: o portal reusa o domínio de proposta do Comercial (formatação de PDF + expiração),
+// mesmo padrão já estabelecido de `formatarTextoRelatorioCliente` (E01-S135, importado do PCM
+// logo abaixo) — o portal é o ponto de composição entre módulos, não os módulos entre si.
+import { estaExpirada } from "../comercial/domain/proposta";
+import { type PropostaPdfPayload, formatarTextoProposta } from "../comercial/domain/proposta-pdf";
 import type { PortalSnapshot } from "./application/portal-gateway";
 import { supabasePortalAdapter } from "./infrastructure/supabase-portal-adapter";
 
@@ -15,6 +21,7 @@ const SECOES: Array<{ id: Secao; label: string }> = [
   { id: "cronograma", label: "Cronograma e conformidade" },
   { id: "notificacoes", label: "Notificações" },
   { id: "orcamentos", label: "Orçamentos" },
+  { id: "propostas", label: "Propostas" },
   { id: "financeiro", label: "Financeiro" },
 ];
 
@@ -97,6 +104,7 @@ export function PortalShell() {
             {secao === "cronograma" && <Cronograma data={snapshot} />}
             {secao === "notificacoes" && <Notificacoes data={snapshot} onAtualizar={recarregar} />}
             {secao === "orcamentos" && <Orcamentos data={snapshot} onAtualizar={recarregar} />}
+            {secao === "propostas" && <Propostas data={snapshot} onAtualizar={recarregar} />}
             {secao === "financeiro" && <Financeiro data={snapshot} />}
           </>
         )}
@@ -624,6 +632,134 @@ function Orcamentos({
           )}
         </section>
       ))}
+    </div>
+  );
+}
+
+const TIPO_PROPOSTA_LABEL: Record<string, string> = {
+  levantamento: "Levantamento",
+  volante: "Volante",
+  residente: "Residente",
+  simples: "Simples",
+};
+
+async function baixarPdfProposta(payload: unknown, versaoAtual: number, contaNome: string) {
+  const pdf = await criarRelatorioPdf({
+    titulo: "Proposta Comercial",
+    subtitulo: `${contaNome} · v${versaoAtual}`,
+  });
+  pdf.escreverTexto(formatarTextoProposta((payload ?? {}) as PropostaPdfPayload, contaNome));
+  const bytes = await pdf.finalizar();
+  const url = URL.createObjectURL(
+    new Blob([Uint8Array.from(bytes).buffer], { type: "application/pdf" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `proposta-${contaNome.toLowerCase().replaceAll(/[^a-z0-9]+/gi, "-")}-v${versaoAtual}.pdf`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// E03-S06: aceite/recusa da proposta. `data.propostas` já só traz o que a view `portal_propostas`
+// libera (enviada/aceita/recusada, da própria Conta — AC-3/AC-4); os botões de decisão só aparecem
+// pra status 'enviada' (AC-5/AC-6), e "Aceitar" some quando a proposta está expirada (AC-7) — a
+// guarda real continua no banco (`fn_decidir_proposta`), isto é só a UI não oferecer o que o banco
+// vai recusar de qualquer forma.
+function Propostas({
+  data,
+  onAtualizar,
+}: { data: PortalSnapshot; onAtualizar: () => Promise<void> }) {
+  const [motivos, setMotivos] = useState<Record<string, string>>({});
+  const [erro, setErro] = useState<string | null>(null);
+  if (!data.propostas.length) return <Vazio texto="Nenhuma proposta disponível." />;
+  return (
+    <div className="grid gap-4">
+      {erro && (
+        <div className="rounded-xl border border-red-500 bg-card p-4 text-sm text-red-600">
+          {erro}
+        </div>
+      )}
+      {data.propostas.map((p) => {
+        const expirada = estaExpirada(p.validoAte);
+        return (
+          <section key={p.id} className="rounded-xl border border-line bg-card p-5">
+            <div className="flex justify-between">
+              <div>
+                <h2 className="font-semibold">
+                  {TIPO_PROPOSTA_LABEL[p.tipo] ?? p.tipo} · v{p.versaoAtual}
+                </h2>
+                <p className="text-sm text-ink-3">
+                  Validade: {p.validoAte ? dataPt(p.validoAte) : "não informada"}
+                  {expirada && p.status === "enviada" && (
+                    <span className="ml-2 font-semibold text-red-600">expirada</span>
+                  )}
+                </p>
+                {p.escopo && <p className="mt-2 text-sm text-ink-2">{p.escopo}</p>}
+              </div>
+              <div className="text-right">
+                <p className="font-semibold">{reais(p.precoCentavos)}</p>
+                <Badge texto={p.status} />
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void baixarPdfProposta(p.payload, p.versaoAtual, data.cliente.nome)}
+                className="rounded-lg border border-orange px-4 py-2 text-sm font-semibold text-orange"
+              >
+                Baixar PDF
+              </button>
+              {p.status === "enviada" && (
+                <>
+                  {!expirada && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setErro(null);
+                        try {
+                          await supabasePortalAdapter.decidirProposta(p.id, "aceita");
+                          await onAtualizar();
+                        } catch (e) {
+                          setErro(e instanceof Error ? e.message : "Falha ao aceitar a proposta.");
+                        }
+                      }}
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+                    >
+                      Aceitar
+                    </button>
+                  )}
+                  <input
+                    placeholder="Motivo da recusa"
+                    value={motivos[p.id] ?? ""}
+                    onChange={(e) => setMotivos((v) => ({ ...v, [p.id]: e.target.value }))}
+                    className="min-w-52 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    disabled={!motivos[p.id]?.trim()}
+                    onClick={async () => {
+                      setErro(null);
+                      try {
+                        await supabasePortalAdapter.decidirProposta(
+                          p.id,
+                          "recusada",
+                          motivos[p.id],
+                        );
+                        await onAtualizar();
+                      } catch (e) {
+                        setErro(e instanceof Error ? e.message : "Falha ao recusar a proposta.");
+                      }
+                    }}
+                    className="rounded-lg border border-red-500 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-50"
+                  >
+                    Recusar
+                  </button>
+                </>
+              )}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

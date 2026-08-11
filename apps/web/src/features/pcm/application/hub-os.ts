@@ -1,4 +1,4 @@
-import { type StatusOrdemServico, ehOsAberta } from "../domain/ordens-servico";
+import { type StatusOrdemServico, ehOsAberta, ehOsRegistroVisita } from "../domain/ordens-servico";
 import { calcularScoreGutd, ordenarPorPrioridade } from "../domain/priorizacao-backlog";
 import type { AlterarStatusOsInput, FiltrosServidorOrdens, HubOsGateway } from "./hub-os-gateway";
 
@@ -20,7 +20,9 @@ export async function listarBacklogGut(gateway: HubOsGateway) {
     gateway.listarOrdensServico(),
     gateway.obterPesosGutd(),
   ]);
-  const abertas = ordens.filter((ordem) => ehOsAberta(ordem.status));
+  const abertas = ordens.filter(
+    (ordem) => ehOsAberta(ordem.status) && !ehOsRegistroVisita(ordem.titulo),
+  );
   const comScore = abertas.map((ordem) => ({
     ...ordem,
     score: calcularScoreGutd(

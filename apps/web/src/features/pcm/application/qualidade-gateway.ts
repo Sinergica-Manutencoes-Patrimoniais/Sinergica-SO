@@ -93,6 +93,27 @@ export interface InspecaoItem {
   destinoResponsavel: ResponsavelDestino | null;
   auvoQuestaoChave: string | null;
   auvoImportacaoProvisoria?: boolean;
+  /** E01-S143: GUT/esforço/embasamento calculados pela IA ao enviar o item pra backlog (mesmo
+   * motor de classificação da E01-S105) — `null` até a IA rodar (ou pro item nunca ir a backlog). */
+  gravidade: number | null;
+  urgencia: number | null;
+  tendencia: number | null;
+  dorCliente: number | null;
+  esforcoHoras: number | null;
+  justificativaEsforco: string | null;
+  citacaoNormativa: string | null;
+}
+
+/** E01-S143: GUT/esforço/embasamento revisados (editáveis) antes de confirmar "Gerar backlog". */
+export interface GutEsforcoItem {
+  gravidade: number;
+  urgencia: number;
+  tendencia: number;
+  /** Quarto fator do GUTd (E01-S82). Anulável: item antigo não tem, e ausência não penaliza. */
+  dorCliente: number | null;
+  esforcoHoras: number;
+  justificativaEsforco: string | null;
+  citacaoNormativa: string | null;
 }
 
 export interface CriarInspecaoInput {
@@ -279,6 +300,19 @@ export interface CriarChecklistTemplateInput {
   createdBy: string;
 }
 
+/** Resposta crua da IA de classificação GUTd — `indice` é o número do item enviado, e é ele que
+ * pareia com o item original (não a posição no array). */
+export interface ClassificacaoGutdBruta {
+  indice: number;
+  gravidade: number;
+  urgencia: number;
+  tendencia: number;
+  dorCliente: number | null;
+  esforcoHoras: number;
+  justificativaEsforco: string | null;
+  citacaoNormativa: string | null;
+}
+
 export interface QualidadeGateway {
   listarClientes(): Promise<ClienteOpcao[]>;
   listarInspecoes(): Promise<InspecaoResumo[]>;
@@ -289,6 +323,11 @@ export interface QualidadeGateway {
   editarItemInspecao(input: EditarInspecaoItemInput): Promise<InspecaoItem>;
   excluirItemInspecao(id: string): Promise<void>;
   processarRelatorioInspecao(texto: string): Promise<ItemInspecaoImportado[]>;
+
+  /** E01-S143: classifica em GUTd itens de inspeção que JÁ existem. Endpoint próprio, separado do
+   * import — lá a IA extrai itens de texto bruto e decide quantos são; aqui a contagem é dada e a
+   * resposta traz o índice de cada item de volta, para o pareamento não depender da ordem. */
+  classificarItensGutd(texto: string): Promise<ClassificacaoGutdBruta[]>;
   criarInspecaoImportada(input: CriarInspecaoImportadaInput): Promise<InspecaoResumo>;
   listarLaudosSpda(): Promise<LaudoSpdaResumo[]>;
   criarLaudoSpda(input: CriarLaudoSpdaInput): Promise<LaudoSpdaResumo>;
@@ -324,4 +363,12 @@ export interface QualidadeGateway {
   ): Promise<void>;
   /** AC-4: assessment mais recente do cliente (`e_assessment=true`), ou `null` se nunca houve um. */
   obterAssessmentVigente(clientId: string): Promise<InspecaoResumo | null>;
+  /** E01-S143 AC-1: troca só o `resultado` do item (ribbon rápido no card), sem abrir o form completo. */
+  atualizarResultadoItem(
+    itemId: string,
+    resultado: ItemResultado,
+    updatedBy: string,
+  ): Promise<InspecaoItem>;
+  /** E01-S143 AC-5: persiste o GUT/esforço/embasamento revisado antes de gerar o backlog. */
+  atualizarGutEsforcoItem(itemId: string, gutEsforco: GutEsforcoItem): Promise<InspecaoItem>;
 }

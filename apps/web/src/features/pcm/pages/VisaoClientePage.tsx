@@ -6,6 +6,7 @@
 // OS/qualidade continuam nas telas de origem. A ação de edição só leva o usuário para o alvo.
 import {
   Activity,
+  Briefcase,
   Calendar,
   ClipboardCheck,
   ClipboardList,
@@ -26,7 +27,7 @@ import {
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
@@ -94,6 +95,7 @@ type Aba360 =
   | "sistemas"
   | "board"
   | "financeiro"
+  | "comercial"
   | "comunicacao";
 
 // E01-S111: rótulos de exibição da preferência de contato de um responsável do cliente.
@@ -119,6 +121,9 @@ const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   // E01-S78: board visual dos ativos por Local (fase 1 do "mapa do andar").
   { id: "board", label: "Board", icon: LayoutGrid },
   { id: "financeiro", label: "Financeiro", icon: DollarSign },
+  // E03-S01 AC-9: funil da Conta. Só aparece quando o shell injeta `painelComercial` — sem o
+  // módulo Comercial, a aba nem existe.
+  { id: "comercial", label: "Comercial", icon: Briefcase },
   { id: "comunicacao", label: "Comunicação", icon: MessageCircle },
 ];
 
@@ -126,9 +131,15 @@ export function VisaoClientePage({
   clienteId,
   onAbrirOs,
   periodo,
+  painelComercial,
 }: {
   clienteId: string;
   onAbrirOs?: (osId: string) => void;
+  /** E03-S01 AC-9: conteúdo da aba Comercial, injetado pelo shell (`HomePage`).
+   * Vem por composição e não por import porque `features/pcm` não pode importar
+   * `features/comercial` (regra de fronteira do CLAUDE.md — features de domínios diferentes não
+   * se conhecem). Ausente (ex.: usuário sem o módulo), a aba simplesmente não aparece. */
+  painelComercial?: ReactNode;
   /** E01-S75 AC-5: vindo do Apontamento de Horas — abre direto na aba "OS" filtrando backlog e
    * histórico ao período por `createdAt` (client-side, sobre o dado já carregado; o gateway não
    * tem parâmetro de data). `createdAt` é o campo disponível em `OrdemServicoResumo` — não é
@@ -261,7 +272,7 @@ export function VisaoClientePage({
 
       <div className="border-b border-line-soft overflow-x-auto">
         <div className="flex min-w-max gap-2">
-          {ABAS.map((item) => {
+          {ABAS.filter((item) => item.id !== "comercial" || painelComercial).map((item) => {
             const Icon = item.icon;
             const ativo = aba === item.id;
             return (
@@ -347,6 +358,8 @@ export function VisaoClientePage({
       {aba === "financeiro" && (
         <PainelFinanceiro cliente={cliente} backlog={backlog} historico={historico} />
       )}
+
+      {aba === "comercial" && painelComercial}
 
       {aba === "comunicacao" && (
         <PainelComunicacao cliente={cliente} eventos={eventos} temEscrita={temEscrita} />

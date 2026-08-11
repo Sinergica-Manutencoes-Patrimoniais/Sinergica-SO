@@ -1,12 +1,12 @@
 import { Tooltip } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import { rotuloNumeroOrdem } from "../domain/ordens-servico";
 import {
   formatarDiaIso,
   gerarDiasDoMes,
-  ordensNoDia,
+  indexarOrdensPorDia,
   resumoTooltipOrdem,
 } from "../domain/ordens-servico";
 
@@ -18,9 +18,11 @@ const MAX_CHIPS_POR_DIA = 3;
 export function OsCalendarioView({
   ordens,
   onSelecionar,
+  onIntervaloChange,
 }: {
   ordens: OrdemServicoOperacional[];
   onSelecionar: (id: string) => void;
+  onIntervaloChange?: (inicio: string, fim: string) => void;
 }) {
   const [mesRef, setMesRef] = useState(() => {
     const hoje = new Date();
@@ -28,7 +30,13 @@ export function OsCalendarioView({
   });
 
   const dias = useMemo(() => gerarDiasDoMes(mesRef.getFullYear(), mesRef.getMonth()), [mesRef]);
+  const ordensPorDia = useMemo(() => indexarOrdensPorDia(ordens), [ordens]);
   const hojeIso = formatarDiaIso(new Date());
+  useEffect(() => {
+    const primeiro = dias[0];
+    const ultimo = dias.at(-1);
+    if (primeiro && ultimo) onIntervaloChange?.(formatarDiaIso(primeiro), formatarDiaIso(ultimo));
+  }, [dias, onIntervaloChange]);
 
   function mudarMes(deltaMeses: number) {
     setMesRef((atual) => new Date(atual.getFullYear(), atual.getMonth() + deltaMeses, 1));
@@ -84,7 +92,7 @@ export function OsCalendarioView({
         {dias.map((dia) => {
           const diaIso = formatarDiaIso(dia);
           const doMesAtual = dia.getMonth() === mesRef.getMonth();
-          const ordensDoDia = ordensNoDia(ordens, diaIso);
+          const ordensDoDia = ordensPorDia.get(diaIso) ?? [];
           return (
             <div
               key={diaIso}

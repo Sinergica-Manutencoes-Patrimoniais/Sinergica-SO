@@ -197,6 +197,15 @@ export function ehOsAberta(status: string): boolean {
   return !ehOsHistorica(status);
 }
 
+// E01-S142: técnico registra entrada/saída abrindo uma tarefa no Auvo com este título literal —
+// vira OS normal (usada no apontamento de horas, E01-S133/S134), mas nunca é item de trabalho a
+// tratar. Match exato normalizado (trim + lowercase) — título parecido mas diferente não é ocultado.
+const TITULOS_REGISTRO_VISITA = new Set(["inicio visita", "fim visita"]);
+
+export function ehOsRegistroVisita(titulo: string): boolean {
+  return TITULOS_REGISTRO_VISITA.has(titulo.trim().toLowerCase());
+}
+
 /** E01-S83 AC-2: item de backlog é uma OS aberta ainda sem agendamento — sem data prevista, sem
  * técnico e sem vínculo com tarefa no Auvo (a criação via `abrirOrdemServico` nunca dispara sync
  * com o Auvo — só a transição de status pra `planejamento` dispara, ver trigger
@@ -230,9 +239,11 @@ export function ordenarBacklogGut<T extends { scorePcm: number; createdAt: strin
 }
 
 export function filtrarBacklogGut<
-  T extends { status: string; scorePcm: number; createdAt: string },
+  T extends { status: string; scorePcm: number; createdAt: string; titulo: string },
 >(ordens: readonly T[]): T[] {
-  return ordenarBacklogGut(ordens.filter((ordem) => ehOsAberta(ordem.status)));
+  return ordenarBacklogGut(
+    ordens.filter((ordem) => ehOsAberta(ordem.status) && !ehOsRegistroVisita(ordem.titulo)),
+  );
 }
 
 export interface GrupoTecnico {
@@ -274,6 +285,21 @@ export function ordensNoDia(
   diaIso: string,
 ): OrdemServicoOperacional[] {
   return ordens.filter((ordem) => paraDiaIso(ordem.dataAgendada) === diaIso);
+}
+
+/** E01-S145: índice O(N) reutilizado nas 42 células do calendário. */
+export function indexarOrdensPorDia(
+  ordens: readonly OrdemServicoOperacional[],
+): Map<string, OrdemServicoOperacional[]> {
+  const indice = new Map<string, OrdemServicoOperacional[]>();
+  for (const ordem of ordens) {
+    const dia = paraDiaIso(ordem.dataAgendada);
+    if (!dia) continue;
+    const itens = indice.get(dia);
+    if (itens) itens.push(ordem);
+    else indice.set(dia, [ordem]);
+  }
+  return indice;
 }
 
 /** E01-S38: grade de 6 semanas (42 dias) pro mês do calendário, começando no domingo anterior (ou
@@ -331,6 +357,7 @@ export function calcularMetricasOperacao(
   let semTecnico = 0;
   let syncAuvoErro = 0;
   for (const ordem of ordens) {
+    if (ehOsRegistroVisita(ordem.titulo)) continue;
     if (ordem.status === "backlog") backlog++;
     if (ehOsAberta(ordem.status) && ordem.tecnicoFuncionarioId === null) semTecnico++;
     if (ordem.auvoSyncError !== null) syncAuvoErro++;
@@ -367,12 +394,16 @@ export function filtrarOrdens(
 ): OrdemServicoOperacional[] {
   const termo = filtros.busca.trim().toLowerCase();
   return ordens.filter((ordem) => {
+    // E01-S142 AC-1: OS de registro de ponto do técnico nunca aparecem em Chamados/OS.
+    if (ehOsRegistroVisita(ordem.titulo)) return false;
     const passaBusca =
       termo.length === 0 ||
       ordem.numero.toLowerCase().includes(termo) ||
       ordem.titulo.toLowerCase().includes(termo) ||
       ordem.clienteNome.toLowerCase().includes(termo);
-    const passaStatus = filtros.status === "todas" || ordem.status === filtros.status;
+    const passaStatus =
+      filtros.status === "todas" ||
+      (filtros.status === "ativos" ? ehOsAberta(ordem.status) : ordem.status === filtros.status);
     const passaTecnico =
       filtros.tecnicoFuncionarioId === "todos" ||
       ordem.tecnicoFuncionarioId === filtros.tecnicoFuncionarioId;
@@ -387,15 +418,17 @@ export function filtrarOrdens(
 }
 
 export function calcularKpisOrdens(ordens: readonly OrdemServicoOperacional[]): KpisOrdensServico {
-  return ordens.reduce<KpisOrdensServico>(
-    (kpis, ordem) => ({
-      total: kpis.total + 1,
-      abertas: kpis.abertas + (ehOsAberta(ordem.status) ? 1 : 0),
-      emPlanejamento: kpis.emPlanejamento + (ordem.status === "planejamento" ? 1 : 0),
-      emExecucao: kpis.emExecucao + (ordem.status === "em_execucao" ? 1 : 0),
-      finalizadas: kpis.finalizadas + (ordem.status === "finalizado" ? 1 : 0),
-      criticas: kpis.criticas + (ordem.prioridade === "critica" ? 1 : 0),
-    }),
-    { total: 0, abertas: 0, emPlanejamento: 0, emExecucao: 0, finalizadas: 0, criticas: 0 },
-  );
+  return ordens
+    .filter((ordem) => !ehOsRegistroVisita(ordem.titulo))
+    .reduce<KpisOrdensServico>(
+      (kpis, ordem) => ({
+        total: kpis.total + 1,
+        abertas: kpis.abertas + (ehOsAberta(ordem.status) ? 1 : 0),
+        emPlanejamento: kpis.emPlanejamento + (ordem.status === "planejamento" ? 1 : 0),
+        emExecucao: kpis.emExecucao + (ordem.status === "em_execucao" ? 1 : 0),
+        finalizadas: kpis.finalizadas + (ordem.status === "finalizado" ? 1 : 0),
+        criticas: kpis.criticas + (ordem.prioridade === "critica" ? 1 : 0),
+      }),
+      { total: 0, abertas: 0, emPlanejamento: 0, emExecucao: 0, finalizadas: 0, criticas: 0 },
+    );
 }

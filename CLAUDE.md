@@ -113,6 +113,23 @@ Dentro de `apps/web/src/features/<dominio>/`:
 - `infrastructure/` — adapters (Supabase, Auvo, Evolution…).
 - Features de domínios diferentes **não se importam** — compartilhe via `packages/`.
 
+## Data fetching — TanStack Query é o padrão (OBRIGATÓRIO em código novo)
+
+Decisão do PO (Lucas, 2026-08-10), introduzida pela E01-S145. **Todo dado que vem do servidor
+passa por TanStack Query** — nunca `useState` + `useEffect` + `carregar()` manual.
+
+- Hooks de query/mutation ficam em `application/<dominio>-queries.ts`, com as chaves num objeto
+  `<dominio>QueryKeys` (padrão de `features/pcm/application/operacao-queries.ts`).
+- `queryClient` único em `app/query-client.ts` (`staleTime` 30s por padrão).
+- Depois de escrever, **invalide a chave** — não chame `carregar()` de novo à mão.
+- Filtro/busca que dispara request usa `keepPreviousData` + cancelamento; resultado antigo nunca
+  pode sobrescrever filtro novo.
+- `useState` continua sendo o certo para **estado local de UI** (modal aberto, campo de formulário).
+
+**Migração:** o app tem ~81 telas no padrão antigo. Não há campanha de migração — cada uma
+converte quando for tocada. Código novo já nasce no padrão; PR com `useEffect` buscando dado de
+servidor deve ser recusado no review.
+
 ## Segurança — OS-grade (obrigatório neste projeto)
 RLS FORCE em toda tabela · schemas por domínio · `audit.*` append-only · secrets em Vault ·
 refresh OAuth em Vault · webhooks com HMAC · `service_role` nunca no client.

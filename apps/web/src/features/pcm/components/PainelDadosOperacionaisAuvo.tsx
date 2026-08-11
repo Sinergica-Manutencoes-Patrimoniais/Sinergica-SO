@@ -11,7 +11,6 @@ type Estado =
       gps: number;
       despesas: number;
       custoCentavos: number;
-      satisfacoes: number;
       questionarios: number;
       ultimaPosicao: string | null;
     };
@@ -39,17 +38,19 @@ export function PainelDadosOperacionaisAuvo() {
       const corteDespesas = new Date(Date.now() - JANELA_DESPESAS_DIAS * 86_400_000)
         .toISOString()
         .slice(0, 10);
-      const [gps, despesas, satisfacoes, questionarios] = await Promise.all([
+      // E03-S11: pcm.satisfacao_respostas virou espelho inativo (migration 0201) — a Sinérgica não
+      // usa a pesquisa de satisfação do Auvo. Não consulta mais essa tabela; o card correspondente
+      // vira um aviso estático "desativada", sem contagem.
+      const [gps, despesas, questionarios] = await Promise.all([
         pcm
           .from("gps_posicoes")
           .select("position_date", { count: "exact", head: false })
           .order("position_date", { ascending: false })
           .limit(1),
         pcm.from("despesas").select("valor_centavos").gte("data", corteDespesas),
-        pcm.from("satisfacao_respostas").select("id", { count: "exact", head: true }),
         pcm.from("questionarios").select("id", { count: "exact", head: true }),
       ]);
-      const erro = gps.error ?? despesas.error ?? satisfacoes.error ?? questionarios.error;
+      const erro = gps.error ?? despesas.error ?? questionarios.error;
       if (erro) {
         setEstado(tabelaIndisponivel(erro) ? { fase: "indisponivel" } : { fase: "erro" });
         return;
@@ -64,7 +65,6 @@ export function PainelDadosOperacionaisAuvo() {
         gps: gps.count ?? 0,
         despesas: despesas.data?.length ?? 0,
         custoCentavos,
-        satisfacoes: satisfacoes.count ?? 0,
         questionarios: questionarios.count ?? 0,
         ultimaPosicao: gps.data?.[0]?.position_date ?? null,
       });
@@ -79,8 +79,8 @@ export function PainelDadosOperacionaisAuvo() {
   if (estado.fase === "indisponivel")
     return (
       <section className="rounded-xl border border-warning-line bg-orange-soft p-4 text-sm text-warning">
-        <strong>Dados operacionais aguardando sincronização.</strong> GPS, despesas, satisfação e
-        questionários aparecerão aqui depois que as migrations e os pulls do Auvo estiverem ativos.
+        <strong>Dados operacionais aguardando sincronização.</strong> GPS, despesas e questionários
+        aparecerão aqui depois que as migrations e os pulls do Auvo estiverem ativos.
       </section>
     );
   if (estado.fase === "erro")
@@ -109,8 +109,8 @@ export function PainelDadosOperacionaisAuvo() {
     {
       Icon: Smile,
       label: "Satisfação",
-      valor: String(estado.satisfacoes),
-      sub: "resposta(s) sincronizada(s)",
+      valor: "Desativada",
+      sub: "usa o portal do cliente (CSAT/NPS), não o Auvo — E03-S11",
     },
     {
       Icon: ClipboardCheck,

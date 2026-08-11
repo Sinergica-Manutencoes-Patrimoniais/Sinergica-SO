@@ -15,6 +15,7 @@ import {
 import type { OpcaoClienteAgenda, OpcaoFuncionario } from "../application/agenda-tecnico-gateway";
 import {
   type AlocacaoTecnico,
+  agruparAlocacoesPorTecnico,
   agruparPorDia,
   corDoTecnico,
   diasDaSemana,
@@ -40,6 +41,8 @@ export function AgendaTecnicoPage() {
   const [modal, setModal] = useState<{ dia: string; alocacao: AlocacaoTecnico | null } | null>(
     null,
   );
+  // E01-S140 AC-1: "Por dia" é o default — comportamento atual preservado.
+  const [visao, setVisao] = useState<"dia" | "tecnico">("dia");
 
   const dias = diasDaSemana(referencia);
 
@@ -122,8 +125,37 @@ export function AgendaTecnicoPage() {
         </div>
       )}
 
+      <div className="inline-flex w-fit rounded-md border border-line bg-card p-0.5">
+        <button
+          type="button"
+          onClick={() => setVisao("dia")}
+          className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${
+            visao === "dia" ? "bg-navy text-white" : "text-ink-3 hover:text-ink"
+          }`}
+        >
+          Por dia
+        </button>
+        <button
+          type="button"
+          onClick={() => setVisao("tecnico")}
+          className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${
+            visao === "tecnico" ? "bg-navy text-white" : "text-ink-3 hover:text-ink"
+          }`}
+        >
+          Por técnico
+        </button>
+      </div>
+
       {carregando ? (
         <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
+      ) : visao === "tecnico" ? (
+        <TimelinePorTecnico
+          alocacoes={alocacoes}
+          dias={dias}
+          diaLabel={DIA_LABEL}
+          temEscrita={temEscrita}
+          onAbrirModal={(dia, alocacao) => setModal({ dia, alocacao })}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {dias.map((dia, index) => (
@@ -209,6 +241,113 @@ export function AgendaTecnicoPage() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+// E01-S140: visão timeline — linha por técnico, coluna por dia. Mesmos dados e ações da visão por
+// dia (AC-5/AC-6), só muda o agrupamento visual.
+function TimelinePorTecnico({
+  alocacoes,
+  dias,
+  diaLabel,
+  temEscrita,
+  onAbrirModal,
+}: {
+  alocacoes: AlocacaoTecnico[];
+  dias: string[];
+  diaLabel: string[];
+  temEscrita: boolean;
+  onAbrirModal: (dia: string, alocacao: AlocacaoTecnico | null) => void;
+}) {
+  const linhas = agruparAlocacoesPorTecnico(alocacoes, dias);
+
+  if (linhas.length === 0) {
+    return (
+      <div className="rounded-lg border border-line bg-card p-8 text-center text-sm text-ink-3">
+        Nenhuma alocação nesta semana.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-line bg-card">
+      <table className="w-full min-w-[720px] border-collapse text-sm">
+        <thead>
+          <tr className="border-b border-line-soft">
+            <th className="w-40 shrink-0 px-3 py-2 text-left text-micro font-semibold tracking-wide text-ink-3">
+              Técnico
+            </th>
+            {dias.map((dia, index) => (
+              <th
+                key={dia}
+                className="px-3 py-2 text-left text-micro font-semibold tracking-wide text-ink-3"
+              >
+                {diaLabel[index]}{" "}
+                {new Date(`${dia}T00:00:00`).toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                })}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {linhas.map((linha) => (
+            <tr key={linha.funcionarioId} className="border-b border-line-soft last:border-0">
+              <td className="px-3 py-2 align-top">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: corDoTecnico(linha.funcionarioId) }}
+                  />
+                  <span className="truncate text-xs font-semibold text-ink">
+                    {linha.funcionarioNome}
+                  </span>
+                </div>
+              </td>
+              {dias.map((dia) => {
+                const doDia = linha.porDia.get(dia) ?? [];
+                return (
+                  <td key={dia} className="px-2 py-2 align-top">
+                    {doDia.length === 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => temEscrita && onAbrirModal(dia, null)}
+                        className="w-full rounded-md px-2 py-1.5 text-left text-xs text-ink-4 hover:bg-line-soft"
+                      >
+                        —
+                      </button>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        {doDia.map((alocacao) => (
+                          <button
+                            key={alocacao.id}
+                            type="button"
+                            onClick={() => temEscrita && onAbrirModal(dia, alocacao)}
+                            className="rounded-md border border-line-soft px-2 py-1.5 text-left hover:bg-line-soft"
+                          >
+                            <p className="truncate text-xs text-ink">
+                              {alocacao.clienteNome}
+                              {alocacao.horaInicio && (
+                                <span className="ml-1 text-ink-3">
+                                  {alocacao.horaFim
+                                    ? `${alocacao.horaInicio}–${alocacao.horaFim}`
+                                    : alocacao.horaInicio}
+                                </span>
+                              )}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -23,6 +23,27 @@ describe("parsearPlanilhaLevantamento", () => {
     ]);
   });
 
+  it("E01-S144: coluna 'Ocorrência' do Auvo é foto, não relato", () => {
+    const resultado = parsearPlanilhaLevantamento([
+      ["Local", "Ocorrência", "Relato"],
+      [
+        "Hall 15 BL A",
+        "https://auvo-producao.s3.amazonaws.com/anexos_tarefas/a.jpg;https://auvo-producao.s3.amazonaws.com/anexos_tarefas/b.jpg",
+        "Cabos do sistema de alarme de incêndio expostos",
+      ],
+    ]);
+    expect(resultado.itensBrutos).toEqual([
+      expect.objectContaining({
+        local: "Hall 15 BL A",
+        relatoOriginal: "Cabos do sistema de alarme de incêndio expostos",
+        fotoUrls: [
+          "https://auvo-producao.s3.amazonaws.com/anexos_tarefas/a.jpg",
+          "https://auvo-producao.s3.amazonaws.com/anexos_tarefas/b.jpg",
+        ],
+      }),
+    ]);
+  });
+
   it("explica a coluna ausente em vez de tentar índices silenciosos", () => {
     expect(() =>
       parsearPlanilhaLevantamento([
