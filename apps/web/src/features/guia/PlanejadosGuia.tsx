@@ -26,37 +26,6 @@ function PaginaPlanejada({ dados }: { dados: ModuloPlanejado }) {
   );
 }
 
-export function ComercialGuia() {
-  return (
-    <PaginaPlanejada
-      dados={{
-        titulo: "Comercial",
-        subtitulo: "CRM, propostas com apoio de IA e gestão de contratos.",
-        paraQueServe:
-          "Organizar o processo de venda desde o primeiro contato (lead) até o contrato assinado — hoje esse controle não existe de forma centralizada.",
-        diaADia:
-          "Em vez de perder lead por falta de acompanhamento, o time comercial vai ver em que etapa está cada negociação e receber lembrete de quando cobrar retorno do cliente.",
-        funcoes: [
-          {
-            nome: "Leads",
-            descricao: "Toda oportunidade comercial, de onde veio e em que etapa está.",
-          },
-          {
-            nome: "Propostas com IA",
-            descricao:
-              "Geração assistida de proposta comercial a partir do levantamento feito em campo.",
-          },
-          {
-            nome: "Contratos",
-            descricao:
-              "Gestão do contrato fechado — vira a fonte de receita recorrente do Financeiro.",
-          },
-        ],
-      }}
-    />
-  );
-}
-
 export function MarketingGuia() {
   return (
     <PaginaPlanejada

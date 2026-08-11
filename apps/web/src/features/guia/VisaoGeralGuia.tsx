@@ -65,7 +65,7 @@ export function VisaoGeralGuia() {
 
       <Callout titulo="O que já está em uso">
         <p>
-          PCM, Atendimento, Financeiro e Área do Cliente já trabalham com dados reais. Comercial,
+          PCM, Atendimento, Financeiro, Comercial e Área do Cliente já trabalham com dados reais.
           Marketing e Cockpit geral ainda são módulos planejados. O Cockpit dentro do Financeiro já
           existe, mas cobre somente saúde financeira — não confunda com o futuro painel executivo de
           toda a empresa. Cada página deste guia informa o estado do módulo.

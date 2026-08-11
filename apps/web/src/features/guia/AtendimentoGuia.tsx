@@ -53,8 +53,9 @@ export function AtendimentoGuia() {
         <p>
           Quando o Zé identifica manutenção, cria o Chamado no PCM conforme o fluxo. O contato pode
           ser vinculado ao cadastro do cliente no CRM, preservando histórico. O atendente humano
-          assume casos sensíveis sem perder contexto; oportunidades comerciais ficam preparadas para
-          o módulo Comercial.
+          assume casos sensíveis sem perder contexto; quando o Zé identifica uma oportunidade
+          comercial na conversa, ela já cai automaticamente no Funil do módulo Comercial, na etapa
+          configurada pra receber lead do agente — sem precisar recadastrar nada.
         </p>
       </Callout>
     </div>

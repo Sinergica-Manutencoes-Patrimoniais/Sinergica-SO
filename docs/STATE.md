@@ -10,7 +10,7 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-## 2026-08-11 — E03 Comercial: S01-S13 implementadas, épico segue em andamento (Claude/Opus 5)
+## 2026-08-11 — E03 Comercial: TODAS as 14 stories implementadas, épico pronto pra fechar (Claude/Opus 5)
 
 Especificação completa do épico E03 (14 stories) concluída em sessão anterior (commit `a4904e2`),
 com framework de propriedade de dados (ADR-0019 R1/R2/R3 + corolários) e decisão de Conta única
@@ -238,9 +238,34 @@ corolário do ADR-0019 ("épico de origem não determina propriedade") já estav
 corretamente de uma sessão anterior — conferidos contra esta story, batem, sem reescrita. `ci:local`
 verde, nenhum código de runtime tocado.
 
-**Próximo passo**: S14 (Guia do SO — módulo Comercial), última story do épico. Depois: confirmar
-exposição real de `relacionamento` no Data API, rodar Playwright completo (as demais stories
-seguem bloqueadas nele), só então branch → PR → merge (nunca push direto, nunca por story).
+**S14 — Guia do SO: módulo Comercial — implementada nesta sessão, ÚLTIMA STORY DO ÉPICO E03.**
+`ComercialGuia.tsx` novo (padrão `FinanceiroGuia.tsx`): 6 grupos/9 opções documentando as 6 telas
+reais de `COMERCIAL_NAV` (Dashboard/Funil/Contas/Contratos/Precificação/Configuração do funil) mais
+Propostas e Levantamento de pré-venda (sub-telas dentro de Contas). 4 conceitos em linguagem de
+negócio: Conta (mesmo cadastro em qualquer estágio), Proposta × Orçamento de Serviço (cross-refer
+com a distinção fechada na S12), Piso e desconto máximo, Etapas configuráveis + motivo de perda
+obrigatório. 2 Callouts: integrações com outros módulos (WhatsApp→funil da S09, levantamento
+reusando inspeção do PCM da S05, aprovação no portal da S06, contrato→receita recorrente da S07) e
+honestidade sobre o que não existe (DOCX, assinatura eletrônica, proposta por IA). Teste de
+cobertura (`ComercialGuia.test.ts`) quebra o build se tela nova entrar sem documentação.
+`ComercialGuia` saiu de `PlanejadosGuia.tsx`, `VisaoGeralGuia.tsx` e `AtendimentoGuia.tsx`
+atualizados. `ci:local` verde, Playwright novo passou de verdade contra dev server local.
+
+**Épico E03 Comercial: as 14 stories estão implementadas e commitadas localmente**, cada uma em seu
+próprio commit, branch ainda não pushed (por instrução explícita do Lucas — subir tudo de uma vez
+só ao final). Pendências antes do push/PR/merge único:
+1. Confirmar exposição real do schema `relacionamento` no Data API do Supabase — é o bloqueio
+   conhecido que impede boa parte do Playwright de rodar até o fim (erro "Falha ao carregar
+   contas" em várias stories: S04, S05, S06, S07, S10 parcialmente). Só S08/S09/S10(Inbox+Funil)/
+   S11/S14 rodaram Playwright completo até agora, por não dependerem desse schema.
+2. Depois de desbloqueado, rodar a suíte Playwright completa (não só os specs novos desta sessão)
+   pra confirmar que nada regrediu ao longo de 14 stories consecutivas tocando schema em produção.
+3. Revisão final do diff acumulado (14 commits, migrations 0185-0204) antes de abrir o PR.
+4. Só então: branch → PR → merge (nunca push direto pra main, nunca incremental por story —
+   instrução vigente desde o início do épico).
+
+**Próximo passo**: item 1 acima (verificar `relacionamento` no Data API) é o que mais provavelmente
+precisa de ação fora do código (configuração no dashboard do Supabase) — investigar isso primeiro.
 
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 
