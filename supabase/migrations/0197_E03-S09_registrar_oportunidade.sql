@@ -5,7 +5,7 @@
 -- `lead_tier in ('A','B','C','D')`) que a spec pedia como edge case. Esta migration só adiciona o
 -- que faltava: idempotência por conversa (AC-6) e etapa de entrada configurável (AC-4).
 --
--- Rollback:
+-- Reverso:
 --   drop function if exists comercial.fn_registrar_oportunidade(text, text, text, int, text, text, text, text, uuid, uuid, uuid);
 --   alter table comercial.etapas_funil drop column if exists entrada_agente;
 --   drop index if exists comercial.idx_oportunidades_conversa_aberta;

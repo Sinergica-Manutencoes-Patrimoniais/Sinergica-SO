@@ -15,7 +15,7 @@
 -- (edge case da spec) — a RPC de ativação (0192) decide, não uma CHECK aqui (regra de negócio
 -- condicional ao tipo é mais clara em PL/pgSQL do que em CHECK).
 --
--- Rollback:
+-- Reverso:
 --   drop table if exists comercial.contratos;
 
 create table comercial.contratos (

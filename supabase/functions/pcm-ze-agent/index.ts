@@ -455,9 +455,10 @@ async function tentarMelhorarTituloOs(db: UntypedSupabaseClient, osId: string, d
 }
 
 /** E02-S08: agente comercial — qualifica contato novo (não é síndico de condomínio já cliente)
- * chegado numa instância WhatsApp dedicada e cria comercial.leads com score/resumo pro time
- * comercial assumir. Reaproveita a mesma fila/lock/debounce de wa_queue do Zé — só o "o que fazer
- * quando pronto" muda (lead em vez de OS). */
+ * chegado numa instância WhatsApp dedicada e cria oportunidade no funil (E03-S09, RPC
+ * `comercial.fn_registrar_oportunidade`) com score/resumo pro time comercial assumir. Reaproveita
+ * a mesma fila/lock/debounce de wa_queue do Zé — só o "o que fazer quando pronto" muda (lead em
+ * vez de OS). */
 async function processarComercial(
   db: UntypedSupabaseClient,
   item: QueueItem,
@@ -540,10 +541,10 @@ async function processarComercial(
     });
   if (clusterError) throw clusterError;
 
-  // E03-S09 AC-1/AC-8: RPC publicada pelo Comercial substitui o insert direto em
-  // `comercial.leads` (ADR-0019 R1/R2) — ela já resolve a Conta pelo vínculo do contato (AC-2),
-  // já é idempotente por conversa aberta (AC-6) e já grava `conversa_id` na oportunidade (AC-5,
-  // não mexe em `conversas.lead_id`, que segue intocado até a S10).
+  // E03-S09 AC-1/AC-8: RPC publicada pelo Comercial (ADR-0019 R1/R2) — resolve a Conta pelo
+  // vínculo do contato (AC-2), é idempotente por conversa aberta (AC-6) e grava `conversa_id` na
+  // própria oportunidade (AC-5). A tabela legada do Atendimento que este fluxo escrevia antes foi
+  // dropada na E03-S10, junto com a coluna correspondente em `atendimento.conversas`.
   //
   // AC-7: falha aqui NUNCA derruba o atendimento — loga e segue pra confirmação normal. O cliente
   // não pode ficar sem resposta porque o CRM falhou.

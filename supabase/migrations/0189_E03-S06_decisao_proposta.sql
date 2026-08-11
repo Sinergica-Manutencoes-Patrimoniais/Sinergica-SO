@@ -6,7 +6,7 @@
 -- ignorada sem erro, garantido por `unique(proposta_id)` + `on conflict do nothing` no banco, não
 -- só na UI.
 --
--- Rollback:
+-- Reverso:
 --   drop function if exists comercial.fn_decidir_proposta(uuid, text, text);
 --   drop table if exists comercial.proposta_decisoes;
 --   delete from comercial.motivos_perda where nome = 'Proposta recusada pelo cliente';

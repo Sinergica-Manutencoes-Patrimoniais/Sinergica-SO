@@ -9,7 +9,7 @@
 -- vinculado" (spec.md) — se o id da inspeção não pertencer à Conta informada, a função nega antes
 -- de devolver qualquer item, mesmo que o chamador tenha módulo comercial em outra Conta.
 --
--- Rollback:
+-- Reverso:
 --   drop function if exists pcm.fn_listar_itens_assessment(uuid, uuid);
 
 create or replace function pcm.fn_listar_itens_assessment(p_inspecao_id uuid, p_cliente_id uuid)

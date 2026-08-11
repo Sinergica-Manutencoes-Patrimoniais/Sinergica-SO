@@ -15,7 +15,7 @@
 -- `payload` vem de `proposta_versoes` (subquery pela versão vigente) — é o snapshot que o PDF do
 -- portal renderiza (AC-2: reflete a versão, nunca uma releitura ao vivo das tabelas).
 --
--- Rollback:
+-- Reverso:
 --   drop view if exists comercial.portal_propostas;
 
 create view comercial.portal_propostas

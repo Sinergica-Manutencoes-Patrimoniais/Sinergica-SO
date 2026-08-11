@@ -10,7 +10,7 @@
 -- então "propostas enviadas no período" usa `created_at` como proxy — documentado no comment de
 -- `fn_desconto_medio`.
 --
--- Rollback:
+-- Reverso:
 --   drop function if exists comercial.fn_origem_leads(date, date);
 --   drop function if exists comercial.fn_desconto_medio(date, date);
 --   drop function if exists comercial.fn_ticket_medio(date, date);

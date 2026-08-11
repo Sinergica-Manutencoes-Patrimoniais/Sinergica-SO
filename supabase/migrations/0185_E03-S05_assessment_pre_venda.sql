@@ -8,7 +8,7 @@
 -- 2) `pcm.fn_criar_assessment_pre_venda` — a interface publicada que o Comercial chama (ADR-0019
 --    R1/R2: pcm.inspecoes é do PCM, o Comercial nunca faz insert/select direto nela).
 --
--- Rollback:
+-- Reverso:
 --   drop function if exists pcm.fn_criar_assessment_pre_venda(uuid, text);
 --   alter table pcm.inspecoes drop constraint if exists inspecoes_motivo_assessment_check;
 --   alter table pcm.inspecoes add constraint inspecoes_motivo_assessment_check

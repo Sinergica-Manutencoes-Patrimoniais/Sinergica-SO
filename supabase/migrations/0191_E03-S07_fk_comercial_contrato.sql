@@ -12,7 +12,7 @@
 -- hoje, é o padrão do repositório pra ALTER TABLE ADD CONSTRAINT em tabela que pode crescer entre o
 -- lint e o push.
 --
--- Rollback:
+-- Reverso:
 --   alter table financeiro.contratos drop constraint if exists contratos_comercial_contrato_id_fkey;
 --   alter table financeiro.contratos drop column if exists comercial_contrato_id;
 

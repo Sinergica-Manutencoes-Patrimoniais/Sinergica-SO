@@ -70,6 +70,27 @@ Atendimento. Aposentadoria em duas etapas — primeiro read-only, depois drop �
 - Alterar o comportamento do agente (é a S09).
 - Mexer em `comercial.oportunidades` além do necessário para receber os dados.
 
+## Decisão registrada (AC-4, task 4)
+
+`atendimento.conversas.lead_id` é **removida** (drop da coluna), não reapontada para
+`comercial.oportunidades`. Três motivos:
+
+1. **Uso real = zero.** Busca textual em `apps/web/src/` e `supabase/functions/` não encontra
+   nenhuma leitura de `conversas.lead_id` fora de um comentário da própria S09 — a coluna nunca foi
+   consumida por UI nem por outra function.
+2. **O equivalente já existe do lado certo.** A S09 deu a `comercial.oportunidades` a coluna
+   `conversa_id` (não mexeu em `conversas.lead_id`, de propósito) — é o Comercial que sabe de qual
+   conversa ele nasceu, não o Atendimento que precisa saber em qual oportunidade ele virou. Reapontar
+   `conversas.lead_id` para `comercial.oportunidades` recriaria a mesma violação do R3 (ADR-0019)
+   que a S09 evitou: enriquecimento do Comercial vivendo como coluna na tabela do Atendimento.
+3. **Sem linha pra migrar.** `comercial.leads` tem 0 linhas em produção (verificado, task 1/2) —
+   não há `lead_id` preenchido para preservar; a FK está sempre `null` hoje.
+
+`relacionamento.get_timeline_contato` (E02-S08, migration 0068) referenciava `comercial.leads`
+diretamente — atualizada nesta story para ler de `comercial.oportunidades` (`origem='whatsapp'`)
+no lugar. Sem chamador na aplicação hoje (busca textual confirma), mas a função precisa continuar
+válida — referenciar uma tabela dropada quebraria qualquer chamada futura.
+
 ## Rastreabilidade
 - Épico: `../E03-S01-fundacao-comercial/design.md` §4.3 · ADR-0019 (R1) · ADR-0020
 - Bloqueada por: `../E03-S09-agente-lead-funil/spec.md`

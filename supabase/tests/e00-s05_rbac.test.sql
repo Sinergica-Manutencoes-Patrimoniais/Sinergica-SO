@@ -55,8 +55,10 @@ insert into atendimento.wa_messages (id, instance_id, remote_jid, message_id) va
 insert into atendimento.wa_queue (id, queue_key, wait_until) values
   ('50000000-0000-0000-0000-000000000001', 'fila-teste', now());
 
-insert into comercial.leads (id, nome, created_by) values
-  ('60000000-0000-0000-0000-000000000001', 'Lead Teste', '00000000-0000-0000-0000-000000000001');
+-- E03-S10: comercial.leads foi dropada — comercial.motivos_perda é o substituto (mesma disciplina
+-- de RLS comercial:leitura/escrita, só o alvo do smoke test mudou).
+insert into comercial.motivos_perda (id, nome) values
+  ('60000000-0000-0000-0000-000000000001', 'Motivo Teste RBAC');
 
 insert into config.feature_flags (id, chave) values
   ('70000000-0000-0000-0000-000000000001', 'flag_teste');
@@ -175,17 +177,17 @@ select lives_ok(
   $$ insert into pcm.clientes (nome, created_by) values ('pcm escrita', '00000000-0000-0000-0000-000000000004') $$,
   'pcm escrita insere pcm.clientes'
 );
-select is((select count(*) from comercial.leads)::int, 1, 'comercial leitura le comercial.leads');
+select is((select count(*) from comercial.motivos_perda)::int, 1, 'comercial leitura le comercial.motivos_perda');
 select throws_ok(
-  $$ insert into comercial.leads (nome, created_by) values ('lead proibido', '00000000-0000-0000-0000-000000000004') $$,
-  '42501', null, 'comercial leitura NAO insere comercial.leads'
+  $$ insert into comercial.motivos_perda (nome) values ('motivo proibido') $$,
+  '42501', null, 'comercial leitura NAO insere comercial.motivos_perda'
 );
 select is((select count(*) from atendimento.config_ze)::int, 0, 'sem modulo atendimento NAO le atendimento.config_ze');
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000001","user_role":"superadmin","user_modulos":{}}';
 select is((select count(*) from atendimento.config_ze)::int, 1, 'superadmin bypassa user_modulos vazio');
 select lives_ok(
-  $$ insert into comercial.leads (nome, created_by) values ('lead superadmin', '00000000-0000-0000-0000-000000000001') $$,
+  $$ insert into comercial.motivos_perda (nome) values ('motivo superadmin') $$,
   'superadmin escreve sem user_modulos'
 );
 

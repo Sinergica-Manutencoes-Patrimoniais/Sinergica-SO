@@ -132,10 +132,33 @@ sem mock pesado. A cobertura real veio do smoke test exaustivo da RPC em produç
 um mock — testa o banco de verdade) + revisão de código da isolação try/catch. `ci:local` verde
 (979 testes). Visão 360 ganhou botão "Ver conversa" + deep-link novo em `AtendimentoInboxPage`.
 
-**Próximo passo**: S10 (aposentar `comercial.leads`, agora seguro depois da S09), depois S11-S14,
-seguindo a mesma ordem do ROADMAP. Ao fechar o épico inteiro: confirmar exposição real de
-`relacionamento` no Data API, rodar Playwright completo (as demais stories seguem bloqueadas
-nele), só então branch → PR → merge (nunca push direto, nunca por story).
+**S10 — Aposentar `comercial.leads` — implementada e DROPADA em produção nesta sessão.** Trava
+(AC-1) confirmada antes de codar: 0 linhas em `comercial.leads` (sempre teve), 0 vínculos
+`entidade_tipo='comercial_lead'` — migrar dado antes do drop virou no-op nesta produção
+específica. Migration `0198` (read-only) → `0199` (drop com DDL completo de recriação no
+comentário) → `0200` (validate constraint). Decisão registrada no spec.md (AC-4): `lead_id` foi
+**removida** de `atendimento.conversas`, não reapontada — o equivalente (`oportunidades.
+conversa_id`) já existe do lado certo desde a S09; reapontar recriaria a violação de R3 que a S09
+evitou. `relacionamento.get_timeline_contato` reescrita pra ler de `comercial.oportunidades`.
+
+**Achado real durante a limpeza (AC-7)**: 3 pgTAP PRÉ-EXISTENTES (`agente_comercial_leads`,
+`relacionamento_contatos_timeline`, `e00-s05_rbac` — nenhum escrito por mim) inseriam direto em
+`comercial.leads` e teriam quebrado com o drop. Atualizados: 2 trocaram a asserção de leads pelo
+fluxo novo via `fn_registrar_oportunidade`; o terceiro (smoke test genérico de RBAC) trocou o alvo
+de `comercial.leads` por `comercial.motivos_perda` (mesma disciplina de RLS, tabela mais simples).
+Sem essa varredura, esses 3 arquivos ficariam quebrados silenciosamente até alguém rodar `supabase
+test db` com Docker — nenhum deles roda localmente hoje, então o achado só apareceu por busca
+textual deliberada, não pelo gate.
+
+`ARCHITECTURE.md` atualizado (dívida de fronteira item 3 riscado, mapa de schema `comercial` e
+matriz dono×consumidor corrigidos — estavam desatualizados desde antes do épico E03 existir).
+`ci:local` verde (979 testes). pgTAP novo (`comercial_leads_aposentado.test.sql`, 5 assertions).
+Playwright passou de verdade (Inbox do Atendimento + Funil do Comercial, sem erro de console).
+
+**Próximo passo**: S11 (satisfação — fonte única), depois S12-S14, seguindo a mesma ordem do
+ROADMAP. Ao fechar o épico inteiro: confirmar exposição real de `relacionamento` no Data API,
+rodar Playwright completo (as demais stories seguem bloqueadas nele), só então branch → PR →
+merge (nunca push direto, nunca por story).
 
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 

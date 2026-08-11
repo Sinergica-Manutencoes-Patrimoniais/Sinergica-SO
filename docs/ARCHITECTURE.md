@@ -146,9 +146,12 @@ Views de consumo: `aging_recebiveis`, `aging_pagaveis`, `portal_faturas`, `porta
 contrato comercial. Quando o E03 entregar `comercial.contratos`, esta tabela passa a ser
 alimentada por ele via FK `comercial_contrato_id` (ADR-0020).
 
-### `comercial` — Comercial · 1 tabela (épico E03 não iniciado)
-`leads` — ⚠️ **escrita pelo Atendimento** (agente comercial, E02-S09), nunca pelo Comercial.
-O E03 a absorve em `comercial.oportunidades` (ADR-0020).
+### `comercial` — Comercial (épico E03 implementado — S01 a S09; ver ROADMAP para detalhe por story)
+`etapas_funil`, `motivos_perda`, `oportunidades`, `oportunidade_eventos`, `parametros_preco`,
+`niveis_tecnico`, `materiais`, `propostas`, `proposta_itens`, `proposta_versoes`,
+`proposta_forcos_piso`, `proposta_decisoes`, `contratos`. `leads` foi **dropada (E03-S10,
+2026-08-11)** — era escrita pelo Atendimento (E02-S09), violava R1; absorvida em
+`comercial.oportunidades` desde a E03-S01/S09.
 
 ### `relacionamento` — Transversal · 3 tabelas
 `contatos`, `identidades_contato`, `vinculos` — identidade relacional comum a Atendimento,
@@ -172,7 +175,7 @@ definição e devem consumir por view.
 | OS (`pcm.ordens_servico`) | PCM | Financeiro (custo), Atendimento (abre), Portal | FK + RPC `security definer` |
 | Funcionário/despesa | PCM | Financeiro (rentabilidade E04-S06) | RPC `security definer` com guarda de módulo |
 | Contato (`relacionamento.*`) | Transversal | Atendimento, Comercial | FK direta |
-| Lead (`comercial.leads`) | ⚠️ Atendimento (de facto) | ninguém (sem UI) | — |
+| Lead (`comercial.oportunidades`, `origem='whatsapp'`) | Comercial | Atendimento (timeline do contato) | RPC `security definer` `fn_registrar_oportunidade`/`get_timeline_contato` |
 | Fatura/cobrança | Financeiro | Portal | **view** `portal_faturas`/`portal_cobrancas` ✅ |
 
 ### Dívida de fronteira (passivo herdado — corrigir no E03)
@@ -185,9 +188,10 @@ definição e devem consumir por view.
    espelho **inativo** (histórico preservado, sem novas escritas) e o recurso `satisfactions` da
    Edge Function `pcm-auvo-support-pull` é desligado — os recursos `questionnaires` e `expenses`
    da mesma function continuam ativos (E03-S11).
-3. **`comercial.leads` escrita pelo Atendimento** — viola R1. Regularizada em E03-S09/S10.
-   ⚠️ A tabela está **vazia mas viva**: `pcm-ze-agent` está deployada e insere nela. O drop só é
-   seguro depois que a E03-S09 estiver em produção.
+3. ~~`comercial.leads` escrita pelo Atendimento~~ — **resolvido (2026-08-11).** E03-S09 trocou o
+   insert direto por `comercial.fn_registrar_oportunidade` (RPC publicada, R1/R2); E03-S10 dropou
+   `comercial.leads` (0 linhas em produção, nunca recebeu UAT de WhatsApp real), removeu
+   `atendimento.conversas.lead_id` e tirou `'comercial_lead'` do check de `relacionamento.vinculos`.
 
 **Não é dívida — caso 2** (reclassificado em 2026-08-10, E03-S13):
 `atendimento.historico_chamado_snapshots`. Foi criada pela E01-S89 (épico do PCM), mas o snapshot

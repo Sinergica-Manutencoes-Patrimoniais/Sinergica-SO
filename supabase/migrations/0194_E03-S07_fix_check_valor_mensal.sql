@@ -7,7 +7,7 @@
 -- e já está em `comercial.fn_ativar_contrato` (migration 0193, guarda explícita). Esta migration só
 -- relaxa a CHECK pra permitir o rascunho existir; a guarda de ativação continua intocada.
 --
--- Rollback:
+-- Reverso:
 --   alter table comercial.contratos drop constraint if exists contratos_valor_mensal_centavos_check;
 --   alter table comercial.contratos add constraint contratos_valor_mensal_centavos_check
 --     check (valor_mensal_centavos > 0);
