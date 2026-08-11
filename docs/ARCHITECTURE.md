@@ -54,6 +54,14 @@ supabase/
 ```
 
 **Regra de fronteira**: features de domínios diferentes **não se importam** — compartilhe só via `packages/`.
+Quando uma tela precisa montar conteúdo de outro contexto (ex.: a aba Comercial dentro da Visão 360
+do PCM), quem compõe é o **shell** (`app/`), passando o nó pronto por prop — nunca um import
+cruzado entre features.
+
+**Data fetching**: dado de servidor passa por **TanStack Query** (decisão do PO, 2026-08-10,
+E01-S145). Hooks em `application/<dominio>-queries.ts`, chaves num objeto `<dominio>QueryKeys`,
+`queryClient` único em `app/query-client.ts`. Escrita invalida chave — nunca recarrega à mão.
+`useState` fica para estado local de UI. Ver `CLAUDE.md` § Data fetching.
 
 ## Camadas DDD (por feature)
 ```

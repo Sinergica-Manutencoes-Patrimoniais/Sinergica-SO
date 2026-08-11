@@ -7,16 +7,11 @@
 
 import { Badge, Button, Card, EmptyState } from "@sinergica/ui";
 import { Plus } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
-import type { Etapa, Oportunidade } from "../domain/funil";
+import { useEtapas, useOportunidadesDaConta } from "../application/comercial-queries";
 import { supabaseComercialAdapter } from "../infrastructure/supabase-comercial-adapter";
 import { NovaOportunidadeModal } from "./NovaOportunidadeModal";
-
-type Estado =
-  | { fase: "carregando" }
-  | { fase: "erro"; mensagem: string }
-  | { fase: "pronto"; oportunidades: Oportunidade[]; etapas: Etapa[] };
 
 function formatarValor(centavos: number | null): string {
   if (centavos === null) return "—";
@@ -40,31 +35,17 @@ export function PainelComercialCliente({
   clienteNome?: string;
 }) {
   const { podeAcessar } = usePermissoes();
-  const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [criando, setCriando] = useState(false);
 
   const temLeitura = podeAcessar("comercial", "leitura");
   const temEscrita = podeAcessar("comercial", "escrita");
 
-  const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
-    try {
-      const [oportunidades, etapas] = await Promise.all([
-        supabaseComercialAdapter.listarOportunidadesDaConta(clienteId),
-        supabaseComercialAdapter.listarEtapas(),
-      ]);
-      setEstado({ fase: "pronto", oportunidades, etapas });
-    } catch (error) {
-      setEstado({
-        fase: "erro",
-        mensagem: error instanceof Error ? error.message : "Falha ao carregar o funil.",
-      });
-    }
-  }, [clienteId]);
-
-  useEffect(() => {
-    if (temLeitura) carregar();
-  }, [temLeitura, carregar]);
+  const etapasQuery = useEtapas(supabaseComercialAdapter, temLeitura);
+  const oportunidadesQuery = useOportunidadesDaConta(
+    supabaseComercialAdapter,
+    clienteId,
+    temLeitura,
+  );
 
   // Sem o módulo, a aba não mostra dado de funil — mas também não finge que a Conta não existe.
   if (!temLeitura) {
@@ -75,19 +56,24 @@ export function PainelComercialCliente({
     );
   }
 
-  if (estado.fase === "carregando") {
+  if (oportunidadesQuery.isPending) {
     return <p className="text-sm text-ink-2">Carregando oportunidades…</p>;
   }
 
-  if (estado.fase === "erro") {
+  const erro = oportunidadesQuery.error ?? etapasQuery.error;
+  if (erro) {
     return (
       <Card>
-        <p className="p-4 text-sm text-danger">{estado.mensagem}</p>
+        <p className="p-4 text-sm text-danger">
+          {erro instanceof Error ? erro.message : "Falha ao carregar o funil."}
+        </p>
       </Card>
     );
   }
 
-  const etapaPorId = new Map(estado.etapas.map((e) => [e.id, e]));
+  const oportunidades = oportunidadesQuery.data ?? [];
+  const etapas = etapasQuery.data ?? [];
+  const etapaPorId = new Map(etapas.map((e) => [e.id, e]));
 
   return (
     <div className="space-y-3">
@@ -101,7 +87,7 @@ export function PainelComercialCliente({
         )}
       </div>
 
-      {estado.oportunidades.length === 0 ? (
+      {oportunidades.length === 0 ? (
         // Conta sem oportunidade é o caso comum (105 contas existiam antes do módulo) — estado
         // vazio explicativo, nunca erro.
         <EmptyState titulo="Nenhuma oportunidade nesta conta">
@@ -110,7 +96,7 @@ export function PainelComercialCliente({
       ) : (
         <Card>
           <ul className="divide-y divide-line/60">
-            {estado.oportunidades.map((op) => {
+            {oportunidades.map((op) => {
               const etapa = etapaPorId.get(op.etapaId);
               return (
                 <li key={op.id} className="flex flex-wrap items-center gap-3 p-3">
@@ -151,12 +137,10 @@ export function PainelComercialCliente({
       {criando && (
         <NovaOportunidadeModal
           conta={{ id: clienteId, nome: clienteNome ?? "esta conta" }}
-          etapas={estado.etapas}
+          etapas={etapas}
           onFechar={() => setCriando(false)}
-          onCriada={() => {
-            setCriando(false);
-            carregar();
-          }}
+          // Invalidação de chave na mutation atualiza a lista — sem recarga manual.
+          onCriada={() => setCriando(false)}
         />
       )}
     </div>

@@ -2,27 +2,23 @@
  *
  * A diferença para a Lista de Clientes do PCM é o que esta tela NÃO faz: não filtra por `ativo`.
  * O PCM mostra quem está em operação; o Comercial precisa ver lead, prospecto, cliente ativo e
- * cliente antigo na mesma lista — é a "visão 360 de todo mundo" que motivou o ADR-0020. */
+ * cliente antigo na mesma lista — é a "visão 360 de todo mundo" que motivou o ADR-0020.
+ *
+ * Data fetching por TanStack Query (regra do projeto, `CLAUDE.md` § Data fetching): o filtro faz
+ * parte da query key, `keepPreviousData` evita a lista piscar, e o debounce de 250 ms na busca
+ * segue o mesmo número escolhido pela E01-S145 no board de Operação. */
 
 import { Badge, Button, Card, EmptyState, Field, Input, Select } from "@sinergica/ui";
 import { Plus, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import type { ContaComFunil, FiltroSituacaoConta } from "../application/comercial-gateway";
+import { useContas, useEtapas } from "../application/comercial-queries";
 import { NovaOportunidadeModal } from "../components/NovaOportunidadeModal";
-import type { Etapa } from "../domain/funil";
 import { etapasVisiveis } from "../domain/funil";
 import { supabaseComercialAdapter } from "../infrastructure/supabase-comercial-adapter";
 
-type Estado =
-  | { fase: "carregando" }
-  | { fase: "erro"; mensagem: string }
-  | { fase: "pronto"; contas: ContaComFunil[]; etapas: Etapa[] };
-
-function formatarValor(centavos: number | null): string {
-  if (centavos === null) return "—";
-  return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+const DEBOUNCE_BUSCA_MS = 250;
 
 export function ContasPage({
   onAbrirConta,
@@ -30,42 +26,37 @@ export function ContasPage({
   onAbrirConta?: (clienteId: string) => void;
 }) {
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
-  const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [texto, setTexto] = useState("");
+  const [textoDebounced, setTextoDebounced] = useState("");
   const [situacao, setSituacao] = useState<FiltroSituacaoConta>("todas");
   const [etapaId, setEtapaId] = useState<string>("");
   const [contaParaOportunidade, setContaParaOportunidade] = useState<ContaComFunil | null>(null);
 
   const temLeitura = podeAcessar("comercial", "leitura");
   const temEscrita = podeAcessar("comercial", "escrita");
+  const habilitado = !permissoesCarregando && temLeitura;
 
-  const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
-    try {
-      const [contas, etapas] = await Promise.all([
-        supabaseComercialAdapter.listarContas({
-          texto: texto || undefined,
-          situacao,
-          etapaId: etapaId || null,
-        }),
-        supabaseComercialAdapter.listarEtapas(),
-      ]);
-      setEstado({ fase: "pronto", contas, etapas });
-    } catch (error) {
-      setEstado({
-        fase: "erro",
-        mensagem: error instanceof Error ? error.message : "Falha ao carregar contas.",
-      });
-    }
-  }, [texto, situacao, etapaId]);
-
+  // Só o valor debounced entra na query key — digitar não dispara uma request por tecla.
   useEffect(() => {
-    if (!permissoesCarregando && temLeitura) carregar();
-  }, [permissoesCarregando, temLeitura, carregar]);
+    const timer = setTimeout(() => setTextoDebounced(texto), DEBOUNCE_BUSCA_MS);
+    return () => clearTimeout(timer);
+  }, [texto]);
+
+  const filtro = useMemo(
+    () => ({
+      texto: textoDebounced || undefined,
+      situacao,
+      etapaId: etapaId || null,
+    }),
+    [textoDebounced, situacao, etapaId],
+  );
+
+  const etapasQuery = useEtapas(supabaseComercialAdapter, habilitado);
+  const contasQuery = useContas(supabaseComercialAdapter, filtro, habilitado);
 
   const etapasParaFiltro = useMemo(
-    () => (estado.fase === "pronto" ? etapasVisiveis(estado.etapas) : []),
-    [estado],
+    () => etapasVisiveis(etapasQuery.data ?? []),
+    [etapasQuery.data],
   );
 
   if (permissoesCarregando) return null;
@@ -78,6 +69,13 @@ export function ContasPage({
     );
   }
 
+  const contas = contasQuery.data ?? [];
+  const erro = contasQuery.error ?? etapasQuery.error;
+  // `isPending` é carga fria (sem dado nenhum). Refetch com dado anterior na tela mostra só o
+  // indicador discreto — a lista não pisca.
+  const cargaFria = contasQuery.isPending;
+  const atualizando = contasQuery.isFetching && !cargaFria;
+
   return (
     <div className="space-y-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -87,10 +85,13 @@ export function ContasPage({
             Todas as contas — lead, prospecto, cliente ativo e antigo. O PCM mostra só as ativas.
           </p>
         </div>
-        <Button variant="ghost" onClick={carregar}>
-          <RefreshCw className="size-4" aria-hidden />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          {atualizando && <span className="text-xs text-ink-2">atualizando…</span>}
+          <Button variant="ghost" onClick={() => contasQuery.refetch()}>
+            <RefreshCw className="size-4" aria-hidden />
+            Atualizar
+          </Button>
+        </div>
       </header>
 
       <Card>
@@ -135,15 +136,17 @@ export function ContasPage({
         </div>
       </Card>
 
-      {estado.fase === "carregando" && <p className="text-sm text-ink-2">Carregando contas…</p>}
+      {cargaFria && <p className="text-sm text-ink-2">Carregando contas…</p>}
 
-      {estado.fase === "erro" && (
+      {erro && (
         <Card>
-          <p className="p-4 text-sm text-danger">{estado.mensagem}</p>
+          <p className="p-4 text-sm text-danger">
+            {erro instanceof Error ? erro.message : "Falha ao carregar contas."}
+          </p>
         </Card>
       )}
 
-      {estado.fase === "pronto" && estado.contas.length === 0 && (
+      {!cargaFria && !erro && contas.length === 0 && (
         // `filtrado` e não `vazio`: existem 105 contas em produção, então lista vazia aqui é
         // sempre resultado de filtro — a E00-S17 exige que as duas telas não se pareçam.
         <EmptyState titulo="Nenhuma conta encontrada" variante="filtrado">
@@ -151,7 +154,7 @@ export function ContasPage({
         </EmptyState>
       )}
 
-      {estado.fase === "pronto" && estado.contas.length > 0 && (
+      {contas.length > 0 && (
         <Card>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -166,7 +169,7 @@ export function ContasPage({
                 </tr>
               </thead>
               <tbody>
-                {estado.contas.map((conta) => (
+                {contas.map((conta) => (
                   <tr key={conta.id} className="border-b border-line/60 last:border-0">
                     <td className="p-3">
                       <button
@@ -228,19 +231,16 @@ export function ContasPage({
         </Card>
       )}
 
-      {contaParaOportunidade && estado.fase === "pronto" && (
+      {contaParaOportunidade && (
         <NovaOportunidadeModal
           conta={contaParaOportunidade}
-          etapas={estado.etapas}
+          etapas={etapasQuery.data ?? []}
           onFechar={() => setContaParaOportunidade(null)}
-          onCriada={() => {
-            setContaParaOportunidade(null);
-            carregar();
-          }}
+          // A invalidação de chave está no `useCriarOportunidade` — a lista se atualiza sozinha,
+          // sem a tela chamar recarga.
+          onCriada={() => setContaParaOportunidade(null)}
         />
       )}
     </div>
   );
 }
-
-export { formatarValor };

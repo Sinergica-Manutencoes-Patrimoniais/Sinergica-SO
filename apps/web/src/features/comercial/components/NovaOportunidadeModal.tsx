@@ -2,6 +2,7 @@
 
 import { Button, Field, Input, Modal, Select, Textarea } from "@sinergica/ui";
 import { useState } from "react";
+import { useCriarOportunidade } from "../application/comercial-queries";
 import type { Etapa } from "../domain/funil";
 import { etapaPadrao, etapasVisiveis } from "../domain/funil";
 import { supabaseComercialAdapter } from "../infrastructure/supabase-comercial-adapter";
@@ -36,32 +37,33 @@ export function NovaOportunidadeModal({
   const abertas = visiveis.filter((e) => e.tipo === "aberta");
   const padrao = abertas[0];
 
+  // Estado de formulário continua em `useState` — é estado local de UI, não dado de servidor
+  // (`CLAUDE.md` § Data fetching). Só a escrita passa pela mutation.
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [etapaId, setEtapaId] = useState(padrao?.id ?? "");
   const [erro, setErro] = useState<string | null>(null);
-  const [salvando, setSalvando] = useState(false);
+
+  const criar = useCriarOportunidade(supabaseComercialAdapter);
 
   async function salvar() {
     setErro(null);
-    setSalvando(true);
     try {
       // `etapaPadrao` lança mensagem clara se o funil não tiver etapa aberta — melhor do que
       // deixar o banco devolver violação de FK.
       const etapa = etapaId ? visiveis.find((e) => e.id === etapaId) : etapaPadrao(etapas);
-      await supabaseComercialAdapter.criarOportunidade({
+      await criar.mutateAsync({
         clienteId: conta.id,
         titulo,
         descricao: descricao.trim() || null,
         valorEstimadoCentavos: reaisParaCentavos(valor),
         etapaId: etapa?.id ?? null,
       });
+      // A lista e a aba da Conta se atualizam pela invalidação de chave da mutation.
       onCriada();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao criar oportunidade.");
-    } finally {
-      setSalvando(false);
     }
   }
 
@@ -133,8 +135,11 @@ export function NovaOportunidadeModal({
           <Button variant="ghost" onClick={onFechar}>
             Cancelar
           </Button>
-          <Button onClick={salvar} disabled={salvando || !titulo.trim() || abertas.length === 0}>
-            {salvando ? "Criando…" : "Criar oportunidade"}
+          <Button
+            onClick={salvar}
+            disabled={criar.isPending || !titulo.trim() || abertas.length === 0}
+          >
+            {criar.isPending ? "Criando…" : "Criar oportunidade"}
           </Button>
         </div>
       </div>

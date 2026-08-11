@@ -6,16 +6,19 @@
 
 import { Badge, Button, Card, Field, Input } from "@sinergica/ui";
 import { Plus, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
-import type { Etapa, MotivoPerda } from "../domain/funil";
+import {
+  useCriarEtapa,
+  useCriarMotivoPerda,
+  useEditarEtapa,
+  useEditarMotivoPerda,
+  useEtapas,
+  useMotivosPerda,
+} from "../application/comercial-queries";
+import type { Etapa } from "../domain/funil";
 import { podeDesativarEtapa } from "../domain/funil";
 import { supabaseComercialAdapter } from "../infrastructure/supabase-comercial-adapter";
-
-type Estado =
-  | { fase: "carregando" }
-  | { fase: "erro"; mensagem: string }
-  | { fase: "pronto"; etapas: Etapa[]; motivos: MotivoPerda[] };
 
 const TIPO_ROTULO: Record<Etapa["tipo"], string> = {
   aberta: "Em andamento",
@@ -31,33 +34,20 @@ const TIPO_TOM: Record<Etapa["tipo"], "info" | "success" | "danger"> = {
 
 export function ConfigFunilPage() {
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
-  const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [novaEtapa, setNovaEtapa] = useState("");
   const [novoMotivo, setNovoMotivo] = useState("");
 
   const temLeitura = podeAcessar("comercial", "leitura");
   const temEscrita = podeAcessar("comercial", "escrita");
+  const habilitado = !permissoesCarregando && temLeitura;
 
-  const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
-    try {
-      const [etapas, motivos] = await Promise.all([
-        supabaseComercialAdapter.listarEtapas(),
-        supabaseComercialAdapter.listarMotivosPerda(),
-      ]);
-      setEstado({ fase: "pronto", etapas, motivos });
-    } catch (error) {
-      setEstado({
-        fase: "erro",
-        mensagem: error instanceof Error ? error.message : "Falha ao carregar a configuração.",
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!permissoesCarregando && temLeitura) carregar();
-  }, [permissoesCarregando, temLeitura, carregar]);
+  const etapasQuery = useEtapas(supabaseComercialAdapter, habilitado);
+  const motivosQuery = useMotivosPerda(supabaseComercialAdapter, habilitado);
+  const criarEtapaMutation = useCriarEtapa(supabaseComercialAdapter);
+  const editarEtapaMutation = useEditarEtapa(supabaseComercialAdapter);
+  const criarMotivoMutation = useCriarMotivoPerda(supabaseComercialAdapter);
+  const editarMotivoMutation = useEditarMotivoPerda(supabaseComercialAdapter);
 
   async function alternarEtapa(etapa: Etapa, etapas: Etapa[]) {
     setErroAcao(null);
@@ -71,8 +61,7 @@ export function ConfigFunilPage() {
       }
     }
     try {
-      await supabaseComercialAdapter.editarEtapa({ id: etapa.id, ativo: !etapa.ativo });
-      await carregar();
+      await editarEtapaMutation.mutateAsync({ id: etapa.id, ativo: !etapa.ativo });
     } catch (e) {
       setErroAcao(e instanceof Error ? e.message : "Falha ao atualizar a etapa.");
     }
@@ -84,14 +73,13 @@ export function ConfigFunilPage() {
     setErroAcao(null);
     try {
       const proximaOrdem = Math.max(0, ...etapas.map((e) => e.ordem)) + 1;
-      await supabaseComercialAdapter.criarEtapa({
+      await criarEtapaMutation.mutateAsync({
         nome,
         ordem: proximaOrdem,
         cor: "#64748B",
         tipo: "aberta",
       });
       setNovaEtapa("");
-      await carregar();
     } catch (e) {
       setErroAcao(e instanceof Error ? e.message : "Falha ao criar a etapa.");
     }
@@ -102,9 +90,8 @@ export function ConfigFunilPage() {
     if (!nome) return;
     setErroAcao(null);
     try {
-      await supabaseComercialAdapter.criarMotivoPerda({ nome });
+      await criarMotivoMutation.mutateAsync({ nome });
       setNovoMotivo("");
-      await carregar();
     } catch (e) {
       setErroAcao(e instanceof Error ? e.message : "Falha ao criar o motivo.");
     }
@@ -112,6 +99,10 @@ export function ConfigFunilPage() {
 
   if (permissoesCarregando) return null;
   if (!temLeitura) return null;
+
+  const etapas = etapasQuery.data ?? [];
+  const motivos = motivosQuery.data ?? [];
+  const erroCarga = etapasQuery.error ?? motivosQuery.error;
 
   return (
     <div className="space-y-4">
@@ -122,7 +113,13 @@ export function ConfigFunilPage() {
             Etapas e motivos de perda. Renomear uma etapa não afeta as métricas — elas usam o tipo.
           </p>
         </div>
-        <Button variant="ghost" onClick={carregar}>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            etapasQuery.refetch();
+            motivosQuery.refetch();
+          }}
+        >
           <RefreshCw className="size-4" aria-hidden />
           Atualizar
         </Button>
@@ -134,20 +131,22 @@ export function ConfigFunilPage() {
         </Card>
       )}
 
-      {estado.fase === "erro" && (
+      {erroCarga && (
         <Card>
-          <p className="p-4 text-sm text-danger">{estado.mensagem}</p>
+          <p className="p-4 text-sm text-danger">
+            {erroCarga instanceof Error ? erroCarga.message : "Falha ao carregar a configuração."}
+          </p>
         </Card>
       )}
 
-      {estado.fase === "pronto" && (
+      {!erroCarga && (
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <div className="border-b border-line p-3">
               <h2 className="font-semibold text-ink">Etapas</h2>
             </div>
             <ul className="divide-y divide-line/60">
-              {estado.etapas.map((etapa) => (
+              {etapas.map((etapa) => (
                 <li key={etapa.id} className="flex items-center gap-3 p-3">
                   <span
                     aria-hidden
@@ -158,11 +157,7 @@ export function ConfigFunilPage() {
                   <Badge tone={TIPO_TOM[etapa.tipo]}>{TIPO_ROTULO[etapa.tipo]}</Badge>
                   {!etapa.ativo && <Badge tone="neutral">Desativada</Badge>}
                   {temEscrita && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => alternarEtapa(etapa, estado.etapas)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => alternarEtapa(etapa, etapas)}>
                       {etapa.ativo ? "Desativar" : "Reativar"}
                     </Button>
                   )}
@@ -183,7 +178,7 @@ export function ConfigFunilPage() {
                     )}
                   </Field>
                 </div>
-                <Button onClick={() => criarEtapa(estado.etapas)} disabled={!novaEtapa.trim()}>
+                <Button onClick={() => criarEtapa(etapas)} disabled={!novaEtapa.trim()}>
                   <Plus className="size-4" aria-hidden />
                   Adicionar
                 </Button>
@@ -199,7 +194,7 @@ export function ConfigFunilPage() {
               </p>
             </div>
             <ul className="divide-y divide-line/60">
-              {estado.motivos.map((motivo) => (
+              {motivos.map((motivo) => (
                 <li key={motivo.id} className="flex items-center gap-3 p-3">
                   <span className="flex-1 text-sm text-ink">{motivo.nome}</span>
                   {!motivo.ativo && <Badge tone="neutral">Desativado</Badge>}
@@ -208,11 +203,10 @@ export function ConfigFunilPage() {
                       variant="ghost"
                       size="sm"
                       onClick={async () => {
-                        await supabaseComercialAdapter.editarMotivoPerda({
+                        await editarMotivoMutation.mutateAsync({
                           id: motivo.id,
                           ativo: !motivo.ativo,
                         });
-                        await carregar();
                       }}
                     >
                       {motivo.ativo ? "Desativar" : "Reativar"}
