@@ -10,7 +10,7 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-## 2026-08-11 — E03 Comercial: S01-S05 implementadas, épico segue em andamento (Claude/Opus 5)
+## 2026-08-11 — E03 Comercial: S01-S11 implementadas, épico segue em andamento (Claude/Opus 5)
 
 Especificação completa do épico E03 (14 stories) concluída em sessão anterior (commit `a4904e2`),
 com framework de propriedade de dados (ADR-0019 R1/R2/R3 + corolários) e decisão de Conta única
@@ -155,7 +155,42 @@ matriz dono×consumidor corrigidos — estavam desatualizados desde antes do ép
 `ci:local` verde (979 testes). pgTAP novo (`comercial_leads_aposentado.test.sql`, 5 assertions).
 Playwright passou de verdade (Inbox do Atendimento + Funil do Comercial, sem erro de console).
 
-**Próximo passo**: S11 (satisfação — fonte única), depois S12-S14, seguindo a mesma ordem do
+**S11 — Satisfação: desativar a do Auvo, portal vira fonte única — implementada e DEPLOYADA em
+produção nesta sessão.** Story independente, sem dependência das demais. Pré-condição confirmada
+antes de codar: `pcm.satisfacao_respostas` com 0 linhas (pesquisa nunca foi ativada de fato), sem
+`cron.job` chamando `resource=satisfactions` diretamente. Migration `0201` — pura `comment on
+table`, sem drop, sem alterar dado (AC-3): documenta a desativação, a fonte canônica
+(`pcm.portal_satisfacao`) e como reativar (decisão de produto, não recriação de schema).
+
+`pcm-auvo-support-pull/index.ts`: `Resource` perde `"satisfactions"` do union type; o handler
+reconhece o valor à parte e devolve `HttpError(400, "resource desativado — ...")`, distinto do
+`"resource inválido"` genérico (AC-1, caso de borda da spec — nunca 500 silencioso). **Bug real
+pego na revisão**: o `catch` sempre devolvia uma mensagem genérica fixa, ignorando `error.message`
+da `HttpError` — a mensagem clara de "desativado" nunca chegaria no client; corrigido pra
+surfaced `error.message` (mesmo padrão já usado em `pcm-auvo-sync-all`, que o `support-pull` não
+seguia). `pcm-auvo-sync-all/index.ts` (`~L103`): tira `"satisfactions"` do array de recursos
+chamados em paralelo (AC-2) — nada no sistema invoca mais o recurso desligado; `index.test.ts`
+ajustado (`ETAPAS_FIXAS` 6→5, asserções reescritas). `PainelDadosOperacionaisAuvo.tsx`: para de
+consultar `pcm.satisfacao_respostas`; card de Satisfação virou estático "Desativada" com sub-texto
+apontando pro portal, nunca "0 registros sincronizados" (AC-5). `ARCHITECTURE.md`/`glossary.md` já
+tinham a declaração de fonte canônica de uma sessão anterior — conferido que bate com a
+implementação final, sem reescrita necessária (AC-4). Nenhum leitor de Relatório Mensal lê NPS
+dessa tabela (task 6 virou no-op, confirmado por grep).
+
+Deploy de `pcm-auvo-support-pull` e `pcm-auvo-sync-all` via `--use-api`, ambos confirmados `ACTIVE`
+com versão nova. **Lacuna honesta**: smoke test HTTP direto (`curl` com `service_role`) não foi
+possível nesta sessão — a chave em `.env.local` estava desatualizada (secrets de produção
+rotacionados na mesma sessão, `updated_at` de hoje), sem `functions invoke` nesta versão do
+Supabase CLI, sem Deno local, sem Netlify linkado; coberto por revisão de código exaustiva dos 3
+caminhos (`questionnaires`/`expenses`/`satisfactions`) + `deploy` confirmado `ACTIVE`, mesmo padrão
+de honestidade da lacuna do Deno test na S09. `ci:local` verde. pgTAP escrito
+(`pcm_satisfacao_inativa.test.sql`, 4 assertions — tabela não dropada, comentário documenta a
+desativação e a fonte canônica, `portal_satisfacao` intocada), não executado local (sem Docker),
+mas as próprias asserções foram conferidas manualmente contra produção via `supabase db query
+--linked` antes de escrever o teste. **Playwright passou de verdade** (card "Desativada" visível
+no dashboard PCM, sem erro de console — PCM não depende do bloqueio `relacionamento`).
+
+**Próximo passo**: S12 (Dono do Orçamento de Serviço), depois S13/S14, seguindo a mesma ordem do
 ROADMAP. Ao fechar o épico inteiro: confirmar exposição real de `relacionamento` no Data API,
 rodar Playwright completo (as demais stories seguem bloqueadas nele), só então branch → PR →
 merge (nunca push direto, nunca por story).
