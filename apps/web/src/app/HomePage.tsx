@@ -640,6 +640,9 @@ export function HomePage() {
   // E03-S05, AC-7: deep-link da aba Comercial da Visão 360 ("ver assessment completo") pra
   // `InspecoesPage`, mesmo padrão do `osDeepLink` acima.
   const [inspecaoDeepLinkId, setInspecaoDeepLinkId] = useState<string | null>(null);
+  // E03-S09, AC-5: deep-link da aba Comercial da Visão 360 ("ver conversa que originou o lead")
+  // pra `AtendimentoInboxPage` — mesmo padrão do `inspecaoDeepLinkId` acima.
+  const [conversaDeepLinkId, setConversaDeepLinkId] = useState<string | null>(null);
   // E01-S75 AC-5: período vindo do Apontamento de Horas — só setado junto com `clienteSelecionado`
   // pela navegação de "Horas por cliente"; nulo em qualquer outro caminho pra Visão 360 (clique
   // direto em ListaClientesPage não filtra nada).
@@ -697,6 +700,12 @@ export function HomePage() {
     setInspecaoDeepLinkId(inspecaoId);
     setClienteSelecionado(null);
     setPcmView("inspecoes");
+  }
+
+  function abrirConversaDoComercial(conversaId: string) {
+    setConversaDeepLinkId(conversaId);
+    setAtendimentoView("inbox");
+    navegarModulo("atendimento");
   }
 
   function abrirOsDoCliente(osId: string) {
@@ -926,6 +935,9 @@ export function HomePage() {
                       title={item.label}
                       onClick={() => {
                         setAtendimentoView(item.view);
+                        // Clique manual no menu não é o deep-link do Comercial (E03-S09) — limpa
+                        // pra não reabrir uma conversa antiga se o usuário voltar pro Inbox depois.
+                        setConversaDeepLinkId(null);
                         setMobileSidebarOpen(false);
                       }}
                       className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
@@ -1202,6 +1214,7 @@ export function HomePage() {
                         <PainelComercialCliente
                           clienteId={clienteSelecionado}
                           onAbrirLevantamento={abrirInspecaoDoComercial}
+                          onAbrirConversa={abrirConversaDoComercial}
                         />
                       ) : undefined
                     }
@@ -1331,7 +1344,7 @@ export function HomePage() {
             atendimentoView === "dashboard" ? (
               <AtendimentoDashboardPage />
             ) : atendimentoView === "inbox" ? (
-              <AtendimentoInboxPage />
+              <AtendimentoInboxPage conversaIdInicial={conversaDeepLinkId} />
             ) : atendimentoView === "config" ? (
               <AtendimentoConfigPage />
             ) : null

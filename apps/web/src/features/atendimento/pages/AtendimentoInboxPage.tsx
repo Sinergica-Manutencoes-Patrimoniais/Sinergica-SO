@@ -41,11 +41,22 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; conversas: ConversaItem[] };
 
-export function AtendimentoInboxPage() {
+export function AtendimentoInboxPage({
+  conversaIdInicial,
+}: {
+  /** E03-S09 AC-5: deep-link vindo da aba Comercial da Visão 360 ("ver conversa que originou o
+   * lead") — mesmo padrão de `inspecaoIdInicial` em `InspecoesPage` (E03-S05). */
+  conversaIdInicial?: string | null;
+} = {}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
-  const [conversaSelecionadaId, setConversaSelecionadaId] = useState<string | null>(null);
+  const [conversaSelecionadaId, setConversaSelecionadaId] = useState<string | null>(
+    conversaIdInicial ?? null,
+  );
+  useEffect(() => {
+    if (conversaIdInicial) setConversaSelecionadaId(conversaIdInicial);
+  }, [conversaIdInicial]);
   const [mensagens, setMensagens] = useState<MensagemItem[]>([]);
   const [templates, setTemplates] = useState<WaTemplateItem[]>([]);
   const [tags, setTags] = useState<TagItem[]>([]);

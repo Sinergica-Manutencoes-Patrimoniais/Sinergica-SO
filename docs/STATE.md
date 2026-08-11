@@ -105,10 +105,37 @@ contra produção real (zero oportunidades reais hoje — "sem dados" é o camin
 hipotético). `ci:local` verde (979 testes). pgTAP escrito (10 assertions, inclui regressão de
 reabertura usando último fechamento).
 
-**Próximo passo**: S09 (Agente Zé entrega lead pro Comercial), depois S10-S14, seguindo a mesma
-ordem do ROADMAP. Ao fechar o épico inteiro: confirmar exposição real de `relacionamento` no Data
-API, rodar Playwright completo (as demais stories seguem bloqueadas nele), só então branch → PR →
-merge (nunca push direto, nunca por story).
+**S09 — Agente comercial entrega lead no funil — implementada e DEPLOYADA em produção nesta
+sessão.** Única story do épico até agora que toca uma Edge Function LIVE (`pcm-ze-agent`,
+processa WhatsApp real). Achado bom: `comercial.oportunidades` já tinha TODAS as 8 colunas que a
+spec pedia desde a migration da S01 (`score`/`resumo`/`origem`/`origem_ref`/`lead_tier`/
+`cluster_nome`/`conversa_id`/`contato_id`, com os mesmos checks `0-100`/`A-D` da spec) — só faltou
+a RPC e 2 peças pequenas de schema. Migration `0197`: índice único parcial
+`idx_oportunidades_conversa_aberta` (`fechada_em is null` é EXATAMENTE "etapa aberta" por
+construção via o trigger da S01 — dá pra indexar sem precisar de join, idempotência real de
+verdade no banco) + `etapas_funil.entrada_agente` (configurável, índice parcial "no máximo uma
+marcada") + RPC `fn_registrar_oportunidade` (`security definer`, guarda `service_role`). 7
+cenários smoke-testados em produção com contato/conversa reais dentro de `rollback`: Conta
+nova+vínculo, idempotência (mesma conversa 2x = 1 oportunidade só), reuso de Conta (conversa nova
+do mesmo contato = mesma Conta), oportunidade fechada gera nova, score fora de faixa recusado,
+guarda sem service_role nega, etapa configurável funciona.
+
+Edge Function alterada: RPC substitui o insert direto em `comercial.leads`, tudo dentro de
+`try/catch` que nunca derruba o atendimento (cobre inclusive uma falha de robustez pré-existente
+no código original, corrigida de graça). **Deployada via `--use-api`** (bundler local instável de
+novo), confirmada `ACTIVE` com versão nova; `comercial.leads` seguindo com zero linhas. UAT com
+WhatsApp real fica fora de escopo (sem instância conectada, herdado da E02-S09).
+
+**Lacuna honesta**: task 6 (Deno tests do handler) não foi escrita — Deno CLI indisponível neste
+ambiente, e a lógica alterada está embutida numa função grande sem parte pura extraível pra testar
+sem mock pesado. A cobertura real veio do smoke test exaustivo da RPC em produção (mais forte que
+um mock — testa o banco de verdade) + revisão de código da isolação try/catch. `ci:local` verde
+(979 testes). Visão 360 ganhou botão "Ver conversa" + deep-link novo em `AtendimentoInboxPage`.
+
+**Próximo passo**: S10 (aposentar `comercial.leads`, agora seguro depois da S09), depois S11-S14,
+seguindo a mesma ordem do ROADMAP. Ao fechar o épico inteiro: confirmar exposição real de
+`relacionamento` no Data API, rodar Playwright completo (as demais stories seguem bloqueadas
+nele), só então branch → PR → merge (nunca push direto, nunca por story).
 
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 

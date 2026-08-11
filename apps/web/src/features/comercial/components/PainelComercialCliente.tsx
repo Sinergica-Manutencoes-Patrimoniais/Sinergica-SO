@@ -6,7 +6,7 @@
  * (ADR-0020). */
 
 import { Badge, Button, Card, EmptyState } from "@sinergica/ui";
-import { ClipboardList, FileText, Plus, Search } from "lucide-react";
+import { ClipboardList, FileText, MessageCircle, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useEtapas, useOportunidadesDaConta } from "../application/comercial-queries";
@@ -32,6 +32,7 @@ export function PainelComercialCliente({
   clienteId,
   clienteNome,
   onAbrirLevantamento,
+  onAbrirConversa,
 }: {
   clienteId: string;
   /** Só enfeita o título do modal. Opcional porque a Visão 360 já mostra o nome da Conta no
@@ -40,6 +41,10 @@ export function PainelComercialCliente({
   /** E03-S05, AC-7: "link para o Assessment completo" — o Comercial não conhece a tela do PCM, o
    * shell (`HomePage`) é quem sabe navegar até `InspecoesPage` com a inspeção certa selecionada. */
   onAbrirLevantamento?: (inspecaoId: string) => void;
+  /** E03-S09, AC-5: "link para a conversa que originou a oportunidade" — mesmo raciocínio acima,
+   * mas pra `AtendimentoInboxPage`. Só aparece quando a oportunidade tem `conversaId` (nasceu do
+   * agente de WhatsApp, S09) — a maioria não tem, e o botão simplesmente não aparece nelas. */
+  onAbrirConversa?: (conversaId: string) => void;
 }) {
   const { podeAcessar } = usePermissoes();
   const [criando, setCriando] = useState(false);
@@ -156,6 +161,17 @@ export function PainelComercialCliente({
                   <span className="tabular-nums text-sm text-ink">
                     {formatarValor(op.valorEstimadoCentavos)}
                   </span>
+                  {/* E03-S09 AC-5: só oportunidade nascida do agente de WhatsApp tem conversaId. */}
+                  {op.conversaId && onAbrirConversa && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onAbrirConversa(op.conversaId as string)}
+                    >
+                      <MessageCircle className="size-4" aria-hidden />
+                      Ver conversa
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" onClick={() => setOportunidadeAberta(op.id)}>
                     <FileText className="size-4" aria-hidden />
                     Propostas

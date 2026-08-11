@@ -539,41 +539,39 @@ async function processarComercial(
       p_subsegmento: null,
     });
   if (clusterError) throw clusterError;
-  const { data: leadRow, error: leadError } = await db
-    .schema("comercial")
-    .from("leads")
-    .insert({
-      nome: lead.nome,
-      email: lead.email ?? null,
-      telefone: lead.telefone ?? null,
-      origem: "whatsapp",
-      origem_ref: remoteJid,
-      status: "qualificado",
-      score: lead.score,
-      lead_tier: leadTier,
-      cluster_nome: (clusterNome as string | null) ?? null,
-      resumo: lead.resumo,
-      conversa_id: conversa?.id ?? null,
-      contato_id: conversa?.contatoId ?? null,
-      created_by: await systemUserId(db),
-    })
-    .select("id")
-    .single();
-  if (leadError) throw leadError;
 
-  if (conversa?.id) {
-    await db.schema("atendimento").from("conversas").update({ lead_id: leadRow.id }).eq("id", conversa.id);
-  }
-  if (conversa?.contatoId) {
-    await db.schema("relacionamento").from("vinculos").upsert(
-      {
-        contato_id: conversa.contatoId,
-        entidade_tipo: "comercial_lead",
-        entidade_id: leadRow.id,
-        papel: "lead",
-        principal: true,
-      },
-      { onConflict: "contato_id,entidade_tipo,entidade_id" },
+  // E03-S09 AC-1/AC-8: RPC publicada pelo Comercial substitui o insert direto em
+  // `comercial.leads` (ADR-0019 R1/R2) — ela já resolve a Conta pelo vínculo do contato (AC-2),
+  // já é idempotente por conversa aberta (AC-6) e já grava `conversa_id` na oportunidade (AC-5,
+  // não mexe em `conversas.lead_id`, que segue intocado até a S10).
+  //
+  // AC-7: falha aqui NUNCA derruba o atendimento — loga e segue pra confirmação normal. O cliente
+  // não pode ficar sem resposta porque o CRM falhou.
+  try {
+    const { error: rpcError } = await db.schema("comercial").rpc("fn_registrar_oportunidade", {
+      p_nome: lead.nome,
+      p_telefone: lead.telefone ?? null,
+      p_score: lead.score,
+      p_resumo: lead.resumo,
+      p_origem_ref: remoteJid,
+      p_lead_tier: leadTier,
+      p_cluster_nome: (clusterNome as string | null) ?? null,
+      p_conversa_id: conversa?.id ?? null,
+      p_contato_id: conversa?.contatoId ?? null,
+      p_created_by: await systemUserId(db),
+    });
+    if (rpcError) throw rpcError;
+  } catch (e) {
+    console.error(
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        nivel: "error",
+        fn: FN,
+        msg: "falha ao registrar oportunidade no Comercial — atendimento segue normalmente",
+        instanceId,
+        remoteJid,
+        detail: String(e),
+      }),
     );
   }
 
@@ -581,7 +579,7 @@ async function processarComercial(
   await responderEvolution(instanceId, remoteJid, confirmacao);
   await registrarMensagemAgente(db, instanceId, remoteJid, confirmacao, "agente");
   await finalizarFila(db, item.id, "done", now);
-  return { queueId: item.id, status: "done", leadId: leadRow.id };
+  return { queueId: item.id, status: "done" };
 }
 
 function splitQueueKey(queueKey: string): [string, string] {
