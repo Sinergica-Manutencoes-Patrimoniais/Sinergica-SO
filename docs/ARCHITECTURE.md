@@ -181,7 +181,13 @@ definição e devem consumir por view.
 
 ### Dívida de fronteira (passivo herdado — corrigir no E03)
 1. **Colunas comerciais em `pcm.clientes`** — `tipo`, `status_comercial` (E01-S12) violam R3.
-   Migram para `comercial.oportunidades` (E03-S01).
+   **Ainda não migradas** (2026-08-12) — continuam em uso real pela carteira do PCM. A E03/ADR-0020
+   resolveu o modelo conceitual (funil vive em `comercial.oportunidades`, Conta é uma linha só), mas
+   nenhuma migration dropou/deprecou essas duas colunas em produção. **Enforcement de fronteira feito
+   na camada de aplicação (E01-S147, 2026-08-12)**: `listarClientes` do PCM (`Cliente360Gateway`)
+   filtra `tipo != 'lead'` na própria query — a carteira operacional nunca lista quem ainda não é
+   cliente de verdade, mesmo com a coluna ainda fisicamente presente. Drop físico das colunas fica
+   pendente de story própria (não é urgente — R1/R3 já respeitados no runtime).
 2. **Satisfação duplicada** — `pcm.satisfacao_respostas` (pesquisa do Auvo, E01-S55) e
    `pcm.portal_satisfacao` (CSAT/NPS do portal, E09) medem o mesmo conceito sobre a mesma OS.
    **Resolvido por decisão do PO (2026-08-10): a Sinérgica não usa a pesquisa do Auvo.**
