@@ -10,6 +10,25 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-12 — Registrando lote de melhorias (Claude/Haiku)
+
+Lucas olhando o sistema e pedindo melhorias em fluxo contínuo. Registrados **5 stories novas**:
+
+**E02 (Atendimento):**
+- **E02-S31:** Relatório de gasto de IA (inspeção, atendimento, previsões) com limite e quota excedida
+- **E02-S32:** Exibir mensagens WhatsApp enviadas pelo celular no Inbox
+- **E02-S33:** Gasto de IA visível na conversa (rodapé + acumulado)
+- **E02-S34:** Modelo de IA configurável por agente (Zé, Atendimento), com fallback global
+
+**E01 (PCM):**
+- **E01-S146:** Suite E2E (Playwright) — CRUD ferramentas, clientes, equipamentos com fixture isolada
+
+Specs `.md` criadas com AC e tarefas sketch. ROADMAP atualizado. Branch `feat/lote-melhorias-2026-08-12` aberta.
+
+**Nota:** E01-S142 (ocultar OS de ponto "INICIO/FIM VISITA") já foi implementada em sessão anterior (2026-08-10, migration `0173` aplicada em produção). Registrado no ROADMAP como Done.
+
+**Próximo:** Lucas continua revisando sistema e pedindo mais. Specs prontas pra implementar sob demanda — basta ele marcar qual quer fazer primeiro.
+
 ## 2026-08-11 — E03 Comercial: MERGEADO em main (PR #57) — épico completo (Claude/Opus 5)
 
 Especificação completa do épico E03 (14 stories) concluída em sessão anterior (commit `a4904e2`),
