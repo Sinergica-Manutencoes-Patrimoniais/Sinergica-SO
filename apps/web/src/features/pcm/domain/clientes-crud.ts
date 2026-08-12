@@ -14,6 +14,9 @@ export function validarClienteForm(input: ClienteFormData): ClienteFormData {
     contatoTelefone: textoOuNull(input.contatoTelefone),
     contatoEmail: textoOuNull(input.contatoEmail),
     observacoes: textoOuNull(input.observacoes),
+    ativo: input.ativo,
+    tipo: input.tipo,
+    statusComercial: input.statusComercial,
   };
 }
 

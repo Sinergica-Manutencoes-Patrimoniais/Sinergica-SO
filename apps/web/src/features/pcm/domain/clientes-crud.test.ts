@@ -27,4 +27,15 @@ describe("validarClienteForm", () => {
       observacoes: null,
     });
   });
+
+  it("E01-S148: preserva ativo/tipo/statusComercial quando informados (edição)", () => {
+    const resultado = validarClienteForm({
+      nome: "Condomínio Primavera",
+      ativo: false,
+      tipo: "cliente",
+      statusComercial: "inativo",
+    });
+    expect(resultado.ativo).toBe(false);
+    expect(resultado.statusComercial).toBe("inativo");
+  });
 });

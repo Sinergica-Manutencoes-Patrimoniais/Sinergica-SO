@@ -15,6 +15,9 @@ interface ClienteFormPrefill {
   contatoTelefone?: string | null;
   contatoEmail?: string | null;
   observacoes?: string | null;
+  ativo?: boolean;
+  tipo?: "cliente" | "lead";
+  statusComercial?: "ativo" | "inativo" | "prospecto";
 }
 
 export function ClienteFormModal({
@@ -26,6 +29,7 @@ export function ClienteFormModal({
   onCancel: () => void;
   onSalvar: (dados: ClienteFormData) => Promise<void>;
 }) {
+  const ehEdicao = Boolean(cliente);
   const [dados, setDados] = useState<ClienteFormData>({
     nome: cliente?.nome ?? "",
     cnpj: cliente?.cnpj ?? "",
@@ -37,6 +41,9 @@ export function ClienteFormModal({
     contatoTelefone: cliente?.contatoTelefone ?? "",
     contatoEmail: cliente?.contatoEmail ?? "",
     observacoes: cliente?.observacoes ?? "",
+    ativo: cliente?.ativo ?? true,
+    tipo: cliente?.tipo ?? "cliente",
+    statusComercial: cliente?.statusComercial ?? "ativo",
   });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -103,6 +110,38 @@ export function ClienteFormModal({
             value={dados.contatoEmail ?? ""}
             onChange={(v) => setCampo("contatoEmail", v)}
           />
+          {ehEdicao && (
+            <>
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-ink-3">Status</span>
+                <select
+                  value={dados.statusComercial ?? "ativo"}
+                  onChange={(event) =>
+                    setDados((atual) => ({
+                      ...atual,
+                      statusComercial: event.target.value as ClienteFormData["statusComercial"],
+                    }))
+                  }
+                  className="input w-full"
+                >
+                  <option value="ativo">Ativo</option>
+                  <option value="inativo">Inativo</option>
+                  <option value="prospecto">Prospecto</option>
+                </select>
+              </label>
+              <label className="flex items-center gap-2 pt-5">
+                <input
+                  type="checkbox"
+                  checked={dados.ativo ?? true}
+                  onChange={(event) =>
+                    setDados((atual) => ({ ...atual, ativo: event.target.checked }))
+                  }
+                  className="h-4 w-4 accent-orange"
+                />
+                <span className="text-xs font-semibold text-ink-3">Cliente ativo (operação)</span>
+              </label>
+            </>
+          )}
           <label className="block md:col-span-2">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Observações</span>
             <textarea

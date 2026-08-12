@@ -32,7 +32,6 @@ type Estado =
   | { fase: "pronto"; clientes: ClienteResumo[] };
 
 type FiltroStatus = "todos" | "ativo" | "inativo";
-type FiltroTipo = "todos" | "cliente" | "lead";
 type FiltroOperacao = "todos" | "com_ativos" | "com_backlog" | "sem_contato" | "incompleto";
 type Ordenacao = "nome" | "atividade" | "ativos" | "backlog" | "gut";
 
@@ -53,7 +52,6 @@ export function ListaClientesPage({
   const [busca, setBusca] = useState("");
   // E01-S110 AC-2: padrão inicial é "Ativo" (não "Todos") — operador ainda troca manualmente.
   const [status, setStatus] = useState<FiltroStatus>("ativo");
-  const [tipo, setTipo] = useState<FiltroTipo>("todos");
   const [operacao, setOperacao] = useState<FiltroOperacao>("todos");
   const [ordenacao, setOrdenacao] = useState<Ordenacao>("atividade");
   const [marcacaoFiltro, setMarcacaoFiltro] = useState<string>("todos");
@@ -110,7 +108,6 @@ export function ListaClientesPage({
     return clientes
       .filter((cliente) => {
         if (status !== "todos" && (status === "ativo") !== cliente.ativo) return false;
-        if (tipo !== "todos" && cliente.tipo !== tipo) return false;
         if (operacao === "com_ativos" && (cliente.equipamentosAtivos ?? 0) === 0) return false;
         if (operacao === "com_backlog" && (cliente.osAbertas ?? 0) === 0) return false;
         if (
@@ -147,13 +144,12 @@ export function ListaClientesPage({
           .some((valor) => normalizar(String(valor)).includes(termo));
       })
       .sort((a, b) => compararClientes(a, b, ordenacao));
-  }, [clientes, termo, status, tipo, operacao, ordenacao, marcacaoFiltro]);
+  }, [clientes, termo, status, operacao, ordenacao, marcacaoFiltro]);
 
   const metricas = useMemo(() => montarMetricas(clientes), [clientes]);
   const filtrosAtivos =
     Boolean(busca.trim()) ||
     status !== "todos" ||
-    tipo !== "todos" ||
     operacao !== "todos" ||
     ordenacao !== "atividade" ||
     marcacaoFiltro !== "todos";
@@ -161,7 +157,6 @@ export function ListaClientesPage({
   function limparFiltros() {
     setBusca("");
     setStatus("todos");
-    setTipo("todos");
     setOperacao("todos");
     setOrdenacao("atividade");
     setMarcacaoFiltro("todos");
@@ -280,16 +275,6 @@ export function ListaClientesPage({
               ["todos", "Todos"],
               ["ativo", "Ativos"],
               ["inativo", "Inativos"],
-            ]}
-          />
-          <SelectFiltro
-            label="Tipo"
-            value={tipo}
-            onChange={(valor) => setTipo(valor as FiltroTipo)}
-            options={[
-              ["todos", "Todos"],
-              ["cliente", "Clientes"],
-              ["lead", "Leads"],
             ]}
           />
           <SelectFiltro
