@@ -12,16 +12,20 @@ alwaysApply: true
 
 ## 2026-08-12 — Registrando lote de melhorias (Claude/Haiku)
 
-Lucas olhando o sistema e pedindo melhorias em fluxo contínuo. Registrados **5 stories novas**:
+Lucas olhando o sistema e pedindo melhorias em fluxo contínuo. Registradas **9 stories novas** em 2 rodadas:
 
-**E02 (Atendimento):**
+**Rodada 1 — E02 (Atendimento) + E01 (Testes):**
 - **E02-S31:** Relatório de gasto de IA (inspeção, atendimento, previsões) com limite e quota excedida
 - **E02-S32:** Exibir mensagens WhatsApp enviadas pelo celular no Inbox
 - **E02-S33:** Gasto de IA visível na conversa (rodapé + acumulado)
 - **E02-S34:** Modelo de IA configurável por agente (Zé, Atendimento), com fallback global
-
-**E01 (PCM):**
 - **E01-S146:** Suite E2E (Playwright) — CRUD ferramentas, clientes, equipamentos com fixture isolada
+
+**Rodada 2 — E01 (PCM operacional) — continuação do pedido:**
+- **E01-S147:** Filtrar clientes na lista PCM — só ativos (operação), não leads
+- **E01-S148:** Editar cliente (status, ativo) no detalhe — via RPC com guarda RLS
+- **E01-S149:** Propriedade de cliente documentada — Comercial dono, PCM view (Shared Kernel)
+- **E01-S150:** Kanban PCM — mover OS entre status manualmente (drag funciona)
 
 Specs `.md` criadas com AC e tarefas sketch. ROADMAP atualizado. Branch `feat/lote-melhorias-2026-08-12` aberta.
 
