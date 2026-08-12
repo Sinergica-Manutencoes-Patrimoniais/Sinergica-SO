@@ -10,7 +10,7 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-## 2026-08-11 — E03 Comercial: 14 stories implementadas, relacionamento exposto, pronto pro PR (Claude/Opus 5)
+## 2026-08-11 — E03 Comercial: MERGEADO em main (PR #57) — épico completo (Claude/Opus 5)
 
 Especificação completa do épico E03 (14 stories) concluída em sessão anterior (commit `a4904e2`),
 com framework de propriedade de dados (ADR-0019 R1/R2/R3 + corolários) e decisão de Conta única
@@ -298,9 +298,50 @@ só ao final).
      tocadas nesta sessão, não investigadas (nenhuma é feature do Comercial nem foi alterada por
      nenhuma story E03).
 
-**Próximo passo**: revisão final do diff acumulado (commits desde `main`, migrations 0185-0204)
-antes de abrir o PR único — branch → PR → merge (nunca push direto pra main, nunca incremental por
-story, instrução vigente desde o início do épico).
+**PR #57 aberto, revisado e MERGEADO em `main`** (a pedido explícito do Lucas: "pode revisar tudo
+estando ok pode fazer o merge"). Antes do merge, `gh pr checks` mostrou conflito real com `main`
+(PR #56, squash-merge de todo o lote E00-S14..S23/E01-S139/E02-S29-S30 do dia 08/08, que main não
+tinha e a branch também carregava por commits próprios divergentes) — 6 conflitos de conteúdo
+resolvidos um a um (`OsCalendarioView.tsx`, `PainelDadosOperacionaisAuvo.tsx`, `InspecoesPage.tsx`,
+`OrdensServicoPage.tsx` ×4 hunks, `ROADMAP.md`, `pnpm-lock.yaml` regenerado), sempre preferindo o
+lado que continha a feature mais completa (confirmado lendo se cada símbolo em conflito era
+efetivamente usado no restante do arquivo antes de decidir).
+
+**A CI real (`db-tests`, Docker) rodou pela PRIMEIRA VEZ nesta sessão inteira** — 3 rodadas até
+verde, achando **16 bugs genuínos e pré-existentes no pgTAP** que nenhuma sessão anterior (sem
+Docker local) tinha conseguido detectar:
+- 8 arquivos inseriam `pcm.clientes` sem `created_by` (NOT NULL) — bug sistêmico de fixture desde
+  a S01.
+- 2 arquivos fingiam a claim `"role":"service_role"` com o role PG `authenticated` — não basta
+  (RLS de `relacionamento.contatos` só olha `user_role`/`user_modulos`; `fn_registrar_oportunidade`
+  só tem `EXECUTE` concedido a `service_role` de verdade). Trocado pra `set local role
+  service_role` real em cada ponto necessário.
+- 1 arquivo inseria em `auth.users` DEPOIS de trocar pro role `authenticated` (sem privilégio) —
+  movido pro topo.
+- 3 asserções esperavam `UPDATE` sob RLS lançar `42501` — RLS filtra `UPDATE` silenciosamente
+  (`USING`), só `INSERT`/`WITH CHECK` lança erro de verdade. Reescritas pra conferir valor
+  inalterado.
+- 1 asserção assumia tabela de referência (`comercial.motivos_perda`) com exatamente 1 linha,
+  ignorando o seed compartilhado — trocada pra `>= 1`.
+- 2 asserções checavam colunas de `comercial.leads` (dropada na S10) via `has_column(...)`,
+  escapando da varredura textual da época — repontadas pra `comercial.oportunidades`.
+- 2 arquivos com `plan()` sub-contando as asserções reais (14 vs 15, 13 vs 14) desde que foram
+  escritos.
+- 3 ocorrências de `is()` comparando `bigint` (retorno de RPC) contra `integer` sem cast.
+- Múltiplas leituras (via `join`/`select` direto) rodando sob a RLS do **caller** logo depois de
+  uma RPC `security definer` ter escrito o dado — quando o caller (leitura comercial, ou
+  `cliente-sindico`) não tem visibilidade própria da tabela envolvida (`financeiro.contratos` sem
+  `financeiro:leitura`; `pcm.inspecoes` sem módulo `pcm`; `comercial.oportunidades`/
+  `oportunidade_eventos` sem carve-out de síndico). Corrigido com `service_role` só no ponto de
+  verificação, restaurando role/claims originais antes do próximo passo do teste.
+
+Todos os achados são bugs de TESTE (fixture/asserção), não de produto — nenhum deles indicava
+comportamento real errado em produção; cada um foi confirmado lendo a RLS/trigger/função real
+antes de decidir o fix. `gh pr checks`: `db-tests`/`migrations`/`qualidade` verdes,
+`mergeStateStatus: CLEAN`, merge feito via `gh pr merge --merge`.
+
+**Épico E03 Comercial: FECHADO.** 14 stories + limpeza de fronteira de dados + infraestrutura de
+teste, tudo em `main`. Próximo trabalho: começar um épico novo (nenhuma pendência aberta deste).
 
 ## 2026-08-10 — E01-S145: fluidez e performance de Chamados (Codex)
 
