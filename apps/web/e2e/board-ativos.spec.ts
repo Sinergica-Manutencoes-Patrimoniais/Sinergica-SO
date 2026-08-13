@@ -1,4 +1,5 @@
 import { type Locator, expect, test } from "@playwright/test";
+import { softDeletePorNome } from "./helpers/limpeza-e2e";
 
 // E01-S78 — Board de ativos por Local + drawer de detalhe. Reusa o setup de E01-S76 (cliente >
 // Área "Torre A" > Local "3º andar" > sub-local "Sala 302" > item instalado) e valida a aba Board:
@@ -19,10 +20,23 @@ async function selecionarPorTexto(select: Locator, textoParcial: string) {
   await select.selectOption({ label: completo });
 }
 
+// E01-S146: cliente + item ficavam em produção pra sempre (achado real: 56 clientes/35
+// equipamentos acumulados, 2026-08-12). `itemAtual` rastreia o nome corrente (o teste renomeia o
+// item no meio do fluxo) pra limpar o registro certo.
+let clienteCriado: string | null = null;
+let itemAtual: string | null = null;
+
+test.afterEach(async ({ page }) => {
+  if (clienteCriado) await softDeletePorNome(page, "pcm", "clientes", clienteCriado);
+  if (itemAtual) await softDeletePorNome(page, "pcm", "equipamentos", itemAtual);
+});
+
 test("Board: colunas por Local, card do ativo e drawer de detalhe", async ({ page }) => {
   const sufixo = Date.now();
   const nomeCliente = `[TESTE E2E] Cliente S78 ${sufixo}`;
   const nomeItem = `[TESTE E2E] AC Board ${sufixo}`;
+  clienteCriado = nomeCliente;
+  itemAtual = nomeItem;
 
   // ── Setup: cliente + Área > Local > sub-local + item instalado no sub-local ──────────────────
   await page.goto("/");
@@ -92,6 +106,7 @@ test("Board: colunas por Local, card do ativo e drawer de detalhe", async ({ pag
 
   // ── E01-S79: editar o item direto do drawer (antes só era possível visualizar) ─────────────────
   const nomeEditado = `${nomeItem} (editado)`;
+  itemAtual = nomeEditado;
   await drawer.getByRole("button", { name: "Editar ativo" }).click();
   const campoNome = page.getByLabel("Nome *");
   await expect(campoNome).toHaveValue(nomeItem);

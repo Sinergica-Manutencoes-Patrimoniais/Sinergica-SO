@@ -1,4 +1,5 @@
 import { type Locator, expect, test } from "@playwright/test";
+import { softDeletePorNome } from "./helpers/limpeza-e2e";
 
 /** selectOption({label}) só aceita string exata, não RegExp/substring — resolve o texto completo
  * da <option> que contém `textoParcial` (ex.: nome com sufixo Auvo) e seleciona por ele. Faz
@@ -25,12 +26,27 @@ async function selecionarPorTexto(select: Locator, textoParcial: string) {
 // ordens-servico.spec.ts) — NUNCA contra a URL Netlify de produção. Cliente prefixado com
 // timestamp garante que "Torre A"/"3º andar"/"Sala 302"/"Sistema de Hidrante Torre A" (nomes do
 // AC) não colidem com execuções anteriores (unique index é por cliente).
+// E01-S146: cliente + item ficavam em produção pra sempre (achado real: 56 clientes/35
+// equipamentos acumulados, 2026-08-12). Soft-deleta os dois desta execução ao final — áreas/
+// locais/sistemas ligados ao cliente ficam órfãos mas invisíveis (não aparecem nas telas
+// Clientes/Equipamentos que motivaram o achado; cleanup completo da hierarquia fica pra story
+// futura se o Lucas pedir).
+let clienteCriado: string | null = null;
+let itemCriado: string | null = null;
+
+test.afterEach(async ({ page }) => {
+  if (clienteCriado) await softDeletePorNome(page, "pcm", "clientes", clienteCriado);
+  if (itemCriado) await softDeletePorNome(page, "pcm", "equipamentos", itemCriado);
+});
+
 test("cria hierarquia Área>Local, instala Item, cria Sistema e confirma breadcrumb + chip", async ({
   page,
 }) => {
   const sufixo = Date.now();
   const nomeCliente = `[TESTE E2E] Cliente S76 ${sufixo}`;
   const nomeItem = `[TESTE E2E] Hidrante ${sufixo}`;
+  clienteCriado = nomeCliente;
+  itemCriado = nomeItem;
   // SistemasPage lista Sistemas de TODOS os clientes (sem filtro) — sufixo evita colidir com
   // "Sistema de Hidrante Torre A" de execuções anteriores do mesmo spec.
   const nomeSistema = `Sistema de Hidrante Torre A ${sufixo}`;

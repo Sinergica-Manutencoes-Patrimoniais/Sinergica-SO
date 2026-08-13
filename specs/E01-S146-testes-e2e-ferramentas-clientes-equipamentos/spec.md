@@ -5,7 +5,17 @@ description: Suite E2E (Playwright) para CRUD ferramentas, clientes, equipamento
 
 # E01-S146 — Testes E2E — Ferramentas, Clientes, Equipamentos
 
-## Contexto
+> **Escopo corrigido (2026-08-12).** O pedido original do Lucas ("Ainda existe ferramentas,
+> clientes, equipamentos,[TESTE E2E]") **não era falta de teste — era poluição de dado real em
+> produção**, de volta desde a limpeza de 2026-08-06. Achado: 20 specs `e2e/*.spec.ts` criam dado
+> `[TESTE E2E]` e **nenhum limpa depois** (a limpeza de 2026-08-06 tratou o sintoma, não a causa).
+> Confirmado ao vivo: 124 registros acumulados (33 ferramentas, 56 clientes, 35 equipamentos).
+> Ver `tasks.md` para o que foi feito de verdade — os AC abaixo (suíte E2E nova do zero) **não
+> foram implementados**, porque já existem specs cobrindo CRUD de ferramentas/clientes/equipamentos
+> (`ferramentas.spec.ts`, `clientes-marcacoes.spec.ts`, `hierarquia-sistemas.spec.ts`,
+> `board-ativos.spec.ts`) — faltava só limpeza, não cobertura.
+
+## Contexto (original, mantido para histórico)
 Telas do PCM (cadastros de Ferramentas, Clientes, Equipamentos) têm testes unit, mas **sem E2E real**.
 Lucas quer validar CRUD end-to-end + UI antes de novos refactores visuais (E00-S14..S23).
 
