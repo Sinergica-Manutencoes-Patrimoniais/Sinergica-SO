@@ -31,6 +31,56 @@ Specs `.md` criadas com AC e tarefas sketch. ROADMAP atualizado. Branch `feat/lo
 
 **Nota:** E01-S142 (ocultar OS de ponto "INICIO/FIM VISITA") já foi implementada em sessão anterior (2026-08-10, migration `0173` aplicada em produção). Registrado no ROADMAP como Done.
 
+## 2026-08-12 (cont.) — Implementação: 6 de 9 stories do lote (Claude/Sonnet 5)
+
+Lucas pediu pra `@dev` implementar as 9 stories registradas. Trabalhei sequencial (branch já
+aberta), commit por story/grupo, sempre validando ao vivo (dev server + Playwright contra
+produção, mesma prática de sessões anteriores).
+
+**E01-S147/S148/S150 — commit `3511b2f`.** Achados reais (não hipotéticos) mudaram o escopo:
+- **S148**: `mapearClienteCommand` (adapter) hardcodava `ativo:true`/`status_comercial:'ativo'`
+  em TODO save (criação E edição) — por isso editar cliente nunca mudava status. Split em
+  `mapearClienteCriacao`/`mapearClienteEdicao`; modal ganhou campos Status/Ativo (só na edição).
+- **S147**: filtro server-side `.neq("tipo","lead")` no `listarClientes` — carteira PCM nunca
+  mais lista lead. Filtro "Tipo" (Cliente/Lead) removido da UI (não fazia mais sentido).
+- **S150**: investigação ao vivo (Playwright contra produção, usuário real) — RPC/RLS/backend já
+  aceitavam qualquer transição de status (dropdown do detalhe funcionava). O drag nativo HTML5
+  também funciona (confirmado com sequência de mouse manual), mas o helper de alto nível do
+  Playwright falhava — sintoma de fragilidade real de DnD nativo em trackpad, não bug de lógica.
+  Fix: select de status direto em cada card do Kanban, sem depender de arrastar. E2E novo
+  (`e2e/ordens-servico-kanban-status.spec.ts`) cobre o fluxo.
+
+**E01-S149 — commit `1f5397a`.** `glossary.md` já documentava certo ("PCM exibe as ativas,
+Comercial exibe todas") — só `ARCHITECTURE.md` estava desatualizado (dizia que as colunas
+`tipo`/`status_comercial` migrariam pro E03, nunca migraram). Corrigido pra refletir a realidade:
+enforcement é via filtro de aplicação (S147), não view/migration nova.
+
+**E01-S146 — commit `4c45bba`. Escopo corrigido em tempo real.** O pedido do Lucas ("Ainda existe
+ferramentas, clientes, equipamentos,[TESTE E2E]") não era falta de teste — era **dado de teste de
+volta em produção**. Achado real: **20 specs `e2e/*.spec.ts` criam dado `[TESTE E2E]` e nenhum
+limpa depois** — a limpeza de 2026-08-06 tratou o sintoma, não a causa, e reacumulou: **124
+registros** (33 ferramentas, 56 clientes, 35 equipamentos) confirmados via REST autenticado contra
+produção. Perguntei ao Lucas antes de apagar (AskUserQuestion — ação destrutiva/irreversível em
+produção) — autorizado. Zero dependência real (FK `NO ACTION` em chamados/OS/tickets/sistemas)
+confirmada antes; apagado via `supabase db query --linked` (só soft-delete disponível via RLS,
+cleanup direto via CLI). Causa raiz corrigida: helper `e2e/helpers/limpeza-e2e.ts` (soft-delete
+autenticado via REST) wired em `afterEach` dos 4 specs que tocam essas 3 tabelas
+(`ferramentas`/`clientes-marcacoes`/`hierarquia-sistemas`/`board-ativos`.spec.ts). Achado extra:
+`ferramentas.spec.ts` estava quebrado contra a UI atual (campo "Quantidade total" não existe mais
+no form) — corrigido; bug real sinalizado mas não corrigido (fora de escopo): `quantidade_total`
+nunca incrementa quando a 1ª unidade é gerada na criação ("1/0 unid." em vez de "1/1").
+
+**Gates**: `pnpm run typecheck`/`biome check`/`vitest run src/features/pcm` (464 passed)/
+`pnpm vite build` verdes em todo commit. E2E rodado ao vivo contra produção real pra cada mudança
+(não só unit) — inclusive as investigações que descartaram hipóteses erradas antes de codar.
+
+**Faltam 4 stories — E02-S31/S32/S33/S34 (Atendimento, gasto de IA + modelo por agente).** Maiores
+que as 6 já feitas: migrations novas (`ia_gasto_log`, `config.agentes_ia`), mudança em Edge
+Function que processa WhatsApp real (`_shared/openrouter.ts`, `pcm-ze-agent`,
+`atendimento-whatsapp-envio`) e 3 telas novas. Pausei aqui pra confirmar com o Lucas antes de subir
+mudança em Edge Function de produção (mesmo padrão de cautela das sessões anteriores — deploy de
+Edge Function sempre pediu autorização explícita antes).
+
 **Próximo:** Lucas continua revisando sistema e pedindo mais. Specs prontas pra implementar sob demanda — basta ele marcar qual quer fazer primeiro.
 
 ## 2026-08-11 — E03 Comercial: MERGEADO em main (PR #57) — épico completo (Claude/Opus 5)
