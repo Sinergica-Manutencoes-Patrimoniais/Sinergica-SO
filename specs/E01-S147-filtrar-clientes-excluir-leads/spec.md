@@ -1,6 +1,7 @@
 ---
 name: E01-S147-filtrar-clientes-excluir-leads
 description: Filtrar base de clientes no PCM — exibir só clientes ativos, não leads
+alwaysApply: true
 ---
 
 # E01-S147 — Filtrar clientes (excluir leads) na view PCM

@@ -1,6 +1,7 @@
 ---
 name: E01-S150-kanban-mover-os-manual
 description: Permitir arrastar/mover OS entre colunas do Kanban PCM manualmente
+alwaysApply: true
 ---
 
 # E01-S150 — Kanban PCM: mover OS entre status manualmente

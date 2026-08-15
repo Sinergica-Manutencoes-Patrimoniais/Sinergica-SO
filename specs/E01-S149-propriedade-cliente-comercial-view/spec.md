@@ -1,6 +1,7 @@
 ---
 name: E01-S149-propriedade-cliente-comercial-view
 description: Documentar e reforçar propriedade de cliente — Comercial dono, PCM/Atendimento veem view
+alwaysApply: true
 ---
 
 # E01-S149 — Propriedade de cliente (Comercial dono, PCM view)

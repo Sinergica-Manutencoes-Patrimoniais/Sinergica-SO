@@ -1,6 +1,7 @@
 ---
 name: E01-S146-testes-e2e-ferramentas-clientes-equipamentos-tasks
 description: Tasks da story E01-S146 (escopo corrigido — limpeza de poluição, não suíte nova)
+alwaysApply: false
 ---
 
 # Tasks — E01-S146

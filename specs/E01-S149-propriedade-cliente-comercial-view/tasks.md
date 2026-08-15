@@ -1,6 +1,7 @@
 ---
 name: E01-S149-propriedade-cliente-comercial-view-tasks
 description: Tasks da story E01-S149
+alwaysApply: false
 ---
 
 # Tasks — E01-S149

@@ -1,6 +1,7 @@
 ---
 name: E01-S147-filtrar-clientes-excluir-leads-tasks
 description: Tasks da story E01-S147
+alwaysApply: false
 ---
 
 # Tasks — E01-S147

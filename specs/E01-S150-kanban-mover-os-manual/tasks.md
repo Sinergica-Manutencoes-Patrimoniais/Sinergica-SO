@@ -1,6 +1,7 @@
 ---
 name: E01-S150-kanban-mover-os-manual-tasks
 description: Tasks da story E01-S150
+alwaysApply: false
 ---
 
 # Tasks — E01-S150

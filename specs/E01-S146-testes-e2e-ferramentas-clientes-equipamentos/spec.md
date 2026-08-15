@@ -1,6 +1,7 @@
 ---
 name: E01-S146-testes-e2e-ferramentas-clientes-equipamentos
 description: Suite E2E (Playwright) para CRUD ferramentas, clientes, equipamentos (clean fixtures)
+alwaysApply: true
 ---
 
 # E01-S146 — Testes E2E — Ferramentas, Clientes, Equipamentos

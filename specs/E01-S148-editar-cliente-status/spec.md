@@ -1,6 +1,7 @@
 ---
 name: E01-S148-editar-cliente-status
 description: Permitir editar status/campos de cliente no PCM (ativo, cliente, tipo, etc)
+alwaysApply: true
 ---
 
 # E01-S148 — Editar cliente (status, ativo) no PCM

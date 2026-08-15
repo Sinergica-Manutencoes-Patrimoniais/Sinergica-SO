@@ -1,6 +1,7 @@
 ---
 name: E01-S148-editar-cliente-status-tasks
 description: Tasks da story E01-S148
+alwaysApply: false
 ---
 
 # Tasks — E01-S148
