@@ -11,9 +11,10 @@ interface IntegracaoRow {
   provedor: string | null;
   ativo: boolean;
   config_publico: Record<string, unknown> | null;
+  limite_quota_ia_usd: number | null;
 }
 
-const COLS = "id,chave,provedor,ativo,config_publico" as const;
+const COLS = "id,chave,provedor,ativo,config_publico,limite_quota_ia_usd" as const;
 
 async function comTemSegredo(rows: IntegracaoRow[]): Promise<Integracao[]> {
   const resultados = await Promise.all(
@@ -29,6 +30,7 @@ async function comTemSegredo(rows: IntegracaoRow[]): Promise<Integracao[]> {
         ativo: row.ativo,
         configPublico: row.config_publico ?? {},
         temSegredo: Boolean(data),
+        limiteQuotaIaUsd: row.limite_quota_ia_usd,
       };
     }),
   );
@@ -53,6 +55,9 @@ export const supabaseIntegracoesAdapter: IntegracoesGateway = {
           ativo: input.ativo,
           config_publico: input.configPublico,
           updated_at: new Date().toISOString(),
+          ...(input.limiteQuotaIaUsd !== undefined
+            ? { limite_quota_ia_usd: input.limiteQuotaIaUsd }
+            : {}),
         },
         { onConflict: "chave" },
       )

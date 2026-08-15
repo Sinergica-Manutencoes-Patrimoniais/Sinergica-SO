@@ -18,8 +18,8 @@ export async function responderEvolution(
   instanceId: string,
   remoteJid: string,
   text: string,
-): Promise<void> {
-  await enviarEvolution(instanceId, "sendText", criarPayloadTexto(remoteJid, text));
+): Promise<string | null> {
+  return await enviarEvolution(instanceId, "sendText", criarPayloadTexto(remoteJid, text));
 }
 
 /** E04-S08: telefone de contato (`pcm.clientes.contato_telefone`, formatos livres — Auvo/cadastro
@@ -36,15 +36,29 @@ export async function enviarEvolution(
   instanceId: string,
   endpoint: "sendText" | "sendMedia" | "sendTemplate" | "sendButtons",
   payload: Record<string, unknown>,
-): Promise<void> {
-  await chamarEvolution(instanceId, endpoint, payload);
+): Promise<string | null> {
+  return await chamarEvolution(instanceId, endpoint, payload);
+}
+
+/** E02-S32: extrai `key.id` da resposta do Evolution (formato Baileys), usado como
+ * `wa_message_id` pra casar o envio feito pelo app com o eco `fromMe` do próprio webhook —
+ * sem isso, o webhook trataria o eco como uma mensagem nova de celular e duplicaria a bolha. */
+function extrairEvolutionMessageId(data: unknown): string | null {
+  if (data && typeof data === "object" && "key" in data) {
+    const key = (data as { key?: unknown }).key;
+    if (key && typeof key === "object" && "id" in key) {
+      const id = (key as { id?: unknown }).id;
+      if (typeof id === "string" && id) return id;
+    }
+  }
+  return null;
 }
 
 async function chamarEvolution(
   instanceId: string,
   endpoint: string,
   payload: Record<string, unknown>,
-): Promise<void> {
+): Promise<string | null> {
   const configuracao = await obterConfiguracaoEvolution();
   if (!configuracao) {
     throw new Error("Evolution não configurada — informe URL e chave em Configurações > Atendimento > Evolution");
@@ -64,4 +78,6 @@ async function chamarEvolution(
     );
     throw new Error(`Evolution ${endpoint} falhou: ${res.status}${corpo ? ` — ${corpo.slice(0, 300)}` : ""}`);
   }
+  const data = await res.json().catch(() => null);
+  return extrairEvolutionMessageId(data);
 }

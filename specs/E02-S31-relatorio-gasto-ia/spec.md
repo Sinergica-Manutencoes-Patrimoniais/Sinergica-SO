@@ -1,6 +1,7 @@
 ---
 name: E02-S31-relatorio-gasto-ia
 description: Relatório de consumo de IA (inspeção, atendimento, previsões) com limite de quota e alerta
+alwaysApply: true
 ---
 
 # E02-S31 — Relatório de gasto de IA

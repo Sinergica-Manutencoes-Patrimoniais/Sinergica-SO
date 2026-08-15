@@ -37,9 +37,10 @@ export interface ConfigIaValidado {
   janelaDias: number[];
 }
 
+/** E02-S34: `modeloLlm` vazio é válido — significa "usa o modelo global de Configurações > IA"
+ * (resolvido em `_shared/openrouter.ts` no momento da chamada, não aqui). */
 export function validarConfigIa(input: ConfigIaFormData): ConfigIaValidado {
   const modeloLlm = input.modeloLlm.trim();
-  if (!modeloLlm) throw new Error("Modelo LLM é obrigatório.");
   const janelaInicio = input.janelaInicio.trim();
   const janelaFim = input.janelaFim.trim();
   if ((janelaInicio && !janelaFim) || (!janelaInicio && janelaFim)) {

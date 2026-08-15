@@ -1,9 +1,17 @@
 ---
 name: E02-S34-modelo-ia-por-agente
 description: Permitir escolher modelo de IA por agente (Atendimento/Zé), com fallback global
+alwaysApply: true
 ---
 
 # E02-S34 — Modelo de IA por agente
+
+> **SPEC_DEVIATION (2026-08-15, confirmado com Lucas):** AC-1 pede tabela nova
+> `config.agentes_ia`. Descoberto que `atendimento.personas.modelo_llm` já faz esse papel pros 2
+> agentes citados (Zé, Assistente Atendimento), com UI própria. Decisão: estender
+> `personas.modelo_llm` (fallback pro modelo global quando vazio) em vez de duplicar a fonte de
+> verdade. Ver `tasks.md` pro design corrigido; ACs abaixo continuam válidos em espírito (mesmo
+> comportamento observável), só a AC-1 (tabela) não se aplica literalmente.
 
 ## Contexto
 Hoje existe um único modelo global OpenRouter (E00-S13): `Configurações > Integrações > Modelo`.

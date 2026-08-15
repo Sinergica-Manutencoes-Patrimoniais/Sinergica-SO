@@ -13,7 +13,7 @@
 // de 1 a 5. O score é média ponderada por `config.priorizacao_gutd`, calculada no client; a IA só
 // dá os quatro fatores, nunca o score.
 import { HttpError } from "./auth.ts";
-import { obterConfiguracaoOpenRouter } from "./openrouter.ts";
+import { obterConfiguracaoOpenRouter, quotaIaExcedida, registrarGastoIa } from "./openrouter.ts";
 
 const PROMPT_GUTD =
   'Você classifica itens de inspeção predial já identificados. Para CADA item numerado recebido, ' +
@@ -55,6 +55,9 @@ function texto(valor: unknown): string | null {
  * Item que vier sem índice válido ou sem os três fatores obrigatórios é descartado — melhor o
  * client ver que faltou um do que aceitar nota inventada. */
 export async function classificarItensGutd(texto_itens: string): Promise<ItemGutdClassificado[]> {
+  if (await quotaIaExcedida()) {
+    throw new HttpError(422, "Quota de IA excedida — ajuste o limite em Configurações > IA.");
+  }
   const configuracao = await obterConfiguracaoOpenRouter();
   if (!configuracao) {
     throw new HttpError(422, "OpenRouter não configurado — configure em Configurações > IA.");
@@ -74,9 +77,23 @@ export async function classificarItensGutd(texto_itens: string): Promise<ItemGut
   });
   if (!response.ok) throw new HttpError(502, `OpenRouter respondeu ${response.status}`);
 
+  const data = await response.json();
+  const usage = data?.usage;
+  if (usage && typeof usage.cost === "number") {
+    await registrarGastoIa({
+      modulo: "inspecao",
+      uso: {
+        usdCost: usage.cost,
+        promptTokens: typeof usage.prompt_tokens === "number" ? usage.prompt_tokens : null,
+        completionTokens: typeof usage.completion_tokens === "number" ? usage.completion_tokens : null,
+      },
+      modelo: configuracao.modeloImport,
+      endpoint: "classificar-itens-gutd",
+    });
+  }
+
   let parsed: { itens?: unknown };
   try {
-    const data = await response.json();
     parsed = JSON.parse(String(data?.choices?.[0]?.message?.content ?? "{}")) as { itens?: unknown };
   } catch {
     throw new HttpError(502, "OpenRouter devolveu JSON inválido");

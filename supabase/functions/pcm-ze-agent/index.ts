@@ -7,7 +7,13 @@ import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
 import { responderEvolution } from "../_shared/evolution.ts";
-import { gerarTituloOsViaOpenRouter } from "../_shared/openrouter.ts";
+import {
+  gerarTituloOsViaOpenRouter,
+  obterConfiguracaoOpenRouter,
+  quotaIaExcedida,
+  registrarGastoIa,
+  type UsoOpenRouter,
+} from "../_shared/openrouter.ts";
 import { sanearTituloGerado } from "../_shared/titulo-os.ts";
 import { criarChamadoAutomatico, marcarChamadoAutomaticoComOs } from "../_shared/auvo/os-from-task.ts";
 import {
@@ -256,6 +262,16 @@ async function processarChamados(
   // E02-S24: alma+resumo SEMPRE buscados pelo `config.client_id` desta conversa — nunca de outro
   // cliente (AC-4, isolamento). `comporContextoCliente` só concatena o que já veio filtrado.
   const memoriaCliente = await buscarMemoriaCliente(db, config.client_id);
+  // E02-S31 AC-2: bloqueia antes de gastar se a quota mensal já estourou.
+  if (await quotaIaExcedida()) {
+    await finalizarFila(db, item.id, "skipped", now);
+    return { queueId: item.id, status: "quota_ia_excedida" };
+  }
+  // E02-S34: credencial sempre do Vault (nunca mais env var solta); modelo é
+  // persona.modelo_llm (por agente) com fallback pro modelo global de Configurações > IA.
+  const configuracaoIa = await obterConfiguracaoOpenRouter();
+  if (!configuracaoIa) throw new HttpError(422, "OpenRouter não configurado — configure em Configurações > IA.");
+  const modeloResolvido = persona.modelo_llm?.trim() || configuracaoIa.modelo;
   const extraido = await extrairChamadoViaOpenRouter(
     comporPromptPersona(
       persona.prompt_sistema,
@@ -266,11 +282,15 @@ async function processarChamados(
     contexto,
     config.client_id,
     remoteJid,
-    persona.modelo_llm,
+    configuracaoIa.apiKey,
+    modeloResolvido,
   );
   if (!extraido.pronto) {
     await responderEvolution(instanceId, remoteJid, extraido.pergunta);
-    await registrarMensagemAgente(db, instanceId, remoteJid, extraido.pergunta, "ze");
+    await registrarMensagemAgente(db, instanceId, remoteJid, extraido.pergunta, "ze", {
+      uso: extraido.uso,
+      modelo: modeloResolvido,
+    });
     await finalizarFila(db, item.id, "done", now);
     return { queueId: item.id, status: "asked" };
   }
@@ -296,7 +316,10 @@ async function processarChamados(
   await salvarChamadosPendentes(db, conversaId, extraido.itens);
   const pergunta = montarResumoPendentes(extraido.itens);
   await responderEvolution(instanceId, remoteJid, pergunta);
-  await registrarMensagemAgente(db, instanceId, remoteJid, pergunta, "ze");
+  await registrarMensagemAgente(db, instanceId, remoteJid, pergunta, "ze", {
+    uso: extraido.uso,
+    modelo: modeloResolvido,
+  });
   await finalizarFila(db, item.id, "done", now);
   return { queueId: item.id, status: "waiting_confirmation", itens: extraido.itens.length };
 }
@@ -437,14 +460,13 @@ async function criarChamadosConfirmados(
 async function tentarMelhorarTituloOs(db: UntypedSupabaseClient, osId: string, descricao: string): Promise<void> {
   if (!descricao.trim()) return;
   try {
-    const { data: integracao } = await db.schema("config").from("integracoes").select("ativo,config_publico").eq("chave", "openrouter").maybeSingle();
+    const { data: integracao } = await db.schema("config").from("integracoes").select("ativo").eq("chave", "openrouter").maybeSingle();
     if (!integracao?.ativo) return;
 
-    const { data: apiKey } = await db.schema("config").rpc("fn_obter_segredo_integracao_interno", { p_chave: "openrouter_api_key" });
-    if (!apiKey) return;
+    const configuracaoIa = await obterConfiguracaoOpenRouter();
+    if (!configuracaoIa) return;
 
-    const modelo = (integracao.config_publico?.modelo as string | undefined) ?? "openai/gpt-4o-mini";
-    const bruto = await gerarTituloOsViaOpenRouter(apiKey, modelo, descricao);
+    const bruto = await gerarTituloOsViaOpenRouter(configuracaoIa.apiKey, configuracaoIa.modelo, descricao);
     const titulo = sanearTituloGerado(bruto);
     if (!titulo) return;
 
@@ -504,13 +526,21 @@ async function processarComercial(
     : "";
   const fluxo = await buscarFluxoAtivo(db, personaId);
   const passos = fluxo.passos;
+  if (await quotaIaExcedida()) {
+    await finalizarFila(db, item.id, "skipped", now);
+    return { queueId: item.id, status: "quota_ia_excedida" };
+  }
+  const configuracaoIa = await obterConfiguracaoOpenRouter();
+  if (!configuracaoIa) throw new HttpError(422, "OpenRouter não configurado — configure em Configurações > IA.");
+  const modeloResolvido = persona.modelo_llm?.trim() || configuracaoIa.modelo;
   const lead = await extrairLeadViaOpenRouter(
     comporPromptPersona(persona.prompt_sistema, persona.base_conhecimento, conhecimento),
     null,
     passos,
     contexto,
+    configuracaoIa.apiKey,
+    modeloResolvido,
     messages.at(-1)?.sender_jid ?? undefined,
-    persona.modelo_llm,
   );
   const conversaExecucao = await buscarConversa(db, instanceId, remoteJid);
   if (fluxo.fluxoId && conversaExecucao?.id) {
@@ -525,7 +555,10 @@ async function processarComercial(
 
   if (!lead.pronto) {
     await responderEvolution(instanceId, remoteJid, lead.pergunta);
-    await registrarMensagemAgente(db, instanceId, remoteJid, lead.pergunta, "agente");
+    await registrarMensagemAgente(db, instanceId, remoteJid, lead.pergunta, "agente", {
+      uso: lead.uso,
+      modelo: modeloResolvido,
+    });
     await finalizarFila(db, item.id, "done", now);
     return { queueId: item.id, status: "asked" };
   }
@@ -706,10 +739,11 @@ async function registrarMensagemAgente(
   remoteJid: string,
   texto: string,
   remetenteTipo: "ze" | "agente",
+  gastoIa?: { uso: UsoOpenRouter | null; modelo: string },
 ): Promise<void> {
   const conversaId = await buscarConversaId(db, instanceId, remoteJid);
   if (!conversaId) return;
-  const { error: insertError } = await db
+  const { data: mensagem, error: insertError } = await db
     .schema("atendimento")
     .from("mensagens")
     .insert({
@@ -718,8 +752,21 @@ async function registrarMensagemAgente(
       remetente_tipo: remetenteTipo,
       conteudo: texto,
       status_entrega: "enviado",
-    });
+    })
+    .select("id")
+    .single();
   if (insertError) throw insertError;
+  // E02-S31/E02-S33: liga o gasto à mensagem (ref_id) pro rodapé de custo na conversa. Só loga
+  // quando o OpenRouter devolveu `usage.cost` — sem isso não há custo real pra atribuir.
+  if (gastoIa?.uso) {
+    await registrarGastoIa({
+      modulo: "atendimento",
+      uso: gastoIa.uso,
+      modelo: gastoIa.modelo,
+      refId: mensagem?.id as string | undefined,
+      endpoint: "pcm-ze-agent",
+    });
+  }
 }
 
 function deveAcionarZe(content: string, modo: ModoZe, botJid: string | null): boolean {
@@ -956,11 +1003,13 @@ async function extrairChamadoViaOpenRouter(
   contexto: string,
   clientId: string,
   remoteJid: string,
-  modelo?: string,
-): Promise<{ pronto: false; pergunta: string } | { pronto: true; itens: ItemChamadoExtraido[] }> {
-  const apiKey = Deno.env.get("OPENROUTER_API_KEY") ?? "";
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY ausente");
-
+  apiKey: string,
+  modelo: string,
+): Promise<
+  ({ pronto: false; pergunta: string } | { pronto: true; itens: ItemChamadoExtraido[] }) & {
+    uso: UsoOpenRouter | null;
+  }
+> {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -968,7 +1017,7 @@ async function extrairChamadoViaOpenRouter(
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: modelo || Deno.env.get("OPENROUTER_ZE_MODEL") || "google/gemini-2.5-flash",
+      model: modelo,
       messages: [
         {
           role: "system",
@@ -984,10 +1033,15 @@ async function extrairChamadoViaOpenRouter(
   });
   if (!res.ok) throw new Error(`OpenRouter falhou: ${res.status}`);
   const data = await res.json();
+  const uso = extrairUsoOpenRouter(data);
   const text = data?.choices?.[0]?.message?.content;
   const parsed = LlmEnvelopeSchema.parse(JSON.parse(text));
   if (parsed?.pronto === false) {
-    return { pronto: false, pergunta: String(parsed.pergunta ?? "Pode me informar o problema, o local e a urgência?") };
+    return {
+      pronto: false,
+      pergunta: String(parsed.pergunta ?? "Pode me informar o problema, o local e a urgência?"),
+      uso,
+    };
   }
   const brutos = Array.isArray(parsed.itens) && parsed.itens.length > 0 ? parsed.itens : [parsed];
   const itens: ItemChamadoExtraido[] = brutos.map((bruto: Record<string, unknown>) => ({
@@ -997,7 +1051,18 @@ async function extrairChamadoViaOpenRouter(
     prioridade: normalizePrioridade(bruto.prioridade),
     local_descricao: String(bruto.local_descricao ?? bruto.local ?? "Não informado").slice(0, 500),
   }));
-  return { pronto: true, itens };
+  return { pronto: true, itens, uso };
+}
+
+/** E02-S31: `data.usage.cost` já vem automático em toda resposta não-streaming do OpenRouter. */
+function extrairUsoOpenRouter(data: unknown): UsoOpenRouter | null {
+  const usage = (data as { usage?: unknown } | null)?.usage as Record<string, unknown> | undefined;
+  if (!usage || typeof usage.cost !== "number") return null;
+  return {
+    usdCost: usage.cost,
+    promptTokens: typeof usage.prompt_tokens === "number" ? usage.prompt_tokens : null,
+    completionTokens: typeof usage.completion_tokens === "number" ? usage.completion_tokens : null,
+  };
 }
 
 /** E02-S08: mesmo padrão de `extrairChamadoViaOpenRouter`, mas pro agente comercial — qualifica
@@ -1009,15 +1074,15 @@ async function extrairLeadViaOpenRouter(
   baseConhecimento: string | null,
   passos: PassoFluxo[],
   contexto: string,
+  apiKey: string,
+  modelo: string,
   solicitante?: string,
-  modelo?: string,
 ): Promise<
-  | { pronto: false; pergunta: string }
-  | { pronto: true; nome: string; email?: string; telefone?: string; resumo: string; score: number }
+  (
+    | { pronto: false; pergunta: string }
+    | { pronto: true; nome: string; email?: string; telefone?: string; resumo: string; score: number }
+  ) & { uso: UsoOpenRouter | null }
 > {
-  const apiKey = Deno.env.get("OPENROUTER_API_KEY") ?? "";
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY ausente");
-
   const partesPrompt = [promptSistema];
   if (baseConhecimento) partesPrompt.push(`Base de conhecimento:\n${baseConhecimento}`);
   if (passos.length > 0) {
@@ -1044,7 +1109,7 @@ async function extrairLeadViaOpenRouter(
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: modelo || Deno.env.get("OPENROUTER_ZE_MODEL") || "google/gemini-2.5-flash",
+      model: modelo,
       messages: [
         { role: "system", content: partesPrompt.join("\n\n") },
         {
@@ -1057,10 +1122,15 @@ async function extrairLeadViaOpenRouter(
   });
   if (!res.ok) throw new Error(`OpenRouter falhou: ${res.status}`);
   const data = await res.json();
+  const uso = extrairUsoOpenRouter(data);
   const text = data?.choices?.[0]?.message?.content;
   const parsed = LlmEnvelopeSchema.parse(JSON.parse(text));
   if (parsed?.pronto === false) {
-    return { pronto: false, pergunta: String(parsed.pergunta ?? "Pode me contar um pouco mais sobre o que você precisa?") };
+    return {
+      pronto: false,
+      pergunta: String(parsed.pergunta ?? "Pode me contar um pouco mais sobre o que você precisa?"),
+      uso,
+    };
   }
   return {
     pronto: true,
@@ -1069,6 +1139,7 @@ async function extrairLeadViaOpenRouter(
     telefone: parsed.telefone ? String(parsed.telefone).slice(0, 50) : undefined,
     resumo: String(parsed.resumo ?? contexto).slice(0, 2000),
     score: Math.min(100, Math.max(0, Number(parsed.score) || 0)),
+    uso,
   };
 }
 

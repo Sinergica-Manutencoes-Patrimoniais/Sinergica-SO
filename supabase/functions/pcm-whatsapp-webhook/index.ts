@@ -50,9 +50,6 @@ serve(async (req) => {
       return json(200, { ok: true, ignored: true, reason: "event" }, cors);
     }
     const message = extractEvolutionMessage(payload);
-    if (message.fromMe) {
-      return json(200, { ok: true, ignored: true, reason: "fromMe" }, cors);
-    }
     if (message.remoteJid?.endsWith("@broadcast")) {
       return json(200, { ok: true, ignored: true, reason: "broadcast" }, cors);
     }
@@ -77,6 +74,25 @@ serve(async (req) => {
       });
     if (rateError) throw rateError;
     if (!rateAllowed) throw new HttpError(429, "Limite de webhook excedido");
+
+    if (message.fromMe) {
+      // E02-S32: eco de mensagem enviada por NÓS. Se veio do próprio app
+      // (atendimento-whatsapp-envio), o `wa_message_id` já está gravado nessa mensagem e o
+      // `on conflict (wa_message_id) do nothing` da RPC evita duplicar. Se não bate com nada
+      // conhecido, é celular pessoal — a RPC insere como `origem_envio='celular'`. Não passa por
+      // wa_messages/debounce/scheduleAgent — Zé não deve reagir ao que nós mesmos mandamos.
+      const { error: celularError } = await db.schema("atendimento").rpc("fn_registrar_mensagem_celular", {
+        p_instance_id: instanceId,
+        p_remote_jid: message.remoteJid,
+        p_contato_nome: message.contactName,
+        p_conteudo: message.content,
+        p_wa_message_id: message.messageId,
+        p_enviado_em: message.receivedAt ?? now,
+      });
+      if (celularError) throw celularError;
+      return json(200, { ok: true, fromMe: true }, cors);
+    }
+
     const queueKey = `${instanceId}:${message.remoteJid}`;
 
     const { data: insertedMessage, error: insertMessageError } = await db

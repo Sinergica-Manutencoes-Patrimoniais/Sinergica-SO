@@ -10,6 +10,64 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-15 — Implementação: E02-S31/S32/S33/S34, as 4 stories restantes do lote (Claude/Sonnet 5)
+
+Lucas pediu pra implementar as 4 últimas stories do lote (E02-S31/S32/S33/S34), com limpeza de
+dados de teste depois do E2E. `tasks.md` criado pras 4 (não existiam) — 2 SPEC_DEVIATION reais
+achados no processo, ambos corrigidos com decisão consciente (um confirmado com Lucas via
+pergunta direta, não decidido sozinho):
+
+**E02-S34 — pivô de design confirmado com Lucas:** AC-1 pedia tabela nova `config.agentes_ia`.
+Achado real: `atendimento.personas.modelo_llm` já resolve "modelo por agente" pros 2 agentes
+citados (Zé/Comercial), com UI própria em Configurações > Atendimento > Operação — criar tabela
+nova duplicaria fonte de verdade pro mesmo dado. Perguntei a Lucas (`AskUserQuestion`), decisão:
+estender `personas.modelo_llm`, não duplicar. Corrigido junto: fallback de modelo vazio caía num
+env var solto, agora cai no modelo global (`config.integracoes`); os 2 call sites de
+`pcm-ze-agent` que liam `OPENROUTER_API_KEY` direto do env (bypass do Vault, débito desde E01-S81)
+passaram a usar `obterConfiguracaoOpenRouter()`.
+
+**E02-S32/S33 — nomes errados no spec:** ambos citavam `atendimento.chamados_interacoes` e
+componentes (`HistoricoChamadoInteracao`, `ConversaChamado`, `supabase-historico-chamado-adapter`)
+que não existem — são do domínio do portal do cliente, não do chat do Atendimento. Corrigido pra
+`atendimento.mensagens`/`MensagemBubble`/`ConversaChat` (que já existiam e é onde o Inbox real
+vive). Achado extra não previsto no spec: o eco `fromMe` do Evolution pro envio feito pelo PRÓPRIO
+app (não só celular) não tinha dedup nenhum — `_shared/evolution.ts` agora captura o `key.id` que
+o Evolution devolve e grava como `wa_message_id`, senão TODO envio pelo formulário duplicaria como
+mensagem de celular quando o webhook processasse o eco.
+
+**Implementado:** migrations `0205`-`0207` (`config.ia_gasto_log` + `limite_quota_ia_usd` + view
+`ia_gasto_resumo_mes`; `atendimento.mensagens.origem_envio` + RPC
+`fn_registrar_mensagem_celular`) — aplicadas em produção (`supabase db push --linked`).
+`_shared/openrouter.ts` ganhou `chamarOpenRouterComUso`/`registrarGastoIa`/`quotaIaExcedida`
+(usage.cost do OpenRouter é automático desde 2025, sem precisar do parâmetro deprecated
+`usage:{include:true}`). Telas novas: `RelatorioGastoIaPage` (Configurações > Gasto de IA) e campo
+de quota em `ConfigIaPage`. `MensagemBubble` ganhou ícone 📱 (celular) e rodapé de custo de IA;
+`ConversaChat` ganhou badge "Total IA".
+
+**Gap conhecido (E02-S31 AC-4, 2ª metade):** preview de custo no dialog de UPLOAD de inspeção não
+foi feito — o gasto do módulo inspeção é logado e aparece no dashboard normalmente, só não há
+"IA: $X este relatório" no momento do import em si (não existe relatório persistido nesse instante
+pra atrelar o `ref_id`).
+
+**Gates:** `ci:local` 17/17 verde (inclui `audit:esteira`, que também pegou `alwaysApply` faltando
+em 5 stories de sessão anterior — E01-S146..S150 — corrigido junto, mesmo gate, mesmo commit).
+`tsc --noEmit` limpo, 999 testes unit passando (17 novos: `ia-gasto.test.ts`, ajustes em
+`mensagens.test.ts`/`personas.test.ts`). Playwright rodou contra produção real (Supabase de
+produção, sem staging — mesma prática de sempre): 2 specs novas, smoke read-only (`Configurações >
+IA`/`Gasto de IA`, regressão do Inbox com os campos novos), **nenhum dado de teste criado** (specs
+não escrevem, só navegam/leem) — nada pra limpar desta rodada. Dev server local rodou na porta
+5174, não 5173 (ocupada por outro projeto — `TriviaAgents` — de outra sessão nesta máquina; não
+mexi nesse processo).
+
+**Não deployado:** as Edge Functions modificadas (`pcm-ze-agent`, `pcm-os-gerar-titulo`,
+`atendimento-whatsapp-envio`, `pcm-whatsapp-webhook`, `_shared/*`) não foram deployadas
+manualmente — `.github/workflows/deploy.yml` cuida disso após merge, mesmo fluxo de toda story
+anterior. Até lá, o código novo do backend só existe no branch, não em produção (migrations sim,
+já aplicadas — só schema, não muda comportamento sozinho).
+
+Branch `feat/lote-melhorias-2026-08-12` (mesma do resto do lote). Ainda não commitado nem
+perguntado sobre PR (processo: confirmar com Lucas antes de `gh pr create`).
+
 ## 2026-08-12 — Registrando lote de melhorias (Claude/Haiku)
 
 Lucas olhando o sistema e pedindo melhorias em fluxo contínuo. Registradas **9 stories novas** em 2 rodadas:

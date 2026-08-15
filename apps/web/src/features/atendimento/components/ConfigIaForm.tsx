@@ -140,12 +140,16 @@ export function ConfigIaForm({
       <label className="mt-4 block text-xs font-semibold text-ink-2" htmlFor="config-ia-modelo">
         Modelo LLM
       </label>
+      <p className="mt-0.5 text-xs text-ink-3">
+        Modelo usado só por este agente (E02-S34). Deixe em branco pra usar o modelo global de
+        Configurações &gt; IA.
+      </p>
       <input
         id="config-ia-modelo"
         value={form.modeloLlm}
         onChange={(e) => setForm((f) => ({ ...f, modeloLlm: e.target.value }))}
         disabled={!temEscrita}
-        placeholder="openai/gpt-4o-mini"
+        placeholder="em branco = usa o modelo global"
         className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
       />
 

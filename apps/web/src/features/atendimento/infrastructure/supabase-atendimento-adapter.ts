@@ -8,7 +8,7 @@ import type {
   MarcarConversaLidaCommand,
 } from "../application/atendimento-gateway";
 import type { CanalConversa, ConversaItem, StatusConversa } from "../domain/conversas";
-import type { MensagemItem } from "../domain/mensagens";
+import type { CustoIaMensagem, MensagemItem } from "../domain/mensagens";
 import type { MensagemRicaInput } from "../domain/mensagens";
 
 interface ConversaRow {
@@ -45,12 +45,13 @@ interface MensagemRow {
   midia_nome: string | null;
   midia_mime: string | null;
   payload: Record<string, unknown>;
+  origem_envio: MensagemItem["origemEnvio"];
 }
 
 const CONVERSA_COLS =
   "id,client_id,contato_nome,canal,status,modo,atribuido_a,handoff_motivo,handoff_em,nao_lidas,ultima_mensagem_preview,ultima_mensagem_em,ordem_servico_id,tags,instance_id,remote_jid" as const;
 const MENSAGEM_COLS =
-  "id,conversa_id,direcao,remetente_tipo,remetente_id,conteudo,status_entrega,erro_detalhe,created_at,tipo_conteudo,midia_url,midia_nome,midia_mime,payload" as const;
+  "id,conversa_id,direcao,remetente_tipo,remetente_id,conteudo,status_entrega,erro_detalhe,created_at,tipo_conteudo,midia_url,midia_nome,midia_mime,payload,origem_envio" as const;
 
 function mapConversa(row: ConversaRow, clientesMap: Map<string, string>): ConversaItem {
   return {
@@ -72,7 +73,7 @@ function mapConversa(row: ConversaRow, clientesMap: Map<string, string>): Conver
   };
 }
 
-function mapMensagem(row: MensagemRow): MensagemItem {
+function mapMensagem(row: MensagemRow, custoIa: CustoIaMensagem | null = null): MensagemItem {
   return {
     id: row.id,
     conversaId: row.conversa_id,
@@ -88,7 +89,43 @@ function mapMensagem(row: MensagemRow): MensagemItem {
     midiaNome: row.midia_nome,
     midiaMime: row.midia_mime,
     payload: row.payload ?? {},
+    origemEnvio: row.origem_envio,
+    custoIa,
   };
+}
+
+/** E02-S33: `config.ia_gasto_log` é escrito pelas Edge Functions com `ref_id` = id da mensagem de
+ * IA que gerou o gasto — consulta direta ao schema (mesmo padrão de `pcm.clientes` acima, dado
+ * cross-schema já estabelecido nesta camada), sem importar nada de `features/config` (domínios
+ * diferentes não se importam). */
+async function buscarCustoIaPorMensagem(
+  mensagemIds: string[],
+): Promise<Map<string, CustoIaMensagem>> {
+  const mapa = new Map<string, CustoIaMensagem>();
+  if (mensagemIds.length === 0) return mapa;
+  const { data, error } = await supabase
+    .schema("config")
+    .from("ia_gasto_log")
+    .select("ref_id,usd_cost,modelo,prompt_tokens,completion_tokens")
+    .in("ref_id", mensagemIds);
+  if (error) throw error;
+  for (const row of (data ?? []) as Array<{
+    ref_id: string | null;
+    usd_cost: number;
+    modelo: string | null;
+    prompt_tokens: number | null;
+    completion_tokens: number | null;
+  }>) {
+    if (row.ref_id) {
+      mapa.set(row.ref_id, {
+        usdCost: Number(row.usd_cost),
+        modelo: row.modelo,
+        tokensIn: row.prompt_tokens,
+        tokensOut: row.completion_tokens,
+      });
+    }
+  }
+  return mapa;
 }
 
 async function invocarAcao(
@@ -143,9 +180,14 @@ export const supabaseAtendimentoAdapter: AtendimentoGateway = {
       .eq("conversa_id", conversaId)
       .order("created_at", { ascending: true });
     if (error) throw error;
+    const rows = (data ?? []) as MensagemRow[];
+    const idsDeAgente = rows
+      .filter((row) => row.remetente_tipo === "ze" || row.remetente_tipo === "agente")
+      .map((row) => row.id);
+    const custosPorMensagem = await buscarCustoIaPorMensagem(idsDeAgente);
     return Promise.all(
-      ((data ?? []) as MensagemRow[]).map(async (row) => {
-        const mensagem = mapMensagem(row);
+      rows.map(async (row) => {
+        const mensagem = mapMensagem(row, custosPorMensagem.get(row.id) ?? null);
         if (!row.midia_url) return mensagem;
         const { data: signed } = await supabase.storage
           .from("atendimento-midias")

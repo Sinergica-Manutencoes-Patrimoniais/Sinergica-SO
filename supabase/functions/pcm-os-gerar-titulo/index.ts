@@ -7,7 +7,7 @@ import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
-import { gerarTituloOsViaOpenRouter, OpenRouterApiError } from "../_shared/openrouter.ts";
+import { gerarTituloOsViaOpenRouter, obterConfiguracaoOpenRouter, OpenRouterApiError } from "../_shared/openrouter.ts";
 import { sanearTituloGerado } from "../_shared/titulo-os.ts";
 
 const FN = "pcm-os-gerar-titulo";
@@ -43,14 +43,13 @@ serve(async (req) => {
     // biome-ignore lint/suspicious/noExplicitAny: cliente supabase-js sem tipos gerados no repo (schemas não-public)
     const db: any = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
-    const { data: integracao } = await db.schema("config").from("integracoes").select("ativo,config_publico").eq("chave", "openrouter").maybeSingle();
+    const { data: integracao } = await db.schema("config").from("integracoes").select("ativo").eq("chave", "openrouter").maybeSingle();
     if (!integracao?.ativo) throw new HttpError(422, "IA de título não está ativa (Configurações > IA).");
 
-    const { data: apiKey } = await db.schema("config").rpc("fn_obter_segredo_integracao_interno", { p_chave: "openrouter_api_key" });
-    if (!apiKey) throw new HttpError(422, "Chave do OpenRouter não configurada (Configurações > IA).");
+    const configuracaoIa = await obterConfiguracaoOpenRouter();
+    if (!configuracaoIa) throw new HttpError(422, "Chave do OpenRouter não configurada (Configurações > IA).");
 
-    const modelo = (integracao.config_publico?.modelo as string | undefined) ?? "openai/gpt-4o-mini";
-    const bruto = await gerarTituloOsViaOpenRouter(apiKey, modelo, descricao);
+    const bruto = await gerarTituloOsViaOpenRouter(configuracaoIa.apiKey, configuracaoIa.modelo, descricao);
     const titulo = sanearTituloGerado(bruto);
 
     console.log(JSON.stringify({ ts: new Date().toISOString(), nivel: "info", fn: FN, reqId, msg: "título gerado" }));

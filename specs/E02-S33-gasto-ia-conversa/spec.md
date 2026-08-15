@@ -1,9 +1,15 @@
 ---
 name: E02-S33-gasto-ia-conversa
 description: Exibir custo de IA (USD) de cada resposta na conversa do Atendimento
+alwaysApply: true
 ---
 
 # E02-S33 — Gasto de IA na conversa
+
+> **SPEC_DEVIATION (2026-08-15):** as tasks abaixo citam `supabase-historico-chamado-adapter.ts`,
+> `HistoricoChamadoInteracao`, `ConversaChamado` — não existem. Os componentes reais são
+> `MensagemBubble.tsx`/`ConversaChat.tsx` (`domain/mensagens.ts`). Ver `tasks.md` pros nomes
+> corretos; ACs abaixo continuam válidos como estão.
 
 ## Contexto
 Quando supervisor/agente clica "Responder com IA agora" (E02-S01), a Edge Function chama OpenRouter.

@@ -1,9 +1,15 @@
 ---
 name: E02-S32-mensagens-celular-atendimento
 description: Exibir mensagens de WhatsApp enviadas via celular (não só via app) no Atendimento
+alwaysApply: true
 ---
 
 # E02-S32 — Mensagens do celular no Atendimento
+
+> **SPEC_DEVIATION (2026-08-15):** as tasks abaixo citam `atendimento.chamados_interacoes` e
+> `supabase-historico-chamado-adapter.ts` — não existem. A tabela real do chat é
+> `atendimento.mensagens`, webhook real é `pcm-whatsapp-webhook/index.ts`. Ver `tasks.md` pros
+> nomes corretos; ACs abaixo continuam válidos como estão.
 
 ## Contexto
 Supervisor/técnico envia WhatsApp pelo celular pessoal usando a conta Sinérgica.

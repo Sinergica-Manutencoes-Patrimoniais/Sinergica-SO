@@ -9,6 +9,8 @@ export interface Integracao {
   configPublico: Record<string, unknown>;
   /** true = segredo já gravado no Vault; nunca expõe o valor (E00-S12 AC-3). */
   temSegredo: boolean;
+  /** E02-S31 AC-2: limite mensal de gasto de IA em USD. `null` = sem limite. */
+  limiteQuotaIaUsd: number | null;
 }
 
 export interface SalvarIntegracaoInput {
@@ -16,6 +18,7 @@ export interface SalvarIntegracaoInput {
   provedor: string | null;
   ativo: boolean;
   configPublico: Record<string, unknown>;
+  limiteQuotaIaUsd?: number | null;
 }
 
 export interface IntegracoesGateway {

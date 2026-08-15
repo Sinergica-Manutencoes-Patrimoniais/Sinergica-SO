@@ -4,6 +4,7 @@ import type { WaTemplateItem } from "../domain/canais-externos";
 import { canalSuportaIa, labelCanal } from "../domain/conversas";
 import type { ConversaItem } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
+import { formatarTotalCustoIaConversa, totalCustoIaConversa } from "../domain/mensagens";
 import type { MensagemRicaInput } from "../domain/mensagens";
 import type { TagItem } from "../domain/tags";
 import { EmojiPicker } from "./EmojiPicker";
@@ -58,6 +59,7 @@ export function ConversaChat({
   }
 
   const suportaIa = canalSuportaIa(conversa.canal);
+  const totalIa = totalCustoIaConversa(mensagens);
 
   async function enviar() {
     if (!texto.trim()) return;
@@ -114,6 +116,11 @@ export function ConversaChat({
             <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
               {labelCanal(conversa.canal)}
             </span>
+            {totalIa > 0 && (
+              <span className="rounded-full bg-orange-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
+                Total IA: {formatarTotalCustoIaConversa(totalIa)}
+              </span>
+            )}
             {conversa.tags.map((tag) => (
               <button
                 key={tag}

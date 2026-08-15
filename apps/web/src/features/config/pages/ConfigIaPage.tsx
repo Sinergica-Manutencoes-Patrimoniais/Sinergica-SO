@@ -9,6 +9,8 @@ import {
   salvarMetadadoIntegracao,
 } from "../application/integracoes";
 import type { Integracao } from "../application/integracoes-gateway";
+import { formatarCustoTotalIA, verificarQuotaExcedida } from "../domain/ia-gasto";
+import { supabaseIaAdapter } from "../infrastructure/supabase-ia-adapter";
 import { supabaseIntegracoesAdapter } from "../infrastructure/supabase-integracoes-adapter";
 
 const CHAVE_IA = "openrouter";
@@ -29,13 +31,19 @@ export function ConfigIaPage() {
   const [modeloImport, setModeloImport] = useState("google/gemini-2.5-flash");
   const [ativo, setAtivo] = useState(false);
   const [apiKey, setApiKey] = useState("");
+  const [limiteQuotaIaUsd, setLimiteQuotaIaUsd] = useState("");
+  const [gastoMesUsd, setGastoMesUsd] = useState(0);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
     setErro(null);
     try {
-      const lista = await listarIntegracoes(supabaseIntegracoesAdapter);
+      const [lista, logsDoMes] = await Promise.all([
+        listarIntegracoes(supabaseIntegracoesAdapter),
+        supabaseIaAdapter.listarLogsDoMes(new Date()),
+      ]);
       setIntegracoes(lista);
+      setGastoMesUsd(logsDoMes.reduce((soma, log) => soma + log.usdCost, 0));
       const ia = lista.find((i) => i.chave === CHAVE_IA);
       if (ia) {
         setModelo(
@@ -47,6 +55,7 @@ export function ConfigIaPage() {
         setModeloImport(
           (ia.configPublico.import_model as string | undefined) ?? "google/gemini-2.5-flash",
         );
+        setLimiteQuotaIaUsd(ia.limiteQuotaIaUsd != null ? String(ia.limiteQuotaIaUsd) : "");
       }
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar a configuração de IA.");
@@ -69,16 +78,22 @@ export function ConfigIaPage() {
   }
 
   const iaIntegracao = integracoes.find((i) => i.chave === CHAVE_IA);
+  const statusQuota = verificarQuotaExcedida(gastoMesUsd, iaIntegracao?.limiteQuotaIaUsd ?? null);
 
   async function salvarMetadado() {
     setSalvando(true);
     setErro(null);
     try {
+      const limiteNumero = limiteQuotaIaUsd.trim() ? Number(limiteQuotaIaUsd) : null;
+      if (limiteNumero !== null && (!Number.isFinite(limiteNumero) || limiteNumero < 0)) {
+        throw new Error("Limite de quota deve ser um número positivo ou vazio (sem limite).");
+      }
       await salvarMetadadoIntegracao(supabaseIntegracoesAdapter, {
         chave: CHAVE_IA,
         provedor: "openrouter",
         ativo,
         configPublico: { modelo, import_model: modeloImport },
+        limiteQuotaIaUsd: limiteNumero,
       });
       await carregar();
     } catch (e) {
@@ -116,6 +131,21 @@ export function ConfigIaPage() {
       {erro && (
         <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
           {erro}
+        </div>
+      )}
+
+      {!carregando && statusQuota.excedida && (
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+          Quota de IA excedida ({formatarCustoTotalIA(gastoMesUsd)} de{" "}
+          {formatarCustoTotalIA(iaIntegracao?.limiteQuotaIaUsd ?? 0)}) — a IA está desabilitada até
+          o próximo mês ou até o limite ser aumentado.
+        </div>
+      )}
+      {!carregando && statusQuota.aviso90 && (
+        <div className="rounded-md border border-warning-line bg-warning-soft px-4 py-2 text-sm text-warning">
+          Aviso: {Math.round(statusQuota.percentual ?? 0)}% da quota de IA já foi consumida este mês
+          ({formatarCustoTotalIA(gastoMesUsd)} de{" "}
+          {formatarCustoTotalIA(iaIntegracao?.limiteQuotaIaUsd ?? 0)}).
         </div>
       )}
 
@@ -180,6 +210,24 @@ export function ConfigIaPage() {
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-ink-3">
+                Limite de quota mensal (USD)
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="input w-full"
+                value={limiteQuotaIaUsd}
+                onChange={(e) => setLimiteQuotaIaUsd(e.target.value)}
+                placeholder="Vazio = sem limite"
+              />
+              <span className="mt-1 block text-micro text-ink-3">
+                Gasto este mês: {formatarCustoTotalIA(gastoMesUsd)}. Ao atingir 100% do limite, a IA
+                é desabilitada até o mês seguinte.
+              </span>
             </label>
           </div>
           <button
