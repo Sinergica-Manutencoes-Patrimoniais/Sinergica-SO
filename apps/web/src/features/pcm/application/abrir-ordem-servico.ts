@@ -17,7 +17,11 @@ export async function abrirOrdemServico(
   const titulo = input.titulo.trim();
   if (!input.clientId) throw new Error("Cliente é obrigatório.");
   if (!titulo) throw new Error("Título é obrigatório.");
-  if (!input.tipoTarefaId) throw new Error("Tipo de tarefa é obrigatório.");
+  // E01-S83: só exige tipo de tarefa quando a OS já nasce agendada (técnico e/ou data) — item de
+  // backlog puro (sem os dois) é intermediário, preenchido só quando alguém decidir tratá-lo.
+  if (!input.tipoTarefaId && (input.tecnicoId || input.dataPrevista)) {
+    throw new Error("Tipo de tarefa é obrigatório para OS com técnico ou data definidos.");
+  }
   // E01-S07 AC-1 / E01-S05: tipo do Hub inferido na criação. `pmocScheduleId` só chega aqui quando
   // o caller sabe que a OS nasce de uma visita PMOC (E01-S05 "Criar OS" síncrono) — omitido em
   // toda criação manual normal. `chamadoId` (E01-S88 AC-3) segue o mesmo padrão pro Chamado.

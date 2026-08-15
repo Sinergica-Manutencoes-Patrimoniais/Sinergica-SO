@@ -33,6 +33,7 @@ import {
   classificarItensParaBacklog,
   confirmarGerarBacklog,
   derivarItemParaChamado,
+  derivarItemParaOsOuBacklog,
 } from "../application/assessment";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import {
@@ -555,6 +556,45 @@ export function InspecoesPage({
         } catch (error) {
           setErroAcao(
             `Inspeção importada, mas parte dos chamados não foi criada: ${error instanceof Error ? error.message : "erro desconhecido"}`,
+          );
+        }
+      } else {
+        // Lucas (2026-08-15): item é intermediário — vai pro backlog GUT (OS sem técnico/data),
+        // não fica só preso dentro do registro da inspeção. Tipo de tarefa/técnico ficam em aberto,
+        // preenchidos só quando alguém decidir tratar o item de verdade (planejar/promover a
+        // chamado) — mesma regra que abrirOrdemServico já aplica pra qualquer item de backlog.
+        try {
+          for (const item of itensCriados) {
+            await derivarItemParaOsOuBacklog(
+              supabaseQualidadeAdapter,
+              supabaseOrdemServicoAdapter,
+              item,
+              {
+                clientId: input.clientId,
+                titulo: item.descricao,
+                descricao: null,
+                categoria: "corretiva",
+                prioridade: "media",
+                gravidade: item.gravidade ?? 3,
+                urgencia: item.urgencia ?? 3,
+                tendencia: item.tendencia ?? 3,
+                dorCliente: item.dorCliente,
+                observacao: null,
+                localDescricao: item.localizacao,
+                solicitante: null,
+                origem: "vistoria",
+                tecnicoId: null,
+                tipoTarefaId: null,
+                dataPrevista: null,
+              },
+              "backlog",
+              "sinergica",
+              user.id,
+            );
+          }
+        } catch (error) {
+          setErroAcao(
+            `Inspeção importada, mas parte dos itens não foi enviada ao backlog: ${error instanceof Error ? error.message : "erro desconhecido"}`,
           );
         }
       }
@@ -1892,13 +1932,17 @@ function ImportarRelatorioModal({
   onSubmit: (input: ImportarConfirmacao) => Promise<void>;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [step, setStep] = useState<"upload" | "processando" | "revisao">("upload");
+  const [step, setStep] = useState<"upload" | "detalhes" | "processando" | "revisao">("upload");
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [itens, setItens] = useState<ItemInspecaoImportado[]>([]);
   const [criarChamados, setCriarChamados] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<number>>(new Set());
   const [expandido, setExpandido] = useState<number | null>(null);
+  const [extraido, setExtraido] = useState<{
+    textoParaClassificacao: string;
+    itensBrutos: ItemInspecaoImportado[];
+  } | null>(null);
   const [form, setForm] = useState({
     clientId: clientes[0]?.id ?? "",
     titulo: "",
@@ -1907,15 +1951,37 @@ function ImportarRelatorioModal({
     observacoesGerais: "",
   });
 
+  // Lucas (2026-08-15): a IA só deve processar DEPOIS de confirmar qual relatório foi importado —
+  // antes disparava no onChange do input de arquivo, antes mesmo de escolher o cliente. Agora
+  // `handleFile` só parseia o arquivo (sem IA) e para no step "detalhes"; a IA só roda quando o
+  // usuário confirma cliente/título/data e clica em avançar (`processarComIA`).
   async function handleFile(file: File) {
     setErro(null);
     setAviso(null);
-    setStep("processando");
     try {
-      const extraido =
+      const extraidoArquivo =
         tipo === "xls"
           ? await extrairPlanilhaXls(file)
           : { textoParaClassificacao: await extrairTextoPdfOuTexto(file), itensBrutos: [] };
+      setExtraido(extraidoArquivo);
+      setForm((atual) => ({
+        ...atual,
+        titulo:
+          atual.titulo ||
+          `${tipo === "xls" ? "Relatório XLS" : "Relatório PDF"} — ${file.name.replace(/\.[^.]+$/, "")}`,
+      }));
+      setStep("detalhes");
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível ler o arquivo.");
+      setStep("upload");
+    }
+  }
+
+  async function processarComIA() {
+    if (!extraido) return;
+    setErro(null);
+    setStep("processando");
+    try {
       let processados: ItemInspecaoImportado[];
       try {
         processados = await supabaseQualidadeAdapter.processarRelatorioInspecao(
@@ -1932,16 +1998,10 @@ function ImportarRelatorioModal({
       }
       setItens(processados);
       setSelecionados(new Set(processados.map((_, index) => index)));
-      setForm((atual) => ({
-        ...atual,
-        titulo:
-          atual.titulo ||
-          `${tipo === "xls" ? "Relatório XLS" : "Relatório PDF"} — ${file.name.replace(/\.[^.]+$/, "")}`,
-      }));
       setStep("revisao");
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Não foi possível processar o arquivo.");
-      setStep("upload");
+      setStep("detalhes");
     }
   }
 
@@ -1997,23 +2057,20 @@ function ImportarRelatorioModal({
         </div>
       )}
 
-      {step === "processando" && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-orange" />
-          <p className="mt-4 text-sm font-semibold text-ink">Processando relatório…</p>
-          <p className="mt-1 text-xs text-ink-3">
-            Extraindo inconformidades e classificando com IA.
-          </p>
-        </div>
-      )}
-
-      {step === "revisao" && (
+      {step === "detalhes" && (
         <div className="space-y-4">
-          {aviso ? (
-            <p className="rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-sm text-warning">
-              {aviso}
-            </p>
-          ) : null}
+          {erro && (
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+              {erro}
+            </div>
+          )}
+          <p className="text-sm text-ink-3">
+            Arquivo lido
+            {extraido && extraido.itensBrutos.length > 0
+              ? ` — ${extraido.itensBrutos.length} item(ns) encontrado(s).`
+              : "."}{" "}
+            Confirme os dados abaixo antes de mandar pra IA classificar.
+          </p>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <Field label="Cliente *">
               <select
@@ -2051,6 +2108,37 @@ function ImportarRelatorioModal({
               />
             </Field>
           </div>
+          <ModalActions
+            primaryLabel="Analisar com IA"
+            disabled={!form.clientId || !form.titulo.trim()}
+            onCancel={onClose}
+            onPrimary={() => void processarComIA()}
+          />
+        </div>
+      )}
+
+      {step === "processando" && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-orange" />
+          <p className="mt-4 text-sm font-semibold text-ink">Processando relatório…</p>
+          <p className="mt-1 text-xs text-ink-3">
+            Extraindo inconformidades e classificando com IA.
+          </p>
+        </div>
+      )}
+
+      {step === "revisao" && (
+        <div className="space-y-4">
+          {aviso ? (
+            <p className="rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-sm text-warning">
+              {aviso}
+            </p>
+          ) : null}
+          <p className="text-sm text-ink-3">
+            <span className="font-semibold text-ink">{form.titulo}</span> ·{" "}
+            {clientes.find((c) => c.id === form.clientId)?.nome ?? "cliente não encontrado"} ·{" "}
+            {form.dataInspecao}
+          </p>
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-ink-3">
@@ -2084,7 +2172,8 @@ function ImportarRelatorioModal({
             />
             <span>
               Após revisar, criar um Chamado por item selecionado. A origem fica vinculada à
-              inspeção; deixe desmarcado para apenas gravar os itens.
+              inspeção; deixe desmarcado para os itens irem pro Backlog GUT (tratamento decide
+              depois o que vira chamado).
             </span>
           </label>
 

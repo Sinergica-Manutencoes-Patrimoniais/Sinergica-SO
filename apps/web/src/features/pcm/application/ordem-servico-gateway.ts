@@ -42,7 +42,10 @@ export interface CriarOrdemServicoInput {
   solicitante: string | null;
   origem: OrigemOs;
   tecnicoId: string | null;
-  tipoTarefaId: string;
+  /** E01-S83: obrigatório só quando a OS nasce com técnico/data (agendada) — item de backlog
+   * (sem técnico, sem data) pode nascer sem tipo de tarefa, preenchido só quando alguém decidir
+   * tratá-lo (planejar/promover a chamado). Ver validação em `abrirOrdemServico`. */
+  tipoTarefaId: string | null;
   dataPrevista: string | null;
   createdBy: string;
   /** E01-S05: setado só quando a OS nasce de uma visita PMOC ("Criar OS" síncrono na agenda). */

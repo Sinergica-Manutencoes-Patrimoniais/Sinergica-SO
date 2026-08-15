@@ -55,9 +55,24 @@ describe("abrirOrdemServico", () => {
     );
   });
 
-  it("AC-2 (E01-S39): rejeita tipo de tarefa vazio antes do gateway", async () => {
-    await expect(abrirOrdemServico(gatewayMock(), { ...input, tipoTarefaId: "" })).rejects.toThrow(
-      /Tipo de tarefa/,
-    );
+  it("AC-2 (E01-S39): rejeita tipo de tarefa vazio quando já tem técnico ou data (OS agendada)", async () => {
+    await expect(
+      abrirOrdemServico(gatewayMock(), { ...input, tipoTarefaId: "", tecnicoId: "t1" }),
+    ).rejects.toThrow(/Tipo de tarefa/);
+    await expect(
+      abrirOrdemServico(gatewayMock(), { ...input, tipoTarefaId: "", dataPrevista: "2026-08-20" }),
+    ).rejects.toThrow(/Tipo de tarefa/);
+  });
+
+  it("E01-S83: aceita tipo de tarefa vazio/null quando não tem técnico nem data (item de backlog puro)", async () => {
+    const gateway = gatewayMock();
+    await expect(
+      abrirOrdemServico(gateway, {
+        ...input,
+        tipoTarefaId: null,
+        tecnicoId: null,
+        dataPrevista: null,
+      }),
+    ).resolves.toEqual({ id: "os1", numero: "OS-0001" });
   });
 });
