@@ -199,11 +199,22 @@ export function ehOsAberta(status: string): boolean {
 
 // E01-S142: técnico registra entrada/saída abrindo uma tarefa no Auvo com este título literal —
 // vira OS normal (usada no apontamento de horas, E01-S133/S134), mas nunca é item de trabalho a
-// tratar. Match exato normalizado (trim + lowercase) — título parecido mas diferente não é ocultado.
+// tratar. Match exato normalizado (trim + lowercase + sem acento) — título parecido mas diferente
+// não é ocultado. Bug real achado em produção (2026-08-15): o título literal do Auvo é
+// "INÍCIO VISITA " (com acento e espaço à direita) — o match sem normalizar acento nunca batia
+// com "inicio visita" do Set, então a OS continuava aparecendo na lista de Chamados.
 const TITULOS_REGISTRO_VISITA = new Set(["inicio visita", "fim visita"]);
 
+function normalizarTitulo(titulo: string): string {
+  return titulo
+    .trim()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
 export function ehOsRegistroVisita(titulo: string): boolean {
-  return TITULOS_REGISTRO_VISITA.has(titulo.trim().toLowerCase());
+  return TITULOS_REGISTRO_VISITA.has(normalizarTitulo(titulo));
 }
 
 /** E01-S83 AC-2: item de backlog é uma OS aberta ainda sem agendamento — sem data prevista, sem

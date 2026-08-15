@@ -133,6 +133,11 @@ describe("ehOsRegistroVisita — E01-S142", () => {
     expect(ehOsRegistroVisita("  inicio visita  ")).toBe(true);
   });
 
+  it("reconhece o título real do Auvo, com acento e espaço à direita (bug achado em produção 2026-08-15)", () => {
+    expect(ehOsRegistroVisita("INÍCIO VISITA ")).toBe(true);
+    expect(ehOsRegistroVisita("Início Visita")).toBe(true);
+  });
+
   it("não reconhece títulos parecidos mas diferentes", () => {
     expect(ehOsRegistroVisita("Inicio Visita Extra")).toBe(false);
     expect(ehOsRegistroVisita("Visita Inicio")).toBe(false);
