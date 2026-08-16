@@ -350,6 +350,9 @@ export function BacklogGutPage({
                   <th className="px-2 py-2 text-center font-semibold">G</th>
                   <th className="px-2 py-2 text-center font-semibold">U</th>
                   <th className="px-2 py-2 text-center font-semibold">T</th>
+                  <th className="px-2 py-2 text-center font-semibold" title="Dor do cliente">
+                    D
+                  </th>
                   <th className="px-2 py-2 text-center font-semibold">Score</th>
                   <th className="px-4 py-2" />
                 </tr>
@@ -420,6 +423,9 @@ export function BacklogGutPage({
                     </td>
                     <td className="px-2 py-2.5 text-center text-xs font-semibold tabular-nums text-ink-2">
                       {ordem.tendencia ?? 1}
+                    </td>
+                    <td className="px-2 py-2.5 text-center text-xs font-semibold tabular-nums text-ink-2">
+                      {ordem.dorCliente ?? "—"}
                     </td>
                     <td className="px-2 py-2.5 text-center text-sm font-bold tabular-nums text-ink">
                       {ordem.scorePcm}

@@ -71,6 +71,7 @@ import {
   calcularKpisOrdens,
   calcularMetricasOperacao,
   ehCardChamadoAberto,
+  ehItemBacklog,
   filtrarOrdens,
   prioridadeColor,
   resumoTooltipOrdem,
@@ -571,11 +572,13 @@ export function OrdensServicoPage({
       {/* E01-S118 AC-3: aba Backlog reusa a página priorizada por GUT; as demais abas seguem o
           fluxo de filtros/visões da OS. */}
       {visao === "backlog" ? (
+        // E01-S151: `ordensFiltradas` é o conjunto geral da página (Lista/Kanban) — sem técnico,
+        // sem data, planejamento/execução misturados. Backlog GUT é a fila de triagem de verdade,
+        // filtra por `ehItemBacklog` igual `listarBacklogGut` já faz pro modo não-controlado.
         <BacklogGutPage
-          ordensControladas={ordensFiltradas}
+          ordensControladas={ordensFiltradas.filter(ehItemBacklog)}
           onPlanejarControlado={(ordem) => onAlterarStatusDe(ordem.id, "planejamento")}
           onAtualizarControlado={carregar}
-          totalControlado={totalFiltrado}
         />
       ) : (
         <>
