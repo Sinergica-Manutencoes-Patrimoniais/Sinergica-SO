@@ -33,7 +33,6 @@ import {
   classificarItensParaBacklog,
   confirmarGerarBacklog,
   derivarItemParaChamado,
-  derivarItemParaOsOuBacklog,
 } from "../application/assessment";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import {
@@ -540,8 +539,13 @@ export function InspecoesPage({
       setEstado({ ...estado, inspecoes: [criada, ...estado.inspecoes] });
       setSelecionadaId(criada.id);
       setModalAtivo(null);
-      const itensCriados = await supabaseQualidadeAdapter.listarItensInspecao(criada.id);
+      // Lucas (2026-08-16): import NÃO decide destino nenhum sozinho — item fica só na inspeção
+      // (`destino: null`, "aguardando triagem"), Fabrício revisa depois item por item (abrir
+      // Chamado, selecionar pro Backlog GUT em lote, ou descartar — fluxo já existente mais abaixo
+      // nesta página, `handleAbrirChamado`/`handleAbrirRevisaoBacklog`/`handleDescartar`).
+      // Único caso de destino automático continua sendo o checkbox explícito abaixo.
       if (input.criarChamados) {
+        const itensCriados = await supabaseQualidadeAdapter.listarItensInspecao(criada.id);
         try {
           for (const item of itensCriados) {
             await derivarItemParaChamado(
@@ -556,45 +560,6 @@ export function InspecoesPage({
         } catch (error) {
           setErroAcao(
             `Inspeção importada, mas parte dos chamados não foi criada: ${error instanceof Error ? error.message : "erro desconhecido"}`,
-          );
-        }
-      } else {
-        // Lucas (2026-08-15): item é intermediário — vai pro backlog GUT (OS sem técnico/data),
-        // não fica só preso dentro do registro da inspeção. Tipo de tarefa/técnico ficam em aberto,
-        // preenchidos só quando alguém decidir tratar o item de verdade (planejar/promover a
-        // chamado) — mesma regra que abrirOrdemServico já aplica pra qualquer item de backlog.
-        try {
-          for (const item of itensCriados) {
-            await derivarItemParaOsOuBacklog(
-              supabaseQualidadeAdapter,
-              supabaseOrdemServicoAdapter,
-              item,
-              {
-                clientId: input.clientId,
-                titulo: item.descricao,
-                descricao: null,
-                categoria: "corretiva",
-                prioridade: "media",
-                gravidade: item.gravidade ?? 3,
-                urgencia: item.urgencia ?? 3,
-                tendencia: item.tendencia ?? 3,
-                dorCliente: item.dorCliente,
-                observacao: null,
-                localDescricao: item.localizacao,
-                solicitante: null,
-                origem: "vistoria",
-                tecnicoId: null,
-                tipoTarefaId: null,
-                dataPrevista: null,
-              },
-              "backlog",
-              "sinergica",
-              user.id,
-            );
-          }
-        } catch (error) {
-          setErroAcao(
-            `Inspeção importada, mas parte dos itens não foi enviada ao backlog: ${error instanceof Error ? error.message : "erro desconhecido"}`,
           );
         }
       }
@@ -2172,8 +2137,8 @@ function ImportarRelatorioModal({
             />
             <span>
               Após revisar, criar um Chamado por item selecionado. A origem fica vinculada à
-              inspeção; deixe desmarcado para os itens irem pro Backlog GUT (tratamento decide
-              depois o que vira chamado).
+              inspeção; deixe desmarcado para os itens ficarem só na inspeção — Fabrício escolhe
+              depois, item por item, o que vai pro Backlog GUT.
             </span>
           </label>
 
