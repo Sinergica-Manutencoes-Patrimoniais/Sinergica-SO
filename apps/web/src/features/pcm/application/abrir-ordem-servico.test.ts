@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { PESOS_GUTD_PADRAO } from "../domain/priorizacao-backlog";
-import { abrirOrdemServico } from "./abrir-ordem-servico";
+import { abrirOrdemServico, confirmarChamadoBacklog } from "./abrir-ordem-servico";
 import type { CriarOrdemServicoInput, OrdemServicoGateway } from "./ordem-servico-gateway";
 
 const input: CriarOrdemServicoInput = {
@@ -27,6 +27,7 @@ function gatewayMock(): OrdemServicoGateway {
   return {
     carregarDadosAbertura: vi.fn(async () => ({ clientes: [], tecnicos: [], tiposTarefa: [] })),
     criarOrdemServico: vi.fn(async () => ({ id: "os1", numero: "OS-0001" })),
+    confirmarChamado: vi.fn(async () => ({ numero: "CH-0001" })),
     editarOrdemServico: vi.fn(async () => undefined),
     iaTituloAtiva: vi.fn(async () => false),
     gerarTituloOs: vi.fn(async () => ""),
@@ -74,5 +75,29 @@ describe("abrirOrdemServico", () => {
         dataPrevista: null,
       }),
     ).resolves.toEqual({ id: "os1", numero: "OS-0001" });
+  });
+
+  it("E01-S151: cria com semChamado repassa a flag pro gateway", async () => {
+    const gateway = gatewayMock();
+    await abrirOrdemServico(gateway, { ...input, tipoTarefaId: null, semChamado: true });
+    expect(gateway.criarOrdemServico).toHaveBeenCalledWith(
+      expect.objectContaining({ semChamado: true }),
+    );
+  });
+});
+
+describe("confirmarChamadoBacklog", () => {
+  it("E01-S151: delega pro gateway e devolve o número do Chamado criado", async () => {
+    const gateway = gatewayMock();
+    await expect(
+      confirmarChamadoBacklog(gateway, { ordemId: "os1", userId: "u1" }),
+    ).resolves.toEqual({ numero: "CH-0001" });
+    expect(gateway.confirmarChamado).toHaveBeenCalledWith({ ordemId: "os1", userId: "u1" });
+  });
+
+  it("E01-S151: rejeita sem ordemId antes do gateway", async () => {
+    await expect(
+      confirmarChamadoBacklog(gatewayMock(), { ordemId: "", userId: "u1" }),
+    ).rejects.toThrow(/backlog/);
   });
 });

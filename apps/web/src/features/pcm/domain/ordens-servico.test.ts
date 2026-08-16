@@ -9,6 +9,7 @@ import {
   deveAlterarStatusPorDrop,
   ehCardChamadoAberto,
   ehItemBacklog,
+  ehItemPreTriagem,
   ehOsRegistroVisita,
   filtrarBacklogGut,
   filtrarOrdens,
@@ -142,6 +143,16 @@ describe("ehOsRegistroVisita — E01-S142", () => {
     expect(ehOsRegistroVisita("Inicio Visita Extra")).toBe(false);
     expect(ehOsRegistroVisita("Visita Inicio")).toBe(false);
     expect(ehOsRegistroVisita("Trocar disjuntor")).toBe(false);
+  });
+});
+
+describe("ehItemPreTriagem — E01-S151", () => {
+  it("reconhece placeholder gerado pela trigger (migration 0209)", () => {
+    expect(ehItemPreTriagem("PRE-E0204FC1")).toBe(true);
+  });
+
+  it("não reconhece Chamado real", () => {
+    expect(ehItemPreTriagem("CH-0001")).toBe(false);
   });
 });
 

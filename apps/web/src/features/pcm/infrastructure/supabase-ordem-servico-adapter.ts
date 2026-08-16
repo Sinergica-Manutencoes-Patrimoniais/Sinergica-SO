@@ -126,7 +126,9 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
 
   async criarOrdemServico(input): Promise<OrdemServicoCriada> {
     let chamadoId = input.chamadoId ?? null;
-    if (!chamadoId) {
+    // E01-S151: item de backlog puro (semChamado) nasce sem Chamado — a trigger
+    // fn_ordens_servico_sync_numero_chamado (0209) gera o placeholder PRE-XXXXXXXX sozinha.
+    if (!chamadoId && !input.semChamado) {
       const chamadoAutomatico = await criarChamadoAutomatico({
         clienteId: input.clientId,
         titulo: input.titulo,
@@ -140,8 +142,8 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
       .from("ordens_servico")
       .insert({
         client_id: input.clientId,
-        // `numero` não é enviado: a trigger `fn_ordens_servico_sync_numero_chamado` (0151) sempre
-        // sobrescreve com o CH-XXXX do `chamado_id` acima.
+        // `numero` não é enviado: a trigger `fn_ordens_servico_sync_numero_chamado` (0151/0209)
+        // preenche sozinha — CH-XXXX do `chamado_id` acima, ou PRE-XXXXXXXX se ele for null.
         titulo: input.titulo,
         descricao: montarDescricao(input),
         categoria: input.categoria,
@@ -171,12 +173,42 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
 
     // Chamado veio pronto do caller (fluxo "Gerar OS a partir do Chamado") — quem fecha o ciclo é
     // `gerarOsDoChamado`/`marcarStatusComOs` (chamados.ts), não aqui, pra respeitar o `destino`
-    // escolhido (pode ser "backlog", não só "convertido_os").
-    if (!input.chamadoId) {
+    // escolhido (pode ser "backlog", não só "convertido_os"). `chamadoId` também fica null quando
+    // `semChamado` pulou a criação automática (E01-S151) — nada pra fechar ainda.
+    if (!input.chamadoId && chamadoId) {
       await marcarChamadoAutomaticoComOs(chamadoId, data.id as string, input.createdBy);
     }
 
     return { id: data.id as string, numero: data.numero as string };
+  },
+
+  // E01-S151: "Confirmar chamado" do Fabrício — promove item PRE-XXXXXXXX pra Chamado de verdade.
+  // Reusa exatamente o mesmo par de helpers de `criarOrdemServico` (linha 22/55), só que aplicado
+  // depois, sobre uma OS que já existe. Cliente/título vêm da própria OS (não do caller) — evita
+  // depender de estado desatualizado em memória. UPDATE não passa pela trigger de sync (0151/0209,
+  // só `before insert`) — `numero` precisa ser setado explicitamente aqui.
+  async confirmarChamado(input): Promise<{ numero: string }> {
+    const { data: ordem, error: ordemError } = await supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select("client_id,titulo")
+      .eq("id", input.ordemId)
+      .single();
+    if (ordemError) throw ordemError;
+
+    const chamadoAutomatico = await criarChamadoAutomatico({
+      clienteId: ordem.client_id as string,
+      titulo: ordem.titulo as string,
+      createdBy: input.userId,
+    });
+    const { error } = await supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .update({ chamado_id: chamadoAutomatico.id, numero: chamadoAutomatico.numero })
+      .eq("id", input.ordemId);
+    if (error) throw error;
+    await marcarChamadoAutomaticoComOs(chamadoAutomatico.id, input.ordemId, input.userId);
+    return { numero: chamadoAutomatico.numero };
   },
 
   async obterPorChamado(chamadoId): Promise<OrdemServicoCriada | null> {

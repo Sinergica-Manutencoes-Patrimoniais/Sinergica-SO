@@ -35,3 +35,14 @@ export async function abrirOrdemServico(
     origemInspecaoItemId: input.origemInspecaoItemId ?? null,
   });
 }
+
+/** E01-S151: "Confirmar chamado" — a decisão do Fabrício de que um item PRE-XXXXXXXX vira Chamado
+ * de verdade (solicitação). Depois disso o item segue no backlog, agora com CH-XXXX, pronto pro
+ * "Planejar" assumir o resto do pipeline (técnico + data). */
+export async function confirmarChamadoBacklog(
+  gateway: OrdemServicoGateway,
+  input: { ordemId: string; userId: string },
+): Promise<{ numero: string }> {
+  if (!input.ordemId) throw new Error("Item de backlog é obrigatório.");
+  return gateway.confirmarChamado(input);
+}

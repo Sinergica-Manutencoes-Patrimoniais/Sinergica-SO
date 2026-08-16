@@ -2,17 +2,24 @@ import { Plus, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { listarBacklogGut, planejarOrdemServico } from "../application/hub-os";
+import { confirmarChamadoBacklog } from "../application/abrir-ordem-servico";
+import {
+  alterarStatusOrdemServico,
+  listarBacklogGut,
+  planejarOrdemServico,
+} from "../application/hub-os";
 import { AbrirOsAuvoModal } from "../components/AbrirOsAuvoModal";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
+  ehItemPreTriagem,
   prioridadeColor,
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
+import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 
 type Estado =
   | { fase: "carregando" }
@@ -129,6 +136,46 @@ export function BacklogGutPage({
       if (ordem.auvoTaskId == null) setAberturaAuvoOsId(ordem.id);
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível planejar OS.");
+    } finally {
+      setSalvandoId(null);
+    }
+  }
+
+  // E01-S151: decisão do Fabrício — item PRE-XXXXXXXX vira Chamado de verdade (solicitação).
+  async function onConfirmarChamado(ordem: OrdemServicoOperacional) {
+    if (!user) return;
+    setSalvandoId(ordem.id);
+    setErroAcao(null);
+    try {
+      await confirmarChamadoBacklog(supabaseOrdemServicoAdapter, {
+        ordemId: ordem.id,
+        userId: user.id,
+      });
+      if (onAtualizarControlado) await onAtualizarControlado();
+      else await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível confirmar o chamado.");
+    } finally {
+      setSalvandoId(null);
+    }
+  }
+
+  // E01-S151: Fabrício decide que o item não tem tratativa — cancela sem nunca ter criado Chamado.
+  async function onDescartar(ordem: OrdemServicoOperacional) {
+    if (!user) return;
+    if (!window.confirm(`Descartar "${ordem.titulo}"? Não pode ser desfeito.`)) return;
+    setSalvandoId(ordem.id);
+    setErroAcao(null);
+    try {
+      await alterarStatusOrdemServico(supabaseHubOsAdapter, {
+        id: ordem.id,
+        status: "cancelado",
+        updatedBy: user.id,
+      });
+      if (onAtualizarControlado) await onAtualizarControlado();
+      else await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível descartar o item.");
     } finally {
       setSalvandoId(null);
     }
@@ -322,8 +369,14 @@ export function BacklogGutPage({
                     }}
                   >
                     <td className="px-4 py-2.5 text-xs font-bold text-ink-3">{index + 1}</td>
-                    <td className="px-2 py-2.5 font-brand text-xs tabular-nums text-ink-2">
-                      {ordem.numero}
+                    <td className="px-2 py-2.5 font-brand text-xs tabular-nums">
+                      {ehItemPreTriagem(ordem.numero) ? (
+                        <span className="text-ink-3" title={ordem.numero}>
+                          Aguardando triagem
+                        </span>
+                      ) : (
+                        <span className="text-ink-2">{ordem.numero}</span>
+                      )}
                     </td>
                     <td className="px-2 py-2.5 min-w-48">
                       <p className="font-semibold text-ink">{ordem.titulo}</p>
@@ -372,19 +425,49 @@ export function BacklogGutPage({
                       {ordem.scorePcm}
                     </td>
                     <td className="px-4 py-2.5">
-                      {temEscrita && ordem.status !== "planejamento" && (
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onPlanejar(ordem);
-                          }}
-                          disabled={salvandoId === ordem.id}
-                          className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
-                        >
-                          Planejar
-                        </button>
-                      )}
+                      <div className="flex items-center justify-end gap-1.5">
+                        {temEscrita && ehItemPreTriagem(ordem.numero) && (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onConfirmarChamado(ordem);
+                            }}
+                            disabled={salvandoId === ordem.id}
+                            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                          >
+                            Confirmar chamado
+                          </button>
+                        )}
+                        {temEscrita &&
+                          !ehItemPreTriagem(ordem.numero) &&
+                          ordem.status !== "planejamento" && (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onPlanejar(ordem);
+                              }}
+                              disabled={salvandoId === ordem.id}
+                              className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                            >
+                              Planejar
+                            </button>
+                          )}
+                        {temEscrita && (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onDescartar(ordem);
+                            }}
+                            disabled={salvandoId === ordem.id}
+                            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+                          >
+                            Descartar
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

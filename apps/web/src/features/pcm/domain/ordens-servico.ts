@@ -235,6 +235,13 @@ export function ehItemBacklog(
   );
 }
 
+// E01-S151: item de backlog nasce sem Chamado — `numero` vira um placeholder gerado pela trigger
+// (migration 0209), nunca confundível com um CH-XXXX real. Fabrício confirma via "Confirmar
+// chamado" antes de o item poder ser planejado (técnico + data).
+export function ehItemPreTriagem(numero: string): boolean {
+  return numero.startsWith("PRE-");
+}
+
 /** E01-S61 — AC-4: soltar o card na própria coluna de origem não deve disparar alteração de
  * status (evita PATCH/evento vazio no outbox Auvo). */
 export function deveAlterarStatusPorDrop(statusOrigem: string, statusDestino: string): boolean {

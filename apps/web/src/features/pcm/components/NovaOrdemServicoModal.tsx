@@ -53,8 +53,6 @@ interface FormState {
   observacao: string;
 }
 
-const hoje = new Date().toISOString().slice(0, 10);
-
 const FORM_INICIAL: FormState = {
   clientId: "",
   solicitante: "",
@@ -66,7 +64,10 @@ const FORM_INICIAL: FormState = {
   origem: "solicitacao_cliente",
   tecnicoId: "",
   localDescricao: "",
-  dataPrevista: hoje,
+  // E01-S151: vazio por padrão — este modal só cria (nunca edita) via "Novo item de backlog"
+  // (BacklogGutPage). Data pré-preenchida com hoje fazia todo item novo nascer "agendado" (viola
+  // ehItemBacklog: dataAgendada===null), sumindo do backlog assim que criado.
+  dataPrevista: "",
   gravidade: 3,
   urgencia: 3,
   tendencia: 3,
@@ -252,6 +253,9 @@ export function NovaOrdemServicoModal({
           tipoTarefaId: form.tipoTarefaId,
           dataPrevista: form.dataPrevista || null,
           createdBy: user.id,
+          // E01-S151: sem técnico ainda = item de backlog puro — nasce sem Chamado, Fabrício
+          // confirma depois. Com técnico já escolhido na hora, é trabalho real, Chamado imediato.
+          semChamado: !form.tecnicoId,
         });
         onCriada?.(criada.numero);
         onFechar();

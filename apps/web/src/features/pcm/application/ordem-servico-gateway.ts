@@ -55,6 +55,9 @@ export interface CriarOrdemServicoInput {
   /** E01-S90 AC-3: setado só quando a OS/backlog nasce de um item de assessment (coluna já existia
    * desde E01-S83/`0128`, sem consumidor até esta story). */
   origemInspecaoItemId?: string | null;
+  /** E01-S151: item de backlog puro (sem técnico, sem data) nasce sem Chamado — Fabrício confirma
+   * depois via `confirmarChamado`. Ignorado se `chamadoId` já vier setado. */
+  semChamado?: boolean;
 }
 
 /** E01-S07: comando real enviado ao gateway — inclui `tipoOs`, calculado pelo use-case
@@ -101,6 +104,11 @@ export interface OrdemServicoGateway {
   /** E01-S129: recupera conversão interrompida antes de criar outra OS para o mesmo Chamado. */
   obterPorChamado?(chamadoId: string): Promise<OrdemServicoCriada | null>;
   editarOrdemServico(input: EditarOrdemServicoInput): Promise<void>;
+  /** E01-S151: promove um item de backlog `PRE-XXXXXXXX` pra Chamado de verdade (Fabrício
+   * "Confirmar chamado") — mint do `CH-XXXX`, vincula na OS, fecha o ciclo (`convertido_os`).
+   * Cliente/título são lidos da própria OS no adapter — não depende do que o client já tem em
+   * memória. */
+  confirmarChamado(input: { ordemId: string; userId: string }): Promise<{ numero: string }>;
   /** E01-S81 AC-4: sinaliza se a IA de título está configurada/ativa — booleano público, nunca
    * expõe a credencial (checagem separada de `fn_integracao_tem_segredo`, que é superadmin-only). */
   iaTituloAtiva(): Promise<boolean>;

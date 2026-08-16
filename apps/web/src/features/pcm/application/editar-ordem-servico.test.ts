@@ -7,6 +7,7 @@ function gatewayFake(): OrdemServicoGateway {
   return {
     carregarDadosAbertura: vi.fn(),
     criarOrdemServico: vi.fn(),
+    confirmarChamado: vi.fn(),
     editarOrdemServico: vi.fn().mockResolvedValue(undefined),
     iaTituloAtiva: vi.fn(),
     gerarTituloOs: vi.fn(),
