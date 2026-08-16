@@ -33,6 +33,7 @@ import {
   classificarItensParaBacklog,
   confirmarGerarBacklog,
   derivarItemParaChamado,
+  derivarItemParaOsOuBacklog,
 } from "../application/assessment";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import {
@@ -539,27 +540,47 @@ export function InspecoesPage({
       setEstado({ ...estado, inspecoes: [criada, ...estado.inspecoes] });
       setSelecionadaId(criada.id);
       setModalAtivo(null);
-      // Lucas (2026-08-16): import NÃO decide destino nenhum sozinho — item fica só na inspeção
-      // (`destino: null`, "aguardando triagem"), Fabrício revisa depois item por item (abrir
-      // Chamado, selecionar pro Backlog GUT em lote, ou descartar — fluxo já existente mais abaixo
-      // nesta página, `handleAbrirChamado`/`handleAbrirRevisaoBacklog`/`handleDescartar`).
-      // Único caso de destino automático continua sendo o checkbox explícito abaixo.
-      if (input.criarChamados) {
+      // Lucas (2026-08-16): import NÃO decide Chamado sozinho — por padrão o item fica só na
+      // inspeção (`destino: null`, "aguardando triagem"), Fabrício revisa depois item por item
+      // (abrir Chamado, selecionar pro Backlog GUT em lote, ou descartar — fluxo já existente mais
+      // abaixo nesta página, `handleAbrirChamado`/`handleAbrirRevisaoBacklog`/`handleDescartar`).
+      // O checkbox do modal é um atalho pra pular essa triagem manual e mandar tudo direto pro
+      // Backlog GUT (sem Chamado — `semChamado: true`, mesma pré-triagem da E01-S151); ele nunca
+      // cria Chamado, essa ação continua sendo só individual, via `handleAbrirChamado`.
+      if (input.enviarBacklog) {
         const itensCriados = await supabaseQualidadeAdapter.listarItensInspecao(criada.id);
         try {
           for (const item of itensCriados) {
-            await derivarItemParaChamado(
+            await derivarItemParaOsOuBacklog(
               supabaseQualidadeAdapter,
-              supabaseChamadosAdapter,
+              supabaseOrdemServicoAdapter,
               item,
-              input.clientId,
+              {
+                clientId: input.clientId,
+                titulo: item.descricao,
+                descricao: null,
+                categoria: "corretiva",
+                prioridade: "media",
+                gravidade: item.gravidade ?? 3,
+                urgencia: item.urgencia ?? 3,
+                tendencia: item.tendencia ?? 3,
+                dorCliente: item.dorCliente,
+                observacao: null,
+                localDescricao: item.localizacao,
+                solicitante: null,
+                origem: "vistoria",
+                tecnicoId: null,
+                tipoTarefaId: null,
+                dataPrevista: null,
+              },
+              "backlog",
               "sinergica",
               user.id,
             );
           }
         } catch (error) {
           setErroAcao(
-            `Inspeção importada, mas parte dos chamados não foi criada: ${error instanceof Error ? error.message : "erro desconhecido"}`,
+            `Inspeção importada, mas parte dos itens não foi enviada ao backlog: ${error instanceof Error ? error.message : "erro desconhecido"}`,
           );
         }
       }
@@ -1880,7 +1901,7 @@ interface ImportarConfirmacao {
   responsavelTecnico: string;
   observacoesGerais: string;
   itens: ItemInspecaoImportado[];
-  criarChamados: boolean;
+  enviarBacklog: boolean;
 }
 
 function ImportarRelatorioModal({
@@ -1901,7 +1922,7 @@ function ImportarRelatorioModal({
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [itens, setItens] = useState<ItemInspecaoImportado[]>([]);
-  const [criarChamados, setCriarChamados] = useState(false);
+  const [enviarBacklog, setEnviarBacklog] = useState(false);
   const [selecionados, setSelecionados] = useState<Set<number>>(new Set());
   const [expandido, setExpandido] = useState<number | null>(null);
   const [extraido, setExtraido] = useState<{
@@ -2131,14 +2152,14 @@ function ImportarRelatorioModal({
           <label className="flex items-start gap-2 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink-2">
             <input
               type="checkbox"
-              checked={criarChamados}
-              onChange={(event) => setCriarChamados(event.target.checked)}
+              checked={enviarBacklog}
+              onChange={(event) => setEnviarBacklog(event.target.checked)}
               className="mt-0.5 h-4 w-4 accent-navy"
             />
             <span>
-              Após revisar, criar um Chamado por item selecionado. A origem fica vinculada à
-              inspeção; deixe desmarcado para os itens ficarem só na inspeção — Fabrício escolhe
-              depois, item por item, o que vai pro Backlog GUT.
+              Após revisar, enviar cada item selecionado direto pro Backlog GUT (sem Chamado). Deixe
+              desmarcado para os itens ficarem só na inspeção — Fabrício escolhe depois, item por
+              item, o que vira Chamado, o que vai pro Backlog GUT ou o que é descartado.
             </span>
           </label>
 
@@ -2252,7 +2273,7 @@ function ImportarRelatorioModal({
                 ...form,
                 observacoesGerais: `Importado de relatório ${tipo.toUpperCase()} Auvo.`,
                 itens: itensSelecionados,
-                criarChamados,
+                enviarBacklog,
               })
             }
           />
