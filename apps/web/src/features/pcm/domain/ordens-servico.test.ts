@@ -147,12 +147,12 @@ describe("ehOsRegistroVisita — E01-S142", () => {
 });
 
 describe("ehItemPreTriagem — E01-S151", () => {
-  it("reconhece placeholder gerado pela trigger (migration 0209)", () => {
-    expect(ehItemPreTriagem("PRE-E0204FC1")).toBe(true);
+  it("reconhece item sem chamadoId, independente do formato do numero (bug achado em produção 2026-08-16: relíquia pré-ADR-0014 com numero 'CH-006' mas chamadoId null)", () => {
+    expect(ehItemPreTriagem({ chamadoId: null })).toBe(true);
   });
 
-  it("não reconhece Chamado real", () => {
-    expect(ehItemPreTriagem("CH-0001")).toBe(false);
+  it("não reconhece item com chamadoId real", () => {
+    expect(ehItemPreTriagem({ chamadoId: "c1" })).toBe(false);
   });
 });
 

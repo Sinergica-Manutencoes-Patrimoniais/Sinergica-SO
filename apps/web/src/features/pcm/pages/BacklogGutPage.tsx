@@ -370,7 +370,7 @@ export function BacklogGutPage({
                   >
                     <td className="px-4 py-2.5 text-xs font-bold text-ink-3">{index + 1}</td>
                     <td className="px-2 py-2.5 font-brand text-xs tabular-nums">
-                      {ehItemPreTriagem(ordem.numero) ? (
+                      {ehItemPreTriagem(ordem) ? (
                         <span className="text-ink-3" title={ordem.numero}>
                           Aguardando triagem
                         </span>
@@ -426,7 +426,7 @@ export function BacklogGutPage({
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center justify-end gap-1.5">
-                        {temEscrita && ehItemPreTriagem(ordem.numero) && (
+                        {temEscrita && ehItemPreTriagem(ordem) && (
                           <button
                             type="button"
                             onClick={(event) => {
@@ -440,7 +440,7 @@ export function BacklogGutPage({
                           </button>
                         )}
                         {temEscrita &&
-                          !ehItemPreTriagem(ordem.numero) &&
+                          !ehItemPreTriagem(ordem) &&
                           ordem.status !== "planejamento" && (
                             <button
                               type="button"

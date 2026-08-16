@@ -236,10 +236,14 @@ export function ehItemBacklog(
 }
 
 // E01-S151: item de backlog nasce sem Chamado — `numero` vira um placeholder gerado pela trigger
-// (migration 0209), nunca confundível com um CH-XXXX real. Fabrício confirma via "Confirmar
-// chamado" antes de o item poder ser planejado (técnico + data).
-export function ehItemPreTriagem(numero: string): boolean {
-  return numero.startsWith("PRE-");
+// (migration 0209) só pra satisfazer a constraint `not null unique`, nunca é o sinal usado aqui.
+// A fonte da verdade é `chamadoId`, não o formato do texto: achado real em produção (2026-08-16)
+// — 3 linhas de antes do ADR-0014 (CH-006/CH-007/CH-0061, de 2026-07-06/07/30) já tinham
+// `chamado_id` null mas `numero` gravado direto como "CH-XXX" (relíquia da numeração antiga de
+// OS, E01-S88), enganando uma checagem baseada em `numero.startsWith("PRE-")`. Fabrício confirma
+// via "Confirmar chamado" antes de o item poder ser planejado (técnico + data).
+export function ehItemPreTriagem(ordem: Pick<OrdemServicoOperacional, "chamadoId">): boolean {
+  return ordem.chamadoId === null;
 }
 
 /** E01-S61 — AC-4: soltar o card na própria coluna de origem não deve disparar alteração de
