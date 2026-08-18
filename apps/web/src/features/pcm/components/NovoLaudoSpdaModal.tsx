@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import {
   ArrowLeft,
   ArrowRight,
@@ -494,10 +495,10 @@ export function NovoLaudoSpdaModal({
               Salvar laudo
             </button>
             {etapaIndex < ETAPAS.length - 1 ? (
-              <button type="button" onClick={avancar} className="btn-primary">
+              <Button variant="primary" onClick={avancar}>
                 Continuar
                 <ArrowRight className="h-4 w-4" />
-              </button>
+              </Button>
             ) : (
               <button
                 type="button"
