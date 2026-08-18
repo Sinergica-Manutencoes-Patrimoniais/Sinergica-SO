@@ -1,3 +1,4 @@
+import { Button, Modal } from "@sinergica/ui";
 import { AlertTriangle, History, RefreshCw, Undo2, UserRound, Wrench } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -475,18 +476,17 @@ function TecnicoFerramentasModal({
   const disponiveis = unidades.filter((unidade) => unidade.status === "disponivel");
   const posse = unidades.filter((unidade) => unidade.atribuidaA === funcionario.id);
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-4xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <div>
-            <h3 className="text-base font-semibold text-ink">{funcionario.nome}</h3>
-            <p className="text-xs text-ink-3">Ferramentas, transferência e histórico</p>
-          </div>
-          <button type="button" onClick={onFechar} className="btn-secondary">
-            Fechar
-          </button>
-        </div>
-        <div className="grid gap-4 p-4 md:grid-cols-2">
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onFechar();
+      }}
+      titulo={funcionario.nome}
+      descricao="Ferramentas, transferência e histórico"
+      tamanho="lg"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <section>
             <h4 className="text-sm font-semibold text-ink">Disponíveis</h4>
             <div className="mt-2 max-h-64 space-y-1 overflow-y-auto">
@@ -521,13 +521,9 @@ function TecnicoFerramentasModal({
                       {unidade.ferramentaNome} · {unidade.codigo}
                     </span>
                     {temEscrita && (
-                      <button
-                        type="button"
-                        onClick={() => onDevolver(unidade)}
-                        className="text-orange"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => onDevolver(unidade)}>
                         Devolver
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))
@@ -535,23 +531,22 @@ function TecnicoFerramentasModal({
             </div>
           </section>
         </div>
-        <div className="flex justify-between border-t border-line px-4 py-3">
-          <button type="button" onClick={onHistorico} className="btn-secondary">
+        <div className="flex justify-between border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onHistorico}>
             Histórico
-          </button>
+          </Button>
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="primary"
               disabled={salvando || selecionadas.length === 0}
               onClick={onAtribuir}
-              className="btn-primary"
             >
               Atribuir {selecionadas.length || ""}
-            </button>
+            </Button>
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -655,14 +650,14 @@ function AbaPorCliente({ temEscrita }: { temEscrita: boolean }) {
                 </option>
               ))}
             </select>
-            <button
-              type="button"
+            <Button
+              variant="accent"
               onClick={alocar}
               disabled={salvando || !ferramentaId || !clienteId}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+              loading={salvando}
             >
               Alocar
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -692,14 +687,14 @@ function AbaPorCliente({ temEscrita }: { temEscrita: boolean }) {
                 </p>
               </div>
               {temEscrita && (
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<Undo2 className="h-3.5 w-3.5" />}
                   onClick={() => devolver(alocacao.id)}
-                  className="inline-flex shrink-0 items-center gap-1 rounded-md border border-line px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                 >
-                  <Undo2 className="h-3.5 w-3.5" />
                   Devolver
-                </button>
+                </Button>
               )}
             </li>
           ))}
@@ -736,61 +731,52 @@ function DevolucaoModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Devolver {unidade.codigo}</h3>
-          <p className="text-xs text-ink-3">{unidade.ferramentaNome}</p>
-        </div>
-        <div className="space-y-3 p-4">
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={`Devolver ${unidade.codigo}`}
+      descricao={unidade.ferramentaNome}
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Condição</span>
+          <select
+            value={condicao}
+            onChange={(event) => setCondicao(event.target.value as CondicaoDevolucao)}
+            className="input w-full"
+          >
+            <option value="ok">OK</option>
+            <option value="danificada">Danificada</option>
+            <option value="perdida">Perdida</option>
+          </select>
+        </label>
+        {condicao !== "ok" && (
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Condição</span>
-            <select
-              value={condicao}
-              onChange={(event) => setCondicao(event.target.value as CondicaoDevolucao)}
-              className="input w-full"
-            >
-              <option value="ok">OK</option>
-              <option value="danificada">Danificada</option>
-              <option value="perdida">Perdida</option>
-            </select>
+            <span className="mb-1 block text-xs font-semibold text-ink-3">O que aconteceu? *</span>
+            <textarea
+              value={motivo}
+              onChange={(event) => setMotivo(event.target.value)}
+              className="input min-h-[80px] w-full resize-y"
+            />
           </label>
-          {condicao !== "ok" && (
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">
-                O que aconteceu? *
-              </span>
-              <textarea
-                value={motivo}
-                onChange={(event) => setMotivo(event.target.value)}
-                className="input min-h-[80px] w-full resize-y"
-              />
-            </label>
-          )}
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        )}
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={confirmar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Confirmar devolução"}
-          </button>
+          </Button>
+          <Button variant="primary" onClick={confirmar} disabled={salvando} loading={salvando}>
+            Confirmar devolução
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
