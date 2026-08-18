@@ -1,3 +1,4 @@
+import { ConfirmDialog } from "@sinergica/ui";
 import { Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { FluxoItem, FluxoLog, FluxoRecipe, PassoFluxo } from "../domain/fluxos";
@@ -37,6 +38,7 @@ export function FluxosManager({
   const [mostrarLogs, setMostrarLogs] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [confirmarDesativar, setConfirmarDesativar] = useState(false);
 
   const selecionado = fluxos.find((f) => f.id === selecionadoId) ?? null;
   const personasAtivas = personas.filter((p) => p.ativo);
@@ -77,17 +79,8 @@ export function FluxosManager({
 
   async function desativar() {
     if (!selecionado) return;
-    if (!window.confirm(`Desativar o fluxo "${selecionado.nome}"?`)) return;
-    setSalvando(true);
-    setErro(null);
-    try {
-      await onDesativar(selecionado.id);
-      setSelecionadoId(null);
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível desativar o fluxo.");
-    } finally {
-      setSalvando(false);
-    }
+    await onDesativar(selecionado.id);
+    setSelecionadoId(null);
   }
 
   return (
@@ -238,7 +231,7 @@ export function FluxosManager({
                 <button
                   type="button"
                   disabled={salvando}
-                  onClick={desativar}
+                  onClick={() => setConfirmarDesativar(true)}
                   className="inline-flex items-center gap-2 rounded-md border border-danger-line px-3 py-2 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
                 >
                   <X className="h-4 w-4" />

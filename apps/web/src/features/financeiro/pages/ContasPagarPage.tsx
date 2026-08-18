@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, Modal as ModalPrimitivo } from "@sinergica/ui";
 import { AlertCircle, Pencil, Plus, RefreshCw, Wallet, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -43,6 +44,9 @@ export function ContasPagarPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [recorrenciaParaDesativar, setRecorrenciaParaDesativar] = useState<RecorrenciaItem | null>(
+    null,
+  );
 
   const temLeitura = podeAcessar("financeiro", "leitura");
   const temEscrita = podeAcessar("financeiro", "escrita");
@@ -85,9 +89,9 @@ export function ContasPagarPage() {
     await carregar();
   }
 
-  async function desativar(recorrencia: RecorrenciaItem) {
-    if (!user || !confirm(`Desativar "${recorrencia.descricao}"?`)) return;
-    await desativarRecorrencia(supabaseFinanceiroAdapter, recorrencia.id, user.id);
+  async function desativar() {
+    if (!user || !recorrenciaParaDesativar) return;
+    await desativarRecorrencia(supabaseFinanceiroAdapter, recorrenciaParaDesativar.id, user.id);
     await carregar();
   }
 
@@ -123,14 +127,15 @@ export function ContasPagarPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={<RefreshCw className="h-4 w-4" />}
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4"
         >
-          <RefreshCw className="h-4 w-4" />
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -151,14 +156,13 @@ export function ContasPagarPage() {
             </p>
           </div>
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="accent"
+              icon={<Plus className="h-4 w-4" />}
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
-              <Plus className="h-4 w-4" />
               Nova despesa fixa
-            </button>
+            </Button>
           )}
         </div>
         {erroAcao && (
@@ -199,7 +203,7 @@ export function ContasPagarPage() {
                     {r.ativo && (
                       <button
                         type="button"
-                        onClick={() => desativar(r)}
+                        onClick={() => setRecorrenciaParaDesativar(r)}
                         className="text-ink-3 hover:text-danger"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -283,6 +287,17 @@ export function ContasPagarPage() {
           onSalvar={salvar}
         />
       )}
+
+      <ConfirmDialog
+        open={recorrenciaParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setRecorrenciaParaDesativar(null);
+        }}
+        titulo={`Desativar "${recorrenciaParaDesativar?.descricao}"`}
+        descricao="A despesa fixa deixa de gerar novos lançamentos."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
     </div>
   );
 }
@@ -332,102 +347,90 @@ function RecorrenciaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {recorrencia ? "Editar despesa fixa" : "Nova despesa fixa"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
-          <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição *</span>
-            <input
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              className="input w-full"
-              placeholder="Aluguel"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Valor *</span>
-            <input
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-              className="input w-full"
-              placeholder="0,00"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">
-              Dia de vencimento (1-28) *
-            </span>
-            <input
-              type="number"
-              min={1}
-              max={28}
-              value={diaVencimento}
-              onChange={(e) => setDiaVencimento(Number(e.target.value))}
-              className="input w-full"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria *</span>
-            <select
-              value={categoriaId}
-              onChange={(e) => setCategoriaId(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">Selecione…</option>
-              {categoriasSaida.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Conta</span>
-            <select
-              value={contaId}
-              onChange={(e) => setContaId(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">Ainda não sei</option>
-              {contas.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          {erro && (
-            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={recorrencia ? "Editar despesa fixa" : "Nova despesa fixa"}
+      tamanho="md"
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="block sm:col-span-2">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição *</span>
+          <input
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="input w-full"
+            placeholder="Aluguel"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Valor *</span>
+          <input
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            className="input w-full"
+            placeholder="0,00"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">
+            Dia de vencimento (1-28) *
+          </span>
+          <input
+            type="number"
+            min={1}
+            max={28}
+            value={diaVencimento}
+            onChange={(e) => setDiaVencimento(Number(e.target.value))}
+            className="input w-full"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria *</span>
+          <select
+            value={categoriaId}
+            onChange={(e) => setCategoriaId(e.target.value)}
+            className="input w-full"
           >
+            <option value="">Selecione…</option>
+            {categoriasSaida.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Conta</span>
+          <select
+            value={contaId}
+            onChange={(e) => setContaId(e.target.value)}
+            className="input w-full"
+          >
+            <option value="">Ainda não sei</option>
+            {contas.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        {erro && (
+          <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 pt-2 sm:col-span-2">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="accent" onClick={salvar} loading={salvando}>
             {salvando ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }

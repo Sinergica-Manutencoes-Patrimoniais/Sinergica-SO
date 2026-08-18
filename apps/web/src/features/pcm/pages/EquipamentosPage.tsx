@@ -1,4 +1,5 @@
-import { Boxes, Layers, Link2, Pencil, Plus, RefreshCw, Trash2, Wrench, X } from "lucide-react";
+import { ConfirmDialog, Modal as ModalPrimitivo } from "@sinergica/ui";
+import { Boxes, Layers, Link2, Pencil, Plus, RefreshCw, Trash2, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -41,6 +42,10 @@ export function EquipamentosPage() {
   const [imagemAmpliada, setImagemAmpliada] = useState<string | null>(null);
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
   const [itemDetalheId, setItemDetalheId] = useState<string | null>(null);
+  const [desativarInfo, setDesativarInfo] = useState<{
+    equipamento: EquipamentoItem;
+    possuiOs: boolean;
+  } | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -82,23 +87,26 @@ export function EquipamentosPage() {
     await carregar();
   }
 
-  async function desativar(equipamento: EquipamentoItem) {
+  async function abrirConfirmacaoDesativar(equipamento: EquipamentoItem) {
     if (!user) return;
+    setErroAcao(null);
     try {
-      setErroAcao(null);
       const possuiOs = await supabaseEquipamentosAdapter.possuiOsAberta(equipamento.id);
-      const msg = possuiOs
-        ? `Desativar ${equipamento.nome}? Há vínculo com OS; o histórico será preservado.`
-        : `Desativar ${equipamento.nome}?`;
-      if (!confirm(msg)) return;
-      await desativarEquipamento(supabaseEquipamentosAdapter, {
-        id: equipamento.id,
-        userId: user.id,
-      });
-      await carregar();
+      setDesativarInfo({ equipamento, possuiOs });
     } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
+      setErroAcao(
+        error instanceof Error ? error.message : "Não foi possível verificar OS vinculadas.",
+      );
     }
+  }
+
+  async function desativar() {
+    if (!user || !desativarInfo) return;
+    await desativarEquipamento(supabaseEquipamentosAdapter, {
+      id: desativarInfo.equipamento.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   if (permissoesCarregando)
@@ -193,7 +201,9 @@ export function EquipamentosPage() {
                     temEscrita ? () => setModal({ modo: "editar", equipamento }) : undefined
                   }
                   onDesativar={
-                    temEscrita && equipamento.ativo ? () => desativar(equipamento) : undefined
+                    temEscrita && equipamento.ativo
+                      ? () => abrirConfirmacaoDesativar(equipamento)
+                      : undefined
                   }
                   onAmpliarImagem={setImagemAmpliada}
                   onVerDetalhe={() => setItemDetalheId(equipamento.id)}
@@ -217,26 +227,37 @@ export function EquipamentosPage() {
         <ItemDetalheModal itemId={itemDetalheId} onFechar={() => setItemDetalheId(null)} />
       )}
 
-      {imagemAmpliada && (
-        <div className="modal-backdrop">
-          <div className="max-h-[85vh] max-w-3xl">
-            <div className="flex justify-end pb-2">
-              <button
-                type="button"
-                onClick={() => setImagemAmpliada(null)}
-                className="rounded-full bg-card p-1.5 text-ink-2 hover:text-ink"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <img
-              src={imagemAmpliada}
-              alt="Equipamento ampliado"
-              className="max-h-[75vh] w-full rounded-lg object-contain"
-            />
-          </div>
-        </div>
-      )}
+      <ModalPrimitivo
+        open={imagemAmpliada !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setImagemAmpliada(null);
+        }}
+        titulo="Imagem do equipamento"
+        tamanho="lg"
+      >
+        {imagemAmpliada && (
+          <img
+            src={imagemAmpliada}
+            alt="Equipamento ampliado"
+            className="max-h-[75vh] w-full rounded-lg object-contain"
+          />
+        )}
+      </ModalPrimitivo>
+
+      <ConfirmDialog
+        open={desativarInfo !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setDesativarInfo(null);
+        }}
+        titulo={`Desativar "${desativarInfo?.equipamento.nome}"`}
+        descricao={
+          desativarInfo?.possuiOs
+            ? "Há vínculo com OS; o histórico será preservado."
+            : "Esta ação não pode ser desfeita."
+        }
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
     </div>
   );
 }
@@ -337,86 +358,79 @@ function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () =
   }, [itemId]);
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Detalhe do Item</h3>
-          <button
-            type="button"
-            onClick={onFechar}
-            aria-label="Fechar"
-            className="text-ink-3 hover:text-ink"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto p-4">
-          {contexto === "carregando" ? (
-            <p className="text-sm text-ink-3">Carregando…</p>
-          ) : contexto === null ? (
-            <p className="text-sm text-ink-3">Item não encontrado.</p>
-          ) : (
-            <>
-              <div>
-                <h4 className="text-lg font-semibold text-ink">{contexto.item.nome}</h4>
-                {/* AC-6: breadcrumb Cliente > Área > Local */}
-                <p className="mt-1 text-sm text-ink-3" data-testid="item-breadcrumb">
-                  {contexto.breadcrumb
-                    ? [
-                        contexto.breadcrumb.clienteNome,
-                        contexto.breadcrumb.areaNome,
-                        contexto.breadcrumb.localNome,
-                      ]
-                        .filter(Boolean)
-                        .join(" > ")
-                    : "Sem instalação definida (Local não atribuído)."}
-                </p>
-              </div>
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onFechar();
+      }}
+      titulo="Detalhe do Item"
+    >
+      <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
+        {contexto === "carregando" ? (
+          <p className="text-sm text-ink-3">Carregando…</p>
+        ) : contexto === null ? (
+          <p className="text-sm text-ink-3">Item não encontrado.</p>
+        ) : (
+          <>
+            <div>
+              <h4 className="text-lg font-semibold text-ink">{contexto.item.nome}</h4>
+              {/* AC-6: breadcrumb Cliente > Área > Local */}
+              <p className="mt-1 text-sm text-ink-3" data-testid="item-breadcrumb">
+                {contexto.breadcrumb
+                  ? [
+                      contexto.breadcrumb.clienteNome,
+                      contexto.breadcrumb.areaNome,
+                      contexto.breadcrumb.localNome,
+                    ]
+                      .filter(Boolean)
+                      .join(" > ")
+                  : "Sem instalação definida (Local não atribuído)."}
+              </p>
+            </div>
 
-              <div>
-                <h5 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Faz parte de
-                </h5>
-                {contexto.sistemas.length === 0 ? (
-                  <p className="text-sm text-ink-3">Nenhum Sistema.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {contexto.sistemas.map((sistema) => (
-                      <span
-                        key={sistema.id}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-orange-soft px-3 py-1 text-xs font-semibold text-orange-deep"
-                      >
-                        <Link2 className="h-3 w-3" />
-                        {sistema.nome}
-                        {sistema.codigo ? ` · ${sistema.codigo}` : ""}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {contexto.componentesFilhos.length > 0 && (
-                <div>
-                  <h5 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
-                    Componentes
-                  </h5>
-                  <div className="flex flex-col gap-1.5">
-                    {contexto.componentesFilhos.map((componente) => (
-                      <div
-                        key={componente.id}
-                        className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2"
-                      >
-                        <Boxes className="h-3.5 w-3.5 text-ink-3" />
-                        {componente.nome}
-                      </div>
-                    ))}
-                  </div>
+            <div>
+              <h5 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
+                Faz parte de
+              </h5>
+              {contexto.sistemas.length === 0 ? (
+                <p className="text-sm text-ink-3">Nenhum Sistema.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {contexto.sistemas.map((sistema) => (
+                    <span
+                      key={sistema.id}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-orange-soft px-3 py-1 text-xs font-semibold text-orange-deep"
+                    >
+                      <Link2 className="h-3 w-3" />
+                      {sistema.nome}
+                      {sistema.codigo ? ` · ${sistema.codigo}` : ""}
+                    </span>
+                  ))}
                 </div>
               )}
-            </>
-          )}
-        </div>
+            </div>
+
+            {contexto.componentesFilhos.length > 0 && (
+              <div>
+                <h5 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
+                  Componentes
+                </h5>
+                <div className="flex flex-col gap-1.5">
+                  {contexto.componentesFilhos.map((componente) => (
+                    <div
+                      key={componente.id}
+                      className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2"
+                    >
+                      <Boxes className="h-3.5 w-3.5 text-ink-3" />
+                      {componente.nome}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }

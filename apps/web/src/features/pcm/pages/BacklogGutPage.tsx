@@ -1,4 +1,4 @@
-import { Tooltip } from "@sinergica/ui";
+import { Button, Tooltip } from "@sinergica/ui";
 import { Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -113,9 +113,9 @@ export function BacklogGutPage({
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="text-sm text-ink-3 mt-1">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <Button variant="ghost" onClick={carregar} className="mt-4 text-orange">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }

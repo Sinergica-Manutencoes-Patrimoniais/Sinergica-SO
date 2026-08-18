@@ -1,4 +1,5 @@
-import { Plus, X } from "lucide-react";
+import { Button, Modal } from "@sinergica/ui";
+import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PageHeader, StatusChip, TableShell } from "./MockUi";
 import { CLIENTES, LANCAMENTOS, brl, dataCurta } from "./mock-data";
@@ -30,10 +31,13 @@ export function LancamentosMock() {
         title="Lançamentos"
         subtitle="Entradas e saídas — ciclo previsto → realizado → conciliado."
         actions={
-          <button type="button" onClick={() => setModalAberto(true)} className="btn-accent">
-            <Plus className="h-4 w-4" />
+          <Button
+            variant="accent"
+            icon={<Plus className="h-4 w-4" />}
+            onClick={() => setModalAberto(true)}
+          >
             Novo lançamento
-          </button>
+          </Button>
         }
       />
       <div className="surface-card flex flex-wrap gap-2 p-3">
@@ -111,101 +115,95 @@ export function LancamentosMock() {
         )}
       </TableShell>
 
-      {modalAberto && <NovoLancamentoModal onFechar={() => setModalAberto(false)} />}
+      <NovoLancamentoModal aberto={modalAberto} onFechar={() => setModalAberto(false)} />
     </div>
   );
 }
 
-function NovoLancamentoModal({ onFechar }: { onFechar: () => void }) {
+function NovoLancamentoModal({ aberto, onFechar }: { aberto: boolean; onFechar: () => void }) {
   const [tipo, setTipo] = useState<"entrada" | "saida">("entrada");
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-panel max-w-[440px] p-5">
-        <div className="mb-4 flex items-start justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-ink">Novo lançamento</h3>
-            <p className="mt-0.5 text-xs text-ink-3">Registre uma entrada ou saída manual.</p>
-          </div>
-          <button type="button" onClick={onFechar} className="btn-icon" aria-label="Fechar">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+    <Modal
+      open={aberto}
+      onOpenChange={(open) => {
+        if (!open) onFechar();
+      }}
+      titulo="Novo lançamento"
+      descricao="Registre uma entrada ou saída manual."
+      tamanho="sm"
+    >
+      <div className="mb-3 flex overflow-hidden rounded-lg border border-line">
+        <button
+          type="button"
+          onClick={() => setTipo("entrada")}
+          className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "entrada" ? "bg-success-soft text-success" : "bg-card text-ink-2"}`}
+        >
+          ↓ Entrada
+        </button>
+        <button
+          type="button"
+          onClick={() => setTipo("saida")}
+          className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "saida" ? "bg-orange-soft text-orange-deep" : "bg-card text-ink-2"}`}
+        >
+          ↑ Saída
+        </button>
+      </div>
 
-        <div className="mb-3 flex overflow-hidden rounded-lg border border-line">
-          <button
-            type="button"
-            onClick={() => setTipo("entrada")}
-            className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "entrada" ? "bg-success-soft text-success" : "bg-card text-ink-2"}`}
-          >
-            ↓ Entrada
-          </button>
-          <button
-            type="button"
-            onClick={() => setTipo("saida")}
-            className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "saida" ? "bg-orange-soft text-orange-deep" : "bg-card text-ink-2"}`}
-          >
-            ↑ Saída
-          </button>
-        </div>
-
-        <label className="mb-3 block">
-          <span className="mb-1 block text-micro font-semibold text-ink-2">Descrição</span>
-          <input
-            className="input"
-            type="text"
-            placeholder="Ex.: Laudo SPDA — Cond. Jardins do Lago"
-          />
+      <label className="mb-3 block">
+        <span className="mb-1 block text-micro font-semibold text-ink-2">Descrição</span>
+        <input
+          className="input"
+          type="text"
+          placeholder="Ex.: Laudo SPDA — Cond. Jardins do Lago"
+        />
+      </label>
+      <div className="mb-3 grid grid-cols-2 gap-2.5">
+        <label className="block">
+          <span className="mb-1 block text-micro font-semibold text-ink-2">Valor (R$)</span>
+          <input className="input" type="text" placeholder="0,00" />
         </label>
-        <div className="mb-3 grid grid-cols-2 gap-2.5">
-          <label className="block">
-            <span className="mb-1 block text-micro font-semibold text-ink-2">Valor (R$)</span>
-            <input className="input" type="text" placeholder="0,00" />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-micro font-semibold text-ink-2">Competência</span>
-            <input className="input" type="date" />
-          </label>
-        </div>
-        <div className="mb-3 grid grid-cols-2 gap-2.5">
-          <label className="block">
-            <span className="mb-1 block text-micro font-semibold text-ink-2">Categoria</span>
-            <select className="input">
-              <option>Serviços avulsos</option>
-              <option>Peças e materiais</option>
-              <option>Combustível</option>
-              <option>Receita de contrato</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-micro font-semibold text-ink-2">
-              Cliente (opcional)
-            </span>
-            <select className="input">
-              <option value="">—</option>
-              {CLIENTES.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <label className="mb-4 block">
-          <span className="mb-1 block text-micro font-semibold text-ink-2">Status</span>
+        <label className="block">
+          <span className="mb-1 block text-micro font-semibold text-ink-2">Competência</span>
+          <input className="input" type="date" />
+        </label>
+      </div>
+      <div className="mb-3 grid grid-cols-2 gap-2.5">
+        <label className="block">
+          <span className="mb-1 block text-micro font-semibold text-ink-2">Categoria</span>
           <select className="input">
-            <option value="previsto">Previsto</option>
-            <option value="realizado">Realizado</option>
+            <option>Serviços avulsos</option>
+            <option>Peças e materiais</option>
+            <option>Combustível</option>
+            <option>Receita de contrato</option>
           </select>
         </label>
-
-        <div className="flex justify-end gap-2">
-          <button type="button" onClick={onFechar} className="btn-secondary">
-            Cancelar
-          </button>
-          <button type="button" onClick={onFechar} className="btn-primary">
-            Salvar lançamento
-          </button>
-        </div>
+        <label className="block">
+          <span className="mb-1 block text-micro font-semibold text-ink-2">Cliente (opcional)</span>
+          <select className="input">
+            <option value="">—</option>
+            {CLIENTES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </label>
       </div>
-    </div>
+      <label className="mb-4 block">
+        <span className="mb-1 block text-micro font-semibold text-ink-2">Status</span>
+        <select className="input">
+          <option value="previsto">Previsto</option>
+          <option value="realizado">Realizado</option>
+        </select>
+      </label>
+
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={onFechar}>
+          Cancelar
+        </Button>
+        <Button variant="primary" onClick={onFechar}>
+          Salvar lançamento
+        </Button>
+      </div>
+    </Modal>
   );
 }

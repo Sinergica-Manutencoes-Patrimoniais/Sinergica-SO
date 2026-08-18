@@ -1,4 +1,5 @@
-import { Edit3, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
+import { Edit3, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -49,6 +50,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
   const [descricao, setDescricao] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [itemParaExcluir, setItemParaExcluir] = useState<CatalogoSimplesItem | null>(null);
 
   const titulo = labelCatalogoSimples(tipo);
   const campo = campoCatalogoSimples(tipo);
@@ -116,24 +118,14 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
     }
   }
 
-  async function onExcluir(item: CatalogoSimplesItem) {
-    if (!user) return;
-    const confirmado = window.confirm(`Excluir "${item.descricao}"?`);
-    if (!confirmado) return;
-    setSalvando(true);
-    setErroAcao(null);
-    try {
-      await excluirCatalogoSimples(supabaseCatalogosSimplesAdapter, {
-        tipo,
-        id: item.id,
-        userId: user.id,
-      });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir.");
-    } finally {
-      setSalvando(false);
-    }
+  async function onExcluir() {
+    if (!user || !itemParaExcluir) return;
+    await excluirCatalogoSimples(supabaseCatalogosSimplesAdapter, {
+      tipo,
+      id: itemParaExcluir.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   if (permissoesCarregando) {
@@ -158,9 +150,9 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <Button variant="ghost" onClick={carregar} className="mt-4 text-orange">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -174,19 +166,17 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
           <p className="text-sm text-ink-3">Catálogo simples sincronizado com o Auvo</p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={carregar} className="btn-secondary">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="secondary" icon={<RefreshCw className="h-4 w-4" />} onClick={carregar}>
             Atualizar
-          </button>
+          </Button>
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              icon={<Plus className="h-4 w-4" />}
               onClick={() => abrirModal({ modo: "criar" })}
-              className="btn-primary"
             >
-              <Plus className="h-4 w-4" />
               Novo
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -241,8 +231,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
                     </button>
                     <button
                       type="button"
-                      disabled={salvando}
-                      onClick={() => onExcluir(item)}
+                      onClick={() => setItemParaExcluir(item)}
                       className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                       title="Excluir"
                     >
@@ -256,67 +245,67 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
         </div>
       </section>
 
-      {modal && (
-        <div className="modal-backdrop">
-          <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-modal">
-            <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
-              <h3 className="text-base font-semibold text-ink">
-                {modal.modo === "criar" ? `Novo ${titulo}` : `Editar ${titulo}`}
-              </h3>
+      <Modal
+        open={modal !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setModal(null);
+        }}
+        titulo={modal?.modo === "criar" ? `Novo ${titulo}` : `Editar ${titulo}`}
+      >
+        {modal && (
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void onSalvar();
+            }}
+          >
+            <label className="block">
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+                {campo}
+              </span>
+              <input
+                className="input mt-1"
+                value={descricao}
+                onChange={(event) => setDescricao(event.target.value)}
+              />
+            </label>
+
+            {erroAcao && (
+              <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+                {erroAcao}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
               <button
                 type="button"
                 onClick={() => setModal(null)}
-                className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
-                title="Fechar"
+                className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
               >
-                <X className="h-4 w-4" />
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={salvando}
+                className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              >
+                {salvando ? "Salvando…" : "Salvar"}
               </button>
             </div>
+          </form>
+        )}
+      </Modal>
 
-            <form
-              className="space-y-4 px-4 py-3"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void onSalvar();
-              }}
-            >
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  {campo}
-                </span>
-                <input
-                  className="input mt-1"
-                  value={descricao}
-                  onChange={(event) => setDescricao(event.target.value)}
-                />
-              </label>
-
-              {erroAcao && (
-                <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
-                  {erroAcao}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
-                <button
-                  type="button"
-                  onClick={() => setModal(null)}
-                  className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={salvando}
-                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
-                >
-                  {salvando ? "Salvando…" : "Salvar"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={itemParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaExcluir(null);
+        }}
+        titulo={`Excluir "${itemParaExcluir?.descricao}"`}
+        descricao="Esta ação não pode ser desfeita."
+        onConfirmar={onExcluir}
+      />
     </div>
   );
 }

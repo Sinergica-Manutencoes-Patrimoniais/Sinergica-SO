@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Card, PageHeader } from "./MockUi";
@@ -31,10 +32,9 @@ export function CategoriasMock() {
         title="Categorias"
         subtitle="Plano de contas — 2 níveis, editável."
         actions={
-          <button type="button" className="btn-accent">
-            <Plus className="h-4 w-4" />
+          <Button variant="accent" icon={<Plus className="h-4 w-4" />}>
             Nova categoria
-          </button>
+          </Button>
         }
       />
       <div className="grid gap-3 md:grid-cols-2">

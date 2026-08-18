@@ -1,7 +1,7 @@
 // MarcacoesClientePage.tsx — E01-S91 AC-1. Catálogo gerenciável de marcações de status de cliente
 // (nome+cor) — Configurações → PCM.
-import { ConfirmDialog } from "@sinergica/ui";
-import { Edit3, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
+import { Edit3, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -113,9 +113,9 @@ export function MarcacoesClientePage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <Button variant="ghost" onClick={carregar} className="mt-4 text-orange">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -130,10 +130,9 @@ export function MarcacoesClientePage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={carregar} className="btn-secondary">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="secondary" icon={<RefreshCw className="h-4 w-4" />} onClick={carregar}>
             Atualizar
-          </button>
+          </Button>
           {temEscrita && (
             <button
               type="button"
@@ -199,76 +198,66 @@ export function MarcacoesClientePage() {
       </section>
 
       {modal && (
-        <div className="modal-backdrop">
-          <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-modal">
-            <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
-              <h3 className="text-base font-semibold text-ink">
-                {modal.modo === "criar" ? "Nova marcação" : "Editar marcação"}
-              </h3>
+        <Modal
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) setModal(null);
+          }}
+          titulo={modal.modo === "criar" ? "Nova marcação" : "Editar marcação"}
+        >
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void onSalvar();
+            }}
+          >
+            <label className="block">
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+                Nome *
+              </span>
+              <input
+                className="input mt-1"
+                value={nome}
+                onChange={(event) => setNome(event.target.value)}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+                Cor *
+              </span>
+              <input
+                type="color"
+                className="mt-1 h-10 w-20 cursor-pointer rounded-md border border-line"
+                value={cor}
+                onChange={(event) => setCor(event.target.value)}
+              />
+            </label>
+
+            {erroAcao && (
+              <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+                {erroAcao}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
               <button
                 type="button"
                 onClick={() => setModal(null)}
-                className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
-                title="Fechar"
+                className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
               >
-                <X className="h-4 w-4" />
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={salvando}
+                className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              >
+                {salvando ? "Salvando…" : "Salvar"}
               </button>
             </div>
-
-            <form
-              className="space-y-4 px-4 py-3"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void onSalvar();
-              }}
-            >
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Nome *
-                </span>
-                <input
-                  className="input mt-1"
-                  value={nome}
-                  onChange={(event) => setNome(event.target.value)}
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Cor *
-                </span>
-                <input
-                  type="color"
-                  className="mt-1 h-10 w-20 cursor-pointer rounded-md border border-line"
-                  value={cor}
-                  onChange={(event) => setCor(event.target.value)}
-                />
-              </label>
-
-              {erroAcao && (
-                <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
-                  {erroAcao}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
-                <button
-                  type="button"
-                  onClick={() => setModal(null)}
-                  className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={salvando}
-                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
-                >
-                  {salvando ? "Salvando…" : "Salvar"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
 
       <ConfirmDialog

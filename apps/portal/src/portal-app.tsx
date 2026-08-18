@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { BrowserRouter } from "react-router";
 import { AuthProvider, useAuth } from "../../web/src/app/auth-context";
 import { ThemeProvider } from "../../web/src/app/theme-context";
@@ -19,9 +20,13 @@ function Entrada() {
         <div>
           <h1 className="text-lg font-semibold">Acesso exclusivo do cliente</h1>
           <p className="mt-2 text-sm text-ink-3">Use o sistema interno para este perfil.</p>
-          <button type="button" onClick={logout} className="mt-4 font-semibold text-orange">
+          <Button
+            variant="ghost"
+            onClick={logout}
+            className="mt-4 text-orange hover:text-orange-deep"
+          >
             Sair
-          </button>
+          </Button>
         </div>
       </div>
     );

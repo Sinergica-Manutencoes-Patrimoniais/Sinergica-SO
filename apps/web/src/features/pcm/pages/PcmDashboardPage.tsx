@@ -1,4 +1,4 @@
-import { Tooltip } from "@sinergica/ui";
+import { Button, Tooltip } from "@sinergica/ui";
 import {
   Activity,
   AlertTriangle,
@@ -253,10 +253,14 @@ export function PcmDashboardPage({
       <div className="rounded-xl border border-line bg-card p-8 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Dashboard indisponível</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 btn-secondary">
-          <RefreshCw className="h-4 w-4" />
+        <Button
+          variant="secondary"
+          icon={<RefreshCw className="h-4 w-4" />}
+          onClick={carregar}
+          className="mt-4"
+        >
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -690,9 +694,9 @@ function DetalheErrosSyncAuvo({
           <h3 className="text-sm font-semibold text-ink">Erros de sincronização Auvo</h3>
           <p className="text-xs text-ink-3">Última falha por entidade e registro local.</p>
         </div>
-        <button type="button" onClick={onFechar} className="btn-secondary text-xs">
+        <Button variant="secondary" size="sm" onClick={onFechar}>
           Fechar
-        </button>
+        </Button>
       </div>
       {carregando ? (
         <p className="px-4 py-5 text-sm text-ink-3">Carregando erros…</p>

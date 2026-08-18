@@ -1,4 +1,5 @@
-import { Archive, Plus, RefreshCw, Ticket as TicketIcon, X } from "lucide-react";
+import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
+import { Archive, Plus, RefreshCw, Ticket as TicketIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -289,146 +290,132 @@ function NovoTicketModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Novo ticket</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="max-h-[70vh] overflow-y-auto p-4">
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Novo ticket"
+      tamanho="md"
+    >
+      <div className="flex flex-col gap-3">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Título *</span>
+          <input
+            value={dados.titulo}
+            onChange={(event) => setDados((a) => ({ ...a, titulo: event.target.value }))}
+            className="input w-full"
+          />
+        </label>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+          <textarea
+            value={dados.descricao ?? ""}
+            onChange={(event) => setDados((a) => ({ ...a, descricao: event.target.value }))}
+            className="input min-h-[80px] w-full resize-y"
+          />
+        </label>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente *</span>
+          <select
+            value={dados.clienteId}
+            onChange={(event) => setDados((a) => ({ ...a, clienteId: event.target.value }))}
+            className="input w-full"
+          >
+            <option value="">selecionar</option>
+            {clientes.map((cliente) => (
+              <option key={cliente.id} value={cliente.id} disabled={!cliente.auvoId}>
+                {cliente.nome}
+                {!cliente.auvoId ? " (não sincronizado)" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Equipe responsável</span>
+          <select
+            value={dados.equipeId ?? ""}
+            onChange={(event) => setDados((a) => ({ ...a, equipeId: event.target.value || null }))}
+            className="input w-full"
+          >
+            <option value="">nenhuma</option>
+            {equipes.map((equipe) => (
+              <option key={equipe.id} value={equipe.id}>
+                {equipe.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="mt-3 grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Título *</span>
-            <input
-              value={dados.titulo}
-              onChange={(event) => setDados((a) => ({ ...a, titulo: event.target.value }))}
-              className="input w-full"
-            />
-          </label>
-          <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
-            <textarea
-              value={dados.descricao ?? ""}
-              onChange={(event) => setDados((a) => ({ ...a, descricao: event.target.value }))}
-              className="input min-h-[80px] w-full resize-y"
-            />
-          </label>
-          <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente *</span>
+            <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo de solicitação</span>
             <select
-              value={dados.clienteId}
-              onChange={(event) => setDados((a) => ({ ...a, clienteId: event.target.value }))}
-              className="input w-full"
-            >
-              <option value="">selecionar</option>
-              {clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.id} disabled={!cliente.auvoId}>
-                  {cliente.nome}
-                  {!cliente.auvoId ? " (não sincronizado)" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Equipe responsável</span>
-            <select
-              value={dados.equipeId ?? ""}
-              onChange={(event) =>
-                setDados((a) => ({ ...a, equipeId: event.target.value || null }))
-              }
-              className="input w-full"
-            >
-              <option value="">nenhuma</option>
-              {equipes.map((equipe) => (
-                <option key={equipe.id} value={equipe.id}>
-                  {equipe.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">
-                Tipo de solicitação
-              </span>
-              <select
-                value={dados.requestTypeId ?? ""}
-                onChange={(event) =>
-                  setDados((a) => ({
-                    ...a,
-                    requestTypeId: event.target.value ? Number(event.target.value) : null,
-                  }))
-                }
-                className="input w-full"
-              >
-                <option value="">selecionar</option>
-                {requestTypes.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">Status inicial</span>
-              <select
-                value={dados.statusId ?? ""}
-                onChange={(event) =>
-                  setDados((a) => ({
-                    ...a,
-                    statusId: event.target.value ? Number(event.target.value) : null,
-                  }))
-                }
-                className="input w-full"
-              >
-                <option value="">selecionar</option>
-                {status.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Prioridade</span>
-            <input
-              type="number"
-              value={dados.prioridade ?? ""}
+              value={dados.requestTypeId ?? ""}
               onChange={(event) =>
                 setDados((a) => ({
                   ...a,
-                  prioridade: event.target.value ? Number(event.target.value) : null,
+                  requestTypeId: event.target.value ? Number(event.target.value) : null,
                 }))
               }
               className="input w-full"
-            />
+            >
+              <option value="">selecionar</option>
+              {requestTypes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.nome}
+                </option>
+              ))}
+            </select>
           </label>
-          {erro && (
-            <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-3">Status inicial</span>
+            <select
+              value={dados.statusId ?? ""}
+              onChange={(event) =>
+                setDados((a) => ({
+                  ...a,
+                  statusId: event.target.value ? Number(event.target.value) : null,
+                }))
+              }
+              className="input w-full"
+            >
+              <option value="">selecionar</option>
+              {status.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.nome}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        <label className="mt-3 block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Prioridade</span>
+          <input
+            type="number"
+            value={dados.prioridade ?? ""}
+            onChange={(event) =>
+              setDados((a) => ({
+                ...a,
+                prioridade: event.target.value ? Number(event.target.value) : null,
+              }))
+            }
+            className="input w-full"
+          />
+        </label>
+        {erro && (
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
+          <Button variant="primary" onClick={salvar} disabled={salvando} loading={salvando}>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

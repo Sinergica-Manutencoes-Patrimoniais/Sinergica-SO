@@ -1,4 +1,5 @@
 import type { PortalSection } from "@sinergica/portal-core";
+import { Button } from "@sinergica/ui";
 import { useCallback, useEffect, useId, useState } from "react";
 import { useAuth } from "../../app/auth-context";
 import { criarRelatorioPdf } from "../../lib/pdf/relatorio-pdf";
@@ -839,9 +840,9 @@ function Estado({ mensagem, acao }: { mensagem: string; acao?: () => void }) {
     <div className="p-12 text-center text-sm text-ink-3">
       <p>{mensagem}</p>
       {acao && (
-        <button type="button" onClick={acao} className="mt-3 font-semibold text-orange">
+        <Button variant="ghost" onClick={acao} className="mt-3 text-orange hover:text-orange-deep">
           Tentar novamente
-        </button>
+        </Button>
       )}
     </div>
   );

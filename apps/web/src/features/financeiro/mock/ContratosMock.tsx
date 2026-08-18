@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { Plus } from "lucide-react";
 import { PageHeader, TableShell } from "./MockUi";
 import { CONTRATOS, brl } from "./mock-data";
@@ -11,10 +12,9 @@ export function ContratosMock() {
         title="Contratos"
         subtitle="Receita mensal recorrente por cliente."
         actions={
-          <button type="button" className="btn-accent">
-            <Plus className="h-4 w-4" />
+          <Button variant="accent" icon={<Plus className="h-4 w-4" />}>
             Novo contrato
-          </button>
+          </Button>
         }
       />
       <TableShell

@@ -30,8 +30,18 @@ function arquivos(dir) {
   return out;
 }
 
+// financeiro/mock/** é protótipo navegável com dados fictícios (banner próprio avisa), não tela
+// real — `TableShell` usa `<table>` semântico de verdade (thead/tbody exigem `table` como pai;
+// `role="table"` num `<div>` só pra escapar deste gate quebra acessibilidade de propósito).
+const IGNORAR_TABLE = /features\/financeiro\/mock\//;
+
 const REGRAS = [
-  { nome: "table", padrao: /<table\b/g, motivo: "use <DataTable> de @sinergica/ui" },
+  {
+    nome: "table",
+    padrao: /<table\b/g,
+    motivo: "use <DataTable> de @sinergica/ui",
+    ignorar: IGNORAR_TABLE,
+  },
   { nome: "modal", padrao: /\bmodal-backdrop\b/g, motivo: "use <Modal> de @sinergica/ui" },
   {
     nome: "button",
@@ -53,6 +63,7 @@ for (const caminho of todosArquivos) {
   const linhas = conteudo.split("\n");
   for (const regra of REGRAS) {
     if (APENAS && regra.nome !== APENAS) continue;
+    if (regra.ignorar?.test(caminho)) continue;
     linhas.forEach((linha, i) => {
       regra.padrao.lastIndex = 0;
       if (regra.padrao.test(linha)) {

@@ -5,7 +5,7 @@
 //
 // REQUISITO (Lucas, 2026-07-29): o histórico continua acessível MESMO depois do Chamado virar OS —
 // por isso o painel carrega sempre pelo `chamadoId`, independente do status do Chamado.
-import { X } from "lucide-react";
+import { Button, Modal } from "@sinergica/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
@@ -226,27 +226,23 @@ export function ChamadoPainel({
 
       {podeAgir && (
         <div className="flex flex-wrap gap-2 border-t border-line-soft px-4 py-3">
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setSubModal({ modo: "gerar-os", destino: "convertido_os" })}
-            className="h-8 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
           >
             Gerar OS
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setSubModal({ modo: "gerar-os", destino: "backlog" })}
-            className="btn-secondary h-8 px-3 text-xs"
           >
             Enviar ao backlog
-          </button>
-          <button
-            type="button"
-            onClick={() => setSubModal({ modo: "cancelar" })}
-            className="h-8 rounded-md border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
-          >
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => setSubModal({ modo: "cancelar" })}>
             Cancelar Chamado
-          </button>
+          </Button>
         </div>
       )}
 
@@ -325,9 +321,11 @@ function DetalheChamado({
                 onChange={(e) => setPlanejada(e.target.value)}
                 className="input h-8 w-full text-xs"
               />
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 disabled={!planejada || salvandoPlanejada}
+                loading={salvandoPlanejada}
                 onClick={async () => {
                   setSalvandoPlanejada(true);
                   try {
@@ -336,10 +334,9 @@ function DetalheChamado({
                     setSalvandoPlanejada(false);
                   }
                 }}
-                className="btn-secondary h-8 shrink-0 px-2 text-xs"
               >
                 Salvar
-              </button>
+              </Button>
             </div>
           ) : (
             <p className="text-ink-2">
@@ -359,9 +356,11 @@ function DetalheChamado({
                 onChange={(e) => setExecucao(e.target.value)}
                 className="input h-8 w-full text-xs"
               />
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 disabled={!execucao || salvandoExecucao}
+                loading={salvandoExecucao}
                 onClick={async () => {
                   setSalvandoExecucao(true);
                   try {
@@ -370,10 +369,9 @@ function DetalheChamado({
                     setSalvandoExecucao(false);
                   }
                 }}
-                className="btn-secondary h-8 shrink-0 px-2 text-xs"
               >
                 Salvar
-              </button>
+              </Button>
             </div>
           ) : (
             <p className="text-ink-2">
@@ -452,98 +450,94 @@ function GerarOsModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {destino === "convertido_os" ? "Gerar OS" : "Enviar ao backlog"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <p className="text-sm text-ink-2">
-            {chamado.numero} · {chamado.titulo}
-          </p>
-          <div className="block">
-            <label
-              htmlFor="chamado-gerar-os-tipo-tarefa"
-              className="mb-1 block text-xs font-semibold text-ink-3"
-            >
-              Tipo de tarefa *
-            </label>
-            {dadosOs.tiposTarefa.length === 0 ? (
-              <p className="text-xs text-ink-3">
-                Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa.
-              </p>
-            ) : (
-              <select
-                id="chamado-gerar-os-tipo-tarefa"
-                value={tipoTarefaId}
-                onChange={(e) => setTipoTarefaId(e.target.value)}
-                className="input w-full"
-              >
-                {dadosOs.tiposTarefa.map((tipo) => (
-                  <option key={tipo.id} value={tipo.id}>
-                    {tipo.nome}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Técnico responsável</span>
+    <Modal
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+      titulo={destino === "convertido_os" ? "Gerar OS" : "Enviar ao backlog"}
+    >
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-ink-2">
+          {chamado.numero} · {chamado.titulo}
+        </p>
+        <div className="block">
+          <label
+            htmlFor="chamado-gerar-os-tipo-tarefa"
+            className="mb-1 block text-xs font-semibold text-ink-3"
+          >
+            Tipo de tarefa *
+          </label>
+          {dadosOs.tiposTarefa.length === 0 ? (
+            <p className="text-xs text-ink-3">
+              Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa.
+            </p>
+          ) : (
             <select
-              value={tecnicoId}
-              onChange={(e) => setTecnicoId(e.target.value)}
+              id="chamado-gerar-os-tipo-tarefa"
+              value={tipoTarefaId}
+              onChange={(e) => setTipoTarefaId(e.target.value)}
               className="input w-full"
             >
-              <option value="">Sem técnico</option>
-              {dadosOs.tecnicos.map((tecnico) => (
-                <option key={tecnico.id} value={tecnico.id}>
-                  {tecnico.nome}
+              {dadosOs.tiposTarefa.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.nome}
                 </option>
               ))}
             </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Data prevista</span>
-            <input
-              type="date"
-              value={dataPrevista}
-              onChange={(e) => setDataPrevista(e.target.value)}
-              className="input w-full"
-            />
-          </label>
-          {destino === "backlog" && (
-            <div className="grid grid-cols-3 gap-2">
-              <GutSelect label="Gravidade *" value={gravidade} onChange={setGravidade} />
-              <GutSelect label="Urgência *" value={urgencia} onChange={setUrgencia} />
-              <GutSelect label="Tendência *" value={tendencia} onChange={setTendencia} />
-            </div>
-          )}
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onCancel} className="btn-secondary">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Técnico responsável</span>
+          <select
+            value={tecnicoId}
+            onChange={(e) => setTecnicoId(e.target.value)}
+            className="input w-full"
+          >
+            <option value="">Sem técnico</option>
+            {dadosOs.tecnicos.map((tecnico) => (
+              <option key={tecnico.id} value={tecnico.id}>
+                {tecnico.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Data prevista</span>
+          <input
+            type="date"
+            value={dataPrevista}
+            onChange={(e) => setDataPrevista(e.target.value)}
+            className="input w-full"
+          />
+        </label>
+        {destino === "backlog" && (
+          <div className="grid grid-cols-3 gap-2">
+            <GutSelect label="Gravidade *" value={gravidade} onChange={setGravidade} />
+            <GutSelect label="Urgência *" value={urgencia} onChange={setUrgencia} />
+            <GutSelect label="Tendência *" value={tendencia} onChange={setTendencia} />
+          </div>
+        )}
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-3">
+          <Button variant="secondary" onClick={onCancel}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={confirmar}
             disabled={salvando || !tipoTarefaId || !gutCompleto}
-            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            loading={salvando}
           >
             {salvando ? "Salvando…" : "Confirmar"}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -603,64 +597,58 @@ function CancelarChamadoModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Cancelar Chamado</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
+    <Modal
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+      titulo="Cancelar Chamado"
+    >
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-ink-2">
+          {chamado.numero} · {chamado.titulo}
+        </p>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Justificativa *</span>
+          <textarea
+            value={justificativa}
+            onChange={(e) => setJustificativa(e.target.value)}
+            className="input min-h-24 w-full resize-y"
+            placeholder="Ex: print de WhatsApp autorizando o cancelamento em anexo"
+          />
+        </label>
+        <div>
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Anexo (opcional)</span>
+          <Button variant="secondary" onClick={() => inputRef.current?.click()}>
+            {anexo ? anexo.name : "Escolher arquivo"}
+          </Button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.webp"
+            className="hidden"
+            onChange={(e) => setAnexo(e.target.files?.[0] ?? null)}
+          />
         </div>
-        <div className="flex flex-col gap-3 p-4">
-          <p className="text-sm text-ink-2">
-            {chamado.numero} · {chamado.titulo}
-          </p>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Justificativa *</span>
-            <textarea
-              value={justificativa}
-              onChange={(e) => setJustificativa(e.target.value)}
-              className="input min-h-24 w-full resize-y"
-              placeholder="Ex: print de WhatsApp autorizando o cancelamento em anexo"
-            />
-          </label>
-          <div>
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Anexo (opcional)</span>
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="btn-secondary"
-            >
-              {anexo ? anexo.name : "Escolher arquivo"}
-            </button>
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.webp"
-              className="hidden"
-              onChange={(e) => setAnexo(e.target.files?.[0] ?? null)}
-            />
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
           </div>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onCancel} className="btn-secondary">
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-3">
+          <Button variant="secondary" onClick={onCancel}>
             Voltar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="danger"
             onClick={confirmar}
             disabled={salvando || !justificativa.trim()}
-            className="h-9 rounded-md bg-danger px-3 text-sm font-semibold text-white hover:bg-danger disabled:opacity-50"
+            loading={salvando}
           >
             {salvando ? "Cancelando…" : "Confirmar cancelamento"}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

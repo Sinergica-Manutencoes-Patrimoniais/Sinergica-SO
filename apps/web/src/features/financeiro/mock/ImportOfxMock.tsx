@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { Upload } from "lucide-react";
 import { PageHeader, TableShell } from "./MockUi";
 import { OFX_ROWS, brl, dataCurta } from "./mock-data";
@@ -52,12 +53,12 @@ export function ImportOfxMock() {
             </td>
             <td className="px-4 py-3">
               <div className="flex gap-1.5">
-                <button type="button" className="btn-secondary">
+                <Button variant="secondary" size="sm">
                   Conciliar
-                </button>
-                <button type="button" className="btn-secondary">
+                </Button>
+                <Button variant="secondary" size="sm">
                   Ignorar
-                </button>
+                </Button>
               </div>
             </td>
           </tr>

@@ -1,4 +1,5 @@
-import { Plus, X } from "lucide-react";
+import { Button, Modal } from "@sinergica/ui";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import type { ConhecimentoEntradaFormData, ConhecimentoEntradaItem } from "../domain/conhecimento";
 import type { PersonaItem } from "../domain/personas";
@@ -82,13 +83,13 @@ export function ConhecimentoList({
           {ativas.length} entrada(s) ativa(s) de {entradas.length} total.
         </p>
         {temEscrita && (
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            icon={<Plus className="h-4 w-4" />}
             onClick={() => abrirModal({ modo: "criar" })}
-            className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
           >
-            <Plus className="h-4 w-4" /> Nova entrada
-          </button>
+            Nova entrada
+          </Button>
         )}
       </div>
 
@@ -117,21 +118,17 @@ export function ConhecimentoList({
                   </div>
                   {temEscrita && (
                     <div className="flex shrink-0 gap-2 pl-3">
-                      <button
-                        type="button"
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => abrirModal({ modo: "editar", item })}
-                        className="rounded-md border border-line p-1.5 text-xs text-ink-2 hover:bg-line-soft"
                       >
                         Editar
-                      </button>
+                      </Button>
                       {item.ativo && (
-                        <button
-                          type="button"
-                          onClick={() => onDesativar(item.id)}
-                          className="rounded-md border border-danger-line p-1.5 text-xs text-danger hover:bg-danger-soft"
-                        >
+                        <Button variant="danger" size="sm" onClick={() => onDesativar(item.id)}>
                           Desativar
-                        </button>
+                        </Button>
                       )}
                     </div>
                   )}
@@ -142,98 +139,76 @@ export function ConhecimentoList({
         ))
       )}
 
-      {modal && (
-        <div className="modal-backdrop">
-          <div className="w-full max-w-lg rounded-xl bg-card p-5 shadow-modal">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-ink">
-                {modal.modo === "criar" ? "Nova entrada" : "Editar entrada"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setModal(null)}
-                className="text-ink-3 hover:text-ink"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="mt-4 space-y-3">
-              <input
-                value={form.titulo}
-                onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
-                placeholder="Título"
-                className="w-full rounded-md border border-line p-2 text-sm"
-              />
-              <textarea
-                value={form.conteudo}
-                onChange={(e) => setForm((f) => ({ ...f, conteudo: e.target.value }))}
-                placeholder="Conteúdo"
-                rows={4}
-                className="w-full rounded-md border border-line p-2 text-sm"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  value={form.categoria}
-                  onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value }))}
-                  placeholder="Categoria"
-                  className="w-full rounded-md border border-line p-2 text-sm"
-                />
-                <select
-                  value={form.personaId}
-                  onChange={(e) => setForm((f) => ({ ...f, personaId: e.target.value }))}
-                  className="w-full rounded-md border border-line p-2 text-sm"
-                >
-                  <option value="">Todas as personas</option>
-                  {personas.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  className="text-xs font-semibold text-ink-2"
-                  htmlFor="conhecimento-prioridade"
-                >
-                  Prioridade ({form.prioridade})
-                </label>
-                <input
-                  id="conhecimento-prioridade"
-                  type="range"
-                  min={1}
-                  max={10}
-                  value={form.prioridade}
-                  onChange={(e) => setForm((f) => ({ ...f, prioridade: Number(e.target.value) }))}
-                  className="w-full"
-                />
-              </div>
-              {erro && (
-                <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-                  {erro}
-                </div>
-              )}
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setModal(null)}
-                className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={salvar}
-                disabled={salvando}
-                className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
-              >
-                {salvando ? "Salvando…" : "Salvar"}
-              </button>
-            </div>
+      <Modal
+        open={modal !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setModal(null);
+        }}
+        titulo={modal?.modo === "criar" ? "Nova entrada" : "Editar entrada"}
+      >
+        <div className="space-y-3">
+          <input
+            value={form.titulo}
+            onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
+            placeholder="Título"
+            className="w-full rounded-md border border-line p-2 text-sm"
+          />
+          <textarea
+            value={form.conteudo}
+            onChange={(e) => setForm((f) => ({ ...f, conteudo: e.target.value }))}
+            placeholder="Conteúdo"
+            rows={4}
+            className="w-full rounded-md border border-line p-2 text-sm"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              value={form.categoria}
+              onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value }))}
+              placeholder="Categoria"
+              className="w-full rounded-md border border-line p-2 text-sm"
+            />
+            <select
+              value={form.personaId}
+              onChange={(e) => setForm((f) => ({ ...f, personaId: e.target.value }))}
+              className="w-full rounded-md border border-line p-2 text-sm"
+            >
+              <option value="">Todas as personas</option>
+              {personas.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome}
+                </option>
+              ))}
+            </select>
           </div>
+          <div>
+            <label className="text-xs font-semibold text-ink-2" htmlFor="conhecimento-prioridade">
+              Prioridade ({form.prioridade})
+            </label>
+            <input
+              id="conhecimento-prioridade"
+              type="range"
+              min={1}
+              max={10}
+              value={form.prioridade}
+              onChange={(e) => setForm((f) => ({ ...f, prioridade: Number(e.target.value) }))}
+              className="w-full"
+            />
+          </div>
+          {erro && (
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+              {erro}
+            </div>
+          )}
         </div>
-      )}
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setModal(null)}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={salvar} disabled={salvando} loading={salvando}>
+            {salvando ? "Salvando…" : "Salvar"}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

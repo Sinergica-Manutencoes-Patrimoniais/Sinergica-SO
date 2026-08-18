@@ -1,3 +1,4 @@
+import { DataTable, type DataTableColumn } from "@sinergica/ui";
 import {
   AlertTriangle,
   ChevronDown,

@@ -1,7 +1,8 @@
 // E01-S66: kits de ferramentas — agrupamento PCM-only (Auvo não tem endpoint de kit/bundle).
 // Componente auto-contido (carrega os próprios dados) pra não inchar FerramentasPage.tsx — vive
 // como uma seção a mais na mesma página, mesmo padrão visual de Reservas (E01-S64).
-import { Package, Plus, X } from "lucide-react";
+import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
+import { Package, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { listarUnidadesFerramenta } from "../application/ferramenta-unidades";
@@ -40,14 +41,17 @@ type Estado =
       atribuicoesAtivas: KitAtribuicaoAtiva[];
     };
 
-type Modal = { modo: "novo"; kit?: undefined } | { modo: "editar"; kit: KitItem } | null;
+type ModalState = { modo: "novo"; kit?: undefined } | { modo: "editar"; kit: KitItem } | null;
 
 export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
   const { user } = useAuth();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
-  const [modal, setModal] = useState<Modal>(null);
+  const [modal, setModal] = useState<ModalState>(null);
   const [atribuindo, setAtribuindo] = useState<KitItem | null>(null);
-  const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [kitParaDesativar, setKitParaDesativar] = useState<KitItem | null>(null);
+  const [atribuicaoParaDevolver, setAtribuicaoParaDevolver] = useState<KitAtribuicaoAtiva | null>(
+    null,
+  );
 
   const carregar = useCallback(async () => {
     setEstado({ fase: "carregando" });
@@ -100,14 +104,9 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
   }
 
   async function desativar(kit: KitItem) {
-    if (!user || !confirm(`Desativar o kit ${kit.nome}?`)) return;
-    try {
-      setErroAcao(null);
-      await desativarKit(supabaseKitsAdapter, { id: kit.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar o kit.");
-    }
+    if (!user) return;
+    await desativarKit(supabaseKitsAdapter, { id: kit.id, userId: user.id });
+    await carregar();
   }
 
   async function confirmarAtribuir(funcionarioId: string) {
@@ -122,18 +121,13 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
   }
 
   async function devolver(atribuicao: KitAtribuicaoAtiva) {
-    if (!user || !confirm(`Devolver o kit de ${atribuicao.funcionarioNome}?`)) return;
-    try {
-      setErroAcao(null);
-      await devolverKit(supabaseKitsAdapter, {
-        kitAtribuicaoId: atribuicao.kitAtribuicaoId,
-        condicao: "ok",
-        userId: user.id,
-      });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível devolver o kit.");
-    }
+    if (!user) return;
+    await devolverKit(supabaseKitsAdapter, {
+      kitAtribuicaoId: atribuicao.kitAtribuicaoId,
+      condicao: "ok",
+      userId: user.id,
+    });
+    await carregar();
   }
 
   if (estado.fase === "carregando") {
@@ -162,22 +156,15 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
           </p>
         </div>
         {temEscrita && (
-          <button
-            type="button"
+          <Button
+            variant="accent"
+            icon={<Plus className="h-4 w-4" />}
             onClick={() => setModal({ modo: "novo" })}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
           >
-            <Plus className="h-4 w-4" />
             Novo kit
-          </button>
+          </Button>
         )}
       </div>
-
-      {erroAcao && (
-        <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-          {erroAcao}
-        </div>
-      )}
 
       {estado.kits.length === 0 ? (
         <p className="mt-4 text-sm text-ink-3">Nenhum kit cadastrado.</p>
@@ -222,7 +209,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                         </button>
                         <button
                           type="button"
-                          onClick={() => desativar(kit)}
+                          onClick={() => setKitParaDesativar(kit)}
                           className="text-xs font-semibold text-danger hover:underline"
                         >
                           Desativar
@@ -268,7 +255,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                   {temEscrita && (
                     <button
                       type="button"
-                      onClick={() => devolver(atribuicao)}
+                      onClick={() => setAtribuicaoParaDevolver(atribuicao)}
                       className="shrink-0 text-xs font-semibold text-ink-2 hover:text-ink"
                     >
                       Devolver kit
@@ -298,6 +285,32 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
           onConfirmar={confirmarAtribuir}
         />
       )}
+
+      <ConfirmDialog
+        open={kitParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setKitParaDesativar(null);
+        }}
+        titulo={`Desativar o kit "${kitParaDesativar?.nome}"`}
+        descricao="O kit deixa de poder ser atribuído. Esta ação não pode ser desfeita."
+        rotuloConfirmar="Desativar"
+        onConfirmar={async () => {
+          if (kitParaDesativar) await desativar(kitParaDesativar);
+        }}
+      />
+
+      <ConfirmDialog
+        open={atribuicaoParaDevolver !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setAtribuicaoParaDevolver(null);
+        }}
+        titulo={`Devolver o kit de "${atribuicaoParaDevolver?.funcionarioNome}"`}
+        descricao="Registra a devolução de todos os itens do kit em condição ok."
+        rotuloConfirmar="Devolver"
+        onConfirmar={async () => {
+          if (atribuicaoParaDevolver) await devolver(atribuicaoParaDevolver);
+        }}
+      />
     </section>
   );
 }
@@ -349,102 +362,87 @@ function KitModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">{kit ? "Editar kit" : "Novo kit"}</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="max-h-[70vh] space-y-3 overflow-y-auto p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
-            <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              className="input w-full"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
-            <textarea
-              value={descricao ?? ""}
-              onChange={(e) => setDescricao(e.target.value)}
-              className="input min-h-[60px] w-full resize-y"
-            />
-          </label>
-          <div>
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Itens do kit</span>
-            <div className="space-y-2">
-              {itens.map((item, indice) => (
-                <div
-                  // biome-ignore lint/suspicious/noArrayIndexKey: linha de formulário sem id próprio ainda
-                  key={indice}
-                  className="grid grid-cols-[1fr_90px_auto] gap-2"
+    <Modal
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+      titulo={kit ? "Editar kit" : "Novo kit"}
+    >
+      <div className="max-h-[70vh] space-y-3 overflow-y-auto">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+          <textarea
+            value={descricao ?? ""}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="input min-h-[60px] w-full resize-y"
+          />
+        </label>
+        <div>
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Itens do kit</span>
+          <div className="space-y-2">
+            {itens.map((item, indice) => (
+              <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: linha de formulário sem id próprio ainda
+                key={indice}
+                className="grid grid-cols-[1fr_90px_auto] gap-2"
+              >
+                <select
+                  value={item.ferramentaId}
+                  onChange={(e) => atualizarItem(indice, "ferramentaId", e.target.value)}
+                  className="input h-9"
                 >
-                  <select
-                    value={item.ferramentaId}
-                    onChange={(e) => atualizarItem(indice, "ferramentaId", e.target.value)}
-                    className="input h-9"
-                  >
-                    <option value="">Ferramenta</option>
-                    {ferramentas.map((ferramenta) => (
-                      <option key={ferramenta.id} value={ferramenta.id}>
-                        {ferramenta.nome}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    min={1}
-                    value={item.quantidade}
-                    onChange={(e) => atualizarItem(indice, "quantidade", e.target.value)}
-                    className="input h-9"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removerItem(indice)}
-                    className="text-xs font-semibold text-danger hover:underline"
-                  >
-                    Remover
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setItens((atual) => [...atual, { ferramentaId: "", quantidade: 1 }])}
-              className="mt-2 text-xs font-semibold text-orange hover:text-orange-deep"
-            >
-              + Adicionar item
-            </button>
+                  <option value="">Ferramenta</option>
+                  {ferramentas.map((ferramenta) => (
+                    <option key={ferramenta.id} value={ferramenta.id}>
+                      {ferramenta.nome}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min={1}
+                  value={item.quantidade}
+                  onChange={(e) => atualizarItem(indice, "quantidade", e.target.value)}
+                  className="input h-9"
+                />
+                <button
+                  type="button"
+                  onClick={() => removerItem(indice)}
+                  className="text-xs font-semibold text-danger hover:underline"
+                >
+                  Remover
+                </button>
+              </div>
+            ))}
           </div>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
           <button
             type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            onClick={() => setItens((atual) => [...atual, { ferramentaId: "", quantidade: 1 }])}
+            className="mt-2 text-xs font-semibold text-orange hover:text-orange-deep"
           >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Salvar"}
+            + Adicionar item
           </button>
         </div>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
       </div>
-    </div>
+      <div className="mt-4 flex justify-end gap-2 border-t border-line-soft pt-3">
+        <Button variant="secondary" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button variant="accent" onClick={salvar} disabled={salvando} loading={salvando}>
+          {salvando ? "Salvando…" : "Salvar"}
+        </Button>
+      </div>
+    </Modal>
   );
 }
 
@@ -476,51 +474,49 @@ function AtribuirKitModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Atribuir kit {kit.nome}</h3>
-        </div>
-        <div className="space-y-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Técnico</span>
-            <select
-              value={funcionarioId}
-              onChange={(e) => setFuncionarioId(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">Escolha o técnico</option>
-              {funcionarios.map((funcionario) => (
-                <option key={funcionario.id} value={funcionario.id}>
-                  {funcionario.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+    <Modal
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+      titulo={`Atribuir kit ${kit.nome}`}
+      tamanho="sm"
+    >
+      <div className="space-y-3">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Técnico</span>
+          <select
+            value={funcionarioId}
+            onChange={(e) => setFuncionarioId(e.target.value)}
+            className="input w-full"
           >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={confirmar}
-            disabled={salvando || !funcionarioId}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Atribuir"}
-          </button>
-        </div>
+            <option value="">Escolha o técnico</option>
+            {funcionarios.map((funcionario) => (
+              <option key={funcionario.id} value={funcionario.id}>
+                {funcionario.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
       </div>
-    </div>
+      <div className="mt-4 flex justify-end gap-2 border-t border-line-soft pt-3">
+        <Button variant="secondary" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button
+          variant="accent"
+          onClick={confirmar}
+          disabled={salvando || !funcionarioId}
+          loading={salvando}
+        >
+          {salvando ? "Salvando…" : "Atribuir"}
+        </Button>
+      </div>
+    </Modal>
   );
 }

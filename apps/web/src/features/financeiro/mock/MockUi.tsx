@@ -93,11 +93,16 @@ export function StatusChip({ status }: { status: "previsto" | "realizado" }) {
   );
 }
 
+// Continua com a API (head/children) usada pelos consumidores de fora do lote E00-S15 (ex.:
+// RentabilidadeMock.tsx, fora do escopo desta migração). É `<table>` semântico de verdade — HTML
+// exige que `thead`/`tbody`/`tr` sejam filhos diretos de um `table`, então trocar a tag por
+// `role="table"` (tentativa anterior) quebrava acessibilidade pra "enganar" o gate. `financeiro/
+// mock/**` está na allowlist de `check-primitivas.mjs` (protótipo navegável, não a tela real).
 export function TableShell({ head, children }: { head: ReactNode; children: ReactNode }) {
   return (
     <div className="surface-card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-line-soft text-sm">
+        <table className="w-full min-w-full divide-y divide-line-soft text-sm">
           <thead className="bg-line-soft/60 text-left text-xs font-semibold uppercase tracking-wider text-ink-3">
             <tr>{head}</tr>
           </thead>

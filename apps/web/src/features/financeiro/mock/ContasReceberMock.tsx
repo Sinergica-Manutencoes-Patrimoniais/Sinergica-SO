@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { AgingChip, PageHeader, TableShell } from "./MockUi";
 import { type FaixaAging, RECEBIVEIS, brl, dataCurta } from "./mock-data";
 
@@ -54,9 +55,9 @@ export function ContasReceberMock() {
               <AgingChip faixa={r.faixa} />
             </td>
             <td className="px-4 py-3">
-              <button type="button" className="btn-secondary">
+              <Button variant="secondary" size="sm">
                 Dar baixa
-              </button>
+              </Button>
             </td>
           </tr>
         ))}

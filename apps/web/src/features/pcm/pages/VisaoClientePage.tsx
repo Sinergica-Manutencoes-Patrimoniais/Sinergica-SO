@@ -4,6 +4,7 @@
 //
 // A tela não grava cadastro nem operação localmente: dados de cliente são governados pelo Auvo e
 // OS/qualidade continuam nas telas de origem. A ação de edição só leva o usuário para o alvo.
+import { Button } from "@sinergica/ui";
 import {
   Activity,
   Briefcase,
@@ -1111,10 +1112,9 @@ function PainelCadastroAuvo({
         </div>
         <div className="flex flex-wrap gap-2">
           {temEscrita && (
-            <button type="button" onClick={onEditar} className="btn-secondary">
-              <Pencil className="h-4 w-4" />
+            <Button variant="secondary" icon={<Pencil className="h-4 w-4" />} onClick={onEditar}>
               Editar cadastro
-            </button>
+            </Button>
           )}
           <button
             type="button"

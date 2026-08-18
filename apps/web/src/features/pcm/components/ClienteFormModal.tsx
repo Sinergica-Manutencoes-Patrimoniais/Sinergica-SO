@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { Button, Modal } from "@sinergica/ui";
 import { useState } from "react";
 import type { ClienteFormData } from "../application/cliente-360-gateway";
 
@@ -58,84 +58,64 @@ export function ClienteFormModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-3xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h3 className="text-base font-semibold text-ink">
-            {cliente ? "Editar cliente" : "Novo cliente"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto p-5 md:grid-cols-2">
-          <Field label="Nome *" value={dados.nome} onChange={(v) => setCampo("nome", v)} />
-          <Field label="CNPJ/CPF" value={dados.cnpj ?? ""} onChange={(v) => setCampo("cnpj", v)} />
-          <Field
-            label="Endereço"
-            value={dados.endereco ?? ""}
-            onChange={(v) => setCampo("endereco", v)}
-            className="md:col-span-2"
+    <Modal
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+      titulo={cliente ? "Editar cliente" : "Novo cliente"}
+      tamanho="lg"
+    >
+      <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
+        <Field label="Nome *" value={dados.nome} onChange={(v) => setCampo("nome", v)} />
+        <Field label="CNPJ/CPF" value={dados.cnpj ?? ""} onChange={(v) => setCampo("cnpj", v)} />
+        <Field
+          label="Endereço"
+          value={dados.endereco ?? ""}
+          onChange={(v) => setCampo("endereco", v)}
+          className="md:col-span-2"
+        />
+        <Field label="Cidade" value={dados.cidade ?? ""} onChange={(v) => setCampo("cidade", v)} />
+        <Field label="Estado" value={dados.estado ?? ""} onChange={(v) => setCampo("estado", v)} />
+        <Field label="CEP" value={dados.cep ?? ""} onChange={(v) => setCampo("cep", v)} />
+        <Field
+          label="Contato"
+          value={dados.contatoNome ?? ""}
+          onChange={(v) => setCampo("contatoNome", v)}
+        />
+        <Field
+          label="Telefone"
+          value={dados.contatoTelefone ?? ""}
+          onChange={(v) => setCampo("contatoTelefone", v)}
+        />
+        <Field
+          label="E-mail"
+          value={dados.contatoEmail ?? ""}
+          onChange={(v) => setCampo("contatoEmail", v)}
+        />
+        <label className="block md:col-span-2">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Observações</span>
+          <textarea
+            value={dados.observacoes ?? ""}
+            onChange={(event) => setCampo("observacoes", event.target.value)}
+            className="input min-h-[92px] w-full resize-y"
           />
-          <Field
-            label="Cidade"
-            value={dados.cidade ?? ""}
-            onChange={(v) => setCampo("cidade", v)}
-          />
-          <Field
-            label="Estado"
-            value={dados.estado ?? ""}
-            onChange={(v) => setCampo("estado", v)}
-          />
-          <Field label="CEP" value={dados.cep ?? ""} onChange={(v) => setCampo("cep", v)} />
-          <Field
-            label="Contato"
-            value={dados.contatoNome ?? ""}
-            onChange={(v) => setCampo("contatoNome", v)}
-          />
-          <Field
-            label="Telefone"
-            value={dados.contatoTelefone ?? ""}
-            onChange={(v) => setCampo("contatoTelefone", v)}
-          />
-          <Field
-            label="E-mail"
-            value={dados.contatoEmail ?? ""}
-            onChange={(v) => setCampo("contatoEmail", v)}
-          />
-          <label className="block md:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Observações</span>
-            <textarea
-              value={dados.observacoes ?? ""}
-              onChange={(event) => setCampo("observacoes", event.target.value)}
-              className="input min-h-[92px] w-full resize-y"
-            />
-          </label>
-          {erro && (
-            <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-5 py-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
-        </div>
+        </label>
+        {erro && (
+          <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
       </div>
-    </div>
+      <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+        <Button variant="secondary" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button variant="accent" onClick={salvar} disabled={salvando} loading={salvando}>
+          {salvando ? "Salvando…" : "Salvar"}
+        </Button>
+      </div>
+    </Modal>
   );
 }
 

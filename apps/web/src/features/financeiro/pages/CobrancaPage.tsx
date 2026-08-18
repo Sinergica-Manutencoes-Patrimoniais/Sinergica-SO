@@ -1,4 +1,5 @@
-import { BellRing, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { Button, ConfirmDialog, DataTable, Modal as ModalPrimitivo } from "@sinergica/ui";
+import { BellRing, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -42,7 +43,7 @@ export function CobrancaPage() {
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
-  const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [pontoParaDesativar, setPontoParaDesativar] = useState<PontoReguaItem | null>(null);
 
   const temLeitura = podeAcessar("financeiro", "leitura");
   const temEscrita = podeAcessar("financeiro", "escrita");
@@ -69,7 +70,6 @@ export function CobrancaPage() {
 
   async function salvar(input: PontoReguaFormData) {
     if (!user) return;
-    setErroAcao(null);
     if (modal?.modo === "editar") {
       await editarPontoRegua(supabaseFinanceiroAdapter, {
         ...input,
@@ -83,15 +83,10 @@ export function CobrancaPage() {
     await carregar();
   }
 
-  async function desativar(ponto: PontoReguaItem) {
-    if (!user || !confirm(`Desativar o ponto "${labelDiaOffset(ponto.diaOffset)}"?`)) return;
-    try {
-      setErroAcao(null);
-      await desativarPontoRegua(supabaseFinanceiroAdapter, ponto.id, user.id);
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
-    }
+  async function desativar() {
+    if (!user || !pontoParaDesativar) return;
+    await desativarPontoRegua(supabaseFinanceiroAdapter, pontoParaDesativar.id, user.id);
+    await carregar();
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
@@ -111,14 +106,15 @@ export function CobrancaPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={<RefreshCw className="h-4 w-4" />}
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4"
         >
-          <RefreshCw className="h-4 w-4" />
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -137,130 +133,130 @@ export function CobrancaPage() {
             </p>
           </div>
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="accent"
+              icon={<Plus className="h-4 w-4" />}
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
-              <Plus className="h-4 w-4" />
               Novo ponto
-            </button>
+            </Button>
           )}
         </div>
-        {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-            {erroAcao}
-          </div>
-        )}
       </section>
 
-      {pontos.length === 0 ? (
-        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
-          <BellRing className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">
-            Nenhum ponto configurado — a régua não envia nada até o primeiro ponto ser criado.
-          </p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-line bg-card">
-          <table className="w-full min-w-[560px] text-left text-sm">
-            <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
-              <tr>
-                <th className="px-3 py-2">Ponto</th>
-                <th className="px-3 py-2">Canal</th>
-                <th className="px-3 py-2">Mensagem-modelo</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pontos.map((ponto) => (
-                <tr
-                  key={ponto.id}
-                  className="border-b border-line last:border-0 hover:bg-line-soft"
+      <div className="rounded-lg border border-line bg-card">
+        <DataTable
+          colunas={[
+            {
+              chave: "ponto",
+              cabecalho: "Ponto",
+              render: (ponto: PontoReguaItem) => (
+                <span className="font-semibold text-ink">{labelDiaOffset(ponto.diaOffset)}</span>
+              ),
+            },
+            {
+              chave: "canal",
+              cabecalho: "Canal",
+              render: (ponto: PontoReguaItem) => CANAL_LABEL[ponto.canal],
+            },
+            {
+              chave: "mensagem",
+              cabecalho: "Mensagem-modelo",
+              render: (ponto: PontoReguaItem) => (
+                <span className="block max-w-[360px] truncate">{ponto.mensagemModelo}</span>
+              ),
+            },
+            {
+              chave: "status",
+              cabecalho: "Status",
+              render: (ponto: PontoReguaItem) => (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${ponto.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
                 >
-                  <td className="px-3 py-2 font-semibold text-ink">
-                    {labelDiaOffset(ponto.diaOffset)}
-                  </td>
-                  <td className="px-3 py-2 text-ink-2">{CANAL_LABEL[ponto.canal]}</td>
-                  <td className="max-w-[360px] truncate px-3 py-2 text-ink-2">
-                    {ponto.mensagemModelo}
-                  </td>
-                  <td className="px-3 py-2">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${ponto.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
+                  {ponto.ativo ? "Ativo" : "Inativo"}
+                </span>
+              ),
+            },
+            {
+              chave: "acoes",
+              cabecalho: "Ações",
+              render: (ponto: PontoReguaItem) => (
+                <div className="flex justify-end gap-2">
+                  {temEscrita && (
+                    <button
+                      type="button"
+                      onClick={() => setModal({ modo: "editar", ponto })}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink"
                     >
-                      {ponto.ativo ? "Ativo" : "Inativo"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex justify-end gap-2">
-                      {temEscrita && (
-                        <button
-                          type="button"
-                          onClick={() => setModal({ modo: "editar", ponto })}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          Editar
-                        </button>
-                      )}
-                      {temEscrita && ponto.ativo && (
-                        <button
-                          type="button"
-                          onClick={() => desativar(ponto)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Desativar
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      <Pencil className="h-3.5 w-3.5" />
+                      Editar
+                    </button>
+                  )}
+                  {temEscrita && ponto.ativo && (
+                    <button
+                      type="button"
+                      onClick={() => setPontoParaDesativar(ponto)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Desativar
+                    </button>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+          itens={pontos}
+          chaveLinha={(ponto) => ponto.id}
+          vazio={
+            <span className="inline-flex flex-col items-center gap-2">
+              <BellRing className="h-9 w-9 text-ink-3" />
+              Nenhum ponto configurado — a régua não envia nada até o primeiro ponto ser criado.
+            </span>
+          }
+        />
+      </div>
 
       <section className="rounded-lg border border-line bg-card p-4">
         <h3 className="text-base font-semibold text-ink">Histórico de envios</h3>
         <p className="mt-0.5 text-sm text-ink-3">
           Registrado pelo job diário — nunca editável pela UI (auditoria).
         </p>
-        {envios.length === 0 ? (
-          <p className="mt-4 text-sm text-ink-3">Nenhum envio registrado ainda.</p>
-        ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[480px] text-left text-sm">
-              <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
-                <tr>
-                  <th className="px-3 py-2">Quando</th>
-                  <th className="px-3 py-2">Canal</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Motivo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {envios.slice(0, 50).map((envio) => (
-                  <tr key={envio.id} className="border-b border-line last:border-0">
-                    <td className="px-3 py-2 text-ink-2">
-                      {new Date(envio.enviadoEm).toLocaleString("pt-BR")}
-                    </td>
-                    <td className="px-3 py-2 text-ink-2">
-                      {envio.canalEfetivo ? CANAL_LABEL[envio.canalEfetivo] : "—"}
-                    </td>
-                    <td className="px-3 py-2 text-ink-2">{STATUS_LABEL[envio.status]}</td>
-                    <td className="max-w-[320px] truncate px-3 py-2 text-ink-3">
-                      {envio.motivo ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="mt-3">
+          <DataTable
+            colunas={[
+              {
+                chave: "quando",
+                cabecalho: "Quando",
+                render: (envio: EnvioReguaItem) =>
+                  new Date(envio.enviadoEm).toLocaleString("pt-BR"),
+              },
+              {
+                chave: "canal",
+                cabecalho: "Canal",
+                render: (envio: EnvioReguaItem) =>
+                  envio.canalEfetivo ? CANAL_LABEL[envio.canalEfetivo] : "—",
+              },
+              {
+                chave: "status",
+                cabecalho: "Status",
+                render: (envio: EnvioReguaItem) => STATUS_LABEL[envio.status],
+              },
+              {
+                chave: "motivo",
+                cabecalho: "Motivo",
+                render: (envio: EnvioReguaItem) => (
+                  <span className="block max-w-[320px] truncate text-ink-3">
+                    {envio.motivo ?? "—"}
+                  </span>
+                ),
+              },
+            ]}
+            itens={envios.slice(0, 50)}
+            chaveLinha={(envio) => envio.id}
+            vazio={<>Nenhum envio registrado ainda.</>}
+          />
+        </div>
       </section>
 
       {modal && (
@@ -270,6 +266,17 @@ export function CobrancaPage() {
           onSalvar={salvar}
         />
       )}
+
+      <ConfirmDialog
+        open={pontoParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setPontoParaDesativar(null);
+        }}
+        titulo={`Desativar o ponto "${pontoParaDesativar ? labelDiaOffset(pontoParaDesativar.diaOffset) : ""}"`}
+        descricao="A régua deixa de disparar este ponto."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
     </div>
   );
 }
@@ -305,86 +312,74 @@ function PontoModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {ponto ? "Editar ponto da régua" : "Novo ponto da régua"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">
-              Dia em relação ao vencimento *
-            </span>
-            <input
-              type="number"
-              value={diaOffset}
-              onChange={(e) => setDiaOffset(Number(e.target.value))}
-              className="input w-full"
-              placeholder="-3"
-            />
-            <span className="mt-1 block text-micro text-ink-3">
-              Negativo = antes (D-3), positivo = depois (D+7). Preview: {labelDiaOffset(diaOffset)}
-            </span>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Canal *</span>
-            <select
-              value={canal}
-              onChange={(e) => setCanal(e.target.value as CanalCobranca)}
-              className="input w-full"
-            >
-              <option value="whatsapp">WhatsApp</option>
-              <option value="email">E-mail</option>
-              <option value="ambos">WhatsApp + E-mail</option>
-            </select>
-          </label>
-          <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Mensagem-modelo *</span>
-            <textarea
-              value={mensagemModelo}
-              onChange={(e) => setMensagemModelo(e.target.value)}
-              className="input min-h-[96px] w-full resize-y"
-            />
-            <span className="mt-1 block text-micro text-ink-3">
-              Placeholders: <code>{"{{cliente}}"}</code>, <code>{"{{valor}}"}</code>,{" "}
-              <code>{"{{vencimento}}"}</code>
-            </span>
-          </label>
-          {ponto && (
-            <p className="text-xs text-ink-3 sm:col-span-2">
-              Exemplo de valor real: R$ {centavosParaReais(15000)} — só ilustrativo, não afeta o
-              envio.
-            </p>
-          )}
-          {erro && (
-            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={ponto ? "Editar ponto da régua" : "Novo ponto da régua"}
+      tamanho="md"
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">
+            Dia em relação ao vencimento *
+          </span>
+          <input
+            type="number"
+            value={diaOffset}
+            onChange={(e) => setDiaOffset(Number(e.target.value))}
+            className="input w-full"
+            placeholder="-3"
+          />
+          <span className="mt-1 block text-micro text-ink-3">
+            Negativo = antes (D-3), positivo = depois (D+7). Preview: {labelDiaOffset(diaOffset)}
+          </span>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Canal *</span>
+          <select
+            value={canal}
+            onChange={(e) => setCanal(e.target.value as CanalCobranca)}
+            className="input w-full"
           >
+            <option value="whatsapp">WhatsApp</option>
+            <option value="email">E-mail</option>
+            <option value="ambos">WhatsApp + E-mail</option>
+          </select>
+        </label>
+        <label className="block sm:col-span-2">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Mensagem-modelo *</span>
+          <textarea
+            value={mensagemModelo}
+            onChange={(e) => setMensagemModelo(e.target.value)}
+            className="input min-h-[96px] w-full resize-y"
+          />
+          <span className="mt-1 block text-micro text-ink-3">
+            Placeholders: <code>{"{{cliente}}"}</code>, <code>{"{{valor}}"}</code>,{" "}
+            <code>{"{{vencimento}}"}</code>
+          </span>
+        </label>
+        {ponto && (
+          <p className="text-xs text-ink-3 sm:col-span-2">
+            Exemplo de valor real: R$ {centavosParaReais(15000)} — só ilustrativo, não afeta o
+            envio.
+          </p>
+        )}
+        {erro && (
+          <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 pt-2 sm:col-span-2">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="accent" onClick={salvar} loading={salvando}>
             {salvando ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }

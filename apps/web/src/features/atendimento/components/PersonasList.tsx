@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
 import { Bot, Edit3, Plus, X } from "lucide-react";
 import { useState } from "react";
 import type { PersonaFormData, PersonaItem, TipoPersona } from "../domain/personas";
@@ -32,6 +33,7 @@ export function PersonasList({
   });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [personaParaDesativar, setPersonaParaDesativar] = useState<PersonaItem | null>(null);
 
   function abrirModal(next: ModalState) {
     setModal(next);
@@ -59,17 +61,9 @@ export function PersonasList({
     }
   }
 
-  async function desativar(item: PersonaItem) {
-    if (!window.confirm(`Desativar a persona "${item.nome}"?`)) return;
-    setSalvando(true);
-    setErro(null);
-    try {
-      await onDesativar(item.id);
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível desativar a persona.");
-    } finally {
-      setSalvando(false);
-    }
+  async function desativar() {
+    if (!personaParaDesativar) return;
+    await onDesativar(personaParaDesativar.id);
   }
 
   return (
@@ -82,14 +76,13 @@ export function PersonasList({
           </p>
         </div>
         {temEscrita && (
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            icon={<Plus className="h-4 w-4" />}
             onClick={() => abrirModal({ modo: "criar" })}
-            className="btn-primary"
           >
-            <Plus className="h-4 w-4" />
             Nova persona
-          </button>
+          </Button>
         )}
       </div>
 
@@ -119,24 +112,22 @@ export function PersonasList({
               </div>
               {temEscrita && (
                 <div className="flex shrink-0 justify-end gap-2">
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<Edit3 className="h-4 w-4" />}
                     onClick={() => abrirModal({ modo: "editar", item: persona })}
-                    className="rounded-md border border-line p-2 text-ink-2 hover:bg-line-soft"
                     title="Editar"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </button>
+                  />
                   {persona.ativo && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      icon={<X className="h-4 w-4" />}
                       disabled={salvando}
-                      onClick={() => desativar(persona)}
-                      className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
+                      onClick={() => setPersonaParaDesativar(persona)}
                       title="Desativar"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    />
                   )}
                 </div>
               )}
@@ -145,103 +136,89 @@ export function PersonasList({
         )}
       </div>
 
-      {modal && (
-        <div className="modal-backdrop">
-          <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-modal">
-            <div className="flex items-center justify-between border-b border-line-soft px-5 py-4">
-              <h3 className="text-base font-semibold text-ink">
-                {modal.modo === "criar" ? "Nova persona" : "Editar persona"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setModal(null)}
-                className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
-                title="Fechar"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <form
-              className="max-h-[70vh] space-y-4 overflow-y-auto px-5 py-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void salvar();
-              }}
+      <Modal
+        open={modal !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setModal(null);
+        }}
+        titulo={modal?.modo === "criar" ? "Nova persona" : "Editar persona"}
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void salvar();
+          }}
+        >
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">Nome</span>
+            <input
+              className="input mt-1"
+              value={form.nome}
+              onChange={(event) => setForm({ ...form, nome: event.target.value })}
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">Tipo</span>
+            <select
+              className="input mt-1"
+              value={form.tipo}
+              onChange={(event) => setForm({ ...form, tipo: event.target.value as TipoPersona })}
             >
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Nome
-                </span>
-                <input
-                  className="input mt-1"
-                  value={form.nome}
-                  onChange={(event) => setForm({ ...form, nome: event.target.value })}
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Tipo
-                </span>
-                <select
-                  className="input mt-1"
-                  value={form.tipo}
-                  onChange={(event) =>
-                    setForm({ ...form, tipo: event.target.value as TipoPersona })
-                  }
-                >
-                  {TIPOS.map((tipo) => (
-                    <option key={tipo} value={tipo}>
-                      {labelTipoPersona(tipo)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Prompt de sistema
-                </span>
-                <textarea
-                  className="input mt-1 min-h-[120px]"
-                  value={form.promptSistema}
-                  onChange={(event) => setForm({ ...form, promptSistema: event.target.value })}
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Base de conhecimento (opcional)
-                </span>
-                <textarea
-                  className="input mt-1 min-h-[80px]"
-                  value={form.baseConhecimento}
-                  onChange={(event) => setForm({ ...form, baseConhecimento: event.target.value })}
-                  placeholder="FAQ, instruções extras, política de atendimento…"
-                />
-              </label>
-              {erro && (
-                <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
-                  {erro}
-                </div>
-              )}
-              <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
-                <button
-                  type="button"
-                  onClick={() => setModal(null)}
-                  className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={salvando}
-                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
-                >
-                  {salvando ? "Salvando…" : "Salvar"}
-                </button>
-              </div>
-            </form>
+              {TIPOS.map((tipo) => (
+                <option key={tipo} value={tipo}>
+                  {labelTipoPersona(tipo)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+              Prompt de sistema
+            </span>
+            <textarea
+              className="input mt-1 min-h-[120px]"
+              value={form.promptSistema}
+              onChange={(event) => setForm({ ...form, promptSistema: event.target.value })}
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+              Base de conhecimento (opcional)
+            </span>
+            <textarea
+              className="input mt-1 min-h-[80px]"
+              value={form.baseConhecimento}
+              onChange={(event) => setForm({ ...form, baseConhecimento: event.target.value })}
+              placeholder="FAQ, instruções extras, política de atendimento…"
+            />
+          </label>
+          {erro && (
+            <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+              {erro}
+            </div>
+          )}
+          <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+            <Button variant="secondary" onClick={() => setModal(null)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="primary" disabled={salvando} loading={salvando}>
+              {salvando ? "Salvando…" : "Salvar"}
+            </Button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        open={personaParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setPersonaParaDesativar(null);
+        }}
+        titulo={`Desativar a persona "${personaParaDesativar?.nome}"`}
+        descricao="A persona deixará de ser usada nos atendimentos."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
     </section>
   );
 }

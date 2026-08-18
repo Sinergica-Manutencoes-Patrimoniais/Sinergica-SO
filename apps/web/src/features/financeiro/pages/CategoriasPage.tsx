@@ -1,4 +1,5 @@
-import { Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { Button, ConfirmDialog, Modal as ModalPrimitivo } from "@sinergica/ui";
+import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -27,7 +28,7 @@ export function CategoriasPage() {
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
-  const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [categoriaParaDesativar, setCategoriaParaDesativar] = useState<CategoriaItem | null>(null);
 
   const temLeitura = podeAcessar("financeiro", "leitura");
   const temEscrita = podeAcessar("financeiro", "escrita");
@@ -50,7 +51,6 @@ export function CategoriasPage() {
 
   async function salvar(input: CategoriaFormData) {
     if (!user) return;
-    setErroAcao(null);
     if (modal?.modo === "editar") {
       await editarCategoria(supabaseFinanceiroAdapter, {
         ...input,
@@ -64,15 +64,13 @@ export function CategoriasPage() {
     await carregar();
   }
 
-  async function desativar(categoria: CategoriaItem) {
-    if (!user || !confirm(`Desativar "${categoria.nome}"?`)) return;
-    try {
-      setErroAcao(null);
-      await desativarCategoria(supabaseFinanceiroAdapter, { id: categoria.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
-    }
+  async function desativar() {
+    if (!user || !categoriaParaDesativar) return;
+    await desativarCategoria(supabaseFinanceiroAdapter, {
+      id: categoriaParaDesativar.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
@@ -92,14 +90,15 @@ export function CategoriasPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={<RefreshCw className="h-4 w-4" />}
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4"
         >
-          <RefreshCw className="h-4 w-4" />
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -120,21 +119,15 @@ export function CategoriasPage() {
             </p>
           </div>
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="accent"
+              icon={<Plus className="h-4 w-4" />}
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
-              <Plus className="h-4 w-4" />
               Nova categoria
-            </button>
+            </Button>
           )}
         </div>
-        {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-            {erroAcao}
-          </div>
-        )}
       </section>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -144,7 +137,7 @@ export function CategoriasPage() {
           categorias={estado.categorias}
           temEscrita={temEscrita}
           onEditar={(categoria) => setModal({ modo: "editar", categoria })}
-          onDesativar={desativar}
+          onDesativar={setCategoriaParaDesativar}
         />
         <ArvoreCategorias
           titulo="Saída"
@@ -152,7 +145,7 @@ export function CategoriasPage() {
           categorias={estado.categorias}
           temEscrita={temEscrita}
           onEditar={(categoria) => setModal({ modo: "editar", categoria })}
-          onDesativar={desativar}
+          onDesativar={setCategoriaParaDesativar}
         />
       </div>
 
@@ -164,6 +157,17 @@ export function CategoriasPage() {
           onSalvar={salvar}
         />
       )}
+
+      <ConfirmDialog
+        open={categoriaParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setCategoriaParaDesativar(null);
+        }}
+        titulo={`Desativar "${categoriaParaDesativar?.nome}"`}
+        descricao="A categoria deixa de aparecer para novos lançamentos."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
     </div>
   );
 }
@@ -294,80 +298,64 @@ function CategoriaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {categoria ? "Editar categoria" : "Nova categoria"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
-            <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              className="input w-full"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo *</span>
-            <select
-              value={tipo}
-              onChange={(e) => {
-                setTipo(e.target.value as CategoriaTipo);
-                setParentId("");
-              }}
-              className="input w-full"
-            >
-              <option value="entrada">Entrada</option>
-              <option value="saida">Saída</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">
-              Categoria pai (opcional — máx. 2 níveis)
-            </span>
-            <select
-              value={parentId}
-              onChange={(e) => setParentId(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">Nenhuma (categoria raiz)</option>
-              {opcoesRaiz.map((raiz) => (
-                <option key={raiz.id} value={raiz.id}>
-                  {raiz.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={categoria ? "Editar categoria" : "Nova categoria"}
+      tamanho="md"
+    >
+      <div className="grid grid-cols-1 gap-3">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo *</span>
+          <select
+            value={tipo}
+            onChange={(e) => {
+              setTipo(e.target.value as CategoriaTipo);
+              setParentId("");
+            }}
+            className="input w-full"
           >
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">
+            Categoria pai (opcional — máx. 2 níveis)
+          </span>
+          <select
+            value={parentId}
+            onChange={(e) => setParentId(e.target.value)}
+            className="input w-full"
+          >
+            <option value="">Nenhuma (categoria raiz)</option>
+            {opcoesRaiz.map((raiz) => (
+              <option key={raiz.id} value={raiz.id}>
+                {raiz.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="accent" onClick={salvar} loading={salvando}>
             {salvando ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }

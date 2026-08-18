@@ -1,5 +1,5 @@
-import { ConfirmDialog } from "@sinergica/ui";
-import { Pencil, Plus, RefreshCw, Trash2, Users, X } from "lucide-react";
+import { ConfirmDialog, Modal as ModalPrimitivo } from "@sinergica/ui";
+import { Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -254,67 +254,64 @@ function EquipeModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-2xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {equipe ? "Editar equipe local" : "Nova equipe"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="max-h-[70vh] overflow-y-auto p-4">
-          {equipe?.auvoId && (
-            <div className="mb-3 rounded-md border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
-              Esta edição será apenas local no PCM.
-            </div>
-          )}
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
-            <input
-              value={dados.nome}
-              onChange={(event) => setDados((a) => ({ ...a, nome: event.target.value }))}
-              className="input w-full"
-            />
-          </label>
-          <Checklist
-            titulo="Participantes"
-            ids={dados.participanteIds}
-            funcionarios={funcionarios}
-            onToggle={(id) => toggle("participanteIds", id)}
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={equipe ? "Editar equipe local" : "Nova equipe"}
+      tamanho="lg"
+    >
+      <div className="max-h-[70vh] overflow-y-auto">
+        {equipe?.auvoId && (
+          <div className="mb-3 rounded-md border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
+            Esta edição será apenas local no PCM.
+          </div>
+        )}
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <input
+            value={dados.nome}
+            onChange={(event) => setDados((a) => ({ ...a, nome: event.target.value }))}
+            className="input w-full"
           />
-          <Checklist
-            titulo="Gestores"
-            ids={dados.gestorIds}
-            funcionarios={funcionarios}
-            onToggle={(id) => toggle("gestorIds", id)}
-          />
-          {erro && (
-            <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
-        </div>
+        </label>
+        <Checklist
+          titulo="Participantes"
+          ids={dados.participanteIds}
+          funcionarios={funcionarios}
+          onToggle={(id) => toggle("participanteIds", id)}
+        />
+        <Checklist
+          titulo="Gestores"
+          ids={dados.gestorIds}
+          funcionarios={funcionarios}
+          onToggle={(id) => toggle("gestorIds", id)}
+        />
+        {erro && (
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
       </div>
-    </div>
+      <div className="mt-4 flex justify-end gap-2 border-t border-line pt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onClick={salvar}
+          disabled={salvando}
+          className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+        >
+          {salvando ? "Salvando…" : "Salvar"}
+        </button>
+      </div>
+    </ModalPrimitivo>
   );
 }
 

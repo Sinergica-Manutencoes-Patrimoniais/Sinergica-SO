@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { Plus } from "lucide-react";
 import { PageHeader } from "./MockUi";
 import { CONTAS, brl } from "./mock-data";
@@ -9,10 +10,9 @@ export function ContasBancariasMock() {
         title="Contas bancárias"
         subtitle="Saldo derivado do saldo inicial + lançamentos realizados."
         actions={
-          <button type="button" className="btn-accent">
-            <Plus className="h-4 w-4" />
+          <Button variant="accent" icon={<Plus className="h-4 w-4" />}>
             Nova conta
-          </button>
+          </Button>
         }
       />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

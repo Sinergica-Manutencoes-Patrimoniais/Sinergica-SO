@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { Plus, RefreshCw, Zap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -155,9 +156,9 @@ export function LaudosSpdaPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="text-sm text-ink-3 mt-1">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <Button variant="ghost" onClick={carregar} className="mt-4 text-orange">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -170,10 +171,9 @@ export function LaudosSpdaPage() {
           <p className="text-sm text-ink-3">Vistoria, pontos de medição e conclusão técnica</p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={carregar} className="btn-secondary">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="secondary" icon={<RefreshCw className="h-4 w-4" />} onClick={carregar}>
             Atualizar
-          </button>
+          </Button>
           {temEscrita && (
             <button
               type="button"
