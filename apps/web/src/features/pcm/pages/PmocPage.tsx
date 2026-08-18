@@ -1736,7 +1736,7 @@ function CriarOsVisitaModal({
         a OS e já dispara a tarefa no Auvo (síncrono, mesmo fluxo de "Nova OS").
       </p>
       {!dadosAbertura ? (
-        <p className="mt-4 text-body text-ink-3">Carregando técnicos e tipos de tarefa…</p>
+        <Skeleton className="h-4 w-40" />
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="Tipo de tarefa (Auvo) *">

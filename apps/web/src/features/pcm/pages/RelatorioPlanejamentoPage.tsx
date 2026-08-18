@@ -1,3 +1,4 @@
+import { Skeleton } from "@sinergica/ui";
 import { useCallback, useEffect, useState } from "react";
 import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import { listarOpcoesAgenda } from "../application/agenda-tecnico";
@@ -156,7 +157,7 @@ export function RelatorioPlanejamentoPage() {
       {erro ? (
         <p className="text-body text-danger">{erro}</p>
       ) : carregando ? (
-        <p className="text-body text-ink-3">Carregando…</p>
+        <Skeleton className="h-4 w-40" />
       ) : itens.length === 0 ? (
         <p className="rounded-lg border border-line p-5 text-body text-ink-3">
           Nada planejado para este dia/técnico.

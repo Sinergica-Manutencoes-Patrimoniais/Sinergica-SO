@@ -675,7 +675,7 @@ function AbaPorCliente({ temEscrita }: { temEscrita: boolean }) {
         </div>
       )}
       {carregando ? (
-        <p className="mt-4 text-center text-body text-ink-3">Carregando…</p>
+        <Skeleton className="h-4 w-40" />
       ) : alocacoes.length === 0 ? (
         <div className="mt-4 rounded-lg border border-line-soft bg-paper px-5 py-10 text-center">
           <Wrench className="mx-auto h-9 w-9 text-ink-3" />

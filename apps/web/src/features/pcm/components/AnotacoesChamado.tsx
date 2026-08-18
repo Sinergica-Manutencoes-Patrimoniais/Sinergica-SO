@@ -1,3 +1,4 @@
+import { Skeleton } from "@sinergica/ui";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { adicionarAnotacaoChamado, listarAnotacoesChamado } from "../application/chamados";
@@ -80,7 +81,7 @@ export function AnotacoesChamado({
         </div>
       )}
       {carregando ? (
-        <p className="text-caption text-ink-3">Carregando anotações…</p>
+        <Skeleton className="h-4 w-40" />
       ) : anotacoes.length === 0 ? (
         <p className="text-body text-ink-3">Nenhuma anotação ainda.</p>
       ) : (

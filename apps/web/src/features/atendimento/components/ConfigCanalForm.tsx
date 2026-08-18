@@ -1,3 +1,4 @@
+import { Skeleton } from "@sinergica/ui";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ClienteOpcao } from "../application/config-gateway";
@@ -161,9 +162,7 @@ export function ConfigCanalForm({
           </>
         )}
 
-        {clienteSelecionadoId && carregandoConfig && (
-          <p className="text-body text-ink-3">Carregando config…</p>
-        )}
+        {clienteSelecionadoId && carregandoConfig && <Skeleton className="h-4 w-40" />}
       </form>
     </section>
   );

@@ -656,7 +656,7 @@ function PainelResponsaveis({
         )}
       </div>
       {carregando ? (
-        <div className="px-5 py-6 text-center text-body text-ink-3">Carregando…</div>
+        <Skeleton className="h-4 w-40" />
       ) : responsaveis.length === 0 ? (
         <div className="px-5 py-6 text-center text-body text-ink-3">
           Nenhum responsável cadastrado.
@@ -922,7 +922,7 @@ function PainelFerramentasCliente({
         )}
       </div>
       {carregando ? (
-        <div className="px-5 py-6 text-center text-body text-ink-3">Carregando…</div>
+        <Skeleton className="h-4 w-40" />
       ) : ativas.length === 0 && historico.length === 0 ? (
         <div className="px-5 py-6 text-center text-body text-ink-3">
           Nenhuma ferramenta alocada.
@@ -1026,7 +1026,7 @@ function AlocarFerramentaModal({
         <h2 className="text-lg font-semibold text-ink">Alocar ferramenta</h2>
         <div className="mt-4">
           {carregando ? (
-            <p className="text-body text-ink-3">Carregando…</p>
+            <Skeleton className="h-4 w-40" />
           ) : opcoes.length === 0 ? (
             <p className="text-body text-ink-3">
               Nenhuma ferramenta disponível (todas já estão alocadas em algum cliente).
@@ -1601,7 +1601,7 @@ function PainelAlmaCliente({
       </div>
       <div className="mt-3">
         {carregando ? (
-          <p className="text-body text-ink-3">Carregando…</p>
+          <Skeleton className="h-4 w-40" />
         ) : editando ? (
           <div className="flex flex-col gap-2">
             <textarea

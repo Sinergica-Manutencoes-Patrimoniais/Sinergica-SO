@@ -1,7 +1,7 @@
 // E01-S66: kits de ferramentas — agrupamento PCM-only (Auvo não tem endpoint de kit/bundle).
 // Componente auto-contido (carrega os próprios dados) pra não inchar FerramentasPage.tsx — vive
 // como uma seção a mais na mesma página, mesmo padrão visual de Reservas (E01-S64).
-import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
+import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
 import { Package, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -133,7 +133,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
   if (estado.fase === "carregando") {
     return (
       <section className="rounded-lg border border-line bg-card p-4">
-        <p className="text-body text-ink-3">Carregando kits…</p>
+        <Skeleton className="h-4 w-40" />
       </section>
     );
   }

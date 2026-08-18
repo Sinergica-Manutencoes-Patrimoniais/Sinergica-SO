@@ -434,7 +434,7 @@ function CobrancaModal({
     >
       <div className="flex flex-col gap-3">
         {carregando ? (
-          <p className="text-body text-ink-3">Carregando…</p>
+          <Skeleton className="h-4 w-40" />
         ) : cobrancaAtiva ? (
           <div className="flex flex-col gap-3">
             <p className="text-body text-ink-2">

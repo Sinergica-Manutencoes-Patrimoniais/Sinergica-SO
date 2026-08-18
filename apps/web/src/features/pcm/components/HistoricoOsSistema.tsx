@@ -1,5 +1,6 @@
 // HistoricoOsSistema.tsx — E01-S87 AC-2/AC-3: histórico de OS de um Sistema (vinculadas ao
 // Sistema em si + aos seus Componentes, deduplicadas) — última manutenção em destaque.
+import { Skeleton } from "@sinergica/ui";
 import { useCallback, useEffect, useState } from "react";
 import { listarHistoricoOsSistema } from "../application/sistemas";
 import type { SistemasGateway } from "../application/sistemas-gateway";
@@ -31,7 +32,7 @@ export function HistoricoOsSistema({
   }, [carregar]);
 
   if (historico === "carregando") {
-    return <p className="text-body text-ink-3">Carregando histórico…</p>;
+    return <Skeleton className="h-4 w-40" />;
   }
   if (historico === null) {
     return <p className="text-caption text-ink-3">Não foi possível carregar o histórico.</p>;

@@ -707,7 +707,7 @@ function DetalheErrosSyncAuvo({
         </Button>
       </div>
       {carregando ? (
-        <p className="px-4 py-5 text-body text-ink-3">Carregando erros…</p>
+        <Skeleton className="h-4 w-40" />
       ) : erro ? (
         <p className="px-4 py-5 text-body text-danger">{erro}</p>
       ) : itens.length === 0 ? (

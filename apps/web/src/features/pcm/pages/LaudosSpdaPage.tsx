@@ -363,7 +363,7 @@ export function LaudosSpdaPage() {
 
               <div className="divide-y divide-line-soft">
                 {carregandoPontos ? (
-                  <div className="px-5 py-8 text-body text-ink-3">Carregando pontos…</div>
+                  <Skeleton className="h-4 w-40" />
                 ) : pontos.length === 0 ? (
                   <div className="px-5 py-8 text-body text-ink-3">
                     Nenhum ponto de medição registrado.

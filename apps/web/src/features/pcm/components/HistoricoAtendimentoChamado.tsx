@@ -1,5 +1,6 @@
 // HistoricoAtendimentoChamado.tsx — E01-S89: exibe os snapshots de conversa (WhatsApp/Atendimento)
 // anexados a um Chamado. Leitura via `ChamadosGateway.listarHistoricoAtendimento` (Conformist).
+import { Skeleton } from "@sinergica/ui";
 import { useCallback, useEffect, useState } from "react";
 import { listarHistoricoAtendimento } from "../application/chamados";
 import type { ChamadosGateway } from "../application/chamados-gateway";
@@ -33,7 +34,7 @@ export function HistoricoAtendimentoChamado({
   }, [carregar]);
 
   if (snapshots === "carregando") {
-    return <p className="text-body text-ink-3">Carregando histórico de atendimento…</p>;
+    return <Skeleton className="h-4 w-40" />;
   }
   if (snapshots === null) {
     return <p className="text-caption text-ink-3">Não foi possível carregar o histórico.</p>;

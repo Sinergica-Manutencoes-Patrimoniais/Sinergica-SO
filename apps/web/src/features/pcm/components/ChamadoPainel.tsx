@@ -5,7 +5,7 @@
 //
 // REQUISITO (Lucas, 2026-07-29): o histórico continua acessível MESMO depois do Chamado virar OS —
 // por isso o painel carrega sempre pelo `chamadoId`, independente do status do Chamado.
-import { Button, Modal } from "@sinergica/ui";
+import { Button, Modal, Skeleton } from "@sinergica/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
@@ -163,7 +163,7 @@ export function ChamadoPainel({
   }
 
   if (carregando) {
-    return <div className="px-4 py-3 text-caption text-ink-3">Carregando Chamado…</div>;
+    return <Skeleton className="h-4 w-40" />;
   }
   if (!chamado) {
     return (

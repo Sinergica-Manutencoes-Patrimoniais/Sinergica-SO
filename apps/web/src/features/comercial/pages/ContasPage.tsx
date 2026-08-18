@@ -8,7 +8,17 @@
  * parte da query key, `keepPreviousData` evita a lista piscar, e o debounce de 250 ms na busca
  * segue o mesmo número escolhido pela E01-S145 no board de Operação. */
 
-import { Badge, Button, Card, DataTable, EmptyState, Field, Input, Select } from "@sinergica/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  DataTable,
+  EmptyState,
+  Field,
+  Input,
+  Select,
+  Skeleton,
+} from "@sinergica/ui";
 import { Plus, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -136,7 +146,7 @@ export function ContasPage({
         </div>
       </Card>
 
-      {cargaFria && <p className="text-body text-ink-2">Carregando contas…</p>}
+      {cargaFria && <Skeleton className="h-4 w-40" />}
 
       {erro && (
         <Card>

@@ -5,7 +5,7 @@
  * página do PCM só monta o componente e passa o `clienteId`, que é a Conta compartilhada
  * (ADR-0020). */
 
-import { Badge, Button, Card, EmptyState } from "@sinergica/ui";
+import { Badge, Button, Card, EmptyState, Skeleton } from "@sinergica/ui";
 import { ClipboardList, FileText, MessageCircle, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -78,7 +78,7 @@ export function PainelComercialCliente({
   }
 
   if (oportunidadesQuery.isPending) {
-    return <p className="text-body text-ink-2">Carregando oportunidades…</p>;
+    return <Skeleton className="h-4 w-40" />;
   }
 
   const erro = oportunidadesQuery.error ?? etapasQuery.error;
@@ -213,7 +213,7 @@ export function PainelComercialCliente({
       </div>
 
       {levantamentosQuery.isPending ? (
-        <p className="text-body text-ink-2">Carregando levantamentos…</p>
+        <Skeleton className="h-4 w-40" />
       ) : levantamentos.length === 0 ? (
         <EmptyState titulo="Nenhum levantamento nesta conta">
           {oportunidades.length > 0

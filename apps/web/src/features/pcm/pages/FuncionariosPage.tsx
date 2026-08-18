@@ -344,7 +344,7 @@ function PerfilFuncionarioModal({
       tamanho="lg"
     >
       {!dados ? (
-        <p className="text-body text-ink-3">Carregando perfil…</p>
+        <Skeleton className="h-4 w-40" />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           <section className="rounded border border-line p-3">

@@ -1,4 +1,4 @@
-import { ToastProvider, TooltipProvider } from "@sinergica/ui";
+import { Skeleton, ToastProvider, TooltipProvider } from "@sinergica/ui";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { PortalShell } from "../features/area-cliente/PortalShell";
 import { deveUsarPortal } from "../features/area-cliente/domain/roteamento";
@@ -19,7 +19,7 @@ function TelaCarregando() {
           alt="Sinérgica Manutenções Patrimoniais"
           className="mx-auto h-12 object-contain mb-4"
         />
-        <p className="text-body text-ink-3">Carregando sessão…</p>
+        <Skeleton className="h-4 w-40" />
       </div>
     </div>
   );

@@ -790,7 +790,7 @@ export function InspecoesPage({
               )}
 
               {carregandoItens ? (
-                <div className="py-14 text-center text-body text-ink-3">Carregando itens…</div>
+                <Skeleton className="h-4 w-40" />
               ) : itensFiltrados.length === 0 ? (
                 <div className="py-20 text-center">
                   <ImageIcon className="mx-auto h-10 w-10 text-line" />

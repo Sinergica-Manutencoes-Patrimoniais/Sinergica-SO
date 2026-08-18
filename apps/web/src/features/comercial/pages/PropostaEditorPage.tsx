@@ -6,7 +6,7 @@
  * RPC. O preview e o salvo podem divergir por um instante (parâmetros mudaram enquanto editava);
  * isso é aceitável porque salvar sempre recalcula de novo no servidor com os valores atuais. */
 
-import { Badge, Button, Card, EmptyState, Field, Input, Select } from "@sinergica/ui";
+import { Badge, Button, Card, EmptyState, Field, Input, Select, Skeleton } from "@sinergica/ui";
 import { ArrowLeft, Download, FileSearch, Plus, Send, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -542,7 +542,7 @@ export function PropostaEditorPage({
                   {importandoLevantamento && (
                     <div className="space-y-2 rounded-md border border-line-soft p-2">
                       {itensLevantamentoQuery.isPending ? (
-                        <p className="text-caption text-ink-2">Carregando itens do levantamento…</p>
+                        <Skeleton className="h-4 w-40" />
                       ) : itensLevantamentoQuery.error ? (
                         <p className="text-caption text-danger">
                           Falha ao carregar itens do levantamento.

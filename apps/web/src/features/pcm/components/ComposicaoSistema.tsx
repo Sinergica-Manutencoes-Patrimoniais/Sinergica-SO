@@ -2,6 +2,7 @@
 // Componente compartilhado — usado por `SistemasPage.tsx` (PCM) e `VisaoClientePage.tsx` (Visão
 // 360, AC-2), mesmo comportamento nos dois pontos de entrada. Staged: marca/desmarca em memória,
 // "Salvar" persiste tudo de uma vez (diff, ver `salvarComposicaoSistema`).
+import { Skeleton } from "@sinergica/ui";
 import { useCallback, useEffect, useState } from "react";
 import {
   listarItensDisponiveis,
@@ -86,7 +87,7 @@ export function ComposicaoSistema({
   }
 
   if (estado.fase === "carregando") {
-    return <p className="px-1 py-3 text-body text-ink-3">Carregando itens…</p>;
+    return <Skeleton className="h-4 w-40" />;
   }
   if (estado.fase === "erro") {
     return <p className="px-1 py-3 text-body text-danger">{estado.mensagem}</p>;

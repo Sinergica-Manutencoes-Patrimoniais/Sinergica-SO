@@ -1,7 +1,7 @@
 /** Lista de contratos comerciais (E03-S07, task 7). Ativar/encerrar passam pelas RPCs atômicas —
  * esta página só oferece os botões; a guarda real (piso, vigência, unicidade) está no banco. */
 
-import { Badge, Button, Card, EmptyState, Field, Input } from "@sinergica/ui";
+import { Badge, Button, Card, EmptyState, Field, Input, Skeleton } from "@sinergica/ui";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useContas } from "../application/comercial-queries";
@@ -77,7 +77,7 @@ export function ContratosPage() {
   }
 
   if (contratosQuery.isPending) {
-    return <p className="text-body text-ink-2">Carregando contratos…</p>;
+    return <Skeleton className="h-4 w-40" />;
   }
   if (contratosQuery.error) {
     return (

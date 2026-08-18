@@ -1,5 +1,5 @@
 // EnviarHistoricoModal.tsx — E01-S89. Anexa X dias de conversa a um Chamado existente ou recém-criado.
-import { Button, Modal } from "@sinergica/ui";
+import { Button, Modal, Skeleton } from "@sinergica/ui";
 import { useEffect, useState } from "react";
 import type { ChamadoOpcao } from "../application/historico-chamado-gateway";
 import { JANELAS_DIAS_PADRAO } from "../domain/historico-chamado";
@@ -85,7 +85,7 @@ export function EnviarHistoricoModal({
         </label>
 
         {chamados === null ? (
-          <p className="text-caption text-ink-3">Carregando Chamados…</p>
+          <Skeleton className="h-4 w-40" />
         ) : (
           <div className="block">
             <span className="mb-1 block text-caption font-semibold text-ink-3">

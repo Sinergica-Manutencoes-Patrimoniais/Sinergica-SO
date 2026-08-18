@@ -381,7 +381,7 @@ function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () =
     >
       <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
         {contexto === "carregando" ? (
-          <p className="text-body text-ink-3">Carregando…</p>
+          <Skeleton className="h-4 w-40" />
         ) : contexto === null ? (
           <p className="text-body text-ink-3">Item não encontrado.</p>
         ) : (

@@ -255,7 +255,7 @@ export function AssessmentPage() {
         )}
 
         {carregandoItens ? (
-          <p className="text-body text-ink-3">Carregando itens…</p>
+          <Skeleton className="h-4 w-40" />
         ) : itens.length === 0 ? (
           <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
             <ClipboardCheck className="mx-auto h-9 w-9 text-ink-3" />

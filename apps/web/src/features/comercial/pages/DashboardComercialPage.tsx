@@ -1,7 +1,7 @@
 /** Dashboard comercial (E03-S08). Responde "o funil está funcionando?" — tudo agregado server-side
  * (RPCs, migration 0196), nunca calculado no browser a partir da tabela inteira (AC-1). */
 
-import { Card, EmptyState } from "@sinergica/ui";
+import { Card, EmptyState, Skeleton } from "@sinergica/ui";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import type { PeriodoDashboard } from "../application/dashboard-gateway";
@@ -119,7 +119,7 @@ export function DashboardComercialPage() {
       {/* AC-2: conversão por etapa */}
       <Bloco titulo="Conversão por etapa">
         {conversaoQuery.isPending ? (
-          <p className="text-body text-ink-2">Carregando…</p>
+          <Skeleton className="h-4 w-40" />
         ) : (
           <ConversaoEtapasChart etapas={conversaoQuery.data ?? []} />
         )}
@@ -129,7 +129,7 @@ export function DashboardComercialPage() {
         {/* AC-3: ciclo de venda */}
         <Bloco titulo="Ciclo de venda (mediana)">
           {cicloQuery.isPending ? (
-            <p className="text-body text-ink-2">Carregando…</p>
+            <Skeleton className="h-4 w-40" />
           ) : cicloQuery.data && cicloQuery.data.medianaDias !== null ? (
             <>
               <p className="text-2xl font-semibold tabular-nums text-ink">
@@ -152,7 +152,7 @@ export function DashboardComercialPage() {
         {/* AC-4: win/loss */}
         <Bloco titulo="Win / loss">
           {winLossQuery.isPending ? (
-            <p className="text-body text-ink-2">Carregando…</p>
+            <Skeleton className="h-4 w-40" />
           ) : totalFechadas === 0 ? (
             <SemDados />
           ) : (
@@ -184,7 +184,7 @@ export function DashboardComercialPage() {
         {/* AC-5/AC-8: ticket médio */}
         <Bloco titulo="Ticket médio">
           {ticketQuery.isPending ? (
-            <p className="text-body text-ink-2">Carregando…</p>
+            <Skeleton className="h-4 w-40" />
           ) : ticketQuery.data && ticketQuery.data.ticketMedioCentavos !== null ? (
             <>
               <p className="text-2xl font-semibold tabular-nums text-ink">
@@ -218,7 +218,7 @@ export function DashboardComercialPage() {
         {/* AC-6/AC-8: desconto médio × piso */}
         <Bloco titulo="Desconto médio × piso">
           {descontoQuery.isPending ? (
-            <p className="text-body text-ink-2">Carregando…</p>
+            <Skeleton className="h-4 w-40" />
           ) : descontoQuery.data && descontoQuery.data.descontoMedioPct !== null ? (
             <>
               <p className="text-2xl font-semibold tabular-nums text-ink">
@@ -250,7 +250,7 @@ export function DashboardComercialPage() {
       {/* AC-7: origem do lead */}
       <Bloco titulo="Origem do lead">
         {origemQuery.isPending ? (
-          <p className="text-body text-ink-2">Carregando…</p>
+          <Skeleton className="h-4 w-40" />
         ) : (origemQuery.data ?? []).length === 0 ? (
           <SemDados />
         ) : (

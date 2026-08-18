@@ -1,3 +1,4 @@
+import { Skeleton } from "@sinergica/ui";
 import { Download, Send } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -176,7 +177,7 @@ export function RelatorioClientePage() {
           {erro}
         </p>
       ) : null}
-      {carregando ? <p className="text-body text-ink-3">Carregando…</p> : null}
+      {carregando ? <Skeleton className="h-4 w-40" /> : null}
       {relatorio ? (
         <article className="rounded-lg border border-line bg-card p-6">
           <p className="text-caption font-semibold uppercase tracking-widest text-orange">

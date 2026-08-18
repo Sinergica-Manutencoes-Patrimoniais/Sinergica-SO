@@ -1,6 +1,7 @@
 // PainelSistemasCliente.tsx — E01-S86 AC-2: Visão 360 usa o MESMO componente de composição
 // (checkbox+filtro) do PCM. Só compõe Sistemas já existentes — criar/editar o registro do Sistema
 // continua em `SistemasPage.tsx` (fora de escopo desta story, ver spec.md).
+import { Skeleton } from "@sinergica/ui";
 import { Link2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { listarSistemas } from "../application/sistemas";
@@ -29,7 +30,7 @@ export function PainelSistemasCliente({
   }, [carregar]);
 
   if (sistemas === "carregando") {
-    return <p className="p-4 text-body text-ink-3">Carregando sistemas…</p>;
+    return <Skeleton className="h-4 w-40" />;
   }
 
   if (sistemas.length === 0) {
