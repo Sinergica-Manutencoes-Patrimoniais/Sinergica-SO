@@ -1,3 +1,4 @@
+import { Button, DataTable } from "@sinergica/ui";
 import { Landmark, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -105,14 +106,14 @@ export function ImpostosPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          icon={<RefreshCw className="h-4 w-4" />}
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4"
         >
-          <RefreshCw className="h-4 w-4" />
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -161,15 +162,15 @@ export function ImpostosPage() {
                     className="input"
                   />
                 </label>
-                <button
-                  type="button"
+                <Button
+                  variant="accent"
+                  icon={<Plus className="h-4 w-4" />}
                   onClick={provisionar}
                   disabled={provisionando}
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  loading={provisionando}
                 >
-                  <Plus className="h-4 w-4" />
-                  {provisionando ? "Calculando…" : "Provisionar"}
-                </button>
+                  Provisionar
+                </Button>
               </div>
             )}
           </div>
@@ -182,38 +183,46 @@ export function ImpostosPage() {
           <p className="mt-3 text-sm text-ink-3">Nenhuma provisão calculada ainda.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-line bg-card">
-          <table className="w-full min-w-[560px] text-left text-sm">
-            <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
-              <tr>
-                <th className="px-3 py-2">Competência</th>
-                <th className="px-3 py-2 text-right">Receita</th>
-                <th className="px-3 py-2 text-right">RBT12</th>
-                <th className="px-3 py-2 text-right">Alíquota efetiva</th>
-                <th className="px-3 py-2 text-right">Imposto</th>
-              </tr>
-            </thead>
-            <tbody>
-              {provisoes.map((p) => (
-                <tr key={p.competencia} className="border-b border-line last:border-0">
-                  <td className="px-3 py-2 text-ink-2">{formatarCompetencia(p.competencia)}</td>
-                  <td className="px-3 py-2 text-right text-ink-2">
-                    R$ {centavosParaReais(p.receitaCentavos)}
-                  </td>
-                  <td className="px-3 py-2 text-right text-ink-2">
-                    R$ {centavosParaReais(p.rbt12Centavos)}
-                  </td>
-                  <td className="px-3 py-2 text-right text-ink-2">
-                    {(p.aliquotaEfetiva * 100).toFixed(2)}%
-                  </td>
-                  <td className="px-3 py-2 text-right font-semibold text-ink">
-                    R$ {centavosParaReais(p.valorCentavos)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          colunas={[
+            {
+              chave: "competencia",
+              cabecalho: "Competência",
+              render: (p: ProvisaoImposto) => formatarCompetencia(p.competencia),
+            },
+            {
+              chave: "receita",
+              cabecalho: "Receita",
+              numerica: true,
+              render: (p: ProvisaoImposto) => `R$ ${centavosParaReais(p.receitaCentavos)}`,
+            },
+            {
+              chave: "rbt12",
+              cabecalho: "RBT12",
+              numerica: true,
+              render: (p: ProvisaoImposto) => `R$ ${centavosParaReais(p.rbt12Centavos)}`,
+            },
+            {
+              chave: "aliquota",
+              cabecalho: "Alíquota efetiva",
+              numerica: true,
+              render: (p: ProvisaoImposto) => `${(p.aliquotaEfetiva * 100).toFixed(2)}%`,
+            },
+            {
+              chave: "imposto",
+              cabecalho: "Imposto",
+              numerica: true,
+              render: (p: ProvisaoImposto) => (
+                <span className="font-semibold text-ink">
+                  R$ {centavosParaReais(p.valorCentavos)}
+                </span>
+              ),
+            },
+          ]}
+          itens={provisoes}
+          chaveLinha={(p) => p.competencia}
+          vazio={<>Nenhuma provisão calculada ainda.</>}
+        />
       )}
     </div>
   );
@@ -298,85 +307,91 @@ function ConfigForm({
       </div>
 
       {tipo === "faixa_rbt12" && (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[520px] text-left text-sm">
-            <thead className="text-xs font-semibold uppercase tracking-wide text-ink-3">
-              <tr>
-                <th className="px-2 py-1">Até RBT12 (R$)</th>
-                <th className="px-2 py-1">Alíquota nominal (%)</th>
-                <th className="px-2 py-1">Parcela a deduzir (R$)</th>
-                <th className="px-2 py-1" />
-              </tr>
-            </thead>
-            <tbody>
-              {faixas.map((f, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: lista de faixas fixas, reordenação não ocorre em runtime
-                <tr key={i}>
-                  <td className="px-2 py-1">
-                    <input
-                      value={
-                        f.ateRbt12Centavos == null ? "" : centavosParaReais(f.ateRbt12Centavos)
-                      }
-                      onChange={(e) =>
-                        atualizarFaixa(i, {
-                          ateRbt12Centavos: e.target.value
-                            ? Math.round(Number(e.target.value.replace(",", ".")) * 100)
-                            : null,
-                        })
-                      }
-                      placeholder="sem teto"
-                      className="input w-full"
-                    />
-                  </td>
-                  <td className="px-2 py-1">
-                    <input
-                      value={(f.aliquotaNominal * 100).toFixed(2)}
-                      onChange={(e) =>
-                        atualizarFaixa(i, {
-                          aliquotaNominal: Number(e.target.value.replace(",", ".")) / 100,
-                        })
-                      }
-                      className="input w-full"
-                    />
-                  </td>
-                  <td className="px-2 py-1">
-                    <input
-                      value={centavosParaReais(f.parcelaDeduzirCentavos)}
-                      onChange={(e) =>
-                        atualizarFaixa(i, {
-                          parcelaDeduzirCentavos: Math.round(
-                            Number(e.target.value.replace(",", ".")) * 100,
-                          ),
-                        })
-                      }
-                      className="input w-full"
-                    />
-                  </td>
-                  <td className="px-2 py-1">
-                    <button
-                      type="button"
-                      onClick={() => setFaixas((atual) => atual.filter((_, idx) => idx !== i))}
-                      className="text-ink-3 hover:text-danger"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button
-            type="button"
+        <div className="mt-4">
+          <DataTable
+            colunas={[
+              {
+                chave: "ateRbt12",
+                cabecalho: "Até RBT12 (R$)",
+                render: (f: FaixaRbt12 & { __i: number }) => (
+                  <input
+                    value={f.ateRbt12Centavos == null ? "" : centavosParaReais(f.ateRbt12Centavos)}
+                    onChange={(e) =>
+                      atualizarFaixa(f.__i, {
+                        ateRbt12Centavos: e.target.value
+                          ? Math.round(Number(e.target.value.replace(",", ".")) * 100)
+                          : null,
+                      })
+                    }
+                    placeholder="sem teto"
+                    className="input w-full"
+                  />
+                ),
+              },
+              {
+                chave: "aliquotaNominal",
+                cabecalho: "Alíquota nominal (%)",
+                render: (f: FaixaRbt12 & { __i: number }) => (
+                  <input
+                    value={(f.aliquotaNominal * 100).toFixed(2)}
+                    onChange={(e) =>
+                      atualizarFaixa(f.__i, {
+                        aliquotaNominal: Number(e.target.value.replace(",", ".")) / 100,
+                      })
+                    }
+                    className="input w-full"
+                  />
+                ),
+              },
+              {
+                chave: "parcelaDeduzir",
+                cabecalho: "Parcela a deduzir (R$)",
+                render: (f: FaixaRbt12 & { __i: number }) => (
+                  <input
+                    value={centavosParaReais(f.parcelaDeduzirCentavos)}
+                    onChange={(e) =>
+                      atualizarFaixa(f.__i, {
+                        parcelaDeduzirCentavos: Math.round(
+                          Number(e.target.value.replace(",", ".")) * 100,
+                        ),
+                      })
+                    }
+                    className="input w-full"
+                  />
+                ),
+              },
+              {
+                chave: "acoes",
+                cabecalho: "",
+                render: (f: FaixaRbt12 & { __i: number }) => (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFaixas((atual) => atual.filter((_, idx) => idx !== f.__i))}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                ),
+              },
+            ]}
+            itens={faixas.map((f, i) => ({ ...f, __i: i }))}
+            chaveLinha={(f) => String(f.__i)}
+            vazio={<>Nenhuma faixa cadastrada.</>}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Plus className="h-3.5 w-3.5" />}
             onClick={() =>
               setFaixas((atual) => [
                 ...atual,
                 { ateRbt12Centavos: null, aliquotaNominal: 0.06, parcelaDeduzirCentavos: 0 },
               ])
             }
-            className="mt-2 text-xs font-semibold text-ink-2 hover:text-ink"
+            className="mt-2"
           >
-            + Adicionar faixa
-          </button>
+            Adicionar faixa
+          </Button>
         </div>
       )}
 
@@ -386,14 +401,15 @@ function ConfigForm({
         </div>
       )}
 
-      <button
-        type="button"
+      <Button
+        variant="accent"
         onClick={salvar}
         disabled={salvando}
-        className="mt-4 h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+        loading={salvando}
+        className="mt-4"
       >
         {salvando ? "Salvando…" : "Salvar configuração"}
-      </button>
+      </Button>
     </section>
   );
 }

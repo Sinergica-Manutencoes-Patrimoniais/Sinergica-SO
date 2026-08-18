@@ -1,3 +1,4 @@
+import { Button, DataTable } from "@sinergica/ui";
 import { AlertTriangle, RefreshCw, Target } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -7,7 +8,7 @@ import { obterOrcamentoRealizado, salvarOrcamentoAnual } from "../application/dr
 import type { CategoriaItem } from "../domain/categoria";
 import { centavosParaReais, reaisParaCentavos } from "../domain/dinheiro";
 import { calcularDesvio } from "../domain/dre";
-import type { OrcamentoRealizadoLinha } from "../domain/dre";
+import type { DesvioOrcamento, OrcamentoRealizadoLinha } from "../domain/dre";
 import { supabaseFinanceiroAdapter } from "../infrastructure/supabase-financeiro-adapter";
 
 type Estado =
@@ -90,14 +91,14 @@ export function OrcamentoPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          icon={<RefreshCw className="h-4 w-4" />}
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4"
         >
-          <RefreshCw className="h-4 w-4" />
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -171,14 +172,14 @@ export function OrcamentoPage() {
                 placeholder="0,00"
               />
             </label>
-            <button
-              type="button"
+            <Button
+              variant="accent"
               onClick={salvar}
               disabled={salvando || !categoriaSelecionada}
-              className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+              loading={salvando}
             >
-              {salvando ? "Salvando…" : "Aplicar aos 12 meses"}
-            </button>
+              Aplicar aos 12 meses
+            </Button>
           </div>
         </section>
       )}
@@ -189,45 +190,49 @@ export function OrcamentoPage() {
           <p className="mt-3 text-sm text-ink-3">Nenhum orçamento ou lançamento neste ano ainda.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-line bg-card">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
-              <tr>
-                <th className="px-3 py-2">Categoria</th>
-                <th className="px-3 py-2 text-right">Orçado (ano)</th>
-                <th className="px-3 py-2 text-right">Realizado (ano)</th>
-                <th className="px-3 py-2 text-right">Desvio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resumoAnual.map((d) => (
-                <tr key={d.categoriaId} className="border-b border-line last:border-0">
-                  <td className="px-3 py-2 text-ink-2">{d.categoriaNome}</td>
-                  <td className="px-3 py-2 text-right text-ink-2">
-                    {d.temOrcamento ? `R$ ${centavosParaReais(d.orcadoCentavos)}` : "—"}
-                  </td>
-                  <td className="px-3 py-2 text-right text-ink-2">
-                    R$ {centavosParaReais(d.realizadoCentavos)}
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    {d.temOrcamento ? (
-                      <span
-                        className={`inline-flex items-center gap-1 font-semibold ${d.estourou ? "text-danger" : "text-success"}`}
-                      >
-                        {d.estourou && <AlertTriangle className="h-3.5 w-3.5" />}
-                        {d.desvioPercentual !== null
-                          ? `${d.desvioPercentual >= 0 ? "+" : ""}${d.desvioPercentual.toFixed(1)}%`
-                          : "—"}
-                      </span>
-                    ) : (
-                      <span className="text-ink-3">sem meta</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          colunas={[
+            {
+              chave: "categoria",
+              cabecalho: "Categoria",
+              render: (d: DesvioOrcamento) => d.categoriaNome,
+            },
+            {
+              chave: "orcado",
+              cabecalho: "Orçado (ano)",
+              numerica: true,
+              render: (d: DesvioOrcamento) =>
+                d.temOrcamento ? `R$ ${centavosParaReais(d.orcadoCentavos)}` : "—",
+            },
+            {
+              chave: "realizado",
+              cabecalho: "Realizado (ano)",
+              numerica: true,
+              render: (d: DesvioOrcamento) => `R$ ${centavosParaReais(d.realizadoCentavos)}`,
+            },
+            {
+              chave: "desvio",
+              cabecalho: "Desvio",
+              numerica: true,
+              render: (d: DesvioOrcamento) =>
+                d.temOrcamento ? (
+                  <span
+                    className={`inline-flex items-center gap-1 font-semibold ${d.estourou ? "text-danger" : "text-success"}`}
+                  >
+                    {d.estourou && <AlertTriangle className="h-3.5 w-3.5" />}
+                    {d.desvioPercentual !== null
+                      ? `${d.desvioPercentual >= 0 ? "+" : ""}${d.desvioPercentual.toFixed(1)}%`
+                      : "—"}
+                  </span>
+                ) : (
+                  <span className="text-ink-3">sem meta</span>
+                ),
+            },
+          ]}
+          itens={resumoAnual}
+          chaveLinha={(d) => d.categoriaId}
+          vazio={<>Nenhum orçamento ou lançamento neste ano ainda.</>}
+        />
       )}
     </div>
   );

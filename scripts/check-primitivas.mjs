@@ -30,10 +30,16 @@ function arquivos(dir) {
   return out;
 }
 
-// financeiro/mock/** é protótipo navegável com dados fictícios (banner próprio avisa), não tela
-// real — `TableShell` usa `<table>` semântico de verdade (thead/tbody exigem `table` como pai;
-// `role="table"` num `<div>` só pra escapar deste gate quebra acessibilidade de propósito).
-const IGNORAR_TABLE = /features\/financeiro\/mock\//;
+// Exceções reais ao `DataTable` (não preguiça de migrar):
+// - financeiro/mock/**: protótipo navegável com dados fictícios (banner próprio avisa), não tela
+//   real — `TableShell` usa `<table>` semântico de verdade (thead/tbody exigem `table` como pai;
+//   `role="table"` num `<div>` só pra escapar deste gate quebra acessibilidade de propósito).
+// - DrePage.tsx: tabela pivô (linha=métrica, coluna=mês, ambos dinâmicos) — `DataTable` assume
+//   colunas fixas e linhas=itens, o inverso do que a DRE contábil precisa mostrar.
+// - ApontamentoHorasPage.tsx: linha expansível com `colSpan` pro detalhe de OS do dia —
+//   `DataTable` não tem modelo pra linha de detalhe, só uma linha por item.
+const IGNORAR_TABLE =
+  /features\/financeiro\/mock\/|financeiro\/pages\/DrePage\.tsx$|pcm\/pages\/ApontamentoHorasPage\.tsx$/;
 
 const REGRAS = [
   {

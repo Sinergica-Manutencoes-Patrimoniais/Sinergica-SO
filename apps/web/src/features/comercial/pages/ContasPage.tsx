@@ -8,7 +8,7 @@
  * parte da query key, `keepPreviousData` evita a lista piscar, e o debounce de 250 ms na busca
  * segue o mesmo número escolhido pela E01-S145 no board de Operação. */
 
-import { Badge, Button, Card, EmptyState, Field, Input, Select } from "@sinergica/ui";
+import { Badge, Button, Card, DataTable, EmptyState, Field, Input, Select } from "@sinergica/ui";
 import { Plus, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -156,78 +156,87 @@ export function ContasPage({
 
       {contas.length > 0 && (
         <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-line text-left text-xs text-ink-2">
-                <tr>
-                  <th className="p-3 font-semibold">Conta</th>
-                  <th className="p-3 font-semibold">Situação</th>
-                  <th className="p-3 font-semibold">Etapa do funil</th>
-                  <th className="p-3 font-semibold">Contato</th>
-                  <th className="p-3 font-semibold">Local</th>
-                  <th className="p-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {contas.map((conta) => (
-                  <tr key={conta.id} className="border-b border-line/60 last:border-0">
-                    <td className="p-3">
-                      <button
-                        type="button"
-                        className="text-left font-semibold text-ink hover:underline"
-                        onClick={() => onAbrirConta?.(conta.id)}
-                      >
-                        {conta.nome}
-                      </button>
-                      {conta.cnpj && <p className="text-xs text-ink-2">{conta.cnpj}</p>}
-                    </td>
-                    <td className="p-3">
-                      <Badge tone={conta.ativo ? "success" : "neutral"}>
-                        {conta.ativo ? "Ativa" : "Inativa"}
-                      </Badge>
-                    </td>
-                    <td className="p-3">
-                      {conta.etapa ? (
-                        <span className="inline-flex items-center gap-2">
-                          <span
-                            aria-hidden
-                            className="size-2 rounded-full"
-                            style={{ backgroundColor: conta.etapa.cor }}
-                          />
-                          {conta.etapa.nome}
-                          {conta.oportunidadesAbertas > 1 && (
-                            <span className="text-xs text-ink-2">
-                              +{conta.oportunidadesAbertas - 1}
-                            </span>
-                          )}
+          <DataTable
+            colunas={[
+              {
+                chave: "conta",
+                cabecalho: "Conta",
+                render: (conta) => (
+                  <>
+                    <button
+                      type="button"
+                      className="text-left font-semibold text-ink hover:underline"
+                      onClick={() => onAbrirConta?.(conta.id)}
+                    >
+                      {conta.nome}
+                    </button>
+                    {conta.cnpj && <p className="text-xs text-ink-2">{conta.cnpj}</p>}
+                  </>
+                ),
+              },
+              {
+                chave: "situacao",
+                cabecalho: "Situação",
+                render: (conta) => (
+                  <Badge tone={conta.ativo ? "success" : "neutral"}>
+                    {conta.ativo ? "Ativa" : "Inativa"}
+                  </Badge>
+                ),
+              },
+              {
+                chave: "etapa",
+                cabecalho: "Etapa do funil",
+                render: (conta) =>
+                  conta.etapa ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        className="size-2 rounded-full"
+                        style={{ backgroundColor: conta.etapa.cor }}
+                      />
+                      {conta.etapa.nome}
+                      {conta.oportunidadesAbertas > 1 && (
+                        <span className="text-xs text-ink-2">
+                          +{conta.oportunidadesAbertas - 1}
                         </span>
-                      ) : (
-                        <span className="text-ink-2">Sem oportunidade</span>
                       )}
-                    </td>
-                    <td className="p-3 text-ink-2">
-                      {conta.contatoNome ?? conta.contatoTelefone ?? "—"}
-                    </td>
-                    <td className="p-3 text-ink-2">
-                      {[conta.cidade, conta.estado].filter(Boolean).join("/") || "—"}
-                    </td>
-                    <td className="p-3 text-right">
-                      {temEscrita && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setContaParaOportunidade(conta)}
-                        >
-                          <Plus className="size-4" aria-hidden />
-                          Oportunidade
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </span>
+                  ) : (
+                    <span className="text-ink-2">Sem oportunidade</span>
+                  ),
+              },
+              {
+                chave: "contato",
+                cabecalho: "Contato",
+                render: (conta) => conta.contatoNome ?? conta.contatoTelefone ?? "—",
+              },
+              {
+                chave: "local",
+                cabecalho: "Local",
+                render: (conta) => [conta.cidade, conta.estado].filter(Boolean).join("/") || "—",
+              },
+              {
+                chave: "acoes",
+                cabecalho: "",
+                render: (conta) =>
+                  temEscrita && (
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setContaParaOportunidade(conta)}
+                      >
+                        <Plus className="size-4" aria-hidden />
+                        Oportunidade
+                      </Button>
+                    </div>
+                  ),
+              },
+            ]}
+            itens={contas}
+            chaveLinha={(conta) => conta.id}
+            vazio={<>Nenhuma conta encontrada.</>}
+          />
         </Card>
       )}
 

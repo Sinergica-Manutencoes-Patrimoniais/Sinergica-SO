@@ -1,3 +1,4 @@
+import { Button, DataTable, Field, Modal, Textarea } from "@sinergica/ui";
 import { Lock, LockOpen, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -27,6 +28,8 @@ export function FechamentoPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [processando, setProcessando] = useState<string | null>(null);
+  const [competenciaParaReabrir, setCompetenciaParaReabrir] = useState<string | null>(null);
+  const [motivoReabertura, setMotivoReabertura] = useState("");
 
   const temLeitura = podeAcessar("financeiro", "leitura");
   const temEscrita = podeAcessar("financeiro", "escrita");
@@ -63,15 +66,16 @@ export function FechamentoPage() {
     }
   }
 
-  async function reabrir(competencia: string) {
-    if (!user) return;
-    const motivo = prompt("Motivo da reabertura (obrigatório, fica registrado):");
-    if (motivo === null) return;
+  async function reabrir() {
+    if (!user || !competenciaParaReabrir || !motivoReabertura.trim()) return;
+    const competencia = competenciaParaReabrir;
     setProcessando(competencia);
     setErroAcao(null);
     try {
-      await reabrirMes(supabaseFinanceiroAdapter, competencia, motivo);
+      await reabrirMes(supabaseFinanceiroAdapter, competencia, motivoReabertura.trim());
       await carregar();
+      setCompetenciaParaReabrir(null);
+      setMotivoReabertura("");
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível reabrir o mês.");
     } finally {
@@ -126,61 +130,116 @@ export function FechamentoPage() {
         )}
       </section>
 
-      <div className="overflow-x-auto rounded-lg border border-line bg-card">
-        <table className="w-full min-w-[480px] text-left text-sm">
-          <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
-            <tr>
-              <th className="px-3 py-2">Competência</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {competencias.map((competencia) => {
-              const status: StatusFechamento = statusPorCompetencia.get(competencia) ?? "aberto";
+      <DataTable
+        colunas={[
+          {
+            chave: "competencia",
+            cabecalho: "Competência",
+            render: (competencia: string) => {
               const [ano, mes] = competencia.split("-");
+              return <span className="font-semibold text-ink">{`${mes}/${ano}`}</span>;
+            },
+          },
+          {
+            chave: "status",
+            cabecalho: "Status",
+            render: (competencia: string) => {
+              const status: StatusFechamento = statusPorCompetencia.get(competencia) ?? "aberto";
               return (
-                <tr key={competencia} className="border-b border-line last:border-0">
-                  <td className="px-3 py-2 font-semibold text-ink">{`${mes}/${ano}`}</td>
-                  <td className="px-3 py-2">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${status === "fechado" ? "bg-line-soft text-ink-2" : "bg-success-soft text-success"}`}
-                    >
-                      {status === "fechado" ? "Fechado" : "Aberto"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex justify-end gap-2">
-                      {status === "aberto" && temEscrita && (
-                        <button
-                          type="button"
-                          onClick={() => fechar(competencia)}
-                          disabled={processando === competencia}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink disabled:opacity-50"
-                        >
-                          <Lock className="h-3.5 w-3.5" />
-                          Fechar mês
-                        </button>
-                      )}
-                      {status === "fechado" && ehSuperadmin && (
-                        <button
-                          type="button"
-                          onClick={() => reabrir(competencia)}
-                          disabled={processando === competencia}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep disabled:opacity-50"
-                        >
-                          <LockOpen className="h-3.5 w-3.5" />
-                          Reabrir
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${status === "fechado" ? "bg-line-soft text-ink-2" : "bg-success-soft text-success"}`}
+                >
+                  {status === "fechado" ? "Fechado" : "Aberto"}
+                </span>
               );
-            })}
-          </tbody>
-        </table>
-      </div>
+            },
+          },
+          {
+            chave: "acoes",
+            cabecalho: "Ações",
+            render: (competencia: string) => {
+              const status: StatusFechamento = statusPorCompetencia.get(competencia) ?? "aberto";
+              return (
+                <div className="flex justify-end gap-2">
+                  {status === "aberto" && temEscrita && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<Lock className="h-3.5 w-3.5" />}
+                      onClick={() => fechar(competencia)}
+                      disabled={processando === competencia}
+                    >
+                      Fechar mês
+                    </Button>
+                  )}
+                  {status === "fechado" && ehSuperadmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<LockOpen className="h-3.5 w-3.5" />}
+                      onClick={() => setCompetenciaParaReabrir(competencia)}
+                      disabled={processando === competencia}
+                    >
+                      Reabrir
+                    </Button>
+                  )}
+                </div>
+              );
+            },
+          },
+        ]}
+        itens={competencias}
+        chaveLinha={(competencia) => competencia}
+        vazio={<>Nenhuma competência.</>}
+      />
+
+      {competenciaParaReabrir && (
+        <Modal
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) {
+              setCompetenciaParaReabrir(null);
+              setMotivoReabertura("");
+            }
+          }}
+          titulo="Reabrir mês"
+          descricao="O motivo fica registrado na auditoria de fechamento."
+          tamanho="sm"
+        >
+          <div className="flex flex-col gap-4">
+            <Field label="Motivo da reabertura" required>
+              {(props) => (
+                <Textarea
+                  {...props}
+                  value={motivoReabertura}
+                  onChange={(e) => setMotivoReabertura(e.target.value)}
+                  className="min-h-24"
+                  placeholder="Ex.: lançamento duplicado identificado após o fechamento."
+                />
+              )}
+            </Field>
+            <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setCompetenciaParaReabrir(null);
+                  setMotivoReabertura("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={reabrir}
+                disabled={!motivoReabertura.trim() || processando === competenciaParaReabrir}
+                loading={processando === competenciaParaReabrir}
+              >
+                Reabrir mês
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
