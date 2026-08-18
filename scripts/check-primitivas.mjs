@@ -38,8 +38,10 @@ function arquivos(dir) {
 //   colunas fixas e linhas=itens, o inverso do que a DRE contábil precisa mostrar.
 // - ApontamentoHorasPage.tsx: linha expansível com `colSpan` pro detalhe de OS do dia —
 //   `DataTable` não tem modelo pra linha de detalhe, só uma linha por item.
+// - OrdensServicoPage.tsx: fila com linha selecionada em destaque (aria-selected + borda) — o
+//   `DataTable` não expõe className por linha, só onClickLinha.
 const IGNORAR_TABLE =
-  /features\/financeiro\/mock\/|financeiro\/pages\/DrePage\.tsx$|pcm\/pages\/ApontamentoHorasPage\.tsx$/;
+  /features\/financeiro\/mock\/|financeiro\/pages\/DrePage\.tsx$|pcm\/pages\/ApontamentoHorasPage\.tsx$|pcm\/pages\/OrdensServicoPage\.tsx$/;
 
 const REGRAS = [
   {

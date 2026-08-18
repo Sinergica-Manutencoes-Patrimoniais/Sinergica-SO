@@ -1,4 +1,4 @@
-import { Tooltip } from "@sinergica/ui";
+import { Button, Modal, Tooltip } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   Calendar,
@@ -10,7 +10,6 @@ import {
   LayoutGrid,
   List,
   RefreshCw,
-  X,
 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -445,9 +444,9 @@ export function OrdensServicoPage({
         <p className="text-sm text-ink-3 mt-1">
           {erroFeed instanceof Error ? erroFeed.message : "Não foi possível carregar chamados."}
         </p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <Button variant="ghost" onClick={carregar} className="mt-4">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -463,37 +462,37 @@ export function OrdensServicoPage({
         </div>
         <div className="flex items-center gap-2">
           {recarregando && <span className="text-xs text-ink-3">Atualizando…</span>}
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<RefreshCw className="h-4 w-4" />}
             onClick={carregar}
             disabled={recarregando}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
           >
-            <RefreshCw className="h-4 w-4" />
             Atualizar
-          </button>
+          </Button>
           {temEscrita && (
             <>
               {/* E01-S118 AC-2: "Novo Chamado" é o intake primário — a OS é a evolução dele. */}
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Headset className="h-4 w-4" />}
                 onClick={async () => {
                   if (!dadosOs) await queryCatalogos.refetch();
                   setNovoChamadoAberto(true);
                 }}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
               >
-                <Headset className="h-4 w-4" />
                 Novo Chamado
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<ClipboardList className="h-4 w-4" />}
                 onClick={onNovaOs}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
               >
-                <ClipboardList className="h-4 w-4" />
                 Nova OS
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -507,9 +506,9 @@ export function OrdensServicoPage({
       {feedErro && ordensCarregadas.length > 0 && (
         <div className="flex items-center justify-between rounded-md border border-warning bg-warning-soft px-4 py-2 text-sm text-warning">
           <span>Não foi possível atualizar. Os dados anteriores foram preservados.</span>
-          <button type="button" onClick={carregar} className="font-semibold hover:underline">
+          <Button variant="ghost" size="sm" onClick={carregar}>
             Tentar novamente
-          </button>
+          </Button>
         </div>
       )}
 
@@ -1218,37 +1217,32 @@ function DetalheOs({
       <div className="space-y-3 p-4">{corpo}</div>
 
       {expandido && (
-        <div className="modal-backdrop">
-          <div className="modal-panel max-w-4xl">
-            <div className="flex items-start justify-between gap-2 border-b border-line-soft px-5 py-3">
-              <div className="min-w-0">
-                <Tooltip content="Identificador do Chamado (CH) — a OS é a evolução dele. Sem CH, mostra o ID do Auvo.">
-                  <p className="inline-block text-xs font-brand tabular-nums text-ink-3">
-                    {rotuloNumeroOrdem(selecionada)}
-                  </p>
-                </Tooltip>
-                <h2 className="mt-0.5 truncate text-lg font-semibold text-ink">
-                  {selecionada.titulo}
-                </h2>
-                <p className="mt-0.5 text-xs text-ink-3">{selecionada.clienteNome}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setExpandido(false)}
-                className="shrink-0 rounded-md p-1.5 text-ink-3 hover:bg-line-soft hover:text-ink"
-                aria-label="Fechar"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="space-y-3 p-5">
-              <p className="text-sm leading-relaxed text-ink-2">
-                {selecionada.descricao?.trim() || "Sem descrição informada para esta OS."}
-              </p>
-              {corpo}
-            </div>
+        <Modal
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) setExpandido(false);
+          }}
+          titulo={selecionada.titulo}
+          descricao={
+            <>
+              <Tooltip content="Identificador do Chamado (CH) — a OS é a evolução dele. Sem CH, mostra o ID do Auvo.">
+                <span className="inline-block font-brand tabular-nums">
+                  {rotuloNumeroOrdem(selecionada)}
+                </span>
+              </Tooltip>
+              {" · "}
+              {selecionada.clienteNome}
+            </>
+          }
+          tamanho="lg"
+        >
+          <div className="flex flex-col gap-3">
+            <p className="text-sm leading-relaxed text-ink-2">
+              {selecionada.descricao?.trim() || "Sem descrição informada para esta OS."}
+            </p>
+            {corpo}
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
