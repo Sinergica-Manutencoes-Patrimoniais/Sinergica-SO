@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, DataTable, Modal as ModalPrimitivo } from "@sinergica/ui";
 import {
   ClipboardList,
   Download,
@@ -7,7 +8,6 @@ import {
   RotateCcw,
   Trash2,
   Wallet,
-  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -70,6 +70,8 @@ export function LancamentosPage() {
   const [filtro, setFiltro] = useState<FiltroLancamentos>(FILTRO_VAZIO);
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [lancamentoParaEstornar, setLancamentoParaEstornar] = useState<LancamentoItem | null>(null);
+  const [lancamentoParaExcluir, setLancamentoParaExcluir] = useState<LancamentoItem | null>(null);
 
   const temLeitura = podeAcessar("financeiro", "leitura");
   const temEscrita = podeAcessar("financeiro", "escrita");
@@ -161,18 +163,13 @@ export function LancamentosPage() {
     }
   }
 
-  async function estornar(lancamento: LancamentoItem) {
-    if (!user || !confirm("Estornar a baixa deste lançamento? Ele volta a previsto.")) return;
-    try {
-      setErroAcao(null);
-      await estornarBaixaLancamento(supabaseFinanceiroAdapter, {
-        id: lancamento.id,
-        userId: user.id,
-      });
-      await recarregarLancamentos(filtro);
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível estornar a baixa.");
-    }
+  async function estornar() {
+    if (!user || !lancamentoParaEstornar) return;
+    await estornarBaixaLancamento(supabaseFinanceiroAdapter, {
+      id: lancamentoParaEstornar.id,
+      userId: user.id,
+    });
+    await recarregarLancamentos(filtro);
   }
 
   async function corrigir(
@@ -192,23 +189,10 @@ export function LancamentosPage() {
     await recarregarLancamentos(filtro);
   }
 
-  async function excluirRealizado(lancamento: LancamentoItem) {
-    if (
-      !user ||
-      !confirm(
-        "Excluir este lançamento realizado? A ação fica registrada em auditoria e não pode ser desfeita.",
-      )
-    )
-      return;
-    try {
-      setErroAcao(null);
-      await estornarLancamentoRealizado(supabaseFinanceiroAdapter, lancamento.id, user.id);
-      await recarregarLancamentos(filtro);
-    } catch (error) {
-      setErroAcao(
-        error instanceof Error ? error.message : "Não foi possível excluir o lançamento.",
-      );
-    }
+  async function excluirRealizado() {
+    if (!user || !lancamentoParaExcluir) return;
+    await estornarLancamentoRealizado(supabaseFinanceiroAdapter, lancamentoParaExcluir.id, user.id);
+    await recarregarLancamentos(filtro);
   }
 
   const [anexandoId, setAnexandoId] = useState<string | null>(null);
@@ -281,14 +265,14 @@ export function LancamentosPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          icon={<RefreshCw className="h-4 w-4" />}
           onClick={() => carregarTudo(filtro)}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4"
         >
-          <RefreshCw className="h-4 w-4" />
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -306,23 +290,21 @@ export function LancamentosPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              icon={<Download className="h-4 w-4" />}
               onClick={exportarCsv}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
             >
-              <Download className="h-4 w-4" />
               Exportar CSV
-            </button>
+            </Button>
             {temEscrita && (
-              <button
-                type="button"
+              <Button
+                variant="accent"
+                icon={<Plus className="h-4 w-4" />}
                 onClick={() => setModal({ modo: "novo" })}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
               >
-                <Plus className="h-4 w-4" />
                 Novo lançamento
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -357,132 +339,143 @@ export function LancamentosPage() {
           <p className="mt-3 text-sm text-ink-3">Nenhum lançamento encontrado para este filtro.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-line bg-card">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
-              <tr>
-                <th className="px-3 py-2">Competência</th>
-                <th className="px-3 py-2">Tipo</th>
-                <th className="px-3 py-2">Categoria</th>
-                <th className="px-3 py-2">Descrição</th>
-                <th className="px-3 py-2 text-right">Valor</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lancamentos.map((lancamento) => (
-                <tr
-                  key={lancamento.id}
-                  className="border-b border-line last:border-0 hover:bg-line-soft"
+        <DataTable
+          colunas={[
+            {
+              chave: "competencia",
+              cabecalho: "Competência",
+              render: (lancamento) =>
+                new Date(lancamento.dataCompetencia).toLocaleDateString("pt-BR", {
+                  month: "2-digit",
+                  year: "numeric",
+                }),
+            },
+            {
+              chave: "tipo",
+              cabecalho: "Tipo",
+              render: (lancamento) => (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-micro font-semibold ${lancamento.tipo === "entrada" ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
                 >
-                  <td className="px-3 py-2 text-ink-2">
-                    {new Date(lancamento.dataCompetencia).toLocaleDateString("pt-BR", {
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
-                  </td>
-                  <td className="px-3 py-2">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-micro font-semibold ${lancamento.tipo === "entrada" ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
+                  {lancamento.tipo === "entrada" ? "Entrada" : "Saída"}
+                </span>
+              ),
+            },
+            {
+              chave: "categoria",
+              cabecalho: "Categoria",
+              render: (lancamento) =>
+                categorias.find((c) => c.id === lancamento.categoriaId)?.nome ?? "—",
+            },
+            {
+              chave: "descricao",
+              cabecalho: "Descrição",
+              render: (lancamento) => (
+                <span className="block max-w-[240px] truncate">{lancamento.descricao ?? "—"}</span>
+              ),
+            },
+            {
+              chave: "valor",
+              cabecalho: "Valor",
+              numerica: true,
+              render: (lancamento) => (
+                <span className="font-semibold text-ink">
+                  R$ {centavosParaReais(lancamento.valorCentavos)}
+                </span>
+              ),
+            },
+            {
+              chave: "status",
+              cabecalho: "Status",
+              render: (lancamento) => <StatusBadge lancamento={lancamento} />,
+            },
+            {
+              chave: "acoes",
+              cabecalho: "Ações",
+              render: (lancamento) => (
+                <div className="flex flex-wrap justify-end gap-2">
+                  {temEscrita &&
+                    lancamento.status === "previsto" &&
+                    podeExcluirOuAlterarValor(lancamento) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setModal({ modo: "editar", lancamento })}
+                      >
+                        Editar
+                      </Button>
+                    )}
+                  {temEscrita && lancamento.status === "previsto" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<Wallet className="h-3.5 w-3.5" />}
+                      onClick={() => setModal({ modo: "baixa", lancamento })}
                     >
-                      {lancamento.tipo === "entrada" ? "Entrada" : "Saída"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-ink-2">
-                    {categorias.find((c) => c.id === lancamento.categoriaId)?.nome ?? "—"}
-                  </td>
-                  <td className="max-w-[240px] truncate px-3 py-2 text-ink-2">
-                    {lancamento.descricao ?? "—"}
-                  </td>
-                  <td className="px-3 py-2 text-right font-semibold text-ink">
-                    R$ {centavosParaReais(lancamento.valorCentavos)}
-                  </td>
-                  <td className="px-3 py-2">
-                    <StatusBadge lancamento={lancamento} />
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {temEscrita &&
-                        lancamento.status === "previsto" &&
-                        podeExcluirOuAlterarValor(lancamento) && (
-                          <button
-                            type="button"
-                            onClick={() => setModal({ modo: "editar", lancamento })}
-                            className="text-xs font-semibold text-ink-2 hover:text-ink"
-                          >
-                            Editar
-                          </button>
-                        )}
-                      {temEscrita && lancamento.status === "previsto" && (
-                        <button
-                          type="button"
-                          onClick={() => setModal({ modo: "baixa", lancamento })}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep"
+                      Dar baixa
+                    </Button>
+                  )}
+                  {temEscrita &&
+                    lancamento.status === "realizado" &&
+                    !estaConciliado(lancamento) && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setModal({ modo: "corrigir", lancamento })}
                         >
-                          <Wallet className="h-3.5 w-3.5" />
-                          Dar baixa
-                        </button>
-                      )}
-                      {temEscrita &&
-                        lancamento.status === "realizado" &&
-                        !estaConciliado(lancamento) && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setModal({ modo: "corrigir", lancamento })}
-                              className="text-xs font-semibold text-ink-2 hover:text-ink"
-                            >
-                              Corrigir
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => estornar(lancamento)}
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink"
-                            >
-                              <RotateCcw className="h-3.5 w-3.5" />
-                              Estornar baixa
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => excluirRealizado(lancamento)}
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              Excluir
-                            </button>
-                          </>
-                        )}
-                      {temEscrita &&
-                        lancamento.status === "realizado" &&
-                        !lancamento.comprovantePath && (
-                          <button
-                            type="button"
-                            onClick={() => abrirSeletorComprovante(lancamento.id)}
-                            disabled={anexandoId === lancamento.id}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2 hover:text-ink disabled:opacity-50"
-                          >
-                            <Paperclip className="h-3.5 w-3.5" />
-                            {anexandoId === lancamento.id ? "Enviando…" : "Anexar comprovante"}
-                          </button>
-                        )}
-                      {lancamento.comprovantePath && (
-                        <button
-                          type="button"
-                          onClick={() => verComprovante(lancamento.comprovantePath as string)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep"
+                          Corrigir
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={<RotateCcw className="h-3.5 w-3.5" />}
+                          onClick={() => setLancamentoParaEstornar(lancamento)}
                         >
-                          <Paperclip className="h-3.5 w-3.5" />
-                          Ver comprovante
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                          Estornar baixa
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={<Trash2 className="h-3.5 w-3.5 text-danger" />}
+                          onClick={() => setLancamentoParaExcluir(lancamento)}
+                        >
+                          Excluir
+                        </Button>
+                      </>
+                    )}
+                  {temEscrita &&
+                    lancamento.status === "realizado" &&
+                    !lancamento.comprovantePath && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={<Paperclip className="h-3.5 w-3.5" />}
+                        onClick={() => abrirSeletorComprovante(lancamento.id)}
+                        disabled={anexandoId === lancamento.id}
+                        loading={anexandoId === lancamento.id}
+                      >
+                        Anexar comprovante
+                      </Button>
+                    )}
+                  {lancamento.comprovantePath && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<Paperclip className="h-3.5 w-3.5" />}
+                      onClick={() => verComprovante(lancamento.comprovantePath as string)}
+                    >
+                      Ver comprovante
+                    </Button>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+          itens={lancamentos}
+          chaveLinha={(lancamento) => lancamento.id}
+          vazio={<>Nenhum lançamento encontrado para este filtro.</>}
+        />
       )}
 
       {(modal?.modo === "novo" || modal?.modo === "editar") && (
@@ -519,6 +512,28 @@ export function LancamentosPage() {
         accept=".pdf,.png,.jpg,.jpeg,.webp"
         className="hidden"
         onChange={onArquivoSelecionado}
+      />
+
+      <ConfirmDialog
+        open={lancamentoParaEstornar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setLancamentoParaEstornar(null);
+        }}
+        titulo="Estornar a baixa"
+        descricao={`"${lancamentoParaEstornar?.descricao ?? "Este lançamento"}" volta a previsto.`}
+        rotuloConfirmar="Estornar"
+        onConfirmar={estornar}
+      />
+
+      <ConfirmDialog
+        open={lancamentoParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setLancamentoParaExcluir(null);
+        }}
+        titulo="Excluir lançamento realizado"
+        descricao={`"${lancamentoParaExcluir?.descricao ?? "Este lançamento"}" — a ação fica registrada em auditoria e não pode ser desfeita.`}
+        rotuloConfirmar="Excluir"
+        onConfirmar={excluirRealizado}
       />
     </div>
   );
@@ -754,17 +769,16 @@ function LancamentoModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-2xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {lancamento ? "Editar lançamento" : "Novo lançamento"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={lancamento ? "Editar lançamento" : "Novo lançamento"}
+      tamanho="lg"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo *</span>
             <select
@@ -896,25 +910,21 @@ function LancamentoModal({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={salvar}
             disabled={salvando || !categoriaId}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }
 
@@ -937,15 +947,16 @@ function BaixaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-sm rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Dar baixa</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="p-4">
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Dar baixa"
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <div>
           <p className="text-sm text-ink-2">
             R$ {centavosParaReais(lancamento.valorCentavos)} — confirme a data de pagamento.
           </p>
@@ -959,25 +970,21 @@ function BaixaModal({
             />
           </label>
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={confirmando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={confirmar}
             disabled={confirmando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            loading={confirmando}
           >
-            {confirmando ? "Confirmando…" : "Confirmar baixa"}
-          </button>
+            Confirmar baixa
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }
 
@@ -1021,80 +1028,70 @@ function CorrigirModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Corrigir lançamento realizado</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <p className="text-xs text-ink-3">
-            A correção fica registrada em auditoria (valor anterior/novo por campo alterado).
-          </p>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Valor *</span>
-            <input
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-              className="input w-full"
-              placeholder="0,00"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Competência *</span>
-            <input
-              type="date"
-              value={dataCompetencia}
-              onChange={(e) => setDataCompetencia(e.target.value)}
-              className="input w-full"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria *</span>
-            <select
-              value={categoriaId}
-              onChange={(e) => setCategoriaId(e.target.value)}
-              className="input w-full"
-            >
-              {raizesDoTipo.map((raiz) => (
-                <optgroup key={raiz.id} label={raiz.nome}>
-                  <option value={raiz.id}>{raiz.nome}</option>
-                  {subcategoriasDe(categoriasDoTipo, raiz.id).map((sub) => (
-                    <option key={sub.id} value={sub.id}>
-                      {"↳ "}
-                      {sub.nome}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Corrigir lançamento realizado"
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <p className="text-xs text-ink-3">
+          A correção fica registrada em auditoria (valor anterior/novo por campo alterado).
+        </p>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Valor *</span>
+          <input
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            className="input w-full"
+            placeholder="0,00"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Competência *</span>
+          <input
+            type="date"
+            value={dataCompetencia}
+            onChange={(e) => setDataCompetencia(e.target.value)}
+            className="input w-full"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria *</span>
+          <select
+            value={categoriaId}
+            onChange={(e) => setCategoriaId(e.target.value)}
+            className="input w-full"
           >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Salvar correção"}
-          </button>
-        </div>
+            {raizesDoTipo.map((raiz) => (
+              <optgroup key={raiz.id} label={raiz.nome}>
+                <option value={raiz.id}>{raiz.nome}</option>
+                {subcategoriasDe(categoriasDoTipo, raiz.id).map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {"↳ "}
+                    {sub.nome}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
       </div>
-    </div>
+      <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+        <Button variant="secondary" onClick={onCancel} disabled={salvando}>
+          Cancelar
+        </Button>
+        <Button variant="primary" onClick={salvar} disabled={salvando} loading={salvando}>
+          Salvar correção
+        </Button>
+      </div>
+    </ModalPrimitivo>
   );
 }
