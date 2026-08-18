@@ -45,7 +45,7 @@ export function BacklogGutPage({
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     setErroAcao(null);
     try {
       setEstado({ fase: "pronto", ordens: await listarBacklogGut(supabaseHubOsAdapter) });

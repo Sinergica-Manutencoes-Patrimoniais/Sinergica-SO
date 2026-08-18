@@ -39,7 +39,7 @@ export function AtendimentoDashboardPage() {
   const temLeitura = podeAcessar("atendimento", "leitura");
 
   const carregar = useCallback(async (p: PeriodoDashboard) => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const snapshot = await obterPainelAtendimento(supabaseDashboardAtendimentoAdapter, p);
       setEstado({

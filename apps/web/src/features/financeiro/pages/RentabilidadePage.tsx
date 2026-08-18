@@ -64,7 +64,7 @@ export function RentabilidadePage() {
   const temLeitura = podeAcessar("financeiro", "leitura");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [itens, clientes] = await Promise.all([
         obterRentabilidadeClienteMes(supabaseFinanceiroAdapter, 12),

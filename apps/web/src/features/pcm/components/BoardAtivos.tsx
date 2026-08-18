@@ -43,7 +43,7 @@ export function BoardAtivos({
   const [erroMover, setErroMover] = useState<string | null>(null);
 
   const carregar = useCallback(() => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     carregarBoardCliente(supabaseHierarquiaAdapter, supabaseBoardAtivosAdapter, clienteId)
       .then((d) => {
         setEstado({ fase: "pronto", ...d });

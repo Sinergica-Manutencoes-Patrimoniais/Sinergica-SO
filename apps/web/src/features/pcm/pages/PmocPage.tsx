@@ -115,7 +115,7 @@ export function PmocPage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     setErroAcao(null);
     try {
       const [clientes, contratos] = await Promise.all([

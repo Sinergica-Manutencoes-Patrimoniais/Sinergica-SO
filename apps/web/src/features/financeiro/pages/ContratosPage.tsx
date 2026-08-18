@@ -44,7 +44,7 @@ export function ContratosPage() {
   const temEscrita = podeAcessar("financeiro", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [contratos, clientes] = await Promise.all([
         listarContratos(supabaseFinanceiroAdapter),

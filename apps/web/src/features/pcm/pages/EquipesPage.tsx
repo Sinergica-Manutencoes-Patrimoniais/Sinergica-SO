@@ -33,7 +33,7 @@ export function EquipesPage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [equipes, funcionarios] = await Promise.all([
         listarEquipes(supabaseEquipesAdapter),

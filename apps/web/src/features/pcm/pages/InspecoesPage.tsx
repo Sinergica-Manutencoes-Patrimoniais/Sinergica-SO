@@ -192,7 +192,7 @@ export function InspecoesPage({
   }, [estado, selecionadaId]);
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     setErroAcao(null);
     try {
       const [clientes, inspecoes, tipos, templates] = await Promise.all([

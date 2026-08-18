@@ -36,7 +36,7 @@ export function ComposicaoSistema({
   const [erroSalvar, setErroSalvar] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [itens, membros] = await Promise.all([
         listarItensDisponiveis(gateway, sistema.clienteId),

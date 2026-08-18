@@ -47,7 +47,7 @@ export function FinanceiroDashboardPage() {
   const temLeitura = podeAcessar("financeiro", "leitura");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [resumo, fluxo, gastos, categorias, aging, projecao] = await Promise.all([
         obterResumoCaixa(supabaseFinanceiroAdapter),

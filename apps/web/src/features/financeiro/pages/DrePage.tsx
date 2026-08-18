@@ -35,7 +35,7 @@ export function DrePage() {
   const temLeitura = podeAcessar("financeiro", "leitura");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const linhas = await obterDreMensal(supabaseFinanceiroAdapter, MESES_JANELA);
       setEstado({ fase: "pronto", dres: agregarDre(linhas, ultimosMesesIso(MESES_JANELA)) });

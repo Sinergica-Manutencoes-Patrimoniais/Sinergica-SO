@@ -69,7 +69,7 @@ export function ListaClientesPage({
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const clientes = await listarClientes(supabaseCliente360Adapter);
       setEstado({ fase: "pronto", clientes });

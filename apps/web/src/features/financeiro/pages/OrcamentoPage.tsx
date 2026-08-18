@@ -34,7 +34,7 @@ export function OrcamentoPage() {
   const temEscrita = podeAcessar("financeiro", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [linhas, categorias] = await Promise.all([
         obterOrcamentoRealizado(supabaseFinanceiroAdapter, ano),

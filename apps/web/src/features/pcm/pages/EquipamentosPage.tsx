@@ -51,7 +51,7 @@ export function EquipamentosPage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [equipamentos, clientes] = await Promise.all([
         listarEquipamentos(supabaseEquipamentosAdapter),

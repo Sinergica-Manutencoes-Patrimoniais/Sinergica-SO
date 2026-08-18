@@ -101,7 +101,7 @@ export function FerramentasPage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [ferramentas, categorias, unidades, funcionarios, reservas] = await Promise.all([
         listarFerramentas(supabaseFerramentasAdapter),

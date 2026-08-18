@@ -57,7 +57,7 @@ export function LaudosSpdaPage() {
   const conclusaoSugerida = useMemo(() => sugerirConclusaoSpda(pontos), [pontos]);
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     setErroAcao(null);
     try {
       const [clientes, laudos] = await Promise.all([

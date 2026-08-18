@@ -36,7 +36,7 @@ export function FechamentoPage() {
   const ehSuperadmin = user?.papel === "superadmin";
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const fechamentos = await listarFechamentos(supabaseFinanceiroAdapter);
       setEstado({ fase: "pronto", fechamentos });

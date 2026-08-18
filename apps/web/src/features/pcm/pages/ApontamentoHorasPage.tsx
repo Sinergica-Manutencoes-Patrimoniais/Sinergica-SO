@@ -89,7 +89,7 @@ export function ApontamentoHorasPage({
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const resultado = await obterApontamentoHoras(supabaseApontamentoHorasAdapter, {
         inicio,
@@ -723,7 +723,7 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
 
   const carregar = useCallback(async () => {
     if (!tecnicoFuncionarioId) return;
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const semanas = await obterTendenciaTecnico(
         supabaseApontamentoHorasAdapter,

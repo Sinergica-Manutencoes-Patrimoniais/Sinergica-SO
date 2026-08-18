@@ -101,7 +101,7 @@ export function PcmDashboardPage({
   const pollingRef = useRef<number | null>(null);
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const hoje = hojeLocalIso();
       const [ordens, inspecoes, chamados, agenda, tecnicos, preventivas, reservasFerramenta] =

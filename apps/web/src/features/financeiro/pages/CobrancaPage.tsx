@@ -49,7 +49,7 @@ export function CobrancaPage() {
   const temEscrita = podeAcessar("financeiro", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [pontos, envios] = await Promise.all([
         listarPontosRegua(supabaseFinanceiroAdapter),

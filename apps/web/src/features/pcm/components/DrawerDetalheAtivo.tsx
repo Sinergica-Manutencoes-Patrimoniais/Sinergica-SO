@@ -63,7 +63,7 @@ export function DrawerDetalheAtivo({
 
   useEffect(() => {
     let vivo = true;
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     obterDetalheAtivo(supabaseEquipamentosAdapter, supabaseBoardAtivosAdapter, itemId)
       .then((detalhe) => {
         if (vivo) setEstado({ fase: "pronto", detalhe });

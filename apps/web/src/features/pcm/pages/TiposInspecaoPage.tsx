@@ -35,7 +35,7 @@ export function TiposInspecaoPage() {
     podeAcessar("pcm", "escrita") && (user?.papel === "supervisor" || user?.papel === "superadmin");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const { tipos, templates } = await carregarParametrizacaoInspecao(supabaseQualidadeAdapter);
       setEstado({ fase: "pronto", tipos, templates });

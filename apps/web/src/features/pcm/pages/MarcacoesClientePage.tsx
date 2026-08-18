@@ -41,7 +41,7 @@ export function MarcacoesClientePage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const marcacoes = await listarMarcacoes(supabaseMarcacoesClienteAdapter);
       setEstado({ fase: "pronto", marcacoes });

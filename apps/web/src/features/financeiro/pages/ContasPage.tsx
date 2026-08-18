@@ -32,7 +32,7 @@ export function ContasPage() {
   const temEscrita = podeAcessar("financeiro", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       setEstado({ fase: "pronto", contas: await listarContas(supabaseFinanceiroAdapter) });
     } catch (error) {

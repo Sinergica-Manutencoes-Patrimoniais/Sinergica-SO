@@ -54,7 +54,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
   );
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [kits, ferramentas, unidades, funcionarios, atribuicoesAtivas] = await Promise.all([
         listarKits(supabaseKitsAdapter),

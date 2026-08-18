@@ -58,7 +58,7 @@ export function AssessmentPage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [clientes, todasInspecoes] = await Promise.all([
         supabaseQualidadeAdapter.listarClientes(),

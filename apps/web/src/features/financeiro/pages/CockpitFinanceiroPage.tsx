@@ -54,7 +54,7 @@ export function CockpitFinanceiroPage() {
   const ehSuperadmin = user?.papel === "superadmin";
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [resumo, fluxo, rentabilidade, recebiveis, clientes] = await Promise.all([
         obterResumoCaixa(supabaseFinanceiroAdapter),

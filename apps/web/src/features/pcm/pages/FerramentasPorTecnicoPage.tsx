@@ -76,7 +76,7 @@ export function FerramentasPorTecnicoPage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [dados, unidades] = await Promise.all([
         obterFerramentasPorTecnico(supabaseFerramentasAdapter),

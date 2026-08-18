@@ -59,7 +59,7 @@ export function TicketsPage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [tickets, clientes, equipes, requestTypes, status] = await Promise.all([
         listarTickets(supabaseTicketsAdapter),

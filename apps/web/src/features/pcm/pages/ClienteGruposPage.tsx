@@ -36,7 +36,7 @@ export function ClienteGruposPage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [grupos, clientes] = await Promise.all([
         listarClienteGrupos(supabaseClienteGruposAdapter),
