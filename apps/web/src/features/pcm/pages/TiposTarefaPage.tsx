@@ -272,7 +272,26 @@ export function TiposTarefaPage() {
           ]}
           itens={tiposFiltrados}
           chaveLinha={(tipo) => tipo.id}
-          vazio={<>Nenhum tipo de tarefa encontrado.</>}
+          vazio={
+            // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
+            estado.fase === "pronto" && estado.tipos.length > 0 ? (
+              <span className="flex flex-col items-center gap-2">
+                Nenhum tipo de tarefa para estes filtros.
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setBusca("");
+                    setSomenteAtivos(false);
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+              </span>
+            ) : (
+              <>Nenhum tipo de tarefa cadastrado ainda.</>
+            )
+          }
         />
       </section>
 

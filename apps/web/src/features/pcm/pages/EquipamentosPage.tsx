@@ -1,4 +1,4 @@
-import { ConfirmDialog, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
+import { Button, ConfirmDialog, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
 import { Boxes, Layers, Link2, Pencil, Plus, RefreshCw, Trash2, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -152,6 +152,10 @@ export function EquipamentosPage() {
     );
   }
 
+  const equipamentosFiltrados = estado.equipamentos.filter(
+    (equipamento) => filtroTipo === "todos" || equipamento.tipo === filtroTipo,
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
@@ -202,27 +206,31 @@ export function EquipamentosPage() {
           <Wrench className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-body text-ink-3">Nenhum equipamento cadastrado.</p>
         </div>
+      ) : equipamentosFiltrados.length === 0 ? (
+        // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-line bg-card px-5 py-10 text-center text-body text-ink-3">
+          Nenhum equipamento para este filtro.
+          <Button variant="secondary" size="sm" onClick={() => setFiltroTipo("todos")}>
+            Limpar filtro
+          </Button>
+        </div>
       ) : (
         <section className="rounded-lg border border-line bg-card overflow-hidden">
           <div className="divide-y divide-line-soft">
-            {estado.equipamentos
-              .filter((equipamento) => filtroTipo === "todos" || equipamento.tipo === filtroTipo)
-              .map((equipamento) => (
-                <EquipamentoLinha
-                  key={equipamento.id}
-                  equipamento={equipamento}
-                  onEditar={
-                    temEscrita ? () => setModal({ modo: "editar", equipamento }) : undefined
-                  }
-                  onDesativar={
-                    temEscrita && equipamento.ativo
-                      ? () => abrirConfirmacaoDesativar(equipamento)
-                      : undefined
-                  }
-                  onAmpliarImagem={setImagemAmpliada}
-                  onVerDetalhe={() => setItemDetalheId(equipamento.id)}
-                />
-              ))}
+            {equipamentosFiltrados.map((equipamento) => (
+              <EquipamentoLinha
+                key={equipamento.id}
+                equipamento={equipamento}
+                onEditar={temEscrita ? () => setModal({ modo: "editar", equipamento }) : undefined}
+                onDesativar={
+                  temEscrita && equipamento.ativo
+                    ? () => abrirConfirmacaoDesativar(equipamento)
+                    : undefined
+                }
+                onAmpliarImagem={setImagemAmpliada}
+                onVerDetalhe={() => setItemDetalheId(equipamento.id)}
+              />
+            ))}
           </div>
         </section>
       )}

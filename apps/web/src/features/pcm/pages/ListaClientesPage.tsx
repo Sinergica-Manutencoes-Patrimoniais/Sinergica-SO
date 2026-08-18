@@ -1,4 +1,4 @@
-import { ConfirmDialog, DataTable, Skeleton, Tooltip } from "@sinergica/ui";
+import { Button, ConfirmDialog, DataTable, Skeleton, Tooltip } from "@sinergica/ui";
 import type { DataTableColumn } from "@sinergica/ui";
 import {
   Building2,
@@ -363,8 +363,11 @@ export function ListaClientesPage({
           <p className="mt-3 text-body text-ink-3">Nenhum cliente cadastrado</p>
         </div>
       ) : clientesFiltrados.length === 0 ? (
-        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center text-body text-ink-3">
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-line bg-card px-5 py-10 text-center text-body text-ink-3">
           Nenhum cliente encontrado para os filtros atuais.
+          <Button variant="secondary" size="sm" onClick={limparFiltros}>
+            Limpar filtros
+          </Button>
         </div>
       ) : (
         <section className="rounded-lg border border-line bg-card overflow-hidden">

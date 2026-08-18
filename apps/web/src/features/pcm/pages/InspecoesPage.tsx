@@ -672,8 +672,18 @@ export function InspecoesPage({
 
         <div className="mt-4 space-y-2">
           {inspecoesFiltradas.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-body text-ink-3">
-              Nenhuma inspeção encontrada.
+            // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
+            <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-line px-4 py-8 text-center text-body text-ink-3">
+              {estado.fase === "pronto" && estado.inspecoes.length > 0 ? (
+                <>
+                  Nenhuma inspeção para esta busca.
+                  <Button variant="secondary" size="sm" onClick={() => setBusca("")}>
+                    Limpar busca
+                  </Button>
+                </>
+              ) : (
+                "Nenhuma inspeção registrada ainda."
+              )}
             </div>
           ) : (
             inspecoesFiltradas.map((inspecao) => (
@@ -792,12 +802,33 @@ export function InspecoesPage({
               {carregandoItens ? (
                 <Skeleton className="h-4 w-40" />
               ) : itensFiltrados.length === 0 ? (
+                // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
                 <div className="py-20 text-center">
                   <ImageIcon className="mx-auto h-10 w-10 text-line" />
-                  <p className="mt-3 text-body font-medium text-ink-3">Nenhum item registrado</p>
-                  <p className="mt-1 text-caption text-ink-4">
-                    Toque em “Adicionar item” para começar.
-                  </p>
+                  {itens.length > 0 ? (
+                    <>
+                      <p className="mt-3 text-body font-medium text-ink-3">
+                        Nenhum item para este sistema
+                      </p>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => setFiltroSistema("todos")}
+                      >
+                        Ver todos os sistemas
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-3 text-body font-medium text-ink-3">
+                        Nenhum item registrado
+                      </p>
+                      <p className="mt-1 text-caption text-ink-4">
+                        Toque em “Adicionar item” para começar.
+                      </p>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">

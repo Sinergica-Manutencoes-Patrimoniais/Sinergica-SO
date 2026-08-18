@@ -785,7 +785,19 @@ export function OrdensServicoPage({
                   </div>
                 </div>
                 {ordensFiltradas.length === 0 ? (
-                  <div className="px-5 py-8 text-body text-ink-3">Nenhuma OS encontrada.</div>
+                  // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
+                  <div className="flex flex-col items-center gap-2 px-5 py-8 text-center text-body text-ink-3">
+                    {ordensCarregadas.length > 0 ? (
+                      <>
+                        Nenhuma OS para estes filtros.
+                        <Button variant="secondary" size="sm" onClick={limparFiltros}>
+                          Limpar filtros
+                        </Button>
+                      </>
+                    ) : (
+                      "Nenhuma OS cadastrada ainda."
+                    )}
+                  </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-caption">

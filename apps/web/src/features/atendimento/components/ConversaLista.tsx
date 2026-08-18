@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { MessageCircle, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { canalSuportaIa, filtrarConversas, labelCanal } from "../domain/conversas";
@@ -36,7 +37,17 @@ export function ConversaLista({
         {conversasFiltradas.length === 0 ? (
           <div className="p-8 text-center">
             <MessageCircle className="mx-auto h-8 w-8 text-ink-3" />
-            <p className="mt-2 text-body text-ink-3">Nenhuma conversa encontrada.</p>
+            {/* E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela. */}
+            {conversas.length > 0 ? (
+              <>
+                <p className="mt-2 text-body text-ink-3">Nenhuma conversa para esta busca.</p>
+                <Button variant="secondary" size="sm" onClick={() => setBusca("")}>
+                  Limpar busca
+                </Button>
+              </>
+            ) : (
+              <p className="mt-2 text-body text-ink-3">Nenhuma conversa ainda.</p>
+            )}
           </div>
         ) : (
           conversasFiltradas.map((conversa) => (

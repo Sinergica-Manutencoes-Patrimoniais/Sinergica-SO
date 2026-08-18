@@ -213,8 +213,18 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
 
         <div className="divide-y divide-line-soft">
           {itensFiltrados.length === 0 ? (
-            <div className="px-5 py-8 text-center text-body text-ink-3">
-              Nenhum registro encontrado.
+            // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
+            <div className="flex flex-col items-center gap-2 px-5 py-8 text-center text-body text-ink-3">
+              {estado.fase === "pronto" && estado.itens.length > 0 ? (
+                <>
+                  Nenhum registro para esta busca.
+                  <Button variant="secondary" size="sm" onClick={() => setBusca("")}>
+                    Limpar busca
+                  </Button>
+                </>
+              ) : (
+                "Nenhum registro cadastrado ainda."
+              )}
             </div>
           ) : (
             itensFiltrados.map((item) => (

@@ -482,7 +482,19 @@ export function LancamentosPage() {
           ]}
           itens={lancamentos}
           chaveLinha={(lancamento) => lancamento.id}
-          vazio={<>Nenhum lançamento encontrado para este filtro.</>}
+          vazio={
+            // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
+            Object.values(filtro).some(Boolean) ? (
+              <span className="flex flex-col items-center gap-2">
+                Nenhum resultado para estes filtros.
+                <Button variant="secondary" size="sm" onClick={() => setFiltro(FILTRO_VAZIO)}>
+                  Limpar filtros
+                </Button>
+              </span>
+            ) : (
+              <>Nenhum lançamento ainda.</>
+            )
+          }
         />
       )}
 
