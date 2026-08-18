@@ -1,3 +1,4 @@
+import { Button, Field, Modal, Textarea } from "@sinergica/ui";
 import { UsersRound } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { criarGrupo } from "../application/criar-grupo";
@@ -125,9 +126,9 @@ export function GruposPage() {
           <h2 className="page-title">Grupos</h2>
           <p className="page-subtitle">Conjuntos reutilizáveis de permissão por módulo.</p>
         </div>
-        <button type="button" onClick={abrirCriacao} className="btn-accent">
+        <Button variant="accent" onClick={abrirCriacao}>
           Novo grupo
-        </button>
+        </Button>
       </div>
 
       {erro && <p className="status-error">{erro}</p>}
@@ -167,52 +168,45 @@ export function GruposPage() {
               <span className="text-xs text-ink-3 shrink-0">
                 {grupo.permissoes.length} módulo{grupo.permissoes.length === 1 ? "" : "s"}
               </span>
-              <button
-                type="button"
-                onClick={() => abrirEdicao(grupo)}
-                className="text-xs font-semibold text-orange hover:text-orange-deep cursor-pointer shrink-0"
-              >
+              <Button variant="ghost" size="sm" onClick={() => abrirEdicao(grupo)}>
                 Editar
-              </button>
+              </Button>
             </div>
           ))}
         </div>
       )}
 
       {formAberto && (
-        <div className="modal-backdrop">
-          <div className="modal-panel max-w-lg p-4 sm:p-5 flex flex-col gap-4">
-            <h3 className="text-base font-semibold text-ink">
-              {editandoId ? `Editar grupo — ${editandoGrupo?.nome ?? ""}` : "Novo grupo"}
-            </h3>
+        <Modal
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) fechar();
+          }}
+          titulo={editandoId ? `Editar grupo — ${editandoGrupo?.nome ?? ""}` : "Novo grupo"}
+          tamanho="md"
+        >
+          <div className="flex flex-col gap-4">
+            <Field label="Nome">
+              {(props) => (
+                <input
+                  {...props}
+                  value={form.nome}
+                  onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+                  className="input"
+                />
+              )}
+            </Field>
 
-            <div>
-              <label htmlFor="grupo-nome" className="block text-sm font-medium text-ink-2 mb-1.5">
-                Nome
-              </label>
-              <input
-                id="grupo-nome"
-                value={form.nome}
-                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-                className="input"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="grupo-descricao"
-                className="block text-sm font-medium text-ink-2 mb-1.5"
-              >
-                Descrição
-              </label>
-              <textarea
-                id="grupo-descricao"
-                value={form.descricao}
-                onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
-                rows={2}
-                className="input"
-              />
-            </div>
+            <Field label="Descrição">
+              {(props) => (
+                <Textarea
+                  {...props}
+                  value={form.descricao}
+                  onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
+                  rows={2}
+                />
+              )}
+            </Field>
 
             <div>
               <p className="block text-sm font-medium text-ink-2 mb-1.5">Permissões por módulo</p>
@@ -233,16 +227,16 @@ export function GruposPage() {
 
             {erroForm && <p className="status-error">{erroForm}</p>}
 
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button type="button" onClick={fechar} className="btn-secondary">
+            <div className="flex items-center justify-end gap-2 border-t border-line-soft pt-4">
+              <Button variant="secondary" onClick={fechar}>
                 Cancelar
-              </button>
-              <button type="button" onClick={salvar} disabled={salvando} className="btn-accent">
-                {salvando ? "Salvando…" : "Salvar"}
-              </button>
+              </Button>
+              <Button variant="accent" onClick={salvar} disabled={salvando} loading={salvando}>
+                Salvar
+              </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
