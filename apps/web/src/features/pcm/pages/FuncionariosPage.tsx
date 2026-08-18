@@ -1,14 +1,5 @@
-import {
-  Mail,
-  Pencil,
-  Phone,
-  Plus,
-  RefreshCw,
-  ShieldAlert,
-  Trash2,
-  UserCog,
-  X,
-} from "lucide-react";
+import { Button, ConfirmDialog, Modal as ModalPrimitivo } from "@sinergica/ui";
+import { Mail, Pencil, Phone, Plus, RefreshCw, ShieldAlert, Trash2, UserCog } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -48,6 +39,9 @@ export function FuncionariosPage() {
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [perfil, setPerfil] = useState<FuncionarioItem | null>(null);
+  const [funcionarioParaDesativar, setFuncionarioParaDesativar] = useState<FuncionarioItem | null>(
+    null,
+  );
   const [perfilDados, setPerfilDados] = useState<{
     agenda: string[];
     os: number;
@@ -96,19 +90,13 @@ export function FuncionariosPage() {
     await carregar();
   }
 
-  async function desativar(funcionario: FuncionarioItem) {
-    if (!user) return;
-    if (!confirm(`Desativar ${funcionario.nome} para tarefas no Auvo?`)) return;
-    try {
-      setErroAcao(null);
-      await desativarFuncionario(supabaseFuncionariosAdapter, {
-        id: funcionario.id,
-        userId: user.id,
-      });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
-    }
+  async function desativar() {
+    if (!user || !funcionarioParaDesativar) return;
+    await desativarFuncionario(supabaseFuncionariosAdapter, {
+      id: funcionarioParaDesativar.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   async function abrirPerfil(funcionario: FuncionarioItem) {
@@ -153,14 +141,14 @@ export function FuncionariosPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          icon={<RefreshCw className="h-4 w-4" />}
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4"
         >
-          <RefreshCw className="h-4 w-4" />
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -176,14 +164,13 @@ export function FuncionariosPage() {
             </p>
           </div>
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="accent"
+              icon={<Plus className="h-4 w-4" />}
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
             >
-              <Plus className="h-4 w-4" />
               Novo funcionário
-            </button>
+            </Button>
           )}
         </div>
         {erroAcao && (
@@ -207,7 +194,9 @@ export function FuncionariosPage() {
               onVerPerfil={() => void abrirPerfil(funcionario)}
               onEditar={temEscrita ? () => setModal({ modo: "editar", funcionario }) : undefined}
               onDesativar={
-                temEscrita && funcionario.ativo ? () => desativar(funcionario) : undefined
+                temEscrita && funcionario.ativo
+                  ? () => setFuncionarioParaDesativar(funcionario)
+                  : undefined
               }
             />
           ))}
@@ -228,6 +217,17 @@ export function FuncionariosPage() {
           onFechar={() => setPerfil(null)}
         />
       )}
+
+      <ConfirmDialog
+        open={funcionarioParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setFuncionarioParaDesativar(null);
+        }}
+        titulo={`Desativar "${funcionarioParaDesativar?.nome}"`}
+        descricao="O funcionário para de ser oferecido para tarefas no Auvo."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
     </div>
   );
 }
@@ -282,28 +282,28 @@ function FuncionarioCard({
         <p className="mt-2 text-xs text-danger">{funcionario.auvoSyncError}</p>
       )}
       <div className="mt-4 flex justify-end gap-2">
-        <button type="button" onClick={onVerPerfil} className="btn-secondary">
+        <Button variant="secondary" size="sm" onClick={onVerPerfil}>
           Ver perfil
-        </button>
+        </Button>
         {onEditar && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Pencil className="h-3.5 w-3.5" />}
             onClick={onEditar}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
           >
-            <Pencil className="h-3.5 w-3.5" />
             Editar
-          </button>
+          </Button>
         )}
         {onDesativar && (
-          <button
-            type="button"
+          <Button
+            variant="danger"
+            size="sm"
+            icon={<Trash2 className="h-3.5 w-3.5" />}
             onClick={onDesativar}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
           >
-            <Trash2 className="h-3.5 w-3.5" />
             Desativar
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -320,46 +320,40 @@ function PerfilFuncionarioModal({
   onFechar: () => void;
 }) {
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-3xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex justify-between border-b border-line px-4 py-3">
-          <div>
-            <h3 className="text-base font-semibold text-ink">{funcionario.nome}</h3>
-            <p className="text-xs text-ink-3">
-              {funcionario.cargo ?? "Sem cargo"} · {funcionario.ativo ? "Ativo" : "Inativo"} · Auvo{" "}
-              {funcionario.auvoId ?? "sem vínculo"}
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onFechar();
+      }}
+      titulo={funcionario.nome}
+      descricao={`${funcionario.cargo ?? "Sem cargo"} · ${funcionario.ativo ? "Ativo" : "Inativo"} · Auvo ${funcionario.auvoId ?? "sem vínculo"}`}
+      tamanho="lg"
+    >
+      {!dados ? (
+        <p className="text-sm text-ink-3">Carregando perfil…</p>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          <section className="rounded border border-line p-3">
+            <h4 className="font-semibold text-ink">Alocação da semana</h4>
+            <p className="mt-2 text-sm text-ink-3">
+              {dados.agenda.length ? dados.agenda.join("\n") : "Sem alocação esta semana"}
             </p>
-          </div>
-          <button type="button" onClick={onFechar} className="btn-secondary">
-            Fechar
-          </button>
+          </section>
+          <section className="rounded border border-line p-3">
+            <h4 className="font-semibold text-ink">OS atendidas</h4>
+            <p className="mt-2 text-sm text-ink-3">{dados.os} OS no PCM</p>
+          </section>
+          <section className="rounded border border-line p-3 md:col-span-2">
+            <h4 className="font-semibold text-ink">Ferramentas em posse</h4>
+            <p className="mt-2 whitespace-pre-line text-sm text-ink-3">
+              {dados.ferramentas.length
+                ? dados.ferramentas.join("\n")
+                : "Nenhuma ferramenta em posse"}
+            </p>
+          </section>
         </div>
-        {!dados ? (
-          <p className="p-5 text-sm text-ink-3">Carregando perfil…</p>
-        ) : (
-          <div className="grid gap-3 p-4 md:grid-cols-2">
-            <section className="rounded border border-line p-3">
-              <h4 className="font-semibold text-ink">Alocação da semana</h4>
-              <p className="mt-2 text-sm text-ink-3">
-                {dados.agenda.length ? dados.agenda.join("\n") : "Sem alocação esta semana"}
-              </p>
-            </section>
-            <section className="rounded border border-line p-3">
-              <h4 className="font-semibold text-ink">OS atendidas</h4>
-              <p className="mt-2 text-sm text-ink-3">{dados.os} OS no PCM</p>
-            </section>
-            <section className="rounded border border-line p-3 md:col-span-2">
-              <h4 className="font-semibold text-ink">Ferramentas em posse</h4>
-              <p className="mt-2 whitespace-pre-line text-sm text-ink-3">
-                {dados.ferramentas.length
-                  ? dados.ferramentas.join("\n")
-                  : "Nenhuma ferramenta em posse"}
-              </p>
-            </section>
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </ModalPrimitivo>
   );
 }
 
@@ -417,17 +411,16 @@ function FuncionarioModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-3xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {funcionario ? "Editar funcionário" : "Novo funcionário"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto p-4 md:grid-cols-2">
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={funcionario ? "Editar funcionário" : "Novo funcionário"}
+      tamanho="lg"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
           {!funcionario && (
             <div className="md:col-span-2 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
               <span className="inline-flex items-center gap-2 font-semibold">
@@ -504,25 +497,16 @@ function FuncionarioModal({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
+          <Button variant="primary" onClick={salvar} disabled={salvando} loading={salvando}>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }
 
