@@ -44,7 +44,7 @@ function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode
   return (
     <Card>
       <div className="p-4">
-        <h3 className="mb-3 text-sm font-semibold text-ink">{titulo}</h3>
+        <h3 className="mb-3 text-body font-semibold text-ink">{titulo}</h3>
         {children}
       </div>
     </Card>
@@ -52,7 +52,7 @@ function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode
 }
 
 function SemDados() {
-  return <p className="text-sm text-ink-3">Sem dados ainda no período.</p>;
+  return <p className="text-body text-ink-3">Sem dados ainda no período.</p>;
 }
 
 export function DashboardComercialPage() {
@@ -89,13 +89,13 @@ export function DashboardComercialPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Dashboard comercial</h2>
-          <p className="text-sm text-ink-3">
+          <h2 className="text-heading font-semibold text-ink">Dashboard comercial</h2>
+          <p className="text-body text-ink-3">
             O funil está funcionando? Conversão, ciclo, win/loss.
           </p>
         </div>
         <div className="flex items-end gap-2">
-          <label className="text-xs text-ink-2">
+          <label className="text-caption text-ink-2">
             Início
             <input
               type="date"
@@ -104,7 +104,7 @@ export function DashboardComercialPage() {
               onChange={(e) => setPeriodo((p) => ({ ...p, inicio: e.target.value }))}
             />
           </label>
-          <label className="text-xs text-ink-2">
+          <label className="text-caption text-ink-2">
             Fim
             <input
               type="date"
@@ -119,7 +119,7 @@ export function DashboardComercialPage() {
       {/* AC-2: conversão por etapa */}
       <Bloco titulo="Conversão por etapa">
         {conversaoQuery.isPending ? (
-          <p className="text-sm text-ink-2">Carregando…</p>
+          <p className="text-body text-ink-2">Carregando…</p>
         ) : (
           <ConversaoEtapasChart etapas={conversaoQuery.data ?? []} />
         )}
@@ -129,17 +129,17 @@ export function DashboardComercialPage() {
         {/* AC-3: ciclo de venda */}
         <Bloco titulo="Ciclo de venda (mediana)">
           {cicloQuery.isPending ? (
-            <p className="text-sm text-ink-2">Carregando…</p>
+            <p className="text-body text-ink-2">Carregando…</p>
           ) : cicloQuery.data && cicloQuery.data.medianaDias !== null ? (
             <>
               <p className="text-2xl font-semibold tabular-nums text-ink">
                 {Math.round(cicloQuery.data.medianaDias)} dias
               </p>
-              <p className="text-xs text-ink-3">
+              <p className="text-caption text-ink-3">
                 {cicloQuery.data.quantidade} oportunidade(s) fechada(s)
               </p>
               {amostraPequena(cicloQuery.data.quantidade) && (
-                <p className="mt-1 text-xs text-orange">
+                <p className="mt-1 text-caption text-orange">
                   Amostra pequena — poucos dados no período.
                 </p>
               )}
@@ -152,7 +152,7 @@ export function DashboardComercialPage() {
         {/* AC-4: win/loss */}
         <Bloco titulo="Win / loss">
           {winLossQuery.isPending ? (
-            <p className="text-sm text-ink-2">Carregando…</p>
+            <p className="text-body text-ink-2">Carregando…</p>
           ) : totalFechadas === 0 ? (
             <SemDados />
           ) : (
@@ -160,11 +160,11 @@ export function DashboardComercialPage() {
               <p className="text-2xl font-semibold tabular-nums text-ink">
                 {formatarPct(taxaGanho)}
               </p>
-              <p className="text-xs text-ink-3">
+              <p className="text-caption text-ink-3">
                 {ganhas} ganha(s) · {totalPerdidas} perdida(s) de {totalFechadas} fechada(s)
               </p>
               {amostraPequena(totalFechadas) && (
-                <p className="mt-1 text-xs text-orange">
+                <p className="mt-1 text-caption text-orange">
                   Amostra pequena — poucos dados no período.
                 </p>
               )}
@@ -184,13 +184,13 @@ export function DashboardComercialPage() {
         {/* AC-5/AC-8: ticket médio */}
         <Bloco titulo="Ticket médio">
           {ticketQuery.isPending ? (
-            <p className="text-sm text-ink-2">Carregando…</p>
+            <p className="text-body text-ink-2">Carregando…</p>
           ) : ticketQuery.data && ticketQuery.data.ticketMedioCentavos !== null ? (
             <>
               <p className="text-2xl font-semibold tabular-nums text-ink">
                 {formatarValor(ticketQuery.data.ticketMedioCentavos)}
               </p>
-              <p className="text-xs text-ink-3">
+              <p className="text-caption text-ink-3">
                 {ticketQuery.data.quantidade} oportunidade(s) ganha(s) — fontes:{" "}
                 {ticketQuery.data.fonteContrato > 0 &&
                   `${ticketQuery.data.fonteContrato} ${rotuloFonteTicket("contrato")}`}
@@ -204,7 +204,7 @@ export function DashboardComercialPage() {
                   `${ticketQuery.data.fonteEstimado} ${rotuloFonteTicket("estimado")}`}
               </p>
               {amostraPequena(ticketQuery.data.quantidade) && (
-                <p className="mt-1 text-xs text-orange">
+                <p className="mt-1 text-caption text-orange">
                   Amostra pequena — poucos dados no período.
                 </p>
               )}
@@ -218,13 +218,13 @@ export function DashboardComercialPage() {
         {/* AC-6/AC-8: desconto médio × piso */}
         <Bloco titulo="Desconto médio × piso">
           {descontoQuery.isPending ? (
-            <p className="text-sm text-ink-2">Carregando…</p>
+            <p className="text-body text-ink-2">Carregando…</p>
           ) : descontoQuery.data && descontoQuery.data.descontoMedioPct !== null ? (
             <>
               <p className="text-2xl font-semibold tabular-nums text-ink">
                 {formatarPct(descontoQuery.data.descontoMedioPct)}
               </p>
-              <p className="text-xs text-ink-3">
+              <p className="text-caption text-ink-3">
                 {descontoQuery.data.quantidade} proposta(s) enviada(s) ·{" "}
                 {formatarPct(
                   proporcaoPertoDoPiso(
@@ -235,7 +235,7 @@ export function DashboardComercialPage() {
                 a menos de 5% do piso
               </p>
               {amostraPequena(descontoQuery.data.quantidade) && (
-                <p className="mt-1 text-xs text-orange">
+                <p className="mt-1 text-caption text-orange">
                   Amostra pequena — poucos dados no período.
                 </p>
               )}
@@ -250,7 +250,7 @@ export function DashboardComercialPage() {
       {/* AC-7: origem do lead */}
       <Bloco titulo="Origem do lead">
         {origemQuery.isPending ? (
-          <p className="text-sm text-ink-2">Carregando…</p>
+          <p className="text-body text-ink-2">Carregando…</p>
         ) : (origemQuery.data ?? []).length === 0 ? (
           <SemDados />
         ) : (
@@ -260,7 +260,7 @@ export function DashboardComercialPage() {
               .map((linha) => (
                 <li
                   key={linha.origem}
-                  className="flex items-center justify-between border-b border-line-soft py-1.5 text-sm last:border-0"
+                  className="flex items-center justify-between border-b border-line-soft py-1.5 text-body last:border-0"
                 >
                   <span className="text-ink">{linha.origem}</span>
                   <span className="text-ink-2">

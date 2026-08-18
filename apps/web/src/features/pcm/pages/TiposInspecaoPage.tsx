@@ -109,22 +109,24 @@ export function TiposInspecaoPage() {
   }
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
   if (estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
       </div>
     );
   }
@@ -134,8 +136,8 @@ export function TiposInspecaoPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-ink">Tipos de Inspeção</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h3 className="text-heading font-semibold text-ink">Tipos de Inspeção</h3>
+            <p className="mt-0.5 text-body text-ink-3">
               Parametrização ABNT NBR 16747 — cada tipo (predial, elétrica, SPDA…) tem seus
               checklists configuráveis. Só supervisor/superadmin edita.
             </p>
@@ -144,7 +146,7 @@ export function TiposInspecaoPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "tipo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Novo tipo
@@ -152,13 +154,13 @@ export function TiposInspecaoPage() {
           )}
         </div>
         {!temEscrita && podeAcessar("pcm", "escrita") && (
-          <p className="mt-3 text-xs text-ink-3">
+          <p className="mt-3 text-caption text-ink-3">
             Sua conta tem escrita no PCM, mas editar tipos/templates exige papel supervisor ou
             superadmin.
           </p>
         )}
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -166,7 +168,7 @@ export function TiposInspecaoPage() {
 
       {estado.tipos.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
-          <p className="text-sm text-ink-3">Nenhum tipo de inspeção cadastrado.</p>
+          <p className="text-body text-ink-3">Nenhum tipo de inspeção cadastrado.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
@@ -176,31 +178,33 @@ export function TiposInspecaoPage() {
               <div key={tipo.id} className="rounded-lg border border-line bg-card p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h4 className="text-sm font-semibold text-ink">{tipo.nome}</h4>
-                    {tipo.normaTecnica && <p className="text-xs text-ink-3">{tipo.normaTecnica}</p>}
+                    <h4 className="text-body font-semibold text-ink">{tipo.nome}</h4>
+                    {tipo.normaTecnica && (
+                      <p className="text-caption text-ink-3">{tipo.normaTecnica}</p>
+                    )}
                   </div>
                   {temEscrita && (
                     <button
                       type="button"
                       onClick={() => setModal({ modo: "tipo", tipo })}
-                      className="text-xs font-semibold text-ink-2 hover:text-ink"
+                      className="text-caption font-semibold text-ink-2 hover:text-ink"
                     >
                       Editar
                     </button>
                   )}
                 </div>
-                {tipo.descricao && <p className="mt-2 text-xs text-ink-3">{tipo.descricao}</p>}
+                {tipo.descricao && <p className="mt-2 text-caption text-ink-3">{tipo.descricao}</p>}
 
                 <div className="mt-3 border-t border-line-soft pt-3">
                   <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">
                     Checklists ({templatesDoTipo.length})
                   </p>
                   {templatesDoTipo.length === 0 ? (
-                    <p className="mt-1 text-xs text-ink-3">Nenhum checklist ainda.</p>
+                    <p className="mt-1 text-caption text-ink-3">Nenhum checklist ainda.</p>
                   ) : (
                     <ul className="mt-1 space-y-1">
                       {templatesDoTipo.map((template) => (
-                        <li key={template.id} className="text-xs text-ink-2">
+                        <li key={template.id} className="text-caption text-ink-2">
                           {template.nome} · {template.itens.length} item(ns)
                         </li>
                       ))}
@@ -210,7 +214,7 @@ export function TiposInspecaoPage() {
                     <button
                       type="button"
                       onClick={() => setModal({ modo: "template", tipoId: tipo.id })}
-                      className="mt-2 text-xs font-semibold text-orange hover:text-orange-deep"
+                      className="mt-2 text-caption font-semibold text-orange hover:text-orange-deep"
                     >
                       + Novo checklist
                     </button>
@@ -274,11 +278,11 @@ function TipoModal({
     >
       <div className="space-y-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
           <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Norma técnica</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Norma técnica</span>
           <input
             value={normaTecnica ?? ""}
             onChange={(e) => setNormaTecnica(e.target.value)}
@@ -287,7 +291,7 @@ function TipoModal({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
           <textarea
             value={descricao ?? ""}
             onChange={(e) => setDescricao(e.target.value)}
@@ -295,7 +299,7 @@ function TipoModal({
           />
         </label>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}
@@ -372,11 +376,13 @@ function TemplateModal({
     >
       <div className="max-h-[70vh] space-y-3 overflow-y-auto">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome do checklist *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">
+            Nome do checklist *
+          </span>
           <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
         </label>
         <div>
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Itens esperados</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Itens esperados</span>
           <div className="space-y-2">
             {itens.map((item, indice) => (
               <div
@@ -408,7 +414,7 @@ function TemplateModal({
                   onChange={(e) => atualizarItem(indice, "elemento", e.target.value)}
                   className="input h-9"
                 />
-                <label className="flex items-center gap-1 text-xs text-ink-3">
+                <label className="flex items-center gap-1 text-caption text-ink-3">
                   <input
                     type="checkbox"
                     checked={item.obrigatorio}
@@ -442,7 +448,7 @@ function TemplateModal({
           </Button>
         </div>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}

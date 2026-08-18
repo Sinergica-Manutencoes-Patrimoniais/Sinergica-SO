@@ -37,8 +37,8 @@ export function EmptyState({ titulo, acao, children, variante = "vazio" }: Empty
       data-variante={variante}
       className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line bg-card px-5 py-8 text-center"
     >
-      <p className="text-xs text-ink-3">{titulo}</p>
-      {children && <p className="max-w-sm text-xs text-ink-4">{children}</p>}
+      <p className="text-caption text-ink-3">{titulo}</p>
+      {children && <p className="max-w-sm text-caption text-ink-4">{children}</p>}
       {acao}
     </div>
   );

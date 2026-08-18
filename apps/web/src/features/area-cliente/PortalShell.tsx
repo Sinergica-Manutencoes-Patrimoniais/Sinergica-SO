@@ -55,14 +55,14 @@ export function PortalShell() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4">
           <div>
             <img src="/logos/logo-horizontal-positivo.png" alt="Sinérgica" className="h-8" />
-            <p className="mt-1 text-xs text-ink-3">Portal do Cliente</p>
+            <p className="mt-1 text-caption text-ink-3">Portal do Cliente</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-semibold">{snapshot?.cliente.nome ?? user?.nome}</p>
+            <p className="text-body font-semibold">{snapshot?.cliente.nome ?? user?.nome}</p>
             <button
               type="button"
               onClick={logout}
-              className="text-xs font-semibold text-orange hover:text-orange-deep"
+              className="text-caption font-semibold text-orange hover:text-orange-deep"
             >
               Sair
             </button>
@@ -77,7 +77,7 @@ export function PortalShell() {
               key={item.id}
               type="button"
               onClick={() => setSecao(item.id)}
-              className={`whitespace-nowrap border-b-2 px-3 py-3 text-sm font-semibold ${secao === item.id ? "border-orange text-orange" : "border-transparent text-ink-3 hover:text-ink"}`}
+              className={`whitespace-nowrap border-b-2 px-3 py-3 text-body font-semibold ${secao === item.id ? "border-orange text-orange" : "border-transparent text-ink-3 hover:text-ink"}`}
             >
               {item.label}
               {item.id === "notificacoes" &&
@@ -167,14 +167,14 @@ function Assessments({ data }: { data: PortalSnapshot }) {
       {data.assessments.map((a) => (
         <section key={a.id} className="rounded-xl border border-line bg-card p-5">
           <h2 className="font-semibold">{a.titulo}</h2>
-          <p className="text-sm text-ink-3">
+          <p className="text-body text-ink-3">
             {dataPt(a.data)} · {a.status}
           </p>
           <div className="mt-4 divide-y divide-line-soft">
             {a.itens.map((i) => (
               <div key={i.id} className="py-3">
-                <p className="text-sm font-medium">{i.descricao}</p>
-                <p className="text-xs text-ink-3">
+                <p className="text-body font-medium">{i.descricao}</p>
+                <p className="text-caption text-ink-3">
                   Condição: {i.resultado}
                   {i.responsavel ? ` · Responsável: ${i.responsavel}` : ""}
                 </p>
@@ -182,7 +182,7 @@ function Assessments({ data }: { data: PortalSnapshot }) {
                   <button
                     type="button"
                     onClick={() => i.fotoPath && abrirArquivo("inspecoes-midia", i.fotoPath)}
-                    className="mt-1 text-xs font-semibold text-orange"
+                    className="mt-1 text-caption font-semibold text-orange"
                   >
                     Abrir foto
                   </button>
@@ -213,11 +213,11 @@ function Chamados({
   return (
     <div className="grid gap-4">
       <div className="flex justify-between">
-        <h1 className="text-xl font-semibold">Chamados</h1>
+        <h1 className="text-title font-semibold">Chamados</h1>
         <button
           type="button"
           onClick={() => setNovo(!novo)}
-          className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white"
+          className="rounded-lg bg-orange px-4 py-2 text-body font-semibold text-white"
         >
           Novo chamado
         </button>
@@ -226,13 +226,13 @@ function Chamados({
         <section className="rounded-xl border border-line bg-card p-5">
           <Campo label="Título" value={titulo} onChange={setTitulo} />
           <Campo label="Descrição" value={descricao} onChange={setDescricao} area />
-          <label className="mt-3 block text-sm text-ink-2">
+          <label className="mt-3 block text-body text-ink-2">
             Anexo opcional
             <input
               type="file"
               accept="image/jpeg,image/png,application/pdf"
               onChange={(e) => setNovoArquivo(e.target.files?.[0])}
-              className="mt-1 block w-full text-sm"
+              className="mt-1 block w-full text-body"
             />
           </label>
           <button
@@ -248,7 +248,7 @@ function Chamados({
                 },
               )
             }
-            className="mt-3 rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="mt-3 rounded-lg bg-orange px-4 py-2 text-body font-semibold text-white disabled:opacity-50"
           >
             Enviar
           </button>
@@ -262,7 +262,7 @@ function Chamados({
               <h2 className="font-semibold">
                 {c.numero} · {c.titulo}
               </h2>
-              <p className="text-sm text-ink-3">{c.descricao || "Sem descrição"}</p>
+              <p className="text-body text-ink-3">{c.descricao || "Sem descrição"}</p>
             </div>
             <Badge texto={c.status} />
           </div>
@@ -285,14 +285,14 @@ function Chamados({
               placeholder="Adicionar comentário"
               value={comentario[c.id] ?? ""}
               onChange={(e) => setComentario((v) => ({ ...v, [c.id]: e.target.value }))}
-              className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm"
+              className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-body"
             />
             <input
               type="file"
               aria-label={`Anexo do chamado ${c.numero}`}
               accept="image/jpeg,image/png,application/pdf"
               onChange={(e) => setArquivos((v) => ({ ...v, [c.id]: e.target.files?.[0] }))}
-              className="max-w-52 text-xs"
+              className="max-w-52 text-caption"
             />
             <button
               type="button"
@@ -309,7 +309,7 @@ function Chamados({
                   setArquivos((v) => ({ ...v, [c.id]: undefined }));
                 })
               }
-              className="rounded-lg border border-orange px-3 py-2 text-sm font-semibold text-orange disabled:opacity-50"
+              className="rounded-lg border border-orange px-3 py-2 text-body font-semibold text-orange disabled:opacity-50"
             >
               Comentar
             </button>
@@ -336,7 +336,7 @@ function OrdensServico({
               <h2 className="font-semibold">
                 {os.numero} · {os.titulo}
               </h2>
-              <p className="text-sm text-ink-3">
+              <p className="text-body text-ink-3">
                 {os.categoria} · aberta em {dataPt(os.createdAt)}
               </p>
             </div>
@@ -360,14 +360,14 @@ function OrdensServico({
               placeholder="Adicionar nota para a equipe"
               value={notas[os.id] ?? ""}
               onChange={(e) => setNotas((v) => ({ ...v, [os.id]: e.target.value }))}
-              className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm"
+              className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-body"
             />
             <input
               type="file"
               aria-label={`Anexo do Chamado ${os.numero}`}
               accept="image/jpeg,image/png,application/pdf"
               onChange={(e) => setArquivos((v) => ({ ...v, [os.id]: e.target.files?.[0] }))}
-              className="max-w-52 text-xs"
+              className="max-w-52 text-caption"
             />
             <button
               type="button"
@@ -382,7 +382,7 @@ function OrdensServico({
                 setArquivos((v) => ({ ...v, [os.id]: undefined }));
                 await onAtualizar();
               }}
-              className="rounded-lg border border-orange px-3 py-2 text-sm font-semibold text-orange disabled:opacity-50"
+              className="rounded-lg border border-orange px-3 py-2 text-body font-semibold text-orange disabled:opacity-50"
             >
               Adicionar
             </button>
@@ -402,7 +402,7 @@ function Documentos({ data }: { data: PortalSnapshot }) {
           <div key={d.id} className="flex items-center justify-between gap-4 p-4">
             <div>
               <p className="font-medium">{d.titulo}</p>
-              <p className="text-xs text-ink-3">
+              <p className="text-caption text-ink-3">
                 {d.tipo} · {dataPt(d.data)}
               </p>
             </div>
@@ -410,16 +410,16 @@ function Documentos({ data }: { data: PortalSnapshot }) {
               <button
                 type="button"
                 onClick={() => d.bucket && d.path && abrirArquivo(d.bucket, d.path)}
-                className="text-sm font-semibold text-orange"
+                className="text-body font-semibold text-orange"
               >
                 Baixar
               </button>
             ) : d.conteudo ? (
-              <details className="text-sm">
+              <details className="text-body">
                 <summary className="cursor-pointer font-semibold text-orange">
                   Ver relatório
                 </summary>
-                <pre className="mt-3 max-w-xl whitespace-pre-wrap rounded border border-line-soft bg-paper p-3 text-xs text-ink-2">
+                <pre className="mt-3 max-w-xl whitespace-pre-wrap rounded border border-line-soft bg-paper p-3 text-caption text-ink-2">
                   {d.conteudo}
                 </pre>
                 <button
@@ -431,7 +431,7 @@ function Documentos({ data }: { data: PortalSnapshot }) {
                 </button>
               </details>
             ) : (
-              <span className="text-xs text-ink-3">Registro sem arquivo</span>
+              <span className="text-caption text-ink-3">Registro sem arquivo</span>
             )}
           </div>
         ))}
@@ -471,8 +471,8 @@ function Cronograma({ data }: { data: PortalSnapshot }) {
               className="flex items-center justify-between border-b border-line-soft py-3"
             >
               <div>
-                <p className="text-sm font-medium">{c.titulo}</p>
-                <p className="text-xs text-ink-3">Vigência até {dataPt(c.venceEm)}</p>
+                <p className="text-body font-medium">{c.titulo}</p>
+                <p className="text-caption text-ink-3">Vigência até {dataPt(c.venceEm)}</p>
               </div>
               <Badge texto={c.status} />
             </div>
@@ -510,9 +510,9 @@ function Notificacoes({
         >
           <div className="flex justify-between">
             <p className="font-semibold">{n.titulo}</p>
-            <span className="text-xs text-ink-3">{dataPt(n.createdAt)}</span>
+            <span className="text-caption text-ink-3">{dataPt(n.createdAt)}</span>
           </div>
-          <p className="mt-1 text-sm text-ink-2">{n.mensagem}</p>
+          <p className="mt-1 text-body text-ink-2">{n.mensagem}</p>
         </button>
       ))}
     </div>
@@ -531,7 +531,7 @@ function Pesquisa({
     <section className="rounded-xl border border-orange bg-card p-5">
       <h2 className="font-semibold">Como foi o atendimento? · {titulo}</h2>
       <div className="mt-3 flex flex-wrap gap-4">
-        <label className="text-sm">
+        <label className="text-body">
           Satisfação (1–5){" "}
           <input
             type="number"
@@ -542,7 +542,7 @@ function Pesquisa({
             className="ml-2 w-16 rounded border border-line p-1"
           />
         </label>
-        <label className="text-sm">
+        <label className="text-body">
           NPS (0–10){" "}
           <input
             type="number"
@@ -561,7 +561,7 @@ function Pesquisa({
           await supabasePortalAdapter.responderSatisfacao(osId, csat, nps, comentario);
           await onAtualizar();
         }}
-        className="mt-3 rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white"
+        className="mt-3 rounded-lg bg-orange px-4 py-2 text-body font-semibold text-white"
       >
         Enviar avaliação
       </button>
@@ -584,7 +584,7 @@ function Orcamentos({
               <h2 className="font-semibold">
                 {o.numero} · {o.titulo}
               </h2>
-              <p className="text-sm text-ink-3">
+              <p className="text-body text-ink-3">
                 Validade: {o.validoAte ? dataPt(o.validoAte) : "não informada"}
               </p>
             </div>
@@ -594,7 +594,7 @@ function Orcamentos({
             </div>
           </div>
           {o.itens.length > 0 && (
-            <ul className="mt-4 list-inside list-disc text-sm text-ink-2">
+            <ul className="mt-4 list-inside list-disc text-body text-ink-2">
               {o.itens.map((i, n) => (
                 <li key={`${o.id}-${n}`}>{i.descricao ?? `Item ${n + 1}`}</li>
               ))}
@@ -608,7 +608,7 @@ function Orcamentos({
                   await supabasePortalAdapter.decidirOrcamento(o.id, "aprovado");
                   await onAtualizar();
                 }}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-body font-semibold text-white"
               >
                 Aprovar
               </button>
@@ -616,7 +616,7 @@ function Orcamentos({
                 placeholder="Motivo da recusa"
                 value={motivos[o.id] ?? ""}
                 onChange={(e) => setMotivos((v) => ({ ...v, [o.id]: e.target.value }))}
-                className="min-w-52 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm"
+                className="min-w-52 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-body"
               />
               <button
                 type="button"
@@ -625,7 +625,7 @@ function Orcamentos({
                   await supabasePortalAdapter.decidirOrcamento(o.id, "recusado", motivos[o.id]);
                   await onAtualizar();
                 }}
-                className="rounded-lg border border-red-500 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-50"
+                className="rounded-lg border border-red-500 px-4 py-2 text-body font-semibold text-red-600 disabled:opacity-50"
               >
                 Recusar
               </button>
@@ -676,7 +676,7 @@ function Propostas({
   return (
     <div className="grid gap-4">
       {erro && (
-        <div className="rounded-xl border border-red-500 bg-card p-4 text-sm text-red-600">
+        <div className="rounded-xl border border-red-500 bg-card p-4 text-body text-red-600">
           {erro}
         </div>
       )}
@@ -689,13 +689,13 @@ function Propostas({
                 <h2 className="font-semibold">
                   {TIPO_PROPOSTA_LABEL[p.tipo] ?? p.tipo} · v{p.versaoAtual}
                 </h2>
-                <p className="text-sm text-ink-3">
+                <p className="text-body text-ink-3">
                   Validade: {p.validoAte ? dataPt(p.validoAte) : "não informada"}
                   {expirada && p.status === "enviada" && (
                     <span className="ml-2 font-semibold text-red-600">expirada</span>
                   )}
                 </p>
-                {p.escopo && <p className="mt-2 text-sm text-ink-2">{p.escopo}</p>}
+                {p.escopo && <p className="mt-2 text-body text-ink-2">{p.escopo}</p>}
               </div>
               <div className="text-right">
                 <p className="font-semibold">{reais(p.precoCentavos)}</p>
@@ -706,7 +706,7 @@ function Propostas({
               <button
                 type="button"
                 onClick={() => void baixarPdfProposta(p.payload, p.versaoAtual, data.cliente.nome)}
-                className="rounded-lg border border-orange px-4 py-2 text-sm font-semibold text-orange"
+                className="rounded-lg border border-orange px-4 py-2 text-body font-semibold text-orange"
               >
                 Baixar PDF
               </button>
@@ -724,7 +724,7 @@ function Propostas({
                           setErro(e instanceof Error ? e.message : "Falha ao aceitar a proposta.");
                         }
                       }}
-                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-body font-semibold text-white"
                     >
                       Aceitar
                     </button>
@@ -733,7 +733,7 @@ function Propostas({
                     placeholder="Motivo da recusa"
                     value={motivos[p.id] ?? ""}
                     onChange={(e) => setMotivos((v) => ({ ...v, [p.id]: e.target.value }))}
-                    className="min-w-52 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm"
+                    className="min-w-52 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-body"
                   />
                   <button
                     type="button"
@@ -751,7 +751,7 @@ function Propostas({
                         setErro(e instanceof Error ? e.message : "Falha ao recusar a proposta.");
                       }
                     }}
-                    className="rounded-lg border border-red-500 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-50"
+                    className="rounded-lg border border-red-500 px-4 py-2 text-body font-semibold text-red-600 disabled:opacity-50"
                   >
                     Recusar
                   </button>
@@ -774,7 +774,7 @@ function Financeiro({ data }: { data: PortalSnapshot }) {
           <div key={f.id} className="grid gap-2 p-4 sm:grid-cols-[1fr_auto_auto] sm:items-center">
             <div>
               <p className="font-medium">{f.descricao || "Fatura"}</p>
-              <p className="text-xs text-ink-3">
+              <p className="text-caption text-ink-3">
                 Vencimento: {f.vencimento ? dataPt(f.vencimento) : "—"}
               </p>
             </div>
@@ -787,12 +787,12 @@ function Financeiro({ data }: { data: PortalSnapshot }) {
                 href={f.segundaVia.link}
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm font-semibold text-orange"
+                className="text-body font-semibold text-orange"
               >
                 2ª via
               </a>
             ) : (
-              <span className="text-xs text-ink-3">2ª via indisponível</span>
+              <span className="text-caption text-ink-3">2ª via indisponível</span>
             )}
           </div>
         ))}
@@ -808,7 +808,7 @@ function Kpi({ titulo, valor, onClick }: { titulo: string; valor: number; onClic
       onClick={onClick}
       className="rounded-xl border border-line bg-card p-5 text-left hover:border-orange"
     >
-      <p className="text-sm text-ink-3">{titulo}</p>
+      <p className="text-body text-ink-3">{titulo}</p>
       <p className="mt-2 text-3xl font-semibold">{valor}</p>
     </button>
   );
@@ -816,28 +816,28 @@ function Kpi({ titulo, valor, onClick }: { titulo: string; valor: number; onClic
 function Linha({ principal, secundario }: { principal: string; secundario: string }) {
   return (
     <div className="border-b border-line-soft py-3 last:border-0">
-      <p className="text-sm font-medium">{principal}</p>
-      <p className="text-xs text-ink-3">{secundario}</p>
+      <p className="text-body font-medium">{principal}</p>
+      <p className="text-caption text-ink-3">{secundario}</p>
     </div>
   );
 }
 function Badge({ texto }: { texto: string }) {
   return (
-    <span className="inline-flex rounded-full bg-line-soft px-2 py-1 text-xs font-semibold text-ink-2">
+    <span className="inline-flex rounded-full bg-line-soft px-2 py-1 text-caption font-semibold text-ink-2">
       {texto.replaceAll("_", " ")}
     </span>
   );
 }
 function Vazio({ texto }: { texto: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-line bg-card p-8 text-center text-sm text-ink-3">
+    <div className="rounded-xl border border-dashed border-line bg-card p-8 text-center text-body text-ink-3">
       {texto}
     </div>
   );
 }
 function Estado({ mensagem, acao }: { mensagem: string; acao?: () => void }) {
   return (
-    <div className="p-12 text-center text-sm text-ink-3">
+    <div className="p-12 text-center text-body text-ink-3">
       <p>{mensagem}</p>
       {acao && (
         <Button variant="ghost" onClick={acao} className="mt-3 text-orange hover:text-orange-deep">
@@ -858,10 +858,10 @@ function Campo({
     value,
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       onChange(e.target.value),
-    className: "mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm",
+    className: "mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2 text-body",
   };
   return (
-    <label htmlFor={id} className="mt-3 block text-sm text-ink-2">
+    <label htmlFor={id} className="mt-3 block text-body text-ink-2">
       {label}
       {area ? <textarea id={id} {...props} rows={3} /> : <input id={id} {...props} />}
     </label>

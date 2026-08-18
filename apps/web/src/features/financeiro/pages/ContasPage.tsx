@@ -76,12 +76,12 @@ export function ContasPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -91,7 +91,7 @@ export function ContasPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <Button
           variant="ghost"
           size="sm"
@@ -110,8 +110,8 @@ export function ContasPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Contas bancárias</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h3 className="text-heading font-semibold text-ink">Contas bancárias</h3>
+            <p className="mt-0.5 text-body text-ink-3">
               Saldo atual = saldo inicial + entradas − saídas realizadas, calculado ao vivo.
             </p>
           </div>
@@ -139,7 +139,7 @@ export function ContasPage() {
       {estado.contas.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Building2 className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhuma conta cadastrada.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhuma conta cadastrada.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
@@ -147,8 +147,10 @@ export function ContasPage() {
             <div key={conta.id} className="rounded-lg border border-line bg-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h4 className="truncate text-sm font-semibold text-ink">{conta.nome}</h4>
-                  <p className="mt-1 text-xs text-ink-3">{conta.banco ?? "Sem banco informado"}</p>
+                  <h4 className="truncate text-body font-semibold text-ink">{conta.nome}</h4>
+                  <p className="mt-1 text-caption text-ink-3">
+                    {conta.banco ?? "Sem banco informado"}
+                  </p>
                 </div>
                 <span
                   className={`rounded-full px-2 py-0.5 text-micro font-semibold ${conta.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
@@ -162,7 +164,7 @@ export function ContasPage() {
                   ? centavosParaReais(conta.saldoAtualCentavos)
                   : "—"}
               </p>
-              <p className="mt-1 text-xs text-ink-3">
+              <p className="mt-1 text-caption text-ink-3">
                 Saldo inicial R$ {centavosParaReais(conta.saldoInicialCentavos)} em{" "}
                 {new Date(conta.saldoInicialEm).toLocaleDateString("pt-BR")}
               </p>
@@ -275,7 +277,7 @@ function ContaModal({
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
             <input
               value={nome}
               onChange={(e) => setNome(e.target.value)}
@@ -284,7 +286,7 @@ function ContaModal({
             />
           </label>
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Banco</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Banco</span>
             <input
               value={banco}
               onChange={(e) => setBanco(e.target.value)}
@@ -292,7 +294,9 @@ function ContaModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Saldo inicial *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
+              Saldo inicial *
+            </span>
             <input
               value={saldoInicial}
               onChange={(e) => setSaldoInicial(e.target.value)}
@@ -300,7 +304,9 @@ function ContaModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Data de corte *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
+              Data de corte *
+            </span>
             <input
               type="date"
               value={saldoInicialEm}
@@ -309,7 +315,7 @@ function ContaModal({
             />
           </label>
           {erro && (
-            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}
@@ -375,7 +381,9 @@ function TransferenciaModal({
     >
       <div className="flex flex-col gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Conta de origem *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">
+            Conta de origem *
+          </span>
           <select
             value={contaOrigemId}
             onChange={(e) => setContaOrigemId(e.target.value)}
@@ -390,7 +398,9 @@ function TransferenciaModal({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Conta de destino *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">
+            Conta de destino *
+          </span>
           <select
             value={contaDestinoId}
             onChange={(e) => setContaDestinoId(e.target.value)}
@@ -405,7 +415,7 @@ function TransferenciaModal({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Valor *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Valor *</span>
           <input
             value={valor}
             onChange={(e) => setValor(e.target.value)}
@@ -414,7 +424,7 @@ function TransferenciaModal({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Data *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Data *</span>
           <input
             type="date"
             value={data}
@@ -423,7 +433,7 @@ function TransferenciaModal({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
           <input
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
@@ -431,7 +441,7 @@ function TransferenciaModal({
           />
         </label>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}

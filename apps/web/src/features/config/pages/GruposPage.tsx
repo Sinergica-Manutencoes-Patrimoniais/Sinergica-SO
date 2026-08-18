@@ -154,7 +154,7 @@ export function GruposPage() {
             <div key={grupo.id} className="flex items-center gap-3 px-4 py-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-ink truncate">{grupo.nome}</p>
+                  <p className="text-body font-medium text-ink truncate">{grupo.nome}</p>
                   {!grupo.ativo && (
                     <span className="text-micro font-medium px-2 py-0.5 rounded-full bg-line-soft text-ink-2">
                       Inativo
@@ -162,10 +162,10 @@ export function GruposPage() {
                   )}
                 </div>
                 {grupo.descricao && (
-                  <p className="text-xs text-ink-3 truncate mt-0.5">{grupo.descricao}</p>
+                  <p className="text-caption text-ink-3 truncate mt-0.5">{grupo.descricao}</p>
                 )}
               </div>
-              <span className="text-xs text-ink-3 shrink-0">
+              <span className="text-caption text-ink-3 shrink-0">
                 {grupo.permissoes.length} módulo{grupo.permissoes.length === 1 ? "" : "s"}
               </span>
               <Button variant="ghost" size="sm" onClick={() => abrirEdicao(grupo)}>
@@ -209,12 +209,12 @@ export function GruposPage() {
             </Field>
 
             <div>
-              <p className="block text-sm font-medium text-ink-2 mb-1.5">Permissões por módulo</p>
+              <p className="block text-body font-medium text-ink-2 mb-1.5">Permissões por módulo</p>
               <ModuloPermissaoGrid permissoes={form.permissoes} onChange={alterarPermissao} />
             </div>
 
             {editandoId && (
-              <label className="flex items-center gap-2 text-sm text-ink-2">
+              <label className="flex items-center gap-2 text-body text-ink-2">
                 <input
                   type="checkbox"
                   checked={form.ativo}

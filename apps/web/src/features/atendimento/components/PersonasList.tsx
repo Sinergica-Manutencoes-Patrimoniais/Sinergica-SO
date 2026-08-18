@@ -70,8 +70,8 @@ export function PersonasList({
     <section className="rounded-xl border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
         <div>
-          <h3 className="text-base font-semibold text-ink">Personas de IA</h3>
-          <p className="text-sm text-ink-3">
+          <h3 className="text-heading font-semibold text-ink">Personas de IA</h3>
+          <p className="text-body text-ink-3">
             Prompt de sistema e base de conhecimento por agente (Zé/comercial)
           </p>
         </div>
@@ -87,14 +87,14 @@ export function PersonasList({
       </div>
 
       {erro && !modal && (
-        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erro}
         </div>
       )}
 
       <div className="divide-y divide-line-soft">
         {personas.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-ink-3">
+          <div className="px-5 py-8 text-center text-body text-ink-3">
             Nenhuma persona cadastrada.
           </div>
         ) : (
@@ -104,7 +104,7 @@ export function PersonasList({
                 <Bot className="h-4 w-4 shrink-0 text-ink-3" />
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-ink">{persona.nome}</p>
-                  <p className="text-xs text-ink-3">
+                  <p className="text-caption text-ink-3">
                     {labelTipoPersona(persona.tipo)}
                     {!persona.ativo && " · inativa"}
                   </p>
@@ -151,7 +151,9 @@ export function PersonasList({
           }}
         >
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">Nome</span>
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+              Nome
+            </span>
             <input
               className="input mt-1"
               value={form.nome}
@@ -159,7 +161,9 @@ export function PersonasList({
             />
           </label>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">Tipo</span>
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+              Tipo
+            </span>
             <select
               className="input mt-1"
               value={form.tipo}
@@ -173,7 +177,7 @@ export function PersonasList({
             </select>
           </label>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
               Prompt de sistema
             </span>
             <textarea
@@ -183,7 +187,7 @@ export function PersonasList({
             />
           </label>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
               Base de conhecimento (opcional)
             </span>
             <textarea
@@ -194,7 +198,7 @@ export function PersonasList({
             />
           </label>
           {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
               {erro}
             </div>
           )}

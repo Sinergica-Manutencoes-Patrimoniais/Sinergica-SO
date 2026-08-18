@@ -137,14 +137,14 @@ function NovoLancamentoModal({ aberto, onFechar }: { aberto: boolean; onFechar: 
         <button
           type="button"
           onClick={() => setTipo("entrada")}
-          className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "entrada" ? "bg-success-soft text-success" : "bg-card text-ink-2"}`}
+          className={`flex-1 px-3 py-2 text-caption font-semibold ${tipo === "entrada" ? "bg-success-soft text-success" : "bg-card text-ink-2"}`}
         >
           ↓ Entrada
         </button>
         <button
           type="button"
           onClick={() => setTipo("saida")}
-          className={`flex-1 px-3 py-2 text-xs font-semibold ${tipo === "saida" ? "bg-orange-soft text-orange-deep" : "bg-card text-ink-2"}`}
+          className={`flex-1 px-3 py-2 text-caption font-semibold ${tipo === "saida" ? "bg-orange-soft text-orange-deep" : "bg-card text-ink-2"}`}
         >
           ↑ Saída
         </button>

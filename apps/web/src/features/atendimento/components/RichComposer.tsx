@@ -96,7 +96,7 @@ export function RichComposer({
           type="button"
           disabled={disabled}
           onClick={() => document.getElementById("inbox-rich-file")?.click()}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2"
+          className="inline-flex items-center gap-1 text-caption font-semibold text-ink-2"
         >
           <FileUp className="h-4 w-4" /> Mídia
         </button>
@@ -111,7 +111,7 @@ export function RichComposer({
                 }
               : gravar
           }
-          className="inline-flex items-center gap-1 text-xs font-semibold text-ink-2"
+          className="inline-flex items-center gap-1 text-caption font-semibold text-ink-2"
         >
           {gravando ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}{" "}
           {gravando ? "Parar" : "Áudio"}
@@ -120,7 +120,7 @@ export function RichComposer({
           type="button"
           disabled={disabled || templates.length === 0}
           onClick={() => setModo("template")}
-          className="text-xs font-semibold text-ink-2 disabled:opacity-40"
+          className="text-caption font-semibold text-ink-2 disabled:opacity-40"
         >
           Template
         </button>
@@ -128,7 +128,7 @@ export function RichComposer({
           type="button"
           disabled={disabled}
           onClick={() => setModo("interativa")}
-          className="text-xs font-semibold text-ink-2"
+          className="text-caption font-semibold text-ink-2"
         >
           Botões
         </button>
@@ -140,7 +140,7 @@ export function RichComposer({
               <select
                 value={templateNome}
                 onChange={(event) => setTemplateNome(event.target.value)}
-                className="input flex-1 text-sm"
+                className="input flex-1 text-body"
               >
                 <option value="">Selecione template aprovado</option>
                 {templates
@@ -155,7 +155,7 @@ export function RichComposer({
                 value={parametros}
                 onChange={(event) => setParametros(event.target.value)}
                 placeholder="Valores dos placeholders, separados por vírgula"
-                className="input flex-1 text-sm"
+                className="input flex-1 text-body"
               />
             </>
           ) : (
@@ -166,7 +166,7 @@ export function RichComposer({
                 value={texto}
                 onChange={(event) => setTexto(event.target.value)}
                 placeholder={arquivo?.name ?? "Texto da mensagem"}
-                className="input flex-1 text-sm"
+                className="input flex-1 text-body"
               />
             </>
           )}
@@ -175,17 +175,17 @@ export function RichComposer({
               value={botoes}
               onChange={(event) => setBotoes(event.target.value)}
               placeholder="Botões separados por vírgula"
-              className="input flex-1 text-sm"
+              className="input flex-1 text-body"
             />
           )}
           <button
             type="button"
             onClick={enviar}
-            className="rounded-md bg-orange px-3 py-1.5 text-xs font-semibold text-white"
+            className="rounded-md bg-orange px-3 py-1.5 text-caption font-semibold text-white"
           >
             Enviar
           </button>
-          <button type="button" onClick={() => setModo(null)} className="text-xs text-ink-3">
+          <button type="button" onClick={() => setModo(null)} className="text-caption text-ink-3">
             Cancelar
           </button>
         </div>

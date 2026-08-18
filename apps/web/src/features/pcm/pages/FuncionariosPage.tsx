@@ -120,27 +120,29 @@ export function FuncionariosPage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   }
 
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <Button
           variant="ghost"
           icon={<RefreshCw className="h-4 w-4" />}
@@ -158,8 +160,8 @@ export function FuncionariosPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Funcionários</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h3 className="text-heading font-semibold text-ink">Funcionários</h3>
+            <p className="mt-0.5 text-body text-ink-3">
               Técnicos e gestores sincronizados com usuários Auvo
             </p>
           </div>
@@ -174,7 +176,7 @@ export function FuncionariosPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -183,7 +185,7 @@ export function FuncionariosPage() {
       {estado.funcionarios.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <UserCog className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhum funcionário cadastrado.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhum funcionário cadastrado.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
@@ -247,8 +249,8 @@ function FuncionarioCard({
     <div className="rounded-lg border border-line bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h4 className="truncate text-sm font-semibold text-ink">{funcionario.nome}</h4>
-          <p className="mt-1 text-xs text-ink-3">
+          <h4 className="truncate text-body font-semibold text-ink">{funcionario.nome}</h4>
+          <p className="mt-1 text-caption text-ink-3">
             Auvo {funcionario.auvoId ?? "-"} · {labelUserType(funcionario.userType)}
           </p>
         </div>
@@ -260,10 +262,10 @@ function FuncionarioCard({
           {funcionario.ativo ? "Ativo" : "Inativo"}
         </span>
       </div>
-      <p className="mt-3 text-sm text-ink-3">
+      <p className="mt-3 text-body text-ink-3">
         {[funcionario.cargo, funcionario.equipe].filter(Boolean).join(" · ") || "Sem cargo/equipe"}
       </p>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-3">
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-caption text-ink-3">
         {funcionario.telefone && (
           <span className="inline-flex items-center gap-1">
             <Phone className="h-3.5 w-3.5" />
@@ -279,7 +281,7 @@ function FuncionarioCard({
         <span>Sync: {funcionario.auvoSyncStatus ?? "pending"}</span>
       </div>
       {funcionario.auvoSyncError && (
-        <p className="mt-2 text-xs text-danger">{funcionario.auvoSyncError}</p>
+        <p className="mt-2 text-caption text-danger">{funcionario.auvoSyncError}</p>
       )}
       <div className="mt-4 flex justify-end gap-2">
         <Button variant="secondary" size="sm" onClick={onVerPerfil}>
@@ -330,22 +332,22 @@ function PerfilFuncionarioModal({
       tamanho="lg"
     >
       {!dados ? (
-        <p className="text-sm text-ink-3">Carregando perfil…</p>
+        <p className="text-body text-ink-3">Carregando perfil…</p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           <section className="rounded border border-line p-3">
             <h4 className="font-semibold text-ink">Alocação da semana</h4>
-            <p className="mt-2 text-sm text-ink-3">
+            <p className="mt-2 text-body text-ink-3">
               {dados.agenda.length ? dados.agenda.join("\n") : "Sem alocação esta semana"}
             </p>
           </section>
           <section className="rounded border border-line p-3">
             <h4 className="font-semibold text-ink">OS atendidas</h4>
-            <p className="mt-2 text-sm text-ink-3">{dados.os} OS no PCM</p>
+            <p className="mt-2 text-body text-ink-3">{dados.os} OS no PCM</p>
           </section>
           <section className="rounded border border-line p-3 md:col-span-2">
             <h4 className="font-semibold text-ink">Ferramentas em posse</h4>
-            <p className="mt-2 whitespace-pre-line text-sm text-ink-3">
+            <p className="mt-2 whitespace-pre-line text-body text-ink-3">
               {dados.ferramentas.length
                 ? dados.ferramentas.join("\n")
                 : "Nenhuma ferramenta em posse"}
@@ -422,7 +424,7 @@ function FuncionarioModal({
       <div className="flex flex-col gap-4">
         <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
           {!funcionario && (
-            <div className="md:col-span-2 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
+            <div className="md:col-span-2 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-body text-warning">
               <span className="inline-flex items-center gap-2 font-semibold">
                 <ShieldAlert className="h-4 w-4" />
                 Este cadastro cria acesso real ao app Auvo.
@@ -468,7 +470,7 @@ function FuncionarioModal({
             onChange={(v) => setCampo("email", v)}
           />
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
               Jornada diária (horas)
             </span>
             <input
@@ -492,7 +494,7 @@ function FuncionarioModal({
             </span>
           </label>
           {erro && (
-            <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}
@@ -523,7 +525,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
+      <span className="mb-1 block text-caption font-semibold text-ink-3">{label}</span>
       <input
         type={type}
         value={value}
@@ -543,7 +545,7 @@ function SelectUserType({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo *</span>
+      <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo *</span>
       <select
         value={value}
         onChange={(event) => onChange(Number(event.target.value) as 1 | 2 | 3)}

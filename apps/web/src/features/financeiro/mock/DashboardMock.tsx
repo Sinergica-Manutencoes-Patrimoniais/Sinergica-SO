@@ -107,7 +107,10 @@ function CategoriaBars() {
   return (
     <div className="flex flex-col gap-2.5">
       {GASTO_CATEGORIAS.map((c) => (
-        <div key={c.nome} className="grid grid-cols-[100px_1fr_44px] items-center gap-2.5 text-xs">
+        <div
+          key={c.nome}
+          className="grid grid-cols-[100px_1fr_44px] items-center gap-2.5 text-caption"
+        >
           <span className="truncate font-medium text-ink-2">{c.nome}</span>
           <div className="h-2 overflow-hidden rounded-full bg-line-soft">
             <div
@@ -134,7 +137,7 @@ function PrevistoRealizado() {
     <div className="flex flex-col gap-4">
       {itens.map((i) => (
         <div key={i.label} className="grid grid-cols-[70px_1fr_150px] items-center gap-3">
-          <span className="text-xs font-semibold text-ink-2">{i.label}</span>
+          <span className="text-caption font-semibold text-ink-2">{i.label}</span>
           <div className="relative h-3.5 overflow-hidden rounded-full bg-line-soft">
             <div
               className="absolute inset-y-0 left-0 rounded-full"
@@ -167,7 +170,7 @@ function ProjecaoStrip({ posicao }: { posicao: number }) {
         <div key={p.d} className="flex-1 rounded-lg bg-line-soft px-3 py-2.5 text-center">
           <p className="text-micro font-bold uppercase tracking-wider text-ink-3">{p.d}</p>
           <p
-            className={`mt-1 text-sm font-bold tabular-nums ${p.v < 0 ? "text-danger" : "text-ink"}`}
+            className={`mt-1 text-body font-bold tabular-nums ${p.v < 0 ? "text-danger" : "text-ink"}`}
           >
             {brl(p.v)}
           </p>

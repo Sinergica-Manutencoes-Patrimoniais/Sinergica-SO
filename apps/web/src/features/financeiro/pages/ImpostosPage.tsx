@@ -90,12 +90,12 @@ export function ImpostosPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -105,7 +105,7 @@ export function ImpostosPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <Button
           variant="ghost"
           icon={<RefreshCw className="h-4 w-4" />}
@@ -125,14 +125,14 @@ export function ImpostosPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-center gap-2">
           <Landmark className="h-4 w-4 text-ink-3" />
-          <h3 className="text-base font-semibold text-ink">Impostos — provisão gerencial</h3>
+          <h3 className="text-heading font-semibold text-ink">Impostos — provisão gerencial</h3>
         </div>
-        <p className="mt-0.5 text-sm text-ink-3">
+        <p className="mt-0.5 text-body text-ink-3">
           Simples Nacional/DAS por competência — provisão gerencial, não substitui a apuração fiscal
           oficial.
         </p>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -144,8 +144,8 @@ export function ImpostosPage() {
         <section className="rounded-lg border border-line bg-card p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-ink">Provisionar competência</h3>
-              <p className="mt-0.5 text-xs text-ink-3">
+              <h3 className="text-body font-semibold text-ink">Provisionar competência</h3>
+              <p className="mt-0.5 text-caption text-ink-3">
                 Recalcula se já existir provisão para o mês (retificação, auditável).
               </p>
             </div>
@@ -180,7 +180,7 @@ export function ImpostosPage() {
       {provisoes.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Landmark className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhuma provisão calculada ainda.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhuma provisão calculada ainda.</p>
         </div>
       ) : (
         <DataTable
@@ -267,10 +267,12 @@ function ConfigForm({
 
   return (
     <section className="rounded-lg border border-line bg-card p-4">
-      <h3 className="text-sm font-semibold text-ink">Configuração</h3>
+      <h3 className="text-body font-semibold text-ink">Configuração</h3>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Regime de cálculo</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">
+            Regime de cálculo
+          </span>
           <select
             value={tipo}
             onChange={(e) => setTipo(e.target.value as TipoAliquotaImposto)}
@@ -281,7 +283,7 @@ function ConfigForm({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">
             Dia de vencimento (mês seguinte)
           </span>
           <input
@@ -295,7 +297,9 @@ function ConfigForm({
         </label>
         {tipo === "fixa" && (
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Alíquota fixa (%)</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
+              Alíquota fixa (%)
+            </span>
             <input
               value={aliquotaFixaPercentual}
               onChange={(e) => setAliquotaFixaPercentual(e.target.value)}
@@ -396,7 +400,7 @@ function ConfigForm({
       )}
 
       {erro && (
-        <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+        <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
           {erro}
         </div>
       )}

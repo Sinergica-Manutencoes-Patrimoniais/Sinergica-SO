@@ -52,7 +52,7 @@ export function Modal({
                   {titulo}
                 </Dialog.Title>
                 {descricao && (
-                  <Dialog.Description className="mt-0.5 text-xs text-ink-3">
+                  <Dialog.Description className="mt-0.5 text-caption text-ink-3">
                     {descricao}
                   </Dialog.Description>
                 )}

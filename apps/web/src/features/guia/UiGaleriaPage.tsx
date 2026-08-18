@@ -83,7 +83,7 @@ export function UiGaleriaPage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-heading font-semibold text-ink">Card / EmptyState</h2>
-        <Card className="p-4 text-sm text-ink">Card simples</Card>
+        <Card className="p-4 text-body text-ink">Card simples</Card>
         <EmptyState titulo="Nenhum item ainda" acao={<Button variant="secondary">Criar</Button>}>
           Descrição opcional do estado vazio.
         </EmptyState>
@@ -134,7 +134,7 @@ export function UiGaleriaPage() {
           titulo="Título do modal"
           descricao="Descrição opcional"
         >
-          <p className="text-sm text-ink-2">Conteúdo de exemplo.</p>
+          <p className="text-body text-ink-2">Conteúdo de exemplo.</p>
         </Modal>
       </section>
 

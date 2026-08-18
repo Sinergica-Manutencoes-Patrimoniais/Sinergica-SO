@@ -79,7 +79,7 @@ export function ConhecimentoList({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-ink-3">
+        <p className="text-body text-ink-3">
           {ativas.length} entrada(s) ativa(s) de {entradas.length} total.
         </p>
         {temEscrita && (
@@ -94,14 +94,14 @@ export function ConhecimentoList({
       </div>
 
       {entradas.length === 0 ? (
-        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-body text-ink-3">
           Nenhuma entrada de conhecimento ainda.
         </div>
       ) : (
         [...porCategoria.entries()].map(([categoria, itens]) => (
           <div key={categoria} className="rounded-xl border border-line bg-card">
             <div className="border-b border-line-soft px-4 py-2.5">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-3">
+              <h3 className="text-caption font-semibold uppercase tracking-[0.12em] text-ink-3">
                 {categoria}
               </h3>
             </div>
@@ -110,11 +110,11 @@ export function ConhecimentoList({
                 <div key={item.id} className="flex items-center justify-between px-4 py-3">
                   <div className="min-w-0">
                     <p
-                      className={`text-sm font-medium ${item.ativo ? "text-ink-2" : "text-ink-3 line-through"}`}
+                      className={`text-body font-medium ${item.ativo ? "text-ink-2" : "text-ink-3 line-through"}`}
                     >
                       {item.titulo}
                     </p>
-                    <p className="mt-0.5 truncate text-xs text-ink-3">{item.conteudo}</p>
+                    <p className="mt-0.5 truncate text-caption text-ink-3">{item.conteudo}</p>
                   </div>
                   {temEscrita && (
                     <div className="flex shrink-0 gap-2 pl-3">
@@ -151,26 +151,26 @@ export function ConhecimentoList({
             value={form.titulo}
             onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
             placeholder="Título"
-            className="w-full rounded-md border border-line p-2 text-sm"
+            className="w-full rounded-md border border-line p-2 text-body"
           />
           <textarea
             value={form.conteudo}
             onChange={(e) => setForm((f) => ({ ...f, conteudo: e.target.value }))}
             placeholder="Conteúdo"
             rows={4}
-            className="w-full rounded-md border border-line p-2 text-sm"
+            className="w-full rounded-md border border-line p-2 text-body"
           />
           <div className="grid grid-cols-2 gap-3">
             <input
               value={form.categoria}
               onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value }))}
               placeholder="Categoria"
-              className="w-full rounded-md border border-line p-2 text-sm"
+              className="w-full rounded-md border border-line p-2 text-body"
             />
             <select
               value={form.personaId}
               onChange={(e) => setForm((f) => ({ ...f, personaId: e.target.value }))}
-              className="w-full rounded-md border border-line p-2 text-sm"
+              className="w-full rounded-md border border-line p-2 text-body"
             >
               <option value="">Todas as personas</option>
               {personas.map((p) => (
@@ -181,7 +181,10 @@ export function ConhecimentoList({
             </select>
           </div>
           <div>
-            <label className="text-xs font-semibold text-ink-2" htmlFor="conhecimento-prioridade">
+            <label
+              className="text-caption font-semibold text-ink-2"
+              htmlFor="conhecimento-prioridade"
+            >
               Prioridade ({form.prioridade})
             </label>
             <input
@@ -195,7 +198,7 @@ export function ConhecimentoList({
             />
           </div>
           {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}

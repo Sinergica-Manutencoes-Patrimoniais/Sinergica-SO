@@ -78,7 +78,7 @@ export function OsKanbanView({
   return (
     <div className="flex flex-col gap-2">
       {colunasOcultas.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 text-xs text-ink-3">
+        <div className="flex flex-wrap items-center gap-1.5 text-caption text-ink-3">
           <span className="font-semibold">Colunas ocultas:</span>
           {colunasOcultas.map((coluna) => (
             <button
@@ -115,7 +115,7 @@ export function OsKanbanView({
                   />
                   <div className="flex max-h-[600px] flex-col gap-2 overflow-y-auto p-2">
                     {preventivas.length === 0 ? (
-                      <p className="px-2 py-4 text-center text-xs text-ink-3">
+                      <p className="px-2 py-4 text-center text-caption text-ink-3">
                         Nenhuma preventiva planejada
                       </p>
                     ) : (
@@ -127,10 +127,10 @@ export function OsKanbanView({
                           <span className="rounded-full bg-info-soft px-2 py-0.5 text-micro font-semibold text-info">
                             {TIPO_MANUTENCAO_LABEL[preventiva.maintenanceType]}
                           </span>
-                          <p className="mt-1.5 text-sm font-semibold text-ink">
+                          <p className="mt-1.5 text-body font-semibold text-ink">
                             {preventiva.imovelNome}
                           </p>
-                          <p className="mt-1 text-xs text-ink-3">{preventiva.clienteNome}</p>
+                          <p className="mt-1 text-caption text-ink-3">{preventiva.clienteNome}</p>
                           <p className="mt-1 text-micro text-ink-3">
                             {formatarDataPreventiva(preventiva.scheduledDate)}
                           </p>
@@ -170,7 +170,7 @@ export function OsKanbanView({
                 />
                 <div className="flex max-h-[600px] flex-col gap-2 overflow-y-auto p-2">
                   {ordensDaColuna.length === 0 ? (
-                    <p className="px-2 py-4 text-center text-xs text-ink-3">Vazio</p>
+                    <p className="px-2 py-4 text-center text-caption text-ink-3">Vazio</p>
                   ) : (
                     ordensDaColuna.map((ordem) => (
                       <div
@@ -200,7 +200,7 @@ export function OsKanbanView({
                             className="w-full text-left"
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-xs font-brand tabular-nums text-ink-3">
+                              <span className="text-caption font-brand tabular-nums text-ink-3">
                                 {rotuloNumeroOrdem(ordem)}
                               </span>
                               <span
@@ -209,8 +209,10 @@ export function OsKanbanView({
                                 {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                               </span>
                             </div>
-                            <p className="mt-1.5 text-sm font-semibold text-ink">{ordem.titulo}</p>
-                            <p className="mt-1 text-xs text-ink-3">{ordem.clienteNome}</p>
+                            <p className="mt-1.5 text-body font-semibold text-ink">
+                              {ordem.titulo}
+                            </p>
+                            <p className="mt-1 text-caption text-ink-3">{ordem.clienteNome}</p>
                             {ordem.tecnicoNome && (
                               <p className="mt-1 text-micro text-ink-3">
                                 Técnico: {ordem.tecnicoNome}
@@ -281,7 +283,7 @@ function ColunaHeader({
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
-        <p className="truncate text-xs font-semibold uppercase tracking-wider text-ink-3">
+        <p className="truncate text-caption font-semibold uppercase tracking-wider text-ink-3">
           {label}
         </p>
       </div>

@@ -27,7 +27,7 @@ export function FluxoMensalChart({ pontos }: { pontos: PontoFluxoMensal[] }) {
 
   return (
     <div>
-      <div className="mb-2 flex items-center gap-4 text-xs text-ink-3">
+      <div className="mb-2 flex items-center gap-4 text-caption text-ink-3">
         <Legenda cor={COR_ENTRADA} label="Entradas" />
         <Legenda cor={COR_SAIDA} label="Saídas" />
       </div>
@@ -88,7 +88,7 @@ export function FluxoMensalChart({ pontos }: { pontos: PontoFluxoMensal[] }) {
         })}
       </svg>
       {hover && (
-        <p className="mt-1 text-xs text-ink-2">
+        <p className="mt-1 text-caption text-ink-2">
           {formatarMesCurto(hover.mes)}: entradas R$ {centavosParaReais(hover.entradas)} · saídas R${" "}
           {centavosParaReais(hover.saidas)}
         </p>
@@ -107,5 +107,5 @@ function Legenda({ cor, label }: { cor: string; label: string }) {
 }
 
 export function EstadoVazio({ texto }: { texto: string }) {
-  return <p className="py-8 text-center text-sm text-ink-3">{texto}</p>;
+  return <p className="py-8 text-center text-body text-ink-3">{texto}</p>;
 }

@@ -23,7 +23,7 @@ export function ContasReceberMock() {
           return (
             <div key={f.key} className={`rounded-lg border border-line p-3 ${f.cls}`}>
               <p className="text-micro font-bold text-ink-2">{f.label}</p>
-              <p className="mt-1.5 text-base font-bold tabular-nums text-ink">{brl(total)}</p>
+              <p className="mt-1.5 text-heading font-bold tabular-nums text-ink">{brl(total)}</p>
               <p className="mt-0.5 text-micro text-ink-3">
                 {itens.length} item{itens.length === 1 ? "" : "s"}
               </p>

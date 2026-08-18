@@ -94,7 +94,7 @@ export function ClienteFormModal({
           onChange={(v) => setCampo("contatoEmail", v)}
         />
         <label className="block md:col-span-2">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Observações</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Observações</span>
           <textarea
             value={dados.observacoes ?? ""}
             onChange={(event) => setCampo("observacoes", event.target.value)}
@@ -102,7 +102,7 @@ export function ClienteFormModal({
           />
         </label>
         {erro && (
-          <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}
@@ -132,7 +132,7 @@ function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
+      <span className="mb-1 block text-caption font-semibold text-ink-3">{label}</span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}

@@ -52,7 +52,7 @@ export function ContratosMock() {
           </tr>
         ))}
       </TableShell>
-      <div className="surface-card flex items-center justify-between px-4 py-3 text-sm">
+      <div className="surface-card flex items-center justify-between px-4 py-3 text-body">
         <span className="text-ink-3">Receita recorrente prevista (contratos ativos)</span>
         <b className="tabular-nums text-ink">{brl(total)}</b>
       </div>

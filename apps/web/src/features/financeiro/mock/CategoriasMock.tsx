@@ -65,7 +65,7 @@ export function CategoriasMock() {
 function ParentRow({ nome }: { nome: string }) {
   return (
     <li className="flex items-center justify-between border-b border-line-soft py-2.5 last:border-0">
-      <span className="text-sm font-semibold text-ink">{nome}</span>
+      <span className="text-body font-semibold text-ink">{nome}</span>
       <Switch />
     </li>
   );
@@ -74,7 +74,7 @@ function ParentRow({ nome }: { nome: string }) {
 function ChildRow({ nome }: { nome: string }) {
   return (
     <li className="flex items-center justify-between border-b border-line-soft py-2 pl-4 last:border-0">
-      <span className="text-xs text-ink-2">{nome}</span>
+      <span className="text-caption text-ink-2">{nome}</span>
       <Switch />
     </li>
   );

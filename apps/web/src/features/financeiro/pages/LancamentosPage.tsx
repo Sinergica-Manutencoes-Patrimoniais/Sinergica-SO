@@ -249,12 +249,12 @@ export function LancamentosPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -264,7 +264,7 @@ export function LancamentosPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <Button
           variant="ghost"
           icon={<RefreshCw className="h-4 w-4" />}
@@ -284,8 +284,8 @@ export function LancamentosPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Lançamentos</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h3 className="text-heading font-semibold text-ink">Lançamentos</h3>
+            <p className="mt-0.5 text-body text-ink-3">
               Entradas e saídas — ciclo previsto → realizado.
             </p>
           </div>
@@ -309,7 +309,7 @@ export function LancamentosPage() {
           </div>
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -336,7 +336,9 @@ export function LancamentosPage() {
       {lancamentos.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <ClipboardList className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhum lançamento encontrado para este filtro.</p>
+          <p className="mt-3 text-body text-ink-3">
+            Nenhum lançamento encontrado para este filtro.
+          </p>
         </div>
       ) : (
         <DataTable
@@ -568,9 +570,9 @@ function Totalizador({
 }: { label: string; valorCentavos: number; tom: "positivo" | "negativo" }) {
   return (
     <div className="rounded-lg border border-line bg-card p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</p>
+      <p className="text-caption font-semibold uppercase tracking-wide text-ink-3">{label}</p>
       <p
-        className={`mt-1 text-xl font-semibold ${tom === "positivo" ? "text-success" : "text-danger"}`}
+        className={`mt-1 text-title font-semibold ${tom === "positivo" ? "text-success" : "text-danger"}`}
       >
         R$ {centavosParaReais(Math.abs(valorCentavos))}
       </p>
@@ -700,7 +702,7 @@ function FiltrosBar({
         <button
           type="button"
           onClick={() => onChange({})}
-          className="self-end text-xs font-semibold text-ink-3 hover:text-ink"
+          className="self-end text-caption font-semibold text-ink-3 hover:text-ink"
         >
           Limpar filtros
         </button>
@@ -780,7 +782,7 @@ function LancamentoModal({
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo *</span>
             <select
               value={tipo}
               onChange={(e) => {
@@ -794,7 +796,7 @@ function LancamentoModal({
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Valor *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Valor *</span>
             <input
               value={valor}
               onChange={(e) => setValor(e.target.value)}
@@ -804,7 +806,7 @@ function LancamentoModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Competência *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Competência *</span>
             <input
               type="date"
               value={dataCompetencia}
@@ -813,7 +815,7 @@ function LancamentoModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Status *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Status *</span>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as LancamentoStatus)}
@@ -825,7 +827,7 @@ function LancamentoModal({
           </label>
           {status === "previsto" && (
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">Vencimento *</span>
+              <span className="mb-1 block text-caption font-semibold text-ink-3">Vencimento *</span>
               <input
                 type="date"
                 value={dataVencimento}
@@ -836,7 +838,7 @@ function LancamentoModal({
           )}
           {status === "realizado" && (
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">Pagamento *</span>
+              <span className="mb-1 block text-caption font-semibold text-ink-3">Pagamento *</span>
               <input
                 type="date"
                 value={dataPagamento}
@@ -846,7 +848,7 @@ function LancamentoModal({
             </label>
           )}
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Categoria *</span>
             <select
               value={categoriaId}
               onChange={(e) => setCategoriaId(e.target.value)}
@@ -867,7 +869,7 @@ function LancamentoModal({
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Conta</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Conta</span>
             <select
               value={contaId}
               onChange={(e) => setContaId(e.target.value)}
@@ -882,7 +884,7 @@ function LancamentoModal({
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente</span>
             <select
               value={clienteId}
               onChange={(e) => setClienteId(e.target.value)}
@@ -897,7 +899,7 @@ function LancamentoModal({
             </select>
           </label>
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
             <textarea
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
@@ -905,7 +907,7 @@ function LancamentoModal({
             />
           </label>
           {erro && (
-            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}
@@ -957,11 +959,13 @@ function BaixaModal({
     >
       <div className="flex flex-col gap-4">
         <div>
-          <p className="text-sm text-ink-2">
+          <p className="text-body text-ink-2">
             R$ {centavosParaReais(lancamento.valorCentavos)} — confirme a data de pagamento.
           </p>
           <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Data de pagamento *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
+              Data de pagamento *
+            </span>
             <input
               type="date"
               value={dataPagamento}
@@ -1037,11 +1041,11 @@ function CorrigirModal({
       tamanho="sm"
     >
       <div className="flex flex-col gap-4">
-        <p className="text-xs text-ink-3">
+        <p className="text-caption text-ink-3">
           A correção fica registrada em auditoria (valor anterior/novo por campo alterado).
         </p>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Valor *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Valor *</span>
           <input
             value={valor}
             onChange={(e) => setValor(e.target.value)}
@@ -1050,7 +1054,7 @@ function CorrigirModal({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Competência *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Competência *</span>
           <input
             type="date"
             value={dataCompetencia}
@@ -1059,7 +1063,7 @@ function CorrigirModal({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Categoria *</span>
           <select
             value={categoriaId}
             onChange={(e) => setCategoriaId(e.target.value)}
@@ -1079,7 +1083,7 @@ function CorrigirModal({
           </select>
         </label>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}

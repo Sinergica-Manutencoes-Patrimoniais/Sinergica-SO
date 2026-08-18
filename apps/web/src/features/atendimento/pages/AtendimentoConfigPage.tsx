@@ -556,14 +556,14 @@ export function AtendimentoConfigPage() {
   }
 
   if (permissoesCarregando || carregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Atendimento.
         </p>
       </div>
@@ -574,11 +574,11 @@ export function AtendimentoConfigPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{erro}</p>
+        <p className="mt-1 text-body text-ink-3">{erro}</p>
         <button
           type="button"
           onClick={carregarBase}
-          className="mt-4 text-sm font-semibold text-orange"
+          className="mt-4 text-body font-semibold text-orange"
         >
           Tentar novamente
         </button>
@@ -592,7 +592,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("ia")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "ia" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -601,7 +601,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("operacao")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "operacao" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -610,7 +610,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("conhecimento")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "conhecimento"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -621,7 +621,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("meta-wa")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "meta-wa" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -630,7 +630,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("wa-templates")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "wa-templates"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -641,7 +641,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("instagram")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "instagram"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -652,7 +652,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("messenger")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "messenger"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -663,7 +663,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("ig-comments")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "ig-comments"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -674,7 +674,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("optouts")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "optouts" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -683,7 +683,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("scoring")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "scoring" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -692,7 +692,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("clusters")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "clusters" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -701,7 +701,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("evolution")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "evolution"
               ? "border-b-2 border-orange text-ink"
               : "text-ink-3 hover:text-ink-2"
@@ -712,7 +712,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("canal")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "canal" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -721,7 +721,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("tags")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "tags" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -730,7 +730,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("personas")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "personas" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -739,7 +739,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("agentes")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "agentes" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >
@@ -748,7 +748,7 @@ export function AtendimentoConfigPage() {
         <button
           type="button"
           onClick={() => setAba("fluxos")}
-          className={`shrink-0 px-3 py-1.5 text-xs font-semibold ${
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
             aba === "fluxos" ? "border-b-2 border-orange text-ink" : "text-ink-3 hover:text-ink-2"
           }`}
         >

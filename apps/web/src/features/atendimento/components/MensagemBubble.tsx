@@ -12,7 +12,7 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
 
   return (
     <div className={`flex ${minha ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${cor}`}>
+      <div className={`max-w-[75%] rounded-lg px-3 py-2 text-body ${cor}`}>
         {deAgente && (
           <div className="mb-1 flex items-center gap-1 text-micro font-semibold uppercase tracking-[0.12em] opacity-70">
             <Bot className="h-3 w-3" />
@@ -50,27 +50,27 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
             </a>
           ))}
         {mensagem.tipoConteudo === "template" && (
-          <p className="mt-1 text-xs opacity-75">
+          <p className="mt-1 text-caption opacity-75">
             Template · {String(mensagem.payload.templateNome ?? "")}
           </p>
         )}
         {mensagem.tipoConteudo === "interativa" && Array.isArray(mensagem.payload.botoes) && (
           <div className="mt-2 flex flex-wrap gap-1">
             {(mensagem.payload.botoes as string[]).map((botao) => (
-              <span key={botao} className="rounded border border-current px-2 py-1 text-xs">
+              <span key={botao} className="rounded border border-current px-2 py-1 text-caption">
                 {botao}
               </span>
             ))}
           </div>
         )}
         {mensagem.statusEntrega === "erro" && (
-          <p className="mt-1 flex items-center gap-1 text-xs text-danger">
+          <p className="mt-1 flex items-center gap-1 text-caption text-danger">
             <AlertTriangle className="h-3 w-3" />
             Falha ao enviar{mensagem.erroDetalhe ? `: ${mensagem.erroDetalhe}` : ""}
           </p>
         )}
         {mensagem.statusEntrega === "enviando" && (
-          <p className="mt-1 text-xs opacity-70">Enviando…</p>
+          <p className="mt-1 text-caption opacity-70">Enviando…</p>
         )}
       </div>
     </div>

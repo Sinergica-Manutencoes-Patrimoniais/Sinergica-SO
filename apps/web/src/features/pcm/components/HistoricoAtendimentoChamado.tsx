@@ -33,19 +33,19 @@ export function HistoricoAtendimentoChamado({
   }, [carregar]);
 
   if (snapshots === "carregando") {
-    return <p className="text-sm text-ink-3">Carregando histórico de atendimento…</p>;
+    return <p className="text-body text-ink-3">Carregando histórico de atendimento…</p>;
   }
   if (snapshots === null) {
-    return <p className="text-xs text-ink-3">Não foi possível carregar o histórico.</p>;
+    return <p className="text-caption text-ink-3">Não foi possível carregar o histórico.</p>;
   }
   if (snapshots.length === 0) {
-    return <p className="text-xs text-ink-3">Nenhum histórico de conversa anexado ainda.</p>;
+    return <p className="text-caption text-ink-3">Nenhum histórico de conversa anexado ainda.</p>;
   }
 
   return (
     <ul className="flex flex-col divide-y divide-line-soft">
       {snapshots.map((snap) => (
-        <li key={snap.id} className="py-2 text-xs">
+        <li key={snap.id} className="py-2 text-caption">
           <div className="flex items-center justify-between gap-2">
             <span className="text-ink-2">
               Últimos {snap.janelaDias} dia{snap.janelaDias > 1 ? "s" : ""} · {snap.totalMensagens}{" "}

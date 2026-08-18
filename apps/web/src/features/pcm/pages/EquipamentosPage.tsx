@@ -110,26 +110,28 @@ export function EquipamentosPage() {
   }
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
   if (estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -143,8 +145,8 @@ export function EquipamentosPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Equipamentos</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h3 className="text-heading font-semibold text-ink">Equipamentos</h3>
+            <p className="mt-0.5 text-body text-ink-3">
               Cadastro PCM sincronizado com equipamentos operacionais do Auvo
             </p>
           </div>
@@ -152,7 +154,7 @@ export function EquipamentosPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Novo equipamento
@@ -160,7 +162,7 @@ export function EquipamentosPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -171,7 +173,7 @@ export function EquipamentosPage() {
               key={tipo}
               type="button"
               onClick={() => setFiltroTipo(tipo)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              className={`rounded-full px-3 py-1 text-caption font-semibold ${
                 filtroTipo === tipo
                   ? "bg-navy text-white"
                   : "border border-line text-ink-2 hover:bg-line-soft"
@@ -186,7 +188,7 @@ export function EquipamentosPage() {
       {estado.equipamentos.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Wrench className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhum equipamento cadastrado.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhum equipamento cadastrado.</p>
         </div>
       ) : (
         <section className="rounded-lg border border-line bg-card overflow-hidden">
@@ -297,7 +299,7 @@ function EquipamentoLinha({
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          <span className="truncate text-sm font-semibold text-ink">{equipamento.nome}</span>
+          <span className="truncate text-body font-semibold text-ink">{equipamento.nome}</span>
           <span
             className={`shrink-0 rounded-full px-1.5 py-0.5 text-micro font-semibold ${equipamento.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
           >
@@ -307,7 +309,7 @@ function EquipamentoLinha({
             {equipamento.tipo === "componente" ? "Componente" : "Equipamento"}
           </span>
         </div>
-        <p className="truncate text-xs text-ink-3">
+        <p className="truncate text-caption text-ink-3">
           {equipamento.categoria ?? "Sem categoria"} · {equipamento.clienteNome ?? "sem vínculo"}
           {equipamento.localizacao ? ` · ${equipamento.localizacao}` : ""}
           {equipamento.auvoSyncError ? ` · erro: ${equipamento.auvoSyncError}` : ""}
@@ -317,7 +319,7 @@ function EquipamentoLinha({
       <button
         type="button"
         onClick={onVerDetalhe}
-        className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+        className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
       >
         <Layers className="h-3.5 w-3.5" />
         Detalhe
@@ -327,7 +329,7 @@ function EquipamentoLinha({
         <button
           type="button"
           onClick={onEditar}
-          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
         >
           <Pencil className="h-3.5 w-3.5" />
           Editar
@@ -337,7 +339,7 @@ function EquipamentoLinha({
         <button
           type="button"
           onClick={onDesativar}
-          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-danger-line px-2.5 text-xs font-semibold text-danger hover:bg-danger-soft"
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-danger-line px-2.5 text-caption font-semibold text-danger hover:bg-danger-soft"
         >
           <Trash2 className="h-3.5 w-3.5" />
           Desativar
@@ -367,15 +369,15 @@ function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () =
     >
       <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
         {contexto === "carregando" ? (
-          <p className="text-sm text-ink-3">Carregando…</p>
+          <p className="text-body text-ink-3">Carregando…</p>
         ) : contexto === null ? (
-          <p className="text-sm text-ink-3">Item não encontrado.</p>
+          <p className="text-body text-ink-3">Item não encontrado.</p>
         ) : (
           <>
             <div>
               <h4 className="text-lg font-semibold text-ink">{contexto.item.nome}</h4>
               {/* AC-6: breadcrumb Cliente > Área > Local */}
-              <p className="mt-1 text-sm text-ink-3" data-testid="item-breadcrumb">
+              <p className="mt-1 text-body text-ink-3" data-testid="item-breadcrumb">
                 {contexto.breadcrumb
                   ? [
                       contexto.breadcrumb.clienteNome,
@@ -389,17 +391,17 @@ function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () =
             </div>
 
             <div>
-              <h5 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
+              <h5 className="mb-1.5 text-caption font-semibold uppercase tracking-wider text-ink-3">
                 Faz parte de
               </h5>
               {contexto.sistemas.length === 0 ? (
-                <p className="text-sm text-ink-3">Nenhum Sistema.</p>
+                <p className="text-body text-ink-3">Nenhum Sistema.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {contexto.sistemas.map((sistema) => (
                     <span
                       key={sistema.id}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-orange-soft px-3 py-1 text-xs font-semibold text-orange-deep"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-orange-soft px-3 py-1 text-caption font-semibold text-orange-deep"
                     >
                       <Link2 className="h-3 w-3" />
                       {sistema.nome}
@@ -412,14 +414,14 @@ function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () =
 
             {contexto.componentesFilhos.length > 0 && (
               <div>
-                <h5 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
+                <h5 className="mb-1.5 text-caption font-semibold uppercase tracking-wider text-ink-3">
                   Componentes
                 </h5>
                 <div className="flex flex-col gap-1.5">
                   {contexto.componentesFilhos.map((componente) => (
                     <div
                       key={componente.id}
-                      className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2"
+                      className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-body text-ink-2"
                     >
                       <Boxes className="h-3.5 w-3.5 text-ink-3" />
                       {componente.nome}

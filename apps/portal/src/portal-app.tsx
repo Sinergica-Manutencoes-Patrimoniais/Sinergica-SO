@@ -9,7 +9,7 @@ function Entrada() {
   const { user, status, logout } = useAuth();
   if (status === "carregando")
     return (
-      <div className="grid min-h-screen place-items-center bg-paper text-sm text-ink-3">
+      <div className="grid min-h-screen place-items-center bg-paper text-body text-ink-3">
         Carregando sessão…
       </div>
     );
@@ -19,7 +19,7 @@ function Entrada() {
       <div className="grid min-h-screen place-items-center bg-paper p-6 text-center">
         <div>
           <h1 className="text-lg font-semibold">Acesso exclusivo do cliente</h1>
-          <p className="mt-2 text-sm text-ink-3">Use o sistema interno para este perfil.</p>
+          <p className="mt-2 text-body text-ink-3">Use o sistema interno para este perfil.</p>
           <Button
             variant="ghost"
             onClick={logout}

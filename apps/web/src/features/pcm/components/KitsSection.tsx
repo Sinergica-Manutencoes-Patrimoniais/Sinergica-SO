@@ -133,14 +133,14 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
   if (estado.fase === "carregando") {
     return (
       <section className="rounded-lg border border-line bg-card p-4">
-        <p className="text-sm text-ink-3">Carregando kits…</p>
+        <p className="text-body text-ink-3">Carregando kits…</p>
       </section>
     );
   }
   if (estado.fase === "erro") {
     return (
       <section className="rounded-lg border border-line bg-card p-4">
-        <p className="text-sm text-danger">{estado.mensagem}</p>
+        <p className="text-body text-danger">{estado.mensagem}</p>
       </section>
     );
   }
@@ -149,8 +149,8 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
     <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="text-base font-semibold text-ink">Kits</h3>
-          <p className="mt-0.5 text-sm text-ink-3">
+          <h3 className="text-heading font-semibold text-ink">Kits</h3>
+          <p className="mt-0.5 text-body text-ink-3">
             Conjunto nomeado de ferramentas, atribuído/devolvido como uma unidade só (conceito só do
             PCM — o Auvo não tem kit)
           </p>
@@ -167,7 +167,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
       </div>
 
       {estado.kits.length === 0 ? (
-        <p className="mt-4 text-sm text-ink-3">Nenhum kit cadastrado.</p>
+        <p className="mt-4 text-body text-ink-3">Nenhum kit cadastrado.</p>
       ) : (
         <ul className="mt-4 space-y-2">
           {estado.kits.map((kit) => {
@@ -177,8 +177,8 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
               <li key={kit.id} className="rounded-md border border-line-soft bg-paper p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-sm font-semibold text-ink">{kit.nome}</p>
-                    <p className="text-xs text-ink-3">
+                    <p className="text-body font-semibold text-ink">{kit.nome}</p>
+                    <p className="text-caption text-ink-3">
                       {kit.itens
                         .map((item) => `${item.quantidade}× ${item.ferramentaNome}`)
                         .join(" · ")}
@@ -195,7 +195,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                         <button
                           type="button"
                           onClick={() => setModal({ modo: "editar", kit })}
-                          className="text-xs font-semibold text-ink-2 hover:text-ink"
+                          className="text-caption font-semibold text-ink-2 hover:text-ink"
                         >
                           Editar
                         </button>
@@ -203,14 +203,14 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                           type="button"
                           onClick={() => setAtribuindo(kit)}
                           disabled={!completo}
-                          className="text-xs font-semibold text-orange hover:text-orange-deep disabled:opacity-40"
+                          className="text-caption font-semibold text-orange hover:text-orange-deep disabled:opacity-40"
                         >
                           Atribuir
                         </button>
                         <button
                           type="button"
                           onClick={() => setKitParaDesativar(kit)}
-                          className="text-xs font-semibold text-danger hover:underline"
+                          className="text-caption font-semibold text-danger hover:underline"
                         >
                           Desativar
                         </button>
@@ -219,7 +219,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                   </div>
                 </div>
                 {!completo && faltando.length > 0 && (
-                  <p className="mt-1 text-xs text-danger">
+                  <p className="mt-1 text-caption text-danger">
                     Falta: {faltando.map((item) => item.ferramentaNome).join(", ")}
                   </p>
                 )}
@@ -231,7 +231,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
 
       {estado.atribuicoesAtivas.length > 0 && (
         <div className="mt-5 border-t border-line-soft pt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+          <p className="text-caption font-semibold uppercase tracking-wider text-ink-3">
             Kits atribuídos
           </p>
           <ul className="mt-2 space-y-2">
@@ -240,14 +240,14 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
               return (
                 <li
                   key={atribuicao.kitAtribuicaoId}
-                  className="flex items-center justify-between gap-2 rounded-md border border-line-soft bg-paper px-3 py-2 text-sm"
+                  className="flex items-center justify-between gap-2 rounded-md border border-line-soft bg-paper px-3 py-2 text-body"
                 >
                   <span className="text-ink-2">
                     <Package className="mr-1.5 inline h-3.5 w-3.5 text-ink-3" />
                     {atribuicao.funcionarioNome} · {atribuicao.itensAindaComTecnico}/
                     {atribuicao.totalItens} unidade(s)
                     {!completa && (
-                      <span className="ml-2 text-xs text-warning">
+                      <span className="ml-2 text-caption text-warning">
                         kit incompleto com o técnico
                       </span>
                     )}
@@ -256,7 +256,7 @@ export function KitsSection({ temEscrita }: { temEscrita: boolean }) {
                     <button
                       type="button"
                       onClick={() => setAtribuicaoParaDevolver(atribuicao)}
-                      className="shrink-0 text-xs font-semibold text-ink-2 hover:text-ink"
+                      className="shrink-0 text-caption font-semibold text-ink-2 hover:text-ink"
                     >
                       Devolver kit
                     </button>
@@ -371,11 +371,11 @@ function KitModal({
     >
       <div className="max-h-[70vh] space-y-3 overflow-y-auto">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
           <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
           <textarea
             value={descricao ?? ""}
             onChange={(e) => setDescricao(e.target.value)}
@@ -383,7 +383,7 @@ function KitModal({
           />
         </label>
         <div>
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Itens do kit</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Itens do kit</span>
           <div className="space-y-2">
             {itens.map((item, indice) => (
               <div
@@ -413,7 +413,7 @@ function KitModal({
                 <button
                   type="button"
                   onClick={() => removerItem(indice)}
-                  className="text-xs font-semibold text-danger hover:underline"
+                  className="text-caption font-semibold text-danger hover:underline"
                 >
                   Remover
                 </button>
@@ -423,13 +423,13 @@ function KitModal({
           <button
             type="button"
             onClick={() => setItens((atual) => [...atual, { ferramentaId: "", quantidade: 1 }])}
-            className="mt-2 text-xs font-semibold text-orange hover:text-orange-deep"
+            className="mt-2 text-caption font-semibold text-orange hover:text-orange-deep"
           >
             + Adicionar item
           </button>
         </div>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}
@@ -484,7 +484,7 @@ function AtribuirKitModal({
     >
       <div className="space-y-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Técnico</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Técnico</span>
           <select
             value={funcionarioId}
             onChange={(e) => setFuncionarioId(e.target.value)}
@@ -499,7 +499,7 @@ function AtribuirKitModal({
           </select>
         </label>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}

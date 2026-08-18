@@ -116,24 +116,24 @@ export function ParametrosPrecoPage() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="font-brand text-xl font-bold text-ink">Precificação</h1>
-        <p className="text-sm text-ink-2">
+        <h1 className="font-brand text-title font-bold text-ink">Precificação</h1>
+        <p className="text-body text-ink-2">
           Parâmetros do motor de preço, níveis de técnico e catálogo de materiais.
         </p>
       </header>
 
       {erro && (
         <Card>
-          <p className="p-3 text-sm text-danger">{erro}</p>
+          <p className="p-3 text-body text-danger">{erro}</p>
         </Card>
       )}
 
       {/* Alíquota — sempre do Financeiro, nunca constante no código (AC-5/AC-6). */}
       <Card>
         <div className="flex flex-wrap items-center gap-3 p-3">
-          <span className="text-sm font-semibold text-ink">Alíquota vigente:</span>
+          <span className="text-body font-semibold text-ink">Alíquota vigente:</span>
           {aliquotaQuery.isPending ? (
-            <span className="text-sm text-ink-2">carregando…</span>
+            <span className="text-body text-ink-2">carregando…</span>
           ) : aliquota ? (
             <>
               <Badge tone={aliquota.confirmada ? "success" : "warning"}>
@@ -141,14 +141,14 @@ export function ParametrosPrecoPage() {
                 {aliquota.tipo === "fixa" ? "fixa" : "faixa RBT12"}
               </Badge>
               {!aliquota.confirmada && (
-                <span className="text-xs text-warning">
+                <span className="text-caption text-warning">
                   Configuração de impostos ainda não foi confirmada por ninguém — vem do seed.
                   Confirme em Financeiro → Impostos antes de usar em proposta real.
                 </span>
               )}
             </>
           ) : (
-            <span className="text-sm text-danger">Não foi possível carregar.</span>
+            <span className="text-body text-danger">Não foi possível carregar.</span>
           )}
         </div>
       </Card>
@@ -207,7 +207,7 @@ export function ParametrosPrecoPage() {
             </Field>
           </div>
           <div className="border-t border-line p-3">
-            <label className="flex items-start gap-2 text-sm text-ink">
+            <label className="flex items-start gap-2 text-body text-ink">
               <input
                 type="checkbox"
                 className="mt-0.5 accent-orange"
@@ -217,7 +217,7 @@ export function ParametrosPrecoPage() {
               />
               <span>
                 O custo cadastrado por funcionário já inclui INSS patronal (CPP)
-                <span className="mt-1 block text-xs text-ink-2">
+                <span className="mt-1 block text-caption text-ink-2">
                   No Anexo IV do Simples, o CPP fica FORA do DAS (recolhido à parte); no Anexo III
                   fica DENTRO. Se estiver marcado e a empresa for Anexo III, o encargo pode estar
                   sendo contado duas vezes — confirme uma vez com o contador (AC-9).
@@ -237,7 +237,7 @@ export function ParametrosPrecoPage() {
             {niveis.map((nivel) => (
               <li key={nivel.id} className="space-y-1.5 p-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex-1 text-sm font-semibold text-ink">{nivel.nome}</span>
+                  <span className="flex-1 text-body font-semibold text-ink">{nivel.nome}</span>
                   {!nivel.ativo && <Badge tone="neutral">Desativado</Badge>}
                   {temEscrita && (
                     <Button
@@ -249,13 +249,13 @@ export function ParametrosPrecoPage() {
                     </Button>
                   )}
                 </div>
-                <p className="text-xs text-ink-2">
+                <p className="text-caption text-ink-2">
                   Referência: {formatarValor(nivel.custoMensalReferenciaCentavos)}/mês ·{" "}
                   {nivel.horasMesReferencia}h
                 </p>
                 {temEscrita ? (
                   <select
-                    className="w-full rounded-md border border-line bg-paper px-2 py-1 text-xs text-ink"
+                    className="w-full rounded-md border border-line bg-paper px-2 py-1 text-caption text-ink"
                     value={nivel.cargoPcm ?? ""}
                     onChange={(e) => vincularCargo(nivel, e.target.value)}
                   >
@@ -269,7 +269,7 @@ export function ParametrosPrecoPage() {
                     ))}
                   </select>
                 ) : (
-                  <p className="text-xs text-ink-3">
+                  <p className="text-caption text-ink-3">
                     Cargo: {nivel.cargoPcm ?? "nenhum (custo estimado)"}
                   </p>
                 )}
@@ -320,8 +320,8 @@ export function ParametrosPrecoPage() {
             {materiais.map((material) => (
               <li key={material.id} className="flex items-center gap-2 p-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-ink">{material.nome}</p>
-                  <p className="text-xs text-ink-2">
+                  <p className="truncate text-body font-semibold text-ink">{material.nome}</p>
+                  <p className="text-caption text-ink-2">
                     {formatarValor(material.custoReferenciaCentavos)}/{material.unidade} · markup{" "}
                     {material.markupPct !== null ? `${material.markupPct}%` : "padrão"}
                   </p>

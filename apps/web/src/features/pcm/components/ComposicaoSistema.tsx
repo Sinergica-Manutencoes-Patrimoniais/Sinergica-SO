@@ -86,10 +86,10 @@ export function ComposicaoSistema({
   }
 
   if (estado.fase === "carregando") {
-    return <p className="px-1 py-3 text-sm text-ink-3">Carregando itens…</p>;
+    return <p className="px-1 py-3 text-body text-ink-3">Carregando itens…</p>;
   }
   if (estado.fase === "erro") {
-    return <p className="px-1 py-3 text-sm text-danger">{estado.mensagem}</p>;
+    return <p className="px-1 py-3 text-body text-danger">{estado.mensagem}</p>;
   }
 
   const houveMudanca =
@@ -104,13 +104,13 @@ export function ComposicaoSistema({
         onToggle={toggle}
         disabled={!temEscrita || salvando}
       />
-      {erroSalvar && <p className="text-xs text-danger">{erroSalvar}</p>}
+      {erroSalvar && <p className="text-caption text-danger">{erroSalvar}</p>}
       {temEscrita && (
         <button
           type="button"
           onClick={salvar}
           disabled={salvando || !houveMudanca}
-          className="h-9 self-start rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+          className="h-9 self-start rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
         >
           {salvando ? "Salvando…" : "Salvar composição"}
         </button>

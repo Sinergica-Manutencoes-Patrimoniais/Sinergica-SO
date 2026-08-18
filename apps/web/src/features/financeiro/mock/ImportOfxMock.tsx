@@ -12,10 +12,12 @@ export function ImportOfxMock() {
       />
       <div className="surface-card flex flex-col items-center gap-2 border-dashed p-8 text-center">
         <Upload className="h-6 w-6 text-ink-3" />
-        <p className="text-sm font-semibold text-ink">extrato-itau-julho.ofx</p>
-        <p className="text-xs text-ink-3">arraste um arquivo .ofx aqui ou clique para selecionar</p>
+        <p className="text-body font-semibold text-ink">extrato-itau-julho.ofx</p>
+        <p className="text-caption text-ink-3">
+          arraste um arquivo .ofx aqui ou clique para selecionar
+        </p>
       </div>
-      <div className="flex gap-4 text-xs text-ink-2">
+      <div className="flex gap-4 text-caption text-ink-2">
         <span>
           <b className="text-ink">{OFX_ROWS.length}</b> transações lidas
         </span>
@@ -40,7 +42,7 @@ export function ImportOfxMock() {
         {OFX_ROWS.map((r) => (
           <tr key={r.memo}>
             <td className="px-4 py-3 text-ink-3">{dataCurta(r.data)}</td>
-            <td className="px-4 py-3 font-mono text-xs text-ink-2">{r.memo}</td>
+            <td className="px-4 py-3 font-mono text-caption text-ink-2">{r.memo}</td>
             <td
               className={`px-4 py-3 text-right tabular-nums font-semibold ${r.valor > 0 ? "text-success" : "text-ink"}`}
             >

@@ -36,7 +36,7 @@ export function ConversaLista({
         {conversasFiltradas.length === 0 ? (
           <div className="p-8 text-center">
             <MessageCircle className="mx-auto h-8 w-8 text-ink-3" />
-            <p className="mt-2 text-sm text-ink-3">Nenhuma conversa encontrada.</p>
+            <p className="mt-2 text-body text-ink-3">Nenhuma conversa encontrada.</p>
           </div>
         ) : (
           conversasFiltradas.map((conversa) => (
@@ -49,7 +49,7 @@ export function ConversaLista({
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-semibold text-ink">
+                <span className="truncate text-body font-semibold text-ink">
                   {conversa.clienteNome ?? conversa.contatoNome ?? "Contato sem nome"}
                 </span>
                 {conversa.naoLidas > 0 && (
@@ -58,7 +58,7 @@ export function ConversaLista({
                   </span>
                 )}
               </div>
-              <p className="truncate text-xs text-ink-3">
+              <p className="truncate text-caption text-ink-3">
                 {conversa.ultimaMensagemPreview ?? "sem mensagens"}
               </p>
               <div className="flex items-center gap-2">

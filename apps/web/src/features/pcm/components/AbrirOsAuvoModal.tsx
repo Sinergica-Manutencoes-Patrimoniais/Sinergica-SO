@@ -81,10 +81,10 @@ export function AbrirOsAuvoModal({
       titulo="Abrir OS no Auvo?"
       descricao="Confira dados. Nada foi enviado durante esta prévia."
     >
-      <div className="space-y-3 text-sm">
-        {!preview && !erro && <p className="py-8 text-sm text-ink-3">Montando prévia…</p>}
+      <div className="space-y-3 text-body">
+        {!preview && !erro && <p className="py-8 text-body text-ink-3">Montando prévia…</p>}
         {preview && (
-          <div className="space-y-3 text-sm">
+          <div className="space-y-3 text-body">
             {preview.jaAberta ? (
               <p className="rounded-md bg-orange-soft px-3 py-2 text-orange">
                 Task Auvo #{preview.taskIdExistente} já existe. Nenhuma duplicata será criada.
@@ -125,7 +125,7 @@ export function AbrirOsAuvoModal({
                   ]}
                 />
                 {preview.pendencias.map((pendencia) => (
-                  <p key={pendencia} className="text-xs text-danger">
+                  <p key={pendencia} className="text-caption text-danger">
                     {pendencia}
                   </p>
                 ))}
@@ -137,7 +137,7 @@ export function AbrirOsAuvoModal({
             )}
           </div>
         )}
-        {erro && <p className="text-sm text-danger">{erro}</p>}
+        {erro && <p className="text-body text-danger">{erro}</p>}
         <div className="flex justify-end gap-2 border-t border-line-soft pt-3">
           <Button variant="secondary" onClick={onFechar}>
             {preview?.jaAberta ? "Fechar" : "Agora não"}
@@ -165,7 +165,7 @@ function Campos({ titulo, itens }: { titulo: string; itens: Array<[string, strin
       {itens.map(([rotulo, valor]) => (
         <p
           key={rotulo}
-          className="grid grid-cols-[110px_1fr] gap-2 border-b border-line-soft py-1 text-xs"
+          className="grid grid-cols-[110px_1fr] gap-2 border-b border-line-soft py-1 text-caption"
         >
           <span className="text-ink-3">{rotulo}</span>
           <span className="break-words text-ink">{valor}</span>

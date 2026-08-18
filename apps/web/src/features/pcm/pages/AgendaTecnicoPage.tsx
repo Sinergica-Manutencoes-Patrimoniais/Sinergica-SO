@@ -78,13 +78,15 @@ export function AgendaTecnicoPage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   }
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
@@ -95,8 +97,8 @@ export function AgendaTecnicoPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Agenda do Técnico</h2>
-          <p className="text-sm text-ink-3">
+          <h2 className="text-heading font-semibold text-ink">Agenda do Técnico</h2>
+          <p className="text-body text-ink-3">
             Cronograma semanal — em que cliente cada técnico estará cada dia
           </p>
         </div>
@@ -122,7 +124,7 @@ export function AgendaTecnicoPage() {
       </div>
 
       {erro && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erro}
         </div>
       )}
@@ -131,7 +133,7 @@ export function AgendaTecnicoPage() {
         <button
           type="button"
           onClick={() => setVisao("dia")}
-          className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${
+          className={`rounded px-3 py-1.5 text-caption font-semibold transition-colors ${
             visao === "dia" ? "bg-navy text-white" : "text-ink-3 hover:text-ink"
           }`}
         >
@@ -140,7 +142,7 @@ export function AgendaTecnicoPage() {
         <button
           type="button"
           onClick={() => setVisao("tecnico")}
-          className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${
+          className={`rounded px-3 py-1.5 text-caption font-semibold transition-colors ${
             visao === "tecnico" ? "bg-navy text-white" : "text-ink-3 hover:text-ink"
           }`}
         >
@@ -149,7 +151,7 @@ export function AgendaTecnicoPage() {
       </div>
 
       {carregando ? (
-        <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
+        <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
       ) : visao === "tecnico" ? (
         <TimelinePorTecnico
           alocacoes={alocacoes}
@@ -167,7 +169,7 @@ export function AgendaTecnicoPage() {
                   <p className="text-micro font-semibold tracking-wide text-ink-3">
                     {DIA_LABEL[index]}
                   </p>
-                  <p className="text-sm font-semibold text-ink">
+                  <p className="text-body font-semibold text-ink">
                     {new Date(`${dia}T00:00:00`).toLocaleDateString("pt-BR", {
                       day: "2-digit",
                       month: "2-digit",
@@ -187,7 +189,7 @@ export function AgendaTecnicoPage() {
               </div>
               <div className="flex flex-1 flex-col gap-2 p-2">
                 {(porDia.get(dia) ?? []).length === 0 ? (
-                  <p className="px-2 py-3 text-center text-xs text-ink-3">Sem alocação</p>
+                  <p className="px-2 py-3 text-center text-caption text-ink-3">Sem alocação</p>
                 ) : (
                   (porDia.get(dia) ?? []).map((alocacao) => (
                     <button
@@ -201,7 +203,7 @@ export function AgendaTecnicoPage() {
                           className="h-2 w-2 shrink-0 rounded-full"
                           style={{ backgroundColor: corDoTecnico(alocacao.funcionarioId) }}
                         />
-                        <p className="truncate text-xs font-semibold text-ink">
+                        <p className="truncate text-caption font-semibold text-ink">
                           {alocacao.funcionarioNome}
                           {alocacao.horaInicio && (
                             <span className="ml-1 font-normal text-ink-3">
@@ -212,7 +214,7 @@ export function AgendaTecnicoPage() {
                           )}
                         </p>
                       </div>
-                      <p className="mt-0.5 truncate pl-3.5 text-xs text-ink-3">
+                      <p className="mt-0.5 truncate pl-3.5 text-caption text-ink-3">
                         {alocacao.clienteNome}
                       </p>
                     </button>
@@ -266,7 +268,7 @@ function TimelinePorTecnico({
 
   if (linhas.length === 0) {
     return (
-      <div className="rounded-lg border border-line bg-card p-8 text-center text-sm text-ink-3">
+      <div className="rounded-lg border border-line bg-card p-8 text-center text-body text-ink-3">
         Nenhuma alocação nesta semana.
       </div>
     );
@@ -283,7 +285,9 @@ function TimelinePorTecnico({
             className="h-2 w-2 shrink-0 rounded-full"
             style={{ backgroundColor: corDoTecnico(linha.funcionarioId) }}
           />
-          <span className="truncate text-xs font-semibold text-ink">{linha.funcionarioNome}</span>
+          <span className="truncate text-caption font-semibold text-ink">
+            {linha.funcionarioNome}
+          </span>
         </div>
       ),
     },
@@ -304,7 +308,7 @@ function TimelinePorTecnico({
           <button
             type="button"
             onClick={() => temEscrita && onAbrirModal(dia, null)}
-            className="w-full rounded-md px-2 py-1.5 text-left text-xs text-ink-4 hover:bg-line-soft"
+            className="w-full rounded-md px-2 py-1.5 text-left text-caption text-ink-4 hover:bg-line-soft"
           >
             —
           </button>
@@ -317,7 +321,7 @@ function TimelinePorTecnico({
                 onClick={() => temEscrita && onAbrirModal(dia, alocacao)}
                 className="rounded-md border border-line-soft px-2 py-1.5 text-left hover:bg-line-soft"
               >
-                <p className="truncate text-xs text-ink">
+                <p className="truncate text-caption text-ink">
                   {alocacao.clienteNome}
                   {alocacao.horaInicio && (
                     <span className="ml-1 text-ink-3">
@@ -431,7 +435,7 @@ function AlocacaoModal({
     >
       <div className="flex flex-col gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Técnico *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Técnico *</span>
           <select
             value={funcionarioId}
             onChange={(e) => setFuncionarioId(e.target.value)}
@@ -449,7 +453,7 @@ function AlocacaoModal({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
           <select
             value={clienteId}
             onChange={(e) => setClienteId(e.target.value)}
@@ -468,7 +472,7 @@ function AlocacaoModal({
         </label>
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Início</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Início</span>
             <input
               type="time"
               value={horaInicio}
@@ -477,7 +481,7 @@ function AlocacaoModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Fim</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Fim</span>
             <input
               type="time"
               value={horaFim}
@@ -487,7 +491,7 @@ function AlocacaoModal({
           </label>
         </div>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}
@@ -498,7 +502,7 @@ function AlocacaoModal({
             type="button"
             onClick={remover}
             disabled={removendo}
-            className="h-9 rounded-md border border-danger-line px-3 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
+            className="h-9 rounded-md border border-danger-line px-3 text-body font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
           >
             {removendo ? "Removendo…" : "Remover"}
           </button>
@@ -513,7 +517,7 @@ function AlocacaoModal({
             type="button"
             onClick={salvar}
             disabled={salvando || !funcionarioId || !clienteId}
-            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="h-9 rounded-md bg-navy px-3 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             {salvando ? "Salvando…" : "Salvar"}
           </button>

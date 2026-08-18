@@ -163,11 +163,11 @@ export function ChamadoPainel({
   }
 
   if (carregando) {
-    return <div className="px-4 py-3 text-xs text-ink-3">Carregando Chamado…</div>;
+    return <div className="px-4 py-3 text-caption text-ink-3">Carregando Chamado…</div>;
   }
   if (!chamado) {
     return (
-      <div className="px-4 py-3 text-xs text-ink-3">
+      <div className="px-4 py-3 text-caption text-ink-3">
         {erro ?? "Chamado vinculado não encontrado."}
       </div>
     );
@@ -182,7 +182,7 @@ export function ChamadoPainel({
         <span className="text-micro font-semibold uppercase tracking-wider text-ink-3">
           Chamado
         </span>
-        <span className="font-brand text-xs tabular-nums text-ink-3">{chamado.numero}</span>
+        <span className="font-brand text-caption tabular-nums text-ink-3">{chamado.numero}</span>
         <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
           {STATUS_CHAMADO_LABEL[chamado.status]}
         </span>
@@ -246,7 +246,7 @@ export function ChamadoPainel({
         </div>
       )}
 
-      {erro && <p className="px-4 pb-3 text-xs text-danger">{erro}</p>}
+      {erro && <p className="px-4 pb-3 text-caption text-danger">{erro}</p>}
 
       {subModal?.modo === "gerar-os" && dadosOs && (
         <GerarOsModal
@@ -292,22 +292,22 @@ function DetalheChamado({
   const [salvandoExecucao, setSalvandoExecucao] = useState(false);
 
   return (
-    <div className="flex flex-col gap-3 px-4 py-3 text-sm">
+    <div className="flex flex-col gap-3 px-4 py-3 text-body">
       <div>
-        <span className="block text-xs font-semibold text-ink-3">Solicitação</span>
+        <span className="block text-caption font-semibold text-ink-3">Solicitação</span>
         <p className="whitespace-pre-wrap text-ink-2">{chamado.descricao || "—"}</p>
       </div>
       <div>
-        <span className="block text-xs font-semibold text-ink-3">Local</span>
+        <span className="block text-caption font-semibold text-ink-3">Local</span>
         <p className="whitespace-pre-wrap text-ink-2">{chamado.local || "—"}</p>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
-          <span className="block text-xs font-semibold text-ink-3">Abertura</span>
+          <span className="block text-caption font-semibold text-ink-3">Abertura</span>
           <p className="text-ink-2">{new Date(chamado.createdAt).toLocaleDateString("pt-BR")}</p>
         </div>
         <div>
-          <span className="mb-1 block text-xs font-semibold text-ink-3">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">
             Planejada{" "}
             {chamado.replanejamentos > 0 && (
               <span className="text-ink-3">({chamado.replanejamentos}x replanejada)</span>
@@ -319,7 +319,7 @@ function DetalheChamado({
                 type="date"
                 value={planejada}
                 onChange={(e) => setPlanejada(e.target.value)}
-                className="input h-8 w-full text-xs"
+                className="input h-8 w-full text-caption"
               />
               <Button
                 variant="secondary"
@@ -347,14 +347,14 @@ function DetalheChamado({
           )}
         </div>
         <div>
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Execução (real)</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Execução (real)</span>
           {podeEditar ? (
             <div className="flex items-center gap-1.5">
               <input
                 type="date"
                 value={execucao}
                 onChange={(e) => setExecucao(e.target.value)}
-                className="input h-8 w-full text-xs"
+                className="input h-8 w-full text-caption"
               />
               <Button
                 variant="secondary"
@@ -458,18 +458,18 @@ function GerarOsModal({
       titulo={destino === "convertido_os" ? "Gerar OS" : "Enviar ao backlog"}
     >
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-ink-2">
+        <p className="text-body text-ink-2">
           {chamado.numero} · {chamado.titulo}
         </p>
         <div className="block">
           <label
             htmlFor="chamado-gerar-os-tipo-tarefa"
-            className="mb-1 block text-xs font-semibold text-ink-3"
+            className="mb-1 block text-caption font-semibold text-ink-3"
           >
             Tipo de tarefa *
           </label>
           {dadosOs.tiposTarefa.length === 0 ? (
-            <p className="text-xs text-ink-3">
+            <p className="text-caption text-ink-3">
               Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa.
             </p>
           ) : (
@@ -488,7 +488,9 @@ function GerarOsModal({
           )}
         </div>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Técnico responsável</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">
+            Técnico responsável
+          </span>
           <select
             value={tecnicoId}
             onChange={(e) => setTecnicoId(e.target.value)}
@@ -503,7 +505,7 @@ function GerarOsModal({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Data prevista</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Data prevista</span>
           <input
             type="date"
             value={dataPrevista}
@@ -519,7 +521,7 @@ function GerarOsModal({
           </div>
         )}
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}
@@ -552,7 +554,7 @@ function GutSelect({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
+      <span className="mb-1 block text-caption font-semibold text-ink-3">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value ? Number(e.target.value) : "")}
@@ -605,11 +607,11 @@ function CancelarChamadoModal({
       titulo="Cancelar Chamado"
     >
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-ink-2">
+        <p className="text-body text-ink-2">
           {chamado.numero} · {chamado.titulo}
         </p>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Justificativa *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Justificativa *</span>
           <textarea
             value={justificativa}
             onChange={(e) => setJustificativa(e.target.value)}
@@ -618,7 +620,7 @@ function CancelarChamadoModal({
           />
         </label>
         <div>
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Anexo (opcional)</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Anexo (opcional)</span>
           <Button variant="secondary" onClick={() => inputRef.current?.click()}>
             {anexo ? anexo.name : "Escolher arquivo"}
           </Button>
@@ -631,7 +633,7 @@ function CancelarChamadoModal({
           />
         </div>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}

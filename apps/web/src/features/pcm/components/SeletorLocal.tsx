@@ -61,7 +61,7 @@ export function SeletorLocal({
   return (
     <div className="flex flex-col gap-2">
       <label className="block">
-        <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
+        <span className="mb-1 block text-caption font-semibold text-ink-3">{label}</span>
         <select
           value={selecionado}
           onChange={(e) => selecionar(e.target.value)}

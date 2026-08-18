@@ -85,8 +85,8 @@ export function RelatorioPlanejamentoPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-base font-semibold text-ink">Relatório de planejamento</h2>
-        <p className="text-sm text-ink-3">Agenda e OS planejadas por dia, técnico e cliente</p>
+        <h2 className="text-heading font-semibold text-ink">Relatório de planejamento</h2>
+        <p className="text-body text-ink-3">Agenda e OS planejadas por dia, técnico e cliente</p>
       </div>
       <div className="flex flex-wrap gap-2 rounded-lg border border-line bg-card p-3">
         <input
@@ -154,15 +154,15 @@ export function RelatorioPlanejamentoPage() {
         </button>
       </div>
       {erro ? (
-        <p className="text-sm text-danger">{erro}</p>
+        <p className="text-body text-danger">{erro}</p>
       ) : carregando ? (
-        <p className="text-sm text-ink-3">Carregando…</p>
+        <p className="text-body text-ink-3">Carregando…</p>
       ) : itens.length === 0 ? (
-        <p className="rounded-lg border border-line p-5 text-sm text-ink-3">
+        <p className="rounded-lg border border-line p-5 text-body text-ink-3">
           Nada planejado para este dia/técnico.
         </p>
       ) : (
-        <pre className="whitespace-pre-wrap rounded-lg border border-line bg-card p-4 text-sm text-ink">
+        <pre className="whitespace-pre-wrap rounded-lg border border-line bg-card p-4 text-body text-ink">
           {texto}
         </pre>
       )}

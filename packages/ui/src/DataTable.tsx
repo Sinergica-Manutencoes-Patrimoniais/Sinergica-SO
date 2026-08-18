@@ -45,7 +45,7 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full border-collapse text-body">
         <thead className="sticky top-0 z-10 bg-paper text-[11px] text-ink-3">
           <tr>
             {colunas.map((coluna) => (

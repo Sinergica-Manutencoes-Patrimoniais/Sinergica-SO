@@ -86,7 +86,7 @@ export function PainelItensDoCliente({
 
   if (carregando) {
     return (
-      <div className="bg-card rounded-xl border border-line px-5 py-8 text-center text-sm text-ink-3">
+      <div className="bg-card rounded-xl border border-line px-5 py-8 text-center text-body text-ink-3">
         Carregando…
       </div>
     );
@@ -95,8 +95,8 @@ export function PainelItensDoCliente({
   return (
     <div className="bg-card rounded-xl border border-line">
       <div className="border-b border-line-soft px-5 py-4">
-        <h3 className="text-sm font-semibold text-ink">Itens PCM (estrutura)</h3>
-        <p className="mt-0.5 text-xs text-ink-3">
+        <h3 className="text-body font-semibold text-ink">Itens PCM (estrutura)</h3>
+        <p className="mt-0.5 text-caption text-ink-3">
           Cadastro editável — atribua o Local (Área&gt;Local) de cada Item deste cliente
         </p>
       </div>
@@ -104,7 +104,7 @@ export function PainelItensDoCliente({
       {itens.length === 0 ? (
         <div className="px-5 py-8 text-center">
           <Wrench className="mx-auto h-8 w-8 text-ink-3" />
-          <p className="mt-2 text-sm text-ink-3">Nenhum Item PCM cadastrado para este cliente.</p>
+          <p className="mt-2 text-body text-ink-3">Nenhum Item PCM cadastrado para este cliente.</p>
         </div>
       ) : (
         <div className="divide-y divide-line-soft">
@@ -119,7 +119,7 @@ export function PainelItensDoCliente({
                 ) : (
                   <Wrench className="h-4 w-4 shrink-0 text-ink-3" />
                 )}
-                <span className="truncate text-sm text-ink">{item.nome}</span>
+                <span className="truncate text-body text-ink">{item.nome}</span>
               </div>
               <div className="flex items-center gap-2">
                 <FolderTree className="h-3.5 w-3.5 shrink-0 text-ink-3" />
@@ -128,7 +128,7 @@ export function PainelItensDoCliente({
                     value={item.localId ?? ""}
                     onChange={(e) => atribuirLocal(item, e.target.value)}
                     disabled={salvandoLinha[item.id]}
-                    className="input h-8 w-56 text-xs"
+                    className="input h-8 w-56 text-caption"
                     aria-label={`Local de ${item.nome}`}
                   >
                     <option value="">Sem Local</option>
@@ -140,14 +140,14 @@ export function PainelItensDoCliente({
                     ))}
                   </select>
                 ) : (
-                  <span className="text-xs text-ink-3">
+                  <span className="text-caption text-ink-3">
                     {locaisAchatados.find((l) => l.local.id === item.localId)?.local.nome ??
                       "Sem Local"}
                   </span>
                 )}
               </div>
               {erroLinha[item.id] && (
-                <span className="text-xs text-danger">{erroLinha[item.id]}</span>
+                <span className="text-caption text-danger">{erroLinha[item.id]}</span>
               )}
             </div>
           ))}

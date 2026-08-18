@@ -147,10 +147,10 @@ export function EstruturaClientePage({
     await carregar();
   }
 
-  if (carregando) return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+  if (carregando) return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (erro) {
     return (
-      <div className="p-8 text-center text-sm text-ink-3">
+      <div className="p-8 text-center text-body text-ink-3">
         {erro}
         <Button variant="ghost" size="sm" onClick={carregar} className="ml-2">
           Tentar novamente
@@ -163,8 +163,8 @@ export function EstruturaClientePage({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Estrutura do cliente</h3>
-          <p className="mt-0.5 text-xs text-ink-3">
+          <h3 className="text-body font-semibold text-ink">Estrutura do cliente</h3>
+          <p className="mt-0.5 text-caption text-ink-3">
             Áreas e Locais (árvore) — onde os Itens estão instalados
           </p>
         </div>
@@ -189,7 +189,7 @@ export function EstruturaClientePage({
       {areas.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <FolderTree className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhuma Área cadastrada.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhuma Área cadastrada.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -208,7 +208,7 @@ export function EstruturaClientePage({
                     <ChevronRight className="h-4 w-4" />
                   )}
                 </button>
-                <span className="flex-1 text-sm font-semibold text-ink">{area.nome}</span>
+                <span className="flex-1 text-body font-semibold text-ink">{area.nome}</span>
                 {temEscrita && (
                   <div className="flex items-center gap-1">
                     <Button
@@ -243,7 +243,9 @@ export function EstruturaClientePage({
               {expandidas.has(area.id) && (
                 <div className="px-4 py-2">
                   {(arvores[area.id]?.length ?? 0) === 0 ? (
-                    <p className="py-3 text-xs text-ink-3">Nenhum Local cadastrado nesta Área.</p>
+                    <p className="py-3 text-caption text-ink-3">
+                      Nenhum Local cadastrado nesta Área.
+                    </p>
                   ) : (
                     <LocalTree
                       nodes={arvores[area.id] ?? []}
@@ -353,19 +355,21 @@ function TiposDeLocalPainel({
 
   return (
     <section className="rounded-lg border border-line bg-card p-3">
-      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
+      <div className="flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider text-ink-3">
         <Tag className="h-3.5 w-3.5" />
         Tipos de Local
       </div>
-      <p className="mt-0.5 text-xs text-ink-3">
+      <p className="mt-0.5 text-caption text-ink-3">
         Cadastre aqui (ex.: "Andar", "Sala") — a atribuição no Local sempre seleciona, nunca digita.
       </p>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        {tipos.length === 0 && <span className="text-xs text-ink-3">Nenhum tipo cadastrado.</span>}
+        {tipos.length === 0 && (
+          <span className="text-caption text-ink-3">Nenhum tipo cadastrado.</span>
+        )}
         {tipos.map((tipo) => (
           <span
             key={tipo.id}
-            className="inline-flex items-center gap-1.5 rounded-full bg-line-soft px-2.5 py-1 text-xs font-semibold text-ink-2"
+            className="inline-flex items-center gap-1.5 rounded-full bg-line-soft px-2.5 py-1 text-caption font-semibold text-ink-2"
           >
             {tipo.nome}
             {temEscrita && (
@@ -389,7 +393,7 @@ function TiposDeLocalPainel({
                 if (e.key === "Enter") adicionar();
               }}
               placeholder="Novo tipo…"
-              className="input h-7 w-32 text-xs"
+              className="input h-7 w-32 text-caption"
             />
             <Button
               variant="secondary"
@@ -433,10 +437,10 @@ function LocalTree({
             className="flex items-center gap-2 rounded-md py-1.5 hover:bg-line-soft"
             style={{ paddingLeft: `${nivel * 20}px` }}
           >
-            <span className="flex-1 text-sm text-ink-2">
+            <span className="flex-1 text-body text-ink-2">
               {node.nome}
               {node.tipoNome && (
-                <span className="ml-1.5 text-xs text-ink-3">({node.tipoNome})</span>
+                <span className="ml-1.5 text-caption text-ink-3">({node.tipoNome})</span>
               )}
             </span>
             {temEscrita && (
@@ -525,11 +529,11 @@ function AreaModal({
     >
       <div className="flex flex-col gap-4">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
           <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
           <input
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
@@ -537,7 +541,7 @@ function AreaModal({
           />
         </label>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}
@@ -597,7 +601,7 @@ function LocalModal({
     >
       <div className="flex flex-col gap-4">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
@@ -606,7 +610,7 @@ function LocalModal({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo</span>
           <select
             value={tipoId ?? ""}
             onChange={(e) => setTipoId(e.target.value)}
@@ -620,13 +624,13 @@ function LocalModal({
             ))}
           </select>
           {tiposDeLocal.length === 0 && (
-            <span className="mt-1 block text-xs text-ink-3">
+            <span className="mt-1 block text-caption text-ink-3">
               Nenhum tipo cadastrado — crie um em "Tipos de Local" acima.
             </span>
           )}
         </label>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}

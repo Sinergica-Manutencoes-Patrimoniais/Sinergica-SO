@@ -21,7 +21,7 @@ export function ContasBancariasMock() {
             <p className="text-micro font-semibold uppercase tracking-widest text-ink-3">
               {c.banco}
             </p>
-            <p className="mt-1.5 text-sm font-semibold text-ink">{c.nome}</p>
+            <p className="mt-1.5 text-body font-semibold text-ink">{c.nome}</p>
             <p className="mt-2 text-lg font-bold tabular-nums text-ink">{brl(c.saldo)}</p>
             <p className="mt-0.5 text-micro text-ink-3">Saldo atual</p>
           </div>

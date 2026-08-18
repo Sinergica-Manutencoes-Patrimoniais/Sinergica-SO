@@ -200,12 +200,14 @@ export function FerramentasPorTecnicoPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
@@ -213,11 +215,11 @@ export function FerramentasPorTecnicoPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -239,7 +241,7 @@ export function FerramentasPorTecnicoPage() {
             key={item.id}
             type="button"
             onClick={() => setAba(item.id)}
-            className={`border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
+            className={`border-b-2 px-3 py-2 text-body font-semibold transition-colors ${
               aba === item.id
                 ? "border-orange text-navy"
                 : "border-transparent text-ink-3 hover:text-ink"
@@ -257,8 +259,8 @@ export function FerramentasPorTecnicoPage() {
           <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
               <div>
-                <h3 className="text-base font-semibold text-ink">Ferramentas por Técnico</h3>
-                <p className="mt-0.5 text-sm text-ink-3">
+                <h3 className="text-heading font-semibold text-ink">Ferramentas por Técnico</h3>
+                <p className="mt-0.5 text-body text-ink-3">
                   Posse por unidade individual — histórico nunca é sobrescrito (PCM é dono; Auvo é
                   só sinal de conferência)
                 </p>
@@ -309,7 +311,7 @@ export function FerramentasPorTecnicoPage() {
                     type="button"
                     onClick={atribuir}
                     disabled={salvando || !unidadeId || !funcionarioId}
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                   >
                     Atribuir
                   </button>
@@ -317,7 +319,7 @@ export function FerramentasPorTecnicoPage() {
               )}
             </div>
             {erroAcao && (
-              <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+              <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
                 {erroAcao}
               </div>
             )}
@@ -326,7 +328,7 @@ export function FerramentasPorTecnicoPage() {
           {cardsPorTecnico.length === 0 ? (
             <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
               <Wrench className="mx-auto h-9 w-9 text-ink-3" />
-              <p className="mt-3 text-sm text-ink-3">Nenhuma ferramenta atribuída no momento.</p>
+              <p className="mt-3 text-body text-ink-3">Nenhuma ferramenta atribuída no momento.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
@@ -335,7 +337,7 @@ export function FerramentasPorTecnicoPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <UserRound className="h-4 w-4 text-ink-3" />
-                      <h4 className="text-sm font-semibold text-ink">{funcionario.nome}</h4>
+                      <h4 className="text-body font-semibold text-ink">{funcionario.nome}</h4>
                     </div>
                     <button
                       type="button"
@@ -343,14 +345,14 @@ export function FerramentasPorTecnicoPage() {
                         setTecnicoModal(funcionario);
                         setSelecionadas([]);
                       }}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep"
+                      className="inline-flex items-center gap-1 text-caption font-semibold text-orange hover:text-orange-deep"
                     >
                       <History className="h-3.5 w-3.5" />
                       Ver técnico
                     </button>
                   </div>
                   {unidades.length === 0 ? (
-                    <p className="mt-3 text-xs text-ink-3">
+                    <p className="mt-3 text-caption text-ink-3">
                       Sem unidade atribuída no PCM (só divergência com o Auvo — ver histórico).
                     </p>
                   ) : (
@@ -360,7 +362,7 @@ export function FerramentasPorTecnicoPage() {
                         return (
                           <li
                             key={unidade.id}
-                            className="flex items-center justify-between gap-2 rounded-md border border-line-soft bg-paper px-3 py-2 text-sm"
+                            className="flex items-center justify-between gap-2 rounded-md border border-line-soft bg-paper px-3 py-2 text-body"
                           >
                             <div className="min-w-0">
                               <p className="truncate text-ink-2">
@@ -385,7 +387,7 @@ export function FerramentasPorTecnicoPage() {
                               <button
                                 type="button"
                                 onClick={() => setDevolucao(unidade)}
-                                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-line px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-line px-2 py-1 text-caption font-semibold text-ink-2 hover:bg-line-soft"
                               >
                                 <Undo2 className="h-3.5 w-3.5" />
                                 Devolver
@@ -488,12 +490,12 @@ function TecnicoFerramentasModal({
       <div className="flex flex-col gap-4">
         <div className="grid gap-4 md:grid-cols-2">
           <section>
-            <h4 className="text-sm font-semibold text-ink">Disponíveis</h4>
+            <h4 className="text-body font-semibold text-ink">Disponíveis</h4>
             <div className="mt-2 max-h-64 space-y-1 overflow-y-auto">
               {disponiveis.map((unidade) => (
                 <label
                   key={unidade.id}
-                  className="flex items-center gap-2 rounded border border-line-soft p-2 text-sm"
+                  className="flex items-center gap-2 rounded border border-line-soft p-2 text-body"
                 >
                   <input
                     type="checkbox"
@@ -507,15 +509,15 @@ function TecnicoFerramentasModal({
             </div>
           </section>
           <section>
-            <h4 className="text-sm font-semibold text-ink">Em posse</h4>
+            <h4 className="text-body font-semibold text-ink">Em posse</h4>
             <div className="mt-2 max-h-64 space-y-1 overflow-y-auto">
               {posse.length === 0 ? (
-                <p className="text-sm text-ink-3">Sem unidade atribuída.</p>
+                <p className="text-body text-ink-3">Sem unidade atribuída.</p>
               ) : (
                 posse.map((unidade) => (
                   <div
                     key={unidade.id}
-                    className="flex justify-between rounded border border-line-soft p-2 text-sm"
+                    className="flex justify-between rounded border border-line-soft p-2 text-body"
                   >
                     <span>
                       {unidade.ferramentaNome} · {unidade.codigo}
@@ -619,8 +621,8 @@ function AbaPorCliente({ temEscrita }: { temEscrita: boolean }) {
     <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <h3 className="text-base font-semibold text-ink">Ferramentas por Cliente</h3>
-          <p className="mt-0.5 text-sm text-ink-3">
+          <h3 className="text-heading font-semibold text-ink">Ferramentas por Cliente</h3>
+          <p className="mt-0.5 text-body text-ink-3">
             Ferramentas da Sinérgica emprestadas/em uso em clientes (mesma alocação da Visão 360)
           </p>
         </div>
@@ -662,16 +664,16 @@ function AbaPorCliente({ temEscrita }: { temEscrita: boolean }) {
         )}
       </div>
       {erro && (
-        <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+        <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
           {erro}
         </div>
       )}
       {carregando ? (
-        <p className="mt-4 text-center text-sm text-ink-3">Carregando…</p>
+        <p className="mt-4 text-center text-body text-ink-3">Carregando…</p>
       ) : alocacoes.length === 0 ? (
         <div className="mt-4 rounded-lg border border-line-soft bg-paper px-5 py-10 text-center">
           <Wrench className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">
+          <p className="mt-3 text-body text-ink-3">
             Nenhuma ferramenta alocada a cliente no momento.
           </p>
         </div>
@@ -680,8 +682,8 @@ function AbaPorCliente({ temEscrita }: { temEscrita: boolean }) {
           {alocacoes.map((alocacao) => (
             <li key={alocacao.id} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-ink">{alocacao.ferramentaNome}</p>
-                <p className="mt-0.5 truncate text-xs text-ink-3">
+                <p className="truncate text-body font-medium text-ink">{alocacao.ferramentaNome}</p>
+                <p className="mt-0.5 truncate text-caption text-ink-3">
                   {alocacao.clienteNome} · desde{" "}
                   {new Date(alocacao.alocadaEm).toLocaleDateString("pt-BR")}
                 </p>
@@ -742,7 +744,7 @@ function DevolucaoModal({
     >
       <div className="flex flex-col gap-4">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Condição</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Condição</span>
           <select
             value={condicao}
             onChange={(event) => setCondicao(event.target.value as CondicaoDevolucao)}
@@ -755,7 +757,9 @@ function DevolucaoModal({
         </label>
         {condicao !== "ok" && (
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">O que aconteceu? *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
+              O que aconteceu? *
+            </span>
             <textarea
               value={motivo}
               onChange={(event) => setMotivo(event.target.value)}
@@ -764,7 +768,7 @@ function DevolucaoModal({
           </label>
         )}
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}

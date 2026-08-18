@@ -31,17 +31,17 @@ export function SeletorItensComFiltro({
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
           placeholder={placeholderFiltro}
-          className="input h-9 w-full pl-8 text-sm"
+          className="input h-9 w-full pl-8 text-body"
         />
       </div>
       <div className="max-h-64 overflow-y-auto rounded-md border border-line">
         {itensFiltrados.length === 0 ? (
-          <p className="px-3 py-4 text-center text-xs text-ink-3">Nenhum item encontrado.</p>
+          <p className="px-3 py-4 text-center text-caption text-ink-3">Nenhum item encontrado.</p>
         ) : (
           <ul className="divide-y divide-line-soft">
             {itensFiltrados.map((item) => (
               <li key={item.id}>
-                <label className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-line-soft">
+                <label className="flex cursor-pointer items-center gap-2 px-3 py-2 text-body hover:bg-line-soft">
                   <input
                     type="checkbox"
                     checked={selecionadosIds.has(item.id)}

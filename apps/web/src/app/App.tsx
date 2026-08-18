@@ -19,7 +19,7 @@ function TelaCarregando() {
           alt="Sinérgica Manutenções Patrimoniais"
           className="mx-auto h-12 object-contain mb-4"
         />
-        <p className="text-sm text-ink-3">Carregando sessão…</p>
+        <p className="text-body text-ink-3">Carregando sessão…</p>
       </div>
     </div>
   );

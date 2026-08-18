@@ -176,7 +176,7 @@ export function VisaoClientePage({
   }, [permissoesCarregando, temAcesso, carregar]);
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   }
 
   // AC-1: sem leitura no módulo pcm, a tela não é acessível.
@@ -184,7 +184,7 @@ export function VisaoClientePage({
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="text-sm text-ink-3 mt-1">
+        <p className="text-body text-ink-3 mt-1">
           Você não tem permissão de leitura no módulo PCM para ver esta tela.
         </p>
       </div>
@@ -192,18 +192,18 @@ export function VisaoClientePage({
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   }
 
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="text-sm text-ink-3 mt-1">{estado.mensagem}</p>
+        <p className="text-body text-ink-3 mt-1">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 text-sm font-semibold text-orange hover:text-orange-deep cursor-pointer"
+          className="mt-4 text-body font-semibold text-orange hover:text-orange-deep cursor-pointer"
         >
           Tentar novamente
         </button>
@@ -236,7 +236,7 @@ export function VisaoClientePage({
           <button
             type="button"
             onClick={() => setCriandoAcesso(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white hover:bg-orange-deep"
+            className="inline-flex items-center gap-2 rounded-lg bg-orange px-4 py-2 text-body font-semibold text-white hover:bg-orange-deep"
           >
             <UserPlus size={16} /> Criar acesso ao portal
           </button>
@@ -281,7 +281,7 @@ export function VisaoClientePage({
                 key={item.id}
                 type="button"
                 onClick={() => setAba(item.id)}
-                className={`inline-flex items-center gap-2 border-b-2 px-3 py-3 text-sm font-semibold transition-colors ${
+                className={`inline-flex items-center gap-2 border-b-2 px-3 py-3 text-body font-semibold transition-colors ${
                   ativo ? "border-orange text-ink" : "border-transparent text-ink-3 hover:text-ink"
                 }`}
               >
@@ -311,7 +311,7 @@ export function VisaoClientePage({
       {aba === "os" && (
         <div className="flex flex-col gap-3">
           {periodo && (
-            <p className="text-xs text-ink-3">
+            <p className="text-caption text-ink-3">
               Filtrado por período (OS criadas entre{" "}
               {new Date(`${periodo.inicio}T00:00:00`).toLocaleDateString("pt-BR")} e{" "}
               {new Date(`${periodo.fim}T00:00:00`).toLocaleDateString("pt-BR")}) — vindo do
@@ -410,9 +410,9 @@ function CriarAcessoPortalModal({
     <dialog open className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4">
       <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-modal">
         <h2 className="text-lg font-semibold text-ink">Criar acesso ao Portal do Cliente</h2>
-        <p className="mt-1 text-sm text-ink-3">Condomínio: {clienteNome}</p>
+        <p className="mt-1 text-body text-ink-3">Condomínio: {clienteNome}</p>
         <div className="mt-5 grid gap-3">
-          <label className="text-sm text-ink-2">
+          <label className="text-body text-ink-2">
             Nome
             <input
               value={nome}
@@ -420,7 +420,7 @@ function CriarAcessoPortalModal({
               className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
             />
           </label>
-          <label className="text-sm text-ink-2">
+          <label className="text-body text-ink-2">
             E-mail
             <input
               type="email"
@@ -429,7 +429,7 @@ function CriarAcessoPortalModal({
               className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
             />
           </label>
-          <label className="text-sm text-ink-2">
+          <label className="text-body text-ink-2">
             Senha inicial
             <input
               type="password"
@@ -440,12 +440,12 @@ function CriarAcessoPortalModal({
             />
           </label>
         </div>
-        {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
+        {erro && <p className="mt-3 text-body text-red-600">{erro}</p>}
         <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-line px-4 py-2 text-sm"
+            className="rounded-lg border border-line px-4 py-2 text-body"
           >
             Cancelar
           </button>
@@ -453,7 +453,7 @@ function CriarAcessoPortalModal({
             type="button"
             disabled={salvando || !nome.trim() || !email.trim() || senha.length < 8}
             onClick={criar}
-            className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="rounded-lg bg-orange px-4 py-2 text-body font-semibold text-white disabled:opacity-50"
           >
             {salvando ? "Criando…" : "Criar acesso"}
           </button>
@@ -542,11 +542,11 @@ function PainelContatos({ cliente }: { cliente: ClienteHeader }) {
   return (
     <section className="rounded-lg border border-line bg-card">
       <div className="border-b border-line-soft px-4 py-3">
-        <h3 className="text-sm font-semibold text-ink">Contatos</h3>
-        <p className="mt-0.5 text-xs text-ink-3">Todos os contatos cadastrados no Auvo</p>
+        <h3 className="text-body font-semibold text-ink">Contatos</h3>
+        <p className="mt-0.5 text-caption text-ink-3">Todos os contatos cadastrados no Auvo</p>
       </div>
       {contatos.length === 0 ? (
-        <div className="px-5 py-6 text-center text-sm text-ink-3">
+        <div className="px-5 py-6 text-center text-body text-ink-3">
           {cliente.contatoNome || cliente.contatoTelefone || cliente.contatoEmail
             ? "Só o contato principal está sincronizado (ver Comunicação)."
             : "Nenhum contato cadastrado."}
@@ -555,8 +555,8 @@ function PainelContatos({ cliente }: { cliente: ClienteHeader }) {
         <div className="divide-y divide-line-soft">
           {contatos.map((contato, index) => (
             <div key={`${contato.name ?? "contato"}-${index}`} className="px-5 py-3">
-              <p className="text-sm font-medium text-ink">{contato.name ?? "Sem nome"}</p>
-              <p className="mt-0.5 text-xs text-ink-3">
+              <p className="text-body font-medium text-ink">{contato.name ?? "Sem nome"}</p>
+              <p className="mt-0.5 text-caption text-ink-3">
                 {[contato.phoneNumber, contato.email].filter(Boolean).join(" · ") || "Sem contato"}
               </p>
             </div>
@@ -571,20 +571,20 @@ function PainelGrupos({ grupos }: { grupos: GrupoClienteResumo[] }) {
   return (
     <section className="rounded-lg border border-line bg-card">
       <div className="border-b border-line-soft px-4 py-3">
-        <h3 className="text-sm font-semibold text-ink">Grupos</h3>
-        <p className="mt-0.5 text-xs text-ink-3">
+        <h3 className="text-body font-semibold text-ink">Grupos</h3>
+        <p className="mt-0.5 text-caption text-ink-3">
           Grupos de clientes (PCM) que incluem este cliente
         </p>
       </div>
       <div className="p-4">
         {grupos.length === 0 ? (
-          <p className="text-sm text-ink-3">Não pertence a nenhum grupo.</p>
+          <p className="text-body text-ink-3">Não pertence a nenhum grupo.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {grupos.map((grupo) => (
               <span
                 key={grupo.id}
-                className="rounded-full bg-line-soft px-3 py-1 text-xs font-semibold text-ink-2"
+                className="rounded-full bg-line-soft px-3 py-1 text-caption font-semibold text-ink-2"
               >
                 {grupo.nome}
               </span>
@@ -631,8 +631,8 @@ function PainelResponsaveis({
     <section className="rounded-lg border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Responsáveis</h3>
-          <p className="mt-0.5 text-xs text-ink-3">
+          <h3 className="text-body font-semibold text-ink">Responsáveis</h3>
+          <p className="mt-0.5 text-caption text-ink-3">
             Representantes do cliente (síndico, gerente predial…) — cadastro local
           </p>
         </div>
@@ -644,9 +644,9 @@ function PainelResponsaveis({
         )}
       </div>
       {carregando ? (
-        <div className="px-5 py-6 text-center text-sm text-ink-3">Carregando…</div>
+        <div className="px-5 py-6 text-center text-body text-ink-3">Carregando…</div>
       ) : responsaveis.length === 0 ? (
-        <div className="px-5 py-6 text-center text-sm text-ink-3">
+        <div className="px-5 py-6 text-center text-body text-ink-3">
           Nenhum responsável cadastrado.
         </div>
       ) : (
@@ -654,16 +654,16 @@ function PainelResponsaveis({
           {responsaveis.map((responsavel) => (
             <div key={responsavel.id} className="flex items-center justify-between gap-3 px-5 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-ink">
+                <p className="truncate text-body font-medium text-ink">
                   {responsavel.nome}
                   {responsavel.papel && (
-                    <span className="ml-1.5 text-xs font-normal text-ink-3">
+                    <span className="ml-1.5 text-caption font-normal text-ink-3">
                       · {responsavel.papel}
                     </span>
                   )}
                 </p>
                 {(responsavel.telefone || responsavel.email) && (
-                  <p className="mt-0.5 text-xs text-ink-3">
+                  <p className="mt-0.5 text-caption text-ink-3">
                     {[responsavel.telefone, responsavel.email].filter(Boolean).join(" · ")}
                     {responsavel.preferenciaContato && (
                       <span className="text-ink-3">
@@ -679,14 +679,14 @@ function PainelResponsaveis({
                   <button
                     type="button"
                     onClick={() => setEditando(responsavel)}
-                    className="rounded-md px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                    className="rounded-md px-2 py-1 text-caption font-semibold text-ink-2 hover:bg-line-soft"
                   >
                     Editar
                   </button>
                   <button
                     type="button"
                     onClick={() => remover(responsavel.id)}
-                    className="rounded-md px-2 py-1 text-xs font-semibold text-danger hover:bg-danger-soft"
+                    className="rounded-md px-2 py-1 text-caption font-semibold text-danger hover:bg-danger-soft"
                   >
                     Remover
                   </button>
@@ -781,7 +781,7 @@ function ResponsavelModal({
           {responsavel ? "Editar responsável" : "Adicionar responsável"}
         </h2>
         <div className="mt-4 grid gap-3">
-          <label className="text-sm text-ink-2">
+          <label className="text-body text-ink-2">
             Nome *
             <input
               value={nome}
@@ -789,7 +789,7 @@ function ResponsavelModal({
               className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
             />
           </label>
-          <label className="text-sm text-ink-2">
+          <label className="text-body text-ink-2">
             Papel
             <input
               value={papel}
@@ -798,7 +798,7 @@ function ResponsavelModal({
               className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
             />
           </label>
-          <label className="text-sm text-ink-2">
+          <label className="text-body text-ink-2">
             E-mail
             <input
               type="email"
@@ -807,7 +807,7 @@ function ResponsavelModal({
               className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
             />
           </label>
-          <label className="text-sm text-ink-2">
+          <label className="text-body text-ink-2">
             Telefone
             <input
               value={telefone}
@@ -815,7 +815,7 @@ function ResponsavelModal({
               className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2"
             />
           </label>
-          <label className="text-sm text-ink-2">
+          <label className="text-body text-ink-2">
             Preferência de contato
             <select
               value={preferenciaContato}
@@ -831,12 +831,12 @@ function ResponsavelModal({
             </select>
           </label>
         </div>
-        {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
+        {erro && <p className="mt-3 text-body text-red-600">{erro}</p>}
         <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-line px-4 py-2 text-sm"
+            className="rounded-lg border border-line px-4 py-2 text-body"
           >
             Cancelar
           </button>
@@ -844,7 +844,7 @@ function ResponsavelModal({
             type="button"
             disabled={salvando || !nome.trim()}
             onClick={salvar}
-            className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="rounded-lg bg-orange px-4 py-2 text-body font-semibold text-white disabled:opacity-50"
           >
             {salvando ? "Salvando…" : "Salvar"}
           </button>
@@ -897,8 +897,8 @@ function PainelFerramentasCliente({
     <section className="rounded-lg border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Ferramentas alocadas</h3>
-          <p className="mt-0.5 text-xs text-ink-3">
+          <h3 className="text-body font-semibold text-ink">Ferramentas alocadas</h3>
+          <p className="mt-0.5 text-caption text-ink-3">
             Ferramentas da Sinérgica emprestadas/em uso neste cliente
           </p>
         </div>
@@ -910,16 +910,18 @@ function PainelFerramentasCliente({
         )}
       </div>
       {carregando ? (
-        <div className="px-5 py-6 text-center text-sm text-ink-3">Carregando…</div>
+        <div className="px-5 py-6 text-center text-body text-ink-3">Carregando…</div>
       ) : ativas.length === 0 && historico.length === 0 ? (
-        <div className="px-5 py-6 text-center text-sm text-ink-3">Nenhuma ferramenta alocada.</div>
+        <div className="px-5 py-6 text-center text-body text-ink-3">
+          Nenhuma ferramenta alocada.
+        </div>
       ) : (
         <div className="divide-y divide-line-soft">
           {ativas.map((alocacao) => (
             <div key={alocacao.id} className="flex items-center justify-between gap-3 px-5 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-ink">{alocacao.ferramentaNome}</p>
-                <p className="mt-0.5 text-xs text-ink-3">
+                <p className="truncate text-body font-medium text-ink">{alocacao.ferramentaNome}</p>
+                <p className="mt-0.5 text-caption text-ink-3">
                   Alocada em {new Date(alocacao.alocadaEm).toLocaleDateString("pt-BR")}
                 </p>
               </div>
@@ -927,7 +929,7 @@ function PainelFerramentasCliente({
                 <button
                   type="button"
                   onClick={() => devolver(alocacao.id)}
-                  className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                  className="shrink-0 rounded-md px-2 py-1 text-caption font-semibold text-ink-2 hover:bg-line-soft"
                 >
                   Devolver
                 </button>
@@ -936,8 +938,8 @@ function PainelFerramentasCliente({
           ))}
           {historico.slice(0, 5).map((alocacao) => (
             <div key={alocacao.id} className="px-5 py-3 opacity-60">
-              <p className="truncate text-sm text-ink-2">{alocacao.ferramentaNome}</p>
-              <p className="mt-0.5 text-xs text-ink-3">
+              <p className="truncate text-body text-ink-2">{alocacao.ferramentaNome}</p>
+              <p className="mt-0.5 text-caption text-ink-3">
                 {new Date(alocacao.alocadaEm).toLocaleDateString("pt-BR")} até{" "}
                 {alocacao.devolvidaEm && new Date(alocacao.devolvidaEm).toLocaleDateString("pt-BR")}
               </p>
@@ -961,7 +963,7 @@ function PainelFerramentasCliente({
           }}
         />
       )}
-      {erro && <p className="px-5 pb-3 text-sm text-red-600">{erro}</p>}
+      {erro && <p className="px-5 pb-3 text-body text-red-600">{erro}</p>}
     </section>
   );
 }
@@ -1012,13 +1014,13 @@ function AlocarFerramentaModal({
         <h2 className="text-lg font-semibold text-ink">Alocar ferramenta</h2>
         <div className="mt-4">
           {carregando ? (
-            <p className="text-sm text-ink-3">Carregando…</p>
+            <p className="text-body text-ink-3">Carregando…</p>
           ) : opcoes.length === 0 ? (
-            <p className="text-sm text-ink-3">
+            <p className="text-body text-ink-3">
               Nenhuma ferramenta disponível (todas já estão alocadas em algum cliente).
             </p>
           ) : (
-            <label className="text-sm text-ink-2">
+            <label className="text-body text-ink-2">
               Ferramenta
               <select
                 value={ferramentaId}
@@ -1038,7 +1040,7 @@ function AlocarFerramentaModal({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-line px-4 py-2 text-sm"
+            className="rounded-lg border border-line px-4 py-2 text-body"
           >
             Cancelar
           </button>
@@ -1046,7 +1048,7 @@ function AlocarFerramentaModal({
             type="button"
             disabled={salvando || !ferramentaId}
             onClick={confirmar}
-            className="rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="rounded-lg bg-orange px-4 py-2 text-body font-semibold text-white disabled:opacity-50"
           >
             {salvando ? "Alocando…" : "Alocar"}
           </button>
@@ -1103,9 +1105,9 @@ function PainelCadastroAuvo({
         <div>
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-orange" />
-            <h3 className="text-sm font-semibold text-ink">Cadastro sincronizado do Auvo</h3>
+            <h3 className="text-body font-semibold text-ink">Cadastro sincronizado do Auvo</h3>
           </div>
-          <p className="mt-1 text-xs text-ink-3">
+          <p className="mt-1 text-caption text-ink-3">
             Edições feitas aqui são enviadas ao Auvo automaticamente. Se a sincronização falhar, o
             status da OS e a saúde do sync no dashboard indicam a pendência para nova tentativa.
           </p>
@@ -1128,7 +1130,7 @@ function PainelCadastroAuvo({
           <button
             type="button"
             onClick={() => window.open("https://app.auvo.com.br", "_blank", "noopener,noreferrer")}
-            className="inline-flex items-center gap-2 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+            className="inline-flex items-center gap-2 rounded-md bg-navy px-3 py-2 text-body font-semibold text-white hover:bg-navy-deep"
           >
             <ExternalLink className="h-4 w-4" />
             Editar no Auvo
@@ -1140,7 +1142,7 @@ function PainelCadastroAuvo({
         {itens.map((item) => (
           <div
             key={item.label}
-            className={`rounded-md border px-3 py-2 text-xs font-semibold ${
+            className={`rounded-md border px-3 py-2 text-caption font-semibold ${
               item.ok
                 ? "border-success-line bg-success-soft text-success"
                 : "border-warning-line bg-warning-soft text-warning"
@@ -1173,10 +1175,10 @@ function TimelineCliente({
       <div className="border-b border-line-soft px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-ink">
+            <h3 className="text-body font-semibold text-ink">
               {compacta ? "Eventos recentes" : "Timeline do cliente"}
             </h3>
-            <p className="mt-0.5 text-xs text-ink-3">
+            <p className="mt-0.5 text-caption text-ink-3">
               OS, inspeções, laudos e sinais de sincronização Auvo em ordem cronológica
             </p>
           </div>
@@ -1186,7 +1188,7 @@ function TimelineCliente({
               onChange={(event) =>
                 setFiltro(event.target.value as Cliente360Evento["tipo"] | "todos")
               }
-              className="input h-9 w-[170px] bg-card text-xs"
+              className="input h-9 w-[170px] bg-card text-caption"
               aria-label="Filtrar timeline"
             >
               <option value="todos">Todos os eventos</option>
@@ -1200,9 +1202,9 @@ function TimelineCliente({
         </div>
       </div>
       {eventos.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-ink-3">Sem eventos recentes</div>
+        <div className="px-5 py-8 text-center text-body text-ink-3">Sem eventos recentes</div>
       ) : eventosVisiveis.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-ink-3">
+        <div className="px-5 py-8 text-center text-body text-ink-3">
           Nenhum evento para o filtro selecionado.
         </div>
       ) : (
@@ -1219,13 +1221,15 @@ function TimelineCliente({
                   </span>
                   <div className="min-w-0 flex-1 pb-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium text-ink">{evento.titulo}</p>
-                      <span className="shrink-0 text-xs tabular-nums text-ink-3">
+                      <p className="truncate text-body font-medium text-ink">{evento.titulo}</p>
+                      <span className="shrink-0 text-caption tabular-nums text-ink-3">
                         {formatarData(evento.data)}
                       </span>
                     </div>
                     {evento.subtitulo && (
-                      <p className="mt-0.5 line-clamp-2 text-xs text-ink-3">{evento.subtitulo}</p>
+                      <p className="mt-0.5 line-clamp-2 text-caption text-ink-3">
+                        {evento.subtitulo}
+                      </p>
                     )}
                     {evento.tecnicoNome && (
                       <p className="mt-0.5 text-micro font-medium text-ink-2">
@@ -1233,7 +1237,9 @@ function TimelineCliente({
                       </p>
                     )}
                     {evento.descricao && (
-                      <p className="mt-0.5 line-clamp-2 text-xs text-ink-3">{evento.descricao}</p>
+                      <p className="mt-0.5 line-clamp-2 text-caption text-ink-3">
+                        {evento.descricao}
+                      </p>
                     )}
                   </div>
                 </>
@@ -1258,7 +1264,7 @@ function TimelineCliente({
             })}
           </div>
           {compacta && eventosFiltrados.length > eventosVisiveis.length && (
-            <div className="mt-3 border-t border-line-soft pt-3 text-xs text-ink-3">
+            <div className="mt-3 border-t border-line-soft pt-3 text-caption text-ink-3">
               Mais {eventosFiltrados.length - eventosVisiveis.length} evento(s) na aba Timeline.
             </div>
           )}
@@ -1301,7 +1307,7 @@ function ResumoOperacional({
 
   return (
     <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-      <h3 className="text-sm font-semibold text-ink">Operação</h3>
+      <h3 className="text-body font-semibold text-ink">Operação</h3>
       <div className="mt-4 grid gap-3">
         <ResumoLinha
           label="Equipamentos Auvo"
@@ -1330,8 +1336,8 @@ function ResumoLinha({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-3 last:border-0 last:pb-0">
-      <span className="text-sm text-ink-3">{label}</span>
-      <span className={`text-sm font-semibold ${destaque ? "text-orange-deep" : "text-ink"}`}>
+      <span className="text-body text-ink-3">{label}</span>
+      <span className={`text-body font-semibold ${destaque ? "text-orange-deep" : "text-ink"}`}>
         {value}
       </span>
     </div>
@@ -1342,20 +1348,20 @@ function PainelAssessment({ assessment }: { assessment: AssessmentClienteResumo 
   return (
     <section className="rounded-lg border border-line bg-card">
       <div className="border-b border-line-soft px-4 py-3">
-        <h3 className="text-sm font-semibold text-ink">Assessment</h3>
-        <p className="mt-0.5 text-xs text-ink-3">Documento de estado vigente do cliente</p>
+        <h3 className="text-body font-semibold text-ink">Assessment</h3>
+        <p className="mt-0.5 text-caption text-ink-3">Documento de estado vigente do cliente</p>
       </div>
       {!assessment ? (
-        <div className="px-5 py-8 text-center text-sm text-ink-3">
+        <div className="px-5 py-8 text-center text-body text-ink-3">
           Nenhum assessment cadastrado ainda — crie um em PCM → Assessment.
         </div>
       ) : (
         <div className="p-4">
-          <p className="text-sm text-ink-2">
+          <p className="text-body text-ink-2">
             {MOTIVO_ASSESSMENT_LABEL[assessment.motivo ?? "inicio"]} ·{" "}
             {new Date(`${assessment.dataInspecao}T00:00:00`).toLocaleDateString("pt-BR")}
           </p>
-          <p className="mt-1 text-xs text-ink-3">
+          <p className="mt-1 text-caption text-ink-3">
             {`${assessment.itensDerivados} de ${assessment.totalItens} ${
               assessment.totalItens === 1 ? "item" : "itens"
             } já derivado${assessment.itensDerivados === 1 ? "" : "s"} (Chamado/Backlog/OS)`}
@@ -1371,21 +1377,21 @@ function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <section className="rounded-lg border border-line bg-card">
         <div className="border-b border-line-soft px-4 py-3">
-          <h3 className="text-sm font-semibold text-ink">Inspeções</h3>
+          <h3 className="text-body font-semibold text-ink">Inspeções</h3>
         </div>
         {qualidade.inspecoes.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-ink-3">Nenhuma inspeção criada</div>
+          <div className="px-5 py-8 text-center text-body text-ink-3">Nenhuma inspeção criada</div>
         ) : (
           <div className="divide-y divide-line-soft">
             {qualidade.inspecoes.map((inspecao) => (
               <div key={inspecao.id} className="px-5 py-3.5">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="truncate text-sm font-medium text-ink">{inspecao.titulo}</p>
-                  <span className="text-xs tabular-nums text-ink-3">
+                  <p className="truncate text-body font-medium text-ink">{inspecao.titulo}</p>
+                  <span className="text-caption tabular-nums text-ink-3">
                     {formatarData(inspecao.dataInspecao)}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-ink-3">
+                <p className="mt-1 text-caption text-ink-3">
                   {inspecao.status} · {inspecao.totalItens} itens · {inspecao.itensNaoConformes} não
                   conformes
                 </p>
@@ -1397,21 +1403,21 @@ function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
 
       <section className="rounded-lg border border-line bg-card">
         <div className="border-b border-line-soft px-4 py-3">
-          <h3 className="text-sm font-semibold text-ink">Laudos SPDA</h3>
+          <h3 className="text-body font-semibold text-ink">Laudos SPDA</h3>
         </div>
         {qualidade.laudos.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-ink-3">Nenhum laudo criado</div>
+          <div className="px-5 py-8 text-center text-body text-ink-3">Nenhum laudo criado</div>
         ) : (
           <div className="divide-y divide-line-soft">
             {qualidade.laudos.map((laudo) => (
               <div key={laudo.id} className="px-5 py-3.5">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="truncate text-sm font-medium text-ink">{laudo.numero}</p>
-                  <span className="text-xs tabular-nums text-ink-3">
+                  <p className="truncate text-body font-medium text-ink">{laudo.numero}</p>
+                  <span className="text-caption tabular-nums text-ink-3">
                     {formatarData(laudo.dataVistoria)}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-ink-3">
+                <p className="mt-1 text-caption text-ink-3">
                   {laudo.status}
                   {laudo.nivelProtecao ? ` · Nível ${laudo.nivelProtecao}` : ""}
                 </p>
@@ -1437,14 +1443,14 @@ function PainelComunicacao({
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-        <h3 className="text-sm font-semibold text-ink">Comunicação</h3>
-        <div className="mt-4 grid gap-3 text-sm">
+        <h3 className="text-body font-semibold text-ink">Comunicação</h3>
+        <div className="mt-4 grid gap-3 text-body">
           <ResumoLinha label="Telefone" value={cliente.contatoTelefone ?? "Não informado"} />
           <ResumoLinha label="Email" value={cliente.contatoEmail ?? "Não informado"} />
           <ResumoLinha label="Mensagens vinculadas" value={String(comunicacao.length)} />
         </div>
         {cliente.observacoes && (
-          <div className="mt-4 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
+          <div className="mt-4 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-body text-warning">
             {cliente.observacoes}
           </div>
         )}
@@ -1487,8 +1493,8 @@ function PainelFinanceiro({
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-        <h3 className="text-sm font-semibold text-ink">Status comercial</h3>
-        <p className="mt-2 inline-flex rounded-full bg-line-soft px-3 py-1 text-sm font-semibold text-ink-2">
+        <h3 className="text-body font-semibold text-ink">Status comercial</h3>
+        <p className="mt-2 inline-flex rounded-full bg-line-soft px-3 py-1 text-body font-semibold text-ink-2">
           {cliente.statusComercial
             ? (STATUS_COMERCIAL_LABEL_360[cliente.statusComercial] ?? cliente.statusComercial)
             : "Não informado"}
@@ -1497,22 +1503,22 @@ function PainelFinanceiro({
 
       <section className="rounded-lg border border-line bg-card">
         <div className="border-b border-line-soft px-4 py-3">
-          <h3 className="text-sm font-semibold text-ink">OS por categoria — últimos 12 meses</h3>
-          <p className="mt-0.5 text-xs text-ink-3">
+          <h3 className="text-body font-semibold text-ink">OS por categoria — últimos 12 meses</h3>
+          <p className="mt-0.5 text-caption text-ink-3">
             Volume de atendimento por tipo de serviço (baseado nas 50 OS mais recentes) — não é
             faturamento
           </p>
         </div>
         {categorias.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-ink-3">
+          <div className="px-5 py-8 text-center text-body text-ink-3">
             Nenhuma OS nos últimos 12 meses.
           </div>
         ) : (
           <div className="divide-y divide-line-soft">
             {categorias.map(([categoria, total]) => (
               <div key={categoria} className="flex items-center justify-between px-5 py-3">
-                <span className="text-sm capitalize text-ink-2">{categoria}</span>
-                <span className="text-sm font-semibold tabular-nums text-ink">{total}</span>
+                <span className="text-body capitalize text-ink-2">{categoria}</span>
+                <span className="text-body font-semibold tabular-nums text-ink">{total}</span>
               </div>
             ))}
           </div>
@@ -1520,7 +1526,7 @@ function PainelFinanceiro({
       </section>
 
       <section className="rounded-lg border border-dashed border-line bg-card px-5 py-6 text-center">
-        <p className="text-sm text-ink-3">
+        <p className="text-body text-ink-3">
           Contrato, faturamento e inadimplência ainda não têm dado real vinculado ao cliente — o
           catálogo de preços não está ligado às OS. Sai do ar assim que o módulo Financeiro existir.
         </p>
@@ -1569,8 +1575,8 @@ function PainelAlmaCliente({
     <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Alma do cliente</h3>
-          <p className="mt-0.5 text-xs text-ink-3">
+          <h3 className="text-body font-semibold text-ink">Alma do cliente</h3>
+          <p className="mt-0.5 text-caption text-ink-3">
             Particularidades de comunicação que o Zé usa como contexto (ex.: "prefere áudio, é
             direto")
           </p>
@@ -1583,7 +1589,7 @@ function PainelAlmaCliente({
       </div>
       <div className="mt-3">
         {carregando ? (
-          <p className="text-sm text-ink-3">Carregando…</p>
+          <p className="text-body text-ink-3">Carregando…</p>
         ) : editando ? (
           <div className="flex flex-col gap-2">
             <textarea
@@ -1592,7 +1598,7 @@ function PainelAlmaCliente({
               className="input min-h-24 w-full resize-y"
               placeholder="Ex: Síndico prefere áudio a texto, é direto e não gosta de rodeio."
             />
-            {erro && <p className="text-sm text-red-600">{erro}</p>}
+            {erro && <p className="text-body text-red-600">{erro}</p>}
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setEditando(false)} className="btn-secondary">
                 Cancelar
@@ -1601,14 +1607,14 @@ function PainelAlmaCliente({
                 type="button"
                 disabled={salvando}
                 onClick={salvar}
-                className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                className="h-9 rounded-md bg-navy px-3 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
               >
                 {salvando ? "Salvando…" : "Salvar"}
               </button>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-ink-2">{conteudo || "Nenhuma alma cadastrada ainda."}</p>
+          <p className="text-body text-ink-2">{conteudo || "Nenhuma alma cadastrada ainda."}</p>
         )}
       </div>
     </section>

@@ -84,7 +84,7 @@ export function ConfigIaForm({
 
   if (personas.length === 0) {
     return (
-      <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
+      <div className="rounded-xl border border-line bg-card p-8 text-center text-body text-ink-3">
         Crie uma persona na aba "Personas" antes de configurar o modelo/janela de IA.
       </div>
     );
@@ -92,19 +92,22 @@ export function ConfigIaForm({
 
   return (
     <div className="max-w-xl rounded-xl border border-line bg-card p-5">
-      <h3 className="text-sm font-semibold text-ink">Identidade e modelo</h3>
-      <p className="mt-0.5 text-xs text-ink-3">
+      <h3 className="text-body font-semibold text-ink">Identidade e modelo</h3>
+      <p className="mt-0.5 text-caption text-ink-3">
         Modelo LLM e janela de atendimento por persona (número/instância continua na aba Agentes).
       </p>
 
-      <label className="mt-4 block text-xs font-semibold text-ink-2" htmlFor="config-ia-persona">
+      <label
+        className="mt-4 block text-caption font-semibold text-ink-2"
+        htmlFor="config-ia-persona"
+      >
         Persona
       </label>
       <select
         id="config-ia-persona"
         value={personaId}
         onChange={(e) => setPersonaId(e.target.value)}
-        className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink"
+        className="mt-1 w-full rounded-md border border-line p-2 text-body text-ink"
       >
         {personas.map((p) => (
           <option key={p.id} value={p.id}>
@@ -113,7 +116,7 @@ export function ConfigIaForm({
         ))}
       </select>
 
-      <label className="mt-4 block text-xs font-semibold text-ink-2" htmlFor="config-ia-nome">
+      <label className="mt-4 block text-caption font-semibold text-ink-2" htmlFor="config-ia-nome">
         Nome da identidade
       </label>
       <input
@@ -121,12 +124,15 @@ export function ConfigIaForm({
         value={identidade.nome}
         onChange={(e) => setIdentidade((atual) => ({ ...atual, nome: e.target.value }))}
         disabled={!temEscrita}
-        className="mt-1 w-full rounded-md border border-line p-2 text-sm"
+        className="mt-1 w-full rounded-md border border-line p-2 text-body"
       />
-      <label className="mt-4 block text-xs font-semibold text-ink-2" htmlFor="config-ia-prompt">
+      <label
+        className="mt-4 block text-caption font-semibold text-ink-2"
+        htmlFor="config-ia-prompt"
+      >
         Alma do agente
       </label>
-      <p className="mt-0.5 text-xs text-ink-3">
+      <p className="mt-0.5 text-caption text-ink-3">
         Como o agente fala e se comporta — o prompt de sistema desta persona.
       </p>
       <textarea
@@ -134,10 +140,13 @@ export function ConfigIaForm({
         value={identidade.promptSistema}
         onChange={(e) => setIdentidade((atual) => ({ ...atual, promptSistema: e.target.value }))}
         disabled={!temEscrita}
-        className="mt-1 min-h-24 w-full rounded-md border border-line p-2 text-sm"
+        className="mt-1 min-h-24 w-full rounded-md border border-line p-2 text-body"
       />
 
-      <label className="mt-4 block text-xs font-semibold text-ink-2" htmlFor="config-ia-modelo">
+      <label
+        className="mt-4 block text-caption font-semibold text-ink-2"
+        htmlFor="config-ia-modelo"
+      >
         Modelo LLM
       </label>
       <input
@@ -146,13 +155,13 @@ export function ConfigIaForm({
         onChange={(e) => setForm((f) => ({ ...f, modeloLlm: e.target.value }))}
         disabled={!temEscrita}
         placeholder="openai/gpt-4o-mini"
-        className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
+        className="mt-1 w-full rounded-md border border-line p-2 text-body text-ink disabled:opacity-60"
       />
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div>
           <label
-            className="block text-xs font-semibold text-ink-2"
+            className="block text-caption font-semibold text-ink-2"
             htmlFor="config-ia-janela-inicio"
           >
             Janela — início
@@ -163,11 +172,14 @@ export function ConfigIaForm({
             value={form.janelaInicio}
             onChange={(e) => setForm((f) => ({ ...f, janelaInicio: e.target.value }))}
             disabled={!temEscrita}
-            className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
+            className="mt-1 w-full rounded-md border border-line p-2 text-body text-ink disabled:opacity-60"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-ink-2" htmlFor="config-ia-janela-fim">
+          <label
+            className="block text-caption font-semibold text-ink-2"
+            htmlFor="config-ia-janela-fim"
+          >
             Janela — fim
           </label>
           <input
@@ -176,7 +188,7 @@ export function ConfigIaForm({
             value={form.janelaFim}
             onChange={(e) => setForm((f) => ({ ...f, janelaFim: e.target.value }))}
             disabled={!temEscrita}
-            className="mt-1 w-full rounded-md border border-line p-2 text-sm text-ink disabled:opacity-60"
+            className="mt-1 w-full rounded-md border border-line p-2 text-body text-ink disabled:opacity-60"
           />
         </div>
       </div>
@@ -191,7 +203,7 @@ export function ConfigIaForm({
             type="button"
             disabled={!temEscrita}
             onClick={() => toggleDia(d.valor)}
-            className={`rounded-md border px-2.5 py-1 text-xs font-semibold disabled:opacity-60 ${
+            className={`rounded-md border px-2.5 py-1 text-caption font-semibold disabled:opacity-60 ${
               form.janelaDias.includes(d.valor)
                 ? "border-navy bg-navy text-white"
                 : "border-line text-ink-2 hover:bg-line-soft"
@@ -203,12 +215,12 @@ export function ConfigIaForm({
       </div>
 
       {erro && (
-        <div className="mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erro}
         </div>
       )}
       {salvo && !erro && (
-        <p className="mt-4 text-sm font-medium text-success">Configuração salva.</p>
+        <p className="mt-4 text-body font-medium text-success">Configuração salva.</p>
       )}
 
       {temEscrita && (
@@ -216,7 +228,7 @@ export function ConfigIaForm({
           type="button"
           onClick={salvar}
           disabled={salvando}
-          className="mt-4 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+          className="mt-4 rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
         >
           {salvando ? "Salvando…" : "Salvar"}
         </button>

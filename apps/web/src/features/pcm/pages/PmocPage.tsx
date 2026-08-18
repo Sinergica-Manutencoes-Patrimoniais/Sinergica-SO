@@ -344,27 +344,29 @@ export function PmocPage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando PMOC…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando PMOC…</div>;
   }
 
   if (estado.fase === "erro") {
     return (
       <div className="rounded-xl border border-line bg-card p-8 text-center">
         <h2 className="text-lg font-semibold text-ink-2">PMOC indisponível</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <Button variant="ghost" onClick={carregar} className="mt-4">
           Tentar novamente
         </Button>
@@ -376,8 +378,8 @@ export function PmocPage() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">PMOC · Climatização</h2>
-          <p className="text-sm text-ink-3">
+          <h2 className="text-heading font-semibold text-ink">PMOC · Climatização</h2>
+          <p className="text-body text-ink-3">
             Plano de Manutenção, Operação e Controle com inventário, cronograma e alertas legais
           </p>
         </div>
@@ -398,7 +400,7 @@ export function PmocPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erroAcao}
         </div>
       )}
@@ -423,12 +425,12 @@ export function PmocPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_1fr]">
         <section className="rounded-xl border border-line bg-card">
           <div className="border-b border-line-soft px-4 py-3">
-            <h3 className="text-sm font-semibold text-ink">Contratos PMOC</h3>
-            <p className="mt-0.5 text-xs text-ink-3">{estado.contratos.length} registros</p>
+            <h3 className="text-body font-semibold text-ink">Contratos PMOC</h3>
+            <p className="mt-0.5 text-caption text-ink-3">{estado.contratos.length} registros</p>
           </div>
           <div className="max-h-[720px] divide-y divide-line-soft overflow-y-auto">
             {estado.contratos.length === 0 ? (
-              <div className="px-5 py-10 text-center text-sm text-ink-3">
+              <div className="px-5 py-10 text-center text-body text-ink-3">
                 Nenhum PMOC cadastrado ainda.
               </div>
             ) : (
@@ -443,10 +445,12 @@ export function PmocPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-ink">
+                      <p className="truncate text-body font-semibold text-ink">
                         {contrato.imovelNome}
                       </p>
-                      <p className="mt-1 truncate text-xs text-ink-3">{contrato.clienteNome}</p>
+                      <p className="mt-1 truncate text-caption text-ink-3">
+                        {contrato.clienteNome}
+                      </p>
                     </div>
                     <span
                       className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${statusContratoColor(contrato.status)}`}
@@ -459,7 +463,7 @@ export function PmocPage() {
                     <MiniMetric label="Mês" value={contrato.visitasMes} />
                     <MiniMetric label="NCs" value={contrato.ncsAbertas} />
                   </div>
-                  <p className="mt-3 text-xs text-ink-3">
+                  <p className="mt-3 text-caption text-ink-3">
                     Próxima visita:{" "}
                     <span className="font-semibold text-ink-2">
                       {formatarData(contrato.proximaVisita)}
@@ -485,7 +489,7 @@ export function PmocPage() {
               onCriarOsVisita={abrirCriarOsVisita}
             />
           ) : (
-            <div className="p-10 text-center text-sm text-ink-3">Selecione ou crie um PMOC.</div>
+            <div className="p-10 text-center text-body text-ink-3">Selecione ou crie um PMOC.</div>
           )}
         </section>
       </div>
@@ -576,13 +580,13 @@ function DetalhePmoc({
       <div className="bg-navy px-5 py-5 text-white">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
+            <p className="text-caption font-semibold uppercase tracking-[0.18em] text-white/55">
               PMOC · {contrato.clienteNome}
             </p>
-            <h3 className="mt-1 text-xl font-bold">{contrato.imovelNome}</h3>
-            <p className="mt-1 text-sm text-white/70">{formatarEndereco(contrato)}</p>
+            <h3 className="mt-1 text-title font-bold">{contrato.imovelNome}</h3>
+            <p className="mt-1 text-body text-white/70">{formatarEndereco(contrato)}</p>
           </div>
-          <span className="rounded-full bg-card/12 px-3 py-1 text-xs font-semibold">
+          <span className="rounded-full bg-card/12 px-3 py-1 text-caption font-semibold">
             Vigência {formatarData(contrato.startDate)} a {formatarData(contrato.endDate)}
           </span>
         </div>
@@ -598,14 +602,14 @@ function DetalhePmoc({
         <div className="lg:col-span-2">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <h4 className="text-sm font-semibold text-ink">Inventário de climatização</h4>
-              <p className="text-xs text-ink-3">Evaporadora + condensadora como um sistema</p>
+              <h4 className="text-body font-semibold text-ink">Inventário de climatização</h4>
+              <p className="text-caption text-ink-3">Evaporadora + condensadora como um sistema</p>
             </div>
             {podeEditar && (
               <button
                 type="button"
                 onClick={onNovoEquipamento}
-                className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-caption font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <Plus className="h-4 w-4" />
                 Equipamento
@@ -614,7 +618,7 @@ function DetalhePmoc({
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {detalhe.equipamentos.length === 0 ? (
-              <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3 md:col-span-2">
+              <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-body text-ink-3 md:col-span-2">
                 Nenhum equipamento cadastrado.
               </div>
             ) : (
@@ -623,7 +627,7 @@ function DetalhePmoc({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-brand text-lg font-bold text-ink">{equipamento.tag}</p>
-                      <p className="text-xs text-ink-3">
+                      <p className="text-caption text-ink-3">
                         {
                           TIPO_EQUIPAMENTO_PMOC.find((item) => item.valor === equipamento.type)
                             ?.rotulo
@@ -639,7 +643,7 @@ function DetalhePmoc({
                       Auvo #{equipamento.auvoEquipmentId}
                     </span>
                   )}
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-ink-3">
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-caption text-ink-3">
                     <span>{equipamento.location || "Sem localização"}</span>
                     <span className="text-right">
                       {equipamento.capacityBtu
@@ -659,15 +663,15 @@ function DetalhePmoc({
           <div className="rounded-lg border border-line p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h4 className="text-sm font-semibold text-ink">Inventário assistido pelo Auvo</h4>
-                <p className="mt-1 text-xs text-ink-3">
+                <h4 className="text-body font-semibold text-ink">Inventário assistido pelo Auvo</h4>
+                <p className="mt-1 text-caption text-ink-3">
                   Equipamentos sincronizados do cliente para virar PMOC sem redigitar.
                 </p>
               </div>
               <Snowflake className="h-4 w-4 shrink-0 text-orange" />
             </div>
             {detalhe.sugestoesAuvo.length === 0 ? (
-              <p className="mt-4 text-sm text-ink-3">
+              <p className="mt-4 text-body text-ink-3">
                 Sem equipamentos Auvo vinculados a este cliente.
               </p>
             ) : (
@@ -679,8 +683,8 @@ function DetalhePmoc({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-ink">{sugestao.nome}</p>
-                        <p className="text-xs text-ink-3">Auvo #{sugestao.auvoEquipmentId}</p>
+                        <p className="truncate text-body font-semibold text-ink">{sugestao.nome}</p>
+                        <p className="text-caption text-ink-3">Auvo #{sugestao.auvoEquipmentId}</p>
                       </div>
                       {sugestao.jaImportado ? (
                         <span className="rounded-full bg-success-soft px-2 py-0.5 text-micro font-semibold text-success">
@@ -692,7 +696,7 @@ function DetalhePmoc({
                             type="button"
                             disabled={salvando}
                             onClick={() => onImportarAuvo(sugestao)}
-                            className="shrink-0 rounded-md border border-line px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                            className="shrink-0 rounded-md border border-line px-2 py-1 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
                           >
                             Importar
                           </button>
@@ -702,7 +706,7 @@ function DetalhePmoc({
                   </div>
                 ))}
                 {detalhe.sugestoesAuvo.length > 6 && (
-                  <p className="text-xs text-ink-3">
+                  <p className="text-caption text-ink-3">
                     +{detalhe.sugestoesAuvo.length - 6} equipamentos no cache Auvo
                   </p>
                 )}
@@ -711,7 +715,7 @@ function DetalhePmoc({
           </div>
 
           <div className="rounded-lg border border-line p-4">
-            <h4 className="text-sm font-semibold text-ink">Próxima execução</h4>
+            <h4 className="text-body font-semibold text-ink">Próxima execução</h4>
             {proxima ? (
               <>
                 <div className="mt-3 flex items-center justify-between gap-3">
@@ -720,30 +724,30 @@ function DetalhePmoc({
                   >
                     {STATUS_AGENDA_LABEL[proxima.status]}
                   </span>
-                  <span className="text-sm font-semibold text-ink">
+                  <span className="text-body font-semibold text-ink">
                     {formatarData(proxima.scheduledDate)}
                   </span>
                 </div>
-                <p className="mt-3 text-sm font-semibold text-ink">
+                <p className="mt-3 text-body font-semibold text-ink">
                   {TIPO_MANUTENCAO_LABEL[proxima.maintenanceType]}
                 </p>
-                <p className="mt-1 text-xs text-ink-3">
+                <p className="mt-1 text-caption text-ink-3">
                   {checklistProxima.length} itens no checklist acumulado
                 </p>
                 {obrigatorios.length > 0 && (
-                  <div className="mt-3 rounded-md bg-orange-soft px-3 py-2 text-xs text-orange-deep">
+                  <div className="mt-3 rounded-md bg-orange-soft px-3 py-2 text-caption text-orange-deep">
                     Inclui coleta/laudo microbiológico obrigatório.
                   </div>
                 )}
               </>
             ) : (
-              <p className="mt-3 text-sm text-ink-3">Cronograma sem próxima visita aberta.</p>
+              <p className="mt-3 text-body text-ink-3">Cronograma sem próxima visita aberta.</p>
             )}
           </div>
 
           <div className="rounded-lg border border-line p-4">
-            <h4 className="text-sm font-semibold text-ink">Alertas legais</h4>
-            <div className="mt-3 space-y-2 text-sm">
+            <h4 className="text-body font-semibold text-ink">Alertas legais</h4>
+            <div className="mt-3 space-y-2 text-body">
               <AlertaLinha
                 ativo={contrato.status === "renovar"}
                 label="ART / vigência perto do vencimento"
@@ -759,7 +763,7 @@ function DetalhePmoc({
       </div>
 
       <div className="border-t border-line-soft px-5 py-5">
-        <h4 className="text-sm font-semibold text-ink">Cronograma anual</h4>
+        <h4 className="text-body font-semibold text-ink">Cronograma anual</h4>
         <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-6">
           {detalhe.agenda.map((agenda) => (
             <div key={agenda.id} className="rounded-lg border border-line px-3 py-3">
@@ -773,10 +777,10 @@ function DetalhePmoc({
                   {STATUS_AGENDA_LABEL[agenda.status]}
                 </span>
               </div>
-              <p className="mt-2 text-sm font-semibold text-ink">
+              <p className="mt-2 text-body font-semibold text-ink">
                 {formatarData(agenda.scheduledDate)}
               </p>
-              <p className="mt-1 text-xs text-ink-3">
+              <p className="mt-1 text-caption text-ink-3">
                 {TIPO_MANUTENCAO_LABEL[agenda.maintenanceType]}
               </p>
               {agenda.ordemServicoId ? (
@@ -801,12 +805,12 @@ function DetalhePmoc({
       <div className="grid grid-cols-1 gap-4 border-t border-line-soft p-4 lg:grid-cols-2">
         <div>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h4 className="text-sm font-semibold text-ink">Análises microbiológicas</h4>
+            <h4 className="text-body font-semibold text-ink">Análises microbiológicas</h4>
             {podeEditar && (
               <button
                 type="button"
                 onClick={onNovaAnalise}
-                className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-caption font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <Plus className="h-4 w-4" />
                 Nova análise
@@ -814,7 +818,7 @@ function DetalhePmoc({
             )}
           </div>
           {detalhe.microbiologia.length === 0 ? (
-            <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
+            <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-body text-ink-3">
               Nenhuma análise registrada.
             </div>
           ) : (
@@ -823,10 +827,12 @@ function DetalhePmoc({
                 <div key={analise.id} className="rounded-lg border border-line p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-ink">
+                      <p className="text-body font-semibold text-ink">
                         {formatarData(analise.analysisDate)}
                       </p>
-                      <p className="text-xs text-ink-3">{analise.labName || "Laboratório —"}</p>
+                      <p className="text-caption text-ink-3">
+                        {analise.labName || "Laboratório —"}
+                      </p>
                     </div>
                     <span
                       className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusMicrobioColor(analise.status)}`}
@@ -835,7 +841,7 @@ function DetalhePmoc({
                     </span>
                   </div>
                   {analise.correctiveActionNeeded && (
-                    <div className="mt-2 flex items-center gap-2 rounded-md bg-danger-line px-3 py-2 text-xs font-semibold text-danger">
+                    <div className="mt-2 flex items-center gap-2 rounded-md bg-danger-line px-3 py-2 text-caption font-semibold text-danger">
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                       Fora dos limites legais — ação corretiva necessária.
                     </div>
@@ -848,12 +854,12 @@ function DetalhePmoc({
 
         <div>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h4 className="text-sm font-semibold text-ink">Não-conformidades</h4>
+            <h4 className="text-body font-semibold text-ink">Não-conformidades</h4>
             {podeEditar && (
               <button
                 type="button"
                 onClick={onNovaNc}
-                className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-caption font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <Plus className="h-4 w-4" />
                 Nova NC
@@ -861,7 +867,7 @@ function DetalhePmoc({
             )}
           </div>
           {detalhe.naoConformidades.length === 0 ? (
-            <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
+            <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-body text-ink-3">
               Nenhuma não-conformidade registrada.
             </div>
           ) : (
@@ -870,8 +876,8 @@ function DetalhePmoc({
                 <div key={nc.id} className="rounded-lg border border-line p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-ink">{nc.description}</p>
-                      <p className="text-xs text-ink-3">
+                      <p className="truncate text-body font-semibold text-ink">{nc.description}</p>
+                      <p className="text-caption text-ink-3">
                         {nc.tag ? `${nc.tag} · ` : ""}
                         {nc.deadline ? `Prazo ${formatarData(nc.deadline)}` : "Sem prazo"}
                       </p>
@@ -897,7 +903,7 @@ function DetalhePmoc({
                             status: nc.status === "aberto" ? "em_andamento" : "fechado",
                           })
                         }
-                        className="text-xs font-semibold text-orange hover:text-orange-deep"
+                        className="text-caption font-semibold text-orange hover:text-orange-deep"
                       >
                         {nc.status === "aberto" ? "Iniciar" : "Fechar"}
                       </button>
@@ -967,7 +973,7 @@ function Kpi({
         <Icon className={`h-4 w-4 ${danger && value > 0 ? "text-orange" : "text-ink-3"}`} />
       </div>
       <p
-        className={`mt-2 font-brand text-xl font-bold ${danger && value > 0 ? "text-orange" : "text-ink"}`}
+        className={`mt-2 font-brand text-title font-bold ${danger && value > 0 ? "text-orange" : "text-ink"}`}
       >
         {value}
       </p>
@@ -988,7 +994,7 @@ function HeaderMetric({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-micro font-semibold uppercase tracking-[0.16em] text-white/45">{label}</p>
-      <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
+      <p className="mt-1 truncate text-body font-semibold text-white">{value}</p>
     </div>
   );
 }
@@ -1002,7 +1008,7 @@ function PainelAlertasPmoc({
 }) {
   if (alertas.length === 0) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-line bg-card px-4 py-3 text-sm">
+      <div className="flex items-center gap-2 rounded-lg border border-line bg-card px-4 py-3 text-body">
         <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
         <span className="font-semibold text-success">Tudo em dia</span>
         <span className="text-ink-3">— nenhum contrato PMOC precisa de atenção agora.</span>
@@ -1020,15 +1026,15 @@ function PainelAlertasPmoc({
   return (
     <div className="rounded-xl border border-line bg-card">
       <div className="border-b border-line-soft px-4 py-3">
-        <h3 className="text-sm font-semibold text-ink">Precisa de atenção</h3>
-        <p className="mt-0.5 text-xs text-ink-3">
+        <h3 className="text-body font-semibold text-ink">Precisa de atenção</h3>
+        <p className="mt-0.5 text-caption text-ink-3">
           {alertas.length} contrato(s) — clique para abrir
         </p>
       </div>
       <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
         {[...grupos.entries()].map(([tipo, contratos]) => (
           <div key={tipo} className="rounded-lg border border-line-soft p-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-orange-deep">
+            <p className="mb-2 text-caption font-semibold uppercase tracking-[0.08em] text-orange-deep">
               {TIPO_ALERTA_LABEL[tipo]} ({contratos.length})
             </p>
             <div className="space-y-1">
@@ -1037,9 +1043,10 @@ function PainelAlertasPmoc({
                   key={item.contratoId}
                   type="button"
                   onClick={() => onAbrirContrato(item.contratoId)}
-                  className="block w-full truncate rounded-md px-2 py-1 text-left text-sm text-ink-2 hover:bg-line-soft"
+                  className="block w-full truncate rounded-md px-2 py-1 text-left text-body text-ink-2 hover:bg-line-soft"
                 >
-                  {item.imovelNome} <span className="text-xs text-ink-3">· {item.clienteNome}</span>
+                  {item.imovelNome}{" "}
+                  <span className="text-caption text-ink-3">· {item.clienteNome}</span>
                 </button>
               ))}
             </div>
@@ -1235,7 +1242,7 @@ function NovoPmocModal({
 
       <div className="mt-5 rounded-lg border border-line p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-ink">Inventário inicial</h4>
+          <h4 className="text-body font-semibold text-ink">Inventário inicial</h4>
           <button
             type="button"
             onClick={() =>
@@ -1249,7 +1256,7 @@ function NovoPmocModal({
                 },
               ])
             }
-            className="text-xs font-semibold text-orange"
+            className="text-caption font-semibold text-orange"
           >
             Adicionar linha
           </button>
@@ -1576,7 +1583,7 @@ function NovaAnaliseMicrobioModal({
       </div>
 
       <div
-        className={`mt-4 rounded-md px-3 py-2 text-sm font-semibold ${statusMicrobioColor(previaStatus)}`}
+        className={`mt-4 rounded-md px-3 py-2 text-body font-semibold ${statusMicrobioColor(previaStatus)}`}
       >
         Status calculado: {STATUS_MICROBIO_LABEL[previaStatus]}
         {previaStatus === "nao_conforme" && " — ação corretiva será marcada como necessária"}
@@ -1712,12 +1719,12 @@ function CriarOsVisitaModal({
 
   return (
     <ModalBase title="Criar OS da visita PMOC" onClose={onClose}>
-      <p className="text-sm text-ink-3">
+      <p className="text-body text-ink-3">
         {TIPO_MANUTENCAO_LABEL[agenda.maintenanceType]} · {formatarData(agenda.scheduledDate)}. Cria
         a OS e já dispara a tarefa no Auvo (síncrono, mesmo fluxo de "Nova OS").
       </p>
       {!dadosAbertura ? (
-        <p className="mt-4 text-sm text-ink-3">Carregando técnicos e tipos de tarefa…</p>
+        <p className="mt-4 text-body text-ink-3">Carregando técnicos e tipos de tarefa…</p>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="Tipo de tarefa (Auvo) *">
@@ -1788,7 +1795,7 @@ function ModalBase({
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
+      <span className="mb-1 block text-caption font-semibold text-ink-3">{label}</span>
       {children}
     </div>
   );
@@ -1810,7 +1817,7 @@ function ModalActions({
       <button
         type="button"
         onClick={onCancel}
-        className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+        className="rounded-md border border-line px-4 py-2 text-body font-semibold text-ink-2 hover:bg-line-soft"
       >
         Cancelar
       </button>
@@ -1818,7 +1825,7 @@ function ModalActions({
         type="button"
         onClick={onPrimary}
         disabled={disabled}
-        className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50"
       >
         {disabled && <Loader2 className="h-4 w-4 animate-spin" />}
         {primaryLabel}

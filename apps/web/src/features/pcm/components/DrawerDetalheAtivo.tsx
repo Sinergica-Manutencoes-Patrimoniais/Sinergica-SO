@@ -111,14 +111,14 @@ export function DrawerDetalheAtivo({
       <div className="absolute inset-0 bg-black/30" onClick={onClose} aria-hidden="true" />
       <div className="drawer-panel relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-line bg-card shadow-modal">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Detalhe do ativo</h3>
+          <h3 className="text-heading font-semibold text-ink">Detalhe do ativo</h3>
           <div className="flex items-center gap-3">
             {temEscrita && item && (
               <button
                 type="button"
                 onClick={abrirEdicao}
                 aria-label="Editar ativo"
-                className="flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep"
+                className="flex items-center gap-1 text-caption font-semibold text-orange hover:text-orange-deep"
               >
                 <Pencil className="h-4 w-4" />
                 Editar
@@ -136,10 +136,10 @@ export function DrawerDetalheAtivo({
         </div>
 
         {estado.fase === "carregando" && (
-          <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
+          <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
         )}
         {estado.fase === "erro" && (
-          <div className="p-8 text-center text-sm text-danger">{estado.mensagem}</div>
+          <div className="p-8 text-center text-body text-danger">{estado.mensagem}</div>
         )}
         {estado.fase === "pronto" && <Conteudo detalhe={estado.detalhe} />}
       </div>
@@ -160,7 +160,7 @@ export function DrawerDetalheAtivo({
 function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
   const { contexto, historicoOs } = detalhe;
   if (!contexto) {
-    return <div className="p-8 text-center text-sm text-ink-3">Ativo não encontrado.</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Ativo não encontrado.</div>;
   }
   const { item, breadcrumb, sistemas, componentesFilhos } = contexto;
   const Icone = item.tipo === "componente" ? Puzzle : Wrench;
@@ -183,8 +183,8 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
           </span>
         )}
         <div className="min-w-0">
-          <h4 className="truncate text-sm font-semibold text-ink">{item.nome}</h4>
-          <p className="text-xs text-ink-3">
+          <h4 className="truncate text-body font-semibold text-ink">{item.nome}</h4>
+          <p className="text-caption text-ink-3">
             {item.tipo === "componente" ? "Componente" : "Equipamento"}
             {!item.ativo && " · inativo"}
           </p>
@@ -192,12 +192,12 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
       </div>
 
       <Secao titulo="Instalado em">
-        <p className="text-sm text-ink-2">{caminho || "—"}</p>
+        <p className="text-body text-ink-2">{caminho || "—"}</p>
       </Secao>
 
       <Secao titulo="Sistemas">
         {sistemas.length === 0 ? (
-          <p className="text-xs text-ink-3">Não faz parte de nenhum sistema.</p>
+          <p className="text-caption text-ink-3">Não faz parte de nenhum sistema.</p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {sistemas.map((s) => (
@@ -217,7 +217,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
         <Secao titulo="Componentes">
           <ul className="flex flex-col gap-1">
             {componentesFilhos.map((c) => (
-              <li key={c.id} className="flex items-center gap-2 text-xs text-ink-2">
+              <li key={c.id} className="flex items-center gap-2 text-caption text-ink-2">
                 <Puzzle className="h-3.5 w-3.5 text-ink-3" />
                 {c.nome}
               </li>
@@ -228,12 +228,12 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
 
       <Secao titulo="Histórico de OS">
         {historicoOs === null ? (
-          <p className="text-xs text-ink-3">Não foi possível carregar o histórico.</p>
+          <p className="text-caption text-ink-3">Não foi possível carregar o histórico.</p>
         ) : historicoOs.length === 0 ? (
-          <p className="text-xs text-ink-3">Nenhuma OS registrada para este ativo.</p>
+          <p className="text-caption text-ink-3">Nenhuma OS registrada para este ativo.</p>
         ) : (
           <>
-            <p className="mb-2 text-xs text-ink-3">
+            <p className="mb-2 text-caption text-ink-3">
               Última manutenção:{" "}
               <strong className="text-ink-2">{dataBr(ultimaManutencao(historicoOs))}</strong>
             </p>
@@ -241,7 +241,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
               {historicoOs.map((os) => (
                 <li
                   key={os.osId}
-                  className="flex items-center justify-between gap-2 py-1.5 text-xs"
+                  className="flex items-center justify-between gap-2 py-1.5 text-caption"
                 >
                   <span className="font-brand tabular-nums text-ink-3">{os.numero}</span>
                   <span className="min-w-0 flex-1 truncate text-ink-2">

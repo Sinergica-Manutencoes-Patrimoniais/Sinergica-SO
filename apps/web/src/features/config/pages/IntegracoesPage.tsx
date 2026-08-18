@@ -79,7 +79,7 @@ export function IntegracoesPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Só superadmin configura integrações.</p>
+        <p className="mt-1 text-body text-ink-3">Só superadmin configura integrações.</p>
       </div>
     );
   }
@@ -178,26 +178,26 @@ export function IntegracoesPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-base font-semibold text-ink">Integrações</h2>
-        <p className="text-sm text-ink-3">
+        <h2 className="text-heading font-semibold text-ink">Integrações</h2>
+        <p className="text-body text-ink-3">
           Credenciais de serviços externos. A chave nunca é exibida de novo depois de salva.
         </p>
       </div>
 
       {erro && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erro}
         </div>
       )}
 
       {carregando ? (
-        <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
+        <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
       ) : (
         <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-3">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-ink-3" />
-              <h3 className="text-sm font-semibold text-ink">Provedor de e-mail</h3>
+              <h3 className="text-body font-semibold text-ink">Provedor de e-mail</h3>
             </div>
             <span
               className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
@@ -212,7 +212,7 @@ export function IntegracoesPage() {
 
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">Provedor</span>
+              <span className="mb-1 block text-caption font-semibold text-ink-3">Provedor</span>
               <select
                 className="input w-full"
                 value={provedor}
@@ -228,10 +228,14 @@ export function IntegracoesPage() {
                 onChange={(e) => setAtivo(e.target.checked)}
                 className="h-4 w-4 accent-orange"
               />
-              <span className="text-sm text-ink-2">Ativo (habilita envio real do laudo PMOC)</span>
+              <span className="text-body text-ink-2">
+                Ativo (habilita envio real do laudo PMOC)
+              </span>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">E-mail remetente</span>
+              <span className="mb-1 block text-caption font-semibold text-ink-3">
+                E-mail remetente
+              </span>
               <input
                 className="input w-full"
                 value={fromEmail}
@@ -240,7 +244,9 @@ export function IntegracoesPage() {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">Nome remetente</span>
+              <span className="mb-1 block text-caption font-semibold text-ink-3">
+                Nome remetente
+              </span>
               <input
                 className="input w-full"
                 value={fromName}
@@ -252,14 +258,14 @@ export function IntegracoesPage() {
             type="button"
             onClick={salvarMetadado}
             disabled={salvando}
-            className="mt-3 h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="mt-3 h-9 rounded-md bg-navy px-3 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             Salvar configurações
           </button>
 
           <div className="mt-5 border-t border-line-soft pt-4">
             <label className="block">
-              <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ink-3">
+              <span className="mb-1 flex items-center gap-1.5 text-caption font-semibold text-ink-3">
                 <KeyRound className="h-3.5 w-3.5" />
                 API key {emailIntegracao?.temSegredo && "(substituir)"}
               </span>
@@ -277,7 +283,7 @@ export function IntegracoesPage() {
                   type="button"
                   onClick={salvarChave}
                   disabled={salvando || !apiKey.trim()}
-                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
                   Salvar chave
                 </button>
@@ -292,7 +298,7 @@ export function IntegracoesPage() {
           <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-3">
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-ink-3" />
-              <h3 className="text-sm font-semibold text-ink">Cobrança — Mercado Pago</h3>
+              <h3 className="text-body font-semibold text-ink">Cobrança — Mercado Pago</h3>
             </div>
             <span
               className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
@@ -303,14 +309,14 @@ export function IntegracoesPage() {
             </span>
           </div>
 
-          <p className="mt-2 text-xs text-ink-3">
+          <p className="mt-2 text-caption text-ink-3">
             Emite boleto/PIX de recebíveis (E04-S09). Access token e webhook secret nunca voltam pra
             tela depois de salvos.
           </p>
 
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">Ambiente</span>
+              <span className="mb-1 block text-caption font-semibold text-ink-3">Ambiente</span>
               <select
                 className="input w-full"
                 value={ambienteMp}
@@ -327,21 +333,23 @@ export function IntegracoesPage() {
                 onChange={(e) => setAtivoMp(e.target.checked)}
                 className="h-4 w-4 accent-orange"
               />
-              <span className="text-sm text-ink-2">Ativo (habilita emissão real de cobrança)</span>
+              <span className="text-body text-ink-2">
+                Ativo (habilita emissão real de cobrança)
+              </span>
             </label>
           </div>
           <button
             type="button"
             onClick={salvarMetadadoMp}
             disabled={salvando}
-            className="mt-3 h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="mt-3 h-9 rounded-md bg-navy px-3 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             Salvar configurações
           </button>
 
           <div className="mt-5 flex flex-col gap-4 border-t border-line-soft pt-4">
             <label className="block">
-              <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ink-3">
+              <span className="mb-1 flex items-center gap-1.5 text-caption font-semibold text-ink-3">
                 <KeyRound className="h-3.5 w-3.5" />
                 Access token {temAccessTokenMp && "(substituir)"}
               </span>
@@ -357,14 +365,14 @@ export function IntegracoesPage() {
                   type="button"
                   onClick={salvarAccessTokenMp}
                   disabled={salvando || !accessTokenMp.trim()}
-                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
                   Salvar
                 </button>
               </div>
             </label>
             <label className="block">
-              <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ink-3">
+              <span className="mb-1 flex items-center gap-1.5 text-caption font-semibold text-ink-3">
                 <KeyRound className="h-3.5 w-3.5" />
                 Webhook secret {temWebhookSecretMp && "(substituir)"}
               </span>
@@ -384,7 +392,7 @@ export function IntegracoesPage() {
                   type="button"
                   onClick={salvarWebhookSecretMp}
                   disabled={salvando || !webhookSecretMp.trim()}
-                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                  className="h-9 shrink-0 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                 >
                   Salvar
                 </button>

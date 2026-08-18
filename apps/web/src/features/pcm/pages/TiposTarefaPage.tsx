@@ -106,27 +106,29 @@ export function TiposTarefaPage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando tipos de tarefa…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando tipos de tarefa…</div>;
   }
 
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <Button variant="ghost" onClick={carregar} className="mt-4">
           Tentar novamente
         </Button>
@@ -138,8 +140,8 @@ export function TiposTarefaPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Tipos de Tarefa</h2>
-          <p className="text-sm text-ink-3">Catálogo operacional sincronizado com o Auvo</p>
+          <h2 className="text-heading font-semibold text-ink">Tipos de Tarefa</h2>
+          <p className="text-body text-ink-3">Catálogo operacional sincronizado com o Auvo</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="secondary" icon={<RefreshCw className="h-4 w-4" />} onClick={carregar}>
@@ -158,7 +160,7 @@ export function TiposTarefaPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erroAcao}
         </div>
       )}
@@ -171,7 +173,7 @@ export function TiposTarefaPage() {
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
           />
-          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-body text-ink-2">
             <input
               type="checkbox"
               checked={somenteAtivos}
@@ -189,7 +191,7 @@ export function TiposTarefaPage() {
               render: (tipo) => (
                 <>
                   <p className="font-semibold text-ink">{tipo.nome}</p>
-                  <p className="mt-1 text-xs text-ink-3">
+                  <p className="mt-1 text-caption text-ink-3">
                     {tipo.ativo ? "Ativo" : "Inativo"}
                     {tipo.auvoId ? ` · Auvo #${tipo.auvoId}` : ""}
                   </p>
@@ -212,11 +214,11 @@ export function TiposTarefaPage() {
               cabecalho: "Sync",
               render: (tipo) => (
                 <>
-                  <span className="rounded-full bg-line-soft px-2 py-1 text-xs font-semibold text-ink-2">
+                  <span className="rounded-full bg-line-soft px-2 py-1 text-caption font-semibold text-ink-2">
                     {syncStatusLabel(tipo.auvoSyncStatus)}
                   </span>
                   {tipo.auvoSyncError && (
-                    <p className="mt-1 max-w-[260px] truncate text-xs text-danger">
+                    <p className="mt-1 max-w-[260px] truncate text-caption text-danger">
                       {tipo.auvoSyncError}
                     </p>
                   )}
@@ -320,7 +322,9 @@ function TipoTarefaModal({
         }}
       >
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">Nome</span>
+          <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+            Nome
+          </span>
           <input
             className="input mt-1"
             value={form.nome}
@@ -329,7 +333,7 @@ function TipoTarefaModal({
         </label>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-body text-ink-2">
             <input
               type="checkbox"
               checked={form.preencheRelato}
@@ -339,7 +343,7 @@ function TipoTarefaModal({
             />
             Exige relato
           </label>
-          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-body text-ink-2">
             <input
               type="checkbox"
               checked={form.exigeAssinatura}
@@ -350,7 +354,9 @@ function TipoTarefaModal({
             Assinatura
           </label>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">Fotos</span>
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+              Fotos
+            </span>
             <input
               className="input mt-1"
               type="number"
@@ -367,7 +373,7 @@ function TipoTarefaModal({
           </label>
         </div>
 
-        <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
+        <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-body text-ink-2">
           <input
             type="checkbox"
             checked={form.ativo ?? true}
@@ -377,7 +383,7 @@ function TipoTarefaModal({
         </label>
 
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
             {erro}
           </div>
         )}

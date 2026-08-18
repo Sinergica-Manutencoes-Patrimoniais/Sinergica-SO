@@ -11,7 +11,7 @@ export function ConversaoEtapasChart({ etapas }: { etapas: ConversaoEtapa[] }) {
   const [hover, setHover] = useState<string | null>(null);
 
   if (etapas.length === 0) {
-    return <p className="py-8 text-center text-sm text-ink-3">Nenhuma etapa configurada.</p>;
+    return <p className="py-8 text-center text-body text-ink-3">Nenhuma etapa configurada.</p>;
   }
 
   const maiorValor = Math.max(1, ...etapas.flatMap((e) => [e.entraram, e.avancaram]));
@@ -24,7 +24,7 @@ export function ConversaoEtapasChart({ etapas }: { etapas: ConversaoEtapa[] }) {
 
   return (
     <div>
-      <div className="mb-2 flex items-center gap-4 text-xs text-ink-3">
+      <div className="mb-2 flex items-center gap-4 text-caption text-ink-3">
         <Legenda cor={COR_ENTRARAM} label="Entraram" />
         <Legenda cor={COR_AVANCARAM} label="Avançaram" />
       </div>
@@ -83,7 +83,7 @@ export function ConversaoEtapasChart({ etapas }: { etapas: ConversaoEtapa[] }) {
         })}
       </svg>
       {hover && (
-        <p className="mt-1 text-xs text-ink-2">
+        <p className="mt-1 text-caption text-ink-2">
           {(() => {
             const etapa = etapas.find((e) => e.etapaId === hover);
             if (!etapa) return null;

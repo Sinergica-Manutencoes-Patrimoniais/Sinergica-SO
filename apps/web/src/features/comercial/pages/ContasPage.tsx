@@ -80,13 +80,13 @@ export function ContasPage({
     <div className="space-y-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-brand text-xl font-bold text-ink">Contas</h1>
-          <p className="text-sm text-ink-2">
+          <h1 className="font-brand text-title font-bold text-ink">Contas</h1>
+          <p className="text-body text-ink-2">
             Todas as contas — lead, prospecto, cliente ativo e antigo. O PCM mostra só as ativas.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {atualizando && <span className="text-xs text-ink-2">atualizando…</span>}
+          {atualizando && <span className="text-caption text-ink-2">atualizando…</span>}
           <Button variant="ghost" onClick={() => contasQuery.refetch()}>
             <RefreshCw className="size-4" aria-hidden />
             Atualizar
@@ -136,11 +136,11 @@ export function ContasPage({
         </div>
       </Card>
 
-      {cargaFria && <p className="text-sm text-ink-2">Carregando contas…</p>}
+      {cargaFria && <p className="text-body text-ink-2">Carregando contas…</p>}
 
       {erro && (
         <Card>
-          <p className="p-4 text-sm text-danger">
+          <p className="p-4 text-body text-danger">
             {erro instanceof Error ? erro.message : "Falha ao carregar contas."}
           </p>
         </Card>
@@ -170,7 +170,7 @@ export function ContasPage({
                     >
                       {conta.nome}
                     </button>
-                    {conta.cnpj && <p className="text-xs text-ink-2">{conta.cnpj}</p>}
+                    {conta.cnpj && <p className="text-caption text-ink-2">{conta.cnpj}</p>}
                   </>
                 ),
               },
@@ -196,7 +196,7 @@ export function ContasPage({
                       />
                       {conta.etapa.nome}
                       {conta.oportunidadesAbertas > 1 && (
-                        <span className="text-xs text-ink-2">
+                        <span className="text-caption text-ink-2">
                           +{conta.oportunidadesAbertas - 1}
                         </span>
                       )}

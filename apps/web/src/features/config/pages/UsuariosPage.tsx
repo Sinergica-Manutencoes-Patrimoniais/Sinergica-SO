@@ -239,14 +239,14 @@ export function UsuariosPage() {
             <div key={usuario.userId} className="flex items-center gap-3 px-4 py-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-ink truncate">{usuario.nome}</p>
+                  <p className="text-body font-medium text-ink truncate">{usuario.nome}</p>
                   {!usuario.ativo && (
                     <span className="text-micro font-medium px-2 py-0.5 rounded-full bg-line-soft text-ink-2">
                       Inativo
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-ink-3 mt-0.5">
+                <p className="text-caption text-ink-3 mt-0.5">
                   {PAPEL_LABEL[usuario.papel] ?? usuario.papel} · {descreverModo(usuario)}
                 </p>
               </div>
@@ -272,7 +272,7 @@ export function UsuariosPage() {
               <div className="col-span-2">
                 <label
                   htmlFor="usuario-nome"
-                  className="block text-sm font-medium text-ink-2 mb-1.5"
+                  className="block text-body font-medium text-ink-2 mb-1.5"
                 >
                   Nome
                 </label>
@@ -286,7 +286,7 @@ export function UsuariosPage() {
               <div className="col-span-2">
                 <label
                   htmlFor="usuario-email"
-                  className="block text-sm font-medium text-ink-2 mb-1.5"
+                  className="block text-body font-medium text-ink-2 mb-1.5"
                 >
                   E-mail
                 </label>
@@ -301,7 +301,7 @@ export function UsuariosPage() {
               <div>
                 <label
                   htmlFor="usuario-senha"
-                  className="block text-sm font-medium text-ink-2 mb-1.5"
+                  className="block text-body font-medium text-ink-2 mb-1.5"
                 >
                   Senha
                 </label>
@@ -317,7 +317,7 @@ export function UsuariosPage() {
               <div>
                 <label
                   htmlFor="usuario-papel"
-                  className="block text-sm font-medium text-ink-2 mb-1.5"
+                  className="block text-body font-medium text-ink-2 mb-1.5"
                 >
                   Papel
                 </label>
@@ -337,9 +337,9 @@ export function UsuariosPage() {
             </div>
 
             <div>
-              <p className="block text-sm font-medium text-ink-2 mb-1.5">Modo de permissão</p>
+              <p className="block text-body font-medium text-ink-2 mb-1.5">Modo de permissão</p>
               <div className="flex items-center gap-4 mb-3">
-                <label className="flex items-center gap-1.5 text-sm text-ink-2">
+                <label className="flex items-center gap-1.5 text-body text-ink-2">
                   <input
                     type="radio"
                     name="modo-criacao"
@@ -348,7 +348,7 @@ export function UsuariosPage() {
                   />
                   Individual
                 </label>
-                <label className="flex items-center gap-1.5 text-sm text-ink-2">
+                <label className="flex items-center gap-1.5 text-body text-ink-2">
                   <input
                     type="radio"
                     name="modo-criacao"
@@ -410,7 +410,7 @@ export function UsuariosPage() {
         >
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-1.5 text-sm text-ink-2">
+              <label className="flex items-center gap-1.5 text-body text-ink-2">
                 <input
                   type="radio"
                   name="modo-edicao"
@@ -419,7 +419,7 @@ export function UsuariosPage() {
                 />
                 Individual
               </label>
-              <label className="flex items-center gap-1.5 text-sm text-ink-2">
+              <label className="flex items-center gap-1.5 text-body text-ink-2">
                 <input
                   type="radio"
                   name="modo-edicao"

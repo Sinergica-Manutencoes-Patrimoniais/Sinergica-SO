@@ -282,12 +282,12 @@ export function NovaOrdemServicoModal({
     >
       <form onSubmit={submit} className="flex flex-col gap-5">
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}
         {!carregando && semClientes && (
-          <div className="rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
+          <div className="rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-body text-warning">
             Nenhum cliente disponível no PCM. Conclua o import Auvo antes de abrir OS, inspeções ou
             laudos para um condomínio.
           </div>
@@ -422,8 +422,8 @@ export function NovaOrdemServicoModal({
 
           <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-5 gap-3 rounded-lg border border-line bg-paper p-3">
             <div className="sm:col-span-1">
-              <p className="text-xs font-semibold text-ink-2">GUTD</p>
-              <p className="text-xs text-ink-3 mt-0.5">
+              <p className="text-caption font-semibold text-ink-2">GUTD</p>
+              <p className="text-caption text-ink-3 mt-0.5">
                 Score {score.toFixed(1)} · {labelPrioridade(prioridadeSugerida)}
               </p>
             </div>
@@ -451,7 +451,7 @@ export function NovaOrdemServicoModal({
           {!editando && (
             <Field label="Tipo de tarefa *">
               {semTiposTarefa ? (
-                <p className="text-xs text-ink-3">
+                <p className="text-caption text-ink-3">
                   Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa
                   antes de abrir uma OS.
                 </p>
@@ -534,7 +534,7 @@ function Field({
 }) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      <span className="text-xs font-semibold text-ink-2">{label}</span>
+      <span className="text-caption font-semibold text-ink-2">{label}</span>
       {children}
     </div>
   );

@@ -116,12 +116,12 @@ export function ImportOfxPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -131,11 +131,11 @@ export function ImportOfxPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={() => carregar(contaSelecionada)}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -149,15 +149,15 @@ export function ImportOfxPage() {
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-        <h3 className="text-base font-semibold text-ink">Importar extrato (OFX)</h3>
-        <p className="mt-0.5 text-sm text-ink-3">
+        <h3 className="text-heading font-semibold text-ink">Importar extrato (OFX)</h3>
+        <p className="mt-0.5 text-body text-ink-3">
           Upload → prévia → dedupe por FITID → classificação sugerida → conciliar ou criar
           lançamento.
         </p>
 
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Conta *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Conta *</span>
             <select
               value={contaSelecionada}
               onChange={(e) => setContaSelecionada(e.target.value)}
@@ -172,7 +172,7 @@ export function ImportOfxPage() {
             </select>
           </label>
           {temEscrita && (
-            <label className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft">
+            <label className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md border border-line px-3 text-body font-semibold text-ink-2 hover:bg-line-soft">
               <Upload className="h-4 w-4" />
               Escolher arquivo .ofx
               <input
@@ -188,18 +188,18 @@ export function ImportOfxPage() {
         </div>
 
         {erroImport && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroImport}
           </div>
         )}
-        {mensagemImport && <p className="mt-3 text-sm text-ink-3">{mensagemImport}</p>}
+        {mensagemImport && <p className="mt-3 text-body text-ink-3">{mensagemImport}</p>}
 
         {previa && (
           <div className="mt-3 rounded-md border border-line p-3">
-            <p className="text-sm font-semibold text-ink">
+            <p className="text-body font-semibold text-ink">
               Prévia — {previa.length} transação(ões) lida(s)
             </p>
-            <ul className="mt-2 flex max-h-48 flex-col gap-1 overflow-y-auto text-xs text-ink-3">
+            <ul className="mt-2 flex max-h-48 flex-col gap-1 overflow-y-auto text-caption text-ink-3">
               {previa.map((t) => (
                 <li key={t.fitid} className="flex justify-between gap-2">
                   <span className="truncate">
@@ -216,7 +216,7 @@ export function ImportOfxPage() {
                 type="button"
                 onClick={confirmarImportacao}
                 disabled={importando}
-                className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                className="mt-3 inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
               >
                 {importando ? "Importando…" : "Confirmar importação"}
               </button>
@@ -226,9 +226,9 @@ export function ImportOfxPage() {
       </section>
 
       <div className="rounded-lg border border-line bg-card p-4">
-        <h4 className="mb-3 text-sm font-semibold text-ink">Pendentes ({pendentes.length})</h4>
+        <h4 className="mb-3 text-body font-semibold text-ink">Pendentes ({pendentes.length})</h4>
         {pendentes.length === 0 ? (
-          <p className="py-6 text-center text-sm text-ink-3">Nenhuma transação pendente.</p>
+          <p className="py-6 text-center text-body text-ink-3">Nenhuma transação pendente.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {pendentes.map((transacao) => (
@@ -323,19 +323,19 @@ function LinhaPendente({
     <div className="rounded-md border border-line p-3">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm text-ink-2">{transacao.memo ?? "Sem memo"}</p>
-          <p className="text-xs text-ink-3">
+          <p className="truncate text-body text-ink-2">{transacao.memo ?? "Sem memo"}</p>
+          <p className="text-caption text-ink-3">
             {new Date(transacao.data).toLocaleDateString("pt-BR")} · {transacao.tipoOfx ?? "—"}
           </p>
         </div>
         <span
-          className={`text-sm font-semibold ${transacao.valorCentavos < 0 ? "text-danger" : "text-success"}`}
+          className={`text-body font-semibold ${transacao.valorCentavos < 0 ? "text-danger" : "text-success"}`}
         >
           R$ {centavosParaReais(transacao.valorCentavos)}
         </span>
       </div>
 
-      {erro && <p className="mt-2 text-xs text-danger">{erro}</p>}
+      {erro && <p className="mt-2 text-caption text-danger">{erro}</p>}
 
       {temEscrita && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -344,7 +344,7 @@ function LinhaPendente({
               type="button"
               onClick={() => candidatos[0] && conciliar(candidatos[0].id)}
               disabled={processando}
-              className="inline-flex items-center gap-1 rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-md border border-line px-3 py-1.5 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
             >
               <Link2 className="h-3.5 w-3.5" />
               Conciliar com previsto ({candidatos.length})
@@ -353,7 +353,7 @@ function LinhaPendente({
           <select
             value={categoriaId}
             onChange={(e) => setCategoriaId(e.target.value)}
-            className="input h-8 text-xs"
+            className="input h-8 text-caption"
           >
             <option value="">Categoria…</option>
             {categorias.map((c) => (
@@ -366,7 +366,7 @@ function LinhaPendente({
             type="button"
             onClick={criarLancamento}
             disabled={processando || !categoriaId}
-            className="inline-flex items-center gap-1 rounded-md bg-orange px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-md bg-orange px-3 py-1.5 text-caption font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
             Criar lançamento
@@ -375,7 +375,7 @@ function LinhaPendente({
             type="button"
             onClick={onIgnorar}
             disabled={processando}
-            className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold text-ink-3 hover:bg-line-soft disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-caption font-semibold text-ink-3 hover:bg-line-soft disabled:opacity-50"
           >
             <EyeOff className="h-3.5 w-3.5" />
             Ignorar

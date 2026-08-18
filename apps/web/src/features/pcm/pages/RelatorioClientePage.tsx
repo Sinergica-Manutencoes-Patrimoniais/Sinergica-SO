@@ -112,8 +112,8 @@ export function RelatorioClientePage() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="text-base font-semibold text-ink">Relatório do Cliente</h2>
-        <p className="text-sm text-ink-3">
+        <h2 className="text-heading font-semibold text-ink">Relatório do Cliente</h2>
+        <p className="text-body text-ink-3">
           Apresentação de atividades e próximos passos para o condomínio
         </p>
       </div>
@@ -172,19 +172,23 @@ export function RelatorioClientePage() {
         </button>
       </div>
       {erro ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-danger">{erro}</p>
+        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-body text-danger">
+          {erro}
+        </p>
       ) : null}
-      {carregando ? <p className="text-sm text-ink-3">Carregando…</p> : null}
+      {carregando ? <p className="text-body text-ink-3">Carregando…</p> : null}
       {relatorio ? (
         <article className="rounded-lg border border-line bg-card p-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-orange">Sinérgica</p>
+          <p className="text-caption font-semibold uppercase tracking-widest text-orange">
+            Sinérgica
+          </p>
           <h3 className="mt-2 text-2xl font-semibold text-ink">Relatório de Atividades</h3>
           <p className="mt-1 text-ink-2">
             {relatorio.clienteNome} · {relatorio.inicio} a {relatorio.fim}
           </p>
           <section className="mt-6">
             <h4 className="font-semibold text-ink">Resumo executivo</h4>
-            <p className="mt-2 text-sm text-ink-2">
+            <p className="mt-2 text-body text-ink-2">
               Foram realizados {relatorio.atividades.length} atendimento(s), incluindo{" "}
               {relatorio.preventivasRealizadas} preventiva(s).
             </p>
@@ -194,7 +198,7 @@ export function RelatorioClientePage() {
             {relatorio.atividades.length ? (
               <ul className="mt-2 divide-y divide-line">
                 {relatorio.atividades.map((item) => (
-                  <li key={`${item.numero}-${item.data}`} className="py-3 text-sm">
+                  <li key={`${item.numero}-${item.data}`} className="py-3 text-body">
                     <p className="font-medium text-ink">
                       {item.data} · {item.titulo}
                     </p>
@@ -213,7 +217,7 @@ export function RelatorioClientePage() {
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 text-sm text-ink-3">Sem atividades concluídas no período.</p>
+              <p className="mt-2 text-body text-ink-3">Sem atividades concluídas no período.</p>
             )}
           </section>
           <section className="mt-6">
@@ -221,13 +225,13 @@ export function RelatorioClientePage() {
             {relatorio.cronograma.length ? (
               <ul className="mt-2 divide-y divide-line">
                 {relatorio.cronograma.map((item) => (
-                  <li key={`${item.numero}-${item.data}`} className="py-3 text-sm text-ink">
+                  <li key={`${item.numero}-${item.data}`} className="py-3 text-body text-ink">
                     {item.data} · {item.titulo}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 text-sm text-ink-3">
+              <p className="mt-2 text-body text-ink-3">
                 Sem preventivas ou visitas agendadas no momento.
               </p>
             )}

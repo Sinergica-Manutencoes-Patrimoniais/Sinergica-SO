@@ -136,26 +136,28 @@ export function LaudosSpdaPage() {
   }
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="text-sm text-ink-3 mt-1">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="text-body text-ink-3 mt-1">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando laudos…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando laudos…</div>;
   }
 
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="text-sm text-ink-3 mt-1">{estado.mensagem}</p>
+        <p className="text-body text-ink-3 mt-1">{estado.mensagem}</p>
         <Button variant="ghost" onClick={carregar} className="mt-4 text-orange">
           Tentar novamente
         </Button>
@@ -167,8 +169,8 @@ export function LaudosSpdaPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Laudo SPDA</h2>
-          <p className="text-sm text-ink-3">Vistoria, pontos de medição e conclusão técnica</p>
+          <h2 className="text-heading font-semibold text-ink">Laudo SPDA</h2>
+          <p className="text-body text-ink-3">Vistoria, pontos de medição e conclusão técnica</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="secondary" icon={<RefreshCw className="h-4 w-4" />} onClick={carregar}>
@@ -189,13 +191,13 @@ export function LaudosSpdaPage() {
       </div>
 
       {erroAcao && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erroAcao}
         </div>
       )}
 
       {temEscrita && semClientes && (
-        <div className="rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
+        <div className="rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-body text-warning">
           Nenhum cliente disponível no PCM. Execute o import Auvo para liberar laudos SPDA
           vinculados a condomínios reais.
         </div>
@@ -204,12 +206,14 @@ export function LaudosSpdaPage() {
       <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-4">
         <section className="bg-card rounded-xl border border-line overflow-hidden">
           <div className="px-4 py-3 border-b border-line-soft">
-            <h3 className="text-sm font-semibold text-ink">Laudos</h3>
-            <p className="text-xs text-ink-3 mt-0.5">{estado.laudos.length} registros recentes</p>
+            <h3 className="text-body font-semibold text-ink">Laudos</h3>
+            <p className="text-caption text-ink-3 mt-0.5">
+              {estado.laudos.length} registros recentes
+            </p>
           </div>
           <div className="divide-y divide-line-soft">
             {estado.laudos.length === 0 ? (
-              <div className="px-5 py-8 text-sm text-ink-3">Nenhum laudo SPDA cadastrado.</div>
+              <div className="px-5 py-8 text-body text-ink-3">Nenhum laudo SPDA cadastrado.</div>
             ) : (
               estado.laudos.map((laudo) => (
                 <button
@@ -222,8 +226,8 @@ export function LaudosSpdaPage() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-ink truncate">{laudo.numero}</p>
-                      <p className="text-xs text-ink-3 truncate">{laudo.clienteNome}</p>
+                      <p className="text-body font-semibold text-ink truncate">{laudo.numero}</p>
+                      <p className="text-caption text-ink-3 truncate">{laudo.clienteNome}</p>
                     </div>
                     <span
                       className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-semibold ${statusColor(laudo.status)}`}
@@ -231,7 +235,7 @@ export function LaudosSpdaPage() {
                       {LAUDO_STATUS_LABEL[laudo.status]}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-ink-3">
+                  <p className="mt-2 text-caption text-ink-3">
                     {laudo.dataVistoria}
                     {laudo.nivelProtecao ? ` · Nível ${laudo.nivelProtecao}` : ""}
                   </p>
@@ -247,9 +251,11 @@ export function LaudosSpdaPage() {
               <div className="px-4 py-3 border-b border-line-soft">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs text-ink-3">{laudoSelecionado.clienteNome}</p>
-                    <h3 className="text-base font-semibold text-ink">{laudoSelecionado.numero}</h3>
-                    <p className="text-xs text-ink-3 mt-1">
+                    <p className="text-caption text-ink-3">{laudoSelecionado.clienteNome}</p>
+                    <h3 className="text-heading font-semibold text-ink">
+                      {laudoSelecionado.numero}
+                    </h3>
+                    <p className="text-caption text-ink-3 mt-1">
                       {laudoSelecionado.dataVistoria}
                       {laudoSelecionado.responsavelTecnico
                         ? ` · ${laudoSelecionado.responsavelTecnico}`
@@ -259,14 +265,14 @@ export function LaudosSpdaPage() {
                   <div className="rounded-lg border border-line bg-paper px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-orange" />
-                      <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+                      <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
                         Pontos medidos
                       </span>
                     </div>
-                    <p className="mt-1 text-xl font-bold text-ink">{pontos.length}</p>
+                    <p className="mt-1 text-title font-bold text-ink">{pontos.length}</p>
                   </div>
                 </div>
-                <p className="mt-4 rounded-md bg-paper px-3 py-2 text-sm text-ink-2">
+                <p className="mt-4 rounded-md bg-paper px-3 py-2 text-body text-ink-2">
                   {laudoSelecionado.conclusao || conclusaoSugerida}
                 </p>
               </div>
@@ -318,7 +324,7 @@ export function LaudosSpdaPage() {
                       type="button"
                       onClick={onCriarPonto}
                       disabled={salvando}
-                      className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
                     >
                       <Plus className="h-4 w-4" />
                       Ponto
@@ -345,16 +351,16 @@ export function LaudosSpdaPage() {
 
               <div className="divide-y divide-line-soft">
                 {carregandoPontos ? (
-                  <div className="px-5 py-8 text-sm text-ink-3">Carregando pontos…</div>
+                  <div className="px-5 py-8 text-body text-ink-3">Carregando pontos…</div>
                 ) : pontos.length === 0 ? (
-                  <div className="px-5 py-8 text-sm text-ink-3">
+                  <div className="px-5 py-8 text-body text-ink-3">
                     Nenhum ponto de medição registrado.
                   </div>
                 ) : (
                   pontos.map((ponto) => (
                     <div key={ponto.id} className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-bold text-ink tabular-nums">
+                        <span className="text-body font-bold text-ink tabular-nums">
                           Ponto {ponto.numeroPonto}
                         </span>
                         <span
@@ -368,14 +374,14 @@ export function LaudosSpdaPage() {
                           </span>
                         )}
                       </div>
-                      <p className="mt-2 text-sm font-medium text-ink">{ponto.localizacao}</p>
-                      <p className="mt-1 text-xs text-ink-3">{ponto.observacoes || "—"}</p>
+                      <p className="mt-2 text-body font-medium text-ink">{ponto.localizacao}</p>
+                      <p className="mt-1 text-caption text-ink-3">{ponto.observacoes || "—"}</p>
                       {ponto.fotoUrl && (
                         <a
                           href={ponto.fotoUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-2 inline-flex text-xs font-semibold text-orange hover:text-orange-deep"
+                          className="mt-2 inline-flex text-caption font-semibold text-orange hover:text-orange-deep"
                         >
                           Abrir foto/referência
                         </a>
@@ -386,7 +392,7 @@ export function LaudosSpdaPage() {
               </div>
             </div>
           ) : (
-            <div className="p-8 text-sm text-ink-3">Selecione ou crie um laudo SPDA.</div>
+            <div className="p-8 text-body text-ink-3">Selecione ou crie um laudo SPDA.</div>
           )}
         </section>
       </div>

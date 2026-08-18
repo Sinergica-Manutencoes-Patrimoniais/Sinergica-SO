@@ -85,15 +85,15 @@ function ConfiguracaoEvolution({ temEscrita }: { temEscrita: boolean }) {
 
   return (
     <section className="rounded-xl border border-line bg-card p-4">
-      <h3 className="text-sm font-semibold text-ink">API Evolution</h3>
-      <p className="mt-1 text-xs text-ink-3">
+      <h3 className="text-body font-semibold text-ink">API Evolution</h3>
+      <p className="mt-1 text-caption text-ink-3">
         URL e chave são usadas para criar e administrar instâncias. A chave vai ao Vault e nunca
         volta para esta tela.
       </p>
-      {erro ? <p className="mt-3 text-sm text-danger">{erro}</p> : null}
+      {erro ? <p className="mt-3 text-body text-danger">{erro}</p> : null}
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">URL de conexão</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">URL de conexão</span>
           <input
             className="input w-full"
             value={url}
@@ -103,7 +103,7 @@ function ConfiguracaoEvolution({ temEscrita }: { temEscrita: boolean }) {
           />
         </label>
         <label className="block">
-          <span className="mb-1 flex items-center gap-1 text-xs font-semibold text-ink-3">
+          <span className="mb-1 flex items-center gap-1 text-caption font-semibold text-ink-3">
             <KeyRound className="h-3.5 w-3.5" />
             Chave {integracao?.temSegredo ? "(substituir)" : ""}
           </span>
@@ -126,15 +126,15 @@ function ConfiguracaoEvolution({ temEscrita }: { temEscrita: boolean }) {
         {salvando ? "Salvando…" : "Salvar API"}
       </button>
       <div className="mt-4 border-t border-line-soft pt-3">
-        <p className="text-xs font-semibold text-ink-3">Webhook do SO</p>
+        <p className="text-caption font-semibold text-ink-3">Webhook do SO</p>
         <div className="mt-1 flex flex-wrap items-center gap-2">
-          <code className="break-all rounded bg-paper px-2 py-1 text-xs text-ink">
+          <code className="break-all rounded bg-paper px-2 py-1 text-caption text-ink">
             {webhookUrl}
           </code>
           <button
             type="button"
             onClick={() => void copiarWebhook()}
-            className="btn-secondary text-xs"
+            className="btn-secondary text-caption"
           >
             <Copy className="h-3.5 w-3.5" />
             Copiar
@@ -195,8 +195,8 @@ export function EvolutionTab({
       <ConfiguracaoEvolution temEscrita={temEscrita} />
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink-2">Conexões Evolution</h2>
-          <p className="text-sm text-ink-3">
+          <h2 className="text-heading font-semibold text-ink-2">Conexões Evolution</h2>
+          <p className="text-body text-ink-3">
             Crie a instância, leia o QR no WhatsApp e acompanhe a conexão real.
           </p>
         </div>
@@ -210,7 +210,7 @@ export function EvolutionTab({
               })
             }
             disabled={processando !== null}
-            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-body font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
           >
             <RefreshCw className="h-4 w-4" /> Atualizar status
           </button>
@@ -218,7 +218,7 @@ export function EvolutionTab({
             <button
               type="button"
               onClick={() => setMostrarForm((valor) => !valor)}
-              className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+              className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-body font-semibold text-white hover:bg-navy-deep"
             >
               <Plus className="h-4 w-4" /> Nova instância
             </button>
@@ -227,7 +227,7 @@ export function EvolutionTab({
       </div>
 
       {erro && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
           {erro}
         </div>
       )}
@@ -238,7 +238,7 @@ export function EvolutionTab({
             value={form.label}
             onChange={(event) => setForm((atual) => ({ ...atual, label: event.target.value }))}
             placeholder="Nome, ex.: Atendimento"
-            className="rounded-md border border-line p-2 text-sm"
+            className="rounded-md border border-line p-2 text-body"
           />
           <input
             value={form.instanceName}
@@ -246,13 +246,13 @@ export function EvolutionTab({
               setForm((atual) => ({ ...atual, instanceName: event.target.value }))
             }
             placeholder="Instance ID, ex.: sinergica_atendimento"
-            className="rounded-md border border-line p-2 text-sm"
+            className="rounded-md border border-line p-2 text-body"
           />
           <button
             type="button"
             onClick={criar}
             disabled={processando !== null}
-            className="w-fit rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="w-fit rounded-md bg-navy px-4 py-2 text-body font-semibold text-white disabled:opacity-60"
           >
             {processando === "nova" ? "Criando…" : "Criar e exibir QR"}
           </button>
@@ -261,16 +261,16 @@ export function EvolutionTab({
 
       {qrCode && (
         <div className="rounded-xl border border-line bg-card p-4 text-center">
-          <p className="mb-3 text-sm font-semibold text-ink-2">Leia este QR no WhatsApp</p>
+          <p className="mb-3 text-body font-semibold text-ink-2">Leia este QR no WhatsApp</p>
           {qrCode.startsWith("data:image") ? (
             <img src={qrCode} alt="QR Code da instância Evolution" className="mx-auto h-64 w-64" />
           ) : (
-            <pre className="overflow-auto whitespace-pre-wrap break-all text-xs">{qrCode}</pre>
+            <pre className="overflow-auto whitespace-pre-wrap break-all text-caption">{qrCode}</pre>
           )}
           <button
             type="button"
             onClick={() => setQrCode(null)}
-            className="mt-3 text-xs font-semibold text-orange"
+            className="mt-3 text-caption font-semibold text-orange"
           >
             Fechar QR
           </button>
@@ -278,7 +278,7 @@ export function EvolutionTab({
       )}
 
       {instancias.length === 0 ? (
-        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-body text-ink-3">
           Nenhuma instância Evolution cadastrada.
         </div>
       ) : (
@@ -289,8 +289,8 @@ export function EvolutionTab({
               className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
             >
               <div>
-                <p className="text-sm font-medium text-ink-2">{instancia.label}</p>
-                <p className="text-xs text-ink-3">
+                <p className="text-body font-medium text-ink-2">{instancia.label}</p>
+                <p className="text-caption text-ink-3">
                   {instancia.instanceName} · {instancia.numeroVinculado ?? "sem número vinculado"}
                 </p>
                 <p
@@ -302,7 +302,9 @@ export function EvolutionTab({
                     ? "Webhook de mensagens registrado"
                     : "Webhook pendente — reconecte a instância"}
                 </p>
-                {instancia.erro && <p className="mt-1 text-xs text-danger">{instancia.erro}</p>}
+                {instancia.erro && (
+                  <p className="mt-1 text-caption text-danger">{instancia.erro}</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <span
@@ -315,7 +317,7 @@ export function EvolutionTab({
                     type="button"
                     onClick={() => executar(instancia.id, () => onConectar(instancia.id))}
                     disabled={processando !== null}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-orange disabled:opacity-60"
+                    className="inline-flex items-center gap-1 text-caption font-semibold text-orange disabled:opacity-60"
                   >
                     <RefreshCw className="h-3.5 w-3.5" /> Reconectar
                   </button>
@@ -330,7 +332,7 @@ export function EvolutionTab({
                       })
                     }
                     disabled={processando !== null}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-orange disabled:opacity-60"
+                    className="inline-flex items-center gap-1 text-caption font-semibold text-orange disabled:opacity-60"
                   >
                     <RefreshCw className="h-3.5 w-3.5" /> Registrar webhook
                   </button>
@@ -345,7 +347,7 @@ export function EvolutionTab({
                       })
                     }
                     disabled={processando !== null}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-danger disabled:opacity-60"
+                    className="inline-flex items-center gap-1 text-caption font-semibold text-danger disabled:opacity-60"
                   >
                     <Unplug className="h-3.5 w-3.5" /> Desconectar
                   </button>
@@ -356,7 +358,7 @@ export function EvolutionTab({
         </div>
       )}
 
-      <p className="text-xs text-ink-3">
+      <p className="text-caption text-ink-3">
         O vínculo desta instância com uma persona continua na aba Agentes; groupJid e botJid
         continuam na aba Canal.
       </p>

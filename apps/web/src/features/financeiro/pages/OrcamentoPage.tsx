@@ -75,12 +75,12 @@ export function OrcamentoPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -90,7 +90,7 @@ export function OrcamentoPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <Button
           variant="ghost"
           icon={<RefreshCw className="h-4 w-4" />}
@@ -126,7 +126,7 @@ export function OrcamentoPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-ink-3" />
-            <h3 className="text-base font-semibold text-ink">Orçamento — {ano}</h3>
+            <h3 className="text-heading font-semibold text-ink">Orçamento — {ano}</h3>
           </div>
           <label className="block">
             <input
@@ -138,7 +138,7 @@ export function OrcamentoPage() {
           </label>
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -146,10 +146,10 @@ export function OrcamentoPage() {
 
       {temEscrita && (
         <section className="rounded-lg border border-line bg-card p-4">
-          <h3 className="text-sm font-semibold text-ink">Definir meta mensal</h3>
+          <h3 className="text-body font-semibold text-ink">Definir meta mensal</h3>
           <div className="mt-3 flex flex-wrap items-end gap-2">
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria</span>
+              <span className="mb-1 block text-caption font-semibold text-ink-3">Categoria</span>
               <select
                 value={categoriaSelecionada}
                 onChange={(e) => setCategoriaSelecionada(e.target.value)}
@@ -164,7 +164,9 @@ export function OrcamentoPage() {
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">Valor mensal (R$)</span>
+              <span className="mb-1 block text-caption font-semibold text-ink-3">
+                Valor mensal (R$)
+              </span>
               <input
                 value={valorMensal}
                 onChange={(e) => setValorMensal(e.target.value)}
@@ -187,7 +189,9 @@ export function OrcamentoPage() {
       {resumoAnual.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Target className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhum orçamento ou lançamento neste ano ainda.</p>
+          <p className="mt-3 text-body text-ink-3">
+            Nenhum orçamento ou lançamento neste ano ainda.
+          </p>
         </div>
       ) : (
         <DataTable

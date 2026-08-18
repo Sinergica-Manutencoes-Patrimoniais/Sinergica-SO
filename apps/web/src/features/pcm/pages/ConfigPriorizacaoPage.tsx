@@ -42,7 +42,7 @@ export function ConfigPriorizacaoPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Só superadmin configura a priorização.</p>
+        <p className="mt-1 text-body text-ink-3">Só superadmin configura a priorização.</p>
       </div>
     );
   }
@@ -67,37 +67,39 @@ export function ConfigPriorizacaoPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-base font-semibold text-ink">Priorização (GUTD)</h2>
-        <p className="text-sm text-ink-3">
+        <h2 className="text-heading font-semibold text-ink">Priorização (GUTD)</h2>
+        <p className="text-body text-ink-3">
           Peso de cada fator no score do backlog PCM. A soma precisa fechar em 100%. Nunca é gravado
           na OS — recalculado em runtime a cada carregamento do backlog.
         </p>
       </div>
 
       {erro && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erro}
         </div>
       )}
       {sucesso && (
-        <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
+        <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-body text-success">
           Pesos salvos.
         </div>
       )}
 
       {carregando ? (
-        <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>
+        <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
       ) : (
         <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center gap-2 border-b border-line-soft pb-3">
             <SlidersHorizontal className="h-4 w-4 text-ink-3" />
-            <h3 className="text-sm font-semibold text-ink">Pesos (%)</h3>
+            <h3 className="text-body font-semibold text-ink">Pesos (%)</h3>
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-4">
             {CAMPOS.map((campo) => (
               <label key={campo.key} className="block">
-                <span className="mb-1 block text-xs font-semibold text-ink-3">{campo.label}</span>
+                <span className="mb-1 block text-caption font-semibold text-ink-3">
+                  {campo.label}
+                </span>
                 <input
                   type="number"
                   min={0}
@@ -111,7 +113,7 @@ export function ConfigPriorizacaoPage() {
           </div>
 
           <p
-            className={`mt-3 text-xs font-semibold ${soma === 100 ? "text-ink-3" : "text-danger"}`}
+            className={`mt-3 text-caption font-semibold ${soma === 100 ? "text-ink-3" : "text-danger"}`}
           >
             Soma atual: {soma}% {soma !== 100 && "(precisa somar 100%)"}
           </p>
@@ -120,7 +122,7 @@ export function ConfigPriorizacaoPage() {
             type="button"
             onClick={salvar}
             disabled={salvando || soma !== 100}
-            className="mt-3 h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            className="mt-3 h-9 rounded-md bg-navy px-3 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
           >
             Salvar pesos
           </button>

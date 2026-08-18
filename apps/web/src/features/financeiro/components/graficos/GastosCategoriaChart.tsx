@@ -36,7 +36,7 @@ export function GastosCategoriaChart({ itens }: { itens: GastoCategoriaAgregado[
     <div className="flex flex-col gap-2.5">
       {linhas.map((linha, i) => (
         <div key={linha.categoriaId}>
-          <div className="mb-1 flex items-baseline justify-between text-xs">
+          <div className="mb-1 flex items-baseline justify-between text-caption">
             <span className="font-medium text-ink-2">{linha.nome}</span>
             <span className="text-ink-3">
               R$ {centavosParaReais(linha.totalCentavos)} · {linha.percentual.toFixed(0)}%

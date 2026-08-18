@@ -58,8 +58,8 @@ export function ConfigCanalForm({
   return (
     <section className="rounded-xl border border-line bg-card">
       <div className="border-b border-line-soft px-5 py-4">
-        <h3 className="text-base font-semibold text-ink">Config do Zé por condomínio</h3>
-        <p className="text-sm text-ink-3">
+        <h3 className="text-heading font-semibold text-ink">Config do Zé por condomínio</h3>
+        <p className="text-body text-ink-3">
           Instância do WhatsApp (Evolution) e modo de operação do Agente Zé para cada cliente
         </p>
       </div>
@@ -72,7 +72,9 @@ export function ConfigCanalForm({
         }}
       >
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">Cliente</span>
+          <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+            Cliente
+          </span>
           <select
             className="input mt-1"
             value={clienteSelecionadoId ?? ""}
@@ -90,7 +92,7 @@ export function ConfigCanalForm({
         {clienteSelecionadoId && !carregandoConfig && (
           <>
             <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+              <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
                 Modo
               </span>
               <select
@@ -108,7 +110,7 @@ export function ConfigCanalForm({
             </label>
 
             <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+              <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
                 Group JID (WhatsApp)
               </span>
               <input
@@ -121,7 +123,7 @@ export function ConfigCanalForm({
             </label>
 
             <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+              <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
                 Bot JID (WhatsApp)
               </span>
               <input
@@ -134,7 +136,7 @@ export function ConfigCanalForm({
             </label>
 
             {erro && (
-              <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+              <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
                 {erro}
               </div>
             )}
@@ -144,12 +146,12 @@ export function ConfigCanalForm({
                 <button
                   type="submit"
                   disabled={salvando}
-                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                  className="rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
                 >
                   {salvando ? "Salvando…" : "Salvar"}
                 </button>
                 {salvo && (
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-success">
+                  <span className="inline-flex items-center gap-1 text-body font-semibold text-success">
                     <Check className="h-4 w-4" />
                     Salvo
                   </span>
@@ -160,7 +162,7 @@ export function ConfigCanalForm({
         )}
 
         {clienteSelecionadoId && carregandoConfig && (
-          <p className="text-sm text-ink-3">Carregando config…</p>
+          <p className="text-body text-ink-3">Carregando config…</p>
         )}
       </form>
     </section>

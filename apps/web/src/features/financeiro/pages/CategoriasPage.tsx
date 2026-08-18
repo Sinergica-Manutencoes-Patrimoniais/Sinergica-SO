@@ -74,12 +74,12 @@ export function CategoriasPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -89,7 +89,7 @@ export function CategoriasPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <Button
           variant="ghost"
           size="sm"
@@ -112,8 +112,8 @@ export function CategoriasPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Plano de contas</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h3 className="text-heading font-semibold text-ink">Plano de contas</h3>
+            <p className="mt-0.5 text-body text-ink-3">
               Categorias de entrada e saída, até 2 níveis. Editável — o seed é só o ponto de
               partida.
             </p>
@@ -189,9 +189,9 @@ function ArvoreCategorias({
 }) {
   return (
     <div className="rounded-lg border border-line bg-card p-4">
-      <h4 className="text-sm font-semibold text-ink">{titulo}</h4>
+      <h4 className="text-body font-semibold text-ink">{titulo}</h4>
       {raizes.length === 0 ? (
-        <p className="mt-3 text-sm text-ink-3">Nenhuma categoria de {titulo.toLowerCase()}.</p>
+        <p className="mt-3 text-body text-ink-3">Nenhuma categoria de {titulo.toLowerCase()}.</p>
       ) : (
         <ul className="mt-3 flex flex-col gap-1">
           {raizes.map((raiz) => (
@@ -237,7 +237,7 @@ function LinhaCategoria({
 }) {
   return (
     <div className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-line-soft">
-      <span className={`text-sm ${categoria.ativo ? "text-ink" : "text-ink-3 line-through"}`}>
+      <span className={`text-body ${categoria.ativo ? "text-ink" : "text-ink-3 line-through"}`}>
         {categoria.nome}
       </span>
       {temEscrita && (
@@ -308,11 +308,11 @@ function CategoriaModal({
     >
       <div className="grid grid-cols-1 gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
           <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo *</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo *</span>
           <select
             value={tipo}
             onChange={(e) => {
@@ -326,7 +326,7 @@ function CategoriaModal({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-3">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">
             Categoria pai (opcional — máx. 2 níveis)
           </span>
           <select
@@ -343,7 +343,7 @@ function CategoriaModal({
           </select>
         </label>
         {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}
           </div>
         )}

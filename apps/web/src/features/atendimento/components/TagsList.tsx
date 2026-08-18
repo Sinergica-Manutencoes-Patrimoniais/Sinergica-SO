@@ -57,8 +57,8 @@ export function TagsList({
     <section className="rounded-xl border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
         <div>
-          <h3 className="text-base font-semibold text-ink">Tags de conversa</h3>
-          <p className="text-sm text-ink-3">Catálogo usado para classificar conversas no Inbox</p>
+          <h3 className="text-heading font-semibold text-ink">Tags de conversa</h3>
+          <p className="text-body text-ink-3">Catálogo usado para classificar conversas no Inbox</p>
         </div>
         {temEscrita && (
           <Button
@@ -72,14 +72,14 @@ export function TagsList({
       </div>
 
       {erro && !modal && (
-        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erro}
         </div>
       )}
 
       <div className="divide-y divide-line-soft">
         {tags.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-ink-3">Nenhuma tag cadastrada.</div>
+          <div className="px-5 py-8 text-center text-body text-ink-3">Nenhuma tag cadastrada.</div>
         ) : (
           tags.map((tag) => (
             <div
@@ -137,7 +137,9 @@ export function TagsList({
           }}
         >
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">Nome</span>
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+              Nome
+            </span>
             <input
               className="input mt-1"
               value={nome}
@@ -145,7 +147,7 @@ export function TagsList({
             />
           </label>
           {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
               {erro}
             </div>
           )}
