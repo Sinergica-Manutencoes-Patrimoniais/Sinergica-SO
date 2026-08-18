@@ -472,9 +472,9 @@ export function PropostaEditorPage({
 
       <Card>
         <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
-          <h2 className="flex-1 font-semibold text-ink">
+          <h1 className="flex-1 font-semibold text-ink">
             {TIPO_LABEL[propostaSelecionada.tipo]} · v{propostaSelecionada.versaoAtual}
-          </h2>
+          </h1>
           <Badge tone={STATUS_TOM[propostaSelecionada.status]}>
             {STATUS_LABEL[propostaSelecionada.status]}
           </Badge>

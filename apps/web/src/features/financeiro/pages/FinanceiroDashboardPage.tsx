@@ -115,7 +115,7 @@ export function FinanceiroDashboardPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-heading font-semibold text-ink">Dashboard Financeiro</h3>
+            <h1 className="text-heading font-semibold text-ink">Dashboard Financeiro</h1>
             <p className="mt-0.5 text-body text-ink-3">Posição de caixa e resultado do mês.</p>
           </div>
           <button

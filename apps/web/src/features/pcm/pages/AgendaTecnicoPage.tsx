@@ -97,7 +97,7 @@ export function AgendaTecnicoPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">Agenda do Técnico</h2>
+          <h1 className="text-heading font-semibold text-ink">Agenda do Técnico</h1>
           <p className="text-body text-ink-3">
             Cronograma semanal — em que cliente cada técnico estará cada dia
           </p>

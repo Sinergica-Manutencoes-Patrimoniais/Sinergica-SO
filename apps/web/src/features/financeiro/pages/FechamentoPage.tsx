@@ -118,7 +118,7 @@ export function FechamentoPage() {
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-        <h3 className="text-heading font-semibold text-ink">Fechamento mensal</h3>
+        <h1 className="text-heading font-semibold text-ink">Fechamento mensal</h1>
         <p className="mt-0.5 text-body text-ink-3">
           Mês fechado trava novos lançamentos/edições naquela competência. Reabertura exige motivo e
           fica auditada.

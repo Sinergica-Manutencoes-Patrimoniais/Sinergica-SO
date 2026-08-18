@@ -160,7 +160,7 @@ export function FuncionariosPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-heading font-semibold text-ink">Funcionários</h3>
+            <h1 className="text-heading font-semibold text-ink">Funcionários</h1>
             <p className="mt-0.5 text-body text-ink-3">
               Técnicos e gestores sincronizados com usuários Auvo
             </p>

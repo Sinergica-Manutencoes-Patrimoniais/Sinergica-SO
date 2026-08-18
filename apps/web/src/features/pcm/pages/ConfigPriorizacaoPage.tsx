@@ -67,7 +67,7 @@ export function ConfigPriorizacaoPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-heading font-semibold text-ink">Priorização (GUTD)</h2>
+        <h1 className="text-heading font-semibold text-ink">Priorização (GUTD)</h1>
         <p className="text-body text-ink-3">
           Peso de cada fator no score do backlog PCM. A soma precisa fechar em 100%. Nunca é gravado
           na OS — recalculado em runtime a cada carregamento do backlog.

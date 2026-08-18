@@ -155,7 +155,7 @@ export function CockpitFinanceiroPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-center gap-2">
           <Gauge className="h-4 w-4 text-ink-3" />
-          <h3 className="text-heading font-semibold text-ink">Cockpit financeiro</h3>
+          <h1 className="text-heading font-semibold text-ink">Cockpit financeiro</h1>
         </div>
         <p className="mt-0.5 text-body text-ink-3">
           Saúde financeira — visão executiva, exclusiva do dono.

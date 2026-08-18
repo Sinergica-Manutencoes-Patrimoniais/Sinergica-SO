@@ -283,7 +283,7 @@ export function FerramentasPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-heading font-semibold text-ink">Ferramentas</h3>
+            <h1 className="text-heading font-semibold text-ink">Ferramentas</h1>
             <p className="mt-0.5 text-body text-ink-3">
               Produtos Auvo tratados como ferramentas e kits operacionais
             </p>

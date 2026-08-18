@@ -457,7 +457,7 @@ export function OrdensServicoPage({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">Operação</h2>
+          <h1 className="text-heading font-semibold text-ink">Operação</h1>
           <p className="text-body text-ink-3">
             Chamados e OS — do intake à execução (mesmo item, em fases), com sync Auvo
           </p>

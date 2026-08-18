@@ -89,7 +89,7 @@ export function DashboardComercialPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">Dashboard comercial</h2>
+          <h1 className="text-heading font-semibold text-ink">Dashboard comercial</h1>
           <p className="text-body text-ink-3">
             O funil está funcionando? Conversão, ciclo, win/loss.
           </p>

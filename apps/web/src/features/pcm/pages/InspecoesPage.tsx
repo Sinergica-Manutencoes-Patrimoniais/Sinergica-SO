@@ -598,7 +598,7 @@ export function InspecoesPage({
       <section className="rounded-xl border border-line bg-card p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-heading font-semibold text-ink">Relatórios de Inspeção</h2>
+            <h1 className="text-heading font-semibold text-ink">Relatórios de Inspeção</h1>
             <p className="mt-1 text-body text-ink-3">Vistoria predial mobile com análise por IA</p>
           </div>
           <button

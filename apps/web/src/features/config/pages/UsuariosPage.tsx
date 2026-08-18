@@ -210,7 +210,7 @@ export function UsuariosPage() {
     <div className="page-stack">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Usuários</h2>
+          <h1 className="page-title">Usuários</h1>
           <p className="page-subtitle">Contas com acesso ao Sinérgica SO.</p>
         </div>
         <Button variant="accent" onClick={abrirCriacao}>

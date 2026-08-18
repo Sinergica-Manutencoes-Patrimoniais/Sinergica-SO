@@ -91,7 +91,7 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">Relatório do Dia</h2>
+          <h1 className="text-heading font-semibold text-ink">Relatório do Dia</h1>
           <p className="text-body text-ink-3">Resumo gerencial da operação, por data</p>
         </div>
         <div className="flex flex-wrap gap-2">

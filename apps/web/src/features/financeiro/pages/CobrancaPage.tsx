@@ -126,7 +126,7 @@ export function CobrancaPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-heading font-semibold text-ink">Régua de cobrança</h3>
+            <h1 className="text-heading font-semibold text-ink">Régua de cobrança</h1>
             <p className="mt-0.5 text-body text-ink-3">
               Lembretes automáticos de vencimento — um job diário dispara cada ponto ativo
               (WhatsApp/e-mail).

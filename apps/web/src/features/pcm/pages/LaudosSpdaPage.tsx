@@ -169,7 +169,7 @@ export function LaudosSpdaPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">Laudo SPDA</h2>
+          <h1 className="text-heading font-semibold text-ink">Laudo SPDA</h1>
           <p className="text-body text-ink-3">Vistoria, pontos de medição e conclusão técnica</p>
         </div>
         <div className="flex items-center gap-2">

@@ -106,7 +106,7 @@ export function ConfigIaPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-heading font-semibold text-ink">IA</h2>
+        <h1 className="text-heading font-semibold text-ink">IA</h1>
         <p className="text-body text-ink-3">
           Credencial do OpenRouter usada pra gerar título de OS (E01-S81). A chave nunca é exibida
           de novo depois de salva. A mesma credencial classifica relatórios de inspeção importados.

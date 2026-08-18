@@ -92,7 +92,7 @@ export function AtendimentoDashboardPage() {
     <div className="page-stack">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">Atendimento</h2>
+          <h1 className="text-heading font-semibold text-ink">Atendimento</h1>
           <p className="text-body text-ink-3">
             Visão operacional — fila, tempo de resposta, tendência, canais, IA e equipe.
           </p>

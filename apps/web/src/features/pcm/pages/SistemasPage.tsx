@@ -126,7 +126,7 @@ export function SistemasPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-heading font-semibold text-ink">Sistemas</h3>
+            <h1 className="text-heading font-semibold text-ink">Sistemas</h1>
             <p className="mt-0.5 text-body text-ink-3">
               Agrupamento funcional transversal de Itens ("Sistema de Hidrante Torre A") — enfileira
               no Auvo como Equipment (dry-run, escrita ainda desligada)

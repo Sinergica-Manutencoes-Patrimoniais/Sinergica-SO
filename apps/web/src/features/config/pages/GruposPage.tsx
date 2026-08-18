@@ -123,7 +123,7 @@ export function GruposPage() {
     <div className="page-stack">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Grupos</h2>
+          <h1 className="page-title">Grupos</h1>
           <p className="page-subtitle">Conjuntos reutilizáveis de permissão por módulo.</p>
         </div>
         <Button variant="accent" onClick={abrirCriacao}>

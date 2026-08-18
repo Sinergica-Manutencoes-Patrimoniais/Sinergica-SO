@@ -126,7 +126,7 @@ export function BacklogGutPage({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">Backlog GUT</h2>
+          <h1 className="text-heading font-semibold text-ink">Backlog GUT</h1>
           <p className="text-body text-ink-3">
             OS abertas priorizadas por gravidade, urgência e tendência
           </p>

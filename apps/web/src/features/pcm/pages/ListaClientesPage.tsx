@@ -231,7 +231,7 @@ export function ListaClientesPage({
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h3 className="text-heading font-semibold text-ink">Clientes</h3>
+            <h1 className="text-heading font-semibold text-ink">Clientes</h1>
             <p className="mt-0.5 text-body text-ink-3">
               Carteira PCM enriquecida por Auvo, OS, inspeções e ativos de campo
             </p>

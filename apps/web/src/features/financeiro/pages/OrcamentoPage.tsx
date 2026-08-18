@@ -126,7 +126,7 @@ export function OrcamentoPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-ink-3" />
-            <h3 className="text-heading font-semibold text-ink">Orçamento — {ano}</h3>
+            <h1 className="text-heading font-semibold text-ink">Orçamento — {ano}</h1>
           </div>
           <label className="block">
             <input

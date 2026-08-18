@@ -126,7 +126,7 @@ export function MarcacoesClientePage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">Marcações de Cliente</h2>
+          <h1 className="text-heading font-semibold text-ink">Marcações de Cliente</h1>
           <p className="text-body text-ink-3">
             Catálogo de status (nome+cor) — exatamente 1 marcação vigente por cliente
           </p>

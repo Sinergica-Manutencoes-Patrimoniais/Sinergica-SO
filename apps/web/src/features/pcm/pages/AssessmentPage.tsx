@@ -222,7 +222,7 @@ export function AssessmentPage() {
         </Button>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-heading font-semibold text-ink">{selecionado.titulo}</h2>
+            <h1 className="text-heading font-semibold text-ink">{selecionado.titulo}</h1>
             <p className="text-body text-ink-3">
               {selecionado.clienteNome} ·{" "}
               {selecionado.motivoAssessment

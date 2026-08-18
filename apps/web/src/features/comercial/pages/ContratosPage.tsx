@@ -97,7 +97,7 @@ export function ContratosPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-heading font-semibold text-ink">Contratos</h2>
+        <h1 className="text-heading font-semibold text-ink">Contratos</h1>
         <p className="text-body text-ink-3">
           Gerados a partir de propostas aceitas. Ativar cria o plano de faturamento no Financeiro.
         </p>

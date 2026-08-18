@@ -119,7 +119,7 @@ export function RentabilidadePage() {
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-        <h3 className="text-heading font-semibold text-ink">Rentabilidade por cliente</h3>
+        <h1 className="text-heading font-semibold text-ink">Rentabilidade por cliente</h1>
         <p className="mt-0.5 text-body text-ink-3">
           Receita − custo real (horas + despesas), últimos 12 meses.
         </p>

@@ -136,7 +136,7 @@ export function TiposInspecaoPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-heading font-semibold text-ink">Tipos de Inspeção</h3>
+            <h1 className="text-heading font-semibold text-ink">Tipos de Inspeção</h1>
             <p className="mt-0.5 text-body text-ink-3">
               Parametrização ABNT NBR 16747 — cada tipo (predial, elétrica, SPDA…) tem seus
               checklists configuráveis. Só supervisor/superadmin edita.

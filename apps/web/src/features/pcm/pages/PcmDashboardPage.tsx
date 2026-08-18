@@ -271,7 +271,7 @@ export function PcmDashboardPage({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">PCM · Operação</h2>
+          <h1 className="text-heading font-semibold text-ink">PCM · Operação</h1>
           <p className="text-body text-ink-3">
             Dados reais de OS, backlog, inspeções e caches sincronizados do Auvo
           </p>

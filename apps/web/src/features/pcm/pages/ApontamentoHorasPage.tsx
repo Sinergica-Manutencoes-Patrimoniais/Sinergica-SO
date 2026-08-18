@@ -162,7 +162,7 @@ export function ApontamentoHorasPage({
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-        <h3 className="text-heading font-semibold text-ink">Apontamento de Horas</h3>
+        <h1 className="text-heading font-semibold text-ink">Apontamento de Horas</h1>
         <p className="mt-0.5 text-body text-ink-3">
           Horas por OS derivadas do Auvo (check-in/out) — liga tarefa, técnico e cliente
         </p>

@@ -85,7 +85,7 @@ export function RelatorioPlanejamentoPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-heading font-semibold text-ink">Relatório de planejamento</h2>
+        <h1 className="text-heading font-semibold text-ink">Relatório de planejamento</h1>
         <p className="text-body text-ink-3">Agenda e OS planejadas por dia, técnico e cliente</p>
       </div>
       <div className="flex flex-wrap gap-2 rounded-lg border border-line bg-card p-3">

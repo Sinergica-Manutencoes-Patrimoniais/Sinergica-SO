@@ -378,7 +378,7 @@ export function PmocPage() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">PMOC · Climatização</h2>
+          <h1 className="text-heading font-semibold text-ink">PMOC · Climatização</h1>
           <p className="text-body text-ink-3">
             Plano de Manutenção, Operação e Controle com inventário, cronograma e alertas legais
           </p>

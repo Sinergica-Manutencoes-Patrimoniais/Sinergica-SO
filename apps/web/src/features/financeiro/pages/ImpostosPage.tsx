@@ -125,7 +125,7 @@ export function ImpostosPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-center gap-2">
           <Landmark className="h-4 w-4 text-ink-3" />
-          <h3 className="text-heading font-semibold text-ink">Impostos — provisão gerencial</h3>
+          <h1 className="text-heading font-semibold text-ink">Impostos — provisão gerencial</h1>
         </div>
         <p className="mt-0.5 text-body text-ink-3">
           Simples Nacional/DAS por competência — provisão gerencial, não substitui a apuração fiscal

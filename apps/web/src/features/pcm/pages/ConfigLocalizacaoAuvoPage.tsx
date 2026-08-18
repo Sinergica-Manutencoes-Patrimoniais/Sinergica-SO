@@ -69,7 +69,7 @@ export function ConfigLocalizacaoAuvoPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-heading font-semibold text-ink">Localização Auvo</h2>
+        <h1 className="text-heading font-semibold text-ink">Localização Auvo</h1>
         <p className="text-body text-ink-3">
           O Auvo não entende hierarquia — só um campo de texto. Aqui você define como Área, Local e
           Sublocal se concatenam nesse campo (E01-S85).

@@ -140,7 +140,7 @@ export function TiposTarefaPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading font-semibold text-ink">Tipos de Tarefa</h2>
+          <h1 className="text-heading font-semibold text-ink">Tipos de Tarefa</h1>
           <p className="text-body text-ink-3">Catálogo operacional sincronizado com o Auvo</p>
         </div>
         <div className="flex items-center gap-2">

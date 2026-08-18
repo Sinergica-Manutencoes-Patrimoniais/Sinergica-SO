@@ -163,7 +163,7 @@ export function EstruturaClientePage({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-body font-semibold text-ink">Estrutura do cliente</h3>
+          <h1 className="text-body font-semibold text-ink">Estrutura do cliente</h1>
           <p className="mt-0.5 text-caption text-ink-3">
             Áreas e Locais (árvore) — onde os Itens estão instalados
           </p>

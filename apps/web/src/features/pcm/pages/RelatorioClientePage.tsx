@@ -112,7 +112,7 @@ export function RelatorioClientePage() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="text-heading font-semibold text-ink">Relatório do Cliente</h2>
+        <h1 className="text-heading font-semibold text-ink">Relatório do Cliente</h1>
         <p className="text-body text-ink-3">
           Apresentação de atividades e próximos passos para o condomínio
         </p>
