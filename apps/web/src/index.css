@@ -203,6 +203,19 @@
     --shadow-modal: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 16px 32px rgba(0, 0, 0, 0.4);
     --shadow-drawer: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 48px rgba(0, 0, 0, 0.45);
   }
+
+  /* E00-S22 AC-8 — alto contraste do sistema: borda de superfície fica bem mais visível e o
+     texto terciário (ink-3) sobe pro nível do secundário — deixa de existir texto "fraco". */
+  @media (prefers-contrast: more) {
+    :root {
+      --color-line: #8c8f9b;
+      --color-ink-3: var(--color-ink-2);
+    }
+    html[data-theme="dark"] {
+      --color-line: #697285;
+      --color-ink-3: var(--color-ink-2);
+    }
+  }
 }
 
 @layer components {
