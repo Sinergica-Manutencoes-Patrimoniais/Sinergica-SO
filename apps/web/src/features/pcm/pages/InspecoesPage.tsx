@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
 import {
   ArrowLeft,
   Calendar,
@@ -168,6 +169,9 @@ export function InspecoesPage({
   const [filtroSistema, setFiltroSistema] = useState<FiltroSistema>("todos");
   const [modalAtivo, setModalAtivo] = useState<ModalAtivo>(null);
   const [itemEditando, setItemEditando] = useState<InspecaoItem | null>(null);
+  const [itemParaExcluir, setItemParaExcluir] = useState<InspecaoItem | null>(null);
+  const [itemParaAbrirChamado, setItemParaAbrirChamado] = useState<InspecaoItem | null>(null);
+  const [itemParaDescartar, setItemParaDescartar] = useState<InspecaoItem | null>(null);
   // E01-S143: triagem — seleção local (nada gravado até "Gerar backlog"), revisão editável da IA.
   const [selecionadosBacklog, setSelecionadosBacklog] = useState<Set<string>>(new Set());
   const [dadosOs, setDadosOs] = useState<DadosAberturaOs | null>(null);
@@ -307,27 +311,24 @@ export function InspecoesPage({
     }
   }
 
-  async function handleExcluirItem(item: InspecaoItem) {
-    if (!user || !confirm("Excluir este item de inspeção?")) return;
+  async function handleExcluirItem() {
+    if (!user || !itemParaExcluir) return;
+    const item = itemParaExcluir;
     setSalvando(true);
-    setErroAcao(null);
     try {
       await excluirItemInspecao(supabaseQualidadeAdapter, item.id);
       setItens((atuais) => atuais.filter((atual) => atual.id !== item.id));
       void carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir item.");
     } finally {
       setSalvando(false);
     }
   }
 
   // E01-S141 AC-2: mesma função usada na importação em lote, disparada por item individual.
-  async function handleAbrirChamado(item: InspecaoItem) {
-    if (!user || !inspecaoSelecionada) return;
-    if (!confirm("Abrir um Chamado a partir deste item?")) return;
+  async function handleAbrirChamado() {
+    if (!user || !inspecaoSelecionada || !itemParaAbrirChamado) return;
+    const item = itemParaAbrirChamado;
     setSalvando(true);
-    setErroAcao(null);
     try {
       await derivarItemParaChamado(
         supabaseQualidadeAdapter,
@@ -340,8 +341,6 @@ export function InspecoesPage({
       setItens((atuais) =>
         atuais.map((atual) => (atual.id === item.id ? { ...atual, destino: "chamado" } : atual)),
       );
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível abrir o Chamado.");
     } finally {
       setSalvando(false);
     }
@@ -367,22 +366,18 @@ export function InspecoesPage({
   }
 
   // E01-S143 AC-2: descarte é direto — sem IA, sem passar pela revisão em lote.
-  async function handleDescartar(item: InspecaoItem) {
-    if (!confirm("Descartar este item? Ele não vai para o backlog.")) return;
-    setErroAcao(null);
-    try {
-      await descartarItem(supabaseQualidadeAdapter, item.id);
-      setItens((atuais) =>
-        atuais.map((atual) => (atual.id === item.id ? { ...atual, destino: "descarte" } : atual)),
-      );
-      setSelecionadosBacklog((atuais) => {
-        const proximo = new Set(atuais);
-        proximo.delete(item.id);
-        return proximo;
-      });
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível descartar o item.");
-    }
+  async function handleDescartar() {
+    if (!itemParaDescartar) return;
+    const item = itemParaDescartar;
+    await descartarItem(supabaseQualidadeAdapter, item.id);
+    setItens((atuais) =>
+      atuais.map((atual) => (atual.id === item.id ? { ...atual, destino: "descarte" } : atual)),
+    );
+    setSelecionadosBacklog((atuais) => {
+      const proximo = new Set(atuais);
+      proximo.delete(item.id);
+      return proximo;
+    });
   }
 
   function handleToggleSelecaoBacklog(itemId: string) {
@@ -589,9 +584,9 @@ export function InspecoesPage({
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="text-sm text-ink-3 mt-1">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <Button variant="ghost" onClick={carregar} className="mt-4">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -800,11 +795,11 @@ export function InspecoesPage({
                         setItemEditando(item);
                         setModalAtivo("novo-item");
                       }}
-                      onExcluir={() => handleExcluirItem(item)}
-                      onAbrirChamado={() => handleAbrirChamado(item)}
+                      onExcluir={() => setItemParaExcluir(item)}
+                      onAbrirChamado={() => setItemParaAbrirChamado(item)}
                       onMudarResultado={(resultado) => handleMudarResultado(item, resultado)}
                       onToggleSelecaoBacklog={() => handleToggleSelecaoBacklog(item.id)}
-                      onDescartar={() => handleDescartar(item)}
+                      onDescartar={() => setItemParaDescartar(item)}
                     />
                   ))}
                 </div>
@@ -898,6 +893,39 @@ export function InspecoesPage({
           {erroAcao}
         </div>
       )}
+
+      <ConfirmDialog
+        open={itemParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaExcluir(null);
+        }}
+        titulo="Excluir item de inspeção"
+        descricao={`"${itemParaExcluir?.descricao ?? "Este item"}" será removido.`}
+        rotuloConfirmar="Excluir"
+        onConfirmar={handleExcluirItem}
+      />
+
+      <ConfirmDialog
+        open={itemParaAbrirChamado !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaAbrirChamado(null);
+        }}
+        titulo="Abrir Chamado a partir deste item"
+        descricao={itemParaAbrirChamado?.descricao ?? ""}
+        rotuloConfirmar="Abrir Chamado"
+        onConfirmar={handleAbrirChamado}
+      />
+
+      <ConfirmDialog
+        open={itemParaDescartar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaDescartar(null);
+        }}
+        titulo="Descartar item"
+        descricao="Ele não vai para o backlog."
+        rotuloConfirmar="Descartar"
+        onConfirmar={handleDescartar}
+      />
     </div>
   );
 }
@@ -1205,14 +1233,15 @@ function RevisaoBacklogModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Revisar antes de gerar backlog</h3>
-          <button type="button" onClick={onClose} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onClose();
+      }}
+      titulo="Revisar antes de gerar backlog"
+      tamanho="md"
+    >
+      <div className="flex flex-col gap-4">
         {!correlacionou && (
           <div className="mx-4 mt-3 rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-xs text-warning">
             A IA não classificou todos os itens — os que faltaram vieram com 3/3/3/3 e esforço 0
@@ -1305,21 +1334,21 @@ function RevisaoBacklogModal({
             );
           })}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onClose} className="btn-secondary">
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onClose} disabled={confirmando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => onConfirmar(edicoes)}
             disabled={confirmando}
-            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            loading={confirmando}
           >
-            {confirmando ? "Gerando…" : `Gerar backlog (${edicoes.length})`}
-          </button>
+            {`Gerar backlog (${edicoes.length})`}
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -2283,25 +2312,16 @@ function ModalBase({
   size?: "md" | "lg";
 }) {
   return (
-    <div className="modal-backdrop">
-      <div
-        className={`max-h-[92vh] w-full overflow-hidden rounded-xl bg-card shadow-drawer ${
-          size === "lg" ? "max-w-4xl" : "max-w-2xl"
-        }`}
-      >
-        <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
-          <h3 className="text-sm font-semibold text-ink">{title}</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 text-ink-3 hover:bg-line-soft hover:text-ink"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="max-h-[calc(92vh-64px)] overflow-y-auto p-4">{children}</div>
-      </div>
-    </div>
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onClose();
+      }}
+      titulo={title}
+      tamanho={size === "lg" ? "lg" : "md"}
+    >
+      {children}
+    </Modal>
   );
 }
 

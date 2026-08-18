@@ -53,6 +53,7 @@ export function TicketsPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modalAberto, setModalAberto] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [ticketParaArquivar, setTicketParaArquivar] = useState<TicketItem | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -96,15 +97,10 @@ export function TicketsPage() {
     }
   }
 
-  async function arquivar(ticket: TicketItem) {
-    if (!user || !confirm(`Arquivar o ticket "${ticket.titulo}"? Fica só local no PCM.`)) return;
-    try {
-      setErroAcao(null);
-      await arquivarTicket(supabaseTicketsAdapter, { id: ticket.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível arquivar.");
-    }
+  async function arquivar() {
+    if (!user || !ticketParaArquivar) return;
+    await arquivarTicket(supabaseTicketsAdapter, { id: ticketParaArquivar.id, userId: user.id });
+    await carregar();
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
@@ -223,7 +219,7 @@ export function TicketsPage() {
                 <div className="mt-4 flex justify-end">
                   <button
                     type="button"
-                    onClick={() => arquivar(ticket)}
+                    onClick={() => setTicketParaArquivar(ticket)}
                     className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
                   >
                     <Archive className="h-3.5 w-3.5" />
@@ -246,6 +242,17 @@ export function TicketsPage() {
           onSalvar={salvar}
         />
       )}
+
+      <ConfirmDialog
+        open={ticketParaArquivar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setTicketParaArquivar(null);
+        }}
+        titulo={`Arquivar o ticket "${ticketParaArquivar?.titulo}"`}
+        descricao="Fica só local no PCM."
+        rotuloConfirmar="Arquivar"
+        onConfirmar={arquivar}
+      />
     </div>
   );
 }

@@ -55,6 +55,10 @@ const REGRAS = [
     nome: "button",
     padrao: /<button\b(?![^>]*\btype="submit"[^>]*\bform=)[^>]*\bclassName=/g,
     motivo: "use <Button> de @sinergica/ui (botão cru estilizado fora de packages/ui)",
+    // InspecoesPage.tsx: BottomSheet usa um <button className="absolute inset-0"> como área
+    // clicável invisível pra fechar no toque fora — não é um botão visível, `Button` adiciona
+    // padding/chrome que quebraria o full-bleed.
+    ignorar: /pcm\/pages\/InspecoesPage\.tsx$/,
   },
   {
     nome: "radius",

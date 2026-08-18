@@ -1,3 +1,4 @@
+import { ConfirmDialog } from "@sinergica/ui";
 import { Plus, Radio, X } from "lucide-react";
 import { useState } from "react";
 import type { InstanciaAgenteItem } from "../domain/instancias-agente";
@@ -21,6 +22,7 @@ export function InstanciasAgenteList({
   const [personaId, setPersonaId] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [itemParaDesativar, setItemParaDesativar] = useState<InstanciaAgenteItem | null>(null);
 
   const personasAtivas = personas.filter((p) => p.ativo);
 
@@ -39,17 +41,9 @@ export function InstanciasAgenteList({
     }
   }
 
-  async function desativar(item: InstanciaAgenteItem) {
-    if (!window.confirm(`Desligar o agente da instância "${item.instanceId}"?`)) return;
-    setSalvando(true);
-    setErro(null);
-    try {
-      await onDesativar(item.id);
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível desligar a instância.");
-    } finally {
-      setSalvando(false);
-    }
+  async function desativar() {
+    if (!itemParaDesativar) return;
+    await onDesativar(itemParaDesativar.id);
   }
 
   return (
@@ -152,8 +146,7 @@ export function InstanciasAgenteList({
               {temEscrita && item.ativo && (
                 <button
                   type="button"
-                  disabled={salvando}
-                  onClick={() => desativar(item)}
+                  onClick={() => setItemParaDesativar(item)}
                   className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                   title="Desligar"
                 >
@@ -164,6 +157,17 @@ export function InstanciasAgenteList({
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={itemParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaDesativar(null);
+        }}
+        titulo={`Desligar o agente da instância "${itemParaDesativar?.instanceId}"`}
+        descricao="O agente para de responder por essa instância."
+        rotuloConfirmar="Desligar"
+        onConfirmar={desativar}
+      />
     </section>
   );
 }
