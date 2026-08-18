@@ -1,6 +1,6 @@
 // MarcacoesClientePage.tsx — E01-S91 AC-1. Catálogo gerenciável de marcações de status de cliente
 // (nome+cor) — Configurações → PCM.
-import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
+import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
 import { Edit3, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -95,7 +95,13 @@ export function MarcacoesClientePage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
   if (!temLeitura) {
     return (
@@ -108,7 +114,13 @@ export function MarcacoesClientePage() {
     );
   }
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
   if (estado.fase === "erro") {
     return (

@@ -1,4 +1,4 @@
-import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
+import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
 import {
   ArrowLeft,
   Calendar,
@@ -563,7 +563,13 @@ export function InspecoesPage({
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {
@@ -578,7 +584,13 @@ export function InspecoesPage({
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando inspeções…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {

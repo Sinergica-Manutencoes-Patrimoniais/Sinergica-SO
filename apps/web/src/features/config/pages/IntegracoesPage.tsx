@@ -1,6 +1,7 @@
 // E00-S12: Configurações > Integrações. Superadmin cadastra credenciais externas (começando por
 // provedor de e-mail, usado pelo laudo PMOC em E01-S05). A API key é write-only — nunca volta pra
 // tela depois de salva (mesmo padrão de campo de senha); grava direto no Supabase Vault via RPC.
+import { Skeleton } from "@sinergica/ui";
 import { CreditCard, KeyRound, Mail } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -191,7 +192,11 @@ export function IntegracoesPage() {
       )}
 
       {carregando ? (
-        <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
+        <div className="flex flex-col gap-3 p-8">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-full max-w-md" />
+          <Skeleton className="h-4 w-full max-w-sm" />
+        </div>
       ) : (
         <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-3">

@@ -4,7 +4,7 @@
 //
 // A tela não grava cadastro nem operação localmente: dados de cliente são governados pelo Auvo e
 // OS/qualidade continuam nas telas de origem. A ação de edição só leva o usuário para o alvo.
-import { Button } from "@sinergica/ui";
+import { Button, Skeleton } from "@sinergica/ui";
 import {
   Activity,
   Briefcase,
@@ -176,7 +176,13 @@ export function VisaoClientePage({
   }, [permissoesCarregando, temAcesso, carregar]);
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   // AC-1: sem leitura no módulo pcm, a tela não é acessível.
@@ -192,7 +198,13 @@ export function VisaoClientePage({
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {

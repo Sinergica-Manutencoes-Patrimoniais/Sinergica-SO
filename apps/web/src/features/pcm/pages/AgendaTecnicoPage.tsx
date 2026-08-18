@@ -1,7 +1,7 @@
 // AgendaTecnicoPage.tsx — E01-S104. Board semanal de agenda do técnico: colunas por dia (seg-sáb),
 // card por alocação técnico+cliente. 1ª fase só visual/manual — sem alocação automática nem
 // checagem de conflito (spec.md "Fora de escopo").
-import { Button, DataTable, type DataTableColumn, Modal } from "@sinergica/ui";
+import { Button, DataTable, type DataTableColumn, Modal, Skeleton } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -78,7 +78,13 @@ export function AgendaTecnicoPage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
   if (!temLeitura) {
     return (
@@ -151,7 +157,11 @@ export function AgendaTecnicoPage() {
       </div>
 
       {carregando ? (
-        <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
+        <div className="flex flex-col gap-3 p-8">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-full max-w-md" />
+          <Skeleton className="h-4 w-full max-w-sm" />
+        </div>
       ) : visao === "tecnico" ? (
         <TimelinePorTecnico
           alocacoes={alocacoes}

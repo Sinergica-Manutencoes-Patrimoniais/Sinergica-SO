@@ -1,4 +1,4 @@
-import { Button, Modal } from "@sinergica/ui";
+import { Button, Modal, Skeleton } from "@sinergica/ui";
 import {
   AlertTriangle,
   Calendar,
@@ -344,7 +344,13 @@ export function PmocPage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {
@@ -359,7 +365,13 @@ export function PmocPage() {
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando PMOC…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {

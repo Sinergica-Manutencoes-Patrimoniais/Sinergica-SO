@@ -1,5 +1,6 @@
 // E01-S82 AC-2: Configurações > Priorização. Superadmin ajusta os pesos G/U/T/D usados no cálculo
 // do score GUTD do backlog — sempre em runtime (nunca persistido na OS, ver `hub-os.ts`).
+import { Skeleton } from "@sinergica/ui";
 import { SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -86,7 +87,11 @@ export function ConfigPriorizacaoPage() {
       )}
 
       {carregando ? (
-        <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
+        <div className="flex flex-col gap-3 p-8">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-full max-w-md" />
+          <Skeleton className="h-4 w-full max-w-sm" />
+        </div>
       ) : (
         <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center gap-2 border-b border-line-soft pb-3">

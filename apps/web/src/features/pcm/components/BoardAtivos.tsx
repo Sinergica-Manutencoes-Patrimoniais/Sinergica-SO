@@ -3,6 +3,7 @@
 // Clicar num card abre o drawer de detalhe. Leitura + navegação sobre o dado de E01-S76.
 // E01-S79: arrastar um card pra outra coluna/subgrupo atualiza o `localId` do item (drag and drop
 // nativo HTML5, mesmo padrão do `OsKanbanView.tsx` — sem lib externa).
+import { Skeleton } from "@sinergica/ui";
 import { LayoutGrid, Package, Puzzle, Wrench } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -93,7 +94,13 @@ export function BoardAtivos({
   }, [estado, area]);
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando board…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
   if (estado.fase === "erro") {
     return <div className="p-8 text-center text-body text-danger">{estado.mensagem}</div>;

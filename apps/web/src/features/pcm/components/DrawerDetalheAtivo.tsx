@@ -1,6 +1,7 @@
 // E01-S78: drawer lateral de detalhe do ativo. Reusa `obterContextoItem` (E01-S76) para
 // breadcrumb/sistemas/componentes e acrescenta o histórico de OS (E01-S16). Fecha por X e por Esc.
 // E01-S79: passa a permitir editar o ativo direto do drawer (antes só visualização).
+import { Skeleton } from "@sinergica/ui";
 import { Pencil, Puzzle, Wrench, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -136,7 +137,11 @@ export function DrawerDetalheAtivo({
         </div>
 
         {estado.fase === "carregando" && (
-          <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
+          <div className="flex flex-col gap-3 p-8">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-full max-w-md" />
+            <Skeleton className="h-4 w-full max-w-sm" />
+          </div>
         )}
         {estado.fase === "erro" && (
           <div className="p-8 text-center text-body text-danger">{estado.mensagem}</div>

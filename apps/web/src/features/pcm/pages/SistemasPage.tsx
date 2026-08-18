@@ -1,6 +1,6 @@
 // SistemasPage.tsx — E01-S76 (AC-7, AC-8): CRUD de Sistema + seletor de itens membros (N:N) +
 // status de sync Auvo (código/estado — descriptor `sistemas` nasce writeEnabled:false, dry-run).
-import { Button, ConfirmDialog, Modal as ModalPrimitivo } from "@sinergica/ui";
+import { Button, ConfirmDialog, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
 import { Clock3, Link2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -95,7 +95,13 @@ export function SistemasPage() {
   }
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -107,7 +113,13 @@ export function SistemasPage() {
     );
   }
   if (estado.fase === "carregando")
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">

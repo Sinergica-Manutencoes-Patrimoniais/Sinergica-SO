@@ -1,4 +1,4 @@
-import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
+import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
 import { Edit3, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -129,7 +129,13 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {
@@ -144,7 +150,13 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando {titulo}…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {

@@ -1,5 +1,6 @@
 // E01-S85 AC-1: Configurações > Localização Auvo. Superadmin ajusta separador/ordem da
 // concatenação Área+Local+Sublocal enviada ao Auvo (o Auvo só entende um campo de texto plano).
+import { Skeleton } from "@sinergica/ui";
 import { MapPin } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -88,7 +89,11 @@ export function ConfigLocalizacaoAuvoPage() {
       )}
 
       {carregando ? (
-        <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
+        <div className="flex flex-col gap-3 p-8">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-full max-w-md" />
+          <Skeleton className="h-4 w-full max-w-sm" />
+        </div>
       ) : (
         <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center gap-2 border-b border-line-soft pb-3">

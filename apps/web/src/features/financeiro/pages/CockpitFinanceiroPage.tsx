@@ -1,4 +1,4 @@
-import { Button, DataTable } from "@sinergica/ui";
+import { Button, DataTable, Skeleton } from "@sinergica/ui";
 import { AlertTriangle, Gauge, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -77,7 +77,13 @@ export function CockpitFinanceiroPage() {
   }, [permissoesCarregando, temLeitura, ehSuperadmin, carregar]);
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
 
   // AC-5: só gestão (superadmin) — nem o gate de módulo financeiro basta aqui.
   if (!temLeitura || !ehSuperadmin) {

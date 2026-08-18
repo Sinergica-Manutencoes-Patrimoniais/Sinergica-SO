@@ -1,4 +1,4 @@
-import { ConfirmDialog, Modal as ModalPrimitivo } from "@sinergica/ui";
+import { ConfirmDialog, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
 import { Boxes, Layers, Link2, Pencil, Plus, RefreshCw, Trash2, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -110,7 +110,13 @@ export function EquipamentosPage() {
   }
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -122,7 +128,13 @@ export function EquipamentosPage() {
     );
   }
   if (estado.fase === "carregando")
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">

@@ -1,4 +1,4 @@
-import { Button, Tooltip } from "@sinergica/ui";
+import { Button, Skeleton, Tooltip } from "@sinergica/ui";
 import {
   Activity,
   AlertTriangle,
@@ -245,7 +245,13 @@ export function PcmDashboardPage({
   }, []);
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando dashboard PCM…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {

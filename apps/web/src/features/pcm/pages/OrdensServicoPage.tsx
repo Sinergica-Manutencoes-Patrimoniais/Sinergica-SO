@@ -1,4 +1,4 @@
-import { Button, Modal, Tooltip } from "@sinergica/ui";
+import { Button, Modal, Skeleton, Tooltip } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   Calendar,
@@ -421,7 +421,13 @@ export function OrdensServicoPage({
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {

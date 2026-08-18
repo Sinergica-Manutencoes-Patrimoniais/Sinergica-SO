@@ -1,6 +1,6 @@
 // EstruturaClientePage.tsx — E01-S76 (AC-1, AC-2, AC-3): CRUD de Área > Local (árvore) de um
 // cliente. Mora como aba dentro de VisaoClientePage (design.md — "aba em VisaoClientePage.tsx").
-import { Button, ConfirmDialog, Modal, useToast } from "@sinergica/ui";
+import { Button, ConfirmDialog, Modal, Skeleton, useToast } from "@sinergica/ui";
 import { ChevronDown, ChevronRight, FolderTree, Pencil, Plus, Tag, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -147,7 +147,14 @@ export function EstruturaClientePage({
     await carregar();
   }
 
-  if (carregando) return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+  if (carregando)
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (erro) {
     return (
       <div className="p-8 text-center text-body text-ink-3">

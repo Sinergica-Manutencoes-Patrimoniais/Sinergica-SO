@@ -1,4 +1,4 @@
-import { ConfirmDialog, DataTable, Tooltip } from "@sinergica/ui";
+import { ConfirmDialog, DataTable, Skeleton, Tooltip } from "@sinergica/ui";
 import type { DataTableColumn } from "@sinergica/ui";
 import {
   Building2,
@@ -192,7 +192,13 @@ export function ListaClientesPage({
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temAcesso) {
@@ -207,7 +213,13 @@ export function ListaClientesPage({
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-body text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {

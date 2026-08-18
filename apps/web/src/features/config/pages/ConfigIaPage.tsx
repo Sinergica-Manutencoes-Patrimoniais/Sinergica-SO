@@ -1,5 +1,6 @@
 // E01-S81 AC-1: Configurações > IA. Superadmin cadastra a credencial do OpenRouter (API key,
 // write-only, nunca reexibida) e escolhe o modelo — mesmo padrão de `IntegracoesPage` (E00-S12).
+import { Skeleton } from "@sinergica/ui";
 import { KeyRound, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -120,7 +121,11 @@ export function ConfigIaPage() {
       )}
 
       {carregando ? (
-        <div className="p-8 text-center text-body text-ink-3">Carregando…</div>
+        <div className="flex flex-col gap-3 p-8">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-full max-w-md" />
+          <Skeleton className="h-4 w-full max-w-sm" />
+        </div>
       ) : (
         <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-3">
