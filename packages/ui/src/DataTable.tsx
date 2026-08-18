@@ -2,6 +2,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import type { ReactNode } from "react";
 import { EmptyState } from "./Card";
 import { Skeleton } from "./Skeleton";
+import { useCargaVisivel } from "./use-carga-visivel";
 
 export interface DataTableColumn<T> {
   chave: string;
@@ -43,6 +44,9 @@ export function DataTable<T>({
   ordenacao,
   onOrdenar,
 }: DataTableProps<T>) {
+  // E00-S17 AC-2 — carga rápida (< 200ms) não pisca linha fantasma; uma vez exibida, fica no
+  // mínimo 400ms.
+  const mostrarCarregando = useCargaVisivel(carregando ?? false);
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-body">
@@ -84,49 +88,51 @@ export function DataTable<T>({
           </tr>
         </thead>
         <tbody>
-          {carregando
-            ? Array.from({ length: linhasCarregando }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: linha fantasma, sem identidade real
-                <tr key={i} className="border-b border-line-soft">
-                  {colunas.map((coluna) => (
-                    <td key={coluna.chave} className="px-2 py-2.5">
-                      <Skeleton className="h-4 w-full max-w-32" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            : itens.map((item, i) => (
-                <tr
-                  key={chaveLinha(item)}
-                  onClick={onClickLinha ? () => onClickLinha(item) : undefined}
-                  onKeyDown={
-                    onClickLinha
-                      ? (evento) => {
-                          if (evento.key === "Enter" || evento.key === " ") {
-                            evento.preventDefault();
-                            onClickLinha(item);
+          {carregando && !mostrarCarregando
+            ? null
+            : carregando
+              ? Array.from({ length: linhasCarregando }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: linha fantasma, sem identidade real
+                  <tr key={i} className="border-b border-line-soft">
+                    {colunas.map((coluna) => (
+                      <td key={coluna.chave} className="px-2 py-2.5">
+                        <Skeleton className="h-4 w-full max-w-32" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              : itens.map((item, i) => (
+                  <tr
+                    key={chaveLinha(item)}
+                    onClick={onClickLinha ? () => onClickLinha(item) : undefined}
+                    onKeyDown={
+                      onClickLinha
+                        ? (evento) => {
+                            if (evento.key === "Enter" || evento.key === " ") {
+                              evento.preventDefault();
+                              onClickLinha(item);
+                            }
                           }
-                        }
-                      : undefined
-                  }
-                  tabIndex={onClickLinha ? 0 : undefined}
-                  role={onClickLinha ? "button" : undefined}
-                  className={`border-b border-line-soft ${i % 2 === 1 ? "bg-paper/40" : ""} ${
-                    onClickLinha
-                      ? "cursor-pointer hover:bg-line-soft focus-visible:outline-2 focus-visible:outline-orange/75 focus-visible:-outline-offset-2"
-                      : ""
-                  }`}
-                >
-                  {colunas.map((coluna) => (
-                    <td
-                      key={coluna.chave}
-                      className={`px-2 py-2 ${coluna.numerica ? "text-right font-brand tabular-nums" : ""}`}
-                    >
-                      {coluna.render(item)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+                        : undefined
+                    }
+                    tabIndex={onClickLinha ? 0 : undefined}
+                    role={onClickLinha ? "button" : undefined}
+                    className={`border-b border-line-soft ${i % 2 === 1 ? "bg-paper/40" : ""} ${
+                      onClickLinha
+                        ? "cursor-pointer hover:bg-line-soft focus-visible:outline-2 focus-visible:outline-orange/75 focus-visible:-outline-offset-2"
+                        : ""
+                    }`}
+                  >
+                    {colunas.map((coluna) => (
+                      <td
+                        key={coluna.chave}
+                        className={`px-2 py-2 ${coluna.numerica ? "text-right font-brand tabular-nums" : ""}`}
+                      >
+                        {coluna.render(item)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
         </tbody>
       </table>
       {!carregando && itens.length === 0 && (
