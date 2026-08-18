@@ -1,6 +1,7 @@
 // AssessmentPage.tsx — E01-S90. Inspeção como documento de assessment do cliente: questionário do
 // Auvo vira itens, cada item deriva Chamado/Backlog/OS com responsável (design.md D1/D2/D3).
-import { ArrowLeft, ClipboardCheck, Plus, RefreshCw, X } from "lucide-react";
+import { Button, Modal } from "@sinergica/ui";
+import { ArrowLeft, ClipboardCheck, Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -194,10 +195,14 @@ export function AssessmentPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
-          <RefreshCw className="mr-1 inline h-4 w-4" />
+        <Button
+          variant="ghost"
+          icon={<RefreshCw className="h-4 w-4" />}
+          onClick={carregar}
+          className="mt-4"
+        >
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -205,14 +210,14 @@ export function AssessmentPage() {
   if (selecionado) {
     return (
       <div className="flex flex-col gap-4">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          icon={<ArrowLeft className="h-4 w-4" />}
           onClick={() => setSelecionado(null)}
-          className="btn-secondary self-start"
+          className="self-start"
         >
-          <ArrowLeft className="mr-1 inline h-4 w-4" />
           Voltar
-        </button>
+        </Button>
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-ink">{selecionado.titulo}</h2>
@@ -224,14 +229,14 @@ export function AssessmentPage() {
             </p>
           </div>
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Plus className="h-3.5 w-3.5" />}
               onClick={() => setModalImportar(true)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
             >
-              <Plus className="h-3.5 w-3.5" />
               Importar questionário Auvo
-            </button>
+            </Button>
           )}
         </div>
 
@@ -274,27 +279,27 @@ export function AssessmentPage() {
                 </div>
                 {temEscrita && !item.destino && (
                   <>
-                    <button
-                      type="button"
+                    <Button
+                      variant="primary"
+                      size="sm"
                       onClick={() => abrirModalDerivar(item, "chamado")}
-                      className="inline-flex h-8 shrink-0 items-center rounded-md bg-navy px-2.5 text-xs font-semibold text-white hover:bg-navy-deep"
                     >
                       Gerar Chamado
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => abrirModalDerivar(item, "backlog")}
-                      className="inline-flex h-8 shrink-0 items-center rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                     >
                       Enviar ao backlog
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => abrirModalDerivar(item, "os")}
-                      className="inline-flex h-8 shrink-0 items-center rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                     >
                       Gerar OS
-                    </button>
+                    </Button>
                   </>
                 )}
               </section>
@@ -331,19 +336,18 @@ export function AssessmentPage() {
         </div>
         <div className="flex items-center gap-2">
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Plus className="h-3.5 w-3.5" />}
               onClick={() => setModalNovo(true)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
             >
-              <Plus className="h-3.5 w-3.5" />
               Novo assessment
-            </button>
+            </Button>
           )}
-          <button type="button" onClick={carregar} className="btn-secondary">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="secondary" icon={<RefreshCw className="h-4 w-4" />} onClick={carregar}>
             Atualizar
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -416,68 +420,67 @@ function NovoAssessmentModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Novo assessment</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente *</span>
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="input w-full"
-            >
-              {clientes.length === 0 ? (
-                <option value="">Nenhum cliente disponível</option>
-              ) : (
-                clientes.map((cliente) => (
-                  <option key={cliente.id} value={cliente.id}>
-                    {cliente.nome}
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Motivo *</span>
-            <select
-              value={motivo}
-              onChange={(e) => setMotivo(e.target.value as MotivoAssessment)}
-              className="input w-full"
-            >
-              {Object.entries(MOTIVO_ASSESSMENT_LABEL).map(([valor, label]) => (
-                <option key={valor} value={valor}>
-                  {label}
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Novo assessment"
+      tamanho="md"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente *</span>
+          <select
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            className="input w-full"
+          >
+            {clientes.length === 0 ? (
+              <option value="">Nenhum cliente disponível</option>
+            ) : (
+              clientes.map((cliente) => (
+                <option key={cliente.id} value={cliente.id}>
+                  {cliente.nome}
                 </option>
-              ))}
-            </select>
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onCancel} className="btn-secondary">
+              ))
+            )}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Motivo *</span>
+          <select
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value as MotivoAssessment)}
+            className="input w-full"
+          >
+            {Object.entries(MOTIVO_ASSESSMENT_LABEL).map(([valor, label]) => (
+              <option key={valor} value={valor}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={salvar}
             disabled={salvando || !clientId}
-            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Criando…" : "Criar assessment"}
-          </button>
+            Criar assessment
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -505,48 +508,47 @@ function ImportarQuestionarioModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Importar questionário Auvo</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">
-              ID da tarefa Auvo (questionário concluído) *
-            </span>
-            <input
-              value={auvoTaskId}
-              onChange={(e) => setAuvoTaskId(e.target.value)}
-              className="input w-full"
-              inputMode="numeric"
-              placeholder="Ex: 123456"
-            />
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onCancel} className="btn-secondary">
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Importar questionário Auvo"
+      tamanho="md"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">
+            ID da tarefa Auvo (questionário concluído) *
+          </span>
+          <input
+            value={auvoTaskId}
+            onChange={(e) => setAuvoTaskId(e.target.value)}
+            className="input w-full"
+            inputMode="numeric"
+            placeholder="Ex: 123456"
+          />
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={confirmar}
             disabled={salvando || !auvoTaskId.trim()}
-            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Importando…" : "Importar"}
-          </button>
+            Importar
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -588,96 +590,95 @@ function DerivarItemModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">{DESTINO_ITEM_LABEL[destino]}</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Responsável *</span>
-            <select
-              value={responsavel}
-              onChange={(e) => setResponsavel(e.target.value as ResponsavelDestino)}
-              className="input w-full"
-            >
-              {Object.entries(RESPONSAVEL_DESTINO_LABEL).map(([valor, label]) => (
-                <option key={valor} value={valor}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {precisaOs && (
-            <>
-              <div className="block">
-                <label
-                  htmlFor="assessment-derivar-tipo-tarefa"
-                  className="mb-1 block text-xs font-semibold text-ink-3"
-                >
-                  Tipo de tarefa *
-                </label>
-                {dadosOs.tiposTarefa.length === 0 ? (
-                  <p className="text-xs text-ink-3">
-                    Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa.
-                  </p>
-                ) : (
-                  <select
-                    id="assessment-derivar-tipo-tarefa"
-                    value={tipoTarefaId}
-                    onChange={(e) => setTipoTarefaId(e.target.value)}
-                    className="input w-full"
-                  >
-                    {dadosOs.tiposTarefa.map((tipo) => (
-                      <option key={tipo.id} value={tipo.id}>
-                        {tipo.nome}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-              <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-ink-3">
-                  Técnico responsável
-                </span>
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={DESTINO_ITEM_LABEL[destino]}
+      tamanho="md"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Responsável *</span>
+          <select
+            value={responsavel}
+            onChange={(e) => setResponsavel(e.target.value as ResponsavelDestino)}
+            className="input w-full"
+          >
+            {Object.entries(RESPONSAVEL_DESTINO_LABEL).map(([valor, label]) => (
+              <option key={valor} value={valor}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {precisaOs && (
+          <>
+            <div className="block">
+              <label
+                htmlFor="assessment-derivar-tipo-tarefa"
+                className="mb-1 block text-xs font-semibold text-ink-3"
+              >
+                Tipo de tarefa *
+              </label>
+              {dadosOs.tiposTarefa.length === 0 ? (
+                <p className="text-xs text-ink-3">
+                  Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa.
+                </p>
+              ) : (
                 <select
-                  value={tecnicoId}
-                  onChange={(e) => setTecnicoId(e.target.value)}
+                  id="assessment-derivar-tipo-tarefa"
+                  value={tipoTarefaId}
+                  onChange={(e) => setTipoTarefaId(e.target.value)}
                   className="input w-full"
                 >
-                  <option value="">Sem técnico</option>
-                  {dadosOs.tecnicos.map((tecnico) => (
-                    <option key={tecnico.id} value={tecnico.id}>
-                      {tecnico.nome}
+                  {dadosOs.tiposTarefa.map((tipo) => (
+                    <option key={tipo.id} value={tipo.id}>
+                      {tipo.nome}
                     </option>
                   ))}
                 </select>
-              </label>
-            </>
-          )}
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
+              )}
             </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onCancel} className="btn-secondary">
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-ink-3">
+                Técnico responsável
+              </span>
+              <select
+                value={tecnicoId}
+                onChange={(e) => setTecnicoId(e.target.value)}
+                className="input w-full"
+              >
+                <option value="">Sem técnico</option>
+                {dadosOs.tecnicos.map((tecnico) => (
+                  <option key={tecnico.id} value={tecnico.id}>
+                    {tecnico.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={confirmar}
             disabled={salvando || (precisaOs && !tipoTarefaId)}
-            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Salvando…" : "Confirmar"}
-          </button>
+            Confirmar
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
