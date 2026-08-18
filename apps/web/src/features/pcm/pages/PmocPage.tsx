@@ -1,3 +1,4 @@
+import { Button, Modal } from "@sinergica/ui";
 import {
   AlertTriangle,
   Calendar,
@@ -9,7 +10,6 @@ import {
   RefreshCw,
   Snowflake,
   Wrench,
-  X,
 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -365,9 +365,9 @@ export function PmocPage() {
       <div className="rounded-xl border border-line bg-card p-8 text-center">
         <h2 className="text-lg font-semibold text-ink-2">PMOC indisponível</h2>
         <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <Button variant="ghost" onClick={carregar} className="mt-4">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -382,19 +382,17 @@ export function PmocPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={carregar} className="btn-secondary">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="secondary" icon={<RefreshCw className="h-4 w-4" />} onClick={carregar}>
             Atualizar
-          </button>
+          </Button>
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              icon={<Plus className="h-4 w-4" />}
               onClick={() => setModalAtivo("novo-pmoc")}
-              className="btn-primary"
             >
-              <Plus className="h-4 w-4" />
               Novo PMOC
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -1774,23 +1772,16 @@ function ModalBase({
   size?: "md" | "lg";
 }) {
   return (
-    <div className="modal-backdrop">
-      <div
-        className={`max-h-[92vh] w-full overflow-hidden rounded-xl bg-card shadow-modal ${size === "lg" ? "max-w-5xl" : "max-w-2xl"}`}
-      >
-        <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
-          <h3 className="text-sm font-semibold text-ink">{title}</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 text-ink-3 hover:bg-line-soft hover:text-ink"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="max-h-[calc(92vh-64px)] overflow-y-auto p-4">{children}</div>
-      </div>
-    </div>
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onClose();
+      }}
+      titulo={title}
+      tamanho={size === "lg" ? "lg" : "md"}
+    >
+      {children}
+    </Modal>
   );
 }
 

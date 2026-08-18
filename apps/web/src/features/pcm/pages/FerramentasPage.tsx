@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, Modal as ModalPrimitivo } from "@sinergica/ui";
 import {
   ChevronDown,
   ChevronUp,
@@ -7,7 +8,6 @@ import {
   RefreshCw,
   Trash2,
   Wrench,
-  X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -90,6 +90,12 @@ export function FerramentasPage() {
   });
   const [salvandoReserva, setSalvandoReserva] = useState(false);
   const [efetivando, setEfetivando] = useState<FerramentaReservaItem | null>(null);
+  const [ferramentaParaDesativar, setFerramentaParaDesativar] = useState<FerramentaItem | null>(
+    null,
+  );
+  const [reservaParaCancelar, setReservaParaCancelar] = useState<FerramentaReservaItem | null>(
+    null,
+  );
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -143,15 +149,13 @@ export function FerramentasPage() {
     await carregar();
   }
 
-  async function desativar(ferramenta: FerramentaItem) {
-    if (!user || !confirm(`Desativar ${ferramenta.nome}?`)) return;
-    try {
-      setErroAcao(null);
-      await desativarFerramenta(supabaseFerramentasAdapter, { id: ferramenta.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
-    }
+  async function desativar() {
+    if (!user || !ferramentaParaDesativar) return;
+    await desativarFerramenta(supabaseFerramentasAdapter, {
+      id: ferramentaParaDesativar.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   async function gerarUnidades(ferramenta: FerramentaItem, quantidade: number) {
@@ -221,18 +225,13 @@ export function FerramentasPage() {
     }
   }
 
-  async function cancelarReserva(reserva: FerramentaReservaItem) {
-    if (!user || !confirm(`Cancelar a reserva de ${reserva.funcionarioNome}?`)) return;
-    try {
-      setErroAcao(null);
-      await cancelarReservaFerramenta(supabaseFerramentaReservasAdapter, {
-        reservaId: reserva.id,
-        userId: user.id,
-      });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível cancelar a reserva.");
-    }
+  async function cancelarReserva() {
+    if (!user || !reservaParaCancelar) return;
+    await cancelarReservaFerramenta(supabaseFerramentaReservasAdapter, {
+      reservaId: reservaParaCancelar.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   async function confirmarEfetivar(unidadeId: string) {
@@ -324,7 +323,9 @@ export function FerramentasPage() {
                 }
                 onEditar={temEscrita ? () => setModal({ modo: "editar", ferramenta }) : undefined}
                 onDesativar={
-                  temEscrita && ferramenta.ativo ? () => desativar(ferramenta) : undefined
+                  temEscrita && ferramenta.ativo
+                    ? () => setFerramentaParaDesativar(ferramenta)
+                    : undefined
                 }
                 onGerarUnidades={
                   temEscrita
@@ -449,7 +450,7 @@ export function FerramentasPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => cancelarReserva(reserva)}
+                      onClick={() => setReservaParaCancelar(reserva)}
                       className="text-xs font-semibold text-danger hover:underline"
                     >
                       Cancelar
@@ -499,6 +500,28 @@ export function FerramentasPage() {
           onFechar={() => setHistoricoUnidade(null)}
         />
       )}
+
+      <ConfirmDialog
+        open={ferramentaParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setFerramentaParaDesativar(null);
+        }}
+        titulo={`Desativar "${ferramentaParaDesativar?.nome}"`}
+        descricao="A ferramenta deixa de aparecer nas opções de reserva/atribuição."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
+
+      <ConfirmDialog
+        open={reservaParaCancelar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setReservaParaCancelar(null);
+        }}
+        titulo={`Cancelar a reserva de "${reservaParaCancelar?.funcionarioNome}"`}
+        descricao="A reserva é removida da agenda."
+        rotuloConfirmar="Cancelar reserva"
+        onConfirmar={cancelarReserva}
+      />
     </div>
   );
 }
@@ -531,55 +554,51 @@ function EfetivarReservaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Efetivar reserva</h3>
-          <p className="text-xs text-ink-3">
-            {reserva.ferramentaNome} · {reserva.funcionarioNome}
-          </p>
-        </div>
-        <div className="space-y-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Unidade</span>
-            <select
-              value={unidadeId}
-              onChange={(event) => setUnidadeId(event.target.value)}
-              className="input w-full"
-            >
-              <option value="">Escolha a unidade</option>
-              {unidadesDisponiveis.map((unidade) => (
-                <option key={unidade.id} value={unidade.id}>
-                  {unidade.codigo}
-                </option>
-              ))}
-            </select>
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Efetivar reserva"
+      descricao={`${reserva.ferramentaNome} · ${reserva.funcionarioNome}`}
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Unidade</span>
+          <select
+            value={unidadeId}
+            onChange={(event) => setUnidadeId(event.target.value)}
+            className="input w-full"
           >
+            <option value="">Escolha a unidade</option>
+            {unidadesDisponiveis.map((unidade) => (
+              <option key={unidade.id} value={unidade.id}>
+                {unidade.codigo}
+              </option>
+            ))}
+          </select>
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={confirmar}
             disabled={salvando || !unidadeId}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Salvando…" : "Efetivar (atribuir agora)"}
-          </button>
+            Efetivar (atribuir agora)
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }
 
@@ -745,47 +764,40 @@ function BaixaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Dar baixa em {unidade.codigo}</h3>
-          <p className="text-xs text-ink-3">{unidade.ferramentaNome} — ação permanente</p>
-        </div>
-        <div className="space-y-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Motivo *</span>
-            <textarea
-              value={motivo}
-              onChange={(event) => setMotivo(event.target.value)}
-              className="input min-h-[80px] w-full resize-y"
-              placeholder="Ex.: extraviada em campo, quebrada sem conserto…"
-            />
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={`Dar baixa em ${unidade.codigo}`}
+      descricao={`${unidade.ferramentaNome} — ação permanente`}
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Motivo *</span>
+          <textarea
+            value={motivo}
+            onChange={(event) => setMotivo(event.target.value)}
+            className="input min-h-[80px] w-full resize-y"
+            placeholder="Ex.: extraviada em campo, quebrada sem conserto…"
+          />
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={confirmar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Confirmar baixa"}
-          </button>
+          </Button>
+          <Button variant="primary" onClick={confirmar} disabled={salvando} loading={salvando}>
+            Confirmar baixa
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }
 
@@ -834,17 +846,16 @@ function FerramentaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-2xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {ferramenta ? "Editar ferramenta" : "Nova ferramenta"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto p-4 md:grid-cols-2">
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={ferramenta ? "Editar ferramenta" : "Nova ferramenta"}
+      tamanho="lg"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
           {ferramenta && (
             <div className="md:col-span-2">
               {ferramenta.imagemUrl ? (
@@ -930,25 +941,21 @@ function FerramentaModal({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={salvar}
             disabled={salvando || Object.keys(errosInline).length > 0}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }
 
