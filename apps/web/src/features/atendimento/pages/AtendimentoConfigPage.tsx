@@ -595,6 +595,7 @@ export function AtendimentoConfigPage() {
 
   return (
     <div className="page-stack">
+      <h1 className="text-heading font-semibold text-ink">Configurações do Atendimento</h1>
       <div className="no-scrollbar flex gap-1 overflow-x-auto rounded-lg border border-line bg-card px-1.5 pt-1.5 shadow-raised">
         <button
           type="button"

@@ -269,6 +269,9 @@ export function AtendimentoInboxPage({
         conversaSelecionada ? "xl:grid-cols-[300px_1fr_260px]" : "xl:grid-cols-[300px_1fr]"
       }`}
     >
+      {/* E00-S18 AC-5 — layout de inbox não tem espaço visual pro título, mas a hierarquia de
+       * heading precisa existir mesmo assim. */}
+      <h1 className="sr-only">Caixa de entrada do Atendimento</h1>
       <div className={`${conversaSelecionada ? "hidden xl:block" : "min-h-0"}`}>
         <ConversaLista
           conversas={conversas}
