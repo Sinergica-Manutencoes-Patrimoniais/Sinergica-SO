@@ -18,8 +18,8 @@ export async function responderEvolution(
   instanceId: string,
   remoteJid: string,
   text: string,
-): Promise<void> {
-  await enviarEvolution(instanceId, "sendText", criarPayloadTexto(remoteJid, text));
+): Promise<string | null> {
+  return await enviarEvolution(instanceId, "sendText", criarPayloadTexto(remoteJid, text));
 }
 
 /** E04-S08: telefone de contato (`pcm.clientes.contato_telefone`, formatos livres — Auvo/cadastro
@@ -32,19 +32,32 @@ export function telefoneParaRemoteJid(telefone: string | null | undefined): stri
   return `${comDdi}@s.whatsapp.net`;
 }
 
+/** E02-S32: extrai o `wa_message_id` do corpo de resposta de um `POST /message/{endpoint}`
+ * Evolution — formato `{ key: { id, remoteJid, fromMe }, message, ... }` (confirmado contra a doc
+ * oficial, mesmo `key.id` que o webhook de entrada lê em `evolution-webhook.ts`). Usado pra gravar
+ * na mensagem que o app manda, e assim o webhook conseguir deduplicar o eco `fromMe` do próprio
+ * envio (ON CONFLICT wa_message_id) em vez de descartar todo `fromMe` — que também jogava fora
+ * mensagem mandada direto do celular (bug real, achado 2026-08-19). */
+export function extrairWaMessageId(corpo: unknown): string | null {
+  if (typeof corpo !== "object" || corpo === null) return null;
+  const key = (corpo as { key?: unknown }).key;
+  const id = typeof key === "object" && key !== null ? (key as { id?: unknown }).id : undefined;
+  return typeof id === "string" && id.length > 0 ? id : null;
+}
+
 export async function enviarEvolution(
   instanceId: string,
   endpoint: "sendText" | "sendMedia" | "sendTemplate" | "sendButtons",
   payload: Record<string, unknown>,
-): Promise<void> {
-  await chamarEvolution(instanceId, endpoint, payload);
+): Promise<string | null> {
+  return await chamarEvolution(instanceId, endpoint, payload);
 }
 
 async function chamarEvolution(
   instanceId: string,
   endpoint: string,
   payload: Record<string, unknown>,
-): Promise<void> {
+): Promise<string | null> {
   const configuracao = await obterConfiguracaoEvolution();
   if (!configuracao) {
     throw new Error("Evolution não configurada — informe URL e chave em Configurações > Atendimento > Evolution");
@@ -64,4 +77,10 @@ async function chamarEvolution(
     );
     throw new Error(`Evolution ${endpoint} falhou: ${res.status}${corpo ? ` — ${corpo.slice(0, 300)}` : ""}`);
   }
+  // Corpo de sucesso é best-effort: nem todo endpoint devolve `key.id` (ex. sendTemplate em
+  // algumas versões) — ausência não é erro, só significa que o eco `fromMe` não vai deduplicar
+  // para essa mensagem específica (webhook grava como `celular` mesmo sendo eco; pior caso é uma
+  // linha a mais na conversa, nunca perda de mensagem).
+  const corpo = await res.json().catch(() => null);
+  return extrairWaMessageId(corpo);
 }
