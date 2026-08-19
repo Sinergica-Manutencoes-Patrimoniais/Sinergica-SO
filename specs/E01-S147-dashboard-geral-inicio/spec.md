@@ -48,8 +48,11 @@ domínio/aplicação já existentes (reuso, não duplicação de regra).
 ### AC-1: Card de PCM mostra KPI real
 - **Dado** um usuário com permissão de leitura no módulo PCM logado na tela Início
 - **Quando** a tela carrega
-- **Então** o card de PCM mostra KPIs vindos de `montarDashboardPcm` (mínimo: `OS Abertas`, `Em
-  Execução`, `Backlog GUT`) — nunca os valores fixos do array `DASHBOARD_GERAL` removido
+- **Então** o card de PCM mostra KPIs vindos de `supabaseHubOsAdapter.contarKpis()` (RPC leve
+  `fn_kpis_ordens_servico`, mesma fonte de `PcmDashboardPage`'s hub de OS — mínimo: `OS Abertas`,
+  `Em Execução`, `Críticas`) — nunca os valores fixos do array `DASHBOARD_GERAL` removido.
+  `Backlog GUT` fica fora do card por não ter fonte leve equivalente (só existe via a pipeline
+  pesada de `montarDashboardPcm`, que este card não busca — ver task 2/tasks.md)
 
 ### AC-2: Card de Atendimento mostra KPI real
 - **Dado** um usuário com permissão de leitura no módulo Atendimento
