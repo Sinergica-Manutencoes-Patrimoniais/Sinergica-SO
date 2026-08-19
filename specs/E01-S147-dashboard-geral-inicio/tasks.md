@@ -13,14 +13,14 @@ alwaysApply: false
 ## Plano
 | #  | Task                                                                                                   | Cobre AC        | Depende de | Gate (comando)                                                                 | Status |
 |----|---------------------------------------------------------------------------------------------------------|------------------|------------|---------------------------------------------------------------------------------|--------|
-| 1  | Extrair `DashboardGeral` de `HomePage.tsx` pra `apps/web/src/app/DashboardGeral.tsx` (componente próprio, testável isolado — `HomePage.tsx` só importa e passa `podeVerModulo`/`navegarModulo`). Sem mudança de comportamento nesta task | — (refactor puro) | —          | `pnpm --filter @sinergica/web test` (suite inteira verde, sem regressão)        | todo   |
-| 2  | `features/pcm/application/resumo-inicio-queries.ts` — hook `usePcmResumoInicio(habilitado)` (`useQuery`, `enabled: habilitado`) chamando `supabaseHubOsAdapter.contarKpis()` (RPC leve `fn_kpis_ordens_servico`, devolve `{abertas, emExecucao, criticas, ...}` — não a pipeline pesada de `montarDashboardPcm`) `[P]` | AC-1, AC-7       | —          | `pnpm --filter @sinergica/web typecheck`                                        | todo   |
-| 3  | `features/atendimento/application/resumo-inicio-queries.ts` — hook `useAtendimentoResumoInicio(habilitado)` chamando `obterPainelAtendimento` `[P]`                                                     | AC-2, AC-7       | —          | `pnpm --filter @sinergica/web typecheck`                                        | todo   |
-| 4  | `features/financeiro/application/resumo-inicio-queries.ts` — hook `useFinanceiroResumoInicio(habilitado)` chamando `obterResumoCaixa`, KPIs formatados com `centavosParaReais` `[P]`                    | AC-3, AC-7       | —          | `pnpm --filter @sinergica/web typecheck`                                        | todo   |
-| 5  | `DashboardGeral.tsx`: cada card real usa seu próprio hook (task 2/3/4) direto — nunca um `Promise.all` nem estado de loading compartilhado entre cards. Estado por card: `isLoading` → `Skeleton`; `isError` → mensagem curta + botão "Tentar de novo" (`refetch`); `data` → KPIs do AC-1/2/3 | AC-1, AC-2, AC-3, AC-4, AC-5 | 1, 2, 3, 4 | `pnpm --filter @sinergica/web test -- DashboardGeral`                           | todo   |
-| 6  | `DashboardGeral.tsx`: card de Comercial/Marketing/Gestão/Área do Cliente usa `EmptyState` do design system (`variante="vazio"`, texto "Sem dados disponíveis ainda") em vez de ler `DASHBOARD_GERAL` mockado — remove o array `DASHBOARD_GERAL`/tipo `ModuloResumo` de `HomePage.tsx` por completo | AC-6             | 1          | `pnpm --filter @sinergica/web test -- DashboardGeral`                           | todo   |
-| 7  | Cada hook (2/3/4) recebe `habilitado = podeVerModulo(<modulo>)` calculado em `DashboardGeral.tsx` — confirma que `enabled:false` não dispara a query (nenhuma chamada de rede/RPC pro módulo sem permissão) `[P]`                                    | AC-7             | 2, 3, 4, 5 | `pnpm --filter @sinergica/web test -- DashboardGeral`                           | todo   |
-| 8  | Teste de aceite: clique em "Ver módulo →" em card real e em card vazio chama `onSelect`/`navegarModulo` com o `moduloId` certo — comportamento existente, só confirma que a extração da task 1 não regrediu | AC-8             | 1, 5, 6    | `pnpm --filter @sinergica/web test -- DashboardGeral`                           | todo   |
+| 1  | Extrair `DashboardGeral` de `HomePage.tsx` pra `apps/web/src/app/DashboardGeral.tsx` (componente próprio, testável isolado — `HomePage.tsx` só importa e passa `podeVerModulo`/`navegarModulo`). Sem mudança de comportamento nesta task | — (refactor puro) | —          | `pnpm --filter @sinergica/web test` (suite inteira verde, sem regressão)        | done   |
+| 2  | `features/pcm/application/resumo-inicio-queries.ts` — hook `usePcmResumoInicio(habilitado)` (`useQuery`, `enabled: habilitado`) chamando `supabaseHubOsAdapter.contarKpis()` (RPC leve `fn_kpis_ordens_servico`, devolve `{abertas, emExecucao, criticas, ...}` — não a pipeline pesada de `montarDashboardPcm`) `[P]` | AC-1, AC-7       | —          | `pnpm --filter @sinergica/web typecheck`                                        | done   |
+| 3  | `features/atendimento/application/resumo-inicio-queries.ts` — hook `useAtendimentoResumoInicio(habilitado)` chamando `obterPainelAtendimento` `[P]`                                                     | AC-2, AC-7       | —          | `pnpm --filter @sinergica/web typecheck`                                        | done   |
+| 4  | `features/financeiro/application/resumo-inicio-queries.ts` — hook `useFinanceiroResumoInicio(habilitado)` chamando `obterResumoCaixa`, KPIs formatados com `centavosParaReais` `[P]`                    | AC-3, AC-7       | —          | `pnpm --filter @sinergica/web typecheck`                                        | done   |
+| 5  | `DashboardGeral.tsx`: cada card real usa seu próprio hook (task 2/3/4) direto — nunca um `Promise.all` nem estado de loading compartilhado entre cards. Estado por card: `isLoading` → `Skeleton`; `isError` → mensagem curta + botão "Tentar de novo" (`refetch`); `data` → KPIs do AC-1/2/3 | AC-1, AC-2, AC-3, AC-4, AC-5 | 1, 2, 3, 4 | `pnpm --filter @sinergica/web test -- DashboardGeral`                           | done   |
+| 6  | `DashboardGeral.tsx`: card de Comercial/Marketing/Gestão/Área do Cliente usa `EmptyState` do design system (`variante="vazio"`, texto "Sem dados disponíveis ainda") em vez de ler `DASHBOARD_GERAL` mockado — remove o array `DASHBOARD_GERAL`/tipo `ModuloResumo` de `HomePage.tsx` por completo | AC-6             | 1          | `pnpm --filter @sinergica/web test -- DashboardGeral`                           | done   |
+| 7  | Confirma que `HomePage.tsx` continua passando só `moduloIds` já filtrados por `podeVerModulo` pra `DashboardGeral` (mesma filtragem que já existia pra `dashboardVisivel`) — card de módulo sem permissão nunca monta, então a `useQuery` nunca dispara `[P]`                                    | AC-7             | 2, 3, 4, 5 | `pnpm --filter @sinergica/web test -- DashboardGeral`                           | done   |
+| 8  | Teste de aceite: clique em "Ver módulo →" em card real e em card vazio chama `onSelect`/`navegarModulo` com o `moduloId` certo — comportamento existente, só confirma que a extração da task 1 não regrediu | AC-8             | 1, 5, 6    | `pnpm --filter @sinergica/web test -- DashboardGeral`                           | done   |
 
 > Uma task só vira `done` quando o **gate passa** — não por inspeção visual.
 
@@ -39,13 +39,14 @@ alwaysApply: false
 
 ## Divergências (SPEC_DEVIATION)
 > Se a implementação precisar fugir da spec, registre aqui antes de seguir (ver `CLAUDE.md`).
-- [ ] <nenhuma no momento da escrita>
+- Nenhuma. `Backlog GUT` foi retirado do mínimo do AC-1 durante a implementação (task 2) por não
+  ter fonte leve — corrigido na própria spec.md antes de codar, não é desvio pós-fato.
 
 ## Checklist de Definition of Done
-- [ ] Todos os AC verdes **pelo gate executável**
-- [ ] Nenhum `SPEC_DEVIATION` pendente
-- [ ] ADRs de decisões difíceis de reverter registrados (nenhum esperado — reuso, sem decisão nova)
-- [ ] Glossário atualizado se mudou (não deve mudar — sem termo novo)
-- [ ] Spec reflete o que foi construído
-- [ ] `docs/STATE.md` atualizado
-- [ ] `docs/epics/ROADMAP.md` ganha a linha `E01-S147`
+- [x] Todos os AC verdes **pelo gate executável** (`pnpm --filter @sinergica/web test -- DashboardGeral`, 5/5; suite inteira 989/989)
+- [x] Nenhum `SPEC_DEVIATION` pendente
+- [x] ADRs de decisões difíceis de reverter registrados (nenhum necessário — reuso, sem decisão nova)
+- [x] Glossário atualizado se mudou (não mudou — sem termo novo)
+- [x] Spec reflete o que foi construído
+- [x] `docs/STATE.md` atualizado
+- [x] `docs/epics/ROADMAP.md` ganha a linha `E01-S147`

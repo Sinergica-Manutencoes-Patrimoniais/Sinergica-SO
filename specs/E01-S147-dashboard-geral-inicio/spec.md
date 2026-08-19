@@ -6,7 +6,7 @@ alwaysApply: true
 
 # Spec — Dashboard geral real na tela Início
 
-> **Fonte da verdade.** Status: rascunho
+> **Fonte da verdade.** Status: implementado
 > Os AC são (a) o contrato com o negócio, (b) o oráculo de teste, (c) o prompt para o agente
 > implementar. Escreva-os para serem executáveis.
 
@@ -89,9 +89,12 @@ domínio/aplicação já existentes (reuso, não duplicação de regra).
 ### AC-7: Gating de permissão evita fetch desnecessário
 - **Dado** um usuário sem permissão de leitura em um dos três módulos (PCM/Atendimento/Financeiro)
 - **Quando** a tela Início carrega
-- **Então** o hook daquele módulo nem dispara a query (`enabled: false` na `useQuery`, mesmo
-  `podeVerModulo` já usado pro filtro visual) — nunca tenta buscar dado que o usuário não pode ver
-  e depois esconde na UI
+- **Então** o card daquele módulo nem monta — `HomePage.tsx` já filtra `moduloIds` por
+  `podeVerModulo` antes de passar pra `DashboardGeral`, então o componente do card (e a
+  `useQuery` dentro dele) nunca chega a existir. Cada hook aceita um parâmetro opcional
+  `habilitado` (`enabled` da `useQuery`, mesmo padrão de `features/comercial/application/
+  dashboard-queries.ts`) pra reuso futuro em outro ponto de montagem — não é usado neste ponto de
+  chamada porque a lista já filtrada torna redundante, não porque o mecanismo não existe
 
 ### AC-8: Botão "Ver módulo" continua navegando
 - **Dado** qualquer card real ou vazio

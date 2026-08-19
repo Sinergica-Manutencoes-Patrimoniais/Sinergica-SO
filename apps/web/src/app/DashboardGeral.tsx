@@ -1,130 +1,189 @@
-// E01-S147: dashboard geral da tela Início — extraído de HomePage.tsx (arquivo de alto risco,
-// ver docs/STATE.md) pra virar testável isolado. Nesta primeira task só move o componente e o
-// mock existentes, sem mudar comportamento; tasks seguintes trocam DASHBOARD_GERAL por dado real
-// por módulo.
-import { AlertTriangle } from "lucide-react";
+// E01-S147: dashboard geral da tela Início com dado real por módulo (PCM/Atendimento/Financeiro).
+// Cada card real é uma `useQuery` independente — nunca um `Promise.all` — pra um módulo lento ou
+// quebrado não travar nem esconder os outros (AC-4/5, spec.md). Módulo sem dado real pronto ainda
+// (Comercial/Marketing/Gestão/Área do Cliente, ver spec "Fora de escopo") mostra `EmptyState`
+// honesto em vez de número inventado (AC-6) — nunca reintroduzir o antigo `DASHBOARD_GERAL`
+// mockado aqui.
+import { EmptyState, Skeleton } from "@sinergica/ui";
+import { RefreshCw } from "lucide-react";
+import type { ReactNode } from "react";
+import { useAtendimentoResumoInicio } from "../features/atendimento/application/resumo-inicio-queries";
+import { supabaseDashboardAtendimentoAdapter } from "../features/atendimento/infrastructure/supabase-dashboard-atendimento-adapter";
+import { useFinanceiroResumoInicio } from "../features/financeiro/application/resumo-inicio-queries";
+import { centavosParaReais } from "../features/financeiro/domain/dinheiro";
+import { supabaseFinanceiroAdapter } from "../features/financeiro/infrastructure/supabase-financeiro-adapter";
+import { usePcmResumoInicio } from "../features/pcm/application/resumo-inicio-queries";
+import { supabaseHubOsAdapter } from "../features/pcm/infrastructure/supabase-hub-os-adapter";
 import { MODULOS } from "./modulos";
 import type { ModuloId } from "./modulos";
 
-export interface ModuloResumo {
+const MODULOS_COM_DADO_REAL = new Set<ModuloId>(["pcm", "atendimento", "financeiro"]);
+
+interface CardModuloChromeProps {
   moduloId: ModuloId;
-  kpis: Array<{ label: string; valor: string }>;
-  alerta?: string;
+  onSelect: (id: ModuloId) => void;
+  children: ReactNode;
 }
 
-export const DASHBOARD_GERAL: ModuloResumo[] = [
-  {
-    moduloId: "pcm",
-    kpis: [
-      { label: "OS Abertas", valor: "12" },
-      { label: "SLA no Prazo", valor: "87%" },
-      { label: "Backlog", valor: "23 itens" },
-    ],
-  },
-  {
-    moduloId: "atendimento",
-    kpis: [
-      { label: "Chamados hoje", valor: "8" },
-      { label: "Pendentes", valor: "3" },
-    ],
-  },
-  {
-    moduloId: "comercial",
-    kpis: [
-      { label: "Leads ativos", valor: "5" },
-      { label: "Contratos ativos", valor: "3" },
-    ],
-  },
-  {
-    moduloId: "financeiro",
-    kpis: [
-      { label: "Recebido (mês)", valor: "R$ 48,5k" },
-      { label: "Inadimplentes", valor: "1" },
-    ],
-    alerta: "1 contrato",
-  },
-  {
-    moduloId: "marketing",
-    kpis: [
-      { label: "Publicações/sem.", valor: "3" },
-      { label: "Alcance", valor: "1.2k" },
-      { label: "Leads (mês)", valor: "12" },
-    ],
-  },
-  {
-    moduloId: "gestao",
-    kpis: [
-      { label: "Alertas críticos", valor: "0" },
-      { label: "Score geral", valor: "94" },
-    ],
-  },
-  {
-    moduloId: "area-cliente",
-    kpis: [
-      { label: "Portais ativos", valor: "15" },
-      { label: "OS via portal", valor: "2" },
-    ],
-  },
-];
+function CardModuloChrome({ moduloId, onSelect, children }: CardModuloChromeProps) {
+  const modulo = MODULOS.find((m) => m.id === moduloId);
+  if (!modulo) return null;
+  const Icon = modulo.icon;
+  return (
+    <div className="group flex min-h-44 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-raised transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-overlay">
+      <div className="flex items-center gap-2.5 bg-navy px-3.5 py-2.5">
+        <div className="w-7 h-7 rounded-md bg-card/10 flex items-center justify-center shrink-0">
+          <Icon className="w-4 h-4 text-white" strokeWidth={1.8} />
+        </div>
+        <span className="text-body font-semibold text-white flex-1 truncate">{modulo.label}</span>
+      </div>
+      <div className="flex flex-1 flex-col gap-2 px-3.5 py-3">{children}</div>
+      <div className="px-3.5 pb-3">
+        <button
+          type="button"
+          onClick={() => onSelect(moduloId)}
+          className="w-full cursor-pointer rounded-md py-1.5 text-center text-caption font-semibold text-orange transition-colors hover:bg-orange-soft hover:text-orange-deep"
+        >
+          Ver módulo →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function KpiLinha({ label, valor }: { label: string; valor: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <span className="text-caption text-ink-3 truncate">{label}</span>
+      <span className="shrink-0 font-brand text-heading font-bold tabular-nums text-ink">
+        {valor}
+      </span>
+    </div>
+  );
+}
+
+function ErroCard({ onTentarDeNovo }: { onTentarDeNovo: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
+      <p className="text-caption text-ink-3">Não foi possível carregar este módulo.</p>
+      <button
+        type="button"
+        onClick={onTentarDeNovo}
+        className="inline-flex items-center gap-1.5 text-caption font-semibold text-orange hover:text-orange-deep"
+      >
+        <RefreshCw className="h-3.5 w-3.5" />
+        Tentar de novo
+      </button>
+    </div>
+  );
+}
+
+function SkeletonKpis() {
+  return (
+    <>
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-4/5" />
+      <Skeleton className="h-4 w-3/5" />
+    </>
+  );
+}
+
+function CardPcm({ onSelect }: { onSelect: (id: ModuloId) => void }) {
+  const query = usePcmResumoInicio(supabaseHubOsAdapter);
+  return (
+    <CardModuloChrome moduloId="pcm" onSelect={onSelect}>
+      {query.isSuccess ? (
+        <>
+          <KpiLinha label="OS Abertas" valor={String(query.data.abertas)} />
+          <KpiLinha label="Em Execução" valor={String(query.data.emExecucao)} />
+          <KpiLinha label="Críticas" valor={String(query.data.criticas)} />
+        </>
+      ) : query.isError ? (
+        <ErroCard onTentarDeNovo={() => query.refetch()} />
+      ) : (
+        <SkeletonKpis />
+      )}
+    </CardModuloChrome>
+  );
+}
+
+function CardAtendimento({ onSelect }: { onSelect: (id: ModuloId) => void }) {
+  const query = useAtendimentoResumoInicio(supabaseDashboardAtendimentoAdapter);
+  return (
+    <CardModuloChrome moduloId="atendimento" onSelect={onSelect}>
+      {query.isSuccess ? (
+        <>
+          <KpiLinha label="Fila sem atendente" valor={String(query.data.filaSemAtendente)} />
+          <KpiLinha label="Conversas abertas" valor={String(query.data.conversasAbertas)} />
+          <KpiLinha label="Não lidas" valor={String(query.data.naoLidas)} />
+        </>
+      ) : query.isError ? (
+        <ErroCard onTentarDeNovo={() => query.refetch()} />
+      ) : (
+        <SkeletonKpis />
+      )}
+    </CardModuloChrome>
+  );
+}
+
+function CardFinanceiro({ onSelect }: { onSelect: (id: ModuloId) => void }) {
+  const query = useFinanceiroResumoInicio(supabaseFinanceiroAdapter);
+  return (
+    <CardModuloChrome moduloId="financeiro" onSelect={onSelect}>
+      {query.isSuccess ? (
+        <>
+          <KpiLinha
+            label="Posição de caixa"
+            valor={`R$ ${centavosParaReais(query.data.posicaoCaixaCentavos)}`}
+          />
+          <KpiLinha
+            label="Resultado do mês"
+            valor={`R$ ${centavosParaReais(query.data.resultadoMesCentavos)}`}
+          />
+          <KpiLinha
+            label="A receber (30d)"
+            valor={`R$ ${centavosParaReais(query.data.aReceber30dCentavos)}`}
+          />
+        </>
+      ) : query.isError ? (
+        <ErroCard onTentarDeNovo={() => query.refetch()} />
+      ) : (
+        <SkeletonKpis />
+      )}
+    </CardModuloChrome>
+  );
+}
+
+function CardVazio({
+  moduloId,
+  onSelect,
+}: { moduloId: ModuloId; onSelect: (id: ModuloId) => void }) {
+  return (
+    <CardModuloChrome moduloId={moduloId} onSelect={onSelect}>
+      <EmptyState titulo="Sem dados disponíveis ainda">
+        Este módulo ainda não tem visão geral pronta pro Início.
+      </EmptyState>
+    </CardModuloChrome>
+  );
+}
 
 export function DashboardGeral({
-  resumos,
+  moduloIds,
   onSelect,
 }: {
-  resumos: ModuloResumo[];
+  moduloIds: ModuloId[];
   onSelect: (id: ModuloId) => void;
 }) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      {resumos.map((resumo) => {
-        const modulo = MODULOS.find((m) => m.id === resumo.moduloId);
-        if (!modulo) return null;
-        const Icon = modulo.icon;
-        return (
-          <div
-            key={resumo.moduloId}
-            className="group flex min-h-44 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-raised transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-overlay"
-          >
-            {/* Header */}
-            <div className="flex items-center gap-2.5 bg-navy px-3.5 py-2.5">
-              <div className="w-7 h-7 rounded-md bg-card/10 flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-white" strokeWidth={1.8} />
-              </div>
-              <span className="text-body font-semibold text-white flex-1 truncate">
-                {modulo.label}
-              </span>
-              {resumo.alerta && (
-                <span className="inline-flex items-center gap-1 shrink-0 rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
-                  <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
-                  {resumo.alerta}
-                </span>
-              )}
-            </div>
-
-            {/* KPIs */}
-            <div className="flex flex-1 flex-col gap-2 px-3.5 py-3">
-              {resumo.kpis.map((kpi) => (
-                <div key={kpi.label} className="flex items-baseline justify-between gap-2">
-                  <span className="text-caption text-ink-3 truncate">{kpi.label}</span>
-                  <span className="shrink-0 font-brand text-heading font-bold tabular-nums text-ink">
-                    {kpi.valor}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer */}
-            <div className="px-3.5 pb-3">
-              <button
-                type="button"
-                onClick={() => onSelect(resumo.moduloId)}
-                className="w-full cursor-pointer rounded-md py-1.5 text-center text-caption font-semibold text-orange transition-colors hover:bg-orange-soft hover:text-orange-deep"
-              >
-                Ver módulo →
-              </button>
-            </div>
-          </div>
-        );
+      {moduloIds.map((moduloId) => {
+        if (!MODULOS_COM_DADO_REAL.has(moduloId)) {
+          return <CardVazio key={moduloId} moduloId={moduloId} onSelect={onSelect} />;
+        }
+        if (moduloId === "pcm") return <CardPcm key={moduloId} onSelect={onSelect} />;
+        if (moduloId === "atendimento")
+          return <CardAtendimento key={moduloId} onSelect={onSelect} />;
+        return <CardFinanceiro key={moduloId} onSelect={onSelect} />;
       })}
     </div>
   );

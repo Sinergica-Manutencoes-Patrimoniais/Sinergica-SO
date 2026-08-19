@@ -119,7 +119,7 @@ import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
-import { DASHBOARD_GERAL, DashboardGeral } from "./DashboardGeral";
+import { DashboardGeral } from "./DashboardGeral";
 import { useAuth } from "./auth-context";
 import { MODULOS, isModuloNegocio } from "./modulos";
 import type { AreaAtiva, ModuloId, ModuloTab } from "./modulos";
@@ -540,7 +540,9 @@ export function HomePage() {
 
   const podeGerenciarConfig = user?.papel === "superadmin" || user?.papel === "supervisor";
   const podeCriarOs = podeAcessar("pcm", "escrita");
-  const dashboardVisivel = DASHBOARD_GERAL.filter((r) => podeVerModulo(r.moduloId));
+  const dashboardModuloIds = MODULOS.filter((m) => m.id !== "inicio" && podeVerModulo(m.id)).map(
+    (m) => m.id,
+  );
 
   const modulo = MODULOS.find((m) => m.id === activeModulo);
   const initials =
@@ -989,7 +991,7 @@ export function HomePage() {
         <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5">
           {/* Conteúdo por módulo */}
           {activeModulo === "inicio" ? (
-            <DashboardGeral resumos={dashboardVisivel} onSelect={navegarModulo} />
+            <DashboardGeral moduloIds={dashboardModuloIds} onSelect={navegarModulo} />
           ) : activeModulo === "pcm" ? (
             pcmView === "clientes" ? (
               clienteSelecionado ? (
