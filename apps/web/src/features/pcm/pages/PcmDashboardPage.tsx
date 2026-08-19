@@ -1,4 +1,4 @@
-import { Button, Skeleton, Tooltip } from "@sinergica/ui";
+import { Button, Card, CardHeader, Skeleton, Tooltip } from "@sinergica/ui";
 import {
   Activity,
   AlertTriangle,
@@ -9,7 +9,6 @@ import {
   Clock3,
   DatabaseZap,
   Link2,
-  Loader2,
   RefreshCw,
   TrendingDown,
   TrendingUp,
@@ -256,8 +255,8 @@ export function PcmDashboardPage({
 
   if (estado.fase === "erro") {
     return (
-      <div className="rounded-xl border border-line bg-card p-8 text-center">
-        <h2 className="text-lg font-semibold text-ink-2">Dashboard indisponível</h2>
+      <Card className="p-8 text-center">
+        <h2 className="text-heading font-semibold text-ink-2">Dashboard indisponível</h2>
         <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <Button
           variant="secondary"
@@ -267,7 +266,7 @@ export function PcmDashboardPage({
         >
           Tentar novamente
         </Button>
-      </div>
+      </Card>
     );
   }
 
@@ -284,39 +283,34 @@ export function PcmDashboardPage({
         </div>
         <div className="flex flex-col items-end gap-1.5">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={carregar}
               title="Relê os dados já sincronizados localmente (rápido, não chama o Auvo)"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
+              icon={<RefreshCw className="h-4 w-4" />}
             >
-              <RefreshCw className="h-4 w-4" />
               Atualizar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
               onClick={sincronizar}
-              disabled={sincronizacaoAuvo.fase === "sincronizando"}
+              loading={sincronizacaoAuvo.fase === "sincronizando"}
               title="Puxa os dados do Auvo agora (clientes, equipe, tarefas viram OS aberta) — os cadastros feitos aqui já vão pro Auvo na hora, isto é só para trazer o que mudou lá"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-2.5 text-caption font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-60"
+              icon={<DatabaseZap className="h-4 w-4" />}
             >
-              <Loader2
-                className={`h-4 w-4 ${sincronizacaoAuvo.fase === "sincronizando" ? "animate-spin" : "hidden"}`}
-              />
-              <DatabaseZap
-                className={`h-4 w-4 ${sincronizacaoAuvo.fase === "sincronizando" ? "hidden" : ""}`}
-              />
               {sincronizacaoAuvo.fase === "sincronizando" ? "Sincronizando…" : "Sincronizar Auvo"}
-            </button>
+            </Button>
             {podeCriarOs && (
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={onNovaOs}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep"
+                icon={<ClipboardList className="h-4 w-4" />}
               >
-                <ClipboardList className="w-4 h-4" />
                 Nova OS
-              </button>
+              </Button>
             )}
           </div>
           <StatusSincronizacaoAuvo estado={sincronizacaoAuvo} />
@@ -358,8 +352,8 @@ export function PcmDashboardPage({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-card rounded-xl border border-line">
-          <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
             <div>
               <h3 className="text-body font-semibold text-ink">Ordens de Serviço Recentes</h3>
               <p className="text-caption text-ink-3 mt-0.5">Últimas 5 OS registradas no PCM</p>
@@ -371,7 +365,7 @@ export function PcmDashboardPage({
             >
               Ver todas →
             </button>
-          </div>
+          </CardHeader>
           <div className="divide-y divide-line-soft">
             {dashboard.ordensRecentes.length === 0 ? (
               <div className="px-5 py-8 text-center text-body text-ink-3">
@@ -410,10 +404,10 @@ export function PcmDashboardPage({
               ))
             )}
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-card rounded-xl border border-line">
-          <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
+        <Card>
+          <CardHeader>
             <div>
               <h3 className="text-body font-semibold text-ink">Top Backlog GUT</h3>
               <p className="text-caption text-ink-3 mt-0.5">OS abertas com maior score</p>
@@ -425,7 +419,7 @@ export function PcmDashboardPage({
             >
               Ver fila →
             </button>
-          </div>
+          </CardHeader>
           <div className="divide-y divide-line-soft">
             {dashboard.topBacklog.length === 0 ? (
               <div className="px-5 py-8 text-center text-body text-ink-3">
@@ -465,7 +459,7 @@ export function PcmDashboardPage({
               ))
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
@@ -493,7 +487,10 @@ function CockpitBomDiaCards({
   onVerErrosSync: () => void;
 }) {
   return (
-    <section className="rounded-xl border border-line bg-card p-4" aria-label="Cockpit bom dia">
+    <section
+      className="overflow-hidden rounded-xl border border-line bg-card shadow-raised p-4"
+      aria-label="Cockpit bom dia"
+    >
       <div className="mb-3">
         <h3 className="text-body font-semibold text-ink">Bom dia · operação de hoje</h3>
         <p className="text-caption text-ink-3">Decisões e pontos de atenção para {cockpit.dia}</p>
@@ -696,7 +693,10 @@ function DetalheErrosSyncAuvo({
   onFechar: () => void;
 }) {
   return (
-    <section className="rounded-xl border border-danger-line bg-card" aria-live="polite">
+    <section
+      className="overflow-hidden rounded-xl border border-danger-line bg-card shadow-raised"
+      aria-live="polite"
+    >
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
           <h3 className="text-body font-semibold text-ink">Erros de sincronização Auvo</h3>
@@ -789,8 +789,8 @@ function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["
     : "sem sync";
 
   return (
-    <section className="bg-card rounded-xl border border-line overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+    <section className="overflow-hidden rounded-xl border border-line bg-card shadow-raised">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft bg-paper/45 px-4 py-3">
         <div>
           <h3 className="text-body font-semibold text-ink">Operação Auvo</h3>
           <p className="text-caption text-ink-3 mt-0.5">
@@ -854,7 +854,7 @@ function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["
                     <p className="truncate text-body font-medium text-ink">{cliente.nome}</p>
                     <p className="text-caption text-ink-3">Auvo #{cliente.auvoId}</p>
                   </div>
-                  <span className="font-brand text-lg font-bold tabular-nums text-ink">
+                  <span className="font-brand text-title font-bold tabular-nums text-ink">
                     {cliente.total}
                   </span>
                 </div>
@@ -872,8 +872,8 @@ function PainelCampoAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmRes
   const ultimaExecucao = formatarDataHoraCurta(campo.ultimaExecucaoCampo);
 
   return (
-    <section className="rounded-xl border border-line bg-card">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+    <section className="overflow-hidden rounded-xl border border-line bg-card shadow-raised">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft bg-paper/45 px-4 py-3">
         <div>
           <h3 className="text-body font-semibold text-ink">Sinais de campo Auvo</h3>
           <p className="mt-0.5 text-caption text-ink-3">

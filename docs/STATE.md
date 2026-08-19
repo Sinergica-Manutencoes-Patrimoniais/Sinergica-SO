@@ -10,6 +10,50 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-08-18 — E00-S24: DESIGN.md/PRODUCT.md de `apps/web` + polish Início/Dashboard PCM (Claude)
+
+Sessão via `/impeccable`, fora do ciclo `@sm`/`@dev` formal — Lucas invocou direto, sem story
+prévia no ROADMAP. Registrei retroativamente como **E00-S24** (sem `spec.md`/`tasks.md`
+formais) pra manter rastreio; decisão dele, perguntado por `AskUserQuestion`.
+
+**`/impeccable init`** — `apps/web` não tinha `PRODUCT.md`. Escrito a partir de evidência real do
+repo (`docs/PROJECT.md`, `docs/glossary.md`, `package.json`, `public/logos/`) + 1 rodada de
+`AskUserQuestion` pros gaps que o código não respondia (usuário primário = supervisor/colaborador;
+WCAG 2.1 AA confirmado vinculante; sem material de marketing, só dado operacional real). `buildPath:
+code` gravado em `apps/web/.impeccable/config.json`.
+
+**`/impeccable document`** (scan mode) — `apps/web` também não tinha `DESIGN.md` apesar do lote
+visual E00-S14..S23 já ter fundação de tokens pronta (`src/index.css`, `packages/ui`). Todo token
+do frontmatter (25 cores, 8 papéis de tipografia, 4 raios) veio direto do código, não inventado.
+Sidecar `.impeccable/design.json` com tonal ramps (só pras cores primary/secondary/neutral — os
+4 estados semânticos já são trios fixos texto/soft/linha, não ramp de 8), 7 componentes
+traduzidos pra HTML/CSS autocontido (`var(--color-*)`), narrativa (North Star "O Painel de
+Comando Técnico", 4 Named Rules). North Star e nomes de cor confirmados por `AskUserQuestion` —
+"Laranja Cirúrgico"/"Navy Institucional" porque o nome já carrega a regra de uso.
+
+**`/impeccable polish`** em `HomePage.tsx` (tela Início/`DashboardGeral`) e
+`PcmDashboardPage.tsx` — achei e corrigi drift real contra o `DESIGN.md` recém-escrito, não
+redesign:
+- Badge de alerta em `DashboardGeral` usava `bg-amber` (cor de marca crua) + emoji `⚠` como ícone
+  → virou `bg-warning-soft`/`text-warning` (par semântico já usado em todo o resto do produto) +
+  `AlertTriangle` do lucide (emoji-como-ícone é proibição explícita do craft floor do skill).
+- 3 botões montados à mão em `PcmDashboardPage.tsx` (Atualizar/Sincronizar Auvo/Nova OS)
+  reimplementavam na mão o que `Button` de `packages/ui` já faz — inclusive o spinner de loading,
+  replicado manualmente. Trocados pelo componente; `Loader2` ficou órfão no import, removido.
+- 5 painéis com card montado à mão (sem `shadow-raised`, sem tingimento `bg-paper/45` do header)
+  — 2 viraram `Card`/`CardHeader` de fato; os que precisavam manter `<section>` (landmark de
+  acessibilidade) ou borda semântica própria (`border-danger-line` do painel de erro Auvo)
+  ganharam as mesmas classes on-brand sem trocar de elemento.
+- 2 números em `text-lg` (fora da escala tipográfica do projeto) → `text-heading`/`text-title`.
+
+**Gates:** lint (`biome check`) e `tsc --noEmit` verdes nos 2 arquivos tocados. **Sem verificação
+visual em navegador** — extensão `claude-in-chrome` não conectada nesta sessão, e
+`playwright.config.ts` aponta pro Supabase de **produção** (não staging/local) exigindo
+`SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD` em `.env.local` da raiz, ausente aqui. Pendência
+registrada, não escondida — mesmo padrão de risco que S17/S18/S20 já tinham documentado.
+
+`docs/epics/ROADMAP.md` ganhou a linha E00-S24 com esse status.
+
 ## 2026-08-18 — Lote visual E00-S14..S23: migração mecânica (S17/S18) + verificação (S19/S22) — parte 2 (Claude)
 
 Continuação da sessão que fez a fundação em 2026-08-07 (tokens de cor, `packages/ui`, toast/
@@ -95,9 +139,18 @@ arquivo, ~2200 linhas) moveu pra `docs/state-historico/2026-07-21-a-2026-08-11.m
 tinha crescido muito além do limite de ~250 linhas da regra de rotação.
 
 ## Em andamento / próximo passo
-Branch `feat/E00-lote-visual-S14-S23` local, sem PR aberto — perguntar ao Lucas antes de abrir
-(`gh pr create`), por instrução permanente dele. Se ele quiser continuar o lote: os itens
-pendentes documentados acima (S17 AC-2 no resto dos skeletons, S20 AC-4/5/6, S21 inteira, S22
+Branch atual `chore/E01-agenda-tecnico-menu-operacao` (não é a `feat/E00-lote-visual-S14-S23`
+citada abaixo — branch trocou entre sessões) já tinha 1 commit (`989f98f`, E01-S104, reorg de
+menu) antes desta sessão. Trabalho de E00-S24 (PRODUCT.md/DESIGN.md + polish) está em cima dela.
+Lucas escolheu, por `AskUserQuestion` nesta sessão: **1 PR só** pros dois (E01-S104 + E00-S24),
+scope de commit `chore(E00-S24)`, e **merge direto após CI verde** — sem esperar review manual.
+Próximo passo literal: `git add` só nos arquivos do trabalho (não pegar o lixo solto não-meu no
+working tree — `.codex/hooks.json`, `.agents/`, `.github/agents/`, `.github/hooks/`,
+`.github/skills/`, `.impeccable/` na raiz — pré-existentes, não tocados nesta sessão), commit,
+push, `gh pr create`, aguardar `gh pr checks` verde, merge.
+
+Se Lucas quiser continuar o lote visual E00-S14..S23 depois: os itens pendentes documentados na
+entrada de sessão anterior (S17 AC-2 no resto dos skeletons, S20 AC-4/5/6, S21 inteira, S22
 AC-1/3/6/7, S23 inteira) todos compartilham o mesmo bloqueio — precisam de navegador/dispositivo
 real pra validar, não código às cegas.
 
@@ -113,3 +166,7 @@ real pra validar, não código às cegas.
   mecânica desta sessão (S17/S18 completos, ~2700 ocorrências trocadas em ~150 arquivos) passou
   pelos gates estáticos e `ci:local`, mas nenhuma tela foi vista renderizada. Quem destrava:
   sessão com Playwright/`claude-in-chrome` disponível, ou revisão humana do Lucas antes do PR.
+- [ ] **`SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD` ausentes em `.env.local` da raiz** —
+  `e2e/auth.setup.ts` falha rápido sem eles, então nenhum spec Playwright roda nesta máquina;
+  bloqueou verificação visual de E00-S24 nesta sessão (2026-08-18) e provavelmente vai bloquear a
+  próxima sessão de UI também. Quem destrava: Lucas, com as credenciais reais de teste.

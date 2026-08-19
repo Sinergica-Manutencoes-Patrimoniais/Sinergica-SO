@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   BarChart3,
   BellRing,
   BookOpen,
@@ -408,6 +409,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
       { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
+      { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "PMOC", icon: Snowflake, view: "pmoc" },
       { label: "Relatório", icon: FileBarChart, view: "relatorio-planejamento" },
     ],
@@ -418,6 +420,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Clientes", icon: Building2, view: "clientes" },
       { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
       { label: "Sistemas", icon: Link2, view: "sistemas" },
+      { label: "Ferramentas", icon: Package, view: "ferramentas" },
     ],
   },
   {
@@ -426,9 +429,7 @@ const PCM_NAV: NavGroup[] = [
     // não duplica o CRUD, só atalho (ver `atalhoConfigGrupos`).
     titulo: "CONFIGURAÇÕES",
     items: [
-      { label: "Ferramentas", icon: Package, view: "ferramentas" },
       { label: "Equipes", icon: Users, view: "equipes" },
-      { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "Funcionários", icon: UserCog, view: "funcionarios" },
       { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
       { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
@@ -562,8 +563,9 @@ function DashboardGeral({
                 {modulo.label}
               </span>
               {resumo.alerta && (
-                <span className="inline-flex items-center gap-1 text-micro font-semibold text-warning bg-amber rounded-full px-2 py-0.5 shrink-0">
-                  ⚠ {resumo.alerta}
+                <span className="inline-flex items-center gap-1 shrink-0 rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
+                  <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  {resumo.alerta}
                 </span>
               )}
             </div>
