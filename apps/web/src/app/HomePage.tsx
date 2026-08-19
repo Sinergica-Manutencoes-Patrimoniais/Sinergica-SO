@@ -1,5 +1,4 @@
 import {
-  AlertTriangle,
   BarChart3,
   BellRing,
   BookOpen,
@@ -21,7 +20,6 @@ import {
   Gauge,
   HardHat,
   Headset,
-  Home,
   KeyRound,
   Landmark,
   LayoutDashboard,
@@ -66,7 +64,6 @@ import { ContratosPage as ComercialContratosPage } from "../features/comercial/p
 import { DashboardComercialPage as ComercialDashboardPage } from "../features/comercial/pages/DashboardComercialPage";
 import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
 import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features/comercial/pages/ParametrosPrecoPage";
-import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
 import { IntegracoesPage } from "../features/config/pages/IntegracoesPage";
@@ -122,31 +119,15 @@ import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
+import { DASHBOARD_GERAL, DashboardGeral } from "./DashboardGeral";
 import { useAuth } from "./auth-context";
+import { MODULOS, isModuloNegocio } from "./modulos";
+import type { AreaAtiva, ModuloId, ModuloTab } from "./modulos";
 import { useNavGuard } from "./nav-guard-context";
 import { usePermissoes } from "./permissoes-context";
 import { useTheme } from "./theme-context";
 
 // ─── tipos ──────────────────────────────────────────────────────────────────
-
-type ModuloId = "inicio" | ModuloNegocioId;
-
-// "config" não é módulo de negócio (não tem permissão por módulo) — é a área administrativa,
-// visível só por papel (superadmin/supervisor), não por config.minhas_permissoes.
-// "guia" também não é módulo permissionável — documentação visível a qualquer usuário logado,
-// igual "config" (mas sem exigir papel administrativo).
-type AreaAtiva = ModuloId | "config" | "guia";
-
-function isModuloNegocio(id: ModuloId): id is ModuloNegocioId {
-  return id !== "inicio";
-}
-
-interface ModuloTab {
-  id: ModuloId;
-  label: string;
-  icon: LucideIcon;
-  descricao: string;
-}
 
 // Sub-navegação interna do Atendimento (E02-S02/S03/S05) — mesmo padrão useState de abas, sem lib
 // de rotas.
@@ -254,58 +235,6 @@ interface GuiaNavItem {
 }
 
 // ─── dados ───────────────────────────────────────────────────────────────────
-
-const MODULOS: ModuloTab[] = [
-  {
-    id: "inicio",
-    label: "Início",
-    icon: Home,
-    descricao: "Visão geral consolidada de todos os módulos do Sinérgica SO.",
-  },
-  {
-    id: "pcm",
-    label: "PCM · Operação",
-    icon: HardHat,
-    descricao: "Ordens de serviço, backlog GUT, inspeções e preventivas.",
-  },
-  {
-    id: "atendimento",
-    label: "Atendimento · Zé",
-    icon: Bot,
-    descricao: "Agente IA no WhatsApp — abre chamados 24/7 sem intervenção humana.",
-  },
-  {
-    id: "comercial",
-    label: "Comercial",
-    icon: Briefcase,
-    descricao: "CRM, levantamentos, propostas com IA e gestão de contratos.",
-  },
-  {
-    id: "financeiro",
-    label: "Financeiro",
-    icon: BarChart3,
-    descricao: "Faturamento, recebíveis, margem por contrato e alertas de inadimplência.",
-  },
-  {
-    id: "marketing",
-    label: "Marketing",
-    icon: Megaphone,
-    descricao:
-      "Calendário editorial, geração de conteúdo com IA, leads e campanhas de aquisição (Growth).",
-  },
-  {
-    id: "gestao",
-    label: "Cockpit",
-    icon: LayoutDashboard,
-    descricao: "KPIs operacionais, SLA, MRR e margem — visão consolidada para gestores.",
-  },
-  {
-    id: "area-cliente",
-    label: "Área do Cliente",
-    icon: UserCircle,
-    descricao: "Portal do síndico — chamados, histórico e download de relatórios.",
-  },
-];
 
 const CONFIG_NAV: Array<{
   id: "grupos" | "usuarios" | "integracoes" | "ia" | "priorizacao" | "localizacao-auvo";
@@ -452,69 +381,6 @@ const PCM_NAV: NavGroup[] = [
   },
 ];
 
-// ─── mock data ────────────────────────────────────────────────────────────────
-
-interface ModuloResumo {
-  moduloId: ModuloId;
-  kpis: Array<{ label: string; valor: string }>;
-  alerta?: string;
-}
-
-const DASHBOARD_GERAL: ModuloResumo[] = [
-  {
-    moduloId: "pcm",
-    kpis: [
-      { label: "OS Abertas", valor: "12" },
-      { label: "SLA no Prazo", valor: "87%" },
-      { label: "Backlog", valor: "23 itens" },
-    ],
-  },
-  {
-    moduloId: "atendimento",
-    kpis: [
-      { label: "Chamados hoje", valor: "8" },
-      { label: "Pendentes", valor: "3" },
-    ],
-  },
-  {
-    moduloId: "comercial",
-    kpis: [
-      { label: "Leads ativos", valor: "5" },
-      { label: "Contratos ativos", valor: "3" },
-    ],
-  },
-  {
-    moduloId: "financeiro",
-    kpis: [
-      { label: "Recebido (mês)", valor: "R$ 48,5k" },
-      { label: "Inadimplentes", valor: "1" },
-    ],
-    alerta: "1 contrato",
-  },
-  {
-    moduloId: "marketing",
-    kpis: [
-      { label: "Publicações/sem.", valor: "3" },
-      { label: "Alcance", valor: "1.2k" },
-      { label: "Leads (mês)", valor: "12" },
-    ],
-  },
-  {
-    moduloId: "gestao",
-    kpis: [
-      { label: "Alertas críticos", valor: "0" },
-      { label: "Score geral", valor: "94" },
-    ],
-  },
-  {
-    moduloId: "area-cliente",
-    kpis: [
-      { label: "Portais ativos", valor: "15" },
-      { label: "OS via portal", valor: "2" },
-    ],
-  },
-];
-
 // ─── componentes ─────────────────────────────────────────────────────────────
 
 function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
@@ -532,69 +398,6 @@ function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
         <span className="w-1.5 h-1.5 rounded-full bg-orange" />
         Em construção
       </span>
-    </div>
-  );
-}
-
-function DashboardGeral({
-  resumos,
-  onSelect,
-}: {
-  resumos: ModuloResumo[];
-  onSelect: (id: ModuloId) => void;
-}) {
-  return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      {resumos.map((resumo) => {
-        const modulo = MODULOS.find((m) => m.id === resumo.moduloId);
-        if (!modulo) return null;
-        const Icon = modulo.icon;
-        return (
-          <div
-            key={resumo.moduloId}
-            className="group flex min-h-44 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-raised transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-overlay"
-          >
-            {/* Header */}
-            <div className="flex items-center gap-2.5 bg-navy px-3.5 py-2.5">
-              <div className="w-7 h-7 rounded-md bg-card/10 flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-white" strokeWidth={1.8} />
-              </div>
-              <span className="text-body font-semibold text-white flex-1 truncate">
-                {modulo.label}
-              </span>
-              {resumo.alerta && (
-                <span className="inline-flex items-center gap-1 shrink-0 rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
-                  <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
-                  {resumo.alerta}
-                </span>
-              )}
-            </div>
-
-            {/* KPIs */}
-            <div className="flex flex-1 flex-col gap-2 px-3.5 py-3">
-              {resumo.kpis.map((kpi) => (
-                <div key={kpi.label} className="flex items-baseline justify-between gap-2">
-                  <span className="text-caption text-ink-3 truncate">{kpi.label}</span>
-                  <span className="shrink-0 font-brand text-heading font-bold tabular-nums text-ink">
-                    {kpi.valor}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer */}
-            <div className="px-3.5 pb-3">
-              <button
-                type="button"
-                onClick={() => onSelect(resumo.moduloId)}
-                className="w-full cursor-pointer rounded-md py-1.5 text-center text-caption font-semibold text-orange transition-colors hover:bg-orange-soft hover:text-orange-deep"
-              >
-                Ver módulo →
-              </button>
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
