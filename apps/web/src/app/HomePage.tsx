@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   BarChart3,
   BellRing,
   BookOpen,
@@ -562,8 +563,9 @@ function DashboardGeral({
                 {modulo.label}
               </span>
               {resumo.alerta && (
-                <span className="inline-flex items-center gap-1 text-micro font-semibold text-warning bg-amber rounded-full px-2 py-0.5 shrink-0">
-                  ⚠ {resumo.alerta}
+                <span className="inline-flex items-center gap-1 shrink-0 rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
+                  <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  {resumo.alerta}
                 </span>
               )}
             </div>

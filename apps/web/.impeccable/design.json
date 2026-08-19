@@ -1,0 +1,412 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-18T00:00:00Z",
+  "title": "Design System: Sinérgica SO",
+  "extensions": {
+    "colorMeta": {
+      "navy-institucional": {
+        "role": "primary",
+        "displayName": "Navy Institucional",
+        "canonical": "#1c2748",
+        "tonalRamp": [
+          "#0a0e1c",
+          "#141c36",
+          "#1c2748",
+          "#27365f",
+          "#3e4c7a",
+          "#6b7aa0",
+          "#a3aec9",
+          "#dde2ef"
+        ]
+      },
+      "navy-profundo": {
+        "role": "primary",
+        "displayName": "Navy Profundo",
+        "canonical": "#141c36",
+        "tonalRamp": [
+          "#050810",
+          "#0d1220",
+          "#141c36",
+          "#1c2748",
+          "#334066",
+          "#5c6a92",
+          "#98a4c4",
+          "#d6dcec"
+        ]
+      },
+      "laranja-cirurgico": {
+        "role": "secondary",
+        "displayName": "Laranja Cirúrgico",
+        "canonical": "#e8731b",
+        "tonalRamp": [
+          "#4a2408",
+          "#7a3c0d",
+          "#b25412",
+          "#d2630f",
+          "#e8731b",
+          "#f0955a",
+          "#f7c19b",
+          "#fbeee0"
+        ]
+      },
+      "laranja-pressionado": {
+        "role": "secondary",
+        "displayName": "Laranja Pressionado",
+        "canonical": "#d2630f",
+        "tonalRamp": [
+          "#3f1e08",
+          "#6b330d",
+          "#9c4a10",
+          "#c25a0f",
+          "#d2630f",
+          "#e68a48",
+          "#f0b98a",
+          "#fae2cd"
+        ]
+      },
+      "ambar": {
+        "role": "secondary",
+        "displayName": "Âmbar",
+        "canonical": "#f4a300",
+        "tonalRamp": [
+          "#4d3300",
+          "#7a5100",
+          "#a86e00",
+          "#d18a00",
+          "#f4a300",
+          "#f7bb40",
+          "#fad584",
+          "#fdedc4"
+        ]
+      },
+      "papel": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "canonical": "#f4f2ec",
+        "tonalRamp": [
+          "#141310",
+          "#2b2820",
+          "#4d4838",
+          "#8a8267",
+          "#c4bda6",
+          "#e2ddcf",
+          "#f4f2ec",
+          "#fbfaf7"
+        ]
+      },
+      "superficie-card": {
+        "role": "neutral",
+        "displayName": "Superfície de Card",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#1a1a1a",
+          "#404040",
+          "#737373",
+          "#a6a6a6",
+          "#d4d4d4",
+          "#e8e8e8",
+          "#f5f5f5",
+          "#ffffff"
+        ]
+      },
+      "linha": {
+        "role": "neutral",
+        "displayName": "Linha",
+        "canonical": "#e5e2d9",
+        "tonalRamp": [
+          "#2c291f",
+          "#524d3d",
+          "#7d765d",
+          "#a89f80",
+          "#c9c2ac",
+          "#e5e2d9",
+          "#f0eee7",
+          "#f8f7f3"
+        ]
+      },
+      "linha-suave": {
+        "role": "neutral",
+        "displayName": "Linha Suave",
+        "canonical": "#edeae2",
+        "tonalRamp": [
+          "#302d24",
+          "#57523f",
+          "#827b60",
+          "#aca486",
+          "#cdc7b1",
+          "#edeae2",
+          "#f4f2ec",
+          "#faf9f5"
+        ]
+      },
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#1a2138",
+        "tonalRamp": [
+          "#080a12",
+          "#0f1322",
+          "#1a2138",
+          "#2a3455",
+          "#454f78",
+          "#6c76a0",
+          "#a2aac8",
+          "#d9dce8"
+        ]
+      },
+      "tinta-2": {
+        "role": "neutral",
+        "displayName": "Tinta 2",
+        "canonical": "#585e72",
+        "tonalRamp": [
+          "#161821",
+          "#2b2e3d",
+          "#414459",
+          "#585e72",
+          "#767c92",
+          "#9a9fb2",
+          "#c1c4d1",
+          "#e6e7ec"
+        ]
+      },
+      "tinta-3": {
+        "role": "neutral",
+        "displayName": "Tinta 3",
+        "canonical": "#8c8f9b",
+        "tonalRamp": [
+          "#232429",
+          "#404248",
+          "#5e6067",
+          "#8c8f9b",
+          "#a5a8b2",
+          "#bfc1c8",
+          "#dadbdf",
+          "#eeeef0"
+        ]
+      },
+      "tinta-4": {
+        "role": "neutral",
+        "displayName": "Tinta 4",
+        "canonical": "#b4b6be",
+        "tonalRamp": [
+          "#2b2c30",
+          "#4d4e54",
+          "#71727a",
+          "#95969e",
+          "#b4b6be",
+          "#cbccd1",
+          "#e1e2e5",
+          "#f2f2f3"
+        ]
+      },
+      "tinta-nav": {
+        "role": "neutral",
+        "displayName": "Tinta Nav",
+        "canonical": "#a8b0cc",
+        "tonalRamp": [
+          "#1a1e2c",
+          "#333a52",
+          "#4d5678",
+          "#6f79a0",
+          "#8f97b8",
+          "#a8b0cc",
+          "#c6cbdd",
+          "#e6e9f1"
+        ]
+      },
+      "sucesso": { "role": "state", "displayName": "Sucesso", "canonical": "#1a7a3b" },
+      "sucesso-suave": { "role": "state", "displayName": "Sucesso Suave", "canonical": "#e7f6ec" },
+      "sucesso-linha": { "role": "state", "displayName": "Sucesso Linha", "canonical": "#bfe9cc" },
+      "alerta": { "role": "state", "displayName": "Alerta", "canonical": "#9a5a00" },
+      "alerta-suave": { "role": "state", "displayName": "Alerta Suave", "canonical": "#fdf1df" },
+      "alerta-linha": { "role": "state", "displayName": "Alerta Linha", "canonical": "#f0d4b0" },
+      "perigo": { "role": "state", "displayName": "Perigo", "canonical": "#a23b25" },
+      "perigo-suave": { "role": "state", "displayName": "Perigo Suave", "canonical": "#fff4f1" },
+      "perigo-linha": { "role": "state", "displayName": "Perigo Linha", "canonical": "#f2c0b5" },
+      "info": { "role": "state", "displayName": "Info", "canonical": "#2e3c70" },
+      "info-suave": { "role": "state", "displayName": "Info Suave", "canonical": "#eaeef8" },
+      "info-linha": { "role": "state", "displayName": "Info Linha", "canonical": "#c7d0ec" }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Título de maior destaque, raro, topo de página de alto nível."
+      },
+      "title": { "displayName": "Title", "purpose": "page-title — título de página padrão." },
+      "heading": { "displayName": "Heading", "purpose": "Título de seção/card dentro da página." },
+      "body": { "displayName": "Body", "purpose": "Texto corrido padrão do produto." },
+      "body-sm": { "displayName": "Body Small", "purpose": "Texto secundário/denso." },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Label de botão, badge, legenda de formulário — sempre semibold."
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "Cabeçalho de grupo de menu, uppercase tracking-widest."
+      },
+      "numero-tabular": {
+        "displayName": "Número Tabular",
+        "purpose": "Todo valor numérico em tabela, KPI ou coluna monetária — Saira + tabular-nums, nunca dança de largura."
+      }
+    },
+    "shadows": [
+      {
+        "name": "raised",
+        "value": "0 1px 2px rgba(20,28,54,.06), 0 1px 1px rgba(20,28,54,.04)",
+        "purpose": "Repouso — card, superfície padrão. No escuro vira contorno 1px."
+      },
+      {
+        "name": "overlay",
+        "value": "0 4px 10px rgba(20,28,54,.1), 0 2px 4px rgba(20,28,54,.06)",
+        "purpose": "Popover, toast."
+      },
+      {
+        "name": "modal",
+        "value": "0 16px 32px rgba(20,28,54,.16), 0 4px 10px rgba(20,28,54,.08)",
+        "purpose": "Modal centrado."
+      },
+      {
+        "name": "drawer",
+        "value": "0 24px 48px rgba(20,28,54,.2), 0 8px 16px rgba(20,28,54,.1)",
+        "purpose": "Sidebar mobile, painel lateral."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Curva padrão de entrada/transição de estado."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.77, 0, 0.175, 1)",
+        "purpose": "Transições simétricas."
+      },
+      {
+        "name": "ease-drawer",
+        "value": "cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "Abertura/fechamento de drawer/sidebar mobile."
+      },
+      {
+        "name": "duration-fast",
+        "value": "120ms",
+        "purpose": "Micro-interação (hover, active, toast saindo)."
+      },
+      {
+        "name": "duration-base",
+        "value": "200ms",
+        "purpose": "Padrão de overlay/surface/toast entrando."
+      },
+      {
+        "name": "duration-slow",
+        "value": "300ms",
+        "purpose": "Troca de tema claro/escuro — evita salto de brilho."
+      }
+    ],
+    "breakpoints": [{ "name": "sm", "value": "640px" }, { "name": "lg", "value": "1024px" }]
+  },
+  "components": [
+    {
+      "name": "Button Primary",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação padrão de página.",
+      "html": "<button class=\"ds-btn-primary\">Salvar</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 14px; border: none; border-radius: var(--radius-md); background: var(--color-navy); color: #ffffff; font-weight: 600; font-size: var(--text-body); transition: background-color 120ms cubic-bezier(0.23,1,0.32,1); } .ds-btn-primary:hover { background: var(--color-navy-deep); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-orange) 75%, transparent); outline-offset: 2px; } .ds-btn-primary:disabled { cursor: not-allowed; opacity: 0.5; }"
+    },
+    {
+      "name": "Button Accent",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "Única cor de ação do produto — usar raro (CTA, prioridade crítica).",
+      "html": "<button class=\"ds-btn-accent\">Abrir Chamado</button>",
+      "css": ".ds-btn-accent { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 14px; border: none; border-radius: var(--radius-md); background: var(--color-orange); color: #ffffff; font-weight: 600; font-size: var(--text-body); transition: background-color 120ms cubic-bezier(0.23,1,0.32,1); } .ds-btn-accent:hover { background: var(--color-orange-deep); } .ds-btn-accent:active { transform: scale(0.97); } .ds-btn-accent:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-orange) 75%, transparent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Button Secondary",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ação secundária/cancelar.",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: var(--radius-md); border: 1px solid var(--color-line); background: var(--color-card); color: var(--color-ink-2); font-weight: 600; font-size: var(--text-body); transition: background-color 120ms, color 120ms; } .ds-btn-secondary:hover { background: var(--color-line-soft); color: var(--color-ink); } .ds-btn-secondary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de texto padrão — sempre envolto por Field (label + ajuda + erro).",
+      "html": "<input class=\"ds-input\" placeholder=\"Buscar cliente…\" />",
+      "css": ".ds-input { height: 36px; width: 100%; border-radius: var(--radius-md); border: 1px solid var(--color-line); background: var(--color-card); padding: 6px 10px; font-size: var(--text-caption); color: var(--color-ink); outline: none; transition: border-color 120ms, box-shadow 120ms, background-color 120ms; } .ds-input::placeholder { color: var(--color-ink-4); } .ds-input:focus { border-color: var(--color-navy); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-navy) 10%, transparent); } .ds-input:disabled { background: var(--color-line-soft); color: var(--color-ink-3); }"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge-neutral",
+      "description": "Rótulo de estado — não interativo. Tone varia (neutral/success/warning/danger/info/accent).",
+      "html": "<span class=\"ds-badge\">Pendente</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 8px; font-size: 11px; font-weight: 600; background: var(--color-line-soft); color: var(--color-ink-2); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Superfície elevada padrão — header opcional com fundo levemente diferenciado.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\">Título da Seção</div><div class=\"ds-card-body\">Conteúdo do card.</div></div>",
+      "css": ".ds-card { overflow: hidden; border-radius: var(--radius-xl); border: 1px solid var(--color-line); background: var(--color-card); box-shadow: 0 1px 2px rgba(20,28,54,.06), 0 1px 1px rgba(20,28,54,.04); } .ds-card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--color-line-soft); background: color-mix(in srgb, var(--color-paper) 45%, transparent); padding: 12px 14px; font-weight: 600; font-size: var(--text-heading); color: var(--color-ink); } .ds-card-body { padding: 14px; font-size: var(--text-body); color: var(--color-ink); }"
+    },
+    {
+      "name": "Nav Item (Sidebar)",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Item de navegação da sidebar navy — componente assinatura do sistema. Estado ativo usa borda esquerda laranja, nunca só cor de texto.",
+      "html": "<button class=\"ds-nav-item ds-nav-item-active\"><span class=\"ds-nav-icon\" aria-hidden=\"true\">●</span>Backlog</button>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border-radius: 2px; font-size: var(--text-body); color: var(--color-nav-ink); background: transparent; border: none; border-left: 2px solid transparent; cursor: pointer; transition: background-color 120ms, color 120ms; } .ds-nav-item:hover { background: rgba(255,255,255,0.04); color: #ffffff; } .ds-nav-item-active { border-left-color: var(--color-orange); background: rgba(255,255,255,0.07); color: #ffffff; font-weight: 500; } .ds-nav-icon { width: 16px; height: 16px; flex-shrink: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "O Painel de Comando Técnico",
+    "overview": "Navy institucional é a estrutura de comando — sidebar, hierarquia, o que orienta. Laranja cirúrgico é ação e prioridade — usado raro e sempre com intenção: CTA, indicador ativo, criticidade. Papel quente (#F4F2EC) é a mesa de trabalho onde o operador resolve chamados e OS — deliberadamente não é o slate genérico de dashboard SaaS (decisão registrada no próprio código-fonte, src/index.css). O sistema serve quem decide e prioriza manutenção predial o dia inteiro: supervisor e colaborador operando PCM — não visitante decidindo se compra algo.\n\nA superfície é honesta e sem ornamento: hairlines quentes em vez de sombra pesada, tipografia Poppins direta pro texto corrido, Saira reservada só pra número tabular (a régua numérica do sistema — nunca dança de largura ao atualizar). O produto reconhece explicitamente sua própria divisão de responsabilidade — PCM decide, Auvo executa — e essa disciplina se reflete na interface: nada finge ter dado que só o Auvo tem autoridade sobre.",
+    "keyCharacteristics": [
+      "Estrutura navy, ação laranja rara, mesa de trabalho em papel quente — nunca slate genérico.",
+      "Hairline > sombra pesada; sombra existe mas é sutil e desaparece no escuro em favor de borda.",
+      "Número sempre em Saira + tabular-nums; texto corrido sempre em Poppins.",
+      "Feedback instantâneo e contido — active:scale-[0.97] no pointerdown, nunca elástico."
+    ],
+    "rules": [
+      {
+        "name": "A Regra do Laranja Raro",
+        "body": "Laranja cirúrgico aparece só em CTA, indicador ativo e prioridade crítica — nunca como cor decorativa ou de preenchimento de área grande. A raridade é o que faz o olho parar nele.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Hairline",
+        "body": "Separação de superfície vem de borda quente (linha/linha-soft) primeiro, sombra depois — nunca sombra pesada como recurso principal de hierarquia.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Número em Saira",
+        "body": "Todo número que representa um dado (não um rótulo) usa font-brand (Saira) + tabular-nums. Texto corrido nunca usa Saira.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra da Sombra Navy",
+        "body": "Toda sombra deriva de rgba(20,28,54,…) — nunca preto puro (rgba(0,0,0,…)) no tema claro. No escuro, sombra vira borda.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do consumir cor sempre por nome de token semântico (text-success, bg-danger-soft) — nunca hex cru, nem lógica dark: por chamada.",
+      "Do usar Saira/tabular-nums (NumeroTabular) em todo valor numérico de tabela/KPI.",
+      "Do reusar packages/ui (Button, Card, Badge, Input, Field, DataTable, Modal, Toast) em vez de montar variante local.",
+      "Do respeitar prefers-reduced-motion — toda animação do sistema já tem fallback estático.",
+      "Do manter o anel de foco visível (laranja, 2px + offset) em todo elemento interativo."
+    ],
+    "donts": [
+      "Don't usar laranja cirúrgico como cor decorativa ou de preenchimento de área grande — é ação rara, não acento.",
+      "Don't usar sombra preta pura (rgba(0,0,0,…)) — toda sombra deriva do navy.",
+      "Don't aplicar --color-ink-* sobre a sidebar navy — o texto de sidebar é tinta-nav, fixo nos dois temas.",
+      "Don't montar modal, toast, tabela ou input à mão numa feature — são casos já unificados; nova ocorrência manual é regressão.",
+      "Don't deixar carregando/vazio sem distinguir \"nunca houve dado\" de \"filtro zerou\"."
+    ]
+  }
+}
