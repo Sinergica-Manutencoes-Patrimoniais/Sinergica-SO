@@ -43,7 +43,12 @@ describe("E01-S60 — contrato visual V1", () => {
     expect(home).toMatch(
       /titulo: "CONFIGURAÇÕES",[\s\S]{0,1800}label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa"/,
     );
-    expect(home).not.toMatch(/titulo: "CADASTROS",[\s\S]{0,800}label: "Tipos de Tarefa"/);
+    // Escopa ao corpo do array de CADASTROS (até o primeiro fechamento `],`) em vez de uma
+    // distância fixa de caracteres — E01-S104 adicionou "Ferramentas" ao grupo e um limiar fixo
+    // (800) vira falso positivo a cada item novo, sem checar se "Tipos de Tarefa" está de fato
+    // dentro do array.
+    const cadastros = home.match(/titulo: "CADASTROS",[\s\S]*?\n\s*\],/)?.[0] ?? "";
+    expect(cadastros).not.toContain('label: "Tipos de Tarefa"');
     expect(home).not.toContain('titulo: "PREVENTIVO"');
     expect(home).not.toContain('label: "Cronograma"');
     expect(home).not.toContain('label: "Preventivas"');
