@@ -35,7 +35,7 @@ export function ModuloPermissaoGrid({ permissoes, onChange, disabled }: ModuloPe
         const atual = permissoes[modulo] ?? null;
         return (
           <div key={modulo} className="flex items-center justify-between gap-3 px-4 py-2.5 bg-card">
-            <span className="text-sm text-ink-2">{MODULO_LABELS[modulo]}</span>
+            <span className="text-body text-ink-2">{MODULO_LABELS[modulo]}</span>
             <div className="flex items-center gap-1">
               {OPCOES.map((opcao) => {
                 const ativo = atual === opcao.nivel;
@@ -45,7 +45,7 @@ export function ModuloPermissaoGrid({ permissoes, onChange, disabled }: ModuloPe
                     type="button"
                     disabled={disabled}
                     onClick={() => onChange(modulo, opcao.nivel)}
-                    className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`text-caption font-medium px-2.5 py-1 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                       ativo ? "bg-orange text-white" : "bg-line-soft text-ink-3 hover:text-ink"
                     }`}
                   >

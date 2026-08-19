@@ -45,7 +45,7 @@ export function IgCommentAutomationsTab({
   return (
     <div className="flex flex-col gap-4">
       {automacoes.length === 0 ? (
-        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-body text-ink-3">
           Nenhuma automação de comentário cadastrada ainda.
         </div>
       ) : (
@@ -53,14 +53,14 @@ export function IgCommentAutomationsTab({
           {automacoes.map((a) => (
             <div key={a.id} className="flex items-center justify-between px-4 py-3">
               <div>
-                <p className="text-sm font-medium text-ink-2">{a.nome}</p>
-                <p className="text-xs text-ink-3">Gatilhos: {a.palavrasGatilho.join(", ")}</p>
+                <p className="text-body font-medium text-ink-2">{a.nome}</p>
+                <p className="text-caption text-ink-3">Gatilhos: {a.palavrasGatilho.join(", ")}</p>
               </div>
               {temEscrita && (
                 <button
                   type="button"
                   onClick={() => onDesativar(a.id)}
-                  className="text-xs text-danger hover:underline"
+                  className="text-caption text-danger hover:underline"
                 >
                   Desativar
                 </button>
@@ -72,9 +72,9 @@ export function IgCommentAutomationsTab({
 
       {temEscrita && (
         <div className="rounded-xl border border-line bg-card p-4">
-          <h3 className="text-sm font-semibold text-ink">Nova regra</h3>
+          <h3 className="text-body font-semibold text-ink">Nova regra</h3>
           {canaisInstagram.length === 0 ? (
-            <p className="mt-2 text-sm text-ink-3">
+            <p className="mt-2 text-body text-ink-3">
               Conecte uma conta na aba "Instagram" antes de criar regras.
             </p>
           ) : (
@@ -82,7 +82,7 @@ export function IgCommentAutomationsTab({
               <select
                 value={form.canalId}
                 onChange={(e) => setForm((f) => ({ ...f, canalId: e.target.value }))}
-                className="w-full rounded-md border border-line p-2 text-sm"
+                className="w-full rounded-md border border-line p-2 text-body"
               >
                 {canaisInstagram.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -94,23 +94,23 @@ export function IgCommentAutomationsTab({
                 value={form.nome}
                 onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
                 placeholder="Nome da regra"
-                className="w-full rounded-md border border-line p-2 text-sm"
+                className="w-full rounded-md border border-line p-2 text-body"
               />
               <input
                 value={form.palavras}
                 onChange={(e) => setForm((f) => ({ ...f, palavras: e.target.value }))}
                 placeholder="Palavras-chave separadas por vírgula"
-                className="w-full rounded-md border border-line p-2 text-sm"
+                className="w-full rounded-md border border-line p-2 text-body"
               />
               <textarea
                 value={form.respostaDm}
                 onChange={(e) => setForm((f) => ({ ...f, respostaDm: e.target.value }))}
                 placeholder="Mensagem do Direct (use {{username}})"
                 rows={2}
-                className="w-full rounded-md border border-line p-2 text-sm"
+                className="w-full rounded-md border border-line p-2 text-body"
               />
               {erro && (
-                <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+                <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
                   {erro}
                 </div>
               )}
@@ -118,7 +118,7 @@ export function IgCommentAutomationsTab({
                 type="button"
                 onClick={salvar}
                 disabled={salvando}
-                className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                className="rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
               >
                 {salvando ? "Salvando…" : "Criar regra"}
               </button>

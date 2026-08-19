@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Card, PageHeader } from "./MockUi";
@@ -31,10 +32,9 @@ export function CategoriasMock() {
         title="Categorias"
         subtitle="Plano de contas — 2 níveis, editável."
         actions={
-          <button type="button" className="btn-accent">
-            <Plus className="h-4 w-4" />
+          <Button variant="accent" icon={<Plus className="h-4 w-4" />}>
             Nova categoria
-          </button>
+          </Button>
         }
       />
       <div className="grid gap-3 md:grid-cols-2">
@@ -65,7 +65,7 @@ export function CategoriasMock() {
 function ParentRow({ nome }: { nome: string }) {
   return (
     <li className="flex items-center justify-between border-b border-line-soft py-2.5 last:border-0">
-      <span className="text-sm font-semibold text-ink">{nome}</span>
+      <span className="text-body font-semibold text-ink">{nome}</span>
       <Switch />
     </li>
   );
@@ -74,7 +74,7 @@ function ParentRow({ nome }: { nome: string }) {
 function ChildRow({ nome }: { nome: string }) {
   return (
     <li className="flex items-center justify-between border-b border-line-soft py-2 pl-4 last:border-0">
-      <span className="text-xs text-ink-2">{nome}</span>
+      <span className="text-caption text-ink-2">{nome}</span>
       <Switch />
     </li>
   );

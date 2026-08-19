@@ -1,4 +1,5 @@
-import { Archive, Plus, RefreshCw, Ticket as TicketIcon, X } from "lucide-react";
+import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
+import { Archive, Plus, RefreshCw, Ticket as TicketIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -52,12 +53,13 @@ export function TicketsPage() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modalAberto, setModalAberto] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [ticketParaArquivar, setTicketParaArquivar] = useState<TicketItem | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [tickets, clientes, equipes, requestTypes, status] = await Promise.all([
         listarTickets(supabaseTicketsAdapter),
@@ -95,24 +97,27 @@ export function TicketsPage() {
     }
   }
 
-  async function arquivar(ticket: TicketItem) {
-    if (!user || !confirm(`Arquivar o ticket "${ticket.titulo}"? Fica só local no PCM.`)) return;
-    try {
-      setErroAcao(null);
-      await arquivarTicket(supabaseTicketsAdapter, { id: ticket.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível arquivar.");
-    }
+  async function arquivar() {
+    if (!user || !ticketParaArquivar) return;
+    await arquivarTicket(supabaseTicketsAdapter, { id: ticketParaArquivar.id, userId: user.id });
+    await carregar();
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
@@ -120,11 +125,11 @@ export function TicketsPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -141,8 +146,8 @@ export function TicketsPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Tickets</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h1 className="text-heading font-semibold text-ink">Tickets</h1>
+            <p className="mt-0.5 text-body text-ink-3">
               Chamados de central de atendimento do Auvo — diferente da OS do PCM
             </p>
           </div>
@@ -150,19 +155,19 @@ export function TicketsPage() {
             <button
               type="button"
               onClick={() => setModalAberto(true)}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Novo ticket
             </button>
           )}
         </div>
-        <div className="mt-3 rounded-md border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
+        <div className="mt-3 rounded-md border border-warning-soft bg-warning-soft px-3 py-2 text-body text-warning">
           Só o status propaga ao Auvo. Título/descrição, se editados depois de criados, ficam só
           locais — a API do Auvo não documenta edição desses campos.
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -171,7 +176,7 @@ export function TicketsPage() {
       {estado.tickets.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <TicketIcon className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhum ticket aberto.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhum ticket aberto.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
@@ -179,8 +184,8 @@ export function TicketsPage() {
             <div key={ticket.id} className="rounded-lg border border-line bg-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h4 className="truncate text-sm font-semibold text-ink">{ticket.titulo}</h4>
-                  <p className="mt-1 text-xs text-ink-3">
+                  <h4 className="truncate text-body font-semibold text-ink">{ticket.titulo}</h4>
+                  <p className="mt-1 text-caption text-ink-3">
                     {ticket.clienteNome ?? "Sem cliente"} · Auvo {ticket.auvoId ?? "-"} · Sync{" "}
                     {ticket.auvoSyncStatus ?? "pending"}
                   </p>
@@ -191,14 +196,14 @@ export function TicketsPage() {
                   {ticket.ativo ? "Ativo" : "Arquivado"}
                 </span>
               </div>
-              {ticket.descricao && <p className="mt-2 text-sm text-ink-3">{ticket.descricao}</p>}
+              {ticket.descricao && <p className="mt-2 text-body text-ink-3">{ticket.descricao}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="text-xs text-ink-3">Status:</span>
+                <span className="text-caption text-ink-3">Status:</span>
                 {temEscrita && ticket.ativo ? (
                   <select
                     value={ticket.statusId ?? ""}
                     onChange={(event) => mudarStatus(ticket, Number(event.target.value))}
-                    className="input h-8 text-xs"
+                    className="input h-8 text-caption"
                   >
                     <option value="" disabled>
                       selecionar
@@ -210,20 +215,20 @@ export function TicketsPage() {
                     ))}
                   </select>
                 ) : (
-                  <span className="text-xs font-semibold text-ink-2">
+                  <span className="text-caption font-semibold text-ink-2">
                     {statusNome(ticket.statusId)}
                   </span>
                 )}
               </div>
               {ticket.auvoSyncError && (
-                <p className="mt-2 text-xs text-danger">{ticket.auvoSyncError}</p>
+                <p className="mt-2 text-caption text-danger">{ticket.auvoSyncError}</p>
               )}
               {temEscrita && ticket.ativo && (
                 <div className="mt-4 flex justify-end">
                   <button
                     type="button"
-                    onClick={() => arquivar(ticket)}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-danger-line px-3 text-xs font-semibold text-danger hover:bg-danger-soft"
+                    onClick={() => setTicketParaArquivar(ticket)}
+                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-danger-line px-3 text-caption font-semibold text-danger hover:bg-danger-soft"
                   >
                     <Archive className="h-3.5 w-3.5" />
                     Arquivar
@@ -245,6 +250,17 @@ export function TicketsPage() {
           onSalvar={salvar}
         />
       )}
+
+      <ConfirmDialog
+        open={ticketParaArquivar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setTicketParaArquivar(null);
+        }}
+        titulo={`Arquivar o ticket "${ticketParaArquivar?.titulo}"`}
+        descricao="Fica só local no PCM."
+        rotuloConfirmar="Arquivar"
+        onConfirmar={arquivar}
+      />
     </div>
   );
 }
@@ -289,146 +305,136 @@ function NovoTicketModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Novo ticket</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="max-h-[70vh] overflow-y-auto p-4">
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Novo ticket"
+      tamanho="md"
+    >
+      <div className="flex flex-col gap-3">
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Título *</span>
+          <input
+            value={dados.titulo}
+            onChange={(event) => setDados((a) => ({ ...a, titulo: event.target.value }))}
+            className="input w-full"
+          />
+        </label>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
+          <textarea
+            value={dados.descricao ?? ""}
+            onChange={(event) => setDados((a) => ({ ...a, descricao: event.target.value }))}
+            className="input min-h-[80px] w-full resize-y"
+          />
+        </label>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
+          <select
+            value={dados.clienteId}
+            onChange={(event) => setDados((a) => ({ ...a, clienteId: event.target.value }))}
+            className="input w-full"
+          >
+            <option value="">selecionar</option>
+            {clientes.map((cliente) => (
+              <option key={cliente.id} value={cliente.id} disabled={!cliente.auvoId}>
+                {cliente.nome}
+                {!cliente.auvoId ? " (não sincronizado)" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">
+            Equipe responsável
+          </span>
+          <select
+            value={dados.equipeId ?? ""}
+            onChange={(event) => setDados((a) => ({ ...a, equipeId: event.target.value || null }))}
+            className="input w-full"
+          >
+            <option value="">nenhuma</option>
+            {equipes.map((equipe) => (
+              <option key={equipe.id} value={equipe.id}>
+                {equipe.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="mt-3 grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Título *</span>
-            <input
-              value={dados.titulo}
-              onChange={(event) => setDados((a) => ({ ...a, titulo: event.target.value }))}
-              className="input w-full"
-            />
-          </label>
-          <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
-            <textarea
-              value={dados.descricao ?? ""}
-              onChange={(event) => setDados((a) => ({ ...a, descricao: event.target.value }))}
-              className="input min-h-[80px] w-full resize-y"
-            />
-          </label>
-          <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
+              Tipo de solicitação
+            </span>
             <select
-              value={dados.clienteId}
-              onChange={(event) => setDados((a) => ({ ...a, clienteId: event.target.value }))}
-              className="input w-full"
-            >
-              <option value="">selecionar</option>
-              {clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.id} disabled={!cliente.auvoId}>
-                  {cliente.nome}
-                  {!cliente.auvoId ? " (não sincronizado)" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Equipe responsável</span>
-            <select
-              value={dados.equipeId ?? ""}
-              onChange={(event) =>
-                setDados((a) => ({ ...a, equipeId: event.target.value || null }))
-              }
-              className="input w-full"
-            >
-              <option value="">nenhuma</option>
-              {equipes.map((equipe) => (
-                <option key={equipe.id} value={equipe.id}>
-                  {equipe.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">
-                Tipo de solicitação
-              </span>
-              <select
-                value={dados.requestTypeId ?? ""}
-                onChange={(event) =>
-                  setDados((a) => ({
-                    ...a,
-                    requestTypeId: event.target.value ? Number(event.target.value) : null,
-                  }))
-                }
-                className="input w-full"
-              >
-                <option value="">selecionar</option>
-                {requestTypes.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-3">Status inicial</span>
-              <select
-                value={dados.statusId ?? ""}
-                onChange={(event) =>
-                  setDados((a) => ({
-                    ...a,
-                    statusId: event.target.value ? Number(event.target.value) : null,
-                  }))
-                }
-                className="input w-full"
-              >
-                <option value="">selecionar</option>
-                {status.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Prioridade</span>
-            <input
-              type="number"
-              value={dados.prioridade ?? ""}
+              value={dados.requestTypeId ?? ""}
               onChange={(event) =>
                 setDados((a) => ({
                   ...a,
-                  prioridade: event.target.value ? Number(event.target.value) : null,
+                  requestTypeId: event.target.value ? Number(event.target.value) : null,
                 }))
               }
               className="input w-full"
-            />
+            >
+              <option value="">selecionar</option>
+              {requestTypes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.nome}
+                </option>
+              ))}
+            </select>
           </label>
-          {erro && (
-            <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
+          <label className="block">
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Status inicial</span>
+            <select
+              value={dados.statusId ?? ""}
+              onChange={(event) =>
+                setDados((a) => ({
+                  ...a,
+                  statusId: event.target.value ? Number(event.target.value) : null,
+                }))
+              }
+              className="input w-full"
+            >
+              <option value="">selecionar</option>
+              {status.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.nome}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        <label className="mt-3 block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Prioridade</span>
+          <input
+            type="number"
+            value={dados.prioridade ?? ""}
+            onChange={(event) =>
+              setDados((a) => ({
+                ...a,
+                prioridade: event.target.value ? Number(event.target.value) : null,
+              }))
+            }
+            className="input w-full"
+          />
+        </label>
+        {erro && (
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
+          <Button variant="primary" onClick={salvar} disabled={salvando} loading={salvando}>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -1,6 +1,6 @@
 // NovoChamadoModal.tsx — E01-S118. Extraído da ChamadosPage pra ser reusado no board da Operação
 // (o "Novo Chamado" do topo). Abrir um Chamado é o intake que, após tratativa, vira OS pro Auvo.
-import { X } from "lucide-react";
+import { Button, Modal } from "@sinergica/ui";
 import { useState } from "react";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
@@ -48,80 +48,79 @@ export function NovoChamadoModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Novo Chamado</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente *</span>
-            <select
-              value={clienteId}
-              onChange={(e) => setClienteId(e.target.value)}
-              className="input w-full"
-            >
-              {clientes.length === 0 ? (
-                <option value="">Nenhum cliente disponível</option>
-              ) : (
-                clientes.map((cliente) => (
-                  <option key={cliente.id} value={cliente.id}>
-                    {cliente.nome}
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Título *</span>
-            <input
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              className="input w-full"
-              placeholder="Ex: Vazamento no térreo"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
-            <textarea
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              className="input min-h-20 w-full resize-y"
-            />
-          </label>
-          <SeletorLocal clienteId={clienteId} value={local} onChange={setLocal} />
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Solicitante</span>
-            <input
-              value={solicitante}
-              onChange={(e) => setSolicitante(e.target.value)}
-              className="input w-full"
-              placeholder="Ex: João Silva (síndico)"
-            />
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onCancel} className="btn-secondary">
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Novo Chamado"
+      tamanho="md"
+    >
+      <div className="flex flex-col gap-3">
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
+          <select
+            value={clienteId}
+            onChange={(e) => setClienteId(e.target.value)}
+            className="input w-full"
+          >
+            {clientes.length === 0 ? (
+              <option value="">Nenhum cliente disponível</option>
+            ) : (
+              clientes.map((cliente) => (
+                <option key={cliente.id} value={cliente.id}>
+                  {cliente.nome}
+                </option>
+              ))
+            )}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Título *</span>
+          <input
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            className="input w-full"
+            placeholder="Ex: Vazamento no térreo"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
+          <textarea
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="input min-h-20 w-full resize-y"
+          />
+        </label>
+        <SeletorLocal clienteId={clienteId} value={local} onChange={setLocal} />
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Solicitante</span>
+          <input
+            value={solicitante}
+            onChange={(e) => setSolicitante(e.target.value)}
+            className="input w-full"
+            placeholder="Ex: João Silva (síndico)"
+          />
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={salvar}
             disabled={salvando || !clienteId || !titulo.trim()}
-            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Salvando…" : "Criar Chamado"}
-          </button>
+            Criar Chamado
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -92,7 +92,7 @@ export function DetalhesTarefaAuvo({
                 key={item.id}
                 type="button"
                 onClick={() => setAba(item.id)}
-                className={`inline-flex items-center gap-1.5 border-b-2 px-2.5 py-2 text-xs font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 border-b-2 px-2.5 py-2 text-caption font-semibold transition-colors ${
                   ativo ? "border-orange text-ink" : "border-transparent text-ink-3 hover:text-ink"
                 }`}
               >
@@ -106,7 +106,7 @@ export function DetalhesTarefaAuvo({
 
       <div className="p-3">
         {aba === "relato" && (
-          <div className="space-y-3 text-sm">
+          <div className="space-y-3 text-body">
             {endereco && (
               <div>
                 <p className="text-micro uppercase tracking-wider text-ink-3">Endereço</p>
@@ -117,7 +117,7 @@ export function DetalhesTarefaAuvo({
                       href={`https://www.google.com/maps?q=${lat},${lon}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="ml-2 text-xs font-semibold text-orange"
+                      className="ml-2 text-caption font-semibold text-orange"
                     >
                       ver no mapa
                     </a>
@@ -173,7 +173,7 @@ export function DetalhesTarefaAuvo({
                 href={taskUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block text-xs font-semibold text-orange"
+                className="inline-block text-caption font-semibold text-orange"
               >
                 Ver tarefa completa no Auvo →
               </a>
@@ -215,7 +215,7 @@ export function DetalhesTarefaAuvo({
                     className="h-20 w-32 rounded-md border border-line object-contain bg-card"
                   />
                 </a>
-                <p className="mt-1 text-xs text-ink-3">{assinaturaNome ?? "Sem nome"}</p>
+                <p className="mt-1 text-caption text-ink-3">{assinaturaNome ?? "Sem nome"}</p>
               </div>
             )}
           </div>
@@ -230,7 +230,7 @@ export function DetalhesTarefaAuvo({
                 <div
                   // biome-ignore lint/suspicious/noArrayIndexKey: resposta achatada não tem id estável no payload
                   key={indice}
-                  className="rounded-md border border-line-soft bg-card p-2.5 text-sm"
+                  className="rounded-md border border-line-soft bg-card p-2.5 text-body"
                 >
                   <p className="text-ink-2 font-medium">{item.pergunta}</p>
                   <p className="mt-1 text-ink">{item.resposta || "Sem resposta"}</p>
@@ -252,7 +252,7 @@ export function DetalhesTarefaAuvo({
         {aba === "pendencias" && (
           <div>
             {pendencia ? (
-              <p className="text-sm text-ink-2">{pendencia}</p>
+              <p className="text-body text-ink-2">{pendencia}</p>
             ) : (
               <EstadoVazio texto="Sem pendências registradas para esta tarefa." />
             )}
@@ -260,7 +260,7 @@ export function DetalhesTarefaAuvo({
         )}
 
         {aba === "horas" && (
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-2 gap-2 text-body">
             {checkInAt && (
               <Info label="Check-in" value={new Date(checkInAt).toLocaleString("pt-BR")} />
             )}
@@ -278,7 +278,7 @@ export function DetalhesTarefaAuvo({
         )}
 
         {aba === "valores" && (
-          <div className="space-y-3 text-sm">
+          <div className="space-y-3 text-body">
             <ListaValores titulo="Produtos" itens={produtos} />
             <ListaValores titulo="Serviços" itens={servicos} />
             <ListaValores titulo="Custos adicionais" itens={custosAdicionais} />
@@ -382,7 +382,7 @@ function urlDoAnexo(anexo: unknown): string | null {
 }
 
 function EstadoVazio({ texto }: { texto: string }) {
-  return <p className="text-sm text-ink-3">{texto}</p>;
+  return <p className="text-body text-ink-3">{texto}</p>;
 }
 
 function Info({ label, value }: { label: string; value: string }) {

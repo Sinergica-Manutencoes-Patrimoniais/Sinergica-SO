@@ -1,5 +1,6 @@
 // EstruturaClientePage.tsx — E01-S76 (AC-1, AC-2, AC-3): CRUD de Área > Local (árvore) de um
 // cliente. Mora como aba dentro de VisaoClientePage (design.md — "aba em VisaoClientePage.tsx").
+import { Button, ConfirmDialog, Modal, Skeleton, useToast } from "@sinergica/ui";
 import { ChevronDown, ChevronRight, FolderTree, Pencil, Plus, Tag, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -45,6 +46,10 @@ export function EstruturaClientePage({
   const [modalArea, setModalArea] = useState<ModalArea>(null);
   const [modalLocal, setModalLocal] = useState<ModalLocal>(null);
   const [tiposDeLocal, setTiposDeLocal] = useState<LocalTipo[]>([]);
+  const [tipoParaRemover, setTipoParaRemover] = useState<LocalTipo | null>(null);
+  const [areaParaExcluir, setAreaParaExcluir] = useState<Area | null>(null);
+  const [localParaExcluir, setLocalParaExcluir] = useState<LocalArvoreNode | null>(null);
+  const toast = useToast();
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -116,40 +121,47 @@ export function EstruturaClientePage({
     await carregar();
   }
 
-  async function removerTipoDeLocal(tipo: LocalTipo) {
-    if (!confirm(`Remover o tipo "${tipo.nome}"?`)) return;
-    await desativarTipoDeLocal(supabaseHierarquiaAdapter, tipo.id, userId);
+  async function removerTipoDeLocal() {
+    if (!tipoParaRemover) return;
+    await desativarTipoDeLocal(supabaseHierarquiaAdapter, tipoParaRemover.id, userId);
     await carregar();
   }
 
-  async function excluirArea(area: Area) {
-    if (!confirm(`Desativar a Área "${area.nome}"?`)) return;
-    await desativarArea(supabaseHierarquiaAdapter, area.id, userId);
+  async function excluirArea() {
+    if (!areaParaExcluir) return;
+    await desativarArea(supabaseHierarquiaAdapter, areaParaExcluir.id, userId);
     await carregar();
   }
 
-  async function excluirLocal(local: LocalArvoreNode) {
+  function pedirExclusaoLocal(local: LocalArvoreNode) {
     if (local.filhos.length > 0) {
-      alert("Este Local tem sub-locais. Remova-os primeiro.");
+      toast.aviso("Este Local tem sub-locais. Remova-os primeiro.");
       return;
     }
-    if (!confirm(`Desativar o Local "${local.nome}"?`)) return;
-    try {
-      await desativarLocal(supabaseHierarquiaAdapter, local.id, userId);
-      await carregar();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Não foi possível desativar o Local.");
-    }
+    setLocalParaExcluir(local);
   }
 
-  if (carregando) return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+  async function excluirLocal() {
+    if (!localParaExcluir) return;
+    await desativarLocal(supabaseHierarquiaAdapter, localParaExcluir.id, userId);
+    await carregar();
+  }
+
+  if (carregando)
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (erro) {
     return (
-      <div className="p-8 text-center text-sm text-ink-3">
+      <div className="p-8 text-center text-body text-ink-3">
         {erro}
-        <button type="button" onClick={carregar} className="ml-2 font-semibold text-orange">
+        <Button variant="ghost" size="sm" onClick={carregar} className="ml-2">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -158,20 +170,19 @@ export function EstruturaClientePage({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Estrutura do cliente</h3>
-          <p className="mt-0.5 text-xs text-ink-3">
+          <h1 className="text-body font-semibold text-ink">Estrutura do cliente</h1>
+          <p className="mt-0.5 text-caption text-ink-3">
             Áreas e Locais (árvore) — onde os Itens estão instalados
           </p>
         </div>
         {temEscrita && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            icon={<Plus className="h-4 w-4" />}
             onClick={() => setModalArea({ modo: "novo" })}
-            className="btn-secondary"
           >
-            <Plus className="h-4 w-4" />
             Nova Área
-          </button>
+          </Button>
         )}
       </div>
 
@@ -179,13 +190,13 @@ export function EstruturaClientePage({
         tipos={tiposDeLocal}
         temEscrita={temEscrita}
         onAdicionar={adicionarTipoDeLocal}
-        onRemover={removerTipoDeLocal}
+        onRemover={setTipoParaRemover}
       />
 
       {areas.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <FolderTree className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhuma Área cadastrada.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhuma Área cadastrada.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -204,42 +215,44 @@ export function EstruturaClientePage({
                     <ChevronRight className="h-4 w-4" />
                   )}
                 </button>
-                <span className="flex-1 text-sm font-semibold text-ink">{area.nome}</span>
+                <span className="flex-1 text-body font-semibold text-ink">{area.nome}</span>
                 {temEscrita && (
                   <div className="flex items-center gap-1">
-                    <button
-                      type="button"
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={<Plus className="h-3.5 w-3.5" />}
                       onClick={() =>
                         setModalLocal({ modo: "novo", areaId: area.id, parentId: null })
                       }
-                      className="inline-flex h-7 items-center gap-1 rounded-md border border-line px-2 text-xs font-semibold text-ink-2 hover:bg-line-soft"
                     >
-                      <Plus className="h-3.5 w-3.5" />
                       Local
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setModalArea({ modo: "editar", area })}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-ink-3 hover:bg-line-soft"
                       aria-label="Editar Área"
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => excluirArea(area)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-danger hover:bg-danger-soft"
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAreaParaExcluir(area)}
                       aria-label="Desativar Área"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                      <Trash2 className="h-3.5 w-3.5 text-danger" />
+                    </Button>
                   </div>
                 )}
               </div>
               {expandidas.has(area.id) && (
                 <div className="px-4 py-2">
                   {(arvores[area.id]?.length ?? 0) === 0 ? (
-                    <p className="py-3 text-xs text-ink-3">Nenhum Local cadastrado nesta Área.</p>
+                    <p className="py-3 text-caption text-ink-3">
+                      Nenhum Local cadastrado nesta Área.
+                    </p>
                   ) : (
                     <LocalTree
                       nodes={arvores[area.id] ?? []}
@@ -252,7 +265,7 @@ export function EstruturaClientePage({
                       onEditar={(local) =>
                         setModalLocal({ modo: "editar", areaId: area.id, local })
                       }
-                      onExcluir={excluirLocal}
+                      onExcluir={pedirExclusaoLocal}
                     />
                   )}
                 </div>
@@ -283,6 +296,39 @@ export function EstruturaClientePage({
           onSalvar={salvarLocal}
         />
       )}
+
+      <ConfirmDialog
+        open={tipoParaRemover !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setTipoParaRemover(null);
+        }}
+        titulo={`Remover o tipo "${tipoParaRemover?.nome}"`}
+        descricao="Locais que já usam esse tipo mantêm a atribuição atual."
+        rotuloConfirmar="Remover"
+        onConfirmar={removerTipoDeLocal}
+      />
+
+      <ConfirmDialog
+        open={areaParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setAreaParaExcluir(null);
+        }}
+        titulo={`Desativar a Área "${areaParaExcluir?.nome}"`}
+        descricao="Os Locais dentro dela deixam de aparecer na estrutura ativa."
+        rotuloConfirmar="Desativar"
+        onConfirmar={excluirArea}
+      />
+
+      <ConfirmDialog
+        open={localParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setLocalParaExcluir(null);
+        }}
+        titulo={`Desativar o Local "${localParaExcluir?.nome}"`}
+        descricao="Itens instalados neste Local precisam ser realocados separadamente."
+        rotuloConfirmar="Desativar"
+        onConfirmar={excluirLocal}
+      />
     </div>
   );
 }
@@ -316,30 +362,32 @@ function TiposDeLocalPainel({
 
   return (
     <section className="rounded-lg border border-line bg-card p-3">
-      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-ink-3">
+      <div className="flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider text-ink-3">
         <Tag className="h-3.5 w-3.5" />
         Tipos de Local
       </div>
-      <p className="mt-0.5 text-xs text-ink-3">
+      <p className="mt-0.5 text-caption text-ink-3">
         Cadastre aqui (ex.: "Andar", "Sala") — a atribuição no Local sempre seleciona, nunca digita.
       </p>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        {tipos.length === 0 && <span className="text-xs text-ink-3">Nenhum tipo cadastrado.</span>}
+        {tipos.length === 0 && (
+          <span className="text-caption text-ink-3">Nenhum tipo cadastrado.</span>
+        )}
         {tipos.map((tipo) => (
           <span
             key={tipo.id}
-            className="inline-flex items-center gap-1.5 rounded-full bg-line-soft px-2.5 py-1 text-xs font-semibold text-ink-2"
+            className="inline-flex items-center gap-1.5 rounded-full bg-line-soft px-2.5 py-1 text-caption font-semibold text-ink-2"
           >
             {tipo.nome}
             {temEscrita && (
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => onRemover(tipo)}
                 aria-label={`Remover ${tipo.nome}`}
-                className="text-ink-3 hover:text-danger"
               >
                 <X className="h-3 w-3" />
-              </button>
+              </Button>
             )}
           </span>
         ))}
@@ -352,17 +400,18 @@ function TiposDeLocalPainel({
                 if (e.key === "Enter") adicionar();
               }}
               placeholder="Novo tipo…"
-              className="input h-7 w-32 text-xs"
+              className="input h-7 w-32 text-caption"
             />
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Plus className="h-3.5 w-3.5" />}
               onClick={adicionar}
               disabled={salvando || !novoNome.trim()}
-              className="inline-flex h-7 items-center gap-1 rounded-md border border-line px-2 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+              loading={salvando}
             >
-              <Plus className="h-3.5 w-3.5" />
               Adicionar
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -395,39 +444,39 @@ function LocalTree({
             className="flex items-center gap-2 rounded-md py-1.5 hover:bg-line-soft"
             style={{ paddingLeft: `${nivel * 20}px` }}
           >
-            <span className="flex-1 text-sm text-ink-2">
+            <span className="flex-1 text-body text-ink-2">
               {node.nome}
               {node.tipoNome && (
-                <span className="ml-1.5 text-xs text-ink-3">({node.tipoNome})</span>
+                <span className="ml-1.5 text-caption text-ink-3">({node.tipoNome})</span>
               )}
             </span>
             {temEscrita && (
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => onNovoFilho(node.id)}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-ink-3 hover:bg-line hover:text-ink"
                   aria-label="Novo sub-local"
                   title="Novo sub-local"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => onEditar(node)}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-ink-3 hover:bg-line hover:text-ink"
                   aria-label="Editar Local"
                 >
                   <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => onExcluir(node)}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-danger hover:bg-danger-soft"
                   aria-label="Desativar Local"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                  <Trash2 className="h-3.5 w-3.5 text-danger" />
+                </Button>
               </div>
             )}
           </div>
@@ -477,52 +526,42 @@ function AreaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">{area ? "Editar Área" : "Nova Área"}</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
-            <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              className="input w-full"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
-            <input
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              className="input w-full"
-            />
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onCancel} className="btn-secondary">
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={area ? "Editar Área" : "Nova Área"}
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
+          <input
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="input w-full"
+          />
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
+          <Button variant="primary" onClick={salvar} disabled={salvando} loading={salvando}>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -559,66 +598,58 @@ function LocalModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {local ? "Editar Local" : parentId ? "Novo sub-local" : "Novo Local"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
-            <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              className="input w-full"
-              placeholder='ex.: "3º andar", "Sala 302"'
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo</span>
-            <select
-              value={tipoId ?? ""}
-              onChange={(e) => setTipoId(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">Sem tipo</option>
-              {tiposDeLocal.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.nome}
-                </option>
-              ))}
-            </select>
-            {tiposDeLocal.length === 0 && (
-              <span className="mt-1 block text-xs text-ink-3">
-                Nenhum tipo cadastrado — crie um em "Tipos de Local" acima.
-              </span>
-            )}
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onCancel} className="btn-secondary">
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={local ? "Editar Local" : parentId ? "Novo sub-local" : "Novo Local"}
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className="input w-full"
+            placeholder='ex.: "3º andar", "Sala 302"'
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo</span>
+          <select
+            value={tipoId ?? ""}
+            onChange={(e) => setTipoId(e.target.value)}
+            className="input w-full"
           >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+            <option value="">Sem tipo</option>
+            {tiposDeLocal.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.nome}
+              </option>
+            ))}
+          </select>
+          {tiposDeLocal.length === 0 && (
+            <span className="mt-1 block text-caption text-ink-3">
+              Nenhum tipo cadastrado — crie um em "Tipos de Local" acima.
+            </span>
+          )}
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={salvar} disabled={salvando} loading={salvando}>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

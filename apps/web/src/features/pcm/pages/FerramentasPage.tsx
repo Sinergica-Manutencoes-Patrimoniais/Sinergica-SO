@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
 import {
   ChevronDown,
   ChevronUp,
@@ -7,7 +8,6 @@ import {
   RefreshCw,
   Trash2,
   Wrench,
-  X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -90,12 +90,18 @@ export function FerramentasPage() {
   });
   const [salvandoReserva, setSalvandoReserva] = useState(false);
   const [efetivando, setEfetivando] = useState<FerramentaReservaItem | null>(null);
+  const [ferramentaParaDesativar, setFerramentaParaDesativar] = useState<FerramentaItem | null>(
+    null,
+  );
+  const [reservaParaCancelar, setReservaParaCancelar] = useState<FerramentaReservaItem | null>(
+    null,
+  );
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [ferramentas, categorias, unidades, funcionarios, reservas] = await Promise.all([
         listarFerramentas(supabaseFerramentasAdapter),
@@ -143,15 +149,13 @@ export function FerramentasPage() {
     await carregar();
   }
 
-  async function desativar(ferramenta: FerramentaItem) {
-    if (!user || !confirm(`Desativar ${ferramenta.nome}?`)) return;
-    try {
-      setErroAcao(null);
-      await desativarFerramenta(supabaseFerramentasAdapter, { id: ferramenta.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível desativar.");
-    }
+  async function desativar() {
+    if (!user || !ferramentaParaDesativar) return;
+    await desativarFerramenta(supabaseFerramentasAdapter, {
+      id: ferramentaParaDesativar.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   async function gerarUnidades(ferramenta: FerramentaItem, quantidade: number) {
@@ -221,18 +225,13 @@ export function FerramentasPage() {
     }
   }
 
-  async function cancelarReserva(reserva: FerramentaReservaItem) {
-    if (!user || !confirm(`Cancelar a reserva de ${reserva.funcionarioNome}?`)) return;
-    try {
-      setErroAcao(null);
-      await cancelarReservaFerramenta(supabaseFerramentaReservasAdapter, {
-        reservaId: reserva.id,
-        userId: user.id,
-      });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível cancelar a reserva.");
-    }
+  async function cancelarReserva() {
+    if (!user || !reservaParaCancelar) return;
+    await cancelarReservaFerramenta(supabaseFerramentaReservasAdapter, {
+      reservaId: reservaParaCancelar.id,
+      userId: user.id,
+    });
+    await carregar();
   }
 
   async function confirmarEfetivar(unidadeId: string) {
@@ -251,12 +250,20 @@ export function FerramentasPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
@@ -264,11 +271,11 @@ export function FerramentasPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -282,8 +289,8 @@ export function FerramentasPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Ferramentas</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h1 className="text-heading font-semibold text-ink">Ferramentas</h1>
+            <p className="mt-0.5 text-body text-ink-3">
               Produtos Auvo tratados como ferramentas e kits operacionais
             </p>
           </div>
@@ -291,7 +298,7 @@ export function FerramentasPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Nova ferramenta
@@ -299,7 +306,7 @@ export function FerramentasPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -308,7 +315,7 @@ export function FerramentasPage() {
       {estado.ferramentas.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Wrench className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhuma ferramenta cadastrada.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhuma ferramenta cadastrada.</p>
         </div>
       ) : (
         <section className="rounded-lg border border-line bg-card overflow-hidden">
@@ -324,7 +331,9 @@ export function FerramentasPage() {
                 }
                 onEditar={temEscrita ? () => setModal({ modo: "editar", ferramenta }) : undefined}
                 onDesativar={
-                  temEscrita && ferramenta.ativo ? () => desativar(ferramenta) : undefined
+                  temEscrita && ferramenta.ativo
+                    ? () => setFerramentaParaDesativar(ferramenta)
+                    : undefined
                 }
                 onGerarUnidades={
                   temEscrita
@@ -340,8 +349,8 @@ export function FerramentasPage() {
       )}
 
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-        <h3 className="text-base font-semibold text-ink">Reservas</h3>
-        <p className="mt-0.5 text-sm text-ink-3">
+        <h3 className="text-heading font-semibold text-ink">Reservas</h3>
+        <p className="mt-0.5 text-body text-ink-3">
           Reserva uma unidade (ou "qualquer disponível") pra um técnico num período — sem mover a
           ferramenta ainda
         </p>
@@ -416,7 +425,7 @@ export function FerramentasPage() {
                 !reservaForm.funcionarioId ||
                 !reservaForm.dataInicio
               }
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
             >
               Reservar
             </button>
@@ -424,13 +433,13 @@ export function FerramentasPage() {
         )}
 
         {ordenarAgendaReservas(estado.reservas).length === 0 ? (
-          <p className="mt-4 text-sm text-ink-3">Sem reservas pendentes.</p>
+          <p className="mt-4 text-body text-ink-3">Sem reservas pendentes.</p>
         ) : (
           <ul className="mt-4 space-y-2">
             {ordenarAgendaReservas(estado.reservas).map((reserva) => (
               <li
                 key={reserva.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line-soft bg-paper px-3 py-2 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line-soft bg-paper px-3 py-2 text-body"
               >
                 <span className="text-ink-2">
                   {reserva.ferramentaNome}{" "}
@@ -443,14 +452,14 @@ export function FerramentasPage() {
                     <button
                       type="button"
                       onClick={() => setEfetivando(reserva)}
-                      className="text-xs font-semibold text-orange hover:text-orange-deep"
+                      className="text-caption font-semibold text-orange hover:text-orange-deep"
                     >
                       Efetivar
                     </button>
                     <button
                       type="button"
-                      onClick={() => cancelarReserva(reserva)}
-                      className="text-xs font-semibold text-danger hover:underline"
+                      onClick={() => setReservaParaCancelar(reserva)}
+                      className="text-caption font-semibold text-danger hover:underline"
                     >
                       Cancelar
                     </button>
@@ -499,6 +508,28 @@ export function FerramentasPage() {
           onFechar={() => setHistoricoUnidade(null)}
         />
       )}
+
+      <ConfirmDialog
+        open={ferramentaParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setFerramentaParaDesativar(null);
+        }}
+        titulo={`Desativar "${ferramentaParaDesativar?.nome}"`}
+        descricao="A ferramenta deixa de aparecer nas opções de reserva/atribuição."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
+
+      <ConfirmDialog
+        open={reservaParaCancelar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setReservaParaCancelar(null);
+        }}
+        titulo={`Cancelar a reserva de "${reservaParaCancelar?.funcionarioNome}"`}
+        descricao="A reserva é removida da agenda."
+        rotuloConfirmar="Cancelar reserva"
+        onConfirmar={cancelarReserva}
+      />
     </div>
   );
 }
@@ -531,55 +562,51 @@ function EfetivarReservaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Efetivar reserva</h3>
-          <p className="text-xs text-ink-3">
-            {reserva.ferramentaNome} · {reserva.funcionarioNome}
-          </p>
-        </div>
-        <div className="space-y-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Unidade</span>
-            <select
-              value={unidadeId}
-              onChange={(event) => setUnidadeId(event.target.value)}
-              className="input w-full"
-            >
-              <option value="">Escolha a unidade</option>
-              {unidadesDisponiveis.map((unidade) => (
-                <option key={unidade.id} value={unidade.id}>
-                  {unidade.codigo}
-                </option>
-              ))}
-            </select>
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Efetivar reserva"
+      descricao={`${reserva.ferramentaNome} · ${reserva.funcionarioNome}`}
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Unidade</span>
+          <select
+            value={unidadeId}
+            onChange={(event) => setUnidadeId(event.target.value)}
+            className="input w-full"
           >
+            <option value="">Escolha a unidade</option>
+            {unidadesDisponiveis.map((unidade) => (
+              <option key={unidade.id} value={unidade.id}>
+                {unidade.codigo}
+              </option>
+            ))}
+          </select>
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={confirmar}
             disabled={salvando || !unidadeId}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Salvando…" : "Efetivar (atribuir agora)"}
-          </button>
+            Efetivar (atribuir agora)
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }
 
@@ -632,21 +659,21 @@ function FerramentaLinha({
           )}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <span className="truncate text-sm font-semibold text-ink">{ferramenta.nome}</span>
+              <span className="truncate text-body font-semibold text-ink">{ferramenta.nome}</span>
               <span
                 className={`shrink-0 rounded-full px-1.5 py-0.5 text-micro font-semibold ${ferramenta.ativo ? "bg-success-soft text-success" : "bg-line-soft text-ink-2"}`}
               >
                 {ferramenta.ativo ? "Ativa" : "Inativa"}
               </span>
             </div>
-            <p className="truncate text-xs text-ink-3">
+            <p className="truncate text-caption text-ink-3">
               {ferramenta.categoriaNome ?? "sem categoria"} · Auvo {ferramenta.auvoId ?? "-"}
               {ferramenta.auvoSyncError ? ` · erro: ${ferramenta.auvoSyncError}` : ""}
             </p>
           </div>
         </button>
 
-        <span className="shrink-0 text-xs text-ink-3">
+        <span className="shrink-0 text-caption text-ink-3">
           {unidades.length}/{ferramenta.quantidadeTotal} unid.
         </span>
 
@@ -669,17 +696,20 @@ function FerramentaLinha({
             <button
               type="button"
               onClick={() => onGerarUnidades(faltamGerar)}
-              className="text-xs font-semibold text-orange hover:text-orange-deep"
+              className="text-caption font-semibold text-orange hover:text-orange-deep"
             >
               Gerar {faltamGerar} unidade(s) (total cadastrado: {ferramenta.quantidadeTotal})
             </button>
           )}
           {unidades.length === 0 ? (
-            <p className="text-xs text-ink-3">Nenhuma unidade gerada ainda.</p>
+            <p className="text-caption text-ink-3">Nenhuma unidade gerada ainda.</p>
           ) : (
             <ul className="space-y-1.5">
               {unidades.map((unidade) => (
-                <li key={unidade.id} className="flex items-center justify-between gap-2 text-xs">
+                <li
+                  key={unidade.id}
+                  className="flex items-center justify-between gap-2 text-caption"
+                >
                   <span className="min-w-0 truncate text-ink-2">
                     <span className="font-brand">{unidade.codigo}</span> ·{" "}
                     {rotuloStatusUnidade(unidade.status)}
@@ -745,47 +775,40 @@ function BaixaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Dar baixa em {unidade.codigo}</h3>
-          <p className="text-xs text-ink-3">{unidade.ferramentaNome} — ação permanente</p>
-        </div>
-        <div className="space-y-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Motivo *</span>
-            <textarea
-              value={motivo}
-              onChange={(event) => setMotivo(event.target.value)}
-              className="input min-h-[80px] w-full resize-y"
-              placeholder="Ex.: extraviada em campo, quebrada sem conserto…"
-            />
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={`Dar baixa em ${unidade.codigo}`}
+      descricao={`${unidade.ferramentaNome} — ação permanente`}
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Motivo *</span>
+          <textarea
+            value={motivo}
+            onChange={(event) => setMotivo(event.target.value)}
+            className="input min-h-[80px] w-full resize-y"
+            placeholder="Ex.: extraviada em campo, quebrada sem conserto…"
+          />
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={confirmar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Confirmar baixa"}
-          </button>
+          </Button>
+          <Button variant="primary" onClick={confirmar} disabled={salvando} loading={salvando}>
+            Confirmar baixa
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }
 
@@ -834,17 +857,16 @@ function FerramentaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-2xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {ferramenta ? "Editar ferramenta" : "Nova ferramenta"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto p-4 md:grid-cols-2">
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={ferramenta ? "Editar ferramenta" : "Nova ferramenta"}
+      tamanho="lg"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
           {ferramenta && (
             <div className="md:col-span-2">
               {ferramenta.imagemUrl ? (
@@ -854,18 +876,18 @@ function FerramentaModal({
                     alt={ferramenta.nome}
                     className="h-16 w-16 rounded-md border border-line object-cover"
                   />
-                  <p className="text-xs text-ink-3">
+                  <p className="text-caption text-ink-3">
                     Imagem vinda do Auvo. Pra trocar, cadastre direto no app Auvo — o PCM ainda não
                     escreve esse campo (contrato de escrita não confirmado).
                   </p>
                 </div>
               ) : (
-                <p className="rounded-md border border-line-soft bg-paper px-3 py-2 text-xs text-ink-3">
+                <p className="rounded-md border border-line-soft bg-paper px-3 py-2 text-caption text-ink-3">
                   Sem imagem. Cadastre a foto direto no Auvo — o PCM só exibe quando o Auvo tiver.
                 </p>
               )}
               {ferramenta.codigoAuvo && (
-                <p className="mt-2 text-xs text-ink-3">
+                <p className="mt-2 text-caption text-ink-3">
                   Código Auvo:{" "}
                   <span className="font-brand text-ink-2">{ferramenta.codigoAuvo}</span>
                 </p>
@@ -886,7 +908,7 @@ function FerramentaModal({
             />
           )}
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Categoria</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Categoria</span>
             <input
               list="ferramenta-categorias-lista"
               value={categoriaTexto}
@@ -900,7 +922,7 @@ function FerramentaModal({
               ))}
             </datalist>
           </label>
-          <p className="rounded-md border border-line-soft bg-paper px-3 py-2 text-xs text-ink-3 md:col-span-2">
+          <p className="rounded-md border border-line-soft bg-paper px-3 py-2 text-caption text-ink-3 md:col-span-2">
             Estoque é calculado pelas unidades físicas cadastradas. Cada item recebe um código
             próprio.
           </p>
@@ -917,7 +939,7 @@ function FerramentaModal({
             step={0.01}
           />
           <label className="block md:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
             <textarea
               value={dados.descricao ?? ""}
               onChange={(event) => setDados((a) => ({ ...a, descricao: event.target.value }))}
@@ -925,30 +947,26 @@ function FerramentaModal({
             />
           </label>
           {erro && (
-            <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="md:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={salvar}
             disabled={salvando || Object.keys(errosInline).length > 0}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }
 
@@ -960,13 +978,13 @@ function Field({
 }: { label: string; value: string; onChange: (value: string) => void; erro?: string }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
+      <span className="mb-1 block text-caption font-semibold text-ink-3">{label}</span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="input w-full"
       />
-      {erro && <span className="mt-1 block text-xs text-danger">{erro}</span>}
+      {erro && <span className="mt-1 block text-caption text-danger">{erro}</span>}
     </label>
   );
 }
@@ -986,7 +1004,7 @@ function NumberField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
+      <span className="mb-1 block text-caption font-semibold text-ink-3">{label}</span>
       <input
         type="number"
         min={0}
@@ -995,7 +1013,7 @@ function NumberField({
         onChange={(event) => onChange(Number(event.target.value))}
         className="input w-full"
       />
-      {erro && <span className="mt-1 block text-xs text-danger">{erro}</span>}
+      {erro && <span className="mt-1 block text-caption text-danger">{erro}</span>}
     </label>
   );
 }
@@ -1010,7 +1028,7 @@ function IconButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
+      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-3 text-caption font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
     >
       {icon}
       {label}

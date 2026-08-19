@@ -30,13 +30,35 @@ function arquivos(dir) {
   return out;
 }
 
+// Exceções reais ao `DataTable` (não preguiça de migrar):
+// - financeiro/mock/**: protótipo navegável com dados fictícios (banner próprio avisa), não tela
+//   real — `TableShell` usa `<table>` semântico de verdade (thead/tbody exigem `table` como pai;
+//   `role="table"` num `<div>` só pra escapar deste gate quebra acessibilidade de propósito).
+// - DrePage.tsx: tabela pivô (linha=métrica, coluna=mês, ambos dinâmicos) — `DataTable` assume
+//   colunas fixas e linhas=itens, o inverso do que a DRE contábil precisa mostrar.
+// - ApontamentoHorasPage.tsx: linha expansível com `colSpan` pro detalhe de OS do dia —
+//   `DataTable` não tem modelo pra linha de detalhe, só uma linha por item.
+// - OrdensServicoPage.tsx: fila com linha selecionada em destaque (aria-selected + borda) — o
+//   `DataTable` não expõe className por linha, só onClickLinha.
+const IGNORAR_TABLE =
+  /features\/financeiro\/mock\/|financeiro\/pages\/DrePage\.tsx$|pcm\/pages\/ApontamentoHorasPage\.tsx$|pcm\/pages\/OrdensServicoPage\.tsx$/;
+
 const REGRAS = [
-  { nome: "table", padrao: /<table\b/g, motivo: "use <DataTable> de @sinergica/ui" },
+  {
+    nome: "table",
+    padrao: /<table\b/g,
+    motivo: "use <DataTable> de @sinergica/ui",
+    ignorar: IGNORAR_TABLE,
+  },
   { nome: "modal", padrao: /\bmodal-backdrop\b/g, motivo: "use <Modal> de @sinergica/ui" },
   {
     nome: "button",
     padrao: /<button\b(?![^>]*\btype="submit"[^>]*\bform=)[^>]*\bclassName=/g,
     motivo: "use <Button> de @sinergica/ui (botão cru estilizado fora de packages/ui)",
+    // InspecoesPage.tsx: BottomSheet usa um <button className="absolute inset-0"> como área
+    // clicável invisível pra fechar no toque fora — não é um botão visível, `Button` adiciona
+    // padding/chrome que quebraria o full-bleed.
+    ignorar: /pcm\/pages\/InspecoesPage\.tsx$/,
   },
   {
     nome: "radius",
@@ -53,6 +75,7 @@ for (const caminho of todosArquivos) {
   const linhas = conteudo.split("\n");
   for (const regra of REGRAS) {
     if (APENAS && regra.nome !== APENAS) continue;
+    if (regra.ignorar?.test(caminho)) continue;
     linhas.forEach((linha, i) => {
       regra.padrao.lastIndex = 0;
       if (regra.padrao.test(linha)) {

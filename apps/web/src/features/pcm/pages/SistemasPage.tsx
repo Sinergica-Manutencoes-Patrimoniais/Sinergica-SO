@@ -1,6 +1,7 @@
 // SistemasPage.tsx — E01-S76 (AC-7, AC-8): CRUD de Sistema + seletor de itens membros (N:N) +
 // status de sync Auvo (código/estado — descriptor `sistemas` nasce writeEnabled:false, dry-run).
-import { Clock3, Link2, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { Button, ConfirmDialog, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
+import { Clock3, Link2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -45,12 +46,13 @@ export function SistemasPage() {
   const [membrosAbertoId, setMembrosAbertoId] = useState<string | null>(null);
   const [historicoAbertoId, setHistoricoAbertoId] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [sistemaParaDesativar, setSistemaParaDesativar] = useState<Sistema | null>(null);
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [sistemas, clientes] = await Promise.all([
         listarSistemas(supabaseSistemasAdapter),
@@ -85,35 +87,48 @@ export function SistemasPage() {
     await carregar();
   }
 
-  async function desativar(sistema: Sistema) {
-    if (!user) return;
-    if (!confirm(`Desativar "${sistema.nome}"?`)) return;
+  async function desativar() {
+    if (!user || !sistemaParaDesativar) return;
     setErroAcao(null);
-    await desativarSistema(supabaseSistemasAdapter, sistema.id, user.id);
+    await desativarSistema(supabaseSistemasAdapter, sistemaParaDesativar.id, user.id);
     await carregar();
   }
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
   if (estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 font-semibold text-orange">
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
+        <Button variant="ghost" onClick={carregar} className="mt-4 text-orange">
           <RefreshCw className="mr-1 inline h-4 w-4" />
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -123,8 +138,8 @@ export function SistemasPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Sistemas</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h1 className="text-heading font-semibold text-ink">Sistemas</h1>
+            <p className="mt-0.5 text-body text-ink-3">
               Agrupamento funcional transversal de Itens ("Sistema de Hidrante Torre A") — enfileira
               no Auvo como Equipment (dry-run, escrita ainda desligada)
             </p>
@@ -133,7 +148,7 @@ export function SistemasPage() {
             <button
               type="button"
               onClick={() => setModal({ modo: "novo" })}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Novo Sistema
@@ -141,7 +156,7 @@ export function SistemasPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -150,7 +165,7 @@ export function SistemasPage() {
       {estado.sistemas.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Link2 className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhum Sistema cadastrado.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhum Sistema cadastrado.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -164,7 +179,7 @@ export function SistemasPage() {
                 <div className="flex items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span className="truncate text-sm font-semibold text-ink">
+                      <span className="truncate text-body font-semibold text-ink">
                         {sistema.nome}
                       </span>
                       <span
@@ -178,7 +193,7 @@ export function SistemasPage() {
                         </span>
                       )}
                     </div>
-                    <p className="truncate text-xs text-ink-3">
+                    <p className="truncate text-caption text-ink-3">
                       {clienteNome}
                       {sistema.tipo ? ` · ${sistema.tipo}` : ""}
                     </p>
@@ -188,7 +203,7 @@ export function SistemasPage() {
                     onClick={() =>
                       setMembrosAbertoId(membrosAbertoId === sistema.id ? null : sistema.id)
                     }
-                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
                   >
                     <Link2 className="h-3.5 w-3.5" />
                     Itens
@@ -198,7 +213,7 @@ export function SistemasPage() {
                     onClick={() =>
                       setHistoricoAbertoId(historicoAbertoId === sistema.id ? null : sistema.id)
                     }
-                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
                   >
                     <Clock3 className="h-3.5 w-3.5" />
                     Histórico
@@ -208,15 +223,15 @@ export function SistemasPage() {
                       <button
                         type="button"
                         onClick={() => setModal({ modo: "editar", sistema })}
-                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         Editar
                       </button>
                       <button
                         type="button"
-                        onClick={() => desativar(sistema)}
-                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-danger-line px-2.5 text-xs font-semibold text-danger hover:bg-danger-soft"
+                        onClick={() => setSistemaParaDesativar(sistema)}
+                        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-danger-line px-2.5 text-caption font-semibold text-danger hover:bg-danger-soft"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -252,6 +267,17 @@ export function SistemasPage() {
           onSalvar={salvar}
         />
       )}
+
+      <ConfirmDialog
+        open={sistemaParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setSistemaParaDesativar(null);
+        }}
+        titulo={`Desativar "${sistemaParaDesativar?.nome}"`}
+        descricao="Esta ação não pode ser desfeita."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
     </div>
   );
 }
@@ -307,87 +333,83 @@ function SistemaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-lg rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {sistema ? "Editar Sistema" : "Novo Sistema"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente *</span>
-            <select
-              value={dados.clienteId}
-              onChange={(e) => setDados((atual) => ({ ...atual, clienteId: e.target.value }))}
-              className="input w-full"
-              disabled={Boolean(sistema)}
-            >
-              <option value="">Selecione…</option>
-              {clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.id}>
-                  {cliente.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Área</span>
-            <select
-              value={dados.areaId ?? ""}
-              onChange={(e) => setDados((atual) => ({ ...atual, areaId: e.target.value }))}
-              className="input w-full"
-              disabled={!dados.clienteId}
-            >
-              <option value="">Sem escopo de Área</option>
-              {areasDoCliente.map((area) => (
-                <option key={area.id} value={area.id}>
-                  {area.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
-            <input
-              value={dados.nome}
-              onChange={(e) => setDados((atual) => ({ ...atual, nome: e.target.value }))}
-              className="input w-full"
-              placeholder='ex.: "Sistema de Hidrante Torre A"'
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo</span>
-            <input
-              value={dados.tipo ?? ""}
-              onChange={(e) => setDados((atual) => ({ ...atual, tipo: e.target.value }))}
-              className="input w-full"
-              placeholder="hidrante, incêndio, spda…"
-            />
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onCancel} className="btn-secondary">
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={sistema ? "Editar Sistema" : "Novo Sistema"}
+    >
+      <div className="flex flex-col gap-3">
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
+          <select
+            value={dados.clienteId}
+            onChange={(e) => setDados((atual) => ({ ...atual, clienteId: e.target.value }))}
+            className="input w-full"
+            disabled={Boolean(sistema)}
           >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
-        </div>
+            <option value="">Selecione…</option>
+            {clientes.map((cliente) => (
+              <option key={cliente.id} value={cliente.id}>
+                {cliente.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Área</span>
+          <select
+            value={dados.areaId ?? ""}
+            onChange={(e) => setDados((atual) => ({ ...atual, areaId: e.target.value }))}
+            className="input w-full"
+            disabled={!dados.clienteId}
+          >
+            <option value="">Sem escopo de Área</option>
+            {areasDoCliente.map((area) => (
+              <option key={area.id} value={area.id}>
+                {area.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
+          <input
+            value={dados.nome}
+            onChange={(e) => setDados((atual) => ({ ...atual, nome: e.target.value }))}
+            className="input w-full"
+            placeholder='ex.: "Sistema de Hidrante Torre A"'
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo</span>
+          <input
+            value={dados.tipo ?? ""}
+            onChange={(e) => setDados((atual) => ({ ...atual, tipo: e.target.value }))}
+            className="input w-full"
+            placeholder="hidrante, incêndio, spda…"
+          />
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
+            {erro}
+          </div>
+        )}
       </div>
-    </div>
+      <div className="mt-4 flex justify-end gap-2 border-t border-line pt-4">
+        <Button variant="secondary" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <button
+          type="button"
+          onClick={salvar}
+          disabled={salvando}
+          className="h-9 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+        >
+          {salvando ? "Salvando…" : "Salvar"}
+        </button>
+      </div>
+    </ModalPrimitivo>
   );
 }

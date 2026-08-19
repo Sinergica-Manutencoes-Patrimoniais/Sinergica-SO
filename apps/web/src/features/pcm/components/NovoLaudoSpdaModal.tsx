@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import {
   ArrowLeft,
   ArrowRight,
@@ -386,10 +387,13 @@ export function NovoLaudoSpdaModal({
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div className="min-w-0 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-3">
+              <p className="text-caption font-semibold uppercase tracking-[0.18em] text-ink-3">
                 Novo laudo SPDA
               </p>
-              <h2 id="novo-laudo-spda-title" className="truncate text-base font-semibold text-ink">
+              <h2
+                id="novo-laudo-spda-title"
+                className="truncate text-heading font-semibold text-ink"
+              >
                 {clienteSelecionado?.nome ?? "Sem cliente"}
               </h2>
             </div>
@@ -414,7 +418,7 @@ export function NovoLaudoSpdaModal({
               />
             ))}
           </div>
-          <div className="mt-2 flex items-center justify-between text-sm">
+          <div className="mt-2 flex items-center justify-between text-body">
             <span className="text-ink-3">
               Etapa {etapaIndex + 1} de {ETAPAS.length}
             </span>
@@ -424,7 +428,7 @@ export function NovoLaudoSpdaModal({
 
         <div className="overflow-y-auto bg-paper p-4 md:p-5">
           {erro && (
-            <div className="mb-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+            <div className="mb-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
               {erro}
             </div>
           )}
@@ -478,7 +482,7 @@ export function NovoLaudoSpdaModal({
           <button
             type="button"
             onClick={etapaIndex === 0 ? onClose : voltar}
-            className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+            className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 text-body font-semibold text-ink-2 hover:bg-line-soft"
           >
             <ArrowLeft className="h-4 w-4" />
             {etapaIndex === 0 ? "Cancelar" : "Voltar"}
@@ -488,22 +492,22 @@ export function NovoLaudoSpdaModal({
               type="button"
               onClick={salvar}
               disabled={salvando || !dados.clientId}
-              className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 text-body font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
             >
               <Save className="h-4 w-4" />
               Salvar laudo
             </button>
             {etapaIndex < ETAPAS.length - 1 ? (
-              <button type="button" onClick={avancar} className="btn-primary">
+              <Button variant="primary" onClick={avancar}>
                 Continuar
                 <ArrowRight className="h-4 w-4" />
-              </button>
+              </Button>
             ) : (
               <button
                 type="button"
                 onClick={salvar}
                 disabled={salvando || !dados.clientId}
-                className="inline-flex items-center gap-2 rounded-md bg-orange px-4 py-2 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-md bg-orange px-4 py-2 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-60"
               >
                 <FileSignature className="h-4 w-4" />
                 Assinar e salvar
@@ -520,20 +524,20 @@ function EtapaTitulo({ titulo, subtitulo }: { titulo: string; subtitulo: string 
   return (
     <div className="mb-6 text-center">
       <h3 className="text-lg font-semibold text-white">{titulo}</h3>
-      <p className="mt-1 text-sm text-white/55">{subtitulo}</p>
+      <p className="mt-1 text-body text-white/55">{subtitulo}</p>
     </div>
   );
 }
 
 function FieldLabel({ children }: { children: ReactNode }) {
-  return <span className="mb-1.5 block text-sm font-medium text-white/75">{children}</span>;
+  return <span className="mb-1.5 block text-body font-medium text-white/75">{children}</span>;
 }
 
 function DarkInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`w-full rounded-md border border-white/15 bg-card/8 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
+      className={`w-full rounded-md border border-white/15 bg-card/8 px-3 py-2 text-body text-white outline-none placeholder:text-white/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
     />
   );
 }
@@ -542,7 +546,7 @@ function DarkTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) 
   return (
     <textarea
       {...props}
-      className={`w-full rounded-md border border-white/15 bg-card/8 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
+      className={`w-full rounded-md border border-white/15 bg-card/8 px-3 py-2 text-body text-white outline-none placeholder:text-white/35 focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
     />
   );
 }
@@ -551,7 +555,7 @@ function DarkSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
-      className={`w-full rounded-md border border-white/15 bg-card/8 px-3 py-2 text-sm text-white outline-none focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
+      className={`w-full rounded-md border border-white/15 bg-card/8 px-3 py-2 text-body text-white outline-none focus:border-orange focus:ring-2 focus:ring-orange/20 ${props.className ?? ""}`}
     />
   );
 }
@@ -767,7 +771,7 @@ function EtapaEdificio({
             onChange={(event) => onEdificioChange({ ...edificio, cobertura: event.target.value })}
           />
         </div>
-        <label className="flex items-center gap-3 text-sm text-white/75 md:col-span-2">
+        <label className="flex items-center gap-3 text-body text-white/75 md:col-span-2">
           <input
             type="checkbox"
             checked={edificio.possuiSpda}
@@ -798,7 +802,7 @@ function EtapaPontos({
       />
       <div className="space-y-3">
         {pontos.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-white/20 px-4 py-10 text-center text-sm text-white/45">
+          <div className="rounded-lg border border-dashed border-white/20 px-4 py-10 text-center text-body text-white/45">
             Nenhum ponto adicionado
           </div>
         ) : (
@@ -809,7 +813,7 @@ function EtapaPontos({
               <div key={ponto.id} className="rounded-lg border border-white/15 bg-card/5 p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-white">Ponto #{index + 1}</p>
+                    <p className="text-body font-semibold text-white">Ponto #{index + 1}</p>
                     <span
                       className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-micro font-semibold ${resultadoColor(status)}`}
                     >
@@ -886,7 +890,7 @@ function EtapaPontos({
         <button
           type="button"
           onClick={() => onChange([...pontos, novoPonto()])}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/25 px-4 py-3 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/25 px-4 py-3 text-body font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Adicionar ponto de medição
@@ -963,13 +967,13 @@ function RadioGrupo({
 }) {
   return (
     <div>
-      <p className="text-sm font-medium text-white">{titulo}</p>
-      <p className="mt-0.5 text-xs text-white/45">{codigo}</p>
+      <p className="text-body font-medium text-white">{titulo}</p>
+      <p className="mt-0.5 text-caption text-white/45">{codigo}</p>
       <div className="mt-3 grid grid-cols-1 gap-2">
         {opcoes.map((opcao) => (
           <label
             key={opcao.valor}
-            className={`flex items-center gap-3 rounded-lg border px-3 py-3 text-sm ${
+            className={`flex items-center gap-3 rounded-lg border px-3 py-3 text-body ${
               value === opcao.valor
                 ? "border-orange bg-card/10 text-white"
                 : "border-white/15 bg-card/5 text-white/75"
@@ -982,7 +986,7 @@ function RadioGrupo({
               className="h-4 w-4 accent-orange"
             />
             <span>{opcao.rotulo}</span>
-            <span className="ml-auto text-xs text-white/45">
+            <span className="ml-auto text-caption text-white/45">
               {codigo} = {opcao.valor}
             </span>
           </label>
@@ -1001,12 +1005,12 @@ function ListaLinhas({
 }) {
   return (
     <div>
-      <p className="text-sm font-medium text-white">Linhas externas conectadas ao edifício</p>
+      <p className="text-body font-medium text-white">Linhas externas conectadas ao edifício</p>
       <div className="mt-3 space-y-3">
         {linhas.map((linha, index) => (
           <div key={linha.id} className="rounded-lg border border-white/15 bg-card/5 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-white">
+              <p className="text-body font-semibold text-white">
                 {linha.tipo === "energia" ? "Linha de Energia" : "Linha de Sinal"} #{index + 1}
               </p>
               <button
@@ -1089,7 +1093,7 @@ function ListaLinhas({
         <button
           type="button"
           onClick={() => onChange([...linhas, novaLinha("energia")])}
-          className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-body font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Energia
@@ -1097,7 +1101,7 @@ function ListaLinhas({
         <button
           type="button"
           onClick={() => onChange([...linhas, novaLinha("sinal")])}
-          className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-body font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Sinal
@@ -1133,7 +1137,7 @@ function EtapaSeguranca({
                 key={valor}
                 type="button"
                 onClick={() => onDescidasChange(valor)}
-                className={`rounded-md px-3 py-2 text-sm font-semibold ${
+                className={`rounded-md px-3 py-2 text-body font-semibold ${
                   descidas === valor ? "bg-orange text-white" : "bg-card/8 text-white/60"
                 }`}
               >
@@ -1145,7 +1149,7 @@ function EtapaSeguranca({
         {pontosCriticos.map((ponto, index) => (
           <div key={ponto.id} className="rounded-lg border border-white/15 bg-card/5 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-white">Ponto crítico #{index + 1}</p>
+              <p className="text-body font-semibold text-white">Ponto crítico #{index + 1}</p>
               <button
                 type="button"
                 onClick={() =>
@@ -1238,7 +1242,7 @@ function EtapaSeguranca({
         <button
           type="button"
           onClick={() => onPontosCriticosChange([...pontosCriticos, novoPontoCritico()])}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/25 px-4 py-3 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/25 px-4 py-3 text-body font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Adicionar ponto crítico
@@ -1265,7 +1269,7 @@ function EtapaDps({
         {quadros.map((quadro, index) => (
           <div key={quadro.id} className="rounded-lg border border-white/15 bg-card/5 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-white">Quadro / ponto #{index + 1}</p>
+              <p className="text-body font-semibold text-white">Quadro / ponto #{index + 1}</p>
               <button
                 type="button"
                 onClick={() => onChange(quadros.filter((item) => item.id !== quadro.id))}
@@ -1365,7 +1369,7 @@ function EtapaDps({
                   )
                 }
               />
-              <label className="flex items-center gap-3 text-sm text-white/75 md:col-span-2">
+              <label className="flex items-center gap-3 text-body text-white/75 md:col-span-2">
                 <input
                   type="checkbox"
                   checked={quadro.equipamentosSensiveis}
@@ -1388,7 +1392,7 @@ function EtapaDps({
         <button
           type="button"
           onClick={() => onChange([...quadros, novoQuadroDps()])}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/25 px-4 py-3 text-sm font-semibold text-white/75 hover:bg-card/8 hover:text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-white/25 px-4 py-3 text-body font-semibold text-white/75 hover:bg-card/8 hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Adicionar quadro
@@ -1470,7 +1474,7 @@ function EtapaAssinatura({
             <button
               type="button"
               onClick={() => onChange({ ...assinatura, assinaturaTexto: "" })}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-white/45 hover:text-white"
+              className="inline-flex items-center gap-1 text-caption font-semibold text-white/45 hover:text-white"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Limpar
@@ -1484,10 +1488,10 @@ function EtapaAssinatura({
           />
         </div>
         <div className="rounded-lg border border-white/15 bg-card/5 p-4 md:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-white/45">
+          <p className="text-caption font-semibold uppercase tracking-wider text-white/45">
             Resumo do laudo
           </p>
-          <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-white/75 md:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-2 text-body text-white/75 md:grid-cols-3">
             <span>Cliente: {clienteNome}</span>
             <span>Pontos: {pontos}</span>
             <span>NP: {nivelProtecao}</span>

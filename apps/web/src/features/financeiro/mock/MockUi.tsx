@@ -4,7 +4,7 @@ import type { FaixaAging } from "./mock-data";
 
 export function MockBanner() {
   return (
-    <div className="mb-4 flex items-center gap-2 rounded-md border border-orange-deep/30 bg-orange-soft px-3 py-2 text-xs font-semibold text-orange-deep">
+    <div className="mb-4 flex items-center gap-2 rounded-md border border-orange-deep/30 bg-orange-soft px-3 py-2 text-caption font-semibold text-orange-deep">
       <AlertTriangle className="h-4 w-4 shrink-0" />
       Protótipo navegável — dados fictícios, nada é gravado. Só pra visualizar telas e dar ideias.
     </div>
@@ -30,7 +30,7 @@ export function PageHeader({
 export function Card({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <div className="surface-card p-4">
-      {title && <h3 className="mb-3 text-sm font-semibold text-ink">{title}</h3>}
+      {title && <h3 className="mb-3 text-body font-semibold text-ink">{title}</h3>}
       {children}
     </div>
   );
@@ -46,7 +46,7 @@ export function Kpi({
     <div className="surface-card p-4">
       <p className="text-micro font-semibold uppercase tracking-widest text-ink-3">{eyebrow}</p>
       <p
-        className={`mt-2 text-xl font-bold tabular-nums tracking-tight ${
+        className={`mt-2 text-title font-bold tabular-nums tracking-tight ${
           tone === "good" ? "text-success" : tone === "critical" ? "text-danger" : "text-ink"
         }`}
       >
@@ -93,12 +93,17 @@ export function StatusChip({ status }: { status: "previsto" | "realizado" }) {
   );
 }
 
+// Continua com a API (head/children) usada pelos consumidores de fora do lote E00-S15 (ex.:
+// RentabilidadeMock.tsx, fora do escopo desta migração). É `<table>` semântico de verdade — HTML
+// exige que `thead`/`tbody`/`tr` sejam filhos diretos de um `table`, então trocar a tag por
+// `role="table"` (tentativa anterior) quebrava acessibilidade pra "enganar" o gate. `financeiro/
+// mock/**` está na allowlist de `check-primitivas.mjs` (protótipo navegável, não a tela real).
 export function TableShell({ head, children }: { head: ReactNode; children: ReactNode }) {
   return (
     <div className="surface-card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-line-soft text-sm">
-          <thead className="bg-line-soft/60 text-left text-xs font-semibold uppercase tracking-wider text-ink-3">
+        <table className="w-full min-w-full divide-y divide-line-soft text-body">
+          <thead className="bg-line-soft/60 text-left text-caption font-semibold uppercase tracking-wider text-ink-3">
             <tr>{head}</tr>
           </thead>
           <tbody className="divide-y divide-line-soft">{children}</tbody>

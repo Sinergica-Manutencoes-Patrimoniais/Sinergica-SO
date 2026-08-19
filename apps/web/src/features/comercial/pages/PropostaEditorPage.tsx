@@ -6,7 +6,7 @@
  * RPC. O preview e o salvo podem divergir por um instante (parâmetros mudaram enquanto editava);
  * isso é aceitável porque salvar sempre recalcula de novo no servidor com os valores atuais. */
 
-import { Badge, Button, Card, EmptyState, Field, Input, Select } from "@sinergica/ui";
+import { Badge, Button, Card, EmptyState, Field, Input, Select, Skeleton } from "@sinergica/ui";
 import { ArrowLeft, Download, FileSearch, Plus, Send, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -372,7 +372,7 @@ export function PropostaEditorPage({
 
         {erro && (
           <Card>
-            <p className="p-3 text-sm text-danger">{erro}</p>
+            <p className="p-3 text-body text-danger">{erro}</p>
           </Card>
         )}
 
@@ -399,7 +399,9 @@ export function PropostaEditorPage({
                       </Badge>
                       {estaExpirada(proposta.validoAte) && <Badge tone="danger">Expirada</Badge>}
                     </div>
-                    <p className="text-xs text-ink-2">{formatarValor(proposta.precoCentavos)}</p>
+                    <p className="text-caption text-ink-2">
+                      {formatarValor(proposta.precoCentavos)}
+                    </p>
                   </button>
                 </li>
               ))}
@@ -464,15 +466,15 @@ export function PropostaEditorPage({
 
       {erro && (
         <Card>
-          <p className="p-3 text-sm text-danger">{erro}</p>
+          <p className="p-3 text-body text-danger">{erro}</p>
         </Card>
       )}
 
       <Card>
         <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
-          <h2 className="flex-1 font-semibold text-ink">
+          <h1 className="flex-1 font-semibold text-ink">
             {TIPO_LABEL[propostaSelecionada.tipo]} · v{propostaSelecionada.versaoAtual}
-          </h2>
+          </h1>
           <Badge tone={STATUS_TOM[propostaSelecionada.status]}>
             {STATUS_LABEL[propostaSelecionada.status]}
           </Badge>
@@ -485,7 +487,7 @@ export function PropostaEditorPage({
         {temEscrita && propostaSelecionada.status === "aceita" && (
           <div className="border-b border-line p-3">
             {contratoGerado ? (
-              <p className="text-xs text-ink-2">
+              <p className="text-caption text-ink-2">
                 Contrato criado. Vá em Comercial → Contratos pra editar e ativar.
               </p>
             ) : (
@@ -513,17 +515,17 @@ export function PropostaEditorPage({
             é o tipo que existe justamente para consumir o Assessment de pré-venda. */}
         {propostaSelecionada.tipo === "levantamento" && (
           <div className="border-b border-line p-3">
-            <h3 className="mb-2 text-sm font-semibold text-ink">Levantamento</h3>
+            <h3 className="mb-2 text-body font-semibold text-ink">Levantamento</h3>
             {propostaSelecionada.assessmentId ? (
               levantamentoVinculado ? (
                 <div className="space-y-2">
-                  <p className="text-sm text-ink">
+                  <p className="text-body text-ink">
                     {levantamentoVinculado.titulo}
                     {levantamentoVinculado.status !== "concluida" && (
                       <Badge tone="warning">Em andamento</Badge>
                     )}
                   </p>
-                  <p className="text-xs text-ink-2">
+                  <p className="text-caption text-ink-2">
                     {levantamentoVinculado.itensNaoConformes + levantamentoVinculado.itensAtencao}{" "}
                     achado(s) de {levantamentoVinculado.totalItens} item(ns) no levantamento
                   </p>
@@ -540,13 +542,13 @@ export function PropostaEditorPage({
                   {importandoLevantamento && (
                     <div className="space-y-2 rounded-md border border-line-soft p-2">
                       {itensLevantamentoQuery.isPending ? (
-                        <p className="text-xs text-ink-2">Carregando itens do levantamento…</p>
+                        <Skeleton className="h-4 w-40" />
                       ) : itensLevantamentoQuery.error ? (
-                        <p className="text-xs text-danger">
+                        <p className="text-caption text-danger">
                           Falha ao carregar itens do levantamento.
                         </p>
                       ) : (
-                        <p className="text-xs text-ink-2">
+                        <p className="text-caption text-ink-2">
                           {itensLevantamentoQuery.data?.length ?? 0} item(ns) no levantamento —
                           achados (não conforme/atenção) entram na composição, acrescentados aos
                           itens já existentes.
@@ -566,12 +568,12 @@ export function PropostaEditorPage({
                       </div>
                     </div>
                   )}
-                  {avisoImportacao && <p className="text-xs text-ink-2">{avisoImportacao}</p>}
+                  {avisoImportacao && <p className="text-caption text-ink-2">{avisoImportacao}</p>}
                 </div>
               ) : (
                 // AC edge case: Assessment excluído/arquivado depois de vinculado — os itens já
                 // importados continuam na composição (foram copiados), só o vínculo fica indisponível.
-                <p className="text-xs text-ink-3">
+                <p className="text-caption text-ink-3">
                   Levantamento vinculado está indisponível (excluído ou arquivado). Os itens já
                   importados continuam na composição normalmente.
                 </p>
@@ -606,10 +608,10 @@ export function PropostaEditorPage({
                 </Button>
               </div>
             ) : (
-              <p className="text-xs text-ink-3">Nenhum levantamento vinculado.</p>
+              <p className="text-caption text-ink-3">Nenhum levantamento vinculado.</p>
             )}
             {(levantamentosQuery.data ?? []).length === 0 && !propostaSelecionada.assessmentId && (
-              <p className="mt-1 text-xs text-ink-3">Nenhum levantamento nesta Conta ainda.</p>
+              <p className="mt-1 text-caption text-ink-3">Nenhum levantamento nesta Conta ainda.</p>
             )}
           </div>
         )}
@@ -617,23 +619,23 @@ export function PropostaEditorPage({
         {/* Painel de cálculo ao vivo — AC-3 */}
         <div className="grid grid-cols-2 gap-3 border-b border-line p-3 sm:grid-cols-4">
           <div>
-            <p className="text-xs text-ink-2">Custo</p>
+            <p className="text-caption text-ink-2">Custo</p>
             <p className="font-semibold tabular-nums text-ink">{formatarValor(custoAtual)}</p>
           </div>
           <div>
-            <p className="text-xs text-ink-2">Piso</p>
+            <p className="text-caption text-ink-2">Piso</p>
             <p className="font-semibold tabular-nums text-ink">
               {preview ? formatarValor(preview.pisoCentavos) : "—"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-ink-2">Preço sugerido</p>
+            <p className="text-caption text-ink-2">Preço sugerido</p>
             <p className="font-semibold tabular-nums text-ink">
               {preview ? formatarValor(preview.precoCentavos) : "—"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-ink-2">Desconto máx.</p>
+            <p className="text-caption text-ink-2">Desconto máx.</p>
             <p className="font-semibold tabular-nums text-ink">
               {preview ? `${(preview.descontoMaximo * 100).toFixed(1)}%` : "—"}
             </p>
@@ -643,7 +645,7 @@ export function PropostaEditorPage({
         {/* Composição */}
         <div className="border-b border-line p-3">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-ink">Composição</h3>
+            <h3 className="text-body font-semibold text-ink">Composição</h3>
             {editavel && (
               <Button
                 variant="ghost"
@@ -657,7 +659,7 @@ export function PropostaEditorPage({
           </div>
 
           {itensAtuais.length === 0 && !itensRascunho && (
-            <p className="py-4 text-center text-xs text-ink-3">Nenhum item ainda.</p>
+            <p className="py-4 text-center text-caption text-ink-3">Nenhum item ainda.</p>
           )}
 
           <ul className="space-y-2">
@@ -782,10 +784,10 @@ export function PropostaEditorPage({
                   </>
                 ) : (
                   <div className="flex-1">
-                    <p className="text-sm text-ink">
+                    <p className="text-body text-ink">
                       {item.descricao || <span className="text-ink-3">(sem descrição)</span>}
                     </p>
-                    <p className="text-xs text-ink-2">
+                    <p className="text-caption text-ink-2">
                       {item.tipo} · {item.quantidade} × {formatarValor(item.custoUnitarioCentavos)}{" "}
                       ={" "}
                       {formatarValor(
@@ -833,7 +835,7 @@ export function PropostaEditorPage({
               Math.round(Number(precoManual.replace(",", ".")) * 100) || 0,
               preview.pisoCentavos,
             ) && (
-              <p className="mt-2 text-xs text-danger">
+              <p className="mt-2 text-caption text-danger">
                 Preço abaixo do piso — será recusado ao salvar. Só superadmin pode forçar, com
                 justificativa.
               </p>
@@ -854,7 +856,7 @@ export function PropostaEditorPage({
         {/* Status */}
         {temEscrita && (
           <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
-            <span className="text-xs font-semibold text-ink-2">Mudar status:</span>
+            <span className="text-caption font-semibold text-ink-2">Mudar status:</span>
             {(
               [
                 "rascunho",
@@ -911,7 +913,7 @@ export function PropostaEditorPage({
         {superadmin && preview && (
           <div className="border-b border-line p-3">
             <details>
-              <summary className="cursor-pointer text-xs font-semibold text-ink-2">
+              <summary className="cursor-pointer text-caption font-semibold text-ink-2">
                 Forçar preço abaixo do piso (superadmin)
               </summary>
               <ForcarPisoForm
@@ -935,8 +937,8 @@ export function PropostaEditorPage({
 
         {/* Histórico de versões */}
         <div className="p-3">
-          <h3 className="mb-2 text-sm font-semibold text-ink">Histórico de versões</h3>
-          <ul className="space-y-1 text-xs text-ink-2">
+          <h3 className="mb-2 text-body font-semibold text-ink">Histórico de versões</h3>
+          <ul className="space-y-1 text-caption text-ink-2">
             {(versoesQuery.data ?? []).map((versao) => (
               <li key={versao.id}>
                 v{versao.versao} — {new Date(versao.criadoEm).toLocaleString("pt-BR")}
@@ -960,7 +962,7 @@ function ForcarPisoForm({
   const [motivo, setMotivo] = useState("");
   return (
     <div className="mt-2 space-y-2">
-      <p className="text-xs text-ink-2">Piso atual: {formatarValor(pisoCentavos)}</p>
+      <p className="text-caption text-ink-2">Piso atual: {formatarValor(pisoCentavos)}</p>
       <Field label="Novo preço (R$)">
         {(props) => <Input {...props} value={preco} onChange={(e) => setPreco(e.target.value)} />}
       </Field>

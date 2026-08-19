@@ -24,9 +24,9 @@ function CardResumo({
 }: { label: string; valor: string | number; detalhe?: string }) {
   return (
     <div className="rounded-lg border border-line bg-card p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</p>
+      <p className="text-caption font-semibold uppercase tracking-wide text-ink-3">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-ink">{valor}</p>
-      {detalhe ? <p className="mt-1 text-xs text-ink-3">{detalhe}</p> : null}
+      {detalhe ? <p className="mt-1 text-caption text-ink-3">{detalhe}</p> : null}
     </div>
   );
 }
@@ -91,8 +91,8 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Relatório do Dia</h2>
-          <p className="text-sm text-ink-3">Resumo gerencial da operação, por data</p>
+          <h1 className="text-heading font-semibold text-ink">Relatório do Dia</h1>
+          <p className="text-body text-ink-3">Resumo gerencial da operação, por data</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <label className="sr-only" htmlFor="relatorio-diario-data">
@@ -126,16 +126,18 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
       </header>
 
       {erro ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-danger">{erro}</p>
+        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-body text-danger">
+          {erro}
+        </p>
       ) : null}
-      {carregando ? <p className="text-sm text-ink-3">Gerando relatório…</p> : null}
+      {carregando ? <p className="text-body text-ink-3">Gerando relatório…</p> : null}
       {!carregando && resumo ? (
         <>
           {resumo.semMovimento ? (
             <div className="rounded-lg border border-line bg-card p-6 text-center">
               <CalendarDays className="mx-auto mb-2 h-6 w-6 text-ink-3" />
               <p className="font-semibold text-ink">Sem movimento neste dia</p>
-              <p className="mt-1 text-sm text-ink-3">
+              <p className="mt-1 text-body text-ink-3">
                 Escolha outra data para consultar a operação.
               </p>
             </div>
@@ -175,13 +177,13 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
               <h3 className="font-semibold text-ink">Por técnico</h3>
             </div>
             {resumo.porTecnico.length === 0 ? (
-              <p className="p-4 text-sm text-ink-3">Sem apontamentos no dia.</p>
+              <p className="p-4 text-body text-ink-3">Sem apontamentos no dia.</p>
             ) : (
               <ul className="divide-y divide-line">
                 {resumo.porTecnico.map((tecnico) => (
                   <li
                     key={tecnico.nome}
-                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"
+                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-body"
                   >
                     <span className="font-medium text-ink">{tecnico.nome}</span>
                     <span className="text-ink-3">
@@ -201,7 +203,7 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
               <AlertTriangle className="h-4 w-4 text-warning" />
               <h3 className="font-semibold text-ink">Atenção</h3>
             </div>
-            <div className="mt-3 grid gap-2 text-sm text-ink-2 sm:grid-cols-2">
+            <div className="mt-3 grid gap-2 text-body text-ink-2 sm:grid-cols-2">
               <p>
                 OS atrasadas: <strong>{resumo.ordensAtrasadas}</strong>
               </p>

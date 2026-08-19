@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { BrowserRouter } from "react-router";
 import { AuthProvider, useAuth } from "../../web/src/app/auth-context";
 import { ThemeProvider } from "../../web/src/app/theme-context";
@@ -8,7 +9,7 @@ function Entrada() {
   const { user, status, logout } = useAuth();
   if (status === "carregando")
     return (
-      <div className="grid min-h-screen place-items-center bg-paper text-sm text-ink-3">
+      <div className="grid min-h-screen place-items-center bg-paper text-body text-ink-3">
         Carregando sessão…
       </div>
     );
@@ -18,10 +19,14 @@ function Entrada() {
       <div className="grid min-h-screen place-items-center bg-paper p-6 text-center">
         <div>
           <h1 className="text-lg font-semibold">Acesso exclusivo do cliente</h1>
-          <p className="mt-2 text-sm text-ink-3">Use o sistema interno para este perfil.</p>
-          <button type="button" onClick={logout} className="mt-4 font-semibold text-orange">
+          <p className="mt-2 text-body text-ink-3">Use o sistema interno para este perfil.</p>
+          <Button
+            variant="ghost"
+            onClick={logout}
+            className="mt-4 text-orange hover:text-orange-deep"
+          >
             Sair
-          </button>
+          </Button>
         </div>
       </div>
     );

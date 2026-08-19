@@ -1,4 +1,5 @@
-import { Tooltip } from "@sinergica/ui";
+import { Button, ConfirmDialog, DataTable, Skeleton, Tooltip } from "@sinergica/ui";
+import type { DataTableColumn } from "@sinergica/ui";
 import {
   Building2,
   Filter,
@@ -62,12 +63,13 @@ export function ListaClientesPage({
     { modo: "novo" } | { modo: "editar"; cliente: ClienteResumo } | null
   >(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [clienteParaExcluir, setClienteParaExcluir] = useState<ClienteResumo | null>(null);
 
   const temAcesso = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const clientes = await listarClientes(supabaseCliente360Adapter);
       setEstado({ fase: "pronto", clientes });
@@ -183,27 +185,27 @@ export function ListaClientesPage({
     await carregar();
   }
 
-  async function excluir(cliente: ClienteResumo) {
-    if (!user) return;
-    if (!confirm(`Excluir ${cliente.nome}? Clientes com OS aberta serão bloqueados.`)) return;
-    try {
-      setErroAcao(null);
-      await excluirCliente(supabaseCliente360Adapter, { id: cliente.id, userId: user.id });
-      await carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir o cliente.");
-    }
+  async function excluir() {
+    if (!user || !clienteParaExcluir) return;
+    await excluirCliente(supabaseCliente360Adapter, { id: clienteParaExcluir.id, userId: user.id });
+    await carregar();
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temAcesso) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="text-sm text-ink-3 mt-1">
+        <p className="text-body text-ink-3 mt-1">
           Você não tem permissão de leitura no módulo PCM para ver esta tela.
         </p>
       </div>
@@ -211,18 +213,24 @@ export function ListaClientesPage({
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="text-sm text-ink-3 mt-1">Não foi possível carregar a lista de clientes.</p>
+        <p className="text-body text-ink-3 mt-1">Não foi possível carregar a lista de clientes.</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 text-sm font-semibold text-orange hover:text-orange-deep cursor-pointer"
+          className="mt-4 text-body font-semibold text-orange hover:text-orange-deep cursor-pointer"
         >
           Tentar novamente
         </button>
@@ -235,8 +243,8 @@ export function ListaClientesPage({
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Clientes</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h1 className="text-heading font-semibold text-ink">Clientes</h1>
+            <p className="mt-0.5 text-body text-ink-3">
               Carteira PCM enriquecida por Auvo, OS, inspeções e ativos de campo
             </p>
           </div>
@@ -251,7 +259,7 @@ export function ListaClientesPage({
               <button
                 type="button"
                 onClick={() => setModal({ modo: "novo" })}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
               >
                 <Plus className="h-4 w-4" />
                 Novo cliente
@@ -331,19 +339,19 @@ export function ListaClientesPage({
             type="button"
             onClick={limparFiltros}
             disabled={!filtrosAtivos}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line px-3 text-body font-semibold text-ink-2 hover:bg-line-soft disabled:cursor-not-allowed disabled:opacity-45"
           >
             <X className="h-4 w-4" />
             Limpar
           </button>
         </div>
 
-        <div className="mt-3 flex items-center gap-2 text-xs text-ink-3">
+        <div className="mt-3 flex items-center gap-2 text-caption text-ink-3">
           <Filter className="h-3.5 w-3.5" />
           {clientesFiltrados.length} de {clientes.length} cadastro(s) visíveis
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -352,45 +360,31 @@ export function ListaClientesPage({
       {clientes.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Building2 className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhum cliente cadastrado</p>
+          <p className="mt-3 text-body text-ink-3">Nenhum cliente cadastrado</p>
         </div>
       ) : clientesFiltrados.length === 0 ? (
-        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center text-sm text-ink-3">
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-line bg-card px-5 py-10 text-center text-body text-ink-3">
           Nenhum cliente encontrado para os filtros atuais.
+          <Button variant="secondary" size="sm" onClick={limparFiltros}>
+            Limpar filtros
+          </Button>
         </div>
       ) : (
         <section className="rounded-lg border border-line bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-line-soft text-sm">
-              <thead className="bg-line-soft/60 text-left text-xs font-semibold uppercase tracking-wider text-ink-3">
-                <tr>
-                  <th className="px-4 py-2.5">Cliente</th>
-                  <th className="px-4 py-2.5">Local</th>
-                  <th className="px-4 py-2.5">Contato</th>
-                  <th className="px-4 py-2.5 text-right">OS abertas</th>
-                  <th className="px-4 py-2.5 text-right">Ativos</th>
-                  <th className="px-4 py-2.5 text-right">Maior GUT</th>
-                  <th className="px-4 py-2.5">Última atividade</th>
-                  <th className="px-4 py-2.5 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line-soft">
-                {clientesFiltrados.map((cliente) => (
-                  <ClienteLinha
-                    key={cliente.id}
-                    cliente={cliente}
-                    marcacoes={marcacoes}
-                    onSelecionar={onSelecionar}
-                    onEditar={temEscrita ? () => setModal({ modo: "editar", cliente }) : undefined}
-                    onExcluir={temEscrita ? () => excluir(cliente) : undefined}
-                    onTrocarMarcacao={
-                      temEscrita ? (marcacaoId) => trocarMarcacao(cliente, marcacaoId) : undefined
-                    }
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            colunas={colunasCliente({
+              marcacoes,
+              onSelecionar,
+              onEditar: temEscrita ? (cliente) => setModal({ modo: "editar", cliente }) : undefined,
+              onExcluir: temEscrita ? (cliente) => setClienteParaExcluir(cliente) : undefined,
+              onTrocarMarcacao: temEscrita
+                ? (cliente, marcacaoId) => trocarMarcacao(cliente, marcacaoId)
+                : undefined,
+            })}
+            itens={clientesFiltrados}
+            chaveLinha={(cliente) => cliente.id}
+            vazio={<>Nenhum cliente encontrado.</>}
+          />
         </section>
       )}
       {modal && (
@@ -400,134 +394,151 @@ export function ListaClientesPage({
           onSalvar={salvarCliente}
         />
       )}
+      <ConfirmDialog
+        open={clienteParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setClienteParaExcluir(null);
+        }}
+        titulo={`Excluir "${clienteParaExcluir?.nome}"`}
+        descricao="Clientes com OS aberta serão bloqueados."
+        onConfirmar={excluir}
+      />
     </div>
   );
 }
 
-function ClienteLinha({
-  cliente,
+function colunasCliente({
   marcacoes,
   onSelecionar,
   onEditar,
   onExcluir,
   onTrocarMarcacao,
 }: {
-  cliente: ClienteResumo;
   marcacoes: MarcacaoCliente[];
   onSelecionar: (clienteId: string) => void;
-  onEditar?: () => void;
-  onExcluir?: () => void;
-  onTrocarMarcacao?: (marcacaoId: string | null) => void;
-}) {
-  const local = [cliente.cidade, cliente.estado].filter(Boolean).join(" — ");
-  const score = cliente.maiorScorePcm ?? 0;
-  const contato = cliente.contatoTelefone ?? cliente.contatoEmail ?? cliente.contatoNome;
-
-  return (
-    <tr className="hover:bg-line-soft/50">
-      <td className="px-4 py-2.5">
-        <button
-          type="button"
-          onClick={() => onSelecionar(cliente.id)}
-          className="text-left hover:underline"
-        >
-          <p className="truncate text-sm font-semibold text-ink">{cliente.nome}</p>
-        </button>
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <Tooltip content={TOOLTIP_CLIENTE.status} className="inline-flex">
-            <button
-              type="button"
-              className="appearance-none border-0 bg-transparent p-0 text-inherit"
-            >
-              <Badge tone={cliente.ativo ? "success" : "neutral"}>
-                {cliente.ativo ? "Ativo" : "Inativo"}
-              </Badge>
-            </button>
-          </Tooltip>
-          {cliente.tipo && (
-            <Tooltip content={TOOLTIP_CLIENTE.tipo} className="inline-flex">
+  onEditar?: (cliente: ClienteResumo) => void;
+  onExcluir?: (cliente: ClienteResumo) => void;
+  onTrocarMarcacao?: (cliente: ClienteResumo, marcacaoId: string | null) => void;
+}): DataTableColumn<ClienteResumo>[] {
+  return [
+    {
+      chave: "cliente",
+      cabecalho: "Cliente",
+      render: (cliente) => (
+        <div>
+          <button
+            type="button"
+            onClick={() => onSelecionar(cliente.id)}
+            className="text-left hover:underline"
+          >
+            <p className="truncate text-body font-semibold text-ink">{cliente.nome}</p>
+          </button>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <Tooltip content={TOOLTIP_CLIENTE.status} className="inline-flex">
               <button
                 type="button"
                 className="appearance-none border-0 bg-transparent p-0 text-inherit"
               >
-                <Badge tone="neutral">{cliente.tipo === "lead" ? "Lead" : "Cliente"}</Badge>
-              </button>
-            </Tooltip>
-          )}
-          {cliente.statusComercial && (
-            <Tooltip content={TOOLTIP_CLIENTE.statusComercial} className="inline-flex">
-              <button
-                type="button"
-                className="appearance-none border-0 bg-transparent p-0 text-inherit"
-              >
-                <Badge tone={cliente.statusComercial === "ativo" ? "success" : "warning"}>
-                  {STATUS_COMERCIAL_LABEL[cliente.statusComercial] ?? cliente.statusComercial}
+                <Badge tone={cliente.ativo ? "success" : "neutral"}>
+                  {cliente.ativo ? "Ativo" : "Inativo"}
                 </Badge>
               </button>
             </Tooltip>
-          )}
-          {!cliente.cadastroCompleto && (
-            <Tooltip content={TOOLTIP_CLIENTE.incompleto} className="inline-flex">
+            {cliente.tipo && (
+              <Tooltip content={TOOLTIP_CLIENTE.tipo} className="inline-flex">
+                <button
+                  type="button"
+                  className="appearance-none border-0 bg-transparent p-0 text-inherit"
+                >
+                  <Badge tone="neutral">{cliente.tipo === "lead" ? "Lead" : "Cliente"}</Badge>
+                </button>
+              </Tooltip>
+            )}
+            {cliente.statusComercial && (
+              <Tooltip content={TOOLTIP_CLIENTE.statusComercial} className="inline-flex">
+                <button
+                  type="button"
+                  className="appearance-none border-0 bg-transparent p-0 text-inherit"
+                >
+                  <Badge tone={cliente.statusComercial === "ativo" ? "success" : "warning"}>
+                    {STATUS_COMERCIAL_LABEL[cliente.statusComercial] ?? cliente.statusComercial}
+                  </Badge>
+                </button>
+              </Tooltip>
+            )}
+            {!cliente.cadastroCompleto && (
+              <Tooltip content={TOOLTIP_CLIENTE.incompleto} className="inline-flex">
+                <button
+                  type="button"
+                  className="appearance-none border-0 bg-transparent p-0 text-inherit"
+                >
+                  <Badge tone="warning">Incompleto</Badge>
+                </button>
+              </Tooltip>
+            )}
+            {cliente.marcacao && !onTrocarMarcacao && (
+              <Tooltip content={TOOLTIP_CLIENTE.marcacao} className="inline-flex">
+                <button
+                  type="button"
+                  className="shrink-0 appearance-none rounded-full border-0 px-2 py-0.5 text-micro font-semibold text-white"
+                  style={{ backgroundColor: cliente.marcacao.cor }}
+                >
+                  {cliente.marcacao.nome}
+                </button>
+              </Tooltip>
+            )}
+            {onTrocarMarcacao && (
+              <Tooltip content={TOOLTIP_CLIENTE.marcacao} className="inline-flex">
+                <select
+                  value={cliente.marcacao?.id ?? ""}
+                  onChange={(event) => onTrocarMarcacao(cliente, event.target.value || null)}
+                  className="h-6 rounded-full border-0 px-2 py-0 text-micro font-semibold text-white"
+                  style={{ backgroundColor: cliente.marcacao?.cor ?? "#9CA3AF" }}
+                >
+                  <option value="">Sem marcação</option>
+                  {marcacoes.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.nome}
+                    </option>
+                  ))}
+                </select>
+              </Tooltip>
+            )}
+          </div>
+          <p className="mt-1 text-micro tabular-nums text-ink-3">
+            CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")} ·{" "}
+            <Tooltip content={TOOLTIP_CLIENTE.auvo} className="inline-flex">
               <button
                 type="button"
                 className="appearance-none border-0 bg-transparent p-0 text-inherit"
               >
-                <Badge tone="warning">Incompleto</Badge>
+                Auvo {rotuloOuPlaceholder(cliente.auvoId ?? null, "—")}
               </button>
             </Tooltip>
-          )}
-          {cliente.marcacao && !onTrocarMarcacao && (
-            <Tooltip content={TOOLTIP_CLIENTE.marcacao} className="inline-flex">
-              <button
-                type="button"
-                className="shrink-0 appearance-none rounded-full border-0 px-2 py-0.5 text-micro font-semibold text-white"
-                style={{ backgroundColor: cliente.marcacao.cor }}
-              >
-                {cliente.marcacao.nome}
-              </button>
-            </Tooltip>
-          )}
-          {onTrocarMarcacao && (
-            <Tooltip content={TOOLTIP_CLIENTE.marcacao} className="inline-flex">
-              <select
-                value={cliente.marcacao?.id ?? ""}
-                onChange={(event) => onTrocarMarcacao(event.target.value || null)}
-                className="h-6 rounded-full border-0 px-2 py-0 text-micro font-semibold text-white"
-                style={{ backgroundColor: cliente.marcacao?.cor ?? "#9CA3AF" }}
-              >
-                <option value="">Sem marcação</option>
-                {marcacoes.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nome}
-                  </option>
-                ))}
-              </select>
-            </Tooltip>
-          )}
+          </p>
         </div>
-        <p className="mt-1 text-micro tabular-nums text-ink-3">
-          CNPJ: {rotuloOuPlaceholder(cliente.cnpj, "—")} ·{" "}
-          <Tooltip content={TOOLTIP_CLIENTE.auvo} className="inline-flex">
-            <button
-              type="button"
-              className="appearance-none border-0 bg-transparent p-0 text-inherit"
-            >
-              Auvo {rotuloOuPlaceholder(cliente.auvoId ?? null, "—")}
-            </button>
-          </Tooltip>
-        </p>
-      </td>
-      <td className="px-4 py-2.5 text-xs text-ink-2">
-        {local && (
-          <span className="inline-flex items-center gap-1">
+      ),
+    },
+    {
+      chave: "local",
+      cabecalho: "Local",
+      render: (cliente) => {
+        const local = [cliente.cidade, cliente.estado].filter(Boolean).join(" — ");
+        return local ? (
+          <span className="inline-flex items-center gap-1 text-caption text-ink-2">
             <MapPin className="h-3.5 w-3.5 shrink-0 text-ink-3" />
             {local}
           </span>
-        )}
-      </td>
-      <td className="px-4 py-2.5 text-xs text-ink-2">
-        {contato && (
-          <span className="inline-flex items-center gap-1">
+        ) : null;
+      },
+    },
+    {
+      chave: "contato",
+      cabecalho: "Contato",
+      render: (cliente) => {
+        const contato = cliente.contatoTelefone ?? cliente.contatoEmail ?? cliente.contatoNome;
+        return contato ? (
+          <span className="inline-flex items-center gap-1 text-caption text-ink-2">
             {cliente.contatoEmail ? (
               <Mail className="h-3.5 w-3.5 shrink-0 text-ink-3" />
             ) : (
@@ -535,28 +546,48 @@ function ClienteLinha({
             )}
             <span className="truncate">{contato}</span>
           </span>
-        )}
-      </td>
-      <td className="px-4 py-2.5 text-right font-brand text-sm tabular-nums text-ink">
-        {cliente.osAbertas ?? 0}
-      </td>
-      <td className="px-4 py-2.5 text-right font-brand text-sm tabular-nums text-ink">
-        {cliente.equipamentosAtivos ?? 0}
-      </td>
-      <td
-        className={`px-4 py-2.5 text-right font-brand text-sm tabular-nums ${score >= 80 ? "font-bold text-orange" : "text-ink"}`}
-      >
-        {score}
-      </td>
-      <td className="px-4 py-2.5 text-xs text-ink-3">
-        {formatarDataCurta(cliente.ultimaAtividadeEm)}
-      </td>
-      <td className="px-4 py-2.5">
+        ) : null;
+      },
+    },
+    {
+      chave: "osAbertas",
+      cabecalho: "OS abertas",
+      numerica: true,
+      render: (cliente) => cliente.osAbertas ?? 0,
+    },
+    {
+      chave: "ativos",
+      cabecalho: "Ativos",
+      numerica: true,
+      render: (cliente) => cliente.equipamentosAtivos ?? 0,
+    },
+    {
+      chave: "gut",
+      cabecalho: "Maior GUT",
+      numerica: true,
+      render: (cliente) => {
+        const score = cliente.maiorScorePcm ?? 0;
+        return <span className={score >= 80 ? "font-bold text-orange" : ""}>{score}</span>;
+      },
+    },
+    {
+      chave: "ultimaAtividade",
+      cabecalho: "Última atividade",
+      render: (cliente) => (
+        <span className="text-caption text-ink-3">
+          {formatarDataCurta(cliente.ultimaAtividadeEm)}
+        </span>
+      ),
+    },
+    {
+      chave: "acoes",
+      cabecalho: "Ações",
+      render: (cliente) => (
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={() => onSelecionar(cliente.id)}
-            className="inline-flex h-8 items-center justify-center rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+            className="inline-flex h-8 items-center justify-center rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
           >
             Ver 360
           </button>
@@ -564,7 +595,7 @@ function ClienteLinha({
             <IconButton
               label="Editar"
               icon={<Pencil className="h-3.5 w-3.5" />}
-              onClick={onEditar}
+              onClick={() => onEditar(cliente)}
             />
           )}
           {onExcluir && (
@@ -572,13 +603,13 @@ function ClienteLinha({
               label="Excluir"
               danger
               icon={<Trash2 className="h-3.5 w-3.5" />}
-              onClick={onExcluir}
+              onClick={() => onExcluir(cliente)}
             />
           )}
         </div>
-      </td>
-    </tr>
-  );
+      ),
+    },
+  ];
 }
 
 function IconButton({
@@ -596,7 +627,7 @@ function IconButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
+      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-2.5 text-caption font-semibold ${danger ? "border-danger-line text-danger hover:bg-danger-soft" : "border-line text-ink-2 hover:bg-line-soft"}`}
     >
       {icon}
       {label}
@@ -608,7 +639,7 @@ function ResumoCarteira({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-line-soft px-3 py-2">
       <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
-      <p className="mt-1 font-brand text-xl font-bold text-ink tabular-nums">{value}</p>
+      <p className="mt-1 font-brand text-title font-bold text-ink tabular-nums">{value}</p>
     </div>
   );
 }

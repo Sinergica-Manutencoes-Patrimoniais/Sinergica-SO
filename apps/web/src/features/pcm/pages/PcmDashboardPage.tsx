@@ -1,4 +1,4 @@
-import { Tooltip } from "@sinergica/ui";
+import { Button, Skeleton, Tooltip } from "@sinergica/ui";
 import {
   Activity,
   AlertTriangle,
@@ -101,7 +101,7 @@ export function PcmDashboardPage({
   const pollingRef = useRef<number | null>(null);
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const hoje = hojeLocalIso();
       const [ordens, inspecoes, chamados, agenda, tecnicos, preventivas, reservasFerramenta] =
@@ -245,18 +245,28 @@ export function PcmDashboardPage({
   }, []);
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando dashboard PCM…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {
     return (
       <div className="rounded-xl border border-line bg-card p-8 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Dashboard indisponível</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 btn-secondary">
-          <RefreshCw className="h-4 w-4" />
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
+        <Button
+          variant="secondary"
+          icon={<RefreshCw className="h-4 w-4" />}
+          onClick={carregar}
+          className="mt-4"
+        >
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -267,8 +277,8 @@ export function PcmDashboardPage({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">PCM · Operação</h2>
-          <p className="text-sm text-ink-3">
+          <h1 className="text-heading font-semibold text-ink">PCM · Operação</h1>
+          <p className="text-body text-ink-3">
             Dados reais de OS, backlog, inspeções e caches sincronizados do Auvo
           </p>
         </div>
@@ -278,7 +288,7 @@ export function PcmDashboardPage({
               type="button"
               onClick={carregar}
               title="Relê os dados já sincronizados localmente (rápido, não chama o Auvo)"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
             >
               <RefreshCw className="h-4 w-4" />
               Atualizar
@@ -288,7 +298,7 @@ export function PcmDashboardPage({
               onClick={sincronizar}
               disabled={sincronizacaoAuvo.fase === "sincronizando"}
               title="Puxa os dados do Auvo agora (clientes, equipe, tarefas viram OS aberta) — os cadastros feitos aqui já vão pro Auvo na hora, isto é só para trazer o que mudou lá"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-2.5 text-xs font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-2.5 text-caption font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Loader2
                 className={`h-4 w-4 ${sincronizacaoAuvo.fase === "sincronizando" ? "animate-spin" : "hidden"}`}
@@ -302,7 +312,7 @@ export function PcmDashboardPage({
               <button
                 type="button"
                 onClick={onNovaOs}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep"
               >
                 <ClipboardList className="w-4 h-4" />
                 Nova OS
@@ -351,20 +361,20 @@ export function PcmDashboardPage({
         <div className="lg:col-span-2 bg-card rounded-xl border border-line">
           <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
             <div>
-              <h3 className="text-sm font-semibold text-ink">Ordens de Serviço Recentes</h3>
-              <p className="text-xs text-ink-3 mt-0.5">Últimas 5 OS registradas no PCM</p>
+              <h3 className="text-body font-semibold text-ink">Ordens de Serviço Recentes</h3>
+              <p className="text-caption text-ink-3 mt-0.5">Últimas 5 OS registradas no PCM</p>
             </div>
             <button
               type="button"
               onClick={onVerOrdens}
-              className="text-xs text-orange font-medium hover:underline"
+              className="text-caption text-orange font-medium hover:underline"
             >
               Ver todas →
             </button>
           </div>
           <div className="divide-y divide-line-soft">
             {dashboard.ordensRecentes.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm text-ink-3">
+              <div className="px-5 py-8 text-center text-body text-ink-3">
                 Nenhuma OS cadastrada ainda.
               </div>
             ) : (
@@ -375,11 +385,11 @@ export function PcmDashboardPage({
                     aria-label={`Resumo do Chamado ${ordem.numero}`}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-line-soft focus:bg-line-soft"
                   >
-                    <span className="text-xs font-brand tabular-nums text-ink-3 w-16 shrink-0">
+                    <span className="text-caption font-brand tabular-nums text-ink-3 w-16 shrink-0">
                       {ordem.numero}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-ink truncate">{ordem.titulo}</p>
+                      <p className="text-body font-medium text-ink truncate">{ordem.titulo}</p>
                       <p className="truncate text-micro text-ink-3">
                         {ordem.clienteNome} · {ordem.categoria} ·{" "}
                         {ordem.tecnicoNome ?? "sem técnico"}
@@ -405,20 +415,20 @@ export function PcmDashboardPage({
         <div className="bg-card rounded-xl border border-line">
           <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
             <div>
-              <h3 className="text-sm font-semibold text-ink">Top Backlog GUT</h3>
-              <p className="text-xs text-ink-3 mt-0.5">OS abertas com maior score</p>
+              <h3 className="text-body font-semibold text-ink">Top Backlog GUT</h3>
+              <p className="text-caption text-ink-3 mt-0.5">OS abertas com maior score</p>
             </div>
             <button
               type="button"
               onClick={onVerBacklog}
-              className="text-xs text-orange font-medium hover:underline"
+              className="text-caption text-orange font-medium hover:underline"
             >
               Ver fila →
             </button>
           </div>
           <div className="divide-y divide-line-soft">
             {dashboard.topBacklog.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm text-ink-3">
+              <div className="px-5 py-8 text-center text-body text-ink-3">
                 Nenhuma OS aberta no backlog.
               </div>
             ) : (
@@ -429,18 +439,18 @@ export function PcmDashboardPage({
                     aria-label={`Resumo do Chamado ${ordem.numero}`}
                     className="flex w-full gap-3 px-4 py-3 text-left hover:bg-line-soft focus:bg-line-soft"
                   >
-                    <span className="mt-0.5 w-5 shrink-0 text-center font-brand text-base font-bold leading-none text-line">
+                    <span className="mt-0.5 w-5 shrink-0 text-center font-brand text-heading font-bold leading-none text-line">
                       {indice + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold leading-snug text-ink-2">
+                      <p className="text-caption font-semibold leading-snug text-ink-2">
                         {ordem.numero} · {ordem.titulo}
                       </p>
                       <p className="mt-1 text-micro text-ink-3">
                         {ordem.clienteNome} · {ordem.categoria}
                       </p>
                       <div className="mt-1.5 flex items-center gap-2">
-                        <span className="text-xs font-bold font-brand text-ink-2">
+                        <span className="text-caption font-bold font-brand text-ink-2">
                           Score {ordem.scorePcm}
                         </span>
                         <span
@@ -485,8 +495,8 @@ function CockpitBomDiaCards({
   return (
     <section className="rounded-xl border border-line bg-card p-4" aria-label="Cockpit bom dia">
       <div className="mb-3">
-        <h3 className="text-sm font-semibold text-ink">Bom dia · operação de hoje</h3>
-        <p className="text-xs text-ink-3">Decisões e pontos de atenção para {cockpit.dia}</p>
+        <h3 className="text-body font-semibold text-ink">Bom dia · operação de hoje</h3>
+        <p className="text-caption text-ink-3">Decisões e pontos de atenção para {cockpit.dia}</p>
       </div>
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         <CockpitCard
@@ -625,9 +635,11 @@ function CockpitCard({
       onClick={onClick}
       className={`rounded-lg border p-3 text-left transition-colors hover:bg-line-soft ${alerta ? "border-danger-line bg-danger-soft" : "border-line bg-paper"}`}
     >
-      <p className="text-xs font-semibold text-ink-3">{titulo}</p>
-      <p className={`mt-1 text-xl font-semibold ${alerta ? "text-danger" : "text-ink"}`}>{valor}</p>
-      <p className="mt-1 line-clamp-2 text-xs text-ink-3">{detalhe}</p>
+      <p className="text-caption font-semibold text-ink-3">{titulo}</p>
+      <p className={`mt-1 text-title font-semibold ${alerta ? "text-danger" : "text-ink"}`}>
+        {valor}
+      </p>
+      <p className="mt-1 line-clamp-2 text-caption text-ink-3">{detalhe}</p>
     </button>
   );
 }
@@ -687,27 +699,27 @@ function DetalheErrosSyncAuvo({
     <section className="rounded-xl border border-danger-line bg-card" aria-live="polite">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Erros de sincronização Auvo</h3>
-          <p className="text-xs text-ink-3">Última falha por entidade e registro local.</p>
+          <h3 className="text-body font-semibold text-ink">Erros de sincronização Auvo</h3>
+          <p className="text-caption text-ink-3">Última falha por entidade e registro local.</p>
         </div>
-        <button type="button" onClick={onFechar} className="btn-secondary text-xs">
+        <Button variant="secondary" size="sm" onClick={onFechar}>
           Fechar
-        </button>
+        </Button>
       </div>
       {carregando ? (
-        <p className="px-4 py-5 text-sm text-ink-3">Carregando erros…</p>
+        <Skeleton className="h-4 w-40" />
       ) : erro ? (
-        <p className="px-4 py-5 text-sm text-danger">{erro}</p>
+        <p className="px-4 py-5 text-body text-danger">{erro}</p>
       ) : itens.length === 0 ? (
-        <p className="px-4 py-5 text-sm text-ink-3">Nenhum erro pendente de detalhamento.</p>
+        <p className="px-4 py-5 text-body text-ink-3">Nenhum erro pendente de detalhamento.</p>
       ) : (
         <ul className="divide-y divide-line-soft">
           {itens.map((item, indice) => (
             <li key={`${item.entity}:${item.rowId ?? "pull"}:${indice}`} className="px-4 py-3">
-              <p className="text-sm font-semibold text-ink">
+              <p className="text-body font-semibold text-ink">
                 {item.entity} · {item.rowId ?? "ID local indisponível"}
               </p>
-              <p className="mt-0.5 text-sm text-danger">{item.lastError}</p>
+              <p className="mt-0.5 text-body text-danger">{item.lastError}</p>
               <p className="mt-1 text-micro text-ink-3">
                 Última falha: {formatarDataHoraCurta(item.lastErrorAt)}
               </p>
@@ -723,16 +735,16 @@ function StatusSincronizacaoAuvo({ estado }: { estado: EstadoSincronizacaoAuvo }
   if (estado.fase === "ocioso") return null;
 
   if (estado.fase === "sincronizando") {
-    return <p className="text-xs text-ink-3">Puxando dados do Auvo…</p>;
+    return <p className="text-caption text-ink-3">Puxando dados do Auvo…</p>;
   }
 
   if (estado.fase === "erro") {
-    return <p className="text-xs font-medium text-danger">{estado.mensagem}</p>;
+    return <p className="text-caption font-medium text-danger">{estado.mensagem}</p>;
   }
 
   if (estado.etapasComErro.length > 0) {
     return (
-      <p className="text-xs font-medium text-warning">
+      <p className="text-caption font-medium text-warning">
         Sincronizado às {formatarDataHoraCurta(estado.syncedAt)} — falhou em:{" "}
         {estado.etapasComErro.join(", ")}
       </p>
@@ -740,7 +752,7 @@ function StatusSincronizacaoAuvo({ estado }: { estado: EstadoSincronizacaoAuvo }
   }
 
   return (
-    <p className="text-xs text-ink-3">
+    <p className="text-caption text-ink-3">
       Sincronizado com o Auvo às {formatarDataHoraCurta(estado.syncedAt)}
     </p>
   );
@@ -780,13 +792,13 @@ function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["
     <section className="bg-card rounded-xl border border-line overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Operação Auvo</h3>
-          <p className="text-xs text-ink-3 mt-0.5">
+          <h3 className="text-body font-semibold text-ink">Operação Auvo</h3>
+          <p className="text-caption text-ink-3 mt-0.5">
             Clientes, equipe e ativos espelhados da API Auvo · atualização {ultimaAtualizacao}
           </p>
         </div>
         {dashboard.equipamentosSemCliente > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold text-warning">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1 text-caption font-semibold text-warning">
             <AlertTriangle className="h-3.5 w-3.5" />
             {dashboard.equipamentosSemCliente} ativos sem cliente
           </span>
@@ -824,11 +836,13 @@ function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["
         </div>
 
         <div className="p-4">
-          <h4 className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-3">
+          <h4 className="text-caption font-semibold uppercase tracking-[0.16em] text-ink-3">
             Clientes com mais ativos
           </h4>
           {dashboard.topClientesEquipamentos.length === 0 ? (
-            <p className="mt-4 text-sm text-ink-3">Nenhum equipamento Auvo vinculado a clientes.</p>
+            <p className="mt-4 text-body text-ink-3">
+              Nenhum equipamento Auvo vinculado a clientes.
+            </p>
           ) : (
             <div className="mt-3 space-y-3">
               {dashboard.topClientesEquipamentos.map((cliente) => (
@@ -837,8 +851,8 @@ function PainelAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmResumo["
                   className="flex items-center justify-between gap-3 border-b border-line-soft pb-2 last:border-0 last:pb-0"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-ink">{cliente.nome}</p>
-                    <p className="text-xs text-ink-3">Auvo #{cliente.auvoId}</p>
+                    <p className="truncate text-body font-medium text-ink">{cliente.nome}</p>
+                    <p className="text-caption text-ink-3">Auvo #{cliente.auvoId}</p>
                   </div>
                   <span className="font-brand text-lg font-bold tabular-nums text-ink">
                     {cliente.total}
@@ -861,12 +875,12 @@ function PainelCampoAuvo({ dashboard }: { dashboard: NonNullable<DashboardPcmRes
     <section className="rounded-xl border border-line bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Sinais de campo Auvo</h3>
-          <p className="mt-0.5 text-xs text-ink-3">
+          <h3 className="text-body font-semibold text-ink">Sinais de campo Auvo</h3>
+          <p className="mt-0.5 text-caption text-ink-3">
             Consolidado do pull de tarefas e dos webhooks de execução
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-info-soft px-3 py-1 text-xs font-semibold text-navy">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-info-soft px-3 py-1 text-caption font-semibold text-navy">
           <Activity className="h-3.5 w-3.5" />
           última execução {ultimaExecucao}
         </span>
@@ -944,10 +958,10 @@ function CampoAuvoItem({
           {label}
         </span>
       </div>
-      <p className="mt-1.5 font-brand text-xl font-bold leading-none text-ink tabular-nums">
+      <p className="mt-1.5 font-brand text-title font-bold leading-none text-ink tabular-nums">
         {value}
       </p>
-      <p className="mt-1 truncate text-xs text-ink-3">{detail}</p>
+      <p className="mt-1 truncate text-caption text-ink-3">{detail}</p>
     </div>
   );
 }
@@ -971,10 +985,10 @@ function AuvoResumoItem({
           {label}
         </span>
       </div>
-      <p className="mt-1.5 font-brand text-xl font-bold leading-none text-ink tabular-nums">
+      <p className="mt-1.5 font-brand text-title font-bold leading-none text-ink tabular-nums">
         {value}
       </p>
-      <p className="mt-1 truncate text-xs text-ink-3">{detail}</p>
+      <p className="mt-1 truncate text-caption text-ink-3">{detail}</p>
     </div>
   );
 }
@@ -985,7 +999,7 @@ function KpiCard({ kpi }: { kpi: KpiDashboardPcm }) {
       <span className="text-micro font-semibold text-ink-3 uppercase tracking-[0.16em] font-brand">
         {kpi.label}
       </span>
-      <span className="mt-0.5 font-brand text-xl font-bold leading-none tabular-nums text-ink">
+      <span className="mt-0.5 font-brand text-title font-bold leading-none tabular-nums text-ink">
         {kpi.valor}
       </span>
       <span

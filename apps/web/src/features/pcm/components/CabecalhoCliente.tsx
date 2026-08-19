@@ -15,11 +15,11 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold truncate">{cliente.nome}</h1>
-          <p className="mt-1 flex items-center gap-2 text-sm text-white/75">
+          <p className="mt-1 flex items-center gap-2 text-body text-white/75">
             <MapPin className="h-4 w-4 shrink-0" />
             <span className="truncate">{local || "Endereço ainda não sincronizado"}</span>
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-caption">
             <Tooltip content={TOOLTIP_CLIENTE.tipo} className="inline-flex">
               <button
                 type="button"
@@ -64,7 +64,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
         <Tooltip content={TOOLTIP_CLIENTE.auvo} className="inline-flex">
           <button
             type="button"
-            className="shrink-0 appearance-none rounded-lg border-0 bg-card/10 px-4 py-3 text-left text-sm text-inherit"
+            className="shrink-0 appearance-none rounded-lg border-0 bg-card/10 px-4 py-3 text-left text-body text-inherit"
           >
             <p className="text-micro font-semibold uppercase tracking-wider text-white/55">Auvo</p>
             <p className="mt-1 font-brand text-lg tabular-nums">
@@ -85,7 +85,7 @@ export function CabecalhoCliente({ cliente }: { cliente: ClienteHeader }) {
       </div>
 
       {(cliente.contatoTelefone || cliente.contatoEmail) && (
-        <div className="mt-4 flex flex-wrap gap-3 text-sm text-white/75">
+        <div className="mt-4 flex flex-wrap gap-3 text-body text-white/75">
           {cliente.contatoTelefone && (
             <span className="inline-flex items-center gap-2">
               <Phone className="h-4 w-4" />
@@ -108,7 +108,7 @@ function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-micro font-semibold uppercase tracking-wider text-white/45">{label}</p>
-      <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
+      <p className="mt-1 truncate text-body font-semibold text-white">{value}</p>
     </div>
   );
 }

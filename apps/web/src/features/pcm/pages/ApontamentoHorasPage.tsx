@@ -1,3 +1,4 @@
+import { DataTable, type DataTableColumn, Skeleton } from "@sinergica/ui";
 import {
   AlertTriangle,
   ChevronDown,
@@ -88,7 +89,7 @@ export function ApontamentoHorasPage({
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const resultado = await obterApontamentoHoras(supabaseApontamentoHorasAdapter, {
         inicio,
@@ -127,27 +128,41 @@ export function ApontamentoHorasPage({
   );
 
   if (permissoesCarregando)
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -159,13 +174,13 @@ export function ApontamentoHorasPage({
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-        <h3 className="text-base font-semibold text-ink">Apontamento de Horas</h3>
-        <p className="mt-0.5 text-sm text-ink-3">
+        <h1 className="text-heading font-semibold text-ink">Apontamento de Horas</h1>
+        <p className="mt-0.5 text-body text-ink-3">
           Horas por OS derivadas do Auvo (check-in/out) — liga tarefa, técnico e cliente
         </p>
         <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-4">
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">De</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">De</span>
             <input
               type="date"
               value={inicio}
@@ -174,7 +189,7 @@ export function ApontamentoHorasPage({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Até</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Até</span>
             <input
               type="date"
               value={fim}
@@ -183,7 +198,7 @@ export function ApontamentoHorasPage({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Técnico</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Técnico</span>
             <select
               value={tecnicoFuncionarioId}
               onChange={(e) => setTecnicoFuncionarioId(e.target.value)}
@@ -198,7 +213,7 @@ export function ApontamentoHorasPage({
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente</span>
             <select
               value={clienteId}
               onChange={(e) => setClienteId(e.target.value)}
@@ -219,7 +234,7 @@ export function ApontamentoHorasPage({
         <button
           type="button"
           onClick={() => setAba("periodo")}
-          className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold ${
+          className={`-mb-px border-b-2 px-3 py-2 text-body font-semibold ${
             aba === "periodo"
               ? "border-orange text-ink"
               : "border-transparent text-ink-3 hover:text-ink-2"
@@ -230,7 +245,7 @@ export function ApontamentoHorasPage({
         <button
           type="button"
           onClick={() => setAba("dia")}
-          className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold ${
+          className={`-mb-px border-b-2 px-3 py-2 text-body font-semibold ${
             aba === "dia"
               ? "border-orange text-ink"
               : "border-transparent text-ink-3 hover:text-ink-2"
@@ -285,25 +300,25 @@ export function ApontamentoHorasPage({
           />
         </div>
         {!temAlgumCusto && (
-          <p className="text-xs text-ink-3">
+          <p className="text-caption text-ink-3">
             Custo disponível quando o módulo Financeiro estiver ativo (E04-S06).
           </p>
         )}
 
         <section className="rounded-lg border border-line bg-card overflow-hidden">
           <div className="border-b border-line-soft px-4 py-3">
-            <h4 className="text-sm font-semibold text-ink">OS no período</h4>
-            <p className="text-xs text-ink-3">{estado.itens.length} ordem(ns) de serviço</p>
+            <h4 className="text-body font-semibold text-ink">OS no período</h4>
+            <p className="text-caption text-ink-3">{estado.itens.length} ordem(ns) de serviço</p>
           </div>
           {estado.itens.length === 0 ? (
             <div className="px-5 py-10 text-center">
               <Clock className="mx-auto h-9 w-9 text-ink-3" />
-              <p className="mt-3 text-sm text-ink-3">Nenhuma OS com apontamento neste período.</p>
+              <p className="mt-3 text-body text-ink-3">Nenhuma OS com apontamento neste período.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-sm">
-                <thead className="border-b border-line bg-line-soft text-xs uppercase text-ink-3">
+              <table className="w-full min-w-[720px] text-left text-body">
+                <thead className="border-b border-line bg-line-soft text-caption uppercase text-ink-3">
                   <tr>
                     <th className="px-4 py-2.5 font-semibold">OS</th>
                     <th className="px-4 py-2.5 font-semibold">Cliente</th>
@@ -315,7 +330,7 @@ export function ApontamentoHorasPage({
                 <tbody>
                   {estado.itens.map((item) => (
                     <tr key={item.osId} className="border-b border-line last:border-b-0">
-                      <td className="px-4 py-2.5 font-brand text-xs tabular-nums text-ink-3">
+                      <td className="px-4 py-2.5 font-brand text-caption tabular-nums text-ink-3">
                         {item.osNumero}
                       </td>
                       <td className="px-4 py-2.5 text-ink-2">{item.clienteNome}</td>
@@ -364,8 +379,8 @@ function InsightsApontamento({
     <section className="rounded-lg border border-line bg-card p-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h4 className="text-sm font-semibold text-ink">Produtividade e consistência</h4>
-          <p className="text-xs text-ink-3">Horas de OS × janela de visita × ponto</p>
+          <h4 className="text-body font-semibold text-ink">Produtividade e consistência</h4>
+          <p className="text-caption text-ink-3">Horas de OS × janela de visita × ponto</p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
           {(
@@ -375,7 +390,7 @@ function InsightsApontamento({
               ["limiarAnomaliaMinutos", "OS curta (min)"],
             ] as const
           ).map(([chave, label]) => (
-            <label key={chave} className="text-xs text-ink-3">
+            <label key={chave} className="text-caption text-ink-3">
               {label}
               <input
                 aria-label={label}
@@ -400,12 +415,14 @@ function InsightsApontamento({
         </div>
       </div>
       {dias.length === 0 ? (
-        <p className="mt-4 text-sm text-ink-3">Sem dados no período.</p>
+        <p className="mt-4 text-body text-ink-3">Sem dados no período.</p>
       ) : (
         <div className="mt-4 grid gap-3 lg:grid-cols-3">
           <div>
-            <h5 className="text-xs font-semibold uppercase text-ink-3">Produtividade diária</h5>
-            <ul className="mt-2 space-y-1 text-xs">
+            <h5 className="text-caption font-semibold uppercase text-ink-3">
+              Produtividade diária
+            </h5>
+            <ul className="mt-2 space-y-1 text-caption">
               {produtividade.slice(0, 8).map((d) => (
                 <li key={d.chave} className="flex justify-between">
                   <span>
@@ -419,8 +436,10 @@ function InsightsApontamento({
             </ul>
           </div>
           <div>
-            <h5 className="text-xs font-semibold uppercase text-ink-3">Consistência das fontes</h5>
-            <ul className="mt-2 space-y-1 text-xs">
+            <h5 className="text-caption font-semibold uppercase text-ink-3">
+              Consistência das fontes
+            </h5>
+            <ul className="mt-2 space-y-1 text-caption">
               {consistencia.slice(0, 8).map((d) => (
                 <li key={d.chave} className={d.divergente ? "text-danger" : "text-ink-2"}>
                   {d.tecnicoNome}: OS {formatarHorasMinutos(d.horasOs)} · visita{" "}
@@ -434,13 +453,13 @@ function InsightsApontamento({
             </ul>
           </div>
           <div>
-            <h5 className="text-xs font-semibold uppercase text-ink-3">
+            <h5 className="text-caption font-semibold uppercase text-ink-3">
               OS abaixo de {parametros.limiarAnomaliaMinutos} min
             </h5>
             {anomalias.length === 0 ? (
-              <p className="mt-2 text-xs text-ink-3">Nenhuma anomalia.</p>
+              <p className="mt-2 text-caption text-ink-3">Nenhuma anomalia.</p>
             ) : (
-              <ul className="mt-2 space-y-1 text-xs">
+              <ul className="mt-2 space-y-1 text-caption">
                 {anomalias.slice(0, 8).map((item) => (
                   <li key={item.osId}>
                     {item.osNumero} · {item.tecnicoNome} · {item.clienteNome} ·{" "}
@@ -471,10 +490,10 @@ function AgregadoPainel({
   return (
     <section className="rounded-lg border border-line bg-card overflow-hidden">
       <div className="border-b border-line-soft px-4 py-3">
-        <h4 className="text-sm font-semibold text-ink">{titulo}</h4>
+        <h4 className="text-body font-semibold text-ink">{titulo}</h4>
       </div>
       {itens.length === 0 ? (
-        <p className="px-4 py-6 text-sm text-ink-3">Sem dados no período.</p>
+        <p className="px-4 py-6 text-body text-ink-3">Sem dados no período.</p>
       ) : (
         <ul className="divide-y divide-line-soft">
           {itens.map((item) => {
@@ -488,7 +507,7 @@ function AgregadoPainel({
                 <span className="shrink-0 font-semibold text-ink">
                   {item.totalHoras}h · {item.totalOs} OS
                   {custo != null && (
-                    <span className="ml-2 text-xs font-normal text-ink-3">
+                    <span className="ml-2 text-caption font-normal text-ink-3">
                       R$ {custo.toFixed(2)}
                     </span>
                   )}
@@ -501,7 +520,7 @@ function AgregadoPainel({
                   <button
                     type="button"
                     onClick={() => onSelecionar?.(item.chave)}
-                    className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left text-sm hover:bg-line-soft/60"
+                    className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left text-body hover:bg-line-soft/60"
                   >
                     {linha}
                   </button>
@@ -511,7 +530,7 @@ function AgregadoPainel({
             return (
               <li
                 key={item.chave}
-                className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm"
+                className="flex items-center justify-between gap-2 px-4 py-2.5 text-body"
               >
                 {linha}
               </li>
@@ -557,8 +576,8 @@ function VisaoPorDia({
       <section className="rounded-lg border border-line bg-card overflow-hidden">
         <div className="flex items-center justify-between gap-2 border-b border-line-soft px-4 py-3">
           <div>
-            <h4 className="text-sm font-semibold text-ink">Por dia</h4>
-            <p className="text-xs text-ink-3">
+            <h4 className="text-body font-semibold text-ink">Por dia</h4>
+            <p className="text-caption text-ink-3">
               {dias.length} dia(s) · diferença do dia (1º check-in → último check-out) vs soma das
               OS
             </p>
@@ -567,7 +586,7 @@ function VisaoPorDia({
             type="button"
             onClick={exportarCsv}
             disabled={dias.length === 0}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
           >
             <Download className="h-3.5 w-3.5" />
             Exportar CSV
@@ -576,14 +595,14 @@ function VisaoPorDia({
         {dias.length === 0 ? (
           <div className="px-5 py-10 text-center">
             <Clock className="mx-auto h-9 w-9 text-ink-3" />
-            <p className="mt-3 text-sm text-ink-3">
+            <p className="mt-3 text-body text-ink-3">
               Nenhum apontamento com check-in/out neste período.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="border-b border-line bg-line-soft text-xs uppercase text-ink-3">
+            <table className="w-full min-w-[760px] text-left text-body">
+              <thead className="border-b border-line bg-line-soft text-caption uppercase text-ink-3">
                 <tr>
                   <th className="px-4 py-2.5 font-semibold">Técnico</th>
                   <th className="px-4 py-2.5 font-semibold">Dia</th>
@@ -648,7 +667,7 @@ function LinhaDia({ dia }: { dia: DiaTecnico }) {
               {dia.ordens.map((os) => (
                 <li
                   key={os.osId}
-                  className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-xs"
+                  className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-caption"
                 >
                   <span className="font-brand tabular-nums text-ink-3">{os.osNumero}</span>
                   <span className="min-w-0 flex-1 truncate text-ink-2">{os.clienteNome}</span>
@@ -704,7 +723,7 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
 
   const carregar = useCallback(async () => {
     if (!tecnicoFuncionarioId) return;
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const semanas = await obterTendenciaTecnico(
         supabaseApontamentoHorasAdapter,
@@ -722,7 +741,7 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
 
   if (!tecnicoFuncionarioId) {
     return (
-      <section className="rounded-lg border border-dashed border-line bg-card px-4 py-3 text-xs text-ink-3">
+      <section className="rounded-lg border border-dashed border-line bg-card px-4 py-3 text-caption text-ink-3">
         <TrendingUp className="mr-1 inline h-3.5 w-3.5" />
         Selecione um técnico no filtro acima para ver a tendência semanal (últimas 8 semanas).
       </section>
@@ -735,7 +754,7 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
   return (
     <section className="rounded-lg border border-line bg-card overflow-hidden">
       <div className="flex items-center justify-between gap-2 border-b border-line-soft px-4 py-3">
-        <h4 className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink">
+        <h4 className="inline-flex items-center gap-1.5 text-body font-semibold text-ink">
           <TrendingUp className="h-4 w-4" />
           Tendência semanal (8 semanas)
         </h4>
@@ -743,25 +762,27 @@ function TendenciaTecnico({ tecnicoFuncionarioId }: { tecnicoFuncionarioId: stri
           type="button"
           onClick={carregar}
           disabled={estado.fase === "carregando"}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           {estado.fase === "carregando" ? "Carregando…" : "Carregar"}
         </button>
       </div>
       {estado.fase === "inicial" && (
-        <p className="px-4 py-6 text-sm text-ink-3">
+        <p className="px-4 py-6 text-body text-ink-3">
           Clique em "Carregar" para ver as horas de OS por semana.
         </p>
       )}
-      {estado.fase === "erro" && <p className="px-4 py-6 text-sm text-danger">{estado.mensagem}</p>}
+      {estado.fase === "erro" && (
+        <p className="px-4 py-6 text-body text-danger">{estado.mensagem}</p>
+      )}
       {estado.fase === "pronto" &&
         (estado.semanas.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-ink-3">Sem horas nas últimas 8 semanas.</p>
+          <p className="px-4 py-6 text-body text-ink-3">Sem horas nas últimas 8 semanas.</p>
         ) : (
           <ul className="flex flex-col gap-2 px-4 py-3">
             {estado.semanas.map((semana) => (
-              <li key={semana.semanaInicio} className="flex items-center gap-3 text-xs">
+              <li key={semana.semanaInicio} className="flex items-center gap-3 text-caption">
                 <span className="w-24 shrink-0 tabular-nums text-ink-3">
                   {formatarDiaBr(semana.semanaInicio)}
                 </span>

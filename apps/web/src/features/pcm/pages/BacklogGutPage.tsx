@@ -1,4 +1,4 @@
-import { Tooltip } from "@sinergica/ui";
+import { Button, Skeleton, Tooltip } from "@sinergica/ui";
 import { Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -45,7 +45,7 @@ export function BacklogGutPage({
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     setErroAcao(null);
     try {
       setEstado({ fase: "pronto", ordens: await listarBacklogGut(supabaseHubOsAdapter) });
@@ -92,30 +92,44 @@ export function BacklogGutPage({
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="text-sm text-ink-3 mt-1">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="text-body text-ink-3 mt-1">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
 
   if (!ordensControladas && estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando backlog…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!ordensControladas && estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="text-sm text-ink-3 mt-1">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <p className="text-body text-ink-3 mt-1">{estado.mensagem}</p>
+        <Button variant="ghost" onClick={carregar} className="mt-4 text-orange">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -124,8 +138,8 @@ export function BacklogGutPage({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Backlog GUT</h2>
-          <p className="text-sm text-ink-3">
+          <h1 className="text-heading font-semibold text-ink">Backlog GUT</h1>
+          <p className="text-body text-ink-3">
             OS abertas priorizadas por gravidade, urgência e tendência
           </p>
         </div>
@@ -134,7 +148,7 @@ export function BacklogGutPage({
             <button
               type="button"
               onClick={() => setCriando(true)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep"
             >
               <Plus className="h-3.5 w-3.5" />
               Novo item de backlog
@@ -152,7 +166,7 @@ export function BacklogGutPage({
       </div>
 
       {erroAcao && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erroAcao}
         </div>
       )}
@@ -167,13 +181,13 @@ export function BacklogGutPage({
 
       <section className="bg-card rounded-xl border border-line overflow-hidden">
         <div className="px-4 py-3 border-b border-line-soft">
-          <h3 className="text-sm font-semibold text-ink">Fila priorizada</h3>
-          <p className="text-xs text-ink-3 mt-0.5">Maior score aparece primeiro</p>
+          <h3 className="text-body font-semibold text-ink">Fila priorizada</h3>
+          <p className="text-caption text-ink-3 mt-0.5">Maior score aparece primeiro</p>
         </div>
 
         <div className="divide-y divide-line-soft">
           {ordens.length === 0 ? (
-            <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS aberta no backlog.</div>
+            <div className="px-5 py-8 text-body text-ink-3">Nenhuma OS aberta no backlog.</div>
           ) : (
             ordens.map((ordem, index) => (
               <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)}>
@@ -192,8 +206,8 @@ export function BacklogGutPage({
                   }}
                 >
                   <div className="flex items-center gap-3 lg:w-20">
-                    <span className="text-xl font-bold text-line font-brand">{index + 1}</span>
-                    <span className="text-xs font-brand tabular-nums text-ink-3">
+                    <span className="text-title font-bold text-line font-brand">{index + 1}</span>
+                    <span className="text-caption font-brand tabular-nums text-ink-3">
                       {ordem.numero}
                     </span>
                   </div>
@@ -215,12 +229,12 @@ export function BacklogGutPage({
                         </span>
                       )}
                     </div>
-                    <p className="mt-2 text-sm font-semibold text-ink">{ordem.titulo}</p>
-                    <p className="mt-1 text-xs text-ink-3">
+                    <p className="mt-2 text-body font-semibold text-ink">{ordem.titulo}</p>
+                    <p className="mt-1 text-caption text-ink-3">
                       {ordem.clienteNome} · {ordem.categoria}
                     </p>
                     {ordem.descricao?.trim() && (
-                      <p className="mt-1 line-clamp-2 text-xs text-ink-3">{ordem.descricao}</p>
+                      <p className="mt-1 line-clamp-2 text-caption text-ink-3">{ordem.descricao}</p>
                     )}
                     <p className="mt-1 text-micro text-ink-3">
                       {ordem.tecnicoNome ?? "sem técnico"}
@@ -243,7 +257,7 @@ export function BacklogGutPage({
                         onPlanejar(ordem);
                       }}
                       disabled={salvandoId === ordem.id}
-                      className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                      className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
                     >
                       Planejar
                     </button>
@@ -294,7 +308,7 @@ function Resumo({ label, valor }: { label: string; valor: number }) {
   return (
     <div className="rounded-lg border border-line bg-card px-4 py-3">
       <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">{label}</p>
-      <p className="mt-1 text-xl font-bold text-ink">{valor}</p>
+      <p className="mt-1 text-title font-bold text-ink">{valor}</p>
     </div>
   );
 }
@@ -303,7 +317,7 @@ function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-md bg-paper px-2 py-1 text-center">
       <p className="text-micro font-semibold uppercase text-ink-3">{label}</p>
-      <p className="text-sm font-bold text-ink tabular-nums">{value}</p>
+      <p className="text-body font-bold text-ink tabular-nums">{value}</p>
     </div>
   );
 }

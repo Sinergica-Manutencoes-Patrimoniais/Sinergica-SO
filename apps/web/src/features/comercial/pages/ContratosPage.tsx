@@ -1,7 +1,7 @@
 /** Lista de contratos comerciais (E03-S07, task 7). Ativar/encerrar passam pelas RPCs atômicas —
  * esta página só oferece os botões; a guarda real (piso, vigência, unicidade) está no banco. */
 
-import { Badge, Button, Card, EmptyState, Field, Input } from "@sinergica/ui";
+import { Badge, Button, Card, EmptyState, Field, Input, Skeleton } from "@sinergica/ui";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useContas } from "../application/comercial-queries";
@@ -77,12 +77,12 @@ export function ContratosPage() {
   }
 
   if (contratosQuery.isPending) {
-    return <p className="text-sm text-ink-2">Carregando contratos…</p>;
+    return <Skeleton className="h-4 w-40" />;
   }
   if (contratosQuery.error) {
     return (
       <Card>
-        <p className="p-4 text-sm text-danger">
+        <p className="p-4 text-body text-danger">
           {contratosQuery.error instanceof Error
             ? contratosQuery.error.message
             : "Falha ao carregar contratos."}
@@ -97,15 +97,15 @@ export function ContratosPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-base font-semibold text-ink">Contratos</h2>
-        <p className="text-sm text-ink-3">
+        <h1 className="text-heading font-semibold text-ink">Contratos</h1>
+        <p className="text-body text-ink-3">
           Gerados a partir de propostas aceitas. Ativar cria o plano de faturamento no Financeiro.
         </p>
       </div>
 
       {erro && (
         <Card>
-          <p className="p-3 text-sm text-danger">{erro}</p>
+          <p className="p-3 text-body text-danger">{erro}</p>
         </Card>
       )}
 
@@ -126,7 +126,7 @@ export function ContratosPage() {
                       {nomePorConta.get(contrato.clienteId) ?? "Conta"} ·{" "}
                       {TIPO_LABEL[contrato.tipo]}
                     </p>
-                    <p className="text-xs text-ink-2">
+                    <p className="text-caption text-ink-2">
                       Vigência: {formatarData(contrato.vigenciaInicio)} até{" "}
                       {formatarData(contrato.vigenciaFim)}
                       {reajusteDevido(contrato.reajusteMes) && contrato.status === "ativo" && (
@@ -134,13 +134,13 @@ export function ContratosPage() {
                       )}
                     </p>
                     {contrato.status === "encerrado" && contrato.encerradoMotivo && (
-                      <p className="text-xs text-ink-3">
+                      <p className="text-caption text-ink-3">
                         Encerrado em {formatarData(contrato.encerradoEm)} —{" "}
                         {contrato.encerradoMotivo}
                       </p>
                     )}
                   </div>
-                  <span className="tabular-nums text-sm text-ink">
+                  <span className="tabular-nums text-body text-ink">
                     {formatarValor(contrato.valorMensalCentavos)}
                     {contrato.valorMensalCentavos !== null && "/mês"}
                   </span>

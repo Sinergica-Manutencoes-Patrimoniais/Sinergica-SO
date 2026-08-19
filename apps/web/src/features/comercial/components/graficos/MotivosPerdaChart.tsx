@@ -10,7 +10,7 @@ export function MotivosPerdaChart({ linhas }: { linhas: WinLossLinha[] }) {
     .sort((a, b) => b.quantidade - a.quantidade);
 
   if (perdidas.length === 0) {
-    return <p className="py-8 text-center text-sm text-ink-3">Nenhuma perda no período.</p>;
+    return <p className="py-8 text-center text-body text-ink-3">Nenhuma perda no período.</p>;
   }
 
   const maior = Math.max(1, ...perdidas.map((l) => l.quantidade));

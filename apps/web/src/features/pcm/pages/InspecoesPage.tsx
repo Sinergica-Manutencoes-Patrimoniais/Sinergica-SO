@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
 import {
   ArrowLeft,
   Calendar,
@@ -168,6 +169,9 @@ export function InspecoesPage({
   const [filtroSistema, setFiltroSistema] = useState<FiltroSistema>("todos");
   const [modalAtivo, setModalAtivo] = useState<ModalAtivo>(null);
   const [itemEditando, setItemEditando] = useState<InspecaoItem | null>(null);
+  const [itemParaExcluir, setItemParaExcluir] = useState<InspecaoItem | null>(null);
+  const [itemParaAbrirChamado, setItemParaAbrirChamado] = useState<InspecaoItem | null>(null);
+  const [itemParaDescartar, setItemParaDescartar] = useState<InspecaoItem | null>(null);
   // E01-S143: triagem — seleção local (nada gravado até "Gerar backlog"), revisão editável da IA.
   const [selecionadosBacklog, setSelecionadosBacklog] = useState<Set<string>>(new Set());
   const [dadosOs, setDadosOs] = useState<DadosAberturaOs | null>(null);
@@ -188,7 +192,7 @@ export function InspecoesPage({
   }, [estado, selecionadaId]);
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     setErroAcao(null);
     try {
       const [clientes, inspecoes, tipos, templates] = await Promise.all([
@@ -307,27 +311,24 @@ export function InspecoesPage({
     }
   }
 
-  async function handleExcluirItem(item: InspecaoItem) {
-    if (!user || !confirm("Excluir este item de inspeção?")) return;
+  async function handleExcluirItem() {
+    if (!user || !itemParaExcluir) return;
+    const item = itemParaExcluir;
     setSalvando(true);
-    setErroAcao(null);
     try {
       await excluirItemInspecao(supabaseQualidadeAdapter, item.id);
       setItens((atuais) => atuais.filter((atual) => atual.id !== item.id));
       void carregar();
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível excluir item.");
     } finally {
       setSalvando(false);
     }
   }
 
   // E01-S141 AC-2: mesma função usada na importação em lote, disparada por item individual.
-  async function handleAbrirChamado(item: InspecaoItem) {
-    if (!user || !inspecaoSelecionada) return;
-    if (!confirm("Abrir um Chamado a partir deste item?")) return;
+  async function handleAbrirChamado() {
+    if (!user || !inspecaoSelecionada || !itemParaAbrirChamado) return;
+    const item = itemParaAbrirChamado;
     setSalvando(true);
-    setErroAcao(null);
     try {
       await derivarItemParaChamado(
         supabaseQualidadeAdapter,
@@ -340,8 +341,6 @@ export function InspecoesPage({
       setItens((atuais) =>
         atuais.map((atual) => (atual.id === item.id ? { ...atual, destino: "chamado" } : atual)),
       );
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível abrir o Chamado.");
     } finally {
       setSalvando(false);
     }
@@ -367,22 +366,18 @@ export function InspecoesPage({
   }
 
   // E01-S143 AC-2: descarte é direto — sem IA, sem passar pela revisão em lote.
-  async function handleDescartar(item: InspecaoItem) {
-    if (!confirm("Descartar este item? Ele não vai para o backlog.")) return;
-    setErroAcao(null);
-    try {
-      await descartarItem(supabaseQualidadeAdapter, item.id);
-      setItens((atuais) =>
-        atuais.map((atual) => (atual.id === item.id ? { ...atual, destino: "descarte" } : atual)),
-      );
-      setSelecionadosBacklog((atuais) => {
-        const proximo = new Set(atuais);
-        proximo.delete(item.id);
-        return proximo;
-      });
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível descartar o item.");
-    }
+  async function handleDescartar() {
+    if (!itemParaDescartar) return;
+    const item = itemParaDescartar;
+    await descartarItem(supabaseQualidadeAdapter, item.id);
+    setItens((atuais) =>
+      atuais.map((atual) => (atual.id === item.id ? { ...atual, destino: "descarte" } : atual)),
+    );
+    setSelecionadosBacklog((atuais) => {
+      const proximo = new Set(atuais);
+      proximo.delete(item.id);
+      return proximo;
+    });
   }
 
   function handleToggleSelecaoBacklog(itemId: string) {
@@ -568,30 +563,44 @@ export function InspecoesPage({
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="text-sm text-ink-3 mt-1">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="text-body text-ink-3 mt-1">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando inspeções…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="text-sm text-ink-3 mt-1">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <p className="text-body text-ink-3 mt-1">{estado.mensagem}</p>
+        <Button variant="ghost" onClick={carregar} className="mt-4">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -601,8 +610,8 @@ export function InspecoesPage({
       <section className="rounded-xl border border-line bg-card p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-ink">Relatórios de Inspeção</h2>
-            <p className="mt-1 text-sm text-ink-3">Vistoria predial mobile com análise por IA</p>
+            <h1 className="text-heading font-semibold text-ink">Relatórios de Inspeção</h1>
+            <p className="mt-1 text-body text-ink-3">Vistoria predial mobile com análise por IA</p>
           </div>
           <button
             type="button"
@@ -619,7 +628,7 @@ export function InspecoesPage({
             <button
               type="button"
               onClick={() => setModalAtivo("importar-xls")}
-              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-success px-2 text-xs font-semibold text-success hover:bg-success-soft"
+              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-success px-2 text-caption font-semibold text-success hover:bg-success-soft"
             >
               <Sheet className="h-4 w-4" />
               XLS
@@ -627,7 +636,7 @@ export function InspecoesPage({
             <button
               type="button"
               onClick={() => setModalAtivo("importar-pdf")}
-              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-navy px-2 text-xs font-semibold text-navy hover:bg-info-soft"
+              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-navy px-2 text-caption font-semibold text-navy hover:bg-info-soft"
             >
               <FileText className="h-4 w-4" />
               PDF
@@ -636,7 +645,7 @@ export function InspecoesPage({
               type="button"
               onClick={() => setModalAtivo("nova-inspecao")}
               disabled={semClientes}
-              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-navy px-2 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-navy px-2 text-caption font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               Nova
@@ -645,7 +654,7 @@ export function InspecoesPage({
         )}
 
         {semClientes && (
-          <div className="mt-4 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-sm text-warning">
+          <div className="mt-4 rounded-md border border-warning-line bg-orange-soft px-3 py-2 text-body text-warning">
             Execute o import Auvo de clientes antes de criar inspeções.
           </div>
         )}
@@ -663,8 +672,18 @@ export function InspecoesPage({
 
         <div className="mt-4 space-y-2">
           {inspecoesFiltradas.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-line px-4 py-8 text-center text-sm text-ink-3">
-              Nenhuma inspeção encontrada.
+            // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
+            <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-line px-4 py-8 text-center text-body text-ink-3">
+              {estado.fase === "pronto" && estado.inspecoes.length > 0 ? (
+                <>
+                  Nenhuma inspeção para esta busca.
+                  <Button variant="secondary" size="sm" onClick={() => setBusca("")}>
+                    Limpar busca
+                  </Button>
+                </>
+              ) : (
+                "Nenhuma inspeção registrada ainda."
+              )}
             </div>
           ) : (
             inspecoesFiltradas.map((inspecao) => (
@@ -680,9 +699,9 @@ export function InspecoesPage({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-ink">{inspecao.titulo}</p>
-                    <p className="mt-1 truncate text-sm text-ink-3">{inspecao.clienteNome}</p>
-                    <p className="mt-1 flex items-center gap-1 text-xs text-ink-3">
+                    <p className="truncate text-body font-semibold text-ink">{inspecao.titulo}</p>
+                    <p className="mt-1 truncate text-body text-ink-3">{inspecao.clienteNome}</p>
+                    <p className="mt-1 flex items-center gap-1 text-caption text-ink-3">
                       <Calendar className="h-3.5 w-3.5" />
                       {formatarData(inspecao.dataInspecao)}
                       {inspecao.responsavelTecnico ? ` · ${inspecao.responsavelTecnico}` : ""}
@@ -694,7 +713,7 @@ export function InspecoesPage({
                     {INSPECAO_STATUS_LABEL[inspecao.status]}
                   </span>
                 </div>
-                <div className="mt-3 flex gap-2 text-xs">
+                <div className="mt-3 flex gap-2 text-caption">
                   <span className="text-ink-3">{inspecao.totalItens} itens</span>
                   <span className="text-danger">{inspecao.itensNaoConformes} NC</span>
                   <span className="text-warning">{inspecao.itensAtencao} atenção</span>
@@ -719,11 +738,11 @@ export function InspecoesPage({
                   <ArrowLeft className="h-4 w-4" />
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">
+                  <p className="truncate text-body font-semibold">
                     {inspecaoSelecionada.codigo ? `${inspecaoSelecionada.codigo} · ` : ""}
                     {inspecaoSelecionada.titulo}
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-white/65">
+                  <p className="mt-0.5 truncate text-caption text-white/65">
                     {inspecaoSelecionada.clienteNome} ·{" "}
                     {formatarData(inspecaoSelecionada.dataInspecao)}
                     {inspecaoSelecionada.tipoInspecaoNome
@@ -731,14 +750,14 @@ export function InspecoesPage({
                       : ""}
                   </p>
                 </div>
-                <span className="rounded-full bg-card/20 px-2 py-0.5 text-xs font-semibold">
+                <span className="rounded-full bg-card/20 px-2 py-0.5 text-caption font-semibold">
                   {INSPECAO_STATUS_LABEL[inspecaoSelecionada.status]}
                 </span>
                 {temEscrita && (
                   <button
                     type="button"
                     onClick={() => setModalAtivo("editar-inspecao")}
-                    className="rounded-md px-2 py-1 text-xs font-semibold text-white/85 hover:bg-card/10 hover:text-white"
+                    className="rounded-md px-2 py-1 text-caption font-semibold text-white/85 hover:bg-card/10 hover:text-white"
                   >
                     Editar
                   </button>
@@ -781,12 +800,35 @@ export function InspecoesPage({
               )}
 
               {carregandoItens ? (
-                <div className="py-14 text-center text-sm text-ink-3">Carregando itens…</div>
+                <Skeleton className="h-4 w-40" />
               ) : itensFiltrados.length === 0 ? (
+                // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
                 <div className="py-20 text-center">
                   <ImageIcon className="mx-auto h-10 w-10 text-line" />
-                  <p className="mt-3 text-sm font-medium text-ink-3">Nenhum item registrado</p>
-                  <p className="mt-1 text-xs text-ink-4">Toque em “Adicionar item” para começar.</p>
+                  {itens.length > 0 ? (
+                    <>
+                      <p className="mt-3 text-body font-medium text-ink-3">
+                        Nenhum item para este sistema
+                      </p>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => setFiltroSistema("todos")}
+                      >
+                        Ver todos os sistemas
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-3 text-body font-medium text-ink-3">
+                        Nenhum item registrado
+                      </p>
+                      <p className="mt-1 text-caption text-ink-4">
+                        Toque em “Adicionar item” para começar.
+                      </p>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -800,11 +842,11 @@ export function InspecoesPage({
                         setItemEditando(item);
                         setModalAtivo("novo-item");
                       }}
-                      onExcluir={() => handleExcluirItem(item)}
-                      onAbrirChamado={() => handleAbrirChamado(item)}
+                      onExcluir={() => setItemParaExcluir(item)}
+                      onAbrirChamado={() => setItemParaAbrirChamado(item)}
                       onMudarResultado={(resultado) => handleMudarResultado(item, resultado)}
                       onToggleSelecaoBacklog={() => handleToggleSelecaoBacklog(item.id)}
-                      onDescartar={() => handleDescartar(item)}
+                      onDescartar={() => setItemParaDescartar(item)}
                     />
                   ))}
                 </div>
@@ -818,7 +860,7 @@ export function InspecoesPage({
                     type="button"
                     onClick={handleAbrirRevisaoBacklog}
                     disabled={classificandoBacklog}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange px-4 py-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange px-4 py-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
                   >
                     {classificandoBacklog
                       ? "Calculando GUT/esforço…"
@@ -831,7 +873,7 @@ export function InspecoesPage({
                     setItemEditando(null);
                     setModalAtivo("novo-item");
                   }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-navy px-4 py-3 text-sm font-semibold text-white hover:bg-navy-deep"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-navy px-4 py-3 text-body font-semibold text-white hover:bg-navy-deep"
                 >
                   <Plus className="h-4 w-4" />
                   Adicionar item
@@ -843,8 +885,10 @@ export function InspecoesPage({
           <div className="flex min-h-[680px] items-center justify-center px-5 text-center">
             <div>
               <ClipboardCheck className="mx-auto h-10 w-10 text-line" />
-              <p className="mt-3 text-sm font-medium text-ink-3">Selecione uma inspeção</p>
-              <p className="mt-1 text-xs text-ink-4">A lista lateral abre os detalhes e itens.</p>
+              <p className="mt-3 text-body font-medium text-ink-3">Selecione uma inspeção</p>
+              <p className="mt-1 text-caption text-ink-4">
+                A lista lateral abre os detalhes e itens.
+              </p>
             </div>
           </div>
         )}
@@ -894,10 +938,43 @@ export function InspecoesPage({
       )}
 
       {erroAcao && (
-        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger shadow-overlay">
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-danger-line bg-danger-soft px-4 py-3 text-body text-danger shadow-overlay">
           {erroAcao}
         </div>
       )}
+
+      <ConfirmDialog
+        open={itemParaExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaExcluir(null);
+        }}
+        titulo="Excluir item de inspeção"
+        descricao={`"${itemParaExcluir?.descricao ?? "Este item"}" será removido.`}
+        rotuloConfirmar="Excluir"
+        onConfirmar={handleExcluirItem}
+      />
+
+      <ConfirmDialog
+        open={itemParaAbrirChamado !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaAbrirChamado(null);
+        }}
+        titulo="Abrir Chamado a partir deste item"
+        descricao={itemParaAbrirChamado?.descricao ?? ""}
+        rotuloConfirmar="Abrir Chamado"
+        onConfirmar={handleAbrirChamado}
+      />
+
+      <ConfirmDialog
+        open={itemParaDescartar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaDescartar(null);
+        }}
+        titulo="Descartar item"
+        descricao="Ele não vai para o backlog."
+        rotuloConfirmar="Descartar"
+        onConfirmar={handleDescartar}
+      />
     </div>
   );
 }
@@ -922,7 +999,7 @@ function KpiInspecao({
   };
   return (
     <div className={`text-center ${className}`}>
-      <div className={`text-base font-bold tabular-nums ${colors[tone]}`}>{value}</div>
+      <div className={`text-heading font-bold tabular-nums ${colors[tone]}`}>{value}</div>
       <div className="text-micro text-white/55">{label}</div>
     </div>
   );
@@ -941,7 +1018,7 @@ function FiltroSistemaButton({
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+      className={`shrink-0 rounded-full border px-3 py-1.5 text-caption font-semibold transition-colors ${
         ativo ? "border-navy bg-navy text-white" : "border-line bg-card text-ink-3 hover:text-ink"
       }`}
     >
@@ -985,7 +1062,7 @@ function ItemInspecaoCard({
             className="h-16 w-16 shrink-0 rounded-md border border-line object-cover"
           />
         ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border border-line bg-paper text-xl">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border border-line bg-paper text-title">
             {SISTEMA_ICONE[item.sistema]}
           </div>
         )}
@@ -1039,14 +1116,14 @@ function ItemInspecaoCard({
               )}
             </div>
           )}
-          <p className="mt-2 line-clamp-2 text-sm font-medium text-ink">{item.descricao}</p>
-          <p className="mt-1 truncate text-xs text-ink-3">
+          <p className="mt-2 line-clamp-2 text-body font-medium text-ink">{item.descricao}</p>
+          <p className="mt-1 truncate text-caption text-ink-3">
             {[item.categoria, item.elemento, item.localizacao].filter(Boolean).join(" · ") ||
               "Localização não informada"}
           </p>
           {/* E01-S143 AC-4/AC-7: Score PCM (GUT) + esforço, só depois que a IA classificou. */}
           {item.gravidade !== null && item.urgencia !== null && item.tendencia !== null && (
-            <div className="mt-2 flex items-center gap-2 rounded-md bg-paper px-2.5 py-1.5 text-xs">
+            <div className="mt-2 flex items-center gap-2 rounded-md bg-paper px-2.5 py-1.5 text-caption">
               <span
                 className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(
                   classificarPrioridade(
@@ -1070,7 +1147,7 @@ function ItemInspecaoCard({
           )}
           {emTriagem && temEscrita && (
             <div className="mt-2 flex items-center gap-3">
-              <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-orange">
+              <label className="inline-flex cursor-pointer items-center gap-1.5 text-caption font-semibold text-orange">
                 <input
                   type="checkbox"
                   checked={selecionadoBacklog}
@@ -1082,7 +1159,7 @@ function ItemInspecaoCard({
               <button
                 type="button"
                 onClick={onDescartar}
-                className="text-xs font-semibold text-ink-3 hover:text-danger"
+                className="text-caption font-semibold text-ink-3 hover:text-danger"
               >
                 Descartar
               </button>
@@ -1099,7 +1176,7 @@ function ItemInspecaoCard({
         </button>
       </div>
       {aberto && (
-        <div className="mt-4 space-y-3 border-t border-line-soft pt-3 text-sm">
+        <div className="mt-4 space-y-3 border-t border-line-soft pt-3 text-body">
           <DetalheItem label="Identificação" value={item.identificacao} />
           <DetalheItem label="Estado de conservação" value={item.estadoConservacao} />
           <DetalheItem label="Anomalia" value={item.anomalia} />
@@ -1113,7 +1190,7 @@ function ItemInspecaoCard({
               <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
                 Mídias ({item.midias.length})
               </p>
-              <p className="mt-1 text-xs text-ink-3">
+              <p className="mt-1 text-caption text-ink-3">
                 {item.midias.map((midia) => midia.nome).join(", ")}
               </p>
             </div>
@@ -1141,7 +1218,7 @@ function ItemInspecaoCard({
                 href={item.fotoUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex text-xs font-semibold text-orange hover:text-orange-deep"
+                className="inline-flex text-caption font-semibold text-orange hover:text-orange-deep"
               >
                 Abrir foto/referência
               </a>
@@ -1152,7 +1229,7 @@ function ItemInspecaoCard({
               <button
                 type="button"
                 onClick={onEditar}
-                className="text-xs font-semibold text-ink-2 hover:text-ink"
+                className="text-caption font-semibold text-ink-2 hover:text-ink"
               >
                 Editar
               </button>
@@ -1160,7 +1237,7 @@ function ItemInspecaoCard({
                 <button
                   type="button"
                   onClick={onAbrirChamado}
-                  className="text-xs font-semibold text-orange hover:text-orange-deep"
+                  className="text-caption font-semibold text-orange hover:text-orange-deep"
                 >
                   Abrir chamado
                 </button>
@@ -1168,7 +1245,7 @@ function ItemInspecaoCard({
               <button
                 type="button"
                 onClick={onExcluir}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:underline"
+                className="inline-flex items-center gap-1 text-caption font-semibold text-danger hover:underline"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Excluir
@@ -1205,16 +1282,17 @@ function RevisaoBacklogModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Revisar antes de gerar backlog</h3>
-          <button type="button" onClick={onClose} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onClose();
+      }}
+      titulo="Revisar antes de gerar backlog"
+      tamanho="md"
+    >
+      <div className="flex flex-col gap-4">
         {!correlacionou && (
-          <div className="mx-4 mt-3 rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-xs text-warning">
+          <div className="mx-4 mt-3 rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-caption text-warning">
             A IA não classificou todos os itens — os que faltaram vieram com 3/3/3/3 e esforço 0
             como ponto de partida. Revise cada item antes de confirmar.
           </div>
@@ -1238,7 +1316,7 @@ function RevisaoBacklogModal({
                   >
                     {PRIORIDADE_LABEL[classificarPrioridadeGutd(score)]}
                   </span>
-                  <span className="text-xs font-semibold text-ink-3">
+                  <span className="text-caption font-semibold text-ink-3">
                     Score PCM (GUTd): {score.toFixed(2)}
                   </span>
                 </div>
@@ -1305,21 +1383,21 @@ function RevisaoBacklogModal({
             );
           })}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button type="button" onClick={onClose} className="btn-secondary">
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onClose} disabled={confirmando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => onConfirmar(edicoes)}
             disabled={confirmando}
-            className="h-9 rounded-md bg-navy px-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+            loading={confirmando}
           >
-            {confirmando ? "Gerando…" : `Gerar backlog (${edicoes.length})`}
-          </button>
+            {`Gerar backlog (${edicoes.length})`}
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -1327,7 +1405,7 @@ function DetalheItem({ label, value }: { label: string; value: string | null }) 
   return (
     <div>
       <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">{label}</p>
-      <p className="mt-1 text-sm text-ink">{value || "—"}</p>
+      <p className="mt-1 text-body text-ink">{value || "—"}</p>
     </div>
   );
 }
@@ -1659,21 +1737,23 @@ function NovoItemModal({
       onClose={onClose}
     >
       <div>
-        <p className="mb-2 text-center text-xs font-semibold text-ink-3">Sistema / Área *</p>
+        <p className="mb-2 text-center text-caption font-semibold text-ink-3">Sistema / Área *</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {SISTEMAS.map((sistema) => (
             <button
               key={sistema}
               type="button"
               onClick={() => setForm((atual) => ({ ...atual, sistema }))}
-              className={`flex min-h-18 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-3 text-sm font-semibold transition-colors ${
+              className={`flex min-h-18 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-3 text-body font-semibold transition-colors ${
                 form.sistema === sistema
                   ? "border-navy bg-info-soft text-navy"
                   : "border-line text-ink-3 hover:border-navy/40 hover:text-ink"
               }`}
             >
-              <span className="text-xl">{SISTEMA_ICONE[sistema]}</span>
-              <span className="text-center text-xs">{rotuloSistema(sistema).split("/")[0]}</span>
+              <span className="text-title">{SISTEMA_ICONE[sistema]}</span>
+              <span className="text-center text-caption">
+                {rotuloSistema(sistema).split("/")[0]}
+              </span>
             </button>
           ))}
         </div>
@@ -1804,14 +1884,14 @@ function NovoItemModal({
       {item && (
         <div className="rounded-lg border border-line-soft bg-paper p-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+            <p className="text-caption font-semibold uppercase tracking-wider text-ink-3">
               Mídias (foto/vídeo/documento)
             </p>
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={enviandoMidia}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-orange hover:text-orange-deep disabled:opacity-50"
+              className="inline-flex items-center gap-1 text-caption font-semibold text-orange hover:text-orange-deep disabled:opacity-50"
             >
               <Upload className="h-3.5 w-3.5" />
               {enviandoMidia ? "Enviando…" : "Adicionar"}
@@ -1828,13 +1908,16 @@ function NovoItemModal({
               }}
             />
           </div>
-          {erroMidia && <p className="mt-2 text-xs text-danger">{erroMidia}</p>}
+          {erroMidia && <p className="mt-2 text-caption text-danger">{erroMidia}</p>}
           {midias.length === 0 ? (
-            <p className="mt-2 text-xs text-ink-3">Nenhuma mídia anexada.</p>
+            <p className="mt-2 text-caption text-ink-3">Nenhuma mídia anexada.</p>
           ) : (
             <ul className="mt-2 space-y-1.5">
               {midias.map((midia) => (
-                <li key={midia.path} className="flex items-center justify-between gap-2 text-xs">
+                <li
+                  key={midia.path}
+                  className="flex items-center justify-between gap-2 text-caption"
+                >
                   <button
                     type="button"
                     onClick={() => handleAbrirMidia(midia)}
@@ -1966,10 +2049,10 @@ function ImportarRelatorioModal({
             className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-line px-6 py-12 text-center hover:border-orange hover:bg-orange-soft/25"
           >
             <Upload className="h-10 w-10 text-ink-3" />
-            <span className="mt-3 text-sm font-semibold text-ink">
+            <span className="mt-3 text-body font-semibold text-ink">
               Arraste ou selecione o arquivo padrão do Auvo
             </span>
-            <span className="mt-1 text-xs text-ink-3">
+            <span className="mt-1 text-caption text-ink-3">
               {tipo === "xls"
                 ? 'Relatório "Respostas Inconformidade" (.xls, .xlsx ou .csv)'
                 : "Relatório de OS/diagnóstico em PDF"}
@@ -1986,11 +2069,11 @@ function ImportarRelatorioModal({
             }}
           />
           {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}
-          <div className="rounded-lg bg-info-soft px-4 py-3 text-sm text-info">
+          <div className="rounded-lg bg-info-soft px-4 py-3 text-body text-info">
             A importação usa o modelo do PCM antigo: extrai local, relato/fotos no XLS e envia o
             texto para a análise IA da função `importar-relatorio-pdf`.
           </div>
@@ -2000,8 +2083,8 @@ function ImportarRelatorioModal({
       {step === "processando" && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <Loader2 className="h-10 w-10 animate-spin text-orange" />
-          <p className="mt-4 text-sm font-semibold text-ink">Processando relatório…</p>
-          <p className="mt-1 text-xs text-ink-3">
+          <p className="mt-4 text-body font-semibold text-ink">Processando relatório…</p>
+          <p className="mt-1 text-caption text-ink-3">
             Extraindo inconformidades e classificando com IA.
           </p>
         </div>
@@ -2010,7 +2093,7 @@ function ImportarRelatorioModal({
       {step === "revisao" && (
         <div className="space-y-4">
           {aviso ? (
-            <p className="rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-sm text-warning">
+            <p className="rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-body text-warning">
               {aviso}
             </p>
           ) : null}
@@ -2053,7 +2136,7 @@ function ImportarRelatorioModal({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-ink-3">
+            <p className="text-body text-ink-3">
               <span className="font-semibold text-ink">{selecionados.size}</span> de {itens.length}{" "}
               item(ns) selecionados
             </p>
@@ -2061,21 +2144,21 @@ function ImportarRelatorioModal({
               <button
                 type="button"
                 onClick={() => setSelecionados(new Set(itens.map((_, index) => index)))}
-                className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="rounded-md border border-line px-3 py-1.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
               >
                 Todos
               </button>
               <button
                 type="button"
                 onClick={() => setSelecionados(new Set())}
-                className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                className="rounded-md border border-line px-3 py-1.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
               >
                 Limpar
               </button>
             </div>
           </div>
 
-          <label className="flex items-start gap-2 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink-2">
+          <label className="flex items-start gap-2 rounded-lg border border-line bg-paper px-3 py-2 text-body text-ink-2">
             <input
               type="checkbox"
               checked={criarChamados}
@@ -2116,8 +2199,8 @@ function ImportarRelatorioModal({
                           GUT {score}
                         </span>
                       </div>
-                      <p className="mt-2 text-sm font-semibold text-ink">{item.tituloBacklog}</p>
-                      <p className="mt-1 text-xs text-ink-3">
+                      <p className="mt-2 text-body font-semibold text-ink">{item.tituloBacklog}</p>
+                      <p className="mt-1 text-caption text-ink-3">
                         {item.local || "Local não informado"}
                       </p>
                     </div>
@@ -2223,7 +2306,7 @@ function TextareaImportado({
         {label}
       </span>
       <textarea
-        className="input mt-1 min-h-20 resize-y text-xs"
+        className="input mt-1 min-h-20 resize-y text-caption"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
@@ -2283,25 +2366,16 @@ function ModalBase({
   size?: "md" | "lg";
 }) {
   return (
-    <div className="modal-backdrop">
-      <div
-        className={`max-h-[92vh] w-full overflow-hidden rounded-xl bg-card shadow-drawer ${
-          size === "lg" ? "max-w-4xl" : "max-w-2xl"
-        }`}
-      >
-        <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
-          <h3 className="text-sm font-semibold text-ink">{title}</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 text-ink-3 hover:bg-line-soft hover:text-ink"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="max-h-[calc(92vh-64px)] overflow-y-auto p-4">{children}</div>
-      </div>
-    </div>
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onClose();
+      }}
+      titulo={title}
+      tamanho={size === "lg" ? "lg" : "md"}
+    >
+      {children}
+    </Modal>
   );
 }
 
@@ -2326,7 +2400,7 @@ function BottomSheet({
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <h3 className="text-sm font-semibold">{title}</h3>
+          <h3 className="text-body font-semibold">{title}</h3>
         </div>
         <div className="space-y-4 p-4">{children}</div>
       </div>
@@ -2345,7 +2419,7 @@ function Field({
 }) {
   return (
     <div className={`block ${className}`}>
-      <span className="mb-1 block text-xs font-semibold text-ink-3">{label}</span>
+      <span className="mb-1 block text-caption font-semibold text-ink-3">{label}</span>
       {children}
     </div>
   );
@@ -2368,14 +2442,14 @@ function ModalActions({
         type="button"
         onClick={onPrimary}
         disabled={disabled}
-        className="inline-flex items-center justify-center rounded-lg bg-navy px-4 py-3 text-sm font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center justify-center rounded-lg bg-navy px-4 py-3 text-body font-semibold text-white hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-50"
       >
         {primaryLabel}
       </button>
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex items-center justify-center rounded-lg border border-line px-4 py-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+        className="inline-flex items-center justify-center rounded-lg border border-line px-4 py-3 text-body font-semibold text-ink-2 hover:bg-line-soft"
       >
         Cancelar
       </button>

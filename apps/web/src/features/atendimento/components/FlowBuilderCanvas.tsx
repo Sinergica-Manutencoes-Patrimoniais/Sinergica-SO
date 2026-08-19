@@ -29,7 +29,7 @@ function PassoNode({ data }: NodeProps<Node<PassoNodeData>>) {
       <Handle type="target" position={Position.Top} />
       <div className="flex items-center justify-between gap-2">
         <input
-          className="input text-sm font-semibold"
+          className="input text-body font-semibold"
           value={passo.campo}
           placeholder="nome_do_campo"
           disabled={readOnly}
@@ -47,14 +47,14 @@ function PassoNode({ data }: NodeProps<Node<PassoNodeData>>) {
         )}
       </div>
       <textarea
-        className="input mt-2 min-h-[60px] text-sm"
+        className="input mt-2 min-h-[60px] text-body"
         value={passo.pergunta}
         placeholder="Pergunta que o agente faz…"
         disabled={readOnly}
         onChange={(event) => onEditar(passo.id, { pergunta: event.target.value })}
       />
       <select
-        className="input mt-2 text-xs"
+        className="input mt-2 text-caption"
         value={passo.tipo ?? "pergunta"}
         disabled={readOnly}
         onChange={(event) =>
@@ -66,14 +66,14 @@ function PassoNode({ data }: NodeProps<Node<PassoNodeData>>) {
       </select>
       {(passo.tipo ?? "pergunta") === "decisao" && (
         <input
-          className="input mt-2 text-xs"
+          className="input mt-2 text-caption"
           value={passo.condicao ?? ""}
           placeholder="Condição desta saída"
           disabled={readOnly}
           onChange={(event) => onEditar(passo.id, { condicao: event.target.value })}
         />
       )}
-      <label className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
+      <label className="mt-2 flex items-center gap-1.5 text-caption text-ink-3">
         <input
           type="checkbox"
           checked={passo.obrigatorio}

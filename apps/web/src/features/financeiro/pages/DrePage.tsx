@@ -1,3 +1,4 @@
+import { Skeleton } from "@sinergica/ui";
 import { FileBarChart, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -34,7 +35,7 @@ export function DrePage() {
   const temLeitura = podeAcessar("financeiro", "leitura");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const linhas = await obterDreMensal(supabaseFinanceiroAdapter, MESES_JANELA);
       setEstado({ fase: "pronto", dres: agregarDre(linhas, ultimosMesesIso(MESES_JANELA)) });
@@ -51,12 +52,18 @@ export function DrePage() {
   }, [permissoesCarregando, temLeitura, carregar]);
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -66,11 +73,11 @@ export function DrePage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -89,17 +96,17 @@ export function DrePage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-center gap-2">
           <FileBarChart className="h-4 w-4 text-ink-3" />
-          <h3 className="text-base font-semibold text-ink">DRE gerencial</h3>
+          <h1 className="text-heading font-semibold text-ink">DRE gerencial</h1>
         </div>
-        <p className="mt-0.5 text-sm text-ink-3">
+        <p className="mt-0.5 text-body text-ink-3">
           Resultado por regime de competência (não é caixa — pode divergir do dashboard, que é por
           data de pagamento).
         </p>
       </section>
 
       <div className="overflow-x-auto rounded-lg border border-line bg-card">
-        <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
+        <table className="w-full min-w-[720px] text-left text-body">
+          <thead className="border-b border-line text-caption font-semibold uppercase tracking-wide text-ink-3">
             <tr>
               <th className="px-3 py-2">Linha</th>
               {dres.map((d) => (
@@ -144,7 +151,7 @@ export function DrePage() {
               {dres.map((d) => (
                 <td
                   key={d.mes}
-                  className={`px-3 py-2 text-right text-base font-semibold ${d.resultadoCentavos >= 0 ? "text-success" : "text-danger"}`}
+                  className={`px-3 py-2 text-right text-heading font-semibold ${d.resultadoCentavos >= 0 ? "text-success" : "text-danger"}`}
                 >
                   R$ {centavosParaReais(Math.abs(d.resultadoCentavos))}
                   {d.resultadoCentavos < 0 ? " (neg.)" : ""}

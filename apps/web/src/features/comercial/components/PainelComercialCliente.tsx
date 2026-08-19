@@ -5,7 +5,7 @@
  * página do PCM só monta o componente e passa o `clienteId`, que é a Conta compartilhada
  * (ADR-0020). */
 
-import { Badge, Button, Card, EmptyState } from "@sinergica/ui";
+import { Badge, Button, Card, EmptyState, Skeleton } from "@sinergica/ui";
 import { ClipboardList, FileText, MessageCircle, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -78,14 +78,14 @@ export function PainelComercialCliente({
   }
 
   if (oportunidadesQuery.isPending) {
-    return <p className="text-sm text-ink-2">Carregando oportunidades…</p>;
+    return <Skeleton className="h-4 w-40" />;
   }
 
   const erro = oportunidadesQuery.error ?? etapasQuery.error;
   if (erro) {
     return (
       <Card>
-        <p className="p-4 text-sm text-danger">
+        <p className="p-4 text-body text-danger">
           {erro instanceof Error ? erro.message : "Falha ao carregar o funil."}
         </p>
       </Card>
@@ -136,13 +136,13 @@ export function PainelComercialCliente({
                 <li key={op.id} className="flex flex-wrap items-center gap-3 p-3">
                   <div className="min-w-48 flex-1">
                     <p className="font-semibold text-ink">{op.titulo}</p>
-                    <p className="text-xs text-ink-2">
+                    <p className="text-caption text-ink-2">
                       Criada em {formatarData(op.criadaEm)}
                       {op.fechadaEm && ` · fechada em ${formatarData(op.fechadaEm)}`}
                     </p>
                   </div>
                   {etapa && (
-                    <span className="inline-flex items-center gap-2 text-sm text-ink">
+                    <span className="inline-flex items-center gap-2 text-body text-ink">
                       <span
                         aria-hidden
                         className="size-2 rounded-full"
@@ -158,7 +158,7 @@ export function PainelComercialCliente({
                     </Badge>
                   )}
                   {op.origem && <Badge tone="info">{op.origem}</Badge>}
-                  <span className="tabular-nums text-sm text-ink">
+                  <span className="tabular-nums text-body text-ink">
                     {formatarValor(op.valorEstimadoCentavos)}
                   </span>
                   {/* E03-S09 AC-5: só oportunidade nascida do agente de WhatsApp tem conversaId. */}
@@ -213,7 +213,7 @@ export function PainelComercialCliente({
       </div>
 
       {levantamentosQuery.isPending ? (
-        <p className="text-sm text-ink-2">Carregando levantamentos…</p>
+        <Skeleton className="h-4 w-40" />
       ) : levantamentos.length === 0 ? (
         <EmptyState titulo="Nenhum levantamento nesta conta">
           {oportunidades.length > 0
@@ -227,7 +227,7 @@ export function PainelComercialCliente({
               <li key={l.id} className="flex flex-wrap items-center gap-3 p-3">
                 <div className="min-w-48 flex-1">
                   <p className="font-semibold text-ink">{l.titulo}</p>
-                  <p className="text-xs text-ink-2">
+                  <p className="text-caption text-ink-2">
                     Criado em {formatarData(l.criadoEm)} · {l.itensNaoConformes + l.itensAtencao}{" "}
                     achado(s) de {l.totalItens} item(ns)
                   </p>

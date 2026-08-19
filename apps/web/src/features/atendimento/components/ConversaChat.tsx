@@ -52,7 +52,7 @@ export function ConversaChat({
     return (
       <div className="flex h-full flex-col items-center justify-center rounded-lg border border-line bg-card text-ink-3">
         <MessageCircle className="h-8 w-8" />
-        <p className="mt-2 text-sm">Selecione uma conversa para ver o histórico.</p>
+        <p className="mt-2 text-body">Selecione uma conversa para ver o histórico.</p>
       </div>
     );
   }
@@ -100,10 +100,10 @@ export function ConversaChat({
     <div className="flex h-full flex-col rounded-lg border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-ink">
+          <p className="truncate text-body font-semibold text-ink">
             {conversa.clienteNome ?? conversa.contatoNome ?? "Contato sem nome"}
           </p>
-          <p className="text-xs text-ink-3">
+          <p className="text-caption text-ink-3">
             {!suportaIa
               ? `${labelCanal(conversa.canal)} · atendimento humano`
               : conversa.modo === "pausado"
@@ -150,7 +150,7 @@ export function ConversaChat({
         {temEscrita && (
           <div className="flex shrink-0 gap-2">
             {!suportaIa ? (
-              <span className="inline-flex h-8 items-center rounded-md border border-line bg-line-soft px-2.5 text-xs font-semibold text-ink-3">
+              <span className="inline-flex h-8 items-center rounded-md border border-line bg-line-soft px-2.5 text-caption font-semibold text-ink-3">
                 IA indisponível
               </span>
             ) : conversa.modo === "auto" ? (
@@ -158,7 +158,7 @@ export function ConversaChat({
                 type="button"
                 disabled={acao !== null}
                 onClick={() => executarAcao("assumir", onAssumir)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
               >
                 <UserCheck className="h-3.5 w-3.5" />
                 Assumir
@@ -168,7 +168,7 @@ export function ConversaChat({
                 type="button"
                 disabled={acao !== null}
                 onClick={() => executarAcao("devolver", onDevolver)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
               >
                 <Bot className="h-3.5 w-3.5" />
                 Devolver ao Zé
@@ -179,7 +179,7 @@ export function ConversaChat({
                 type="button"
                 disabled={acao !== null}
                 onClick={() => executarAcao("ia", onAcionarIa)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Responder com IA agora
@@ -190,7 +190,7 @@ export function ConversaChat({
                 type="button"
                 disabled={acao !== null}
                 onClick={onEnviarHistorico}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
               >
                 <History className="h-3.5 w-3.5" />
                 Enviar histórico
@@ -202,7 +202,7 @@ export function ConversaChat({
 
       <div className="flex-1 space-y-2 overflow-y-auto p-4">
         {mensagens.length === 0 ? (
-          <p className="text-center text-sm text-ink-3">Sem mensagens ainda.</p>
+          <p className="text-center text-body text-ink-3">Sem mensagens ainda.</p>
         ) : (
           mensagens.map((mensagem) => <MensagemBubble key={mensagem.id} mensagem={mensagem} />)
         )}
@@ -210,7 +210,7 @@ export function ConversaChat({
       </div>
 
       {erro && (
-        <div className="mx-4 mb-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+        <div className="mx-4 mb-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
           {erro}
         </div>
       )}
@@ -249,7 +249,7 @@ export function ConversaChat({
             type="button"
             onClick={enviar}
             disabled={enviando || !texto.trim()}
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
             Enviar

@@ -1,5 +1,6 @@
 // E01-S125 — nenhum clique cria task automaticamente: primeiro busca preview sem efeito, depois
 // exige confirmação explícita. O contrato de Edge devolve somente campos não secretos.
+import { Button, Modal } from "@sinergica/ui";
 import { useEffect, useState } from "react";
 import { erroDetalhado } from "../../../lib/http/edge-function-error";
 import { supabase } from "../../../lib/supabase-client";
@@ -72,21 +73,18 @@ export function AbrirOsAuvoModal({
   }
 
   return (
-    <dialog
+    <Modal
       open
-      className="fixed inset-0 z-50 flex h-full w-full max-w-none items-center justify-center bg-black/40 p-4"
-      aria-label="Abrir OS no Auvo"
+      onOpenChange={(open) => {
+        if (!open) onFechar();
+      }}
+      titulo="Abrir OS no Auvo?"
+      descricao="Confira dados. Nada foi enviado durante esta prévia."
     >
-      <div className="w-full max-w-lg rounded-xl border border-line bg-card shadow-modal">
-        <div className="border-b border-line-soft px-5 py-4">
-          <h2 className="text-base font-semibold text-ink">Abrir OS no Auvo?</h2>
-          <p className="mt-1 text-xs text-ink-3">
-            Confira dados. Nada foi enviado durante esta prévia.
-          </p>
-        </div>
-        {!preview && !erro && <p className="px-5 py-8 text-sm text-ink-3">Montando prévia…</p>}
+      <div className="space-y-3 text-body">
+        {!preview && !erro && <p className="py-8 text-body text-ink-3">Montando prévia…</p>}
         {preview && (
-          <div className="space-y-3 px-5 py-4 text-sm">
+          <div className="space-y-3 text-body">
             {preview.jaAberta ? (
               <p className="rounded-md bg-orange-soft px-3 py-2 text-orange">
                 Task Auvo #{preview.taskIdExistente} já existe. Nenhuma duplicata será criada.
@@ -127,7 +125,7 @@ export function AbrirOsAuvoModal({
                   ]}
                 />
                 {preview.pendencias.map((pendencia) => (
-                  <p key={pendencia} className="text-xs text-danger">
+                  <p key={pendencia} className="text-caption text-danger">
                     {pendencia}
                   </p>
                 ))}
@@ -139,24 +137,24 @@ export function AbrirOsAuvoModal({
             )}
           </div>
         )}
-        {erro && <p className="px-5 pb-3 text-sm text-danger">{erro}</p>}
-        <div className="flex justify-end gap-2 border-t border-line-soft px-5 py-3">
-          <button type="button" onClick={onFechar} className="btn-secondary h-9 px-3 text-sm">
+        {erro && <p className="text-body text-danger">{erro}</p>}
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-3">
+          <Button variant="secondary" onClick={onFechar}>
             {preview?.jaAberta ? "Fechar" : "Agora não"}
-          </button>
+          </Button>
           {preview && !preview.jaAberta && (
-            <button
-              type="button"
+            <Button
+              variant="primary"
               onClick={confirmar}
               disabled={!preview.podeAbrir || salvando}
-              className="btn-primary h-9 px-3 text-sm disabled:opacity-50"
+              loading={salvando}
             >
               {salvando ? "Abrindo…" : "Confirmar abertura"}
-            </button>
+            </Button>
           )}
         </div>
       </div>
-    </dialog>
+    </Modal>
   );
 }
 
@@ -167,7 +165,7 @@ function Campos({ titulo, itens }: { titulo: string; itens: Array<[string, strin
       {itens.map(([rotulo, valor]) => (
         <p
           key={rotulo}
-          className="grid grid-cols-[110px_1fr] gap-2 border-b border-line-soft py-1 text-xs"
+          className="grid grid-cols-[110px_1fr] gap-2 border-b border-line-soft py-1 text-caption"
         >
           <span className="text-ink-3">{rotulo}</span>
           <span className="break-words text-ink">{valor}</span>
