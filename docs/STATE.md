@@ -10,163 +10,124 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
-## 2026-08-18 — E00-S24: DESIGN.md/PRODUCT.md de `apps/web` + polish Início/Dashboard PCM (Claude)
+## 2026-08-19 — 4 pedidos em sequência: limpeza de dado, fix Auvo, fix WhatsApp celular, dashboard Início real (Claude)
 
-Sessão via `/impeccable`, fora do ciclo `@sm`/`@dev` formal — Lucas invocou direto, sem story
-prévia no ROADMAP. Registrei retroativamente como **E00-S24** (sem `spec.md`/`tasks.md`
-formais) pra manter rastreio; decisão dele, perguntado por `AskUserQuestion`.
+Sessão longa com Lucas pedindo coisas diferentes conforme via a tela rodando — nenhum planejado
+com antecedência, cada um investigado/resolvido antes de passar pro próximo.
 
-**`/impeccable init`** — `apps/web` não tinha `PRODUCT.md`. Escrito a partir de evidência real do
-repo (`docs/PROJECT.md`, `docs/glossary.md`, `package.json`, `public/logos/`) + 1 rodada de
-`AskUserQuestion` pros gaps que o código não respondia (usuário primário = supervisor/colaborador;
-WCAG 2.1 AA confirmado vinculante; sem material de marketing, só dado operacional real). `buildPath:
-code` gravado em `apps/web/.impeccable/config.json`.
+**1. Remoção de 4 inspeções de teste.** Confirmado com Lucas (dado real de produção, mas
+resultado de teste de import de XLS — 4 registros idênticos "Relatório XLS —
+Respostas_Inconformidade_03_06_2026_a_23_07_2026", `concluida`, 1 item cada, criadas 15-16/08).
+Soft-delete direto via `supabase db query --linked` (CLI autenticado no projeto
+`nudannsrfvjggoergvyn` — token já estava disponível, Lucas confirmou acesso). `pcm.inspecoes.
+deleted_at = now()` — reversível, é a convenção do schema (não `DELETE` físico); `listarInspecoes()`
+já filtra `deleted_at is null`, confirmado que a tela zera. Nenhum commit — mutação de dado, não
+de código.
 
-**`/impeccable document`** (scan mode) — `apps/web` também não tinha `DESIGN.md` apesar do lote
-visual E00-S14..S23 já ter fundação de tokens pronta (`src/index.css`, `packages/ui`). Todo token
-do frontmatter (25 cores, 8 papéis de tipografia, 4 raios) veio direto do código, não inventado.
-Sidecar `.impeccable/design.json` com tonal ramps (só pras cores primary/secondary/neutral — os
-4 estados semânticos já são trios fixos texto/soft/linha, não ramp de 8), 7 componentes
-traduzidos pra HTML/CSS autocontido (`var(--color-*)`), narrativa (North Star "O Painel de
-Comando Técnico", 4 Named Rules). North Star e nomes de cor confirmados por `AskUserQuestion` —
-"Laranja Cirúrgico"/"Navy Institucional" porque o nome já carrega a regra de uso.
+**2. Investigação + fix: "Saúde Auvo: 6 com erro" / 591 erros no cockpit PCM (E01-S146).** Lucas
+pediu pra investigar se dava pra resolver ou se devia remover a feature — não era feature quebrada.
+Achado real (via `supabase db query --linked`, leitura direta antes de qualquer mudança):
+- **568/591 (96%)** = linhas do outbox (`pcm.auvo_sync_outbox`) com `row_id` de
+  `pcm.clientes`/`equipamentos`/`ferramentas` já deletado (hard-delete real, anterior a esta
+  sessão — as 3 tabelas têm `deleted_at`, então não veio de exclusão normal pela UI).
+  `fn_claim_auvo_outbox_batch` só reivindica `status='pending'` — uma vez marcada `'error'`,
+  nunca mais é reprocessada nem limpa sozinha (confirmado: `attempts=1` em 100% das 591 linhas).
+  Fica pra sempre como ruído, sem significar falha de integração ativa.
+- **8** = `writeEnabled=false, pulado (dry-run)` (`produto_categorias`/`serviços`/`sistemas` — E01-S47
+  ainda não habilitou escrita pra essas entidades) contadas como "erro" por engano na view.
+- **1** = "descriptor desconhecido" — anterior ao registro de `sistemas` no registry (já existe
+  hoje, `writeEnabled:false` — ADR-0009/D2).
 
-**`/impeccable polish`** em `HomePage.tsx` (tela Início/`DashboardGeral`) e
-`PcmDashboardPage.tsx` — achei e corrigi drift real contra o `DESIGN.md` recém-escrito, não
-redesign:
-- Badge de alerta em `DashboardGeral` usava `bg-amber` (cor de marca crua) + emoji `⚠` como ícone
-  → virou `bg-warning-soft`/`text-warning` (par semântico já usado em todo o resto do produto) +
-  `AlertTriangle` do lucide (emoji-como-ícone é proibição explícita do craft floor do skill).
-- 3 botões montados à mão em `PcmDashboardPage.tsx` (Atualizar/Sincronizar Auvo/Nova OS)
-  reimplementavam na mão o que `Button` de `packages/ui` já faz — inclusive o spinner de loading,
-  replicado manualmente. Trocados pelo componente; `Loader2` ficou órfão no import, removido.
-- 5 painéis com card montado à mão (sem `shadow-raised`, sem tingimento `bg-paper/45` do header)
-  — 2 viraram `Card`/`CardHeader` de fato; os que precisavam manter `<section>` (landmark de
-  acessibilidade) ou borda semântica própria (`border-danger-line` do painel de erro Auvo)
-  ganharam as mesmas classes on-brand sem trocar de elemento.
-- 2 números em `text-lg` (fora da escala tipográfica do projeto) → `text-heading`/`text-title`.
+Motor de sync **funciona** (228 pushes reais bem-sucedidos no mesmo período) — não removida.
+Migration `0210_E01-S146_limpar_saude_sync_auvo.sql`: purga as 568 órfãs (revalida contra o
+estado atual da tabela, não confia só no `last_error` gravado), reabre a linha de `sistemas` como
+`pending`, ajusta as views `auvo_sync_health`/`auvo_sync_error_details` pra não contar dry-run
+como erro. Resultado real após aplicar: **2 entidades com erro genuíno** (equipamentos 10,
+clientes 4) — investigação desses ~15 casos reais fica pra depois, não travou este fix.
 
-**Gates:** lint (`biome check`) e `tsc --noEmit` verdes nos 2 arquivos tocados. **Sem verificação
-visual em navegador** — extensão `claude-in-chrome` não conectada nesta sessão, e
-`playwright.config.ts` aponta pro Supabase de **produção** (não staging/local) exigindo
-`SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD` em `.env.local` da raiz, ausente aqui. Pendência
-registrada, não escondida — mesmo padrão de risco que S17/S18/S20 já tinham documentado.
+**Achado colateral grave, ao tentar `supabase db push`:** o banco remoto já tinha migrations
+`0205` a `0209` aplicadas (`E02-S31` gasto de IA + quota, `E02-S32` origem de envio de mensagem,
+fix `E01-S142` acento em "INÍCIO VISITA", `E01-S151` backlog sem chamado) **que nunca foram
+commitadas em nenhuma branch deste repositório** — aplicadas direto em produção em alguma sessão
+anterior, sem deixar rastro em git. Reconstruídas nesta sessão a partir de
+`supabase_migrations.schema_migrations.statements` (conteúdo fiel ao aplicado, marcado como
+reconstruído no cabeçalho de cada arquivo) — sem isso, `db push` recusava aplicar qualquer coisa
+nova (`supabase migration list` mostrava `local: ""` pras 5 versões). Minha migration original
+teria colidido no número `0205` (já ocupado por `E02-S31`) — renomeada pra `0210`.
 
-`docs/epics/ROADMAP.md` ganhou a linha E00-S24 com esse status.
+Branch `fix/E01-S146-limpar-saude-sync-auvo`, commit único com a migration + as 5 recuperadas.
+`ci:local` (19 gates) verde. **Sem PR aberto ainda** — Lucas pediu pra terminar o resto antes.
 
-## 2026-08-18 — Lote visual E00-S14..S23: migração mecânica (S17/S18) + verificação (S19/S22) — parte 2 (Claude)
+**3. Investigação + fix: mensagem mandada direto do celular não aparecia no Atendimento (E02-S32).**
+Lucas reportou por print da tela real. Causa raiz: `pcm-whatsapp-webhook/index.ts` ignorava
+incondicionalmente todo evento `fromMe:true` da Evolution API — que cobre TANTO o eco do que o
+próprio app manda QUANTO mensagem mandada direto do celular (mesmo número, o flag sozinho não
+distingue origem). A migration `0207` (recuperada no achado do item 2) já tinha criado
+`origem_envio`/`fn_registrar_mensagem_celular` com dedup por `wa_message_id` (`ON CONFLICT DO
+NOTHING`) — pensado exatamente pra isso — mas **nunca foi ligada**: nem o webhook chamava a
+função nova, nem `atendimento-whatsapp-envio` gravava o `wa_message_id` que a Evolution devolve
+(sem isso, o dedup não tinha como funcionar — toda mensagem do próprio app ia duplicar na tela).
 
-Continuação da sessão que fez a fundação em 2026-08-07 (tokens de cor, `packages/ui`, toast/
-confirmação — ver `docs/state-historico/2026-07-21-a-2026-08-11.md`). Lucas pediu pra implementar
-o lote visual inteiro; decisão explícita dele, por `AskUserQuestion`: sequência completa sem
-parar, branch única do lote com commit por story, migração mecânica completa nesta sessão,
-**pular S21** (reescreve `HomePage.tsx` em produção sem navegador pra validar) e, quando S17/S18
-também esbarraram no mesmo problema (julgamento visual em massa sem navegador), Lucas escolheu
-**continuar mesmo assim, aceitando o risco**. S20 teve o mesmo risco de S21 identificado durante o
-trabalho (AC-4/5 mexem no mesmo `HomePage.tsx`) — perguntado de novo, Lucas escolheu **pular**.
+Fix em 3 arquivos (branch `fix/E02-S32-mensagem-celular-nao-capturada`, commit `44d2cd9`):
+- `_shared/evolution.ts`: `chamarEvolution`/`enviarEvolution`/`responderEvolution` passam a
+  devolver o `wa_message_id` (`key.id`) do corpo de resposta da Evolution — antes descartado.
+  Extração isolada em `extrairWaMessageId` (pura, testada, nunca lança).
+- `atendimento-whatsapp-envio/index.ts`: grava esse id na mensagem que o app já insere (branch
+  Meta fica de fora — webhook/dedup próprios, fora de escopo).
+- `pcm-whatsapp-webhook/index.ts`: `fromMe` agora chama `fn_registrar_mensagem_celular` em vez de
+  ignorar — eco do app vira no-op (conflito no `wa_message_id`), celular vira linha nova, nenhum
+  dos dois entra na fila do Zé (não é pergunta de cliente esperando IA).
 
-Branch: `feat/E00-lote-visual-S14-S23` (local, não pushed — sem PR aberto; `.claude/memory/
-feedback-perguntar-antes-de-pr.md` exige confirmar com Lucas antes do `gh pr create`).
+`deno test` (195 testes, incluindo 2 novos pra `extrairWaMessageId`) + `ci:local` verdes. **Sem PR
+aberto ainda.**
 
-**E00-S17 (skeleton) — implementado.** AC-1: dois codemods (`codemod-skeleton-pagina.mjs` pro
-padrão dominante de página inteira, 49 arquivos/65 ocorrências; `codemod-skeleton-inline.mjs` pras
-variações menores em `<p>`/`<div>` dentro de ternário/`return`/`&&`, 27 arquivos/36 ocorrências) —
-contagem de "Carregando" renderizado caiu a 0, verificado por grep. AC-3: `setEstado({ fase:
-"carregando" })` incondicional (que apagava a lista já exibida a cada recarga pós-mutação) virou
-`setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }))` em 41 arquivos
-— mesmo padrão que `LancamentosPage.tsx` já usava manualmente. AC-2: hook `useCargaVisivel`
-(200ms delay / 400ms mínimo) já existia testado mas sem nenhum consumidor — ligado dentro do
-`DataTable` (`packages/ui`), cobre as 12 telas baseadas em tabela com uma mudança só; os ~76
-skeletons de página inteira do AC-1 continuam sem debounce (heterogêneos demais — `isPending`,
-`fase==='carregando'`, estado local — pra mexer em massa sem navegador; registrado, não
-escondido). AC-6: 9 telas (`LancamentosPage`, `ListaClientesPage`, `TiposTarefaPage`,
-`OrdensServicoPage`, `EquipamentosPage`, `CatalogoSimplesPage`, `InspecoesPage` ×2,
-`ConversaLista`) ganharam distinção real "nunca houve registro" × "filtro zerou" (mensagem própria
-+ ação de limpar filtro/busca) — `ContasPage` (comercial) já fazia isso certo desde a fundação.
-AC-4 (`:active` no `Button`) e AC-5 (reticência única, gate) já vinham prontos.
+**4. Dashboard geral real na tela Início (E01-S147).** Retomada depois de pausada pela investigação
+do item 2 — Lucas pediu explicitamente pra terminar isso antes de subir qualquer coisa pro git.
+`specs/E01-S147-dashboard-geral-inicio/` (spec.md + tasks.md, tier Pequeno — reusa domínio/
+aplicação já existente de PCM/Atendimento/Financeiro, sem bounded context novo). 8/8 tasks:
+- Task 1: extraiu `DashboardGeral` (componente + o antigo mock `DASHBOARD_GERAL`) de
+  `HomePage.tsx` pra `DashboardGeral.tsx` próprio; `MODULOS`/`ModuloTab`/`ModuloId` saíram pra
+  `modulos.ts` (evita import circular entre os dois arquivos novos). Sem mudança de comportamento
+  nesta task.
+- Tasks 2-4: um hook TanStack Query por módulo (`resumo-inicio-queries.ts`, padrão de
+  `features/comercial/application/dashboard-queries.ts`) — PCM usa `contarKpis()` (RPC leve
+  `fn_kpis_ordens_servico`, não a pipeline pesada de `montarDashboardPcm`; por isso `Backlog GUT`
+  saiu do card, sem fonte leve equivalente — spec ajustada durante a implementação, não depois).
+  Atendimento usa `obterPainelAtendimento` + `montarPainelAtendimento` (período "hoje"). Financeiro
+  usa `obterResumoCaixa`, formatado com `centavosParaReais`.
+- Tasks 5-8: `DashboardGeral.tsx` reescrito — cada card real é uma `useQuery` independente (nunca
+  `Promise.all`), loading/erro por card não trava os outros, módulo sem dado real pronto
+  (Comercial — que na verdade JÁ tem dado real e hook `-queries.ts` pronto, mas não confirmado
+  pro escopo desta leva —, Marketing, Gestão, Área do Cliente) mostra `EmptyState` honesto em vez
+  de número inventado. `DashboardGeral.test.tsx` (5 testes RTL, `vi.mock` dos 3 adapters
+  singleton, cobre AC-1 a AC-8).
 
-**E00-S18 (tipografia) — implementado.** AC-1/2/3 (escala de 7 degraus em `rem`, tracking e
-entrelinha por degrau) já existiam em `index.css` desde a fundação. Rollout mecânico e
-value-preserving (mesmo px, só troca de nome) de `text-xs/sm/base/xl` → `caption/body/heading/
-title` via `codemod-tipografia-escala.mjs`: 149 arquivos, 1987 ocorrências. AC-5 (hierarquia real,
-um `<h1>` por tela): promoção manual de `<h2>`/`<h3>` → `<h1>` em 51 páginas (script
-`promover-h1.mjs`, alvo por arquivo:linha, não regex cego — vários arquivos têm outros `h2`/`h3`
-de modal/card com estilo parecido); gap encontrado e fechado nesta parte 2 — `Atendimento
-ConfigPage`/`InboxPage` não tinham heading de título nenhum (só guarda "Acesso restrito"), a
-primeira ganhou `<h1>` visível, a segunda (layout de inbox sem espaço visual pro título) ganhou
-`<h1 className="sr-only">`.
+Suite inteira 989/989, typecheck/biome verdes. Branch `feat/E01-S147-dashboard-geral-inicio`.
+**Sem PR aberto ainda.**
 
-**E00-S19 (movimento) — verificado, sem gap.** Curvas `--ease-*`, gate `movimento` (0
-`transition-all`, sem lib proibida — ADR-0018), `prefers-reduced-motion` cobrindo overlay/surface/
-toast/shimmer do skeleton, `:active` no `Button` — tudo já estava na fundação. Só confirmado
-nesta sessão, nenhuma mudança necessária.
-
-**E00-S20 (materiais/chrome) — parcial, resto pulado por decisão do Lucas.** AC-1/2/3 (4 degraus
-de sombra derivados do navy, `rgba(20,28,54,...)`, override no escuro) já prontos. AC-4/5 (chrome
-translúcido com scroll por baixo) exigiriam reestruturar o `flex-col` de `HomePage.tsx` (header e
-`<main>` são irmãos, não sobrepostos — mesmo arquivo de alto risco do S21); AC-6 (scrim × painel
-não-bloqueante) pede trocar o tratamento visual de vários drawers (ex: `DrawerDetalheAtivo`, que
-hoje usa scrim escuro mesmo sendo um "detalhe lateral" — o exemplo canônico de não-bloqueante
-citado na própria spec). Perguntado, Lucas escolheu pular — mesma lógica do S21.
-
-**E00-S21 — não implementado, decisão de sessão anterior mantida.** `design.md` pronto, aguardando
-review. Reescreve a navegação inteira de `HomePage.tsx` em produção sem navegador pra validar
-visualmente — risco alto demais pra esta sessão.
-
-**E00-S22 (dark mode/a11y) — parcial.** Verificado sem mudança: AC-2 (`ThemeProvider` já resolve
-`prefers-color-scheme` como padrão, escolha explícita em `localStorage` vence e persiste, `html,
-html * { transition: background-color, border-color, color }` faz a troca suave), AC-4 (gate
-`div-clicavel` verde), AC-5 (`Toast` já tem `aria-live` polite/assertive por `tone`, `Field` já
-liga `aria-describedby`/`aria-invalid` automático). Implementado nesta sessão: AC-8
-(`@media (prefers-contrast: more)` em `index.css` — `--color-line` mais visível, `--color-ink-3`
-sobe pro nível de `--color-ink-2`; só ativa sob a media query, zero efeito no padrão). Pendente:
-AC-1 (revisão visual das 56 telas nos 2 temas — gate humano por definição), AC-3 (percurso só de
-teclado), AC-6 (`axe-core` no Playwright/CI — infraestrutura de teste não existe ainda), AC-7
-(alvo de toque ≥44px — risco real de sobrepor botões adjacentes sem poder ver o resultado).
-
-**E00-S23 — não implementado.** Componente novo de física de gesto (arrasto 1:1, decisão por
-velocidade na soltura, interrupção sem salto, rubber-band) — é literalmente o tipo de trabalho que
-mais precisa de dispositivo/navegador real pra validar corretamente. Mesma categoria de risco do
-S20/S21; não tentado às cegas.
-
-**Gates:** `pnpm run ci:local` (19 gates) verde a cada commit desta sessão — alguns runs isolados
-de `testes` falharam de forma intermitente (sem relação com o código alterado; nunca reproduziu na
-segunda tentativa, tratado como flakiness do ambiente, não bug).
-
-**`docs/epics/ROADMAP.md` atualizado** com o status real de S17–S23 (linhas da tabela do lote
-visual). **`docs/STATE.md` rotacionado** nesta sessão: tudo antes de 2026-08-11 (a maior parte do
-arquivo, ~2200 linhas) moveu pra `docs/state-historico/2026-07-21-a-2026-08-11.md` — o arquivo
-tinha crescido muito além do limite de ~250 linhas da regra de rotação.
+**`docs/epics/ROADMAP.md` ganhou as linhas E01-S146 e E01-S147** (E00-S24 já estava, sessão
+anterior). **Nenhuma das 4 mudanças desta sessão foi verificada visualmente em navegador** — mesma
+limitação já registrada em sessões anteriores (ver bloqueios abaixo).
 
 ## Em andamento / próximo passo
-Branch atual `chore/E01-agenda-tecnico-menu-operacao` (não é a `feat/E00-lote-visual-S14-S23`
-citada abaixo — branch trocou entre sessões) já tinha 1 commit (`989f98f`, E01-S104, reorg de
-menu) antes desta sessão. Trabalho de E00-S24 (PRODUCT.md/DESIGN.md + polish) está em cima dela.
-Lucas escolheu, por `AskUserQuestion` nesta sessão: **1 PR só** pros dois (E01-S104 + E00-S24),
-scope de commit `chore(E00-S24)`, e **merge direto após CI verde** — sem esperar review manual.
-Próximo passo literal: `git add` só nos arquivos do trabalho (não pegar o lixo solto não-meu no
-working tree — `.codex/hooks.json`, `.agents/`, `.github/agents/`, `.github/hooks/`,
-`.github/skills/`, `.impeccable/` na raiz — pré-existentes, não tocados nesta sessão), commit,
-push, `gh pr create`, aguardar `gh pr checks` verde, merge.
-
-Se Lucas quiser continuar o lote visual E00-S14..S23 depois: os itens pendentes documentados na
-entrada de sessão anterior (S17 AC-2 no resto dos skeletons, S20 AC-4/5/6, S21 inteira, S22
-AC-1/3/6/7, S23 inteira) todos compartilham o mesmo bloqueio — precisam de navegador/dispositivo
-real pra validar, não código às cegas.
+3 branches prontas, commitadas localmente, **nenhum PR aberto ainda** (Lucas pediu pra terminar
+tudo antes de subir): `fix/E01-S146-limpar-saude-sync-auvo`, `fix/E02-S32-mensagem-celular-nao-
+capturada`, `feat/E01-S147-dashboard-geral-inicio`. Próximo passo literal: perguntar ao Lucas se
+abre PR de cada uma separado ou bundla, e confirmar merge (mesmo padrão desta sessão — E00-S24 já
+foi assim, PR #60, merge direto depois de CI verde).
 
 ## Bloqueios abertos
 > Carregados da rotação desta sessão — confirmados como ainda abertos, não copiados às cegas.
 - [ ] **`.claude/skills/revisao-adversarial/SKILL.md` nunca foi criada** — referenciada em
   `AGENTS.md`/`Definition-of-Done.md` desde 2026-07-02, conteúdo nunca materializado como skill de
-  verdade (confirmado ausente em `.claude/skills/` nesta sessão). Quem destrava: Lucas, com pedido
-  direto.
+  verdade. Quem destrava: Lucas, com pedido direto.
 - [ ] **Rotacionar o JWT secret legado do projeto Supabase** — exposto sem querer num diagnóstico
   de sessão em 2026-07-02. Não catastrófico, mas é boa prática. Quem destrava: @devops/Lucas.
-- [ ] **Lote visual E00-S14..S23 sem navegador pra validar visualmente** — toda a migração
-  mecânica desta sessão (S17/S18 completos, ~2700 ocorrências trocadas em ~150 arquivos) passou
-  pelos gates estáticos e `ci:local`, mas nenhuma tela foi vista renderizada. Quem destrava:
-  sessão com Playwright/`claude-in-chrome` disponível, ou revisão humana do Lucas antes do PR.
+- [ ] **Lote visual E00-S14..S23 (S20 AC-4/5/6, S21, S23) sem navegador pra validar visualmente**
+  — decisão de pular mantida por 2 sessões seguidas. Quem destrava: sessão com Playwright/
+  `claude-in-chrome` disponível, ou revisão humana do Lucas.
 - [ ] **`SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD` ausentes em `.env.local` da raiz** —
-  `e2e/auth.setup.ts` falha rápido sem eles, então nenhum spec Playwright roda nesta máquina;
-  bloqueou verificação visual de E00-S24 nesta sessão (2026-08-18) e provavelmente vai bloquear a
-  próxima sessão de UI também. Quem destrava: Lucas, com as credenciais reais de teste.
+  bloqueou verificação visual real em pelo menos 3 sessões seguidas agora (E00-S24, e as 4
+  mudanças desta sessão). `e2e/auth.setup.ts` falha rápido sem eles. Quem destrava: Lucas, com as
+  credenciais reais de teste — ou aceitar que verificação visual continua sendo feita só por ele,
+  manualmente, depois do merge.
