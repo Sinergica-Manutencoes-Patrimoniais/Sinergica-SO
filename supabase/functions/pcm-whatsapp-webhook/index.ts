@@ -50,9 +50,6 @@ serve(async (req) => {
       return json(200, { ok: true, ignored: true, reason: "event" }, cors);
     }
     const message = extractEvolutionMessage(payload);
-    if (message.fromMe) {
-      return json(200, { ok: true, ignored: true, reason: "fromMe" }, cors);
-    }
     if (message.remoteJid?.endsWith("@broadcast")) {
       return json(200, { ok: true, ignored: true, reason: "broadcast" }, cors);
     }
@@ -67,6 +64,24 @@ serve(async (req) => {
     const db = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
     const now = new Date().toISOString();
+
+    // E02-S32: `fromMe:true` cobre dois casos que a Evolution não distingue sozinha — eco do que o
+    // próprio app mandou (já registrado em `atendimento-whatsapp-envio` com `wa_message_id`
+    // gravado) e mensagem mandada direto do celular (nunca registrada antes). `ON CONFLICT
+    // (wa_message_id) DO NOTHING` dentro da RPC resolve os dois: eco vira no-op, celular vira linha
+    // nova — nunca mais chegam a fila do Zé (não é pergunta de cliente esperando resposta de IA).
+    if (message.fromMe) {
+      const { error } = await db.schema("atendimento").rpc("fn_registrar_mensagem_celular", {
+        p_instance_id: message.instanceId ?? "default",
+        p_remote_jid: message.remoteJid,
+        p_contato_nome: message.contactName,
+        p_conteudo: message.content,
+        p_wa_message_id: message.messageId,
+        p_enviado_em: message.receivedAt ?? now,
+      });
+      if (error) throw error;
+      return json(200, { ok: true, celular: true }, cors);
+    }
     const instanceId = message.instanceId ?? "default";
     const { data: rateAllowed, error: rateError } = await db
       .schema("atendimento")

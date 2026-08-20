@@ -145,6 +145,9 @@ serve(async (req) => {
       .single();
     if (insertError) throw insertError;
 
+    // E02-S32: só Evolution devolve `key.id` reaproveitável pra dedup do eco `fromMe` no webhook
+    // (`pcm-whatsapp-webhook`) — Meta Cloud API tem webhook/dedup próprios, fora deste escopo.
+    let waMessageId: string | null = null;
     try {
       if (input.acao === "enviar" && conversa.provedor === "meta") {
         await enviarMeta(
@@ -154,7 +157,7 @@ serve(async (req) => {
           texto,
         );
       } else if (input.acao === "enviar") {
-        await responderEvolution(conversa.instance_id as string, conversa.remote_jid as string, texto);
+        waMessageId = await responderEvolution(conversa.instance_id as string, conversa.remote_jid as string, texto);
       } else if (conversa.provedor === "meta") {
         await enviarRicoMeta(
           conversa.instance_id as string,
@@ -162,7 +165,7 @@ serve(async (req) => {
           input,
         );
       } else if (input.tipo === "audio" || input.tipo === "midia") {
-        await enviarEvolution(conversa.instance_id as string, "sendMedia", {
+        waMessageId = await enviarEvolution(conversa.instance_id as string, "sendMedia", {
           number: conversa.remote_jid,
           mediatype:
             input.tipo === "audio"
@@ -175,14 +178,14 @@ serve(async (req) => {
           caption: input.texto ?? "",
         });
       } else if (input.tipo === "template") {
-        await enviarEvolution(conversa.instance_id as string, "sendTemplate", {
+        waMessageId = await enviarEvolution(conversa.instance_id as string, "sendTemplate", {
           number: conversa.remote_jid,
           name: input.templateNome,
           language: input.templateIdioma ?? "pt_BR",
           components: [{ type: "body", parameters: (input.parametros ?? []).map((text) => ({ type: "text", text })) }],
         });
       } else {
-        await enviarEvolution(conversa.instance_id as string, "sendButtons", {
+        waMessageId = await enviarEvolution(conversa.instance_id as string, "sendButtons", {
           number: conversa.remote_jid,
           title: input.texto,
           description: input.texto,
@@ -204,7 +207,11 @@ serve(async (req) => {
       return json(200, { ok: false, mensagemId: mensagem.id, erro: "Falha ao enviar via Evolution" }, cors);
     }
 
-    await userClient.schema("atendimento").from("mensagens").update({ status_entrega: "enviado" }).eq("id", mensagem.id);
+    await userClient
+      .schema("atendimento")
+      .from("mensagens")
+      .update({ status_entrega: "enviado", wa_message_id: waMessageId })
+      .eq("id", mensagem.id);
     // Rede de segurança (design.md): envio manual também pausa o Zé nesta conversa, evita os dois
     // responderem em paralelo se o humano mandar mensagem sem ter clicado "assumir" antes.
     await definirHandoff(userClient, conversa.id as string, "envio_humano");
