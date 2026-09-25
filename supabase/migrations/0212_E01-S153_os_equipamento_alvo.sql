@@ -1,9 +1,9 @@
--- 0211_E01-S153_os_equipamento_alvo.sql — Sinérgica SO
+-- 0212_E01-S153_os_equipamento_alvo.sql — Sinérgica SO
 -- Story E01-S153 (follow-up da E01-S76). OS ganha vínculo opcional a um Equipamento (Item) — o
 -- "Alvo" escolhido na abertura, usado como `equipmentId` ao criar a task no Auvo
 -- (pcm-auvo-create-task). NOT VALID: pcm.ordens_servico tem dados de produção (mesmo padrão de
 -- 0095/0096) — coluna nova nasce NULL em toda linha existente, então a FK é satisfeita
--- trivialmente; VALIDATE roda na migration seguinte (0212) fora do lock de escrita.
+-- trivialmente; VALIDATE roda na migration seguinte (0213) fora do lock de escrita.
 --
 -- Reverso:
 --   alter table pcm.ordens_servico drop constraint if exists fk_ordens_servico_equipamento;

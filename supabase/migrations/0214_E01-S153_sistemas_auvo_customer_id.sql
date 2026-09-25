@@ -1,4 +1,4 @@
--- 0213_E01-S153_sistemas_auvo_customer_id.sql — Sinérgica SO
+-- 0214_E01-S153_sistemas_auvo_customer_id.sql — Sinérgica SO
 -- Pré-condição documentada no design.md da E01-S76 pra ligar `writeEnabled:true` no descriptor de
 -- Sistema (registry/sistemas.ts): sem `auvo_customer_id`, o Sistema subiria ao Auvo sem
 -- `associatedCustomerId`. Coluna denormalizada, mesmo padrão de `pcm.equipamentos.auvo_customer_id`
