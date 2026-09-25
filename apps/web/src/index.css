@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Componentes de `@sinergica/ui` são importados como fonte TypeScript pelo Vite. Tailwind v4
+   não os descobre a partir de `apps/web` sozinho, então utilities usadas pelo Modal (como
+   `left-1/2` e `max-w-2xl`) deixavam de existir no CSS de produção. */
+@source "../../../packages/ui/src";
+
 /* ── Sinérgica OS — Design System tokens ──────────────────────────────────────
    Paleta extraída dos logos e peças oficiais da marca.
    Navy (#1C2748) é a estrutura. Laranja (#E8731B) é cirúrgico (só CTA/ativo).
