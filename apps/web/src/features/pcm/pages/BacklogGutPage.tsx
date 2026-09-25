@@ -1,4 +1,4 @@
-import { Button, Skeleton, Tooltip } from "@sinergica/ui";
+import { Button, ConfirmDialog, Skeleton, Tooltip } from "@sinergica/ui";
 import { Plus, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -47,6 +47,9 @@ export function BacklogGutPage({
   const [editando, setEditando] = useState<OrdemServicoOperacional | null>(null);
   const [criando, setCriando] = useState(false);
   const [aberturaAuvoOsId, setAberturaAuvoOsId] = useState<string | null>(null);
+  const [ordemParaDescartar, setOrdemParaDescartar] = useState<OrdemServicoOperacional | null>(
+    null,
+  );
   const [busca, setBusca] = useState("");
   const [clienteFiltro, setClienteFiltro] = useState("todos");
   const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
@@ -163,9 +166,9 @@ export function BacklogGutPage({
   }
 
   // E01-S151: Fabrício decide que o item não tem tratativa — cancela sem nunca ter criado Chamado.
-  async function onDescartar(ordem: OrdemServicoOperacional) {
-    if (!user) return;
-    if (!window.confirm(`Descartar "${ordem.titulo}"? Não pode ser desfeito.`)) return;
+  async function onDescartar() {
+    if (!user || !ordemParaDescartar) return;
+    const ordem = ordemParaDescartar;
     setSalvandoId(ordem.id);
     setErroAcao(null);
     try {
@@ -180,6 +183,7 @@ export function BacklogGutPage({
       setErroAcao(error instanceof Error ? error.message : "Não foi possível descartar o item.");
     } finally {
       setSalvandoId(null);
+      setOrdemParaDescartar(null);
     }
   }
 
@@ -414,15 +418,14 @@ export function BacklogGutPage({
                     <Metric label="Score" value={ordem.scorePcm} />
                   </div>
                   {temEscrita && (
-                    <div
-                      className="flex items-center gap-1.5"
-                      onClick={(event) => event.stopPropagation()}
-                      onKeyDown={(event) => event.stopPropagation()}
-                    >
+                    <div className="flex items-center gap-1.5">
                       {ehItemPreTriagem(ordem) && (
                         <button
                           type="button"
-                          onClick={() => onConfirmarChamado(ordem)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onConfirmarChamado(ordem);
+                          }}
                           disabled={salvandoId === ordem.id}
                           className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
                         >
@@ -432,7 +435,10 @@ export function BacklogGutPage({
                       {!ehItemPreTriagem(ordem) && ordem.status !== "planejamento" && (
                         <button
                           type="button"
-                          onClick={() => onPlanejar(ordem)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onPlanejar(ordem);
+                          }}
                           disabled={salvandoId === ordem.id}
                           className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
                         >
@@ -441,7 +447,10 @@ export function BacklogGutPage({
                       )}
                       <button
                         type="button"
-                        onClick={() => onDescartar(ordem)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setOrdemParaDescartar(ordem);
+                        }}
                         disabled={salvandoId === ordem.id}
                         className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-line px-3 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
                       >
@@ -487,6 +496,17 @@ export function BacklogGutPage({
           onAberta={carregar}
         />
       )}
+
+      <ConfirmDialog
+        open={ordemParaDescartar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setOrdemParaDescartar(null);
+        }}
+        titulo={`Descartar "${ordemParaDescartar?.titulo}"`}
+        descricao="Não pode ser desfeito."
+        rotuloConfirmar="Descartar"
+        onConfirmar={onDescartar}
+      />
     </div>
   );
 }
