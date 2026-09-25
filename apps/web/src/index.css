@@ -327,7 +327,12 @@
   }
 
   /* `forwards` obrigatório: sem ele o navegador reverte pro estado sem transform ao fim da
-     animação — o modal saltaria pro canto superior esquerdo assim que a entrada terminasse. */
+     animação — o modal saltaria pro canto superior esquerdo assim que a entrada terminasse.
+     Achado em produção (2026-09-25, Safari): `forwards` sozinho não é garantia suficiente — se a
+     animação não chega a rodar/persistir (remount do React, `prefers-reduced-motion`, ou só o
+     WebKit não segurando o fill-mode), o elemento cai pro `transform` base da classe. Sem essa
+     declaração aqui, esse "base" era `none` — daí o canto. `transform` fixo abaixo garante que o
+     modal SEMPRE nasce centralizado, animação sendo só um acréscimo visual por cima. */
   .anim-overlay {
     animation: overlay-in var(--duration-base) var(--ease-out) forwards;
   }
@@ -335,9 +340,11 @@
     animation: overlay-out var(--duration-base) var(--ease-out) forwards;
   }
   .anim-surface {
+    transform: translate(-50%, -50%);
     animation: surface-in var(--duration-base) var(--ease-out) forwards;
   }
   .anim-surface[data-state="closed"] {
+    transform: translate(-50%, -50%);
     animation: surface-out var(--duration-base) var(--ease-out) forwards;
   }
 
