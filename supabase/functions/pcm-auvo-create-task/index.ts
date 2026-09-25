@@ -54,7 +54,9 @@ serve(async (req) => {
     const { data: os, error: osError } = await db
       .schema("pcm")
       .from("ordens_servico")
-      .select("id, client_id, categoria, prioridade, titulo, descricao, auvo_task_id, tipo_tarefa_id")
+      .select(
+        "id, client_id, categoria, prioridade, titulo, descricao, auvo_task_id, tipo_tarefa_id, equipamento_id",
+      )
       .eq("id", input.osId)
       .maybeSingle();
 
@@ -110,6 +112,24 @@ serve(async (req) => {
         customerId = await syncClienteFallback(supabaseUrl, serviceKey, os.client_id);
       }
 
+      // E01-S153: OS com Equipamento (Item) escolhido como Alvo — resolve o `auvo_equipment_id`
+      // dele e envia como `equipmentId` no payload da task. CAMPO NÃO VERIFICADO CONTRA A API REAL
+      // do Auvo (mesma ressalva do topo do arquivo) — inferido do nome usado no webhook inbound
+      // (`payload.equipmentId`/`task.equipmentId`, ver webhook-dispatch.ts/extractAuvoId). Ausência
+      // ou nome errado apenas deixa a task sem Alvo (nunca bloqueia a criação — mesmo padrão de
+      // falha tolerante desta função).
+      let equipmentId: number | undefined;
+      if (os.equipamento_id) {
+        const { data: equipamento, error: equipamentoError } = await db
+          .schema("pcm")
+          .from("equipamentos")
+          .select("auvo_equipment_id")
+          .eq("id", os.equipamento_id)
+          .maybeSingle();
+        if (equipamentoError) throw equipamentoError;
+        equipmentId = equipamento?.auvo_equipment_id ?? undefined;
+      }
+
       // 5) Idempotência no Auvo: busca por externalId antes de criar (AC-5, reprocesso de trigger).
       // Correção de revisão: não cair para search.result[0] sem bater o externalId — mesmo risco
       // documentado em pcm-auvo-customers-sync (vincularia a task errada se o paramFilter não
@@ -147,6 +167,7 @@ serve(async (req) => {
           taskTypeId,
           priority: resolveAuvoPriority(os.prioridade),
           orientation: os.descricao ?? os.titulo,
+          ...(equipmentId != null ? { equipmentId } : {}),
         });
         taskId = criada.result.id;
       }

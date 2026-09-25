@@ -128,6 +128,24 @@ serve(async (req) => {
           return json(200, { ok: true, ignored: true, reason: decision.reason }, cors);
         }
 
+        // E01-S153: Sistema (registry/sistemas.ts) sobe ao Auvo como Equipment(27), `writeEnabled:
+        // true` — o webhook desse mesmo Equipment volta aqui. Sem este filtro, o descriptor
+        // `equipamentos` criaria uma linha-fantasma duplicada em `pcm.equipamentos` (pré-condição
+        // do design.md da E01-S76, resolvida junto do flip).
+        if (descriptor.key === "equipamentos") {
+          const { data: sistemaExistente, error: sistemaError } = await db
+            .schema("pcm")
+            .from("sistemas")
+            .select("id")
+            .eq("auvo_equipment_id", decision.auvoId)
+            .maybeSingle();
+          if (sistemaError) throw sistemaError;
+          if (sistemaExistente) {
+            console.log(JSON.stringify({ ...logBase, nivel: "info", msg: "webhook de Equipment ignorado — auvo_equipment_id pertence a um Sistema", auvoId: decision.auvoId }));
+            return json(200, { ok: true, ignored: true, reason: "equipment_is_sistema" }, cors);
+          }
+        }
+
         const { data: rowId, error } = await db.schema("pcm").rpc("fn_upsert_auvo_sync", {
           p_table: descriptor.pcmTable,
           p_auvo_id: String(decision.auvoId),

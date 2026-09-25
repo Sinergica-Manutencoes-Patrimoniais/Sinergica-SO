@@ -1,5 +1,6 @@
 // EstruturaClientePage.tsx — E01-S76 (AC-1, AC-2, AC-3): CRUD de Área > Local (árvore) de um
 // cliente. Mora como aba dentro de VisaoClientePage (design.md — "aba em VisaoClientePage.tsx").
+import { Modal } from "@sinergica/ui";
 import { ChevronDown, ChevronRight, FolderTree, Pencil, Plus, Tag, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -477,38 +478,33 @@ function AreaModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">{area ? "Editar Área" : "Nova Área"}</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
-            <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              className="input w-full"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
-            <input
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              className="input w-full"
-            />
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={area ? "Editar Área" : "Nova Área"}
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-3">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+          <input
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="input w-full"
+          />
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onCancel} className="btn-secondary">
             Cancelar
           </button>
@@ -522,7 +518,7 @@ function AreaModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -559,53 +555,50 @@ function LocalModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-md rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {local ? "Editar Local" : parentId ? "Novo sub-local" : "Novo Local"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-3 p-4">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
-            <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              className="input w-full"
-              placeholder='ex.: "3º andar", "Sala 302"'
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo</span>
-            <select
-              value={tipoId ?? ""}
-              onChange={(e) => setTipoId(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">Sem tipo</option>
-              {tiposDeLocal.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.nome}
-                </option>
-              ))}
-            </select>
-            {tiposDeLocal.length === 0 && (
-              <span className="mt-1 block text-xs text-ink-3">
-                Nenhum tipo cadastrado — crie um em "Tipos de Local" acima.
-              </span>
-            )}
-          </label>
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {erro}
-            </div>
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={local ? "Editar Local" : parentId ? "Novo sub-local" : "Novo Local"}
+      tamanho="sm"
+    >
+      <div className="flex flex-col gap-3">
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Nome *</span>
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className="input w-full"
+            placeholder='ex.: "3º andar", "Sala 302"'
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-3">Tipo</span>
+          <select
+            value={tipoId ?? ""}
+            onChange={(e) => setTipoId(e.target.value)}
+            className="input w-full"
+          >
+            <option value="">Sem tipo</option>
+            {tiposDeLocal.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.nome}
+              </option>
+            ))}
+          </select>
+          {tiposDeLocal.length === 0 && (
+            <span className="mt-1 block text-xs text-ink-3">
+              Nenhum tipo cadastrado — crie um em "Tipos de Local" acima.
+            </span>
           )}
-        </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
+        </label>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            {erro}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onCancel} className="btn-secondary">
             Cancelar
           </button>
@@ -619,6 +612,6 @@ function LocalModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

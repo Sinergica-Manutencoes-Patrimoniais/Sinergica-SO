@@ -6,6 +6,7 @@ import type { OrdemServicoGateway } from "./ordem-servico-gateway";
 function gatewayFake(overrides: Partial<OrdemServicoGateway> = {}): OrdemServicoGateway {
   return {
     carregarDadosAbertura: vi.fn(),
+    listarEquipamentosDoCliente: vi.fn(),
     criarOrdemServico: vi.fn(),
     confirmarChamado: vi.fn(),
     editarOrdemServico: vi.fn(),

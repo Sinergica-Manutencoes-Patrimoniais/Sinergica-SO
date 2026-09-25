@@ -88,9 +88,40 @@ serve(async (req) => {
       { pageSize: DEFAULT_PAGE_SIZE },
     );
 
+    // E01-S153: Sistema (registry/sistemas.ts) sobe ao Auvo como Equipment (`/equipments`,
+    // `writeEnabled:true`) — o pull de `/equipments` traz ESSE id de volta. Sem este filtro, cada
+    // Sistema viraria uma linha-fantasma duplicada em `pcm.equipamentos` (pré-condição documentada
+    // no design.md da E01-S76, resolvida junto do flip).
+    const { data: sistemasEquipmentIds, error: sistemasError } = await db
+      .schema("pcm")
+      .from("sistemas")
+      .select("auvo_equipment_id")
+      .not("auvo_equipment_id", "is", null);
+    if (sistemasError) throw sistemasError;
+    const idsDeSistemas = new Set(
+      (sistemasEquipmentIds ?? []).map((s) => s.auvo_equipment_id as number),
+    );
+    const antesDoFiltro = equipamentos.length;
+    const equipamentosFiltrados = equipamentos.filter((e) => {
+      const id = e.id ?? e.equipmentId;
+      return id == null || !idsDeSistemas.has(id);
+    });
+    if (equipamentosFiltrados.length !== antesDoFiltro) {
+      console.log(
+        JSON.stringify({
+          ts: now,
+          nivel: "info",
+          fn: FN,
+          reqId,
+          msg: "equipamentos ignorados por serem Sistema (linha-fantasma)",
+          ignorados: antesDoFiltro - equipamentosFiltrados.length,
+        }),
+      );
+    }
+
     // 3) Resolve quais `customerId` do Auvo têm cliente correspondente já sincronizado no PCM
     //    (pcm.clientes.auvo_id). Consulta em lote (um SELECT) em vez de por-equipamento.
-    const customerIds = [...new Set(equipamentos.map(auvoCustomerId).filter((c): c is number => c != null))];
+    const customerIds = [...new Set(equipamentosFiltrados.map(auvoCustomerId).filter((c): c is number => c != null))];
     const clientesExistentes = new Map<number, string>();
     if (customerIds.length > 0) {
       const { data: clientes, error: clientesError } = await db
@@ -108,7 +139,7 @@ serve(async (req) => {
     //    + aviso (não falha o equipamento).
     const rows: CacheRow[] = [];
     const syncedIds = new Set<number>();
-    for (const e of equipamentos) {
+    for (const e of equipamentosFiltrados) {
       const auvoEquipmentId = e.id ?? e.equipmentId;
       if (auvoEquipmentId == null) {
         console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "equipamento Auvo sem id — ignorado", equip: e }));

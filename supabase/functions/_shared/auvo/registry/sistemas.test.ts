@@ -1,10 +1,10 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { sistemasDescriptor } from "./sistemas.ts";
 
-Deno.test("sistemasDescriptor — mapeia sistema para /equipments, push-only e writeEnabled false", () => {
+Deno.test("sistemasDescriptor — mapeia sistema para /equipments, push-only e writeEnabled true (E01-S153)", () => {
   assertEquals(sistemasDescriptor.auvoBasePath, "/equipments");
   assertEquals(sistemasDescriptor.pcmTable, "sistemas");
-  assertEquals(sistemasDescriptor.writeEnabled, false);
+  assertEquals(sistemasDescriptor.writeEnabled, true);
   assertEquals(sistemasDescriptor.webhookEntity, undefined);
 });
 

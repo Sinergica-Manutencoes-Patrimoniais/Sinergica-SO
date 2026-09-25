@@ -23,6 +23,11 @@ async function criarChamadoAutomatico(input: {
   clienteId: string;
   titulo: string;
   createdBy: string;
+  /** E01-S152: quando a OS de origem (backlog) já tem descrição/local/fotos, carrega pro Chamado
+   * em vez de nascer vazio. */
+  descricao?: string | null;
+  local?: string | null;
+  fotoUrls?: string[];
 }): Promise<{ id: string; numero: string }> {
   const { data: numero, error: numeroError } = await supabase
     .schema("pcm")
@@ -35,6 +40,9 @@ async function criarChamadoAutomatico(input: {
       numero,
       cliente_id: input.clienteId,
       titulo: input.titulo,
+      descricao: input.descricao ?? null,
+      local: input.local ?? null,
+      foto_urls: input.fotoUrls ?? [],
       origem: "manual",
       created_by: input.createdBy,
       updated_by: input.createdBy,
@@ -74,6 +82,18 @@ async function marcarChamadoAutomaticoComOs(
 }
 
 export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
+  async listarEquipamentosDoCliente(clienteId) {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("equipamentos")
+      .select("id,nome")
+      .eq("client_id", clienteId)
+      .is("deleted_at", null)
+      .order("nome", { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map((row) => ({ id: row.id as string, nome: row.nome as string }));
+  },
+
   async carregarDadosAbertura(): Promise<DadosAberturaOs> {
     const [
       { data: clientes, error: clientesError },
@@ -133,6 +153,9 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         clienteId: input.clientId,
         titulo: input.titulo,
         createdBy: input.createdBy,
+        descricao: input.descricao,
+        local: input.localDescricao,
+        fotoUrls: input.fotoUrls,
       });
       chamadoId = chamadoAutomatico.id;
     }
@@ -165,6 +188,7 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         pmoc_schedule_id: input.pmocScheduleId,
         chamado_id: chamadoId,
         origem_inspecao_item_id: input.origemInspecaoItemId,
+        equipamento_id: input.equipamentoId ?? null,
       })
       .select("id,numero")
       .single();

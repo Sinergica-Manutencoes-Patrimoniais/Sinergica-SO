@@ -26,6 +26,7 @@ const input: CriarOrdemServicoInput = {
 function gatewayMock(): OrdemServicoGateway {
   return {
     carregarDadosAbertura: vi.fn(async () => ({ clientes: [], tecnicos: [], tiposTarefa: [] })),
+    listarEquipamentosDoCliente: vi.fn(async () => []),
     criarOrdemServico: vi.fn(async () => ({ id: "os1", numero: "OS-0001" })),
     confirmarChamado: vi.fn(async () => ({ numero: "CH-0001" })),
     editarOrdemServico: vi.fn(async () => undefined),

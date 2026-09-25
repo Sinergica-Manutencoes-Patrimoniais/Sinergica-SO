@@ -19,6 +19,13 @@ export interface TipoTarefaOpcao {
   auvoId: number | null;
 }
 
+/** E01-S153: opção de Equipamento (Item) pra escolher como Alvo da OS — lista filtrada pelo
+ * cliente escolhido no formulário (o Equipamento pertence a um cliente, ver pcm.equipamentos). */
+export interface EquipamentoAlvoOpcao {
+  id: string;
+  nome: string;
+}
+
 export interface DadosAberturaOs {
   clientes: ClienteOpcao[];
   tecnicos: TecnicoOpcao[];
@@ -58,6 +65,12 @@ export interface CriarOrdemServicoInput {
   /** E01-S151: item de backlog puro (sem técnico, sem data) nasce sem Chamado — Fabrício confirma
    * depois via `confirmarChamado`. Ignorado se `chamadoId` já vier setado. */
   semChamado?: boolean;
+  /** E01-S152: fotos do item de inspeção de origem (`InspecaoItem.fotoUrls`), carregadas pra OS —
+   * sem isso, imagem coletada na vistoria some ao virar backlog/OS. */
+  fotoUrls?: string[];
+  /** E01-S153: Equipamento (Item) alvo da OS, opcional — resolvido pro `auvo_equipment_id` dele e
+   * enviado como `equipmentId` ao criar a task no Auvo (pcm-auvo-create-task). */
+  equipamentoId?: string | null;
 }
 
 /** E01-S07: comando real enviado ao gateway — inclui `tipoOs`, calculado pelo use-case
@@ -100,6 +113,8 @@ export interface EditarOrdemServicoInput {
 
 export interface OrdemServicoGateway {
   carregarDadosAbertura(): Promise<DadosAberturaOs>;
+  /** E01-S153: Equipamentos (Itens) do cliente escolhido, pro seletor de Alvo da OS. */
+  listarEquipamentosDoCliente(clienteId: string): Promise<EquipamentoAlvoOpcao[]>;
   criarOrdemServico(input: CriarOrdemServicoCommand): Promise<OrdemServicoCriada>;
   /** E01-S129: recupera conversão interrompida antes de criar outra OS para o mesmo Chamado. */
   obterPorChamado?(chamadoId: string): Promise<OrdemServicoCriada | null>;

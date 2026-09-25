@@ -79,6 +79,7 @@ export const supabaseSistemasAdapter: SistemasGateway = {
   },
 
   async criar(input: SistemaCommand) {
+    const cliente = await buscarCliente(input.clienteId);
     const { data, error } = await supabase
       .schema("pcm")
       .from("sistemas")
@@ -88,6 +89,9 @@ export const supabaseSistemasAdapter: SistemasGateway = {
         nome: input.nome,
         tipo: input.tipo,
         descricao: input.descricao,
+        // E01-S153: pré-condição do flip writeEnabled — sem isso o Sistema sobe ao Auvo sem
+        // associatedCustomerId (ver registry/sistemas.ts).
+        auvo_customer_id: cliente?.auvoId ?? null,
         auvo_sync_status: "pending",
         created_by: input.userId,
         updated_by: input.userId,
@@ -251,6 +255,18 @@ export const supabaseSistemasAdapter: SistemasGateway = {
     return agregarHistoricoSistema([historicoSistema, historicoComponentes]);
   },
 };
+
+async function buscarCliente(id: string): Promise<{ id: string; auvoId: number | null } | null> {
+  const { data, error } = await supabase
+    .schema("pcm")
+    .from("clientes")
+    .select("id,auvo_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return { id: data.id as string, auvoId: (data.auvo_id as number | null) ?? null };
+}
 
 async function buscarHistoricoPorAuvoIds(auvoEquipmentIds: number[]): Promise<OsHistoricoItem[]> {
   const ids = [...new Set(auvoEquipmentIds)];
