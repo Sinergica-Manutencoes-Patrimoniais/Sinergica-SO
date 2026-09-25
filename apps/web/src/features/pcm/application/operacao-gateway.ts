@@ -60,6 +60,8 @@ export interface OperacaoDetalhe {
   localDescricao: string | null;
   solicitante: string | null;
   origem: string;
+  /** E01-S152: fotos do item de inspeção que originou este item, carregadas na derivação. */
+  fotoUrls: string[];
 }
 
 export interface PaginaOperacao {

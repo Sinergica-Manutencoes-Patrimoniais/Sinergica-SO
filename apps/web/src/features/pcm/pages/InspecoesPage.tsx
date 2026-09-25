@@ -572,6 +572,7 @@ export function InspecoesPage({
                 tecnicoId: null,
                 tipoTarefaId: null,
                 dataPrevista: null,
+                fotoUrls: item.fotoUrls,
               },
               "backlog",
               "sinergica",

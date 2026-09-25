@@ -60,10 +60,11 @@ interface OrdemRow {
   tipo_os: TipoOsHub | null;
   pmoc_schedule_id: string | null;
   chamado_id: string | null;
+  foto_urls: string[] | null;
 }
 
 const COLUNAS_OS =
-  "id,client_id,numero,titulo,descricao,categoria,status,prioridade,gravidade,urgencia,tendencia,dor_cliente,observacao,origem_inspecao_item_id,score_pcm,local_descricao,solicitante,origem,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,updated_at,tecnico_funcionario_id,data_agendada,check_in_at,check_out_at,auvo_detalhes,tipo_os,pmoc_schedule_id,chamado_id" as const;
+  "id,client_id,numero,titulo,descricao,categoria,status,prioridade,gravidade,urgencia,tendencia,dor_cliente,observacao,origem_inspecao_item_id,score_pcm,local_descricao,solicitante,origem,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,updated_at,tecnico_funcionario_id,data_agendada,check_in_at,check_out_at,auvo_detalhes,tipo_os,pmoc_schedule_id,chamado_id,foto_urls" as const;
 
 function mapearOrdem(
   row: OrdemRow,
@@ -104,6 +105,7 @@ function mapearOrdem(
     localDescricao: row.local_descricao,
     solicitante: row.solicitante,
     origem: row.origem,
+    fotoUrls: row.foto_urls ?? [],
   };
 }
 

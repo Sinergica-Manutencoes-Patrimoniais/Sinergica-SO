@@ -189,6 +189,7 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         chamado_id: chamadoId,
         origem_inspecao_item_id: input.origemInspecaoItemId,
         equipamento_id: input.equipamentoId ?? null,
+        foto_urls: input.fotoUrls ?? [],
       })
       .select("id,numero")
       .single();
@@ -215,7 +216,7 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
     const { data: ordem, error: ordemError } = await supabase
       .schema("pcm")
       .from("ordens_servico")
-      .select("client_id,titulo")
+      .select("client_id,titulo,descricao,local_descricao,foto_urls")
       .eq("id", input.ordemId)
       .single();
     if (ordemError) throw ordemError;
@@ -224,6 +225,9 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
       clienteId: ordem.client_id as string,
       titulo: ordem.titulo as string,
       createdBy: input.userId,
+      descricao: ordem.descricao as string | null,
+      local: ordem.local_descricao as string | null,
+      fotoUrls: (ordem.foto_urls as string[] | null) ?? [],
     });
     const { error } = await supabase
       .schema("pcm")

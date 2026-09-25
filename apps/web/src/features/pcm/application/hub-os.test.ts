@@ -47,6 +47,7 @@ const ordem = (patch: Partial<OrdemServicoOperacional>): OrdemServicoOperacional
   localDescricao: null,
   solicitante: null,
   origem: "manual",
+  fotoUrls: [],
   ...patch,
 });
 

@@ -35,6 +35,7 @@ function os(parcial: Partial<OrdemServicoOperacional>): OrdemServicoOperacional 
     localDescricao: null,
     solicitante: null,
     origem: "manual",
+    fotoUrls: [],
     ...parcial,
   };
 }

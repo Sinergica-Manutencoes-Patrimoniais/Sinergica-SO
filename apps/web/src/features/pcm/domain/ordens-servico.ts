@@ -55,6 +55,9 @@ export interface OrdemServicoOperacional {
   localDescricao: string | null;
   solicitante: string | null;
   origem: string;
+  /** E01-S152: fotos do item de inspeção que originou este item (backlog/OS), carregadas na
+   * derivação — `[]` pra OS sem origem de inspeção. */
+  fotoUrls: string[];
 }
 
 // E01-S118 T7: um Chamado recém-aberto ainda NÃO tem linha em `ordens_servico` (só nasce ao
@@ -73,7 +76,7 @@ export function ehCardChamadoAberto(id: string): boolean {
 }
 
 export function chamadoAbertoParaCard(
-  chamado: Pick<Chamado, "id" | "numero" | "titulo" | "descricao" | "createdAt">,
+  chamado: Pick<Chamado, "id" | "numero" | "titulo" | "descricao" | "createdAt" | "fotoUrls">,
   clienteNome: string,
 ): OrdemServicoOperacional {
   return {
@@ -108,6 +111,7 @@ export function chamadoAbertoParaCard(
     localDescricao: null,
     solicitante: null,
     origem: "manual",
+    fotoUrls: chamado.fotoUrls,
   };
 }
 

@@ -305,6 +305,24 @@ function DetalheChamado({
         <span className="block text-xs font-semibold text-ink-3">Local</span>
         <p className="whitespace-pre-wrap text-ink-2">{chamado.local || "—"}</p>
       </div>
+      {chamado.fotoUrls.length > 0 && (
+        <div>
+          <span className="mb-1 block text-xs font-semibold text-ink-3">
+            Fotos ({chamado.fotoUrls.length})
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {chamado.fotoUrls.map((url) => (
+              <a key={url} href={url} target="_blank" rel="noreferrer">
+                <img
+                  src={url}
+                  alt=""
+                  className="h-16 w-16 rounded-md border border-line object-cover"
+                />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
           <span className="block text-xs font-semibold text-ink-3">Abertura</span>

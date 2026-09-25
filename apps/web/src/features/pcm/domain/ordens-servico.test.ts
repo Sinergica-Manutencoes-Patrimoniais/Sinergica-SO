@@ -53,6 +53,7 @@ const base = {
   localDescricao: null,
   solicitante: null,
   origem: "manual",
+  fotoUrls: [],
 };
 
 describe("rotuloNumeroOrdem", () => {
@@ -165,6 +166,7 @@ describe("chamadoAbertoParaCard", () => {
         titulo: "Vazamento",
         descricao: null,
         createdAt: "2026-07-29T10:00:00Z",
+        fotoUrls: [],
       },
       "Cliente X",
     );

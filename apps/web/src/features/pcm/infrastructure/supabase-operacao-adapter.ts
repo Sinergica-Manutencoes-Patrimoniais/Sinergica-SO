@@ -200,7 +200,7 @@ async function obterDetalhe(itemId: string, signal?: AbortSignal): Promise<Opera
     let query = supabase
       .schema("pcm")
       .from("chamados")
-      .select("descricao,local,solicitante,origem")
+      .select("descricao,local,solicitante,origem,foto_urls")
       .eq("id", itemId.slice(PREFIXO_CHAMADO.length))
       .is("deleted_at", null);
     if (signal) query = query.abortSignal(signal);
@@ -213,13 +213,14 @@ async function obterDetalhe(itemId: string, signal?: AbortSignal): Promise<Opera
       localDescricao: data.local,
       solicitante: data.solicitante,
       origem: data.origem,
+      fotoUrls: (data.foto_urls as string[] | null) ?? [],
     };
   }
 
   let query = supabase
     .schema("pcm")
     .from("ordens_servico")
-    .select("descricao,observacao,auvo_detalhes,local_descricao,solicitante,origem")
+    .select("descricao,observacao,auvo_detalhes,local_descricao,solicitante,origem,foto_urls")
     .eq("id", itemId)
     .is("deleted_at", null);
   if (signal) query = query.abortSignal(signal);
@@ -232,6 +233,7 @@ async function obterDetalhe(itemId: string, signal?: AbortSignal): Promise<Opera
     localDescricao: data.local_descricao,
     solicitante: data.solicitante,
     origem: data.origem,
+    fotoUrls: (data.foto_urls as string[] | null) ?? [],
   };
 }
 

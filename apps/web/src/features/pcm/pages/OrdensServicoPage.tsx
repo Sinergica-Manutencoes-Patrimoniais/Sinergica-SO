@@ -1101,6 +1101,25 @@ function DetalheOs({
             )}
           </div>
 
+          {selecionada.fotoUrls.length > 0 && (
+            <div>
+              <p className="mb-1 text-xs font-semibold text-ink-3">
+                Fotos ({selecionada.fotoUrls.length})
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {selecionada.fotoUrls.map((url) => (
+                  <a key={url} href={url} target="_blank" rel="noreferrer">
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-16 w-16 rounded-md border border-line object-cover"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {selecionada.auvoSyncError && (
             <div className="rounded-lg border border-danger-line bg-danger-soft px-3 py-2">
               <p className="text-micro font-semibold uppercase tracking-wider text-danger">

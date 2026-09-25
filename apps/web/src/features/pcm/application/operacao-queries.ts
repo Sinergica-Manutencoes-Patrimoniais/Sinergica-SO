@@ -67,6 +67,9 @@ export function resumoParaOrdem(item: ItemOperacaoResumo): OrdemServicoOperacion
     localDescricao: null,
     solicitante: null,
     origem: item.origem,
+    // E01-S152: resumo do board não carrega fotos (evita payload pesado na lista) — `mesclarDetalhe`
+    // substitui por `OperacaoDetalhe.fotoUrls` real quando o detalhe é aberto.
+    fotoUrls: [],
   };
 }
 

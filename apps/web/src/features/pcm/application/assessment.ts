@@ -72,7 +72,7 @@ export function obterAssessmentVigente(gateway: QualidadeGateway, clientId: stri
 export async function derivarItemParaChamado(
   gatewayQualidade: QualidadeGateway,
   gatewayChamados: ChamadosGateway,
-  item: Pick<InspecaoItem, "id" | "destino" | "descricao">,
+  item: Pick<InspecaoItem, "id" | "destino" | "descricao" | "localizacao" | "fotoUrls">,
   clienteId: string,
   responsavel: ResponsavelDestino,
   userId: string,
@@ -83,6 +83,8 @@ export async function derivarItemParaChamado(
     titulo: item.descricao,
     origem: "inspecao",
     origemInspecaoItemId: item.id,
+    local: item.localizacao,
+    fotoUrls: item.fotoUrls,
     userId,
   });
   await gatewayQualidade.marcarItemDerivado(item.id, "chamado", responsavel);
@@ -153,7 +155,7 @@ export async function confirmarGerarBacklog(
   gatewayQualidade: QualidadeGateway,
   gatewayOs: OrdemServicoGateway,
   itens: ReadonlyArray<{
-    item: Pick<InspecaoItem, "id" | "destino" | "descricao">;
+    item: Pick<InspecaoItem, "id" | "destino" | "descricao" | "fotoUrls">;
     classificacao: ItemClassificado;
   }>,
   contexto: {
@@ -198,6 +200,7 @@ export async function confirmarGerarBacklog(
         tecnicoId: null,
         tipoTarefaId: contexto.tipoTarefaId,
         dataPrevista: null,
+        fotoUrls: item.fotoUrls,
       },
       "backlog",
       "sinergica",

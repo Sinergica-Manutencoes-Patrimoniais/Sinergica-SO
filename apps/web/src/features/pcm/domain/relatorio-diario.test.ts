@@ -36,6 +36,7 @@ const base: DadosRelatorioDiario = {
       localDescricao: null,
       solicitante: null,
       origem: "manual",
+      fotoUrls: [],
     },
     {
       id: "os-2",
@@ -69,6 +70,7 @@ const base: DadosRelatorioDiario = {
       localDescricao: null,
       solicitante: null,
       origem: "manual",
+      fotoUrls: [],
     },
   ],
   chamados: [
@@ -89,6 +91,7 @@ const base: DadosRelatorioDiario = {
       dataPlanejada: null,
       dataExecucao: null,
       replanejamentos: 0,
+      fotoUrls: [],
     },
   ],
   apontamentos: [
