@@ -117,7 +117,7 @@ const COLUNAS_OS =
 // redigitada aqui (mantém `('finalizado','cancelado')` num só lugar).
 const STATUS_HISTORICO_LISTA = `(${STATUS_HISTORICO.join(",")})`;
 
-function mapearClienteCommand(input: ClienteCommand | EditarClienteCommand) {
+function camposComuns(input: ClienteCommand | EditarClienteCommand) {
   return {
     nome: input.nome,
     cnpj: input.cnpj,
@@ -129,11 +129,30 @@ function mapearClienteCommand(input: ClienteCommand | EditarClienteCommand) {
     contato_telefone: input.contatoTelefone,
     contato_email: input.contatoEmail,
     observacoes: input.observacoes,
-    tipo: "cliente",
-    status_comercial: "ativo",
+    updated_by: input.userId,
+  };
+}
+
+/** Criação sempre nasce "cliente"/"ativo" — carteira operacional nunca cria lead direto no PCM. */
+function mapearClienteCriacao(input: ClienteCommand) {
+  return {
+    ...camposComuns(input),
+    tipo: "cliente" as const,
+    status_comercial: "ativo" as const,
     ativo: true,
     auvo_sync_status: "pending",
-    updated_by: input.userId,
+  };
+}
+
+/** E01-S148: edição respeita o que o usuário escolheu (ativo/tipo/status) — antes disto, todo save
+ * forçava `ativo:true`/`status_comercial:'ativo'`, impedindo inativar cliente pelo formulário. Campo
+ * ausente no comando preserva o valor atual (`undefined` não sobrescreve na query do Supabase). */
+function mapearClienteEdicao(input: EditarClienteCommand) {
+  return {
+    ...camposComuns(input),
+    ...(input.tipo !== undefined ? { tipo: input.tipo } : {}),
+    ...(input.statusComercial !== undefined ? { status_comercial: input.statusComercial } : {}),
+    ...(input.ativo !== undefined ? { ativo: input.ativo } : {}),
   };
 }
 
@@ -246,7 +265,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       .schema("pcm")
       .from("clientes")
       .insert({
-        ...mapearClienteCommand(input),
+        ...mapearClienteCriacao(input),
         created_by: input.userId,
       })
       .select(
@@ -263,7 +282,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       .schema("pcm")
       .from("clientes")
       .update({
-        ...mapearClienteCommand(input),
+        ...mapearClienteEdicao(input),
         updated_at: new Date().toISOString(),
       })
       .eq("id", input.id)
@@ -318,6 +337,9 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
           "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,updated_at,marcacao_id",
         )
         .is("deleted_at", null)
+        // E01-S147: lead/prospecto é dado do Comercial (dono, ADR-0019 R1) — a carteira do PCM é
+        // só operação, nunca exibe quem ainda não é cliente de verdade.
+        .neq("tipo", "lead")
         .order("nome", { ascending: true }),
       supabase
         .schema("pcm")

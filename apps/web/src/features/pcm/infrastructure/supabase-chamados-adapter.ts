@@ -32,10 +32,11 @@ interface ChamadoRow {
   data_planejada: string | null;
   data_execucao: string | null;
   replanejamentos: number;
+  foto_urls: string[] | null;
 }
 
 const CHAMADO_COLS =
-  "id,numero,cliente_id,titulo,descricao,local,origem,status,solicitante,ordem_servico_id,cancelamento_justificativa,cancelamento_anexo_path,created_at,data_planejada,data_execucao,replanejamentos" as const;
+  "id,numero,cliente_id,titulo,descricao,local,origem,status,solicitante,ordem_servico_id,cancelamento_justificativa,cancelamento_anexo_path,created_at,data_planejada,data_execucao,replanejamentos,foto_urls" as const;
 
 function mapChamado(row: ChamadoRow): Chamado {
   return {
@@ -55,6 +56,7 @@ function mapChamado(row: ChamadoRow): Chamado {
     dataPlanejada: row.data_planejada,
     dataExecucao: row.data_execucao,
     replanejamentos: row.replanejamentos,
+    fotoUrls: row.foto_urls ?? [],
   };
 }
 
@@ -151,6 +153,7 @@ export const supabaseChamadosAdapter: ChamadosGateway = {
         origem: input.origem ?? "manual",
         solicitante: input.solicitante,
         origem_inspecao_item_id: input.origemInspecaoItemId ?? null,
+        foto_urls: input.fotoUrls ?? [],
         created_by: input.userId,
         updated_by: input.userId,
       })

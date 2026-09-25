@@ -10,11 +10,10 @@ export interface SistemaRow extends Record<string, unknown> {
   /** E01-S85 AC-4: nome da Área (Sistema não tem `local_id`, só `area_id` opcional) — recalculado
    * por trigger (`0131`). */
   auvo_localizacao?: string | null;
-  // NÃO existe hoje em pcm.sistemas (ver migration 0095/design.md — schema travado pelo PO).
-  // `associatedCustomerId` fica sem valor até essa lacuna ser fechada — sem efeito prático nesta
-  // story: `writeEnabled:false` garante que `toAuvo` nunca é chamado pelo drain (processOutboxRow
-  // curto-circuita antes, ver pcm-auvo-push/index.ts). Resolver junto do flip (pré-condição já
-  // documentada no design.md: mitigação da linha-fantasma Equipment(27)).
+  // E01-S153: coluna adicionada (migration 0213) + backfill dos Sistemas existentes — pré-condição
+  // do flip `writeEnabled:true` documentada no design.md da E01-S76. Populada em app a partir de
+  // `pcm.clientes.auvo_id` (supabase-sistemas-adapter.ts), mesmo padrão de
+  // `pcm.equipamentos.auvo_customer_id`.
   auvo_customer_id?: number | null;
 }
 
@@ -30,15 +29,17 @@ export interface AuvoEquipmentSistema {
   active?: boolean;
 }
 
-/** E01-S76 — Sistema (agrupamento transversal de Itens) empurrado ao Auvo como Equipment
- * (`/equipments`), push-only, `writeEnabled:false` (ADR-0009/D2). Sem `webhookEntity` nem
- * `cronSchedule` — PCM é dono do Sistema, evita colisão com o inbound Equipment(27) do descriptor
- * `equipamentos`. NÃO ligar `writeEnabled:true` sem antes mitigar a linha-fantasma (ver design.md). */
+/** E01-S76/E01-S153 — Sistema (agrupamento transversal de Itens) empurrado ao Auvo como Equipment
+ * (`/equipments`), push-only. Sem `webhookEntity` nem `cronSchedule` — PCM é dono do Sistema.
+ * `writeEnabled:true` desde E01-S153, só depois de resolver as duas pré-condições do design.md:
+ * (1) `auvo_customer_id` (migration 0213 + backfill) e (2) mitigação da linha-fantasma — o inbound
+ * de Equipment(27) (`pcm-auvo-equipment-sync` e o dispatcher genérico de webhook) agora exclui
+ * `auvo_equipment_id` já presentes em `pcm.sistemas`, pra não duplicar o Sistema como Equipamento. */
 export const sistemasDescriptor: AuvoEntityDescriptor<AuvoEquipmentSistema, SistemaRow> = {
   key: "sistemas",
   auvoBasePath: "/equipments",
   pcmTable: "sistemas",
-  writeEnabled: false,
+  writeEnabled: true,
   deleteStrategy: "soft-patch",
   toAuvo(row) {
     return limparVazios({

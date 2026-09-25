@@ -76,6 +76,7 @@ export async function gerarOsDoChamado(
     descricao: chamado.descricao,
     chamadoId: chamado.id,
     createdBy: userId,
+    fotoUrls: chamado.fotoUrls,
   };
   let criada = existente;
   if (!criada) {

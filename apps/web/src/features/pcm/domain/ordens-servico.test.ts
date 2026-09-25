@@ -9,6 +9,7 @@ import {
   deveAlterarStatusPorDrop,
   ehCardChamadoAberto,
   ehItemBacklog,
+  ehItemPreTriagem,
   ehOsRegistroVisita,
   filtrarBacklogGut,
   filtrarOrdens,
@@ -52,6 +53,7 @@ const base = {
   localDescricao: null,
   solicitante: null,
   origem: "manual",
+  fotoUrls: [],
 };
 
 describe("rotuloNumeroOrdem", () => {
@@ -133,10 +135,25 @@ describe("ehOsRegistroVisita — E01-S142", () => {
     expect(ehOsRegistroVisita("  inicio visita  ")).toBe(true);
   });
 
+  it("reconhece o título real do Auvo, com acento e espaço à direita (bug achado em produção 2026-08-15)", () => {
+    expect(ehOsRegistroVisita("INÍCIO VISITA ")).toBe(true);
+    expect(ehOsRegistroVisita("Início Visita")).toBe(true);
+  });
+
   it("não reconhece títulos parecidos mas diferentes", () => {
     expect(ehOsRegistroVisita("Inicio Visita Extra")).toBe(false);
     expect(ehOsRegistroVisita("Visita Inicio")).toBe(false);
     expect(ehOsRegistroVisita("Trocar disjuntor")).toBe(false);
+  });
+});
+
+describe("ehItemPreTriagem — E01-S151", () => {
+  it("reconhece item sem chamadoId, independente do formato do numero (bug achado em produção 2026-08-16: relíquia pré-ADR-0014 com numero 'CH-006' mas chamadoId null)", () => {
+    expect(ehItemPreTriagem({ chamadoId: null })).toBe(true);
+  });
+
+  it("não reconhece item com chamadoId real", () => {
+    expect(ehItemPreTriagem({ chamadoId: "c1" })).toBe(false);
   });
 });
 
@@ -149,6 +166,7 @@ describe("chamadoAbertoParaCard", () => {
         titulo: "Vazamento",
         descricao: null,
         createdAt: "2026-07-29T10:00:00Z",
+        fotoUrls: [],
       },
       "Cliente X",
     );

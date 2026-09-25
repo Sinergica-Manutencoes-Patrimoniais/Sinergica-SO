@@ -19,6 +19,13 @@ export interface TipoTarefaOpcao {
   auvoId: number | null;
 }
 
+/** E01-S153: opção de Equipamento (Item) pra escolher como Alvo da OS — lista filtrada pelo
+ * cliente escolhido no formulário (o Equipamento pertence a um cliente, ver pcm.equipamentos). */
+export interface EquipamentoAlvoOpcao {
+  id: string;
+  nome: string;
+}
+
 export interface DadosAberturaOs {
   clientes: ClienteOpcao[];
   tecnicos: TecnicoOpcao[];
@@ -42,7 +49,10 @@ export interface CriarOrdemServicoInput {
   solicitante: string | null;
   origem: OrigemOs;
   tecnicoId: string | null;
-  tipoTarefaId: string;
+  /** E01-S83: obrigatório só quando a OS nasce com técnico/data (agendada) — item de backlog
+   * (sem técnico, sem data) pode nascer sem tipo de tarefa, preenchido só quando alguém decidir
+   * tratá-lo (planejar/promover a chamado). Ver validação em `abrirOrdemServico`. */
+  tipoTarefaId: string | null;
   dataPrevista: string | null;
   createdBy: string;
   /** E01-S05: setado só quando a OS nasce de uma visita PMOC ("Criar OS" síncrono na agenda). */
@@ -52,6 +62,15 @@ export interface CriarOrdemServicoInput {
   /** E01-S90 AC-3: setado só quando a OS/backlog nasce de um item de assessment (coluna já existia
    * desde E01-S83/`0128`, sem consumidor até esta story). */
   origemInspecaoItemId?: string | null;
+  /** E01-S151: item de backlog puro (sem técnico, sem data) nasce sem Chamado — Fabrício confirma
+   * depois via `confirmarChamado`. Ignorado se `chamadoId` já vier setado. */
+  semChamado?: boolean;
+  /** E01-S152: fotos do item de inspeção de origem (`InspecaoItem.fotoUrls`), carregadas pra OS —
+   * sem isso, imagem coletada na vistoria some ao virar backlog/OS. */
+  fotoUrls?: string[];
+  /** E01-S153: Equipamento (Item) alvo da OS, opcional — resolvido pro `auvo_equipment_id` dele e
+   * enviado como `equipmentId` ao criar a task no Auvo (pcm-auvo-create-task). */
+  equipamentoId?: string | null;
 }
 
 /** E01-S07: comando real enviado ao gateway — inclui `tipoOs`, calculado pelo use-case
@@ -94,10 +113,17 @@ export interface EditarOrdemServicoInput {
 
 export interface OrdemServicoGateway {
   carregarDadosAbertura(): Promise<DadosAberturaOs>;
+  /** E01-S153: Equipamentos (Itens) do cliente escolhido, pro seletor de Alvo da OS. */
+  listarEquipamentosDoCliente(clienteId: string): Promise<EquipamentoAlvoOpcao[]>;
   criarOrdemServico(input: CriarOrdemServicoCommand): Promise<OrdemServicoCriada>;
   /** E01-S129: recupera conversão interrompida antes de criar outra OS para o mesmo Chamado. */
   obterPorChamado?(chamadoId: string): Promise<OrdemServicoCriada | null>;
   editarOrdemServico(input: EditarOrdemServicoInput): Promise<void>;
+  /** E01-S151: promove um item de backlog `PRE-XXXXXXXX` pra Chamado de verdade (Fabrício
+   * "Confirmar chamado") — mint do `CH-XXXX`, vincula na OS, fecha o ciclo (`convertido_os`).
+   * Cliente/título são lidos da própria OS no adapter — não depende do que o client já tem em
+   * memória. */
+  confirmarChamado(input: { ordemId: string; userId: string }): Promise<{ numero: string }>;
   /** E01-S81 AC-4: sinaliza se a IA de título está configurada/ativa — booleano público, nunca
    * expõe a credencial (checagem separada de `fn_integracao_tem_segredo`, que é superadmin-only). */
   iaTituloAtiva(): Promise<boolean>;

@@ -27,6 +27,8 @@ export interface Chamado {
   dataExecucao: string | null;
   /** E01-S101: quantas vezes `dataPlanejada` mudou depois de já definida. */
   replanejamentos: number;
+  /** E01-S152: fotos carregadas da origem (item de inspeção, ou OS de backlog promovida). */
+  fotoUrls: string[];
 }
 
 export interface ChamadoFormData {
@@ -38,6 +40,8 @@ export interface ChamadoFormData {
   solicitante?: string | null;
   /** E01-S90 AC-3: setado só quando o Chamado nasce de um item de assessment ("Item deriva Chamado"). */
   origemInspecaoItemId?: string | null;
+  /** E01-S152: fotos do item de inspeção de origem, ou da OS de backlog promovida. */
+  fotoUrls?: string[];
 }
 
 export const STATUS_CHAMADO_LABEL: Record<StatusChamado, string> = {

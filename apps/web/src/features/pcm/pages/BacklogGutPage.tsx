@@ -1,20 +1,27 @@
-import { Button, Skeleton, Tooltip } from "@sinergica/ui";
-import { Plus, RefreshCw } from "lucide-react";
+import { Button, ConfirmDialog, Skeleton, Tooltip } from "@sinergica/ui";
+import { Plus, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { listarBacklogGut, planejarOrdemServico } from "../application/hub-os";
+import { confirmarChamadoBacklog } from "../application/abrir-ordem-servico";
+import {
+  alterarStatusOrdemServico,
+  listarBacklogGut,
+  planejarOrdemServico,
+} from "../application/hub-os";
 import { AbrirOsAuvoModal } from "../components/AbrirOsAuvoModal";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
+  ehItemPreTriagem,
   prioridadeColor,
   resumoTooltipOrdem,
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
+import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 
 type Estado =
   | { fase: "carregando" }
@@ -40,6 +47,13 @@ export function BacklogGutPage({
   const [editando, setEditando] = useState<OrdemServicoOperacional | null>(null);
   const [criando, setCriando] = useState(false);
   const [aberturaAuvoOsId, setAberturaAuvoOsId] = useState<string | null>(null);
+  const [ordemParaDescartar, setOrdemParaDescartar] = useState<OrdemServicoOperacional | null>(
+    null,
+  );
+  const [busca, setBusca] = useState("");
+  const [clienteFiltro, setClienteFiltro] = useState("todos");
+  const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
+  const [prioridadeFiltro, setPrioridadeFiltro] = useState("todas");
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -72,6 +86,47 @@ export function BacklogGutPage({
     };
   }, [ordens, totalControlado]);
 
+  const clientesDisponiveis = useMemo(
+    () => Array.from(new Set(ordens.map((ordem) => ordem.clienteNome))).sort(),
+    [ordens],
+  );
+  const categoriasDisponiveis = useMemo(
+    () => Array.from(new Set(ordens.map((ordem) => ordem.categoria))).sort(),
+    [ordens],
+  );
+  const prioridadesDisponiveis = useMemo(
+    () => Array.from(new Set(ordens.map((ordem) => ordem.prioridade))).sort(),
+    [ordens],
+  );
+
+  const ordensFiltradas = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    return ordens.filter((ordem) => {
+      const passaBusca =
+        termo.length === 0 ||
+        ordem.numero.toLowerCase().includes(termo) ||
+        ordem.titulo.toLowerCase().includes(termo) ||
+        ordem.clienteNome.toLowerCase().includes(termo);
+      const passaCliente = clienteFiltro === "todos" || ordem.clienteNome === clienteFiltro;
+      const passaCategoria = categoriaFiltro === "todas" || ordem.categoria === categoriaFiltro;
+      const passaPrioridade = prioridadeFiltro === "todas" || ordem.prioridade === prioridadeFiltro;
+      return passaBusca && passaCliente && passaCategoria && passaPrioridade;
+    });
+  }, [ordens, busca, clienteFiltro, categoriaFiltro, prioridadeFiltro]);
+
+  const filtrosAtivos =
+    busca.trim() !== "" ||
+    clienteFiltro !== "todos" ||
+    categoriaFiltro !== "todas" ||
+    prioridadeFiltro !== "todas";
+
+  function limparFiltros() {
+    setBusca("");
+    setClienteFiltro("todos");
+    setCategoriaFiltro("todas");
+    setPrioridadeFiltro("todas");
+  }
+
   async function onPlanejar(ordem: OrdemServicoOperacional) {
     if (!user) return;
     setSalvandoId(ordem.id);
@@ -88,6 +143,47 @@ export function BacklogGutPage({
       setErroAcao(error instanceof Error ? error.message : "Não foi possível planejar OS.");
     } finally {
       setSalvandoId(null);
+    }
+  }
+
+  // E01-S151: decisão do Fabrício — item PRE-XXXXXXXX vira Chamado de verdade (solicitação).
+  async function onConfirmarChamado(ordem: OrdemServicoOperacional) {
+    if (!user) return;
+    setSalvandoId(ordem.id);
+    setErroAcao(null);
+    try {
+      await confirmarChamadoBacklog(supabaseOrdemServicoAdapter, {
+        ordemId: ordem.id,
+        userId: user.id,
+      });
+      if (onAtualizarControlado) await onAtualizarControlado();
+      else await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível confirmar o chamado.");
+    } finally {
+      setSalvandoId(null);
+    }
+  }
+
+  // E01-S151: Fabrício decide que o item não tem tratativa — cancela sem nunca ter criado Chamado.
+  async function onDescartar() {
+    if (!user || !ordemParaDescartar) return;
+    const ordem = ordemParaDescartar;
+    setSalvandoId(ordem.id);
+    setErroAcao(null);
+    try {
+      await alterarStatusOrdemServico(supabaseHubOsAdapter, {
+        id: ordem.id,
+        status: "cancelado",
+        updatedBy: user.id,
+      });
+      if (onAtualizarControlado) await onAtualizarControlado();
+      else await carregar();
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível descartar o item.");
+    } finally {
+      setSalvandoId(null);
+      setOrdemParaDescartar(null);
     }
   }
 
@@ -185,11 +281,83 @@ export function BacklogGutPage({
           <p className="text-caption text-ink-3 mt-0.5">Maior score aparece primeiro</p>
         </div>
 
+        <div className="flex flex-wrap items-center gap-2 border-b border-line-soft px-4 py-3">
+          <div className="relative min-w-48 flex-1">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
+            <input
+              value={busca}
+              onChange={(event) => setBusca(event.target.value)}
+              placeholder="Buscar por número, cliente ou título"
+              className="input w-full"
+              style={{ paddingLeft: "2rem" }}
+            />
+          </div>
+          <select
+            className="input w-auto"
+            value={clienteFiltro}
+            onChange={(event) => setClienteFiltro(event.target.value)}
+          >
+            <option value="todos">Todos os clientes</option>
+            {clientesDisponiveis.map((cliente) => (
+              <option key={cliente} value={cliente}>
+                {cliente}
+              </option>
+            ))}
+          </select>
+          <select
+            className="input w-auto"
+            value={categoriaFiltro}
+            onChange={(event) => setCategoriaFiltro(event.target.value)}
+          >
+            <option value="todas">Todas as categorias</option>
+            {categoriasDisponiveis.map((categoria) => (
+              <option key={categoria} value={categoria}>
+                {categoria}
+              </option>
+            ))}
+          </select>
+          <select
+            className="input w-auto"
+            value={prioridadeFiltro}
+            onChange={(event) => setPrioridadeFiltro(event.target.value)}
+          >
+            <option value="todas">Todas as prioridades</option>
+            {prioridadesDisponiveis.map((prioridade) => (
+              <option key={prioridade} value={prioridade}>
+                {PRIORIDADE_LABEL[prioridade as keyof typeof PRIORIDADE_LABEL] ?? prioridade}
+              </option>
+            ))}
+          </select>
+          {filtrosAtivos && (
+            <button
+              type="button"
+              onClick={limparFiltros}
+              className="rounded-md border border-line px-3 py-1.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
+            >
+              Limpar filtros
+            </button>
+          )}
+          <span className="ml-auto text-caption text-ink-3">
+            {ordensFiltradas.length} de {ordens.length}
+          </span>
+        </div>
+
         <div className="divide-y divide-line-soft">
           {ordens.length === 0 ? (
             <div className="px-5 py-8 text-body text-ink-3">Nenhuma OS aberta no backlog.</div>
+          ) : ordensFiltradas.length === 0 ? (
+            <div className="px-5 py-8 text-center text-body text-ink-3">
+              Nenhum item bate com os filtros.
+              <button
+                type="button"
+                onClick={limparFiltros}
+                className="ml-1 font-semibold text-orange hover:underline"
+              >
+                Limpar filtros
+              </button>
+            </div>
           ) : (
-            ordens.map((ordem, index) => (
+            ordensFiltradas.map((ordem, index) => (
               <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)}>
                 {/* biome-ignore lint/a11y/useSemanticElements: não pode virar <button> — a linha
                     tem um <button> aninhado mais abaixo, e botão dentro de botão é HTML inválido. */}
@@ -208,7 +376,7 @@ export function BacklogGutPage({
                   <div className="flex items-center gap-3 lg:w-20">
                     <span className="text-title font-bold text-line font-brand">{index + 1}</span>
                     <span className="text-caption font-brand tabular-nums text-ink-3">
-                      {ordem.numero}
+                      {ehItemPreTriagem(ordem) ? "Aguardando triagem" : ordem.numero}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -249,18 +417,46 @@ export function BacklogGutPage({
                     <Metric label="T" value={ordem.tendencia ?? 1} />
                     <Metric label="Score" value={ordem.scorePcm} />
                   </div>
-                  {temEscrita && ordem.status !== "planejamento" && (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onPlanejar(ordem);
-                      }}
-                      disabled={salvandoId === ordem.id}
-                      className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
-                    >
-                      Planejar
-                    </button>
+                  {temEscrita && (
+                    <div className="flex items-center gap-1.5">
+                      {ehItemPreTriagem(ordem) && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onConfirmarChamado(ordem);
+                          }}
+                          disabled={salvandoId === ordem.id}
+                          className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                        >
+                          Confirmar chamado
+                        </button>
+                      )}
+                      {!ehItemPreTriagem(ordem) && ordem.status !== "planejamento" && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onPlanejar(ordem);
+                          }}
+                          disabled={salvandoId === ordem.id}
+                          className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                        >
+                          Planejar
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setOrdemParaDescartar(ordem);
+                        }}
+                        disabled={salvandoId === ordem.id}
+                        className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-line px-3 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+                      >
+                        Descartar
+                      </button>
+                    </div>
                   )}
                 </div>
               </Tooltip>
@@ -300,6 +496,17 @@ export function BacklogGutPage({
           onAberta={carregar}
         />
       )}
+
+      <ConfirmDialog
+        open={ordemParaDescartar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setOrdemParaDescartar(null);
+        }}
+        titulo={`Descartar "${ordemParaDescartar?.titulo}"`}
+        descricao="Não pode ser desfeito."
+        rotuloConfirmar="Descartar"
+        onConfirmar={onDescartar}
+      />
     </div>
   );
 }

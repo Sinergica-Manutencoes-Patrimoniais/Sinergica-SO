@@ -1,9 +1,11 @@
-import { AlertTriangle, Bot, User } from "lucide-react";
+import { AlertTriangle, Bot, Smartphone, User } from "lucide-react";
 import type { MensagemItem } from "../domain/mensagens";
+import { formatarCustoIaMensagem } from "../domain/mensagens";
 
 export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
   const minha = mensagem.direcao === "saida";
   const deAgente = mensagem.remetenteTipo === "ze" || mensagem.remetenteTipo === "agente";
+  const deCelular = mensagem.remetenteTipo === "humano" && mensagem.origemEnvio === "celular";
   const cor = deAgente
     ? "bg-orange-soft text-ink border border-orange/30"
     : minha
@@ -19,7 +21,13 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
             {mensagem.remetenteTipo === "ze" ? "Agente Zé" : "Agente"}
           </div>
         )}
-        {mensagem.remetenteTipo === "humano" && minha && (
+        {mensagem.remetenteTipo === "humano" && minha && deCelular && (
+          <div className="mb-1 flex items-center gap-1 text-micro font-semibold uppercase tracking-[0.12em] opacity-80">
+            <Smartphone className="h-3 w-3" />
+            Enviado pelo celular
+          </div>
+        )}
+        {mensagem.remetenteTipo === "humano" && minha && !deCelular && (
           <div className="mb-1 flex items-center gap-1 text-micro font-semibold uppercase tracking-[0.12em] opacity-80">
             <User className="h-3 w-3" />
             Você
@@ -71,6 +79,18 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
         )}
         {mensagem.statusEntrega === "enviando" && (
           <p className="mt-1 text-caption opacity-70">Enviando…</p>
+        )}
+        {deAgente && mensagem.custoIa != null && (
+          <p
+            className="mt-1 text-micro opacity-70"
+            title={`Custo de processamento: ${formatarCustoIaMensagem(mensagem.custoIa.usdCost)} (${mensagem.custoIa.modelo ?? "modelo desconhecido"}, ${mensagem.custoIa.tokensIn ?? "?"} in / ${mensagem.custoIa.tokensOut ?? "?"} out)`}
+          >
+            IA · {formatarCustoIaMensagem(mensagem.custoIa.usdCost)} ·{" "}
+            {new Date(mensagem.createdAt).toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
         )}
       </div>
     </div>

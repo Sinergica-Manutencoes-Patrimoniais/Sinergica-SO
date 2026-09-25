@@ -129,6 +129,7 @@ function gatewayChamadosFake(): ChamadosGateway {
     dataPlanejada: null,
     dataExecucao: null,
     replanejamentos: 0,
+    fotoUrls: [],
   };
   return {
     listar: vi.fn(),
@@ -148,7 +149,9 @@ function gatewayChamadosFake(): ChamadosGateway {
 function gatewayOsFake(): OrdemServicoGateway {
   return {
     carregarDadosAbertura: vi.fn(),
+    listarEquipamentosDoCliente: vi.fn(),
     criarOrdemServico: vi.fn(async () => ({ id: "os-1", numero: "OS-0001" })),
+    confirmarChamado: vi.fn(async () => ({ numero: "CH-0001" })),
     editarOrdemServico: vi.fn(),
     iaTituloAtiva: vi.fn(),
     gerarTituloOs: vi.fn(),
@@ -258,12 +261,46 @@ describe("assessment (use case)", () => {
         "user-1",
       );
       expect(gatewayOs.criarOrdemServico).toHaveBeenCalledWith(
-        expect.objectContaining({ origemInspecaoItemId: "item-1" }),
+        expect.objectContaining({ origemInspecaoItemId: "item-1", semChamado: true }),
       );
       expect(gatewayQualidade.marcarItemDerivado).toHaveBeenCalledWith(
         "item-1",
         "backlog",
         "terceiro",
+      );
+    });
+
+    it("E01-S151: destino 'os' cria Chamado imediato (não passa semChamado)", async () => {
+      const gatewayQualidade = gatewayQualidadeFake();
+      const gatewayOs = gatewayOsFake();
+      await derivarItemParaOsOuBacklog(
+        gatewayQualidade,
+        gatewayOs,
+        ITEM,
+        {
+          clientId: "cli-1",
+          titulo: "Hidrante",
+          descricao: null,
+          categoria: "corretiva",
+          prioridade: "media",
+          gravidade: 3,
+          urgencia: 3,
+          tendencia: 3,
+          dorCliente: null,
+          observacao: null,
+          localDescricao: null,
+          solicitante: null,
+          origem: "vistoria",
+          tecnicoId: "tec-1",
+          tipoTarefaId: "tipo-1",
+          dataPrevista: "2026-08-20",
+        },
+        "os",
+        "terceiro",
+        "user-1",
+      );
+      expect(gatewayOs.criarOrdemServico).toHaveBeenCalledWith(
+        expect.objectContaining({ semChamado: false }),
       );
     });
   });

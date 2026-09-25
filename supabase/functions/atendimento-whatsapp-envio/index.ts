@@ -145,8 +145,9 @@ serve(async (req) => {
       .single();
     if (insertError) throw insertError;
 
-    // E02-S32: só Evolution devolve `key.id` reaproveitável pra dedup do eco `fromMe` no webhook
-    // (`pcm-whatsapp-webhook`) — Meta Cloud API tem webhook/dedup próprios, fora deste escopo.
+    // E02-S32: guarda o `key.id` que o Evolution devolve no envio — quando o webhook receber o
+    // eco `fromMe` dessa mesma mensagem, casa por `wa_message_id` em vez de duplicar a bolha como
+    // se fosse um envio novo pelo celular pessoal. Canal Meta não tem esse eco (API oficial), fica null.
     let waMessageId: string | null = null;
     try {
       if (input.acao === "enviar" && conversa.provedor === "meta") {
@@ -207,11 +208,21 @@ serve(async (req) => {
       return json(200, { ok: false, mensagemId: mensagem.id, erro: "Falha ao enviar via Evolution" }, cors);
     }
 
-    await userClient
+    const { error: marcarEnviadoError } = await userClient
       .schema("atendimento")
       .from("mensagens")
       .update({ status_entrega: "enviado", wa_message_id: waMessageId })
       .eq("id", mensagem.id);
+    if (marcarEnviadoError) {
+      // E02-S32: se o eco `fromMe` do webhook já inseriu uma linha com este `wa_message_id`
+      // (corrida rara — webhook mais rápido que este update), a constraint unique rejeita. A
+      // mensagem FOI enviada de verdade — não é erro pro usuário, só perde o dedup por id aqui;
+      // tenta de novo sem o wa_message_id pra não travar o status_entrega.
+      console.warn(
+        JSON.stringify({ ts: now, nivel: "warn", fn: FN, reqId, msg: "wa_message_id em conflito ao marcar enviado", detail: marcarEnviadoError.message }),
+      );
+      await userClient.schema("atendimento").from("mensagens").update({ status_entrega: "enviado" }).eq("id", mensagem.id);
+    }
     // Rede de segurança (design.md): envio manual também pausa o Zé nesta conversa, evita os dois
     // responderem em paralelo se o humano mandar mensagem sem ter clicado "assumir" antes.
     await definirHandoff(userClient, conversa.id as string, "envio_humano");

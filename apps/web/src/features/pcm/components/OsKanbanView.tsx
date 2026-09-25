@@ -10,6 +10,7 @@ import {
 import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
+  STATUS_OS,
   deveAlterarStatusPorDrop,
   prioridadeColor,
   resumoTooltipOrdem,
@@ -233,6 +234,26 @@ export function OsKanbanView({
                             )}
                           </button>
                         </Tooltip>
+                        {/* E01-S150: mover via clique — arrastar (nativo HTML5) é frágil em
+                         * trackpad, então todo card tem também um jeito confiável de trocar de
+                         * fase sem depender do gesto de drag. */}
+                        {temEscrita && (
+                          <select
+                            value={ordem.status}
+                            disabled={salvando}
+                            onChange={(event) =>
+                              onAlterarStatus(ordem.id, event.target.value as StatusOrdemServico)
+                            }
+                            aria-label={`Mover ${rotuloNumeroOrdem(ordem)} para outra fase`}
+                            className="mt-2 h-7 w-full rounded-md border border-line-soft bg-paper px-1.5 text-micro font-semibold text-ink-2"
+                          >
+                            {STATUS_OS.map((status) => (
+                              <option key={status.value} value={status.value}>
+                                {status.label}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     ))
                   )}

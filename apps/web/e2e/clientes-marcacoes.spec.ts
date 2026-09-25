@@ -1,10 +1,22 @@
 import { expect, test } from "@playwright/test";
+import { softDeletePorNome } from "./helpers/limpeza-e2e";
+
+// E01-S146: este spec criava `[TESTE E2E] Cliente S91 <timestamp>` sem nunca limpar — achado real
+// de 56 clientes acumulados em produção (2026-08-12). `afterEach` soft-deleta o cliente desta
+// execução (mesmo padrão do botão "Excluir" de Clientes).
+let clienteCriado: string | null = null;
+
+test.afterEach(async ({ page }) => {
+  if (!clienteCriado) return;
+  await softDeletePorNome(page, "pcm", "clientes", clienteCriado);
+});
 
 test("gerencia marcação, atribui ao cliente, filtra e exibe na Visão 360", async ({ page }) => {
   const sufixo = Date.now();
   const nomeMarcacao = `[TESTE E2E] S91 ${sufixo}`;
   const nomeEditado = `${nomeMarcacao} editada`;
   const nomeCliente = `[TESTE E2E] Cliente S91 ${sufixo}`;
+  clienteCriado = nomeCliente;
 
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();

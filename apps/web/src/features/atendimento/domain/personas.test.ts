@@ -59,10 +59,14 @@ describe("validarConfigIa", () => {
     expect(resultado.janelaFim).toBeNull();
   });
 
-  it("rejeita modelo vazio", () => {
-    expect(() =>
-      validarConfigIa({ modeloLlm: "  ", janelaInicio: "", janelaFim: "", janelaDias: [0] }),
-    ).toThrow("Modelo LLM é obrigatório.");
+  it("aceita modelo vazio (E02-S34: usa o modelo global na resolução)", () => {
+    const resultado = validarConfigIa({
+      modeloLlm: "  ",
+      janelaInicio: "",
+      janelaFim: "",
+      janelaDias: [0],
+    });
+    expect(resultado.modeloLlm).toBe("");
   });
 
   it("rejeita janela pela metade (só início ou só fim)", () => {

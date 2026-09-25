@@ -5,7 +5,7 @@ import { useAuth } from "../../../app/auth-context";
 import { abrirOrdemServico, carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import { editarOrdemServico } from "../application/editar-ordem-servico";
 import { gerarTituloOs, iaTituloAtiva } from "../application/gerar-titulo-os";
-import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
+import type { DadosAberturaOs, EquipamentoAlvoOpcao } from "../application/ordem-servico-gateway";
 import {
   CATEGORIAS_OS,
   type CategoriaOs,
@@ -44,6 +44,8 @@ interface FormState {
   origem: OrigemOs;
   tecnicoId: string;
   localDescricao: string;
+  /** E01-S153: Equipamento (Item) alvo da OS, opcional. */
+  equipamentoId: string;
   dataPrevista: string;
   gravidade: number;
   urgencia: number;
@@ -53,8 +55,6 @@ interface FormState {
   /** E01-S83 AC-4: texto livre, distinto da descrição do problema. */
   observacao: string;
 }
-
-const hoje = new Date().toISOString().slice(0, 10);
 
 const FORM_INICIAL: FormState = {
   clientId: "",
@@ -67,7 +67,11 @@ const FORM_INICIAL: FormState = {
   origem: "solicitacao_cliente",
   tecnicoId: "",
   localDescricao: "",
-  dataPrevista: hoje,
+  equipamentoId: "",
+  // E01-S151: vazio por padrão — este modal só cria (nunca edita) via "Novo item de backlog"
+  // (BacklogGutPage). Data pré-preenchida com hoje fazia todo item novo nascer "agendado" (viola
+  // ehItemBacklog: dataAgendada===null), sumindo do backlog assim que criado.
+  dataPrevista: "",
   gravidade: 3,
   urgencia: 3,
   tendencia: 3,
@@ -116,6 +120,7 @@ export function NovaOrdemServicoModal({
   const [iaAtiva, setIaAtiva] = useState(false);
   const [gerandoTitulo, setGerandoTitulo] = useState(false);
   const [pesosGutd, setPesosGutd] = useState<PesosGutd>(PESOS_GUTD_PADRAO);
+  const [equipamentos, setEquipamentos] = useState<EquipamentoAlvoOpcao[]>([]);
   const editando = Boolean(ordem);
 
   const score = useMemo(
@@ -146,6 +151,27 @@ export function NovaOrdemServicoModal({
   useEffect(() => {
     if (aberto) carregar();
   }, [aberto, carregar]);
+
+  // E01-S153: lista de Equipamentos pra escolher como Alvo — filtrada pelo cliente escolhido.
+  // Troca de cliente reseta a escolha (evita gravar Equipamento de outro cliente por engano).
+  useEffect(() => {
+    if (editando || !form.clientId) {
+      setEquipamentos([]);
+      return;
+    }
+    let cancelado = false;
+    supabaseOrdemServicoAdapter
+      .listarEquipamentosDoCliente(form.clientId)
+      .then((lista) => {
+        if (!cancelado) setEquipamentos(lista);
+      })
+      .catch(() => {
+        if (!cancelado) setEquipamentos([]);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [form.clientId, editando]);
 
   // E01-S81 AC-4: checa se a IA está ligada quando o modal abre, pra habilitar/desabilitar o
   // botão "Gerar título" sem precisar de uma tentativa falha primeiro.
@@ -252,7 +278,11 @@ export function NovaOrdemServicoModal({
           tecnicoId: form.tecnicoId || null,
           tipoTarefaId: form.tipoTarefaId,
           dataPrevista: form.dataPrevista || null,
+          equipamentoId: form.equipamentoId || null,
           createdBy: user.id,
+          // E01-S151: sem técnico ainda = item de backlog puro — nasce sem Chamado, Fabrício
+          // confirma depois. Com técnico já escolhido na hora, é trabalho real, Chamado imediato.
+          semChamado: !form.tecnicoId,
         });
         onCriada?.(criada.numero);
         onFechar();
@@ -300,7 +330,9 @@ export function NovaOrdemServicoModal({
                 <select
                   value={form.clientId}
                   disabled={carregando}
-                  onChange={(e) => setForm((f) => ({ ...f, clientId: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, clientId: e.target.value, equipamentoId: "" }))
+                  }
                   className="input"
                   required
                 >
@@ -493,6 +525,24 @@ export function NovaOrdemServicoModal({
               value={form.localDescricao}
               onChange={(localDescricao) => setForm((f) => ({ ...f, localDescricao }))}
             />
+          )}
+
+          {!editando && (
+            <Field label="Equipamento (Alvo)">
+              <select
+                value={form.equipamentoId}
+                disabled={!form.clientId}
+                onChange={(e) => setForm((f) => ({ ...f, equipamentoId: e.target.value }))}
+                className="input"
+              >
+                <option value="">Sem equipamento</option>
+                {equipamentos.map((equipamento) => (
+                  <option key={equipamento.id} value={equipamento.id}>
+                    {equipamento.nome}
+                  </option>
+                ))}
+              </select>
+            </Field>
           )}
 
           <Field label="Data prevista">

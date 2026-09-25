@@ -30,6 +30,7 @@ const CHAMADO_ABERTO: Chamado = {
   dataPlanejada: null,
   dataExecucao: null,
   replanejamentos: 0,
+  fotoUrls: [],
 };
 
 function gatewayChamadosFake(): ChamadosGateway {
@@ -57,7 +58,9 @@ function gatewayChamadosFake(): ChamadosGateway {
 function gatewayOsFake(): OrdemServicoGateway {
   return {
     carregarDadosAbertura: vi.fn(),
+    listarEquipamentosDoCliente: vi.fn(),
     criarOrdemServico: vi.fn(async () => ({ id: "os-1", numero: "OS-0001" })),
+    confirmarChamado: vi.fn(async () => ({ numero: "CH-0001" })),
     editarOrdemServico: vi.fn(),
     iaTituloAtiva: vi.fn(),
     gerarTituloOs: vi.fn(),

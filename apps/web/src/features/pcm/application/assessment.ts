@@ -72,7 +72,7 @@ export function obterAssessmentVigente(gateway: QualidadeGateway, clientId: stri
 export async function derivarItemParaChamado(
   gatewayQualidade: QualidadeGateway,
   gatewayChamados: ChamadosGateway,
-  item: Pick<InspecaoItem, "id" | "destino" | "descricao">,
+  item: Pick<InspecaoItem, "id" | "destino" | "descricao" | "localizacao" | "fotoUrls">,
   clienteId: string,
   responsavel: ResponsavelDestino,
   userId: string,
@@ -83,6 +83,8 @@ export async function derivarItemParaChamado(
     titulo: item.descricao,
     origem: "inspecao",
     origemInspecaoItemId: item.id,
+    local: item.localizacao,
+    fotoUrls: item.fotoUrls,
     userId,
   });
   await gatewayQualidade.marcarItemDerivado(item.id, "chamado", responsavel);
@@ -91,8 +93,9 @@ export async function derivarItemParaChamado(
 
 /** AC-3: item → Backlog/OS, reusando o mesmo pipeline de abertura de OS (`chamadoId` fica `null`
  * aqui — o item de origem é rastreado via `origemInspecaoItemId`, não via Chamado). `destino`
- * distingue só o rótulo salvo no item; a OS nasce igual nos dois casos (backlog = sem
- * técnico/data). */
+ * distingue o rótulo salvo no item E se nasce com Chamado: `"backlog"` é item pré-triagem
+ * (E01-S151 — sem Chamado até o Fabrício confirmar); `"os"` já tem técnico/tipoTarefa escolhidos
+ * no momento da derivação, então cria Chamado imediato como sempre (AC-3/E01-S99). */
 export async function derivarItemParaOsOuBacklog(
   gatewayQualidade: QualidadeGateway,
   gatewayOs: OrdemServicoGateway,
@@ -107,6 +110,7 @@ export async function derivarItemParaOsOuBacklog(
     ...input,
     origemInspecaoItemId: item.id,
     createdBy: userId,
+    semChamado: destino === "backlog",
   });
   await gatewayQualidade.marcarItemDerivado(item.id, destino, responsavel);
   return criada;
@@ -151,7 +155,7 @@ export async function confirmarGerarBacklog(
   gatewayQualidade: QualidadeGateway,
   gatewayOs: OrdemServicoGateway,
   itens: ReadonlyArray<{
-    item: Pick<InspecaoItem, "id" | "destino" | "descricao">;
+    item: Pick<InspecaoItem, "id" | "destino" | "descricao" | "fotoUrls">;
     classificacao: ItemClassificado;
   }>,
   contexto: {
@@ -196,6 +200,7 @@ export async function confirmarGerarBacklog(
         tecnicoId: null,
         tipoTarefaId: contexto.tipoTarefaId,
         dataPrevista: null,
+        fotoUrls: item.fotoUrls,
       },
       "backlog",
       "sinergica",

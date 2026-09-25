@@ -14,6 +14,7 @@ import {
   ClipboardList,
   Clock,
   Columns3,
+  DollarSign,
   FileBarChart,
   FileSignature,
   FileText,
@@ -67,6 +68,7 @@ import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features
 import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
 import { IntegracoesPage } from "../features/config/pages/IntegracoesPage";
+import { RelatorioGastoIaPage } from "../features/config/pages/RelatorioGastoIaPage";
 import { UsuariosPage } from "../features/config/pages/UsuariosPage";
 import type { FinanceiroView } from "../features/financeiro/mock/FinanceiroMockRouter";
 import { FinanceiroMockRouter } from "../features/financeiro/mock/FinanceiroMockRouter";
@@ -237,7 +239,14 @@ interface GuiaNavItem {
 // ─── dados ───────────────────────────────────────────────────────────────────
 
 const CONFIG_NAV: Array<{
-  id: "grupos" | "usuarios" | "integracoes" | "ia" | "priorizacao" | "localizacao-auvo";
+  id:
+    | "grupos"
+    | "usuarios"
+    | "integracoes"
+    | "ia"
+    | "gasto-ia"
+    | "priorizacao"
+    | "localizacao-auvo";
   label: string;
   icon: LucideIcon;
 }> = [
@@ -245,6 +254,7 @@ const CONFIG_NAV: Array<{
   { id: "usuarios", label: "Usuários", icon: UserCog },
   { id: "integracoes", label: "Integrações", icon: KeyRound },
   { id: "ia", label: "IA", icon: Sparkles },
+  { id: "gasto-ia", label: "Gasto de IA", icon: DollarSign },
   { id: "priorizacao", label: "Priorização", icon: SlidersHorizontal },
   { id: "localizacao-auvo", label: "Localização Auvo", icon: MapPin },
 ];
@@ -411,7 +421,7 @@ export function HomePage() {
   const { confirmarSaida } = useNavGuard();
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
   const [configTab, setConfigTab] = useState<
-    "grupos" | "usuarios" | "integracoes" | "ia" | "priorizacao" | "localizacao-auvo"
+    "grupos" | "usuarios" | "integracoes" | "ia" | "gasto-ia" | "priorizacao" | "localizacao-auvo"
   >("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -1140,6 +1150,8 @@ export function HomePage() {
               <UsuariosPage />
             ) : configTab === "ia" ? (
               <ConfigIaPage />
+            ) : configTab === "gasto-ia" ? (
+              <RelatorioGastoIaPage />
             ) : configTab === "priorizacao" ? (
               <ConfigPriorizacaoPage />
             ) : configTab === "localizacao-auvo" ? (

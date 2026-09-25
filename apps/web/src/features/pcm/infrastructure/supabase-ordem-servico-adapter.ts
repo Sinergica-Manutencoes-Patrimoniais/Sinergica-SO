@@ -23,6 +23,11 @@ async function criarChamadoAutomatico(input: {
   clienteId: string;
   titulo: string;
   createdBy: string;
+  /** E01-S152: quando a OS de origem (backlog) já tem descrição/local/fotos, carrega pro Chamado
+   * em vez de nascer vazio. */
+  descricao?: string | null;
+  local?: string | null;
+  fotoUrls?: string[];
 }): Promise<{ id: string; numero: string }> {
   const { data: numero, error: numeroError } = await supabase
     .schema("pcm")
@@ -35,6 +40,9 @@ async function criarChamadoAutomatico(input: {
       numero,
       cliente_id: input.clienteId,
       titulo: input.titulo,
+      descricao: input.descricao ?? null,
+      local: input.local ?? null,
+      foto_urls: input.fotoUrls ?? [],
       origem: "manual",
       created_by: input.createdBy,
       updated_by: input.createdBy,
@@ -74,6 +82,18 @@ async function marcarChamadoAutomaticoComOs(
 }
 
 export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
+  async listarEquipamentosDoCliente(clienteId) {
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("equipamentos")
+      .select("id,nome")
+      .eq("client_id", clienteId)
+      .is("deleted_at", null)
+      .order("nome", { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map((row) => ({ id: row.id as string, nome: row.nome as string }));
+  },
+
   async carregarDadosAbertura(): Promise<DadosAberturaOs> {
     const [
       { data: clientes, error: clientesError },
@@ -126,11 +146,16 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
 
   async criarOrdemServico(input): Promise<OrdemServicoCriada> {
     let chamadoId = input.chamadoId ?? null;
-    if (!chamadoId) {
+    // E01-S151: item de backlog puro (semChamado) nasce sem Chamado — a trigger
+    // fn_ordens_servico_sync_numero_chamado (0209) gera o placeholder PRE-XXXXXXXX sozinha.
+    if (!chamadoId && !input.semChamado) {
       const chamadoAutomatico = await criarChamadoAutomatico({
         clienteId: input.clientId,
         titulo: input.titulo,
         createdBy: input.createdBy,
+        descricao: input.descricao,
+        local: input.localDescricao,
+        fotoUrls: input.fotoUrls,
       });
       chamadoId = chamadoAutomatico.id;
     }
@@ -140,8 +165,8 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
       .from("ordens_servico")
       .insert({
         client_id: input.clientId,
-        // `numero` não é enviado: a trigger `fn_ordens_servico_sync_numero_chamado` (0151) sempre
-        // sobrescreve com o CH-XXXX do `chamado_id` acima.
+        // `numero` não é enviado: a trigger `fn_ordens_servico_sync_numero_chamado` (0151/0209)
+        // preenche sozinha — CH-XXXX do `chamado_id` acima, ou PRE-XXXXXXXX se ele for null.
         titulo: input.titulo,
         descricao: montarDescricao(input),
         categoria: input.categoria,
@@ -163,6 +188,8 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         pmoc_schedule_id: input.pmocScheduleId,
         chamado_id: chamadoId,
         origem_inspecao_item_id: input.origemInspecaoItemId,
+        equipamento_id: input.equipamentoId ?? null,
+        foto_urls: input.fotoUrls ?? [],
       })
       .select("id,numero")
       .single();
@@ -171,12 +198,45 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
 
     // Chamado veio pronto do caller (fluxo "Gerar OS a partir do Chamado") — quem fecha o ciclo é
     // `gerarOsDoChamado`/`marcarStatusComOs` (chamados.ts), não aqui, pra respeitar o `destino`
-    // escolhido (pode ser "backlog", não só "convertido_os").
-    if (!input.chamadoId) {
+    // escolhido (pode ser "backlog", não só "convertido_os"). `chamadoId` também fica null quando
+    // `semChamado` pulou a criação automática (E01-S151) — nada pra fechar ainda.
+    if (!input.chamadoId && chamadoId) {
       await marcarChamadoAutomaticoComOs(chamadoId, data.id as string, input.createdBy);
     }
 
     return { id: data.id as string, numero: data.numero as string };
+  },
+
+  // E01-S151: "Confirmar chamado" do Fabrício — promove item PRE-XXXXXXXX pra Chamado de verdade.
+  // Reusa exatamente o mesmo par de helpers de `criarOrdemServico` (linha 22/55), só que aplicado
+  // depois, sobre uma OS que já existe. Cliente/título vêm da própria OS (não do caller) — evita
+  // depender de estado desatualizado em memória. UPDATE não passa pela trigger de sync (0151/0209,
+  // só `before insert`) — `numero` precisa ser setado explicitamente aqui.
+  async confirmarChamado(input): Promise<{ numero: string }> {
+    const { data: ordem, error: ordemError } = await supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select("client_id,titulo,descricao,local_descricao,foto_urls")
+      .eq("id", input.ordemId)
+      .single();
+    if (ordemError) throw ordemError;
+
+    const chamadoAutomatico = await criarChamadoAutomatico({
+      clienteId: ordem.client_id as string,
+      titulo: ordem.titulo as string,
+      createdBy: input.userId,
+      descricao: ordem.descricao as string | null,
+      local: ordem.local_descricao as string | null,
+      fotoUrls: (ordem.foto_urls as string[] | null) ?? [],
+    });
+    const { error } = await supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .update({ chamado_id: chamadoAutomatico.id, numero: chamadoAutomatico.numero })
+      .eq("id", input.ordemId);
+    if (error) throw error;
+    await marcarChamadoAutomaticoComOs(chamadoAutomatico.id, input.ordemId, input.userId);
+    return { numero: chamadoAutomatico.numero };
   },
 
   async obterPorChamado(chamadoId): Promise<OrdemServicoCriada | null> {

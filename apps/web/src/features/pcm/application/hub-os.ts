@@ -1,4 +1,8 @@
-import { type StatusOrdemServico, ehOsAberta, ehOsRegistroVisita } from "../domain/ordens-servico";
+import {
+  type StatusOrdemServico,
+  ehItemBacklog,
+  ehOsRegistroVisita,
+} from "../domain/ordens-servico";
 import { calcularScoreGutd, ordenarPorPrioridade } from "../domain/priorizacao-backlog";
 import type { AlterarStatusOsInput, FiltrosServidorOrdens, HubOsGateway } from "./hub-os-gateway";
 
@@ -14,14 +18,19 @@ export async function contarKpisOrdens(gateway: HubOsGateway, filtros?: FiltrosS
 /** E01-S82 AC-2: ordena pelo score GUTD ponderado (nunca gravado — recalculado aqui, em runtime,
  * a cada carregamento, com os pesos vigentes). G/U/T ausentes (nulos) caem pra 1 (mesmo fallback
  * do `score_pcm` GENERATED no banco); D ausente é tratado pelo próprio `calcularScoreGutd`
- * (redistribui peso — AC-4, não penaliza nem infla). */
+ * (redistribui peso — AC-4, não penaliza nem infla).
+ *
+ * E01-S151: filtra por `ehItemBacklog` (sem técnico, sem data, sem `auvoTaskId`), não só
+ * `ehOsAberta` — antes misturava solicitação/backlog/planejamento/execução, tudo que estivesse
+ * aberto; agora é só a fila de triagem de verdade (com ou sem Chamado ainda). O resto do que era
+ * aberto continua visível no Kanban/Operação. */
 export async function listarBacklogGut(gateway: HubOsGateway) {
   const [ordens, pesos] = await Promise.all([
     gateway.listarOrdensServico(),
     gateway.obterPesosGutd(),
   ]);
   const abertas = ordens.filter(
-    (ordem) => ehOsAberta(ordem.status) && !ehOsRegistroVisita(ordem.titulo),
+    (ordem) => ehItemBacklog(ordem) && !ehOsRegistroVisita(ordem.titulo),
   );
   const comScore = abertas.map((ordem) => ({
     ...ordem,

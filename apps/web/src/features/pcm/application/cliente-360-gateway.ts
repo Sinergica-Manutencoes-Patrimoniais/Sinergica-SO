@@ -164,6 +164,10 @@ export interface ClienteFormData {
   contatoTelefone?: string | null;
   contatoEmail?: string | null;
   observacoes?: string | null;
+  /** E01-S148: editável só na edição — na criação, sempre nasce "cliente"/"ativo"/ativo=true. */
+  ativo?: boolean;
+  tipo?: "cliente" | "lead";
+  statusComercial?: "ativo" | "inativo" | "prospecto";
 }
 
 export interface ClienteCommand extends ClienteFormData {
