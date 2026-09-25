@@ -1,3 +1,4 @@
+import { Skeleton } from "@sinergica/ui";
 import { RefreshCw, Wallet } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -46,7 +47,7 @@ export function FinanceiroDashboardPage() {
   const temLeitura = podeAcessar("financeiro", "leitura");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [resumo, fluxo, gastos, categorias, aging, projecao] = await Promise.all([
         obterResumoCaixa(supabaseFinanceiroAdapter),
@@ -78,12 +79,18 @@ export function FinanceiroDashboardPage() {
   }, [permissoesCarregando, temLeitura, carregar]);
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -93,11 +100,11 @@ export function FinanceiroDashboardPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -115,8 +122,8 @@ export function FinanceiroDashboardPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Dashboard Financeiro</h3>
-            <p className="mt-0.5 text-sm text-ink-3">Posição de caixa e resultado do mês.</p>
+            <h1 className="text-heading font-semibold text-ink">Dashboard Financeiro</h1>
+            <p className="mt-0.5 text-body text-ink-3">Posição de caixa e resultado do mês.</p>
           </div>
           <button
             type="button"
@@ -154,11 +161,11 @@ export function FinanceiroDashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <div className="rounded-lg border border-line bg-card p-4">
-          <h4 className="mb-3 text-sm font-semibold text-ink">Fluxo mensal (12 meses)</h4>
+          <h4 className="mb-3 text-body font-semibold text-ink">Fluxo mensal (12 meses)</h4>
           <FluxoMensalChart pontos={fluxo} />
         </div>
         <div className="rounded-lg border border-line bg-card p-4">
-          <h4 className="mb-3 text-sm font-semibold text-ink">
+          <h4 className="mb-3 text-body font-semibold text-ink">
             Gasto por categoria — mês corrente
           </h4>
           <GastosCategoriaChart itens={gastosAgregados} />
@@ -166,7 +173,9 @@ export function FinanceiroDashboardPage() {
       </div>
 
       <div className="rounded-lg border border-line bg-card p-4">
-        <h4 className="mb-3 text-sm font-semibold text-ink">Previsto × realizado — mês corrente</h4>
+        <h4 className="mb-3 text-body font-semibold text-ink">
+          Previsto × realizado — mês corrente
+        </h4>
         <PrevistoRealizadoCard
           entradaPrevista={resumo.entradasPrevistasMesCentavos}
           entradaRealizada={resumo.entradasMesCentavos}
@@ -176,9 +185,9 @@ export function FinanceiroDashboardPage() {
       </div>
 
       <div className="rounded-lg border border-line bg-card p-4">
-        <h4 className="mb-3 text-sm font-semibold text-ink">Projeção de caixa</h4>
+        <h4 className="mb-3 text-body font-semibold text-ink">Projeção de caixa</h4>
         {pontoNegativo && (
-          <p className="mb-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
+          <p className="mb-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body font-semibold text-danger">
             Saldo projetado fica negativo em{" "}
             {new Date(pontoNegativo.dataLimite).toLocaleDateString("pt-BR")} (+
             {pontoNegativo.diasHorizonte}d)
@@ -191,7 +200,7 @@ export function FinanceiroDashboardPage() {
                 +{p.diasHorizonte}d
               </p>
               <p
-                className={`mt-1 text-sm font-semibold ${p.saldoProjetadoCentavos < 0 ? "text-danger" : "text-ink"}`}
+                className={`mt-1 text-body font-semibold ${p.saldoProjetadoCentavos < 0 ? "text-danger" : "text-ink"}`}
               >
                 R$ {centavosParaReais(p.saldoProjetadoCentavos)}
               </p>

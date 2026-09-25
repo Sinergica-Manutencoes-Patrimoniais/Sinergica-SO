@@ -10,6 +10,8 @@
 -- Dashboard/Backlog. Em vez disso, a trigger de sync (0151) gera um placeholder `PRE-XXXXXXXX`
 -- quando `chamado_id` é null: nunca confundível com um `CH-XXXX` real, sem mudar nenhum tipo.
 --
+-- RECONSTRUÍDA nesta sessão (E01-S146) — ver nota em 0205_E02-S31_ia_gasto_log.sql.
+--
 -- Reverso:
 --   (reaplicar a versão da função em 0151_E01-S99_chamado_id_unico.sql:61-77)
 

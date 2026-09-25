@@ -118,8 +118,8 @@ export function FunilPage({
     <div className="space-y-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-brand text-xl font-bold text-ink">Funil</h1>
-          <p className="text-sm text-ink-2">
+          <h1 className="font-brand text-title font-bold text-ink">Funil</h1>
+          <p className="text-body text-ink-2">
             Arraste o card para mudar a etapa. Etapas e motivos: Configuração do funil.
           </p>
         </div>
@@ -137,13 +137,13 @@ export function FunilPage({
 
       {erro && (
         <Card>
-          <p className="p-3 text-sm text-danger">{erro}</p>
+          <p className="p-3 text-body text-danger">{erro}</p>
         </Card>
       )}
 
       {erroCarga && (
         <Card>
-          <p className="p-4 text-sm text-danger">
+          <p className="p-4 text-body text-danger">
             {erroCarga instanceof Error ? erroCarga.message : "Falha ao carregar o funil."}
           </p>
         </Card>
@@ -181,15 +181,15 @@ export function FunilPage({
                     style={{ backgroundColor: etapa.cor }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-ink">{etapa.nome}</p>
-                    <p className="text-xs text-ink-2">
+                    <p className="truncate text-body font-semibold text-ink">{etapa.nome}</p>
+                    <p className="text-caption text-ink-2">
                       {resumo.quantidade} · {formatarValor(resumo.somaValorCentavos)}
                     </p>
                   </div>
                 </div>
                 <div className="flex max-h-[600px] flex-col gap-2 overflow-y-auto p-2">
                   {opsColuna.length === 0 ? (
-                    <p className="px-2 py-4 text-center text-xs text-ink-3">Vazio</p>
+                    <p className="px-2 py-4 text-center text-caption text-ink-3">Vazio</p>
                   ) : (
                     opsColuna.map((op) => (
                       <div
@@ -208,13 +208,13 @@ export function FunilPage({
                           onClick={() => onAbrirConta?.(op.clienteId)}
                           className="w-full text-left"
                         >
-                          <p className="truncate text-xs font-semibold text-ink-2">
+                          <p className="truncate text-caption font-semibold text-ink-2">
                             {op.clienteNome}
                           </p>
-                          <p className="mt-0.5 text-sm font-semibold text-ink">{op.titulo}</p>
+                          <p className="mt-0.5 text-body font-semibold text-ink">{op.titulo}</p>
                           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                             {op.valorEstimadoCentavos !== null && (
-                              <span className="text-xs tabular-nums text-ink-2">
+                              <span className="text-caption tabular-nums text-ink-2">
                                 {formatarValor(op.valorEstimadoCentavos)}
                               </span>
                             )}

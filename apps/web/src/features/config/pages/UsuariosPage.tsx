@@ -1,3 +1,4 @@
+import { Button, Modal } from "@sinergica/ui";
 import { UserRoundCog } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -209,12 +210,12 @@ export function UsuariosPage() {
     <div className="page-stack">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Usuários</h2>
+          <h1 className="page-title">Usuários</h1>
           <p className="page-subtitle">Contas com acesso ao Sinérgica SO.</p>
         </div>
-        <button type="button" onClick={abrirCriacao} className="btn-accent">
+        <Button variant="accent" onClick={abrirCriacao}>
           Novo usuário
-        </button>
+        </Button>
       </div>
 
       {erro && <p className="status-error">{erro}</p>}
@@ -238,39 +239,40 @@ export function UsuariosPage() {
             <div key={usuario.userId} className="flex items-center gap-3 px-4 py-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-ink truncate">{usuario.nome}</p>
+                  <p className="text-body font-medium text-ink truncate">{usuario.nome}</p>
                   {!usuario.ativo && (
                     <span className="text-micro font-medium px-2 py-0.5 rounded-full bg-line-soft text-ink-2">
                       Inativo
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-ink-3 mt-0.5">
+                <p className="text-caption text-ink-3 mt-0.5">
                   {PAPEL_LABEL[usuario.papel] ?? usuario.papel} · {descreverModo(usuario)}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => abrirTrocaModo(usuario)}
-                className="text-xs font-semibold text-orange hover:text-orange-deep cursor-pointer shrink-0"
-              >
+              <Button variant="ghost" size="sm" onClick={() => abrirTrocaModo(usuario)}>
                 Trocar permissão
-              </button>
+              </Button>
             </div>
           ))}
         </div>
       )}
 
       {criando && (
-        <div className="modal-backdrop">
-          <div className="modal-panel max-w-lg p-4 sm:p-5 flex flex-col gap-4">
-            <h3 className="text-base font-semibold text-ink">Novo usuário</h3>
-
+        <Modal
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) setCriando(false);
+          }}
+          titulo="Novo usuário"
+          tamanho="md"
+        >
+          <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label
                   htmlFor="usuario-nome"
-                  className="block text-sm font-medium text-ink-2 mb-1.5"
+                  className="block text-body font-medium text-ink-2 mb-1.5"
                 >
                   Nome
                 </label>
@@ -284,7 +286,7 @@ export function UsuariosPage() {
               <div className="col-span-2">
                 <label
                   htmlFor="usuario-email"
-                  className="block text-sm font-medium text-ink-2 mb-1.5"
+                  className="block text-body font-medium text-ink-2 mb-1.5"
                 >
                   E-mail
                 </label>
@@ -299,7 +301,7 @@ export function UsuariosPage() {
               <div>
                 <label
                   htmlFor="usuario-senha"
-                  className="block text-sm font-medium text-ink-2 mb-1.5"
+                  className="block text-body font-medium text-ink-2 mb-1.5"
                 >
                   Senha
                 </label>
@@ -315,7 +317,7 @@ export function UsuariosPage() {
               <div>
                 <label
                   htmlFor="usuario-papel"
-                  className="block text-sm font-medium text-ink-2 mb-1.5"
+                  className="block text-body font-medium text-ink-2 mb-1.5"
                 >
                   Papel
                 </label>
@@ -335,9 +337,9 @@ export function UsuariosPage() {
             </div>
 
             <div>
-              <p className="block text-sm font-medium text-ink-2 mb-1.5">Modo de permissão</p>
+              <p className="block text-body font-medium text-ink-2 mb-1.5">Modo de permissão</p>
               <div className="flex items-center gap-4 mb-3">
-                <label className="flex items-center gap-1.5 text-sm text-ink-2">
+                <label className="flex items-center gap-1.5 text-body text-ink-2">
                   <input
                     type="radio"
                     name="modo-criacao"
@@ -346,7 +348,7 @@ export function UsuariosPage() {
                   />
                   Individual
                 </label>
-                <label className="flex items-center gap-1.5 text-sm text-ink-2">
+                <label className="flex items-center gap-1.5 text-body text-ink-2">
                   <input
                     type="radio"
                     name="modo-criacao"
@@ -380,32 +382,35 @@ export function UsuariosPage() {
 
             {erroForm && <p className="status-error">{erroForm}</p>}
 
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button type="button" onClick={() => setCriando(false)} className="btn-secondary">
+            <div className="flex items-center justify-end gap-2 border-t border-line-soft pt-4">
+              <Button variant="secondary" onClick={() => setCriando(false)}>
                 Cancelar
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="accent"
                 onClick={salvarCriacao}
                 disabled={salvando}
-                className="btn-accent"
+                loading={salvando}
               >
-                {salvando ? "Criando…" : "Criar usuário"}
-              </button>
+                Criar usuário
+              </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {editandoId && formModo && (
-        <div className="modal-backdrop">
-          <div className="modal-panel max-w-lg p-4 sm:p-5 flex flex-col gap-4">
-            <h3 className="text-base font-semibold text-ink">
-              Trocar permissão — {editandoUsuario?.nome ?? ""}
-            </h3>
-
+        <Modal
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) fecharTrocaModo();
+          }}
+          titulo={`Trocar permissão — ${editandoUsuario?.nome ?? ""}`}
+          tamanho="md"
+        >
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-1.5 text-sm text-ink-2">
+              <label className="flex items-center gap-1.5 text-body text-ink-2">
                 <input
                   type="radio"
                   name="modo-edicao"
@@ -414,7 +419,7 @@ export function UsuariosPage() {
                 />
                 Individual
               </label>
-              <label className="flex items-center gap-1.5 text-sm text-ink-2">
+              <label className="flex items-center gap-1.5 text-body text-ink-2">
                 <input
                   type="radio"
                   name="modo-edicao"
@@ -447,21 +452,21 @@ export function UsuariosPage() {
 
             {erroModo && <p className="status-error">{erroModo}</p>}
 
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button type="button" onClick={fecharTrocaModo} className="btn-secondary">
+            <div className="flex items-center justify-end gap-2 border-t border-line-soft pt-4">
+              <Button variant="secondary" onClick={fecharTrocaModo}>
                 Cancelar
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="accent"
                 onClick={salvarModo}
                 disabled={salvandoModo}
-                className="btn-accent"
+                loading={salvandoModo}
               >
-                {salvandoModo ? "Salvando…" : "Salvar"}
-              </button>
+                Salvar
+              </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

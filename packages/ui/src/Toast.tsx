@@ -109,7 +109,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               role={item.tone === "erro" ? "alert" : "status"}
               aria-live={item.tone === "erro" ? "assertive" : "polite"}
               data-state={saindo.has(item.id) ? "closed" : "open"}
-              className={`anim-toast pointer-events-auto flex items-start gap-2 rounded-lg border px-3 py-2.5 text-xs shadow-overlay ${TONE_CLASSE[item.tone]}`}
+              className={`anim-toast pointer-events-auto flex items-start gap-2 rounded-lg border px-3 py-2.5 text-caption shadow-overlay ${TONE_CLASSE[item.tone]}`}
             >
               <Icone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <p className="flex-1">{item.mensagem}</p>

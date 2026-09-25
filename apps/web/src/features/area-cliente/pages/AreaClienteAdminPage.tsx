@@ -33,7 +33,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="page-title">Área do Cliente</h2>
+              <h1 className="page-title">Área do Cliente</h1>
               <span className="rounded-full bg-success-soft px-2.5 py-1 text-micro font-semibold text-success">
                 Portal implementado
               </span>
@@ -45,7 +45,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
           <button
             type="button"
             onClick={onAbrirClientes}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
           >
             <Building2 className="h-4 w-4" />
             Abrir Clientes
@@ -57,10 +57,10 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
         <div className="flex gap-3">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-orange-deep" />
           <div>
-            <h3 className="text-sm font-semibold text-ink">
+            <h3 className="text-body font-semibold text-ink">
               Por que o portal não abre nesta sessão?
             </h3>
-            <p className="mt-1 text-sm leading-relaxed text-ink-2">
+            <p className="mt-1 text-body leading-relaxed text-ink-2">
               Isto é intencional: um usuário interno nunca entra na interface do cliente. O portal
               só aparece quando o login tem papel <strong>cliente-sindico</strong> e vínculo com um
               cliente. A separação protege dados internos e evita simulação insegura de identidade.
@@ -71,7 +71,7 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
 
       <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <section className="surface-card p-5">
-          <h3 className="text-sm font-semibold text-ink">Como liberar e testar um cliente</h3>
+          <h3 className="text-body font-semibold text-ink">Como liberar e testar um cliente</h3>
           <ol className="mt-4 flex flex-col gap-4">
             <Passo
               numero="1"
@@ -91,15 +91,15 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
           </ol>
 
           <div className="mt-5 rounded-md border border-line bg-paper p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">
+            <p className="text-caption font-semibold uppercase tracking-wide text-ink-3">
               Endereço do portal
             </p>
-            <p className="mt-1 break-all text-sm font-semibold text-ink">{urlPortal}</p>
+            <p className="mt-1 break-all text-body font-semibold text-ink">{urlPortal}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={copiarEndereco}
-                className="inline-flex h-9 items-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-line px-3 text-body font-semibold text-ink-2 hover:bg-line-soft"
               >
                 <Copy className="h-4 w-4" />
                 {copiado ? "Copiado" : "Copiar endereço"}
@@ -109,14 +109,14 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
                   href={urlPortal}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex h-9 items-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                  className="inline-flex h-9 items-center gap-2 rounded-md border border-line px-3 text-body font-semibold text-ink-2 hover:bg-line-soft"
                 >
                   <ExternalLink className="h-4 w-4" />
                   Abrir portal
                 </a>
               )}
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-ink-3">
+            <p className="mt-3 text-caption leading-relaxed text-ink-3">
               {deploySeparado
                 ? "Deploy separado configurado. Este endereço entrega somente o bundle do portal."
                 : "Deploy separado ainda não configurado no Netlify. Para teste, o mesmo endereço do SO direciona automaticamente contas cliente-síndico ao portal."}
@@ -125,10 +125,10 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
         </section>
 
         <section className="surface-card p-5">
-          <h3 className="text-sm font-semibold text-ink">O que já está disponível</h3>
+          <h3 className="text-body font-semibold text-ink">O que já está disponível</h3>
           <ul className="mt-4 flex flex-col gap-2">
             {RECURSOS_PORTAL.map((recurso) => (
-              <li key={recurso} className="flex items-start gap-2 text-sm text-ink-2">
+              <li key={recurso} className="flex items-start gap-2 text-body text-ink-2">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                 {recurso}
               </li>
@@ -137,9 +137,9 @@ export function AreaClienteAdminPage({ onAbrirClientes }: { onAbrirClientes: () 
           <div className="mt-5 rounded-md border border-line p-3">
             <div className="flex items-center gap-2">
               <UserPlus className="h-4 w-4 text-ink-3" />
-              <p className="text-sm font-semibold text-ink">Regra de acesso</p>
+              <p className="text-body font-semibold text-ink">Regra de acesso</p>
             </div>
-            <p className="mt-1 text-xs leading-relaxed text-ink-3">
+            <p className="mt-1 text-caption leading-relaxed text-ink-3">
               Cada login cliente-síndico acessa somente um condomínio. A RLS do Supabase aplica o
               isolamento mesmo que alguém tente chamar a API fora da interface.
             </p>
@@ -161,12 +161,12 @@ function Passo({
 }) {
   return (
     <li className="flex gap-3">
-      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-orange text-xs font-bold text-white">
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-orange text-caption font-bold text-white">
         {numero}
       </span>
       <div>
-        <p className="text-sm font-semibold text-ink">{titulo}</p>
-        <p className="mt-0.5 text-sm leading-relaxed text-ink-2">{descricao}</p>
+        <p className="text-body font-semibold text-ink">{titulo}</p>
+        <p className="mt-0.5 text-body leading-relaxed text-ink-2">{descricao}</p>
       </div>
     </li>
   );

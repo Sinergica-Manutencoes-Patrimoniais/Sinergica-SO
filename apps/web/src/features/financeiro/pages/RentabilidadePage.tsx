@@ -1,3 +1,4 @@
+import { Skeleton } from "@sinergica/ui";
 import { AlertTriangle, ChevronDown, ChevronRight, PieChart, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -63,7 +64,7 @@ export function RentabilidadePage() {
   const temLeitura = podeAcessar("financeiro", "leitura");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [itens, clientes] = await Promise.all([
         obterRentabilidadeClienteMes(supabaseFinanceiroAdapter, 12),
@@ -83,12 +84,18 @@ export function RentabilidadePage() {
   }, [permissoesCarregando, temLeitura, carregar]);
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -98,11 +105,11 @@ export function RentabilidadePage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -119,12 +126,12 @@ export function RentabilidadePage() {
   return (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-        <h3 className="text-base font-semibold text-ink">Rentabilidade por cliente</h3>
-        <p className="mt-0.5 text-sm text-ink-3">
+        <h1 className="text-heading font-semibold text-ink">Rentabilidade por cliente</h1>
+        <p className="mt-0.5 text-body text-ink-3">
           Receita − custo real (horas + despesas), últimos 12 meses.
         </p>
         {semDespesasSincronizadas && (
-          <p className="mt-3 flex items-center gap-1.5 rounded-md border border-line bg-line-soft px-3 py-2 text-xs text-ink-3">
+          <p className="mt-3 flex items-center gap-1.5 rounded-md border border-line bg-line-soft px-3 py-2 text-caption text-ink-3">
             <AlertTriangle className="h-3.5 w-3.5" />
             Despesas de campo ainda sem sincronização do Auvo — custo considera só horas por
             enquanto.
@@ -135,7 +142,7 @@ export function RentabilidadePage() {
       {agregados.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <PieChart className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Sem dados de rentabilidade no período.</p>
+          <p className="mt-3 text-body text-ink-3">Sem dados de rentabilidade no período.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -155,7 +162,7 @@ export function RentabilidadePage() {
                       <ChevronRight className="h-4 w-4 shrink-0 text-ink-3" />
                     )}
                     <div className="min-w-0">
-                      <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-ink">
+                      <p className="flex items-center gap-1.5 truncate text-body font-semibold text-ink">
                         {clientePorId.get(a.clienteId) ?? "Cliente"}
                         {a.temAlerta && (
                           <span title="Margem negativa em 2 meses consecutivos — revisar contrato">
@@ -163,14 +170,14 @@ export function RentabilidadePage() {
                           </span>
                         )}
                       </p>
-                      <p className="text-xs text-ink-3">
+                      <p className="text-caption text-ink-3">
                         Receita R$ {centavosParaReais(a.receitaTotal)} · Custo R${" "}
                         {centavosParaReais(a.custoTotal)} · Cobertura {cob.toFixed(0)}%
                       </p>
                     </div>
                   </div>
                   <span
-                    className={`shrink-0 text-sm font-semibold ${a.margemTotal >= 0 ? "text-success" : "text-danger"}`}
+                    className={`shrink-0 text-body font-semibold ${a.margemTotal >= 0 ? "text-success" : "text-danger"}`}
                   >
                     R$ {centavosParaReais(a.margemTotal)}
                   </span>
@@ -206,7 +213,7 @@ function DetalheMensal({ cliente }: { cliente: ClienteAgregado }) {
           <button
             type="button"
             onClick={() => expandirMes(m.mes)}
-            className="flex w-full items-center justify-between text-xs"
+            className="flex w-full items-center justify-between text-caption"
           >
             <span className="text-ink-2">
               {new Date(m.mes).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}

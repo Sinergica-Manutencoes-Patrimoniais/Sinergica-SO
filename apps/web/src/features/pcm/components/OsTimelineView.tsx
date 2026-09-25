@@ -80,7 +80,7 @@ export function OsTimelineView({
                 return hoje;
               })
             }
-            className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold hover:bg-line-soft"
+            className="rounded-md border border-line px-3 py-1.5 text-caption font-semibold hover:bg-line-soft"
           >
             Hoje
           </button>
@@ -93,7 +93,7 @@ export function OsTimelineView({
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-        <p className="text-sm font-semibold text-ink">
+        <p className="text-body font-semibold text-ink">
           {dia.toLocaleDateString("pt-BR", {
             weekday: "long",
             day: "2-digit",
@@ -104,7 +104,7 @@ export function OsTimelineView({
       </div>
 
       {grupos.length === 0 ? (
-        <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-sm text-ink-3">
+        <div className="rounded-lg border border-line bg-paper px-4 py-8 text-center text-body text-ink-3">
           Nenhuma OS com data/check-in nesse dia.
         </div>
       ) : (
@@ -126,7 +126,7 @@ export function OsTimelineView({
               className="flex border-b border-line-soft last:border-b-0"
             >
               <div className="w-40 shrink-0 border-r border-line-soft px-3 py-3">
-                <p className="text-sm font-semibold text-ink">{grupo.tecnicoNome}</p>
+                <p className="text-body font-semibold text-ink">{grupo.tecnicoNome}</p>
                 <p className="text-micro text-ink-3">{grupo.ordens.length} OS</p>
               </div>
               <div className="relative flex-1 py-3" style={{ minHeight: "3rem" }}>

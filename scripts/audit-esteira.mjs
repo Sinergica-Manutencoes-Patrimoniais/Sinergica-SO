@@ -26,6 +26,9 @@ const NO_FRONTMATTER_OK = new Set([
   "README.md", "CHANGELOG.md", "Definition-of-Done.md", "pull_request_template.md",
   // Índice do sistema de memória — deliberadamente sem frontmatter (ver .claude/memory/MEMORY.md).
   "MEMORY.md",
+  // Gerado pela skill impeccable (`/impeccable init`) — marcador próprio
+  // `<!-- impeccable:product-schema N -->` em vez de frontmatter YAML, não é doc da esteira SDD.
+  "PRODUCT.md",
 ]);
 // Views derivadas geradas por outras ferramentas (não a fonte canônica).
 const isGenerated = (f) => {
@@ -67,6 +70,12 @@ const isSkillDialect = (f) =>
 // Sistema de memória (auto memory) usa `metadata: { type: ... }` em vez de `alwaysApply`.
 const isMemoryDialect = (f) => f.replace(/\\/g, "/").includes("/.claude/memory/");
 
+// DESIGN.md gerado pela skill impeccable segue o formato oficial
+// (github.com/google-labs-code/design.md): frontmatter é schema de token portável
+// (colors/typography/rounded/spacing/components), consumido por ferramentas tipo Stitch — não é
+// diretiva de carregamento do Claude Code, então não tem (nem deve ter) `alwaysApply`.
+const isDesignDotMdDialect = (f) => f.split(/[\\/]/).pop() === "DESIGN.md";
+
 const files = walk(ROOT).filter((f) => !isGenerated(f));
 
 // 1) Frontmatter + dialeto
@@ -81,6 +90,8 @@ for (const f of files) {
     if ("alwaysApply" in fm) err(f, "dialeto skill não deve ter `alwaysApply`");
   } else if (isMemoryDialect(f)) {
     if (!("metadata" in fm)) err(f, "memória sem `metadata`");
+  } else if (isDesignDotMdDialect(f)) {
+    // sem exigência de `alwaysApply` — ver comentário do dialeto acima.
   } else {
     if (!("alwaysApply" in fm)) err(f, "doc sem `alwaysApply`");
     else if (!/^(true|false)$/.test(fm.alwaysApply)) err(f, `alwaysApply inválido: ${fm.alwaysApply}`);

@@ -4,6 +4,8 @@
 -- agregação em SQL em vez de somar client-side (mês pode ter centenas de linhas em
 -- `config.ia_gasto_log`).
 --
+-- RECONSTRUÍDA nesta sessão (E01-S146) — ver nota em 0205_E02-S31_ia_gasto_log.sql.
+--
 -- Reverso:
 --   drop view if exists config.ia_gasto_resumo_mes;
 --   alter table config.integracoes drop column if exists limite_quota_ia_usd;

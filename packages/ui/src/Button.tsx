@@ -12,8 +12,8 @@ const VARIANTE: Record<ButtonVariant, string> = {
 };
 
 const TAMANHO: Record<ButtonSize, string> = {
-  sm: "h-8 px-2.5 text-xs gap-1.5",
-  md: "h-9 px-3.5 text-sm gap-2",
+  sm: "h-8 px-2.5 text-caption gap-1.5",
+  md: "h-9 px-3.5 text-body gap-2",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

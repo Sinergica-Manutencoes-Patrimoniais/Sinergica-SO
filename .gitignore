@@ -24,3 +24,7 @@ apps/web/e2e/.auth/
 apps/web/playwright-report/
 apps/web/test-results/
 apps/web/blob-report/
+
+# Cache local de sessão da skill impeccable (findings/edits por sessão) — não é o design system
+# em si (.impeccable/config.json e design.json continuam versionados), só state efêmero da hook.
+**/.impeccable/hook.cache.json

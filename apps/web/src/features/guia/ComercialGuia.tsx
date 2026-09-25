@@ -116,23 +116,27 @@ const GRUPOS_COMERCIAL: GrupoComercial[] = [
 function OpcaoCard({ opcao }: { opcao: OpcaoComercial }) {
   return (
     <li className="rounded-lg border border-line p-4">
-      <h4 className="text-sm font-semibold text-ink">{opcao.nome}</h4>
-      <dl className="mt-3 grid gap-3 text-sm leading-relaxed md:grid-cols-3">
+      <h4 className="text-body font-semibold text-ink">{opcao.nome}</h4>
+      <dl className="mt-3 grid gap-3 text-body leading-relaxed md:grid-cols-3">
         <div>
-          <dt className="text-xs font-bold uppercase tracking-wide text-ink-3">Para que serve</dt>
+          <dt className="text-caption font-bold uppercase tracking-wide text-ink-3">
+            Para que serve
+          </dt>
           <dd className="mt-1 text-ink-2">{opcao.paraQueServe}</dd>
         </div>
         <div>
-          <dt className="text-xs font-bold uppercase tracking-wide text-ink-3">Como usar</dt>
+          <dt className="text-caption font-bold uppercase tracking-wide text-ink-3">Como usar</dt>
           <dd className="mt-1 text-ink-2">{opcao.comoUsar}</dd>
         </div>
         <div>
-          <dt className="text-xs font-bold uppercase tracking-wide text-ink-3">Qual o sentido</dt>
+          <dt className="text-caption font-bold uppercase tracking-wide text-ink-3">
+            Qual o sentido
+          </dt>
           <dd className="mt-1 text-ink-2">{opcao.resultado}</dd>
         </div>
       </dl>
       {opcao.atencao && (
-        <p className="mt-3 rounded-md bg-line-soft px-3 py-2 text-xs leading-relaxed text-ink-3">
+        <p className="mt-3 rounded-md bg-line-soft px-3 py-2 text-caption leading-relaxed text-ink-3">
           <strong className="text-ink-2">Atenção:</strong> {opcao.atencao}
         </p>
       )}
@@ -198,8 +202,8 @@ export function ComercialGuia() {
         <div className="flex flex-col gap-6">
           {GRUPOS_COMERCIAL.map((grupo) => (
             <section key={grupo.titulo}>
-              <h3 className="text-sm font-semibold text-ink">{grupo.titulo}</h3>
-              <p className="mt-0.5 text-xs text-ink-3">{grupo.sentido}</p>
+              <h3 className="text-body font-semibold text-ink">{grupo.titulo}</h3>
+              <p className="mt-0.5 text-caption text-ink-3">{grupo.sentido}</p>
               <ul className="mt-3 flex flex-col gap-3">
                 {grupo.opcoes.map((opcao) => (
                   <OpcaoCard key={opcao.nome} opcao={opcao} />

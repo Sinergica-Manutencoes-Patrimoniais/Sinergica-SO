@@ -28,13 +28,13 @@ export function MotivoPerdaModal({
       titulo="Motivo da perda"
     >
       <div className="space-y-3">
-        <p className="text-sm text-ink-2">
+        <p className="text-body text-ink-2">
           Obrigatório para mover a oportunidade para uma etapa de perda — é o que alimenta o
           win/loss no dashboard.
         </p>
 
         {ativos.length === 0 ? (
-          <p className="text-sm text-danger">
+          <p className="text-body text-danger">
             Nenhum motivo de perda ativo. Cadastre um em Configuração do funil.
           </p>
         ) : (

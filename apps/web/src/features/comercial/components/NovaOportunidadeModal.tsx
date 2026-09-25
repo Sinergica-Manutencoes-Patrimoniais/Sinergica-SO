@@ -124,12 +124,12 @@ export function NovaOportunidadeModal({
         </Field>
 
         {abertas.length === 0 && (
-          <p className="text-sm text-danger">
+          <p className="text-body text-danger">
             O funil não tem nenhuma etapa aberta ativa. Configure uma antes de criar oportunidades.
           </p>
         )}
 
-        {erro && <p className="text-sm text-danger">{erro}</p>}
+        {erro && <p className="text-body text-danger">{erro}</p>}
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="ghost" onClick={onFechar}>

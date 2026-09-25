@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DataTable } from "./DataTable";
 
@@ -27,7 +27,8 @@ describe("DataTable — E00-S15 AC-5", () => {
     expect(screen.getByText("100")).toBeInTheDocument();
   });
 
-  it("carregando renderiza linhas fantasma, não os itens", () => {
+  it("carregando renderiza linhas fantasma, não os itens (após 200ms — E00-S17 AC-2)", () => {
+    vi.useFakeTimers();
     render(
       <DataTable
         colunas={colunas}
@@ -38,8 +39,31 @@ describe("DataTable — E00-S15 AC-5", () => {
         linhasCarregando={3}
       />,
     );
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(screen.queryByText("Cliente A")).not.toBeInTheDocument();
     expect(document.querySelectorAll(".skeleton").length).toBeGreaterThan(0);
+    vi.useRealTimers();
+  });
+
+  it("carregando por menos de 200ms não chega a mostrar linha fantasma (E00-S17 AC-2)", () => {
+    vi.useFakeTimers();
+    render(
+      <DataTable
+        colunas={colunas}
+        itens={[{ id: "1", nome: "Cliente A", valor: 100 }]}
+        chaveLinha={(l) => l.id}
+        vazio="Nada aqui"
+        carregando
+        linhasCarregando={3}
+      />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(document.querySelectorAll(".skeleton").length).toBe(0);
+    vi.useRealTimers();
   });
 
   it("sem itens e sem carregar mostra o estado vazio", () => {

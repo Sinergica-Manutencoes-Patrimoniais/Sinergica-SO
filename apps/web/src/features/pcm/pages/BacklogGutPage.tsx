@@ -1,3 +1,4 @@
+import { Button, Skeleton, Tooltip } from "@sinergica/ui";
 import { Plus, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -15,6 +16,7 @@ import {
   PRIORIDADE_LABEL,
   ehItemPreTriagem,
   prioridadeColor,
+  resumoTooltipOrdem,
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
@@ -54,7 +56,7 @@ export function BacklogGutPage({
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     setErroAcao(null);
     try {
       setEstado({ fase: "pronto", ordens: await listarBacklogGut(supabaseHubOsAdapter) });
@@ -182,30 +184,44 @@ export function BacklogGutPage({
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="text-sm text-ink-3 mt-1">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="text-body text-ink-3 mt-1">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
 
   if (!ordensControladas && estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando backlog…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!ordensControladas && estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="text-sm text-ink-3 mt-1">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <p className="text-body text-ink-3 mt-1">{estado.mensagem}</p>
+        <Button variant="ghost" onClick={carregar} className="mt-4 text-orange">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -214,8 +230,8 @@ export function BacklogGutPage({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Backlog GUT</h2>
-          <p className="text-sm text-ink-3">
+          <h1 className="text-heading font-semibold text-ink">Backlog GUT</h1>
+          <p className="text-body text-ink-3">
             OS abertas priorizadas por gravidade, urgência e tendência
           </p>
         </div>
@@ -224,7 +240,7 @@ export function BacklogGutPage({
             <button
               type="button"
               onClick={() => setCriando(true)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep"
             >
               <Plus className="h-3.5 w-3.5" />
               Novo item de backlog
@@ -242,7 +258,7 @@ export function BacklogGutPage({
       </div>
 
       {erroAcao && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erroAcao}
         </div>
       )}
@@ -257,8 +273,8 @@ export function BacklogGutPage({
 
       <section className="bg-card rounded-xl border border-line overflow-hidden">
         <div className="px-4 py-3 border-b border-line-soft">
-          <h3 className="text-sm font-semibold text-ink">Fila priorizada</h3>
-          <p className="text-xs text-ink-3 mt-0.5">Maior score aparece primeiro</p>
+          <h3 className="text-body font-semibold text-ink">Fila priorizada</h3>
+          <p className="text-caption text-ink-3 mt-0.5">Maior score aparece primeiro</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 border-b border-line-soft px-4 py-3">
@@ -312,175 +328,132 @@ export function BacklogGutPage({
             <button
               type="button"
               onClick={limparFiltros}
-              className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+              className="rounded-md border border-line px-3 py-1.5 text-caption font-semibold text-ink-2 hover:bg-line-soft"
             >
               Limpar filtros
             </button>
           )}
-          <span className="ml-auto text-xs text-ink-3">
+          <span className="ml-auto text-caption text-ink-3">
             {ordensFiltradas.length} de {ordens.length}
           </span>
         </div>
 
-        {ordens.length === 0 ? (
-          <div className="px-5 py-8 text-sm text-ink-3">Nenhuma OS aberta no backlog.</div>
-        ) : ordensFiltradas.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-ink-3">
-            Nenhum item bate com os filtros.
-            <button
-              type="button"
-              onClick={limparFiltros}
-              className="ml-1 font-semibold text-orange hover:underline"
-            >
-              Limpar filtros
-            </button>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-line-soft text-left text-xs text-ink-3">
-                  <th className="px-4 py-2 font-semibold">#</th>
-                  <th className="px-2 py-2 font-semibold">Chamado</th>
-                  <th className="px-2 py-2 font-semibold">Cliente / Título</th>
-                  <th className="px-2 py-2 font-semibold">Categoria</th>
-                  <th className="px-2 py-2 font-semibold">Status</th>
-                  <th className="px-2 py-2 font-semibold">Prioridade</th>
-                  <th className="px-2 py-2 font-semibold">Técnico / Previsão</th>
-                  <th className="px-2 py-2 text-center font-semibold">G</th>
-                  <th className="px-2 py-2 text-center font-semibold">U</th>
-                  <th className="px-2 py-2 text-center font-semibold">T</th>
-                  <th className="px-2 py-2 text-center font-semibold" title="Dor do cliente">
-                    D
-                  </th>
-                  <th className="px-2 py-2 text-center font-semibold">Score</th>
-                  <th className="px-4 py-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {ordensFiltradas.map((ordem, index) => (
-                  <tr
-                    key={ordem.id}
-                    tabIndex={0}
-                    className="cursor-pointer border-b border-line-soft last:border-0 hover:bg-line-soft focus-visible:outline-2 focus-visible:outline-orange/75 focus-visible:-outline-offset-2"
-                    onClick={() => setEditando(ordem)}
-                    onKeyDown={(evento) => {
-                      if (evento.key === "Enter" || evento.key === " ") {
-                        evento.preventDefault();
-                        setEditando(ordem);
-                      }
-                    }}
-                  >
-                    <td className="px-4 py-2.5 text-xs font-bold text-ink-3">{index + 1}</td>
-                    <td className="px-2 py-2.5 font-brand text-xs tabular-nums">
-                      {ehItemPreTriagem(ordem) ? (
-                        <span className="text-ink-3" title={ordem.numero}>
-                          Aguardando triagem
-                        </span>
-                      ) : (
-                        <span className="text-ink-2">{ordem.numero}</span>
-                      )}
-                    </td>
-                    <td className="px-2 py-2.5 min-w-48">
-                      <p className="font-semibold text-ink">{ordem.titulo}</p>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-ink-3">
-                        {ordem.clienteNome}
-                        {ordem.origemInspecaoItemId && (
-                          <span className="rounded-full bg-info-soft px-1.5 py-0.5 text-micro font-semibold text-info">
-                            Inspeção
-                          </span>
-                        )}
-                      </p>
-                    </td>
-                    <td className="px-2 py-2.5 text-xs text-ink-2">{ordem.categoria}</td>
-                    <td className="px-2 py-2.5">
+        <div className="divide-y divide-line-soft">
+          {ordens.length === 0 ? (
+            <div className="px-5 py-8 text-body text-ink-3">Nenhuma OS aberta no backlog.</div>
+          ) : ordensFiltradas.length === 0 ? (
+            <div className="px-5 py-8 text-center text-body text-ink-3">
+              Nenhum item bate com os filtros.
+              <button
+                type="button"
+                onClick={limparFiltros}
+                className="ml-1 font-semibold text-orange hover:underline"
+              >
+                Limpar filtros
+              </button>
+            </div>
+          ) : (
+            ordensFiltradas.map((ordem, index) => (
+              <Tooltip key={ordem.id} content={resumoTooltipOrdem(ordem)}>
+                {/* biome-ignore lint/a11y/useSemanticElements: não pode virar <button> — a linha
+                    tem um <button> aninhado mais abaixo, e botão dentro de botão é HTML inválido. */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="px-4 py-3 flex flex-col gap-3 lg:flex-row lg:items-center cursor-pointer hover:bg-line-soft focus-visible:outline-2 focus-visible:outline-orange/75 focus-visible:-outline-offset-2"
+                  onClick={() => setEditando(ordem)}
+                  onKeyDown={(evento) => {
+                    if (evento.key === "Enter" || evento.key === " ") {
+                      evento.preventDefault();
+                      setEditando(ordem);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3 lg:w-20">
+                    <span className="text-title font-bold text-line font-brand">{index + 1}</span>
+                    <span className="text-caption font-brand tabular-nums text-ink-3">
+                      {ehItemPreTriagem(ordem) ? "Aguardando triagem" : ordem.numero}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span
                         className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusOsColor(ordem.status)}`}
                       >
                         {rotuloStatusOs(ordem.status)}
                       </span>
-                    </td>
-                    <td className="px-2 py-2.5">
                       <span
                         className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
                       >
                         {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
                       </span>
-                    </td>
-                    <td className="px-2 py-2.5 text-xs text-ink-2">
-                      {ordem.tecnicoNome ?? "sem técnico"}
-                      {ordem.dataAgendada && (
-                        <span className="block text-micro text-ink-3">
-                          prevista {new Date(ordem.dataAgendada).toLocaleDateString("pt-BR")}
+                      {ordem.origemInspecaoItemId && (
+                        <span className="rounded-full px-2 py-0.5 text-micro font-semibold bg-info-soft text-info">
+                          Origem: Inspeção
                         </span>
                       )}
-                    </td>
-                    <td className="px-2 py-2.5 text-center text-xs font-semibold tabular-nums text-ink-2">
-                      {ordem.gravidade ?? 1}
-                    </td>
-                    <td className="px-2 py-2.5 text-center text-xs font-semibold tabular-nums text-ink-2">
-                      {ordem.urgencia ?? 1}
-                    </td>
-                    <td className="px-2 py-2.5 text-center text-xs font-semibold tabular-nums text-ink-2">
-                      {ordem.tendencia ?? 1}
-                    </td>
-                    <td className="px-2 py-2.5 text-center text-xs font-semibold tabular-nums text-ink-2">
-                      {ordem.dorCliente ?? "—"}
-                    </td>
-                    <td className="px-2 py-2.5 text-center text-sm font-bold tabular-nums text-ink">
-                      {ordem.scorePcm}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {temEscrita && ehItemPreTriagem(ordem) && (
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onConfirmarChamado(ordem);
-                            }}
-                            disabled={salvandoId === ordem.id}
-                            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
-                          >
-                            Confirmar chamado
-                          </button>
-                        )}
-                        {temEscrita &&
-                          !ehItemPreTriagem(ordem) &&
-                          ordem.status !== "planejamento" && (
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                onPlanejar(ordem);
-                              }}
-                              disabled={salvandoId === ordem.id}
-                              className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-xs font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
-                            >
-                              Planejar
-                            </button>
-                          )}
-                        {temEscrita && (
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onDescartar(ordem);
-                            }}
-                            disabled={salvandoId === ordem.id}
-                            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
-                          >
-                            Descartar
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    </div>
+                    <p className="mt-2 text-body font-semibold text-ink">{ordem.titulo}</p>
+                    <p className="mt-1 text-caption text-ink-3">
+                      {ordem.clienteNome} · {ordem.categoria}
+                    </p>
+                    {ordem.descricao?.trim() && (
+                      <p className="mt-1 line-clamp-2 text-caption text-ink-3">{ordem.descricao}</p>
+                    )}
+                    <p className="mt-1 text-micro text-ink-3">
+                      {ordem.tecnicoNome ?? "sem técnico"}
+                      {ordem.dataAgendada
+                        ? ` · prevista ${new Date(ordem.dataAgendada).toLocaleDateString("pt-BR")}`
+                        : ""}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 lg:w-72">
+                    <Metric label="G" value={ordem.gravidade ?? 1} />
+                    <Metric label="U" value={ordem.urgencia ?? 1} />
+                    <Metric label="T" value={ordem.tendencia ?? 1} />
+                    <Metric label="Score" value={ordem.scorePcm} />
+                  </div>
+                  {temEscrita && (
+                    <div
+                      className="flex items-center gap-1.5"
+                      onClick={(event) => event.stopPropagation()}
+                      onKeyDown={(event) => event.stopPropagation()}
+                    >
+                      {ehItemPreTriagem(ordem) && (
+                        <button
+                          type="button"
+                          onClick={() => onConfirmarChamado(ordem)}
+                          disabled={salvandoId === ordem.id}
+                          className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                        >
+                          Confirmar chamado
+                        </button>
+                      )}
+                      {!ehItemPreTriagem(ordem) && ordem.status !== "planejamento" && (
+                        <button
+                          type="button"
+                          onClick={() => onPlanejar(ordem)}
+                          disabled={salvandoId === ordem.id}
+                          className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                        >
+                          Planejar
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onDescartar(ordem)}
+                        disabled={salvandoId === ordem.id}
+                        className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-line px-3 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-60"
+                      >
+                        Descartar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </Tooltip>
+            ))
+          )}
+        </div>
       </section>
 
       {editando && (
@@ -522,7 +495,16 @@ function Resumo({ label, valor }: { label: string; valor: number }) {
   return (
     <div className="rounded-lg border border-line bg-card px-4 py-3">
       <p className="text-micro font-semibold uppercase tracking-wider text-ink-3">{label}</p>
-      <p className="mt-1 text-xl font-bold text-ink">{valor}</p>
+      <p className="mt-1 text-title font-bold text-ink">{valor}</p>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md bg-paper px-2 py-1 text-center">
+      <p className="text-micro font-semibold uppercase text-ink-3">{label}</p>
+      <p className="text-body font-bold text-ink tabular-nums">{value}</p>
     </div>
   );
 }

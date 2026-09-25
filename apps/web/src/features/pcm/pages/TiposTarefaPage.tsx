@@ -1,5 +1,12 @@
-import { ConfirmDialog } from "@sinergica/ui";
-import { Edit3, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import {
+  Badge as BadgePrimitivo,
+  Button,
+  ConfirmDialog,
+  DataTable,
+  Modal,
+  Skeleton,
+} from "@sinergica/ui";
+import { Edit3, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -46,7 +53,7 @@ export function TiposTarefaPage() {
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     setErroAcao(null);
     try {
       const tipos = await listarTiposTarefa(supabaseTiposTarefaAdapter);
@@ -106,30 +113,44 @@ export function TiposTarefaPage() {
   }
 
   if (permissoesCarregando) {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">Você não tem permissão de leitura no módulo PCM.</p>
+        <p className="mt-1 text-body text-ink-3">
+          Você não tem permissão de leitura no módulo PCM.
+        </p>
       </div>
     );
   }
 
   if (estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando tipos de tarefa…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button type="button" onClick={carregar} className="mt-4 text-sm font-semibold text-orange">
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
+        <Button variant="ghost" onClick={carregar} className="mt-4">
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -138,29 +159,27 @@ export function TiposTarefaPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Tipos de Tarefa</h2>
-          <p className="text-sm text-ink-3">Catálogo operacional sincronizado com o Auvo</p>
+          <h1 className="text-heading font-semibold text-ink">Tipos de Tarefa</h1>
+          <p className="text-body text-ink-3">Catálogo operacional sincronizado com o Auvo</p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={carregar} className="btn-secondary">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="secondary" icon={<RefreshCw className="h-4 w-4" />} onClick={carregar}>
             Atualizar
-          </button>
+          </Button>
           {temEscrita && (
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              icon={<Plus className="h-4 w-4" />}
               onClick={() => setModal({ modo: "criar" })}
-              className="btn-primary"
             >
-              <Plus className="h-4 w-4" />
               Novo
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {erroAcao && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erroAcao}
         </div>
       )}
@@ -173,7 +192,7 @@ export function TiposTarefaPage() {
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
           />
-          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-body text-ink-2">
             <input
               type="checkbox"
               checked={somenteAtivos}
@@ -183,78 +202,97 @@ export function TiposTarefaPage() {
           </label>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-line-soft text-sm">
-            <thead className="bg-line-soft/60 text-left text-xs font-semibold uppercase tracking-wider text-ink-3">
-              <tr>
-                <th className="px-5 py-3">Nome</th>
-                <th className="px-5 py-3">Requisitos</th>
-                <th className="px-5 py-3">Sync</th>
-                <th className="px-5 py-3 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line-soft">
-              {tiposFiltrados.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-ink-3">
-                    Nenhum tipo de tarefa encontrado.
-                  </td>
-                </tr>
-              ) : (
-                tiposFiltrados.map((tipo) => (
-                  <tr key={tipo.id} className="hover:bg-line-soft/50">
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-ink">{tipo.nome}</p>
-                      <p className="mt-1 text-xs text-ink-3">
-                        {tipo.ativo ? "Ativo" : "Inativo"}
-                        {tipo.auvoId ? ` · Auvo #${tipo.auvoId}` : ""}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3 text-ink-2">
-                      <div className="flex flex-wrap gap-2">
-                        {tipo.preencheRelato && <Badge>Relato</Badge>}
-                        {tipo.exigeAssinatura && <Badge>Assinatura</Badge>}
-                        <Badge>{tipo.fotosMinimas} foto(s)</Badge>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="rounded-full bg-line-soft px-2 py-1 text-xs font-semibold text-ink-2">
-                        {syncStatusLabel(tipo.auvoSyncStatus)}
-                      </span>
-                      {tipo.auvoSyncError && (
-                        <p className="mt-1 max-w-[260px] truncate text-xs text-danger">
-                          {tipo.auvoSyncError}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {temEscrita && (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setModal({ modo: "editar", tipo })}
-                            className="rounded-md border border-line p-2 text-ink-2 hover:bg-line-soft"
-                            title="Editar"
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setTipoParaExcluir(tipo)}
-                            className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          colunas={[
+            {
+              chave: "nome",
+              cabecalho: "Nome",
+              render: (tipo) => (
+                <>
+                  <p className="font-semibold text-ink">{tipo.nome}</p>
+                  <p className="mt-1 text-caption text-ink-3">
+                    {tipo.ativo ? "Ativo" : "Inativo"}
+                    {tipo.auvoId ? ` · Auvo #${tipo.auvoId}` : ""}
+                  </p>
+                </>
+              ),
+            },
+            {
+              chave: "requisitos",
+              cabecalho: "Requisitos",
+              render: (tipo) => (
+                <div className="flex flex-wrap gap-2">
+                  {tipo.preencheRelato && <BadgePrimitivo tone="info">Relato</BadgePrimitivo>}
+                  {tipo.exigeAssinatura && <BadgePrimitivo tone="info">Assinatura</BadgePrimitivo>}
+                  <BadgePrimitivo tone="info">{tipo.fotosMinimas} foto(s)</BadgePrimitivo>
+                </div>
+              ),
+            },
+            {
+              chave: "sync",
+              cabecalho: "Sync",
+              render: (tipo) => (
+                <>
+                  <span className="rounded-full bg-line-soft px-2 py-1 text-caption font-semibold text-ink-2">
+                    {syncStatusLabel(tipo.auvoSyncStatus)}
+                  </span>
+                  {tipo.auvoSyncError && (
+                    <p className="mt-1 max-w-[260px] truncate text-caption text-danger">
+                      {tipo.auvoSyncError}
+                    </p>
+                  )}
+                </>
+              ),
+            },
+            {
+              chave: "acoes",
+              cabecalho: "Ações",
+              render: (tipo) =>
+                temEscrita && (
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setModal({ modo: "editar", tipo })}
+                      title="Editar"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => setTipoParaExcluir(tipo)}
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ),
+            },
+          ]}
+          itens={tiposFiltrados}
+          chaveLinha={(tipo) => tipo.id}
+          vazio={
+            // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
+            estado.fase === "pronto" && estado.tipos.length > 0 ? (
+              <span className="flex flex-col items-center gap-2">
+                Nenhum tipo de tarefa para estes filtros.
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setBusca("");
+                    setSomenteAtivos(false);
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+              </span>
+            ) : (
+              <>Nenhum tipo de tarefa cadastrado ainda.</>
+            )
+          }
+        />
       </section>
 
       {modal && (
@@ -277,14 +315,6 @@ export function TiposTarefaPage() {
         onConfirmar={onExcluir}
       />
     </div>
-  );
-}
-
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-full bg-info-soft px-2 py-1 text-xs font-semibold text-info">
-      {children}
-    </span>
   );
 }
 
@@ -314,112 +344,97 @@ function TipoTarefaModal({
   );
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-xl border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {modal.modo === "criar" ? "Novo Tipo de Tarefa" : "Editar Tipo de Tarefa"}
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
-            title="Fechar"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onClose();
+      }}
+      titulo={modal.modo === "criar" ? "Novo Tipo de Tarefa" : "Editar Tipo de Tarefa"}
+      tamanho="md"
+    >
+      <form
+        className="space-y-4 px-4 py-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void onSalvar(form);
+        }}
+      >
+        <label className="block">
+          <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+            Nome
+          </span>
+          <input
+            className="input mt-1"
+            value={form.nome}
+            onChange={(event) => setForm((atual) => ({ ...atual, nome: event.target.value }))}
+          />
+        </label>
 
-        <form
-          className="space-y-4 px-4 py-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void onSalvar(form);
-          }}
-        >
-          <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">Nome</span>
-            <input
-              className="input mt-1"
-              value={form.nome}
-              onChange={(event) => setForm((atual) => ({ ...atual, nome: event.target.value }))}
-            />
-          </label>
-
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
-              <input
-                type="checkbox"
-                checked={form.preencheRelato}
-                onChange={(event) =>
-                  setForm((atual) => ({ ...atual, preencheRelato: event.target.checked }))
-                }
-              />
-              Exige relato
-            </label>
-            <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
-              <input
-                type="checkbox"
-                checked={form.exigeAssinatura}
-                onChange={(event) =>
-                  setForm((atual) => ({ ...atual, exigeAssinatura: event.target.checked }))
-                }
-              />
-              Assinatura
-            </label>
-            <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                Fotos
-              </span>
-              <input
-                className="input mt-1"
-                type="number"
-                min={0}
-                step={1}
-                value={form.fotosMinimas}
-                onChange={(event) =>
-                  setForm((atual) => ({
-                    ...atual,
-                    fotosMinimas: Number(event.target.value),
-                  }))
-                }
-              />
-            </label>
-          </div>
-
-          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-body text-ink-2">
             <input
               type="checkbox"
-              checked={form.ativo ?? true}
-              onChange={(event) => setForm((atual) => ({ ...atual, ativo: event.target.checked }))}
+              checked={form.preencheRelato}
+              onChange={(event) =>
+                setForm((atual) => ({ ...atual, preencheRelato: event.target.checked }))
+              }
             />
-            Ativo
+            Exige relato
           </label>
+          <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-body text-ink-2">
+            <input
+              type="checkbox"
+              checked={form.exigeAssinatura}
+              onChange={(event) =>
+                setForm((atual) => ({ ...atual, exigeAssinatura: event.target.checked }))
+              }
+            />
+            Assinatura
+          </label>
+          <label className="block">
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+              Fotos
+            </span>
+            <input
+              className="input mt-1"
+              type="number"
+              min={0}
+              step={1}
+              value={form.fotosMinimas}
+              onChange={(event) =>
+                setForm((atual) => ({
+                  ...atual,
+                  fotosMinimas: Number(event.target.value),
+                }))
+              }
+            />
+          </label>
+        </div>
 
-          {erro && (
-            <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
-              {erro}
-            </div>
-          )}
+        <label className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-body text-ink-2">
+          <input
+            type="checkbox"
+            checked={form.ativo ?? true}
+            onChange={(event) => setForm((atual) => ({ ...atual, ativo: event.target.checked }))}
+          />
+          Ativo
+        </label>
 
-          <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={salvando}
-              className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
-            >
-              {salvando ? "Salvando…" : "Salvar"}
-            </button>
+        {erro && (
+          <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
+            {erro}
           </div>
-        </form>
-      </div>
-    </div>
+        )}
+
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onClose} disabled={salvando}>
+            Cancelar
+          </Button>
+          <Button type="submit" variant="primary" disabled={salvando} loading={salvando}>
+            Salvar
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

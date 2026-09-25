@@ -53,11 +53,11 @@ export function LoginPage() {
           <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-[-0.035em] xl:text-4xl">
             Operação, atendimento e gestão em um só lugar.
           </h1>
-          <p className="mt-4 max-w-md text-sm leading-7 text-info-line">
+          <p className="mt-4 max-w-md text-body leading-7 text-info-line">
             Informação operacional clara para a equipe decidir mais rápido e executar melhor.
           </p>
         </div>
-        <p className="relative text-xs text-ink-3">Sinérgica Manutenções Patrimoniais</p>
+        <p className="relative text-caption text-ink-3">Sinérgica Manutenções Patrimoniais</p>
       </section>
 
       <section className="flex min-h-screen items-center justify-center p-4 sm:p-8">
@@ -68,23 +68,26 @@ export function LoginPage() {
               alt="Sinérgica Manutenções Patrimoniais"
               className="h-11 object-contain"
             />
-            <p className="mt-2 text-xs text-ink-3">Sistema Operacional</p>
+            <p className="mt-2 text-caption text-ink-3">Sistema Operacional</p>
           </div>
 
           <div className="surface-card p-5 sm:p-6">
             <p className="font-brand text-micro font-semibold uppercase tracking-[0.18em] text-orange">
               Área segura
             </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-ink">
+            <h2 className="mt-2 text-title font-semibold tracking-[-0.025em] text-ink">
               Bem-vindo de volta
             </h2>
-            <p className="mb-5 mt-1 text-xs leading-relaxed text-ink-3">
+            <p className="mb-5 mt-1 text-caption leading-relaxed text-ink-3">
               Entre com as credenciais da sua conta Sinérgica.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
               <div>
-                <label htmlFor="email" className="mb-1.5 block text-xs font-semibold text-ink-2">
+                <label
+                  htmlFor="email"
+                  className="mb-1.5 block text-caption font-semibold text-ink-2"
+                >
                   E-mail
                 </label>
                 <input
@@ -99,7 +102,10 @@ export function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="mb-1.5 block text-xs font-semibold text-ink-2">
+                <label
+                  htmlFor="password"
+                  className="mb-1.5 block text-caption font-semibold text-ink-2"
+                >
                   Senha
                 </label>
                 <input

@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { Plus } from "lucide-react";
 import { AgingChip, PageHeader, TableShell } from "./MockUi";
 import { type FaixaAging, PAGAR, brl, dataCurta } from "./mock-data";
@@ -15,10 +16,9 @@ export function ContasPagarMock() {
         title="Contas a pagar"
         subtitle="Fornecedores e despesas fixas — por vencimento."
         actions={
-          <button type="button" className="btn-accent">
-            <Plus className="h-4 w-4" />
+          <Button variant="accent" icon={<Plus className="h-4 w-4" />}>
             Nova recorrência
-          </button>
+          </Button>
         }
       />
       <div className="grid grid-cols-3 gap-2.5">
@@ -28,7 +28,7 @@ export function ContasPagarMock() {
           return (
             <div key={f.key} className={`rounded-lg border border-line p-3 ${f.cls}`}>
               <p className="text-micro font-bold text-ink-2">{f.label}</p>
-              <p className="mt-1.5 text-base font-bold tabular-nums text-ink">{brl(total)}</p>
+              <p className="mt-1.5 text-heading font-bold tabular-nums text-ink">{brl(total)}</p>
               <p className="mt-0.5 text-micro text-ink-3">
                 {itens.length} item{itens.length === 1 ? "" : "s"}
               </p>
@@ -60,9 +60,9 @@ export function ContasPagarMock() {
               <AgingChip faixa={p.faixa} />
             </td>
             <td className="px-4 py-3">
-              <button type="button" className="btn-secondary">
+              <Button variant="secondary" size="sm">
                 Dar baixa
-              </button>
+              </Button>
             </td>
           </tr>
         ))}

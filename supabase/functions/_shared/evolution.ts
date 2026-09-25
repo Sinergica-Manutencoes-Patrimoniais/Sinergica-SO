@@ -32,26 +32,25 @@ export function telefoneParaRemoteJid(telefone: string | null | undefined): stri
   return `${comDdi}@s.whatsapp.net`;
 }
 
+/** E02-S32: extrai o `wa_message_id` do corpo de resposta de um `POST /message/{endpoint}`
+ * Evolution — formato `{ key: { id, remoteJid, fromMe }, message, ... }` (confirmado contra a doc
+ * oficial, mesmo `key.id` que o webhook de entrada lê em `evolution-webhook.ts`). Usado pra gravar
+ * na mensagem que o app manda, e assim o webhook conseguir deduplicar o eco `fromMe` do próprio
+ * envio (ON CONFLICT wa_message_id) em vez de descartar todo `fromMe` — que também jogava fora
+ * mensagem mandada direto do celular (bug real, achado 2026-08-19). */
+export function extrairWaMessageId(corpo: unknown): string | null {
+  if (typeof corpo !== "object" || corpo === null) return null;
+  const key = (corpo as { key?: unknown }).key;
+  const id = typeof key === "object" && key !== null ? (key as { id?: unknown }).id : undefined;
+  return typeof id === "string" && id.length > 0 ? id : null;
+}
+
 export async function enviarEvolution(
   instanceId: string,
   endpoint: "sendText" | "sendMedia" | "sendTemplate" | "sendButtons",
   payload: Record<string, unknown>,
 ): Promise<string | null> {
   return await chamarEvolution(instanceId, endpoint, payload);
-}
-
-/** E02-S32: extrai `key.id` da resposta do Evolution (formato Baileys), usado como
- * `wa_message_id` pra casar o envio feito pelo app com o eco `fromMe` do próprio webhook —
- * sem isso, o webhook trataria o eco como uma mensagem nova de celular e duplicaria a bolha. */
-function extrairEvolutionMessageId(data: unknown): string | null {
-  if (data && typeof data === "object" && "key" in data) {
-    const key = (data as { key?: unknown }).key;
-    if (key && typeof key === "object" && "id" in key) {
-      const id = (key as { id?: unknown }).id;
-      if (typeof id === "string" && id) return id;
-    }
-  }
-  return null;
 }
 
 async function chamarEvolution(
@@ -78,6 +77,10 @@ async function chamarEvolution(
     );
     throw new Error(`Evolution ${endpoint} falhou: ${res.status}${corpo ? ` — ${corpo.slice(0, 300)}` : ""}`);
   }
-  const data = await res.json().catch(() => null);
-  return extrairEvolutionMessageId(data);
+  // Corpo de sucesso é best-effort: nem todo endpoint devolve `key.id` (ex. sendTemplate em
+  // algumas versões) — ausência não é erro, só significa que o eco `fromMe` não vai deduplicar
+  // para essa mensagem específica (webhook grava como `celular` mesmo sendo eco; pior caso é uma
+  // linha a mais na conversa, nunca perda de mensagem).
+  const corpo = await res.json().catch(() => null);
+  return extrairWaMessageId(corpo);
 }

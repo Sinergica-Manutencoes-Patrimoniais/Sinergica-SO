@@ -1,3 +1,4 @@
+import { Skeleton } from "@sinergica/ui";
 import { RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -225,14 +226,20 @@ export function AtendimentoInboxPage({
   }
 
   if (permissoesCarregando || estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Atendimento.
         </p>
       </div>
@@ -243,11 +250,11 @@ export function AtendimentoInboxPage({
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregarConversas}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -262,6 +269,9 @@ export function AtendimentoInboxPage({
         conversaSelecionada ? "xl:grid-cols-[300px_1fr_260px]" : "xl:grid-cols-[300px_1fr]"
       }`}
     >
+      {/* E00-S18 AC-5 — layout de inbox não tem espaço visual pro título, mas a hierarquia de
+       * heading precisa existir mesmo assim. */}
+      <h1 className="sr-only">Caixa de entrada do Atendimento</h1>
       <div className={`${conversaSelecionada ? "hidden xl:block" : "min-h-0"}`}>
         <ConversaLista
           conversas={conversas}

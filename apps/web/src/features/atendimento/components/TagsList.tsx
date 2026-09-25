@@ -1,3 +1,4 @@
+import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
 import { Edit3, Plus, Tag as TagIcon, X } from "lucide-react";
 import { useState } from "react";
 import type { TagItem } from "../domain/tags";
@@ -24,6 +25,7 @@ export function TagsList({
   const [nome, setNome] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [tagParaDesativar, setTagParaDesativar] = useState<TagItem | null>(null);
 
   function abrirModal(next: ModalState) {
     setModal(next);
@@ -46,50 +48,38 @@ export function TagsList({
     }
   }
 
-  async function desativar(item: TagItem) {
-    if (
-      !window.confirm(`Desativar a tag "${item.nome}"? Conversas que já a usam não são afetadas.`)
-    )
-      return;
-    setSalvando(true);
-    setErro(null);
-    try {
-      await onDesativar(item.id);
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível desativar a tag.");
-    } finally {
-      setSalvando(false);
-    }
+  async function desativar() {
+    if (!tagParaDesativar) return;
+    await onDesativar(tagParaDesativar.id);
   }
 
   return (
     <section className="rounded-xl border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
         <div>
-          <h3 className="text-base font-semibold text-ink">Tags de conversa</h3>
-          <p className="text-sm text-ink-3">Catálogo usado para classificar conversas no Inbox</p>
+          <h3 className="text-heading font-semibold text-ink">Tags de conversa</h3>
+          <p className="text-body text-ink-3">Catálogo usado para classificar conversas no Inbox</p>
         </div>
         {temEscrita && (
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            icon={<Plus className="h-4 w-4" />}
             onClick={() => abrirModal({ modo: "criar" })}
-            className="btn-primary"
           >
-            <Plus className="h-4 w-4" />
             Nova tag
-          </button>
+          </Button>
         )}
       </div>
 
       {erro && !modal && (
-        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erro}
         </div>
       )}
 
       <div className="divide-y divide-line-soft">
         {tags.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-ink-3">Nenhuma tag cadastrada.</div>
+          <div className="px-5 py-8 text-center text-body text-ink-3">Nenhuma tag cadastrada.</div>
         ) : (
           tags.map((tag) => (
             <div
@@ -107,24 +97,22 @@ export function TagsList({
               </div>
               {temEscrita && (
                 <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<Edit3 className="h-4 w-4" />}
                     onClick={() => abrirModal({ modo: "editar", item: tag })}
-                    className="rounded-md border border-line p-2 text-ink-2 hover:bg-line-soft"
                     title="Editar"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </button>
+                  />
                   {tag.ativo && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      icon={<X className="h-4 w-4" />}
                       disabled={salvando}
-                      onClick={() => desativar(tag)}
-                      className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
+                      onClick={() => setTagParaDesativar(tag)}
                       title="Desativar"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    />
                   )}
                 </div>
               )}
@@ -133,64 +121,57 @@ export function TagsList({
         )}
       </div>
 
-      {modal && (
-        <div className="modal-backdrop">
-          <div className="w-full max-w-md rounded-xl border border-line bg-card shadow-modal">
-            <div className="flex items-center justify-between border-b border-line-soft px-5 py-4">
-              <h3 className="text-base font-semibold text-ink">
-                {modal.modo === "criar" ? "Nova tag" : "Editar tag"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setModal(null)}
-                className="rounded-md p-2 text-ink-3 hover:bg-line-soft"
-                title="Fechar"
-              >
-                <X className="h-4 w-4" />
-              </button>
+      <Modal
+        open={modal !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setModal(null);
+        }}
+        titulo={modal?.modo === "criar" ? "Nova tag" : "Editar tag"}
+        tamanho="sm"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void salvar();
+          }}
+        >
+          <label className="block">
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+              Nome
+            </span>
+            <input
+              className="input mt-1"
+              value={nome}
+              onChange={(event) => setNome(event.target.value)}
+            />
+          </label>
+          {erro && (
+            <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
+              {erro}
             </div>
-            <form
-              className="space-y-4 px-5 py-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void salvar();
-              }}
-            >
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Nome
-                </span>
-                <input
-                  className="input mt-1"
-                  value={nome}
-                  onChange={(event) => setNome(event.target.value)}
-                />
-              </label>
-              {erro && (
-                <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
-                  {erro}
-                </div>
-              )}
-              <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
-                <button
-                  type="button"
-                  onClick={() => setModal(null)}
-                  className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={salvando}
-                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
-                >
-                  {salvando ? "Salvando…" : "Salvar"}
-                </button>
-              </div>
-            </form>
+          )}
+          <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+            <Button variant="secondary" onClick={() => setModal(null)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="primary" disabled={salvando} loading={salvando}>
+              {salvando ? "Salvando…" : "Salvar"}
+            </Button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        open={tagParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setTagParaDesativar(null);
+        }}
+        titulo={`Desativar a tag "${tagParaDesativar?.nome}"`}
+        descricao="Conversas que já usam essa tag não são afetadas."
+        rotuloConfirmar="Desativar"
+        onConfirmar={desativar}
+      />
     </section>
   );
 }

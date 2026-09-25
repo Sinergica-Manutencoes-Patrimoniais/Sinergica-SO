@@ -34,12 +34,12 @@ export function PainelBacklog({
   return (
     <div className="bg-card rounded-xl border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
-        <h3 className="text-sm font-semibold text-ink">Backlog (OS em aberto)</h3>
-        <p className="text-xs text-ink-3 mt-0.5">Priorizadas por score GUT</p>
+        <h3 className="text-body font-semibold text-ink">Backlog (OS em aberto)</h3>
+        <p className="text-caption text-ink-3 mt-0.5">Priorizadas por score GUT</p>
       </div>
 
       {ordens.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-ink-3">Nenhuma OS em aberto</div>
+        <div className="px-5 py-8 text-center text-body text-ink-3">Nenhuma OS em aberto</div>
       ) : (
         <div className="divide-y divide-line-soft">
           {ordens.map((os) => {
@@ -52,12 +52,12 @@ export function PainelBacklog({
                   disabled={!onSelecionar}
                   className="w-full px-5 py-3.5 flex items-center gap-3 text-left hover:bg-line-soft disabled:cursor-default disabled:hover:bg-transparent"
                 >
-                  <span className="text-xs font-brand tabular-nums text-ink-3 w-16 shrink-0">
+                  <span className="text-caption font-brand tabular-nums text-ink-3 w-16 shrink-0">
                     {os.numero}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-ink truncate">{os.titulo}</p>
-                    <p className="text-xs text-ink-3 truncate capitalize">
+                    <p className="text-body font-medium text-ink truncate">{os.titulo}</p>
+                    <p className="text-caption text-ink-3 truncate capitalize">
                       {os.categoria}
                       {os.tecnicoNome ? ` · Técnico: ${os.tecnicoNome}` : ""}
                     </p>
@@ -66,7 +66,7 @@ export function PainelBacklog({
                     <span className={`w-1.5 h-1.5 rounded-full ${prio.dot}`} />
                     <span className="text-ink-2">{prio.label}</span>
                   </span>
-                  <span className="text-xs font-bold font-brand text-ink-2 tabular-nums shrink-0 w-16 text-right">
+                  <span className="text-caption font-bold font-brand text-ink-2 tabular-nums shrink-0 w-16 text-right">
                     {os.gravidade ?? 1}·{os.urgencia ?? 1}·{os.tendencia ?? 1}
                     <span className="block text-micro font-normal text-ink-3">
                       score {os.scorePcm}

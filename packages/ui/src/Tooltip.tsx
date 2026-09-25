@@ -24,7 +24,7 @@ export function Tooltip({
         <RadixTooltip.Content
           sideOffset={6}
           collisionPadding={8}
-          className="anim-overlay z-[100] max-w-xs whitespace-pre-line rounded-md border border-navy-line bg-navy px-3 py-2 text-xs text-white shadow-overlay"
+          className="anim-overlay z-[100] max-w-xs whitespace-pre-line rounded-md border border-navy-line bg-navy px-3 py-2 text-caption text-white shadow-overlay"
         >
           {content}
           <RadixTooltip.Arrow className="fill-navy" />

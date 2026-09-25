@@ -66,14 +66,14 @@ export function CanalExternoTab({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-ink-3">
+        <p className="text-body text-ink-3">
           {canais.length} conexão(ões) de {titulo}.
         </p>
         {temEscrita && !mostrarForm && (
           <button
             type="button"
             onClick={() => setMostrarForm(true)}
-            className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+            className="inline-flex items-center gap-1.5 rounded-md bg-navy px-3 py-2 text-body font-semibold text-white hover:bg-navy-deep"
           >
             <Plus className="h-4 w-4" /> Adicionar
           </button>
@@ -81,7 +81,7 @@ export function CanalExternoTab({
       </div>
 
       {canais.length === 0 ? (
-        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-body text-ink-3">
           Nenhuma conexão de {titulo} configurada ainda.
         </div>
       ) : (
@@ -89,8 +89,8 @@ export function CanalExternoTab({
           {canais.map((c) => (
             <div key={c.id} className="flex items-center justify-between px-4 py-3">
               <div>
-                <p className="text-sm font-medium text-ink-2">{c.label}</p>
-                <p className="text-xs text-ink-3">
+                <p className="text-body font-medium text-ink-2">{c.label}</p>
+                <p className="text-caption text-ink-3">
                   {LABEL_IDENTIFICADOR[tipo]}: {c.identificadorExterno ?? "—"}
                 </p>
               </div>
@@ -104,7 +104,7 @@ export function CanalExternoTab({
                   <button
                     type="button"
                     onClick={() => onDesativar(c.id)}
-                    className="text-xs text-danger hover:underline"
+                    className="text-caption text-danger hover:underline"
                   >
                     Desativar
                   </button>
@@ -122,19 +122,19 @@ export function CanalExternoTab({
               value={form.label}
               onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
               placeholder="Nome da conta"
-              className="rounded-md border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-body"
             />
             <input
               value={form.identificadorExterno}
               onChange={(e) => setForm((f) => ({ ...f, identificadorExterno: e.target.value }))}
               placeholder={LABEL_IDENTIFICADOR[tipo]}
-              className="rounded-md border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-body"
             />
             <input
               value={form.verifyToken}
               onChange={(e) => setForm((f) => ({ ...f, verifyToken: e.target.value }))}
               placeholder="Verify Token"
-              className="col-span-2 rounded-md border border-line p-2 text-sm"
+              className="col-span-2 rounded-md border border-line p-2 text-body"
             />
             {tipo === "meta_wa" && (
               <input
@@ -143,7 +143,7 @@ export function CanalExternoTab({
                   setForm((f) => ({ ...f, identificadorSecundario: e.target.value }))
                 }
                 placeholder="WhatsApp Business Account ID (WABA)"
-                className="col-span-2 rounded-md border border-line p-2 text-sm"
+                className="col-span-2 rounded-md border border-line p-2 text-body"
               />
             )}
           </div>
@@ -152,7 +152,7 @@ export function CanalExternoTab({
             navegador.
           </p>
           {erro && (
-            <div className="mt-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="mt-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}
@@ -161,14 +161,14 @@ export function CanalExternoTab({
               type="button"
               onClick={salvar}
               disabled={salvando}
-              className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+              className="rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
             >
               {salvando ? "Salvando…" : "Salvar"}
             </button>
             <button
               type="button"
               onClick={() => setMostrarForm(false)}
-              className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+              className="rounded-md border border-line px-4 py-2 text-body font-semibold text-ink-2 hover:bg-line-soft"
             >
               Cancelar
             </button>

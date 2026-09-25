@@ -1,4 +1,5 @@
-import { Plus, RefreshCw, Users, X } from "lucide-react";
+import { Button, Modal, Skeleton } from "@sinergica/ui";
+import { Plus, RefreshCw, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -29,7 +30,7 @@ export function CustosPessoalPage() {
   const temEscrita = podeAcessar("financeiro", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [custos, funcionarios] = await Promise.all([
         listarCustosFuncionario(supabaseFinanceiroAdapter),
@@ -57,12 +58,18 @@ export function CustosPessoalPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -72,11 +79,11 @@ export function CustosPessoalPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -99,8 +106,8 @@ export function CustosPessoalPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Custos de pessoal</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h1 className="text-heading font-semibold text-ink">Custos de pessoal</h1>
+            <p className="mt-0.5 text-body text-ink-3">
               Custo mensal por funcionário → R$/h derivado, com histórico de vigência.
             </p>
           </div>
@@ -108,7 +115,7 @@ export function CustosPessoalPage() {
             <button
               type="button"
               onClick={() => setModalAberto(true)}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
               Novo custo
@@ -116,7 +123,7 @@ export function CustosPessoalPage() {
           )}
         </div>
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -125,7 +132,7 @@ export function CustosPessoalPage() {
       {porFuncionario.size === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Users className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhum custo cadastrado.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhum custo cadastrado.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
@@ -133,7 +140,7 @@ export function CustosPessoalPage() {
             const vigente = historico[0]; // já ordenado desc por vigente_desde
             return (
               <div key={funcionarioId} className="rounded-lg border border-line bg-card p-4">
-                <h4 className="text-sm font-semibold text-ink">
+                <h4 className="text-body font-semibold text-ink">
                   {funcionarioPorId.get(funcionarioId) ?? "Funcionário"}
                 </h4>
                 {vigente && (
@@ -142,10 +149,10 @@ export function CustosPessoalPage() {
                     {custoHoraDerivado(vigente.custoMensalCentavos, vigente.horasMesBase)
                       .toFixed(2)
                       .replace(".", ",")}
-                    <span className="text-sm font-normal text-ink-3">/hora</span>
+                    <span className="text-body font-normal text-ink-3">/hora</span>
                   </p>
                 )}
-                <ul className="mt-3 flex flex-col gap-1 text-xs text-ink-3">
+                <ul className="mt-3 flex flex-col gap-1 text-caption text-ink-3">
                   {historico.map((c) => (
                     <li key={c.id}>
                       Desde {new Date(c.vigenteDesde).toLocaleDateString("pt-BR")}: R${" "}
@@ -205,17 +212,18 @@ function CustoModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">Novo custo de funcionário</h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo="Novo custo de funcionário"
+      tamanho="md"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Funcionário *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Funcionário *</span>
             <select
               value={funcionarioId}
               onChange={(e) => setFuncionarioId(e.target.value)}
@@ -230,7 +238,7 @@ function CustoModal({
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Custo mensal *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Custo mensal *</span>
             <input
               value={custoMensal}
               onChange={(e) => setCustoMensal(e.target.value)}
@@ -239,7 +247,9 @@ function CustoModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Horas-base do mês *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
+              Horas-base do mês *
+            </span>
             <input
               type="number"
               value={horasMesBase}
@@ -248,7 +258,9 @@ function CustoModal({
             />
           </label>
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Vigente desde *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
+              Vigente desde *
+            </span>
             <input
               type="date"
               value={vigenteDesde}
@@ -257,29 +269,20 @@ function CustoModal({
             />
           </label>
           {erro && (
-            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+          </Button>
+          <Button variant="primary" onClick={salvar} disabled={salvando} loading={salvando}>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

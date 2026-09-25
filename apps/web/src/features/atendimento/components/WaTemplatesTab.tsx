@@ -53,7 +53,7 @@ export function WaTemplatesTab({
   return (
     <div className="flex flex-col gap-4">
       {templates.length === 0 ? (
-        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-body text-ink-3">
           Nenhum template cadastrado ainda.
         </div>
       ) : (
@@ -61,10 +61,10 @@ export function WaTemplatesTab({
           {templates.map((t) => (
             <div key={t.id} className="flex items-center justify-between px-4 py-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-ink-2">
+                <p className="text-body font-medium text-ink-2">
                   {t.nome} · {t.idioma}
                 </p>
-                <p className="truncate text-xs text-ink-3">{t.corpo}</p>
+                <p className="truncate text-caption text-ink-3">{t.corpo}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2 pl-3">
                 <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro text-ink-2">
@@ -88,7 +88,7 @@ export function WaTemplatesTab({
                         corpo: t.corpo,
                       });
                     }}
-                    className="text-xs text-orange"
+                    className="text-caption text-orange"
                   >
                     Editar
                   </button>
@@ -101,11 +101,11 @@ export function WaTemplatesTab({
 
       {temEscrita && (
         <div className="rounded-xl border border-line bg-card p-4">
-          <h3 className="text-sm font-semibold text-ink">
+          <h3 className="text-body font-semibold text-ink">
             {editandoId ? "Editar template" : "Novo template"}
           </h3>
           {canaisWa.length === 0 ? (
-            <p className="mt-2 text-sm text-ink-3">
+            <p className="mt-2 text-body text-ink-3">
               Conecte uma conta na aba "Meta WA" antes de criar templates.
             </p>
           ) : (
@@ -114,7 +114,7 @@ export function WaTemplatesTab({
                 <select
                   value={form.canalId}
                   onChange={(e) => setForm((f) => ({ ...f, canalId: e.target.value }))}
-                  className="rounded-md border border-line p-2 text-sm"
+                  className="rounded-md border border-line p-2 text-body"
                 >
                   {canaisWa.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -130,7 +130,7 @@ export function WaTemplatesTab({
                       categoria: e.target.value as WaTemplateFormData["categoria"],
                     }))
                   }
-                  className="rounded-md border border-line p-2 text-sm"
+                  className="rounded-md border border-line p-2 text-body"
                 >
                   <option value="utility">Utility</option>
                   <option value="marketing">Marketing</option>
@@ -141,17 +141,17 @@ export function WaTemplatesTab({
                 value={form.nome}
                 onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
                 placeholder="Nome do template"
-                className="w-full rounded-md border border-line p-2 text-sm"
+                className="w-full rounded-md border border-line p-2 text-body"
               />
               <textarea
                 value={form.corpo}
                 onChange={(e) => setForm((f) => ({ ...f, corpo: e.target.value }))}
                 placeholder="Corpo (use {{1}}, {{2}}… para variáveis)"
                 rows={3}
-                className="w-full rounded-md border border-line p-2 text-sm"
+                className="w-full rounded-md border border-line p-2 text-body"
               />
               {erro && (
-                <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+                <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
                   {erro}
                 </div>
               )}
@@ -159,7 +159,7 @@ export function WaTemplatesTab({
                 type="button"
                 onClick={salvar}
                 disabled={salvando}
-                className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+                className="rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
               >
                 {salvando ? "Salvando…" : editandoId ? "Salvar template" : "Criar template"}
               </button>

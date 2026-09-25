@@ -36,7 +36,7 @@ function Linha({
     previsto > 0 ? Math.min((realizado / previsto) * 100, 100) : realizado > 0 ? 100 : 0;
   return (
     <div>
-      <div className="flex items-baseline justify-between text-xs">
+      <div className="flex items-baseline justify-between text-caption">
         <span className="font-medium text-ink-2">{titulo}</span>
         <span className="text-ink-3">
           R$ {centavosParaReais(realizado)} de R$ {centavosParaReais(previsto)} previstos

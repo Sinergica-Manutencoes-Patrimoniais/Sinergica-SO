@@ -18,14 +18,14 @@ export function PainelHistorico({
   return (
     <div className="bg-card rounded-xl border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
-        <h3 className="text-sm font-semibold text-ink">Histórico de OS</h3>
-        <p className="text-xs text-ink-3 mt-0.5">
+        <h3 className="text-body font-semibold text-ink">Histórico de OS</h3>
+        <p className="text-caption text-ink-3 mt-0.5">
           Concluídas e canceladas — status do campo (Auvo)
         </p>
       </div>
 
       {ordens.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-ink-3">Nenhum histórico ainda</div>
+        <div className="px-5 py-8 text-center text-body text-ink-3">Nenhum histórico ainda</div>
       ) : (
         <div className="divide-y divide-line-soft">
           {ordens.map((os) => {
@@ -41,12 +41,12 @@ export function PainelHistorico({
                   disabled={!onSelecionar}
                   className="w-full px-5 py-3.5 flex items-center gap-3 text-left hover:bg-line-soft disabled:cursor-default disabled:hover:bg-transparent"
                 >
-                  <span className="text-xs font-brand tabular-nums text-ink-3 w-16 shrink-0">
+                  <span className="text-caption font-brand tabular-nums text-ink-3 w-16 shrink-0">
                     {os.numero}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-ink truncate">{os.titulo}</p>
-                    <p className="text-xs text-ink-3 truncate capitalize">
+                    <p className="text-body font-medium text-ink truncate">{os.titulo}</p>
+                    <p className="text-caption text-ink-3 truncate capitalize">
                       {os.categoria}
                       {os.tecnicoNome ? ` · Técnico: ${os.tecnicoNome}` : ""}
                     </p>

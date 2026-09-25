@@ -1,3 +1,4 @@
+import { ConfirmDialog } from "@sinergica/ui";
 import { Plus, Radio, X } from "lucide-react";
 import { useState } from "react";
 import type { InstanciaAgenteItem } from "../domain/instancias-agente";
@@ -21,6 +22,7 @@ export function InstanciasAgenteList({
   const [personaId, setPersonaId] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [itemParaDesativar, setItemParaDesativar] = useState<InstanciaAgenteItem | null>(null);
 
   const personasAtivas = personas.filter((p) => p.ativo);
 
@@ -39,25 +41,17 @@ export function InstanciasAgenteList({
     }
   }
 
-  async function desativar(item: InstanciaAgenteItem) {
-    if (!window.confirm(`Desligar o agente da instância "${item.instanceId}"?`)) return;
-    setSalvando(true);
-    setErro(null);
-    try {
-      await onDesativar(item.id);
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível desligar a instância.");
-    } finally {
-      setSalvando(false);
-    }
+  async function desativar() {
+    if (!itemParaDesativar) return;
+    await onDesativar(itemParaDesativar.id);
   }
 
   return (
     <section className="rounded-xl border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
         <div>
-          <h3 className="text-base font-semibold text-ink">Instâncias de agente</h3>
-          <p className="text-sm text-ink-3">
+          <h3 className="text-heading font-semibold text-ink">Instâncias de agente</h3>
+          <p className="text-body text-ink-3">
             Mapeia uma instância WhatsApp (Evolution) dedicada a um agente/persona — usado pelo
             agente comercial, que atende contato novo fora do fluxo por condomínio do Zé
           </p>
@@ -71,7 +65,7 @@ export function InstanciasAgenteList({
       </div>
 
       {erro && (
-        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="mx-5 mt-4 rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erro}
         </div>
       )}
@@ -85,7 +79,7 @@ export function InstanciasAgenteList({
           }}
         >
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
               Instance ID (Evolution)
             </span>
             <input
@@ -96,7 +90,7 @@ export function InstanciasAgenteList({
             />
           </label>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+            <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
               Persona
             </span>
             <select
@@ -116,14 +110,14 @@ export function InstanciasAgenteList({
             <button
               type="button"
               onClick={() => setCriando(false)}
-              className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+              className="rounded-md border border-line px-4 py-2 text-body font-semibold text-ink-2 hover:bg-line-soft"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={salvando}
-              className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+              className="rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
             >
               {salvando ? "Salvando…" : "Vincular"}
             </button>
@@ -133,7 +127,7 @@ export function InstanciasAgenteList({
 
       <div className="divide-y divide-line-soft">
         {instancias.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-ink-3">
+          <div className="px-5 py-8 text-center text-body text-ink-3">
             Nenhuma instância vinculada ainda.
           </div>
         ) : (
@@ -143,7 +137,7 @@ export function InstanciasAgenteList({
                 <Radio className="h-4 w-4 text-ink-3" />
                 <div>
                   <p className="font-semibold text-ink">{item.instanceId}</p>
-                  <p className="text-xs text-ink-3">
+                  <p className="text-caption text-ink-3">
                     {item.personaNome}
                     {!item.ativo && " · desligada"}
                   </p>
@@ -152,8 +146,7 @@ export function InstanciasAgenteList({
               {temEscrita && item.ativo && (
                 <button
                   type="button"
-                  disabled={salvando}
-                  onClick={() => desativar(item)}
+                  onClick={() => setItemParaDesativar(item)}
                   className="rounded-md border border-danger-line p-2 text-danger hover:bg-danger-soft disabled:opacity-50"
                   title="Desligar"
                 >
@@ -164,6 +157,17 @@ export function InstanciasAgenteList({
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={itemParaDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setItemParaDesativar(null);
+        }}
+        titulo={`Desligar o agente da instância "${itemParaDesativar?.instanceId}"`}
+        descricao="O agente para de responder por essa instância."
+        rotuloConfirmar="Desligar"
+        onConfirmar={desativar}
+      />
     </section>
   );
 }

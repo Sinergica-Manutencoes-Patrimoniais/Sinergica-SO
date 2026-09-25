@@ -7,6 +7,11 @@
 -- por wa_message_id, resolve/cria conversa, mas NÃO incrementa nao_lidas (AC-2 — só entrada conta
 -- como não lida) e usa o timestamp real do evento Evolution, não now() (AC-3).
 --
+-- RECONSTRUÍDA nesta sessão (E01-S146) — ver nota em 0205_E02-S31_ia_gasto_log.sql. Achada ao
+-- investigar por que mensagens enviadas pelo celular não aparecem no Atendimento (2026-08-19) —
+-- esta função existe e está aplicada em produção, mas nada no código do app/webhook a invoca
+-- ainda (ver STATE.md).
+--
 -- Reverso:
 --   drop function if exists atendimento.fn_registrar_mensagem_celular(text,text,text,text,text,timestamptz);
 --   alter table atendimento.mensagens drop column if exists origem_envio;

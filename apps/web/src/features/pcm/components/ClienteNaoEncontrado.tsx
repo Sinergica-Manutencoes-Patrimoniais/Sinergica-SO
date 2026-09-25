@@ -10,7 +10,7 @@ export function ClienteNaoEncontrado() {
       </div>
       <div>
         <h2 className="text-lg font-semibold text-ink-2">Cliente não encontrado</h2>
-        <p className="text-sm text-ink-3 mt-1 max-w-sm">
+        <p className="text-body text-ink-3 mt-1 max-w-sm">
           Não foi possível localizar este cliente. Ele pode ter sido removido ou o endereço está
           incorreto.
         </p>

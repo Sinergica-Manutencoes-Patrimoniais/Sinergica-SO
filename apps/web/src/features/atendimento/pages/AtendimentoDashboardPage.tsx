@@ -1,3 +1,4 @@
+import { Skeleton } from "@sinergica/ui";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -38,7 +39,7 @@ export function AtendimentoDashboardPage() {
   const temLeitura = podeAcessar("atendimento", "leitura");
 
   const carregar = useCallback(async (p: PeriodoDashboard) => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const snapshot = await obterPainelAtendimento(supabaseDashboardAtendimentoAdapter, p);
       setEstado({
@@ -59,14 +60,20 @@ export function AtendimentoDashboardPage() {
   }, [permissoesCarregando, temLeitura, periodo, carregar]);
 
   if (permissoesCarregando || estado.fase === "carregando") {
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando dashboard…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   }
 
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Atendimento.
         </p>
       </div>
@@ -77,7 +84,7 @@ export function AtendimentoDashboardPage() {
     return (
       <div className="rounded-xl border border-line bg-card p-8 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Dashboard indisponível</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button type="button" onClick={() => carregar(periodo)} className="mt-4 btn-secondary">
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -92,8 +99,8 @@ export function AtendimentoDashboardPage() {
     <div className="page-stack">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-ink">Atendimento</h2>
-          <p className="text-sm text-ink-3">
+          <h1 className="text-heading font-semibold text-ink">Atendimento</h1>
+          <p className="text-body text-ink-3">
             Visão operacional — fila, tempo de resposta, tendência, canais, IA e equipe.
           </p>
         </div>
@@ -104,7 +111,7 @@ export function AtendimentoDashboardPage() {
                 key={p.valor}
                 type="button"
                 onClick={() => setPeriodo(p.valor)}
-                className={`rounded-sm px-2.5 py-1 text-xs font-semibold ${
+                className={`rounded-sm px-2.5 py-1 text-caption font-semibold ${
                   periodo === p.valor ? "bg-navy text-white" : "text-ink-2 hover:bg-line-soft"
                 }`}
               >
@@ -213,7 +220,7 @@ function Kpi({
         {label}
       </div>
       <p
-        className={`mt-1 font-brand text-xl font-bold leading-none tabular-nums ${alerta ? "text-danger" : "text-ink"}`}
+        className={`mt-1 font-brand text-title font-bold leading-none tabular-nums ${alerta ? "text-danger" : "text-ink"}`}
       >
         {valor}
       </p>
@@ -232,21 +239,21 @@ function QueueHealthCard({ aging }: { aging: PainelAtendimento["aging"] }) {
   };
   return (
     <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
-      <h3 className="text-sm font-semibold text-ink">Saúde da fila — tempo de espera</h3>
-      <p className="mt-0.5 text-xs text-ink-3">
+      <h3 className="text-body font-semibold text-ink">Saúde da fila — tempo de espera</h3>
+      <p className="mt-0.5 text-caption text-ink-3">
         Conversas abertas não lidas, por quanto tempo aguardam resposta.
       </p>
       <div className="mt-4 space-y-2.5">
         {aging.map((a) => (
           <div key={a.faixa} className="flex items-center gap-3">
-            <span className="w-14 shrink-0 text-xs font-medium text-ink-2">{a.faixa}</span>
+            <span className="w-14 shrink-0 text-caption font-medium text-ink-2">{a.faixa}</span>
             <div className="h-2.5 flex-1 rounded-full bg-line-soft">
               <div
                 className={`h-2.5 rounded-full ${cores[a.faixa]}`}
                 style={{ width: `${Math.max((a.total / max) * 100, a.total > 0 ? 4 : 0)}%` }}
               />
             </div>
-            <span className="w-6 shrink-0 text-right text-xs font-semibold text-ink">
+            <span className="w-6 shrink-0 text-right text-caption font-semibold text-ink">
               {a.total}
             </span>
           </div>
@@ -261,8 +268,8 @@ function AiHealthCard({ painel }: { painel: PainelAtendimento }) {
   const iaPct = painel.autonomiaPct ?? 0;
   return (
     <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
-      <h3 className="text-sm font-semibold text-ink">IA — autonomia e escalonamento</h3>
-      <p className="mt-0.5 text-xs text-ink-3">
+      <h3 className="text-body font-semibold text-ink">IA — autonomia e escalonamento</h3>
+      <p className="mt-0.5 text-caption text-ink-3">
         Modo das conversas abertas e quanto passa para humano.
       </p>
       <div className="mt-4 flex items-center gap-4">
@@ -271,7 +278,7 @@ function AiHealthCard({ painel }: { painel: PainelAtendimento }) {
           <div className="h-full bg-orange" style={{ width: `${100 - iaPct}%` }} />
         </div>
       </div>
-      <div className="mt-2 flex items-center justify-between text-xs text-ink-2">
+      <div className="mt-2 flex items-center justify-between text-caption text-ink-2">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-navy" /> IA conduzindo {painel.autonomiaZe} (
           {iaPct}%)
@@ -281,7 +288,7 @@ function AiHealthCard({ painel }: { painel: PainelAtendimento }) {
           {total > 0 ? 100 - iaPct : 0}%)
         </span>
       </div>
-      <div className="mt-4 space-y-1.5 border-t border-line-soft pt-3 text-xs text-ink-2">
+      <div className="mt-4 space-y-1.5 border-t border-line-soft pt-3 text-caption text-ink-2">
         <p>
           Escalou para humano{" "}
           <span className="font-semibold text-ink">{painel.escalonadoPct ?? "—"}%</span>{" "}
@@ -302,15 +309,15 @@ function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] 
   const max = Math.max(...mixCanal.map((m) => m.total), 1);
   return (
     <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
-      <h3 className="text-sm font-semibold text-ink">Mix de canal</h3>
-      <p className="mt-0.5 text-xs text-ink-3">De onde vem a demanda no período.</p>
+      <h3 className="text-body font-semibold text-ink">Mix de canal</h3>
+      <p className="mt-0.5 text-caption text-ink-3">De onde vem a demanda no período.</p>
       {mixCanal.length === 0 ? (
-        <p className="mt-6 text-center text-sm text-ink-3">Sem conversas no período.</p>
+        <p className="mt-6 text-center text-body text-ink-3">Sem conversas no período.</p>
       ) : (
         <div className="mt-4 space-y-2.5">
           {mixCanal.map((m) => (
             <div key={m.label} className="flex items-center gap-3">
-              <span className="w-20 shrink-0 truncate text-xs font-medium capitalize text-ink-2">
+              <span className="w-20 shrink-0 truncate text-caption font-medium capitalize text-ink-2">
                 {m.label}
               </span>
               <div className="h-2.5 flex-1 rounded-full bg-line-soft">
@@ -319,7 +326,7 @@ function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] 
                   style={{ width: `${(m.total / max) * 100}%` }}
                 />
               </div>
-              <span className="w-6 shrink-0 text-right text-xs font-semibold text-ink">
+              <span className="w-6 shrink-0 text-right text-caption font-semibold text-ink">
                 {m.total}
               </span>
             </div>
@@ -333,11 +340,11 @@ function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] 
 function CsatCard({ csat }: { csat: PainelAtendimento["csat"] }) {
   return (
     <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
-      <h3 className="text-sm font-semibold text-ink">Satisfação (CSAT)</h3>
-      <p className="mt-0.5 text-xs text-ink-3">
+      <h3 className="text-body font-semibold text-ink">Satisfação (CSAT)</h3>
+      <p className="mt-0.5 text-caption text-ink-3">
         Notas de pesquisas ligadas ao atendimento no período.
       </p>
-      <div className="mt-6 text-center text-sm text-ink-3">
+      <div className="mt-6 text-center text-body text-ink-3">
         {csat.respostas === 0
           ? "Sem respostas ainda — liga quando pesquisas pós-atendimento existirem."
           : `${csat.media?.toFixed(1) ?? "—"} de média · ${csat.respostas} respostas`}
@@ -350,10 +357,10 @@ function VolumeTrendCard({ volumeDiario }: { volumeDiario: WidgetsAtendimento["v
   const max = Math.max(...volumeDiario.flatMap((v) => [v.entrada, v.saida]), 1);
   return (
     <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
-      <h3 className="text-sm font-semibold text-ink">Volume por dia</h3>
-      <p className="mt-0.5 text-xs text-ink-3">Mensagens recebidas vs enviadas no período.</p>
+      <h3 className="text-body font-semibold text-ink">Volume por dia</h3>
+      <p className="mt-0.5 text-caption text-ink-3">Mensagens recebidas vs enviadas no período.</p>
       {volumeDiario.length === 0 ? (
-        <p className="mt-6 text-center text-sm text-ink-3">Sem mensagens no período.</p>
+        <p className="mt-6 text-center text-body text-ink-3">Sem mensagens no período.</p>
       ) : (
         <div className="mt-4 flex h-32 items-end gap-2">
           {volumeDiario.map((v) => (
@@ -404,15 +411,15 @@ function SlaDeliveryCard({
   const corBarra = pct >= 90 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-danger";
   return (
     <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
-      <h3 className="text-sm font-semibold text-ink">SLA & entrega</h3>
-      <p className="mt-0.5 text-xs text-ink-3">1ª resposta dentro da meta de 5 minutos.</p>
+      <h3 className="text-body font-semibold text-ink">SLA & entrega</h3>
+      <p className="mt-0.5 text-caption text-ink-3">1ª resposta dentro da meta de 5 minutos.</p>
       <p className={`font-brand mt-3 text-3xl font-bold ${cor}`}>
         {slaDentroMetaPct === null ? "—" : `${slaDentroMetaPct}%`}
       </p>
       <div className="mt-2 h-2 rounded-full bg-line-soft">
         <div className={`h-2 rounded-full ${corBarra}`} style={{ width: `${pct}%` }} />
       </div>
-      <p className="mt-3 text-xs text-ink-3">
+      <p className="mt-3 text-caption text-ink-3">
         Tempo médio de 1ª resposta:{" "}
         <span className="font-semibold text-ink-2">{frtMedioLabel}</span>
       </p>
@@ -428,8 +435,10 @@ function HourlyHeatmapCard({ heatmap }: { heatmap: HeatmapCelula[] }) {
   const porCelula = new Map(heatmap.map((h) => [`${h.diaSemana}-${h.hora}`, h.total]));
   return (
     <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
-      <h3 className="text-sm font-semibold text-ink">Pico por hora</h3>
-      <p className="mt-0.5 text-xs text-ink-3">Mensagens recebidas por dia da semana e hora.</p>
+      <h3 className="text-body font-semibold text-ink">Pico por hora</h3>
+      <p className="mt-0.5 text-caption text-ink-3">
+        Mensagens recebidas por dia da semana e hora.
+      </p>
       <div className="mt-4 overflow-x-auto">
         <div
           className="inline-grid gap-[3px]"
@@ -478,15 +487,15 @@ function RankingCard({
   const max = Math.max(...itens.map((i) => i.total), 1);
   return (
     <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
-      <h3 className="text-sm font-semibold text-ink">{titulo}</h3>
-      <p className="mt-0.5 text-xs text-ink-3">{subtitulo}</p>
+      <h3 className="text-body font-semibold text-ink">{titulo}</h3>
+      <p className="mt-0.5 text-caption text-ink-3">{subtitulo}</p>
       {itens.length === 0 ? (
-        <p className="mt-6 text-center text-sm text-ink-3">{vazio}</p>
+        <p className="mt-6 text-center text-body text-ink-3">{vazio}</p>
       ) : (
         <div className="mt-4 space-y-2.5">
           {itens.map((item) => (
             <div key={item.label} className="flex items-center gap-3">
-              <span className="w-24 shrink-0 truncate text-xs font-medium text-ink-2">
+              <span className="w-24 shrink-0 truncate text-caption font-medium text-ink-2">
                 {item.label}
               </span>
               <div className="h-2.5 flex-1 rounded-full bg-line-soft">
@@ -495,7 +504,7 @@ function RankingCard({
                   style={{ width: `${(item.total / max) * 100}%` }}
                 />
               </div>
-              <span className="w-8 shrink-0 text-right text-xs font-semibold text-ink">
+              <span className="w-8 shrink-0 text-right text-caption font-semibold text-ink">
                 {item.total}
               </span>
             </div>

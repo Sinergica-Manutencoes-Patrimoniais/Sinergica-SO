@@ -1,4 +1,5 @@
-import { AlertTriangle, FileText, Pencil, Plus, RefreshCw, Wand2, X } from "lucide-react";
+import { Button, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
+import { AlertTriangle, FileText, Pencil, Plus, RefreshCw, Wand2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -43,7 +44,7 @@ export function ContratosPage() {
   const temEscrita = podeAcessar("financeiro", "escrita");
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [contratos, clientes] = await Promise.all([
         listarContratos(supabaseFinanceiroAdapter),
@@ -96,12 +97,18 @@ export function ContratosPage() {
   }
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           Você não tem permissão de leitura no módulo Financeiro.
         </p>
       </div>
@@ -111,11 +118,11 @@ export function ContratosPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
         <button
           type="button"
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
           Tentar novamente
@@ -132,8 +139,8 @@ export function ContratosPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-ink">Contratos</h3>
-            <p className="mt-0.5 text-sm text-ink-3">
+            <h1 className="text-heading font-semibold text-ink">Contratos</h1>
+            <p className="mt-0.5 text-body text-ink-3">
               Receita mensal prevista (ativos): R${" "}
               {centavosParaReais(receitaMensalPrevista(contratos))}
             </p>
@@ -144,7 +151,7 @@ export function ContratosPage() {
                 type="button"
                 onClick={gerarPrevistosDoMes}
                 disabled={gerando}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line px-3 text-body font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
               >
                 <Wand2 className="h-4 w-4" />
                 {gerando ? "Gerando…" : "Gerar previstos do mês"}
@@ -154,7 +161,7 @@ export function ContratosPage() {
               <button
                 type="button"
                 onClick={() => setModal({ modo: "novo" })}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
               >
                 <Plus className="h-4 w-4" />
                 Novo contrato
@@ -162,9 +169,9 @@ export function ContratosPage() {
             )}
           </div>
         </div>
-        {mensagemGeracao && <p className="mt-3 text-sm text-ink-3">{mensagemGeracao}</p>}
+        {mensagemGeracao && <p className="mt-3 text-body text-ink-3">{mensagemGeracao}</p>}
         {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erroAcao}
           </div>
         )}
@@ -173,7 +180,7 @@ export function ContratosPage() {
       {contratos.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <FileText className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-sm text-ink-3">Nenhum contrato cadastrado.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhum contrato cadastrado.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
@@ -181,10 +188,10 @@ export function ContratosPage() {
             <div key={contrato.id} className="rounded-lg border border-line bg-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h4 className="truncate text-sm font-semibold text-ink">
+                  <h4 className="truncate text-body font-semibold text-ink">
                     {clientePorId.get(contrato.clienteId) ?? "Cliente"}
                   </h4>
-                  <p className="mt-1 text-xs text-ink-3">
+                  <p className="mt-1 text-caption text-ink-3">
                     R$ {centavosParaReais(contrato.valorMensalCentavos)}/mês · vence dia{" "}
                     {contrato.diaVencimento}
                   </p>
@@ -192,10 +199,10 @@ export function ContratosPage() {
                 <StatusBadge status={contrato.status} />
               </div>
               {contrato.descricao && (
-                <p className="mt-3 text-sm text-ink-3">{contrato.descricao}</p>
+                <p className="mt-3 text-body text-ink-3">{contrato.descricao}</p>
               )}
               {contrato.bloqueiaOsEmAtraso && (
-                <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-warning">
+                <p className="mt-2 flex items-center gap-1 text-caption font-semibold text-warning">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   Bloqueia OS em atraso (aviso — sem enforcement no PCM)
                 </p>
@@ -205,7 +212,7 @@ export function ContratosPage() {
                   <button
                     type="button"
                     onClick={() => setModal({ modo: "editar", contrato })}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-line px-3 text-xs font-semibold text-ink-2 hover:bg-line-soft"
+                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-line px-3 text-caption font-semibold text-ink-2 hover:bg-line-soft"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     Editar
@@ -293,19 +300,18 @@ function ContratoModal({
   }
 
   return (
-    <div className="modal-backdrop">
-      <div className="w-full max-w-2xl rounded-lg border border-line bg-card shadow-modal">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">
-            {contrato ? "Editar contrato" : "Novo contrato"}
-          </h3>
-          <button type="button" onClick={onCancel} className="text-ink-3 hover:text-ink">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+    <ModalPrimitivo
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onCancel();
+      }}
+      titulo={contrato ? "Editar contrato" : "Novo contrato"}
+      tamanho="lg"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Cliente *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
             <select
               value={clienteId}
               onChange={(e) => setClienteId(e.target.value)}
@@ -320,7 +326,7 @@ function ContratoModal({
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Valor mensal *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Valor mensal *</span>
             <input
               value={valor}
               onChange={(e) => setValor(e.target.value)}
@@ -329,7 +335,7 @@ function ContratoModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">
+            <span className="mb-1 block text-caption font-semibold text-ink-3">
               Dia de vencimento (1-28) *
             </span>
             <input
@@ -342,7 +348,7 @@ function ContratoModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Início *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Início *</span>
             <input
               type="date"
               value={inicio}
@@ -351,7 +357,7 @@ function ContratoModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Fim (opcional)</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Fim (opcional)</span>
             <input
               type="date"
               value={fim}
@@ -360,7 +366,7 @@ function ContratoModal({
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Status *</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Status *</span>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as ContratoStatus)}
@@ -371,7 +377,7 @@ function ContratoModal({
               <option value="encerrado">Encerrado</option>
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm text-ink-2">
+          <label className="flex items-center gap-2 text-body text-ink-2">
             <input
               type="checkbox"
               checked={bloqueia}
@@ -380,7 +386,7 @@ function ContratoModal({
             Bloqueia OS em atraso (aviso visual)
           </label>
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-ink-3">Descrição</span>
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
             <input
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
@@ -388,29 +394,25 @@ function ContratoModal({
             />
           </label>
           {erro && (
-            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="sm:col-span-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-line px-4 py-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 rounded-md border border-line px-3 text-sm font-semibold text-ink-2 hover:bg-line-soft"
-          >
+        <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+          <Button variant="secondary" onClick={onCancel} disabled={salvando}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={salvar}
             disabled={salvando || !clienteId}
-            className="h-9 rounded-md bg-orange px-3 text-sm font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
+            loading={salvando}
           >
-            {salvando ? "Salvando…" : "Salvar"}
-          </button>
+            Salvar
+          </Button>
         </div>
       </div>
-    </div>
+    </ModalPrimitivo>
   );
 }

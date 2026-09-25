@@ -10,6 +10,8 @@
 -- nova). Afeta os 6 KPIs do topo de Chamados/OS (ambas as telas — hub antigo e Operação unificada)
 -- e a listagem em si: os números como "ABERTAS 405" estavam inflados pelas OS de ponto.
 --
+-- RECONSTRUÍDA nesta sessão (E01-S146) — ver nota em 0205_E02-S31_ia_gasto_log.sql.
+--
 -- Reverso:
 --   (reaplicar as versões anteriores das duas funções — ver migrations 0173 e 0178)
 

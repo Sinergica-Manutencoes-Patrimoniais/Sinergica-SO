@@ -1,3 +1,4 @@
+import { Button, DataTable, Skeleton } from "@sinergica/ui";
 import { AlertTriangle, Gauge, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -53,7 +54,7 @@ export function CockpitFinanceiroPage() {
   const ehSuperadmin = user?.papel === "superadmin";
 
   const carregar = useCallback(async () => {
-    setEstado({ fase: "carregando" });
+    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [resumo, fluxo, rentabilidade, recebiveis, clientes] = await Promise.all([
         obterResumoCaixa(supabaseFinanceiroAdapter),
@@ -76,14 +77,20 @@ export function CockpitFinanceiroPage() {
   }, [permissoesCarregando, temLeitura, ehSuperadmin, carregar]);
 
   if (permissoesCarregando || estado.fase === "carregando")
-    return <div className="p-8 text-center text-sm text-ink-3">Carregando…</div>;
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
 
   // AC-5: só gestão (superadmin) — nem o gate de módulo financeiro basta aqui.
   if (!temLeitura || !ehSuperadmin) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
-        <p className="mt-1 text-sm text-ink-3">
+        <p className="mt-1 text-body text-ink-3">
           O cockpit financeiro é exclusivo do dono (superadmin).
         </p>
       </div>
@@ -93,15 +100,16 @@ export function CockpitFinanceiroPage() {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-sm text-ink-3">{estado.mensagem}</p>
-        <button
-          type="button"
+        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={<RefreshCw className="h-4 w-4" />}
           onClick={carregar}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep"
+          className="mt-4"
         >
-          <RefreshCw className="h-4 w-4" />
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -153,13 +161,13 @@ export function CockpitFinanceiroPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex items-center gap-2">
           <Gauge className="h-4 w-4 text-ink-3" />
-          <h3 className="text-base font-semibold text-ink">Cockpit financeiro</h3>
+          <h1 className="text-heading font-semibold text-ink">Cockpit financeiro</h1>
         </div>
-        <p className="mt-0.5 text-sm text-ink-3">
+        <p className="mt-0.5 text-body text-ink-3">
           Saúde financeira — visão executiva, exclusiva do dono.
         </p>
         {amostraPeq && (
-          <div className="mt-3 flex items-center gap-2 rounded-md border border-warning-soft bg-warning-soft px-3 py-2 text-sm text-warning">
+          <div className="mt-3 flex items-center gap-2 rounded-md border border-warning-soft bg-warning-soft px-3 py-2 text-body text-warning">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             Amostra pequena ({fluxoFechado.length}{" "}
             {fluxoFechado.length === 1 ? "mês fechado" : "meses fechados"}) — runway/break-even
@@ -216,92 +224,103 @@ export function CockpitFinanceiroPage() {
       </div>
 
       <section className="rounded-lg border border-line bg-card p-4">
-        <h3 className="text-sm font-semibold text-ink">
+        <h3 className="text-body font-semibold text-ink">
           Ranking de margem por cliente{" "}
           {mesMaisRecenteFechado
             ? `— ${mesMaisRecenteFechado.slice(5, 7)}/${mesMaisRecenteFechado.slice(0, 4)}`
             : ""}
         </h3>
-        {ranking.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-3">Sem dados de rentabilidade no período.</p>
-        ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[480px] text-left text-sm">
-              <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
-                <tr>
-                  <th className="px-3 py-2">Cliente</th>
-                  <th className="px-3 py-2 text-right">Margem</th>
-                  <th className="px-3 py-2 text-right">Alerta</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ranking.map((r) => {
+        <div className="mt-3">
+          <DataTable
+            colunas={[
+              {
+                chave: "cliente",
+                cabecalho: "Cliente",
+                render: (r: RentabilidadeMes) => clientePorId.get(r.clienteId) ?? "Cliente",
+              },
+              {
+                chave: "margem",
+                cabecalho: "Margem",
+                numerica: true,
+                render: (r: RentabilidadeMes) => (
+                  <span
+                    className={`font-semibold ${r.margemCentavos >= 0 ? "text-success" : "text-danger"}`}
+                  >
+                    {r.margemCentavos >= 0 ? (
+                      <TrendingUp className="mr-1 inline h-3.5 w-3.5" />
+                    ) : (
+                      <TrendingDown className="mr-1 inline h-3.5 w-3.5" />
+                    )}
+                    R$ {centavosParaReais(Math.abs(r.margemCentavos))}
+                  </span>
+                ),
+              },
+              {
+                chave: "alerta",
+                cabecalho: "Alerta",
+                numerica: true,
+                render: (r: RentabilidadeMes) => {
                   const alerta = clientesComAlerta.some(([clienteId]) => clienteId === r.clienteId);
-                  return (
-                    <tr key={r.clienteId} className="border-b border-line last:border-0">
-                      <td className="px-3 py-2 text-ink-2">
-                        {clientePorId.get(r.clienteId) ?? "Cliente"}
-                      </td>
-                      <td
-                        className={`px-3 py-2 text-right font-semibold ${r.margemCentavos >= 0 ? "text-success" : "text-danger"}`}
-                      >
-                        {r.margemCentavos >= 0 ? (
-                          <TrendingUp className="mr-1 inline h-3.5 w-3.5" />
-                        ) : (
-                          <TrendingDown className="mr-1 inline h-3.5 w-3.5" />
-                        )}
-                        R$ {centavosParaReais(Math.abs(r.margemCentavos))}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        {alerta && (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-danger">
-                            <AlertTriangle className="h-3.5 w-3.5" />2 meses negativo — revisar
-                            contrato
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  return alerta ? (
+                    <span className="inline-flex items-center gap-1 text-caption font-semibold text-danger">
+                      <AlertTriangle className="h-3.5 w-3.5" />2 meses negativo — revisar contrato
+                    </span>
+                  ) : null;
+                },
+              },
+            ]}
+            itens={ranking}
+            chaveLinha={(r) => r.clienteId}
+            vazio={<>Sem dados de rentabilidade no período.</>}
+          />
+        </div>
       </section>
 
       <section className="rounded-lg border border-line bg-card p-4">
-        <h3 className="text-sm font-semibold text-ink">
+        <h3 className="text-body font-semibold text-ink">
           Tendência de resultado (últimos {MESES_JANELA} meses)
         </h3>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[480px] text-left text-sm">
-            <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-ink-3">
-              <tr>
-                <th className="px-3 py-2">Mês</th>
-                <th className="px-3 py-2 text-right">Entradas</th>
-                <th className="px-3 py-2 text-right">Saídas</th>
-                <th className="px-3 py-2 text-right">Resultado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fluxo.map((p) => (
-                <tr key={p.mes} className="border-b border-line last:border-0">
-                  <td className="px-3 py-2 text-ink-2">{`${p.mes.slice(5, 7)}/${p.mes.slice(0, 4)}`}</td>
-                  <td className="px-3 py-2 text-right text-success">
-                    R$ {centavosParaReais(p.entradasCentavos)}
-                  </td>
-                  <td className="px-3 py-2 text-right text-danger">
-                    R$ {centavosParaReais(p.saidasCentavos)}
-                  </td>
-                  <td
-                    className={`px-3 py-2 text-right font-semibold ${p.resultadoCentavos >= 0 ? "text-success" : "text-danger"}`}
+        <div className="mt-3">
+          <DataTable
+            colunas={[
+              {
+                chave: "mes",
+                cabecalho: "Mês",
+                render: (p: PontoFluxoMensal) => `${p.mes.slice(5, 7)}/${p.mes.slice(0, 4)}`,
+              },
+              {
+                chave: "entradas",
+                cabecalho: "Entradas",
+                numerica: true,
+                render: (p: PontoFluxoMensal) => (
+                  <span className="text-success">R$ {centavosParaReais(p.entradasCentavos)}</span>
+                ),
+              },
+              {
+                chave: "saidas",
+                cabecalho: "Saídas",
+                numerica: true,
+                render: (p: PontoFluxoMensal) => (
+                  <span className="text-danger">R$ {centavosParaReais(p.saidasCentavos)}</span>
+                ),
+              },
+              {
+                chave: "resultado",
+                cabecalho: "Resultado",
+                numerica: true,
+                render: (p: PontoFluxoMensal) => (
+                  <span
+                    className={`font-semibold ${p.resultadoCentavos >= 0 ? "text-success" : "text-danger"}`}
                   >
                     R$ {centavosParaReais(Math.abs(p.resultadoCentavos))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </span>
+                ),
+              },
+            ]}
+            itens={fluxo}
+            chaveLinha={(p) => p.mes}
+            vazio={<>Sem dados de fluxo no período.</>}
+          />
         </div>
       </section>
     </div>
@@ -327,8 +346,8 @@ function Indicador({
   };
   return (
     <div className="rounded-lg border border-line bg-card p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</p>
-      <p className={`mt-1 text-xl font-semibold ${cores[tom]}`}>{valor}</p>
+      <p className="text-caption font-semibold uppercase tracking-wide text-ink-3">{label}</p>
+      <p className={`mt-1 text-title font-semibold ${cores[tom]}`}>{valor}</p>
       <p className="mt-1 text-micro text-ink-3">{detalhe}</p>
     </div>
   );

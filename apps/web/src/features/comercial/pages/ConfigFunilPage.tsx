@@ -126,8 +126,8 @@ export function ConfigFunilPage() {
     <div className="space-y-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-brand text-xl font-bold text-ink">Configuração do funil</h1>
-          <p className="text-sm text-ink-2">
+          <h1 className="font-brand text-title font-bold text-ink">Configuração do funil</h1>
+          <p className="text-body text-ink-2">
             Etapas e motivos de perda. Renomear uma etapa não afeta as métricas — elas usam o tipo.
           </p>
         </div>
@@ -145,13 +145,13 @@ export function ConfigFunilPage() {
 
       {erroAcao && (
         <Card>
-          <p className="p-3 text-sm text-danger">{erroAcao}</p>
+          <p className="p-3 text-body text-danger">{erroAcao}</p>
         </Card>
       )}
 
       {erroCarga && (
         <Card>
-          <p className="p-4 text-sm text-danger">
+          <p className="p-4 text-body text-danger">
             {erroCarga instanceof Error ? erroCarga.message : "Falha ao carregar a configuração."}
           </p>
         </Card>
@@ -201,7 +201,7 @@ export function ConfigFunilPage() {
                       className="size-3 shrink-0 rounded-full"
                       style={{ backgroundColor: etapa.cor }}
                     />
-                    <span className="flex-1 text-sm text-ink">{etapa.nome}</span>
+                    <span className="flex-1 text-body text-ink">{etapa.nome}</span>
                     <Badge tone={TIPO_TOM[etapa.tipo]}>{TIPO_ROTULO[etapa.tipo]}</Badge>
                     {!etapa.ativo && <Badge tone="neutral">Desativada</Badge>}
                     {temEscrita && (
@@ -242,14 +242,14 @@ export function ConfigFunilPage() {
           <Card>
             <div className="border-b border-line p-3">
               <h2 className="font-semibold text-ink">Motivos de perda</h2>
-              <p className="text-xs text-ink-2">
+              <p className="text-caption text-ink-2">
                 Obrigatórios ao marcar uma oportunidade como perdida — é o que alimenta o win/loss.
               </p>
             </div>
             <ul className="divide-y divide-line/60">
               {motivos.map((motivo) => (
                 <li key={motivo.id} className="flex items-center gap-3 p-3">
-                  <span className="flex-1 text-sm text-ink">{motivo.nome}</span>
+                  <span className="flex-1 text-body text-ink">{motivo.nome}</span>
                   {!motivo.ativo && <Badge tone="neutral">Desativado</Badge>}
                   {temEscrita && (
                     <Button

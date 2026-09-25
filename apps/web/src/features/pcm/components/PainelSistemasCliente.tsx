@@ -1,6 +1,7 @@
 // PainelSistemasCliente.tsx — E01-S86 AC-2: Visão 360 usa o MESMO componente de composição
 // (checkbox+filtro) do PCM. Só compõe Sistemas já existentes — criar/editar o registro do Sistema
 // continua em `SistemasPage.tsx` (fora de escopo desta story, ver spec.md).
+import { Skeleton } from "@sinergica/ui";
 import { Link2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { listarSistemas } from "../application/sistemas";
@@ -29,14 +30,14 @@ export function PainelSistemasCliente({
   }, [carregar]);
 
   if (sistemas === "carregando") {
-    return <p className="p-4 text-sm text-ink-3">Carregando sistemas…</p>;
+    return <Skeleton className="h-4 w-40" />;
   }
 
   if (sistemas.length === 0) {
     return (
       <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
         <Link2 className="mx-auto h-9 w-9 text-ink-3" />
-        <p className="mt-3 text-sm text-ink-3">
+        <p className="mt-3 text-body text-ink-3">
           Nenhum Sistema cadastrado para este cliente. Cadastre em PCM → Configurações → Sistemas.
         </p>
       </div>
@@ -53,10 +54,10 @@ export function PainelSistemasCliente({
             className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink">{sistema.nome}</p>
-              {sistema.tipo && <p className="truncate text-xs text-ink-3">{sistema.tipo}</p>}
+              <p className="truncate text-body font-semibold text-ink">{sistema.nome}</p>
+              {sistema.tipo && <p className="truncate text-caption text-ink-3">{sistema.tipo}</p>}
             </div>
-            <span className="shrink-0 text-xs font-semibold text-orange">
+            <span className="shrink-0 text-caption font-semibold text-orange">
               {sistemaAbertoId === sistema.id ? "Fechar" : "Compor itens"}
             </span>
           </button>

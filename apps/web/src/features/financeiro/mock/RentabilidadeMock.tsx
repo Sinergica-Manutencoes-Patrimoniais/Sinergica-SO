@@ -73,7 +73,7 @@ export function RentabilidadeMock() {
                       {r.os.map((o) => (
                         <div
                           key={o.id}
-                          className="flex flex-wrap gap-x-4 gap-y-0.5 border-b border-dashed border-line py-1 text-xs text-ink-2 last:border-0"
+                          className="flex flex-wrap gap-x-4 gap-y-0.5 border-b border-dashed border-line py-1 text-caption text-ink-2 last:border-0"
                         >
                           <span className="font-mono text-ink-3">{o.id}</span>
                           <span>{o.desc}</span>
@@ -91,7 +91,9 @@ export function RentabilidadeMock() {
           );
         })}
       </TableShell>
-      <p className="text-xs text-ink-3">Clique numa linha pra ver as OS que compõem o custo.</p>
+      <p className="text-caption text-ink-3">
+        Clique numa linha pra ver as OS que compõem o custo.
+      </p>
     </div>
   );
 }

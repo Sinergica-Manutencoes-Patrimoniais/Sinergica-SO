@@ -21,7 +21,6 @@ import {
   Gauge,
   HardHat,
   Headset,
-  Home,
   KeyRound,
   Landmark,
   LayoutDashboard,
@@ -66,7 +65,6 @@ import { ContratosPage as ComercialContratosPage } from "../features/comercial/p
 import { DashboardComercialPage as ComercialDashboardPage } from "../features/comercial/pages/DashboardComercialPage";
 import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
 import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features/comercial/pages/ParametrosPrecoPage";
-import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
 import { IntegracoesPage } from "../features/config/pages/IntegracoesPage";
@@ -123,31 +121,15 @@ import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
 import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
+import { DashboardGeral } from "./DashboardGeral";
 import { useAuth } from "./auth-context";
+import { MODULOS, isModuloNegocio } from "./modulos";
+import type { AreaAtiva, ModuloId, ModuloTab } from "./modulos";
 import { useNavGuard } from "./nav-guard-context";
 import { usePermissoes } from "./permissoes-context";
 import { useTheme } from "./theme-context";
 
 // ─── tipos ──────────────────────────────────────────────────────────────────
-
-type ModuloId = "inicio" | ModuloNegocioId;
-
-// "config" não é módulo de negócio (não tem permissão por módulo) — é a área administrativa,
-// visível só por papel (superadmin/supervisor), não por config.minhas_permissoes.
-// "guia" também não é módulo permissionável — documentação visível a qualquer usuário logado,
-// igual "config" (mas sem exigir papel administrativo).
-type AreaAtiva = ModuloId | "config" | "guia";
-
-function isModuloNegocio(id: ModuloId): id is ModuloNegocioId {
-  return id !== "inicio";
-}
-
-interface ModuloTab {
-  id: ModuloId;
-  label: string;
-  icon: LucideIcon;
-  descricao: string;
-}
 
 // Sub-navegação interna do Atendimento (E02-S02/S03/S05) — mesmo padrão useState de abas, sem lib
 // de rotas.
@@ -255,58 +237,6 @@ interface GuiaNavItem {
 }
 
 // ─── dados ───────────────────────────────────────────────────────────────────
-
-const MODULOS: ModuloTab[] = [
-  {
-    id: "inicio",
-    label: "Início",
-    icon: Home,
-    descricao: "Visão geral consolidada de todos os módulos do Sinérgica SO.",
-  },
-  {
-    id: "pcm",
-    label: "PCM · Operação",
-    icon: HardHat,
-    descricao: "Ordens de serviço, backlog GUT, inspeções e preventivas.",
-  },
-  {
-    id: "atendimento",
-    label: "Atendimento · Zé",
-    icon: Bot,
-    descricao: "Agente IA no WhatsApp — abre chamados 24/7 sem intervenção humana.",
-  },
-  {
-    id: "comercial",
-    label: "Comercial",
-    icon: Briefcase,
-    descricao: "CRM, levantamentos, propostas com IA e gestão de contratos.",
-  },
-  {
-    id: "financeiro",
-    label: "Financeiro",
-    icon: BarChart3,
-    descricao: "Faturamento, recebíveis, margem por contrato e alertas de inadimplência.",
-  },
-  {
-    id: "marketing",
-    label: "Marketing",
-    icon: Megaphone,
-    descricao:
-      "Calendário editorial, geração de conteúdo com IA, leads e campanhas de aquisição (Growth).",
-  },
-  {
-    id: "gestao",
-    label: "Cockpit",
-    icon: LayoutDashboard,
-    descricao: "KPIs operacionais, SLA, MRR e margem — visão consolidada para gestores.",
-  },
-  {
-    id: "area-cliente",
-    label: "Área do Cliente",
-    icon: UserCircle,
-    descricao: "Portal do síndico — chamados, histórico e download de relatórios.",
-  },
-];
 
 const CONFIG_NAV: Array<{
   id:
@@ -418,6 +348,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
       { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
+      { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "PMOC", icon: Snowflake, view: "pmoc" },
       { label: "Relatório", icon: FileBarChart, view: "relatorio-planejamento" },
     ],
@@ -428,6 +359,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Clientes", icon: Building2, view: "clientes" },
       { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
       { label: "Sistemas", icon: Link2, view: "sistemas" },
+      { label: "Ferramentas", icon: Package, view: "ferramentas" },
     ],
   },
   {
@@ -436,9 +368,7 @@ const PCM_NAV: NavGroup[] = [
     // não duplica o CRUD, só atalho (ver `atalhoConfigGrupos`).
     titulo: "CONFIGURAÇÕES",
     items: [
-      { label: "Ferramentas", icon: Package, view: "ferramentas" },
       { label: "Equipes", icon: Users, view: "equipes" },
-      { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "Funcionários", icon: UserCog, view: "funcionarios" },
       { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
       { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
@@ -461,69 +391,6 @@ const PCM_NAV: NavGroup[] = [
   },
 ];
 
-// ─── mock data ────────────────────────────────────────────────────────────────
-
-interface ModuloResumo {
-  moduloId: ModuloId;
-  kpis: Array<{ label: string; valor: string }>;
-  alerta?: string;
-}
-
-const DASHBOARD_GERAL: ModuloResumo[] = [
-  {
-    moduloId: "pcm",
-    kpis: [
-      { label: "OS Abertas", valor: "12" },
-      { label: "SLA no Prazo", valor: "87%" },
-      { label: "Backlog", valor: "23 itens" },
-    ],
-  },
-  {
-    moduloId: "atendimento",
-    kpis: [
-      { label: "Chamados hoje", valor: "8" },
-      { label: "Pendentes", valor: "3" },
-    ],
-  },
-  {
-    moduloId: "comercial",
-    kpis: [
-      { label: "Leads ativos", valor: "5" },
-      { label: "Contratos ativos", valor: "3" },
-    ],
-  },
-  {
-    moduloId: "financeiro",
-    kpis: [
-      { label: "Recebido (mês)", valor: "R$ 48,5k" },
-      { label: "Inadimplentes", valor: "1" },
-    ],
-    alerta: "1 contrato",
-  },
-  {
-    moduloId: "marketing",
-    kpis: [
-      { label: "Publicações/sem.", valor: "3" },
-      { label: "Alcance", valor: "1.2k" },
-      { label: "Leads (mês)", valor: "12" },
-    ],
-  },
-  {
-    moduloId: "gestao",
-    kpis: [
-      { label: "Alertas críticos", valor: "0" },
-      { label: "Score geral", valor: "94" },
-    ],
-  },
-  {
-    moduloId: "area-cliente",
-    kpis: [
-      { label: "Portais ativos", valor: "15" },
-      { label: "OS via portal", valor: "2" },
-    ],
-  },
-];
-
 // ─── componentes ─────────────────────────────────────────────────────────────
 
 function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
@@ -535,74 +402,12 @@ function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
       </div>
       <div>
         <h2 className="text-lg font-semibold text-ink-2">{modulo.label}</h2>
-        <p className="text-sm text-ink-3 mt-1 max-w-sm">{modulo.descricao}</p>
+        <p className="text-body text-ink-3 mt-1 max-w-sm">{modulo.descricao}</p>
       </div>
-      <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-warning bg-orange-soft border border-warning-line rounded-full px-3 py-1">
+      <span className="inline-flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider text-warning bg-orange-soft border border-warning-line rounded-full px-3 py-1">
         <span className="w-1.5 h-1.5 rounded-full bg-orange" />
         Em construção
       </span>
-    </div>
-  );
-}
-
-function DashboardGeral({
-  resumos,
-  onSelect,
-}: {
-  resumos: ModuloResumo[];
-  onSelect: (id: ModuloId) => void;
-}) {
-  return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      {resumos.map((resumo) => {
-        const modulo = MODULOS.find((m) => m.id === resumo.moduloId);
-        if (!modulo) return null;
-        const Icon = modulo.icon;
-        return (
-          <div
-            key={resumo.moduloId}
-            className="group flex min-h-44 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-raised transition-[transform,box-shadow,border-color] hover:-translate-y-0.5 hover:border-navy/20 hover:shadow-overlay"
-          >
-            {/* Header */}
-            <div className="flex items-center gap-2.5 bg-navy px-3.5 py-2.5">
-              <div className="w-7 h-7 rounded-md bg-card/10 flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-white" strokeWidth={1.8} />
-              </div>
-              <span className="text-sm font-semibold text-white flex-1 truncate">
-                {modulo.label}
-              </span>
-              {resumo.alerta && (
-                <span className="inline-flex items-center gap-1 text-micro font-semibold text-warning bg-amber rounded-full px-2 py-0.5 shrink-0">
-                  ⚠ {resumo.alerta}
-                </span>
-              )}
-            </div>
-
-            {/* KPIs */}
-            <div className="flex flex-1 flex-col gap-2 px-3.5 py-3">
-              {resumo.kpis.map((kpi) => (
-                <div key={kpi.label} className="flex items-baseline justify-between gap-2">
-                  <span className="text-xs text-ink-3 truncate">{kpi.label}</span>
-                  <span className="shrink-0 font-brand text-base font-bold tabular-nums text-ink">
-                    {kpi.valor}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer */}
-            <div className="px-3.5 pb-3">
-              <button
-                type="button"
-                onClick={() => onSelect(resumo.moduloId)}
-                className="w-full cursor-pointer rounded-md py-1.5 text-center text-xs font-semibold text-orange transition-colors hover:bg-orange-soft hover:text-orange-deep"
-              >
-                Ver módulo →
-              </button>
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -745,7 +550,9 @@ export function HomePage() {
 
   const podeGerenciarConfig = user?.papel === "superadmin" || user?.papel === "supervisor";
   const podeCriarOs = podeAcessar("pcm", "escrita");
-  const dashboardVisivel = DASHBOARD_GERAL.filter((r) => podeVerModulo(r.moduloId));
+  const dashboardModuloIds = MODULOS.filter((m) => m.id !== "inicio" && podeVerModulo(m.id)).map(
+    (m) => m.id,
+  );
 
   const modulo = MODULOS.find((m) => m.id === activeModulo);
   const initials =
@@ -816,7 +623,7 @@ export function HomePage() {
                     type="button"
                     title={m.label}
                     onClick={() => navegarModulo(m.id)}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white ${sidebarCompacta ? "justify-center" : ""}`}
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white ${sidebarCompacta ? "justify-center" : ""}`}
                   >
                     <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
                     {!sidebarCompacta && <span className="truncate">{m.label}</span>}
@@ -843,7 +650,7 @@ export function HomePage() {
                       setConfigTab(item.id);
                       setMobileSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                       isActive
                         ? "border-orange bg-card/[0.07] text-white font-medium"
                         : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -885,7 +692,7 @@ export function HomePage() {
                               ? () => irParaPcmView(view)
                               : undefined
                         }
-                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                           isActive
                             ? "border-orange bg-card/[0.07] text-white font-medium"
                             : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -909,7 +716,7 @@ export function HomePage() {
                                     ? () => irParaPcmView(filho.view as PcmView)
                                     : undefined
                                 }
-                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${
+                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${
                                   filhoIsActive
                                     ? "border-orange bg-card/[0.07] text-white font-medium"
                                     : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -950,7 +757,7 @@ export function HomePage() {
                         setConversaDeepLinkId(null);
                         setMobileSidebarOpen(false);
                       }}
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                         isActive
                           ? "border-orange bg-card/[0.07] text-white font-medium"
                           : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -983,7 +790,7 @@ export function HomePage() {
                         setFinanceiroView(item.view);
                         setMobileSidebarOpen(false);
                       }}
-                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                         isActive
                           ? "border-orange bg-card/[0.07] text-white font-medium"
                           : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -1015,7 +822,7 @@ export function HomePage() {
                       setComercialView(item.view);
                       setMobileSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                       isActive
                         ? "border-orange bg-card/[0.07] text-white font-medium"
                         : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -1046,7 +853,7 @@ export function HomePage() {
                       setGuiaView(item.view);
                       setMobileSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                       isActive
                         ? "border-orange bg-card/[0.07] text-white font-medium"
                         : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -1061,7 +868,7 @@ export function HomePage() {
           ) : (
             !sidebarCompacta && (
               <div className="px-2 pt-4 text-center">
-                <p className="text-xs text-nav-ink">
+                <p className="text-caption text-nav-ink">
                   Navegação disponível quando o módulo for construído.
                 </p>
               </div>
@@ -1075,7 +882,7 @@ export function HomePage() {
             type="button"
             title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`hidden w-full items-center gap-2.5 rounded-sm border-l-2 border-transparent px-2 py-1.5 text-sm text-nav-ink transition-colors hover:bg-card/[0.04] hover:text-white lg:flex ${sidebarCompacta ? "justify-center" : ""}`}
+            className={`hidden w-full items-center gap-2.5 rounded-sm border-l-2 border-transparent px-2 py-1.5 text-body text-nav-ink transition-colors hover:bg-card/[0.04] hover:text-white lg:flex ${sidebarCompacta ? "justify-center" : ""}`}
           >
             {sidebarCompacta ? (
               <ChevronRight className="w-4 h-4 shrink-0" strokeWidth={1.8} />
@@ -1091,7 +898,7 @@ export function HomePage() {
               type="button"
               title="Configurações"
               onClick={() => navegarModulo("config")}
-              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
                 activeModulo === "config"
                   ? "border-orange bg-card/[0.07] text-white font-medium"
                   : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
@@ -1105,7 +912,7 @@ export function HomePage() {
             type="button"
             title="Sair"
             onClick={logout}
-            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm text-nav-ink hover:bg-card/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCompacta ? "justify-center" : ""}`}
+            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body text-nav-ink hover:bg-card/[0.04] hover:text-white transition-colors cursor-pointer border-l-2 border-transparent ${sidebarCompacta ? "justify-center" : ""}`}
           >
             <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.8} />
             {!sidebarCompacta && <span>Sair</span>}
@@ -1134,7 +941,7 @@ export function HomePage() {
                   key={m.id}
                   type="button"
                   onClick={() => navegarModulo(m.id)}
-                  className={`flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 px-2.5 py-3 text-xs font-medium transition-colors sm:px-3.5 sm:text-sm ${
+                  className={`flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 px-2.5 py-3 text-caption font-medium transition-colors sm:px-3.5 sm:text-body ${
                     isActive
                       ? "border-orange text-navy"
                       : "border-transparent text-ink-3 hover:text-ink hover:border-line"
@@ -1155,7 +962,7 @@ export function HomePage() {
             <button
               type="button"
               onClick={() => navegarModulo("guia")}
-              className={`flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 px-2.5 py-3 text-xs font-medium transition-colors sm:px-3.5 sm:text-sm ${
+              className={`flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 px-2.5 py-3 text-caption font-medium transition-colors sm:px-3.5 sm:text-body ${
                 activeModulo === "guia"
                   ? "border-orange text-navy"
                   : "border-transparent text-ink-3 hover:text-ink hover:border-line"
@@ -1183,7 +990,7 @@ export function HomePage() {
                   <Moon className="h-4 w-4" strokeWidth={2} />
                 )}
               </button>
-              <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center text-white text-xs font-bold">
+              <div className="w-7 h-7 rounded-full bg-navy flex items-center justify-center text-white text-caption font-bold">
                 {initials}
               </div>
             </div>
@@ -1194,7 +1001,7 @@ export function HomePage() {
         <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5">
           {/* Conteúdo por módulo */}
           {activeModulo === "inicio" ? (
-            <DashboardGeral resumos={dashboardVisivel} onSelect={navegarModulo} />
+            <DashboardGeral moduloIds={dashboardModuloIds} onSelect={navegarModulo} />
           ) : activeModulo === "pcm" ? (
             pcmView === "clientes" ? (
               clienteSelecionado ? (
@@ -1207,7 +1014,7 @@ export function HomePage() {
                       setClienteSelecionado(null);
                       setClientePeriodo(null);
                     }}
-                    className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-orange hover:text-orange-deep cursor-pointer"
+                    className="self-start inline-flex items-center gap-1.5 text-body font-semibold text-orange hover:text-orange-deep cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" strokeWidth={2} />
                     Voltar para clientes
@@ -1288,7 +1095,7 @@ export function HomePage() {
                   <button
                     type="button"
                     onClick={voltarAoClienteDoDeepLink}
-                    className="self-start inline-flex items-center gap-1.5 text-sm font-semibold text-orange hover:text-orange-deep cursor-pointer"
+                    className="self-start inline-flex items-center gap-1.5 text-body font-semibold text-orange hover:text-orange-deep cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" strokeWidth={2} />
                     Voltar ao cliente
@@ -1315,7 +1122,7 @@ export function HomePage() {
             ) : (
               <div className="flex flex-col gap-4">
                 {feedbackOs && (
-                  <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-sm text-success">
+                  <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-body text-success">
                     {feedbackOs}
                   </div>
                 )}

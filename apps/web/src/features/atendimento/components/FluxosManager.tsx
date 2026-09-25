@@ -1,3 +1,4 @@
+import { ConfirmDialog } from "@sinergica/ui";
 import { Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { FluxoItem, FluxoLog, FluxoRecipe, PassoFluxo } from "../domain/fluxos";
@@ -37,6 +38,7 @@ export function FluxosManager({
   const [mostrarLogs, setMostrarLogs] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [confirmarDesativar, setConfirmarDesativar] = useState(false);
 
   const selecionado = fluxos.find((f) => f.id === selecionadoId) ?? null;
   const personasAtivas = personas.filter((p) => p.ativo);
@@ -77,17 +79,8 @@ export function FluxosManager({
 
   async function desativar() {
     if (!selecionado) return;
-    if (!window.confirm(`Desativar o fluxo "${selecionado.nome}"?`)) return;
-    setSalvando(true);
-    setErro(null);
-    try {
-      await onDesativar(selecionado.id);
-      setSelecionadoId(null);
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível desativar o fluxo.");
-    } finally {
-      setSalvando(false);
-    }
+    await onDesativar(selecionado.id);
+    setSelecionadoId(null);
   }
 
   return (
@@ -95,8 +88,8 @@ export function FluxosManager({
       <section className="rounded-xl border border-line bg-card">
         <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
           <div>
-            <h3 className="text-base font-semibold text-ink">Fluxos de qualificação</h3>
-            <p className="text-sm text-ink-3">
+            <h3 className="text-heading font-semibold text-ink">Fluxos de qualificação</h3>
+            <p className="text-body text-ink-3">
               Roteiro de perguntas por persona — usado hoje pelo agente comercial (E02-S08)
             </p>
           </div>
@@ -117,7 +110,7 @@ export function FluxosManager({
             }}
           >
             <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+              <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
                 Nome
               </span>
               <input
@@ -127,7 +120,7 @@ export function FluxosManager({
               />
             </label>
             <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+              <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
                 Recipe (opcional)
               </span>
               <select
@@ -144,7 +137,7 @@ export function FluxosManager({
               </select>
             </label>
             <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+              <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
                 Persona
               </span>
               <select
@@ -164,14 +157,14 @@ export function FluxosManager({
               <button
                 type="button"
                 onClick={() => setCriando(false)}
-                className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-ink-2 hover:bg-line-soft"
+                className="rounded-md border border-line px-4 py-2 text-body font-semibold text-ink-2 hover:bg-line-soft"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={salvando}
-                className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                className="rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
               >
                 Criar
               </button>
@@ -181,14 +174,14 @@ export function FluxosManager({
 
         <div className="flex flex-wrap gap-2 px-5 py-4">
           {fluxos.length === 0 ? (
-            <p className="text-sm text-ink-3">Nenhum fluxo cadastrado ainda.</p>
+            <p className="text-body text-ink-3">Nenhum fluxo cadastrado ainda.</p>
           ) : (
             fluxos.map((fluxo) => (
               <button
                 key={fluxo.id}
                 type="button"
                 onClick={() => setSelecionadoId(fluxo.id)}
-                className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
+                className={`rounded-full border px-3 py-1.5 text-body font-medium ${
                   fluxo.id === selecionadoId
                     ? "border-orange bg-orange-soft/40 text-ink"
                     : "border-line text-ink-2 hover:bg-line-soft"
@@ -203,7 +196,7 @@ export function FluxosManager({
       </section>
 
       {erro && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-sm text-danger">
+        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
           {erro}
         </div>
       )}
@@ -228,7 +221,7 @@ export function FluxosManager({
                   setMostrarLogs((valor) => !valor);
                   await onCarregarLogs(selecionado.id);
                 }}
-                className="rounded-md border border-line px-3 py-2 text-sm font-semibold text-ink-2"
+                className="rounded-md border border-line px-3 py-2 text-body font-semibold text-ink-2"
               >
                 Logs
               </button>
@@ -238,8 +231,8 @@ export function FluxosManager({
                 <button
                   type="button"
                   disabled={salvando}
-                  onClick={desativar}
-                  className="inline-flex items-center gap-2 rounded-md border border-danger-line px-3 py-2 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
+                  onClick={() => setConfirmarDesativar(true)}
+                  className="inline-flex items-center gap-2 rounded-md border border-danger-line px-3 py-2 text-body font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
                 >
                   <X className="h-4 w-4" />
                   Desativar fluxo
@@ -248,7 +241,7 @@ export function FluxosManager({
                   type="button"
                   disabled={salvando}
                   onClick={salvar}
-                  className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                  className="rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
                 >
                   {salvando ? "Salvando…" : "Salvar passos"}
                 </button>
@@ -262,13 +255,13 @@ export function FluxosManager({
           />
           {mostrarLogs && (
             <section className="rounded-xl border border-line bg-card p-4">
-              <h4 className="text-sm font-semibold text-ink">Execuções recentes</h4>
+              <h4 className="text-body font-semibold text-ink">Execuções recentes</h4>
               {logs.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-3">Nenhuma execução registrada.</p>
+                <p className="mt-2 text-body text-ink-3">Nenhuma execução registrada.</p>
               ) : (
                 <div className="mt-2 divide-y divide-line-soft">
                   {logs.map((log) => (
-                    <div key={log.id} className="py-2 text-xs text-ink-2">
+                    <div key={log.id} className="py-2 text-caption text-ink-2">
                       {new Date(log.createdAt).toLocaleString("pt-BR")} · conversa {log.conversaId}{" "}
                       · {log.nosPercorridos.join(" → ")}
                     </div>

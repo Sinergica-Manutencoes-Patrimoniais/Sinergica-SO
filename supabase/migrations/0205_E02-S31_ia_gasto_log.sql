@@ -5,6 +5,11 @@
 -- Fica em `config` (não schema novo): é telemetria de uma integração que já mora em
 -- `config.integracoes`, não um bounded context próprio.
 --
+-- RECONSTRUÍDA nesta sessão (E01-S146) a partir de `supabase_migrations.schema_migrations.statements`
+-- — o arquivo original foi aplicado direto em produção sem nunca ser commitado neste repositório
+-- (achado ao investigar colisão de número com 0210). Conteúdo reconstituído fiel ao aplicado; ver
+-- STATE.md 2026-08-19 para o achado completo.
+--
 -- Reverso:
 --   drop table if exists config.ia_gasto_log;
 

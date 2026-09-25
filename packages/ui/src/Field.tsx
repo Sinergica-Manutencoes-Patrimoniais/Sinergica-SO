@@ -28,7 +28,7 @@ export function Field({ label, error, ajuda, required, children }: FieldProps) {
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-semibold text-ink-2">
+      <label htmlFor={id} className="text-caption font-semibold text-ink-2">
         {label}
         {required && (
           <span aria-hidden="true" className="text-danger">

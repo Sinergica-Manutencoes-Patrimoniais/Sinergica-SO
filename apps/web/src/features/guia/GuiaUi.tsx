@@ -39,8 +39,8 @@ export function StatusModulo({ status }: { status: "real" | "prototipo" | "plane
 export function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <div className="surface-card p-5">
-      <h3 className="mb-2.5 text-sm font-semibold text-ink">{titulo}</h3>
-      <div className="flex flex-col gap-2.5 text-sm leading-relaxed text-ink-2">{children}</div>
+      <h3 className="mb-2.5 text-body font-semibold text-ink">{titulo}</h3>
+      <div className="flex flex-col gap-2.5 text-body leading-relaxed text-ink-2">{children}</div>
     </div>
   );
 }
@@ -50,8 +50,8 @@ export function ListaFuncoes({ itens }: { itens: Array<{ nome: string; descricao
     <ul className="flex flex-col gap-3">
       {itens.map((item) => (
         <li key={item.nome} className="border-b border-line-soft pb-3 last:border-0 last:pb-0">
-          <p className="text-sm font-semibold text-ink">{item.nome}</p>
-          <p className="mt-0.5 text-sm leading-relaxed text-ink-2">{item.descricao}</p>
+          <p className="text-body font-semibold text-ink">{item.nome}</p>
+          <p className="mt-0.5 text-body leading-relaxed text-ink-2">{item.descricao}</p>
         </li>
       ))}
     </ul>
@@ -61,8 +61,8 @@ export function ListaFuncoes({ itens }: { itens: Array<{ nome: string; descricao
 export function Callout({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <div className="rounded-lg border border-orange-deep/25 bg-orange-soft/60 p-4">
-      <p className="text-xs font-bold uppercase tracking-wide text-orange-deep">{titulo}</p>
-      <div className="mt-1.5 flex flex-col gap-2 text-sm leading-relaxed text-ink-2">
+      <p className="text-caption font-bold uppercase tracking-wide text-orange-deep">{titulo}</p>
+      <div className="mt-1.5 flex flex-col gap-2 text-body leading-relaxed text-ink-2">
         {children}
       </div>
     </div>

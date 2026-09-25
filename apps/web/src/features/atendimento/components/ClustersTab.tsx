@@ -39,7 +39,7 @@ export function ClustersTab({
   return (
     <div className="flex flex-col gap-4">
       {clusters.length === 0 ? (
-        <div className="rounded-xl border border-line bg-card p-8 text-center text-sm text-ink-3">
+        <div className="rounded-xl border border-line bg-card p-8 text-center text-body text-ink-3">
           Nenhum cluster cadastrado ainda.
         </div>
       ) : (
@@ -47,8 +47,8 @@ export function ClustersTab({
           {clusters.map((c) => (
             <div key={c.id} className="flex items-center justify-between px-4 py-3">
               <div>
-                <p className="text-sm font-medium text-ink-2">{c.nome}</p>
-                <p className="text-xs text-ink-3">
+                <p className="text-body font-medium text-ink-2">{c.nome}</p>
+                <p className="text-caption text-ink-3">
                   {c.leadTier ? `Tier ${c.leadTier}` : "Qualquer tier"}
                   {c.segmento ? ` · ${c.segmento}` : ""}
                   {c.subsegmento ? ` · ${c.subsegmento}` : ""}
@@ -58,7 +58,7 @@ export function ClustersTab({
                 <button
                   type="button"
                   onClick={() => onDesativar(c.id)}
-                  className="text-xs text-danger hover:underline"
+                  className="text-caption text-danger hover:underline"
                 >
                   Desativar
                 </button>
@@ -70,20 +70,20 @@ export function ClustersTab({
 
       {temEscrita && (
         <div className="rounded-xl border border-line bg-card p-4">
-          <h3 className="text-sm font-semibold text-ink">Novo cluster</h3>
+          <h3 className="text-body font-semibold text-ink">Novo cluster</h3>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <input
               value={form.nome}
               onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
               placeholder="Nome do cluster"
-              className="rounded-md border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-body"
             />
             <select
               value={form.leadTier}
               onChange={(e) =>
                 setForm((f) => ({ ...f, leadTier: e.target.value as LeadTier | "" }))
               }
-              className="rounded-md border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-body"
             >
               <option value="">Qualquer tier</option>
               {TIERS.map((t) => (
@@ -96,17 +96,17 @@ export function ClustersTab({
               value={form.segmento}
               onChange={(e) => setForm((f) => ({ ...f, segmento: e.target.value }))}
               placeholder="Segmento (opcional)"
-              className="rounded-md border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-body"
             />
             <input
               value={form.subsegmento}
               onChange={(e) => setForm((f) => ({ ...f, subsegmento: e.target.value }))}
               placeholder="Subsegmento (opcional)"
-              className="rounded-md border border-line p-2 text-sm"
+              className="rounded-md border border-line p-2 text-body"
             />
           </div>
           {erro && (
-            <div className="mt-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <div className="mt-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
               {erro}
             </div>
           )}
@@ -114,7 +114,7 @@ export function ClustersTab({
             type="button"
             onClick={salvar}
             disabled={salvando}
-            className="mt-3 rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
+            className="mt-3 rounded-md bg-navy px-4 py-2 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-60"
           >
             {salvando ? "Salvando…" : "Criar cluster"}
           </button>

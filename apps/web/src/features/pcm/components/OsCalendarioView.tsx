@@ -62,7 +62,7 @@ export function OsCalendarioView({
                 return new Date(hoje.getFullYear(), hoje.getMonth(), 1);
               })
             }
-            className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold hover:bg-line-soft"
+            className="rounded-md border border-line px-3 py-1.5 text-caption font-semibold hover:bg-line-soft"
           >
             Hoje
           </button>
@@ -75,7 +75,7 @@ export function OsCalendarioView({
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-        <p className="text-sm font-semibold capitalize text-ink">
+        <p className="text-body font-semibold capitalize text-ink">
           {mesRef.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
         </p>
       </div>

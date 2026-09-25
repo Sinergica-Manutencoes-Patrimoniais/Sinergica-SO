@@ -10,19 +10,21 @@ export function PainelEquipamentos({ equipamentos }: { equipamentos: ResultadoEq
   return (
     <div className="bg-card rounded-xl border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
-        <h3 className="text-sm font-semibold text-ink">Equipamentos vinculados</h3>
-        <p className="text-xs text-ink-3 mt-0.5">Cache de campo (Auvo)</p>
+        <h3 className="text-body font-semibold text-ink">Equipamentos vinculados</h3>
+        <p className="text-caption text-ink-3 mt-0.5">Cache de campo (Auvo)</p>
       </div>
 
       {equipamentos === "indisponivel" ? (
         <div className="px-5 py-8 text-center">
-          <p className="text-sm text-ink-3">Integração de campo indisponível</p>
-          <p className="text-xs text-ink-3 mt-1">
+          <p className="text-body text-ink-3">Integração de campo indisponível</p>
+          <p className="text-caption text-ink-3 mt-1">
             O cache de equipamentos ainda não está disponível nesta instalação.
           </p>
         </div>
       ) : equipamentos.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm text-ink-3">Sem equipamentos vinculados</div>
+        <div className="px-5 py-8 text-center text-body text-ink-3">
+          Sem equipamentos vinculados
+        </div>
       ) : (
         <div className="divide-y divide-line-soft">
           {equipamentos.map((eq) => (
@@ -36,7 +38,7 @@ export function PainelEquipamentos({ equipamentos }: { equipamentos: ResultadoEq
               ) : (
                 <div className="h-8 w-8 shrink-0 rounded-sm border border-line bg-line-soft" />
               )}
-              <span className="text-sm text-ink truncate">{eq.nome}</span>
+              <span className="text-body text-ink truncate">{eq.nome}</span>
             </div>
           ))}
         </div>

@@ -1,3 +1,4 @@
+import { Button } from "@sinergica/ui";
 import { Plus } from "lucide-react";
 import { PageHeader, TableShell } from "./MockUi";
 import { FUNCIONARIOS, brl } from "./mock-data";
@@ -9,10 +10,9 @@ export function CustosPessoalMock() {
         title="Custos de pessoal"
         subtitle="Custo mensal → R$/hora derivado, por vigência."
         actions={
-          <button type="button" className="btn-accent">
-            <Plus className="h-4 w-4" />
+          <Button variant="accent" icon={<Plus className="h-4 w-4" />}>
             Novo registro
-          </button>
+          </Button>
         }
       />
       <TableShell
