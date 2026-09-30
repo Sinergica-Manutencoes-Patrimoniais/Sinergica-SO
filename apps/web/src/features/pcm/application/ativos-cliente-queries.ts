@@ -3,6 +3,8 @@
 // (regra do CLAUDE.md). Cada hook recebe o gateway por parâmetro (mesmo padrão de
 // operacao-queries.ts/resumo-inicio-queries.ts) — quem chama injeta o adapter singleton.
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { montarArvoreAtivos } from "../domain/arvore-ativos";
 import { criarCatalogoSimples, listarCatalogoSimples } from "./catalogos-simples";
 import type { CatalogosSimplesGateway } from "./catalogos-simples-gateway";
 import {
@@ -120,6 +122,62 @@ export function useMembrosSistemasDoCliente(gateway: SistemasGateway, clienteId:
     queryFn: () => listarMembrosSistemasDoCliente(gateway, clienteId ?? ""),
     enabled: Boolean(clienteId),
   });
+}
+
+/** E01-S160: compõe queries existentes; nenhuma request adicional para árvore. */
+export function useArvoreAtivos({
+  cliente,
+  hierarquia,
+  equipamentos,
+  sistemas,
+}: {
+  cliente: { id: string; nome: string } | null;
+  hierarquia: HierarquiaGateway;
+  equipamentos: EquipamentosGateway;
+  sistemas: SistemasGateway;
+}) {
+  const areas = useAreasDoCliente(hierarquia, cliente?.id ?? null);
+  const locais = useLocaisDoCliente(hierarquia, cliente?.id ?? null);
+  const componentes = useComponentesDoCliente(equipamentos, cliente?.id ?? null);
+  const sistemasQuery = useSistemasDoCliente(sistemas, cliente?.id ?? null);
+  const membros = useMembrosSistemasDoCliente(sistemas, cliente?.id ?? null);
+  const data = useMemo(() => {
+    if (
+      !cliente ||
+      !areas.data ||
+      !locais.data ||
+      !componentes.data ||
+      !sistemasQuery.data ||
+      !membros.data
+    )
+      return undefined;
+    return montarArvoreAtivos({
+      cliente,
+      areas: areas.data,
+      locais: locais.data,
+      componentes: componentes.data,
+      sistemas: sistemasQuery.data,
+      membros: membros.data,
+    });
+  }, [cliente, areas.data, locais.data, componentes.data, sistemasQuery.data, membros.data]);
+  return {
+    data,
+    isLoading:
+      areas.isLoading ||
+      locais.isLoading ||
+      componentes.isLoading ||
+      sistemasQuery.isLoading ||
+      membros.isLoading,
+    error: areas.error ?? locais.error ?? componentes.error ?? sistemasQuery.error ?? membros.error,
+    refetch: () =>
+      Promise.all([
+        areas.refetch(),
+        locais.refetch(),
+        componentes.refetch(),
+        sistemasQuery.refetch(),
+        membros.refetch(),
+      ]),
+  };
 }
 
 export function useFerramentasAlocadas(
