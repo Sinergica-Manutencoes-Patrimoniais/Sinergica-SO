@@ -10,6 +10,14 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-09-30 — Ondas S159–S161 concluídas localmente (Codex)
+
+- S159: cadastro/edição de Componentes e Sistemas dentro da Visão 360; regressão E2E escrita.
+- S160: árvore de ativos, teste de componente e E2E escritos.
+- S161: exportação/importação Excel com plano puro (diff, referências, validações, ordem), executor sequencial pelos casos de uso, confirmação, progresso e relatório `.xlsx`. A planilha de exemplo foi conferida: abas e cabeçalhos aderem ao contrato.
+- Gates locais focados: 11 testes Vitest verdes, typecheck e listagem Playwright verdes. `ci:local` ainda deve ser rodado depois deste lote final. E2E autenticado não foi executado: faltam `SUPABASE_TEST_EMAIL` e `SUPABASE_TEST_PASSWORD`.
+- Não aplicar migration `0223` nem redeployar Edge Functions antes do lote de deploy final solicitado pelo Lucas.
+
 ## 2026-09-29 — Specs da iniciativa "Cadastro de ativos v2" (E01-S154..S161) (Claude)
 
 Lucas mandou o diagrama "Cliente: Guainumbí" (estrutura + Sistemas amarelos + Componentes

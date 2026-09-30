@@ -373,7 +373,7 @@ export function VisaoClientePage({
       )}
 
       {aba === "estrutura" && user && (
-        <EstruturaClientePage clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
+        <EstruturaClientePage cliente={cliente} temEscrita={temEscrita} userId={user.id} />
       )}
 
       {aba === "sistemas" && user && (

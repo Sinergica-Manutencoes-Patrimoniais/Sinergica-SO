@@ -110,9 +110,9 @@ _74 concluídas no histórico · maior ID usado: E01-S161_
 | E01-S153 | Fix modal Estrutura (Portal) + OS escolhe Equipamento (Alvo) + flip Sistema→Auvo | Claude (sessão Lucas) | Implementado localmente (2026-09-24). M… | — |
 | E01-S157 | Siglas + identificador de ativo | Codex | Em validação (2026-09-30) — aguarda db-tests, E2E e AC-10 no Auvo | [spec](../../specs/E01-S157-siglas-identificador-ativo/spec.md) |
 | E01-S158 | Descrição completa no Auvo | — (livre) | Spec pronta (2026-09-29) — onda 2 | [spec](../../specs/E01-S158-descricao-completa-auvo/spec.md) |
-| E01-S159 | Cadastro completo na Visão 360 | — (livre) | Spec pronta (2026-09-29) — onda 3 | [spec](../../specs/E01-S159-cadastro-ativos-visao-360/spec.md) |
-| E01-S160 | Aba Árvore na Visão 360 | — (livre) | Spec pronta (2026-09-29) — onda 3 | [spec](../../specs/E01-S160-arvore-ativos-360/spec.md) |
-| E01-S161 | Importação/exportação da estrutura via Excel | — (livre) | Spec pronta (2026-09-29) — onda 4 | [spec](../../specs/E01-S161-importacao-excel-estrutura/spec.md) |
+| E01-S159 | Cadastro completo na Visão 360 | Codex | Implementado localmente; E2E autenticado pendente | [spec](../../specs/E01-S159-cadastro-ativos-visao-360/spec.md) |
+| E01-S160 | Aba Árvore na Visão 360 | Codex | Implementada localmente; teste de componente verde, E2E autenticado pendente | [spec](../../specs/E01-S160-arvore-ativos-360/spec.md) |
+| E01-S161 | Importação/exportação da estrutura via Excel | Codex | Implementada localmente; E2E autenticado pendente | [spec](../../specs/E01-S161-importacao-excel-estrutura/spec.md) |
 | E01-S114 | Nav: "Backlog GUT"/"Ordens de Serviço" viram submenu de "Chamados" | Claude (sessão Lucas) | Implementado localmente (2026-07-29). P… | [spec](../../specs/E01-S114-nav-chamados-submenu-backlog-os/spec.md) |
 | E01-S115 | Limpar dados de teste E2E do banco | — (livre) | Feito (2026-07-29). Inventário revisado… | [spec](../../specs/E01-S115-limpar-dados-teste-e2e/spec.md) |
 | E01-S118 | Operação unifica Chamados no board | Claude (sessão Lucas) | Implementado localmente (2026-07-29). B… | [spec](../../specs/E01-S118-operacao-unifica-chamados-board/spec.md) |

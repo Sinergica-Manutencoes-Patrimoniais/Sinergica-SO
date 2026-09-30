@@ -1,9 +1,12 @@
+import { Button, ConfirmDialog, Modal, Skeleton, useToast } from "@sinergica/ui";
 // EstruturaClientePage.tsx — E01-S76 (AC-1, AC-2, AC-3): CRUD de Área > Local (árvore) de um
 // cliente. Mora como aba dentro de VisaoClientePage (design.md — "aba em VisaoClientePage.tsx").
-import { Button, ConfirmDialog, Modal, Skeleton, useToast } from "@sinergica/ui";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, FolderTree, Pencil, Plus, Tag, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { baixarPlanilha } from "../../../lib/sheetjs";
+import { ativosClienteQueryKeys } from "../application/ativos-cliente-queries";
+import type { ClienteHeader } from "../application/cliente-360-gateway";
 import {
   criarArea,
   criarLocal,
@@ -14,6 +17,7 @@ import {
   editarArea,
   editarLocal,
 } from "../application/hierarquia";
+import { executarPlanoEstrutura } from "../application/importacao-estrutura";
 import { ImportacaoEstruturaModal } from "../components/ImportacaoEstruturaModal";
 import type {
   Area,
@@ -28,6 +32,7 @@ import { sugerirSiglaUnica } from "../domain/siglas";
 import { supabaseCatalogosSimplesAdapter } from "../infrastructure/supabase-catalogos-simples-adapter";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
+import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
 
 type ModalArea = { modo: "novo" } | { modo: "editar"; area: Area } | null;
@@ -41,14 +46,15 @@ function achatar(nodes: LocalArvoreNode[]): LocalArvoreNode[] {
 }
 
 export function EstruturaClientePage({
-  clienteId,
+  cliente,
   temEscrita,
   userId,
 }: {
-  clienteId: string;
+  cliente: ClienteHeader;
   temEscrita: boolean;
   userId: string;
 }) {
+  const clienteId = cliente.id;
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [areas, setAreas] = useState<Area[]>([]);
@@ -74,6 +80,7 @@ export function EstruturaClientePage({
   const [areaParaExcluir, setAreaParaExcluir] = useState<Area | null>(null);
   const [localParaExcluir, setLocalParaExcluir] = useState<LocalArvoreNode | null>(null);
   const toast = useToast();
+  const queryClient = useQueryClient();
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -124,7 +131,7 @@ export function EstruturaClientePage({
   async function exportarExcel() {
     await baixarPlanilha(
       montarPlanilhaEstrutura({
-        cliente: { id: clienteId, nome: "cliente" },
+        cliente: { id: clienteId, nome: cliente.nome, sigla: cliente.sigla },
         areas,
         locais: Object.values(arvores).flatMap((arvore) => achatar(arvore)),
         sistemas,
@@ -137,8 +144,53 @@ export function EstruturaClientePage({
         })),
         tiposLocal: tiposDeLocal,
       }),
-      nomeArquivoExportacao({ id: clienteId, nome: "cliente" }, new Date()),
+      nomeArquivoExportacao(
+        { id: clienteId, nome: cliente.nome, sigla: cliente.sigla },
+        new Date(),
+      ),
     );
+  }
+
+  async function executarImportacao(
+    plano: Parameters<typeof executarPlanoEstrutura>[0],
+    onProgresso: (atual: number, total: number) => void,
+  ) {
+    const relatorio = await executarPlanoEstrutura(
+      plano,
+      {
+        cliente: { id: clienteId, nome: cliente.nome, sigla: cliente.sigla },
+        areas,
+        locais: Object.values(arvores).flatMap(achatar),
+        sistemas,
+        componentes,
+        membros,
+        categorias: categorias.map((categoria) => ({
+          id: categoria.id,
+          nome: categoria.descricao,
+          sigla: categoria.sigla,
+        })),
+        tiposLocal: tiposDeLocal,
+      },
+      {
+        hierarquia: supabaseHierarquiaAdapter,
+        equipamentos: supabaseEquipamentosAdapter,
+        sistemas: supabaseSistemasAdapter,
+        identificador: supabaseIdentificadorAtivoAdapter,
+      },
+      userId,
+      onProgresso,
+    );
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ativosClienteQueryKeys.areas(clienteId) }),
+      queryClient.invalidateQueries({ queryKey: ativosClienteQueryKeys.locais(clienteId) }),
+      queryClient.invalidateQueries({ queryKey: ativosClienteQueryKeys.componentes(clienteId) }),
+      queryClient.invalidateQueries({ queryKey: ativosClienteQueryKeys.sistemas(clienteId) }),
+      queryClient.invalidateQueries({
+        queryKey: ativosClienteQueryKeys.membrosSistemas(clienteId),
+      }),
+    ]);
+    await carregar();
+    return relatorio;
   }
 
   async function salvarArea(dados: AreaFormData) {
@@ -258,7 +310,7 @@ export function EstruturaClientePage({
       {importando && (
         <ImportacaoEstruturaModal
           estado={{
-            cliente: { id: clienteId, nome: "cliente" },
+            cliente: { id: clienteId, nome: cliente.nome, sigla: cliente.sigla },
             areas,
             locais: Object.values(arvores).flatMap(achatar),
             sistemas,
@@ -272,6 +324,7 @@ export function EstruturaClientePage({
             tiposLocal: tiposDeLocal,
           }}
           onClose={() => setImportando(false)}
+          onExecutar={executarImportacao}
         />
       )}
 
