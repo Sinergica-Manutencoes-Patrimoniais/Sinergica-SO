@@ -14,12 +14,14 @@ import { SeletorPosicao } from "./SeletorPosicao";
 export function EquipamentoModal({
   equipamento,
   clientes,
+  clienteFixoId,
   userId,
   onCancel,
   onSalvar,
 }: {
   equipamento?: EquipamentoItem;
   clientes: EquipamentoClienteOpcao[];
+  clienteFixoId?: string;
   userId?: string;
   onCancel: () => void;
   onSalvar: (input: EquipamentoFormData) => Promise<void>;
@@ -31,7 +33,7 @@ export function EquipamentoModal({
     siglasInformadas: [],
     categoriaId: equipamento?.categoriaId ?? null,
     categoria: equipamento?.categoria ?? null,
-    clientId: equipamento?.clientId ?? "",
+    clientId: clienteFixoId ?? equipamento?.clientId ?? "",
     localizacao: equipamento?.localizacao ?? "",
     observacoes: equipamento?.observacoes ?? "",
     tipo: equipamento?.tipo ?? "equipamento",
@@ -75,29 +77,31 @@ export function EquipamentoModal({
           userId={userId}
           onChange={(categoriaId) => setDados((atual) => ({ ...atual, categoriaId }))}
         />
-        <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
-          <select
-            value={dados.clientId ?? ""}
-            onChange={(event) =>
-              setDados((atual) => ({
-                ...atual,
-                clientId: event.target.value,
-                areaId: null,
-                localId: null,
-              }))
-            }
-            className="input w-full"
-          >
-            <option value="">Selecione…</option>
-            {clientes.map((cliente) => (
-              <option key={cliente.id} value={cliente.id}>
-                {cliente.nome}
-                {cliente.auvoId ? ` · Auvo ${cliente.auvoId}` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
+        {!clienteFixoId && (
+          <label className="block">
+            <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
+            <select
+              value={dados.clientId ?? ""}
+              onChange={(event) =>
+                setDados((atual) => ({
+                  ...atual,
+                  clientId: event.target.value,
+                  areaId: null,
+                  localId: null,
+                }))
+              }
+              className="input w-full"
+            >
+              <option value="">Selecione…</option>
+              {clientes.map((cliente) => (
+                <option key={cliente.id} value={cliente.id}>
+                  {cliente.nome}
+                  {cliente.auvoId ? ` · Auvo ${cliente.auvoId}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="grid grid-cols-1 gap-3 md:col-span-2 md:grid-cols-2">
           <SeletorPosicao
             clienteId={dados.clientId ?? null}
