@@ -20,6 +20,7 @@ import {
   LayoutGrid,
   Link2,
   MessageCircle,
+  Network,
   Package,
   Pencil,
   RefreshCw,
@@ -54,6 +55,7 @@ import {
 import { editarCliente } from "../application/clientes-crud";
 import { listarClientes } from "../application/listar-clientes";
 import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao-cliente";
+import { ArvoreAtivos } from "../components/ArvoreAtivos";
 import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
 import { ClienteFormModal } from "../components/ClienteFormModal";
@@ -90,6 +92,7 @@ type Aba360 =
   | "estrutura"
   | "sistemas"
   | "ferramentas"
+  | "arvore"
   | "board"
   | "financeiro"
   | "comercial"
@@ -116,6 +119,7 @@ const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   // E01-S86 AC-2: compor Sistema (checkbox+filtro), mesmo componente do PCM.
   { id: "sistemas", label: "Sistemas", icon: Link2 },
   { id: "ferramentas", label: "Ferramentas", icon: Package },
+  { id: "arvore", label: "Árvore", icon: Network },
   // E01-S78: board visual dos ativos por Local (fase 1 do "mapa do andar").
   { id: "board", label: "Board", icon: LayoutGrid },
   { id: "financeiro", label: "Financeiro", icon: DollarSign },
@@ -379,6 +383,8 @@ export function VisaoClientePage({
       {aba === "ferramentas" && (
         <PainelFerramentasClienteTab clienteId={cliente.id} temEscrita={temEscrita} />
       )}
+
+      {aba === "arvore" && <ArvoreAtivos clienteId={cliente.id} clienteNome={cliente.nome} />}
 
       {aba === "board" && (
         <BoardAtivos clienteId={cliente.id} onIrParaEstrutura={() => setAba("estrutura")} />
