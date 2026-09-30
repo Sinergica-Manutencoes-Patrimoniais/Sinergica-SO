@@ -1,5 +1,5 @@
 import { Button, ConfirmDialog } from "@sinergica/ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePreviaIdentificador } from "../application/ativos-cliente-queries";
 import type { EntradaIdentificadorAtivo } from "../application/identificador-ativo";
 import type { NivelComSigla } from "../application/identificador-ativo-gateway";
@@ -28,6 +28,23 @@ export function CampoIdentificador({
   const previa = usePreviaIdentificador(supabaseIdentificadorAtivoAdapter, input);
   const resultado = previa.data;
   const sugestao = resultado?.prefixo ? `${resultado.prefixo}-${resultado.nn ?? "##"}` : "—";
+
+  useEffect(() => {
+    const faltantes = resultado?.faltantes ?? [];
+    const novas = faltantes
+      .filter(
+        (faltante) =>
+          !siglasInformadas.some(
+            (item) => item.id === faltante.id && item.nivel === faltante.nivel,
+          ),
+      )
+      .map((faltante) => ({
+        nivel: faltante.nivel,
+        id: faltante.id,
+        sigla: sugerirSigla(faltante.nome, { manterNumero: true }).sigla,
+      }));
+    if (novas.length) onSiglasChange([...siglasInformadas, ...novas]);
+  }, [resultado?.faltantes, siglasInformadas, onSiglasChange]);
 
   function atualizarSigla(nivel: NivelComSigla, id: string, sigla: string) {
     const restante = siglasInformadas.filter((item) => item.id !== id || item.nivel !== nivel);
