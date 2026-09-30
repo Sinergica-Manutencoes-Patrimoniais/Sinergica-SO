@@ -102,14 +102,17 @@ linhas velhas de ROADMAP da E01-S154/S155 (2026-09-25), já substituídas pela i
 **Próximo passo histórico:** E01-S156 (categoria como catálogo) — concluída acima.
 
 ## Em andamento / próximo passo
-- **E01-S157 (onda 2) em andamento** na branch `feat/E01-S157-siglas-identificador-ativo`.
-  Task 1 aplicada em produção: migrations `0221`/`0222` passaram smoke transacional; auditoria
-  confirmou 3 colunas, 3 checks validados, 5 índices e RPC retornando `01`. Task 2 (pgTAP) foi
-  escrita e aguarda `db-tests` da CI, pois não há Docker local. Tasks 3 e 4 concluídas (domínio
-  e porta/adaptor). O núcleo da task 5 está verde: prévia sem reserva, siglas antes da recarga,
-  sequencial e identificador manual. Próximo: integrar a resolução em `criarEquipamento` e
-  `criarSistema`, incluindo retry de `23505` e conflito de número do nome; depois tasks 6–12.
-  AC-10 só é verificado após deploy e falha exige parar.
+- **E01-S157 (onda 2) pronta para validação externa** na branch
+  `feat/E01-S157-siglas-identificador-ativo` (Codex, 2026-09-30). Migrations `0221`/`0222` estão
+  aplicadas em produção; smoke transacional e auditoria confirmaram 3 colunas, 3 checks, 5 índices
+  e RPC retornando `01`. Código, UI, siglas de estrutura/cliente, E2E e glossário foram concluídos
+  em 10 commits. `pnpm run ci:local`, auditoria da esteira, testes Deno dos descriptors Auvo e o
+  parse do E2E estão verdes.
+- **Próxima ação concreta:** antes de merge/deploy, rodar `db-tests` no CI (pgTAP, Task 2) e executar
+  `identificador-ativo.spec.ts` com credenciais E2E. Depois, usar um cliente de teste com `auvo_id`
+  seguro para AC-10: criar Componente, aguardar drain, conferir `identifier` no GET Auvo e confirmar
+  que o inbound não sobrescreveu `pcm.equipamentos.identificador`. Se divergir, parar e registrar
+  `SPEC_DEVIATION` na spec.
 - (Resolvido) As 3 branches da sessão de 2026-08-19 viraram os PRs #61, #62 e #63, todos mergeados.
 
 ## Bloqueios abertos
@@ -130,3 +133,6 @@ linhas velhas de ROADMAP da E01-S154/S155 (2026-09-25), já substituídas pela i
 - [ ] **Docker não existe mais nesta máquina** (confirmado por Lucas, 2026-09-30) — todo pgTAP da
   Onda 1 em diante é escrito mas roda só no CI `db-tests`, nunca localmente. Não é regressão, é a
   realidade do ambiente agora; pare de tentar `supabase test db` local.
+- [ ] **E01-S157 AC-10 e E2E real** — `SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD` continuam
+  ausentes e nenhum cliente Auvo seguro foi indicado. Quem destrava: Lucas fornece as credenciais e
+  aponta o cliente de teste; não criar Equipment de validação em cliente produtivo.
