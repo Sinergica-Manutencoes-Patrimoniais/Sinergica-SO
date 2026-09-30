@@ -153,6 +153,7 @@ export function DrawerDetalheAtivo({
         <EquipamentoModal
           equipamento={item}
           clientes={opcoes.clientes}
+          userId={user?.id}
           onCancel={() => setEditando(false)}
           onSalvar={salvarEdicao}
         />

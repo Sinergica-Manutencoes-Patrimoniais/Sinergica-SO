@@ -7,23 +7,27 @@ import type {
   EquipamentoFormData,
   EquipamentoItem,
 } from "../domain/equipamentos";
+import { SeletorCategoria } from "./SeletorCategoria";
 import { SeletorPosicao } from "./SeletorPosicao";
 
 export function EquipamentoModal({
   equipamento,
   clientes,
+  userId,
   onCancel,
   onSalvar,
 }: {
   equipamento?: EquipamentoItem;
   clientes: EquipamentoClienteOpcao[];
+  userId?: string;
   onCancel: () => void;
   onSalvar: (input: EquipamentoFormData) => Promise<void>;
 }) {
   const [dados, setDados] = useState<EquipamentoFormData>({
     nome: equipamento?.nome ?? "",
     identificador: equipamento?.identificador ?? "",
-    categoria: equipamento?.categoria ?? "",
+    categoriaId: equipamento?.categoriaId ?? null,
+    categoria: equipamento?.categoria ?? null,
     clientId: equipamento?.clientId ?? "",
     localizacao: equipamento?.localizacao ?? "",
     observacoes: equipamento?.observacoes ?? "",
@@ -67,10 +71,11 @@ export function EquipamentoModal({
           value={dados.identificador ?? ""}
           onChange={(v) => setCampo("identificador", v)}
         />
-        <Field
-          label="Categoria"
-          value={dados.categoria ?? ""}
-          onChange={(v) => setCampo("categoria", v)}
+        <SeletorCategoria
+          value={dados.categoriaId ?? null}
+          textoLegado={dados.categoria}
+          userId={userId}
+          onChange={(categoriaId) => setDados((atual) => ({ ...atual, categoriaId }))}
         />
         <label className="block">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>

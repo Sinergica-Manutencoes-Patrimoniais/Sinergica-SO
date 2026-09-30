@@ -242,6 +242,7 @@ export function EquipamentosPage() {
         <EquipamentoModal
           equipamento={modal.modo === "editar" ? modal.equipamento : undefined}
           clientes={estado.clientes}
+          userId={user?.id}
           onCancel={() => setModal(null)}
           onSalvar={salvar}
         />

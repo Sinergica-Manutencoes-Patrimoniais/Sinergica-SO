@@ -9,6 +9,8 @@ export interface Sistema {
   /** E01-S155: quando presente, `areaId` é sempre a Área deste Local (o banco deriva). */
   localId: string | null;
   nome: string;
+  categoriaId: string | null;
+  categoria: string | null;
   tipo: string | null;
   descricao: string | null;
   ativo: boolean;
@@ -25,6 +27,8 @@ export interface SistemaFormData {
   areaId?: string | null;
   localId?: string | null;
   nome: string;
+  categoriaId?: string | null;
+  categoria?: string | null;
   tipo?: string | null;
   descricao?: string | null;
 }
@@ -41,11 +45,15 @@ export function validarSistema(input: SistemaFormData): SistemaFormData {
   const nome = input.nome.trim();
   if (!nome) throw new Error("Nome do Sistema é obrigatório.");
   if (!input.clienteId) throw new Error("Cliente é obrigatório.");
+  const categoriaId = textoOuNull(input.categoriaId);
+  if (!categoriaId) throw new Error("Categoria é obrigatória.");
   return {
     clienteId: input.clienteId,
     areaId: textoOuNull(input.areaId),
     localId: textoOuNull(input.localId),
     nome,
+    categoriaId,
+    categoria: textoOuNull(input.categoria),
     tipo: textoOuNull(input.tipo),
     descricao: textoOuNull(input.descricao),
   };

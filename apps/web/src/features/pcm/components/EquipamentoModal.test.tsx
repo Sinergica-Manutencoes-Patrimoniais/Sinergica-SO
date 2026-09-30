@@ -12,6 +12,10 @@ vi.mock("./SeletorPosicao", () => ({
   ),
 }));
 
+vi.mock("./SeletorCategoria", () => ({
+  SeletorCategoria: () => <output data-testid="categoria" />,
+}));
+
 vi.mock("../infrastructure/supabase-hierarquia-adapter", () => ({
   supabaseHierarquiaAdapter: { listarLocaisDoCliente: vi.fn().mockResolvedValue([]) },
 }));
@@ -20,6 +24,7 @@ const componente: EquipamentoItem = {
   id: "item-1",
   nome: "Portão",
   identificador: null,
+  categoriaId: null,
   categoria: null,
   clientId: "cliente-1",
   clienteNome: "Guainumbí",

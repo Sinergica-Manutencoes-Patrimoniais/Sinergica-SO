@@ -12,6 +12,7 @@ import {
 import { BannerEscritaAuvoPendente } from "../components/BannerEscritaAuvoPendente";
 import type { CatalogoSimplesItem, CatalogoSimplesTipo } from "../domain/catalogos-simples";
 import { campoCatalogoSimples, labelCatalogoSimples } from "../domain/catalogos-simples";
+import { sugerirSiglaUnica } from "../domain/siglas";
 import { syncStatusLabel } from "../domain/tipos-tarefa";
 import { supabaseCatalogosSimplesAdapter } from "../infrastructure/supabase-catalogos-simples-adapter";
 
@@ -48,6 +49,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
   const [busca, setBusca] = useState("");
   const [modal, setModal] = useState<ModalState | null>(null);
   const [descricao, setDescricao] = useState("");
+  const [sigla, setSigla] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [itemParaExcluir, setItemParaExcluir] = useState<CatalogoSimplesItem | null>(null);
@@ -87,6 +89,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
   function abrirModal(next: ModalState) {
     setModal(next);
     setDescricao(next.item?.descricao ?? "");
+    setSigla(next.item?.sigla ?? "");
     setErroAcao(null);
   }
 
@@ -99,6 +102,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
         await criarCatalogoSimples(supabaseCatalogosSimplesAdapter, {
           tipo,
           descricao,
+          sigla: tipo === "equipamento_categorias" ? sigla : undefined,
           userId: user.id,
         });
       } else if (modal.item) {
@@ -106,6 +110,7 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
           tipo,
           id: modal.item.id,
           descricao,
+          sigla: tipo === "equipamento_categorias" ? sigla : undefined,
           userId: user.id,
         });
       }
@@ -234,6 +239,9 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
               >
                 <div>
                   <p className="font-semibold text-ink">{item.descricao}</p>
+                  {tipo === "equipamento_categorias" && (
+                    <p className="mt-1 text-caption text-ink-3">Sigla: {item.sigla ?? "—"}</p>
+                  )}
                   <p className="mt-1 text-caption text-ink-3">
                     {item.auvoId ? `Auvo #${item.auvoId}` : "Ainda sem id Auvo"}
                   </p>
@@ -294,6 +302,29 @@ function CatalogoSimplesPage({ tipo }: { tipo: CatalogoSimplesTipo }) {
                 onChange={(event) => setDescricao(event.target.value)}
               />
             </label>
+            {tipo === "equipamento_categorias" && (
+              <label className="block">
+                <span className="text-caption font-semibold uppercase tracking-wider text-ink-3">
+                  Sigla
+                </span>
+                <input
+                  className="input mt-1"
+                  value={sigla}
+                  onChange={(event) => setSigla(event.target.value.toUpperCase())}
+                  onBlur={() => {
+                    if (!descricao.trim()) return;
+                    const emUso = new Set(
+                      estado.fase === "pronto"
+                        ? estado.itens.flatMap((item) =>
+                            item.id !== modal?.item?.id && item.sigla ? [item.sigla] : [],
+                          )
+                        : [],
+                    );
+                    setSigla(sugerirSiglaUnica(descricao, emUso, { manterNumero: true }));
+                  }}
+                />
+              </label>
+            )}
 
             {erroAcao && (
               <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">

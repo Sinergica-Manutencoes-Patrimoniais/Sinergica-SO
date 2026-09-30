@@ -9,6 +9,8 @@ const SISTEMA: Sistema = {
   areaId: null,
   localId: null,
   nome: "Sistema Hidrante",
+  categoriaId: "cat-1",
+  categoria: "Hidráulica",
   tipo: null,
   descricao: null,
   ativo: true,

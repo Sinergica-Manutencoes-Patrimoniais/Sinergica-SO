@@ -10,6 +10,7 @@ import type { CatalogoSimplesItem, CatalogoSimplesTipo } from "../domain/catalog
 interface CatalogoSimplesRow {
   id: string;
   descricao?: string | null;
+  sigla?: string | null;
   auvo_id: number | null;
   auvo_sync_status: string | null;
   auvo_sync_error: string | null;
@@ -17,7 +18,8 @@ interface CatalogoSimplesRow {
 }
 
 const COLS = "id,descricao,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
-const CATEGORY_COLS = "id,nome,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
+const CATEGORY_COLS =
+  "id,nome,sigla,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
 
 const TABELA: Record<
   CatalogoSimplesTipo,
@@ -45,6 +47,7 @@ function mapRow(row: CatalogoSimplesRow & { nome?: string | null }): CatalogoSim
   return {
     id: row.id,
     descricao: row.descricao ?? row.nome ?? "",
+    sigla: row.sigla ?? null,
     auvoId: row.auvo_id,
     auvoSyncStatus: row.auvo_sync_status,
     auvoSyncError: row.auvo_sync_error,
@@ -61,8 +64,8 @@ export const supabaseCatalogosSimplesAdapter: CatalogosSimplesGateway = {
       .is("deleted_at", null)
       .order(textColumn(tipo), { ascending: true });
 
-    if (error) throw error;
-    return ((data ?? []) as CatalogoSimplesRow[]).map(mapRow);
+    if (error) throw traduzirErroSigla(error);
+    return ((data ?? []) as unknown as CatalogoSimplesRow[]).map(mapRow);
   },
 
   async criar(input: CatalogoSimplesCommand) {
@@ -71,6 +74,7 @@ export const supabaseCatalogosSimplesAdapter: CatalogosSimplesGateway = {
       .from(TABELA[input.tipo])
       .insert({
         [textColumn(input.tipo)]: input.descricao,
+        ...(input.tipo === "equipamento_categorias" ? { sigla: input.sigla } : {}),
         auvo_sync_status: "pending",
         created_by: input.userId,
         updated_by: input.userId,
@@ -78,8 +82,8 @@ export const supabaseCatalogosSimplesAdapter: CatalogosSimplesGateway = {
       .select(selectCols(input.tipo))
       .single();
 
-    if (error) throw error;
-    return mapRow(data as CatalogoSimplesRow);
+    if (error) throw traduzirErroSigla(error);
+    return mapRow(data as unknown as CatalogoSimplesRow);
   },
 
   async editar(input: EditarCatalogoSimplesCommand) {
@@ -88,6 +92,7 @@ export const supabaseCatalogosSimplesAdapter: CatalogosSimplesGateway = {
       .from(TABELA[input.tipo])
       .update({
         [textColumn(input.tipo)]: input.descricao,
+        ...(input.tipo === "equipamento_categorias" ? { sigla: input.sigla } : {}),
         auvo_sync_status: "pending",
         updated_at: new Date().toISOString(),
         updated_by: input.userId,
@@ -96,8 +101,8 @@ export const supabaseCatalogosSimplesAdapter: CatalogosSimplesGateway = {
       .select(selectCols(input.tipo))
       .single();
 
-    if (error) throw error;
-    return mapRow(data as CatalogoSimplesRow);
+    if (error) throw traduzirErroSigla(error);
+    return mapRow(data as unknown as CatalogoSimplesRow);
   },
 
   async excluir(input: ExcluirCatalogoSimplesCommand) {
@@ -115,3 +120,10 @@ export const supabaseCatalogosSimplesAdapter: CatalogosSimplesGateway = {
     if (error) throw error;
   },
 };
+
+function traduzirErroSigla(error: { code?: string; message?: string }): never {
+  if (error.code === "23505" && error.message?.includes("uq_equipamento_categorias_sigla")) {
+    throw new Error("Sigla já usada por outra categoria.");
+  }
+  throw error;
+}

@@ -38,7 +38,20 @@ importa), mensagens literais e gates.
 O antigo ficou em `Sinergica-SO.quebrado-2026-09-29`. A única diferença eram 2 linhas S154/S155 do
 ROADMAP (2026-09-25), nunca pushadas e sem spec escrita, **substituídas** por esta iniciativa.
 
-## 2026-09-30 — Implementação Onda 1 em andamento: E01-S154 completa (Claude)
+## 2026-09-30 — Onda 1 concluída localmente: E01-S154 + S155 + S156 (Codex)
+
+- **E01-S156 completa, 11/11 tasks:** domínio de siglas, catálogo com `sigla`, `categoria_id`
+  em Componentes/Sistemas, seletor com criação inline, tela de catálogo, adapters e hooks.
+- Migrations `0219`/`0220` já estavam aplicadas: auditoria pela Management API confirmou 5
+  colunas, 3 constraints validadas, 6 seeds e 2 triggers. Outbox confirma 6 creates de categoria
+  e nenhum update de Componentes desde o início da onda.
+- `pcm-auvo-push`, `pcm-auvo-pull`, `pcm-auvo-sync-all`, `pcm-auvo-webhook` e
+  `pcm-auvo-webhooks-register` foram redeployadas pela Management API; todas respondem 401 sem
+  credenciais, nunca 500. Vitest focado, Deno e typecheck verdes; pgTAP novo aguarda `db-tests`
+  no CI, pois esta máquina não tem Docker.
+- Próximo passo: CI e validação humana em browser; depois, **E01-S157** (onda 2).
+
+## 2026-09-30 — Implementação Onda 1: E01-S154 + S155 (histórico)
 
 Continuação da sessão de 2026-09-29 (acima). Lucas pediu pra implementar as 4 ondas ponta a ponta
 (frontend+backend+banco). Decisões de processo tomadas nesta sessão:
@@ -86,13 +99,13 @@ linhas velhas de ROADMAP da E01-S154/S155 (2026-09-25), já substituídas pela i
 - E2E de Componente só na Área e Sistema no Local foi escrito em `hierarquia-sistemas.spec.ts` e listado pelo Playwright; não executado sem `SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD`. `tsc --noEmit`, testes do seletor/modal e suite PCM anterior verdes; pgTAP fica para CI (`db-tests`) porque não há Docker.
 - Glossário ganhou Posição e Área efetiva; Instalação aponta para Posição. Sem SPEC_DEVIATION.
 
-**Próximo passo literal:** E01-S156 (categoria como catálogo) — fecha a Onda 1 na mesma branch.
+**Próximo passo histórico:** E01-S156 (categoria como catálogo) — concluída acima.
 
 ## Em andamento / próximo passo
 - Iniciativa Cadastro de ativos v2 — **branch `feat/onda1-componente-posicao-categoria`** (local,
-  não pushada ainda). E01-S154 e E01-S155 completas. Próximo: **E01-S156** (categoria) — mesma
-  branch, mesma onda. S157 (onda 2) tem uma verificação real no Auvo (AC-10) que pode mandar
-  parar.
+  não pushada ainda). Onda 1 (E01-S154/S155/S156) completa localmente. Próximo: validação CI e
+  humana; depois **E01-S157**. S157 (onda 2) tem uma verificação real no Auvo (AC-10) que pode
+  mandar parar.
 - (Resolvido) As 3 branches da sessão de 2026-08-19 viraram os PRs #61, #62 e #63, todos mergeados.
 
 ## Bloqueios abertos

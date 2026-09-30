@@ -30,6 +30,7 @@ function item(
 ): EquipamentoItem {
   return {
     identificador: null,
+    categoriaId: null,
     categoria: null,
     clientId: "cli-1",
     clienteNome: "Cliente",

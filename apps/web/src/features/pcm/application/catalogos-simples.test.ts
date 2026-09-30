@@ -12,6 +12,7 @@ function gatewayMock(): CatalogosSimplesGateway {
     criar: vi.fn(async (input) => ({
       id: "item-1",
       descricao: input.descricao,
+      sigla: input.sigla ?? null,
       auvoId: null,
       auvoSyncStatus: "pending",
       auvoSyncError: null,
@@ -20,6 +21,7 @@ function gatewayMock(): CatalogosSimplesGateway {
     editar: vi.fn(async (input) => ({
       id: input.id,
       descricao: input.descricao,
+      sigla: input.sigla ?? null,
       auvoId: null,
       auvoSyncStatus: "pending",
       auvoSyncError: null,

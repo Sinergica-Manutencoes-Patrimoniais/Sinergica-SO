@@ -16,6 +16,7 @@ interface EquipamentoRow {
   id: string;
   nome: string;
   identificador: string | null;
+  categoria_id: string | null;
   categoria: string | null;
   client_id: string | null;
   auvo_customer_id: number | null;
@@ -43,13 +44,14 @@ interface ClienteRow {
 }
 
 const COLS =
-  "id,nome,identificador,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id,area_id" as const;
+  "id,nome,identificador,categoria_id,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id,area_id" as const;
 
 function mapRow(row: EquipamentoRow, clientes: Map<string, string>): EquipamentoItem {
   return {
     id: row.id,
     nome: row.nome,
     identificador: row.identificador,
+    categoriaId: row.categoria_id,
     categoria: row.categoria,
     clientId: row.client_id,
     clienteNome: row.client_id ? (clientes.get(row.client_id) ?? null) : null,
@@ -122,6 +124,7 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
       .insert({
         nome: input.nome,
         identificador: input.identificador,
+        categoria_id: input.categoriaId,
         categoria: input.categoria,
         client_id: cliente?.id ?? null,
         auvo_customer_id: cliente?.auvoId ?? null,
@@ -150,6 +153,7 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
       .update({
         nome: input.nome,
         identificador: input.identificador,
+        categoria_id: input.categoriaId,
         categoria: input.categoria,
         client_id: cliente?.id ?? null,
         auvo_customer_id: cliente?.auvoId ?? null,

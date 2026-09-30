@@ -14,6 +14,7 @@ import {
 } from "../application/sistemas";
 import { ComposicaoSistema } from "../components/ComposicaoSistema";
 import { HistoricoOsSistema } from "../components/HistoricoOsSistema";
+import { SeletorCategoria } from "../components/SeletorCategoria";
 import { SeletorPosicao } from "../components/SeletorPosicao";
 import type { EquipamentoClienteOpcao } from "../domain/equipamentos";
 import type { Sistema, SistemaFormData } from "../domain/sistemas";
@@ -262,6 +263,7 @@ export function SistemasPage() {
         <SistemaModal
           sistema={modal.modo === "editar" ? modal.sistema : undefined}
           clientes={estado.clientes}
+          userId={user?.id}
           onCancel={() => setModal(null)}
           onSalvar={salvar}
         />
@@ -284,11 +286,13 @@ export function SistemasPage() {
 function SistemaModal({
   sistema,
   clientes,
+  userId,
   onCancel,
   onSalvar,
 }: {
   sistema?: Sistema;
   clientes: EquipamentoClienteOpcao[];
+  userId?: string;
   onCancel: () => void;
   onSalvar: (dados: SistemaFormData) => Promise<void>;
 }) {
@@ -297,7 +301,8 @@ function SistemaModal({
     areaId: sistema?.areaId ?? null,
     localId: sistema?.localId ?? null,
     nome: sistema?.nome ?? "",
-    tipo: sistema?.tipo ?? "",
+    categoriaId: sistema?.categoriaId ?? null,
+    categoria: sistema?.categoria ?? null,
     descricao: sistema?.descricao ?? "",
   });
   const [salvando, setSalvando] = useState(false);
@@ -362,15 +367,12 @@ function SistemaModal({
             placeholder='ex.: "Sistema de Hidrante Torre A"'
           />
         </label>
-        <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo</span>
-          <input
-            value={dados.tipo ?? ""}
-            onChange={(e) => setDados((atual) => ({ ...atual, tipo: e.target.value }))}
-            className="input w-full"
-            placeholder="hidrante, incêndio, spda…"
-          />
-        </label>
+        <SeletorCategoria
+          value={dados.categoriaId ?? null}
+          textoLegado={dados.categoria}
+          userId={userId}
+          onChange={(categoriaId) => setDados((atual) => ({ ...atual, categoriaId }))}
+        />
         {erro && (
           <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}

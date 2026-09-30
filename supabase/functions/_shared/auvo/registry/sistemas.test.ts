@@ -17,12 +17,14 @@ Deno.test("sistemasDescriptor — toAuvo mapeia nome/descricao/codigo/ativo", ()
       codigo: "SH-001",
       ativo: true,
       auvo_customer_id: 99,
+      categoria: "Hidráulica",
     }),
     {
       name: "Sistema Hidrante",
       description: "Rede de hidrantes prediais",
       associatedCustomerId: 99,
       identifier: "SH-001",
+      category: "Hidráulica",
       active: true,
     },
   );

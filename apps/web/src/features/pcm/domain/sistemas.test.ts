@@ -7,21 +7,41 @@ import {
 } from "./sistemas";
 
 describe("sistemas", () => {
+  it("E01-S156 AC-6: exige Categoria do catálogo", () => {
+    expect(() => validarSistema({ clienteId: "c1", nome: "Sistema X" })).toThrow(
+      "Categoria é obrigatória.",
+    );
+  });
+
   it("normaliza cadastro de sistema", () => {
     expect(
-      validarSistema({ clienteId: "c1", nome: "  Sistema de Hidrante Torre A  ", areaId: "" }),
+      validarSistema({
+        clienteId: "c1",
+        nome: "  Sistema de Hidrante Torre A  ",
+        categoriaId: "cat-1",
+        areaId: "",
+      }),
     ).toEqual({
       clienteId: "c1",
       areaId: null,
       localId: null,
       nome: "Sistema de Hidrante Torre A",
+      categoriaId: "cat-1",
+      categoria: null,
       tipo: null,
       descricao: null,
     });
   });
 
   it("E01-S155: normaliza localId", () => {
-    expect(validarSistema({ clienteId: "c1", nome: "Sistema X", localId: "loc-1" })).toMatchObject({
+    expect(
+      validarSistema({
+        clienteId: "c1",
+        nome: "Sistema X",
+        categoriaId: "cat-1",
+        localId: "loc-1",
+      }),
+    ).toMatchObject({
       localId: "loc-1",
     });
   });
@@ -33,9 +53,9 @@ describe("sistemas", () => {
   });
 
   it("bloqueia sem cliente", () => {
-    expect(() => validarSistema({ clienteId: "", nome: "Sistema X" })).toThrow(
-      "Cliente é obrigatório.",
-    );
+    expect(() =>
+      validarSistema({ clienteId: "", nome: "Sistema X", categoriaId: "cat-1" }),
+    ).toThrow("Cliente é obrigatório.");
   });
 
   it("INV-5: rejeita item de cliente diferente", () => {

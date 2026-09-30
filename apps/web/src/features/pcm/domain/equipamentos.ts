@@ -6,6 +6,7 @@ export interface EquipamentoItem {
   id: string;
   nome: string;
   identificador: string | null;
+  categoriaId: string | null;
   categoria: string | null;
   clientId: string | null;
   clienteNome: string | null;
@@ -50,6 +51,7 @@ export interface EquipamentoClienteOpcao {
 export interface EquipamentoFormData {
   nome: string;
   identificador?: string | null;
+  categoriaId?: string | null;
   categoria?: string | null;
   clientId?: string | null;
   localizacao?: string | null;
@@ -69,6 +71,8 @@ export function validarEquipamento(input: EquipamentoFormData): EquipamentoFormD
   if (!nome) throw new Error("Nome é obrigatório.");
   const clientId = textoOuNull(input.clientId);
   if (!clientId) throw new Error("Cliente é obrigatório.");
+  const categoriaId = textoOuNull(input.categoriaId);
+  if (!categoriaId) throw new Error("Categoria é obrigatória.");
   const tipo = input.tipo ?? "equipamento";
   if (tipo !== "equipamento" && tipo !== "componente") {
     throw new Error("Tipo deve ser 'equipamento' ou 'componente'.");
@@ -76,6 +80,7 @@ export function validarEquipamento(input: EquipamentoFormData): EquipamentoFormD
   return {
     nome,
     identificador: textoOuNull(input.identificador),
+    categoriaId,
     categoria: textoOuNull(input.categoria),
     clientId,
     localizacao: textoOuNull(input.localizacao),

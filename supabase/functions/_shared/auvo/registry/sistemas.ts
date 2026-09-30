@@ -3,6 +3,7 @@ import type { AuvoEntityDescriptor } from "./types.ts";
 export interface SistemaRow extends Record<string, unknown> {
   id: string;
   nome: string;
+  categoria?: string | null;
   tipo?: string | null;
   descricao?: string | null;
   ativo?: boolean | null;
@@ -27,6 +28,7 @@ export interface AuvoEquipmentSistema {
   customerId?: number;
   location?: string;
   active?: boolean;
+  category?: string;
 }
 
 /** E01-S76/E01-S153 — Sistema (agrupamento transversal de Itens) empurrado ao Auvo como Equipment
@@ -47,6 +49,7 @@ export const sistemasDescriptor: AuvoEntityDescriptor<AuvoEquipmentSistema, Sist
       description: row.descricao ?? row.nome,
       associatedCustomerId: row.auvo_customer_id,
       identifier: row.codigo,
+      category: row.categoria,
       // E01-S85 AC-4: localização do Sistema é só a Área (não tem local_id).
       location: row.auvo_localizacao,
       active: row.ativo ?? true,

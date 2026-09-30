@@ -15,6 +15,8 @@ interface SistemaRow {
   area_id: string | null;
   local_id: string | null;
   nome: string;
+  categoria_id: string | null;
+  categoria: string | null;
   tipo: string | null;
   descricao: string | null;
   ativo: boolean;
@@ -39,7 +41,7 @@ interface ItemOpcaoRow {
 }
 
 const SISTEMA_COLS =
-  "id,cliente_id,area_id,local_id,nome,tipo,descricao,ativo,auvo_id,auvo_equipment_id,codigo,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
+  "id,cliente_id,area_id,local_id,nome,categoria_id,categoria,tipo,descricao,ativo,auvo_id,auvo_equipment_id,codigo,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
 
 function mapSistema(row: SistemaRow): Sistema {
   return {
@@ -48,6 +50,8 @@ function mapSistema(row: SistemaRow): Sistema {
     areaId: row.area_id,
     localId: row.local_id,
     nome: row.nome,
+    categoriaId: row.categoria_id,
+    categoria: row.categoria,
     tipo: row.tipo,
     descricao: row.descricao,
     ativo: row.ativo,
@@ -99,6 +103,8 @@ export const supabaseSistemasAdapter: SistemasGateway = {
         area_id: input.localId ? null : input.areaId,
         local_id: input.localId,
         nome: input.nome,
+        categoria_id: input.categoriaId,
+        categoria: input.categoria,
         tipo: input.tipo,
         descricao: input.descricao,
         // E01-S153: pré-condição do flip writeEnabled — sem isso o Sistema sobe ao Auvo sem
@@ -122,6 +128,8 @@ export const supabaseSistemasAdapter: SistemasGateway = {
         area_id: input.localId ? null : input.areaId,
         local_id: input.localId,
         nome: input.nome,
+        categoria_id: input.categoriaId,
+        categoria: input.categoria,
         tipo: input.tipo,
         descricao: input.descricao,
         auvo_sync_status: "pending",
