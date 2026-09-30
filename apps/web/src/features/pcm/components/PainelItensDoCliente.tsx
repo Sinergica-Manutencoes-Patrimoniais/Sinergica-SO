@@ -1,25 +1,25 @@
-// PainelItensDoCliente.tsx — E01-S76: dentro da aba "Ativos" da Visão 360, lista os Itens
-// editáveis do PCM (`pcm.equipamentos`) deste cliente e permite atribuir Local direto daqui —
-// sem precisar ir pra tela global "Componentes" e procurar o item lá. Complementa
-// `PainelEquipamentos` (cache Auvo, só leitura, fonte de dado diferente).
-import { Boxes, FolderTree, Wrench } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { atualizarPosicaoComponente, listarEquipamentos } from "../application/equipamentos";
-import type { EquipamentoItem } from "../domain/equipamentos";
+import { Button, ConfirmDialog, Skeleton } from "@sinergica/ui";
+import { Boxes, Pencil, Plus, Search, Wrench } from "lucide-react";
+import { useState } from "react";
+import {
+  useAreasDoCliente,
+  useComponentesDoCliente,
+  useCriarComponente,
+  useDesativarComponente,
+  useEditarComponente,
+  useLocaisDoCliente,
+  useMembrosSistemasDoCliente,
+  useSistemasDoCliente,
+} from "../application/ativos-cliente-queries";
+import type { EquipamentoFormData, EquipamentoItem } from "../domain/equipamentos";
 import { montarArvore } from "../domain/hierarquia";
-import type { LocalArvoreNode } from "../domain/hierarquia";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
+import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
+import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
+import { EquipamentoModal } from "./EquipamentoModal";
 
-function flattenArvore(
-  nodes: LocalArvoreNode[],
-  profundidade = 0,
-): Array<{ local: LocalArvoreNode; profundidade: number }> {
-  return nodes.flatMap((node) => [
-    { local: node, profundidade },
-    ...flattenArvore(node.filhos, profundidade + 1),
-  ]);
-}
+type Modal = { modo: "novo" } | { modo: "editar"; item: EquipamentoItem } | null;
 
 export function PainelItensDoCliente({
   clienteId,
@@ -30,122 +30,206 @@ export function PainelItensDoCliente({
   temEscrita: boolean;
   userId: string;
 }) {
-  const [carregando, setCarregando] = useState(true);
-  const [itens, setItens] = useState<EquipamentoItem[]>([]);
-  const [locaisAchatados, setLocaisAchatados] = useState<
-    Array<{ local: LocalArvoreNode; profundidade: number }>
-  >([]);
-  const [erroLinha, setErroLinha] = useState<Record<string, string>>({});
-  const [salvandoLinha, setSalvandoLinha] = useState<Record<string, boolean>>({});
+  const [busca, setBusca] = useState("");
+  const [modal, setModal] = useState<Modal>(null);
+  const [paraDesativar, setParaDesativar] = useState<{
+    item: EquipamentoItem;
+    possuiOs: boolean;
+  } | null>(null);
+  const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const componentes = useComponentesDoCliente(supabaseEquipamentosAdapter, clienteId);
+  const areas = useAreasDoCliente(supabaseHierarquiaAdapter, clienteId);
+  const locais = useLocaisDoCliente(supabaseHierarquiaAdapter, clienteId);
+  const sistemas = useSistemasDoCliente(supabaseSistemasAdapter, clienteId);
+  const membros = useMembrosSistemasDoCliente(supabaseSistemasAdapter, clienteId);
+  const criar = useCriarComponente(supabaseEquipamentosAdapter, supabaseIdentificadorAtivoAdapter);
+  const editar = useEditarComponente(supabaseEquipamentosAdapter);
+  const desativar = useDesativarComponente(supabaseEquipamentosAdapter, clienteId);
 
-  const carregar = useCallback(async () => {
-    setCarregando(true);
-    try {
-      const [todos, locais] = await Promise.all([
-        listarEquipamentos(supabaseEquipamentosAdapter),
-        supabaseHierarquiaAdapter.listarLocaisDoCliente(clienteId),
-      ]);
-      setItens(todos.filter((item) => item.clientId === clienteId));
-      setLocaisAchatados(flattenArvore(montarArvore(locais)));
-    } finally {
-      setCarregando(false);
+  const carregando =
+    componentes.isLoading ||
+    areas.isLoading ||
+    locais.isLoading ||
+    sistemas.isLoading ||
+    membros.isLoading;
+  const erro = componentes.error ?? areas.error ?? locais.error ?? sistemas.error ?? membros.error;
+  const locaisPorId = caminhosLocais(locais.data ?? []);
+  const areaPorId = new Map((areas.data ?? []).map((area) => [area.id, area.nome]));
+  const sistemaPorItem = new Map(
+    (membros.data ?? []).map((membro) => [
+      membro.itemId,
+      (sistemas.data ?? []).find((sistema) => sistema.id === membro.sistemaId)?.nome ?? "—",
+    ]),
+  );
+  const itens = (componentes.data ?? []).filter((item) => {
+    const termo = busca.trim().toLocaleLowerCase("pt-BR");
+    return (
+      !termo ||
+      `${item.nome} ${item.identificador ?? ""}`.toLocaleLowerCase("pt-BR").includes(termo)
+    );
+  });
+
+  async function salvar(dados: EquipamentoFormData) {
+    setErroAcao(null);
+    if (modal?.modo === "editar") {
+      await editar.mutateAsync({ ...dados, id: modal.item.id, userId });
+    } else {
+      await criar.mutateAsync({ ...dados, userId });
     }
-  }, [clienteId]);
+    setModal(null);
+  }
 
-  useEffect(() => {
-    carregar();
-  }, [carregar]);
-
-  async function atribuirLocal(item: EquipamentoItem, localId: string) {
-    setErroLinha((atual) => ({ ...atual, [item.id]: "" }));
-    setSalvandoLinha((atual) => ({ ...atual, [item.id]: true }));
+  async function abrirDesativacao(item: EquipamentoItem) {
     try {
-      await atualizarPosicaoComponente(supabaseEquipamentosAdapter, {
-        id: item.id,
-        areaId: item.areaId,
-        localId: localId || null,
-        userId,
-      });
-      await carregar();
-    } catch (e) {
-      setErroLinha((atual) => ({
-        ...atual,
-        [item.id]: e instanceof Error ? e.message : "Não foi possível atribuir o Local.",
-      }));
-    } finally {
-      setSalvandoLinha((atual) => ({ ...atual, [item.id]: false }));
+      setErroAcao(null);
+      const possuiOs = await supabaseEquipamentosAdapter.possuiOsAberta(item.id);
+      setParaDesativar({ item, possuiOs });
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Não foi possível consultar as OS.");
     }
   }
 
-  if (carregando) {
+  if (carregando) return <Skeleton className="h-32 w-full" />;
+  if (erro) {
     return (
-      <div className="bg-card rounded-xl border border-line px-5 py-8 text-center text-body text-ink-3">
-        Carregando…
+      <div className="rounded-lg border border-danger-line bg-danger-soft px-5 py-6 text-body text-danger">
+        {erro instanceof Error ? erro.message : "Não foi possível carregar Componentes."}
+        <Button
+          variant="secondary"
+          size="sm"
+          className="ml-3"
+          onClick={() =>
+            void Promise.all([
+              componentes.refetch(),
+              areas.refetch(),
+              locais.refetch(),
+              sistemas.refetch(),
+              membros.refetch(),
+            ])
+          }
+        >
+          Tentar de novo
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="bg-card rounded-xl border border-line">
-      <div className="border-b border-line-soft px-5 py-4">
-        <h3 className="text-body font-semibold text-ink">Itens PCM (estrutura)</h3>
-        <p className="mt-0.5 text-caption text-ink-3">
-          Cadastro editável — atribua o Local (Área&gt;Local) de cada Item deste cliente
-        </p>
+    <section className="rounded-lg border border-line bg-card">
+      <div className="flex flex-col gap-3 border-b border-line-soft px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-body font-semibold text-ink">Componentes</h3>
+          <p className="mt-0.5 text-caption text-ink-3">
+            Cadastro e posição dos componentes deste cliente
+          </p>
+        </div>
+        {temEscrita && (
+          <Button variant="accent" size="sm" onClick={() => setModal({ modo: "novo" })}>
+            <Plus className="h-4 w-4" /> Novo componente
+          </Button>
+        )}
       </div>
-
-      {itens.length === 0 ? (
-        <div className="px-5 py-8 text-center">
+      <div className="border-b border-line-soft px-4 py-3">
+        <label className="relative block max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
+          <input
+            value={busca}
+            onChange={(event) => setBusca(event.target.value)}
+            className="input w-full pl-9"
+            placeholder="Buscar por nome ou identificador"
+          />
+        </label>
+      </div>
+      {(componentes.data ?? []).length === 0 ? (
+        <div className="px-5 py-10 text-center">
           <Wrench className="mx-auto h-8 w-8 text-ink-3" />
-          <p className="mt-2 text-body text-ink-3">Nenhum Item PCM cadastrado para este cliente.</p>
+          <p className="mt-2 text-body text-ink-3">
+            Nenhum componente cadastrado para este cliente.
+          </p>
+        </div>
+      ) : itens.length === 0 ? (
+        <div className="px-5 py-10 text-center text-body text-ink-3">
+          Nenhum componente para esta busca.
         </div>
       ) : (
         <div className="divide-y divide-line-soft">
-          {itens.map((item) => (
-            <div
-              key={item.id}
-              className="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-center"
-            >
-              <div className="flex min-w-0 flex-1 items-center gap-2">
-                {item.tipo === "componente" ? (
-                  <Boxes className="h-4 w-4 shrink-0 text-ink-3" />
-                ) : (
-                  <Wrench className="h-4 w-4 shrink-0 text-ink-3" />
-                )}
-                <span className="truncate text-body text-ink">{item.nome}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FolderTree className="h-3.5 w-3.5 shrink-0 text-ink-3" />
-                {temEscrita ? (
-                  <select
-                    value={item.localId ?? ""}
-                    onChange={(e) => atribuirLocal(item, e.target.value)}
-                    disabled={salvandoLinha[item.id]}
-                    className="input h-8 w-56 text-caption"
-                    aria-label={`Local de ${item.nome}`}
-                  >
-                    <option value="">Sem Local</option>
-                    {locaisAchatados.map(({ local, profundidade }) => (
-                      <option key={local.id} value={local.id}>
-                        {"— ".repeat(profundidade)}
-                        {local.nome}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="text-caption text-ink-3">
-                    {locaisAchatados.find((l) => l.local.id === item.localId)?.local.nome ??
-                      "Sem Local"}
-                  </span>
+          {itens.map((item) => {
+            const local = item.localId ? locaisPorId.get(item.localId) : null;
+            const posicao =
+              local?.caminho ?? (item.areaId ? (areaPorId.get(item.areaId) ?? "—") : "—");
+            return (
+              <div
+                key={item.id}
+                className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center"
+              >
+                <Boxes className="h-4 w-4 shrink-0 text-ink-3" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-body font-medium text-ink">{item.nome}</p>
+                  <p className="truncate text-caption text-ink-3">
+                    {item.identificador ?? "—"} · {item.categoria ?? "—"} · {posicao} ·{" "}
+                    {sistemaPorItem.get(item.id) ?? "—"}
+                  </p>
+                </div>
+                {temEscrita && (
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setModal({ modo: "editar", item })}
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Editar
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => void abrirDesativacao(item)}>
+                      Desativar
+                    </Button>
+                  </div>
                 )}
               </div>
-              {erroLinha[item.id] && (
-                <span className="text-caption text-danger">{erroLinha[item.id]}</span>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
-    </div>
+      {erroAcao && <p className="px-4 py-3 text-caption text-danger">{erroAcao}</p>}
+      {modal && (
+        <EquipamentoModal
+          equipamento={modal.modo === "editar" ? modal.item : undefined}
+          clientes={[]}
+          clienteFixoId={clienteId}
+          userId={userId}
+          onCancel={() => setModal(null)}
+          onSalvar={salvar}
+        />
+      )}
+      <ConfirmDialog
+        open={paraDesativar !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setParaDesativar(null);
+        }}
+        titulo={`Desativar "${paraDesativar?.item.nome}"`}
+        descricao={
+          paraDesativar?.possuiOs
+            ? "Há vínculo com OS; o histórico será preservado."
+            : "Esta ação não pode ser desfeita."
+        }
+        rotuloConfirmar="Desativar"
+        onConfirmar={async () => {
+          if (!paraDesativar) return;
+          await desativar.mutateAsync({ id: paraDesativar.item.id, userId });
+        }}
+      />
+    </section>
   );
+}
+
+function caminhosLocais(locais: Parameters<typeof montarArvore>[0]) {
+  const porId = new Map<string, { caminho: string }>();
+  const visitar = (nodes: ReturnType<typeof montarArvore>, anterior: string[]) => {
+    for (const node of nodes) {
+      const nomes = [...anterior, node.nome];
+      porId.set(node.id, { caminho: nomes.join(" > ") });
+      visitar(node.filhos, nomes);
+    }
+  };
+  visitar(montarArvore(locais), []);
+  return porId;
 }

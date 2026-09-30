@@ -362,7 +362,14 @@ export function VisaoClientePage({
           {user && (
             <PainelItensDoCliente clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
           )}
-          <PainelEquipamentos equipamentos={equipamentos} />
+          <details className="rounded-lg border border-line bg-card">
+            <summary className="cursor-pointer px-4 py-3 text-body font-semibold text-ink">
+              Equipamentos no Auvo (somente leitura)
+            </summary>
+            <div className="border-t border-line-soft">
+              <PainelEquipamentos equipamentos={equipamentos} />
+            </div>
+          </details>
         </div>
       )}
 
