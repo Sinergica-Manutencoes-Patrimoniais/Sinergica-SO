@@ -6,6 +6,8 @@ import {
   validarMembroSemOutroSistema,
   validarSistema,
 } from "../domain/sistemas";
+import type { CriarComIdentificadorOpcoes } from "./equipamentos";
+import { IdentificadorDuplicadoError, resolverIdentificadorNaCriacao } from "./identificador-ativo";
 import type { EditarSistemaCommand, SistemaCommand, SistemasGateway } from "./sistemas-gateway";
 
 export function listarSistemas(gateway: SistemasGateway, clienteId?: string) {
@@ -19,9 +21,53 @@ export function obterSistema(gateway: SistemasGateway, id: string) {
 /** AC-7/AC-8 — persiste em pcm.sistemas; o trigger `trg_sistemas_auvo_enqueue` (banco) enfileira no
  * outbox automaticamente — nenhuma chamada Auvo acontece aqui (drain é assíncrono e gated por
  * `writeEnabled:false` no descriptor). */
-export function criarSistema(gateway: SistemasGateway, input: SistemaCommand) {
+export async function criarSistema(
+  gateway: SistemasGateway,
+  input: SistemaCommand,
+  opcoesIdentificador?: CriarComIdentificadorOpcoes,
+) {
   const validado = validarSistema(input);
-  return gateway.criar({ ...validado, userId: input.userId });
+  if (!opcoesIdentificador) return gateway.criar({ ...validado, userId: input.userId });
+  const resolver = () =>
+    resolverIdentificadorNaCriacao(
+      opcoesIdentificador.identificador,
+      {
+        clienteId: validado.clienteId,
+        areaId: validado.areaId ?? null,
+        localId: validado.localId ?? null,
+        categoriaId: validado.categoriaId as string,
+        nomeAtivo: validado.nome,
+      },
+      { ...opcoesIdentificador, userId: input.userId },
+    );
+  const primeiro = await resolver();
+  try {
+    return await gateway.criar({
+      ...validado,
+      codigo: primeiro.identificador,
+      userId: input.userId,
+    });
+  } catch (erro) {
+    if (!(erro instanceof IdentificadorDuplicadoError)) throw erro;
+    if (!primeiro.nnDoSequencial) {
+      throw new Error(
+        `O identificador ${primeiro.identificador} já existe. Mude o número no nome ou edite o identificador.`,
+      );
+    }
+    const segundo = await resolver();
+    try {
+      return await gateway.criar({
+        ...validado,
+        codigo: segundo.identificador,
+        userId: input.userId,
+      });
+    } catch (segundoErro) {
+      if (segundoErro instanceof IdentificadorDuplicadoError) {
+        throw new Error("Não foi possível reservar o identificador. Tente salvar de novo.");
+      }
+      throw segundoErro;
+    }
+  }
 }
 
 export function editarSistema(gateway: SistemasGateway, input: EditarSistemaCommand) {

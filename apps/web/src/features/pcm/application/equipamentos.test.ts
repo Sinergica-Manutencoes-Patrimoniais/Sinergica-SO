@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import type { EquipamentoItem } from "../domain/equipamentos";
 import { atualizarPosicaoComponente, criarEquipamento } from "./equipamentos";
 import type { EquipamentosGateway } from "./equipamentos-gateway";
+import { IdentificadorDuplicadoError } from "./identificador-ativo";
+import type { IdentificadorAtivoGateway } from "./identificador-ativo-gateway";
 
 function gatewayFake(): EquipamentosGateway {
   return {
@@ -24,6 +26,37 @@ describe("criarEquipamento", () => {
       "Cliente é obrigatório.",
     );
     expect(gateway.criar).not.toHaveBeenCalled();
+  });
+
+  it("E01-S157 AC-6: reserva de novo uma vez ao colidir no sequencial", async () => {
+    const gateway = gatewayFake();
+    gateway.criar = vi
+      .fn()
+      .mockRejectedValueOnce(new IdentificadorDuplicadoError("GUA-ELE-BOM-01"))
+      .mockResolvedValue({} as EquipamentoItem);
+    const identificador: IdentificadorAtivoGateway = {
+      obterNiveis: vi.fn(async () => ({
+        cliente: { id: "cli-1", nome: "Guainumbí", sigla: "GUA" },
+        area: null,
+        locais: [],
+        categoria: { id: "cat-1", nome: "Elétrica", sigla: "ELE" },
+      })),
+      definirSigla: vi.fn(),
+      proximoSequencial: vi.fn().mockResolvedValueOnce("01").mockResolvedValueOnce("02"),
+    };
+    await criarEquipamento(
+      gateway,
+      { nome: "Bomba", categoriaId: "cat-1", clientId: "cli-1", userId: "user-1" },
+      { identificador, siglasInformadas: [], identificadorManual: null },
+    );
+    expect(gateway.criar).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ identificador: "GUA-ELE-BOM-01" }),
+    );
+    expect(gateway.criar).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ identificador: "GUA-ELE-BOM-02" }),
+    );
   });
 });
 

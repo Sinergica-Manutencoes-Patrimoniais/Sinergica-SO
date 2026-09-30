@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Sistema } from "../domain/sistemas";
-import { adicionarItem, listarHistoricoOsSistema, salvarComposicaoSistema } from "./sistemas";
+import { IdentificadorDuplicadoError } from "./identificador-ativo";
+import type { IdentificadorAtivoGateway } from "./identificador-ativo-gateway";
+import {
+  adicionarItem,
+  criarSistema,
+  listarHistoricoOsSistema,
+  salvarComposicaoSistema,
+} from "./sistemas";
 import type { SistemaItemOpcao, SistemasGateway } from "./sistemas-gateway";
 
 const SISTEMA: Sistema = {
@@ -88,6 +95,39 @@ describe("salvarComposicaoSistema", () => {
     await salvarComposicaoSistema(gateway, "sis-1", ["item-1"], "user-1");
     expect(gateway.adicionarItem).not.toHaveBeenCalled();
     expect(gateway.removerItem).not.toHaveBeenCalled();
+  });
+});
+
+describe("criarSistema — E01-S157", () => {
+  it("refaz uma única reserva quando o sequencial colide", async () => {
+    const gateway = gatewayFake([]);
+    gateway.criar = vi
+      .fn()
+      .mockRejectedValueOnce(new IdentificadorDuplicadoError("GUA-HID-SIH-01"))
+      .mockResolvedValue(SISTEMA);
+    const identificador: IdentificadorAtivoGateway = {
+      obterNiveis: vi.fn(async () => ({
+        cliente: { id: "cli-1", nome: "Guainumbí", sigla: "GUA" },
+        area: null,
+        locais: [],
+        categoria: { id: "cat-1", nome: "Hidráulica", sigla: "HID" },
+      })),
+      definirSigla: vi.fn(),
+      proximoSequencial: vi.fn().mockResolvedValueOnce("01").mockResolvedValueOnce("02"),
+    };
+    await criarSistema(
+      gateway,
+      { clienteId: "cli-1", categoriaId: "cat-1", nome: "Sistema Hidrante", userId: "user-1" },
+      { identificador, siglasInformadas: [], identificadorManual: null },
+    );
+    expect(gateway.criar).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ codigo: "GUA-HID-SIH-01" }),
+    );
+    expect(gateway.criar).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ codigo: "GUA-HID-SIH-02" }),
+    );
   });
 });
 
