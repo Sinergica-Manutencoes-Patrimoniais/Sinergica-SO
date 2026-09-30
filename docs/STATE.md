@@ -102,9 +102,14 @@ linhas velhas de ROADMAP da E01-S154/S155 (2026-09-25), já substituídas pela i
 **Próximo passo histórico:** E01-S156 (categoria como catálogo) — concluída acima.
 
 ## Em andamento / próximo passo
-- Iniciativa Cadastro de ativos v2 — Onda 1 (E01-S154/S155/S156) integrada em `main`.
-  Próximo: validação CI e humana; depois **E01-S157**. S157 (onda 2) tem uma verificação real
-  no Auvo (AC-10) que pode mandar parar.
+- **E01-S157 (onda 2) em andamento** na branch `feat/E01-S157-siglas-identificador-ativo`.
+  Task 1 aplicada em produção: migrations `0221`/`0222` passaram smoke transacional; auditoria
+  confirmou 3 colunas, 3 checks validados, 5 índices e RPC retornando `01`. Task 2 (pgTAP) foi
+  escrita e aguarda `db-tests` da CI, pois não há Docker local. Tasks 3 e 4 concluídas (domínio
+  e porta/adaptor). O núcleo da task 5 está verde: prévia sem reserva, siglas antes da recarga,
+  sequencial e identificador manual. Próximo: integrar a resolução em `criarEquipamento` e
+  `criarSistema`, incluindo retry de `23505` e conflito de número do nome; depois tasks 6–12.
+  AC-10 só é verificado após deploy e falha exige parar.
 - (Resolvido) As 3 branches da sessão de 2026-08-19 viraram os PRs #61, #62 e #63, todos mergeados.
 
 ## Bloqueios abertos
