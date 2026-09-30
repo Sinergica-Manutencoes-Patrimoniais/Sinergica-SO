@@ -147,11 +147,45 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       .is("deleted_at", null)
       .order("nome", { ascending: true });
     if (error) throw error;
-    return ((data ?? []) as ItemOpcaoRow[]).map((row) => ({
-      id: row.id,
-      nome: row.nome,
-      clientId: row.client_id,
-    }));
+    const itens = (data ?? []) as ItemOpcaoRow[];
+    if (itens.length === 0) return [];
+
+    // E01-S154 AC-4: um Componente pertence a no máximo 1 Sistema — resolve em quais itens desta
+    // lista já têm dono, pra UI desabilitar o checkbox deles em qualquer OUTRO Sistema.
+    const { data: membrosData, error: membrosError } = await supabase
+      .schema("pcm")
+      .from("sistema_itens")
+      .select("item_id,sistema_id")
+      .in(
+        "item_id",
+        itens.map((item) => item.id),
+      );
+    if (membrosError) throw membrosError;
+    const sistemaIdPorItem = new Map(
+      (membrosData ?? []).map((m) => [m.item_id as string, m.sistema_id as string]),
+    );
+    const sistemaIds = [...new Set(sistemaIdPorItem.values())];
+    let nomePorSistema = new Map<string, string>();
+    if (sistemaIds.length > 0) {
+      const { data: sistemasData, error: sistemasError } = await supabase
+        .schema("pcm")
+        .from("sistemas")
+        .select("id,nome")
+        .in("id", sistemaIds);
+      if (sistemasError) throw sistemasError;
+      nomePorSistema = new Map((sistemasData ?? []).map((s) => [s.id as string, s.nome as string]));
+    }
+
+    return itens.map((row) => {
+      const sistemaId = sistemaIdPorItem.get(row.id) ?? null;
+      return {
+        id: row.id,
+        nome: row.nome,
+        clientId: row.client_id,
+        sistemaId,
+        sistemaNome: sistemaId ? (nomePorSistema.get(sistemaId) ?? null) : null,
+      };
+    });
   },
 
   async listarItensDoSistema(sistemaId): Promise<SistemaItemMembro[]> {

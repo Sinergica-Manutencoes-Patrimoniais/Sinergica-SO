@@ -65,17 +65,19 @@ function classificarTokens(tokens: string[]): TokensClassificados {
   let numero: string | null = null;
   const semNumero: string[] = [];
   for (let i = base.length - 1; i >= 0; i--) {
-    if (numero === null && /^[0-9]+$/.test(base[i])) {
-      numero = base[i];
+    const token = base[i] as string;
+    if (numero === null && /^[0-9]+$/.test(token)) {
+      numero = token;
     } else {
-      semNumero.unshift(base[i]);
+      semNumero.unshift(token);
     }
   }
 
   let marcador: string | null = null;
   let palavras = semNumero;
-  if (semNumero.length >= 2 && semNumero[semNumero.length - 1].length === 1) {
-    marcador = semNumero[semNumero.length - 1];
+  const ultimoToken = semNumero[semNumero.length - 1];
+  if (semNumero.length >= 2 && ultimoToken !== undefined && ultimoToken.length === 1) {
+    marcador = ultimoToken;
     palavras = semNumero.slice(0, -1);
   }
 
@@ -111,22 +113,24 @@ export function sugerirSigla(nome: string, opcoes: { manterNumero: boolean }): S
   const numeroFinal = !opcoes.manterNumero && numero !== null ? formatarNumeroFinal(numero) : null;
 
   if (opcoes.manterNumero && numero !== null && palavras.length >= 1) {
-    return { sigla: palavras[0].charAt(0) + formatarNumeroParaSigla(numero), numeroFinal };
+    const primeira = palavras[0] as string;
+    return { sigla: primeira.charAt(0) + formatarNumeroParaSigla(numero), numeroFinal };
   }
   if (marcador !== null && palavras.length === 1) {
-    return { sigla: pad(palavras[0].slice(0, 2), 2) + marcador, numeroFinal };
+    const unica = palavras[0] as string;
+    return { sigla: pad(unica.slice(0, 2), 2) + marcador, numeroFinal };
   }
   if (palavras.length >= 3) {
-    return {
-      sigla: palavras[0].charAt(0) + palavras[1].charAt(0) + palavras[2].charAt(0),
-      numeroFinal,
-    };
+    const [p1, p2, p3] = palavras as [string, string, string];
+    return { sigla: p1.charAt(0) + p2.charAt(0) + p3.charAt(0), numeroFinal };
   }
   if (palavras.length === 2) {
-    return { sigla: pad(palavras[0].slice(0, 2), 2) + palavras[1].charAt(0), numeroFinal };
+    const [p1, p2] = palavras as [string, string];
+    return { sigla: pad(p1.slice(0, 2), 2) + p2.charAt(0), numeroFinal };
   }
   if (palavras.length === 1) {
-    return { sigla: pad(palavras[0].slice(0, 3), 3), numeroFinal };
+    const unica = palavras[0] as string;
+    return { sigla: pad(unica.slice(0, 3), 3), numeroFinal };
   }
   if (numero !== null) {
     return { sigla: formatarNumeroParaSiglaDeTresDigitos(numero), numeroFinal };

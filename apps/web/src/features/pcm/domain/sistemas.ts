@@ -65,6 +65,19 @@ export function validarMembroNaoDuplicado(
   }
 }
 
+/** E01-S154 AC-4 — Componente pertence a no máximo 1 Sistema (`uq_sistema_itens_item_unico` no
+ * banco). `pertencimento` é o Sistema ao qual o item já pertence hoje, se algum. */
+export function validarMembroSemOutroSistema(
+  sistemaAtualId: string,
+  pertencimento: { sistemaId: string; sistemaNome: string } | null,
+) {
+  if (pertencimento && pertencimento.sistemaId !== sistemaAtualId) {
+    throw new Error(
+      `Componente já pertence ao Sistema «${pertencimento.sistemaNome}». Remova de lá antes.`,
+    );
+  }
+}
+
 function textoOuNull(valor: string | null | undefined): string | null {
   const texto = valor?.trim() ?? "";
   return texto.length > 0 ? texto : null;

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { validarMembroMesmoCliente, validarMembroNaoDuplicado, validarSistema } from "./sistemas";
+import {
+  validarMembroMesmoCliente,
+  validarMembroNaoDuplicado,
+  validarMembroSemOutroSistema,
+  validarSistema,
+} from "./sistemas";
 
 describe("sistemas", () => {
   it("normaliza cadastro de sistema", () => {
@@ -44,5 +49,27 @@ describe("sistemas", () => {
 
   it("INV-6: aceita item novo", () => {
     expect(() => validarMembroNaoDuplicado([{ itemId: "i1" }], "i2")).not.toThrow();
+  });
+
+  it("E01-S154 AC-4: rejeita item que já pertence a outro Sistema", () => {
+    expect(() =>
+      validarMembroSemOutroSistema("sistema-b", {
+        sistemaId: "sistema-a",
+        sistemaNome: "Incêndio Torre B",
+      }),
+    ).toThrow("Componente já pertence ao Sistema «Incêndio Torre B». Remova de lá antes.");
+  });
+
+  it("E01-S154 AC-4: aceita item que já pertence ao MESMO Sistema (edição)", () => {
+    expect(() =>
+      validarMembroSemOutroSistema("sistema-a", {
+        sistemaId: "sistema-a",
+        sistemaNome: "Incêndio Torre B",
+      }),
+    ).not.toThrow();
+  });
+
+  it("E01-S154 AC-4: aceita item sem pertencimento nenhum", () => {
+    expect(() => validarMembroSemOutroSistema("sistema-a", null)).not.toThrow();
   });
 });

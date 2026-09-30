@@ -5,6 +5,9 @@
 export interface ItemComposicaoSistema {
   id: string;
   nome: string;
+  /** E01-S154 AC-4: nome do Sistema ao qual o item já pertence, quando é um Sistema DIFERENTE do
+   * que está sendo composto agora — a UI usa isso pra desabilitar o checkbox. */
+  sistemaOutroNome?: string | null;
 }
 
 /** AC-1: reduz a lista por nome em tempo real — substring, case/acento-insensível o bastante pra
