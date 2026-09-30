@@ -14,6 +14,7 @@ describe("hierarquia — Área", () => {
     expect(validarArea({ clienteId: "c1", nome: "  Torre A  " })).toEqual({
       clienteId: "c1",
       nome: "Torre A",
+      sigla: null,
       descricao: null,
       ordem: 0,
     });
@@ -58,6 +59,7 @@ describe("hierarquia — Local", () => {
       areaId: "a1",
       parentId: null,
       nome: "3º andar",
+      sigla: null,
       tipoId: "t1",
       descricao: null,
       ordem: 0,

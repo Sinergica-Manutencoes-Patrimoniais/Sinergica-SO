@@ -52,6 +52,12 @@ export interface EquipamentoFormData {
   nome: string;
   identificador?: string | null;
   alterarIdentificador?: boolean;
+  identificadorManual?: string | null;
+  siglasInformadas?: Array<{
+    nivel: "cliente" | "area" | "local" | "categoria";
+    id: string;
+    sigla: string;
+  }>;
   categoriaId?: string | null;
   categoria?: string | null;
   clientId?: string | null;
@@ -82,6 +88,8 @@ export function validarEquipamento(input: EquipamentoFormData): EquipamentoFormD
     nome,
     identificador: textoOuNull(input.identificador),
     alterarIdentificador: input.alterarIdentificador === true,
+    identificadorManual: textoOuNull(input.identificadorManual),
+    siglasInformadas: input.siglasInformadas ?? [],
     categoriaId,
     categoria: textoOuNull(input.categoria),
     clientId,

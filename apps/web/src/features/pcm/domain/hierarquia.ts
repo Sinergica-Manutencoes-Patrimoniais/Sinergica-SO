@@ -2,11 +2,13 @@
 // INV 1 (Local sem ciclo), INV 2 (área consistente na subárvore) e INV 7 (Área sempre presente)
 // são also enforced no banco (trigger `fn_locais_valida_hierarquia`, FK not null de `area_id`);
 // aqui validam ANTES do round-trip, pra UI dar erro imediato (mesmo padrão de `ferramentas.ts`).
+import { validarSigla } from "./siglas";
 
 export interface Area {
   id: string;
   clienteId: string;
   nome: string;
+  sigla?: string | null;
   descricao: string | null;
   ordem: number;
   ativo: boolean;
@@ -16,6 +18,7 @@ export interface AreaFormData {
   clienteId: string;
   nome: string;
   descricao?: string | null;
+  sigla?: string | null;
   ordem?: number;
 }
 
@@ -41,6 +44,7 @@ export interface Local {
   areaId: string;
   parentId: string | null;
   nome: string;
+  sigla?: string | null;
   tipoId: string | null;
   tipoNome: string | null;
   descricao: string | null;
@@ -54,6 +58,7 @@ export interface LocalFormData {
   nome: string;
   tipoId?: string | null;
   descricao?: string | null;
+  sigla?: string | null;
   ordem?: number;
 }
 
@@ -76,6 +81,7 @@ export function validarArea(input: AreaFormData): AreaFormData {
     clienteId: input.clienteId,
     nome,
     descricao: textoOuNull(input.descricao),
+    sigla: input.sigla?.trim() ? validarSigla(input.sigla) : null,
     ordem: input.ordem ?? 0,
   };
 }
@@ -92,6 +98,7 @@ export function validarLocal(input: LocalFormData): LocalFormData {
     nome,
     tipoId: textoOuNull(input.tipoId),
     descricao: textoOuNull(input.descricao),
+    sigla: input.sigla?.trim() ? validarSigla(input.sigla) : null,
     ordem: input.ordem ?? 0,
   };
 }

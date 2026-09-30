@@ -21,6 +21,7 @@ const AREA: Area = {
   id: "area-1",
   clienteId: "cli-1",
   nome: "Torre A",
+  sigla: null,
   descricao: null,
   ordem: 0,
   ativo: true,
@@ -29,6 +30,7 @@ const AREA: Area = {
 function local(over: Partial<Local> & Pick<Local, "id" | "nome" | "areaId">): Local {
   return {
     parentId: null,
+    sigla: null,
     tipoId: null,
     tipoNome: null,
     descricao: null,

@@ -20,6 +20,7 @@ import type {
   ItemTipo,
 } from "../domain/equipamentos";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
+import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 
 type Estado =
   | { fase: "carregando" }
@@ -80,7 +81,15 @@ export function EquipamentosPage() {
         userId: user.id,
       });
     } else {
-      await criarEquipamento(supabaseEquipamentosAdapter, { ...input, userId: user.id });
+      await criarEquipamento(
+        supabaseEquipamentosAdapter,
+        { ...input, userId: user.id },
+        {
+          identificador: supabaseIdentificadorAtivoAdapter,
+          siglasInformadas: input.siglasInformadas ?? [],
+          identificadorManual: input.identificadorManual ?? null,
+        },
+      );
     }
     setModal(null);
     await carregar();

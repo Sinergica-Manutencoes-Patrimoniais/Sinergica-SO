@@ -48,6 +48,7 @@ interface FuncionarioRow {
 interface ClienteRow {
   id: string;
   nome: string;
+  sigla: string | null;
   cnpj: string | null;
   auvo_id: number | null;
   ativo: boolean;
@@ -61,7 +62,7 @@ interface ClienteRow {
   contato_telefone: string | null;
   contato_email: string | null;
   observacoes: string | null;
-  updated_at: string | null;
+  updated_at?: string | null;
   detalhes?: Record<string, unknown> | null;
   marcacao_id?: string | null;
 }
@@ -120,6 +121,7 @@ const STATUS_HISTORICO_LISTA = `(${STATUS_HISTORICO.join(",")})`;
 function camposComuns(input: ClienteCommand | EditarClienteCommand) {
   return {
     nome: input.nome,
+    sigla: input.sigla,
     cnpj: input.cnpj,
     endereco: input.endereco,
     cidade: input.cidade,
@@ -156,6 +158,13 @@ function mapearClienteEdicao(input: EditarClienteCommand) {
   };
 }
 
+function erroSigla(error: { code?: string; message?: string }): never {
+  if (error.code === "23505" && error.message?.includes("uq_clientes_sigla")) {
+    throw new Error("Sigla já usada neste nível.");
+  }
+  throw error;
+}
+
 function mapearOs(row: OrdemServicoRow, funcionarios: Map<string, string>): OrdemServicoResumo {
   return {
     id: row.id,
@@ -187,6 +196,7 @@ function mapearCliente(
   return {
     id: row.id,
     nome: row.nome,
+    sigla: row.sigla,
     cnpj: row.cnpj,
     auvoId: row.auvo_id,
     ativo: row.ativo,
@@ -269,11 +279,11 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         created_by: input.userId,
       })
       .select(
-        "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes",
+        "id,nome,sigla,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes",
       )
       .single();
 
-    if (error) throw error;
+    if (error) erroSigla(error);
     return mapearCliente(data as ClienteRow);
   },
 
@@ -287,11 +297,11 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       })
       .eq("id", input.id)
       .select(
-        "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes",
+        "id,nome,sigla,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes",
       )
       .single();
 
-    if (error) throw error;
+    if (error) erroSigla(error);
     return mapearCliente(data as ClienteRow);
   },
 
@@ -334,7 +344,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         .schema("pcm")
         .from("clientes")
         .select(
-          "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,updated_at,marcacao_id",
+          "id,nome,sigla,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,updated_at,marcacao_id",
         )
         .is("deleted_at", null)
         // E01-S147: lead/prospecto é dado do Comercial (dono, ADR-0019 R1) — a carteira do PCM é
@@ -426,6 +436,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       return {
         id: row.id,
         nome: row.nome,
+        sigla: row.sigla,
         cnpj: row.cnpj,
         ativo: row.ativo,
         auvoId: row.auvo_id,
@@ -461,7 +472,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       .schema("pcm")
       .from("clientes")
       .select(
-        "id,nome,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,detalhes,marcacao_id",
+        "id,nome,sigla,cnpj,auvo_id,ativo,tipo,status_comercial,endereco,cidade,estado,cep,contato_nome,contato_telefone,contato_email,observacoes,detalhes,marcacao_id",
       )
       .eq("id", id)
       .is("deleted_at", null)

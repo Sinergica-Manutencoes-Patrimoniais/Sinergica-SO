@@ -6,6 +6,7 @@
 export interface MarcacaoClienteResumo {
   id: string;
   nome: string;
+  sigla?: string | null;
   cor: string;
 }
 
@@ -13,6 +14,7 @@ export interface MarcacaoClienteResumo {
 export interface ClienteHeader {
   id: string;
   nome: string;
+  sigla?: string | null;
   cnpj: string | null;
   auvoId: number | null;
   ativo: boolean;
@@ -44,6 +46,7 @@ export interface GrupoClienteResumo {
 export interface ClienteResumo {
   id: string;
   nome: string;
+  sigla?: string | null;
   cnpj: string | null;
   ativo: boolean;
   auvoId?: number | null;
@@ -155,6 +158,7 @@ export interface QualidadeClienteResumo {
 
 export interface ClienteFormData {
   nome: string;
+  sigla?: string | null;
   cnpj?: string | null;
   endereco?: string | null;
   cidade?: string | null;

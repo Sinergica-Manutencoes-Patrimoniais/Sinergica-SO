@@ -1,10 +1,12 @@
 import type { ClienteFormData } from "../application/cliente-360-gateway";
+import { validarSigla } from "./siglas";
 
 export function validarClienteForm(input: ClienteFormData): ClienteFormData {
   const nome = input.nome.trim();
   if (!nome) throw new Error("Nome é obrigatório.");
   return {
     nome,
+    sigla: input.sigla?.trim() ? validarSigla(input.sigla) : null,
     cnpj: textoOuNull(input.cnpj),
     endereco: textoOuNull(input.endereco),
     cidade: textoOuNull(input.cidade),

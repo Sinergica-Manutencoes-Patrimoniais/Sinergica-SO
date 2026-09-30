@@ -1,11 +1,13 @@
 import { Button, Modal } from "@sinergica/ui";
 import { useState } from "react";
 import type { ClienteFormData } from "../application/cliente-360-gateway";
+import { sugerirSiglaUnica } from "../domain/siglas";
 
 /** E01-S50: extraído de `ListaClientesPage.tsx` pra ser reaproveitado também na edição direto na
  * Visão 360 do cliente — mesmo formulário/validação, dois pontos de entrada. */
 interface ClienteFormPrefill {
   nome: string;
+  sigla?: string | null;
   cnpj?: string | null;
   endereco?: string | null;
   cidade?: string | null;
@@ -24,14 +26,17 @@ export function ClienteFormModal({
   cliente,
   onCancel,
   onSalvar,
+  siglasEmUso = [],
 }: {
   cliente?: ClienteFormPrefill;
   onCancel: () => void;
   onSalvar: (dados: ClienteFormData) => Promise<void>;
+  siglasEmUso?: string[];
 }) {
   const ehEdicao = Boolean(cliente);
   const [dados, setDados] = useState<ClienteFormData>({
     nome: cliente?.nome ?? "",
+    sigla: cliente?.sigla ?? "",
     cnpj: cliente?.cnpj ?? "",
     endereco: cliente?.endereco ?? "",
     cidade: cliente?.cidade ?? "",
@@ -75,6 +80,24 @@ export function ClienteFormModal({
     >
       <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
         <Field label="Nome *" value={dados.nome} onChange={(v) => setCampo("nome", v)} />
+        <Field
+          label="Sigla"
+          value={dados.sigla ?? ""}
+          onChange={(v) => setCampo("sigla", v.toUpperCase())}
+          onBlur={() =>
+            !dados.sigla?.trim() && dados.nome.trim()
+              ? setCampo(
+                  "sigla",
+                  sugerirSiglaUnica(dados.nome, new Set(siglasEmUso), { manterNumero: true }),
+                )
+              : undefined
+          }
+        />
+        {cliente?.sigla && dados.sigla !== cliente.sigla && (
+          <p className="text-caption text-warning md:col-span-2">
+            Mudar a sigla não altera identificadores já gerados.
+          </p>
+        )}
         <Field label="CNPJ/CPF" value={dados.cnpj ?? ""} onChange={(v) => setCampo("cnpj", v)} />
         <Field
           label="Endereço"
@@ -164,11 +187,13 @@ function Field({
   label,
   value,
   onChange,
+  onBlur,
   className = "",
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   className?: string;
 }) {
   return (
@@ -177,6 +202,7 @@ function Field({
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
         className="input w-full"
       />
     </label>

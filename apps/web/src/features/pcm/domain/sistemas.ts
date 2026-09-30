@@ -29,6 +29,12 @@ export interface SistemaFormData {
   nome: string;
   codigo?: string | null;
   alterarIdentificador?: boolean;
+  identificadorManual?: string | null;
+  siglasInformadas?: Array<{
+    nivel: "cliente" | "area" | "local" | "categoria";
+    id: string;
+    sigla: string;
+  }>;
   categoriaId?: string | null;
   categoria?: string | null;
   tipo?: string | null;
@@ -56,6 +62,8 @@ export function validarSistema(input: SistemaFormData): SistemaFormData {
     nome,
     codigo: textoOuNull(input.codigo),
     alterarIdentificador: input.alterarIdentificador === true,
+    identificadorManual: textoOuNull(input.identificadorManual),
+    siglasInformadas: input.siglasInformadas ?? [],
     categoriaId,
     categoria: textoOuNull(input.categoria),
     tipo: textoOuNull(input.tipo),

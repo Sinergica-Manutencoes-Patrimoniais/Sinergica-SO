@@ -16,6 +16,7 @@ describe("validarClienteForm", () => {
       }),
     ).toEqual({
       nome: "Condomínio Primavera",
+      sigla: null,
       cnpj: null,
       endereco: null,
       cidade: null,

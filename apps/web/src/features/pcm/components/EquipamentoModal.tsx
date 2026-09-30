@@ -7,6 +7,7 @@ import type {
   EquipamentoFormData,
   EquipamentoItem,
 } from "../domain/equipamentos";
+import { CampoIdentificador } from "./CampoIdentificador";
 import { SeletorCategoria } from "./SeletorCategoria";
 import { SeletorPosicao } from "./SeletorPosicao";
 
@@ -26,6 +27,8 @@ export function EquipamentoModal({
   const [dados, setDados] = useState<EquipamentoFormData>({
     nome: equipamento?.nome ?? "",
     identificador: equipamento?.identificador ?? "",
+    identificadorManual: equipamento?.identificador ?? null,
+    siglasInformadas: [],
     categoriaId: equipamento?.categoriaId ?? null,
     categoria: equipamento?.categoria ?? null,
     clientId: equipamento?.clientId ?? "",
@@ -66,11 +69,6 @@ export function EquipamentoModal({
     >
       <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
         <Field label="Nome *" value={dados.nome} onChange={(v) => setCampo("nome", v)} />
-        <Field
-          label="Identificador"
-          value={dados.identificador ?? ""}
-          onChange={(v) => setCampo("identificador", v)}
-        />
         <SeletorCategoria
           value={dados.categoriaId ?? null}
           textoLegado={dados.categoria}
@@ -108,6 +106,33 @@ export function EquipamentoModal({
             onChange={({ areaId, localId }) => setDados((atual) => ({ ...atual, areaId, localId }))}
           />
         </div>
+        <CampoIdentificador
+          modo={equipamento ? "editar" : "criar"}
+          input={
+            dados.clientId && dados.categoriaId
+              ? {
+                  clienteId: dados.clientId,
+                  areaId: dados.areaId ?? null,
+                  localId: dados.localId ?? null,
+                  categoriaId: dados.categoriaId,
+                  nomeAtivo: dados.nome,
+                }
+              : null
+          }
+          valor={dados.identificadorManual ?? ""}
+          onManualChange={(identificadorManual, alterarIdentificador) =>
+            setDados((atual) => ({
+              ...atual,
+              identificador: identificadorManual,
+              identificadorManual,
+              alterarIdentificador,
+            }))
+          }
+          siglasInformadas={dados.siglasInformadas ?? []}
+          onSiglasChange={(siglasInformadas) =>
+            setDados((atual) => ({ ...atual, siglasInformadas }))
+          }
+        />
         <label className="block md:col-span-2">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Observações</span>
           <textarea

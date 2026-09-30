@@ -12,6 +12,7 @@ import {
   editarSistema,
   listarSistemas,
 } from "../application/sistemas";
+import { CampoIdentificador } from "../components/CampoIdentificador";
 import { ComposicaoSistema } from "../components/ComposicaoSistema";
 import { HistoricoOsSistema } from "../components/HistoricoOsSistema";
 import { SeletorCategoria } from "../components/SeletorCategoria";
@@ -19,6 +20,7 @@ import { SeletorPosicao } from "../components/SeletorPosicao";
 import type { EquipamentoClienteOpcao } from "../domain/equipamentos";
 import type { Sistema, SistemaFormData } from "../domain/sistemas";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
+import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
 
 type Estado =
@@ -81,7 +83,15 @@ export function SistemasPage() {
         userId: user.id,
       });
     } else {
-      await criarSistema(supabaseSistemasAdapter, { ...dados, userId: user.id });
+      await criarSistema(
+        supabaseSistemasAdapter,
+        { ...dados, userId: user.id },
+        {
+          identificador: supabaseIdentificadorAtivoAdapter,
+          siglasInformadas: dados.siglasInformadas ?? [],
+          identificadorManual: dados.identificadorManual ?? null,
+        },
+      );
     }
     setModal(null);
     await carregar();
@@ -301,6 +311,9 @@ function SistemaModal({
     areaId: sistema?.areaId ?? null,
     localId: sistema?.localId ?? null,
     nome: sistema?.nome ?? "",
+    codigo: sistema?.codigo ?? "",
+    identificadorManual: sistema?.codigo ?? null,
+    siglasInformadas: [],
     categoriaId: sistema?.categoriaId ?? null,
     categoria: sistema?.categoria ?? null,
     descricao: sistema?.descricao ?? "",
@@ -352,6 +365,33 @@ function SistemaModal({
             ))}
           </select>
         </label>
+        <CampoIdentificador
+          modo={sistema ? "editar" : "criar"}
+          input={
+            dados.clienteId && dados.categoriaId
+              ? {
+                  clienteId: dados.clienteId,
+                  areaId: dados.areaId ?? null,
+                  localId: dados.localId ?? null,
+                  categoriaId: dados.categoriaId,
+                  nomeAtivo: dados.nome,
+                }
+              : null
+          }
+          valor={dados.identificadorManual ?? ""}
+          onManualChange={(identificadorManual, alterarIdentificador) =>
+            setDados((atual) => ({
+              ...atual,
+              codigo: identificadorManual,
+              identificadorManual,
+              alterarIdentificador,
+            }))
+          }
+          siglasInformadas={dados.siglasInformadas ?? []}
+          onSiglasChange={(siglasInformadas) =>
+            setDados((atual) => ({ ...atual, siglasInformadas }))
+          }
+        />
         <SeletorPosicao
           clienteId={dados.clienteId || null}
           areaId={dados.areaId ?? null}

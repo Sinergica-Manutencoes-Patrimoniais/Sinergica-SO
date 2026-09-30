@@ -21,6 +21,7 @@ import type {
   LocalTipo,
 } from "../domain/hierarquia";
 import { montarArvore } from "../domain/hierarquia";
+import { sugerirSiglaUnica } from "../domain/siglas";
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 
 type ModalArea = { modo: "novo" } | { modo: "editar"; area: Area } | null;
@@ -279,6 +280,9 @@ export function EstruturaClientePage({
         <AreaModal
           clienteId={clienteId}
           area={modalArea.modo === "editar" ? modalArea.area : undefined}
+          siglasEmUso={areas
+            .filter((item) => item.id !== (modalArea.modo === "editar" ? modalArea.area.id : ""))
+            .flatMap((item) => (item.sigla ? [item.sigla] : []))}
           onCancel={() => setModalArea(null)}
           onSalvar={salvarArea}
         />
@@ -292,6 +296,16 @@ export function EstruturaClientePage({
           }
           local={modalLocal.modo === "editar" ? modalLocal.local : undefined}
           tiposDeLocal={tiposDeLocal}
+          siglasEmUso={Object.values(arvores)
+            .flatMap(achatarLocais)
+            .filter(
+              (item) =>
+                item.areaId === modalLocal.areaId &&
+                item.parentId ===
+                  (modalLocal.modo === "novo" ? modalLocal.parentId : modalLocal.local.parentId) &&
+                item.id !== (modalLocal.modo === "editar" ? modalLocal.local.id : ""),
+            )
+            .flatMap((item) => (item.sigla ? [item.sigla] : []))}
           onCancel={() => setModalLocal(null)}
           onSalvar={salvarLocal}
         />
@@ -446,6 +460,7 @@ function LocalTree({
           >
             <span className="flex-1 text-body text-ink-2">
               {node.nome}
+              {node.sigla && <span className="ml-1.5 text-caption text-ink-3">· {node.sigla}</span>}
               {node.tipoNome && (
                 <span className="ml-1.5 text-caption text-ink-3">({node.tipoNome})</span>
               )}
@@ -500,16 +515,19 @@ function LocalTree({
 function AreaModal({
   clienteId,
   area,
+  siglasEmUso,
   onCancel,
   onSalvar,
 }: {
   clienteId: string;
   area?: Area;
+  siglasEmUso: string[];
   onCancel: () => void;
   onSalvar: (dados: AreaFormData) => Promise<void>;
 }) {
   const [nome, setNome] = useState(area?.nome ?? "");
   const [descricao, setDescricao] = useState(area?.descricao ?? "");
+  const [sigla, setSigla] = useState(area?.sigla ?? "");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -517,7 +535,7 @@ function AreaModal({
     try {
       setSalvando(true);
       setErro(null);
-      await onSalvar({ clienteId, nome, descricao });
+      await onSalvar({ clienteId, nome, descricao, sigla });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível salvar a Área.");
     } finally {
@@ -539,6 +557,25 @@ function AreaModal({
           <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
           <input value={nome} onChange={(e) => setNome(e.target.value)} className="input w-full" />
         </label>
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Sigla</span>
+          <input
+            value={sigla}
+            onChange={(e) => setSigla(e.target.value.toUpperCase())}
+            onBlur={() =>
+              !sigla &&
+              nome.trim() &&
+              setSigla(sugerirSiglaUnica(nome, new Set(siglasEmUso), { manterNumero: true }))
+            }
+            maxLength={3}
+            className="input w-full"
+          />
+        </label>
+        {area?.sigla && sigla !== area.sigla && (
+          <p className="text-caption text-warning">
+            Mudar a sigla não altera identificadores já gerados.
+          </p>
+        )}
         <label className="block">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Descrição</span>
           <input
@@ -570,6 +607,7 @@ function LocalModal({
   parentId,
   local,
   tiposDeLocal,
+  siglasEmUso,
   onCancel,
   onSalvar,
 }: {
@@ -577,11 +615,13 @@ function LocalModal({
   parentId: string | null;
   local?: LocalArvoreNode;
   tiposDeLocal: LocalTipo[];
+  siglasEmUso: string[];
   onCancel: () => void;
   onSalvar: (dados: LocalFormData) => Promise<void>;
 }) {
   const [nome, setNome] = useState(local?.nome ?? "");
   const [tipoId, setTipoId] = useState(local?.tipoId ?? "");
+  const [sigla, setSigla] = useState(local?.sigla ?? "");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -589,7 +629,7 @@ function LocalModal({
     try {
       setSalvando(true);
       setErro(null);
-      await onSalvar({ areaId, parentId, nome, tipoId });
+      await onSalvar({ areaId, parentId, nome, tipoId, sigla });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível salvar o Local.");
     } finally {
@@ -616,6 +656,25 @@ function LocalModal({
             placeholder='ex.: "3º andar", "Sala 302"'
           />
         </label>
+        <label className="block">
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Sigla</span>
+          <input
+            value={sigla}
+            onChange={(e) => setSigla(e.target.value.toUpperCase())}
+            onBlur={() =>
+              !sigla &&
+              nome.trim() &&
+              setSigla(sugerirSiglaUnica(nome, new Set(siglasEmUso), { manterNumero: true }))
+            }
+            maxLength={3}
+            className="input w-full"
+          />
+        </label>
+        {local?.sigla && sigla !== local.sigla && (
+          <p className="text-caption text-warning">
+            Mudar a sigla não altera identificadores já gerados.
+          </p>
+        )}
         <label className="block">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo</span>
           <select
@@ -652,4 +711,8 @@ function LocalModal({
       </div>
     </Modal>
   );
+}
+
+function achatarLocais(nodes: LocalArvoreNode[]): LocalArvoreNode[] {
+  return nodes.flatMap((node) => [node, ...achatarLocais(node.filhos)]);
 }

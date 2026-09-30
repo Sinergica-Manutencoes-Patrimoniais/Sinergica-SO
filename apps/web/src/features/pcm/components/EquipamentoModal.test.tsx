@@ -16,6 +16,10 @@ vi.mock("./SeletorCategoria", () => ({
   SeletorCategoria: () => <output data-testid="categoria" />,
 }));
 
+vi.mock("./CampoIdentificador", () => ({
+  CampoIdentificador: () => <output data-testid="campo-identificador" />,
+}));
+
 vi.mock("../infrastructure/supabase-hierarquia-adapter", () => ({
   supabaseHierarquiaAdapter: { listarLocaisDoCliente: vi.fn().mockResolvedValue([]) },
 }));

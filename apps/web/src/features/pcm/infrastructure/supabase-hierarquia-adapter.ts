@@ -13,6 +13,7 @@ interface AreaRow {
   id: string;
   cliente_id: string;
   nome: string;
+  sigla: string | null;
   descricao: string | null;
   ordem: number;
   ativo: boolean;
@@ -23,6 +24,7 @@ interface LocalRow {
   area_id: string;
   parent_id: string | null;
   nome: string;
+  sigla: string | null;
   tipo_id: string | null;
   descricao: string | null;
   ordem: number;
@@ -37,8 +39,8 @@ interface LocalTipoRow {
   ativo: boolean;
 }
 
-const AREA_COLS = "id,cliente_id,nome,descricao,ordem,ativo" as const;
-const LOCAL_COLS = "id,area_id,parent_id,nome,tipo_id,descricao,ordem,ativo" as const;
+const AREA_COLS = "id,cliente_id,nome,sigla,descricao,ordem,ativo" as const;
+const LOCAL_COLS = "id,area_id,parent_id,nome,sigla,tipo_id,descricao,ordem,ativo" as const;
 const LOCAL_TIPO_COLS = "id,cliente_id,nome,ordem,ativo" as const;
 
 function mapArea(row: AreaRow): Area {
@@ -46,6 +48,7 @@ function mapArea(row: AreaRow): Area {
     id: row.id,
     clienteId: row.cliente_id,
     nome: row.nome,
+    sigla: row.sigla,
     descricao: row.descricao,
     ordem: row.ordem,
     ativo: row.ativo,
@@ -62,12 +65,18 @@ function mapLocalTipo(row: LocalTipoRow): LocalTipo {
   };
 }
 
+function erroSigla(error: { code?: string }): never {
+  if (error.code === "23505") throw new Error("Sigla já usada neste nível.");
+  throw error;
+}
+
 function mapLocal(row: LocalRow, tipos: Map<string, string>): Local {
   return {
     id: row.id,
     areaId: row.area_id,
     parentId: row.parent_id,
     nome: row.nome,
+    sigla: row.sigla,
     tipoId: row.tipo_id,
     tipoNome: row.tipo_id ? (tipos.get(row.tipo_id) ?? null) : null,
     descricao: row.descricao,
@@ -121,6 +130,7 @@ export const supabaseHierarquiaAdapter: HierarquiaGateway = {
       .insert({
         cliente_id: input.clienteId,
         nome: input.nome,
+        sigla: input.sigla,
         descricao: input.descricao,
         ordem: input.ordem ?? 0,
         created_by: input.userId,
@@ -128,7 +138,7 @@ export const supabaseHierarquiaAdapter: HierarquiaGateway = {
       })
       .select(AREA_COLS)
       .single();
-    if (error) throw error;
+    if (error) erroSigla(error);
     return mapArea(data as AreaRow);
   },
 
@@ -138,6 +148,7 @@ export const supabaseHierarquiaAdapter: HierarquiaGateway = {
       .from("areas")
       .update({
         nome: input.nome,
+        sigla: input.sigla,
         descricao: input.descricao,
         ordem: input.ordem ?? 0,
         updated_at: new Date().toISOString(),
@@ -146,7 +157,7 @@ export const supabaseHierarquiaAdapter: HierarquiaGateway = {
       .eq("id", input.id)
       .select(AREA_COLS)
       .single();
-    if (error) throw error;
+    if (error) erroSigla(error);
     return mapArea(data as AreaRow);
   },
 
@@ -210,6 +221,7 @@ export const supabaseHierarquiaAdapter: HierarquiaGateway = {
           area_id: input.areaId,
           parent_id: input.parentId ?? null,
           nome: input.nome,
+          sigla: input.sigla,
           tipo_id: input.tipoId ?? null,
           descricao: input.descricao,
           ordem: input.ordem ?? 0,
@@ -220,7 +232,7 @@ export const supabaseHierarquiaAdapter: HierarquiaGateway = {
         .single(),
       clienteIdDaArea(input.areaId).then(mapaTiposDoCliente),
     ]);
-    if (error) throw error;
+    if (error) erroSigla(error);
     return mapLocal(data as LocalRow, tipos);
   },
 
@@ -233,6 +245,7 @@ export const supabaseHierarquiaAdapter: HierarquiaGateway = {
           area_id: input.areaId,
           parent_id: input.parentId ?? null,
           nome: input.nome,
+          sigla: input.sigla,
           tipo_id: input.tipoId ?? null,
           descricao: input.descricao,
           ordem: input.ordem ?? 0,
@@ -244,7 +257,7 @@ export const supabaseHierarquiaAdapter: HierarquiaGateway = {
         .single(),
       clienteIdDaArea(input.areaId).then(mapaTiposDoCliente),
     ]);
-    if (error) throw error;
+    if (error) erroSigla(error);
     return mapLocal(data as LocalRow, tipos);
   },
 

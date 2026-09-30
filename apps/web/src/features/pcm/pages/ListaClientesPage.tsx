@@ -375,6 +375,9 @@ export function ListaClientesPage({
       {modal && (
         <ClienteFormModal
           cliente={modal.modo === "editar" ? modal.cliente : undefined}
+          siglasEmUso={clientes
+            .filter((item) => item.id !== (modal.modo === "editar" ? modal.cliente.id : ""))
+            .flatMap((item) => (item.sigla ? [item.sigla] : []))}
           onCancel={() => setModal(null)}
           onSalvar={salvarCliente}
         />
