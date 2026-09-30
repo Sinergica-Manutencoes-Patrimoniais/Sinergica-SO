@@ -2578,38 +2578,3 @@ async function extrairPlanilhaXls(file: File) {
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" }) as unknown[][];
   return parsearPlanilhaLevantamento(rows);
 }
-
-async function carregarSheetJs(): Promise<{
-  read: (
-    data: Uint8Array,
-    options: { type: "array" },
-  ) => {
-    SheetNames: string[];
-    Sheets: Record<string, unknown>;
-  };
-  utils: {
-    sheet_to_json: (sheet: unknown, options: { header: 1; defval: string }) => unknown[];
-  };
-}> {
-  const win = window as typeof window & { XLSX?: Awaited<ReturnType<typeof carregarSheetJs>> };
-  if (!win.XLSX) {
-    await carregarScript(
-      "sheetjs-cdn",
-      "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
-    );
-  }
-  if (!win.XLSX) throw new Error("Não foi possível carregar o leitor de planilhas.");
-  return win.XLSX;
-}
-
-async function carregarScript(id: string, src: string): Promise<void> {
-  if (document.getElementById(id)) return;
-  await new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.id = id;
-    script.src = src;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Falha ao carregar ${src}`));
-    document.head.appendChild(script);
-  });
-}
