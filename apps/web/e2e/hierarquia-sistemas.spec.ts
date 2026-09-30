@@ -170,3 +170,73 @@ test("cria hierarquia Área>Local, instala Item, cria Sistema e confirma breadcr
     linhaSistemaHistorico.getByText("Nenhuma OS registrada para este sistema.", { exact: true }),
   ).toBeVisible({ timeout: 10_000 });
 });
+
+// E01-S154 AC-4: Componente pertence a no máximo 1 Sistema — compõe num Sistema A e confirma que
+// o seletor de outro Sistema (B) mostra o item desabilitado com "em «Sistema A»".
+test("Componente em um Sistema aparece desabilitado no seletor de outro Sistema (E01-S154 AC-4)", async ({
+  page,
+}) => {
+  const sufixo = Date.now();
+  const nomeCliente = `[TESTE E2E] Cliente S154 ${sufixo}`;
+  const nomeItem = `[TESTE E2E] Bomba ${sufixo}`;
+  clienteCriado = nomeCliente;
+  itemCriado = nomeItem;
+  const nomeSistemaA = `Sistema A ${sufixo}`;
+  const nomeSistemaB = `Sistema B ${sufixo}`;
+
+  await page.goto("/");
+  await page.getByText("PCM · Operação", { exact: true }).first().click();
+  await page.getByText("Clientes", { exact: true }).click();
+  await page.getByRole("button", { name: "Novo cliente" }).click();
+  await page.getByLabel("Nome *").fill(nomeCliente);
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await page
+    .getByPlaceholder("Buscar por cliente, cidade, contato, CNPJ ou ID Auvo")
+    .fill(nomeCliente);
+  await expect(page.getByText(nomeCliente, { exact: true }).first()).toBeVisible({
+    timeout: 10_000,
+  });
+
+  // Componente do cliente de teste.
+  await page.getByText("PCM · Operação", { exact: true }).first().click();
+  await page.getByText("Componentes", { exact: true }).click();
+  await page.getByRole("button", { name: "Novo componente" }).click();
+  await page.getByLabel("Nome *").fill(nomeItem);
+  await selecionarPorTexto(page.getByLabel("Cliente"), nomeCliente);
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText(nomeItem, { exact: true }).first()).toBeVisible({ timeout: 10_000 });
+
+  // Dois Sistemas do mesmo cliente.
+  await page.getByText("Sistemas", { exact: true }).click();
+  for (const nomeSistema of [nomeSistemaA, nomeSistemaB]) {
+    await page.getByRole("button", { name: "Novo Sistema" }).click();
+    await selecionarPorTexto(page.getByLabel("Cliente *"), nomeCliente);
+    await page.getByPlaceholder('ex.: "Sistema de Hidrante Torre A"').fill(nomeSistema);
+    await page.getByRole("button", { name: "Salvar" }).click();
+    await expect(page.getByText(nomeSistema, { exact: true })).toBeVisible({ timeout: 10_000 });
+  }
+
+  // Compõe o Componente no Sistema A.
+  const linhaSistemaA = page
+    .getByText(nomeSistemaA, { exact: true })
+    .locator("xpath=ancestor::section[1]");
+  await linhaSistemaA.getByRole("button", { name: "Itens" }).click();
+  await linhaSistemaA.getByPlaceholder("Filtrar por nome…").fill(nomeItem);
+  await linhaSistemaA.getByLabel(nomeItem, { exact: true }).check();
+  await linhaSistemaA.getByRole("button", { name: "Salvar composição" }).click();
+  await expect(linhaSistemaA.getByLabel(nomeItem, { exact: true })).toBeChecked({
+    timeout: 10_000,
+  });
+
+  // No Sistema B, o mesmo item aparece desabilitado, com "em «Sistema A ...»".
+  const linhaSistemaB = page
+    .getByText(nomeSistemaB, { exact: true })
+    .locator("xpath=ancestor::section[1]");
+  await linhaSistemaB.getByRole("button", { name: "Itens" }).click();
+  await linhaSistemaB.getByPlaceholder("Filtrar por nome…").fill(nomeItem);
+  await expect(linhaSistemaB.getByText(`em «${nomeSistemaA}»`, { exact: true })).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(linhaSistemaB.getByLabel(nomeItem, { exact: true })).toBeDisabled();
+  await expect(linhaSistemaB.getByLabel(nomeItem, { exact: true })).not.toBeChecked();
+});
