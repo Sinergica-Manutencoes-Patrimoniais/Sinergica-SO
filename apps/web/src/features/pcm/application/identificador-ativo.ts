@@ -6,6 +6,13 @@ import {
 } from "../domain/identificador-ativo";
 import type { IdentificadorAtivoGateway, NivelComSigla } from "./identificador-ativo-gateway";
 
+export class IdentificadorDuplicadoError extends Error {
+  constructor(readonly identificador: string) {
+    super(`Identificador duplicado: ${identificador}`);
+    this.name = "IdentificadorDuplicadoError";
+  }
+}
+
 export interface EntradaIdentificadorAtivo {
   clienteId: string;
   areaId: string | null;

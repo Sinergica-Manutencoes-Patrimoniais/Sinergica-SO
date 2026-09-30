@@ -51,6 +51,7 @@ export interface EquipamentoClienteOpcao {
 export interface EquipamentoFormData {
   nome: string;
   identificador?: string | null;
+  alterarIdentificador?: boolean;
   categoriaId?: string | null;
   categoria?: string | null;
   clientId?: string | null;
@@ -80,6 +81,7 @@ export function validarEquipamento(input: EquipamentoFormData): EquipamentoFormD
   return {
     nome,
     identificador: textoOuNull(input.identificador),
+    alterarIdentificador: input.alterarIdentificador === true,
     categoriaId,
     categoria: textoOuNull(input.categoria),
     clientId,

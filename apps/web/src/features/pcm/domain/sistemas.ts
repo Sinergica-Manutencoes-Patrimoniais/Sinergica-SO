@@ -27,6 +27,8 @@ export interface SistemaFormData {
   areaId?: string | null;
   localId?: string | null;
   nome: string;
+  codigo?: string | null;
+  alterarIdentificador?: boolean;
   categoriaId?: string | null;
   categoria?: string | null;
   tipo?: string | null;
@@ -52,6 +54,8 @@ export function validarSistema(input: SistemaFormData): SistemaFormData {
     areaId: textoOuNull(input.areaId),
     localId: textoOuNull(input.localId),
     nome,
+    codigo: textoOuNull(input.codigo),
+    alterarIdentificador: input.alterarIdentificador === true,
     categoriaId,
     categoria: textoOuNull(input.categoria),
     tipo: textoOuNull(input.tipo),

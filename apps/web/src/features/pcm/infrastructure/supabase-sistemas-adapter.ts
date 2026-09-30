@@ -1,4 +1,5 @@
 import { supabase } from "../../../lib/supabase-client";
+import { IdentificadorDuplicadoError } from "../application/identificador-ativo";
 import type {
   EditarSistemaCommand,
   SistemaCommand,
@@ -66,6 +67,9 @@ function mapSistema(row: SistemaRow): Sistema {
 
 /** E01-S155 AC-6: mesma tradução de `fn_sistemas_normalizar_posicao` do lado dos equipamentos. */
 function traduzirErroPosicao(error: { code?: string; message?: string }): never {
+  if (error.code === "23505" && error.message?.includes("uq_sistemas_codigo_padrao")) {
+    throw new IdentificadorDuplicadoError("");
+  }
   if (error.code === "23514" && error.message?.includes("posicao_cliente_divergente")) {
     throw new Error("A Área/Local escolhido é de outro cliente.");
   }
@@ -103,6 +107,7 @@ export const supabaseSistemasAdapter: SistemasGateway = {
         area_id: input.localId ? null : input.areaId,
         local_id: input.localId,
         nome: input.nome,
+        codigo: input.codigo,
         categoria_id: input.categoriaId,
         categoria: input.categoria,
         tipo: input.tipo,
@@ -128,6 +133,7 @@ export const supabaseSistemasAdapter: SistemasGateway = {
         area_id: input.localId ? null : input.areaId,
         local_id: input.localId,
         nome: input.nome,
+        ...(input.alterarIdentificador ? { codigo: input.codigo } : {}),
         categoria_id: input.categoriaId,
         categoria: input.categoria,
         tipo: input.tipo,

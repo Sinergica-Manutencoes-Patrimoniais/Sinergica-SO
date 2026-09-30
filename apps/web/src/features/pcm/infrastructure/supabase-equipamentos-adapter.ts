@@ -5,6 +5,7 @@ import type {
   EquipamentoCommand,
   EquipamentosGateway,
 } from "../application/equipamentos-gateway";
+import { IdentificadorDuplicadoError } from "../application/identificador-ativo";
 import type {
   EquipamentoClienteOpcao,
   EquipamentoItem,
@@ -75,6 +76,9 @@ function mapRow(row: EquipamentoRow, clientes: Map<string, string>): Equipamento
 /** E01-S155 AC-6: o trigger `fn_equipamentos_normalizar_posicao` rejeita Área/Local de outro
  * cliente com `errcode 23514` — traduz pra mensagem de UI. */
 function traduzirErroPosicao(error: { code?: string; message?: string }): never {
+  if (error.code === "23505" && error.message?.includes("uq_equipamentos_identificador_padrao")) {
+    throw new IdentificadorDuplicadoError("");
+  }
   if (error.code === "23514" && error.message?.includes("posicao_cliente_divergente")) {
     throw new Error("A Área/Local escolhido é de outro cliente.");
   }
@@ -152,7 +156,7 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
       .from("equipamentos")
       .update({
         nome: input.nome,
-        identificador: input.identificador,
+        ...(input.alterarIdentificador ? { identificador: input.identificador } : {}),
         categoria_id: input.categoriaId,
         categoria: input.categoria,
         client_id: cliente?.id ?? null,
