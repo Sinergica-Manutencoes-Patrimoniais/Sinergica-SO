@@ -8,7 +8,7 @@ import {
   Network,
   Search,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useArvoreAtivos } from "../application/ativos-cliente-queries";
 import { type NoArvore, filtrarArvore } from "../domain/arvore-ativos";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
@@ -35,6 +35,16 @@ export function ArvoreAtivos({
   );
   const buscaAtiva = busca.trim().length >= 2;
   const todosIds = coletarIds(filtrada);
+
+  useEffect(() => {
+    const raiz = arvore.data;
+    if (!raiz) return;
+    setExpandidos((atual) =>
+      atual.size > 1
+        ? atual
+        : new Set([raiz.id, ...raiz.filhos.filter((no) => no.tipo === "area").map((no) => no.id)]),
+    );
+  }, [arvore.data]);
 
   if (arvore.isLoading) return <Skeleton className="h-40 w-full" />;
   if (arvore.error || !filtrada)
