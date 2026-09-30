@@ -15,8 +15,8 @@ alwaysApply: true
 - S159: cadastro/edição de Componentes e Sistemas dentro da Visão 360; regressão E2E escrita.
 - S160: árvore de ativos, teste de componente e E2E escritos.
 - S161: exportação/importação Excel com plano puro (diff, referências, validações, ordem), executor sequencial pelos casos de uso, confirmação, progresso e relatório `.xlsx`. A planilha de exemplo foi conferida: abas e cabeçalhos aderem ao contrato.
-- Gates locais focados: 11 testes Vitest verdes, typecheck e listagem Playwright verdes. `ci:local` ainda deve ser rodado depois deste lote final. E2E autenticado não foi executado: faltam `SUPABASE_TEST_EMAIL` e `SUPABASE_TEST_PASSWORD`.
-- Não aplicar migration `0223` nem redeployar Edge Functions antes do lote de deploy final solicitado pelo Lucas.
+- Gates locais focados: 11 testes Vitest, typecheck, listagem Playwright e `ci:local` verdes. E2E autenticado não foi executado: faltam `SUPABASE_TEST_EMAIL` e `SUPABASE_TEST_PASSWORD`.
+- **Deploy Supabase concluído (2026-09-30):** migration `0223` aplicada atomicamente pela Management API (2 colunas + 4 registros de trigger + histórico confirmados). `pcm-auvo-push` v37, `pcm-auvo-pull` v38, `pcm-auvo-sync-all` v40 e `pcm-auvo-webhook` v44 publicadas com `--use-api`; smoke sem credencial retornou 401 nas quatro.
 
 ## 2026-09-29 — Specs da iniciativa "Cadastro de ativos v2" (E01-S154..S161) (Claude)
 

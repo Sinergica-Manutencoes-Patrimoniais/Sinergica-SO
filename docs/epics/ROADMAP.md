@@ -109,7 +109,7 @@ _74 concluídas no histórico · maior ID usado: E01-S161_
 | E01-S113 | "Ferramentas por Técnico" vira hub único (técnico + cliente) | Claude (sessão Lucas) | Implementado localmente (2026-07-29). Q… | [spec](../../specs/E01-S113-ferramentas-hub-tecnico-cliente/spec.md) |
 | E01-S153 | Fix modal Estrutura (Portal) + OS escolhe Equipamento (Alvo) + flip Sistema→Auvo | Claude (sessão Lucas) | Implementado localmente (2026-09-24). M… | — |
 | E01-S157 | Siglas + identificador de ativo | Codex | Em validação (2026-09-30) — aguarda db-tests, E2E e AC-10 no Auvo | [spec](../../specs/E01-S157-siglas-identificador-ativo/spec.md) |
-| E01-S158 | Descrição completa no Auvo | — (livre) | Spec pronta (2026-09-29) — onda 2 | [spec](../../specs/E01-S158-descricao-completa-auvo/spec.md) |
+| E01-S158 | Descrição completa no Auvo | Codex | Migration `0223` e Edge Functions Auvo em produção; db-tests e E2E autenticado pendentes | [spec](../../specs/E01-S158-descricao-completa-auvo/spec.md) |
 | E01-S159 | Cadastro completo na Visão 360 | Codex | Implementado localmente; E2E autenticado pendente | [spec](../../specs/E01-S159-cadastro-ativos-visao-360/spec.md) |
 | E01-S160 | Aba Árvore na Visão 360 | Codex | Implementada localmente; teste de componente verde, E2E autenticado pendente | [spec](../../specs/E01-S160-arvore-ativos-360/spec.md) |
 | E01-S161 | Importação/exportação da estrutura via Excel | Codex | Implementada localmente; E2E autenticado pendente | [spec](../../specs/E01-S161-importacao-excel-estrutura/spec.md) |
