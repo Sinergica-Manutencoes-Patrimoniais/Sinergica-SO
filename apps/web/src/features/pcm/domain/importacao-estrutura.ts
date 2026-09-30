@@ -37,6 +37,18 @@ export interface LinhaPlanilha {
   valores: Record<string, string>;
 }
 
+export interface ResultadoPlano {
+  linha: LinhaPlanilha;
+  resultado: "CRIAR" | "EDITAR" | "EXCLUIR" | "SEM MUDANÇA" | "ERRO" | "AVISO";
+  detalhes: string[];
+  dependeDe: number[];
+}
+export interface PlanoImportacao {
+  resultados: ResultadoPlano[];
+  temErros: boolean;
+  alteracoes: number;
+}
+
 export function montarPlanilhaEstrutura(estado: EstadoEstrutura): Record<string, unknown[][]> {
   const locaisPorId = new Map(estado.locais.map((local) => [local.id, local]));
   const areaNome = new Map(estado.areas.map((area) => [area.id, area.nome]));
@@ -160,6 +172,46 @@ export function parsearPlanilhaEstrutura(abas: Record<string, unknown[][]>): {
     });
   }
   return { linhas, errosGerais };
+}
+
+/** Planejamento puro e conservador: valida antes de qualquer escrita. */
+export function planejarImportacao(
+  linhas: LinhaPlanilha[],
+  estado: EstadoEstrutura,
+): PlanoImportacao {
+  const ids = new Set(
+    [...estado.areas, ...estado.locais, ...estado.sistemas, ...estado.componentes].map(
+      (item) => item.id,
+    ),
+  );
+  const categorias = new Set(estado.categorias.map((categoria) => normalizar(categoria.nome)));
+  const resultados = linhas.map((linha): ResultadoPlano => {
+    const erros: string[] = [];
+    const id = linha.valores.Id ?? "";
+    const nome = linha.valores.Nome ?? "";
+    if (linha.valores.erro) erros.push(linha.valores.erro);
+    if ((linha.acao === "EDITAR" || linha.acao === "EXCLUIR") && (!id || !ids.has(id)))
+      erros.push("Id não encontrado neste cliente.");
+    if (linha.acao === "CRIAR" && id) erros.push("Linha de CRIAR não pode ter Id.");
+    if (linha.acao !== "EXCLUIR" && !nome) erros.push("Nome é obrigatório.");
+    if (["Sistemas", "Componentes"].includes(linha.aba) && linha.acao !== "EXCLUIR") {
+      const categoria = linha.valores.Categoria ?? "";
+      if (!categoria) erros.push("Categoria é obrigatória.");
+      else if (!categorias.has(normalizar(categoria)))
+        erros.push(`Categoria «${categoria}» não existe. Cadastre em Categorias de Ativo.`);
+    }
+    const sigla = linha.valores.Sigla ?? "";
+    if (sigla && !/^[A-Za-z0-9]{3}$/.test(sigla))
+      erros.push("Sigla deve ter exatamente 3 letras ou números.");
+    return { linha, resultado: erros.length ? "ERRO" : linha.acao, detalhes: erros, dependeDe: [] };
+  });
+  return {
+    resultados,
+    temErros: resultados.some((resultado) => resultado.resultado === "ERRO"),
+    alteracoes: resultados.filter((resultado) =>
+      ["CRIAR", "EDITAR", "EXCLUIR"].includes(resultado.resultado),
+    ).length,
+  };
 }
 
 function cabecalhosIguais(atual: unknown[], esperado: readonly string[]) {
