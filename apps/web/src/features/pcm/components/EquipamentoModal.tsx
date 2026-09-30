@@ -1,15 +1,13 @@
 // E01-S79: extraído de EquipamentosPage.tsx pra componente compartilhado — reusado também pelo
 // drawer de detalhe do Board (E01-S78), que antes só permitia visualizar, nunca editar.
 import { Button, Modal } from "@sinergica/ui";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type {
   EquipamentoClienteOpcao,
   EquipamentoFormData,
   EquipamentoItem,
 } from "../domain/equipamentos";
-import { montarArvore } from "../domain/hierarquia";
-import type { LocalArvoreNode } from "../domain/hierarquia";
-import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
+import { SeletorPosicao } from "./SeletorPosicao";
 
 export function EquipamentoModal({
   equipamento,
@@ -30,26 +28,12 @@ export function EquipamentoModal({
     localizacao: equipamento?.localizacao ?? "",
     observacoes: equipamento?.observacoes ?? "",
     tipo: equipamento?.tipo ?? "equipamento",
-    localId: equipamento?.localId ?? "",
+    localId: equipamento?.localId ?? null,
     parentItemId: equipamento?.parentItemId ?? "",
+    areaId: equipamento?.areaId ?? null,
   });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [locaisDoCliente, setLocaisDoCliente] = useState<LocalArvoreNode[]>([]);
-
-  useEffect(() => {
-    if (!dados.clientId) {
-      setLocaisDoCliente([]);
-      return;
-    }
-    let cancelado = false;
-    supabaseHierarquiaAdapter.listarLocaisDoCliente(dados.clientId).then((locais) => {
-      if (!cancelado) setLocaisDoCliente(montarArvore(locais));
-    });
-    return () => {
-      cancelado = true;
-    };
-  }, [dados.clientId]);
 
   async function salvar() {
     try {
@@ -89,13 +73,20 @@ export function EquipamentoModal({
           onChange={(v) => setCampo("categoria", v)}
         />
         <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
           <select
             value={dados.clientId ?? ""}
-            onChange={(event) => setCampo("clientId", event.target.value)}
+            onChange={(event) =>
+              setDados((atual) => ({
+                ...atual,
+                clientId: event.target.value,
+                areaId: null,
+                localId: null,
+              }))
+            }
             className="input w-full"
           >
-            <option value="">Sem vínculo</option>
+            <option value="">Selecione…</option>
             {clientes.map((cliente) => (
               <option key={cliente.id} value={cliente.id}>
                 {cliente.nome}
@@ -104,23 +95,14 @@ export function EquipamentoModal({
             ))}
           </select>
         </label>
-        <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Local (AC-4)</span>
-          <select
-            value={dados.localId ?? ""}
-            onChange={(event) => setCampo("localId", event.target.value)}
-            className="input w-full"
-            disabled={!dados.clientId}
-          >
-            <option value="">Sem local</option>
-            {flattenArvore(locaisDoCliente).map(({ local, profundidade }) => (
-              <option key={local.id} value={local.id}>
-                {"— ".repeat(profundidade)}
-                {local.nome}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid grid-cols-1 gap-3 md:col-span-2 md:grid-cols-2">
+          <SeletorPosicao
+            clienteId={dados.clientId ?? null}
+            areaId={dados.areaId ?? null}
+            localId={dados.localId ?? null}
+            onChange={({ areaId, localId }) => setDados((atual) => ({ ...atual, areaId, localId }))}
+          />
+        </div>
         <label className="block md:col-span-2">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Observações</span>
           <textarea
@@ -145,16 +127,6 @@ export function EquipamentoModal({
       </div>
     </Modal>
   );
-}
-
-function flattenArvore(
-  nodes: LocalArvoreNode[],
-  profundidade = 0,
-): Array<{ local: LocalArvoreNode; profundidade: number }> {
-  return nodes.flatMap((node) => [
-    { local: node, profundidade },
-    ...flattenArvore(node.filhos, profundidade + 1),
-  ]);
 }
 
 function Field({

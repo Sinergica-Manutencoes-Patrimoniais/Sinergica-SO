@@ -4,7 +4,7 @@
 // `PainelEquipamentos` (cache Auvo, só leitura, fonte de dado diferente).
 import { Boxes, FolderTree, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { editarEquipamento, listarEquipamentos } from "../application/equipamentos";
+import { atualizarPosicaoComponente, listarEquipamentos } from "../application/equipamentos";
 import type { EquipamentoItem } from "../domain/equipamentos";
 import { montarArvore } from "../domain/hierarquia";
 import type { LocalArvoreNode } from "../domain/hierarquia";
@@ -60,17 +60,10 @@ export function PainelItensDoCliente({
     setErroLinha((atual) => ({ ...atual, [item.id]: "" }));
     setSalvandoLinha((atual) => ({ ...atual, [item.id]: true }));
     try {
-      await editarEquipamento(supabaseEquipamentosAdapter, {
-        nome: item.nome,
-        identificador: item.identificador,
-        categoria: item.categoria,
-        clientId: item.clientId,
-        localizacao: item.localizacao,
-        observacoes: item.observacoes,
-        tipo: item.tipo,
-        localId: localId || null,
-        parentItemId: item.parentItemId,
+      await atualizarPosicaoComponente(supabaseEquipamentosAdapter, {
         id: item.id,
+        areaId: item.areaId,
+        localId: localId || null,
         userId,
       });
       await carregar();
