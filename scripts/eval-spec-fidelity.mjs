@@ -9,6 +9,7 @@
 
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, resolve, extname } from "node:path";
+import { execFileSync } from "node:child_process";
 
 const ROOT = resolve(process.argv[2] || ".");
 const SKIP = new Set(["node_modules", ".git", ".claude", "specs", "docs", "scripts", ".triviaiox-core", ".triviaiox"]);
@@ -30,15 +31,31 @@ const acTokens = (s) => new Set(s.match(/AC-\d+/g) || []);
 const specsDir = join(ROOT, "specs");
 if (!existsSync(specsDir)) { console.log("Sem specs/ — nada a avaliar."); process.exit(0); }
 
-let codeBlob = "";
-try { for (const f of walkCode(ROOT)) codeBlob += "\n" + readFileSync(f, "utf8"); } catch {}
-const codeACs = acTokens(codeBlob);
-const deviations = (codeBlob.match(/SPEC_DEVIATION/g) || []).length;
+// Specs legadas (NNNN-*) são sempre avaliadas. Specs E0N-S0N só quando tocadas vs a base
+// (EVAL_BASE, default origin/main): o legado não foi escrito com AC-N em toda task e não é reescrito.
+const BASE = process.env.EVAL_BASE || "origin/main";
+let tocadas = new Set();
+try {
+  const out = execFileSync("git", ["diff", "--name-only", `${BASE}...HEAD`, "--", "specs"], { cwd: ROOT, encoding: "utf8" });
+  tocadas = new Set(out.split("\n").map((l) => l.split("/")[1]).filter(Boolean));
+} catch { /* sem git/base: só as NNNN-* */ }
+const avaliar = (name) => /^\d{4}-/.test(name) || (/^E\d+-S\d+\w*-/.test(name) && tocadas.has(name));
+
+// Sem concatenar o repo inteiro numa string: acumula só os tokens AC-N e conta SPEC_DEVIATION por arquivo.
+const codeACs = new Set();
+let deviations = 0;
+try {
+  for (const f of walkCode(ROOT)) {
+    const t = readFileSync(f, "utf8");
+    for (const ac of acTokens(t)) codeACs.add(ac);
+    deviations += (t.match(/SPEC_DEVIATION/g) || []).length;
+  }
+} catch {}
 
 let hardFail = 0;
 const rows = [];
 for (const name of readdirSync(specsDir)) {
-  if (!/^\d{4}-/.test(name)) continue;
+  if (!avaliar(name)) continue;
   const dir = join(specsDir, name);
   if (!existsSync(join(dir, "spec.md"))) continue;
   const acs = [...acTokens(readFileSync(join(dir, "spec.md"), "utf8"))].sort();

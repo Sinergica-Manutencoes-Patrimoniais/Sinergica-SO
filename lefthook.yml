@@ -1,3 +1,7 @@
+output:
+  - failure
+  - summary
+
 # Lefthook — orquestrador único dos gates de qualidade (substitui husky + lint-staged + ci-local.mjs).
 # Um só arquivo define o que roda no commit, na mensagem e no push. Paralelo por padrão (rápido).
 # Instala com `lefthook install` (roda no `pnpm install` via script prepare).
@@ -26,7 +30,30 @@ commit-msg:
 # ─────────────────────────────────────────────────────────────────────────────
 # pre-push = espelho da CI. Paralelo: você vê TODOS os vermelhos de uma vez, não um a um.
 # db-tests (pgTAP via Docker) NÃO entra aqui — exige Docker local; roda no CI (job db-tests).
+# pre-push = só o que mudou (rápido). Gate completo: `pnpm run ci:local` (= lefthook run ci),
+# que espelha a CI e roda sob demanda antes de PR sensível. A CI é o gate definitivo.
 pre-push:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.{js,jsx,ts,tsx,json,jsonc,css}"
+      run: pnpm exec biome check --no-errors-on-unmatched {push_files}
+    typecheck-e-testes:
+      # só pacotes afetados vs main (turbo); precisa de origin/main atualizado (git fetch)
+      run: pnpm exec turbo run typecheck test --filter="...[origin/main]"
+    migrations:
+      glob: "supabase/migrations/**"
+      run: pnpm run lint:migrations
+    edge-functions:
+      glob: "supabase/functions/**"
+      run: pnpm run check:edge-functions
+    gitleaks:
+      run: gitleaks detect --source . --no-banner --redact --exit-code 1
+      skip:
+        - run: "! command -v gitleaks"
+
+# Gate completo, espelho da CI (pnpm run ci:local). Não é hook git: só roda sob demanda.
+ci:
   parallel: true
   commands:
     esteira:

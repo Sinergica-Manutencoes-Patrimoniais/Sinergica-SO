@@ -1,3 +1,9 @@
+---
+name: CLAUDE
+description: Convenções do agente para o Sinérgica SO (fluxo enxuto E00-S25). Sempre ativo.
+alwaysApply: true
+---
+
 # CLAUDE.md — Sinérgica SO
 
 > Cliente: Sinérgica Manutenções (manutenção predial) · Monorepo multi-domínio · Trívia Studio.

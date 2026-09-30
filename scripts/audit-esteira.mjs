@@ -13,6 +13,8 @@ const IGNORE_DIRS = new Set([
   ".triviaiox-core", ".triviaiox", ".claude/skills/_disabled",
   ".cursor", ".gemini", ".windsurf",
   "graphify-out",
+  // Spec Kit (templates/scripts) e cópias históricas verbatim (links relativos ao local original).
+  ".specify", "historico",
   // Triviaiox agent files use their own format (not SDD frontmatter)
   "TRIVIAIOX", ".codex",
   // Definições de subagente (.claude/agents) e auto-memory (.claude/agent-memory) — geradas/
@@ -79,7 +81,10 @@ const isDesignDotMdDialect = (f) => f.split(/[\\/]/).pop() === "DESIGN.md";
 const files = walk(ROOT).filter((f) => !isGenerated(f));
 
 // 1) Frontmatter + dialeto
+// Saídas do Spec Kit em specs/ (plan.md, research.md, contracts/…) não levam frontmatter SDD.
+const isSpecsDoc = (f) => relative(ROOT, f).replace(/\\/g, "/").startsWith("specs/");
 for (const f of files) {
+  if (isSpecsDoc(f)) continue;
   if (NO_FRONTMATTER_OK.has(f.split(/[\\/]/).pop())) continue;
   const text = readFileSync(f, "utf8");
   const fm = parseFrontmatter(text);
