@@ -67,7 +67,7 @@ alwaysApply: false
 
 ## Como rodar tudo localmente (espelho da CI)
 ```bash
-pnpm run ci:local   # = `lefthook run pre-push`: a MESMA bateria do pipeline, em paralelo
+pnpm run ci:local   # = `lefthook run ci`: bateria completa espelho da CI (pre-push roda só os afetados)
 ```
 `ci:local` é o **espelho da CI** definido em `lefthook.yml` (uma fonte só para hook e comando):
 esteira, fidelidade, Mermaid, migrations (Squawk + RLS-GRANT), lint (Biome), typecheck,

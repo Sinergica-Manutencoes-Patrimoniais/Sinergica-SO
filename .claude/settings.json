@@ -21,28 +21,13 @@
       "Bash(find . *)",
       "Bash(ls *)",
       "Bash(cat *)"
+    ],
+    "ask": [
+      "Bash(git push:*)"
     ]
   },
   "hooks": {
     "PreToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node scripts/check-story.mjs"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/enforce-git-push-authority.sh"
-          }
-        ]
-      },
       {
         "matcher": "Bash",
         "hooks": [

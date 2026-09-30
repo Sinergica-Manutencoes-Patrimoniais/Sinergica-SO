@@ -61,6 +61,19 @@ jobs:
         run: pnpm turbo run lint typecheck test --filter="...[origin/${{ github.base_ref || 'main' }}]"
       - name: Arquitetura (dependência DDD por máquina)
         run: pnpm run arch:check
+      - name: Biome (repo inteiro, inclui scripts e configs)
+        run: pnpm exec biome check .
+      - name: Build (affected)
+        run: pnpm turbo run build --filter="...[origin/${{ github.base_ref || 'main' }}]"
+
+      # Gates de design (movidos do pre-push local para cá; rodam todos e listam todas as falhas)
+      - name: Gates de design (tokens, primitivas, diálogos, catch, reticência, sombras, movimento, tipografia, div clicável)
+        run: |
+          fail=0
+          for c in tokens-cor primitivas dialogos-nativos catch-silencioso reticencia sombras movimento tipografia div-clicavel; do
+            node "scripts/check-$c.mjs" || fail=1
+          done
+          exit $fail
 
   migrations:
     # Squawk = SEGURANÇA de migration (locks, breaking change, downtime). lint-migrations.mjs =

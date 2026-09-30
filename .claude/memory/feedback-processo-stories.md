@@ -1,25 +1,17 @@
 ---
 name: feedback-processo-stories
-description: Processo obrigatório de stories/épicos com agentes Triviaiox — múltiplos devs simultâneos no Sinérgica SO.
-metadata: 
-  node_type: memory
+description: Processo por story (owner no ROADMAP, spec+tasks antes de codar). Versão enxuta pós E00-S25.
+metadata:
   type: feedback
-  originSessionId: f5f215d0-bb44-4034-b748-086da2842008
 ---
 
-# Processo: Stories + Agentes Triviaiox (OBRIGATÓRIO)
+# Processo por story (enxuto)
 
-Nunca implementar sem passar pelo processo de épicos/stories. Múltiplas sessões Claude podem estar em paralelo.
+1. Grep da sua story no `docs/epics/ROADMAP.md` (nunca leia inteiro); marque o **owner antes de codar**.
+2. Feature: Spec Kit (`speckit-specify/plan/tasks/implement`) em `specs/E0N-S0N-<nome>/`. Trivial/bug: só branch + PR.
+3. Arquitetural: ADR antes + `/revisao-adversarial`.
+4. Ao concluir: tire a linha do ROADMAP; `docs/STATE.md` só via `/handoff`.
 
-## Regra
-1. Ler `docs/epics/ROADMAP.md` ao iniciar qualquer sessão de desenvolvimento.
-2. Marcar o owner da story ANTES de codar qualquer linha.
-3. Criar `specs/E0N-S0N-<nome>/spec.md` + `tasks.md` ANTES de implementar.
-4. Seguir ciclo: `@pm/@analyst` → `@architect` (tier arq.) → `@sm` → `@dev` → `@qa` → `@devops`.
-5. Atualizar ROADMAP.md + STATE.md ao concluir.
+**Why:** várias sessões (humanas + Claude) em paralelo; sem owner há conflito e perda de rastreio. A versão anterior (6 personas + 14 gates) custava ~80k tokens por sessão só de contexto.
 
-**Why:** Lucas tem múltiplos desenvolvedores (humanos + Claude) trabalhando em paralelo em épicos diferentes. Sem esse controle, há risco de conflito (dois devs na mesma story) e perda de rastreio (spec não registrada, AC não verificado).
-
-**How to apply:** A CADA NOVA SOLICITAÇÃO DE FEATURE/STORY — antes de responder "vou implementar X", verificar o ROADMAP, abrir a story, criar spec+tasks. Só então implementar.
-
-A story `E00-S01-login-home` foi implementada sem esse processo (SPEC_DEVIATION registrado). Não repetir.
+**How to apply:** a cada nova solicitação de feature, verifique o ROADMAP antes de dizer "vou implementar X". `E00-S01` foi feita sem processo (SPEC_DEVIATION): não repetir.

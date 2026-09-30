@@ -40,8 +40,10 @@ function arquivos(dir) {
 //   `DataTable` não tem modelo pra linha de detalhe, só uma linha por item.
 // - OrdensServicoPage.tsx: fila com linha selecionada em destaque (aria-selected + borda) — o
 //   `DataTable` não expõe className por linha, só onClickLinha.
+// - RelatorioGastoIaPage.tsx: DÍVIDA aceita (E00-S25) — lista simples que cabe no `DataTable`, mas
+//   entrou na E02-S31 antes deste gate rodar na CI. Migrar quando a página for tocada e remover daqui.
 const IGNORAR_TABLE =
-  /features\/financeiro\/mock\/|financeiro\/pages\/DrePage\.tsx$|pcm\/pages\/ApontamentoHorasPage\.tsx$|pcm\/pages\/OrdensServicoPage\.tsx$/;
+  /features\/financeiro\/mock\/|financeiro\/pages\/DrePage\.tsx$|pcm\/pages\/ApontamentoHorasPage\.tsx$|pcm\/pages\/OrdensServicoPage\.tsx$|config\/pages\/RelatorioGastoIaPage\.tsx$/;
 
 const REGRAS = [
   {
