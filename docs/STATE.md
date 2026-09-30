@@ -80,13 +80,19 @@ linhas velhas de ROADMAP da E01-S154/S155 (2026-09-25), já substituídas pela i
   "Subcomponente (legado)".
 - 506 testes de `features/pcm` verdes, `ci:local` (biome+tsc) verde. 8 commits.
 
-**Próximo passo literal:** E01-S155 (posição flexível) — próxima story da onda 1, mesma branch.
+**E01-S155 (posição flexível) — completa, 11/11 tasks:**
+- Migrations `0217`/`0218` aplicadas em produção após smoke test transacional com rollback; nenhuma fez `UPDATE` em massa em `pcm.equipamentos`/`pcm.sistemas`/`pcm.equipamento_categorias` e não houve enqueue Auvo em massa.
+- `SeletorPosicao` entra em Componente e Sistema; trocar cliente limpa Área/Local; o cliente do Componente não oferece mais "Sem vínculo". Painel da 360 e move no Board usam `atualizarPosicaoComponente`, portanto movem legado sem exigir os campos do cadastro completo.
+- E2E de Componente só na Área e Sistema no Local foi escrito em `hierarquia-sistemas.spec.ts` e listado pelo Playwright; não executado sem `SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD`. `tsc --noEmit`, testes do seletor/modal e suite PCM anterior verdes; pgTAP fica para CI (`db-tests`) porque não há Docker.
+- Glossário ganhou Posição e Área efetiva; Instalação aponta para Posição. Sem SPEC_DEVIATION.
+
+**Próximo passo literal:** E01-S156 (categoria como catálogo) — fecha a Onda 1 na mesma branch.
 
 ## Em andamento / próximo passo
 - Iniciativa Cadastro de ativos v2 — **branch `feat/onda1-componente-posicao-categoria`** (local,
-  não pushada ainda). E01-S154 completa (8 commits). Próximo: **E01-S155** (posição flexível),
-  depois **E01-S156** (categoria) — mesma branch, mesma onda. S157 (onda 2) tem uma verificação
-  real no Auvo (AC-10) que pode mandar parar.
+  não pushada ainda). E01-S154 e E01-S155 completas. Próximo: **E01-S156** (categoria) — mesma
+  branch, mesma onda. S157 (onda 2) tem uma verificação real no Auvo (AC-10) que pode mandar
+  parar.
 - (Resolvido) As 3 branches da sessão de 2026-08-19 viraram os PRs #61, #62 e #63, todos mergeados.
 
 ## Bloqueios abertos
