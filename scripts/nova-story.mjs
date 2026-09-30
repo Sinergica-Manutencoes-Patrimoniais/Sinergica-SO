@@ -154,13 +154,12 @@ writeFileSync(tasksPath, tasksContent, "utf8");
 const roadmapContent = readFileSync(ROADMAP, "utf8");
 const epicSection = `### ${epicId} —`;
 
-const storyRow = `| ${fullId} | ${descricao} | [spec](../../specs/${fullId}-${slug}/spec.md) | Rascunho | ${owner} | ⏳ |`;
+const storyRow = `| ${fullId} | ${descricao} | ${owner} | Rascunho | [spec](../../specs/${fullId}-${slug}/spec.md) |`;
 
 let updatedRoadmap;
 if (roadmapContent.includes(epicSection)) {
   // Insere no final da tabela do épico
-  const insertAfter = `| Story ID | Descrição | Spec | Status | Owner | AC verdes |`;
-  const headerLine = `|----------|-----------|------|--------|-------|-----------|`;
+    const headerLine = `|----|--------|-------|--------|------|`;
   const insertPoint = roadmapContent.indexOf(headerLine, roadmapContent.indexOf(epicSection));
   if (insertPoint !== -1) {
     // Encontra o fim da tabela (linha em branco ou próxima seção)
@@ -178,7 +177,7 @@ if (roadmapContent.includes(epicSection)) {
     // fallback: append ao final da seção do épico
     updatedRoadmap = roadmapContent.replace(
       epicSection,
-      `${epicSection}\n${storyRow}\n`,
+      `${epicSection}\n\n| ID | Título | Owner | Status | Spec |\n${headerLine}\n${storyRow}\n`,
     );
   }
 } else {

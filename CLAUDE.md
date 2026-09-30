@@ -1,179 +1,60 @@
----
-name: CLAUDE
-description: Convenções do agente para o Sinérgica SO (Padrão SO v3 + Triviaiox). Sempre ativo.
-alwaysApply: true
----
-
 # CLAUDE.md — Sinérgica SO
 
-> Projeto: **Sinérgica SO** · Cliente: Sinérgica Manutenções · Perfil: **SO (monorepo multi-domínio)**
-> Desenvolvido pela Trívia Studio seguindo o **Padrão SO v3** (SDD + Triviaiox).
-> Idioma: **PT-BR com termos técnicos em inglês** (spec, AC, bounded context, gate, ADR, RLS, etc.).
+> Cliente: Sinérgica Manutenções (manutenção predial) · Monorepo multi-domínio · Trívia Studio.
+> Idioma: **PT-BR com termos técnicos em inglês**. Fonte de verdade lida em runtime (o vault Obsidian é espelho).
 
-Leia este arquivo antes de qualquer implementação. **É a fonte de verdade que o agente lê em
-runtime** — o vault Obsidian é só espelho humano.
+## Contexto
+- **9 bounded contexts:** PCM/Operação, Comercial, Atendimento (IA/Zé), Marketing, Growth, Financeiro, Gestão (cockpit), Área do Cliente — `docs/ARCHITECTURE.md`.
+- **Stack:** React 19 + Vite + TS + Tailwind; Supabase (Postgres, Edge Functions, Storage); Netlify; OpenRouter (LLM); Auvo (campo); Evolution API (WhatsApp).
+- **PCM é o system of record**; Auvo é o braço de campo.
+- **Papéis:** superadmin · supervisor · colaborador · cliente-síndico.
 
-## Contexto do projeto
-- **O que é:** sistema operacional da empresa Sinérgica Manutenções (manutenção predial).
-- **Módulos (9 bounded contexts):** PCM/Operação, Comercial, Atendimento (IA/Zé), Marketing,
-  Growth, Financeiro, Gestão (cockpit), Área do Cliente — ver `docs/ARCHITECTURE.md`.
-- **Stack:** React 19 + Vite + TypeScript + Tailwind; Supabase (Postgres + Edge Functions + Storage);
-  Netlify; OpenRouter (LLM); Auvo (campo); Evolution API (WhatsApp).
-- **PCM é o system of record**; Auvo é o braço de campo (execução insubstituível).
-- **Papéis:** superadmin · supervisor · colaborador · cliente-síndico (renomeado de
-  admin/escritorio/tecnico em E00-S08 — mesma matriz de permissão).
+## Início de sessão (carregue só isto)
+`CLAUDE.md` · `docs/STATE.md` · **a linha da sua story** no ROADMAP (`grep -n "E0N-S0N" docs/epics/ROADMAP.md`) · `spec.md` da story ativa.
+**Nunca leia o `ROADMAP.md` inteiro** (histórico completo em `docs/epics/historico/`). O resto é sob demanda (mapa no fim).
 
-## Regras aprendidas em sessões anteriores (leia sempre)
+## Fluxo de trabalho (várias sessões em paralelo)
+1. **Escolha/abra a story** no `docs/epics/ROADMAP.md` (próximo ID = "maior ID usado" do épico + 1) e **marque o owner antes de codar**. Uma story, um owner.
+2. **Trivial / bug** (≤3 arquivos, sem decisão): branch → teste que falha → fix → PR. Sem spec.
+3. **Feature:** `speckit-specify` → `speckit-plan` → `speckit-tasks` → `speckit-implement`, em `specs/E0N-S0N-<nome>/`.
+   `tasks.md` = 1 linha por task + AC; detalhe técnico (SQL, assinaturas) vai no `plan.md`.
+4. **Arquitetural** (novo bounded context, integração externa, schema com dado em produção, decisão irreversível): além do fluxo de feature, ADR em `docs/adr/` **antes** de implementar e `/revisao-adversarial` antes do PASS.
+5. **Ao concluir:** tire a linha do ROADMAP (a story fica no git e no `spec.md`); `docs/STATE.md` só via `/handoff` ao pausar.
+- Personas Triviaiox (`@architect`, `@security`, `@data-engineer`…) são **opcionais**: `AGENTS.md`.
+- **Spec ambígua? Pare e pergunte.** "Fora de escopo" é vinculante. Não invente: codebase → docs → MCP/doc oficial → "não sei".
 
-@.claude/memory/feedback-processo-stories.md
-@.claude/memory/feedback-devops-branch-pr.md
+## Convenções de rastreio (obrigatório)
+- **Commit:** `feat(E01-S02): …` · `fix(E03-S01): …` · `chore(E00-S25): …` (ID da story no escopo).
+- **Migration:** `NNNN_E0N-S0N_descricao.sql`, sequência sem pular (ver `db/README.md`).
+- **Branch:** `feat/E0N-S0N-descricao`. **Nunca `git push origin main`**: branch → push da branch → PR (`gh pr create`) → merge após aprovação. Só `@devops`/humano faz push (o `git push` pede confirmação).
+- Termos exatos de `docs/glossary.md`; termo novo entra no glossário no mesmo PR. Sem sinônimos.
 
-## Início de sessão — contexto base obrigatório (`alwaysApply: true`)
-Carregue **antes da primeira tarefa**:
-este `CLAUDE.md` · `docs/STATE.md` · `docs/epics/ROADMAP.md` · `docs/PROJECT.md` · `spec.md` da feature ativa em `specs/`.
+## Arquitetura — DDD tático por feature
+`interfaces → application → domain ← infrastructure`, dentro de `apps/web/src/features/<dominio>/`.
+`domain/` sem I/O nem framework · `application/` casos de uso · `infrastructure/` adapters (Supabase, Auvo, Evolution).
+Features de domínios diferentes **não se importam**: compartilhe via `packages/`.
 
-Todos os outros docs são `alwaysApply: false` — puxe **sob demanda** pelo `description` no frontmatter.
+## Data fetching — TanStack Query (obrigatório em código novo)
+Todo dado de servidor passa por TanStack Query, nunca `useState`+`useEffect`+`carregar()`.
+- Hooks em `application/<dominio>-queries.ts` com chaves em `<dominio>QueryKeys` (padrão: `features/pcm/application/operacao-queries.ts`).
+- `queryClient` único em `app/query-client.ts` (`staleTime` 30s). Após escrever, **invalide a chave**.
+- Filtro/busca: `keepPreviousData` + cancelamento (resultado antigo nunca sobrescreve filtro novo).
+- `useState` só para estado local de UI. Tela antiga converte quando for tocada; `useEffect` buscando dado de servidor em código novo é recusado no review.
 
-## Processo de trabalho por story (OBRIGATÓRIO — trabalho paralelo)
-O desenvolvimento é feito por **múltiplas pessoas/sessões Claude simultaneamente**.
-Cada sessão pode estar em um épico diferente. Para não haver conflito:
-
-1. **Leia `docs/epics/ROADMAP.md` ao iniciar.** Veja qual story está disponível (sem owner).
-2. **Marque o owner** da story nessa tabela antes de codar qualquer linha.
-3. **Siga o ciclo de agentes Triviaiox** (`AGENTS.md`):
-   - `@pm` / `@analyst` → define/refina o escopo da story e escreve `product.md`
-   - `@architect` → (se tier arquitetural) escreve `design.md`
-   - `@sm` → quebra em tasks (`tasks.md`) com referência de AC
-   - `@dev` → implementa (somente após tasks.md existir)
-   - `@qa` → valida ACs contra os gates
-   - `@devops` → merge, commit, push
-4. **Nunca implemente sem `spec.md` e `tasks.md` existirem.** Se não existirem, crie-os primeiro.
-5. **Ao concluir**, atualize `docs/epics/ROADMAP.md` (status, AC verdes) e `docs/STATE.md`.
-
-## Convenções de nomeação — rastreio épico/story (OBRIGATÓRIO)
-
-### Commits
-Sempre incluir o ID da story no escopo do Conventional Commit:
-```
-feat(E01-S02): descrição do que foi feito
-fix(E03-S01): descrição do fix
-chore(E00-S00): descrição da tarefa de infra
-```
-
-### Migrations
-Formato: `NNNN_E0N-S0N_descricao.sql`
-- `NNNN` = sequência crescente (garante ordem de execução no Supabase)
-- `E0N-S0N` = ID do épico + story que criou esta migration
-- Exemplo: `0002_E01-S02_tabela_ordens_servico.sql`
-
-A sequência nunca pula: se a última é `0001`, a próxima é `0002`.
-Ver `db/README.md` para detalhes.
-
-## A spec é a fonte da verdade
-- Implemente **a partir de** `specs/NNNN-*/spec.md`. Os AC (Given/When/Then) são o contrato e
-  o oráculo de teste.
-- Spec ambígua? **Pare e pergunte.** Nunca adivinhe. Atualizar a spec é decisão consciente.
-- **"Fora de escopo" é vinculante.**
-
-## Verificação de conhecimento (nunca invente)
-1. Padrões do próprio codebase.
-2. Docs do projeto (`specs/`, `docs/`, ADRs, glossário).
-3. MCP de referência (Supabase, Context7) quando conectado.
-4. Web/doc oficial da tecnologia.
-5. Não encontrou? **Diga "não sei" e sinalize.** Incerteza explícita > chute confiante.
-
-## Antes de codar — descubra o tier
-*Isso introduz decisão difícil de reverter ou nova fronteira de domínio?*
-- **Trivial** (≤3 arquivos, sem decisão): só o PR (ou `specs/quick/`).
-- **Pequeno** (feature isolada, <10 tasks): `spec.md` + `tasks.md`.
-- **Arquitetural** (novo bounded context, integração externa, decisão irreversível, schema com dados em
-  produção): `design.md` aprovado **antes** de implementar. Sem ele → pare e sinalize.
-
-> Se os passos passarem de ~5 ou surgirem dependências complexas → crie `tasks.md` formal.
-> Leia `ANTI-PADROES.md` antes de criar qualquer artefato.
-
-## Quem faz o quê — agentes Triviaiox
-`AGENTS.md` tem o ciclo completo. Resumo:
-`@pm/@analyst` → `@architect` → `@sm` → `@dev` → `@qa` → `@devops` (único com git push/PR).
-Feature com LLM → `@prompt-engineer` (ver `ia/`).
-
-Agentes disponíveis: `.claude/commands/TRIVIAIOX/agents/` · `.codex/agents/`.
-
-## Linguagem ubíqua
-Use exatamente os termos de `docs/glossary.md` e do `domain.md` da feature. Termo novo → glossário
-no mesmo PR. **Sem sinônimos.**
-
-## Arquitetura — regra de dependência (DDD tático por feature)
-```
-interfaces → application → domain ← infrastructure
-```
-Dentro de `apps/web/src/features/<dominio>/`:
-- `domain/` — sem I/O, sem framework.
-- `application/` — casos de uso (orquestra domínio + portas).
-- `infrastructure/` — adapters (Supabase, Auvo, Evolution…).
-- Features de domínios diferentes **não se importam** — compartilhe via `packages/`.
-
-## Data fetching — TanStack Query é o padrão (OBRIGATÓRIO em código novo)
-
-Decisão do PO (Lucas, 2026-08-10), introduzida pela E01-S145. **Todo dado que vem do servidor
-passa por TanStack Query** — nunca `useState` + `useEffect` + `carregar()` manual.
-
-- Hooks de query/mutation ficam em `application/<dominio>-queries.ts`, com as chaves num objeto
-  `<dominio>QueryKeys` (padrão de `features/pcm/application/operacao-queries.ts`).
-- `queryClient` único em `app/query-client.ts` (`staleTime` 30s por padrão).
-- Depois de escrever, **invalide a chave** — não chame `carregar()` de novo à mão.
-- Filtro/busca que dispara request usa `keepPreviousData` + cancelamento; resultado antigo nunca
-  pode sobrescrever filtro novo.
-- `useState` continua sendo o certo para **estado local de UI** (modal aberto, campo de formulário).
-
-**Migração:** o app tem ~81 telas no padrão antigo. Não há campanha de migração — cada uma
-converte quando for tocada. Código novo já nasce no padrão; PR com `useEffect` buscando dado de
-servidor deve ser recusado no review.
-
-## Segurança — OS-grade (obrigatório neste projeto)
-RLS FORCE em toda tabela · schemas por domínio · `audit.*` append-only · secrets em Vault ·
-refresh OAuth em Vault · webhooks com HMAC · `service_role` nunca no client.
-Ver `seguranca/os-grade.md`. Toda dívida → `docs/SECURITY_DEBT.md`.
+## Segurança — OS-grade (não negociável)
+RLS **FORCE** em toda tabela + teste pgTAP (permitido e negado) · schemas por domínio · `audit.*` append-only · secrets e refresh OAuth no Vault · webhooks com HMAC · `service_role` nunca no client · permissão checada no servidor. Migration só aditiva; nunca edite migration aplicada.
+Detalhes: `seguranca/os-grade.md`. Toda dívida → `docs/SECURITY_DEBT.md`.
 
 ## Divergência da spec (SPEC_DEVIATION)
-1. Pare. Marque `// SPEC_DEVIATION: <motivo>` no código e em `tasks.md`.
-2. Decida: corrige o código OU atualiza a spec + ADR.
-3. Nunca silencioso — spec e código divergentes = fonte da verdade apodrecendo.
+Pare → marque `// SPEC_DEVIATION: <motivo>` no código e em `tasks.md` → corrija o código **ou** atualize a spec + ADR. Nunca silencioso.
 
 ## Definition of Done
-`Definition-of-Done.md` (gates executáveis). Resumo:
-- AC verdes **pelo comando** (não inspeção).
-- `pnpm run ci:local` (= `lefthook run pre-push`, espelho da CI) verde; depois `gh pr checks` verde
-  no PR, sem check obrigatório pulado (RLS/pgTAP do job `db-tests` exige Docker — não pode ter
-  sido silenciosamente pulado).
-- Sem `SPEC_DEVIATION` pendente · ADRs registrados · glossário e `docs/STATE.md` atualizados.
+`Definition-of-Done.md`. Resumo: AC verdes **por comando** · CI verde no PR (`gh pr checks`, incluindo `db-tests` **não pulado**) · sem SPEC_DEVIATION pendente · ADR se irreversível · glossário atualizado.
+Gate verde é "caminho feliz funciona": no tier arquitetural, rode `/revisao-adversarial` (achado reproduzido vira teste).
+Pre-push roda só o que mudou; `pnpm run ci:local` (completo) sob demanda antes de PR sensível.
 
-> **Gate verde não é "correto", é "o caminho feliz funciona".** Antes de dar PASS, faça a
-> **revisão adversarial** (`/revisao-adversarial`): assuma que a feature está quebrada e tente
-> prová-lo (borda, erro parcial, concorrência, buraco na spec, abuso). É a passada que pega o que
-> o checklist confirmatório não vê — achado reproduzido vira teste e volta ao `@dev`.
-
-## Mapa de documentos sob demanda
-- **Identidade do projeto:** `docs/PROJECT.md`.
-- **Arquitetura:** `docs/ARCHITECTURE.md` (9 bounded contexts, context-map, schemas).
-- **Requirements por módulo:** `docs/blueprint/`.
-- **Glossário:** `docs/glossary.md`.
-- **Banco:** `db/README.md`, `db/rls.template.sql`, `db/rls-test.md`.
-- **Segurança:** `seguranca/baseline-minimo.md`, `seguranca/os-grade.md`, `seguranca/threat-model.template.md`.
-- **Helpers de código:** `apps/web/src/lib/log.ts`, `apps/web/src/lib/http/problem.ts`, `apps/web/src/config/env.ts`.
-- **Edge Functions:** `supabase/functions/_template/index.ts` + `_shared/`.
-- **Observabilidade/ops:** `observabilidade/README.md`, `runbooks/`.
-- **IA/LLM:** `ia/` (só em feature com LLM — Agente Zé, laudos, propostas).
-- **Exemplos SDD completos:** `specs/_examples/` (domínio puro + I/O).
-- **Estado do trabalho:** `docs/STATE.md` (volátil; atualize ao pausar/retomar — use `/handoff`).
-- **Decisões duráveis:** `docs/adr/` (nunca edite um ADR; crie um que o substitua).
+## Mapa de docs (sob demanda)
+`docs/PROJECT.md` identidade · `docs/ARCHITECTURE.md` contextos · `docs/blueprint/` requisitos · `docs/glossary.md` · `db/README.md`, `db/rls.template.sql` · `seguranca/` · `docs/adr/` (nunca edite ADR; crie outro que o substitua) · `supabase/functions/_template/` · `observabilidade/`, `runbooks/` · `ia/` (features com LLM) · `specs/_examples/` · helpers: `apps/web/src/lib/log.ts`, `lib/http/problem.ts`, `config/env.ts`.
 
 ## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+`graphify-out/graph.json` existe. Para pergunta de código: `graphify query "<pergunta>"` (ou `path`/`explain`) antes de grep bruto. Após alterar código: `graphify update .`.
