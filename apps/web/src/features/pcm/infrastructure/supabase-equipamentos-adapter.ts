@@ -32,6 +32,8 @@ interface EquipamentoRow {
   local_id: string | null;
   tipo: string;
   parent_item_id: string | null;
+  // E01-S155
+  area_id: string | null;
 }
 
 interface ClienteRow {
@@ -41,7 +43,7 @@ interface ClienteRow {
 }
 
 const COLS =
-  "id,nome,identificador,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id" as const;
+  "id,nome,identificador,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id,area_id" as const;
 
 function mapRow(row: EquipamentoRow, clientes: Map<string, string>): EquipamentoItem {
   return {
@@ -64,7 +66,17 @@ function mapRow(row: EquipamentoRow, clientes: Map<string, string>): Equipamento
     localId: row.local_id,
     tipo: (row.tipo as ItemTipo) ?? "equipamento",
     parentItemId: row.parent_item_id,
+    areaId: row.area_id,
   };
+}
+
+/** E01-S155 AC-6: o trigger `fn_equipamentos_normalizar_posicao` rejeita Área/Local de outro
+ * cliente com `errcode 23514` — traduz pra mensagem de UI. */
+function traduzirErroPosicao(error: { code?: string; message?: string }): never {
+  if (error.code === "23514" && error.message?.includes("posicao_cliente_divergente")) {
+    throw new Error("A Área/Local escolhido é de outro cliente.");
+  }
+  throw error;
 }
 
 export const supabaseEquipamentosAdapter: EquipamentosGateway = {
@@ -116,7 +128,9 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
         localizacao: input.localizacao,
         observacoes: input.observacoes,
         auvo_sync_status: "pending",
+        // E01-S155: com Local escolhido, area_id não é enviado — o trigger deriva da Área do Local.
         local_id: input.localId ?? null,
+        area_id: input.localId ? null : (input.areaId ?? null),
         tipo: input.tipo ?? "equipamento",
         parent_item_id: input.parentItemId ?? null,
         created_by: input.userId,
@@ -124,7 +138,7 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
       })
       .select(COLS)
       .single();
-    if (error) throw error;
+    if (error) traduzirErroPosicao(error);
     return mapRow(data as EquipamentoRow, new Map(cliente ? [[cliente.id, cliente.nome]] : []));
   },
 
@@ -143,6 +157,7 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
         observacoes: input.observacoes,
         auvo_sync_status: "pending",
         local_id: input.localId ?? null,
+        area_id: input.localId ? null : (input.areaId ?? null),
         tipo: input.tipo ?? "equipamento",
         parent_item_id: input.parentItemId ?? null,
         updated_at: new Date().toISOString(),
@@ -151,8 +166,23 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
       .eq("id", input.id)
       .select(COLS)
       .single();
-    if (error) throw error;
+    if (error) traduzirErroPosicao(error);
     return mapRow(data as EquipamentoRow, new Map(cliente ? [[cliente.id, cliente.nome]] : []));
+  },
+
+  async atualizarPosicao(input) {
+    const { error } = await supabase
+      .schema("pcm")
+      .from("equipamentos")
+      .update({
+        local_id: input.localId,
+        area_id: input.localId ? null : input.areaId,
+        auvo_sync_status: "pending",
+        updated_at: new Date().toISOString(),
+        updated_by: input.userId,
+      })
+      .eq("id", input.id);
+    if (error) traduzirErroPosicao(error);
   },
 
   async desativar(input: DesativarEquipamentoCommand) {
@@ -223,6 +253,7 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
     const item = await this.obterItem(id);
     if (!item) return null;
 
+    // E01-S155 AC-8: Área efetiva = area_id direto, ou a Área do Local quando há Local.
     let breadcrumb: ItemContexto["breadcrumb"] = null;
     if (item.localId) {
       const local = await supabase
@@ -244,6 +275,18 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
           localNome: local.data.nome as string,
         };
       }
+    } else if (item.areaId) {
+      const area = await supabase
+        .schema("pcm")
+        .from("areas")
+        .select("nome")
+        .eq("id", item.areaId)
+        .maybeSingle();
+      breadcrumb = {
+        clienteNome: item.clienteNome,
+        areaNome: (area.data?.nome as string | undefined) ?? null,
+        localNome: null,
+      };
     } else if (item.clienteNome) {
       breadcrumb = { clienteNome: item.clienteNome, areaNome: null, localNome: null };
     }

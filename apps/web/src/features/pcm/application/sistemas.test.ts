@@ -7,6 +7,7 @@ const SISTEMA: Sistema = {
   id: "sis-1",
   clienteId: "cli-1",
   areaId: null,
+  localId: null,
   nome: "Sistema Hidrante",
   tipo: null,
   descricao: null,

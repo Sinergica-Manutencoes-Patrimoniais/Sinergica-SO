@@ -13,6 +13,7 @@ interface SistemaRow {
   id: string;
   cliente_id: string;
   area_id: string | null;
+  local_id: string | null;
   nome: string;
   tipo: string | null;
   descricao: string | null;
@@ -38,13 +39,14 @@ interface ItemOpcaoRow {
 }
 
 const SISTEMA_COLS =
-  "id,cliente_id,area_id,nome,tipo,descricao,ativo,auvo_id,auvo_equipment_id,codigo,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
+  "id,cliente_id,area_id,local_id,nome,tipo,descricao,ativo,auvo_id,auvo_equipment_id,codigo,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
 
 function mapSistema(row: SistemaRow): Sistema {
   return {
     id: row.id,
     clienteId: row.cliente_id,
     areaId: row.area_id,
+    localId: row.local_id,
     nome: row.nome,
     tipo: row.tipo,
     descricao: row.descricao,
@@ -56,6 +58,14 @@ function mapSistema(row: SistemaRow): Sistema {
     auvoSyncError: row.auvo_sync_error,
     auvoSyncedAt: row.auvo_synced_at,
   };
+}
+
+/** E01-S155 AC-6: mesma tradução de `fn_sistemas_normalizar_posicao` do lado dos equipamentos. */
+function traduzirErroPosicao(error: { code?: string; message?: string }): never {
+  if (error.code === "23514" && error.message?.includes("posicao_cliente_divergente")) {
+    throw new Error("A Área/Local escolhido é de outro cliente.");
+  }
+  throw error;
 }
 
 export const supabaseSistemasAdapter: SistemasGateway = {
@@ -85,7 +95,9 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       .from("sistemas")
       .insert({
         cliente_id: input.clienteId,
-        area_id: input.areaId,
+        // E01-S155: com Local escolhido, area_id não é enviado — o trigger deriva da Área do Local.
+        area_id: input.localId ? null : input.areaId,
+        local_id: input.localId,
         nome: input.nome,
         tipo: input.tipo,
         descricao: input.descricao,
@@ -98,7 +110,7 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       })
       .select(SISTEMA_COLS)
       .single();
-    if (error) throw error;
+    if (error) traduzirErroPosicao(error);
     return mapSistema(data as SistemaRow);
   },
 
@@ -107,7 +119,8 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       .schema("pcm")
       .from("sistemas")
       .update({
-        area_id: input.areaId,
+        area_id: input.localId ? null : input.areaId,
+        local_id: input.localId,
         nome: input.nome,
         tipo: input.tipo,
         descricao: input.descricao,
@@ -118,7 +131,7 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       .eq("id", input.id)
       .select(SISTEMA_COLS)
       .single();
-    if (error) throw error;
+    if (error) traduzirErroPosicao(error);
     return mapSistema(data as SistemaRow);
   },
 

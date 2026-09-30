@@ -6,6 +6,8 @@ export interface Sistema {
   id: string;
   clienteId: string;
   areaId: string | null;
+  /** E01-S155: quando presente, `areaId` é sempre a Área deste Local (o banco deriva). */
+  localId: string | null;
   nome: string;
   tipo: string | null;
   descricao: string | null;
@@ -21,6 +23,7 @@ export interface Sistema {
 export interface SistemaFormData {
   clienteId: string;
   areaId?: string | null;
+  localId?: string | null;
   nome: string;
   tipo?: string | null;
   descricao?: string | null;
@@ -41,6 +44,7 @@ export function validarSistema(input: SistemaFormData): SistemaFormData {
   return {
     clienteId: input.clienteId,
     areaId: textoOuNull(input.areaId),
+    localId: textoOuNull(input.localId),
     nome,
     tipo: textoOuNull(input.tipo),
     descricao: textoOuNull(input.descricao),

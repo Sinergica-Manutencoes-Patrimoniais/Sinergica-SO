@@ -4,6 +4,7 @@
 
 import type { EquipamentoItem, ItemTipo } from "./equipamentos";
 import type { Area, Local } from "./hierarquia";
+import { areaEfetiva } from "./posicao-ativo";
 
 export interface ItemCard {
   id: string;
@@ -43,8 +44,10 @@ function toCard(item: EquipamentoItem): ItemCard {
 }
 
 /** AC-2/AC-3: colunas = Locais nível-1 da Área (ordenados por `ordem`, `nome`); sub-locais viram
- * subgrupos dentro da coluna do ancestral nível-1; itens sem `localId` vão pra coluna "Sem local".
- * Itens cujo `localId` é de outra Área não entram (aparecem quando a Área deles é selecionada). */
+ * subgrupos dentro da coluna do ancestral nível-1; itens sem Local vão pra coluna "Sem local" **só
+ * quando a Área efetiva deles é esta Área** (E01-S155 AC-8) — item sem Área nenhuma não aparece em
+ * board nenhum. Itens cujo `localId` é de outra Área não entram (aparecem quando a Área deles é
+ * selecionada). */
 export function montarColunasBoard(
   area: Area,
   locaisDoCliente: Local[],
@@ -52,6 +55,7 @@ export function montarColunasBoard(
 ): ColunaBoard[] {
   const locaisDaArea = locaisDoCliente.filter((l) => l.areaId === area.id);
   const porId = new Map(locaisDaArea.map((l) => [l.id, l]));
+  const todosLocaisPorId = new Map(locaisDoCliente.map((l) => [l.id, { areaId: l.areaId }]));
 
   // Ancestral nível-1 (filho direto da Área) de um Local, subindo pela cadeia de parentId.
   function nivel1De(localId: string): string | null {
@@ -89,11 +93,13 @@ export function montarColunasBoard(
   };
 
   for (const item of itensDoCliente) {
-    const card = toCard(item);
     if (!item.localId) {
-      semLocal.itensDiretos.push(card);
+      if (areaEfetiva(item, todosLocaisPorId) === area.id) {
+        semLocal.itensDiretos.push(toCard(item));
+      }
       continue;
     }
+    const card = toCard(item);
     const local = porId.get(item.localId);
     if (!local) continue; // localId de outra Área — fora deste board
     const n1 = nivel1De(item.localId);

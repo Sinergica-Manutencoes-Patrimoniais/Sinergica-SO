@@ -1,5 +1,6 @@
 import { validarEquipamento, validarParentItem } from "../domain/equipamentos";
 import type {
+  AtualizarPosicaoComponenteCommand,
   DesativarEquipamentoCommand,
   EditarEquipamentoCommand,
   EquipamentoCommand,
@@ -47,4 +48,14 @@ export function desativarEquipamento(
 ) {
   if (!input.id) throw new Error("Componente é obrigatório.");
   return gateway.desativar(input);
+}
+
+/** E01-S155: move o Componente pelo Board/painel da 360 — de propósito **sem** `validarEquipamento`
+ * (cliente/categoria obrigatórios): mover um item legado incompleto não pode travar. */
+export async function atualizarPosicaoComponente(
+  gateway: EquipamentosGateway,
+  input: AtualizarPosicaoComponenteCommand,
+) {
+  if (!input.id) throw new Error("Componente é obrigatório.");
+  return gateway.atualizarPosicao(input);
 }

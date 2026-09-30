@@ -13,9 +13,16 @@ describe("sistemas", () => {
     ).toEqual({
       clienteId: "c1",
       areaId: null,
+      localId: null,
       nome: "Sistema de Hidrante Torre A",
       tipo: null,
       descricao: null,
+    });
+  });
+
+  it("E01-S155: normaliza localId", () => {
+    expect(validarSistema({ clienteId: "c1", nome: "Sistema X", localId: "loc-1" })).toMatchObject({
+      localId: "loc-1",
     });
   });
 
