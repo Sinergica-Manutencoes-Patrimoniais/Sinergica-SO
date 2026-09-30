@@ -11,5 +11,5 @@
 - [x] T9 (F2) `Definition-of-Done.md` reescrito (61 → 32 linhas; segurança/perf/observabilidade preservadas) — AC-5
 - [x] T10 (F3) Spec Kit core copiado do Atendimento (`.specify/`, 5 skills); constitution Sinérgica; pasta `E0N-S0N-nome` via `SPECIFY_FEATURE_DIRECTORY` (o skill já suporta, sem patch); templates ganham convenção AC-N — AC-6
 - [x] T11 (F3) Skill `revisao-adversarial`; `nova-feature`/`validar`/`revisar-pr`/`auditar` em `docs/_arquivo/skills/` — AC-6
-- [ ] T12 (F4) `AGENTS.md` sem ciclo obrigatório; arquivar ANTI-PADROES/PADRAO-DE-QUALIDADE — AC-1
-- [ ] T13 (F4) ADR de workflow enxuto — AC-6
+- [x] T12 (F4) `AGENTS.md` 92 → 39 linhas, personas opcionais. SPEC_DEVIATION: ANTI-PADROES/PADRAO-DE-QUALIDADE NÃO arquivados (10 arquivos linkam para eles; custo zero quando não lidos) — AC-1
+- [x] T13 (F4) ADR-0023 `docs/adr/0023-workflow-enxuto-spec-kit.md` — AC-6
