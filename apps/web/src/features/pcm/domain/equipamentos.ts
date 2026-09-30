@@ -6,6 +6,7 @@ export interface EquipamentoItem {
   id: string;
   nome: string;
   identificador: string | null;
+  auvoDescricao?: string | null;
   categoriaId: string | null;
   categoria: string | null;
   clientId: string | null;

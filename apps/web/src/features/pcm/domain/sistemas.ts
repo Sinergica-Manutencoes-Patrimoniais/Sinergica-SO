@@ -17,6 +17,7 @@ export interface Sistema {
   auvoId: number | null;
   auvoEquipmentId: number | null;
   codigo: string | null;
+  auvoDescricao?: string | null;
   auvoSyncStatus: string | null;
   auvoSyncError: string | null;
   auvoSyncedAt: string | null;

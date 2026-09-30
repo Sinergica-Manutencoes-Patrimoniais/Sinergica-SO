@@ -8,6 +8,7 @@ export interface SistemaRow extends Record<string, unknown> {
   descricao?: string | null;
   ativo?: boolean | null;
   codigo?: string | null;
+  auvo_descricao?: string | null;
   /** E01-S85 AC-4: nome da Área (Sistema não tem `local_id`, só `area_id` opcional) — recalculado
    * por trigger (`0131`). */
   auvo_localizacao?: string | null;
@@ -46,7 +47,7 @@ export const sistemasDescriptor: AuvoEntityDescriptor<AuvoEquipmentSistema, Sist
   toAuvo(row) {
     return limparVazios({
       name: row.nome,
-      description: row.descricao ?? row.nome,
+      description: row.auvo_descricao ?? row.descricao ?? row.nome,
       associatedCustomerId: row.auvo_customer_id,
       identifier: row.codigo,
       category: row.categoria,

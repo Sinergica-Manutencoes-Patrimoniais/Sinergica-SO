@@ -39,6 +39,16 @@ Deno.test("sistemasDescriptor — E01-S85 AC-4: envia auvo_localizacao (nome da 
   assertEquals(payload.location, "Torre A");
 });
 
+Deno.test("sistemasDescriptor — E01-S158 prioriza descrição completa calculada", () => {
+  const payload = sistemasDescriptor.toAuvo({
+    id: "s1",
+    nome: "Sistema Hidrante",
+    descricao: "Descrição legada",
+    auvo_descricao: "Guainumbí - Torre A - Hidráulica - Sistema Hidrante",
+  });
+  assertEquals(payload.description, "Guainumbí - Torre A - Hidráulica - Sistema Hidrante");
+});
+
 Deno.test("sistemasDescriptor — E01-S85 AC-4: sem Área vinculada, location some do payload", () => {
   const payload = sistemasDescriptor.toAuvo({
     id: "s1",

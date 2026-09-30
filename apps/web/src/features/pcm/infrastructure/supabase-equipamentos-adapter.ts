@@ -17,6 +17,7 @@ interface EquipamentoRow {
   id: string;
   nome: string;
   identificador: string | null;
+  auvo_descricao: string | null;
   categoria_id: string | null;
   categoria: string | null;
   client_id: string | null;
@@ -45,13 +46,14 @@ interface ClienteRow {
 }
 
 const COLS =
-  "id,nome,identificador,categoria_id,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id,area_id" as const;
+  "id,nome,identificador,auvo_descricao,categoria_id,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id,area_id" as const;
 
 function mapRow(row: EquipamentoRow, clientes: Map<string, string>): EquipamentoItem {
   return {
     id: row.id,
     nome: row.nome,
     identificador: row.identificador,
+    auvoDescricao: row.auvo_descricao,
     categoriaId: row.categoria_id,
     categoria: row.categoria,
     clientId: row.client_id,

@@ -200,6 +200,10 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
         <p className="text-body text-ink-2">{caminho || "—"}</p>
       </Secao>
 
+      <Secao titulo="Nome completo (Auvo)">
+        <p className="text-body text-ink-2">{item.auvoDescricao ?? "—"}</p>
+      </Secao>
+
       <Secao titulo="Sistemas">
         {sistemas.length === 0 ? (
           <p className="text-caption text-ink-3">Não faz parte de nenhum sistema.</p>

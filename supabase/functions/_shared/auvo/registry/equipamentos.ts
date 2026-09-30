@@ -4,6 +4,7 @@ export interface EquipamentoRow extends Record<string, unknown> {
   id: string;
   nome: string;
   identificador?: string | null;
+  auvo_descricao?: string | null;
   categoria?: string | null;
   auvo_customer_id?: number | null;
   localizacao?: string | null;
@@ -45,7 +46,7 @@ export const equipamentosDescriptor: AuvoEntityDescriptor<AuvoEquipment, Equipam
   toAuvo(row) {
     return limparVazios({
       name: row.nome,
-      description: row.nome,
+      description: row.auvo_descricao ?? row.nome,
       identifier: row.identificador,
       category: row.categoria,
       associatedCustomerId: row.auvo_customer_id,

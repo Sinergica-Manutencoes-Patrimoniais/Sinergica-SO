@@ -24,6 +24,7 @@ interface SistemaRow {
   auvo_id: number | null;
   auvo_equipment_id: number | null;
   codigo: string | null;
+  auvo_descricao: string | null;
   auvo_sync_status: string | null;
   auvo_sync_error: string | null;
   auvo_synced_at: string | null;
@@ -42,7 +43,7 @@ interface ItemOpcaoRow {
 }
 
 const SISTEMA_COLS =
-  "id,cliente_id,area_id,local_id,nome,categoria_id,categoria,tipo,descricao,ativo,auvo_id,auvo_equipment_id,codigo,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
+  "id,cliente_id,area_id,local_id,nome,categoria_id,categoria,tipo,descricao,ativo,auvo_id,auvo_equipment_id,codigo,auvo_descricao,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
 
 function mapSistema(row: SistemaRow): Sistema {
   return {
@@ -59,6 +60,7 @@ function mapSistema(row: SistemaRow): Sistema {
     auvoId: row.auvo_id,
     auvoEquipmentId: row.auvo_equipment_id,
     codigo: row.codigo,
+    auvoDescricao: row.auvo_descricao,
     auvoSyncStatus: row.auvo_sync_status,
     auvoSyncError: row.auvo_sync_error,
     auvoSyncedAt: row.auvo_synced_at,

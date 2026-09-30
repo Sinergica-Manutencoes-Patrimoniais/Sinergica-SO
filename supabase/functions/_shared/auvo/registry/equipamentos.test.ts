@@ -75,6 +75,15 @@ Deno.test("equipamentosDescriptor — E01-S85 AC-1: auvo_localizacao tem priorid
   assertEquals(payload.location, "Torre A · 1º andar · Sala 001");
 });
 
+Deno.test("equipamentosDescriptor — E01-S158 envia descrição completa quando calculada", () => {
+  const payload = equipamentosDescriptor.toAuvo({
+    id: "e1",
+    nome: "Bomba 1",
+    auvo_descricao: "Guainumbí - Torre A - Elétrica - Bomba 1",
+  });
+  assertEquals(payload.description, "Guainumbí - Torre A - Elétrica - Bomba 1");
+});
+
 Deno.test("equipamentosDescriptor — E01-S85 AC-1: sem auvo_localizacao cai pro localizacao legado", () => {
   const payload = equipamentosDescriptor.toAuvo({
     id: "e1",
