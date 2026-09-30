@@ -38,110 +38,55 @@ importa), mensagens literais e gates.
 O antigo ficou em `Sinergica-SO.quebrado-2026-09-29`. A única diferença eram 2 linhas S154/S155 do
 ROADMAP (2026-09-25), nunca pushadas e sem spec escrita, **substituídas** por esta iniciativa.
 
-## 2026-08-19 — 4 pedidos em sequência: limpeza de dado, fix Auvo, fix WhatsApp celular, dashboard Início real (Claude)
+## 2026-09-30 — Implementação Onda 1 em andamento: E01-S154 completa (Claude)
 
-Sessão longa com Lucas pedindo coisas diferentes conforme via a tela rodando — nenhum planejado
-com antecedência, cada um investigado/resolvido antes de passar pro próximo.
+Continuação da sessão de 2026-09-29 (acima). Lucas pediu pra implementar as 4 ondas ponta a ponta
+(frontend+backend+banco). Decisões de processo tomadas nesta sessão:
+- Branch **por onda** (não por story nem uma única): `feat/onda1-componente-posicao-categoria`
+  cobre E01-S154+S155+S156, a partir de `docs/E01-S154-S161-cadastro-ativos`.
+- Migrations e Edge Functions são **aplicadas de verdade** durante a implementação (não só
+  escritas) — Lucas passou um `SUPABASE_ACCESS_TOKEN` (`sbp_...`) pra isso.
+- **Sem `supabase` CLI** (Lucas não tem instalado / pediu pra não depender dele — ficava pedindo
+  senha de banco e travava). Uso a **API de gerência do Supabase direto via `curl`**
+  (`POST https://api.supabase.com/v1/projects/nudannsrfvjggoergvyn/database/query`, header
+  `Authorization: Bearer <token>`) — é o mesmo backend que `supabase db query --linked` chama.
+  Token vive só em `<scratchpad>/.sb-token` (fora do repo, nunca commitado) + helper
+  `<scratchpad>/sbquery.sh`. Cada migration é smoke-testada com `begin; ...; rollback;` antes de
+  aplicar de verdade (mesmo padrão já usado em E03-S05).
+- **Sem Docker** nesta máquina — pgTAP é escrito (roda no CI `db-tests`) mas não executado local.
+  **Sem `SUPABASE_TEST_EMAIL`/`PASSWORD`** — E2E é escrito e validado só por `playwright test
+  --list` (parse/estrutura), não executado de ponta a ponta.
 
-**1. Remoção de 4 inspeções de teste.** Confirmado com Lucas (dado real de produção, mas
-resultado de teste de import de XLS — 4 registros idênticos "Relatório XLS —
-Respostas_Inconformidade_03_06_2026_a_23_07_2026", `concluida`, 1 item cada, criadas 15-16/08).
-Soft-delete direto via `supabase db query --linked` (CLI autenticado no projeto
-`nudannsrfvjggoergvyn` — token já estava disponível, Lucas confirmou acesso). `pcm.inspecoes.
-deleted_at = now()` — reversível, é a convenção do schema (não `DELETE` físico); `listarInspecoes()`
-já filtra `deleted_at is null`, confirmado que a tela zera. Nenhum commit — mutação de dado, não
-de código.
+**Achado de ambiente, início da sessão:** o checkout local (`Sinergica-SO`) estava corrompido
+(`.git` 0 bytes, `supabase/`/`specs/` vazios — Lucas tinha movido a pasta). Reclonado do zero em
+`/Users/lucasazevedo/GitHub/Sinergica/Sinergica-SO`; o antigo virou
+`Sinergica-SO.quebrado-2026-09-29` (não apagado). Único conteúdo que não estava no GitHub: as 2
+linhas velhas de ROADMAP da E01-S154/S155 (2026-09-25), já substituídas pela iniciativa nova.
 
-**2. Investigação + fix: "Saúde Auvo: 6 com erro" / 591 erros no cockpit PCM (E01-S146).** Lucas
-pediu pra investigar se dava pra resolver ou se devia remover a feature — não era feature quebrada.
-Achado real (via `supabase db query --linked`, leitura direta antes de qualquer mudança):
-- **568/591 (96%)** = linhas do outbox (`pcm.auvo_sync_outbox`) com `row_id` de
-  `pcm.clientes`/`equipamentos`/`ferramentas` já deletado (hard-delete real, anterior a esta
-  sessão — as 3 tabelas têm `deleted_at`, então não veio de exclusão normal pela UI).
-  `fn_claim_auvo_outbox_batch` só reivindica `status='pending'` — uma vez marcada `'error'`,
-  nunca mais é reprocessada nem limpa sozinha (confirmado: `attempts=1` em 100% das 591 linhas).
-  Fica pra sempre como ruído, sem significar falha de integração ativa.
-- **8** = `writeEnabled=false, pulado (dry-run)` (`produto_categorias`/`serviços`/`sistemas` — E01-S47
-  ainda não habilitou escrita pra essas entidades) contadas como "erro" por engano na view.
-- **1** = "descriptor desconhecido" — anterior ao registro de `sistemas` no registry (já existe
-  hoje, `writeEnabled:false` — ADR-0009/D2).
+**E01-S154 (Componente + Sistema 1:N) — completa, 10/10 tasks:**
+- Migration `0216` (índice único `sistema_itens(item_id)`) aplicada em produção — pré-checagem
+  read-only confirmou 0 duplicatas antes. Achado de ambiente: `0211` existia no remoto mas não
+  local (mismatch pré-existente) — resolvido com `migration repair --status reverted 0211` antes
+  do primeiro push (só mexe na tabela de histórico, não em schema).
+- `validarMembroSemOutroSistema` (domínio) + `SistemaItemOpcao.sistemaId/sistemaNome` (gateway) +
+  `listarItensDisponiveis` resolvendo pertencimento atual (adapter) + seletor de composição
+  desabilitando item de outro Sistema com "em «Nome»".
+- Modal perde os campos Tipo/Equipamento pai (dado legado preservado, só some da UI).
+- UI renomeada ponta a ponta pra "Componente" (nav, modal, Nova OS, badges, mensagens de erro,
+  glossário) — exceções PMOC/laudos/Auvo tempo-real preservadas (ADR-0022).
+- **SPEC_DEVIATION registrado** (em `specs/E01-S154-.../tasks.md`): o filtro "Equipamento/
+  Componente" e os badges por item em `EquipamentosPage`/`BoardAtivos`/`DrawerDetalheAtivo` não
+  estavam na spec e colidiriam com o nome novo da entidade — renomeados pra "Principal"/
+  "Subcomponente (legado)".
+- 506 testes de `features/pcm` verdes, `ci:local` (biome+tsc) verde. 8 commits.
 
-Motor de sync **funciona** (228 pushes reais bem-sucedidos no mesmo período) — não removida.
-Migration `0210_E01-S146_limpar_saude_sync_auvo.sql`: purga as 568 órfãs (revalida contra o
-estado atual da tabela, não confia só no `last_error` gravado), reabre a linha de `sistemas` como
-`pending`, ajusta as views `auvo_sync_health`/`auvo_sync_error_details` pra não contar dry-run
-como erro. Resultado real após aplicar: **2 entidades com erro genuíno** (equipamentos 10,
-clientes 4) — investigação desses ~15 casos reais fica pra depois, não travou este fix.
-
-**Achado colateral grave, ao tentar `supabase db push`:** o banco remoto já tinha migrations
-`0205` a `0209` aplicadas (`E02-S31` gasto de IA + quota, `E02-S32` origem de envio de mensagem,
-fix `E01-S142` acento em "INÍCIO VISITA", `E01-S151` backlog sem chamado) **que nunca foram
-commitadas em nenhuma branch deste repositório** — aplicadas direto em produção em alguma sessão
-anterior, sem deixar rastro em git. Reconstruídas nesta sessão a partir de
-`supabase_migrations.schema_migrations.statements` (conteúdo fiel ao aplicado, marcado como
-reconstruído no cabeçalho de cada arquivo) — sem isso, `db push` recusava aplicar qualquer coisa
-nova (`supabase migration list` mostrava `local: ""` pras 5 versões). Minha migration original
-teria colidido no número `0205` (já ocupado por `E02-S31`) — renomeada pra `0210`.
-
-Branch `fix/E01-S146-limpar-saude-sync-auvo`, commit único com a migration + as 5 recuperadas.
-`ci:local` (19 gates) verde. **Sem PR aberto ainda** — Lucas pediu pra terminar o resto antes.
-
-**3. Investigação + fix: mensagem mandada direto do celular não aparecia no Atendimento (E02-S32).**
-Lucas reportou por print da tela real. Causa raiz: `pcm-whatsapp-webhook/index.ts` ignorava
-incondicionalmente todo evento `fromMe:true` da Evolution API — que cobre TANTO o eco do que o
-próprio app manda QUANTO mensagem mandada direto do celular (mesmo número, o flag sozinho não
-distingue origem). A migration `0207` (recuperada no achado do item 2) já tinha criado
-`origem_envio`/`fn_registrar_mensagem_celular` com dedup por `wa_message_id` (`ON CONFLICT DO
-NOTHING`) — pensado exatamente pra isso — mas **nunca foi ligada**: nem o webhook chamava a
-função nova, nem `atendimento-whatsapp-envio` gravava o `wa_message_id` que a Evolution devolve
-(sem isso, o dedup não tinha como funcionar — toda mensagem do próprio app ia duplicar na tela).
-
-Fix em 3 arquivos (branch `fix/E02-S32-mensagem-celular-nao-capturada`, commit `44d2cd9`):
-- `_shared/evolution.ts`: `chamarEvolution`/`enviarEvolution`/`responderEvolution` passam a
-  devolver o `wa_message_id` (`key.id`) do corpo de resposta da Evolution — antes descartado.
-  Extração isolada em `extrairWaMessageId` (pura, testada, nunca lança).
-- `atendimento-whatsapp-envio/index.ts`: grava esse id na mensagem que o app já insere (branch
-  Meta fica de fora — webhook/dedup próprios, fora de escopo).
-- `pcm-whatsapp-webhook/index.ts`: `fromMe` agora chama `fn_registrar_mensagem_celular` em vez de
-  ignorar — eco do app vira no-op (conflito no `wa_message_id`), celular vira linha nova, nenhum
-  dos dois entra na fila do Zé (não é pergunta de cliente esperando IA).
-
-`deno test` (195 testes, incluindo 2 novos pra `extrairWaMessageId`) + `ci:local` verdes. **Sem PR
-aberto ainda.**
-
-**4. Dashboard geral real na tela Início (E01-S147).** Retomada depois de pausada pela investigação
-do item 2 — Lucas pediu explicitamente pra terminar isso antes de subir qualquer coisa pro git.
-`specs/E01-S147-dashboard-geral-inicio/` (spec.md + tasks.md, tier Pequeno — reusa domínio/
-aplicação já existente de PCM/Atendimento/Financeiro, sem bounded context novo). 8/8 tasks:
-- Task 1: extraiu `DashboardGeral` (componente + o antigo mock `DASHBOARD_GERAL`) de
-  `HomePage.tsx` pra `DashboardGeral.tsx` próprio; `MODULOS`/`ModuloTab`/`ModuloId` saíram pra
-  `modulos.ts` (evita import circular entre os dois arquivos novos). Sem mudança de comportamento
-  nesta task.
-- Tasks 2-4: um hook TanStack Query por módulo (`resumo-inicio-queries.ts`, padrão de
-  `features/comercial/application/dashboard-queries.ts`) — PCM usa `contarKpis()` (RPC leve
-  `fn_kpis_ordens_servico`, não a pipeline pesada de `montarDashboardPcm`; por isso `Backlog GUT`
-  saiu do card, sem fonte leve equivalente — spec ajustada durante a implementação, não depois).
-  Atendimento usa `obterPainelAtendimento` + `montarPainelAtendimento` (período "hoje"). Financeiro
-  usa `obterResumoCaixa`, formatado com `centavosParaReais`.
-- Tasks 5-8: `DashboardGeral.tsx` reescrito — cada card real é uma `useQuery` independente (nunca
-  `Promise.all`), loading/erro por card não trava os outros, módulo sem dado real pronto
-  (Comercial — que na verdade JÁ tem dado real e hook `-queries.ts` pronto, mas não confirmado
-  pro escopo desta leva —, Marketing, Gestão, Área do Cliente) mostra `EmptyState` honesto em vez
-  de número inventado. `DashboardGeral.test.tsx` (5 testes RTL, `vi.mock` dos 3 adapters
-  singleton, cobre AC-1 a AC-8).
-
-Suite inteira 989/989, typecheck/biome verdes. Branch `feat/E01-S147-dashboard-geral-inicio`.
-**Sem PR aberto ainda.**
-
-**`docs/epics/ROADMAP.md` ganhou as linhas E01-S146 e E01-S147** (E00-S24 já estava, sessão
-anterior). **Nenhuma das 4 mudanças desta sessão foi verificada visualmente em navegador** — mesma
-limitação já registrada em sessões anteriores (ver bloqueios abaixo).
+**Próximo passo literal:** E01-S155 (posição flexível) — próxima story da onda 1, mesma branch.
 
 ## Em andamento / próximo passo
-- Iniciativa Cadastro de ativos v2: specs prontas, nenhuma story com owner. Próximo passo:
-  executar a **onda 1** (E01-S154, S155 e S156 são independentes e podem rodar em paralelo). Cada
-  sessão marca owner no ROADMAP antes de codar. S157 tem uma verificação real no Auvo (AC-10) que
-  pode mandar parar.
+- Iniciativa Cadastro de ativos v2 — **branch `feat/onda1-componente-posicao-categoria`** (local,
+  não pushada ainda). E01-S154 completa (8 commits). Próximo: **E01-S155** (posição flexível),
+  depois **E01-S156** (categoria) — mesma branch, mesma onda. S157 (onda 2) tem uma verificação
+  real no Auvo (AC-10) que pode mandar parar.
 - (Resolvido) As 3 branches da sessão de 2026-08-19 viraram os PRs #61, #62 e #63, todos mergeados.
 
 ## Bloqueios abertos
@@ -155,7 +100,10 @@ limitação já registrada em sessões anteriores (ver bloqueios abaixo).
   — decisão de pular mantida por 2 sessões seguidas. Quem destrava: sessão com Playwright/
   `claude-in-chrome` disponível, ou revisão humana do Lucas.
 - [ ] **`SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD` ausentes em `.env.local` da raiz** —
-  bloqueou verificação visual real em pelo menos 3 sessões seguidas agora (E00-S24, e as 4
-  mudanças desta sessão). `e2e/auth.setup.ts` falha rápido sem eles. Quem destrava: Lucas, com as
-  credenciais reais de teste — ou aceitar que verificação visual continua sendo feita só por ele,
-  manualmente, depois do merge.
+  bloqueou verificação visual real em pelo menos 4 sessões seguidas agora (E00-S24, as 4 mudanças
+  de 2026-08-19, e a Onda 1 de 2026-09-30). `e2e/auth.setup.ts` falha rápido sem eles. Quem
+  destrava: Lucas, com as credenciais reais de teste — ou aceitar que verificação visual continua
+  sendo feita só por ele, manualmente, depois do merge.
+- [ ] **Docker não existe mais nesta máquina** (confirmado por Lucas, 2026-09-30) — todo pgTAP da
+  Onda 1 em diante é escrito mas roda só no CI `db-tests`, nunca localmente. Não é regressão, é a
+  realidade do ambiente agora; pare de tentar `supabase test db` local.

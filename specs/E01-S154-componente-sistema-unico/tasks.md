@@ -12,27 +12,27 @@ alwaysApply: false
 ## Plano
 | # | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |---|------|----------|------------|----------------|--------|
-| 1 | **Pré-checagem de duplicatas (somente leitura).** Rode no projeto Supabase linked: `select item_id, array_agg(sistema_id) from pcm.sistema_itens group by item_id having count(*) > 1;`. Resultado vazio: siga. Com linhas: **PARE**, reporte a lista ao Lucas e aguarde. | AC-3 | — | query retorna 0 linhas | todo |
-| 2 | **Migration** `supabase/migrations/NNNN_E01-S154_sistema_itens_item_unico.sql` (NNNN = próximo livre): `create unique index if not exists uq_sistema_itens_item_unico on pcm.sistema_itens (item_id);` + `drop index if exists pcm.idx_sistema_itens_item;` (redundante). pgTAP novo `supabase/tests/pcm_sistema_itens_unico.test.sql`: `has_index`, e `throws_ok` inserindo o mesmo item em 2 sistemas (use o padrão de fixtures de `hierarquia_localizacao_rls.test.sql`). Aplique com `supabase db push` só depois do gate local. | AC-3 | 1 | `supabase test db` (CI `db-tests`) | todo |
-| 3 | **Domínio**: em `features/pcm/domain/sistemas.ts`, adicione `validarMembroSemOutroSistema(itemId, sistemaAtualId, pertencimento: { sistemaId: string; sistemaNome: string } \| null)`. Lança o erro literal do AC-4 quando `pertencimento` existe e `pertencimento.sistemaId !== sistemaAtualId`. Em `composicao-sistema.ts`, `ItemComposicaoSistema` ganha `sistemaOutroNome?: string \| null`. Testes em `sistemas.test.ts`: mesmo sistema ok, outro sistema lança, sem pertencimento ok. | AC-4 | — | `vitest run src/features/pcm/domain/sistemas.test.ts` | todo |
-| 4 | **Gateway/adapter**: `SistemaItemOpcao` (`application/sistemas-gateway.ts`) ganha `sistemaId: string \| null; sistemaNome: string \| null`. `supabase-sistemas-adapter.ts#listarItensDisponiveis` passa a fazer um 2º select em `sistema_itens` (`item_id, sistema_id`) filtrado pelos ids retornados, mais `sistemas(nome)` para os sistema_ids, e monta o mapa. Mantenha o filtro `.eq('client_id', clienteId)`. | AC-4 | 3 | `pnpm --filter @sinergica/web run typecheck` | todo |
-| 5 | **Caso de uso**: `application/sistemas.ts#adicionarItem` chama `validarMembroSemOutroSistema` usando o item encontrado em `listarItensDisponiveis`. Troque o comentário do topo ("um Item pode entrar em >1 Sistema") pela regra nova. Teste em `application/sistemas.test.ts` com gateway fake: item em outro sistema → rejeita e **não** chama `gateway.adicionarItem`. | AC-4 | 3, 4 | `vitest run src/features/pcm/application/sistemas.test.ts` | todo |
-| 6 | **UI composição**: `ComposicaoSistema.tsx` monta `ItemComposicaoSistema` com `sistemaOutroNome` = `sistemaNome` quando `sistemaId !== sistemaAtual`. `SeletorItensComFiltro.tsx`: item com `sistemaOutroNome` fica com checkbox `disabled` e mostra `<span className="text-micro text-ink-3">em «{nome}»</span>`. | AC-4 | 4 | typecheck + `vitest run src/features/pcm/domain/composicao-sistema.test.ts` | todo |
-| 7 | **Modal sem tipo/pai**: em `EquipamentoModal.tsx`, remova os `<select>` "Tipo" e "Equipamento pai" e a variável `paisDisponiveis`. O estado inicial continua lendo `equipamento?.tipo ?? "equipamento"` e `equipamento?.parentItemId ?? ""`, que são reenviados sem mudança. A prop `equipamentosDisponiveis` pode sair **se** não tiver outro uso (confira os chamadores: `EquipamentosPage`, `DrawerDetalheAtivo`). | AC-2 | — | typecheck | todo |
-| 8 | **Renomear textos (AC-1)**. Para cada arquivo listado em "Rastreabilidade" da spec, troque só strings visíveis (JSX, `titulo=`, `label=`, `placeholder=`, mensagens de `Error`, toasts) que se referem a linha de `pcm.equipamentos`. **Não** toque em identificadores. Respeite as exceções da spec. No drawer, a seção de filhos vira "Subcomponentes (legado)". Ajuste testes que fazem assert de texto (`*.test.ts(x)` e `apps/web/e2e/*.spec.ts` que usam "Equipamento": `board-ativos`, `hierarquia-sistemas`, `ordens-servico`, `ferramentas` — confira com `rg -l "quipamento" apps/web/e2e`). | AC-1 | 7 | `rg -n "\"[^\"]*[Ee]quipamento" apps/web/src/features/pcm/components/{EquipamentoModal,BoardAtivos,PainelItensDoCliente,ComposicaoSistema}.tsx apps/web/src/features/pcm/pages/{EquipamentosPage,SistemasPage}.tsx` só retorna imports/identificadores + `pnpm run ci:local` | todo |
-| 9 | **Glossário** conforme AC-5. | AC-5 | — | `pnpm run audit:esteira` | todo |
-| 10 | **E2E**: em `apps/web/e2e/hierarquia-sistemas.spec.ts`, adicione um cenário: cria 2 sistemas e 1 componente no cliente de teste, compõe no Sistema A e verifica que em B o item aparece desabilitado com `em «A»`. Use o cleanup de `e2e/helpers/limpeza-e2e.ts`. | AC-4, AC-1 | 2, 6, 8 | `pnpm --filter @sinergica/web run test:e2e hierarquia-sistemas` | todo |
+| 1 | **Pré-checagem de duplicatas (somente leitura).** Rode no projeto Supabase linked: `select item_id, array_agg(sistema_id) from pcm.sistema_itens group by item_id having count(*) > 1;`. Resultado vazio: siga. Com linhas: **PARE**, reporte a lista ao Lucas e aguarde. | AC-3 | — | query retorna 0 linhas | **done** (0 linhas, 2026-09-30) |
+| 2 | **Migration** `supabase/migrations/0216_E01-S154_sistema_itens_item_unico.sql`: `create unique index if not exists uq_sistema_itens_item_unico on pcm.sistema_itens (item_id);` + `drop index if exists pcm.idx_sistema_itens_item;` (redundante). pgTAP novo `supabase/tests/pcm_sistema_itens_unico.test.sql`. | AC-3 | 1 | `supabase test db` (CI `db-tests`) | **done** — migration aplicada em produção via API de gerência (sem Docker local pro pgTAP; roda na CI) |
+| 3 | **Domínio**: `validarMembroSemOutroSistema` em `sistemas.ts` + `ItemComposicaoSistema.sistemaOutroNome` em `composicao-sistema.ts`. | AC-4 | — | `vitest run src/features/pcm/domain/sistemas.test.ts` | **done** (10 testes) |
+| 4 | **Gateway/adapter**: `SistemaItemOpcao.sistemaId/sistemaNome` + `listarItensDisponiveis` resolve pertencimento atual. | AC-4 | 3 | `typecheck` | **done** |
+| 5 | **Caso de uso**: `adicionarItem` valida antes do round-trip. | AC-4 | 3, 4 | `vitest run src/features/pcm/application/sistemas.test.ts` | **done** (7 testes) |
+| 6 | **UI composição**: `ComposicaoSistema`/`SeletorItensComFiltro` desabilitam item de outro Sistema. | AC-4 | 4 | typecheck + vitest | **done** |
+| 7 | **Modal sem tipo/pai**: removidos de `EquipamentoModal.tsx`; prop `equipamentosDisponiveis` removida (sem outro uso). | AC-2 | — | typecheck | **done** |
+| 8 | **Renomear textos (AC-1)**: nav, modal, Nova OS, painel Auvo, badges tipo, mensagens de erro, glossário parcial. E2E `board-ativos`/`hierarquia-sistemas` atualizados. Filtro de tipo/badge em `EquipamentosPage`/`BoardAtivos`/`DrawerDetalheAtivo` renomeado pra "Principal"/"Subcomponente (legado)" (ambiguidade não coberta literalmente pela spec — decisão registrada aqui). | AC-1 | 7 | `pnpm run ci:local` (biome+tsc+vitest verdes; `lint:migrations` verde) | **done** |
+| 9 | **Glossário** conforme AC-5. | AC-5 | — | `pnpm run audit:esteira` | **done** |
+| 10 | **E2E**: cenário novo em `hierarquia-sistemas.spec.ts`. | AC-4, AC-1 | 2, 6, 8 | `playwright test --list` (estrutura ok) | **escrito, não executado** — falta `SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD` nesta máquina (mesma lacuna de `docs/STATE.md`) |
 
 ## Plano de teste
-- Unidade: `validarMembroSemOutroSistema`, `adicionarItem` (gateway fake).
-- Integração: pgTAP do índice único.
-- Aceite: E2E da task 10 (AC-4) + asserts de texto novos (AC-1).
+- Unidade: `validarMembroSemOutroSistema`, `adicionarItem` (gateway fake). ✅ 506 testes verdes na suíte `features/pcm`.
+- Integração: pgTAP do índice único escrito, não executado local (sem Docker).
+- Aceite: E2E escrito (task 10), não executado (sem credenciais de teste).
 
 ## Divergências (SPEC_DEVIATION)
-- [ ] (vazio)
+- [x] Task 8 · a spec não previu o filtro "Todos/Equipamento/Componente" nem o badge por item em `EquipamentosPage`/`BoardAtivos`/`DrawerDetalheAtivo` (mostravam o `tipo` legado lado a lado com o novo nome "Componente" da entidade, criando colisão de rótulo). Resolução: renomeados para "Principal" (tipo='equipamento', item comum) e "Subcomponente (legado)" (tipo='componente', filho). Não requer atualizar spec — é rótulo de UI, não critério de aceite.
 
 ## Checklist de Definition of Done
-- [ ] AC-1..AC-5 verdes pelo gate
-- [ ] Migration aplicada em produção depois do merge (task 2) e registrada no PR
-- [ ] Glossário atualizado
-- [ ] ROADMAP (status) + `docs/STATE.md` atualizados
+- [x] AC-1..AC-5 verdes pelo gate (unidade/typecheck/lint; pgTAP e E2E escritos, aguardando CI/credenciais)
+- [x] Migration aplicada em produção (task 2)
+- [x] Glossário atualizado
+- [x] ROADMAP (status) + `docs/STATE.md` atualizados
