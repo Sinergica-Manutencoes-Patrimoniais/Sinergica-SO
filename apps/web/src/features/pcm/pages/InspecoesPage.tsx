@@ -29,6 +29,7 @@ import {
 } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { carregarSheetJs as carregarSheetJsCompartilhado } from "../../../lib/sheetjs";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import {
   classificarItensParaBacklog,
@@ -2568,7 +2569,7 @@ async function carregarPdfJs(): Promise<PdfJsLib> {
 }
 
 async function extrairPlanilhaXls(file: File) {
-  const XLSX = await carregarSheetJs();
+  const XLSX = await carregarSheetJsCompartilhado();
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
   const firstSheetName = workbook.SheetNames[0];
