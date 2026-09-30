@@ -18,6 +18,16 @@ export interface DesativarEquipamentoCommand {
   userId: string;
 }
 
+/** E01-S155: move um Componente na árvore (Board, painel "Itens PCM" da 360) sem passar pelas
+ * validações de `validarEquipamento` (cliente/categoria obrigatórios) — mover um item legado
+ * incompleto não pode ficar bloqueado por regras que só valem na criação/edição pelo modal. */
+export interface AtualizarPosicaoComponenteCommand {
+  id: string;
+  areaId: string | null;
+  localId: string | null;
+  userId: string;
+}
+
 export interface EquipamentosGateway {
   listar(): Promise<EquipamentoItem[]>;
   listarClientes(): Promise<EquipamentoClienteOpcao[]>;
@@ -28,4 +38,6 @@ export interface EquipamentosGateway {
   // E01-S76
   obterItem(id: string): Promise<EquipamentoItem | null>;
   obterContextoItem(id: string): Promise<ItemContexto | null>;
+  // E01-S155
+  atualizarPosicao(input: AtualizarPosicaoComponenteCommand): Promise<void>;
 }

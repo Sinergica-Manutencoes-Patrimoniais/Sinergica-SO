@@ -13,7 +13,10 @@ interface SistemaRow {
   id: string;
   cliente_id: string;
   area_id: string | null;
+  local_id: string | null;
   nome: string;
+  categoria_id: string | null;
+  categoria: string | null;
   tipo: string | null;
   descricao: string | null;
   ativo: boolean;
@@ -38,14 +41,17 @@ interface ItemOpcaoRow {
 }
 
 const SISTEMA_COLS =
-  "id,cliente_id,area_id,nome,tipo,descricao,ativo,auvo_id,auvo_equipment_id,codigo,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
+  "id,cliente_id,area_id,local_id,nome,categoria_id,categoria,tipo,descricao,ativo,auvo_id,auvo_equipment_id,codigo,auvo_sync_status,auvo_sync_error,auvo_synced_at" as const;
 
 function mapSistema(row: SistemaRow): Sistema {
   return {
     id: row.id,
     clienteId: row.cliente_id,
     areaId: row.area_id,
+    localId: row.local_id,
     nome: row.nome,
+    categoriaId: row.categoria_id,
+    categoria: row.categoria,
     tipo: row.tipo,
     descricao: row.descricao,
     ativo: row.ativo,
@@ -56,6 +62,14 @@ function mapSistema(row: SistemaRow): Sistema {
     auvoSyncError: row.auvo_sync_error,
     auvoSyncedAt: row.auvo_synced_at,
   };
+}
+
+/** E01-S155 AC-6: mesma tradução de `fn_sistemas_normalizar_posicao` do lado dos equipamentos. */
+function traduzirErroPosicao(error: { code?: string; message?: string }): never {
+  if (error.code === "23514" && error.message?.includes("posicao_cliente_divergente")) {
+    throw new Error("A Área/Local escolhido é de outro cliente.");
+  }
+  throw error;
 }
 
 export const supabaseSistemasAdapter: SistemasGateway = {
@@ -85,8 +99,12 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       .from("sistemas")
       .insert({
         cliente_id: input.clienteId,
-        area_id: input.areaId,
+        // E01-S155: com Local escolhido, area_id não é enviado — o trigger deriva da Área do Local.
+        area_id: input.localId ? null : input.areaId,
+        local_id: input.localId,
         nome: input.nome,
+        categoria_id: input.categoriaId,
+        categoria: input.categoria,
         tipo: input.tipo,
         descricao: input.descricao,
         // E01-S153: pré-condição do flip writeEnabled — sem isso o Sistema sobe ao Auvo sem
@@ -98,7 +116,7 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       })
       .select(SISTEMA_COLS)
       .single();
-    if (error) throw error;
+    if (error) traduzirErroPosicao(error);
     return mapSistema(data as SistemaRow);
   },
 
@@ -107,8 +125,11 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       .schema("pcm")
       .from("sistemas")
       .update({
-        area_id: input.areaId,
+        area_id: input.localId ? null : input.areaId,
+        local_id: input.localId,
         nome: input.nome,
+        categoria_id: input.categoriaId,
+        categoria: input.categoria,
         tipo: input.tipo,
         descricao: input.descricao,
         auvo_sync_status: "pending",
@@ -118,7 +139,7 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       .eq("id", input.id)
       .select(SISTEMA_COLS)
       .single();
-    if (error) throw error;
+    if (error) traduzirErroPosicao(error);
     return mapSistema(data as SistemaRow);
   },
 
@@ -147,11 +168,45 @@ export const supabaseSistemasAdapter: SistemasGateway = {
       .is("deleted_at", null)
       .order("nome", { ascending: true });
     if (error) throw error;
-    return ((data ?? []) as ItemOpcaoRow[]).map((row) => ({
-      id: row.id,
-      nome: row.nome,
-      clientId: row.client_id,
-    }));
+    const itens = (data ?? []) as ItemOpcaoRow[];
+    if (itens.length === 0) return [];
+
+    // E01-S154 AC-4: um Componente pertence a no máximo 1 Sistema — resolve em quais itens desta
+    // lista já têm dono, pra UI desabilitar o checkbox deles em qualquer OUTRO Sistema.
+    const { data: membrosData, error: membrosError } = await supabase
+      .schema("pcm")
+      .from("sistema_itens")
+      .select("item_id,sistema_id")
+      .in(
+        "item_id",
+        itens.map((item) => item.id),
+      );
+    if (membrosError) throw membrosError;
+    const sistemaIdPorItem = new Map(
+      (membrosData ?? []).map((m) => [m.item_id as string, m.sistema_id as string]),
+    );
+    const sistemaIds = [...new Set(sistemaIdPorItem.values())];
+    let nomePorSistema = new Map<string, string>();
+    if (sistemaIds.length > 0) {
+      const { data: sistemasData, error: sistemasError } = await supabase
+        .schema("pcm")
+        .from("sistemas")
+        .select("id,nome")
+        .in("id", sistemaIds);
+      if (sistemasError) throw sistemasError;
+      nomePorSistema = new Map((sistemasData ?? []).map((s) => [s.id as string, s.nome as string]));
+    }
+
+    return itens.map((row) => {
+      const sistemaId = sistemaIdPorItem.get(row.id) ?? null;
+      return {
+        id: row.id,
+        nome: row.nome,
+        clientId: row.client_id,
+        sistemaId,
+        sistemaNome: sistemaId ? (nomePorSistema.get(sistemaId) ?? null) : null,
+      };
+    });
   },
 
   async listarItensDoSistema(sistemaId): Promise<SistemaItemMembro[]> {

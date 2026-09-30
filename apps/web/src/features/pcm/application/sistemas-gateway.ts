@@ -13,6 +13,10 @@ export interface SistemaItemOpcao {
   id: string;
   nome: string;
   clientId: string | null;
+  /** E01-S154 AC-4: Sistema ao qual este item já pertence hoje, se algum (componente pertence a
+   * no máximo 1 Sistema). */
+  sistemaId: string | null;
+  sistemaNome: string | null;
 }
 
 export interface SistemasGateway {

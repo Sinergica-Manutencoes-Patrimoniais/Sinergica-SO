@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { carregarBoardCliente } from "../application/board-ativos";
-import { editarEquipamento } from "../application/equipamentos";
+import { atualizarPosicaoComponente } from "../application/equipamentos";
 import type { ColunaBoard, ItemCard } from "../domain/board-ativos";
 import { montarColunasBoard } from "../domain/board-ativos";
 import type { EquipamentoItem } from "../domain/equipamentos";
@@ -65,17 +65,10 @@ export function BoardAtivos({
       if (!item || item.localId === novoLocalId) return;
       try {
         setErroMover(null);
-        await editarEquipamento(supabaseEquipamentosAdapter, {
-          nome: item.nome,
-          identificador: item.identificador,
-          categoria: item.categoria,
-          clientId: item.clientId,
-          localizacao: item.localizacao,
-          observacoes: item.observacoes,
-          tipo: item.tipo,
-          localId: novoLocalId,
-          parentItemId: item.parentItemId,
+        await atualizarPosicaoComponente(supabaseEquipamentosAdapter, {
           id: item.id,
+          areaId,
+          localId: novoLocalId,
           userId: user.id,
         });
         carregar();
@@ -83,7 +76,7 @@ export function BoardAtivos({
         setErroMover(error instanceof Error ? error.message : "Não foi possível mover o ativo.");
       }
     },
-    [user, estado, carregar],
+    [user, estado, areaId, carregar],
   );
 
   const area = estado.fase === "pronto" ? estado.areas.find((a) => a.id === areaId) : undefined;
@@ -291,7 +284,7 @@ function CardAtivo({
         <span className="block truncate text-caption font-semibold text-ink">{item.nome}</span>
         <span className="flex items-center gap-1 text-micro text-ink-3">
           <Package className="h-3 w-3" />
-          {item.tipo === "componente" ? "Componente" : "Equipamento"}
+          {item.tipo === "componente" ? "Subcomponente (legado)" : "Principal"}
           {!item.ativo && " · inativo"}
         </span>
       </span>

@@ -1,13 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Sistema } from "../domain/sistemas";
-import { listarHistoricoOsSistema, salvarComposicaoSistema } from "./sistemas";
+import { adicionarItem, listarHistoricoOsSistema, salvarComposicaoSistema } from "./sistemas";
 import type { SistemaItemOpcao, SistemasGateway } from "./sistemas-gateway";
 
 const SISTEMA: Sistema = {
   id: "sis-1",
   clienteId: "cli-1",
   areaId: null,
+  localId: null,
   nome: "Sistema Hidrante",
+  categoriaId: "cat-1",
+  categoria: "Hidráulica",
   tipo: null,
   descricao: null,
   ativo: true,
@@ -20,9 +23,16 @@ const SISTEMA: Sistema = {
 };
 
 const ITENS: SistemaItemOpcao[] = [
-  { id: "item-1", nome: "Bomba 1", clientId: "cli-1" },
-  { id: "item-2", nome: "Bomba 2", clientId: "cli-1" },
-  { id: "item-3", nome: "Bomba 3", clientId: "cli-1" },
+  { id: "item-1", nome: "Bomba 1", clientId: "cli-1", sistemaId: null, sistemaNome: null },
+  { id: "item-2", nome: "Bomba 2", clientId: "cli-1", sistemaId: null, sistemaNome: null },
+  { id: "item-3", nome: "Bomba 3", clientId: "cli-1", sistemaId: null, sistemaNome: null },
+  {
+    id: "item-4",
+    nome: "Bomba 4",
+    clientId: "cli-1",
+    sistemaId: "sis-2",
+    sistemaNome: "Sistema Incêndio",
+  },
 ];
 
 function gatewayFake(membrosIniciais: string[]): SistemasGateway {
@@ -78,6 +88,22 @@ describe("salvarComposicaoSistema", () => {
     await salvarComposicaoSistema(gateway, "sis-1", ["item-1"], "user-1");
     expect(gateway.adicionarItem).not.toHaveBeenCalled();
     expect(gateway.removerItem).not.toHaveBeenCalled();
+  });
+});
+
+describe("adicionarItem — E01-S154 AC-4", () => {
+  it("rejeita item que já pertence a outro Sistema, sem chamar o gateway", async () => {
+    const gateway = gatewayFake([]);
+    await expect(adicionarItem(gateway, "sis-1", "item-4", "user-1")).rejects.toThrow(
+      "Componente já pertence ao Sistema «Sistema Incêndio». Remova de lá antes.",
+    );
+    expect(gateway.adicionarItem).not.toHaveBeenCalled();
+  });
+
+  it("aceita item sem Sistema nenhum", async () => {
+    const gateway = gatewayFake([]);
+    await adicionarItem(gateway, "sis-1", "item-1", "user-1");
+    expect(gateway.adicionarItem).toHaveBeenCalledWith("sis-1", "item-1", "user-1");
   });
 });
 

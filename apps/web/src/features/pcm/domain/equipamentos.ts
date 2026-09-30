@@ -6,6 +6,7 @@ export interface EquipamentoItem {
   id: string;
   nome: string;
   identificador: string | null;
+  categoriaId: string | null;
   categoria: string | null;
   clientId: string | null;
   clienteNome: string | null;
@@ -23,6 +24,9 @@ export interface EquipamentoItem {
   localId: string | null;
   tipo: ItemTipo;
   parentItemId: string | null;
+  /** E01-S155: posição direta na Área, sem Local. Quando `localId` está presente, `areaId` é
+   * sempre a Área desse Local (o banco deriva — ver trigger `fn_equipamentos_normalizar_posicao`). */
+  areaId: string | null;
 }
 
 /** E01-S76 AC-6: caminho de instalação (Cliente>Área>Local) + Sistemas de que o Item participa —
@@ -47,6 +51,7 @@ export interface EquipamentoClienteOpcao {
 export interface EquipamentoFormData {
   nome: string;
   identificador?: string | null;
+  categoriaId?: string | null;
   categoria?: string | null;
   clientId?: string | null;
   localizacao?: string | null;
@@ -55,11 +60,19 @@ export interface EquipamentoFormData {
   localId?: string | null;
   tipo?: ItemTipo;
   parentItemId?: string | null;
+  // E01-S155
+  areaId?: string | null;
 }
 
+/** E01-S155 AC-5: cliente obrigatório na criação/edição pelo SO — o banco não impõe `NOT NULL`
+ * (o inbound do Auvo grava equipamento sem cliente), então a validação fica só na borda. */
 export function validarEquipamento(input: EquipamentoFormData): EquipamentoFormData {
   const nome = input.nome.trim();
   if (!nome) throw new Error("Nome é obrigatório.");
+  const clientId = textoOuNull(input.clientId);
+  if (!clientId) throw new Error("Cliente é obrigatório.");
+  const categoriaId = textoOuNull(input.categoriaId);
+  if (!categoriaId) throw new Error("Categoria é obrigatória.");
   const tipo = input.tipo ?? "equipamento";
   if (tipo !== "equipamento" && tipo !== "componente") {
     throw new Error("Tipo deve ser 'equipamento' ou 'componente'.");
@@ -67,13 +80,15 @@ export function validarEquipamento(input: EquipamentoFormData): EquipamentoFormD
   return {
     nome,
     identificador: textoOuNull(input.identificador),
+    categoriaId,
     categoria: textoOuNull(input.categoria),
-    clientId: textoOuNull(input.clientId),
+    clientId,
     localizacao: textoOuNull(input.localizacao),
     observacoes: textoOuNull(input.observacoes),
     localId: textoOuNull(input.localId),
     tipo,
     parentItemId: textoOuNull(input.parentItemId),
+    areaId: textoOuNull(input.areaId),
   };
 }
 
@@ -85,7 +100,7 @@ export function validarParentItem(
 ) {
   if (!pai) return;
   if (pai.clientId !== itemClientId) {
-    throw new Error("O Equipamento pai deve pertencer ao mesmo cliente.");
+    throw new Error("O Componente pai deve pertencer ao mesmo cliente.");
   }
 }
 

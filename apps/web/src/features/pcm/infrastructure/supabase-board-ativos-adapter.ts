@@ -6,6 +6,7 @@ interface ItemRow {
   id: string;
   nome: string;
   identificador: string | null;
+  categoria_id: string | null;
   categoria: string | null;
   client_id: string | null;
   auvo_customer_id: number | null;
@@ -21,16 +22,18 @@ interface ItemRow {
   local_id: string | null;
   tipo: string;
   parent_item_id: string | null;
+  area_id: string | null;
 }
 
 const ITEM_COLS =
-  "id,nome,identificador,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id" as const;
+  "id,nome,identificador,categoria_id,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id,area_id" as const;
 
 function mapItem(row: ItemRow): EquipamentoItem {
   return {
     id: row.id,
     nome: row.nome,
     identificador: row.identificador,
+    categoriaId: row.categoria_id,
     categoria: row.categoria,
     clientId: row.client_id,
     clienteNome: null, // board é por cliente — o nome não é usado nos cards
@@ -47,6 +50,7 @@ function mapItem(row: ItemRow): EquipamentoItem {
     localId: row.local_id,
     tipo: (row.tipo as ItemTipo) ?? "equipamento",
     parentItemId: row.parent_item_id,
+    areaId: row.area_id,
   };
 }
 

@@ -14,11 +14,11 @@ import {
 } from "../application/sistemas";
 import { ComposicaoSistema } from "../components/ComposicaoSistema";
 import { HistoricoOsSistema } from "../components/HistoricoOsSistema";
+import { SeletorCategoria } from "../components/SeletorCategoria";
+import { SeletorPosicao } from "../components/SeletorPosicao";
 import type { EquipamentoClienteOpcao } from "../domain/equipamentos";
-import type { Area } from "../domain/hierarquia";
 import type { Sistema, SistemaFormData } from "../domain/sistemas";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
-import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
 
 type Estado =
@@ -263,6 +263,7 @@ export function SistemasPage() {
         <SistemaModal
           sistema={modal.modo === "editar" ? modal.sistema : undefined}
           clientes={estado.clientes}
+          userId={user?.id}
           onCancel={() => setModal(null)}
           onSalvar={salvar}
         />
@@ -285,40 +286,27 @@ export function SistemasPage() {
 function SistemaModal({
   sistema,
   clientes,
+  userId,
   onCancel,
   onSalvar,
 }: {
   sistema?: Sistema;
   clientes: EquipamentoClienteOpcao[];
+  userId?: string;
   onCancel: () => void;
   onSalvar: (dados: SistemaFormData) => Promise<void>;
 }) {
   const [dados, setDados] = useState<SistemaFormData>({
     clienteId: sistema?.clienteId ?? "",
-    areaId: sistema?.areaId ?? "",
+    areaId: sistema?.areaId ?? null,
+    localId: sistema?.localId ?? null,
     nome: sistema?.nome ?? "",
-    tipo: sistema?.tipo ?? "",
+    categoriaId: sistema?.categoriaId ?? null,
+    categoria: sistema?.categoria ?? null,
     descricao: sistema?.descricao ?? "",
   });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [areasDoCliente, setAreasDoCliente] = useState<Area[]>([]);
-
-  // Área é escopo opcional do Sistema — sempre selecionada dentre as Áreas já cadastradas na
-  // Estrutura do cliente (nunca digitada), pra não divergir do que existe lá.
-  useEffect(() => {
-    if (!dados.clienteId) {
-      setAreasDoCliente([]);
-      return;
-    }
-    let cancelado = false;
-    supabaseHierarquiaAdapter.listarAreas(dados.clienteId).then((areas) => {
-      if (!cancelado) setAreasDoCliente(areas);
-    });
-    return () => {
-      cancelado = true;
-    };
-  }, [dados.clienteId]);
 
   async function salvar() {
     try {
@@ -345,7 +333,14 @@ function SistemaModal({
           <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
           <select
             value={dados.clienteId}
-            onChange={(e) => setDados((atual) => ({ ...atual, clienteId: e.target.value }))}
+            onChange={(e) =>
+              setDados((atual) => ({
+                ...atual,
+                clienteId: e.target.value,
+                areaId: null,
+                localId: null,
+              }))
+            }
             className="input w-full"
             disabled={Boolean(sistema)}
           >
@@ -357,22 +352,12 @@ function SistemaModal({
             ))}
           </select>
         </label>
-        <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Área</span>
-          <select
-            value={dados.areaId ?? ""}
-            onChange={(e) => setDados((atual) => ({ ...atual, areaId: e.target.value }))}
-            className="input w-full"
-            disabled={!dados.clienteId}
-          >
-            <option value="">Sem escopo de Área</option>
-            {areasDoCliente.map((area) => (
-              <option key={area.id} value={area.id}>
-                {area.nome}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SeletorPosicao
+          clienteId={dados.clienteId || null}
+          areaId={dados.areaId ?? null}
+          localId={dados.localId ?? null}
+          onChange={({ areaId, localId }) => setDados((atual) => ({ ...atual, areaId, localId }))}
+        />
         <label className="block">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Nome *</span>
           <input
@@ -382,15 +367,12 @@ function SistemaModal({
             placeholder='ex.: "Sistema de Hidrante Torre A"'
           />
         </label>
-        <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo</span>
-          <input
-            value={dados.tipo ?? ""}
-            onChange={(e) => setDados((atual) => ({ ...atual, tipo: e.target.value }))}
-            className="input w-full"
-            placeholder="hidrante, incêndio, spda…"
-          />
-        </label>
+        <SeletorCategoria
+          value={dados.categoriaId ?? null}
+          textoLegado={dados.categoria}
+          userId={userId}
+          onChange={(categoriaId) => setDados((atual) => ({ ...atual, categoriaId }))}
+        />
         {erro && (
           <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}

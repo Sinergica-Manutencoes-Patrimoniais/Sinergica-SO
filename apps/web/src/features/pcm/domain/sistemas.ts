@@ -6,7 +6,11 @@ export interface Sistema {
   id: string;
   clienteId: string;
   areaId: string | null;
+  /** E01-S155: quando presente, `areaId` é sempre a Área deste Local (o banco deriva). */
+  localId: string | null;
   nome: string;
+  categoriaId: string | null;
+  categoria: string | null;
   tipo: string | null;
   descricao: string | null;
   ativo: boolean;
@@ -21,7 +25,10 @@ export interface Sistema {
 export interface SistemaFormData {
   clienteId: string;
   areaId?: string | null;
+  localId?: string | null;
   nome: string;
+  categoriaId?: string | null;
+  categoria?: string | null;
   tipo?: string | null;
   descricao?: string | null;
 }
@@ -38,10 +45,15 @@ export function validarSistema(input: SistemaFormData): SistemaFormData {
   const nome = input.nome.trim();
   if (!nome) throw new Error("Nome do Sistema é obrigatório.");
   if (!input.clienteId) throw new Error("Cliente é obrigatório.");
+  const categoriaId = textoOuNull(input.categoriaId);
+  if (!categoriaId) throw new Error("Categoria é obrigatória.");
   return {
     clienteId: input.clienteId,
     areaId: textoOuNull(input.areaId),
+    localId: textoOuNull(input.localId),
     nome,
+    categoriaId,
+    categoria: textoOuNull(input.categoria),
     tipo: textoOuNull(input.tipo),
     descricao: textoOuNull(input.descricao),
   };
@@ -62,6 +74,19 @@ export function validarMembroNaoDuplicado(
 ) {
   if (membrosAtuais.some((m) => m.itemId === itemId)) {
     throw new Error("Este item já faz parte do Sistema.");
+  }
+}
+
+/** E01-S154 AC-4 — Componente pertence a no máximo 1 Sistema (`uq_sistema_itens_item_unico` no
+ * banco). `pertencimento` é o Sistema ao qual o item já pertence hoje, se algum. */
+export function validarMembroSemOutroSistema(
+  sistemaAtualId: string,
+  pertencimento: { sistemaId: string; sistemaNome: string } | null,
+) {
+  if (pertencimento && pertencimento.sistemaId !== sistemaAtualId) {
+    throw new Error(
+      `Componente já pertence ao Sistema «${pertencimento.sistemaNome}». Remova de lá antes.`,
+    );
   }
 }
 

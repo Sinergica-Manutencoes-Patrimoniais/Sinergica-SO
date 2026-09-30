@@ -528,14 +528,14 @@ export function NovaOrdemServicoModal({
           )}
 
           {!editando && (
-            <Field label="Equipamento (Alvo)">
+            <Field label="Componente (Alvo)">
               <select
                 value={form.equipamentoId}
                 disabled={!form.clientId}
                 onChange={(e) => setForm((f) => ({ ...f, equipamentoId: e.target.value }))}
                 className="input"
               >
-                <option value="">Sem equipamento</option>
+                <option value="">Sem componente</option>
                 {equipamentos.map((equipamento) => (
                   <option key={equipamento.id} value={equipamento.id}>
                     {equipamento.nome}

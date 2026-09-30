@@ -20,7 +20,7 @@ describe("catalogos-simples", () => {
     expect(labelCatalogoSimples("segmentos")).toBe("Segmentos");
     expect(labelCatalogoSimples("palavras_chave")).toBe("Palavras-chave");
     expect(labelCatalogoSimples("produto_categorias")).toBe("Categorias de Produto");
-    expect(labelCatalogoSimples("equipamento_categorias")).toBe("Categorias de Equipamento");
+    expect(labelCatalogoSimples("equipamento_categorias")).toBe("Categorias de Ativo");
   });
 
   it("usa rótulo de campo adequado por catálogo", () => {

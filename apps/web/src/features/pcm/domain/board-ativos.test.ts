@@ -30,6 +30,7 @@ function item(
 ): EquipamentoItem {
   return {
     identificador: null,
+    categoriaId: null,
     categoria: null,
     clientId: "cli-1",
     clienteNome: "Cliente",
@@ -46,6 +47,7 @@ function item(
     localId: null,
     tipo: "equipamento",
     parentItemId: null,
+    areaId: null,
     ...over,
   };
 }
@@ -88,9 +90,9 @@ describe("board-ativos — montarColunasBoard", () => {
     expect(c?.totalItens).toBe(1);
   });
 
-  it("item sem localId vai pra coluna 'Sem local' (AC-3)", () => {
+  it("item sem localId mas com a Área do board vai pra coluna 'Sem local' (AC-3)", () => {
     const colunas = montarColunasBoard(area, locais, [
-      item({ id: "i1", nome: "Extintor solto", localId: null }),
+      item({ id: "i1", nome: "Extintor solto", localId: null, areaId: "area-1" }),
     ]);
     const sem = colunas.find((x) => x.localId === null);
     expect(sem?.localNome).toBe("Sem local");
@@ -99,6 +101,20 @@ describe("board-ativos — montarColunasBoard", () => {
 
   it("'Sem local' só aparece quando há item sem local", () => {
     expect(montarColunasBoard(area, locais, []).some((c) => c.localId === null)).toBe(false);
+  });
+
+  it("E01-S155 AC-8: item sem Local e sem Área não aparece em board nenhum", () => {
+    const colunas = montarColunasBoard(area, locais, [
+      item({ id: "i1", nome: "Órfão", localId: null, areaId: null }),
+    ]);
+    expect(colunas.reduce((s, c) => s + c.totalItens, 0)).toBe(0);
+  });
+
+  it("E01-S155 AC-8: item só com Área de OUTRA Área não entra no 'Sem local' desta", () => {
+    const colunas = montarColunasBoard(area, locais, [
+      item({ id: "i1", nome: "De outra área", localId: null, areaId: "area-2" }),
+    ]);
+    expect(colunas.reduce((s, c) => s + c.totalItens, 0)).toBe(0);
   });
 
   it("item cujo localId é de outra Área não entra no board da Área atual (borda)", () => {

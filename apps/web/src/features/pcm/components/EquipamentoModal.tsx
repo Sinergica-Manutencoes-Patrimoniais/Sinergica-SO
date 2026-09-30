@@ -1,63 +1,43 @@
 // E01-S79: extraído de EquipamentosPage.tsx pra componente compartilhado — reusado também pelo
 // drawer de detalhe do Board (E01-S78), que antes só permitia visualizar, nunca editar.
 import { Button, Modal } from "@sinergica/ui";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type {
   EquipamentoClienteOpcao,
   EquipamentoFormData,
   EquipamentoItem,
 } from "../domain/equipamentos";
-import { montarArvore } from "../domain/hierarquia";
-import type { LocalArvoreNode } from "../domain/hierarquia";
-import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
+import { SeletorCategoria } from "./SeletorCategoria";
+import { SeletorPosicao } from "./SeletorPosicao";
 
 export function EquipamentoModal({
   equipamento,
   clientes,
-  equipamentosDisponiveis,
+  userId,
   onCancel,
   onSalvar,
 }: {
   equipamento?: EquipamentoItem;
   clientes: EquipamentoClienteOpcao[];
-  equipamentosDisponiveis: EquipamentoItem[];
+  userId?: string;
   onCancel: () => void;
   onSalvar: (input: EquipamentoFormData) => Promise<void>;
 }) {
   const [dados, setDados] = useState<EquipamentoFormData>({
     nome: equipamento?.nome ?? "",
     identificador: equipamento?.identificador ?? "",
-    categoria: equipamento?.categoria ?? "",
+    categoriaId: equipamento?.categoriaId ?? null,
+    categoria: equipamento?.categoria ?? null,
     clientId: equipamento?.clientId ?? "",
     localizacao: equipamento?.localizacao ?? "",
     observacoes: equipamento?.observacoes ?? "",
     tipo: equipamento?.tipo ?? "equipamento",
-    localId: equipamento?.localId ?? "",
+    localId: equipamento?.localId ?? null,
     parentItemId: equipamento?.parentItemId ?? "",
+    areaId: equipamento?.areaId ?? null,
   });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [locaisDoCliente, setLocaisDoCliente] = useState<LocalArvoreNode[]>([]);
-
-  useEffect(() => {
-    if (!dados.clientId) {
-      setLocaisDoCliente([]);
-      return;
-    }
-    let cancelado = false;
-    supabaseHierarquiaAdapter.listarLocaisDoCliente(dados.clientId).then((locais) => {
-      if (!cancelado) setLocaisDoCliente(montarArvore(locais));
-    });
-    return () => {
-      cancelado = true;
-    };
-  }, [dados.clientId]);
-
-  // AC-5: Componente pode ser filho de um Equipamento do MESMO cliente — lista só equipamentos
-  // (não outros componentes) do cliente selecionado, excluindo o próprio item (edição).
-  const paisDisponiveis = equipamentosDisponiveis.filter(
-    (e) => e.tipo === "equipamento" && e.clientId === dados.clientId && e.id !== equipamento?.id,
-  );
 
   async function salvar() {
     try {
@@ -65,7 +45,7 @@ export function EquipamentoModal({
       setErro(null);
       await onSalvar(dados);
     } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível salvar equipamento.");
+      setErro(error instanceof Error ? error.message : "Não foi possível salvar componente.");
     } finally {
       setSalvando(false);
     }
@@ -81,7 +61,7 @@ export function EquipamentoModal({
       onOpenChange={(open) => {
         if (!open) onCancel();
       }}
-      titulo={equipamento ? "Editar equipamento" : "Novo equipamento"}
+      titulo={equipamento ? "Editar componente" : "Novo componente"}
       tamanho="lg"
     >
       <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
@@ -91,19 +71,27 @@ export function EquipamentoModal({
           value={dados.identificador ?? ""}
           onChange={(v) => setCampo("identificador", v)}
         />
-        <Field
-          label="Categoria"
-          value={dados.categoria ?? ""}
-          onChange={(v) => setCampo("categoria", v)}
+        <SeletorCategoria
+          value={dados.categoriaId ?? null}
+          textoLegado={dados.categoria}
+          userId={userId}
+          onChange={(categoriaId) => setDados((atual) => ({ ...atual, categoriaId }))}
         />
         <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente</span>
+          <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
           <select
             value={dados.clientId ?? ""}
-            onChange={(event) => setCampo("clientId", event.target.value)}
+            onChange={(event) =>
+              setDados((atual) => ({
+                ...atual,
+                clientId: event.target.value,
+                areaId: null,
+                localId: null,
+              }))
+            }
             className="input w-full"
           >
-            <option value="">Sem vínculo</option>
+            <option value="">Selecione…</option>
             {clientes.map((cliente) => (
               <option key={cliente.id} value={cliente.id}>
                 {cliente.nome}
@@ -112,61 +100,14 @@ export function EquipamentoModal({
             ))}
           </select>
         </label>
-        <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo</span>
-          <select
-            value={dados.tipo ?? "equipamento"}
-            onChange={(event) =>
-              setDados((atual) => ({
-                ...atual,
-                tipo: event.target.value as EquipamentoFormData["tipo"],
-                // trocar pra "equipamento" limpa o pai — invariante só faz sentido pra componente
-                parentItemId: event.target.value === "componente" ? atual.parentItemId : "",
-              }))
-            }
-            className="input w-full"
-          >
-            <option value="equipamento">Equipamento</option>
-            <option value="componente">Componente</option>
-          </select>
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Local (AC-4)</span>
-          <select
-            value={dados.localId ?? ""}
-            onChange={(event) => setCampo("localId", event.target.value)}
-            className="input w-full"
-            disabled={!dados.clientId}
-          >
-            <option value="">Sem local</option>
-            {flattenArvore(locaisDoCliente).map(({ local, profundidade }) => (
-              <option key={local.id} value={local.id}>
-                {"— ".repeat(profundidade)}
-                {local.nome}
-              </option>
-            ))}
-          </select>
-        </label>
-        {dados.tipo === "componente" && (
-          <label className="block">
-            <span className="mb-1 block text-caption font-semibold text-ink-3">
-              Equipamento pai (AC-5)
-            </span>
-            <select
-              value={dados.parentItemId ?? ""}
-              onChange={(event) => setCampo("parentItemId", event.target.value)}
-              className="input w-full"
-              disabled={!dados.clientId}
-            >
-              <option value="">Nenhum</option>
-              {paisDisponiveis.map((pai) => (
-                <option key={pai.id} value={pai.id}>
-                  {pai.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
+        <div className="grid grid-cols-1 gap-3 md:col-span-2 md:grid-cols-2">
+          <SeletorPosicao
+            clienteId={dados.clientId ?? null}
+            areaId={dados.areaId ?? null}
+            localId={dados.localId ?? null}
+            onChange={({ areaId, localId }) => setDados((atual) => ({ ...atual, areaId, localId }))}
+          />
+        </div>
         <label className="block md:col-span-2">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Observações</span>
           <textarea
@@ -191,16 +132,6 @@ export function EquipamentoModal({
       </div>
     </Modal>
   );
-}
-
-function flattenArvore(
-  nodes: LocalArvoreNode[],
-  profundidade = 0,
-): Array<{ local: LocalArvoreNode; profundidade: number }> {
-  return nodes.flatMap((node) => [
-    { local: node, profundidade },
-    ...flattenArvore(node.filhos, profundidade + 1),
-  ]);
 }
 
 function Field({

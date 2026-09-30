@@ -39,20 +39,31 @@ export function SeletorItensComFiltro({
           <p className="px-3 py-4 text-center text-caption text-ink-3">Nenhum item encontrado.</p>
         ) : (
           <ul className="divide-y divide-line-soft">
-            {itensFiltrados.map((item) => (
-              <li key={item.id}>
-                <label className="flex cursor-pointer items-center gap-2 px-3 py-2 text-body hover:bg-line-soft">
-                  <input
-                    type="checkbox"
-                    checked={selecionadosIds.has(item.id)}
-                    onChange={() => onToggle(item.id)}
-                    disabled={disabled}
-                    className="h-4 w-4 accent-orange"
-                  />
-                  <span className="truncate text-ink-2">{item.nome}</span>
-                </label>
-              </li>
-            ))}
+            {itensFiltrados.map((item) => {
+              // E01-S154 AC-4: item já membro de outro Sistema — não pode ser marcado aqui.
+              const bloqueado = Boolean(item.sistemaOutroNome);
+              return (
+                <li key={item.id}>
+                  <label
+                    className={`flex items-center gap-2 px-3 py-2 text-body ${bloqueado ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-line-soft"}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selecionadosIds.has(item.id)}
+                      onChange={() => onToggle(item.id)}
+                      disabled={disabled || bloqueado}
+                      className="h-4 w-4 accent-orange"
+                    />
+                    <span className="truncate text-ink-2">{item.nome}</span>
+                    {bloqueado && (
+                      <span className="shrink-0 text-micro text-ink-3">
+                        em «{item.sistemaOutroNome}»
+                      </span>
+                    )}
+                  </label>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

@@ -9,7 +9,7 @@ import {
   listarItensDoSistema,
   salvarComposicaoSistema,
 } from "../application/sistemas";
-import type { SistemasGateway } from "../application/sistemas-gateway";
+import type { SistemaItemOpcao, SistemasGateway } from "../application/sistemas-gateway";
 import type { Sistema } from "../domain/sistemas";
 import { SeletorItensComFiltro } from "./SeletorItensComFiltro";
 
@@ -29,7 +29,7 @@ export function ComposicaoSistema({
   const [estado, setEstado] = useState<
     | { fase: "carregando" }
     | { fase: "erro"; mensagem: string }
-    | { fase: "pronto"; itens: Array<{ id: string; nome: string }>; membrosOriginaisIds: string[] }
+    | { fase: "pronto"; itens: SistemaItemOpcao[]; membrosOriginaisIds: string[] }
   >({ fase: "carregando" });
   const [selecionadosIds, setSelecionadosIds] = useState<Set<string>>(new Set());
   const [salvando, setSalvando] = useState(false);
@@ -97,10 +97,17 @@ export function ComposicaoSistema({
     estado.membrosOriginaisIds.length !== selecionadosIds.size ||
     estado.membrosOriginaisIds.some((id) => !selecionadosIds.has(id));
 
+  // E01-S154 AC-4: item já membro de OUTRO Sistema fica desabilitado, com o nome dele à mostra.
+  const itensParaSeletor = estado.itens.map((item) => ({
+    id: item.id,
+    nome: item.nome,
+    sistemaOutroNome: item.sistemaId && item.sistemaId !== sistema.id ? item.sistemaNome : null,
+  }));
+
   return (
     <div className="flex flex-col gap-3">
       <SeletorItensComFiltro
-        itens={estado.itens}
+        itens={itensParaSeletor}
         selecionadosIds={selecionadosIds}
         onToggle={toggle}
         disabled={!temEscrita || salvando}

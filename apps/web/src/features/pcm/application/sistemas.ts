@@ -3,6 +3,7 @@ import type { OsHistoricoItem } from "../domain/historico-ativo";
 import {
   validarMembroMesmoCliente,
   validarMembroNaoDuplicado,
+  validarMembroSemOutroSistema,
   validarSistema,
 } from "../domain/sistemas";
 import type { EditarSistemaCommand, SistemaCommand, SistemasGateway } from "./sistemas-gateway";
@@ -54,8 +55,10 @@ export async function listarHistoricoOsSistema(
   }
 }
 
-/** AC-7 — adiciona N itens ao Sistema; um Item pode entrar em >1 Sistema (INV-6 só impede
- * duplicata NO MESMO Sistema). Valida INV-5 (mesmo cliente) e INV-6 antes do round-trip. */
+/** AC-7 — adiciona um item ao Sistema. E01-S154 AC-4: um Componente pertence a no máximo 1
+ * Sistema (`uq_sistema_itens_item_unico` no banco) — valida ANTES do round-trip pra dar erro
+ * legível em vez do 23505 cru. Valida INV-5 (mesmo cliente) e INV-6 (não duplicar no mesmo
+ * Sistema) também. */
 export async function adicionarItem(
   gateway: SistemasGateway,
   sistemaId: string,
@@ -71,6 +74,10 @@ export async function adicionarItem(
   const item = itens.find((i) => i.id === itemId);
   validarMembroMesmoCliente(sistema.clienteId, item?.clientId ?? null);
   validarMembroNaoDuplicado(membrosAtuais, itemId);
+  validarMembroSemOutroSistema(
+    sistemaId,
+    item?.sistemaId ? { sistemaId: item.sistemaId, sistemaNome: item.sistemaNome ?? "" } : null,
+  );
   return gateway.adicionarItem(sistemaId, itemId, userId);
 }
 
