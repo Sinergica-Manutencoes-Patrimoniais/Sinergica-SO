@@ -108,7 +108,7 @@ _74 concluídas no histórico · maior ID usado: E01-S161_
 | E01-S119 | Anotações do Chamado | Codex | Implementado localmente (2026-07-29). M… | [spec](../../specs/E01-S119-anotacoes-chamado/spec.md) |
 | E01-S113 | "Ferramentas por Técnico" vira hub único (técnico + cliente) | Claude (sessão Lucas) | Implementado localmente (2026-07-29). Q… | [spec](../../specs/E01-S113-ferramentas-hub-tecnico-cliente/spec.md) |
 | E01-S153 | Fix modal Estrutura (Portal) + OS escolhe Equipamento (Alvo) + flip Sistema→Auvo | Claude (sessão Lucas) | Implementado localmente (2026-09-24). M… | — |
-| E01-S157 | Siglas + identificador de ativo | — (livre) | Spec pronta (2026-09-29) — onda 2 | [spec](../../specs/E01-S157-siglas-identificador-ativo/spec.md) |
+| E01-S157 | Siglas + identificador de ativo | Codex | Em implementação (2026-09-30) — onda 2 | [spec](../../specs/E01-S157-siglas-identificador-ativo/spec.md) |
 | E01-S158 | Descrição completa no Auvo | — (livre) | Spec pronta (2026-09-29) — onda 2 | [spec](../../specs/E01-S158-descricao-completa-auvo/spec.md) |
 | E01-S159 | Cadastro completo na Visão 360 | — (livre) | Spec pronta (2026-09-29) — onda 3 | [spec](../../specs/E01-S159-cadastro-ativos-visao-360/spec.md) |
 | E01-S160 | Aba Árvore na Visão 360 | — (livre) | Spec pronta (2026-09-29) — onda 3 | [spec](../../specs/E01-S160-arvore-ativos-360/spec.md) |
