@@ -10,6 +10,34 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-09-29 — Specs da iniciativa "Cadastro de ativos v2" (E01-S154..S161) (Claude)
+
+Lucas mandou o diagrama "Cliente: Guainumbí" (estrutura + Sistemas amarelos + Componentes
+laranjas) e 6 regras. Comparei com o código de `main` e fechamos as decisões em conversa (não
+precisa re-perguntar):
+- **Componente** = nome de UI de `pcm.equipamentos`. "Equipamento" é o nome do Auvo. O código
+  **não** é renomeado (ADR-0022).
+- Componente em **no máximo 1** Sistema. O vínculo **não** vai ao Auvo; lá os dois são Equipment.
+- Componente e Sistema em qualquer nível (Cliente/Área/Local). Cliente obrigatório no SO.
+- Categoria = catálogo `equipamento_categorias` (já espelhado com o Auvo), mais as 6 novas
+  (ELE/HID/TRV/CLI/SEG/PCI), que **convivem** com as atuais. Lucas higieniza depois.
+- Sigla de **3** caracteres por bloco, sugerida automaticamente e editável. Identificador
+  `GUA-TOA-A02-SHA-ELE-QDC-01`, só para itens **novos criados pelo SO**, **fixo** depois;
+  alteração manual com aviso de QR Code. Número no fim do nome ("Ar Condicionado 01") vira o `NN`.
+- Descrição no Auvo = nome completo. Ferramentas são da Sinérgica: na 360, só alocar/devolver.
+- Visão em árvore na 360 (v1 lista recolhível; diagrama em caixas fica para depois).
+
+**Artefatos (branch `docs/E01-S154-S161-cadastro-ativos`):** product + design compartilhados em
+`specs/E01-S155-posicao-flexivel-ativos/`, ADR-0022, spec+tasks de S154..S161, planilha de exemplo
+em `specs/E01-S161-importacao-excel-estrutura/exemplo-planilha.xlsx`, e as linhas no ROADMAP.
+Specs escritas para o Sonnet executar: paths, migrations, nomes de trigger (a ordem alfabética
+importa), mensagens literais e gates.
+
+**Incidente de ambiente:** o checkout local estava corrompido (`.git` com 0 bytes, `supabase/` e
+`specs/` vazios; Lucas tinha movido a pasta). Reclonado em `/Users/lucasazevedo/GitHub/Sinergica/Sinergica-SO`.
+O antigo ficou em `Sinergica-SO.quebrado-2026-09-29`. A única diferença eram 2 linhas S154/S155 do
+ROADMAP (2026-09-25), nunca pushadas e sem spec escrita, **substituídas** por esta iniciativa.
+
 ## 2026-08-19 — 4 pedidos em sequência: limpeza de dado, fix Auvo, fix WhatsApp celular, dashboard Início real (Claude)
 
 Sessão longa com Lucas pedindo coisas diferentes conforme via a tela rodando — nenhum planejado
@@ -110,11 +138,11 @@ anterior). **Nenhuma das 4 mudanças desta sessão foi verificada visualmente em
 limitação já registrada em sessões anteriores (ver bloqueios abaixo).
 
 ## Em andamento / próximo passo
-3 branches prontas, commitadas localmente, **nenhum PR aberto ainda** (Lucas pediu pra terminar
-tudo antes de subir): `fix/E01-S146-limpar-saude-sync-auvo`, `fix/E02-S32-mensagem-celular-nao-
-capturada`, `feat/E01-S147-dashboard-geral-inicio`. Próximo passo literal: perguntar ao Lucas se
-abre PR de cada uma separado ou bundla, e confirmar merge (mesmo padrão desta sessão — E00-S24 já
-foi assim, PR #60, merge direto depois de CI verde).
+- Iniciativa Cadastro de ativos v2: specs prontas, nenhuma story com owner. Próximo passo:
+  executar a **onda 1** (E01-S154, S155 e S156 são independentes e podem rodar em paralelo). Cada
+  sessão marca owner no ROADMAP antes de codar. S157 tem uma verificação real no Auvo (AC-10) que
+  pode mandar parar.
+- (Resolvido) As 3 branches da sessão de 2026-08-19 viraram os PRs #61, #62 e #63, todos mergeados.
 
 ## Bloqueios abertos
 > Carregados da rotação desta sessão — confirmados como ainda abertos, não copiados às cegas.

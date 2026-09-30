@@ -1,0 +1,39 @@
+---
+name: tasks-E01-S157
+description: Tasks da E01-S157 — siglas em cliente/área/local, montarPrefixoIdentificador, RPC de sequencial, CampoIdentificador, aviso de QR.
+alwaysApply: false
+---
+
+# Tasks — E01-S157 Siglas + identificador de ativo
+
+> Commits: `feat(E01-S157): ...`. Paths web relativos a `apps/web/src/`.
+> Pré-requisito: E01-S155 e E01-S156 mergeadas (`domain/siglas.ts`, `categoria_id`, `area_id`/`local_id`).
+
+## Plano
+| # | Task | Cobre AC | Depende de | Gate (comando) | Status |
+|---|------|----------|------------|----------------|--------|
+| 1 | **Migration** `NNNN_E01-S157_siglas_identificador_ativo.sql`: colunas + checks + índices do AC-1; índices `uq_equipamentos_identificador_padrao` e `uq_sistemas_codigo_padrao` (design); função `pcm.fn_proximo_sequencial_identificador` (design: valida prefixo, `substring(... from '^' \|\| p_prefixo \|\| '-([0-9]{2,})$')::int`, max nas 2 tabelas com `deleted_at is null`, `lpad(...,2,'0')`), `language plpgsql stable security invoker`, `grant execute ... to authenticated`. `pcm.clientes` está no sync do Auvo: **não** faça update em `clientes` na migration. | AC-1, AC-5 | — | `supabase db lint` | todo |
+| 2 | **pgTAP** `supabase/tests/pcm_identificador_ativo.test.sql`: checks das siglas (aceita `TOA`, rejeita `TO`/`to1`/`TOAA`); unicidade entre irmãos (mesma Área/mesmo pai rejeita, pais diferentes aceita); RPC: vazio → `01`; com `-01` e `-03` em equipamentos e `-05` em sistemas → `06`; prefixo inválido → erro; índice único padrão rejeita duplicata de padrão e **aceita** duplicata de identificador legado numérico. | AC-1, AC-5 | 1 | `supabase test db` | todo |
+| 3 | **Domínio** `domain/identificador-ativo.ts`: `montarPrefixoIdentificador(e: EntradaPrefixo)` (usa `sugerirSigla(nome, { manterNumero:false })` para o bloco do nome), `montarIdentificador(prefixo, nn)`, `normalizarIdentificadorManual(v)` (trim, upper, sem espaço, não vazio, senão throw "Identificador inválido."), `class SiglasFaltantesError extends Error { faltantes }`. `EntradaPrefixo` recebe cada nível como `{ id, nome, sigla: string \| null } \| null`. `identificador-ativo.test.ts`: as 5 linhas do AC-4 + faltante de cada nível. | AC-4 | — | `vitest run src/features/pcm/domain/identificador-ativo.test.ts` | todo |
+| 4 | **Porta** `application/identificador-ativo-gateway.ts`: `interface IdentificadorAtivoGateway { obterNiveis(input: { clienteId: string; areaId: string \| null; localId: string \| null; categoriaId: string }): Promise<{ cliente; area; locais /* raiz→folha */; categoria }>; definirSigla(nivel: 'cliente'\|'area'\|'local'\|'categoria', id: string, sigla: string, userId: string): Promise<void>; proximoSequencial(prefixo: string): Promise<string>; }`. **Adapter** `infrastructure/supabase-identificador-ativo-adapter.ts`: `obterNiveis` sobe a cadeia de locais (reaproveite `listarLocaisDoCliente` + `montarArvore`, ou faça `select id,nome,sigla,parent_id,area_id` dos locais da Área e suba em memória); `definirSigla` faz update da coluna `sigla` (+ `updated_at/updated_by` onde existirem) e traduz 23505 para "Sigla já usada neste nível."; `proximoSequencial` → `supabase.schema('pcm').rpc('fn_proximo_sequencial_identificador', { p_prefixo })`. | AC-5, AC-6 | 1, 3 | typecheck | todo |
+| 5 | **Caso de uso** `application/identificador-ativo.ts`: `previsualizarIdentificador(gw, input)` → `{ prefixo, nn: string \| null, faltantes }` (não chama RPC; `nn` = número do nome ou null). `resolverIdentificadorNaCriacao(gw, input, { siglasInformadas, identificadorManual, userId })`: (1) se `identificadorManual` → devolve normalizado; (2) grava as `siglasInformadas` via `definirSigla`; (3) recarrega os níveis e monta o prefixo (se ainda faltar sigla → `SiglasFaltantesError`); (4) `nn = numeroDoNome ?? await proximoSequencial(prefixo)`; devolve `{ identificador, nnDoSequencial: boolean }`. Em `application/equipamentos.ts`, `criarEquipamento` passa a receber `{ identificador: IdentificadorAtivoGateway, ... }` e, com o valor resolvido, chama `gateway.criar`. Em 23505 no índice `uq_equipamentos_identificador_padrao` com `nnDoSequencial` → resolve de novo e tenta 1×. Sem `nnDoSequencial` → erro do AC-7. Mesmo fluxo em `criarSistema` (grava em `codigo`). Testes com gateways fake: sequencial, número do nome, manual, retry 1×, conflito AC-7, siglas faltantes gravadas antes. | AC-6, AC-7 | 3, 4 | `vitest run src/features/pcm/application/identificador-ativo.test.ts src/features/pcm/application/equipamentos.test.ts src/features/pcm/application/sistemas.test.ts` | todo |
+| 6 | **Adapters de ativo**: `supabase-equipamentos-adapter.ts#criar` grava `identificador` recebido; `editar` **só** grava `identificador` quando o command tiver `alterarIdentificador: true` (senão omite a coluna do update). `supabase-sistemas-adapter.ts`: mesmo com `codigo`, e `Sistema` passa a expor `codigo` no form. Traduzir 23505 do índice padrão para um erro tipado `IdentificadorDuplicadoError` (usado na task 5). | AC-6, AC-8 | 5 | typecheck | todo |
+| 7 | **UI** `components/CampoIdentificador.tsx`: modo `criar` (prévia + bloco "Siglas faltando" + link "Editar identificador") e modo `editar` (somente leitura + botão "Alterar identificador" → `ConfirmDialog` de `@sinergica/ui` com os textos **literais** do AC-8). Prévia via `useQuery` com chave `ativosClienteQueryKeys.previaIdentificador(input)` e `placeholderData: keepPreviousData` (regra do CLAUDE.md). Plugar em `EquipamentoModal.tsx` (substitui o `Field` "Identificador") e no `SistemaModal` (`pages/SistemasPage.tsx`). Teste `CampoIdentificador.test.tsx`: confirmação obrigatória antes de editar; siglas faltando aparecem. | AC-6, AC-8 | 5, 6 | `vitest run src/features/pcm/components/CampoIdentificador.test.tsx` | todo |
+| 8 | **Estrutura**: campo Sigla em `AreaModal`/`LocalModal` (`pages/EstruturaClientePage.tsx`) com sugestão ao sair do Nome (irmãos conforme AC-2), aviso de mudança, e sigla ao lado do nome na árvore. `domain/hierarquia.ts`: `Area`/`Local` + form data ganham `sigla`; `validarArea`/`validarLocal` validam com `validarSigla` quando preenchida. Adapter de hierarquia lê/grava `sigla`. | AC-2 | 1 | `vitest run src/features/pcm/domain/hierarquia.test.ts` + typecheck | todo |
+| 9 | **Cliente**: campo Sigla em `components/ClienteFormModal.tsx` + `EditarClienteCommand`/adapter 360 gravando `sigla`. Isso enfileira PATCH do **cliente** no Auvo com payload igual. Aceito (1 linha). | AC-3 | 1 | typecheck | todo |
+| 10 | **Verificação AC-10** (manual, depois do deploy): no cliente de teste, crie 1 Componente pelo SO, espere o drain, confira `identifier` no Auvo (GET `/equipments/{auvo_id}` via Edge Function de diagnóstico existente ou UI do Auvo) e que `pcm.equipamentos.identificador` não mudou após o inbound. Registre o resultado no PR. Falhou → **PARE** (spec). | AC-10, AC-9 | 6, 7 | evidência no PR | todo |
+| 11 | **E2E** `apps/web/e2e/identificador-ativo.spec.ts` (cliente de teste; **não** drena para o Auvo real se o cliente de teste não tiver `auvo_id`, confira): define siglas faltantes pelo bloco inline, cria Componente, vê identificador `XXX-...-01`; cria o 2º igual → `-02`; edita → "Alterar identificador" exige confirmação. Cleanup via `limpeza-e2e.ts`. | AC-6, AC-8 | 7, 8 | `pnpm --filter @sinergica/web run test:e2e identificador-ativo` | todo |
+| 12 | **Glossário**: entrada **Identificador do ativo** (formato, gerado só na criação pelo SO, fixo, ADR-0022). | AC-4 | — | `pnpm run audit:esteira` | todo |
+
+## Plano de teste
+- Unidade: prefixo (tabela AC-4), casos de uso com fakes (sequencial/nome/manual/retry/conflito).
+- Banco: pgTAP (task 2).
+- Aceite: E2E (task 11) + verificação real no Auvo (task 10).
+
+## Divergências (SPEC_DEVIATION)
+- [ ] (vazio)
+
+## Checklist de Definition of Done
+- [ ] AC-1..AC-10 verdes (AC-10 com evidência) · `ci:local` · CI `db-tests`
+- [ ] ADR-0022 referenciado no PR
+- [ ] Glossário · ROADMAP · STATE
