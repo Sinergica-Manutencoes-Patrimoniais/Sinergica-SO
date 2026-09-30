@@ -3,6 +3,9 @@
 -- produção (2026-09-30, read-only) confirmou 0 linhas com o mesmo item_id em >1 sistema — a
 -- criação do índice é segura.
 
+-- CONCURRENTLY não roda dentro de transação, e o runner do Supabase envolve cada migration numa
+-- (mesmo racional de require-concurrent-index-creation em .squawk.toml). Tabela pequena (Mês 1).
+-- squawk-ignore require-concurrent-index-deletion
 drop index if exists pcm.idx_sistema_itens_item;
 
 create unique index if not exists uq_sistema_itens_item_unico
