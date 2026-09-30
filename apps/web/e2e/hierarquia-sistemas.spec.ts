@@ -33,10 +33,17 @@ async function selecionarPorTexto(select: Locator, textoParcial: string) {
 // futura se o Lucas pedir).
 let clienteCriado: string | null = null;
 let itemCriado: string | null = null;
+let sistemasCriados: string[] = [];
 
 test.afterEach(async ({ page }) => {
+  for (const nomeSistema of sistemasCriados) {
+    await softDeletePorNome(page, "pcm", "sistemas", nomeSistema);
+  }
   if (clienteCriado) await softDeletePorNome(page, "pcm", "clientes", clienteCriado);
   if (itemCriado) await softDeletePorNome(page, "pcm", "equipamentos", itemCriado);
+  clienteCriado = null;
+  itemCriado = null;
+  sistemasCriados = [];
 });
 
 test("cria hierarquia Área>Local, instala Item, cria Sistema e confirma breadcrumb + chip", async ({
@@ -50,6 +57,7 @@ test("cria hierarquia Área>Local, instala Item, cria Sistema e confirma breadcr
   // SistemasPage lista Sistemas de TODOS os clientes (sem filtro) — sufixo evita colidir com
   // "Sistema de Hidrante Torre A" de execuções anteriores do mesmo spec.
   const nomeSistema = `Sistema de Hidrante Torre A ${sufixo}`;
+  sistemasCriados.push(nomeSistema);
 
   // ── Cliente de teste ──────────────────────────────────────────────────
   await page.goto("/");
@@ -89,10 +97,10 @@ test("cria hierarquia Área>Local, instala Item, cria Sistema e confirma breadcr
   await page.getByText("Componentes", { exact: true }).click();
   await page.getByRole("button", { name: "Novo componente" }).click();
   await page.getByLabel("Nome *").fill(nomeItem);
-  await selecionarPorTexto(page.getByLabel("Cliente"), nomeCliente);
+  await selecionarPorTexto(page.getByLabel("Cliente *"), nomeCliente);
   // Local depende de fetch assíncrono (listarLocaisDoCliente) disparado pela troca de cliente —
   // selecionarPorTexto já faz o polling da opção aparecer.
-  await selecionarPorTexto(page.getByLabel("Local (AC-4)"), "Sala 302");
+  await selecionarPorTexto(page.getByLabel("Local"), "Sala 302");
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByText(nomeItem, { exact: true }).first()).toBeVisible({ timeout: 10_000 });
 
@@ -183,6 +191,7 @@ test("Componente em um Sistema aparece desabilitado no seletor de outro Sistema 
   itemCriado = nomeItem;
   const nomeSistemaA = `Sistema A ${sufixo}`;
   const nomeSistemaB = `Sistema B ${sufixo}`;
+  sistemasCriados.push(nomeSistemaA, nomeSistemaB);
 
   await page.goto("/");
   await page.getByText("PCM · Operação", { exact: true }).first().click();
@@ -202,7 +211,7 @@ test("Componente em um Sistema aparece desabilitado no seletor de outro Sistema 
   await page.getByText("Componentes", { exact: true }).click();
   await page.getByRole("button", { name: "Novo componente" }).click();
   await page.getByLabel("Nome *").fill(nomeItem);
-  await selecionarPorTexto(page.getByLabel("Cliente"), nomeCliente);
+  await selecionarPorTexto(page.getByLabel("Cliente *"), nomeCliente);
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByText(nomeItem, { exact: true }).first()).toBeVisible({ timeout: 10_000 });
 
@@ -239,4 +248,71 @@ test("Componente em um Sistema aparece desabilitado no seletor de outro Sistema 
   });
   await expect(linhaSistemaB.getByLabel(nomeItem, { exact: true })).toBeDisabled();
   await expect(linhaSistemaB.getByLabel(nomeItem, { exact: true })).not.toBeChecked();
+});
+
+// E01-S155 AC-1/AC-3/AC-8: Componente só na Área preserva breadcrumb Cliente>Área; Sistema
+// criado num Local reabre com Local selecionado. Dados usam prefixo de teste e cleanup genérico.
+test("Componente só na Área e Sistema no Local preservam posição (E01-S155)", async ({ page }) => {
+  const sufixo = Date.now();
+  const nomeCliente = `[TESTE E2E] Cliente S155 ${sufixo}`;
+  const nomeComponente = `[TESTE E2E] Portão ${sufixo}`;
+  const nomeSistema = `Sistema Portaria ${sufixo}`;
+  clienteCriado = nomeCliente;
+  itemCriado = nomeComponente;
+  sistemasCriados.push(nomeSistema);
+
+  await page.goto("/");
+  await page.getByText("PCM · Operação", { exact: true }).first().click();
+  await page.getByText("Clientes", { exact: true }).click();
+  await page.getByRole("button", { name: "Novo cliente" }).click();
+  await page.getByLabel("Nome *").fill(nomeCliente);
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await page
+    .getByPlaceholder("Buscar por cliente, cidade, contato, CNPJ ou ID Auvo")
+    .fill(nomeCliente);
+  await page.getByText(nomeCliente, { exact: true }).first().click();
+
+  await page.getByText("Estrutura", { exact: true }).click();
+  await page.getByRole("button", { name: "Nova Área" }).click();
+  await page.getByLabel("Nome *").fill("Garagem");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText("Garagem", { exact: true })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "Local", exact: true }).click();
+  await page.getByLabel("Nome *").fill("Portaria");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText("Portaria", { exact: true })).toBeVisible({ timeout: 10_000 });
+
+  await page.getByText("PCM · Operação", { exact: true }).first().click();
+  await page.getByText("Componentes", { exact: true }).click();
+  await page.getByRole("button", { name: "Novo componente" }).click();
+  await page.getByLabel("Nome *").fill(nomeComponente);
+  await selecionarPorTexto(page.getByLabel("Cliente *"), nomeCliente);
+  await selecionarPorTexto(page.getByLabel("Área"), "Garagem");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText(nomeComponente, { exact: true }).first()).toBeVisible({
+    timeout: 10_000,
+  });
+
+  const linhaComponente = page
+    .getByText(nomeComponente, { exact: true })
+    .locator('xpath=ancestor::div[contains(@class,"py-2.5")][1]');
+  await linhaComponente.getByRole("button", { name: "Detalhe" }).click();
+  const breadcrumb = page.getByTestId("item-breadcrumb");
+  await expect(breadcrumb).toContainText(nomeCliente, { timeout: 10_000 });
+  await expect(breadcrumb).toContainText("Garagem");
+  await expect(breadcrumb).not.toContainText("Portaria");
+  await page.getByRole("button", { name: "Fechar" }).click();
+
+  await page.getByText("Sistemas", { exact: true }).click();
+  await page.getByRole("button", { name: "Novo Sistema" }).click();
+  await selecionarPorTexto(page.getByLabel("Cliente *"), nomeCliente);
+  await selecionarPorTexto(page.getByLabel("Local"), "Portaria");
+  await page.getByPlaceholder('ex.: "Sistema de Hidrante Torre A"').fill(nomeSistema);
+  await page.getByRole("button", { name: "Salvar" }).click();
+  const linhaSistema = page
+    .getByText(nomeSistema, { exact: true })
+    .locator("xpath=ancestor::section[1]");
+  await expect(linhaSistema).toBeVisible({ timeout: 10_000 });
+  await linhaSistema.getByRole("button", { name: "Editar" }).click();
+  await expect(page.getByLabel("Local")).toHaveValue(/.+/);
 });

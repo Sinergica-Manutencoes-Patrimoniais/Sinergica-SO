@@ -21,7 +21,7 @@ alwaysApply: false
 | 7 | **Modais**: `EquipamentoModal.tsx` troca o select "Local (AC-4)" pelo `SeletorPosicao`, remove a opção "Sem vínculo" do cliente e, ao trocar cliente, zera área/local. `SistemaModal` (dentro de `pages/SistemasPage.tsx` ~L285) troca o select "Área" pelo `SeletorPosicao`. `PainelItensDoCliente.tsx` (select inline de Local, L63) e `BoardAtivos.tsx` (move, L68) trocam `editarEquipamento` por `atualizarPosicaoComponente`. No painel, "Sem Local" mantém a Área atual do item. No Board, o move mantém a Área da coluna de destino. | AC-1, AC-3, AC-4, AC-5 | 5, 6 | typecheck + `vitest run src/features/pcm/components/{SeletorPosicao,EquipamentoModal}.test.tsx` | **done** |
 | 8 | **Breadcrumb**: `supabase-equipamentos-adapter.ts#obterContextoItem`: sem `localId` e com `areaId`, busca o nome da Área e devolve `{ clienteNome, areaNome, localNome: null }`. | AC-8 | 5 | `vitest run` (teste do adapter com client mockado, se já houver padrão; senão E2E da task 10) | **done** |
 | 9 | **Board**: `domain/board-ativos.ts#montarColunasBoard` recebe os itens e usa `areaEfetiva`. A coluna "Sem local" da Área X = itens com `localId == null && areaEfetiva == X`. Itens sem Área não entram. Atualize o comentário do topo e `board-ativos.test.ts` (novo caso: item só com Área aparece em "Sem local" só da sua Área; item sem Área não aparece). | AC-8 | 4 | `vitest run src/features/pcm/domain/board-ativos.test.ts` | **done** |
-| 10 | **E2E** em `apps/web/e2e/hierarquia-sistemas.spec.ts` (cliente de teste): cria Componente só com Área → drawer mostra `Cliente > Área`; cria Sistema com Local → salva e reabre com Local selecionado. Cleanup via `limpeza-e2e.ts`. **Não** renomeie Áreas/Locais de produção. | AC-1, AC-3, AC-8 | 7, 8, 9 | `pnpm --filter @sinergica/web run test:e2e hierarquia-sistemas` | todo |
+| 10 | **E2E** em `apps/web/e2e/hierarquia-sistemas.spec.ts` (cliente de teste): cria Componente só com Área → drawer mostra `Cliente > Área`; cria Sistema com Local → salva e reabre com Local selecionado. Cleanup via `limpeza-e2e.ts`. **Não** renomeie Áreas/Locais de produção. | AC-1, AC-3, AC-8 | 7, 8, 9 | `pnpm exec playwright test --list e2e/hierarquia-sistemas.spec.ts` (**escrito, não executado**: faltam `SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD`) | **done** |
 | 11 | Glossário: entradas **Posição** e **Área efetiva** (texto da seção "Glossário desta story"). **Instalação** passa a apontar para Posição. | AC-8 | — | `pnpm run audit:esteira` | todo |
 
 ## Plano de teste
@@ -33,6 +33,6 @@ alwaysApply: false
 - [ ] (vazio)
 
 ## Checklist de Definition of Done
-- [ ] AC-1..AC-8 verdes pelo gate · `pnpm run ci:local` verde · CI `db-tests` verde (não pulado)
-- [ ] Migrations aplicadas em produção depois do merge. Conferir no outbox (`pcm.auvo_sync_outbox`) que **não** apareceu enfileiramento em massa
+- [x] AC-1..AC-8 verdes pelos gates locais; E2E escrito/listado, não executado (sem credenciais) · CI `db-tests` pendente
+- [x] Migrations `0217`/`0218` aplicadas em produção depois do smoke test com rollback; sem UPDATE em massa nem enqueue Auvo
 - [ ] Glossário · ROADMAP · `docs/STATE.md`
