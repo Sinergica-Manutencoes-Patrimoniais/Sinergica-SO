@@ -87,9 +87,7 @@ export function validarEquipamento(input: EquipamentoFormData): EquipamentoFormD
   return {
     nome,
     identificador: textoOuNull(input.identificador),
-    alterarIdentificador: input.alterarIdentificador === true,
-    identificadorManual: textoOuNull(input.identificadorManual),
-    siglasInformadas: input.siglasInformadas ?? [],
+    ...(input.alterarIdentificador === true ? { alterarIdentificador: true } : {}),
     categoriaId,
     categoria: textoOuNull(input.categoria),
     clientId,

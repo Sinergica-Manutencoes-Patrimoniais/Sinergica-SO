@@ -5,6 +5,7 @@
 // A tela não grava cadastro nem operação localmente: dados de cliente são governados pelo Auvo e
 // OS/qualidade continuam nas telas de origem. A ação de edição só leva o usuário para o alvo.
 import { Button, Skeleton } from "@sinergica/ui";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   Briefcase,
@@ -57,6 +58,7 @@ import {
   listarAlocacoesCliente,
   listarFerramentasDisponiveis,
 } from "../application/ferramenta-alocacao-cliente";
+import { listarClientes } from "../application/listar-clientes";
 import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao-cliente";
 import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
@@ -158,6 +160,11 @@ export function VisaoClientePage({
   // telas do PCM; superadmin já é bypass dentro de podeAcessarModulo). Sem permissão nova.
   const temAcesso = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
+  const siglasClientes = useQuery({
+    queryKey: ["pcm", "clientes", "siglas"],
+    queryFn: () => listarClientes(supabaseCliente360Adapter),
+    enabled: editandoCadastro && temEscrita,
+  });
 
   const carregar = useCallback(async () => {
     setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
@@ -269,6 +276,9 @@ export function VisaoClientePage({
       {editandoCadastro && (
         <ClienteFormModal
           cliente={cliente}
+          siglasEmUso={(siglasClientes.data ?? [])
+            .filter((item) => item.id !== cliente.id)
+            .flatMap((item) => (item.sigla ? [item.sigla] : []))}
           onCancel={() => setEditandoCadastro(false)}
           onSalvar={async (dados) => {
             if (!user) return;
