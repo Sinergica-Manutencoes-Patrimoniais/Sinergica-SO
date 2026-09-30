@@ -22,7 +22,7 @@ const estado = {
 describe("importação de estrutura", () => {
   it("exporta cabeçalhos e aceita variação de cabeçalho", () => {
     const abas = montarPlanilhaEstrutura(estado);
-    expect(abas.Áreas[0]).toEqual(CABECALHOS.Áreas);
+    expect(abas.Áreas?.[0]).toEqual(CABECALHOS.Áreas);
     const entrada = {
       ...abas,
       Áreas: [

@@ -3,6 +3,7 @@
 import { Button, ConfirmDialog, Modal, Skeleton, useToast } from "@sinergica/ui";
 import { ChevronDown, ChevronRight, FolderTree, Pencil, Plus, Tag, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { baixarPlanilha } from "../../../lib/sheetjs";
 import {
   criarArea,
   criarLocal,
@@ -21,14 +22,22 @@ import type {
   LocalTipo,
 } from "../domain/hierarquia";
 import { montarArvore } from "../domain/hierarquia";
+import { montarPlanilhaEstrutura, nomeArquivoExportacao } from "../domain/importacao-estrutura";
 import { sugerirSiglaUnica } from "../domain/siglas";
+import { supabaseCatalogosSimplesAdapter } from "../infrastructure/supabase-catalogos-simples-adapter";
+import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
+import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
 
 type ModalArea = { modo: "novo" } | { modo: "editar"; area: Area } | null;
 type ModalLocal =
   | { modo: "novo"; areaId: string; parentId: string | null }
   | { modo: "editar"; areaId: string; local: LocalArvoreNode }
   | null;
+
+function achatar(nodes: LocalArvoreNode[]): LocalArvoreNode[] {
+  return nodes.flatMap((node) => [node, ...achatar(node.filhos)]);
+}
 
 export function EstruturaClientePage({
   clienteId,
@@ -47,6 +56,18 @@ export function EstruturaClientePage({
   const [modalArea, setModalArea] = useState<ModalArea>(null);
   const [modalLocal, setModalLocal] = useState<ModalLocal>(null);
   const [tiposDeLocal, setTiposDeLocal] = useState<LocalTipo[]>([]);
+  const [componentes, setComponentes] = useState<
+    Awaited<ReturnType<typeof supabaseEquipamentosAdapter.listarPorCliente>>
+  >([]);
+  const [sistemas, setSistemas] = useState<
+    Awaited<ReturnType<typeof supabaseSistemasAdapter.listar>>
+  >([]);
+  const [membros, setMembros] = useState<
+    Awaited<ReturnType<typeof supabaseSistemasAdapter.listarMembrosDoCliente>>
+  >([]);
+  const [categorias, setCategorias] = useState<
+    Awaited<ReturnType<typeof supabaseCatalogosSimplesAdapter.listar>>
+  >([]);
   const [tipoParaRemover, setTipoParaRemover] = useState<LocalTipo | null>(null);
   const [areaParaExcluir, setAreaParaExcluir] = useState<Area | null>(null);
   const [localParaExcluir, setLocalParaExcluir] = useState<LocalArvoreNode | null>(null);
@@ -56,11 +77,16 @@ export function EstruturaClientePage({
     setCarregando(true);
     setErro(null);
     try {
-      const [listaAreas, locais, tipos] = await Promise.all([
-        supabaseHierarquiaAdapter.listarAreas(clienteId),
-        supabaseHierarquiaAdapter.listarLocaisDoCliente(clienteId),
-        supabaseHierarquiaAdapter.listarTiposDeLocal(clienteId),
-      ]);
+      const [listaAreas, locais, tipos, itens, listaSistemas, listaMembros, listaCategorias] =
+        await Promise.all([
+          supabaseHierarquiaAdapter.listarAreas(clienteId),
+          supabaseHierarquiaAdapter.listarLocaisDoCliente(clienteId),
+          supabaseHierarquiaAdapter.listarTiposDeLocal(clienteId),
+          supabaseEquipamentosAdapter.listarPorCliente(clienteId),
+          supabaseSistemasAdapter.listar(clienteId),
+          supabaseSistemasAdapter.listarMembrosDoCliente(clienteId),
+          supabaseCatalogosSimplesAdapter.listar("equipamento_categorias"),
+        ]);
       const porArea: Record<string, LocalArvoreNode[]> = {};
       for (const area of listaAreas) {
         porArea[area.id] = montarArvore(locais.filter((l) => l.areaId === area.id));
@@ -68,6 +94,10 @@ export function EstruturaClientePage({
       setAreas(listaAreas);
       setArvores(porArea);
       setTiposDeLocal(tipos);
+      setComponentes(itens);
+      setSistemas(listaSistemas);
+      setMembros(listaMembros);
+      setCategorias(listaCategorias);
       setExpandidas(new Set(listaAreas.map((a) => a.id)));
     } catch {
       setErro("Não foi possível carregar a estrutura do cliente.");
@@ -87,6 +117,26 @@ export function EstruturaClientePage({
       else proxima.add(areaId);
       return proxima;
     });
+  }
+
+  async function exportarExcel() {
+    await baixarPlanilha(
+      montarPlanilhaEstrutura({
+        cliente: { id: clienteId, nome: "cliente" },
+        areas,
+        locais: Object.values(arvores).flatMap((arvore) => achatar(arvore)),
+        sistemas,
+        componentes,
+        membros,
+        categorias: categorias.map((categoria) => ({
+          id: categoria.id,
+          nome: categoria.descricao,
+          sigla: categoria.sigla,
+        })),
+        tiposLocal: tiposDeLocal,
+      }),
+      nomeArquivoExportacao({ id: clienteId, nome: "cliente" }, new Date()),
+    );
   }
 
   async function salvarArea(dados: AreaFormData) {
@@ -176,15 +226,20 @@ export function EstruturaClientePage({
             Áreas e Locais (árvore) — onde os Itens estão instalados
           </p>
         </div>
-        {temEscrita && (
-          <Button
-            variant="secondary"
-            icon={<Plus className="h-4 w-4" />}
-            onClick={() => setModalArea({ modo: "novo" })}
-          >
-            Nova Área
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => void exportarExcel()}>
+            Exportar Excel
           </Button>
-        )}
+          {temEscrita && (
+            <Button
+              variant="secondary"
+              icon={<Plus className="h-4 w-4" />}
+              onClick={() => setModalArea({ modo: "novo" })}
+            >
+              Nova Área
+            </Button>
+          )}
+        </div>
       </div>
 
       <TiposDeLocalPainel
