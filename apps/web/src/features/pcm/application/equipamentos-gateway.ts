@@ -30,6 +30,8 @@ export interface AtualizarPosicaoComponenteCommand {
 
 export interface EquipamentosGateway {
   listar(): Promise<EquipamentoItem[]>;
+  /** E01-S159: componente da Visão 360 nunca carrega inventário de outros clientes. */
+  listarPorCliente(clienteId: string): Promise<EquipamentoItem[]>;
   listarClientes(): Promise<EquipamentoClienteOpcao[]>;
   criar(input: EquipamentoCommand): Promise<EquipamentoItem>;
   editar(input: EditarEquipamentoCommand): Promise<EquipamentoItem>;

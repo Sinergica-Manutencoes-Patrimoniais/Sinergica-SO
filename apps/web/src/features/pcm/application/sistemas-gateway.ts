@@ -21,6 +21,8 @@ export interface SistemaItemOpcao {
 
 export interface SistemasGateway {
   listar(clienteId?: string): Promise<Sistema[]>;
+  /** E01-S159: vínculos dos Sistemas de um único cliente, para listas 360 sem varrer inventário. */
+  listarMembrosDoCliente(clienteId: string): Promise<Array<{ sistemaId: string; itemId: string }>>;
   obter(id: string): Promise<Sistema | null>;
   criar(input: SistemaCommand): Promise<Sistema>;
   editar(input: EditarSistemaCommand): Promise<Sistema>;

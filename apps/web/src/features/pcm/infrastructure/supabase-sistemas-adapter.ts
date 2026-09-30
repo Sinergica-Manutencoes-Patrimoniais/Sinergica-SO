@@ -87,6 +87,28 @@ export const supabaseSistemasAdapter: SistemasGateway = {
     return ((data ?? []) as SistemaRow[]).map(mapSistema);
   },
 
+  async listarMembrosDoCliente(clienteId) {
+    const { data: sistemas, error: sistemasError } = await supabase
+      .schema("pcm")
+      .from("sistemas")
+      .select("id")
+      .eq("cliente_id", clienteId)
+      .is("deleted_at", null);
+    if (sistemasError) throw sistemasError;
+    const sistemaIds = (sistemas ?? []).map((sistema) => sistema.id as string);
+    if (sistemaIds.length === 0) return [];
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("sistema_itens")
+      .select("sistema_id,item_id")
+      .in("sistema_id", sistemaIds);
+    if (error) throw error;
+    return (data ?? []).map((membro) => ({
+      sistemaId: membro.sistema_id as string,
+      itemId: membro.item_id as string,
+    }));
+  },
+
   async obter(id) {
     const { data, error } = await supabase
       .schema("pcm")

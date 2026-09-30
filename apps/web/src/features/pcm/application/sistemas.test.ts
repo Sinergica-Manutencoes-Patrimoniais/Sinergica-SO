@@ -5,6 +5,7 @@ import type { IdentificadorAtivoGateway } from "./identificador-ativo-gateway";
 import {
   adicionarItem,
   criarSistema,
+  desativarSistema,
   listarHistoricoOsSistema,
   salvarComposicaoSistema,
 } from "./sistemas";
@@ -51,6 +52,7 @@ function gatewayFake(membrosIniciais: string[]): SistemasGateway {
   );
   return {
     listar: vi.fn(),
+    listarMembrosDoCliente: vi.fn(async () => []),
     obter: vi.fn(async () => SISTEMA),
     criar: vi.fn(),
     editar: vi.fn(),
@@ -144,6 +146,23 @@ describe("adicionarItem — E01-S154 AC-4", () => {
     const gateway = gatewayFake([]);
     await adicionarItem(gateway, "sis-1", "item-1", "user-1");
     expect(gateway.adicionarItem).toHaveBeenCalledWith("sis-1", "item-1", "user-1");
+  });
+});
+
+describe("desativarSistema — E01-S159 AC-4", () => {
+  it("remove membros antes do soft-delete", async () => {
+    const gateway = gatewayFake(["item-1", "item-2"]);
+    await desativarSistema(gateway, "sis-1", "user-1");
+    expect(gateway.removerItem).toHaveBeenCalledWith("sis-1", "item-1");
+    expect(gateway.removerItem).toHaveBeenCalledWith("sis-1", "item-2");
+    expect(gateway.desativar).toHaveBeenCalledWith("sis-1", "user-1");
+    const ordemRemover = vi.mocked(gateway.removerItem).mock.invocationCallOrder[0];
+    const ordemDesativar = vi.mocked(gateway.desativar).mock.invocationCallOrder[0];
+    expect(ordemRemover).toBeDefined();
+    expect(ordemDesativar).toBeDefined();
+    expect(ordemRemover ?? Number.POSITIVE_INFINITY).toBeLessThan(
+      ordemDesativar ?? Number.NEGATIVE_INFINITY,
+    );
   });
 });
 

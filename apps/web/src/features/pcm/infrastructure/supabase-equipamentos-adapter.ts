@@ -106,6 +106,25 @@ export const supabaseEquipamentosAdapter: EquipamentosGateway = {
     return ((equipamentos.data ?? []) as EquipamentoRow[]).map((row) => mapRow(row, clientesMap));
   },
 
+  async listarPorCliente(clienteId) {
+    const [equipamentos, cliente] = await Promise.all([
+      supabase
+        .schema("pcm")
+        .from("equipamentos")
+        .select(COLS)
+        .eq("client_id", clienteId)
+        .is("deleted_at", null)
+        .order("nome", { ascending: true }),
+      supabase.schema("pcm").from("clientes").select("id,nome").eq("id", clienteId).maybeSingle(),
+    ]);
+    if (equipamentos.error) throw equipamentos.error;
+    if (cliente.error) throw cliente.error;
+    const clientes = cliente.data
+      ? new Map([[cliente.data.id as string, cliente.data.nome as string]])
+      : new Map<string, string>();
+    return ((equipamentos.data ?? []) as EquipamentoRow[]).map((row) => mapRow(row, clientes));
+  },
+
   async listarClientes(): Promise<EquipamentoClienteOpcao[]> {
     const { data, error } = await supabase
       .schema("pcm")

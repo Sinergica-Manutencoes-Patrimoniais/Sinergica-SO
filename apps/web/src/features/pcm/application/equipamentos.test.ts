@@ -8,6 +8,7 @@ import type { IdentificadorAtivoGateway } from "./identificador-ativo-gateway";
 function gatewayFake(): EquipamentosGateway {
   return {
     listar: vi.fn(),
+    listarPorCliente: vi.fn(),
     listarClientes: vi.fn(),
     criar: vi.fn(async () => ({}) as EquipamentoItem),
     editar: vi.fn(async () => ({}) as EquipamentoItem),

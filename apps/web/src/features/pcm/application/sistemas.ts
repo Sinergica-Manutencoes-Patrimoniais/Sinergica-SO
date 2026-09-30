@@ -14,6 +14,10 @@ export function listarSistemas(gateway: SistemasGateway, clienteId?: string) {
   return gateway.listar(clienteId);
 }
 
+export function listarMembrosSistemasDoCliente(gateway: SistemasGateway, clienteId: string) {
+  return gateway.listarMembrosDoCliente(clienteId);
+}
+
 export function obterSistema(gateway: SistemasGateway, id: string) {
   return gateway.obter(id);
 }
@@ -75,8 +79,10 @@ export function editarSistema(gateway: SistemasGateway, input: EditarSistemaComm
   return gateway.editar({ ...validado, id: input.id, userId: input.userId });
 }
 
-export function desativarSistema(gateway: SistemasGateway, id: string, userId: string) {
+export async function desativarSistema(gateway: SistemasGateway, id: string, userId: string) {
   if (!id) throw new Error("Sistema é obrigatório.");
+  const membros = await gateway.listarItensDoSistema(id);
+  await Promise.all(membros.map((membro) => gateway.removerItem(id, membro.itemId)));
   return gateway.desativar(id, userId);
 }
 

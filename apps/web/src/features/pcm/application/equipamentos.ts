@@ -19,6 +19,10 @@ export function listarEquipamentos(gateway: EquipamentosGateway) {
   return gateway.listar();
 }
 
+export function listarEquipamentosPorCliente(gateway: EquipamentosGateway, clienteId: string) {
+  return gateway.listarPorCliente(clienteId);
+}
+
 export function listarClientesEquipamento(gateway: EquipamentosGateway) {
   return gateway.listarClientes();
 }
