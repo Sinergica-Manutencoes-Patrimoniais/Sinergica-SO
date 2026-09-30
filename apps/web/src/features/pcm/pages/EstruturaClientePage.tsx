@@ -14,6 +14,7 @@ import {
   editarArea,
   editarLocal,
 } from "../application/hierarquia";
+import { ImportacaoEstruturaModal } from "../components/ImportacaoEstruturaModal";
 import type {
   Area,
   AreaFormData,
@@ -68,6 +69,7 @@ export function EstruturaClientePage({
   const [categorias, setCategorias] = useState<
     Awaited<ReturnType<typeof supabaseCatalogosSimplesAdapter.listar>>
   >([]);
+  const [importando, setImportando] = useState(false);
   const [tipoParaRemover, setTipoParaRemover] = useState<LocalTipo | null>(null);
   const [areaParaExcluir, setAreaParaExcluir] = useState<Area | null>(null);
   const [localParaExcluir, setLocalParaExcluir] = useState<LocalArvoreNode | null>(null);
@@ -231,6 +233,11 @@ export function EstruturaClientePage({
             Exportar Excel
           </Button>
           {temEscrita && (
+            <Button variant="secondary" onClick={() => setImportando(true)}>
+              Importar Excel
+            </Button>
+          )}
+          {temEscrita && (
             <Button
               variant="secondary"
               icon={<Plus className="h-4 w-4" />}
@@ -248,6 +255,25 @@ export function EstruturaClientePage({
         onAdicionar={adicionarTipoDeLocal}
         onRemover={setTipoParaRemover}
       />
+      {importando && (
+        <ImportacaoEstruturaModal
+          estado={{
+            cliente: { id: clienteId, nome: "cliente" },
+            areas,
+            locais: Object.values(arvores).flatMap(achatar),
+            sistemas,
+            componentes,
+            membros,
+            categorias: categorias.map((categoria) => ({
+              id: categoria.id,
+              nome: categoria.descricao,
+              sigla: categoria.sigla,
+            })),
+            tiposLocal: tiposDeLocal,
+          }}
+          onClose={() => setImportando(false)}
+        />
+      )}
 
       {areas.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
