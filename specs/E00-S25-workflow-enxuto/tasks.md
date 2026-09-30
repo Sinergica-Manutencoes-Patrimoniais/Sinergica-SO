@@ -9,7 +9,7 @@
 - [x] T7 (F2) CI ganha gates de design, `biome check .` e build affected (antes só rodavam no pre-push). SPEC_DEVIATION: NÃO unificamos os 9 `check-*.mjs` nem tiramos o `tsc` do build web (risco/custo > ganho: agora só rodam na CI; `tsc` no build protege o deploy Netlify) — AC-5
 - [x] T8 (F2) `audit-esteira` ignora `.specify`/`historico` e não exige frontmatter em `specs/`; `eval:spec` avalia specs E0N-S0N tocadas vs origin/main e não concatena o repo em string — AC-5
 - [x] T9 (F2) `Definition-of-Done.md` reescrito (61 → 32 linhas; segurança/perf/observabilidade preservadas) — AC-5
-- [ ] T10 (F3) Instalar Spec Kit (core) + constitution + pasta `E0N-S0N-nome` — AC-6
-- [ ] T11 (F3) Skill `revisao-adversarial`; arquivar skills antigas — AC-6
+- [x] T10 (F3) Spec Kit core copiado do Atendimento (`.specify/`, 5 skills); constitution Sinérgica; pasta `E0N-S0N-nome` via `SPECIFY_FEATURE_DIRECTORY` (o skill já suporta, sem patch); templates ganham convenção AC-N — AC-6
+- [x] T11 (F3) Skill `revisao-adversarial`; `nova-feature`/`validar`/`revisar-pr`/`auditar` em `docs/_arquivo/skills/` — AC-6
 - [ ] T12 (F4) `AGENTS.md` sem ciclo obrigatório; arquivar ANTI-PADROES/PADRAO-DE-QUALIDADE — AC-1
 - [ ] T13 (F4) ADR de workflow enxuto — AC-6

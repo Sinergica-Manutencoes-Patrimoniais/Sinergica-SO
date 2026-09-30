@@ -22,7 +22,7 @@ alwaysApply: true
 ## Fluxo de trabalho (várias sessões em paralelo)
 1. **Escolha/abra a story** no `docs/epics/ROADMAP.md` (próximo ID = "maior ID usado" do épico + 1) e **marque o owner antes de codar**. Uma story, um owner.
 2. **Trivial / bug** (≤3 arquivos, sem decisão): branch → teste que falha → fix → PR. Sem spec.
-3. **Feature:** `speckit-specify` → `speckit-plan` → `speckit-tasks` → `speckit-implement`, em `specs/E0N-S0N-<nome>/`.
+3. **Feature:** `speckit-specify` → `speckit-plan` → `speckit-tasks` → `speckit-implement`. Ao chamar `speckit-specify`, informe `SPECIFY_FEATURE_DIRECTORY=specs/E0N-S0N-<nome>` (senão ele numera `NNN-` sozinho). Regras em `.specify/memory/constitution.md`; AC = ids `AC-N`.
    `tasks.md` = 1 linha por task + AC; detalhe técnico (SQL, assinaturas) vai no `plan.md`.
 4. **Arquitetural** (novo bounded context, integração externa, schema com dado em produção, decisão irreversível): além do fluxo de feature, ADR em `docs/adr/` **antes** de implementar e `/revisao-adversarial` antes do PASS.
 5. **Ao concluir:** tire a linha do ROADMAP (a story fica no git e no `spec.md`); `docs/STATE.md` só via `/handoff` ao pausar.
