@@ -70,8 +70,8 @@ test("Board: colunas por Local, card do ativo e drawer de detalhe", async ({ pag
   await expect(page.getByText("Sala 302", { exact: true })).toBeVisible({ timeout: 10_000 });
 
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Equipamentos", { exact: true }).click();
-  await page.getByRole("button", { name: "Novo equipamento" }).click();
+  await page.getByText("Componentes", { exact: true }).click();
+  await page.getByRole("button", { name: "Novo componente" }).click();
   await page.getByLabel("Nome *").fill(nomeItem);
   await selecionarPorTexto(page.getByLabel("Cliente"), nomeCliente);
   await selecionarPorTexto(page.getByLabel("Local (AC-4)"), "Sala 302");

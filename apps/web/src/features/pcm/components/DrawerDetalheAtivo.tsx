@@ -153,7 +153,6 @@ export function DrawerDetalheAtivo({
         <EquipamentoModal
           equipamento={item}
           clientes={opcoes.clientes}
-          equipamentosDisponiveis={opcoes.equipamentos}
           onCancel={() => setEditando(false)}
           onSalvar={salvarEdicao}
         />
@@ -190,7 +189,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
         <div className="min-w-0">
           <h4 className="truncate text-body font-semibold text-ink">{item.nome}</h4>
           <p className="text-caption text-ink-3">
-            {item.tipo === "componente" ? "Componente" : "Equipamento"}
+            {item.tipo === "componente" ? "Subcomponente (legado)" : "Principal"}
             {!item.ativo && " · inativo"}
           </p>
         </div>
@@ -219,7 +218,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
       </Secao>
 
       {componentesFilhos.length > 0 && (
-        <Secao titulo="Componentes">
+        <Secao titulo="Subcomponentes (legado)">
           <ul className="flex flex-col gap-1">
             {componentesFilhos.map((c) => (
               <li key={c.id} className="flex items-center gap-2 text-caption text-ink-2">

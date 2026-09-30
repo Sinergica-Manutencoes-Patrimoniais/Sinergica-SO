@@ -45,6 +45,6 @@ export function desativarEquipamento(
   gateway: EquipamentosGateway,
   input: DesativarEquipamentoCommand,
 ) {
-  if (!input.id) throw new Error("Equipamento é obrigatório.");
+  if (!input.id) throw new Error("Componente é obrigatório.");
   return gateway.desativar(input);
 }

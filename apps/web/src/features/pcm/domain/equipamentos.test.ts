@@ -47,7 +47,7 @@ describe("validarParentItem — AC-5", () => {
 
   it("rejeita pai de cliente diferente", () => {
     expect(() => validarParentItem("c1", { clientId: "c2", tipo: "equipamento" })).toThrow(
-      "O Equipamento pai deve pertencer ao mesmo cliente.",
+      "O Componente pai deve pertencer ao mesmo cliente.",
     );
   });
 

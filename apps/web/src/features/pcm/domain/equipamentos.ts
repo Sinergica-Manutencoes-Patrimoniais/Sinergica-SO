@@ -85,7 +85,7 @@ export function validarParentItem(
 ) {
   if (!pai) return;
   if (pai.clientId !== itemClientId) {
-    throw new Error("O Equipamento pai deve pertencer ao mesmo cliente.");
+    throw new Error("O Componente pai deve pertencer ao mesmo cliente.");
   }
 }
 

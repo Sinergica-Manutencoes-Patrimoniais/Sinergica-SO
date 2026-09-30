@@ -14,13 +14,11 @@ import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia
 export function EquipamentoModal({
   equipamento,
   clientes,
-  equipamentosDisponiveis,
   onCancel,
   onSalvar,
 }: {
   equipamento?: EquipamentoItem;
   clientes: EquipamentoClienteOpcao[];
-  equipamentosDisponiveis: EquipamentoItem[];
   onCancel: () => void;
   onSalvar: (input: EquipamentoFormData) => Promise<void>;
 }) {
@@ -53,19 +51,13 @@ export function EquipamentoModal({
     };
   }, [dados.clientId]);
 
-  // AC-5: Componente pode ser filho de um Equipamento do MESMO cliente — lista só equipamentos
-  // (não outros componentes) do cliente selecionado, excluindo o próprio item (edição).
-  const paisDisponiveis = equipamentosDisponiveis.filter(
-    (e) => e.tipo === "equipamento" && e.clientId === dados.clientId && e.id !== equipamento?.id,
-  );
-
   async function salvar() {
     try {
       setSalvando(true);
       setErro(null);
       await onSalvar(dados);
     } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível salvar equipamento.");
+      setErro(error instanceof Error ? error.message : "Não foi possível salvar componente.");
     } finally {
       setSalvando(false);
     }
@@ -81,7 +73,7 @@ export function EquipamentoModal({
       onOpenChange={(open) => {
         if (!open) onCancel();
       }}
-      titulo={equipamento ? "Editar equipamento" : "Novo equipamento"}
+      titulo={equipamento ? "Editar componente" : "Novo componente"}
       tamanho="lg"
     >
       <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
@@ -113,24 +105,6 @@ export function EquipamentoModal({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Tipo</span>
-          <select
-            value={dados.tipo ?? "equipamento"}
-            onChange={(event) =>
-              setDados((atual) => ({
-                ...atual,
-                tipo: event.target.value as EquipamentoFormData["tipo"],
-                // trocar pra "equipamento" limpa o pai — invariante só faz sentido pra componente
-                parentItemId: event.target.value === "componente" ? atual.parentItemId : "",
-              }))
-            }
-            className="input w-full"
-          >
-            <option value="equipamento">Equipamento</option>
-            <option value="componente">Componente</option>
-          </select>
-        </label>
-        <label className="block">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Local (AC-4)</span>
           <select
             value={dados.localId ?? ""}
@@ -147,26 +121,6 @@ export function EquipamentoModal({
             ))}
           </select>
         </label>
-        {dados.tipo === "componente" && (
-          <label className="block">
-            <span className="mb-1 block text-caption font-semibold text-ink-3">
-              Equipamento pai (AC-5)
-            </span>
-            <select
-              value={dados.parentItemId ?? ""}
-              onChange={(event) => setCampo("parentItemId", event.target.value)}
-              className="input w-full"
-              disabled={!dados.clientId}
-            >
-              <option value="">Nenhum</option>
-              {paisDisponiveis.map((pai) => (
-                <option key={pai.id} value={pai.id}>
-                  {pai.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
         <label className="block md:col-span-2">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Observações</span>
           <textarea

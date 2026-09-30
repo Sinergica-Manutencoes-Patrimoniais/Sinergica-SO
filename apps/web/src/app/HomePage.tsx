@@ -357,7 +357,7 @@ const PCM_NAV: NavGroup[] = [
     titulo: "CADASTROS",
     items: [
       { label: "Clientes", icon: Building2, view: "clientes" },
-      { label: "Equipamentos", icon: Wrench, view: "equipamentos" },
+      { label: "Componentes", icon: Wrench, view: "equipamentos" },
       { label: "Sistemas", icon: Link2, view: "sistemas" },
       { label: "Ferramentas", icon: Package, view: "ferramentas" },
     ],

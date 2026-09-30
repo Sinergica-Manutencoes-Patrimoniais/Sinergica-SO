@@ -291,7 +291,7 @@ function CardAtivo({
         <span className="block truncate text-caption font-semibold text-ink">{item.nome}</span>
         <span className="flex items-center gap-1 text-micro text-ink-3">
           <Package className="h-3 w-3" />
-          {item.tipo === "componente" ? "Componente" : "Equipamento"}
+          {item.tipo === "componente" ? "Subcomponente (legado)" : "Principal"}
           {!item.ativo && " · inativo"}
         </span>
       </span>

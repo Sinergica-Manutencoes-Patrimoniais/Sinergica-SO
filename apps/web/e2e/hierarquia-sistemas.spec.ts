@@ -86,8 +86,8 @@ test("cria hierarquia Área>Local, instala Item, cria Sistema e confirma breadcr
 
   // ── AC-4: cria Item (equipamento) e instala em "Sala 302" ──────────────────────────────────
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Equipamentos", { exact: true }).click();
-  await page.getByRole("button", { name: "Novo equipamento" }).click();
+  await page.getByText("Componentes", { exact: true }).click();
+  await page.getByRole("button", { name: "Novo componente" }).click();
   await page.getByLabel("Nome *").fill(nomeItem);
   await selecionarPorTexto(page.getByLabel("Cliente"), nomeCliente);
   // Local depende de fetch assíncrono (listarLocaisDoCliente) disparado pela troca de cliente —
@@ -121,7 +121,7 @@ test("cria hierarquia Área>Local, instala Item, cria Sistema e confirma breadcr
 
   // ── AC-6: abre o Item e confirma breadcrumb Cliente>Área>Local + chip do Sistema ───────────
   await page.getByText("PCM · Operação", { exact: true }).first().click();
-  await page.getByText("Equipamentos", { exact: true }).click();
+  await page.getByText("Componentes", { exact: true }).click();
   const linhaItem = page
     .getByText(nomeItem, { exact: true })
     .locator('xpath=ancestor::div[contains(@class,"py-2.5")][1]');

@@ -1,6 +1,6 @@
 // PainelItensDoCliente.tsx — E01-S76: dentro da aba "Ativos" da Visão 360, lista os Itens
 // editáveis do PCM (`pcm.equipamentos`) deste cliente e permite atribuir Local direto daqui —
-// sem precisar ir pra tela global "Equipamentos" e procurar o item lá. Complementa
+// sem precisar ir pra tela global "Componentes" e procurar o item lá. Complementa
 // `PainelEquipamentos` (cache Auvo, só leitura, fonte de dado diferente).
 import { Boxes, FolderTree, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";

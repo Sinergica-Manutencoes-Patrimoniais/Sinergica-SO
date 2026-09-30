@@ -10,7 +10,7 @@ export function PainelEquipamentos({ equipamentos }: { equipamentos: ResultadoEq
   return (
     <div className="bg-card rounded-xl border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
-        <h3 className="text-body font-semibold text-ink">Equipamentos vinculados</h3>
+        <h3 className="text-body font-semibold text-ink">Equipamentos no Auvo (somente leitura)</h3>
         <p className="text-caption text-ink-3 mt-0.5">Cache de campo (Auvo)</p>
       </div>
 

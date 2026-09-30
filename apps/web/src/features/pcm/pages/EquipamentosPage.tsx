@@ -61,8 +61,7 @@ export function EquipamentosPage() {
     } catch (error) {
       setEstado({
         fase: "erro",
-        mensagem:
-          error instanceof Error ? error.message : "Não foi possível carregar equipamentos.",
+        mensagem: error instanceof Error ? error.message : "Não foi possível carregar componentes.",
       });
     }
   }, []);
@@ -161,7 +160,7 @@ export function EquipamentosPage() {
       <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-heading font-semibold text-ink">Equipamentos</h1>
+            <h1 className="text-heading font-semibold text-ink">Componentes</h1>
             <p className="mt-0.5 text-body text-ink-3">
               Cadastro PCM sincronizado com equipamentos operacionais do Auvo
             </p>
@@ -173,7 +172,7 @@ export function EquipamentosPage() {
               className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep"
             >
               <Plus className="h-4 w-4" />
-              Novo equipamento
+              Novo componente
             </button>
           )}
         </div>
@@ -195,7 +194,11 @@ export function EquipamentosPage() {
                   : "border border-line text-ink-2 hover:bg-line-soft"
               }`}
             >
-              {tipo === "todos" ? "Todos" : tipo === "equipamento" ? "Equipamentos" : "Componentes"}
+              {tipo === "todos"
+                ? "Todos"
+                : tipo === "equipamento"
+                  ? "Principais"
+                  : "Subcomponentes (legado)"}
             </button>
           ))}
         </div>
@@ -204,7 +207,7 @@ export function EquipamentosPage() {
       {estado.equipamentos.length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Wrench className="mx-auto h-9 w-9 text-ink-3" />
-          <p className="mt-3 text-body text-ink-3">Nenhum equipamento cadastrado.</p>
+          <p className="mt-3 text-body text-ink-3">Nenhum componente cadastrado.</p>
         </div>
       ) : equipamentosFiltrados.length === 0 ? (
         // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
@@ -239,7 +242,6 @@ export function EquipamentosPage() {
         <EquipamentoModal
           equipamento={modal.modo === "editar" ? modal.equipamento : undefined}
           clientes={estado.clientes}
-          equipamentosDisponiveis={estado.equipamentos}
           onCancel={() => setModal(null)}
           onSalvar={salvar}
         />
@@ -254,13 +256,13 @@ export function EquipamentosPage() {
         onOpenChange={(aberto) => {
           if (!aberto) setImagemAmpliada(null);
         }}
-        titulo="Imagem do equipamento"
+        titulo="Imagem do componente"
         tamanho="lg"
       >
         {imagemAmpliada && (
           <img
             src={imagemAmpliada}
-            alt="Equipamento ampliado"
+            alt="Componente ampliado"
             className="max-h-[75vh] w-full rounded-lg object-contain"
           />
         )}
@@ -326,7 +328,7 @@ function EquipamentoLinha({
             {equipamento.ativo ? "Ativo" : "Inativo"}
           </span>
           <span className="shrink-0 rounded-full bg-line-soft px-1.5 py-0.5 text-micro font-semibold text-ink-2">
-            {equipamento.tipo === "componente" ? "Componente" : "Equipamento"}
+            {equipamento.tipo === "componente" ? "Subcomponente (legado)" : "Principal"}
           </span>
         </div>
         <p className="truncate text-caption text-ink-3">
