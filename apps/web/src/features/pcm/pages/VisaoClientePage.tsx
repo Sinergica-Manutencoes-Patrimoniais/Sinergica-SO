@@ -66,6 +66,7 @@ import { ClienteFormModal } from "../components/ClienteFormModal";
 import { ClienteNaoEncontrado } from "../components/ClienteNaoEncontrado";
 import { PainelBacklog } from "../components/PainelBacklog";
 import { PainelEquipamentos } from "../components/PainelEquipamentos";
+import { PainelFerramentasCliente as PainelFerramentasClienteTab } from "../components/PainelFerramentasCliente";
 import { PainelHistorico } from "../components/PainelHistorico";
 import { PainelItensDoCliente } from "../components/PainelItensDoCliente";
 import { PainelSistemasCliente } from "../components/PainelSistemasCliente";
@@ -96,6 +97,7 @@ type Aba360 =
   | "ativos"
   | "estrutura"
   | "sistemas"
+  | "ferramentas"
   | "board"
   | "financeiro"
   | "comercial"
@@ -116,11 +118,12 @@ const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   { id: "qualidade", label: "Inspeções", icon: Calendar },
   // E01-S90 AC-4: assessment vigente do cliente (documento de estado, distinto de Inspeções ABNT).
   { id: "assessment", label: "Assessment", icon: ClipboardCheck },
-  { id: "ativos", label: "Ativos", icon: Layers },
   // E01-S76: Área>Local (árvore) — onde os Itens estão instalados.
   { id: "estrutura", label: "Estrutura", icon: FolderTree },
+  { id: "ativos", label: "Componentes", icon: Layers },
   // E01-S86 AC-2: compor Sistema (checkbox+filtro), mesmo componente do PCM.
   { id: "sistemas", label: "Sistemas", icon: Link2 },
+  { id: "ferramentas", label: "Ferramentas", icon: Package },
   // E01-S78: board visual dos ativos por Local (fase 1 do "mapa do andar").
   { id: "board", label: "Board", icon: LayoutGrid },
   { id: "financeiro", label: "Financeiro", icon: DollarSign },
@@ -381,6 +384,10 @@ export function VisaoClientePage({
         <PainelSistemasCliente clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
       )}
 
+      {aba === "ferramentas" && (
+        <PainelFerramentasClienteTab clienteId={cliente.id} temEscrita={temEscrita} />
+      )}
+
       {aba === "board" && (
         <BoardAtivos clienteId={cliente.id} onIrParaEstrutura={() => setAba("estrutura")} />
       )}
@@ -547,7 +554,6 @@ function Resumo360({
       </div>
 
       <PainelResponsaveis clienteId={cliente.id} temEscrita={temEscrita} />
-      <PainelFerramentasCliente clienteId={cliente.id} temEscrita={temEscrita} />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
         <TimelineCliente eventos={eventos} compacta onAbrirOs={onAbrirOs} />
