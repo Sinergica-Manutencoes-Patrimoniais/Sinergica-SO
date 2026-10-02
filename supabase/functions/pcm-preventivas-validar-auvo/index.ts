@@ -13,12 +13,13 @@ function claims(req: Request): Record<string, unknown> { try { const p = (req.he
 /** Auvo v2 pode devolver o identificador diretamente em `result` ou em um objeto. */
 export function taskId(valor: unknown): number | null {
   const x = valor as {
-    result?: number | { id?: number; taskID?: number; taskId?: number };
+    result?: number | unknown[] | { id?: number; taskID?: number; taskId?: number };
     id?: number;
     taskID?: number;
     taskId?: number;
   };
   if (typeof x.result === "number") return x.result;
+  if (Array.isArray(x.result)) return taskId(x.result[0]);
   return x.result?.id ?? x.result?.taskID ?? x.result?.taskId ?? x.id ?? x.taskID ?? x.taskId ?? null;
 }
 
@@ -52,7 +53,25 @@ export function taskTesteExistente(
     tarefa.equipmentId === alvo.equipmentId &&
     tarefa.taskTypeId === alvo.taskTypeId,
   ).at(-1);
-  return taskId(exata ?? legada ?? {});
+  // A listagem do Auvo nem sempre devolve os IDs auxiliares no mesmo shape do POST;
+  // a orientação exclusiva ainda permite recuperar uma tentativa anterior sem duplicá-la.
+  const porOrientacao = tarefas.filter((tarefa) =>
+    tarefa.orientation === "TESTE DE CONTRATO PCM PREVENTIVAS — não executar",
+  ).at(-1);
+  return taskId(exata ?? legada ?? porOrientacao ?? {});
+}
+
+/** Diagnóstico sem payload completo: suficiente para corrigir contrato sem registrar dados da task. */
+export function resumoRespostaCriacaoTask(valor: unknown): string {
+  if (valor === null) return "null";
+  if (Array.isArray(valor)) return `array(${valor.length})`;
+  if (typeof valor !== "object") return typeof valor;
+  const corpo = valor as Record<string, unknown>;
+  const chaves = Object.keys(corpo).sort().join(",");
+  const result = corpo.result;
+  const resumoResult = result === null ? "null" : Array.isArray(result) ? `array(${result.length})${result[0] && typeof result[0] === "object" ? `:obj(${Object.keys(result[0] as Record<string, unknown>).sort().join(",")})` : ""}` : typeof result === "object" ? `obj(${Object.keys(result as Record<string, unknown>).sort().join(",")})` : `${typeof result}:${String(result).slice(0, 120)}`;
+  const mensagem = typeof corpo.message === "string" ? ` message:${corpo.message.slice(0, 180)}` : "";
+  return `campos:${chaves}; result:${resumoResult}${mensagem}`;
 }
 
 type EvidenciaAlvo = { tecnico?: boolean; data?: boolean; alvo?: boolean; questionario?: boolean };
@@ -99,15 +118,17 @@ if (import.meta.main) serve(async (req) => {
       const alvoTeste = { externalId: chave, customerId: clienteR.data.auvo_id, equipmentId: input.equipamentoAuvoId, taskTypeId: tipoR.data.auvo_id };
       const existentes = await auvoGet<AuvoTasksResposta>(`/tasks?${filtro}`);
       let id = taskTesteExistente(existentes, alvoTeste);
+      let respostaCriacao: unknown = null;
       if (id == null) {
         const criada = await auvoPost<unknown>("/tasks", { externalId: chave, customerId: clienteR.data.auvo_id, taskTypeId: tipoR.data.auvo_id, equipmentId: input.equipamentoAuvoId, orientation: "TESTE DE CONTRATO PCM PREVENTIVAS — não executar", priority: 1 });
+        respostaCriacao = criada;
         id = taskId(criada);
         if (id == null) {
           const aposCriar = await auvoGet<AuvoTasksResposta>(`/tasks?${filtro}`);
           id = taskTesteExistente(aposCriar, alvoTeste);
         }
       }
-      if (id == null) throw new Error("Auvo não devolveu ID da task de teste");
+      if (id == null) throw new Error(`Auvo não devolveu ID da task de teste (${resumoRespostaCriacaoTask(respostaCriacao)})`);
       await auvoPatch(`/tasks/${id}`, toAuvoJsonPatch({ idUserTo: tecnicoR.data.auvo_user_id, taskDate: input.visitaEm.slice(0, 19), questionnaireId: questionarioR.data.auvo_id }));
       const retorno = await auvoGet<unknown>(`/tasks/${id}`);
       const tarefa = ((retorno as { result?: Record<string, unknown> }).result ?? retorno) as Record<string, unknown>;
