@@ -19,7 +19,7 @@ alwaysApply: false
 | 9 | Triagem de achados e envio manual individual ao backlog, com origem e deduplicação | AC-6 | 8 | teste de decisão/repetição | todo |
 | 10 | Validar plano de Sistema e Componente ponta a ponta; revisão adversarial, `pnpm run ci:local`, CI `db-tests` | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7 | 1-9 | gates verdes | todo |
 | 11 | Exibir e operar Preventivas na aba da Visão 360, usando o mesmo fluxo e dados do PCM com escopo fixo no cliente aberto | AC-8 | 5-9 para fluxo completo; leitura pode avançar antes do gate Auvo | testes de filtro, componente, navegação e E2E da aba | implementado localmente; E2E autenticado pendente de credenciais |
-| 12 | Acrescentar calendário mensal, histórico e detalhe resumido com resultado consolidado e link direto para a OS Auvo | AC-5, AC-7, AC-8, AC-9 | 8, 11 | contrato real de resultado, testes de domínio/UI/E2E e `ci:local` | especificado; implementação pendente |
+| 12 | Acrescentar calendário mensal, histórico e detalhe resumido com resultado consolidado e link direto para a OS Auvo | AC-5, AC-7, AC-8, AC-9 | 8, 11 | contrato real de resultado, testes de domínio/UI/E2E e `ci:local` | implementação local parcial; contrato vivo, db-tests, E2E e CI pendentes |
 
 Task 7 bloqueada até task 1 comprovar POST/GET com questionário e alvo corretos. Resultado de
 POST sem leitura conclusiva não satisfaz gate; task parcial nunca fica disponível ao técnico.
@@ -221,27 +221,27 @@ nunca é interpretado como aprovação ou reprovação.
 
 ### Entrega 12.2 — domínio, persistência e consulta histórica
 
-- [ ] Escrever testes da matriz de consolidação antes da implementação: qualquer “Não OK”;
+- [x] Escrever testes da matriz de consolidação antes da implementação: qualquer “Não OK”;
   concluída sem reprovação; incompleta; conclusão antes das respostas; reentrega; evento antigo.
-- [ ] Implementar função pura única para consolidação e usá-la em webhook, pull e reconciliação.
-- [ ] Se campos consolidados não existirem, criar migration aditiva para resultado e instante da
+- [x] Implementar função pura única para consolidação e usá-la em webhook, pull e reconciliação.
+- [x] Se campos consolidados não existirem, criar migration aditiva para resultado e instante da
   última consolidação, com RLS FORCE, índices necessários e pgTAP permitido/negado. Não remover
   avaliações ou snapshots existentes.
-- [ ] Expandir leitura de ocorrências com OS, técnico, datas e resultado sem N+1. Histórico deve
-  ser paginado e sempre limitado pelo cliente autorizado.
+- [~] Expandir leitura de ocorrências com OS, técnico, datas e resultado sem N+1. O cliente já é
+  limitado pelo plano autorizado; paginação explícita do histórico permanece pendente.
 - [ ] Gates: testes focados, `lint:migrations`, `db-tests`, typecheck e reentrega fora de ordem.
 
 ### Entrega 12.3 — calendário, histórico e detalhe resumido
 
-- [ ] Escrever testes de componente para mês atual, navegação entre meses, evento em `visita_em`
+- [~] Escrever testes de componente para mês atual, navegação entre meses, evento em `visita_em`
   ou fallback em `vencimento`, filtros de período/resultado e permanência de ciclos concluídos.
-- [ ] Implementar calendário mensal e histórico decrescente na aba Preventivas da Visão 360,
+- [x] Implementar calendário mensal e histórico decrescente na aba Preventivas da Visão 360,
   reutilizando consulta e regras da tela global quando aplicável.
-- [ ] Abrir o mesmo detalhe resumido por evento ou linha: plano, alvo, vencimento, visita,
+- [x] Abrir o mesmo detalhe resumido por evento ou linha: plano, alvo, vencimento, visita,
   conclusão, técnico, OS, estado operacional e resultado.
-- [ ] Exibir **Ver OS no Auvo** somente com `auvo_task_id`; abrir a task correta em nova aba, sem
+- [x] Exibir **Ver OS no Auvo** somente com `auvo_task_id`; abrir a task correta em nova aba, sem
   credenciais na URL. Sem vínculo, explicar que OS ainda não foi criada ou sincronizada.
-- [ ] Tratar carregando, vazio, erro/retry e somente leitura. Gates: componente, acessibilidade,
+- [~] Tratar carregando, vazio, erro/retry e somente leitura. Gates: componente, acessibilidade,
   teste visual e typecheck.
 
 ### Entrega 12.4 — validação ponta a ponta

@@ -26,6 +26,12 @@ Componente/Equipamento cobre só aquele item. Auvo executa; PCM sincroniza statu
 fotos, medições e local digitado por avaliação de Sistema. Achados só seguem ao backlog por ação
 de Fabrício. Nenhuma recorrência nativa é criada no Auvo.
 
+Para leitura gerencial, o PCM conserva na ocorrência somente `Pendente`, `OK` ou `Não OK`, além
+do vínculo da OS e do link da task. Qualquer resposta explicitamente marcada `Não OK` prevalece.
+`OK` só é publicado após task concluída e questionário completo com marcadores positivos
+comprovados; formato desconhecido ou texto livre permanece `Pendente`. Formulário, fotos,
+medições e relato completos continuam no Auvo — o PCM não os replica como detalhe de execução.
+
 Teste real de POST/GET deve comprovar campos críticos antes do envio. Sem garantia do
 questionário, bloquear confirmação com motivo claro. Falha mantém ocorrência pendente. Resultado
 incerto exige reconciliação por chave estável antes de retry, preservando uma ocorrência por OS.
@@ -36,3 +42,5 @@ incerto exige reconciliação por chave estável antes de retry, preservando uma
 - Pausa cessa novos vencimentos e preserva task/resultados históricos.
 - Limite real da API para questionário ou Sistema mantém write path bloqueado até revisão
   documentada da decisão.
+- A visão histórica não cria uma segunda fonte de verdade do formulário: abre a task correta no
+  Auvo e expõe no PCM apenas o selo operacional consolidado.
