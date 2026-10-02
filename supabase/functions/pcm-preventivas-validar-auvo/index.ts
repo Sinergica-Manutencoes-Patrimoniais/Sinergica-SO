@@ -191,6 +191,25 @@ export function resumoRespostaCriacaoTask(valor: unknown): string {
   return `campos:${chaves}; result:${resumoResult}${mensagem}`;
 }
 
+/** Diagnóstico de formato sem valores da task. */
+export function resumoCamposTaskAuvo(tarefa: Record<string, unknown>): string {
+  const campos = Object.keys(tarefa).sort().join(",");
+  const questionarios = tarefa.questionnaires;
+  if (Array.isArray(questionarios)) {
+    const primeiro = questionarios[0];
+    const camposQuestionario = primeiro && typeof primeiro === "object"
+      ? Object.keys(primeiro as Record<string, unknown>).sort().join(",")
+      : typeof primeiro;
+    return `${campos}; questionnaires:array(${camposQuestionario})`;
+  }
+  if (questionarios && typeof questionarios === "object") {
+    return `${campos}; questionnaires:object(${
+      Object.keys(questionarios as Record<string, unknown>).sort().join(",")
+    })`;
+  }
+  return `${campos}; questionnaires:${typeof questionarios}`;
+}
+
 type EvidenciaAlvo = {
   tecnico?: boolean;
   data?: boolean;
@@ -375,11 +394,18 @@ if (import.meta.main) {
             questionarioNome: questionario.nome,
           }),
         };
+        const evidenciaComDiagnostico = evidencia.questionario ? evidencia : {
+          ...evidencia,
+          questionarioFormato: resumoCamposTaskAuvo(tarefa),
+        };
         const ok = evidencia.tecnico && evidencia.data && evidencia.tipo &&
           evidencia.alvo && evidencia.questionario;
         if (!ok) {
           await db.schema("pcm").from("preventiva_auvo_contrato").update({
-            evidencia: { ...evidenciasAnteriores, [input.alvoTipo]: evidencia },
+            evidencia: {
+              ...evidenciasAnteriores,
+              [input.alvoTipo]: evidenciaComDiagnostico,
+            },
             updated_at: new Date().toISOString(),
           }).eq("id", true);
           throw new Error(
@@ -388,7 +414,7 @@ if (import.meta.main) {
         }
         const evidencias = {
           ...evidenciasAnteriores,
-          [input.alvoTipo]: evidencia,
+          [input.alvoTipo]: evidenciaComDiagnostico,
         };
         const completo = contratoPreventivoCompleto(evidencias);
         await db.schema("pcm").from("preventiva_auvo_contrato").update({

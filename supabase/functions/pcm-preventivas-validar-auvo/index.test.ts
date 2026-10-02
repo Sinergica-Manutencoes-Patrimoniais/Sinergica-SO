@@ -3,6 +3,7 @@ import {
   contratoPreventivoCompleto,
   evidenciaTaskPreventiva,
   montarPayloadCriacaoTask,
+  resumoCamposTaskAuvo,
   resumoRespostaCriacaoTask,
   taskId,
   taskTesteExistente,
@@ -124,6 +125,16 @@ Deno.test("resumoRespostaCriacaoTask — expõe contrato sem payload da task", (
   assertEquals(
     resumoRespostaCriacaoTask({ result: null }),
     "campos:result; result:null",
+  );
+});
+
+Deno.test("resumoCamposTaskAuvo — registra somente nomes de campos para diagnóstico", () => {
+  assertEquals(
+    resumoCamposTaskAuvo({
+      questionnaires: [{ questionnaireDescription: "não registrar valor" }],
+      idUserTo: 7,
+    }),
+    "idUserTo,questionnaires; questionnaires:array(questionnaireDescription)",
   );
 });
 
