@@ -275,7 +275,7 @@ nunca é interpretado como aprovação ou reprovação.
   ambiente foram pulados), typecheck e `git diff --check` aprovados. O E2E foi criado e listado,
   mas a execução autenticada parou no setup porque `SUPABASE_TEST_EMAIL` e
   `SUPABASE_TEST_PASSWORD` não estão configurados. Nenhuma task Auvo foi criada.
-- 12: migration `0228` aplicada ao Supabase remoto; suíte web aprovada (170 arquivos, 1121
+- 12: migration `0228` aplicada ao Supabase remoto; suíte web aprovada (170 arquivos, 1123
   testes; 3 arquivos/9 testes externos pulados), typecheck, lint de migrations e `ci:local`
   aprovados. E2E autenticado continua sem credenciais/identificadores de teste. `supabase start`
   não iniciou porque o daemon Docker local está indisponível; portanto `db-tests` não foi rodado.

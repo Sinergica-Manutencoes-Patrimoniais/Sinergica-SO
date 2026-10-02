@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import type { ResultadoPreventivas } from "../application/preventivas-gateway";
 
 const { listarPreventivas, listarCatalogoPreventivas } = vi.hoisted(() => ({
   listarPreventivas: vi.fn(),
@@ -19,7 +20,7 @@ vi.mock("../../../lib/supabase-client", () => ({
 
 import { PreventivasWorkspace } from "./PreventivasWorkspace";
 
-const dados = {
+const dados: ResultadoPreventivas = {
   planos: [
     {
       id: "plano-a",
@@ -119,6 +120,61 @@ describe("PreventivasWorkspace — E01-S53 AC-8", () => {
       "href",
       "https://app.auvo.com.br/tarefa/123",
     );
+  });
+
+  it("filtra o histórico pelo resultado consolidado", async () => {
+    const ocorrenciaBase = dados.ocorrencias[0];
+    if (!ocorrenciaBase) throw new Error("Fixture de ocorrência ausente.");
+    const ocorrenciaOk = {
+      ...ocorrenciaBase,
+      id: "ocorrencia-ok",
+      auvo_task_id: 124,
+      os_numero: "CH-124",
+      resultado_estado: "ok" as const,
+    };
+    renderWorkspace({}, { ...dados, ocorrencias: [ocorrenciaBase, ocorrenciaOk] });
+
+    expect(await screen.findByText("Histórico: 1–2 de 2")).toBeInTheDocument();
+    await userEvent.selectOptions(
+      screen.getByLabelText("Filtrar histórico por resultado"),
+      "nao_ok",
+    );
+
+    expect(screen.getByText("Histórico: 1–1 de 1")).toBeInTheDocument();
+    expect(screen.getByText(/OS CH-123/)).toBeInTheDocument();
+    expect(screen.queryByText(/OS CH-124/)).not.toBeInTheDocument();
+  });
+
+  it("filtra o histórico pelo período da execução", async () => {
+    const ocorrenciaBase = dados.ocorrencias[0];
+    if (!ocorrenciaBase) throw new Error("Fixture de ocorrência ausente.");
+    const agora = new Date();
+    const antiga = new Date(agora);
+    antiga.setDate(antiga.getDate() - 91);
+    const ocorrenciaAntiga = {
+      ...ocorrenciaBase,
+      id: "ocorrencia-antiga",
+      auvo_task_id: 125,
+      os_numero: "CH-125",
+      os_concluida_em: antiga.toISOString(),
+    };
+    const ocorrenciaRecente = {
+      ...ocorrenciaBase,
+      id: "ocorrencia-recente",
+      os_numero: "CH-126",
+      os_concluida_em: agora.toISOString(),
+    };
+    renderWorkspace({}, { ...dados, ocorrencias: [ocorrenciaAntiga, ocorrenciaRecente] });
+
+    await screen.findByText("Histórico: 1–2 de 2");
+    await userEvent.selectOptions(
+      screen.getByLabelText("Filtrar histórico por período"),
+      "30_dias",
+    );
+
+    expect(screen.getByText("Histórico: 1–1 de 1")).toBeInTheDocument();
+    expect(screen.getByText(/OS CH-126/)).toBeInTheDocument();
+    expect(screen.queryByText(/OS CH-125/)).not.toBeInTheDocument();
   });
 
   it("abre o detalhe da ocorrência ao selecioná-la no calendário", async () => {

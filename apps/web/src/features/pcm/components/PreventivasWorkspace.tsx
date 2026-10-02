@@ -40,6 +40,8 @@ type FormValidacaoContrato = {
 };
 
 const TAMANHO_PAGINA_HISTORICO = 10;
+type FiltroResultadoHistorico = "todos" | "pendente" | "ok" | "nao_ok";
+type FiltroPeriodoHistorico = "todos" | "30_dias" | "90_dias" | "12_meses";
 
 const criarFormVazio = (clienteId = ""): FormPlano => ({
   nome: "",
@@ -124,6 +126,10 @@ export function PreventivasWorkspace({
   );
   const [ocorrenciaEmFoco, setOcorrenciaEmFoco] = useState<string | null>(null);
   const [paginaHistorico, setPaginaHistorico] = useState(0);
+  const [filtroResultadoHistorico, setFiltroResultadoHistorico] =
+    useState<FiltroResultadoHistorico>("todos");
+  const [filtroPeriodoHistorico, setFiltroPeriodoHistorico] =
+    useState<FiltroPeriodoHistorico>("todos");
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const chave = ["pcm", "preventivas", clienteId ?? "todos"] as const;
@@ -144,6 +150,8 @@ export function PreventivasWorkspace({
     setAvaliacaoParaBacklog(null);
     setOcorrenciaEmFoco(null);
     setPaginaHistorico(0);
+    setFiltroResultadoHistorico("todos");
+    setFiltroPeriodoHistorico("todos");
     setTecnicoId("");
     setVisita("");
     setErroAcao(null);
@@ -386,10 +394,31 @@ export function PreventivasWorkspace({
         a.os_concluida_em ?? a.visita_em ?? a.vencimento,
       ),
     );
-  const totalPaginasHistorico = Math.max(1, Math.ceil(historico.length / TAMANHO_PAGINA_HISTORICO));
+  const limitePeriodoHistorico = new Date();
+  if (filtroPeriodoHistorico === "30_dias")
+    limitePeriodoHistorico.setDate(limitePeriodoHistorico.getDate() - 30);
+  if (filtroPeriodoHistorico === "90_dias")
+    limitePeriodoHistorico.setDate(limitePeriodoHistorico.getDate() - 90);
+  if (filtroPeriodoHistorico === "12_meses")
+    limitePeriodoHistorico.setFullYear(limitePeriodoHistorico.getFullYear() - 1);
+  const historicoFiltrado = historico.filter((ocorrencia) => {
+    if (
+      filtroResultadoHistorico !== "todos" &&
+      ocorrencia.resultado_estado !== filtroResultadoHistorico
+    ) {
+      return false;
+    }
+    if (filtroPeriodoHistorico === "todos") return true;
+    const data = ocorrencia.os_concluida_em ?? ocorrencia.visita_em ?? ocorrencia.vencimento;
+    return new Date(data).getTime() >= limitePeriodoHistorico.getTime();
+  });
+  const totalPaginasHistorico = Math.max(
+    1,
+    Math.ceil(historicoFiltrado.length / TAMANHO_PAGINA_HISTORICO),
+  );
   const paginaHistoricoSegura = Math.min(paginaHistorico, totalPaginasHistorico - 1);
   const inicioHistorico = paginaHistoricoSegura * TAMANHO_PAGINA_HISTORICO;
-  const historicoVisivel = historico.slice(
+  const historicoVisivel = historicoFiltrado.slice(
     inicioHistorico,
     inicioHistorico + TAMANHO_PAGINA_HISTORICO,
   );
@@ -525,9 +554,45 @@ export function PreventivasWorkspace({
           O PCM mostra o resultado resumido. Formulário, fotos e medições completos ficam na tarefa
           do Auvo.
         </p>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <label className="flex items-center gap-2 text-sm text-ink-2">
+            Período
+            <select
+              aria-label="Filtrar histórico por período"
+              className="input w-auto py-1 text-sm"
+              value={filtroPeriodoHistorico}
+              onChange={(event) => {
+                setFiltroPeriodoHistorico(event.target.value as FiltroPeriodoHistorico);
+                setPaginaHistorico(0);
+              }}
+            >
+              <option value="todos">Todo o histórico</option>
+              <option value="30_dias">Últimos 30 dias</option>
+              <option value="90_dias">Últimos 90 dias</option>
+              <option value="12_meses">Últimos 12 meses</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ink-2">
+            Resultado
+            <select
+              aria-label="Filtrar histórico por resultado"
+              className="input w-auto py-1 text-sm"
+              value={filtroResultadoHistorico}
+              onChange={(event) => {
+                setFiltroResultadoHistorico(event.target.value as FiltroResultadoHistorico);
+                setPaginaHistorico(0);
+              }}
+            >
+              <option value="todos">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="ok">OK</option>
+              <option value="nao_ok">Não OK</option>
+            </select>
+          </label>
+        </div>
         <div className="mt-3 grid gap-2">
-          {historico.length === 0 ? (
-            <p className="text-body text-ink-3">Nenhuma preventiva enviada ao Auvo ainda.</p>
+          {historicoFiltrado.length === 0 ? (
+            <p className="text-body text-ink-3">Nenhuma preventiva encontrada nesse filtro.</p>
           ) : (
             historicoVisivel.map((ocorrencia) => {
               const avaliacoesDaOcorrencia = avaliacoesPorOcorrencia.get(ocorrencia.id) ?? [];
@@ -589,12 +654,12 @@ export function PreventivasWorkspace({
             })
           )}
         </div>
-        {historico.length > 0 && (
+        {historicoFiltrado.length > 0 && (
           <div className="mt-3 flex items-center justify-between gap-2 text-sm text-ink-3">
             <p>
               Histórico: {inicioHistorico + 1}–
-              {Math.min(inicioHistorico + TAMANHO_PAGINA_HISTORICO, historico.length)} de{" "}
-              {historico.length}
+              {Math.min(inicioHistorico + TAMANHO_PAGINA_HISTORICO, historicoFiltrado.length)} de{" "}
+              {historicoFiltrado.length}
             </p>
             <div className="flex gap-2">
               <Button
