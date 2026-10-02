@@ -3,6 +3,7 @@ import {
   calcularJanelaRolante,
   extractTaskId,
   mapTaskStatusToOsStatus,
+  montarAtualizacaoResultadoPreventiva,
   montarLinhasAvaliacaoPreventiva,
   montarDetalhes,
 } from "./index.ts";
@@ -203,4 +204,31 @@ Deno.test("montarLinhasAvaliacaoPreventiva — E01-S53 preserva local e data da 
       recebido_em: "2026-10-01T12:00:00Z",
     },
   ]);
+});
+
+Deno.test("montarAtualizacaoResultadoPreventiva — só conclui com marcador explícito e timestamp de origem", () => {
+  assertEquals(
+    montarAtualizacaoResultadoPreventiva("ocorrencia-1", {
+      status: "finalizado",
+      checkOutAt: "2026-10-01T15:00:00.000Z",
+      questionarios: [{ answers: [{ reply: "OK", replyDate: "2026-10-01T14:30:00Z" }] }],
+    }),
+    {
+      ocorrenciaId: "ocorrencia-1",
+      resultado: "ok",
+      atualizadoEm: "2026-10-01T15:00:00.000Z",
+    },
+  );
+  assertEquals(
+    montarAtualizacaoResultadoPreventiva("ocorrencia-1", {
+      status: "finalizado",
+      checkOutAt: "2026-10-01T15:00:00.000Z",
+      questionarios: [{ answers: [{ reply: "observação livre" }] }],
+    }),
+    {
+      ocorrenciaId: "ocorrencia-1",
+      resultado: "pendente",
+      atualizadoEm: "2026-10-01T15:00:00.000Z",
+    },
+  );
 });

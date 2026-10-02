@@ -22,6 +22,10 @@ import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.
 import { auvoNaiveToUtc } from "../_shared/auvo/datetime.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
 import {
+  consolidarResultadoPreventiva,
+  type ResultadoPreventiva,
+} from "../_shared/preventivas/resultado.ts";
+import {
   marcarChamadoAutomaticoComOs,
   montarLinhaOs,
   obterUsuarioSistema,
@@ -423,8 +427,13 @@ if (import.meta.main) serve(async (req) => {
  * avaliação de Sistema pode ser feita em qualquer local e não deve criar/vincular inventário pelo
  * que o técnico digitou. */
 async function sincronizarAvaliacoesPreventivas(
-  db: ReturnType<typeof createClient>,
-  tarefas: Array<{ taskId: number; questionarios: AuvoQuestionnaire[] | undefined }>,
+  db: any,
+  tarefas: Array<{
+    taskId: number;
+    status: OsStatus;
+    checkOutAt: string | null;
+    questionarios: AuvoQuestionnaire[] | undefined;
+  }>,
 ): Promise<number> {
   const comResposta = tarefas.filter((tarefa) => Array.isArray(tarefa.questionarios) && tarefa.questionarios.length > 0);
   if (!comResposta.length) return 0;
@@ -437,6 +446,11 @@ async function sincronizarAvaliacoesPreventivas(
     if (typeof os.auvo_task_id === "number" && typeof os.ocorrencia_preventiva_id === "string") ocorrenciaPorTask.set(os.auvo_task_id, os.ocorrencia_preventiva_id);
   }
   const linhas: Array<Record<string, unknown>> = [];
+  const resultados: Array<{
+    ocorrenciaId: string;
+    resultado: ResultadoPreventiva;
+    atualizadoEm: string;
+  }> = [];
   const recebidoEm = new Date().toISOString();
   for (const tarefa of comResposta) {
     const ocorrenciaId = ocorrenciaPorTask.get(tarefa.taskId);
@@ -449,13 +463,54 @@ async function sincronizarAvaliacoesPreventivas(
         recebidoEm,
       ),
     );
+    const resultado = montarAtualizacaoResultadoPreventiva(ocorrenciaId, tarefa);
+    if (resultado) resultados.push(resultado);
   }
-  if (!linhas.length) return 0;
-  const { error } = await db.schema("pcm").rpc("upsert_avaliacoes_preventivas", {
-    p_linhas: linhas,
-  });
-  if (error) throw error;
+  if (linhas.length) {
+    const { error } = await db.schema("pcm").rpc("upsert_avaliacoes_preventivas", {
+      p_linhas: linhas,
+    });
+    if (error) throw error;
+  }
+  for (const resultado of resultados) {
+    const { error } = await db.schema("pcm").rpc("atualizar_resultado_preventiva", {
+      p_ocorrencia_id: resultado.ocorrenciaId,
+      p_resultado: resultado.resultado,
+      p_atualizado_em: resultado.atualizadoEm,
+    });
+    if (error) throw error;
+  }
   return linhas.length;
+}
+
+export interface DadosResultadoPreventiva {
+  status: OsStatus;
+  checkOutAt: string | null;
+  questionarios: AuvoQuestionnaire[] | undefined;
+}
+
+/** Retorna `null` sem relógio de origem, para nunca regredir o histórico por uma reentrega. */
+export function montarAtualizacaoResultadoPreventiva(
+  ocorrenciaId: string,
+  tarefa: DadosResultadoPreventiva,
+): { ocorrenciaId: string; resultado: ResultadoPreventiva; atualizadoEm: string } | null {
+  const respostas = (tarefa.questionarios ?? []).flatMap((questionario) => questionario.answers ?? []);
+  const datas = [
+    ...respostas.map((resposta) => auvoNaiveToUtc(resposta.replyDate)),
+    tarefa.checkOutAt,
+  ].filter((data): data is string => data != null);
+  const atualizadoEm = datas.sort().at(-1);
+  if (!atualizadoEm) return null;
+
+  return {
+    ocorrenciaId,
+    resultado: consolidarResultadoPreventiva({
+      osConcluida: tarefa.status === "finalizado",
+      questionarioRecebido: Array.isArray(tarefa.questionarios) && tarefa.questionarios.length > 0,
+      respostas: respostas.map((resposta) => ({ valor: resposta.reply })),
+    }),
+    atualizadoEm,
+  };
 }
 
 /** Converte resposta Auvo em linha estável. A chave nunca depende do texto digitado pelo técnico. */

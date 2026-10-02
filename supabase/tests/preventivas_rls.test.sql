@@ -2,7 +2,7 @@
 -- Roda no job db-tests. Esta máquina não possui Docker/Supabase local.
 
 begin;
-select plan(14);
+select plan(17);
 
 select has_table('pcm', 'planos_preventivos', 'AC-1: planos existem');
 select has_table('pcm', 'ocorrencias_preventivas', 'AC-1: ocorrências existem');
@@ -13,6 +13,12 @@ select has_function(
   'materializar_ocorrencias_preventivas',
   array['uuid', 'date'],
   'AC-1: materialização idempotente existe'
+);
+select has_function(
+  'pcm',
+  'atualizar_resultado_preventiva',
+  array['uuid', 'text', 'timestamp with time zone'],
+  'AC-5/AC-9: consolidação de resultado da ocorrência existe'
 );
 
 set local role service_role;
@@ -92,6 +98,24 @@ select is(
   (select resposta ->> 'valor' from pcm.avaliacoes_preventivas where chave_origem = 'teste-ordem-s53'),
   'Resposta nova',
   'AC-5: resposta mais nova permanece após reentrega fora de ordem'
+);
+select is(
+  pcm.atualizar_resultado_preventiva(
+    (select id from pcm.ocorrencias_preventivas where plano_id = '00000000-0000-0000-0000-000000000537' and indice = 0),
+    'nao_ok',
+    '2026-10-02T10:00:00Z'
+  ),
+  'nao_ok',
+  'AC-5: ocorrência expõe resultado Não OK consolidado'
+);
+select is(
+  pcm.atualizar_resultado_preventiva(
+    (select id from pcm.ocorrencias_preventivas where plano_id = '00000000-0000-0000-0000-000000000537' and indice = 0),
+    'ok',
+    '2026-10-01T10:00:00Z'
+  ),
+  'nao_ok',
+  'AC-5: atualização antiga não regride resultado consolidado'
 );
 select throws_ok(
   $$ insert into pcm.ocorrencias_preventivas (plano_id, indice, vencimento, chave_externa) values ('00000000-0000-0000-0000-000000000537', 0, current_date, 'PREV-DUPLICADA-S53') $$,
