@@ -3,6 +3,7 @@ import {
   calcularJanelaRolante,
   extractTaskId,
   mapTaskStatusToOsStatus,
+  montarLinhasAvaliacaoPreventiva,
   montarDetalhes,
 } from "./index.ts";
 
@@ -157,4 +158,49 @@ Deno.test("montarDetalhes — E01-S70: keyWordsDescriptions, timeControl e finan
 
 Deno.test("montarDetalhes — E01-S70: keyWords é fallback quando keyWordsDescriptions ausente", () => {
   assertEquals(montarDetalhes({ keyWords: [1, 2] }), { palavrasChave: [1, 2] });
+});
+
+Deno.test("montarLinhasAvaliacaoPreventiva — E01-S53 preserva local e data da resposta Auvo", () => {
+  const linhas = montarLinhasAvaliacaoPreventiva(
+    "ocorrencia-1",
+    73,
+    [
+      {
+        id: 9,
+        name: "Checklist incêndio",
+        answers: [
+          {
+            questionId: 42,
+            questionDescription: "Hidrante acessível?",
+            reply: "Não",
+            replyDate: "2026-10-01T10:30:00Z",
+            localName: "Torre A · 14º andar",
+            photos: [{ url: "https://auvo.example/hidrante.jpg" }],
+            measurements: [{ nome: "Pressão", valor: 8.5, unidade: "bar" }],
+          },
+        ],
+      },
+    ],
+    "2026-10-01T12:00:00Z",
+  );
+
+  assertEquals(linhas, [
+    {
+      ocorrencia_id: "ocorrencia-1",
+      chave_origem: "73:9:42",
+      item_referencia: "Hidrante acessível?",
+      local_informado: "Torre A · 14º andar",
+      resposta: {
+        questionarioId: 9,
+        questionario: "Checklist incêndio",
+        pergunta: "Hidrante acessível?",
+        valor: "Não",
+        respondidaEm: "2026-10-01T10:30:00Z",
+      },
+      fotos: [{ url: "https://auvo.example/hidrante.jpg" }],
+      medicoes: [{ nome: "Pressão", valor: 8.5, unidade: "bar" }],
+      auvo_updated_at: "2026-10-01T10:30:00Z",
+      recebido_em: "2026-10-01T12:00:00Z",
+    },
+  ]);
 });

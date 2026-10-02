@@ -116,6 +116,19 @@ interface AuvoQuestionnaireAnswer {
   questionDescription?: string;
   reply?: string;
   replyDate?: string;
+  // Alguns questionários de Sistema trazem o local por avaliação. Nunca tentamos casar texto
+  // com o inventário: preservamos a informação bruta vinda do técnico.
+  local?: string;
+  location?: string;
+  localName?: string;
+  photos?: unknown[];
+  fotos?: unknown[];
+  images?: unknown[];
+  attachments?: unknown[];
+  anexos?: unknown[];
+  measurements?: unknown[];
+  medidas?: unknown[];
+  medicoes?: unknown[];
 }
 
 interface AuvoTasksResponse {
@@ -221,6 +234,7 @@ if (import.meta.main) serve(async (req) => {
       checkInAt: string | null;
       checkOutAt: string | null;
       detalhes: Record<string, unknown>;
+      questionarios: AuvoQuestionnaire[] | undefined;
     }> = [];
     for (const tarefa of tarefas) {
       const taskId = extractTaskId(tarefa);
@@ -241,6 +255,7 @@ if (import.meta.main) serve(async (req) => {
         checkInAt: auvoNaiveToUtc(tarefa.checkInDate),
         checkOutAt: auvoNaiveToUtc(tarefa.checkOutDate),
         detalhes: montarDetalhes(tarefa),
+        questionarios: tarefa.questionnaires,
       });
     }
 
@@ -386,7 +401,11 @@ if (import.meta.main) serve(async (req) => {
       }
     }
 
-    const resultado = { pulled: tarefas.length, criadas, enriquecidas, semCliente, ignoradas };
+    // E01-S53: só tarefas que já pertencem a uma ocorrência preventiva recebem este espelho
+    // estruturado. O import geral nunca cria preventivas nem inferre achados do texto.
+    const avaliacoesPreventivas = await sincronizarAvaliacoesPreventivas(db, comTaskId);
+
+    const resultado = { pulled: tarefas.length, criadas, enriquecidas, avaliacoesPreventivas, semCliente, ignoradas };
     console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, msg: "import de reconciliação concluído", ...resultado }));
     return json(200, resultado, cors);
   } catch (e) {
@@ -399,6 +418,90 @@ if (import.meta.main) serve(async (req) => {
     return problem(500, "Erro interno", reqId, cors);
   }
 });
+
+/** Espelho idempotente das respostas de tarefas preventivas. `local` permanece texto bruto: uma
+ * avaliação de Sistema pode ser feita em qualquer local e não deve criar/vincular inventário pelo
+ * que o técnico digitou. */
+async function sincronizarAvaliacoesPreventivas(
+  db: ReturnType<typeof createClient>,
+  tarefas: Array<{ taskId: number; questionarios: AuvoQuestionnaire[] | undefined }>,
+): Promise<number> {
+  const comResposta = tarefas.filter((tarefa) => Array.isArray(tarefa.questionarios) && tarefa.questionarios.length > 0);
+  if (!comResposta.length) return 0;
+  const ids = comResposta.map((tarefa) => tarefa.taskId);
+  const { data: osRows, error: osErro } = await db.schema("pcm").from("ordens_servico")
+    .select("auvo_task_id,ocorrencia_preventiva_id").in("auvo_task_id", ids).not("ocorrencia_preventiva_id", "is", null);
+  if (osErro) throw osErro;
+  const ocorrenciaPorTask = new Map<number, string>();
+  for (const os of osRows ?? []) {
+    if (typeof os.auvo_task_id === "number" && typeof os.ocorrencia_preventiva_id === "string") ocorrenciaPorTask.set(os.auvo_task_id, os.ocorrencia_preventiva_id);
+  }
+  const linhas: Array<Record<string, unknown>> = [];
+  const recebidoEm = new Date().toISOString();
+  for (const tarefa of comResposta) {
+    const ocorrenciaId = ocorrenciaPorTask.get(tarefa.taskId);
+    if (!ocorrenciaId) continue;
+    linhas.push(
+      ...montarLinhasAvaliacaoPreventiva(
+        ocorrenciaId,
+        tarefa.taskId,
+        tarefa.questionarios ?? [],
+        recebidoEm,
+      ),
+    );
+  }
+  if (!linhas.length) return 0;
+  const { error } = await db.schema("pcm").rpc("upsert_avaliacoes_preventivas", {
+    p_linhas: linhas,
+  });
+  if (error) throw error;
+  return linhas.length;
+}
+
+/** Converte resposta Auvo em linha estável. A chave nunca depende do texto digitado pelo técnico. */
+export function montarLinhasAvaliacaoPreventiva(
+  ocorrenciaId: string,
+  taskId: number,
+  questionarios: AuvoQuestionnaire[],
+  recebidoEm: string,
+): Array<Record<string, unknown>> {
+  const linhas: Array<Record<string, unknown>> = [];
+  for (const questionario of questionarios) {
+    for (const resposta of questionario.answers ?? []) {
+      const questionId = resposta.questionId ?? resposta.questionDescription;
+      if (questionId == null) continue;
+      linhas.push({
+        ocorrencia_id: ocorrenciaId,
+        chave_origem: `${taskId}:${questionario.id ?? "questionario"}:${questionId}`,
+        item_referencia: resposta.questionDescription ?? null,
+        local_informado: resposta.local ?? resposta.location ?? resposta.localName ?? null,
+        resposta: {
+          questionarioId: questionario.id ?? null,
+          questionario: questionario.name ?? null,
+          pergunta: resposta.questionDescription ?? null,
+          valor: resposta.reply ?? "",
+          respondidaEm: resposta.replyDate ?? null,
+        },
+        fotos: primeiraLista(
+          resposta.photos,
+          resposta.fotos,
+          resposta.images,
+          resposta.attachments,
+          resposta.anexos,
+        ),
+        medicoes: primeiraLista(resposta.measurements, resposta.medidas, resposta.medicoes),
+        auvo_updated_at: resposta.replyDate ?? null,
+        recebido_em: recebidoEm,
+      });
+    }
+  }
+  return linhas;
+}
+
+/** Só preserva coleções reais recebidas; campo ausente nunca inventa evidência. */
+function primeiraLista(...valores: Array<unknown[] | undefined>): unknown[] {
+  return valores.find((valor) => Array.isArray(valor)) ?? [];
+}
 
 /** Dado rico da tarefa que só serve pra exibição (nunca WHERE/ORDER BY/GROUP BY) — vai em
  * `auvo_detalhes` (jsonb). Só inclui chaves presentes/não-vazias no payload real, sem inventar

@@ -114,6 +114,7 @@ import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
+import { PreventivasPage } from "../features/pcm/pages/PreventivasPage";
 import { RelatorioClientePage } from "../features/pcm/pages/RelatorioClientePage";
 import { RelatorioDiarioPage } from "../features/pcm/pages/RelatorioDiarioPage";
 import { RelatorioPlanejamentoPage } from "../features/pcm/pages/RelatorioPlanejamentoPage";
@@ -161,6 +162,7 @@ type PcmView =
   | "assessment"
   | "cliente-marcacoes"
   | "pmoc"
+  | "preventivas"
   | "laudos-spda"
   | "apontamento-horas"
   | "tipos-inspecao"
@@ -350,6 +352,7 @@ const PCM_NAV: NavGroup[] = [
       { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
       { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "PMOC", icon: Snowflake, view: "pmoc" },
+      { label: "Preventivas", icon: Calendar, view: "preventivas" },
       { label: "Relatório", icon: FileBarChart, view: "relatorio-planejamento" },
     ],
   },
@@ -1087,6 +1090,8 @@ export function HomePage() {
               <LaudosSpdaPage />
             ) : pcmView === "pmoc" ? (
               <PmocPage />
+            ) : pcmView === "preventivas" ? (
+              <PreventivasPage />
             ) : pcmView === "ordens" || pcmView === "chamados" || pcmView === "backlog" ? (
               // E01-S118: Chamados/Operação/Backlog são o mesmo board (o Chamado evolui pra OS);
               // `view=backlog` (deep-link do Dashboard) abre já na aba Backlog.

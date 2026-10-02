@@ -51,9 +51,10 @@ describe("E01-S60 — contrato visual V1", () => {
     expect(cadastros).not.toContain('label: "Tipos de Tarefa"');
     expect(home).not.toContain('titulo: "PREVENTIVO"');
     expect(home).not.toContain('label: "Cronograma"');
-    expect(home).not.toContain('label: "Preventivas"');
+    expect(home).toContain('label: "Preventivas", icon: Calendar, view: "preventivas"');
     expect(home).toContain('pcmView === "tipos-tarefa" ?');
     expect(home).toContain('pcmView === "pmoc" ?');
+    expect(home).toContain('pcmView === "preventivas" ?');
   });
 
   it("liga a aba Área do Cliente à central real do portal", () => {
