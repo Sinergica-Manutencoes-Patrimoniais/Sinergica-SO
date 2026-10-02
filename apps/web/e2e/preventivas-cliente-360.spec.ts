@@ -4,15 +4,16 @@ const clienteA = process.env.E2E_PREVENTIVAS_CLIENTE_A;
 const clienteB = process.env.E2E_PREVENTIVAS_CLIENTE_B;
 const nomeClienteA = process.env.E2E_PREVENTIVAS_NOME_A;
 const nomeClienteB = process.env.E2E_PREVENTIVAS_NOME_B;
-
-test.skip(
-  !clienteA || !clienteB || !nomeClienteA || !nomeClienteB,
-  "Requer sessão autenticada e dois clientes de teste existentes; não cria task Auvo.",
-);
+const osNumeroConcluida = process.env.E2E_PREVENTIVAS_OS_NUMERO_CONCLUIDA;
+const auvoUrlConcluida = process.env.E2E_PREVENTIVAS_AUVO_URL_CONCLUIDA;
 
 test("Preventivas no 360 isola cliente em consultas e formulário (E01-S53 AC-8)", async ({
   page,
 }) => {
+  test.skip(
+    !clienteA || !clienteB || !nomeClienteA || !nomeClienteB,
+    "Requer sessão autenticada e dois clientes de teste existentes; não cria task Auvo.",
+  );
   const planosVistos: string[] = [];
   const ocorrenciasVistas: string[] = [];
   const avaliacoesVistas: string[] = [];
@@ -62,4 +63,36 @@ test("Preventivas no 360 isola cliente em consultas e formulário (E01-S53 AC-8)
     await expect(page.getByText(`Cliente: ${nomeClienteB}`)).toBeVisible();
     await expect(page.getByLabel("Cliente")).toHaveCount(0);
   }
+});
+
+test("Calendário abre histórico concluído e mantém o formulário no Auvo (E01-S53 AC-5, AC-7)", async ({
+  page,
+}) => {
+  test.skip(
+    !clienteA || !nomeClienteA || !osNumeroConcluida || !auvoUrlConcluida,
+    "Requer ocorrência concluída de teste e URL Auvo conhecida; não abre nem altera a task.",
+  );
+  if (!clienteA || !nomeClienteA || !osNumeroConcluida || !auvoUrlConcluida) {
+    throw new Error("Configuração E2E de preventiva concluída ausente.");
+  }
+  await page.goto("/");
+  await page.getByText("PCM · Operação", { exact: true }).first().click();
+  await page.getByText("Clientes", { exact: true }).click();
+  const busca = page.getByPlaceholder("Buscar por cliente, cidade, contato, CNPJ ou ID Auvo");
+  await busca.fill(nomeClienteA);
+  await page.getByText(nomeClienteA, { exact: true }).first().click();
+  await page.locator("main").getByRole("button", { name: "Preventivas", exact: true }).click();
+
+  await expect(page.getByText("Calendário de vencimentos")).toBeVisible();
+  await page.getByRole("button", { name: "Mês anterior" }).click();
+  await page.getByRole("button", { name: "Próximo mês" }).click();
+
+  const linha = page.getByText(`OS ${osNumeroConcluida}`, { exact: false }).first();
+  await expect(linha).toBeVisible();
+  const historico = linha.locator("xpath=ancestor::article");
+  await expect(historico.getByText(/Resultado: (Pendente|OK|Não OK)/)).toBeVisible();
+  await expect(historico.getByRole("link", { name: "Abrir formulário no Auvo" })).toHaveAttribute(
+    "href",
+    auvoUrlConcluida,
+  );
 });

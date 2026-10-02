@@ -63,8 +63,11 @@ const dados = {
   ],
 };
 
-function renderWorkspace(props: Partial<React.ComponentProps<typeof PreventivasWorkspace>> = {}) {
-  listarPreventivas.mockResolvedValue(dados);
+function renderWorkspace(
+  props: Partial<React.ComponentProps<typeof PreventivasWorkspace>> = {},
+  dadosPreventivas = dados,
+) {
+  listarPreventivas.mockResolvedValue(dadosPreventivas);
   listarCatalogoPreventivas.mockResolvedValue({
     clientes: [{ id: "cliente-a", nome: "Cliente A" }],
     sistemas: [{ id: "sistema-a", nome: "Sistema A", cliente_id: "cliente-a" }],
@@ -124,6 +127,29 @@ describe("PreventivasWorkspace — E01-S53 AC-8", () => {
 
     expect(await screen.findByText("Detalhe da preventiva")).toBeInTheDocument();
     expect(screen.getAllByText(/OS CH-123/)).toHaveLength(2);
+  });
+
+  it("pagina o histórico sem reduzir os eventos disponíveis no calendário", async () => {
+    const ocorrenciaBase = dados.ocorrencias[0];
+    if (!ocorrenciaBase) throw new Error("Fixture de ocorrência ausente.");
+    const ocorrencias = Array.from({ length: 11 }, (_, indice) => ({
+      ...ocorrenciaBase,
+      id: `ocorrencia-${indice + 1}`,
+      auvo_task_id: indice + 1,
+      os_numero: `CH-${indice + 1}`,
+      vencimento: `2026-10-${String(indice + 1).padStart(2, "0")}`,
+    }));
+    renderWorkspace({}, { ...dados, ocorrencias, avaliacoes: [] });
+
+    expect(await screen.findByText("Histórico: 1–10 de 11")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Plano A: No Auvo" })).toHaveLength(11);
+    expect(screen.getByText(/OS CH-11/)).toBeInTheDocument();
+    expect(screen.queryByText(/OS CH-1 ·/)).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Próxima página do histórico" }));
+
+    expect(screen.getByText("Histórico: 11–11 de 11")).toBeInTheDocument();
+    expect(screen.getByText(/OS CH-1 ·/)).toBeInTheDocument();
   });
 
   it("expõe validação do contrato Auvo somente para superadmin", async () => {

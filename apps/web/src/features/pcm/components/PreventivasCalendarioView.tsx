@@ -11,6 +11,7 @@ export type ItemCalendarioPreventiva = {
   vencimento: string;
   visitaEm: string | null;
   estado: "prevista" | "atrasada" | "agendada" | "auvo_disponivel" | "concluida";
+  resultado?: "pendente" | "ok" | "nao_ok";
 };
 
 const ESTADO: Record<ItemCalendarioPreventiva["estado"], { rotulo: string; classe: string }> = {
@@ -47,6 +48,9 @@ export function PreventivasCalendarioView({
   onSelecionar: (ocorrenciaId: string) => void;
   mesInicial?: Date;
 }) {
+  const [filtroResultado, setFiltroResultado] = useState<"todos" | "pendente" | "ok" | "nao_ok">(
+    "todos",
+  );
   const [mesRef, setMesRef] = useState(() => {
     const base = mesInicial ?? new Date();
     return new Date(base.getFullYear(), base.getMonth(), 1);
@@ -55,11 +59,12 @@ export function PreventivasCalendarioView({
   const ocorrenciasPorDia = useMemo(() => {
     const indice = new Map<string, ItemCalendarioPreventiva[]>();
     for (const ocorrencia of ocorrencias) {
+      if (filtroResultado !== "todos" && ocorrencia.resultado !== filtroResultado) continue;
       const data = dataDoCalendario(ocorrencia);
       indice.set(data, [...(indice.get(data) ?? []), ocorrencia]);
     }
     return indice;
-  }, [ocorrencias]);
+  }, [filtroResultado, ocorrencias]);
   const hoje = formatarDiaIso(new Date());
 
   function mudarMes(delta: number) {
@@ -98,6 +103,22 @@ export function PreventivasCalendarioView({
           {mesRef.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
         </p>
       </div>
+      <label className="flex items-center gap-2 text-sm text-ink-2">
+        Resultado
+        <select
+          aria-label="Filtrar por resultado"
+          className="input w-auto py-1 text-sm"
+          value={filtroResultado}
+          onChange={(event) =>
+            setFiltroResultado(event.target.value as "todos" | "pendente" | "ok" | "nao_ok")
+          }
+        >
+          <option value="todos">Todos</option>
+          <option value="pendente">Pendente</option>
+          <option value="ok">OK</option>
+          <option value="nao_ok">Não OK</option>
+        </select>
+      </label>
       <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-line bg-line-soft">
         {DIAS_SEMANA.map((dia) => (
           <div

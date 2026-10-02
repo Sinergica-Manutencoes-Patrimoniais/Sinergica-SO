@@ -39,6 +39,8 @@ type FormValidacaoContrato = {
   visita: string;
 };
 
+const TAMANHO_PAGINA_HISTORICO = 10;
+
 const criarFormVazio = (clienteId = ""): FormPlano => ({
   nome: "",
   clienteId,
@@ -121,6 +123,7 @@ export function PreventivasWorkspace({
     null,
   );
   const [ocorrenciaEmFoco, setOcorrenciaEmFoco] = useState<string | null>(null);
+  const [paginaHistorico, setPaginaHistorico] = useState(0);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const chave = ["pcm", "preventivas", clienteId ?? "todos"] as const;
@@ -140,6 +143,7 @@ export function PreventivasWorkspace({
     setSelecionada(null);
     setAvaliacaoParaBacklog(null);
     setOcorrenciaEmFoco(null);
+    setPaginaHistorico(0);
     setTecnicoId("");
     setVisita("");
     setErroAcao(null);
@@ -382,6 +386,13 @@ export function PreventivasWorkspace({
         a.os_concluida_em ?? a.visita_em ?? a.vencimento,
       ),
     );
+  const totalPaginasHistorico = Math.max(1, Math.ceil(historico.length / TAMANHO_PAGINA_HISTORICO));
+  const paginaHistoricoSegura = Math.min(paginaHistorico, totalPaginasHistorico - 1);
+  const inicioHistorico = paginaHistoricoSegura * TAMANHO_PAGINA_HISTORICO;
+  const historicoVisivel = historico.slice(
+    inicioHistorico,
+    inicioHistorico + TAMANHO_PAGINA_HISTORICO,
+  );
   const ocorrenciaSelecionada = ocorrenciaEmFoco
     ? (ocorrencias.find((ocorrencia) => ocorrencia.id === ocorrenciaEmFoco) ?? null)
     : null;
@@ -431,6 +442,7 @@ export function PreventivasWorkspace({
                 vencimento: ocorrencia.vencimento,
                 visitaEm: ocorrencia.visita_em,
                 estado: estadoDaOcorrencia(ocorrencia),
+                resultado: ocorrencia.resultado_estado,
               }))}
               onSelecionar={(ocorrenciaId) => {
                 setOcorrenciaEmFoco(ocorrenciaId);
@@ -517,7 +529,7 @@ export function PreventivasWorkspace({
           {historico.length === 0 ? (
             <p className="text-body text-ink-3">Nenhuma preventiva enviada ao Auvo ainda.</p>
           ) : (
-            historico.map((ocorrencia) => {
+            historicoVisivel.map((ocorrencia) => {
               const avaliacoesDaOcorrencia = avaliacoesPorOcorrencia.get(ocorrencia.id) ?? [];
               return (
                 <article
@@ -577,6 +589,35 @@ export function PreventivasWorkspace({
             })
           )}
         </div>
+        {historico.length > 0 && (
+          <div className="mt-3 flex items-center justify-between gap-2 text-sm text-ink-3">
+            <p>
+              Histórico: {inicioHistorico + 1}–
+              {Math.min(inicioHistorico + TAMANHO_PAGINA_HISTORICO, historico.length)} de{" "}
+              {historico.length}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                disabled={paginaHistoricoSegura === 0}
+                aria-label="Página anterior do histórico"
+                onClick={() => setPaginaHistorico((pagina) => Math.max(0, pagina - 1))}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={paginaHistoricoSegura >= totalPaginasHistorico - 1}
+                aria-label="Próxima página do histórico"
+                onClick={() =>
+                  setPaginaHistorico((pagina) => Math.min(totalPaginasHistorico - 1, pagina + 1))
+                }
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
+        )}
       </section>
       <section className="rounded-lg border border-line bg-surface p-4">
         <h2 className="font-semibold text-ink">Planos ativos</h2>

@@ -19,7 +19,7 @@ alwaysApply: false
 | 9 | Triagem de achados e envio manual individual ao backlog, com origem e deduplicação | AC-6 | 8 | teste de decisão/repetição | todo |
 | 10 | Validar plano de Sistema e Componente ponta a ponta; revisão adversarial, `pnpm run ci:local`, CI `db-tests` | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7 | 1-9 | gates verdes | todo |
 | 11 | Exibir e operar Preventivas na aba da Visão 360, usando o mesmo fluxo e dados do PCM com escopo fixo no cliente aberto | AC-8 | 5-9 para fluxo completo; leitura pode avançar antes do gate Auvo | testes de filtro, componente, navegação e E2E da aba | implementado localmente; E2E autenticado pendente de credenciais |
-| 12 | Acrescentar calendário mensal, histórico e detalhe resumido com resultado consolidado e link direto para a OS Auvo | AC-5, AC-7, AC-8, AC-9 | 8, 11 | contrato real de resultado, testes de domínio/UI/E2E e `ci:local` | implementação local parcial; contrato vivo, db-tests, E2E e CI pendentes |
+| 12 | Acrescentar calendário mensal, histórico e detalhe resumido com resultado consolidado e link direto para a OS Auvo | AC-5, AC-7, AC-8, AC-9 | 8, 11 | contrato real de resultado, testes de domínio/UI/E2E e `ci:local` | implementação e migration aplicadas; contrato vivo, db-tests e E2E autenticado pendentes; CI local aprovado |
 
 Task 7 bloqueada até task 1 comprovar POST/GET com questionário e alvo corretos. Resultado de
 POST sem leitura conclusiva não satisfaz gate; task parcial nunca fica disponível ao técnico.
@@ -227,13 +227,15 @@ nunca é interpretado como aprovação ou reprovação.
 - [x] Se campos consolidados não existirem, criar migration aditiva para resultado e instante da
   última consolidação, com RLS FORCE, índices necessários e pgTAP permitido/negado. Não remover
   avaliações ou snapshots existentes.
-- [~] Expandir leitura de ocorrências com OS, técnico, datas e resultado sem N+1. O cliente já é
-  limitado pelo plano autorizado; paginação explícita do histórico permanece pendente.
-- [ ] Gates: testes focados, `lint:migrations`, `db-tests`, typecheck e reentrega fora de ordem.
+- [x] Expandir leitura de ocorrências com OS, técnico, datas e resultado sem N+1. O cliente já é
+  limitado pelo plano autorizado; histórico tem paginação explícita de apresentação, sem reduzir o
+  calendário.
+- [~] Gates: testes focados, `lint:migrations`, typecheck e reentrega fora de ordem aprovados;
+  `db-tests` ainda requer Docker/Supabase local iniciado.
 
 ### Entrega 12.3 — calendário, histórico e detalhe resumido
 
-- [~] Escrever testes de componente para mês atual, navegação entre meses, evento em `visita_em`
+- [x] Escrever testes de componente para mês atual, navegação entre meses, evento em `visita_em`
   ou fallback em `vencimento`, filtros de período/resultado e permanência de ciclos concluídos.
 - [x] Implementar calendário mensal e histórico decrescente na aba Preventivas da Visão 360,
   reutilizando consulta e regras da tela global quando aplicável.
@@ -241,18 +243,21 @@ nunca é interpretado como aprovação ou reprovação.
   conclusão, técnico, OS, estado operacional e resultado.
 - [x] Exibir **Ver OS no Auvo** somente com `auvo_task_id`; abrir a task correta em nova aba, sem
   credenciais na URL. Sem vínculo, explicar que OS ainda não foi criada ou sincronizada.
-- [~] Tratar carregando, vazio, erro/retry e somente leitura. Gates: componente, acessibilidade,
-  teste visual e typecheck.
+- [x] Tratar carregando, vazio, erro/retry e somente leitura. Gates de componente, acessibilidade,
+  teste visual e typecheck aprovados localmente.
 
 ### Entrega 12.4 — validação ponta a ponta
 
-- [ ] E2E autenticado: abrir Cliente 360, navegar meses, localizar ocorrência concluída, conferir
-  resultado e validar destino do link Auvo sem alterar ou concluir tarefa real.
+- [~] E2E autenticado: cenário criado para abrir Cliente 360, navegar meses, localizar ocorrência
+  concluída, conferir resultado e validar destino do link Auvo sem alterar ou concluir tarefa real.
+  Execução depende de credenciais e identificadores de teste.
 - [ ] E2E de isolamento: cliente A nunca mostra evento, histórico ou detalhe de B após troca rápida
   de cliente, filtro, retry ou retorno atrasado.
 - [ ] Regressão de criação/agendamento, pausa, retry Auvo e envio manual ao backlog.
-- [ ] Executar testes web, typecheck, `db-tests`, `pnpm run ci:local`, revisão adversarial e
-  `git diff --check`. Registrar separadamente qualquer gate externo indisponível.
+- [~] Executar testes web, typecheck, `db-tests`, `pnpm run ci:local`, revisão adversarial e
+  `git diff --check`. Suíte web (170 arquivos, 1121 testes; 3 arquivos/9 testes externos
+  pulados), typecheck, migration remota e CI local aprovados; `db-tests`, E2E autenticado e
+  revisão adversarial permanecem.
 
 ### Fora da T12
 
@@ -270,6 +275,10 @@ nunca é interpretado como aprovação ou reprovação.
   ambiente foram pulados), typecheck e `git diff --check` aprovados. O E2E foi criado e listado,
   mas a execução autenticada parou no setup porque `SUPABASE_TEST_EMAIL` e
   `SUPABASE_TEST_PASSWORD` não estão configurados. Nenhuma task Auvo foi criada.
+- 12: migration `0228` aplicada ao Supabase remoto; suíte web aprovada (170 arquivos, 1121
+  testes; 3 arquivos/9 testes externos pulados), typecheck, lint de migrations e `ci:local`
+  aprovados. E2E autenticado continua sem credenciais/identificadores de teste. `supabase start`
+  não iniciou porque o daemon Docker local está indisponível; portanto `db-tests` não foi rodado.
 
 ## Divergências (SPEC_DEVIATION)
 
