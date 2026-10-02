@@ -10,10 +10,22 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  createClient,
+  SupabaseClient,
+} from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
-import { AuvoApiError, auvoGet, auvoPost, buildParamFilter } from "../_shared/auvo/client.ts";
+import {
+  getSupabaseServiceKey,
+  HttpError,
+  requireServiceRole,
+} from "../_shared/auth.ts";
+import {
+  AuvoApiError,
+  auvoGet,
+  auvoPost,
+  buildParamFilter,
+} from "../_shared/auvo/client.ts";
 import { resolveAuvoTaskTypeId } from "../_shared/auvo/task-type-map.ts";
 import { resolveAuvoPriority } from "../_shared/auvo/priority-map.ts";
 
@@ -24,16 +36,62 @@ const InputSchema = z.object({
 });
 
 interface AuvoTask {
-  id: number;
+  id?: number;
+  taskID?: number;
   externalId?: string;
+}
+
+export function extrairTaskIdAuvo(resposta: unknown): number | null {
+  const corpo = resposta as {
+    result?: unknown;
+    id?: number;
+    taskID?: number;
+    taskId?: number;
+  };
+  if (Array.isArray(corpo?.result)) return extrairTaskIdAuvo(corpo.result[0]);
+  const result = corpo?.result as {
+    id?: number;
+    taskID?: number;
+    taskId?: number;
+  } | undefined;
+  return result?.id ?? result?.taskID ?? result?.taskId ?? corpo?.id ??
+    corpo?.taskID ?? corpo?.taskId ?? null;
+}
+
+export function montarPayloadTaskAuvo(input: {
+  externalId: string;
+  customerId: number;
+  taskType: number;
+  priority: number;
+  orientation: string;
+  equipmentId?: number;
+}): Record<string, unknown> {
+  return {
+    externalId: input.externalId,
+    customerId: input.customerId,
+    taskType: input.taskType,
+    priority: input.priority,
+    orientation: input.orientation,
+    ...(input.equipmentId == null ? {} : { equipmentsId: [input.equipmentId] }),
+  };
 }
 
 serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin"));
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors, status: 204 });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: cors, status: 204 });
+  }
 
   const reqId = crypto.randomUUID().slice(0, 8);
-  console.log(JSON.stringify({ ts: new Date().toISOString(), nivel: "info", fn: FN, reqId, method: req.method }));
+  console.log(
+    JSON.stringify({
+      ts: new Date().toISOString(),
+      nivel: "info",
+      fn: FN,
+      reqId,
+      method: req.method,
+    }),
+  );
 
   try {
     if (req.method !== "POST") throw new HttpError(405, "Método não permitido");
@@ -46,9 +104,13 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceKey = getSupabaseServiceKey();
-    if (!supabaseUrl || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
+    if (!supabaseUrl || !serviceKey) {
+      throw new HttpError(500, "Ambiente Supabase incompleto");
+    }
 
-    const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const db = createClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
     // 3) Busca a OS.
     const { data: os, error: osError } = await db
@@ -65,7 +127,11 @@ serve(async (req) => {
 
     // AC-5: idempotente — já sincronizada, no-op (sem nova chamada ao Auvo).
     if (os.auvo_task_id != null) {
-      return json(200, { ok: true, taskId: os.auvo_task_id, created: false }, cors);
+      return json(
+        200,
+        { ok: true, taskId: os.auvo_task_id, created: false },
+        cors,
+      );
     }
 
     // E01-S40: prefere o tipo de tarefa escolhido na criação da OS (tipo_tarefa_id →
@@ -88,8 +154,16 @@ serve(async (req) => {
 
     // AC-7: nem tipo de tarefa nem categoria resolveram — falha explícita, NENHUMA chamada POST /tasks.
     if (taskTypeId === undefined) {
-      await markFailed(db, input.osId, `taskTypeId não configurado para categoria ${os.categoria}`);
-      return json(200, { ok: false, reason: "taskTypeId_not_mapped", categoria: os.categoria }, cors);
+      await markFailed(
+        db,
+        input.osId,
+        `taskTypeId não configurado para categoria ${os.categoria}`,
+      );
+      return json(200, {
+        ok: false,
+        reason: "taskTypeId_not_mapped",
+        categoria: os.categoria,
+      }, cors);
     }
 
     // A partir daqui, qualquer falha (DB ou Auvo) grava auvo_sync_status='failed' e retorna 200
@@ -105,19 +179,23 @@ serve(async (req) => {
         .eq("id", os.client_id)
         .maybeSingle();
       if (clienteError) throw clienteError;
-      if (!cliente) throw new Error(`Cliente ${os.client_id} da OS ${input.osId} não encontrado`);
+      if (!cliente) {
+        throw new Error(
+          `Cliente ${os.client_id} da OS ${input.osId} não encontrado`,
+        );
+      }
 
       let customerId: number | null = cliente.auvo_id;
       if (customerId == null) {
-        customerId = await syncClienteFallback(supabaseUrl, serviceKey, os.client_id);
+        customerId = await syncClienteFallback(
+          supabaseUrl,
+          serviceKey,
+          os.client_id,
+        );
       }
 
-      // E01-S153: OS com Equipamento (Item) escolhido como Alvo — resolve o `auvo_equipment_id`
-      // dele e envia como `equipmentId` no payload da task. CAMPO NÃO VERIFICADO CONTRA A API REAL
-      // do Auvo (mesma ressalva do topo do arquivo) — inferido do nome usado no webhook inbound
-      // (`payload.equipmentId`/`task.equipmentId`, ver webhook-dispatch.ts/extractAuvoId). Ausência
-      // ou nome errado apenas deixa a task sem Alvo (nunca bloqueia a criação — mesmo padrão de
-      // falha tolerante desta função).
+      // E01-S153: OS com Equipamento (Item) escolhido como alvo — contrato Auvo v2 usa
+      // `equipmentsId: number[]` no POST /tasks. Ausência do vínculo mantém task sem alvo.
       let equipmentId: number | undefined;
       if (os.equipamento_id) {
         const { data: equipamento, error: equipamentoError } = await db
@@ -141,7 +219,9 @@ serve(async (req) => {
         );
         existente = search?.result?.find((t) => t.externalId === input.osId);
       } catch (searchError) {
-        if (!(searchError instanceof AuvoApiError) || searchError.status !== 400) {
+        if (
+          !(searchError instanceof AuvoApiError) || searchError.status !== 400
+        ) {
           throw searchError;
         }
         console.warn(
@@ -150,7 +230,8 @@ serve(async (req) => {
             nivel: "warn",
             fn: FN,
             reqId,
-            msg: "Auvo rejeitou busca de task por externalId; seguindo para criação com externalId",
+            msg:
+              "Auvo rejeitou busca de task por externalId; seguindo para criação com externalId",
             osId: input.osId,
             detail: searchError.message,
           }),
@@ -159,17 +240,28 @@ serve(async (req) => {
 
       let taskId: number;
       if (existente) {
-        taskId = existente.id;
+        const existenteId = extrairTaskIdAuvo(existente);
+        if (existenteId == null) {
+          throw new Error("Busca Auvo devolveu task sem identificador");
+        }
+        taskId = existenteId;
       } else {
-        const criada = await auvoPost<{ result: { id: number } }>("/tasks", {
-          externalId: input.osId,
-          customerId,
-          taskTypeId,
-          priority: resolveAuvoPriority(os.prioridade),
-          orientation: os.descricao ?? os.titulo,
-          ...(equipmentId != null ? { equipmentId } : {}),
-        });
-        taskId = criada.result.id;
+        const criada = await auvoPost<unknown>(
+          "/tasks",
+          montarPayloadTaskAuvo({
+            externalId: input.osId,
+            customerId,
+            taskType: taskTypeId,
+            priority: resolveAuvoPriority(os.prioridade),
+            orientation: os.descricao ?? os.titulo,
+            equipmentId,
+          }),
+        );
+        const criadaId = extrairTaskIdAuvo(criada);
+        if (criadaId == null) {
+          throw new Error("Auvo não devolveu o identificador da task criada");
+        }
+        taskId = criadaId;
       }
 
       // 6) Grava sucesso.
@@ -188,38 +280,72 @@ serve(async (req) => {
 
       return json(200, { ok: true, taskId, created: !existente }, cors);
     } catch (inner) {
-      const detail =
-        inner instanceof AuvoApiError
-          ? `Auvo ${inner.status}: ${inner.message}${inner.requestId ? ` (X-Request-Id: ${inner.requestId})` : ""}`
-          : inner instanceof Error
-            ? inner.message
-            : String(inner);
+      const detail = inner instanceof AuvoApiError
+        ? `Auvo ${inner.status}: ${inner.message}${
+          inner.requestId ? ` (X-Request-Id: ${inner.requestId})` : ""
+        }`
+        : inner instanceof Error
+        ? inner.message
+        : String(inner);
 
       console.error(
-        JSON.stringify({ ts: new Date().toISOString(), nivel: "error", fn: FN, reqId, msg: "falha ao criar task Auvo", osId: input.osId, detail }),
+        JSON.stringify({
+          ts: new Date().toISOString(),
+          nivel: "error",
+          fn: FN,
+          reqId,
+          msg: "falha ao criar task Auvo",
+          osId: input.osId,
+          detail,
+        }),
       );
 
       await markFailed(db, input.osId, detail);
       return json(200, { ok: false, reason: "sync_failed", detail }, cors);
     }
   } catch (e) {
-    if (e instanceof HttpError) return problem(e.status, e.message, reqId, cors);
-    if (e instanceof z.ZodError) return problem(422, "Input inválido", reqId, cors);
-    console.error(JSON.stringify({ ts: new Date().toISOString(), nivel: "error", fn: FN, reqId, msg: "erro inesperado", detail: String(e) }));
+    if (e instanceof HttpError) {
+      return problem(e.status, e.message, reqId, cors);
+    }
+    if (e instanceof z.ZodError) {
+      return problem(422, "Input inválido", reqId, cors);
+    }
+    console.error(
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        nivel: "error",
+        fn: FN,
+        reqId,
+        msg: "erro inesperado",
+        detail: String(e),
+      }),
+    );
     return problem(500, "Erro interno", reqId, cors); // nunca vaza stack
   }
 });
 
 /** Chama pcm-auvo-customers-sync internamente (mesma auth de service_role) e retorna o customerId. */
-async function syncClienteFallback(supabaseUrl: string, serviceKey: string, clienteId: string): Promise<number> {
-  const res = await fetch(`${supabaseUrl}/functions/v1/pcm-auvo-customers-sync`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
-    body: JSON.stringify({ clienteId }),
-  });
+async function syncClienteFallback(
+  supabaseUrl: string,
+  serviceKey: string,
+  clienteId: string,
+): Promise<number> {
+  const res = await fetch(
+    `${supabaseUrl}/functions/v1/pcm-auvo-customers-sync`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({ clienteId }),
+    },
+  );
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`Falha no fallback de sync de cliente (status ${res.status}): ${body}`);
+    throw new Error(
+      `Falha no fallback de sync de cliente (status ${res.status}): ${body}`,
+    );
   }
   const data = await res.json();
   if (typeof data?.customerId !== "number") {
@@ -230,7 +356,11 @@ async function syncClienteFallback(supabaseUrl: string, serviceKey: string, clie
 
 /** Grava auvo_sync_status='failed' + auvo_sync_error na OS. Nunca lança — loga se a própria
  * escrita falhar, para não mascarar o erro original com um erro novo não tratado. */
-async function markFailed(db: SupabaseClient, osId: string, errorMessage: string): Promise<void> {
+async function markFailed(
+  db: SupabaseClient,
+  osId: string,
+  errorMessage: string,
+): Promise<void> {
   const { error } = await db
     .schema("pcm")
     .from("ordens_servico")
@@ -242,19 +372,35 @@ async function markFailed(db: SupabaseClient, osId: string, errorMessage: string
     .eq("id", osId);
   if (error) {
     console.error(
-      JSON.stringify({ ts: new Date().toISOString(), nivel: "error", fn: FN, msg: "falha ao gravar auvo_sync_status=failed", osId, detail: error.message }),
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        nivel: "error",
+        fn: FN,
+        msg: "falha ao gravar auvo_sync_status=failed",
+        osId,
+        detail: error.message,
+      }),
     );
   }
 }
 
-function json(status: number, body: unknown, cors: Record<string, string>): Response {
+function json(
+  status: number,
+  body: unknown,
+  cors: Record<string, string>,
+): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", ...cors },
   });
 }
 
-function problem(status: number, detail: string, reqId: string, cors: Record<string, string>): Response {
+function problem(
+  status: number,
+  detail: string,
+  reqId: string,
+  cors: Record<string, string>,
+): Response {
   const titles: Record<number, string> = {
     400: "Bad Request",
     401: "Unauthorized",
@@ -263,7 +409,13 @@ function problem(status: number, detail: string, reqId: string, cors: Record<str
     422: "Unprocessable Entity",
     500: "Internal Server Error",
   };
-  const body = { type: "about:blank", title: titles[status] ?? "Error", status, detail, reqId };
+  const body = {
+    type: "about:blank",
+    title: titles[status] ?? "Error",
+    status,
+    detail,
+    reqId,
+  };
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/problem+json", ...cors },
