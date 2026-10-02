@@ -118,6 +118,14 @@ describe("PreventivasWorkspace — E01-S53 AC-8", () => {
     );
   });
 
+  it("abre o detalhe da ocorrência ao selecioná-la no calendário", async () => {
+    renderWorkspace();
+    await userEvent.click(await screen.findByRole("button", { name: "Plano A: No Auvo" }));
+
+    expect(await screen.findByText("Detalhe da preventiva")).toBeInTheDocument();
+    expect(screen.getAllByText(/OS CH-123/)).toHaveLength(2);
+  });
+
   it("expõe validação do contrato Auvo somente para superadmin", async () => {
     renderWorkspace({ podeValidarContratoAuvo: true });
     await userEvent.click(await screen.findByRole("button", { name: "Validar contrato Auvo" }));

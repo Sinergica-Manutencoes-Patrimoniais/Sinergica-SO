@@ -18,6 +18,7 @@ export type PlanoPreventivo = {
   equipamento_id: string | null;
   questionario_id: string;
   tipo_tarefa_id: string;
+  alvo_nome?: string | null;
 };
 
 export type OcorrenciaPreventiva = {

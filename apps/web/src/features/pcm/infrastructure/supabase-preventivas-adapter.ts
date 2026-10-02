@@ -24,7 +24,33 @@ export async function listarPreventivas(
   if (contexto.clienteId) planosQuery = planosQuery.eq("cliente_id", contexto.clienteId);
   const planosResultado = await planosQuery.order("primeira_data");
   lancarSeErro(planosResultado);
-  const planos = (planosResultado.data ?? []) as PlanoPreventivo[];
+  const planosSemAlvo = (planosResultado.data ?? []) as PlanoPreventivo[];
+  const sistemaIds = planosSemAlvo
+    .map((plano) => plano.sistema_id)
+    .filter((id): id is string => id != null);
+  const equipamentoIds = planosSemAlvo
+    .map((plano) => plano.equipamento_id)
+    .filter((id): id is string => id != null);
+  const [sistemasResultado, equipamentosResultado] = await Promise.all([
+    sistemaIds.length
+      ? supabase.schema("pcm").from("sistemas").select("id,nome").in("id", sistemaIds)
+      : Promise.resolve({ data: [], error: null }),
+    equipamentoIds.length
+      ? supabase.schema("pcm").from("equipamentos").select("id,nome").in("id", equipamentoIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  lancarSeErro(sistemasResultado);
+  lancarSeErro(equipamentosResultado);
+  const alvoPorId = new Map<string, string>([
+    ...(sistemasResultado.data ?? []).map((sistema) => [sistema.id, sistema.nome] as const),
+    ...(equipamentosResultado.data ?? []).map(
+      (equipamento) => [equipamento.id, equipamento.nome] as const,
+    ),
+  ]);
+  const planos = planosSemAlvo.map((plano) => ({
+    ...plano,
+    alvo_nome: alvoPorId.get(plano.sistema_id ?? plano.equipamento_id ?? "") ?? null,
+  }));
   const planoIds = planos.map((plano) => plano.id);
   if (planoIds.length === 0) return { planos: [], ocorrencias: [], avaliacoes: [] };
 
