@@ -76,13 +76,13 @@ export async function listarCatalogoPreventivas(
   const sistemasBase = supabase
     .schema("pcm")
     .from("sistemas")
-    .select("id,nome,cliente_id")
+    .select("id,nome,cliente_id,auvo_equipment_id")
     .is("deleted_at", null)
     .eq("ativo", true);
   const equipamentosBase = supabase
     .schema("pcm")
     .from("equipamentos")
-    .select("id,nome,client_id")
+    .select("id,nome,client_id,auvo_equipment_id")
     .is("deleted_at", null)
     .eq("ativo", true);
   const [clientes, sistemas, equipamentos, questionarios, tipos, tecnicos] = await Promise.all([

@@ -19,5 +19,11 @@ export function PreventivasPage() {
   if (!leitura)
     return <div className="p-12 text-center text-ink-3">Você não tem acesso às preventivas.</div>;
   if (!user) return null;
-  return <PreventivasWorkspace temEscrita={escrita} userId={user.id} />;
+  return (
+    <PreventivasWorkspace
+      temEscrita={escrita}
+      podeValidarContratoAuvo={user.papel === "superadmin"}
+      userId={user.id}
+    />
+  );
 }

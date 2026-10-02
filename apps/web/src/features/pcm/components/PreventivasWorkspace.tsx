@@ -28,6 +28,16 @@ type FormPlano = {
   unidade: "semanas" | "meses";
 };
 
+type FormValidacaoContrato = {
+  clienteId: string;
+  alvoTipo: "sistema" | "equipamento";
+  alvoId: string;
+  tecnicoId: string;
+  questionarioId: string;
+  tipoTarefaId: string;
+  visita: string;
+};
+
 const criarFormVazio = (clienteId = ""): FormPlano => ({
   nome: "",
   clienteId,
@@ -39,6 +49,20 @@ const criarFormVazio = (clienteId = ""): FormPlano => ({
   intervaloN: 1,
   unidade: "meses",
 });
+
+const criarFormValidacao = (clienteId = ""): FormValidacaoContrato => {
+  const visita = new Date(Date.now() + 86_400_000);
+  visita.setHours(10, 0, 0, 0);
+  return {
+    clienteId,
+    alvoTipo: "equipamento",
+    alvoId: "",
+    tecnicoId: "",
+    questionarioId: "",
+    tipoTarefaId: "",
+    visita: visita.toISOString().slice(0, 16),
+  };
+};
 
 function dataHoraLocal(valor: string | null): string {
   if (!valor) return "—";
@@ -59,18 +83,24 @@ export function PreventivasWorkspace({
   clienteId,
   clienteNome,
   temEscrita,
+  podeValidarContratoAuvo = false,
   userId,
   compacto = false,
 }: {
   clienteId?: string;
   clienteNome?: string;
   temEscrita: boolean;
+  podeValidarContratoAuvo?: boolean;
   userId: string;
   compacto?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [novo, setNovo] = useState(false);
+  const [validandoContrato, setValidandoContrato] = useState(false);
   const [form, setForm] = useState<FormPlano>(() => criarFormVazio(clienteId));
+  const [formValidacao, setFormValidacao] = useState<FormValidacaoContrato>(() =>
+    criarFormValidacao(clienteId),
+  );
   const [selecionada, setSelecionada] = useState<OcorrenciaPreventiva | null>(null);
   const [tecnicoId, setTecnicoId] = useState("");
   const [visita, setVisita] = useState("");
@@ -87,17 +117,19 @@ export function PreventivasWorkspace({
   const catalogo = useQuery({
     queryKey: ["pcm", "preventivas", "catalogo", clienteId ?? "todos"],
     queryFn: () => listarCatalogoPreventivas({ clienteId }),
-    enabled: novo || selecionada !== null,
+    enabled: novo || selecionada !== null || validandoContrato,
   });
 
   useEffect(() => {
     setNovo(false);
+    setValidandoContrato(false);
     setSelecionada(null);
     setAvaliacaoParaBacklog(null);
     setTecnicoId("");
     setVisita("");
     setErroAcao(null);
     setForm(criarFormVazio(clienteId));
+    setFormValidacao(criarFormValidacao(clienteId));
   }, [clienteId]);
 
   const dados = preventivas.data;
@@ -112,6 +144,12 @@ export function PreventivasWorkspace({
       ? catalogo.data.sistemas.filter((item) => item.cliente_id === clienteEfetivoId)
       : catalogo.data.equipamentos.filter((item) => item.client_id === clienteEfetivoId);
   }, [catalogo.data, clienteEfetivoId, form.alvoTipo]);
+  const alvosValidacao = useMemo(() => {
+    if (!catalogo.data) return [];
+    return formValidacao.alvoTipo === "sistema"
+      ? catalogo.data.sistemas.filter((item) => item.cliente_id === formValidacao.clienteId)
+      : catalogo.data.equipamentos.filter((item) => item.client_id === formValidacao.clienteId);
+  }, [catalogo.data, formValidacao.alvoTipo, formValidacao.clienteId]);
 
   async function atualizar() {
     await queryClient.invalidateQueries({ queryKey: ["pcm", "preventivas"] });
@@ -240,6 +278,47 @@ export function PreventivasWorkspace({
     }
   }
 
+  async function validarContratoAuvo() {
+    const alvo = alvosValidacao.find((item) => item.id === formValidacao.alvoId);
+    if (
+      !formValidacao.clienteId ||
+      !formValidacao.tecnicoId ||
+      !formValidacao.questionarioId ||
+      !formValidacao.tipoTarefaId ||
+      !alvo?.auvo_equipment_id ||
+      !formValidacao.visita
+    ) {
+      setErroAcao("Informe cliente, alvo vinculado ao Auvo, técnico, questionário, tipo e data.");
+      return;
+    }
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("pcm-preventivas-validar-auvo", {
+        body: {
+          clienteId: formValidacao.clienteId,
+          tecnicoFuncionarioId: formValidacao.tecnicoId,
+          questionarioId: formValidacao.questionarioId,
+          tipoTarefaId: formValidacao.tipoTarefaId,
+          equipamentoAuvoId: alvo.auvo_equipment_id,
+          alvoTipo: formValidacao.alvoTipo,
+          visitaEm: new Date(formValidacao.visita).toISOString(),
+        },
+      });
+      if (error) throw await erroDetalhado(error);
+      if (!(data as { ok?: boolean }).ok) throw new Error("Auvo não confirmou a task de teste.");
+      setValidandoContrato(false);
+      setFormValidacao(criarFormValidacao(clienteId));
+      await atualizar();
+    } catch (causa) {
+      setErroAcao(
+        causa instanceof Error ? causa.message : "Não foi possível validar o contrato Auvo.",
+      );
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   if (preventivas.isLoading)
     return (
       <div className={compacto ? "py-4" : "p-8"}>
@@ -272,6 +351,11 @@ export function PreventivasWorkspace({
             <RefreshCw className="mr-2 h-4 w-4" />
             Atualizar
           </Button>
+          {podeValidarContratoAuvo && (
+            <Button variant="secondary" onClick={() => setValidandoContrato(true)}>
+              Validar contrato Auvo
+            </Button>
+          )}
           {temEscrita && (
             <Button onClick={() => setNovo(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -526,6 +610,90 @@ export function PreventivasWorkspace({
           <Button disabled={salvando || catalogo.isLoading} onClick={() => void criarPlano()}>
             <Calendar className="mr-2 h-4 w-4" />
             Criar plano
+          </Button>
+        </div>
+      </Modal>
+      <Modal
+        open={validandoContrato}
+        onOpenChange={setValidandoContrato}
+        titulo="Validação do contrato Auvo"
+        descricao="Cria uma task futura de teste. Execute uma vez para Sistema e outra para Equipamento."
+      >
+        <div className="grid gap-3">
+          <Campo label="Cliente" id="validacao-cliente">
+            <Select
+              id="validacao-cliente"
+              value={formValidacao.clienteId}
+              onChange={(clienteIdSelecionado) =>
+                setFormValidacao({ ...formValidacao, clienteId: clienteIdSelecionado, alvoId: "" })
+              }
+              opcoes={catalogo.data?.clientes ?? []}
+            />
+          </Campo>
+          <Campo label="Tipo de alvo" id="validacao-alvo-tipo">
+            <select
+              id="validacao-alvo-tipo"
+              className="input"
+              value={formValidacao.alvoTipo}
+              onChange={(e) =>
+                setFormValidacao({
+                  ...formValidacao,
+                  alvoTipo: e.target.value as FormValidacaoContrato["alvoTipo"],
+                  alvoId: "",
+                })
+              }
+            >
+              <option value="equipamento">Equipamento / componente</option>
+              <option value="sistema">Sistema</option>
+            </select>
+          </Campo>
+          <Campo label="Alvo vinculado ao Auvo" id="validacao-alvo">
+            <Select
+              id="validacao-alvo"
+              value={formValidacao.alvoId}
+              onChange={(alvoId) => setFormValidacao({ ...formValidacao, alvoId })}
+              opcoes={alvosValidacao}
+              placeholder="Selecione o alvo"
+            />
+          </Campo>
+          <Campo label="Técnico" id="validacao-tecnico">
+            <Select
+              id="validacao-tecnico"
+              value={formValidacao.tecnicoId}
+              onChange={(tecnicoId) => setFormValidacao({ ...formValidacao, tecnicoId })}
+              opcoes={catalogo.data?.tecnicos ?? []}
+            />
+          </Campo>
+          <Campo label="Questionário do Auvo" id="validacao-questionario">
+            <Select
+              id="validacao-questionario"
+              value={formValidacao.questionarioId}
+              onChange={(questionarioId) => setFormValidacao({ ...formValidacao, questionarioId })}
+              opcoes={catalogo.data?.questionarios ?? []}
+            />
+          </Campo>
+          <Campo label="Tipo de tarefa do Auvo" id="validacao-tipo">
+            <Select
+              id="validacao-tipo"
+              value={formValidacao.tipoTarefaId}
+              onChange={(tipoTarefaId) => setFormValidacao({ ...formValidacao, tipoTarefaId })}
+              opcoes={catalogo.data?.tipos ?? []}
+            />
+          </Campo>
+          <Campo label="Data e hora futura" id="validacao-visita">
+            <input
+              id="validacao-visita"
+              className="input"
+              type="datetime-local"
+              value={formValidacao.visita}
+              onChange={(e) => setFormValidacao({ ...formValidacao, visita: e.target.value })}
+            />
+          </Campo>
+          <Button
+            disabled={salvando || catalogo.isLoading}
+            onClick={() => void validarContratoAuvo()}
+          >
+            Validar e criar task de teste
           </Button>
         </div>
       </Modal>

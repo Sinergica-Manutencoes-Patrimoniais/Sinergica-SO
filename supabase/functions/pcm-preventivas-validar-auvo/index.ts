@@ -8,11 +8,19 @@ import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.t
 import { auvoGet, auvoPatch, auvoPost } from "../_shared/auvo/client.ts";
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
 
-const Input = z.object({ clienteId: z.string().uuid(), tecnicoFuncionarioId: z.string().uuid(), questionarioId: z.string().uuid(), tipoTarefaId: z.string().uuid(), equipamentoAuvoId: z.number().int().positive(), visitaEm: z.string().datetime() });
+const Input = z.object({ clienteId: z.string().uuid(), tecnicoFuncionarioId: z.string().uuid(), questionarioId: z.string().uuid(), tipoTarefaId: z.string().uuid(), equipamentoAuvoId: z.number().int().positive(), alvoTipo: z.enum(["sistema", "equipamento"]), visitaEm: z.string().datetime() });
 function claims(req: Request): Record<string, unknown> { try { const p = (req.headers.get("Authorization")?.replace("Bearer ", "") ?? "").split(".")[1]; return JSON.parse(atob((p ?? "").replace(/-/g, "+").replace(/_/g, "/"))); } catch { return {}; } }
 function taskId(valor: unknown): number | null { const x = valor as { result?: { id?: number; taskID?: number }; id?: number; taskID?: number }; return x.result?.id ?? x.result?.taskID ?? x.id ?? x.taskID ?? null; }
 
-serve(async (req) => {
+type EvidenciaAlvo = { tecnico?: boolean; data?: boolean; alvo?: boolean; questionario?: boolean };
+export function contratoPreventivoCompleto(evidencia: Record<string, unknown>): boolean {
+  return ["sistema", "equipamento"].every((tipo) => {
+    const item = evidencia[tipo] as EvidenciaAlvo | undefined;
+    return item?.tecnico === true && item.data === true && item.alvo === true && item.questionario === true;
+  });
+}
+
+if (import.meta.main) serve(async (req) => {
   const cors = corsHeaders(req.headers.get("Origin"));
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   try {
@@ -23,6 +31,9 @@ serve(async (req) => {
     const input = Input.parse(await req.json());
     if (new Date(input.visitaEm).getTime() <= Date.now()) throw new HttpError(422, "Use uma data futura para a task de teste");
     const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", getSupabaseServiceKey(), { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: contratoAnterior, error: contratoAnteriorErro } = await db.schema("pcm").from("preventiva_auvo_contrato").select("evidencia").eq("id", true).single();
+    if (contratoAnteriorErro) throw contratoAnteriorErro;
+    const evidenciasAnteriores = (contratoAnterior.evidencia ?? {}) as Record<string, unknown>;
     await db.schema("pcm").from("preventiva_auvo_contrato").update({ estado: "pendente", erro: null, updated_at: new Date().toISOString() }).eq("id", true);
     try {
       const [clienteR, tecnicoR, questionarioR, tipoR] = await Promise.all([
@@ -45,8 +56,10 @@ serve(async (req) => {
       const ok = Number(tarefa.idUserTo) === tecnicoR.data.auvo_user_id && String(tarefa.taskDate ?? "").slice(0, 19) === input.visitaEm.slice(0, 19) && Number(tarefa.equipmentId) === input.equipamentoAuvoId && questionarioOk;
       const evidencia = { taskId: id, externalId: chave, tecnico: Number(tarefa.idUserTo) === tecnicoR.data.auvo_user_id, data: String(tarefa.taskDate ?? "").slice(0, 19) === input.visitaEm.slice(0, 19), alvo: Number(tarefa.equipmentId) === input.equipamentoAuvoId, questionario: questionarioOk };
       if (!ok) throw new Error("GET Auvo não confirmou todos os campos críticos");
-      await db.schema("pcm").from("preventiva_auvo_contrato").update({ estado: "validado", validado_em: new Date().toISOString(), evidencia, erro: null, updated_at: new Date().toISOString() }).eq("id", true);
-      return resposta(200, { ok: true, evidencia }, cors);
+      const evidencias = { ...evidenciasAnteriores, [input.alvoTipo]: evidencia };
+      const completo = contratoPreventivoCompleto(evidencias);
+      await db.schema("pcm").from("preventiva_auvo_contrato").update({ estado: completo ? "validado" : "pendente", validado_em: completo ? new Date().toISOString() : null, evidencia: evidencias, erro: null, updated_at: new Date().toISOString() }).eq("id", true);
+      return resposta(200, { ok: true, completo, evidencia }, cors);
     } catch (erro) {
       const mensagem = erro instanceof Error ? erro.message : "Falha ao validar contrato Auvo";
       await db.schema("pcm").from("preventiva_auvo_contrato").update({ estado: "falhou", erro: mensagem.slice(0, 500), updated_at: new Date().toISOString() }).eq("id", true);
