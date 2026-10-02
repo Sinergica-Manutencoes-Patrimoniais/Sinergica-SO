@@ -409,7 +409,7 @@ if (import.meta.main) {
             updated_at: new Date().toISOString(),
           }).eq("id", true);
           throw new Error(
-            `GET Auvo não confirmou campos críticos (tecnico=${evidencia.tecnico}; data=${evidencia.data}; tipo=${evidencia.tipo}; alvo=${evidencia.alvo}; questionario=${evidencia.questionario})`,
+            `GET Auvo não confirmou campos críticos (tecnico=${evidencia.tecnico}; data=${evidencia.data}; tipo=${evidencia.tipo}; alvo=${evidencia.alvo}; questionario=${evidencia.questionario}; formatoQuestionario=${resumoCamposTaskAuvo({ questionnaireId: tarefa.questionnaireId, questionnaires: tarefa.questionnaires })})`,
           );
         }
         const evidencias = {
@@ -442,10 +442,15 @@ if (import.meta.main) {
         : erro instanceof z.ZodError
         ? 422
         : 500;
+      // A tela de validação é exclusiva de superadmin. Preservar a mensagem
+      // operacional (sem corpos/token do Auvo) permite corrigir o contrato
+      // sem repetir uma task de teste às cegas.
       const detail = erro instanceof HttpError
         ? erro.message
         : erro instanceof z.ZodError
         ? "Entrada inválida"
+        : erro instanceof Error
+        ? erro.message.slice(0, 500)
         : "Não foi possível validar o contrato Auvo";
       return resposta(status, { title: "Error", status, detail }, cors);
     }
