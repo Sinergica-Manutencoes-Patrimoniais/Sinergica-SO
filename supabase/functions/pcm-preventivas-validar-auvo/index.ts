@@ -86,7 +86,12 @@ export function taskTesteExistente(
   },
 ): number | null {
   const tarefas = tarefasDaResposta(resposta);
-  const exata = tarefas.find((tarefa) => tarefa.externalId === alvo.externalId);
+  const exata = tarefas.find((tarefa) =>
+    tarefa.externalId === alvo.externalId &&
+    tarefa.customerId === alvo.customerId &&
+    tarefa.equipmentsId?.includes(alvo.equipmentId) &&
+    tarefa.taskType === alvo.taskTypeId
+  );
   const legada = tarefas.filter((tarefa) =>
     tarefa.orientation === "TESTE DE CONTRATO PCM PREVENTIVAS — não executar" &&
     tarefa.customerId === alvo.customerId &&
@@ -121,22 +126,6 @@ export function montarPayloadCriacaoTask(input: {
     orientation: "TESTE DE CONTRATO PCM PREVENTIVAS — não executar",
     priority: 1,
   };
-}
-
-export function montarPatchValidacaoTask(input: {
-  tecnicoId: number;
-  visitaEm: string;
-  taskType: number;
-  equipmentId: number;
-  questionarioId: number;
-}) {
-  return toAuvoJsonPatch({
-    idUserTo: input.tecnicoId,
-    taskDate: input.visitaEm.slice(0, 19),
-    taskType: input.taskType,
-    equipmentsId: [input.equipmentId],
-    questionnaireId: input.questionarioId,
-  });
 }
 
 type EvidenciaTask = {
@@ -359,12 +348,10 @@ if (import.meta.main) {
         }
         await auvoPatch(
           `/tasks/${id}`,
-          montarPatchValidacaoTask({
-            tecnicoId: tecnico.auvo_user_id,
-            visitaEm: input.visitaEm,
-            taskType: tipo.auvo_id,
-            equipmentId: input.equipamentoAuvoId,
-            questionarioId: questionario.auvo_id,
+          toAuvoJsonPatch({
+            idUserTo: tecnico.auvo_user_id,
+            taskDate: input.visitaEm.slice(0, 19),
+            questionnaireId: questionario.auvo_id,
           }),
         );
         const retorno = await auvoGet<unknown>(`/tasks/${id}`);

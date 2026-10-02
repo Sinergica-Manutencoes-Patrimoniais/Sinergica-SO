@@ -2,7 +2,6 @@ import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
   contratoPreventivoCompleto,
   evidenciaTaskPreventiva,
-  montarPatchValidacaoTask,
   montarPayloadCriacaoTask,
   resumoRespostaCriacaoTask,
   taskId,
@@ -62,9 +61,27 @@ Deno.test("taskTesteExistente — aceita apenas externalId ou tentativa legada c
   };
   assertEquals(
     taskTesteExistente({
-      result: [{ taskID: 90, externalId: alvo.externalId }],
+      result: [{
+        taskID: 90,
+        externalId: alvo.externalId,
+        customerId: 1,
+        equipmentsId: [2],
+        taskType: 3,
+      }],
     }, alvo),
     90,
+  );
+  assertEquals(
+    taskTesteExistente({
+      result: [{
+        taskID: 93,
+        externalId: alvo.externalId,
+        customerId: 1,
+        equipmentsId: [99],
+        taskType: 3,
+      }],
+    }, alvo),
+    null,
   );
   assertEquals(
     taskTesteExistente({
@@ -126,25 +143,6 @@ Deno.test("montarPayloadCriacaoTask — usa nomes do contrato Auvo para tipo e e
       orientation: "TESTE DE CONTRATO PCM PREVENTIVAS — não executar",
       priority: 1,
     },
-  );
-});
-
-Deno.test("montarPatchValidacaoTask — corrige todos os campos críticos da task-teste legada", () => {
-  assertEquals(
-    montarPatchValidacaoTask({
-      tecnicoId: 7,
-      visitaEm: "2026-10-03T16:00:00.000Z",
-      taskType: 3,
-      equipmentId: 9,
-      questionarioId: 4,
-    }),
-    [
-      { op: "replace", path: "idUserTo", value: 7 },
-      { op: "replace", path: "taskDate", value: "2026-10-03T16:00:00" },
-      { op: "replace", path: "taskType", value: 3 },
-      { op: "replace", path: "equipmentsId", value: [9] },
-      { op: "replace", path: "questionnaireId", value: 4 },
-    ],
   );
 });
 
