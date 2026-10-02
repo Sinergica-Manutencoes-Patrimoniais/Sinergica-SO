@@ -47,10 +47,10 @@ export async function listarPreventivas(
       (equipamento) => [equipamento.id, equipamento.nome] as const,
     ),
   ]);
-  const planos = planosSemAlvo.map((plano) => ({
-    ...plano,
-    alvo_nome: alvoPorId.get(plano.sistema_id ?? plano.equipamento_id ?? "") ?? null,
-  }));
+  const planos = planosSemAlvo.map((plano) => {
+    const alvoNome = alvoPorId.get(plano.sistema_id ?? plano.equipamento_id ?? "");
+    return alvoNome ? { ...plano, alvo_nome: alvoNome } : plano;
+  });
   const planoIds = planos.map((plano) => plano.id);
   if (planoIds.length === 0) return { planos: [], ocorrencias: [], avaliacoes: [] };
 
@@ -119,23 +119,22 @@ export async function listarPreventivas(
   );
   return {
     planos,
-    ocorrencias: ocorrencias.map((ocorrencia) => ({
-      ...ocorrencia,
-      os_status: osPorOcorrencia.get(ocorrencia.id)?.status ?? null,
-      os_id: osPorOcorrencia.get(ocorrencia.id)?.id ?? null,
-      os_numero: osPorOcorrencia.get(ocorrencia.id)?.numero ?? null,
-      os_concluida_em: osPorOcorrencia.get(ocorrencia.id)?.check_out_at ?? null,
-      tecnico_nome:
-        tecnicoPorId.get(
-          osPorOcorrencia.get(ocorrencia.id)?.tecnico_funcionario_id ??
-            ocorrencia.tecnico_funcionario_id ??
-            "",
-        ) ?? null,
-      auvo_task_url:
-        typeof osPorOcorrencia.get(ocorrencia.id)?.auvo_detalhes?.taskUrl === "string"
-          ? (osPorOcorrencia.get(ocorrencia.id)?.auvo_detalhes?.taskUrl as string)
-          : null,
-    })),
+    ocorrencias: ocorrencias.map((ocorrencia) => {
+      const ordem = osPorOcorrencia.get(ocorrencia.id);
+      const tecnicoNome = tecnicoPorId.get(
+        ordem?.tecnico_funcionario_id ?? ocorrencia.tecnico_funcionario_id ?? "",
+      );
+      const taskUrl = ordem?.auvo_detalhes?.taskUrl;
+      return {
+        ...ocorrencia,
+        os_status: ordem?.status ?? null,
+        ...(ordem?.id ? { os_id: ordem.id } : {}),
+        ...(ordem?.numero ? { os_numero: ordem.numero } : {}),
+        ...(ordem?.check_out_at ? { os_concluida_em: ordem.check_out_at } : {}),
+        ...(tecnicoNome ? { tecnico_nome: tecnicoNome } : {}),
+        ...(typeof taskUrl === "string" ? { auvo_task_url: taskUrl } : {}),
+      };
+    }),
     avaliacoes: (avaliacoesResultado.data ?? []) as AvaliacaoPreventiva[],
   };
 }
