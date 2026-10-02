@@ -2,7 +2,7 @@
 -- Roda no job db-tests. Esta máquina não possui Docker/Supabase local.
 
 begin;
-select plan(10);
+select plan(11);
 
 select has_table('pcm', 'planos_preventivos', 'AC-1: planos existem');
 select has_table('pcm', 'ocorrencias_preventivas', 'AC-1: ocorrências existem');
@@ -45,6 +45,14 @@ set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000532","u
 select lives_ok(
   $$ insert into pcm.planos_preventivos (id, cliente_id, sistema_id, questionario_id, tipo_tarefa_id, nome, primeira_data, intervalo_unidade, intervalo_n, estado, created_by) values ('00000000-0000-0000-0000-000000000537', '00000000-0000-0000-0000-000000000533', '00000000-0000-0000-0000-000000000534', '00000000-0000-0000-0000-000000000535', '00000000-0000-0000-0000-000000000536', '[TESTE] Plano escrita S53', current_date, 'semanas', 1, 'ativo', '00000000-0000-0000-0000-000000000532') $$,
   'AC-1: PCM escrita cria plano com alvo do cliente'
+);
+select is(
+  (select count(*)::int from audit.events
+    where entity = 'pcm.planos_preventivos'
+      and entity_id = '00000000-0000-0000-0000-000000000537'::uuid
+      and action = 'insert'),
+  1,
+  'AC-1: criação do plano deixa auditoria append-only'
 );
 
 set local role service_role;
