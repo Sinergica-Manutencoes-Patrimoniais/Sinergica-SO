@@ -1,4 +1,4 @@
-import { Button, Modal, Skeleton } from "@sinergica/ui";
+import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Pause, Play, Plus, RefreshCw, Send } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
@@ -74,6 +74,9 @@ export function PreventivasWorkspace({
   const [selecionada, setSelecionada] = useState<OcorrenciaPreventiva | null>(null);
   const [tecnicoId, setTecnicoId] = useState("");
   const [visita, setVisita] = useState("");
+  const [avaliacaoParaBacklog, setAvaliacaoParaBacklog] = useState<AvaliacaoPreventiva | null>(
+    null,
+  );
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const chave = ["pcm", "preventivas", clienteId ?? "todos"] as const;
@@ -90,6 +93,7 @@ export function PreventivasWorkspace({
   useEffect(() => {
     setNovo(false);
     setSelecionada(null);
+    setAvaliacaoParaBacklog(null);
     setTecnicoId("");
     setVisita("");
     setErroAcao(null);
@@ -217,7 +221,6 @@ export function PreventivasWorkspace({
   async function enviarAoBacklog(avaliacao: AvaliacaoPreventiva) {
     const descricao =
       `${avaliacao.resposta?.pergunta ?? avaliacao.item_referencia ?? "Avaliação preventiva"}: ${avaliacao.resposta?.valor ?? ""}`.trim();
-    if (!window.confirm("Enviar este achado ao backlog para tratativa?")) return;
     setSalvando(true);
     setErroAcao(null);
     try {
@@ -228,9 +231,10 @@ export function PreventivasWorkspace({
       if (!(data as { ok?: boolean }).ok) throw new Error("O achado não foi enviado ao backlog.");
       await atualizar();
     } catch (causa) {
-      setErroAcao(
-        causa instanceof Error ? causa.message : "Não foi possível enviar o achado ao backlog.",
-      );
+      const mensagem =
+        causa instanceof Error ? causa.message : "Não foi possível enviar o achado ao backlog.";
+      setErroAcao(mensagem);
+      throw new Error(mensagem);
     } finally {
       setSalvando(false);
     }
@@ -404,7 +408,7 @@ export function PreventivasWorkspace({
                   <Button
                     variant="secondary"
                     disabled={salvando}
-                    onClick={() => void enviarAoBacklog(avaliacao)}
+                    onClick={() => setAvaliacaoParaBacklog(avaliacao)}
                   >
                     Enviar ao backlog
                   </Button>
@@ -553,6 +557,19 @@ export function PreventivasWorkspace({
           </Button>
         </div>
       </Modal>
+      <ConfirmDialog
+        open={avaliacaoParaBacklog !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setAvaliacaoParaBacklog(null);
+        }}
+        titulo="Enviar achado ao backlog"
+        descricao="Uma OS corretiva será criada para tratativa deste achado."
+        rotuloConfirmar="Enviar ao backlog"
+        onConfirmar={async () => {
+          if (!avaliacaoParaBacklog) return;
+          await enviarAoBacklog(avaliacaoParaBacklog);
+        }}
+      />
     </div>
   );
 }

@@ -102,4 +102,11 @@ describe("PreventivasWorkspace — E01-S53 AC-8", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Novo plano" }));
     expect(await screen.findByLabelText("Cliente")).toBeInTheDocument();
   });
+
+  it("pede confirmação no produto antes de enviar achado ao backlog", async () => {
+    renderWorkspace();
+    await userEvent.click(await screen.findByRole("button", { name: "Enviar ao backlog" }));
+
+    expect(await screen.findByText("Enviar achado ao backlog")).toBeInTheDocument();
+  });
 });
