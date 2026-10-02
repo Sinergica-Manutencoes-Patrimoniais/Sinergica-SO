@@ -38,10 +38,14 @@ export interface AuvoEquipmentSistema {
  * (1) `auvo_customer_id` (migration 0213 + backfill) e (2) mitigação da linha-fantasma — o inbound
  * de Equipment(27) (`pcm-auvo-equipment-sync` e o dispatcher genérico de webhook) agora exclui
  * `auvo_equipment_id` já presentes em `pcm.sistemas`, pra não duplicar o Sistema como Equipamento. */
-export const sistemasDescriptor: AuvoEntityDescriptor<AuvoEquipmentSistema, SistemaRow> = {
+export const sistemasDescriptor: AuvoEntityDescriptor<
+  AuvoEquipmentSistema,
+  SistemaRow
+> = {
   key: "sistemas",
   auvoBasePath: "/equipments",
   pcmTable: "sistemas",
+  auvoIdColumn: "auvo_equipment_id",
   writeEnabled: true,
   deleteStrategy: "soft-patch",
   toAuvo(row) {
@@ -60,7 +64,10 @@ export const sistemasDescriptor: AuvoEntityDescriptor<AuvoEquipmentSistema, Sist
     const auvoId = auvo.id ?? auvo.equipmentId;
     return {
       auvo_equipment_id: auvoId,
-      nome: textoOuFallback(auvo.name ?? auvo.description, `Sistema ${auvoId ?? ""}`.trim()),
+      nome: textoOuFallback(
+        auvo.name ?? auvo.description,
+        `Sistema ${auvoId ?? ""}`.trim(),
+      ),
       codigo: textoOuNull(auvo.identifier),
       ativo: auvo.active !== false,
     };
@@ -78,9 +85,13 @@ function limparVazios<T extends Record<string, unknown>>(input: T): T {
 }
 
 function textoOuFallback(value: unknown, fallback: string): string {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : fallback;
 }
 
 function textoOuNull(value: unknown): string | null {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : null;
 }

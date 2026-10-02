@@ -17,8 +17,17 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared/auth.ts";
-import { AuvoApiError, auvoDelete, auvoPatch, auvoPost } from "../_shared/auvo/client.ts";
+import {
+  getSupabaseServiceKey,
+  HttpError,
+  requireServiceRole,
+} from "../_shared/auth.ts";
+import {
+  AuvoApiError,
+  auvoDelete,
+  auvoPatch,
+  auvoPost,
+} from "../_shared/auvo/client.ts";
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
 import { getDescriptor } from "../_shared/auvo/registry/index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
@@ -42,8 +51,15 @@ export interface OutboxRow {
  * decisão (idempotência, writeEnabled, delete vs create/update) sem um Postgres real. A
  * implementação concreta (`makeSupabaseOutboxRowDb`) envolve o cliente Supabase de verdade. */
 export interface OutboxRowDb {
-  fetchOrigem(table: string, rowId: string): Promise<Record<string, unknown> | null>;
-  applyAuvoSync(table: string, rowId: string, patch: Record<string, unknown>): Promise<void>;
+  fetchOrigem(
+    table: string,
+    rowId: string,
+  ): Promise<Record<string, unknown> | null>;
+  applyAuvoSync(
+    table: string,
+    rowId: string,
+    patch: Record<string, unknown>,
+  ): Promise<void>;
   /** Espelha o `writeEnabled` do descriptor em `pcm.auvo_entity_status` (E00-S11) — a única forma
    * de uma view SQL saber se uma entidade está em dry-run de propósito (não é erro) ou se algo
    * quebrou. Chamado uma vez por entidade vista no lote, nunca por linha. */
@@ -65,10 +81,15 @@ export interface ProcessResult {
 export async function processOutboxRow(
   db: OutboxRowDb,
   row: OutboxRow,
-  descriptor: AuvoEntityDescriptor<Record<string, unknown>, Record<string, unknown>> | undefined,
+  descriptor:
+    | AuvoEntityDescriptor<Record<string, unknown>, Record<string, unknown>>
+    | undefined,
 ): Promise<ProcessResult> {
   if (!descriptor) {
-    return { ok: false, error: `descriptor desconhecido para entity="${row.entity}"` };
+    return {
+      ok: false,
+      error: `descriptor desconhecido para entity="${row.entity}"`,
+    };
   }
 
   if (!descriptor.writeEnabled) {
@@ -79,10 +100,19 @@ export async function processOutboxRow(
 
   const origem = await db.fetchOrigem(descriptor.pcmTable, row.row_id);
   if (!origem) {
-    return { ok: false, error: `linha de origem ${row.row_id} não encontrada em pcm.${descriptor.pcmTable}` };
+    return {
+      ok: false,
+      error:
+        `linha de origem ${row.row_id} não encontrada em pcm.${descriptor.pcmTable}`,
+    };
   }
 
-  const existingAuvoId = origem["auvo_id"] as number | string | null | undefined;
+  const auvoIdColumn = descriptor.auvoIdColumn ?? "auvo_id";
+  const existingAuvoId = origem[auvoIdColumn] as
+    | number
+    | string
+    | null
+    | undefined;
 
   if (row.op === "delete") {
     if (existingAuvoId != null && descriptor.deleteStrategy !== "unsupported") {
@@ -95,7 +125,10 @@ export async function processOutboxRow(
         // decide; ausente = `{active:false}`. PATCH da Auvo v2 é JSON Patch, não objeto flat —
         // ver _shared/auvo/json-patch.ts.
         const patch = descriptor.deactivatePatch ?? { active: false };
-        await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, toAuvoJsonPatch(patch));
+        await auvoPatch(
+          `${descriptor.auvoBasePath}/${existingAuvoId}`,
+          toAuvoJsonPatch(patch),
+        );
       }
     }
     // 'unsupported' (ex. Teams: sem PATCH/DELETE): exclusão fica só local, nenhuma chamada ao Auvo.
@@ -122,8 +155,12 @@ export async function processOutboxRow(
     // com o mesmo dialeto). Ver _shared/auvo/json-patch.ts. `toAuvoUpdate`, se definido, restringe
     // o patch a um subconjunto de campos editáveis (ex.: Tickets só documenta `statusId`) — cai
     // para `toAuvo()` completo quando ausente, mesmo comportamento de todas as outras entidades.
-    const patchPayload = descriptor.toAuvoUpdate?.(origem) ?? descriptor.toAuvo(origem);
-    await auvoPatch(`${descriptor.auvoBasePath}/${existingAuvoId}`, toAuvoJsonPatch(patchPayload));
+    const patchPayload = descriptor.toAuvoUpdate?.(origem) ??
+      descriptor.toAuvo(origem);
+    await auvoPatch(
+      `${descriptor.auvoBasePath}/${existingAuvoId}`,
+      toAuvoJsonPatch(patchPayload),
+    );
     auvoId = existingAuvoId;
   } else {
     // Idempotência por ADR-0001 — nome do campo varia por recurso (a maioria usa `externalId`,
@@ -133,13 +170,16 @@ export async function processOutboxRow(
       ...descriptor.toAuvo(origem),
       [externalIdField]: row.row_id,
     });
-    const createdAuvoId = descriptor.extractCreatedAuvoId?.(criado) ?? extractCreatedAuvoId(criado);
-    if (createdAuvoId == null) throw new Error(`Auvo criou ${descriptor.key} sem id na resposta`);
+    const createdAuvoId = descriptor.extractCreatedAuvoId?.(criado) ??
+      extractCreatedAuvoId(criado);
+    if (createdAuvoId == null) {
+      throw new Error(`Auvo criou ${descriptor.key} sem id na resposta`);
+    }
     auvoId = createdAuvoId;
   }
 
   await db.applyAuvoSync(descriptor.pcmTable, row.row_id, {
-    auvo_id: auvoId,
+    [auvoIdColumn]: auvoId,
     auvo_sync_status: "synced",
     auvo_synced_at: new Date().toISOString(),
     auvo_sync_error: null,
@@ -150,13 +190,18 @@ export async function processOutboxRow(
 
 function extractCreatedAuvoId(response: unknown): number | null {
   const result = (response as { result?: { id?: unknown } } | null)?.result;
-  return typeof result?.id === "number" && Number.isFinite(result.id) ? result.id : null;
+  return typeof result?.id === "number" && Number.isFinite(result.id)
+    ? result.id
+    : null;
 }
 
 function makeSupabaseOutboxRowDb(db: UntypedSupabaseClient): OutboxRowDb {
   return {
     async fetchOrigem(table, rowId) {
-      const { data, error } = await db.schema("pcm").from(table).select("*").eq("id", rowId).maybeSingle();
+      const { data, error } = await db.schema("pcm").from(table).select("*").eq(
+        "id",
+        rowId,
+      ).maybeSingle();
       if (error) throw error;
       return (data as Record<string, unknown> | null) ?? null;
     },
@@ -172,116 +217,230 @@ function makeSupabaseOutboxRowDb(db: UntypedSupabaseClient): OutboxRowDb {
       const { error } = await db
         .schema("pcm")
         .from("auvo_entity_status")
-        .upsert({ entity, write_enabled: writeEnabled, updated_at: new Date().toISOString() }, { onConflict: "entity" });
+        .upsert({
+          entity,
+          write_enabled: writeEnabled,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "entity" });
       // Nunca deixa a saúde-de-sync (visibilidade) derrubar o drain (função) — só loga.
-      if (error) console.error(JSON.stringify({ nivel: "error", fn: FN, msg: "falha ao gravar auvo_entity_status", entity, detail: error.message }));
+      if (error) {
+        console.error(
+          JSON.stringify({
+            nivel: "error",
+            fn: FN,
+            msg: "falha ao gravar auvo_entity_status",
+            entity,
+            detail: error.message,
+          }),
+        );
+      }
     },
   };
 }
 
-if (import.meta.main) serve(async (req) => {
-  const cors = corsHeaders(req.headers.get("Origin"));
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors, status: 204 });
+if (import.meta.main) {
+  serve(async (req) => {
+    const cors = corsHeaders(req.headers.get("Origin"));
+    if (req.method === "OPTIONS") {
+      return new Response(null, { headers: cors, status: 204 });
+    }
 
-  const reqId = crypto.randomUUID().slice(0, 8);
-  const now = new Date().toISOString();
-  console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, method: req.method }));
+    const reqId = crypto.randomUUID().slice(0, 8);
+    const now = new Date().toISOString();
+    console.log(
+      JSON.stringify({
+        ts: now,
+        nivel: "info",
+        fn: FN,
+        reqId,
+        method: req.method,
+      }),
+    );
 
-  try {
-    if (req.method !== "POST") throw new HttpError(405, "Método não permitido");
-
-    // Auth — chamada interna sistema→sistema (cron), nunca frontend.
-    requireServiceRole(req);
-
-    const url = Deno.env.get("SUPABASE_URL") ?? "";
-    const serviceKey = getSupabaseServiceKey();
-    if (!url || !serviceKey) throw new HttpError(500, "Ambiente Supabase incompleto");
-    const supa = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-    const rowDb = makeSupabaseOutboxRowDb(supa);
-
-    // Reivindica o lote atomicamente (pending → processing) — AC-3, AC-5.
-    const { data: lote, error: loteError } = await supa
-      .schema("pcm")
-      .rpc("fn_claim_auvo_outbox_batch", { p_limit: BATCH_SIZE });
-    if (loteError) throw loteError;
-
-    const linhas = (lote ?? []) as OutboxRow[];
-    let sent = 0;
-    let failed = 0;
-    const entidadesVistas = new Set<string>();
-
-    for (const linha of linhas) {
-      const descriptor = getDescriptor(linha.entity) as
-        | AuvoEntityDescriptor<Record<string, unknown>, Record<string, unknown>>
-        | undefined;
-
-      // E00-S11: espelha write_enabled uma vez por entidade (não por linha) — visibilidade de
-      // saúde de sync, nunca bloqueia o processamento da linha em si.
-      if (descriptor && !entidadesVistas.has(linha.entity)) {
-        entidadesVistas.add(linha.entity);
-        await rowDb.upsertEntityStatus(linha.entity, descriptor.writeEnabled);
+    try {
+      if (req.method !== "POST") {
+        throw new HttpError(405, "Método não permitido");
       }
 
-      let resultado: ProcessResult;
-      try {
-        resultado = await processOutboxRow(rowDb, linha, descriptor);
-      } catch (rowError) {
-        // Erro inesperado (rede, Auvo 5xx, banco) — não trava o lote (AC-5): registra e segue.
-        const detail =
-          rowError instanceof AuvoApiError
-            ? `Auvo ${rowError.status}: ${rowError.message}${rowError.requestId ? ` (X-Request-Id: ${rowError.requestId})` : ""}`
+      // Auth — chamada interna sistema→sistema (cron), nunca frontend.
+      requireServiceRole(req);
+
+      const url = Deno.env.get("SUPABASE_URL") ?? "";
+      const serviceKey = getSupabaseServiceKey();
+      if (!url || !serviceKey) {
+        throw new HttpError(500, "Ambiente Supabase incompleto");
+      }
+      const supa = createClient(url, serviceKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const rowDb = makeSupabaseOutboxRowDb(supa);
+
+      // Reivindica o lote atomicamente (pending → processing) — AC-3, AC-5.
+      const { data: lote, error: loteError } = await supa
+        .schema("pcm")
+        .rpc("fn_claim_auvo_outbox_batch", { p_limit: BATCH_SIZE });
+      if (loteError) {
+        throw loteError;
+      }
+
+      const linhas = (lote ?? []) as OutboxRow[];
+      let sent = 0;
+      let failed = 0;
+      const entidadesVistas = new Set<string>();
+
+      for (const linha of linhas) {
+        const descriptor = getDescriptor(linha.entity) as
+          | AuvoEntityDescriptor<
+            Record<string, unknown>,
+            Record<string, unknown>
+          >
+          | undefined;
+
+        // E00-S11: espelha write_enabled uma vez por entidade (não por linha) — visibilidade de
+        // saúde de sync, nunca bloqueia o processamento da linha em si.
+        if (descriptor && !entidadesVistas.has(linha.entity)) {
+          entidadesVistas.add(linha.entity);
+          await rowDb.upsertEntityStatus(linha.entity, descriptor.writeEnabled);
+        }
+
+        let resultado: ProcessResult;
+        try {
+          resultado = await processOutboxRow(rowDb, linha, descriptor);
+        } catch (rowError) {
+          // Erro inesperado (rede, Auvo 5xx, banco) — não trava o lote (AC-5): registra e segue.
+          const detail = rowError instanceof AuvoApiError
+            ? `Auvo ${rowError.status}: ${rowError.message}${
+              rowError.requestId ? ` (X-Request-Id: ${rowError.requestId})` : ""
+            }`
             : rowError instanceof Error
-              ? rowError.message
-              : String(rowError);
+            ? rowError.message
+            : String(rowError);
+          console.error(
+            JSON.stringify({
+              ts: now,
+              nivel: "error",
+              fn: FN,
+              reqId,
+              msg: "falha ao processar linha do outbox",
+              entity: linha.entity,
+              rowId: linha.row_id,
+              detail,
+            }),
+          );
+          resultado = { ok: false, error: detail };
+        }
+
+        const update = resultado.ok
+          ? { status: "sent", sent_at: new Date().toISOString() }
+          : {
+            status: "error",
+            attempts: linha.attempts + 1,
+            last_error: (resultado.error ?? "").slice(0, 2000),
+          };
+
+        const { error: updateError } = await supa.schema("pcm").from(
+          "auvo_sync_outbox",
+        ).update(update).eq("id", linha.id);
+        if (updateError) {
+          // Não deixa uma falha ao GRAVAR o resultado mascarar o resultado original — só loga.
+          console.error(
+            JSON.stringify({
+              ts: now,
+              nivel: "error",
+              fn: FN,
+              reqId,
+              msg: "falha ao atualizar status do outbox",
+              outboxId: linha.id,
+              detail: updateError.message,
+            }),
+          );
+        }
+
+        if (resultado.ok) {
+          sent++;
+        } else failed++;
+      }
+
+      const resultadoFinal = { claimed: linhas.length, sent, failed };
+      console.log(
+        JSON.stringify({
+          ts: now,
+          nivel: "info",
+          fn: FN,
+          reqId,
+          msg: "drain concluído",
+          ...resultadoFinal,
+        }),
+      );
+      return json(200, resultadoFinal, cors);
+    } catch (e) {
+      if (e instanceof HttpError) {
+        return problem(e.status, e.message, reqId, cors);
+      }
+      if (e instanceof AuvoApiError) {
         console.error(
-          JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "falha ao processar linha do outbox", entity: linha.entity, rowId: linha.row_id, detail }),
+          JSON.stringify({
+            ts: now,
+            nivel: "error",
+            fn: FN,
+            reqId,
+            msg: "falha Auvo",
+            status: e.status,
+            requestId: e.requestId,
+          }),
         );
-        resultado = { ok: false, error: detail };
+        return problem(
+          502,
+          `Auvo indisponível ou erro: ${e.message}`,
+          reqId,
+          cors,
+        );
       }
-
-      const update = resultado.ok
-        ? { status: "sent", sent_at: new Date().toISOString() }
-        : { status: "error", attempts: linha.attempts + 1, last_error: (resultado.error ?? "").slice(0, 2000) };
-
-      const { error: updateError } = await supa.schema("pcm").from("auvo_sync_outbox").update(update).eq("id", linha.id);
-      if (updateError) {
-        // Não deixa uma falha ao GRAVAR o resultado mascarar o resultado original — só loga.
-        console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "falha ao atualizar status do outbox", outboxId: linha.id, detail: updateError.message }));
-      }
-
-      if (resultado.ok) sent++;
-      else failed++;
+      console.error(
+        JSON.stringify({
+          ts: now,
+          nivel: "error",
+          fn: FN,
+          reqId,
+          msg: "erro inesperado",
+          detail: String(e),
+        }),
+      );
+      return problem(500, "Erro interno", reqId, cors); // nunca vaza stack
     }
+  });
+}
 
-    const resultadoFinal = { claimed: linhas.length, sent, failed };
-    console.log(JSON.stringify({ ts: now, nivel: "info", fn: FN, reqId, msg: "drain concluído", ...resultadoFinal }));
-    return json(200, resultadoFinal, cors);
-  } catch (e) {
-    if (e instanceof HttpError) return problem(e.status, e.message, reqId, cors);
-    if (e instanceof AuvoApiError) {
-      console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "falha Auvo", status: e.status, requestId: e.requestId }));
-      return problem(502, `Auvo indisponível ou erro: ${e.message}`, reqId, cors);
-    }
-    console.error(JSON.stringify({ ts: now, nivel: "error", fn: FN, reqId, msg: "erro inesperado", detail: String(e) }));
-    return problem(500, "Erro interno", reqId, cors); // nunca vaza stack
-  }
-});
-
-function json(status: number, body: unknown, cors: Record<string, string>): Response {
+function json(
+  status: number,
+  body: unknown,
+  cors: Record<string, string>,
+): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", ...cors },
   });
 }
 
-function problem(status: number, detail: string, reqId: string, cors: Record<string, string>): Response {
+function problem(
+  status: number,
+  detail: string,
+  reqId: string,
+  cors: Record<string, string>,
+): Response {
   const titles: Record<number, string> = {
     401: "Unauthorized",
     405: "Method Not Allowed",
     500: "Internal Server Error",
     502: "Bad Gateway",
   };
-  const body = { type: "about:blank", title: titles[status] ?? "Error", status, detail, reqId };
+  const body = {
+    type: "about:blank",
+    title: titles[status] ?? "Error",
+    status,
+    detail,
+    reqId,
+  };
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/problem+json", ...cors },

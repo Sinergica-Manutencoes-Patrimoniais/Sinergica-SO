@@ -29,6 +29,10 @@ export interface AuvoEntityDescriptor<TAuvo, TRow> {
   /** Tabela `pcm.<pcmTable>` correspondente (sem o prefixo de schema). */
   readonly pcmTable: string;
 
+  /** Coluna que guarda o id Auvo na tabela PCM. Padrão `auvo_id`; Sistemas usam
+   * `auvo_equipment_id` porque são publicados no recurso Equipment do Auvo. */
+  readonly auvoIdColumn?: string;
+
   /** Entidade de webhook do Auvo (`POST /webhooks` → `entity`), se esta entidade suportar
    * notificação em tempo real. Ausente = só cron (`E01-S23` decide a cadência). Valores documentados
    * pela API Auvo: 1-User, 4-Task, 7-Customer, 27-Equipment, 50-Invoice, 62-Ticket. */
@@ -111,4 +115,7 @@ export interface AuvoEntityDescriptor<TAuvo, TRow> {
 
 /** Registro de descriptors, indexado pela `key` de cada um. Populado pelas stories de entidade
  * (`E01-S24`+) — vazio nesta story (E01-S22), que só entrega o mecanismo. */
-export type AuvoEntityRegistry = Record<string, AuvoEntityDescriptor<unknown, unknown>>;
+export type AuvoEntityRegistry = Record<
+  string,
+  AuvoEntityDescriptor<unknown, unknown>
+>;

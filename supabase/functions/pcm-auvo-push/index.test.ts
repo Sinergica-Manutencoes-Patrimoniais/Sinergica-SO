@@ -4,21 +4,27 @@
 // Rodar localmente (requer Deno CLI, indisponível neste ambiente):
 //   deno test supabase/functions/pcm-auvo-push/index.test.ts --allow-env
 
-import { assertEquals, assertMatch } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import {
+  assertEquals,
+  assertMatch,
+} from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { type OutboxRow, type OutboxRowDb, processOutboxRow } from "./index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
 
 function withEnv(vars: Record<string, string>): () => void {
   const original = Deno.env.get;
   // deno-lint-ignore no-explicit-any
-  (Deno.env as any).get = (key: string) => vars[key] ?? original.call(Deno.env, key);
+  (Deno.env as any).get = (key: string) =>
+    vars[key] ?? original.call(Deno.env, key);
   return () => {
     // deno-lint-ignore no-explicit-any
     (Deno.env as any).get = original;
   };
 }
 
-function withFetch(handler: (req: Request) => Response): { restore: () => void; calls: Request[] } {
+function withFetch(
+  handler: (req: Request) => Response,
+): { restore: () => void; calls: Request[] } {
   const original = globalThis.fetch;
   const calls: Request[] = [];
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
@@ -26,7 +32,12 @@ function withFetch(handler: (req: Request) => Response): { restore: () => void; 
     if (req.url.includes("/login")) {
       return Promise.resolve(
         new Response(
-          JSON.stringify({ result: { accessToken: "tok", expiration: new Date(Date.now() + 1_800_000).toISOString() } }),
+          JSON.stringify({
+            result: {
+              accessToken: "tok",
+              expiration: new Date(Date.now() + 1_800_000).toISOString(),
+            },
+          }),
           { status: 200 },
         ),
       );
@@ -34,12 +45,20 @@ function withFetch(handler: (req: Request) => Response): { restore: () => void; 
     calls.push(req.clone());
     return Promise.resolve(handler(req));
   }) as typeof fetch;
-  return { restore: () => { globalThis.fetch = original; }, calls };
+  return {
+    restore: () => {
+      globalThis.fetch = original;
+    },
+    calls,
+  };
 }
 
 const ENV = { AUVO_API_KEY: "k", AUVO_USER_TOKEN: "t" };
 
-function fakeDescriptor(): AuvoEntityDescriptor<Record<string, unknown>, Record<string, unknown>> {
+function fakeDescriptor(): AuvoEntityDescriptor<
+  Record<string, unknown>,
+  Record<string, unknown>
+> {
   return {
     key: "fake",
     auvoBasePath: "/fake-resource",
@@ -52,8 +71,16 @@ function fakeDescriptor(): AuvoEntityDescriptor<Record<string, unknown>, Record<
 
 /** Stub de `OutboxRowDb` que serve uma linha de origem fixa e grava as chamadas de
  * `applyAuvoSync` para inspeção nos asserts. */
-function fakeDb(origem: Record<string, unknown> | null): OutboxRowDb & { patches: Array<{ table: string; rowId: string; patch: Record<string, unknown> }> } {
-  const patches: Array<{ table: string; rowId: string; patch: Record<string, unknown> }> = [];
+function fakeDb(
+  origem: Record<string, unknown> | null,
+): OutboxRowDb & {
+  patches: Array<
+    { table: string; rowId: string; patch: Record<string, unknown> }
+  >;
+} {
+  const patches: Array<
+    { table: string; rowId: string; patch: Record<string, unknown> }
+  > = [];
   return {
     patches,
     fetchOrigem: () => Promise.resolve(origem),
@@ -65,7 +92,13 @@ function fakeDb(origem: Record<string, unknown> | null): OutboxRowDb & { patches
   };
 }
 
-const baseRow: OutboxRow = { id: "outbox-1", entity: "fake", row_id: "row-1", op: "create", attempts: 0 };
+const baseRow: OutboxRow = {
+  id: "outbox-1",
+  entity: "fake",
+  row_id: "row-1",
+  op: "create",
+  attempts: 0,
+};
 
 Deno.test("processOutboxRow — descriptor desconhecido devolve ok:false sem lançar", async () => {
   const db = fakeDb({ id: "row-1", nome: "X" });
@@ -76,7 +109,9 @@ Deno.test("processOutboxRow — descriptor desconhecido devolve ok:false sem lan
 
 Deno.test("processOutboxRow — writeEnabled=false nunca chama o Auvo (AC-6)", async () => {
   const restoreEnv = withEnv(ENV);
-  const { restore, calls } = withFetch(() => new Response("não deveria ser chamado", { status: 500 }));
+  const { restore, calls } = withFetch(() =>
+    new Response("não deveria ser chamado", { status: 500 })
+  );
   try {
     const descriptor = { ...fakeDescriptor(), writeEnabled: false };
     const db = fakeDb({ id: "row-1", nome: "X" });
@@ -101,7 +136,9 @@ Deno.test("processOutboxRow — create sem auvo_id existente faz POST com extern
   const restoreEnv = withEnv(ENV);
   const { restore, calls } = withFetch((req) => {
     assertEquals(req.method, "POST");
-    return new Response(JSON.stringify({ result: { id: 123 } }), { status: 201 });
+    return new Response(JSON.stringify({ result: { id: 123 } }), {
+      status: 201,
+    });
   });
   try {
     const db = fakeDb({ id: "row-1", nome: "X" }); // sem auvo_id
@@ -117,14 +154,62 @@ Deno.test("processOutboxRow — create sem auvo_id existente faz POST com extern
   }
 });
 
+Deno.test("processOutboxRow — descriptor com auvoIdColumn grava e reutiliza auvo_equipment_id", async () => {
+  const restoreEnv = withEnv(ENV);
+  const { restore, calls } = withFetch((req) => {
+    if (req.method === "POST") {
+      return new Response(JSON.stringify({ result: { id: 777 } }), {
+        status: 201,
+      });
+    }
+    return new Response(JSON.stringify({ result: { id: 777 } }), {
+      status: 200,
+    });
+  });
+  try {
+    const descriptor = {
+      ...fakeDescriptor(),
+      auvoIdColumn: "auvo_equipment_id",
+    };
+    const db = fakeDb({ id: "row-1", nome: "Sistema" });
+    assertEquals((await processOutboxRow(db, baseRow, descriptor)).ok, true);
+    assertEquals(db.patches[0].patch.auvo_equipment_id, 777);
+
+    const dbReprocessada = fakeDb({
+      id: "row-1",
+      nome: "Sistema",
+      auvo_equipment_id: 777,
+    });
+    assertEquals(
+      (await processOutboxRow(
+        dbReprocessada,
+        { ...baseRow, op: "update" },
+        descriptor,
+      )).ok,
+      true,
+    );
+    assertEquals(calls.map((call) => call.method), ["POST", "PATCH"]);
+  } finally {
+    restore();
+    restoreEnv();
+  }
+});
+
 Deno.test("processOutboxRow — extractCreatedAuvoId customizado aceita GUID string (E01-S74, achado real em Services)", async () => {
   // O extrator padrão só aceita `result.id` numérico. Confirmado ao vivo contra a API Auvo real
   // que /services devolve um GUID string — sem um extractCreatedAuvoId customizado, esta criação
   // lançaria "Auvo criou fake sem id na resposta" mesmo com a chamada HTTP tendo funcionado (201).
   const restoreEnv = withEnv(ENV);
-  const { restore } = withFetch(() => new Response(JSON.stringify({ result: { id: "5d271e4e-guid" } }), { status: 201 }));
+  const { restore } = withFetch(() =>
+    new Response(JSON.stringify({ result: { id: "5d271e4e-guid" } }), {
+      status: 201,
+    })
+  );
   try {
-    const descriptor: AuvoEntityDescriptor<Record<string, unknown>, Record<string, unknown>> = {
+    const descriptor: AuvoEntityDescriptor<
+      Record<string, unknown>,
+      Record<string, unknown>
+    > = {
       ...fakeDescriptor(),
       extractCreatedAuvoId: (response) => {
         const id = (response as { result?: { id?: unknown } })?.result?.id;
@@ -143,7 +228,9 @@ Deno.test("processOutboxRow — extractCreatedAuvoId customizado aceita GUID str
 
 Deno.test("processOutboxRow — externalIdField customizado (ex. Services usa externalCode)", async () => {
   const restoreEnv = withEnv(ENV);
-  const { restore, calls } = withFetch(() => new Response(JSON.stringify({ result: { id: 7 } }), { status: 201 }));
+  const { restore, calls } = withFetch(() =>
+    new Response(JSON.stringify({ result: { id: 7 } }), { status: 201 })
+  );
   try {
     const descriptor = { ...fakeDescriptor(), externalIdField: "externalCode" };
     const db = fakeDb({ id: "row-1", nome: "X" });
@@ -161,7 +248,9 @@ Deno.test("processOutboxRow — reprocessar linha com auvo_id existente faz PATC
   const restoreEnv = withEnv(ENV);
   const { restore, calls } = withFetch((req) => {
     assertEquals(req.method, "PATCH");
-    return new Response(JSON.stringify({ result: { id: 55 } }), { status: 200 });
+    return new Response(JSON.stringify({ result: { id: 55 } }), {
+      status: 200,
+    });
   });
   try {
     const db = fakeDb({ id: "row-1", nome: "X", auvo_id: 55 });
@@ -202,7 +291,9 @@ Deno.test("processOutboxRow — delete com auvo_id existente faz PATCH active:fa
 
 Deno.test("processOutboxRow — delete de linha nunca sincronizada não chama o Auvo", async () => {
   const restoreEnv = withEnv(ENV);
-  const { restore, calls } = withFetch(() => new Response("não deveria ser chamado", { status: 500 }));
+  const { restore, calls } = withFetch(() =>
+    new Response("não deveria ser chamado", { status: 500 })
+  );
   try {
     const db = fakeDb({ id: "row-1", nome: "X" }); // sem auvo_id
     const row: OutboxRow = { ...baseRow, op: "delete" };
@@ -223,7 +314,10 @@ Deno.test("processOutboxRow — deleteStrategy='hard-delete' chama DELETE físic
     return new Response(null, { status: 204 });
   });
   try {
-    const descriptor = { ...fakeDescriptor(), deleteStrategy: "hard-delete" as const };
+    const descriptor = {
+      ...fakeDescriptor(),
+      deleteStrategy: "hard-delete" as const,
+    };
     const db = fakeDb({ id: "row-1", nome: "X", auvo_id: 88 });
     const row: OutboxRow = { ...baseRow, op: "delete" };
     const resultado = await processOutboxRow(db, row, descriptor);
@@ -237,14 +331,23 @@ Deno.test("processOutboxRow — deleteStrategy='hard-delete' chama DELETE físic
 
 Deno.test("processOutboxRow — deactivatePatch customizado é usado em vez de active:false", async () => {
   const restoreEnv = withEnv(ENV);
-  const { restore, calls } = withFetch(() => new Response(null, { status: 204 }));
+  const { restore, calls } = withFetch(() =>
+    new Response(null, { status: 204 })
+  );
   try {
-    const descriptor = { ...fakeDescriptor(), deactivatePatch: { unavailableForTasks: true } };
+    const descriptor = {
+      ...fakeDescriptor(),
+      deactivatePatch: { unavailableForTasks: true },
+    };
     const db = fakeDb({ id: "row-1", nome: "X", auvo_id: 99 });
     const row: OutboxRow = { ...baseRow, op: "delete" };
     await processOutboxRow(db, row, descriptor);
     const corpo = await calls[0].json();
-    assertEquals(corpo, [{ op: "replace", path: "unavailableForTasks", value: true }]);
+    assertEquals(corpo, [{
+      op: "replace",
+      path: "unavailableForTasks",
+      value: true,
+    }]);
   } finally {
     restore();
     restoreEnv();
@@ -253,9 +356,14 @@ Deno.test("processOutboxRow — deactivatePatch customizado é usado em vez de a
 
 Deno.test("processOutboxRow — deleteStrategy='unsupported' não chama o Auvo (ex. Teams sem DELETE)", async () => {
   const restoreEnv = withEnv(ENV);
-  const { restore, calls } = withFetch(() => new Response("não deveria ser chamado", { status: 500 }));
+  const { restore, calls } = withFetch(() =>
+    new Response("não deveria ser chamado", { status: 500 })
+  );
   try {
-    const descriptor = { ...fakeDescriptor(), deleteStrategy: "unsupported" as const };
+    const descriptor = {
+      ...fakeDescriptor(),
+      deleteStrategy: "unsupported" as const,
+    };
     const db = fakeDb({ id: "row-1", nome: "X", auvo_id: 44 });
     const row: OutboxRow = { ...baseRow, op: "delete" };
     const resultado = await processOutboxRow(db, row, descriptor);
@@ -271,15 +379,27 @@ Deno.test("processOutboxRow — toAuvoUpdate restringe o PATCH a um subconjunto 
   const restoreEnv = withEnv(ENV);
   const { restore, calls } = withFetch((req) => {
     assertEquals(req.method, "PATCH");
-    return new Response(JSON.stringify({ result: { id: 66 } }), { status: 200 });
+    return new Response(JSON.stringify({ result: { id: 66 } }), {
+      status: 200,
+    });
   });
   try {
     const descriptor = {
       ...fakeDescriptor(),
-      toAuvo: (row: Record<string, unknown>) => ({ title: row.titulo, statusId: row.status_id }),
-      toAuvoUpdate: (row: Record<string, unknown>) => ({ statusId: row.status_id }),
+      toAuvo: (row: Record<string, unknown>) => ({
+        title: row.titulo,
+        statusId: row.status_id,
+      }),
+      toAuvoUpdate: (row: Record<string, unknown>) => ({
+        statusId: row.status_id,
+      }),
     };
-    const db = fakeDb({ id: "row-1", titulo: "Não deve ir no PATCH", status_id: 2, auvo_id: 66 });
+    const db = fakeDb({
+      id: "row-1",
+      titulo: "Não deve ir no PATCH",
+      status_id: 2,
+      auvo_id: 66,
+    });
     const row: OutboxRow = { ...baseRow, op: "update" };
     const resultado = await processOutboxRow(db, row, descriptor);
     assertEquals(resultado.ok, true);
@@ -293,7 +413,9 @@ Deno.test("processOutboxRow — toAuvoUpdate restringe o PATCH a um subconjunto 
 
 Deno.test("processOutboxRow — supportsUpdate=false trata op='update' como no-op de sucesso", async () => {
   const restoreEnv = withEnv(ENV);
-  const { restore, calls } = withFetch(() => new Response("não deveria ser chamado", { status: 500 }));
+  const { restore, calls } = withFetch(() =>
+    new Response("não deveria ser chamado", { status: 500 })
+  );
   try {
     const descriptor = { ...fakeDescriptor(), supportsUpdate: false };
     const db = fakeDb({ id: "row-1", nome: "X", auvo_id: 10 });
