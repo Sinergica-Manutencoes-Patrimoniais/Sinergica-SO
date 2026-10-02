@@ -15,6 +15,7 @@ import {
   auvoPost,
 } from "../_shared/auvo/client.ts";
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
+import { taskTemQuestionario } from "../_shared/auvo/task.ts";
 import { classificarFalhaEnvioPreventiva } from "../_shared/preventivas/confirmacao.ts";
 
 const FN = "pcm-preventivas-confirmar";
@@ -66,15 +67,13 @@ export function tarefaPreventivaConfirmada(
     questionarioId: number;
   },
 ): boolean {
-  const questionarios = Array.isArray(task.questionnaires)
-    ? task.questionnaires
-    : [];
-  const questionarioConfirmado =
-    Number(task.questionnaireId) === esperado.questionarioId ||
-    questionarios.some((q) =>
-      Number((q as { questionnaireId?: number }).questionnaireId) ===
-        esperado.questionarioId
-    );
+  const questionarioConfirmado = taskTemQuestionario(
+    {
+      questionnaireId: task.questionnaireId,
+      questionnaires: task.questionnaires,
+    },
+    esperado.questionarioId,
+  );
   return Number(task.idUserTo) === esperado.tecnicoId &&
     String(task.taskDate ?? "").slice(0, 19) ===
       esperado.visitaEm.slice(0, 19) &&

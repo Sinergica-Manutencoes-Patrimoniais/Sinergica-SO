@@ -26,3 +26,27 @@ Deno.test("tarefaPreventivaConfirmada — exige técnico, data, tipo, alvo e que
     true,
   );
 });
+
+Deno.test("tarefaPreventivaConfirmada — aceita questionário serializado no retorno do Auvo", () => {
+  assertEquals(
+    tarefaPreventivaConfirmada(
+      {
+        idUserTo: 7,
+        taskDate: "2026-10-03T16:00:00",
+        taskType: 3,
+        equipmentsId: [9],
+        questionnaires: JSON.stringify({
+          entityList: [{ questionnaireID: 4 }],
+        }),
+      },
+      {
+        tecnicoId: 7,
+        visitaEm: "2026-10-03T16:00:00.000Z",
+        taskType: 3,
+        equipmentId: 9,
+        questionarioId: 4,
+      },
+    ),
+    true,
+  );
+});

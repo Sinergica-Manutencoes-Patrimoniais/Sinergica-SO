@@ -16,6 +16,7 @@ import {
   buildParamFilter,
 } from "../_shared/auvo/client.ts";
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
+import { taskTemQuestionario } from "../_shared/auvo/task.ts";
 
 const Input = z.object({
   clienteId: z.string().uuid(),
@@ -139,9 +140,6 @@ export function evidenciaTaskPreventiva(
     questionarioId: number;
   },
 ): EvidenciaTask {
-  const questionarios = Array.isArray(tarefa.questionnaires)
-    ? tarefa.questionnaires
-    : [];
   return {
     tecnico: Number(tarefa.idUserTo) === esperado.tecnicoId,
     data: String(tarefa.taskDate ?? "").slice(0, 19) ===
@@ -149,11 +147,13 @@ export function evidenciaTaskPreventiva(
     tipo: Number(tarefa.taskType) === esperado.taskType,
     alvo: Array.isArray(tarefa.equipmentsId) &&
       tarefa.equipmentsId.map(Number).includes(esperado.equipmentId),
-    questionario: Number(tarefa.questionnaireId) === esperado.questionarioId ||
-      questionarios.some((q) =>
-        Number((q as { questionnaireId?: number }).questionnaireId) ===
-          esperado.questionarioId
-      ),
+    questionario: taskTemQuestionario(
+      {
+        questionnaireId: tarefa.questionnaireId,
+        questionnaires: tarefa.questionnaires,
+      },
+      esperado.questionarioId,
+    ),
   };
 }
 

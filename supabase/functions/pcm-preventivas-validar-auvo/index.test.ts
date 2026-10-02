@@ -149,3 +149,27 @@ Deno.test("evidenciaTaskPreventiva — reconhece lista de equipamentos e questio
     { tecnico: true, data: true, tipo: true, alvo: true, questionario: true },
   );
 });
+
+Deno.test("evidenciaTaskPreventiva — reconhece questionário serializado no detalhe aninhado do Auvo", () => {
+  assertEquals(
+    evidenciaTaskPreventiva(
+      {
+        idUserTo: 7,
+        taskDate: "2026-10-03T16:00:00",
+        taskType: 3,
+        equipmentsId: [9],
+        questionnaires: JSON.stringify({
+          entityList: [{ questionnaireID: 4 }],
+        }),
+      },
+      {
+        tecnicoId: 7,
+        visitaEm: "2026-10-03T16:00:00.000Z",
+        taskType: 3,
+        equipmentId: 9,
+        questionarioId: 4,
+      },
+    ),
+    { tecnico: true, data: true, tipo: true, alvo: true, questionario: true },
+  );
+});
