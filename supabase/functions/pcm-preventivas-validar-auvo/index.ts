@@ -93,7 +93,7 @@ if (import.meta.main) serve(async (req) => {
     const input = Input.parse(await req.json());
     if (new Date(input.visitaEm).getTime() <= Date.now()) throw new HttpError(422, "Use uma data futura para a task de teste");
     const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", getSupabaseServiceKey(), { auth: { persistSession: false, autoRefreshToken: false } });
-    const { data: contratoAnterior, error: contratoAnteriorErro } = await db.schema("pcm").from("preventiva_auvo_contrato").select("evidencia").eq("id", true).single();
+    const { data: contratoAnterior, error: contratoAnteriorErro } = await db.schema("pcm").from("preventiva_auvo_contrato").select("evidencia,estado").eq("id", true).single();
     if (contratoAnteriorErro) throw contratoAnteriorErro;
     const evidenciasAnteriores = (contratoAnterior.evidencia ?? {}) as Record<string, unknown>;
     await db.schema("pcm").from("preventiva_auvo_contrato").update({ estado: "pendente", erro: null, updated_at: new Date().toISOString() }).eq("id", true);
@@ -120,6 +120,9 @@ if (import.meta.main) serve(async (req) => {
       let id = taskTesteExistente(existentes, alvoTeste);
       let respostaCriacao: unknown = null;
       if (id == null) {
+        if (contratoAnterior.estado === "falhou") {
+          throw new HttpError(409, "Task-teste anterior não foi localizada no Auvo; nenhuma nova task será criada automaticamente.");
+        }
         const criada = await auvoPost<unknown>("/tasks", { externalId: chave, customerId: clienteR.data.auvo_id, taskTypeId: tipoR.data.auvo_id, equipmentId: input.equipamentoAuvoId, orientation: "TESTE DE CONTRATO PCM PREVENTIVAS — não executar", priority: 1 });
         respostaCriacao = criada;
         id = taskId(criada);
@@ -134,9 +137,12 @@ if (import.meta.main) serve(async (req) => {
       const tarefa = ((retorno as { result?: Record<string, unknown> }).result ?? retorno) as Record<string, unknown>;
       const questionarios = Array.isArray(tarefa.questionnaires) ? tarefa.questionnaires : [];
       const questionarioOk = tarefa.questionnaireId === questionarioR.data.auvo_id || questionarios.some((q) => (q as { id?: number }).id === questionarioR.data.auvo_id);
-      const ok = Number(tarefa.idUserTo) === tecnicoR.data.auvo_user_id && String(tarefa.taskDate ?? "").slice(0, 19) === input.visitaEm.slice(0, 19) && Number(tarefa.equipmentId) === input.equipamentoAuvoId && questionarioOk;
       const evidencia = { taskId: id, externalId: chave, tecnico: Number(tarefa.idUserTo) === tecnicoR.data.auvo_user_id, data: String(tarefa.taskDate ?? "").slice(0, 19) === input.visitaEm.slice(0, 19), alvo: Number(tarefa.equipmentId) === input.equipamentoAuvoId, questionario: questionarioOk };
-      if (!ok) throw new Error("GET Auvo não confirmou todos os campos críticos");
+      const ok = evidencia.tecnico && evidencia.data && evidencia.alvo && evidencia.questionario;
+      if (!ok) {
+        await db.schema("pcm").from("preventiva_auvo_contrato").update({ evidencia: { ...evidenciasAnteriores, [input.alvoTipo]: evidencia }, updated_at: new Date().toISOString() }).eq("id", true);
+        throw new Error(`GET Auvo não confirmou campos críticos (tecnico=${evidencia.tecnico}; data=${evidencia.data}; alvo=${evidencia.alvo}; questionario=${evidencia.questionario})`);
+      }
       const evidencias = { ...evidenciasAnteriores, [input.alvoTipo]: evidencia };
       const completo = contratoPreventivoCompleto(evidencias);
       await db.schema("pcm").from("preventiva_auvo_contrato").update({ estado: completo ? "validado" : "pendente", validado_em: completo ? new Date().toISOString() : null, evidencia: evidencias, erro: null, updated_at: new Date().toISOString() }).eq("id", true);
