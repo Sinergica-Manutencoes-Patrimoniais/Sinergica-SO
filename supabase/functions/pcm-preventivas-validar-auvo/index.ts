@@ -123,6 +123,22 @@ export function montarPayloadCriacaoTask(input: {
   };
 }
 
+export function montarPatchValidacaoTask(input: {
+  tecnicoId: number;
+  visitaEm: string;
+  taskType: number;
+  equipmentId: number;
+  questionarioId: number;
+}) {
+  return toAuvoJsonPatch({
+    idUserTo: input.tecnicoId,
+    taskDate: input.visitaEm.slice(0, 19),
+    taskType: input.taskType,
+    equipmentsId: [input.equipmentId],
+    questionnaireId: input.questionarioId,
+  });
+}
+
 type EvidenciaTask = {
   tecnico: boolean;
   data: boolean;
@@ -343,10 +359,12 @@ if (import.meta.main) {
         }
         await auvoPatch(
           `/tasks/${id}`,
-          toAuvoJsonPatch({
-            idUserTo: tecnico.auvo_user_id,
-            taskDate: input.visitaEm.slice(0, 19),
-            questionnaireId: questionario.auvo_id,
+          montarPatchValidacaoTask({
+            tecnicoId: tecnico.auvo_user_id,
+            visitaEm: input.visitaEm,
+            taskType: tipo.auvo_id,
+            equipmentId: input.equipamentoAuvoId,
+            questionarioId: questionario.auvo_id,
           }),
         );
         const retorno = await auvoGet<unknown>(`/tasks/${id}`);
