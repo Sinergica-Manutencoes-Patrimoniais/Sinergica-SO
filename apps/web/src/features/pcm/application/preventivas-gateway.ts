@@ -3,6 +3,7 @@ export type OpcaoPreventiva = {
   nome: string;
   auvo_id?: number | null;
   auvo_user_id?: number | null;
+  auvo_equipment_id?: number | null;
 };
 
 export type PlanoPreventivo = {

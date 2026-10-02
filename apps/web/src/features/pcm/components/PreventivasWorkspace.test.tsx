@@ -109,4 +109,11 @@ describe("PreventivasWorkspace — E01-S53 AC-8", () => {
 
     expect(await screen.findByText("Enviar achado ao backlog")).toBeInTheDocument();
   });
+
+  it("expõe validação do contrato Auvo somente para superadmin", async () => {
+    renderWorkspace({ podeValidarContratoAuvo: true });
+    await userEvent.click(await screen.findByRole("button", { name: "Validar contrato Auvo" }));
+
+    expect(await screen.findByText("Validação do contrato Auvo")).toBeInTheDocument();
+  });
 });
