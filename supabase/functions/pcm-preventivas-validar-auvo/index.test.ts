@@ -191,3 +191,28 @@ Deno.test("evidenciaTaskPreventiva — reconhece questionário serializado no de
     { tecnico: true, data: true, tipo: true, alvo: true, questionario: true },
   );
 });
+
+Deno.test("evidenciaTaskPreventiva — reconhece descrição do questionário retornada pelo Auvo", () => {
+  assertEquals(
+    evidenciaTaskPreventiva(
+      {
+        idUserTo: 7,
+        taskDate: "2026-10-03T16:00:00",
+        taskType: 3,
+        equipmentsId: [9],
+        questionnaires: [{
+          questionnaireDescription: "Luminária de Emergência",
+        }],
+      },
+      {
+        tecnicoId: 7,
+        visitaEm: "2026-10-03T16:00:00.000Z",
+        taskType: 3,
+        equipmentId: 9,
+        questionarioId: 4,
+        questionarioNome: "Luminária de Emergência",
+      },
+    ),
+    { tecnico: true, data: true, tipo: true, alvo: true, questionario: true },
+  );
+});

@@ -6,6 +6,7 @@
 export function taskTemQuestionario(
   valor: unknown,
   questionarioId: number,
+  questionarioNome?: string,
   profundidade = 0,
 ): boolean {
   if (profundidade > 8 || valor == null) return false;
@@ -14,15 +15,21 @@ export function taskTemQuestionario(
       return taskTemQuestionario(
         JSON.parse(valor),
         questionarioId,
+        questionarioNome,
         profundidade + 1,
       );
     } catch {
-      return false;
+      return normalizar(valor) === normalizar(questionarioNome ?? "");
     }
   }
   if (Array.isArray(valor)) {
     return valor.some((item) =>
-      taskTemQuestionario(item, questionarioId, profundidade + 1)
+      taskTemQuestionario(
+        item,
+        questionarioId,
+        questionarioNome,
+        profundidade + 1,
+      )
     );
   }
   if (typeof valor !== "object") return false;
@@ -33,7 +40,21 @@ export function taskTemQuestionario(
       if (normalizada === "questionnaireid") {
         return Number(item) === questionarioId;
       }
-      return taskTemQuestionario(item, questionarioId, profundidade + 1);
+      if (
+        ["questionnairedescription", "questionnairename", "description", "name"]
+          .includes(normalizada) && typeof item === "string"
+      ) return normalizar(item) === normalizar(questionarioNome ?? "");
+      return taskTemQuestionario(
+        item,
+        questionarioId,
+        questionarioNome,
+        profundidade + 1,
+      );
     },
   );
+}
+
+function normalizar(valor: string): string {
+  return valor.normalize("NFD").replace(/\p{Diacritic}/gu, "").trim()
+    .toLowerCase();
 }

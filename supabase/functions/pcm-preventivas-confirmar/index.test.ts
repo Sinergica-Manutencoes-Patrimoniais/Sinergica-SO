@@ -50,3 +50,28 @@ Deno.test("tarefaPreventivaConfirmada — aceita questionário serializado no re
     true,
   );
 });
+
+Deno.test("tarefaPreventivaConfirmada — aceita descrição de questionário retornada pelo Auvo", () => {
+  assertEquals(
+    tarefaPreventivaConfirmada(
+      {
+        idUserTo: 7,
+        taskDate: "2026-10-03T16:00:00",
+        taskType: 3,
+        equipmentsId: [9],
+        questionnaires: [{
+          questionnaireDescription: "Luminária de Emergência",
+        }],
+      },
+      {
+        tecnicoId: 7,
+        visitaEm: "2026-10-03T16:00:00.000Z",
+        taskType: 3,
+        equipmentId: 9,
+        questionarioId: 4,
+        questionarioNome: "Luminária de Emergência",
+      },
+    ),
+    true,
+  );
+});

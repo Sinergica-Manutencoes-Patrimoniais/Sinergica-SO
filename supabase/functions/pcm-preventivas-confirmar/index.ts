@@ -65,6 +65,7 @@ export function tarefaPreventivaConfirmada(
     taskType: number;
     equipmentId: number;
     questionarioId: number;
+    questionarioNome?: string;
   },
 ): boolean {
   const questionarioConfirmado = taskTemQuestionario(
@@ -73,6 +74,7 @@ export function tarefaPreventivaConfirmada(
       questionnaires: task.questionnaires,
     },
     esperado.questionarioId,
+    esperado.questionarioNome,
   );
   return Number(task.idUserTo) === esperado.tecnicoId &&
     String(task.taskDate ?? "").slice(0, 19) ===
@@ -285,6 +287,7 @@ serve(async (req) => {
           taskType: tipo.auvo_id,
           equipmentId: alvo.auvo_equipment_id,
           questionarioId: questionario.auvo_id,
+          questionarioNome: questionario.nome,
         })
       ) {
         throw new Error(

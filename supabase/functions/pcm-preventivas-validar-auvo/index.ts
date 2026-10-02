@@ -143,6 +143,7 @@ export function evidenciaTaskPreventiva(
     taskType: number;
     equipmentId: number;
     questionarioId: number;
+    questionarioNome?: string;
   },
 ): EvidenciaTask {
   return {
@@ -158,6 +159,7 @@ export function evidenciaTaskPreventiva(
         questionnaires: tarefa.questionnaires,
       },
       esperado.questionarioId,
+      esperado.questionarioNome,
     ),
   };
 }
@@ -261,10 +263,11 @@ if (import.meta.main) {
             "id",
             input.tecnicoFuncionarioId,
           ).single(),
-          db.schema("pcm").from("questionarios").select("auvo_id,ativo").eq(
-            "id",
-            input.questionarioId,
-          ).single(),
+          db.schema("pcm").from("questionarios").select("auvo_id,ativo,nome")
+            .eq(
+              "id",
+              input.questionarioId,
+            ).single(),
           db.schema("pcm").from("tipos_tarefa").select("auvo_id").eq(
             "id",
             input.tipoTarefaId,
@@ -369,6 +372,7 @@ if (import.meta.main) {
             taskType: tipo.auvo_id,
             equipmentId: input.equipamentoAuvoId,
             questionarioId: questionario.auvo_id,
+            questionarioNome: questionario.nome,
           }),
         };
         const ok = evidencia.tecnico && evidencia.data && evidencia.tipo &&
