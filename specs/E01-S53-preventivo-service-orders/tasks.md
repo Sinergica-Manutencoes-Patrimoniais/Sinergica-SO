@@ -1,34 +1,27 @@
 ---
 name: tasks
-description: Decomposição e gates — preventivo recorrente PCM→Auvo (bloqueada em design.md + credencial API).
+description: Tasks e gates — preventivas PCM com execução no Auvo.
 alwaysApply: false
 ---
 
-# Tasks — Preventivo recorrente: PCM comanda, Auvo executa
+# Tasks — Preventivas no PCM, execução no Auvo
 
-> ⚠️ Tier arquitetural: tasks 1-2 vêm ANTES de qualquer código de feature.
+| # | Task | AC | Depende | Gate | Status |
+|---|------|----|---------|------|--------|
+| 1 | Validar POST/GET Auvo com task futura, técnico, questionário, alvo Sistema/Componente e chave estável; registrar evidência sanitizada no design | AC-2, AC-3, AC-4, AC-5 | acesso de teste autorizado | contrato real documentado | todo |
+| 2 | Fechar design/ADR com campos comprovados, estados, reconciliação, payload de avaliação/local e tratamento de ciclos passados | AC-1, AC-3, AC-4, AC-5 | 1 | revisão arquitetural | todo |
+| 3 | Migration aditiva de planos, ocorrências, vínculos, resultados e achados; índices, RLS FORCE, audit e pgTAP permitido/negado | AC-1, AC-4, AC-5, AC-6, AC-7 | 2 | `pnpm run lint:migrations`; `db-tests` | todo |
+| 4 | Domínio com testes de recorrência ancorada, fim de mês, pausa, atraso e geração idempotente | AC-1, AC-7 | 3 | testes focados | todo |
+| 5 | Casos de uso e UI de plano para Sistema/Componente, questionário obrigatório, ativação/pausa | AC-1, AC-7 | 3, 4 | testes focados | todo |
+| 6 | Calendário/drawer com vencimento, visita, alvo/itens, estados e confirmação de Fabrício | AC-2, AC-3 | 5 | teste de UI | todo |
+| 7 | Criação imediata Auvo, leitura de confirmação, vínculo, bloqueio de questionário incerto, falha/retry idempotente | AC-3, AC-4 | 1-3, 6 | teste integração | todo |
+| 8 | Sync idempotente de status, respostas, fotos, medições e local por avaliação de Sistema | AC-5 | 3, 7 | teste de reentrega/ordem | todo |
+| 9 | Triagem de achados e envio manual individual ao backlog, com origem e deduplicação | AC-6 | 8 | teste de decisão/repetição | todo |
+| 10 | Validar plano de Sistema e Componente ponta a ponta; revisão adversarial, `pnpm run ci:local`, CI `db-tests` | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7 | 1-9 | gates verdes | todo |
 
-## Plano
-| # | Task | Cobre AC | Depende de | Gate (comando) | Status |
-|---|------|----------|------------|----------------|--------|
-| 1 | Teste de contrato com credencial API real: criar/inspecionar/excluir 1 service order de teste E 1 task recorrente de teste; registrar payloads reais | — | credencial Auvo | manual (curl, registro no design) | todo |
-| 2 | `design.md` (@architect): mecanismo A×B, modelo `pcm.planos_preventivos`, idempotência, ADR "PCM dono do preventivo" | — | 1 | revisão | todo |
-| 3 | Migration `pcm.planos_preventivos` (+`plano_preventivo_id` em `pcm.ordens_servico`, `NOT VALID`→`VALIDATE`) | AC-1, AC-3 | 2 | `pnpm run lint:migrations` | todo |
-| 4 | Domain/application/adapter + UI de planos (lista por cliente, form, ativar/pausar) | AC-1, AC-5 | 3 | `pnpm run test` | todo |
-| 5 | Write path: ativação cria recorrência no Auvo (Edge Function ou outbox, conforme design) com idempotência | AC-2, AC-5 | 2, 3 | `deno test` | todo |
-| 6 | Vincular ocorrências: `os-from-task`/webhook reconhecem tarefa de plano e gravam `plano_preventivo_id` | AC-3 | 5 | `deno test` | todo |
-| 7 | Aderência: % cumprido + atrasadas no cliente-360 e calendário | AC-4 | 6 | `pnpm run test` | todo |
-| 8 | pgTAP RLS + `pnpm run ci:local` + ROADMAP/STATE + validação manual com plano piloto real (1 cliente) | todos | 1-7 | `pnpm run ci:local` | todo |
-
-## Plano de teste
-- Contrato: payload real registrado antes do schema (task 1).
-- Unit: geração de idempotência, regras de status do plano, cálculo de aderência.
-- E2E manual: plano piloto num cliente real, acompanhar 1 ciclo de geração.
+Task 7 bloqueada até task 1 comprovar POST/GET com questionário e alvo corretos. Resultado de
+POST sem leitura conclusiva não satisfaz gate; task parcial nunca fica disponível ao técnico.
 
 ## Divergências (SPEC_DEVIATION)
-- [ ] Nenhuma divergência aberta.
 
-## Checklist de Definition of Done
-- [ ] Todos os AC verdes
-- [ ] `pnpm run ci:local` verde
-- [ ] ADR registrado · ROADMAP/STATE atualizados
+- [ ] Nenhuma divergência aberta.

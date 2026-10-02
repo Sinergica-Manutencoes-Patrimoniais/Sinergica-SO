@@ -1,30 +1,38 @@
 ---
 name: ADR-0008
-description: PCM governa plano preventivo; Auvo materializa recorrência de campo.
+description: PCM governa plano e ocorrências; Auvo executa task criada na confirmação.
 alwaysApply: false
 ---
 
-# ADR-0008 — PCM dono do preventivo; Auvo executor da recorrência
+# ADR-0008 — PCM dono do preventivo; Auvo executor da visita
 
 ## Status
 
-Aceita, com contrato de escrita pendente de validação viva.
+Aceita. Contrato POST/GET Auvo pendente de validação viva antes do write path. Esta revisão
+substitui decisão anterior de recorrência nativa em `/serviceorders`.
 
 ## Contexto
 
-O preventivo é uma decisão operacional e de conformidade do PCM. O Auvo já oferece service orders
-recorrentes, mas o módulo está vazio na conta da Sinérgica; duplicar recorrência por cron no PCM
-criaria duas fontes de verdade para datas e pausas.
+Fabrício define plano, vê vencimentos e confirma técnico/data no PCM. Técnico precisa encontrar
+imediatamente no Auvo task agendada, mesmo para visita futura, e responder questionário ali.
+PCM precisa governar cada ocorrência e preservar datas futuras quando houver atraso.
 
 ## Decisão
 
-O PCM mantém o plano e seu ciclo de vida; uma ativação materializa uma service order recorrente no
-Auvo, identificada por `externalId` determinístico. O Auvo gera/executa tarefas; webhook e import
-trazem as ocorrências de volta ao PCM.
+PCM gera ocorrências por N semanas ou N meses a partir da primeira data, inicialmente sem OS.
+Confirmar visita cria imediatamente uma task Auvo por ocorrência, com técnico, data, alvo e
+questionário verificados, e persiste seu ID. Task de Sistema cobre conjunto de itens; task de
+Componente/Equipamento cobre só aquele item. Auvo executa; PCM sincroniza status, respostas,
+fotos, medições e local digitado por avaliação de Sistema. Achados só seguem ao backlog por ação
+de Fabrício. Nenhuma recorrência nativa é criada no Auvo.
+
+Teste real de POST/GET deve comprovar campos críticos antes do envio. Sem garantia do
+questionário, bloquear confirmação com motivo claro. Falha mantém ocorrência pendente. Resultado
+incerto exige reconciliação por chave estável antes de retry, preservando uma ocorrência por OS.
 
 ## Consequências
 
-- Evita cron caseiro para recorrência e preserva o app de campo como executor.
-- Exige teste real de criação, pausa e correlação antes de ativar qualquer write path.
-- Se o Auvo não preservar a chave de correlação na tarefa, esta decisão deve ser substituída por ADR
-  novo; não se deve correlacionar por título ou data aproximada.
+- PCM materializa janela de vencimentos, calendário, estado de envio e reconciliação.
+- Pausa cessa novos vencimentos e preserva task/resultados históricos.
+- Limite real da API para questionário ou Sistema mantém write path bloqueado até revisão
+  documentada da decisão.

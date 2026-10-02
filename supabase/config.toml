@@ -430,6 +430,12 @@ verify_jwt = true
 verify_jwt = true
 [functions.pcm-auvo-open-task]
 verify_jwt = true
+[functions.pcm-preventivas-confirmar]
+verify_jwt = true
+[functions.pcm-preventivas-validar-auvo]
+verify_jwt = true
+[functions.pcm-preventivas-enviar-backlog]
+verify_jwt = true
 [functions.pcm-auvo-customers-import]
 verify_jwt = true
 [functions.pcm-auvo-customers-sync]
