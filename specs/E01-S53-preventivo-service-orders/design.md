@@ -51,9 +51,37 @@ resultado incerto exige reconciliação segura antes de novo POST. Import/webhoo
 ID/chave comprovada, nunca título ou data aproximada. Interface mostra erro sem segredo e ação
 de retry quando segura.
 
+## Preventivas na Visão 360 do Cliente (AC-8)
+
+- `VisaoClientePage` recebe `clienteId` do contexto e monta a aba **Preventivas** somente com
+  permissão de leitura PCM. Extrair o painel de `PreventivasPage` para componente reutilizável
+  (ou composição equivalente) com `clienteId` opcional: sem filtro na tela global e filtro
+  obrigatório na Visão 360. Formulários e comandos chamam os mesmos casos de uso; nenhuma
+  segunda implementação de recorrência, confirmação Auvo, reconciliação ou triagem de achados.
+- Consultas de planos aplicam `cliente_id = clienteId` no servidor. Ocorrências são consultadas
+  pelos IDs dos planos desse cliente e avaliações pelos IDs dessas ocorrências, também no
+  servidor; conjunto vazio não dispara consulta global. Paginação/limite de avaliações ocorre
+  depois do filtro. Não carregar tudo para filtrar no browser.
+- No novo plano aberto pela Visão 360, `clienteId` vem do contexto, fica fixo e limita Sistemas
+  por `cliente_id` e Componentes/Equipamentos por `client_id` nas consultas. A trigger existente
+  do plano valida que alvo pertence ao cliente gravado. Confirmação de visita e envio de achados
+  continuam usando IDs de ocorrência/avaliação, RBAC e vínculos existentes; usuário com escrita
+  PCM já tem escopo global. AC-8 não altera Edge Functions, schema nem RLS.
+- Dados remotos passam por TanStack Query com chaves que incluem `clienteId`. Habilitar consultas
+  somente quando a aba estiver ativa e leitura autorizada; catálogos de formulário somente
+  quando necessários. Na troca de cliente, cancelar/ignorar resposta anterior, limpar seleção e
+  formulário, e não mostrar cache do cliente anterior. Invalidar chaves afetadas após mutações
+  tanto no painel global quanto na Visão 360. Recarregar a aba usa o mesmo filtro.
+- Painel trata carregamento, vazio, erro com retry e sucesso. Sem planos, oferecer criação só a
+  quem tem escrita. Confirmar visita continua criando task no Auvo pelo fluxo de AC-3/AC-4; a
+  Visão 360 não ganha executor de campo nem questionário próprio.
+
 ## Segurança e testes
 
 Migration aditiva, RLS FORCE e pgTAP permitido/negado; permissão no servidor; audit append-only;
 segredos só no servidor/Vault. TanStack Query para dados remotos, invalidando após escrita.
 Testar recorrência, criação antecipada, idempotência, falha/retry, sync, local de Sistema e envio
-manual de achados. Validar plano de Sistema e de Componente/Equipamento.
+manual de achados. Validar plano de Sistema e de Componente/Equipamento. Para AC-8, cobrir
+isolamento entre dois clientes (inclusive avaliação e troca rápida), estado vazio/erro e retry,
+aba inativa sem consulta, cliente fixo no cadastro, leitura sem escrita e ações compartilhadas
+com a tela global.

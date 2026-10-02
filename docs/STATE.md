@@ -10,6 +10,19 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## 2026-10-01 — Handoff E01-S53/T11, Preventivas na Visão 360 (Codex)
+
+- Branch `feat/preventivas-pcm-auvo`, base de Preventivas no commit local `d8453e5`.
+- `specs/E01-S53-preventivo-service-orders/spec.md` (AC-8), `design.md` e `tasks.md`
+  atualizados: plano executável em três entregas para Terra. Alterações de docs desta sessão
+  ainda não commitadas; não houve alteração de código, push ou deploy nesta sessão.
+- Próxima ação: Terra lê AC-8 e seção `E01-S53/T11` em `tasks.md`, implementa consultas filtradas
+  por cliente, extrai workspace reutilizável e monta aba `Preventivas` em `VisaoClientePage`.
+  Rodar testes focados, typecheck e E2E UI conforme gates da task. O cliente da 360 fica fixo;
+  a tela global continua sem filtro.
+- Gate Auvo de AC-3 ainda pendente de task real autorizada; T11 não o altera. E2E autenticado
+  depende de sessão de teste; usar interceptação REST para a regressão de escopo da aba.
+
 ## 2026-09-30 — Ondas S159–S161 concluídas localmente (Codex)
 
 - S159: cadastro/edição de Componentes e Sistemas dentro da Visão 360; regressão E2E escrita.
@@ -110,21 +123,15 @@ linhas velhas de ROADMAP da E01-S154/S155 (2026-09-25), já substituídas pela i
 **Próximo passo histórico:** E01-S156 (categoria como catálogo) — concluída acima.
 
 ## Em andamento / próximo passo
-- **E01-S157 (onda 2) pronta para validação externa** na branch
-  `feat/E01-S157-siglas-identificador-ativo` (Codex, 2026-09-30). Migrations `0221`/`0222` estão
-  aplicadas em produção; smoke transacional e auditoria confirmaram 3 colunas, 3 checks, 5 índices
-  e RPC retornando `01`. Código, UI, siglas de estrutura/cliente, E2E e glossário foram concluídos
-  em 10 commits. `pnpm run ci:local`, auditoria da esteira, testes Deno dos descriptors Auvo e o
-  parse do E2E estão verdes.
-- **Próxima ação concreta:** antes de merge/deploy, rodar `db-tests` no CI (pgTAP, Task 2) e executar
-  `identificador-ativo.spec.ts` com credenciais E2E. Depois, usar um cliente de teste com `auvo_id`
-  seguro para AC-10: criar Componente, aguardar drain, conferir `identifier` no GET Auvo e confirmar
-  que o inbound não sobrescreveu `pcm.equipamentos.identificador`. Se divergir, parar e registrar
-  `SPEC_DEVIATION` na spec.
-- (Resolvido) As 3 branches da sessão de 2026-08-19 viraram os PRs #61, #62 e #63, todos mergeados.
+- **Ativo:** E01-S53/T11, aba Preventivas na Visão 360. Plano e gates em
+  `specs/E01-S53-preventivo-service-orders/tasks.md`; iniciar pela entrega 11.1.
+- **Próxima ação concreta:** filtrar consultas de planos, ocorrências e avaliações por
+  `clienteId` no banco; cobrir A/B e cliente vazio com teste. Terra segue 11.2 e 11.3 após gate.
 
 ## Bloqueios abertos
 > Carregados da rotação desta sessão — confirmados como ainda abertos, não copiados às cegas.
+- [ ] **Validação viva do contrato Auvo em E01-S53 AC-3:** confirmar tarefa de teste com
+  técnico, data, alvo e questionário antes de habilitar abertura preventiva. Independente de T11.
 - [ ] **`.claude/skills/revisao-adversarial/SKILL.md` nunca foi criada** — referenciada em
   `AGENTS.md`/`Definition-of-Done.md` desde 2026-07-02, conteúdo nunca materializado como skill de
   verdade. Quem destrava: Lucas, com pedido direto.

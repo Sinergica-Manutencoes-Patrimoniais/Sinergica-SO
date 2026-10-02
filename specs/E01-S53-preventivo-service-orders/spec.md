@@ -66,6 +66,24 @@ quais achados envia ao backlog.
 - Pausar plano interrompe novos vencimentos, preserva ocorrências, OS e resultados históricos.
   Retomar usa âncora original, sem deslocar datas futuras.
 
+### AC-8: Preventivas na Visão 360 do Cliente
+
+- Dado um cliente aberto na Visão 360, a aba **Preventivas** mostra somente seus planos,
+  ocorrências e avaliações, inclusive status de envio, visita, vínculo Auvo e achados. Um plano
+  ou resultado de outro cliente nunca aparece, mesmo após trocar de cliente ou atualizar a aba.
+- Na aba, usuário com escrita no PCM pode criar plano, pausar/retomar plano, confirmar visita,
+  repetir envio quando seguro e enviar achado ao backlog, com as mesmas regras e resultados da
+  tela global Preventivas. Ao criar plano, cliente da Visão 360 já vem definido e não pode ser
+  trocado; alvos oferecidos pertencem somente a esse cliente.
+- Usuário com leitura no PCM vê os dados, mas não executa ações de escrita. Sem leitura, não vê
+  a aba nem seus dados. Escrita segue a permissão global existente do PCM; ao criar plano, a
+  validação existente do plano exige que o alvo pertença ao cliente definido.
+- Sem planos, a aba mostra estado vazio com ação de criar plano para quem pode escrever; falha de
+  carregamento mostra erro e opção de tentar novamente. Após ação bem-sucedida ou atualização,
+  planos, ocorrências e avaliações refletem o estado atual do cliente sem exibir dados antigos.
+- PCM continua dono do plano e das decisões; técnico executa tarefa e questionário no Auvo,
+  conforme AC-1 a AC-7. A aba usa o mesmo fluxo, sem criar regra de negócio paralela.
+
 ## Fora de escopo
 
 - Recorrência nativa `/serviceorders` ou repetição automática de task Auvo.
