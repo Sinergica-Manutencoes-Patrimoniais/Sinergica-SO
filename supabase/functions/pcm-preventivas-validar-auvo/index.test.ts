@@ -52,7 +52,7 @@ Deno.test("taskId — aceita resposta Auvo com result numérico ou objeto", () =
   assertEquals(taskId({}), null);
 });
 
-Deno.test("taskTesteExistente — prioriza externalId e recupera tentativa legada compatível", () => {
+Deno.test("taskTesteExistente — aceita apenas externalId ou tentativa legada com mesmo alvo", () => {
   const alvo = {
     externalId: "PREV-CONTRATO-equipamento-1-2-3",
     customerId: 1,
@@ -71,8 +71,8 @@ Deno.test("taskTesteExistente — prioriza externalId e recupera tentativa legad
         entityList: [{
           taskID: 91,
           customerId: 1,
-          equipmentId: 2,
-          taskTypeId: 3,
+          equipmentsId: [2],
+          taskType: 3,
           orientation: "TESTE DE CONTRATO PCM PREVENTIVAS — não executar",
         }],
       },
@@ -86,7 +86,7 @@ Deno.test("taskTesteExistente — prioriza externalId e recupera tentativa legad
         orientation: "TESTE DE CONTRATO PCM PREVENTIVAS — não executar",
       }],
     }, alvo),
-    92,
+    null,
   );
   assertEquals(taskTesteExistente({ result: [] }, alvo), null);
 });

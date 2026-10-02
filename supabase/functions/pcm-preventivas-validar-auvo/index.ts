@@ -92,12 +92,9 @@ export function taskTesteExistente(
     tarefa.equipmentsId?.includes(alvo.equipmentId) &&
     tarefa.taskType === alvo.taskTypeId
   ).at(-1);
-  // A listagem do Auvo nem sempre devolve os IDs auxiliares no mesmo shape do POST;
-  // a orientação exclusiva ainda permite recuperar uma tentativa anterior sem duplicá-la.
-  const porOrientacao = tarefas.filter((tarefa) =>
-    tarefa.orientation === "TESTE DE CONTRATO PCM PREVENTIVAS — não executar"
-  ).at(-1);
-  return taskId(exata ?? legada ?? porOrientacao ?? {});
+  // Orientação é compartilhada por todas as validações. Nunca é chave de
+  // idempotência: reutilizaria task de outro alvo e mascararia o contrato real.
+  return taskId(exata ?? legada ?? {});
 }
 
 /** Campos de criação confirmados no contrato Auvo v2. */
