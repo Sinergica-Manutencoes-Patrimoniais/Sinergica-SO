@@ -4,8 +4,9 @@ import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
-import { auvoGet, auvoPatch, auvoPost } from "../_shared/auvo/client.ts";
+import { AuvoApiError, auvoGet, auvoPatch, auvoPost } from "../_shared/auvo/client.ts";
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
+import { classificarFalhaEnvioPreventiva } from "../_shared/preventivas/confirmacao.ts";
 
 const FN = "pcm-preventivas-confirmar";
 const Input = z.object({
@@ -42,7 +43,9 @@ serve(async (req) => {
 
     const { data: ocorrencia, error: ocorrenciaErro } = await db.schema("pcm").from("ocorrencias_preventivas").select("*").eq("id", input.ocorrenciaId).single();
     if (ocorrenciaErro) throw ocorrenciaErro;
-    if (ocorrencia.auvo_task_id != null) return json(200, { ok: true, taskId: ocorrencia.auvo_task_id, created: false }, cors);
+    if (ocorrencia.envio_estado === "disponivel" && ocorrencia.auvo_task_id != null) {
+      return json(200, { ok: true, taskId: ocorrencia.auvo_task_id, created: false }, cors);
+    }
     if (!["prevista", "falha"].includes(ocorrencia.envio_estado)) throw new HttpError(409, "Esta ocorrência está sendo conciliada por outro envio.");
 
     const { data: tomada, error: tomadaErro } = await db.schema("pcm").from("ocorrencias_preventivas")
@@ -51,6 +54,9 @@ serve(async (req) => {
     if (tomadaErro) throw tomadaErro;
     if (!tomada?.length) throw new HttpError(409, "A ocorrência foi alterada por outro usuário. Atualize a tela.");
 
+    let tentativaRemotaIniciada = false;
+    let taskIdRemota: number | null = null;
+    let osId: string | null = null;
     try {
       const { data: plano, error: planoErro } = await db.schema("pcm").from("planos_preventivos").select("*").eq("id", ocorrencia.plano_id).single();
       if (planoErro) throw planoErro;
@@ -70,19 +76,28 @@ serve(async (req) => {
         throw new HttpError(422, "Cliente, técnico, alvo, tipo ou questionário ainda não possui vínculo Auvo válido.");
       }
       const titulo = `Preventiva: ${plano.nome}`;
-      const { data: os, error: osErro } = await db.schema("pcm").from("ordens_servico").insert({
+      const { data: osExistente, error: osExistenteErro } = await db.schema("pcm").from("ordens_servico")
+        .select("id,auvo_task_id").eq("ocorrencia_preventiva_id", ocorrencia.id).maybeSingle();
+      if (osExistenteErro) throw osExistenteErro;
+      if (osExistente?.auvo_task_id != null) {
+        throw new HttpError(409, "A task Auvo desta ocorrência precisa de reconciliação antes de nova confirmação.");
+      }
+      const os = osExistente ?? (await db.schema("pcm").from("ordens_servico").insert({
         client_id: plano.cliente_id, titulo, descricao: `Preventiva ${plano.nome} · alvo: ${alvoR.data.nome} · questionário: ${questionarioR.data.nome}`,
         categoria: "preventiva", status: "planejamento", prioridade: "normal", origem: "preventiva_pcm", created_by: userId,
         tipo_tarefa_id: plano.tipo_tarefa_id, tecnico_funcionario_id: input.tecnicoFuncionarioId, data_agendada: input.visitaEm,
         ocorrencia_preventiva_id: ocorrencia.id, sistema_id: plano.sistema_id, equipamento_id: plano.equipamento_id, questionario_id: plano.questionario_id,
-      }).select("id").single();
-      if (osErro) throw osErro;
+      }).select("id,auvo_task_id").single()).data;
+      if (!os) throw new Error("Não foi possível reservar a OS local preventiva");
+      osId = os.id;
 
+      tentativaRemotaIniciada = true;
       const criada = await auvoPost<unknown>("/tasks", {
         externalId: os.id, customerId: clienteR.data.auvo_id, taskTypeId: tipoR.data.auvo_id, equipmentId: alvoR.data.auvo_equipment_id,
         orientation: `PCM ${os.id} · ${titulo}`, priority: 2,
       });
       const taskId = extrairTaskId(criada);
+      taskIdRemota = taskId;
       if (taskId == null) throw new Error("Auvo não devolveu o identificador da tarefa criada");
       await auvoPatch(`/tasks/${taskId}`, toAuvoJsonPatch({ idUserTo: tecnicoR.data.auvo_user_id, taskDate: input.visitaEm.slice(0, 19), questionnaireId: questionarioR.data.auvo_id }));
       const lida = await auvoGet<unknown>(`/tasks/${taskId}`);
@@ -101,7 +116,23 @@ serve(async (req) => {
       return json(200, { ok: true, taskId, created: true }, cors);
     } catch (causa) {
       const mensagem = causa instanceof Error ? causa.message : "Falha inesperada ao abrir task Auvo";
-      await db.schema("pcm").from("ocorrencias_preventivas").update({ envio_estado: "falha", erro_envio: mensagem.slice(0, 500), updated_at: new Date().toISOString() }).eq("id", input.ocorrenciaId);
+      const rejeicaoRemotaConhecida = causa instanceof AuvoApiError && causa.status >= 400 && causa.status < 500;
+      const envioEstado = classificarFalhaEnvioPreventiva(tentativaRemotaIniciada, rejeicaoRemotaConhecida);
+      const agora = new Date().toISOString();
+      await db.schema("pcm").from("ocorrencias_preventivas").update({
+        envio_estado: envioEstado,
+        erro_envio: mensagem.slice(0, 500),
+        auvo_task_id: taskIdRemota,
+        updated_at: agora,
+      }).eq("id", input.ocorrenciaId);
+      if (osId && taskIdRemota != null) {
+        await db.schema("pcm").from("ordens_servico").update({
+          auvo_task_id: taskIdRemota,
+          auvo_sync_status: "failed",
+          auvo_sync_error: mensagem.slice(0, 500),
+          updated_at: agora,
+        }).eq("id", osId);
+      }
       throw causa;
     }
   } catch (causa) {
