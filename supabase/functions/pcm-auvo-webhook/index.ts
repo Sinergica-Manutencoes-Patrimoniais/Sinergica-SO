@@ -31,6 +31,7 @@ import { criarOsDaTarefa, resolverFuncionarioIdPorAuvoId } from "../_shared/auvo
 import { auvoNaiveToUtc } from "../_shared/auvo/datetime.ts";
 import { auvoGet } from "../_shared/auvo/client.ts";
 import { classificarRelatorioInspecao } from "../_shared/classificar-relatorio-inspecao.ts";
+import { consolidarResultadoPreventiva } from "../_shared/preventivas/resultado.ts";
 
 const FN = "pcm-auvo-webhook";
 
@@ -201,7 +202,7 @@ serve(async (req) => {
     const { data: osExistente, error: osError } = await db
       .schema("pcm")
       .from("ordens_servico")
-      .select("id, status, categoria, auvo_task_id, numero, pmoc_schedule_id")
+      .select("id, status, categoria, auvo_task_id, numero, pmoc_schedule_id, ocorrencia_preventiva_id")
       .eq("auvo_task_id", taskId)
       .maybeSingle();
     if (osError) throw osError;
@@ -212,6 +213,7 @@ serve(async (req) => {
       categoria: string;
       numero?: string;
       pmoc_schedule_id?: string | null;
+      ocorrencia_preventiva_id?: string | null;
     };
     let transicionou: boolean;
     let criadaAgora = false;
@@ -240,7 +242,7 @@ serve(async (req) => {
         console.warn(JSON.stringify({ ...logBase, nivel: "warn", msg: "tarefa nova do Auvo, mas cliente ainda não sincronizado no PCM — ignorado (AC-4, pego depois pelo import de reconciliação)", taskId, customerId }));
         return json(200, { ok: true, ignored: true, reason: "customer_not_synced", taskId, customerId }, cors);
       }
-      os = { id: criada.id, status: criada.status, categoria: "corretiva" };
+      os = { id: criada.id, status: criada.status, categoria: "corretiva", ocorrencia_preventiva_id: null };
       transicionou = true;
       criadaAgora = true;
       console.log(JSON.stringify({ ...logBase, nivel: "info", msg: "OS criada a partir de tarefa Auvo desconhecida (AC-3)", osId: os.id, taskId, status: targetStatus }));
@@ -298,6 +300,13 @@ serve(async (req) => {
     // E01-S15: captura rica do webhook. Não copia anexos/fotos para Storage; guarda metadados,
     // URLs/referências do Auvo quando existirem, e sempre preserva o payload bruto.
     await upsertTaskSnapshot(db, os.id, taskId, payload, targetStatus);
+
+    // E01-S53: o webhook de conclusão busca a tarefa final porque seu payload não é contrato de
+    // questionário. Só altera o resumo com data de origem, então uma reentrega tardia não regride
+    // a ocorrência; o import periódico continua cobrindo eventos perdidos.
+    const resultadoPreventiva = targetStatus === "finalizado" && os.ocorrencia_preventiva_id
+      ? await sincronizarResultadoPreventivaDoWebhook(db, os.ocorrencia_preventiva_id, taskId)
+      : null;
 
     // E01-S130 AC-4: o import de questionário feito antes da finalização é provisório. Quando a
     // tarefa fecha, busca a versão final na API (o payload do webhook não é contrato de checklist),
@@ -383,7 +392,7 @@ serve(async (req) => {
       }
     }
 
-    return json(200, { ok: true, osId: os.id, taskId, status: targetStatus, transitioned: transicionou, created: criadaAgora, assessmentResync }, cors);
+    return json(200, { ok: true, osId: os.id, taskId, status: targetStatus, transitioned: transicionou, created: criadaAgora, assessmentResync, resultadoPreventiva }, cors);
   } catch (e) {
     if (e instanceof HttpError) return problem(e.status, e.message, reqId, cors);
     console.error(JSON.stringify({ ...logBase, nivel: "error", msg: "erro inesperado", detail: String(e) }));
@@ -540,6 +549,47 @@ async function upsertTaskSnapshot(
       { onConflict: "auvo_task_id" },
     );
   if (error) throw error;
+}
+
+/** Atualiza apenas o selo resumido. As respostas ricas continuam no espelho/reconciliação. */
+async function sincronizarResultadoPreventivaDoWebhook(
+  db: UntypedSupabaseClient,
+  ocorrenciaId: string,
+  taskId: number,
+): Promise<"pendente" | "ok" | "nao_ok" | null> {
+  const payload = await auvoGet<unknown>(`/tasks/${taskId}`);
+  const root = isObject(payload) && isObject(payload.result) ? payload.result : payload;
+  if (!isObject(root)) return null;
+
+  const questionarios = Array.isArray(root.questionnaires) ? root.questionnaires : [];
+  const respostas = questionarios.flatMap((questionario) =>
+    isObject(questionario) && Array.isArray(questionario.answers)
+      ? questionario.answers
+      : [],
+  );
+  const datas = [
+    ...respostas.map((resposta) =>
+      isObject(resposta) ? firstIsoString([resposta.replyDate]) : null,
+    ),
+    firstIsoString([root.checkOutDate, root.checkOutAt]),
+  ].filter((data): data is string => data != null);
+  const atualizadoEm = datas.sort().at(-1);
+  if (!atualizadoEm) return null;
+
+  const resultado = consolidarResultadoPreventiva({
+    osConcluida: true,
+    questionarioRecebido: questionarios.length > 0,
+    respostas: respostas.map((resposta) => ({
+      valor: isObject(resposta) ? resposta.reply : undefined,
+    })),
+  });
+  const { error } = await db.schema("pcm").rpc("atualizar_resultado_preventiva", {
+    p_ocorrencia_id: ocorrenciaId,
+    p_resultado: resultado,
+    p_atualizado_em: atualizadoEm,
+  });
+  if (error) throw error;
+  return resultado;
 }
 
 type AssessmentProvisorioRow = {
