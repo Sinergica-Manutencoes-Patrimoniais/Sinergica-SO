@@ -429,29 +429,56 @@ async function sincronizarAvaliacoesPreventivas(
     if (typeof os.auvo_task_id === "number" && typeof os.ocorrencia_preventiva_id === "string") ocorrenciaPorTask.set(os.auvo_task_id, os.ocorrencia_preventiva_id);
   }
   const linhas: Array<Record<string, unknown>> = [];
+  const recebidoEm = new Date().toISOString();
   for (const tarefa of comResposta) {
     const ocorrenciaId = ocorrenciaPorTask.get(tarefa.taskId);
     if (!ocorrenciaId) continue;
-    for (const questionario of tarefa.questionarios ?? []) {
-      for (const resposta of questionario.answers ?? []) {
-        const questionId = resposta.questionId ?? resposta.questionDescription;
-        if (questionId == null) continue;
-        linhas.push({
-          ocorrencia_id: ocorrenciaId,
-          chave_origem: `${tarefa.taskId}:${questionario.id ?? "questionario"}:${questionId}`,
-          item_referencia: resposta.questionDescription ?? null,
-          local_informado: resposta.local ?? resposta.location ?? resposta.localName ?? null,
-          resposta: { questionarioId: questionario.id ?? null, questionario: questionario.name ?? null, pergunta: resposta.questionDescription ?? null, valor: resposta.reply ?? "", respondidaEm: resposta.replyDate ?? null },
-          recebido_em: new Date().toISOString(),
-        });
-      }
-    }
+    linhas.push(
+      ...montarLinhasAvaliacaoPreventiva(
+        ocorrenciaId,
+        tarefa.taskId,
+        tarefa.questionarios ?? [],
+        recebidoEm,
+      ),
+    );
   }
   if (!linhas.length) return 0;
   const { error } = await db.schema("pcm").from("avaliacoes_preventivas")
     .upsert(linhas, { onConflict: "ocorrencia_id,chave_origem" });
   if (error) throw error;
   return linhas.length;
+}
+
+/** Converte resposta Auvo em linha estável. A chave nunca depende do texto digitado pelo técnico. */
+export function montarLinhasAvaliacaoPreventiva(
+  ocorrenciaId: string,
+  taskId: number,
+  questionarios: AuvoQuestionnaire[],
+  recebidoEm: string,
+): Array<Record<string, unknown>> {
+  const linhas: Array<Record<string, unknown>> = [];
+  for (const questionario of questionarios) {
+    for (const resposta of questionario.answers ?? []) {
+      const questionId = resposta.questionId ?? resposta.questionDescription;
+      if (questionId == null) continue;
+      linhas.push({
+        ocorrencia_id: ocorrenciaId,
+        chave_origem: `${taskId}:${questionario.id ?? "questionario"}:${questionId}`,
+        item_referencia: resposta.questionDescription ?? null,
+        local_informado: resposta.local ?? resposta.location ?? resposta.localName ?? null,
+        resposta: {
+          questionarioId: questionario.id ?? null,
+          questionario: questionario.name ?? null,
+          pergunta: resposta.questionDescription ?? null,
+          valor: resposta.reply ?? "",
+          respondidaEm: resposta.replyDate ?? null,
+        },
+        auvo_updated_at: resposta.replyDate ?? null,
+        recebido_em: recebidoEm,
+      });
+    }
+  }
+  return linhas;
 }
 
 /** Dado rico da tarefa que só serve pra exibição (nunca WHERE/ORDER BY/GROUP BY) — vai em
