@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { contratoPreventivoCompleto } from "./index.ts";
+import { contratoPreventivoCompleto, taskId } from "./index.ts";
 
 Deno.test("contratoPreventivoCompleto — exige evidência válida para Sistema e Equipamento", () => {
   assertEquals(contratoPreventivoCompleto({}), false);
@@ -16,4 +16,12 @@ Deno.test("contratoPreventivoCompleto — exige evidência válida para Sistema 
     }),
     true,
   );
+});
+
+Deno.test("taskId — aceita resposta Auvo com result numérico ou objeto", () => {
+  assertEquals(taskId({ result: 123 }), 123);
+  assertEquals(taskId({ result: { id: 124 } }), 124);
+  assertEquals(taskId({ result: { taskID: 125 } }), 125);
+  assertEquals(taskId({ result: { taskId: 126 } }), 126);
+  assertEquals(taskId({}), null);
 });

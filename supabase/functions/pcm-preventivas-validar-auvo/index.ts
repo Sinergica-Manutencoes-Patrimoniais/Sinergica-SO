@@ -10,7 +10,17 @@ import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
 
 const Input = z.object({ clienteId: z.string().uuid(), tecnicoFuncionarioId: z.string().uuid(), questionarioId: z.string().uuid(), tipoTarefaId: z.string().uuid(), equipamentoAuvoId: z.number().int().positive(), alvoTipo: z.enum(["sistema", "equipamento"]), visitaEm: z.string().datetime() });
 function claims(req: Request): Record<string, unknown> { try { const p = (req.headers.get("Authorization")?.replace("Bearer ", "") ?? "").split(".")[1]; return JSON.parse(atob((p ?? "").replace(/-/g, "+").replace(/_/g, "/"))); } catch { return {}; } }
-function taskId(valor: unknown): number | null { const x = valor as { result?: { id?: number; taskID?: number }; id?: number; taskID?: number }; return x.result?.id ?? x.result?.taskID ?? x.id ?? x.taskID ?? null; }
+/** Auvo v2 pode devolver o identificador diretamente em `result` ou em um objeto. */
+export function taskId(valor: unknown): number | null {
+  const x = valor as {
+    result?: number | { id?: number; taskID?: number; taskId?: number };
+    id?: number;
+    taskID?: number;
+    taskId?: number;
+  };
+  if (typeof x.result === "number") return x.result;
+  return x.result?.id ?? x.result?.taskID ?? x.result?.taskId ?? x.id ?? x.taskID ?? x.taskId ?? null;
+}
 
 type EvidenciaAlvo = { tecnico?: boolean; data?: boolean; alvo?: boolean; questionario?: boolean };
 export function contratoPreventivoCompleto(evidencia: Record<string, unknown>): boolean {
