@@ -2,7 +2,7 @@
 -- Roda no job db-tests. Esta máquina não possui Docker/Supabase local.
 
 begin;
-select plan(11);
+select plan(14);
 
 select has_table('pcm', 'planos_preventivos', 'AC-1: planos existem');
 select has_table('pcm', 'ocorrencias_preventivas', 'AC-1: ocorrências existem');
@@ -65,6 +65,33 @@ select is(
   pcm.materializar_ocorrencias_preventivas('00000000-0000-0000-0000-000000000537', current_date + 14),
   0,
   'AC-1: segunda materialização não duplica ciclos'
+);
+select is(
+  pcm.upsert_avaliacoes_preventivas(jsonb_build_array(jsonb_build_object(
+    'ocorrencia_id', (select id from pcm.ocorrencias_preventivas where plano_id = '00000000-0000-0000-0000-000000000537' and indice = 0),
+    'chave_origem', 'teste-ordem-s53',
+    'resposta', jsonb_build_object('valor', 'Resposta nova'),
+    'auvo_updated_at', '2026-10-02T10:00:00Z',
+    'recebido_em', '2026-10-02T10:01:00Z'
+  ))),
+  1,
+  'AC-5: primeira resposta preventiva é registrada'
+);
+select is(
+  pcm.upsert_avaliacoes_preventivas(jsonb_build_array(jsonb_build_object(
+    'ocorrencia_id', (select id from pcm.ocorrencias_preventivas where plano_id = '00000000-0000-0000-0000-000000000537' and indice = 0),
+    'chave_origem', 'teste-ordem-s53',
+    'resposta', jsonb_build_object('valor', 'Resposta antiga'),
+    'auvo_updated_at', '2026-10-01T10:00:00Z',
+    'recebido_em', '2026-10-02T10:02:00Z'
+  ))),
+  0,
+  'AC-5: evento Auvo antigo não atualiza avaliação'
+);
+select is(
+  (select resposta ->> 'valor' from pcm.avaliacoes_preventivas where chave_origem = 'teste-ordem-s53'),
+  'Resposta nova',
+  'AC-5: resposta mais nova permanece após reentrega fora de ordem'
 );
 select throws_ok(
   $$ insert into pcm.ocorrencias_preventivas (plano_id, indice, vencimento, chave_externa) values ('00000000-0000-0000-0000-000000000537', 0, current_date, 'PREV-DUPLICADA-S53') $$,

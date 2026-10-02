@@ -443,8 +443,9 @@ async function sincronizarAvaliacoesPreventivas(
     );
   }
   if (!linhas.length) return 0;
-  const { error } = await db.schema("pcm").from("avaliacoes_preventivas")
-    .upsert(linhas, { onConflict: "ocorrencia_id,chave_origem" });
+  const { error } = await db.schema("pcm").rpc("upsert_avaliacoes_preventivas", {
+    p_linhas: linhas,
+  });
   if (error) throw error;
   return linhas.length;
 }
