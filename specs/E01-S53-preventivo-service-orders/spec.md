@@ -6,7 +6,8 @@ alwaysApply: true
 
 # Spec — Preventivas no PCM, execução no Auvo
 
-> Status: rascunho. Tier arquitetural. ADR-0008 e `design.md` regem a integração.
+> Status: rascunho revisado para T12 em 2026-10-02. Tier arquitetural. ADR-0008 e `design.md`
+> regem a integração.
 
 ## Resumo
 
@@ -14,8 +15,9 @@ Fabrício cadastra no PCM plano para Sistema ou Componente/Equipamento com prime
 intervalo de N semanas ou N meses e questionário preexistente no Auvo. Cada vencimento gera uma
 ocorrência planejada sem OS. Ao confirmar técnico e data da visita no calendário, o PCM cria
 imediatamente uma task/OS no Auvo, mesmo para data futura, e guarda seu ID. Técnico encontra a
-tarefa, executa serviço e responde questionário no Auvo. PCM recebe resultados; Fabrício decide
-quais achados envia ao backlog.
+tarefa, executa serviço e responde questionário no Auvo. PCM acompanha calendário e histórico,
+recebe o resultado consolidado da execução e mantém link para a OS completa no Auvo. Fabrício
+decide quais achados envia ao backlog.
 
 ## Critérios de aceite
 
@@ -39,7 +41,7 @@ quais achados envia ao backlog.
 
 - Ao confirmar, PCM cria task Auvo com técnico, data, alvo e questionário conferidos, persiste ID
   remoto e exibe vínculo, inclusive quando visita é futura.
-- Antes de habilitar confirmação, teste real de POST e GET Auvo comprova os quatro campos na
+- Antes de habilitar confirmação, teste real de criação e consulta no Auvo comprova os quatro campos na
   task criada para plano de Sistema e de Componente/Equipamento. Se questionário não puder ser
   garantido, bloquear abertura da OS e explicar motivo; nunca enviar tarefa parcial.
 
@@ -51,10 +53,17 @@ quais achados envia ao backlog.
 
 ### AC-5: Sincronização de execução
 
-- Status, respostas, fotos e medições recebidos do Auvo aparecem na ocorrência e histórico PCM;
+- Status e resultado consolidado recebidos do Auvo aparecem na ocorrência e histórico PCM;
   reentrega ou evento fora de ordem não duplica nem apaga resultado mais recente.
-- Questionário de Sistema preserva o local informado pelo técnico em cada avaliação de item. A
-  conclusão aparece no calendário.
+- Resultado é `Não OK` quando qualquer pergunta do questionário estiver explicitamente marcada
+  como “Não OK”. É `OK` somente após conclusão da OS, recebimento completo do resultado e
+  ausência de pergunta marcada como “Não OK”. Nos demais casos permanece `Pendente`, inclusive
+  quando a OS estiver concluída mas o resultado ainda não puder ser determinado com segurança.
+- O PCM não infere reprovação por texto livre. Se o retorno Auvo não identificar de forma
+  inequívoca a marca “Não OK”, mantém `Pendente` e informa que a sincronização está incompleta.
+- Formulário completo, fotos, medições e relato permanecem disponíveis pelo link da OS no Auvo;
+  o calendário e o histórico do PCM não precisam reproduzir esses conteúdos. Dados já recebidos
+  e trilhas existentes são preservados.
 
 ### AC-6: Decisão manual sobre achados
 
@@ -84,14 +93,62 @@ quais achados envia ao backlog.
 - PCM continua dono do plano e das decisões; técnico executa tarefa e questionário no Auvo,
   conforme AC-1 a AC-7. A aba usa o mesmo fluxo, sem criar regra de negócio paralela.
 
+### AC-9: Calendário, histórico e detalhe resumido na Visão 360
+
+- A aba **Preventivas** oferece visão mensal em calendário. Cada ocorrência aparece na data da
+  visita quando agendada; sem visita, aparece no vencimento previsto. Aparência distingue ciclo
+  previsto, visita agendada, OS disponível no Auvo, atraso e execução concluída.
+- Navegação entre meses permite consultar ocorrências futuras e passadas do cliente aberto. A
+  visão histórica lista execuções em ordem decrescente, com filtros por período e resultado,
+  sem misturar dados de outro cliente.
+- Ao abrir uma ocorrência, usuário vê plano, alvo, vencimento, visita, data de conclusão,
+  técnico, número/ID da OS, estado operacional e resultado `Pendente`, `OK` ou `Não OK`.
+- Quando existir task vinculada, ação **Ver OS no Auvo** abre diretamente a OS correspondente
+  em nova aba. Sem vínculo, a ação não é oferecida e a interface explica que a OS ainda não foi
+  criada ou sincronizada.
+- Ocorrência concluída continua acessível no calendário e histórico mesmo quando o plano for
+  pausado, o alvo mudar ou ciclos futuros forem materializados.
+- Calendário, histórico e detalhe respeitam as mesmas permissões e isolamento de cliente do
+  AC-8. Usuário somente leitura pode consultar e abrir o link Auvo, mas não alterar plano,
+  agendamento, resultado ou backlog.
+
+## Entidades relevantes
+
+- **Plano preventivo:** regra recorrente vinculada a um cliente e alvo.
+- **Ocorrência preventiva:** ciclo individual do plano, preservado como registro histórico.
+- **OS preventiva:** ordem local vinculada a uma única ocorrência e à task correspondente no
+  Auvo.
+- **Resultado consolidado:** `Pendente`, `OK` ou `Não OK`, calculado a partir da conclusão e das
+  marcações explícitas do questionário no Auvo.
+
+## Premissas
+
+- O Auvo oferece URL estável para abrir a task pelo ID já persistido pelo PCM.
+- O retorno de execução permite identificar marcações explícitas “Não OK”; o contrato será
+  validado com payload real antes de habilitar classificação automática em produção.
+- O Auvo continua sendo fonte do formulário completo, anexos, medições e relato do técnico.
+- `Pendente` é estado seguro sempre que não houver informação suficiente para classificar.
+
+## Critérios de sucesso
+
+- Fabrício localiza uma preventiva passada ou futura de um cliente em até 30 segundos pela
+  Visão 360.
+- Em 100% das ocorrências com task vinculada, o detalhe oferece link para a OS correta no Auvo.
+- Em 100% das ocorrências classificadas como `Não OK`, existe ao menos uma pergunta marcada
+  explicitamente como “Não OK”; nenhuma classificação deriva de texto livre.
+- Nenhuma ocorrência é classificada como `OK` antes da conclusão e do recebimento completo do
+  resultado.
+- Trocar de cliente, mês ou filtro nunca exibe ocorrências de outro cliente.
+
 ## Fora de escopo
 
 - Recorrência nativa `/serviceorders` ou repetição automática de task Auvo.
 - Preencher questionário no PCM; exibir ao técnico OS pelo PCM.
+- Espelhar no PCM o formulário completo, fotos, medições ou relato da execução.
 - Backlog automático; laudo PMOC legal; roteirização; alertas de conformidade.
 
 ## Rastreabilidade
 
 - `docs/adr/0008-pcm-dono-preventivo-auvo-recorrencia.md`; `design.md`; `tasks.md`.
-- E01-S121 documenta PATCH `/tasks/{id}` com `questionnaireId`, `taskDate` e `idUserTo`;
-  POST/GET ainda exigem validação viva para este fluxo.
+- E01-S121 documenta atualização de questionário, data e técnico; criação e consulta ainda
+  exigem validação viva para este fluxo.

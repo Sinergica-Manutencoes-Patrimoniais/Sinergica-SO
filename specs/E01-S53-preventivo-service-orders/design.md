@@ -10,7 +10,9 @@ alwaysApply: true
 
 PCM governa plano, série de vencimentos e agendamento. Ativação materializa ocorrências locais
 sem ID Auvo. Confirmação de técnico e visita cria imediatamente uma task no Auvo por ocorrência.
-Auvo é interface de execução e questionário do técnico. Sem recorrência nativa Auvo.
+Auvo é interface de execução, questionário e consulta do conteúdo completo pelo técnico e pelo
+gestor. PCM mantém calendário, histórico, resultado consolidado e vínculo navegável. Sem
+recorrência nativa Auvo.
 
 ## Gate do contrato
 
@@ -31,8 +33,13 @@ revisar decisão; não inferir capacidade pelo OpenAPI ou UI.
   `(plano_id, indice)` e ID Auvo. Estado “disponível” só após vínculo persistido.
 - Snapshot do alvo e dos itens do Sistema na confirmação; alterações futuras de composição não
   reescrevem task criada. Uma task para conjunto, não task por item.
-- Respostas, fotos, medições e local por avaliação entram por ID remoto/identificador estável;
-  eventos repetidos ou antigos não regressam estado. Achados têm origem e decisão manual única.
+- Eventos de execução entram por ID remoto/identificador estável; eventos repetidos ou antigos
+  não regressam estado. Payloads e avaliações já persistidos não são removidos, mas a nova visão
+  gerencial não depende de reproduzir formulário, fotos, medições ou relato.
+- Resultado consolidado pertence à ocorrência e usa três estados: `pendente`, `ok`, `nao_ok`.
+  `nao_ok` exige ao menos uma resposta explicitamente marcada “Não OK”; `ok` exige OS concluída,
+  resultado completo e zero marcações “Não OK”. Ausência, formato desconhecido ou sincronização
+  incompleta resulta em `pendente`, nunca em inferência otimista.
 
 ## Recorrência e calendário
 
@@ -76,6 +83,38 @@ de retry quando segura.
   quem tem escrita. Confirmar visita continua criando task no Auvo pelo fluxo de AC-3/AC-4; a
   Visão 360 não ganha executor de campo nem questionário próprio.
 
+## Calendário e histórico resumido (AC-9)
+
+- `PreventivasWorkspace` passa a separar planejamento, calendário e histórico sem duplicar
+  regras entre tela global e Visão 360. Calendário mensal posiciona cada ocorrência em
+  `visita_em` quando presente e, caso contrário, em `vencimento`. Estado operacional e resultado
+  são dimensões distintas: uma ocorrência pode estar concluída e ainda `pendente` de resultado.
+- A consulta da Visão 360 retorna, para cada ocorrência, dados do plano/alvo, OS vinculada,
+  técnico, datas operacionais, resultado consolidado e `auvo_task_id`. Deve evitar N+1, limitar
+  tudo pelo cliente autorizado e paginar histórico antes de crescer sem limite.
+- Clique em evento ou linha histórica abre o mesmo detalhe resumido. O detalhe não renderiza
+  formulário ou anexos: mostra metadados gerenciais e constrói ação **Ver OS no Auvo** somente
+  quando `auvo_task_id` existir. URL contém apenas o identificador da task, nunca credencial ou
+  payload; abre em nova aba com proteção contra controle da janela de origem.
+- Histórico usa a ocorrência como identidade estável. Pausa do plano, alteração posterior do
+  alvo ou geração de novos ciclos não reescreve registro concluído. Ordenação padrão é execução
+  mais recente primeiro, com período e resultado como filtros iniciais.
+
+## Consolidação do resultado Auvo (AC-5, AC-9)
+
+- Antes de implementar classificação, validar em retorno real do Auvo qual campo representa a
+  marca explícita “Não OK”. Registrar estrutura sanitizada e casos `OK`, `Não OK` e formulário
+  incompleto. Se API não expuser sinal inequívoco, manter resultado `pendente` e bloquear
+  classificação automática; texto livre nunca serve como regra.
+- Função pura consolida respostas: qualquer marca “Não OK” produz `nao_ok`; OS concluída com
+  resultado completo e nenhuma marca produz `ok`; qualquer outro caso produz `pendente`.
+- Webhook, pull ou reconciliação aplicam a mesma função e atualizam resultado idempotentemente.
+  Evento antigo não substitui resultado mais novo. Conclusão recebida antes do questionário
+  deixa `pendente`; chegada posterior das respostas recalcula sem ação manual.
+- Mudança de schema, se necessária, é aditiva e preserva avaliações e snapshots existentes.
+  Guardar somente campos consolidados necessários à consulta; conteúdo completo continua no
+  Auvo e não vira requisito de apresentação no PCM.
+
 ## Segurança e testes
 
 Migration aditiva, RLS FORCE e pgTAP permitido/negado; permissão no servidor; audit append-only;
@@ -84,4 +123,6 @@ Testar recorrência, criação antecipada, idempotência, falha/retry, sync, loc
 manual de achados. Validar plano de Sistema e de Componente/Equipamento. Para AC-8, cobrir
 isolamento entre dois clientes (inclusive avaliação e troca rápida), estado vazio/erro e retry,
 aba inativa sem consulta, cliente fixo no cadastro, leitura sem escrita e ações compartilhadas
-com a tela global.
+com a tela global. Para AC-9, cobrir mudança de mês, data efetiva do evento, histórico paginado,
+detalhe resumido, link Auvo correto, ausência de link sem task e matriz `Pendente|OK|Não OK`,
+inclusive conclusão anterior às respostas e evento fora de ordem.

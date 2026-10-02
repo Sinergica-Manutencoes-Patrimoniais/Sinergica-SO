@@ -15,10 +15,11 @@ alwaysApply: false
 | 5 | Casos de uso e UI de plano para Sistema/Componente, questionário obrigatório, ativação/pausa | AC-1, AC-7 | 3, 4 | testes focados | todo |
 | 6 | Calendário/drawer com vencimento, visita, alvo/itens, estados e confirmação de Fabrício | AC-2, AC-3 | 5 | teste de UI | todo |
 | 7 | Criação imediata Auvo, leitura de confirmação, vínculo, bloqueio de questionário incerto, falha/retry idempotente | AC-3, AC-4 | 1-3, 6 | teste integração | todo |
-| 8 | Sync idempotente de status, respostas, fotos, medições e local por avaliação de Sistema | AC-5 | 3, 7 | teste de reentrega/ordem | todo |
+| 8 | Sync idempotente de status e avaliações necessárias ao resultado; preservar payloads, fotos, medições e local já recebidos sem exigir sua reprodução na nova visão | AC-5 | 3, 7 | teste de reentrega/ordem | todo |
 | 9 | Triagem de achados e envio manual individual ao backlog, com origem e deduplicação | AC-6 | 8 | teste de decisão/repetição | todo |
 | 10 | Validar plano de Sistema e Componente ponta a ponta; revisão adversarial, `pnpm run ci:local`, CI `db-tests` | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7 | 1-9 | gates verdes | todo |
 | 11 | Exibir e operar Preventivas na aba da Visão 360, usando o mesmo fluxo e dados do PCM com escopo fixo no cliente aberto | AC-8 | 5-9 para fluxo completo; leitura pode avançar antes do gate Auvo | testes de filtro, componente, navegação e E2E da aba | implementado localmente; E2E autenticado pendente de credenciais |
+| 12 | Acrescentar calendário mensal, histórico e detalhe resumido com resultado consolidado e link direto para a OS Auvo | AC-5, AC-7, AC-8, AC-9 | 8, 11 | contrato real de resultado, testes de domínio/UI/E2E e `ci:local` | especificado; implementação pendente |
 
 Task 7 bloqueada até task 1 comprovar POST/GET com questionário e alvo corretos. Resultado de
 POST sem leitura conclusiva não satisfaz gate; task parcial nunca fica disponível ao técnico.
@@ -193,6 +194,72 @@ if (error) throw error;
 4. Muitas avaliações de B: limite 30 aplicado depois do filtro de A (11.1).
 5. Criar plano na Visão 360 de B: `cliente_id` persistido é B, inclusive após alternar de A
    para B; o seletor global continua operante (11.2/11.3).
+
+## E01-S53/T12 — Calendário e histórico de preventivas
+
+**Objetivo:** transformar a aba Preventivas da Visão 360 em consulta gerencial do ciclo completo,
+sem copiar o formulário de campo para o PCM. Cada ocorrência fica acessível no calendário e no
+histórico, mostra resultado `Pendente|OK|Não OK` e abre a OS completa no Auvo.
+
+**Regra de resultado:** qualquer pergunta explicitamente marcada “Não OK” torna a ocorrência
+`Não OK`. `OK` exige OS concluída, questionário completo e nenhuma marca “Não OK”. Ausência de
+resposta, formato não comprovado ou sincronização incompleta permanece `Pendente`. Texto livre
+nunca é interpretado como aprovação ou reprovação.
+
+### Entrega 12.1 — contrato de resultado do Auvo
+
+- [ ] Obter retorno real e sanitizado de OS concluída com questionário, cobrindo uma resposta
+  “Não OK”, uma execução sem “Não OK” e questionário incompleto. Preferir leitura de tarefa já
+  existente; criar tarefa real exige autorização explícita.
+- [ ] Identificar campo e valores estáveis usados pelo Auvo. Se marca inequívoca não estiver
+  disponível, registrar bloqueio e manter todas as ocorrências sem resultado comprovado como
+  `Pendente`.
+- [ ] Atualizar ADR-0008 com a decisão: PCM conserva resultado consolidado e vínculo; conteúdo
+  completo da execução permanece no Auvo nesta etapa.
+- [ ] Criar fixtures sanitizadas e testes de contrato. Gate: classificação não depende de texto
+  livre, posição da pergunta ou rótulo traduzido por inferência.
+
+### Entrega 12.2 — domínio, persistência e consulta histórica
+
+- [ ] Escrever testes da matriz de consolidação antes da implementação: qualquer “Não OK”;
+  concluída sem reprovação; incompleta; conclusão antes das respostas; reentrega; evento antigo.
+- [ ] Implementar função pura única para consolidação e usá-la em webhook, pull e reconciliação.
+- [ ] Se campos consolidados não existirem, criar migration aditiva para resultado e instante da
+  última consolidação, com RLS FORCE, índices necessários e pgTAP permitido/negado. Não remover
+  avaliações ou snapshots existentes.
+- [ ] Expandir leitura de ocorrências com OS, técnico, datas e resultado sem N+1. Histórico deve
+  ser paginado e sempre limitado pelo cliente autorizado.
+- [ ] Gates: testes focados, `lint:migrations`, `db-tests`, typecheck e reentrega fora de ordem.
+
+### Entrega 12.3 — calendário, histórico e detalhe resumido
+
+- [ ] Escrever testes de componente para mês atual, navegação entre meses, evento em `visita_em`
+  ou fallback em `vencimento`, filtros de período/resultado e permanência de ciclos concluídos.
+- [ ] Implementar calendário mensal e histórico decrescente na aba Preventivas da Visão 360,
+  reutilizando consulta e regras da tela global quando aplicável.
+- [ ] Abrir o mesmo detalhe resumido por evento ou linha: plano, alvo, vencimento, visita,
+  conclusão, técnico, OS, estado operacional e resultado.
+- [ ] Exibir **Ver OS no Auvo** somente com `auvo_task_id`; abrir a task correta em nova aba, sem
+  credenciais na URL. Sem vínculo, explicar que OS ainda não foi criada ou sincronizada.
+- [ ] Tratar carregando, vazio, erro/retry e somente leitura. Gates: componente, acessibilidade,
+  teste visual e typecheck.
+
+### Entrega 12.4 — validação ponta a ponta
+
+- [ ] E2E autenticado: abrir Cliente 360, navegar meses, localizar ocorrência concluída, conferir
+  resultado e validar destino do link Auvo sem alterar ou concluir tarefa real.
+- [ ] E2E de isolamento: cliente A nunca mostra evento, histórico ou detalhe de B após troca rápida
+  de cliente, filtro, retry ou retorno atrasado.
+- [ ] Regressão de criação/agendamento, pausa, retry Auvo e envio manual ao backlog.
+- [ ] Executar testes web, typecheck, `db-tests`, `pnpm run ci:local`, revisão adversarial e
+  `git diff --check`. Registrar separadamente qualquer gate externo indisponível.
+
+### Fora da T12
+
+- Renderizar formulário, fotos, medições ou relato completo no PCM.
+- Editar ou responder questionário pelo PCM.
+- Classificar texto livre como “Não OK”.
+- Criar backlog automaticamente.
 
 ### Registro de execução — 2026-10-01
 
