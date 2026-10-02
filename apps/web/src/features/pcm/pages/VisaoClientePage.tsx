@@ -66,6 +66,7 @@ import { PainelFerramentasCliente as PainelFerramentasClienteTab } from "../comp
 import { PainelHistorico } from "../components/PainelHistorico";
 import { PainelItensDoCliente } from "../components/PainelItensDoCliente";
 import { PainelSistemasCliente } from "../components/PainelSistemasCliente";
+import { PreventivasWorkspace } from "../components/PreventivasWorkspace";
 import { MOTIVO_ASSESSMENT_LABEL } from "../domain/assessment";
 import {
   PREFERENCIAS_CONTATO,
@@ -86,6 +87,7 @@ type Aba360 =
   | "resumo"
   | "timeline"
   | "os"
+  | "preventivas"
   | "qualidade"
   | "assessment"
   | "ativos"
@@ -110,6 +112,7 @@ const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
   { id: "resumo", label: "Resumo", icon: Activity },
   { id: "timeline", label: "Timeline", icon: RefreshCw },
   { id: "os", label: "OS", icon: ClipboardList },
+  { id: "preventivas", label: "Preventivas", icon: Calendar },
   { id: "qualidade", label: "Inspeções", icon: Calendar },
   // E01-S90 AC-4: assessment vigente do cliente (documento de estado, distinto de Inspeções ABNT).
   { id: "assessment", label: "Assessment", icon: ClipboardCheck },
@@ -350,6 +353,17 @@ export function VisaoClientePage({
             />
           </div>
         </div>
+      )}
+
+      {aba === "preventivas" && user && (
+        <PreventivasWorkspace
+          key={cliente.id}
+          clienteId={cliente.id}
+          clienteNome={cliente.nome}
+          temEscrita={temEscrita}
+          userId={user.id}
+          compacto
+        />
       )}
 
       {aba === "qualidade" && <PainelQualidade qualidade={qualidade} />}

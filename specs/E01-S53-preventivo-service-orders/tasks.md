@@ -18,7 +18,7 @@ alwaysApply: false
 | 8 | Sync idempotente de status, respostas, fotos, medições e local por avaliação de Sistema | AC-5 | 3, 7 | teste de reentrega/ordem | todo |
 | 9 | Triagem de achados e envio manual individual ao backlog, com origem e deduplicação | AC-6 | 8 | teste de decisão/repetição | todo |
 | 10 | Validar plano de Sistema e Componente ponta a ponta; revisão adversarial, `pnpm run ci:local`, CI `db-tests` | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7 | 1-9 | gates verdes | todo |
-| 11 | Exibir e operar Preventivas na aba da Visão 360, usando o mesmo fluxo e dados do PCM com escopo fixo no cliente aberto | AC-8 | 5-9 para fluxo completo; leitura pode avançar antes do gate Auvo | testes de filtro, componente, navegação e E2E da aba | todo |
+| 11 | Exibir e operar Preventivas na aba da Visão 360, usando o mesmo fluxo e dados do PCM com escopo fixo no cliente aberto | AC-8 | 5-9 para fluxo completo; leitura pode avançar antes do gate Auvo | testes de filtro, componente, navegação e E2E da aba | implementado localmente; E2E autenticado pendente de credenciais |
 
 Task 7 bloqueada até task 1 comprovar POST/GET com questionário e alvo corretos. Resultado de
 POST sem leitura conclusiva não satisfaz gate; task parcial nunca fica disponível ao técnico.
@@ -193,6 +193,16 @@ if (error) throw error;
 4. Muitas avaliações de B: limite 30 aplicado depois do filtro de A (11.1).
 5. Criar plano na Visão 360 de B: `cliente_id` persistido é B, inclusive após alternar de A
    para B; o seletor global continua operante (11.2/11.3).
+
+### Registro de execução — 2026-10-01
+
+- 11.1: testes do adaptador aprovados (2); typecheck aprovado. Commit local `40b6fb0`.
+- 11.2: testes do workspace aprovados (2), typecheck e teste visual aprovados. Commit local
+  `2520f76`.
+- 11.3: suíte web aprovada (166 arquivos, 1114 testes; 3 arquivos/9 testes de integração sem
+  ambiente foram pulados), typecheck e `git diff --check` aprovados. O E2E foi criado e listado,
+  mas a execução autenticada parou no setup porque `SUPABASE_TEST_EMAIL` e
+  `SUPABASE_TEST_PASSWORD` não estão configurados. Nenhuma task Auvo foi criada.
 
 ## Divergências (SPEC_DEVIATION)
 
