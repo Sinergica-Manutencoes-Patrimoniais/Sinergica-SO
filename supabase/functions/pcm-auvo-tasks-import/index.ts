@@ -121,6 +121,14 @@ interface AuvoQuestionnaireAnswer {
   local?: string;
   location?: string;
   localName?: string;
+  photos?: unknown[];
+  fotos?: unknown[];
+  images?: unknown[];
+  attachments?: unknown[];
+  anexos?: unknown[];
+  measurements?: unknown[];
+  medidas?: unknown[];
+  medicoes?: unknown[];
 }
 
 interface AuvoTasksResponse {
@@ -474,12 +482,25 @@ export function montarLinhasAvaliacaoPreventiva(
           valor: resposta.reply ?? "",
           respondidaEm: resposta.replyDate ?? null,
         },
+        fotos: primeiraLista(
+          resposta.photos,
+          resposta.fotos,
+          resposta.images,
+          resposta.attachments,
+          resposta.anexos,
+        ),
+        medicoes: primeiraLista(resposta.measurements, resposta.medidas, resposta.medicoes),
         auvo_updated_at: resposta.replyDate ?? null,
         recebido_em: recebidoEm,
       });
     }
   }
   return linhas;
+}
+
+/** Só preserva coleções reais recebidas; campo ausente nunca inventa evidência. */
+function primeiraLista(...valores: Array<unknown[] | undefined>): unknown[] {
+  return valores.find((valor) => Array.isArray(valor)) ?? [];
 }
 
 /** Dado rico da tarefa que só serve pra exibição (nunca WHERE/ORDER BY/GROUP BY) — vai em

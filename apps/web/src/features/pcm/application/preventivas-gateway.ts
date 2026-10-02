@@ -28,6 +28,7 @@ export type OcorrenciaPreventiva = {
   auvo_task_id: number | null;
   tecnico_funcionario_id: string | null;
   erro_envio: string | null;
+  os_status?: string | null;
 };
 
 export type AvaliacaoPreventiva = {
@@ -36,6 +37,8 @@ export type AvaliacaoPreventiva = {
   item_referencia: string | null;
   local_informado: string | null;
   resposta: { pergunta?: string; valor?: string };
+  fotos?: unknown[];
+  medicoes?: unknown[];
 };
 
 export type ResultadoPreventivas = {

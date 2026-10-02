@@ -39,17 +39,32 @@ export async function listarPreventivas(
   const ocorrenciaIds = ocorrencias.map((ocorrencia) => ocorrencia.id);
   if (ocorrenciaIds.length === 0) return { planos, ocorrencias: [], avaliacoes: [] };
 
-  const avaliacoesResultado = await supabase
-    .schema("pcm")
-    .from("avaliacoes_preventivas")
-    .select("*")
-    .in("ocorrencia_id", ocorrenciaIds)
-    .order("recebido_em", { ascending: false })
-    .limit(30);
+  const [avaliacoesResultado, osResultado] = await Promise.all([
+    supabase
+      .schema("pcm")
+      .from("avaliacoes_preventivas")
+      .select("*")
+      .in("ocorrencia_id", ocorrenciaIds)
+      .order("recebido_em", { ascending: false })
+      .limit(30),
+    supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select("ocorrencia_preventiva_id,status")
+      .in("ocorrencia_preventiva_id", ocorrenciaIds)
+      .order("updated_at", { ascending: false }),
+  ]);
   lancarSeErro(avaliacoesResultado);
+  lancarSeErro(osResultado);
+  const statusPorOcorrencia = new Map(
+    (osResultado.data ?? []).map((ordem) => [ordem.ocorrencia_preventiva_id, ordem.status]),
+  );
   return {
     planos,
-    ocorrencias,
+    ocorrencias: ocorrencias.map((ocorrencia) => ({
+      ...ocorrencia,
+      os_status: statusPorOcorrencia.get(ocorrencia.id) ?? null,
+    })),
     avaliacoes: (avaliacoesResultado.data ?? []) as AvaliacaoPreventiva[],
   };
 }

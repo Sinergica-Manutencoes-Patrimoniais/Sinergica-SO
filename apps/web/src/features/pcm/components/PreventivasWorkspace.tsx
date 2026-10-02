@@ -297,7 +297,7 @@ export function PreventivasWorkspace({
                   vencimento: ocorrencia.vencimento,
                   ordemServico: ocorrencia.auvo_task_id
                     ? {
-                        status: "planejamento",
+                        status: ocorrencia.os_status ?? "planejamento",
                         auvoDisponivel: ocorrencia.envio_estado === "disponivel",
                       }
                     : null,
@@ -402,6 +402,10 @@ export function PreventivasWorkspace({
                   <p className="text-sm text-ink-3">
                     {avaliacao.resposta?.valor ?? "Sem resposta"}
                     {avaliacao.local_informado ? ` · Local: ${avaliacao.local_informado}` : ""}
+                    {avaliacao.fotos?.length ? ` · ${avaliacao.fotos.length} foto(s)` : ""}
+                    {avaliacao.medicoes?.length
+                      ? ` · ${avaliacao.medicoes.length} medição(ões)`
+                      : ""}
                   </p>
                 </div>
                 {temEscrita && (

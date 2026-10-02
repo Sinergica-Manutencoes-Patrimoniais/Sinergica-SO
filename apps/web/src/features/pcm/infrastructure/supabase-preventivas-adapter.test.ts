@@ -37,13 +37,16 @@ describe("listarPreventivas — E01-S53 AC-8", () => {
       planos_preventivos: [{ id: "plano-a", cliente_id: "cliente-a" }],
       ocorrencias_preventivas: [{ id: "ocorrencia-a", plano_id: "plano-a" }],
       avaliacoes_preventivas: [{ id: "avaliacao-a", ocorrencia_id: "ocorrencia-a" }],
+      ordens_servico: [{ ocorrencia_preventiva_id: "ocorrencia-a", status: "finalizado" }],
     };
     consultas.length = 0;
 
     const resultado = await listarPreventivas({ clienteId: "cliente-a" });
 
     expect(resultado.planos).toEqual([{ id: "plano-a", cliente_id: "cliente-a" }]);
-    expect(resultado.ocorrencias).toEqual([{ id: "ocorrencia-a", plano_id: "plano-a" }]);
+    expect(resultado.ocorrencias).toEqual([
+      { id: "ocorrencia-a", plano_id: "plano-a", os_status: "finalizado" },
+    ]);
     expect(resultado.avaliacoes).toEqual([{ id: "avaliacao-a", ocorrencia_id: "ocorrencia-a" }]);
     expect(consultas.find((item) => item.tabela === "planos_preventivos")?.eq).toHaveBeenCalledWith(
       "cliente_id",
@@ -55,6 +58,10 @@ describe("listarPreventivas — E01-S53 AC-8", () => {
     expect(
       consultas.find((item) => item.tabela === "avaliacoes_preventivas")?.in,
     ).toHaveBeenCalledWith("ocorrencia_id", ["ocorrencia-a"]);
+    expect(consultas.find((item) => item.tabela === "ordens_servico")?.in).toHaveBeenCalledWith(
+      "ocorrencia_preventiva_id",
+      ["ocorrencia-a"],
+    );
   });
 
   it("não busca filhas quando o cliente não tem planos", async () => {
