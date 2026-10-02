@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { contratoPreventivoCompleto, taskId } from "./index.ts";
+import { contratoPreventivoCompleto, taskId, taskTesteExistente } from "./index.ts";
 
 Deno.test("contratoPreventivoCompleto — exige evidência válida para Sistema e Equipamento", () => {
   assertEquals(contratoPreventivoCompleto({}), false);
@@ -24,4 +24,11 @@ Deno.test("taskId — aceita resposta Auvo com result numérico ou objeto", () =
   assertEquals(taskId({ result: { taskID: 125 } }), 125);
   assertEquals(taskId({ result: { taskId: 126 } }), 126);
   assertEquals(taskId({}), null);
+});
+
+Deno.test("taskTesteExistente — prioriza externalId e recupera tentativa legada compatível", () => {
+  const alvo = { externalId: "PREV-CONTRATO-equipamento-1-2-3", customerId: 1, equipmentId: 2, taskTypeId: 3 };
+  assertEquals(taskTesteExistente({ result: [{ taskID: 90, externalId: alvo.externalId }] }, alvo), 90);
+  assertEquals(taskTesteExistente({ result: { entityList: [{ taskID: 91, customerId: 1, equipmentId: 2, taskTypeId: 3, orientation: "TESTE DE CONTRATO PCM PREVENTIVAS — não executar" }] } }, alvo), 91);
+  assertEquals(taskTesteExistente({ result: [] }, alvo), null);
 });

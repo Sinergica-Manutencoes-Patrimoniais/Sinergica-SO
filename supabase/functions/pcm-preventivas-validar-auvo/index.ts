@@ -5,7 +5,7 @@ import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
-import { auvoGet, auvoPatch, auvoPost } from "../_shared/auvo/client.ts";
+import { auvoGet, auvoPatch, auvoPost, buildParamFilter } from "../_shared/auvo/client.ts";
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
 
 const Input = z.object({ clienteId: z.string().uuid(), tecnicoFuncionarioId: z.string().uuid(), questionarioId: z.string().uuid(), tipoTarefaId: z.string().uuid(), equipamentoAuvoId: z.number().int().positive(), alvoTipo: z.enum(["sistema", "equipamento"]), visitaEm: z.string().datetime() });
@@ -20,6 +20,39 @@ export function taskId(valor: unknown): number | null {
   };
   if (typeof x.result === "number") return x.result;
   return x.result?.id ?? x.result?.taskID ?? x.result?.taskId ?? x.id ?? x.taskID ?? x.taskId ?? null;
+}
+
+type AuvoTaskTeste = {
+  taskID?: number;
+  id?: number;
+  taskId?: number;
+  externalId?: string;
+  customerId?: number;
+  equipmentId?: number;
+  taskTypeId?: number;
+  orientation?: string;
+};
+
+type AuvoTasksResposta = { result?: AuvoTaskTeste[] | { entityList?: AuvoTaskTeste[] } };
+
+function tarefasDaResposta(resposta: AuvoTasksResposta): AuvoTaskTeste[] {
+  if (Array.isArray(resposta.result)) return resposta.result;
+  return resposta.result?.entityList ?? [];
+}
+
+export function taskTesteExistente(
+  resposta: AuvoTasksResposta,
+  alvo: { externalId: string; customerId: number; equipmentId: number; taskTypeId: number },
+): number | null {
+  const tarefas = tarefasDaResposta(resposta);
+  const exata = tarefas.find((tarefa) => tarefa.externalId === alvo.externalId);
+  const legada = tarefas.filter((tarefa) =>
+    tarefa.orientation === "TESTE DE CONTRATO PCM PREVENTIVAS — não executar" &&
+    tarefa.customerId === alvo.customerId &&
+    tarefa.equipmentId === alvo.equipmentId &&
+    tarefa.taskTypeId === alvo.taskTypeId,
+  ).at(-1);
+  return taskId(exata ?? legada ?? {});
 }
 
 type EvidenciaAlvo = { tecnico?: boolean; data?: boolean; alvo?: boolean; questionario?: boolean };
@@ -55,9 +88,26 @@ if (import.meta.main) serve(async (req) => {
       const erro = [clienteR, tecnicoR, questionarioR, tipoR].find((x) => x.error)?.error;
       if (erro) throw erro;
       if (!clienteR.data.auvo_id || !tecnicoR.data.auvo_user_id || !questionarioR.data.auvo_id || !questionarioR.data.ativo || !tipoR.data.auvo_id) throw new HttpError(422, "Cadastro PCM sem vínculo Auvo suficiente para a validação");
-      const chave = `PREV-CONTRATO-${crypto.randomUUID()}`;
-      const criada = await auvoPost<unknown>("/tasks", { externalId: chave, customerId: clienteR.data.auvo_id, taskTypeId: tipoR.data.auvo_id, equipmentId: input.equipamentoAuvoId, orientation: "TESTE DE CONTRATO PCM PREVENTIVAS — não executar", priority: 1 });
-      const id = taskId(criada); if (!id) throw new Error("Auvo não devolveu ID da task de teste");
+      const chave = `PREV-CONTRATO-${input.alvoTipo}-${clienteR.data.auvo_id}-${input.equipamentoAuvoId}-${tipoR.data.auvo_id}`;
+      const filtro = buildParamFilter({
+        StartDate: new Date(Date.now() - 86_400_000).toISOString().slice(0, 19),
+        EndDate: new Date(input.visitaEm).getTime() > Date.now()
+          ? new Date(new Date(input.visitaEm).getTime() + 86_400_000).toISOString().slice(0, 19)
+          : new Date(Date.now() + 86_400_000).toISOString().slice(0, 19),
+        customerId: clienteR.data.auvo_id,
+      });
+      const alvoTeste = { externalId: chave, customerId: clienteR.data.auvo_id, equipmentId: input.equipamentoAuvoId, taskTypeId: tipoR.data.auvo_id };
+      const existentes = await auvoGet<AuvoTasksResposta>(`/tasks?${filtro}`);
+      let id = taskTesteExistente(existentes, alvoTeste);
+      if (id == null) {
+        const criada = await auvoPost<unknown>("/tasks", { externalId: chave, customerId: clienteR.data.auvo_id, taskTypeId: tipoR.data.auvo_id, equipmentId: input.equipamentoAuvoId, orientation: "TESTE DE CONTRATO PCM PREVENTIVAS — não executar", priority: 1 });
+        id = taskId(criada);
+        if (id == null) {
+          const aposCriar = await auvoGet<AuvoTasksResposta>(`/tasks?${filtro}`);
+          id = taskTesteExistente(aposCriar, alvoTeste);
+        }
+      }
+      if (id == null) throw new Error("Auvo não devolveu ID da task de teste");
       await auvoPatch(`/tasks/${id}`, toAuvoJsonPatch({ idUserTo: tecnicoR.data.auvo_user_id, taskDate: input.visitaEm.slice(0, 19), questionnaireId: questionarioR.data.auvo_id }));
       const retorno = await auvoGet<unknown>(`/tasks/${id}`);
       const tarefa = ((retorno as { result?: Record<string, unknown> }).result ?? retorno) as Record<string, unknown>;
