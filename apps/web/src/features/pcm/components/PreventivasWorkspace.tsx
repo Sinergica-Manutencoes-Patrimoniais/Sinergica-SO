@@ -15,6 +15,7 @@ import {
   listarCatalogoPreventivas,
   listarPreventivas,
 } from "../infrastructure/supabase-preventivas-adapter";
+import { PreventivasCalendarioView } from "./PreventivasCalendarioView";
 
 type FormPlano = {
   nome: string;
@@ -79,6 +80,18 @@ function rotuloEstado(ocorrencia: OcorrenciaPreventiva): string {
   return ocorrencia.visita_em ? "Visita agendada" : "Vencimento previsto";
 }
 
+function rotuloResultado(ocorrencia: OcorrenciaPreventiva): string {
+  if (ocorrencia.resultado_estado === "nao_ok") return "Não OK";
+  if (ocorrencia.resultado_estado === "ok") return "OK";
+  return "Pendente";
+}
+
+function classeResultado(ocorrencia: OcorrenciaPreventiva): string {
+  if (ocorrencia.resultado_estado === "nao_ok") return "bg-red-soft text-red";
+  if (ocorrencia.resultado_estado === "ok") return "bg-green-soft text-green";
+  return "bg-line-soft text-ink-2";
+}
+
 export function PreventivasWorkspace({
   clienteId,
   clienteNome,
@@ -107,6 +120,7 @@ export function PreventivasWorkspace({
   const [avaliacaoParaBacklog, setAvaliacaoParaBacklog] = useState<AvaliacaoPreventiva | null>(
     null,
   );
+  const [ocorrenciaEmFoco, setOcorrenciaEmFoco] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const chave = ["pcm", "preventivas", clienteId ?? "todos"] as const;
@@ -125,6 +139,7 @@ export function PreventivasWorkspace({
     setValidandoContrato(false);
     setSelecionada(null);
     setAvaliacaoParaBacklog(null);
+    setOcorrenciaEmFoco(null);
     setTecnicoId("");
     setVisita("");
     setErroAcao(null);
@@ -339,6 +354,34 @@ export function PreventivasWorkspace({
   const planos = dados?.planos ?? [];
   const ocorrencias = dados?.ocorrencias ?? [];
   const avaliacoes = dados?.avaliacoes ?? [];
+  const hoje = new Date().toISOString().slice(0, 10);
+  const avaliacoesPorOcorrencia = new Map<string, AvaliacaoPreventiva[]>();
+  for (const avaliacao of avaliacoes) {
+    avaliacoesPorOcorrencia.set(avaliacao.ocorrencia_id, [
+      ...(avaliacoesPorOcorrencia.get(avaliacao.ocorrencia_id) ?? []),
+      avaliacao,
+    ]);
+  }
+  const estadoDaOcorrencia = (ocorrencia: OcorrenciaPreventiva) =>
+    calcularStatusOcorrenciaPreventiva(
+      {
+        vencimento: ocorrencia.vencimento,
+        ordemServico: ocorrencia.auvo_task_id
+          ? {
+              status: ocorrencia.os_status ?? "planejamento",
+              auvoDisponivel: ocorrencia.envio_estado === "disponivel",
+            }
+          : null,
+      },
+      hoje,
+    );
+  const historico = ocorrencias
+    .filter((ocorrencia) => ocorrencia.auvo_task_id !== null)
+    .sort((a, b) =>
+      (b.os_concluida_em ?? b.visita_em ?? b.vencimento).localeCompare(
+        a.os_concluida_em ?? a.visita_em ?? a.vencimento,
+      ),
+    );
   return (
     <div className={`flex flex-col gap-5 ${compacto ? "py-4" : "p-6"}`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -371,58 +414,96 @@ export function PreventivasWorkspace({
       )}
       <section className="rounded-lg border border-line bg-surface p-4">
         <h2 className="font-semibold text-ink">Calendário de vencimentos</h2>
-        <div className="mt-3 grid gap-2">
+        <p className="mt-1 text-sm text-ink-3">
+          A visita usa a data agendada; sem agendamento, aparece no vencimento previsto.
+        </p>
+        <div className="mt-3">
           {ocorrencias.length === 0 ? (
             <p className="text-body text-ink-3">Nenhuma ocorrência planejada.</p>
           ) : (
-            ocorrencias.map((ocorrencia) => {
-              const estado = calcularStatusOcorrenciaPreventiva(
-                {
-                  vencimento: ocorrencia.vencimento,
-                  ordemServico: ocorrencia.auvo_task_id
-                    ? {
-                        status: ocorrencia.os_status ?? "planejamento",
-                        auvoDisponivel: ocorrencia.envio_estado === "disponivel",
-                      }
-                    : null,
-                },
-                new Date().toISOString().slice(0, 10),
-              );
+            <PreventivasCalendarioView
+              ocorrencias={ocorrencias.map((ocorrencia) => ({
+                id: ocorrencia.id,
+                nomePlano: planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido",
+                vencimento: ocorrencia.vencimento,
+                visitaEm: ocorrencia.visita_em,
+                estado: estadoDaOcorrencia(ocorrencia),
+              }))}
+              onSelecionar={(ocorrenciaId) => {
+                setOcorrenciaEmFoco(ocorrenciaId);
+                requestAnimationFrame(() =>
+                  document
+                    .getElementById(`preventiva-${ocorrenciaId}`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+                );
+              }}
+            />
+          )}
+        </div>
+      </section>
+      <section className="rounded-lg border border-line bg-surface p-4">
+        <h2 className="font-semibold text-ink">Histórico de execuções</h2>
+        <p className="mt-1 text-sm text-ink-3">
+          O PCM mostra o resultado resumido. Formulário, fotos e medições completos ficam na tarefa
+          do Auvo.
+        </p>
+        <div className="mt-3 grid gap-2">
+          {historico.length === 0 ? (
+            <p className="text-body text-ink-3">Nenhuma preventiva enviada ao Auvo ainda.</p>
+          ) : (
+            historico.map((ocorrencia) => {
+              const avaliacoesDaOcorrencia = avaliacoesPorOcorrencia.get(ocorrencia.id) ?? [];
               return (
-                <div
+                <article
+                  id={`preventiva-${ocorrencia.id}`}
                   key={ocorrencia.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line px-3 py-2"
+                  className={`rounded-md border px-3 py-3 ${ocorrenciaEmFoco === ocorrencia.id ? "border-orange ring-1 ring-orange" : "border-line"}`}
                 >
-                  <div>
-                    <p className="font-medium text-ink">
-                      {planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido"}
-                    </p>
-                    <p className="text-sm text-ink-3">
-                      Vence{" "}
-                      {new Intl.DateTimeFormat("pt-BR").format(
-                        new Date(`${ocorrencia.vencimento}T00:00:00`),
-                      )}{" "}
-                      · {rotuloEstado(ocorrencia)} ·{" "}
-                      {estado === "atrasada" ? "Atrasada" : dataHoraLocal(ocorrencia.visita_em)}
-                    </p>
-                    {ocorrencia.erro_envio && (
-                      <p className="text-sm text-red">{ocorrencia.erro_envio}</p>
-                    )}
-                  </div>
-                  {temEscrita && ocorrencia.envio_estado !== "disponivel" && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setSelecionada(ocorrencia);
-                        setTecnicoId(ocorrencia.tecnico_funcionario_id ?? "");
-                        setVisita(ocorrencia.visita_em ? ocorrencia.visita_em.slice(0, 16) : "");
-                      }}
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-ink">
+                        {planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido"}
+                      </p>
+                      <p className="text-sm text-ink-3">
+                        {ocorrencia.os_numero
+                          ? `OS ${ocorrencia.os_numero}`
+                          : `Tarefa Auvo #${ocorrencia.auvo_task_id}`}{" "}
+                        · Técnico: {ocorrencia.tecnico_nome ?? "não informado"} ·{" "}
+                        {ocorrencia.os_concluida_em
+                          ? `Executada em ${dataHoraLocal(ocorrencia.os_concluida_em)}`
+                          : rotuloEstado(ocorrencia)}
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-full px-2 py-1 text-caption font-semibold ${classeResultado(ocorrencia)}`}
                     >
-                      <Send className="mr-2 h-4 w-4" />
-                      Confirmar visita
-                    </Button>
-                  )}
-                </div>
+                      Resultado: {rotuloResultado(ocorrencia)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {ocorrencia.auvo_task_url ? (
+                      <a
+                        href={ocorrencia.auvo_task_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-md border border-line px-3 py-1.5 text-caption font-semibold text-ink hover:bg-line-soft"
+                      >
+                        Abrir formulário no Auvo
+                      </a>
+                    ) : null}
+                    {temEscrita &&
+                      avaliacoesDaOcorrencia.map((avaliacao) => (
+                        <Button
+                          key={avaliacao.id}
+                          variant="secondary"
+                          disabled={salvando}
+                          onClick={() => setAvaliacaoParaBacklog(avaliacao)}
+                        >
+                          Enviar achado ao backlog
+                        </Button>
+                      ))}
+                  </div>
+                </article>
               );
             })
           )}
@@ -457,48 +538,6 @@ export function PreventivasWorkspace({
                       <Pause className="mr-2 h-4 w-4" />
                     )}
                     {plano.estado === "pausado" ? "Retomar" : "Pausar"}
-                  </Button>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      </section>
-      <section className="rounded-lg border border-line bg-surface p-4">
-        <h2 className="font-semibold text-ink">Avaliações recebidas do Auvo</h2>
-        <p className="mt-1 text-sm text-ink-3">
-          O local informado pelo técnico é preservado como texto. Nada entra no backlog sem sua
-          decisão.
-        </p>
-        <div className="mt-3 grid gap-2">
-          {avaliacoes.length === 0 ? (
-            <p className="text-body text-ink-3">Nenhuma resposta preventiva recebida.</p>
-          ) : (
-            avaliacoes.map((avaliacao) => (
-              <div
-                key={avaliacao.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line px-3 py-2"
-              >
-                <div>
-                  <p className="font-medium text-ink">
-                    {avaliacao.resposta?.pergunta ?? avaliacao.item_referencia ?? "Avaliação"}
-                  </p>
-                  <p className="text-sm text-ink-3">
-                    {avaliacao.resposta?.valor ?? "Sem resposta"}
-                    {avaliacao.local_informado ? ` · Local: ${avaliacao.local_informado}` : ""}
-                    {avaliacao.fotos?.length ? ` · ${avaliacao.fotos.length} foto(s)` : ""}
-                    {avaliacao.medicoes?.length
-                      ? ` · ${avaliacao.medicoes.length} medição(ões)`
-                      : ""}
-                  </p>
-                </div>
-                {temEscrita && (
-                  <Button
-                    variant="secondary"
-                    disabled={salvando}
-                    onClick={() => setAvaliacaoParaBacklog(avaliacao)}
-                  >
-                    Enviar ao backlog
                   </Button>
                 )}
               </div>

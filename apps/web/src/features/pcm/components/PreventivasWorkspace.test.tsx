@@ -41,10 +41,15 @@ const dados = {
       plano_id: "plano-a",
       vencimento: "2026-10-10",
       visita_em: null,
-      envio_estado: "prevista" as const,
-      auvo_task_id: null,
+      envio_estado: "disponivel" as const,
+      auvo_task_id: 123,
       tecnico_funcionario_id: null,
       erro_envio: null,
+      resultado_estado: "nao_ok" as const,
+      resultado_atualizado_em: "2026-10-10T12:00:00Z",
+      os_numero: "CH-123",
+      tecnico_nome: "Técnico A",
+      auvo_task_url: "https://app.auvo.com.br/tarefa/123",
     },
   ],
   avaliacoes: [
@@ -103,11 +108,14 @@ describe("PreventivasWorkspace — E01-S53 AC-8", () => {
     expect(await screen.findByLabelText("Cliente")).toBeInTheDocument();
   });
 
-  it("pede confirmação no produto antes de enviar achado ao backlog", async () => {
+  it("mostra no histórico o resultado resumido e mantém o formulário completo no Auvo", async () => {
     renderWorkspace();
-    await userEvent.click(await screen.findByRole("button", { name: "Enviar ao backlog" }));
-
-    expect(await screen.findByText("Enviar achado ao backlog")).toBeInTheDocument();
+    expect(await screen.findByText("Histórico de execuções")).toBeInTheDocument();
+    expect(screen.getByText("Resultado: Não OK")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Abrir formulário no Auvo" })).toHaveAttribute(
+      "href",
+      "https://app.auvo.com.br/tarefa/123",
+    );
   });
 
   it("expõe validação do contrato Auvo somente para superadmin", async () => {

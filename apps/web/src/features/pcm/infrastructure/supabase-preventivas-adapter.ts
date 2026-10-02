@@ -50,20 +50,65 @@ export async function listarPreventivas(
     supabase
       .schema("pcm")
       .from("ordens_servico")
-      .select("ocorrencia_preventiva_id,status")
+      .select(
+        "id,ocorrencia_preventiva_id,status,numero,tecnico_funcionario_id,check_out_at,auvo_detalhes",
+      )
       .in("ocorrencia_preventiva_id", ocorrenciaIds)
       .order("updated_at", { ascending: false }),
   ]);
   lancarSeErro(avaliacoesResultado);
   lancarSeErro(osResultado);
-  const statusPorOcorrencia = new Map(
-    (osResultado.data ?? []).map((ordem) => [ordem.ocorrencia_preventiva_id, ordem.status]),
+  type OrdemPreventivaRow = {
+    id: string;
+    ocorrencia_preventiva_id: string;
+    status: string;
+    numero: string;
+    tecnico_funcionario_id: string | null;
+    check_out_at: string | null;
+    auvo_detalhes: { taskUrl?: unknown } | null;
+  };
+  const osPorOcorrencia = new Map(
+    ((osResultado.data ?? []) as OrdemPreventivaRow[]).map((ordem) => [
+      ordem.ocorrencia_preventiva_id,
+      ordem,
+    ]),
+  );
+  const tecnicoIds = [
+    ...new Set(
+      ocorrencias
+        .map(
+          (ocorrencia) =>
+            osPorOcorrencia.get(ocorrencia.id)?.tecnico_funcionario_id ??
+            ocorrencia.tecnico_funcionario_id,
+        )
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const funcionariosResultado = tecnicoIds.length
+    ? await supabase.schema("pcm").from("funcionarios").select("id,nome").in("id", tecnicoIds)
+    : { data: [], error: null };
+  lancarSeErro(funcionariosResultado);
+  const tecnicoPorId = new Map(
+    (funcionariosResultado.data ?? []).map((funcionario) => [funcionario.id, funcionario.nome]),
   );
   return {
     planos,
     ocorrencias: ocorrencias.map((ocorrencia) => ({
       ...ocorrencia,
-      os_status: statusPorOcorrencia.get(ocorrencia.id) ?? null,
+      os_status: osPorOcorrencia.get(ocorrencia.id)?.status ?? null,
+      os_id: osPorOcorrencia.get(ocorrencia.id)?.id ?? null,
+      os_numero: osPorOcorrencia.get(ocorrencia.id)?.numero ?? null,
+      os_concluida_em: osPorOcorrencia.get(ocorrencia.id)?.check_out_at ?? null,
+      tecnico_nome:
+        tecnicoPorId.get(
+          osPorOcorrencia.get(ocorrencia.id)?.tecnico_funcionario_id ??
+            ocorrencia.tecnico_funcionario_id ??
+            "",
+        ) ?? null,
+      auvo_task_url:
+        typeof osPorOcorrencia.get(ocorrencia.id)?.auvo_detalhes?.taskUrl === "string"
+          ? (osPorOcorrencia.get(ocorrencia.id)?.auvo_detalhes?.taskUrl as string)
+          : null,
     })),
     avaliacoes: (avaliacoesResultado.data ?? []) as AvaliacaoPreventiva[],
   };

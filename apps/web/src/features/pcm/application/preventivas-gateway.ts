@@ -29,7 +29,14 @@ export type OcorrenciaPreventiva = {
   auvo_task_id: number | null;
   tecnico_funcionario_id: string | null;
   erro_envio: string | null;
+  resultado_estado: "pendente" | "ok" | "nao_ok";
+  resultado_atualizado_em: string | null;
   os_status?: string | null;
+  os_id?: string | null;
+  os_numero?: string | null;
+  os_concluida_em?: string | null;
+  tecnico_nome?: string | null;
+  auvo_task_url?: string | null;
 };
 
 export type AvaliacaoPreventiva = {
