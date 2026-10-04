@@ -16,6 +16,7 @@ import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
 import { ComposicaoSistema } from "./ComposicaoSistema";
+import { DrawerDetalheSistema } from "./DrawerDetalheSistema";
 import { SistemaModal } from "./SistemaModal";
 
 type Modal = { modo: "novo" } | { modo: "editar"; sistema: Sistema } | null;
@@ -24,14 +25,17 @@ export function PainelSistemasCliente({
   clienteId,
   temEscrita,
   userId,
+  onAbrirOs,
 }: {
   clienteId: string;
   temEscrita: boolean;
   userId: string;
+  onAbrirOs?: (osId: string) => void;
 }) {
   const [modal, setModal] = useState<Modal>(null);
   const [sistemaAbertoId, setSistemaAbertoId] = useState<string | null>(null);
   const [paraDesativar, setParaDesativar] = useState<Sistema | null>(null);
+  const [detalheAbertoId, setDetalheAbertoId] = useState<string | null>(null);
   const sistemas = useSistemasDoCliente(supabaseSistemasAdapter, clienteId);
   const membros = useMembrosSistemasDoCliente(supabaseSistemasAdapter, clienteId);
   const areas = useAreasDoCliente(supabaseHierarquiaAdapter, clienteId);
@@ -111,7 +115,13 @@ export function PainelSistemasCliente({
             <section key={sistema.id} className="rounded-lg border border-line bg-card">
               <div className="flex items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-body font-semibold text-ink">{sistema.nome}</p>
+                  <button
+                    type="button"
+                    onClick={() => setDetalheAbertoId(sistema.id)}
+                    className="truncate text-left text-body font-semibold text-ink hover:underline"
+                  >
+                    {sistema.nome}
+                  </button>
                   <p className="truncate text-caption text-ink-3">
                     {sistema.codigo ?? "—"} · {sistema.categoria ?? "—"} · {posicao} ·{" "}
                     {quantidadePorSistema.get(sistema.id) ?? 0} componentes
@@ -179,6 +189,14 @@ export function PainelSistemasCliente({
           await desativar.mutateAsync({ id: paraDesativar.id, userId });
         }}
       />
+      {detalheAbertoId && (
+        <DrawerDetalheSistema
+          sistemaId={detalheAbertoId}
+          clienteEsperadoId={clienteId}
+          onClose={() => setDetalheAbertoId(null)}
+          onAbrirOs={onAbrirOs}
+        />
+      )}
     </div>
   );
 }

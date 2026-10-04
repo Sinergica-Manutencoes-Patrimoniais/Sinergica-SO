@@ -57,9 +57,8 @@ por chave do cliente e limpa a seleção antes de renderizar o novo cliente.
 
 ## Navegação
 
-`onAbrirOs` é injetado pela Visão 360, reutilizando seu deep-link existente para a tela de OS.
-Na lista global, uma OS abre a rota local de Operação com `location.assign` para o hash já usado
-pelo shell; não é feita mutação de dados. Links do Auvo abrem em nova aba com `noopener`.
+`onAbrirOs` é injetado pelo shell e pela Visão 360, reutilizando o deep-link existente para a
+tela de OS. Não é feita mutação de dados. Links do Auvo abrem em nova aba com `noopener`.
 Clique em um componente reaproveita `DrawerDetalheAtivo` já existente, sobre o drawer de Sistema.
 
 ## Testes e segurança

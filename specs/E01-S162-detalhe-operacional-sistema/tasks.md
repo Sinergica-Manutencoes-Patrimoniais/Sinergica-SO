@@ -12,11 +12,11 @@ alwaysApply: false
 | # | Task | Cobre AC | Gate | Status |
 |---|---|---|---|---|
 | 1 | Registrar este design e plano canônicos; preservar a composição como estado atual e a manutenção como execução concluída. | AC-1..AC-7 | `pnpm eval:spec` | feito |
-| 2 | Criar modelo de domínio do detalhe: fontes de OS, dedupe, divisão aberta/histórico, última manutenção por `finalizado + check_out_at`, plano/ocorrência e componente atual. Cobrir regras com teste puro. | AC-3, AC-4, AC-5, AC-6 | `pnpm --filter @sinergica/web test -- detalhe-sistema` | pendente |
-| 3 | Criar gateway e adapter Supabase de leitura: resolver Sistema ativo e cliente, membros atuais, OS por fontes locais/Auvo, preventivas e posições próprias. Cada consulta é limitada pelo cliente; conjunto vazio não consulta filhos. | AC-2..AC-7 | `pnpm --filter @sinergica/web test -- supabase-detalhe-sistema` | pendente |
-| 4 | Criar hook TanStack Query e `DrawerDetalheSistema`, com cadastro, OS abertas, histórico, preventivas e componentes; tratar carregando/vazio/erro por seção, Escape/foco e links PCM/Auvo. | AC-1..AC-7 | `pnpm --filter @sinergica/web test -- DrawerDetalheSistema` | pendente |
-| 5 | Integrar o mesmo drawer em `SistemasPage` e `PainelSistemasCliente`; preservar composição/edição existentes e desmontar a seleção na troca de cliente. | AC-1, AC-6, AC-7 | `pnpm --filter @sinergica/web test -- SistemasPage PainelSistemasCliente VisaoClientePage` | pendente |
-| 6 | Rodar gates finais: testes focados, typecheck, `pnpm run ci:local`, `pnpm eval:spec` e `git diff --check`; registrar limitações de E2E autenticado se faltar sessão. | AC-1..AC-7 | comandos acima | pendente |
+| 2 | Criar modelo de domínio do detalhe: fontes de OS, dedupe, divisão aberta/histórico, última manutenção por `finalizado + check_out_at`, plano/ocorrência e componente atual. Cobrir regras com teste puro. | AC-3, AC-4, AC-5, AC-6 | `pnpm --filter @sinergica/web test -- detalhe-sistema` | feito |
+| 3 | Criar gateway e adapter Supabase de leitura: resolver Sistema ativo e cliente, membros atuais, OS por fontes locais/Auvo, preventivas e posições próprias. Cada consulta é limitada pelo cliente; conjunto vazio não consulta filhos. | AC-2..AC-7 | `pnpm --filter @sinergica/web test -- supabase-detalhe-sistema` | feito |
+| 4 | Criar hook TanStack Query e `DrawerDetalheSistema`, com cadastro, OS abertas, histórico, preventivas e componentes; tratar carregando/vazio/erro por seção, Escape/foco e links PCM/Auvo. | AC-1..AC-7 | `pnpm --filter @sinergica/web test -- DrawerDetalheSistema` | feito |
+| 5 | Integrar o mesmo drawer em `SistemasPage` e `PainelSistemasCliente`; preservar composição/edição existentes e desmontar a seleção na troca de cliente. | AC-1, AC-6, AC-7 | `pnpm --filter @sinergica/web test -- SistemasPage PainelSistemasCliente VisaoClientePage` | feito |
+| 6 | Rodar gates finais: testes focados, typecheck, `pnpm run ci:local`, `pnpm eval:spec` e `git diff --check`; registrar limitações de E2E autenticado se faltar sessão. | AC-1..AC-7 | comandos acima | feito |
 
 ## Divergências (SPEC_DEVIATION)
 
@@ -24,6 +24,6 @@ alwaysApply: false
 
 ## Checklist de Definition of Done
 
-- [ ] AC-1..AC-7 verdes por teste/gate
-- [ ] Sem query de servidor via `useEffect` nos arquivos novos
-- [ ] Sem migration, deploy, push ou chamada que crie task Auvo
+- [x] AC-1..AC-7 verdes por teste/gate
+- [x] Sem query de servidor via `useEffect` nos arquivos novos
+- [x] Sem migration, deploy, push ou chamada que crie task Auvo

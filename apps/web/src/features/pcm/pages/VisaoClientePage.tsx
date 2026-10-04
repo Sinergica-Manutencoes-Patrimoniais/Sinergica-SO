@@ -391,7 +391,13 @@ export function VisaoClientePage({
       )}
 
       {aba === "sistemas" && user && (
-        <PainelSistemasCliente clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
+        <PainelSistemasCliente
+          key={cliente.id}
+          clienteId={cliente.id}
+          temEscrita={temEscrita}
+          userId={user.id}
+          onAbrirOs={onAbrirOs}
+        />
       )}
 
       {aba === "ferramentas" && (
