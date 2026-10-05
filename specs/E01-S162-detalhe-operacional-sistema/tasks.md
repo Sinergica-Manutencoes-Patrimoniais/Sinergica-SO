@@ -16,7 +16,7 @@ alwaysApply: false
 | 3 | Criar gateway e adapter Supabase de leitura: resolver Sistema ativo e cliente, membros atuais, OS por fontes locais/Auvo, preventivas e posições próprias. Cada consulta é limitada pelo cliente; conjunto vazio não consulta filhos. | AC-2..AC-7 | `pnpm --filter @sinergica/web test -- supabase-detalhe-sistema` | feito |
 | 4 | Criar hook TanStack Query e `DrawerDetalheSistema`, com cadastro, OS abertas, histórico, preventivas e componentes; tratar carregando/vazio/erro por seção, Escape/foco e links PCM/Auvo. | AC-1..AC-7 | `pnpm --filter @sinergica/web test -- DrawerDetalheSistema` | feito |
 | 5 | Integrar o mesmo drawer em `SistemasPage` e `PainelSistemasCliente`; preservar composição/edição existentes e desmontar a seleção na troca de cliente. | AC-1, AC-6, AC-7 | `pnpm --filter @sinergica/web test -- SistemasPage PainelSistemasCliente VisaoClientePage` | feito |
-| 6 | Rodar gates finais: testes focados, typecheck, `pnpm run ci:local`, `pnpm eval:spec` e `git diff --check`; registrar limitações de E2E autenticado se faltar sessão. | AC-1..AC-7 | comandos acima | bloqueado — Node/pnpm ausentes no ambiente |
+| 6 | Rodar gates finais: testes focados, typecheck, `pnpm run ci:local`, `pnpm eval:spec` e `git diff --check`; registrar limitações de E2E autenticado se faltar sessão. | AC-1..AC-7 | comandos acima | feito — 11 testes focados, typecheck, eval:spec, diff e ci:local verdes |
 | 7 | Registrar ADR-0024 e corrigir regressões adversariais: preservar componentes homônimos por ID, link Auvo apenas para ID positivo, não fechar o Sistema quando um componente sobreposto recebe Escape, não consultar membros ao carregar cadastro e descartar visão de cliente obsoleta. | AC-2..AC-7 | testes de domínio e drawer | feito — aguardando gate do item 6 |
 
 ## Divergências (SPEC_DEVIATION)
@@ -25,7 +25,7 @@ alwaysApply: false
 
 ## Checklist de Definition of Done
 
-- [ ] AC-1..AC-7 verdes por teste/gate (execução bloqueada pela ausência de Node/pnpm)
+- [x] AC-1..AC-7 verdes por teste/gate
 - [x] Sem query de servidor via `useEffect` nos arquivos novos
 - [x] Sem migration, deploy, push ou chamada que crie task Auvo
 - [x] ADR-0024 registra o read-model e seus limites
@@ -38,5 +38,5 @@ alwaysApply: false
   reproduziu e o listener do pai agora aguarda o fechamento do componente.
 - `VisaoClientePage.tsx:172` — alta, resposta concorrente ou troca de cliente podia manter o contexto
   anterior montado; estado é identificado pelo cliente e respostas obsoletas são descartadas.
-- Sem achado alto ou médio aberto na inspeção estática final; os comandos de execução continuam
-  bloqueados pela ausência de Node/pnpm neste ambiente.
+- Sem achado alto ou médio aberto na inspeção estática final; 11 testes focados, typecheck,
+  `eval:spec`, `git diff --check` e `ci:local` passaram.
