@@ -52,8 +52,8 @@ select is(
 update pcm.equipamentos
 set categoria_id = null
 where id = '00000000-0000-0000-0000-000000000157';
-select is_null(
-  (select categoria from pcm.equipamentos where id = '00000000-0000-0000-0000-000000000157'),
+select ok(
+  (select categoria from pcm.equipamentos where id = '00000000-0000-0000-0000-000000000157') is null,
   'AC-4 passo 2: remover categoria_id limpa texto inalterado'
 );
 
