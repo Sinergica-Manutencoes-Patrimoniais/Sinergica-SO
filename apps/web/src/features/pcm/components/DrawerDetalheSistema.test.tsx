@@ -73,11 +73,15 @@ const ordens: OsSistema[] = [
 ];
 const preventivas: PreventivaSistema[] = [];
 
-function renderDrawer(onClose = vi.fn(), onAbrirOs = vi.fn()) {
+function renderDrawer(
+  onClose = vi.fn(),
+  onAbrirOs = vi.fn(),
+  preventivasDoTeste: PreventivaSistema[] = preventivas,
+) {
   gateway.obterCadastro.mockResolvedValue(cadastro);
   gateway.listarComponentes.mockResolvedValue(componentes);
   gateway.listarOs.mockResolvedValue(ordens);
-  gateway.listarPreventivas.mockResolvedValue(preventivas);
+  gateway.listarPreventivas.mockResolvedValue(preventivasDoTeste);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return {
     onClose,
@@ -113,5 +117,45 @@ describe("DrawerDetalheSistema — E01-S162", () => {
     expect(onAbrirOs).toHaveBeenCalledWith("os-aberta");
     await userEvent.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("mantém o Sistema aberto quando Escape pertence ao detalhe de um componente sobreposto", async () => {
+    const { onClose } = renderDrawer();
+    await userEvent.click(await screen.findByRole("button", { name: /Bomba/ }));
+    expect(screen.getByText("Detalhe do componente")).toBeInTheDocument();
+
+    await userEvent.keyboard("{Escape}");
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("não oferece link Auvo quando a ocorrência tem identificador remoto inválido", async () => {
+    renderDrawer(vi.fn(), vi.fn(), [
+      {
+        id: "plano-1",
+        plano: "Preventiva da bomba",
+        alvo: "Bomba",
+        planoPausado: false,
+        periodicidade: "1 meses",
+        proximoVencimento: "2026-10-15",
+        ocorrencias: [
+          {
+            id: "ocorrencia-1",
+            vencimento: "2026-10-15",
+            visitaEm: null,
+            estado: "disponivel",
+            resultado: "pendente",
+            concluidaEm: null,
+            tecnicoNome: null,
+            osId: null,
+            osNumero: null,
+            auvoTaskId: -1,
+          },
+        ],
+      },
+    ]);
+
+    expect(await screen.findByText("Preventiva da bomba")).toBeInTheDocument();
+    expect(screen.queryByText("Ver OS no Auvo")).not.toBeInTheDocument();
   });
 });

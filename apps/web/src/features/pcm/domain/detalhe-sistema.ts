@@ -37,7 +37,7 @@ export type CadastroSistema = {
   syncStatus: string | null;
   criadoEm: string | null;
   atualizadoEm: string | null;
-  quantidadeComponentes: number;
+  quantidadeComponentes: number | null;
 };
 
 export type PreventivaSistema = {
@@ -71,7 +71,12 @@ export function agregarOsSistema(fontes: OsSistema[]): OsSistema[] {
     }
     const origens = [...existente.origens];
     for (const origem of os.origens) {
-      if (!origens.some((atual) => atual.tipo === origem.tipo && atual.nome === origem.nome)) {
+      const jaExiste = origens.some((atual) => {
+        if (atual.tipo !== origem.tipo) return false;
+        if (atual.tipo === "sistema") return true;
+        return origem.tipo === "componente" && atual.id === origem.id;
+      });
+      if (!jaExiste) {
         origens.push(origem);
       }
     }

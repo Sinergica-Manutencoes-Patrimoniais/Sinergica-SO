@@ -30,6 +30,18 @@ describe("detalhe de Sistema — E01-S162", () => {
     ]);
   });
 
+  it("preserva duas origens de componentes distintos mesmo quando seus nomes são iguais", () => {
+    const resultado = agregarOsSistema([
+      os("1", { origens: [{ tipo: "componente", id: "c-1", nome: "Bomba" }] }),
+      os("1", { origens: [{ tipo: "componente", id: "c-2", nome: "Bomba" }] }),
+    ]);
+
+    expect(resultado[0]?.origens).toEqual([
+      { tipo: "componente", id: "c-1", nome: "Bomba" },
+      { tipo: "componente", id: "c-2", nome: "Bomba" },
+    ]);
+  });
+
   it("separa OS abertas do histórico finalizado/cancelado", () => {
     const resultado = separarOsSistema([
       os("aberta"),

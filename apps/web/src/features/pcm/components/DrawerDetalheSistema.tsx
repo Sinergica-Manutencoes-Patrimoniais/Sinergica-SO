@@ -9,6 +9,7 @@ import {
 } from "../application/detalhe-sistema-queries";
 import { linkAuvoDaOs, separarOsSistema, ultimaManutencaoSistema } from "../domain/detalhe-sistema";
 import type { OsSistema, PreventivaSistema } from "../domain/detalhe-sistema";
+import { auvoTaskDeepLink } from "../domain/ordens-servico";
 import { supabaseDetalheSistemaAdapter } from "../infrastructure/supabase-detalhe-sistema-adapter";
 import { DrawerDetalheAtivo } from "./DrawerDetalheAtivo";
 
@@ -48,24 +49,29 @@ export function DrawerDetalheSistema({
 }) {
   const focoAnterior = useRef<HTMLElement | null>(null);
   const [componenteAbertoId, setComponenteAbertoId] = useState<string | null>(null);
+  const componenteAbertoIdRef = useRef<string | null>(null);
+  const onCloseRef = useRef(onClose);
+  componenteAbertoIdRef.current = componenteAbertoId;
+  onCloseRef.current = onClose;
   const cadastro = useCadastroSistema(supabaseDetalheSistemaAdapter, sistemaId, clienteEsperadoId);
   const clienteId = cadastro.data?.clienteId ?? null;
   const componentes = useComponentesSistema(supabaseDetalheSistemaAdapter, sistemaId, clienteId);
   const ordens = useOsSistema(supabaseDetalheSistemaAdapter, sistemaId, clienteId);
   const preventivas = usePreventivasSistema(supabaseDetalheSistemaAdapter, sistemaId, clienteId);
+  const quantidadeComponentes = componentes.data?.length ?? cadastro.data?.quantidadeComponentes;
 
   useEffect(() => {
     focoAnterior.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !componenteAbertoIdRef.current) onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
       focoAnterior.current?.focus();
     };
-  }, [onClose]);
+  }, []);
 
   const abrirOs = (osId: string) => {
     if (onAbrirOs) onAbrirOs(osId);
@@ -126,7 +132,7 @@ export function DrawerDetalheSistema({
                 <Campo titulo="Área / Local" valor={cadastro.data.posicao ?? "—"} />
                 <Campo
                   titulo="Componentes atuais"
-                  valor={String(cadastro.data.quantidadeComponentes)}
+                  valor={quantidadeComponentes == null ? "—" : String(quantidadeComponentes)}
                 />
                 <Campo titulo="Descrição" valor={cadastro.data.descricao ?? "Não informado"} />
                 <Campo titulo="Cadastrado em" valor={dataBr(cadastro.data.criadoEm, true)} />
@@ -177,7 +183,7 @@ export function DrawerDetalheSistema({
             </Secao>
 
             <Secao
-              titulo={`Componentes (${componentes.data?.length ?? cadastro.data.quantidadeComponentes})`}
+              titulo={`Componentes (${quantidadeComponentes == null ? "—" : quantidadeComponentes})`}
             >
               {componentes.isLoading && <Skeleton className="h-16 w-full" />}
               {componentes.error && (
@@ -381,9 +387,7 @@ function ListaPreventivas({
           ) : (
             <ul className="mt-2 divide-y divide-line-soft">
               {preventiva.ocorrencias.map((ocorrencia) => {
-                const linkAuvo = ocorrencia.auvoTaskId
-                  ? `https://app.auvo.com.br/informacoes/tarefa/${ocorrencia.auvoTaskId}`
-                  : null;
+                const linkAuvo = auvoTaskDeepLink(ocorrencia.auvoTaskId);
                 return (
                   <li
                     key={ocorrencia.id}
@@ -401,7 +405,7 @@ function ListaPreventivas({
                           onClick={() => onAbrirOs(ocorrencia.osId as string)}
                           className="font-semibold text-orange hover:underline"
                         >
-                          {ocorrencia.osNumero ?? "Abrir OS"}
+                          {ocorrencia.osNumero ?? ocorrencia.osId ?? "Abrir OS"}
                         </button>
                       )}
                       {linkAuvo && (

@@ -190,14 +190,13 @@ export const supabaseDetalheSistemaAdapter: DetalheSistemaGateway = {
     lancarSeErro(sistemaResultado);
     if (!sistemaResultado.data) return null;
     const sistema = sistemaResultado.data as SistemaRow;
-    const [cliente, membros, posicoes] = await Promise.all([
+    const [cliente, posicoes] = await Promise.all([
       supabase
         .schema("pcm")
         .from("clientes")
         .select("nome")
         .eq("id", sistema.cliente_id)
         .maybeSingle(),
-      membrosAtuais(sistema.id, sistema.cliente_id),
       posicoesDoCliente(sistema.cliente_id),
     ]);
     lancarSeErro(cliente);
@@ -213,7 +212,9 @@ export const supabaseDetalheSistemaAdapter: DetalheSistemaGateway = {
       syncStatus: sistema.auvo_sync_status,
       criadoEm: sistema.created_at,
       atualizadoEm: sistema.updated_at,
-      quantidadeComponentes: membros.length,
+      // A lista de componentes é uma seção independente do drawer. Não a carregue aqui:
+      // uma falha nela não pode esconder o cadastro já autorizado do Sistema.
+      quantidadeComponentes: null,
     };
   },
 
