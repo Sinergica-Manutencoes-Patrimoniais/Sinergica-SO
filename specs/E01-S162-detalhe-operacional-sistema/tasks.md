@@ -29,3 +29,14 @@ alwaysApply: false
 - [x] Sem query de servidor via `useEffect` nos arquivos novos
 - [x] Sem migration, deploy, push ou chamada que crie task Auvo
 - [x] ADR-0024 registra o read-model e seus limites
+
+## Revisão adversarial — 2026-10-05
+
+- `detalhe-sistema.ts:74` — média, componentes diferentes e homônimos perdiam uma origem; teste de
+  deduplicação por ID reproduziu e a comparação foi corrigida.
+- `DrawerDetalheSistema.tsx:67` — média, Escape no drawer sobreposto fechava também o Sistema; teste
+  reproduziu e o listener do pai agora aguarda o fechamento do componente.
+- `VisaoClientePage.tsx:172` — alta, resposta concorrente ou troca de cliente podia manter o contexto
+  anterior montado; estado é identificado pelo cliente e respostas obsoletas são descartadas.
+- Sem achado alto ou médio aberto na inspeção estática final; os comandos de execução continuam
+  bloqueados pela ausência de Node/pnpm neste ambiente.
