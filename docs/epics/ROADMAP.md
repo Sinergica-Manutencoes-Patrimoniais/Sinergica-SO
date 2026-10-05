@@ -46,7 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S25_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 
 ### E01 — PCM · Operação
-_74 concluídas no histórico · maior ID usado: E01-S161_
+_74 concluídas no histórico · maior ID usado: E01-S162_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -113,6 +113,7 @@ _74 concluídas no histórico · maior ID usado: E01-S161_
 | E01-S159 | Cadastro completo na Visão 360 | Codex | Implementado localmente; E2E autenticado pendente | [spec](../../specs/E01-S159-cadastro-ativos-visao-360/spec.md) |
 | E01-S160 | Aba Árvore na Visão 360 | Codex | Implementada localmente; teste de componente verde, E2E autenticado pendente | [spec](../../specs/E01-S160-arvore-ativos-360/spec.md) |
 | E01-S161 | Importação/exportação da estrutura via Excel | Codex | Implementada localmente; E2E autenticado pendente | [spec](../../specs/E01-S161-importacao-excel-estrutura/spec.md) |
+| E01-S162 | Detalhe operacional do Sistema | Codex | Em andamento — owner Codex; validação e revisão arquitetural em curso | [spec](../../specs/E01-S162-detalhe-operacional-sistema/spec.md) |
 | E01-S114 | Nav: "Backlog GUT"/"Ordens de Serviço" viram submenu de "Chamados" | Claude (sessão Lucas) | Implementado localmente (2026-07-29). P… | [spec](../../specs/E01-S114-nav-chamados-submenu-backlog-os/spec.md) |
 | E01-S115 | Limpar dados de teste E2E do banco | — (livre) | Feito (2026-07-29). Inventário revisado… | [spec](../../specs/E01-S115-limpar-dados-teste-e2e/spec.md) |
 | E01-S118 | Operação unifica Chamados no board | Claude (sessão Lucas) | Implementado localmente (2026-07-29). B… | [spec](../../specs/E01-S118-operacao-unifica-chamados-board/spec.md) |

@@ -6,6 +6,9 @@ alwaysApply: true
 
 # Design — Detalhe operacional do Sistema
 
+> Decisão arquitetural registrada em
+> [`ADR-0024`](../../docs/adr/0024-read-model-detalhe-operacional-sistema.md).
+
 ## Decisão
 
 `DrawerDetalheSistema` é uma única superfície de consulta, aberta tanto pela lista global de
@@ -69,5 +72,7 @@ Clique em um componente reaproveita `DrawerDetalheAtivo` já existente, sobre o 
   vazio não dispara query filha; link Auvo só existe com ID remoto conhecido.
 - Componente: fechar restaura foco, estados de seção, links e composição atual.
 - Integração de tela: lista global e 360 abrem o mesmo drawer; mudança do cliente elimina seleção.
+- Regressão: origens de componentes são identificadas por ID, não por nome; um drawer de
+  componente sobreposto consome Escape antes do drawer de Sistema.
 
 Não há migration, deploy, chamada de escrita, criação de OS ou leitura remota do Auvo nesta story.
