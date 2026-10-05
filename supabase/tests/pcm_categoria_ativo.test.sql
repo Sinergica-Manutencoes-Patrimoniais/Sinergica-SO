@@ -18,10 +18,14 @@ select is(
   'AC-3: seis categorias semente com sigla existem'
 );
 
-set local role service_role;
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values ('00000000-0000-0000-0000-000000000162', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'categoria-s156@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
+
+-- auth.users é gerenciada pelo Supabase: o papel de aplicação service_role não
+-- recebe escrita direta nela. A fixture é criada pelo dono do banco antes de
+-- assumir o papel que exercita as tabelas da aplicação.
+set local role service_role;
 insert into pcm.equipamento_categorias (id, nome, sigla, created_by, updated_by)
 values ('00000000-0000-0000-0000-000000000156', '[TESTE] Categoria S156', 'T56', '00000000-0000-0000-0000-000000000162', '00000000-0000-0000-0000-000000000162');
 select throws_ok(
@@ -48,8 +52,8 @@ select is(
 update pcm.equipamentos
 set categoria_id = null
 where id = '00000000-0000-0000-0000-000000000157';
-select is_null(
-  (select categoria from pcm.equipamentos where id = '00000000-0000-0000-0000-000000000157'),
+select ok(
+  (select categoria from pcm.equipamentos where id = '00000000-0000-0000-0000-000000000157') is null,
   'AC-4 passo 2: remover categoria_id limpa texto inalterado'
 );
 

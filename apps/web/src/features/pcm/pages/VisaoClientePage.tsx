@@ -30,7 +30,7 @@ import {
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
@@ -81,7 +81,7 @@ import { EstruturaClientePage } from "./EstruturaClientePage";
 type Estado =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
-  | { fase: "pronto"; visao: VisaoCliente };
+  | { fase: "pronto"; clienteId: string; visao: VisaoCliente };
 
 type Aba360 =
   | "resumo"
@@ -154,6 +154,7 @@ export function VisaoClientePage({
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
+  const requisicaoAtual = useRef(0);
   const [aba, setAba] = useState<Aba360>(periodo ? "os" : "resumo");
   const [editandoCadastro, setEditandoCadastro] = useState(false);
   const [criandoAcesso, setCriandoAcesso] = useState(false);
@@ -169,11 +170,14 @@ export function VisaoClientePage({
   });
 
   const carregar = useCallback(async () => {
+    const requisicao = ++requisicaoAtual.current;
     setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const visao = await obterVisaoCliente(supabaseCliente360Adapter, clienteId);
-      setEstado({ fase: "pronto", visao });
+      if (requisicao !== requisicaoAtual.current) return;
+      setEstado({ fase: "pronto", clienteId, visao });
     } catch {
+      if (requisicao !== requisicaoAtual.current) return;
       // AC-8/AC-5 são estados de retorno (não exceções); aqui só cai erro inesperado de
       // infra (rede/permissão de banco) — mensagem neutra, sem vazar detalhe de implementação.
       setEstado({ fase: "erro", mensagem: "Não foi possível carregar a visão do cliente." });
@@ -207,6 +211,18 @@ export function VisaoClientePage({
   }
 
   if (estado.fase === "carregando") {
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
+  }
+
+  // Não renderiza uma visão já carregada para outro cliente enquanto a próxima consulta começa.
+  // Isso desmonta o drawer aberto antes de qualquer dado anterior permanecer visível.
+  if (estado.fase === "pronto" && estado.clienteId !== clienteId) {
     return (
       <div className="flex flex-col gap-3 p-8">
         <Skeleton className="h-6 w-48" />
@@ -391,7 +407,13 @@ export function VisaoClientePage({
       )}
 
       {aba === "sistemas" && user && (
-        <PainelSistemasCliente clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
+        <PainelSistemasCliente
+          key={cliente.id}
+          clienteId={cliente.id}
+          temEscrita={temEscrita}
+          userId={user.id}
+          onAbrirOs={onAbrirOs}
+        />
       )}
 
       {aba === "ferramentas" && (

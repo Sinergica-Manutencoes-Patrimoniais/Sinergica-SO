@@ -18,9 +18,14 @@ values
   ('40000000-0000-0000-0000-000000000061', 'Categoria despesa S12', 'saida')
 on conflict (id) do nothing;
 insert into financeiro.lancamentos (id, tipo, status, valor_centavos, data_competencia, data_pagamento, categoria_id)
-values
-  ('40000000-0000-0000-0000-000000000062', 'entrada', 'realizado', 500000, '2026-06-10', '2026-06-10', '40000000-0000-0000-0000-000000000060'),
-  ('40000000-0000-0000-0000-000000000063', 'saida', 'realizado', 200000, '2026-06-10', '2026-06-10', '40000000-0000-0000-0000-000000000061')
+select
+  id, tipo, status, valor_centavos, competencia + 9, competencia + 9, categoria_id
+from (
+  values
+    ('40000000-0000-0000-0000-000000000062'::uuid, 'entrada'::text, 'realizado'::text, 500000::bigint, '40000000-0000-0000-0000-000000000060'::uuid),
+    ('40000000-0000-0000-0000-000000000063'::uuid, 'saida'::text, 'realizado'::text, 200000::bigint, '40000000-0000-0000-0000-000000000061'::uuid)
+) as fixture(id, tipo, status, valor_centavos, categoria_id)
+cross join (select date_trunc('month', current_date)::date as competencia) mes_atual
 on conflict (id) do nothing;
 
 set local role authenticated;
@@ -37,35 +42,35 @@ select throws_ok(
 
 -- 2) fn_dre_mensal soma receita/despesa por competência (AC-1)
 select is(
-  (select valor_centavos from financeiro.fn_dre_mensal(3) where mes = '2026-06-01' and tipo = 'entrada' limit 1),
+  (select valor_centavos from financeiro.fn_dre_mensal(3) where mes = date_trunc('month', current_date)::date and tipo = 'entrada' limit 1),
   500000::bigint,
-  'fn_dre_mensal soma receita de junho/2026'
+  'fn_dre_mensal soma receita do mês corrente'
 );
 select is(
-  (select valor_centavos from financeiro.fn_dre_mensal(3) where mes = '2026-06-01' and tipo = 'saida' limit 1),
+  (select valor_centavos from financeiro.fn_dre_mensal(3) where mes = date_trunc('month', current_date)::date and tipo = 'saida' limit 1),
   200000::bigint,
-  'fn_dre_mensal soma despesa de junho/2026'
+  'fn_dre_mensal soma despesa do mês corrente'
 );
 
 -- 3) escrita grava orçamento pra despesa S12 em julho/2026
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000502","user_role":"colaborador","user_modulos":{"financeiro":"escrita"}}';
 select lives_ok(
   $$ insert into financeiro.orcamentos (categoria_id, competencia, valor_centavos)
-     values ('40000000-0000-0000-0000-000000000061', '2026-06-01', 150000) $$,
+     values ('40000000-0000-0000-0000-000000000061', date_trunc('month', current_date)::date, 150000) $$,
   'escrita financeiro grava orcamento'
 );
 
 -- 4) fn_orcamento_realizado: categoria COM orçamento mostra tem_orcamento=true; categoria receita
 -- (sem orçamento, só realizado) aparece com tem_orcamento=false — edge case AC-3.
 select is(
-  (select tem_orcamento from financeiro.fn_orcamento_realizado(2026)
-     where categoria_id = '40000000-0000-0000-0000-000000000061' and mes = '2026-06-01'),
+  (select tem_orcamento from financeiro.fn_orcamento_realizado(extract(year from current_date)::int)
+     where categoria_id = '40000000-0000-0000-0000-000000000061' and mes = date_trunc('month', current_date)::date),
   true,
   'categoria com orcamento: tem_orcamento=true'
 );
 select is(
-  (select tem_orcamento from financeiro.fn_orcamento_realizado(2026)
-     where categoria_id = '40000000-0000-0000-0000-000000000060' and mes = '2026-06-01'),
+  (select tem_orcamento from financeiro.fn_orcamento_realizado(extract(year from current_date)::int)
+     where categoria_id = '40000000-0000-0000-0000-000000000060' and mes = date_trunc('month', current_date)::date),
   false,
   'categoria SEM orcamento (so realizado): tem_orcamento=false (edge case AC-3)'
 );

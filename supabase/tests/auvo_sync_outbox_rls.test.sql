@@ -47,7 +47,7 @@ reset role;
 -- ── service_role escreve normalmente (é quem pcm-auvo-push usa) ──────────────────────────────────
 set local role service_role;
 select lives_ok(
-  $$ insert into pcm.auvo_sync_outbox (entity, row_id, op) values ('smoke', gen_random_uuid(), 'create') $$,
+  $$ insert into pcm.auvo_sync_outbox (entity, row_id, op) values ('_test_claim_entity', gen_random_uuid(), 'create') $$,
   'service_role insere em auvo_sync_outbox'
 );
 reset role;
@@ -111,7 +111,15 @@ select is(
   'fn_apply_auvo_sync efetivamente aplicou o patch (anti-loop nao e so um no-op)'
 );
 
--- fn_claim_auvo_outbox_batch: reivindica todas as pending (smoke + create/update/delete = 4) numa
+-- Outras fixtures/migrations podem já ter trabalho pendente. Elas não fazem parte
+-- deste cenário; deixamo-las fora do lote transacional para provar só as quatro
+-- linhas criadas acima. O rollback final restaura seus status originais.
+update pcm.auvo_sync_outbox
+set status = 'processing'
+where status = 'pending'
+  and entity not in ('_test_claim_entity', '_test_entity');
+
+-- fn_claim_auvo_outbox_batch: reivindica todas as pending (_test_claim_entity + create/update/delete = 4) numa
 -- unica chamada, e uma segunda chamada nao pega as mesmas linhas (agora 'processing', nao 'pending').
 select is(
   (select count(*)::int from pcm.fn_claim_auvo_outbox_batch(100)),

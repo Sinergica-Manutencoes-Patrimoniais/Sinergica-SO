@@ -13,4 +13,10 @@ describe("VisaoClientePage — E01-S53 AC-8", () => {
     expect(fonte).toContain("clienteNome={cliente.nome}");
     expect(fonte).toContain("temEscrita={temEscrita}");
   });
+
+  it("não mantém a visão anterior montada durante a troca de cliente", () => {
+    expect(fonte).toContain('{ fase: "pronto"; clienteId: string; visao: VisaoCliente }');
+    expect(fonte).toContain("estado.clienteId !== clienteId");
+    expect(fonte).toContain("requisicao !== requisicaoAtual.current");
+  });
 });

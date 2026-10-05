@@ -5,10 +5,13 @@ select plan(14);
 select has_column('pcm', 'equipamentos', 'auvo_descricao', 'AC-2: Componente tem auvo_descricao');
 select has_column('pcm', 'sistemas', 'auvo_descricao', 'AC-2: Sistema tem auvo_descricao');
 
-set local role service_role;
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values ('00000000-0000-0000-0000-000000000358', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'descricao-s158@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
+
+-- A criação da identidade é feita antes de assumir service_role; esse papel
+-- não tem (nem deve receber) escrita direta em auth.users.
+set local role service_role;
 
 insert into pcm.clientes (id, nome, created_by, updated_by)
 values ('00000000-0000-0000-0000-000000000359', '[TESTE] Cliente S158', '00000000-0000-0000-0000-000000000358', '00000000-0000-0000-0000-000000000358');

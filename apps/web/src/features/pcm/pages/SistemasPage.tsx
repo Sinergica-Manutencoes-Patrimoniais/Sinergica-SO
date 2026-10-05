@@ -13,6 +13,7 @@ import {
   listarSistemas,
 } from "../application/sistemas";
 import { ComposicaoSistema } from "../components/ComposicaoSistema";
+import { DrawerDetalheSistema } from "../components/DrawerDetalheSistema";
 import { HistoricoOsSistema } from "../components/HistoricoOsSistema";
 import { SistemaModal } from "../components/SistemaModal";
 import type { EquipamentoClienteOpcao } from "../domain/equipamentos";
@@ -38,13 +39,14 @@ const STATUS_LABEL: Record<string, { texto: string; classe: string }> = {
   error: { texto: "Erro", classe: "bg-danger-soft text-danger" },
 };
 
-export function SistemasPage() {
+export function SistemasPage({ onAbrirOs }: { onAbrirOs?: (osId: string) => void }) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [modal, setModal] = useState<Modal>(null);
   const [membrosAbertoId, setMembrosAbertoId] = useState<string | null>(null);
   const [historicoAbertoId, setHistoricoAbertoId] = useState<string | null>(null);
+  const [detalheAbertoId, setDetalheAbertoId] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [sistemaParaDesativar, setSistemaParaDesativar] = useState<Sistema | null>(null);
 
@@ -187,9 +189,13 @@ export function SistemasPage() {
                 <div className="flex items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span className="truncate text-body font-semibold text-ink">
+                      <button
+                        type="button"
+                        onClick={() => setDetalheAbertoId(sistema.id)}
+                        className="truncate text-left text-body font-semibold text-ink hover:underline"
+                      >
                         {sistema.nome}
-                      </span>
+                      </button>
                       <span
                         className={`shrink-0 rounded-full px-1.5 py-0.5 text-micro font-semibold ${status.classe}`}
                       >
@@ -287,6 +293,13 @@ export function SistemasPage() {
         rotuloConfirmar="Desativar"
         onConfirmar={desativar}
       />
+      {detalheAbertoId && (
+        <DrawerDetalheSistema
+          sistemaId={detalheAbertoId}
+          onClose={() => setDetalheAbertoId(null)}
+          onAbrirOs={onAbrirOs}
+        />
+      )}
     </div>
   );
 }

@@ -8,7 +8,6 @@ select has_column('pcm', 'clientes', 'sigla', 'AC-1: Cliente tem sigla');
 select has_column('pcm', 'areas', 'sigla', 'AC-1: Área tem sigla');
 select has_column('pcm', 'locais', 'sigla', 'AC-1: Local tem sigla');
 
-set local role service_role;
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
@@ -23,6 +22,10 @@ values (
   now(), '{}', '{}', now(), now()
 )
 on conflict (id) do nothing;
+
+-- service_role representa o runtime da aplicação e não escreve em auth.users.
+-- A fixture de identidade precisa ser criada pelo dono do banco.
+set local role service_role;
 
 insert into pcm.clientes (id, nome, sigla, created_by, updated_by)
 values (

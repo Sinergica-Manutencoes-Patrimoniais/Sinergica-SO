@@ -452,7 +452,7 @@ export function HomePage() {
   // reagir mesmo clicando duas vezes seguidas na MESMA OS (osId igual não mudaria de valor).
   const [osDeepLink, setOsDeepLink] = useState<{
     osId: string;
-    origemClienteId: string;
+    origemClienteId: string | null;
     seq: number;
   } | null>(null);
   // E03-S05, AC-7: deep-link da aba Comercial da Visão 360 ("ver assessment completo") pra
@@ -537,8 +537,18 @@ export function HomePage() {
     setPcmView("ordens");
   }
 
+  function abrirOsDoSistema(osId: string) {
+    setClienteSelecionado(null);
+    setOsDeepLink((atual) => ({
+      osId,
+      origemClienteId: null,
+      seq: (atual?.seq ?? 0) + 1,
+    }));
+    setPcmView("ordens");
+  }
+
   function voltarAoClienteDoDeepLink() {
-    if (!osDeepLink) return;
+    if (!osDeepLink?.origemClienteId) return;
     setClienteSelecionado(osDeepLink.origemClienteId);
     setPcmView("clientes");
     setOsDeepLink(null);
@@ -1056,7 +1066,7 @@ export function HomePage() {
             ) : pcmView === "equipamentos" ? (
               <EquipamentosPage />
             ) : pcmView === "sistemas" ? (
-              <SistemasPage />
+              <SistemasPage onAbrirOs={abrirOsDoSistema} />
             ) : pcmView === "equipes" ? (
               <EquipesPage />
             ) : pcmView === "agenda-tecnico" ? (
@@ -1096,7 +1106,7 @@ export function HomePage() {
               // E01-S118: Chamados/Operação/Backlog são o mesmo board (o Chamado evolui pra OS);
               // `view=backlog` (deep-link do Dashboard) abre já na aba Backlog.
               <div className="flex flex-col gap-4">
-                {osDeepLink && (
+                {osDeepLink?.origemClienteId && (
                   <button
                     type="button"
                     onClick={voltarAoClienteDoDeepLink}
