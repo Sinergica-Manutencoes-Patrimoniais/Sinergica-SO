@@ -10,6 +10,7 @@ import {
   useMembrosSistemasDoCliente,
   useSistemasDoCliente,
 } from "../application/ativos-cliente-queries";
+import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
 import { FILTROS_SISTEMAS_360_VAZIO, filtrarSistemas360 } from "../domain/cliente-360-filtros";
 import { montarArvore } from "../domain/hierarquia";
 import type { Sistema, SistemaFormData } from "../domain/sistemas";
@@ -35,6 +36,7 @@ export function PainelSistemasCliente({
 }) {
   const [filtros, setFiltros] = useState(FILTROS_SISTEMAS_360_VAZIO);
   const clienteAnterior = useRef(clienteId);
+  const primeiroFiltro = useRef(true);
   const [modal, setModal] = useState<Modal>(null);
   const [sistemaAbertoId, setSistemaAbertoId] = useState<string | null>(null);
   const [paraDesativar, setParaDesativar] = useState<Sistema | null>(null);
@@ -58,6 +60,7 @@ export function PainelSistemasCliente({
     );
   }
   const sistemasFiltrados = filtrarSistemas360(sistemas.data ?? [], quantidadePorSistema, filtros);
+  const assinaturaFiltros = JSON.stringify(filtros);
 
   useEffect(() => {
     if (clienteAnterior.current !== clienteId) {
@@ -65,6 +68,15 @@ export function PainelSistemasCliente({
       setFiltros(FILTROS_SISTEMAS_360_VAZIO);
     }
   }, [clienteId]);
+
+  useEffect(() => {
+    if (primeiroFiltro.current) {
+      primeiroFiltro.current = false;
+      return;
+    }
+    if (!assinaturaFiltros) return;
+    registrarEventoCliente360({ nome: "cliente360_filter_changed", clienteId, aba: "sistemas" });
+  }, [assinaturaFiltros, clienteId]);
 
   async function salvar(dados: SistemaFormData) {
     if (modal?.modo === "editar") {

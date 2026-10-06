@@ -1,6 +1,7 @@
 import { Button, ConfirmDialog } from "@sinergica/ui";
 import { useEffect, useMemo, useState } from "react";
 import { usePreviaIdentificador } from "../application/ativos-cliente-queries";
+import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
 import type { EntradaIdentificadorAtivo, SiglaInformada } from "../application/identificador-ativo";
 import type { NivelComSigla } from "../application/identificador-ativo-gateway";
 import { sugerirSigla, validarSigla } from "../domain/siglas";
@@ -67,6 +68,7 @@ export function CampoIdentificador({
       ...sugestoesVisiveis.map(({ nivel, id, sigla }) => ({ nivel, id, sigla })),
     ]);
     setRecomendacoesAplicadas(true);
+    registrarEventoCliente360({ nome: "identificador_recommendations_applied" });
   }
 
   if (!editando) {

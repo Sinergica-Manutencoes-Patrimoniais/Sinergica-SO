@@ -1,4 +1,6 @@
 import { ExternalLink, Send } from "lucide-react";
+import { useEffect } from "react";
+import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
 import type { OcorrenciaPreventiva, PlanoPreventivo } from "../application/preventivas-gateway";
 import { Cliente360Drawer } from "./Cliente360Drawer";
 
@@ -36,6 +38,16 @@ export function PreventivaDetalheDrawer({
   onConfirmarVisita: (ocorrencia: OcorrenciaPreventiva) => void;
   onAbrirOs?: (osId: string) => void;
 }) {
+  useEffect(() => {
+    if (plano?.cliente_id) {
+      registrarEventoCliente360({
+        nome: "cliente360_drawer_opened",
+        clienteId: plano.cliente_id,
+        tipo: "preventiva",
+      });
+    }
+  }, [plano?.cliente_id]);
+
   const outras = ocorrenciasDoPlano
     .filter((item) => item.id !== ocorrencia.id)
     .sort((a, b) => a.vencimento.localeCompare(b.vencimento));

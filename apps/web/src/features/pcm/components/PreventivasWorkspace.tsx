@@ -4,6 +4,7 @@ import { Calendar, Clock3, List, Pause, Play, Plus, RefreshCw, Send } from "luci
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { erroDetalhado } from "../../../lib/http/edge-function-error";
 import { supabase } from "../../../lib/supabase-client";
+import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
 import type {
   AvaliacaoPreventiva,
   OcorrenciaPreventiva,
@@ -491,6 +492,9 @@ export function PreventivasWorkspace({
   function mudarVisao(proxima: VisaoPreventivas) {
     setVisao(proxima);
     window.localStorage.setItem(CHAVE_VISAO_PREVENTIVAS, proxima);
+    if (clienteId) {
+      registrarEventoCliente360({ nome: "preventiva_view_changed", clienteId, visao: proxima });
+    }
   }
 
   return (

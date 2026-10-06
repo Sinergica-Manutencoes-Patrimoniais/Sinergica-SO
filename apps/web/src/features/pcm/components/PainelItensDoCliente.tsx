@@ -11,6 +11,7 @@ import {
   useMembrosSistemasDoCliente,
   useSistemasDoCliente,
 } from "../application/ativos-cliente-queries";
+import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
 import {
   FILTROS_COMPONENTES_360_VAZIO,
   SEM_SISTEMA,
@@ -39,6 +40,7 @@ export function PainelItensDoCliente({
 }) {
   const [filtros, setFiltros] = useState(FILTROS_COMPONENTES_360_VAZIO);
   const clienteAnterior = useRef(clienteId);
+  const primeiroFiltro = useRef(true);
   const [modal, setModal] = useState<Modal>(null);
   const [paraDesativar, setParaDesativar] = useState<{
     item: EquipamentoItem;
@@ -76,6 +78,7 @@ export function PainelItensDoCliente({
     (membros.data ?? []).map((membro) => [membro.itemId, membro.sistemaId]),
   );
   const itens = filtrarComponentes360(componentes.data ?? [], sistemaIdPorItem, filtros);
+  const assinaturaFiltros = JSON.stringify(filtros);
 
   useEffect(() => {
     if (clienteAnterior.current !== clienteId) {
@@ -83,6 +86,19 @@ export function PainelItensDoCliente({
       setFiltros(FILTROS_COMPONENTES_360_VAZIO);
     }
   }, [clienteId]);
+
+  useEffect(() => {
+    if (primeiroFiltro.current) {
+      primeiroFiltro.current = false;
+      return;
+    }
+    if (!assinaturaFiltros) return;
+    registrarEventoCliente360({
+      nome: "cliente360_filter_changed",
+      clienteId,
+      aba: "componentes",
+    });
+  }, [assinaturaFiltros, clienteId]);
 
   useEffect(() => {
     if (abrirNovoToken > 0 && temEscrita) setModal({ modo: "novo" });

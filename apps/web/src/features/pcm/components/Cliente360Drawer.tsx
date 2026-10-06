@@ -31,6 +31,11 @@ export function Cliente360Drawer({
 }) {
   const painelRef = useRef<HTMLDialogElement | null>(null);
   const focoAnterior = useRef<HTMLElement | null>(null);
+  const onFecharAtual = useRef(onFechar);
+
+  useEffect(() => {
+    onFecharAtual.current = onFechar;
+  }, [onFechar]);
 
   useEffect(() => {
     if (!aberto) return;
@@ -43,7 +48,7 @@ export function Cliente360Drawer({
     function aoTeclar(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        onFechar();
+        onFecharAtual.current();
         return;
       }
       if (event.key !== "Tab" || !painel) return;
@@ -70,7 +75,7 @@ export function Cliente360Drawer({
       if (origem instanceof HTMLElement) origem.focus();
       else focoAnterior.current?.focus();
     };
-  }, [aberto, onFechar, originElementId]);
+  }, [aberto, originElementId]);
 
   if (!aberto) return null;
   return (

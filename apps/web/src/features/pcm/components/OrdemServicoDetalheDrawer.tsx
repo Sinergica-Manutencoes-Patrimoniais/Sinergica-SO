@@ -1,8 +1,10 @@
 import { Button, Skeleton } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 import { cliente360QueryKeys } from "../application/cliente-360-query-keys";
+import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
 import { operacaoQueryKeys, useAlterarStatusOperacao } from "../application/operacao-queries";
 import type { StatusOrdemServico } from "../domain/ordens-servico";
 import { rotuloStatusOs } from "../domain/ordens-servico";
@@ -53,13 +55,35 @@ export function OrdemServicoDetalheDrawer({
   });
   const alterarStatus = useAlterarStatusOperacao(supabaseOperacaoAdapter);
 
+  useEffect(() => {
+    if (aberto) {
+      registrarEventoCliente360({ nome: "cliente360_drawer_opened", clienteId, tipo: "os" });
+    }
+  }, [aberto, clienteId]);
+
   async function mudarStatus(status: StatusOrdemServico) {
-    await alterarStatus.mutateAsync({ ids: [ordem.id], status });
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: cliente360QueryKeys.raiz(clienteId) }),
-      queryClient.invalidateQueries({ queryKey: operacaoQueryKeys.detalhe(ordem.id) }),
-      onMutada(),
-    ]);
+    try {
+      await alterarStatus.mutateAsync({ ids: [ordem.id], status });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: cliente360QueryKeys.raiz(clienteId) }),
+        queryClient.invalidateQueries({ queryKey: operacaoQueryKeys.detalhe(ordem.id) }),
+        onMutada(),
+      ]);
+      registrarEventoCliente360({
+        nome: "cliente360_mutation_finished",
+        clienteId,
+        recurso: "os",
+        resultado: "sucesso",
+      });
+    } catch (error) {
+      registrarEventoCliente360({
+        nome: "cliente360_mutation_finished",
+        clienteId,
+        recurso: "os",
+        resultado: "falha",
+      });
+      throw error;
+    }
   }
 
   return (
