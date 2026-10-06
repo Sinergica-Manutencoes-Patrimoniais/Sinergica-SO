@@ -1,5 +1,6 @@
 import { Button, Skeleton } from "@sinergica/ui";
-import { useState } from "react";
+import { Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
 import {
@@ -8,6 +9,7 @@ import {
   useFerramentasAlocadas,
   useFerramentasDisponiveis,
 } from "../application/ativos-cliente-queries";
+import { normalizarBusca360 } from "../domain/cliente-360-filtros";
 import { supabaseFerramentaAlocacaoClienteAdapter } from "../infrastructure/supabase-ferramenta-alocacao-cliente-adapter";
 
 /** Ferramentas são patrimônio da Sinérgica: alocação temporária, nunca Componente do cliente. */
@@ -20,6 +22,14 @@ export function PainelFerramentasCliente({
 }) {
   const { user } = useAuth();
   const [alocando, setAlocando] = useState(false);
+  const [filtros, setFiltros] = useState({
+    busca: "",
+    categoriaId: "",
+    situacao: "todas" as "todas" | "ativas" | "historico",
+    inicio: "",
+    fim: "",
+  });
+  const clienteAnterior = useRef(clienteId);
   const alocacoes = useFerramentasAlocadas(supabaseFerramentaAlocacaoClienteAdapter, clienteId);
   const devolver = useDevolverFerramenta(supabaseFerramentaAlocacaoClienteAdapter, clienteId);
 
@@ -42,8 +52,34 @@ export function PainelFerramentasCliente({
     );
   }
 
-  const ativas = (alocacoes.data ?? []).filter((alocacao) => alocacao.devolvidaEm === null);
-  const historico = (alocacoes.data ?? []).filter((alocacao) => alocacao.devolvidaEm !== null);
+  useEffect(() => {
+    if (clienteAnterior.current !== clienteId) {
+      clienteAnterior.current = clienteId;
+      setFiltros({ busca: "", categoriaId: "", situacao: "todas", inicio: "", fim: "" });
+    }
+  }, [clienteId]);
+
+  const todasAlocacoes = alocacoes.data ?? [];
+  const busca = normalizarBusca360(filtros.busca);
+  const alocacoesFiltradas = todasAlocacoes.filter((alocacao) => {
+    if (busca && !normalizarBusca360(alocacao.ferramentaNome).includes(busca)) return false;
+    if (filtros.categoriaId && alocacao.categoriaId !== filtros.categoriaId) return false;
+    if (filtros.situacao === "ativas" && alocacao.devolvidaEm !== null) return false;
+    if (filtros.situacao === "historico" && alocacao.devolvidaEm === null) return false;
+    const dataAlocacao = alocacao.alocadaEm.slice(0, 10);
+    if (filtros.inicio && dataAlocacao < filtros.inicio) return false;
+    if (filtros.fim && dataAlocacao > filtros.fim) return false;
+    return true;
+  });
+  const ativas = alocacoesFiltradas.filter((alocacao) => alocacao.devolvidaEm === null);
+  const historico = alocacoesFiltradas.filter((alocacao) => alocacao.devolvidaEm !== null);
+  const categorias = [
+    ...new Map(
+      todasAlocacoes
+        .filter((alocacao) => alocacao.categoriaId && alocacao.categoriaNome)
+        .map((alocacao) => [alocacao.categoriaId as string, alocacao.categoriaNome as string]),
+    ).entries(),
+  ];
   return (
     <section className="rounded-lg border border-line bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
@@ -59,9 +95,82 @@ export function PainelFerramentasCliente({
           </Button>
         )}
       </div>
+      {todasAlocacoes.length > 0 && (
+        <div className="grid gap-2 border-b border-line-soft px-4 py-3 lg:grid-cols-6">
+          <label className="relative block lg:col-span-2">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
+            <input
+              value={filtros.busca}
+              onChange={(event) => setFiltros((atual) => ({ ...atual, busca: event.target.value }))}
+              className="input w-full pl-9"
+              placeholder="Buscar ferramenta"
+            />
+          </label>
+          <select
+            aria-label="Filtrar ferramentas por categoria"
+            value={filtros.categoriaId}
+            onChange={(event) =>
+              setFiltros((atual) => ({ ...atual, categoriaId: event.target.value }))
+            }
+            className="input min-w-0"
+          >
+            <option value="">Todas as categorias</option>
+            {categorias.map(([id, nome]) => (
+              <option key={id} value={id}>
+                {nome}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Filtrar ferramentas por situação"
+            value={filtros.situacao}
+            onChange={(event) =>
+              setFiltros((atual) => ({
+                ...atual,
+                situacao: event.target.value as typeof atual.situacao,
+              }))
+            }
+            className="input min-w-0"
+          >
+            <option value="todas">Todas as situações</option>
+            <option value="ativas">Em uso</option>
+            <option value="historico">Devolvidas</option>
+          </select>
+          <input
+            aria-label="Alocada a partir de"
+            type="date"
+            value={filtros.inicio}
+            onChange={(event) => setFiltros((atual) => ({ ...atual, inicio: event.target.value }))}
+            className="input min-w-0"
+          />
+          <div className="flex items-center gap-2">
+            <input
+              aria-label="Alocada até"
+              type="date"
+              value={filtros.fim}
+              onChange={(event) => setFiltros((atual) => ({ ...atual, fim: event.target.value }))}
+              className="input min-w-0"
+            />
+            <button
+              type="button"
+              onClick={() =>
+                setFiltros({ busca: "", categoriaId: "", situacao: "todas", inicio: "", fim: "" })
+              }
+              className="shrink-0 text-caption font-semibold text-orange hover:text-orange-deep"
+            >
+              Limpar
+            </button>
+          </div>
+          <p className="lg:col-span-6 text-caption text-ink-3">
+            {alocacoesFiltradas.length} visíveis de {todasAlocacoes.length}
+          </p>
+        </div>
+      )}
       {ativas.length === 0 && historico.length === 0 ? (
         <div className="px-5 py-6 text-center text-body text-ink-3">
-          Nenhuma ferramenta alocada.
+          {todasAlocacoes.length === 0
+            ? "Nenhuma ferramenta alocada."
+            : "Nenhuma ferramenta para estes filtros."}
         </div>
       ) : (
         <div className="divide-y divide-line-soft">
@@ -87,7 +196,7 @@ export function PainelFerramentasCliente({
               )}
             </div>
           ))}
-          {historico.slice(0, 5).map((alocacao) => (
+          {historico.map((alocacao) => (
             <div key={alocacao.id} className="px-5 py-3 opacity-60">
               <p className="truncate text-body text-ink-2">{alocacao.ferramentaNome}</p>
               <p className="mt-0.5 text-caption text-ink-3">
