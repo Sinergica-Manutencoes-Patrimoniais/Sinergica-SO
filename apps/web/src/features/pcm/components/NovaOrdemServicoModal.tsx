@@ -94,6 +94,7 @@ function prioridadeParaForm(prioridade: string): PrioridadeBacklog {
 export function NovaOrdemServicoModal({
   aberto,
   ordem,
+  clienteFixoId,
   onFechar,
   onCriada,
   onEditada,
@@ -102,6 +103,7 @@ export function NovaOrdemServicoModal({
   /** E01-S69: presente = modo edição (pré-preenche e salva via `editarOrdemServico`); ausente =
    * modo criação (comportamento original, inalterado). */
   ordem?: OrdemServicoOperacional;
+  clienteFixoId?: string;
   onFechar: () => void;
   onCriada?: (numero: string) => void;
   onEditada?: () => void;
@@ -138,7 +140,7 @@ export function NovaOrdemServicoModal({
       setDados(resultado);
       setForm((f) => ({
         ...f,
-        clientId: f.clientId || resultado.clientes[0]?.id || "",
+        clientId: clienteFixoId || f.clientId || resultado.clientes[0]?.id || "",
         tipoTarefaId: f.tipoTarefaId || resultado.tiposTarefa[0]?.id || "",
       }));
     } catch {
@@ -146,7 +148,7 @@ export function NovaOrdemServicoModal({
     } finally {
       setCarregando(false);
     }
-  }, []);
+  }, [clienteFixoId]);
 
   useEffect(() => {
     if (aberto) carregar();
@@ -324,7 +326,7 @@ export function NovaOrdemServicoModal({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {!editando && (
+          {!editando && !clienteFixoId && (
             <>
               <Field label="Cliente *" className="md:col-span-2">
                 <select

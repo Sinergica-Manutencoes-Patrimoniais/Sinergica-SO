@@ -56,6 +56,29 @@ export type ResultadoPreventivas = {
   avaliacoes: AvaliacaoPreventiva[];
 };
 
+/** Campos do plano que não podem reescrever uma recorrência já materializada. */
+export type AtualizacaoPlanoPreventivo = Partial<
+  Pick<
+    PlanoPreventivo,
+    | "nome"
+    | "estado"
+    | "primeira_data"
+    | "intervalo_unidade"
+    | "intervalo_n"
+    | "sistema_id"
+    | "equipamento_id"
+    | "questionario_id"
+    | "tipo_tarefa_id"
+  >
+>;
+
+export type AtualizarPlanoPreventivoInput = {
+  planoId: string;
+  clienteId: string;
+  userId: string;
+  alteracoes: AtualizacaoPlanoPreventivo;
+};
+
 export type CatalogoPreventivas = {
   clientes: OpcaoPreventiva[];
   sistemas: Array<OpcaoPreventiva & { cliente_id: string }>;

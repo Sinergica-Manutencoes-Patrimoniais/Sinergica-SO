@@ -1,6 +1,6 @@
 import { Button, ConfirmDialog, Skeleton } from "@sinergica/ui";
 import { Boxes, Pencil, Plus, Search, Wrench } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useAreasDoCliente,
   useComponentesDoCliente,
@@ -11,6 +11,12 @@ import {
   useMembrosSistemasDoCliente,
   useSistemasDoCliente,
 } from "../application/ativos-cliente-queries";
+import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
+import {
+  FILTROS_COMPONENTES_360_VAZIO,
+  SEM_SISTEMA,
+  filtrarComponentes360,
+} from "../domain/cliente-360-filtros";
 import type { EquipamentoFormData, EquipamentoItem } from "../domain/equipamentos";
 import { montarArvore } from "../domain/hierarquia";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
@@ -25,12 +31,16 @@ export function PainelItensDoCliente({
   clienteId,
   temEscrita,
   userId,
+  abrirNovoToken = 0,
 }: {
   clienteId: string;
   temEscrita: boolean;
   userId: string;
+  abrirNovoToken?: number;
 }) {
-  const [busca, setBusca] = useState("");
+  const [filtros, setFiltros] = useState(FILTROS_COMPONENTES_360_VAZIO);
+  const clienteAnterior = useRef(clienteId);
+  const primeiroFiltro = useRef(true);
   const [modal, setModal] = useState<Modal>(null);
   const [paraDesativar, setParaDesativar] = useState<{
     item: EquipamentoItem;
@@ -43,7 +53,10 @@ export function PainelItensDoCliente({
   const sistemas = useSistemasDoCliente(supabaseSistemasAdapter, clienteId);
   const membros = useMembrosSistemasDoCliente(supabaseSistemasAdapter, clienteId);
   const criar = useCriarComponente(supabaseEquipamentosAdapter, supabaseIdentificadorAtivoAdapter);
-  const editar = useEditarComponente(supabaseEquipamentosAdapter);
+  const editar = useEditarComponente(
+    supabaseEquipamentosAdapter,
+    supabaseIdentificadorAtivoAdapter,
+  );
   const desativar = useDesativarComponente(supabaseEquipamentosAdapter, clienteId);
 
   const carregando =
@@ -61,13 +74,35 @@ export function PainelItensDoCliente({
       (sistemas.data ?? []).find((sistema) => sistema.id === membro.sistemaId)?.nome ?? "—",
     ]),
   );
-  const itens = (componentes.data ?? []).filter((item) => {
-    const termo = busca.trim().toLocaleLowerCase("pt-BR");
-    return (
-      !termo ||
-      `${item.nome} ${item.identificador ?? ""}`.toLocaleLowerCase("pt-BR").includes(termo)
-    );
-  });
+  const sistemaIdPorItem = Object.fromEntries(
+    (membros.data ?? []).map((membro) => [membro.itemId, membro.sistemaId]),
+  );
+  const itens = filtrarComponentes360(componentes.data ?? [], sistemaIdPorItem, filtros);
+  const assinaturaFiltros = JSON.stringify(filtros);
+
+  useEffect(() => {
+    if (clienteAnterior.current !== clienteId) {
+      clienteAnterior.current = clienteId;
+      setFiltros(FILTROS_COMPONENTES_360_VAZIO);
+    }
+  }, [clienteId]);
+
+  useEffect(() => {
+    if (primeiroFiltro.current) {
+      primeiroFiltro.current = false;
+      return;
+    }
+    if (!assinaturaFiltros) return;
+    registrarEventoCliente360({
+      nome: "cliente360_filter_changed",
+      clienteId,
+      aba: "componentes",
+    });
+  }, [assinaturaFiltros, clienteId]);
+
+  useEffect(() => {
+    if (abrirNovoToken > 0 && temEscrita) setModal({ modo: "novo" });
+  }, [abrirNovoToken, temEscrita]);
 
   async function salvar(dados: EquipamentoFormData) {
     setErroAcao(null);
@@ -129,16 +164,101 @@ export function PainelItensDoCliente({
           </Button>
         )}
       </div>
-      <div className="border-b border-line-soft px-4 py-3">
-        <label className="relative block max-w-md">
+      <div className="grid gap-2 border-b border-line-soft px-4 py-3 lg:grid-cols-8">
+        <label className="relative block lg:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
           <input
-            value={busca}
-            onChange={(event) => setBusca(event.target.value)}
+            value={filtros.busca}
+            onChange={(event) => setFiltros((atual) => ({ ...atual, busca: event.target.value }))}
             className="input w-full pl-9"
             placeholder="Buscar por nome ou identificador"
           />
         </label>
+        <FiltroSelect
+          label="Categoria"
+          value={filtros.categoriaIds[0] ?? ""}
+          onChange={(categoriaId) =>
+            setFiltros((atual) => ({
+              ...atual,
+              categoriaIds: categoriaId ? [categoriaId] : [],
+            }))
+          }
+          opcoes={(componentes.data ?? []).flatMap((item) =>
+            item.categoriaId && item.categoria
+              ? [{ id: item.categoriaId, nome: item.categoria }]
+              : [],
+          )}
+        />
+        <FiltroSelect
+          label="Área"
+          value={filtros.areaIds[0] ?? ""}
+          onChange={(areaId) =>
+            setFiltros((atual) => ({ ...atual, areaIds: areaId ? [areaId] : [] }))
+          }
+          opcoes={(areas.data ?? []).map((area) => ({ id: area.id, nome: area.nome }))}
+        />
+        <FiltroSelect
+          label="Local"
+          value={filtros.localIds[0] ?? ""}
+          onChange={(localId) =>
+            setFiltros((atual) => ({ ...atual, localIds: localId ? [localId] : [] }))
+          }
+          opcoes={(locais.data ?? []).map((local) => ({ id: local.id, nome: local.nome }))}
+        />
+        <FiltroSelect
+          label="Sistema"
+          value={filtros.sistemaIds[0] ?? ""}
+          onChange={(sistemaId) =>
+            setFiltros((atual) => ({ ...atual, sistemaIds: sistemaId ? [sistemaId] : [] }))
+          }
+          opcoes={[
+            { id: SEM_SISTEMA, nome: "Sem sistema" },
+            ...(sistemas.data ?? []).map((sistema) => ({ id: sistema.id, nome: sistema.nome })),
+          ]}
+        />
+        <FiltroSelect
+          label="Sincronização"
+          value={filtros.syncStatuses[0] ?? ""}
+          onChange={(syncStatus) =>
+            setFiltros((atual) => ({
+              ...atual,
+              syncStatuses: syncStatus ? [syncStatus] : [],
+            }))
+          }
+          opcoes={[
+            { id: "synced", nome: "Sincronizado" },
+            { id: "pending", nome: "Pendente" },
+            { id: "error", nome: "Com erro" },
+          ]}
+        />
+        <div className="flex items-center gap-2">
+          <FiltroSelect
+            label="Situação"
+            value={filtros.situacao}
+            onChange={(situacao) =>
+              setFiltros((atual) => ({
+                ...atual,
+                situacao: (situacao || "todos") as typeof atual.situacao,
+              }))
+            }
+            opcoes={[
+              { id: "todos", nome: "Todas situações" },
+              { id: "ativos", nome: "Ativos" },
+              { id: "inativos", nome: "Inativos" },
+            ]}
+            semOpcaoTodos
+          />
+          <button
+            type="button"
+            onClick={() => setFiltros(FILTROS_COMPONENTES_360_VAZIO)}
+            className="shrink-0 text-caption font-semibold text-orange hover:text-orange-deep"
+          >
+            Limpar
+          </button>
+        </div>
+        <p className="lg:col-span-8 text-caption text-ink-3">
+          {itens.length} visíveis de {(componentes.data ?? []).length}
+        </p>
       </div>
       {(componentes.data ?? []).length === 0 ? (
         <div className="px-5 py-10 text-center">
@@ -149,7 +269,7 @@ export function PainelItensDoCliente({
         </div>
       ) : itens.length === 0 ? (
         <div className="px-5 py-10 text-center text-body text-ink-3">
-          Nenhum componente para esta busca.
+          Nenhum componente para estes filtros.
         </div>
       ) : (
         <div className="divide-y divide-line-soft">
@@ -218,6 +338,37 @@ export function PainelItensDoCliente({
         }}
       />
     </section>
+  );
+}
+
+function FiltroSelect({
+  label,
+  value,
+  onChange,
+  opcoes,
+  semOpcaoTodos = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (valor: string) => void;
+  opcoes: Array<{ id: string; nome: string }>;
+  semOpcaoTodos?: boolean;
+}) {
+  const unicas = [...new Map(opcoes.map((opcao) => [opcao.id, opcao])).values()];
+  return (
+    <select
+      aria-label={`Filtrar componentes por ${label}`}
+      className="input min-w-0"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      {!semOpcaoTodos && <option value="">Todas as opções</option>}
+      {unicas.map((opcao) => (
+        <option key={opcao.id} value={opcao.id}>
+          {opcao.nome}
+        </option>
+      ))}
+    </select>
   );
 }
 

@@ -46,7 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S25_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S162_
+_75 concluídas no histórico · maior ID usado: E01-S163_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -137,6 +137,7 @@ _75 concluídas no histórico · maior ID usado: E01-S162_
 | E01-S139 | Identidade visual nos PDFs de relatório | Claude (sessão Lucas) | Implementado localmente (2026-08-07). H… | [spec](../../specs/E01-S139-identidade-visual-pdf/spec.md) |
 | E01-S141 | Relatório de Inspeção: item vira Chamado pendente | Claude (sessão Lucas) | Superada por E01-S143 (2026-08-10) — Lu… | [spec](../../specs/E01-S141-inspecao-item-vira-chamado/spec.md) |
 | E01-S145 | Fluidez e performance de Chamados/OS | Codex | Implementado localmente (2026-08-10). M… | [spec](../../specs/E01-S145-fluidez-performance-chamados/product.md) |
+| E01-S163 | Cliente 360 como cockpit operacional | Codex | Spec, plano e tarefas prontos para Terra (2026-10-06) | [spec](../../specs/E01-S163-cliente-360-cockpit-operacional/spec.md) |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S34_

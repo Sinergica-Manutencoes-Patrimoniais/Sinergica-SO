@@ -132,6 +132,14 @@ export function EquipamentoModal({
               alterarIdentificador,
             }))
           }
+          onAplicarRecomendacoes={(identificador) =>
+            setDados((atual) => ({
+              ...atual,
+              identificador,
+              identificadorManual: null,
+              alterarIdentificador: Boolean(equipamento),
+            }))
+          }
           siglasInformadas={dados.siglasInformadas ?? []}
           onSiglasChange={(siglasInformadas) =>
             setDados((atual) => ({ ...atual, siglasInformadas }))

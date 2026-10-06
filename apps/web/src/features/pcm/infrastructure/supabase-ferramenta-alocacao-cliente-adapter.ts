@@ -14,18 +14,34 @@ interface AlocacaoRow {
   devolvida_em: string | null;
 }
 
+interface FerramentaRow {
+  id: string;
+  nome: string;
+  categoria_id: string | null;
+}
+
 const COLS = "id,ferramenta_id,cliente_id,alocada_em,devolvida_em" as const;
 
 async function mapearNomes(
   ferramentaIds: string[],
   clienteIds: string[],
-): Promise<{ ferramentas: Map<string, string>; clientes: Map<string, string> }> {
+): Promise<{
+  ferramentas: Map<
+    string,
+    { nome: string; categoriaId: string | null; categoriaNome: string | null }
+  >;
+  clientes: Map<string, string>;
+}> {
   const [
     { data: ferramentasData, error: ferramentasError },
     { data: clientesData, error: clientesError },
   ] = await Promise.all([
     ferramentaIds.length > 0
-      ? supabase.schema("pcm").from("ferramentas").select("id,nome").in("id", ferramentaIds)
+      ? supabase
+          .schema("pcm")
+          .from("ferramentas")
+          .select("id,nome,categoria_id")
+          .in("id", ferramentaIds)
       : Promise.resolve({ data: [], error: null }),
     clienteIds.length > 0
       ? supabase.schema("pcm").from("clientes").select("id,nome").in("id", clienteIds)
@@ -33,21 +49,55 @@ async function mapearNomes(
   ]);
   if (ferramentasError) throw ferramentasError;
   if (clientesError) throw clientesError;
+  const categoriaIds = [
+    ...new Set(
+      ((ferramentasData ?? []) as FerramentaRow[])
+        .map((ferramenta) => ferramenta.categoria_id)
+        .filter((categoriaId): categoriaId is string => categoriaId !== null),
+    ),
+  ];
+  const { data: categoriasData, error: categoriasError } = categoriaIds.length
+    ? await supabase
+        .schema("pcm")
+        .from("produto_categorias")
+        .select("id,nome")
+        .in("id", categoriaIds)
+    : { data: [], error: null };
+  if (categoriasError) throw categoriasError;
+  const categorias = new Map(
+    (categoriasData ?? []).map((categoria) => [categoria.id as string, categoria.nome as string]),
+  );
   return {
-    ferramentas: new Map((ferramentasData ?? []).map((f) => [f.id as string, f.nome as string])),
+    ferramentas: new Map(
+      ((ferramentasData ?? []) as FerramentaRow[]).map((ferramenta) => [
+        ferramenta.id,
+        {
+          nome: ferramenta.nome,
+          categoriaId: ferramenta.categoria_id,
+          categoriaNome: ferramenta.categoria_id
+            ? (categorias.get(ferramenta.categoria_id) ?? null)
+            : null,
+        },
+      ]),
+    ),
     clientes: new Map((clientesData ?? []).map((c) => [c.id as string, c.nome as string])),
   };
 }
 
 function mapAlocacao(
   row: AlocacaoRow,
-  ferramentas: Map<string, string>,
+  ferramentas: Map<
+    string,
+    { nome: string; categoriaId: string | null; categoriaNome: string | null }
+  >,
   clientes: Map<string, string>,
 ): AlocacaoFerramentaCliente {
   return {
     id: row.id,
     ferramentaId: row.ferramenta_id,
-    ferramentaNome: ferramentas.get(row.ferramenta_id) ?? "Ferramenta",
+    ferramentaNome: ferramentas.get(row.ferramenta_id)?.nome ?? "Ferramenta",
+    categoriaId: ferramentas.get(row.ferramenta_id)?.categoriaId ?? null,
+    categoriaNome: ferramentas.get(row.ferramenta_id)?.categoriaNome ?? null,
     clienteId: row.cliente_id,
     clienteNome: clientes.get(row.cliente_id) ?? "Cliente",
     alocadaEm: row.alocada_em,

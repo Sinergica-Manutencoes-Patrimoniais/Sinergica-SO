@@ -6,7 +6,11 @@ import type {
   EquipamentoCommand,
   EquipamentosGateway,
 } from "./equipamentos-gateway";
-import { IdentificadorDuplicadoError, resolverIdentificadorNaCriacao } from "./identificador-ativo";
+import {
+  IdentificadorDuplicadoError,
+  prepararIdentificadorNaCriacao,
+  resolverIdentificadorNaCriacao,
+} from "./identificador-ativo";
 import type { IdentificadorAtivoGateway, NivelComSigla } from "./identificador-ativo-gateway";
 
 export interface CriarComIdentificadorOpcoes {
@@ -39,19 +43,18 @@ export async function criarEquipamento(
   }
   if (!opcoesIdentificador) return gateway.criar({ ...validado, userId: input.userId });
 
-  const resolver = () =>
-    resolverIdentificadorNaCriacao(
-      opcoesIdentificador.identificador,
-      {
-        clienteId: validado.clientId as string,
-        areaId: validado.areaId ?? null,
-        localId: validado.localId ?? null,
-        categoriaId: validado.categoriaId as string,
-        nomeAtivo: validado.nome,
-      },
-      { ...opcoesIdentificador, userId: input.userId },
-    );
-  const primeiro = await resolver();
+  const entradaIdentificador = {
+    clienteId: validado.clientId as string,
+    areaId: validado.areaId ?? null,
+    localId: validado.localId ?? null,
+    categoriaId: validado.categoriaId as string,
+    nomeAtivo: validado.nome,
+  };
+  const primeiro = await prepararIdentificadorNaCriacao(
+    opcoesIdentificador.identificador,
+    entradaIdentificador,
+    { ...opcoesIdentificador, userId: input.userId },
+  );
   try {
     return await gateway.criar({
       ...validado,
@@ -59,13 +62,21 @@ export async function criarEquipamento(
       userId: input.userId,
     });
   } catch (erro) {
-    if (!(erro instanceof IdentificadorDuplicadoError)) throw erro;
+    if (!(erro instanceof IdentificadorDuplicadoError)) {
+      await primeiro.desfazer();
+      throw erro;
+    }
     if (!primeiro.nnDoSequencial) {
+      await primeiro.desfazer();
       throw new Error(
         `O identificador ${primeiro.identificador} já existe. Mude o número no nome ou edite o identificador.`,
       );
     }
-    const segundo = await resolver();
+    const segundo = await resolverIdentificadorNaCriacao(
+      opcoesIdentificador.identificador,
+      entradaIdentificador,
+      { ...opcoesIdentificador, userId: input.userId },
+    );
     try {
       return await gateway.criar({
         ...validado,
@@ -74,8 +85,10 @@ export async function criarEquipamento(
       });
     } catch (segundoErro) {
       if (segundoErro instanceof IdentificadorDuplicadoError) {
+        await primeiro.desfazer();
         throw new Error("Não foi possível reservar o identificador. Tente salvar de novo.");
       }
+      await primeiro.desfazer();
       throw segundoErro;
     }
   }
@@ -84,13 +97,44 @@ export async function criarEquipamento(
 export async function editarEquipamento(
   gateway: EquipamentosGateway,
   input: EditarEquipamentoCommand,
+  opcoesIdentificador?: CriarComIdentificadorOpcoes,
 ) {
   const validado = validarEquipamento(input);
   if (validado.parentItemId) {
     const pai = await gateway.obterItem(validado.parentItemId);
     validarParentItem(validado.clientId ?? null, pai);
   }
-  return gateway.editar({ ...validado, id: input.id, userId: input.userId });
+  if (
+    !opcoesIdentificador ||
+    !validado.alterarIdentificador ||
+    opcoesIdentificador.identificadorManual !== null
+  ) {
+    return gateway.editar({ ...validado, id: input.id, userId: input.userId });
+  }
+
+  const preparado = await prepararIdentificadorNaCriacao(
+    opcoesIdentificador.identificador,
+    {
+      clienteId: validado.clientId as string,
+      areaId: validado.areaId ?? null,
+      localId: validado.localId ?? null,
+      categoriaId: validado.categoriaId as string,
+      nomeAtivo: validado.nome,
+    },
+    { ...opcoesIdentificador, userId: input.userId },
+  );
+  try {
+    return await gateway.editar({
+      ...validado,
+      id: input.id,
+      identificador: preparado.identificador,
+      alterarIdentificador: true,
+      userId: input.userId,
+    });
+  } catch (erro) {
+    await preparado.desfazer();
+    throw erro;
+  }
 }
 
 /** AC-6 — resolve o caminho de instalação (Cliente>Área>Local) + Sistemas do Item, pra tela de

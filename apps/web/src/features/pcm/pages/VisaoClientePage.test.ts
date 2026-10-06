@@ -19,4 +19,23 @@ describe("VisaoClientePage — E01-S53 AC-8", () => {
     expect(fonte).toContain("estado.clienteId !== clienteId");
     expect(fonte).toContain("requisicao !== requisicaoAtual.current");
   });
+
+  it("agrupa a navegação e condiciona ações rápidas à permissão de escrita", () => {
+    expect(fonte).toContain('label: "Operação"');
+    expect(fonte).toContain('label: "Ativos"');
+    expect(fonte).toContain('label: "Gestão e relacionamento"');
+    expect(fonte).toContain("<Cliente360AcoesRapidas");
+    expect(fonte).toContain("temEscrita && user");
+    expect(fonte).toContain("onNovoChamado");
+    expect(fonte).toContain("onNovaOs");
+    expect(fonte).toContain("onNovaPreventiva");
+    expect(fonte).toContain("onNovoComponente");
+  });
+
+  it("mantém áreas secundárias alcançáveis no overflow Mais", () => {
+    expect(fonte).toContain("LIMITE_ABAS_VISIVEIS");
+    expect(fonte).toContain("abasNoMais");
+    expect(fonte).toContain("Mais áreas de ${grupo.label}");
+    expect(fonte).toContain('event.currentTarget.closest("details")?.removeAttribute("open")');
+  });
 });

@@ -35,6 +35,7 @@ import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
 import { supabaseConfigAdapter } from "../../config/infrastructure/supabase-config-adapter";
+import { criarChamado } from "../application/chamados";
 import type {
   AssessmentClienteResumo,
   Cliente360Evento,
@@ -58,8 +59,12 @@ import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao
 import { ArvoreAtivos } from "../components/ArvoreAtivos";
 import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
+import { Cliente360AcoesRapidas } from "../components/Cliente360AcoesRapidas";
 import { ClienteFormModal } from "../components/ClienteFormModal";
 import { ClienteNaoEncontrado } from "../components/ClienteNaoEncontrado";
+import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
+import { NovoChamadoModal } from "../components/NovoChamadoModal";
+import { OrdemServicoDetalheDrawer } from "../components/OrdemServicoDetalheDrawer";
 import { PainelBacklog } from "../components/PainelBacklog";
 import { PainelEquipamentos } from "../components/PainelEquipamentos";
 import { PainelFerramentasCliente as PainelFerramentasClienteTab } from "../components/PainelFerramentasCliente";
@@ -73,6 +78,7 @@ import {
   type PreferenciaContato,
   type ResponsavelCliente,
 } from "../domain/cliente-responsaveis";
+import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
 import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
@@ -100,6 +106,8 @@ type Aba360 =
   | "comercial"
   | "comunicacao";
 
+type GrupoAba360 = "operacao" | "ativos" | "gestao";
+
 // E01-S111: rótulos de exibição da preferência de contato de um responsável do cliente.
 const PREFERENCIA_CONTATO_LABEL: Record<PreferenciaContato, string> = {
   whatsapp: "WhatsApp",
@@ -108,29 +116,42 @@ const PREFERENCIA_CONTATO_LABEL: Record<PreferenciaContato, string> = {
   outro: "Outro",
 };
 
-const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
-  { id: "resumo", label: "Resumo", icon: Activity },
-  { id: "timeline", label: "Timeline", icon: RefreshCw },
-  { id: "os", label: "OS", icon: ClipboardList },
-  { id: "preventivas", label: "Preventivas", icon: Calendar },
-  { id: "qualidade", label: "Inspeções", icon: Calendar },
+const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon; grupo: GrupoAba360 }> = [
+  { id: "resumo", label: "Resumo", icon: Activity, grupo: "operacao" },
+  { id: "timeline", label: "Timeline", icon: RefreshCw, grupo: "operacao" },
+  { id: "os", label: "OS", icon: ClipboardList, grupo: "operacao" },
+  { id: "preventivas", label: "Preventivas", icon: Calendar, grupo: "operacao" },
+  { id: "qualidade", label: "Inspeções", icon: Calendar, grupo: "operacao" },
   // E01-S90 AC-4: assessment vigente do cliente (documento de estado, distinto de Inspeções ABNT).
-  { id: "assessment", label: "Assessment", icon: ClipboardCheck },
+  { id: "assessment", label: "Assessment", icon: ClipboardCheck, grupo: "operacao" },
   // E01-S76: Área>Local (árvore) — onde os Itens estão instalados.
-  { id: "estrutura", label: "Estrutura", icon: FolderTree },
-  { id: "ativos", label: "Componentes", icon: Layers },
+  { id: "estrutura", label: "Estrutura", icon: FolderTree, grupo: "ativos" },
+  { id: "ativos", label: "Componentes", icon: Layers, grupo: "ativos" },
   // E01-S86 AC-2: compor Sistema (checkbox+filtro), mesmo componente do PCM.
-  { id: "sistemas", label: "Sistemas", icon: Link2 },
-  { id: "ferramentas", label: "Ferramentas", icon: Package },
-  { id: "arvore", label: "Árvore", icon: Network },
+  { id: "sistemas", label: "Sistemas", icon: Link2, grupo: "ativos" },
+  { id: "ferramentas", label: "Ferramentas", icon: Package, grupo: "ativos" },
+  { id: "arvore", label: "Árvore", icon: Network, grupo: "ativos" },
   // E01-S78: board visual dos ativos por Local (fase 1 do "mapa do andar").
-  { id: "board", label: "Board", icon: LayoutGrid },
-  { id: "financeiro", label: "Financeiro", icon: DollarSign },
+  { id: "board", label: "Board", icon: LayoutGrid, grupo: "ativos" },
+  { id: "financeiro", label: "Financeiro", icon: DollarSign, grupo: "gestao" },
   // E03-S01 AC-9: funil da Conta. Só aparece quando o shell injeta `painelComercial` — sem o
   // módulo Comercial, a aba nem existe.
-  { id: "comercial", label: "Comercial", icon: Briefcase },
-  { id: "comunicacao", label: "Comunicação", icon: MessageCircle },
+  { id: "comercial", label: "Comercial", icon: Briefcase, grupo: "gestao" },
+  { id: "comunicacao", label: "Comunicação", icon: MessageCircle, grupo: "gestao" },
 ];
+
+const GRUPOS_ABAS: Array<{ id: GrupoAba360; label: string }> = [
+  { id: "operacao", label: "Operação" },
+  { id: "ativos", label: "Ativos" },
+  { id: "gestao", label: "Gestão e relacionamento" },
+];
+
+/** Mantém a faixa principal curta; áreas secundárias continuam disponíveis em um overflow nativo. */
+const LIMITE_ABAS_VISIVEIS: Record<GrupoAba360, number> = {
+  operacao: 4,
+  ativos: 3,
+  gestao: 3,
+};
 
 export function VisaoClientePage({
   clienteId,
@@ -158,6 +179,15 @@ export function VisaoClientePage({
   const [aba, setAba] = useState<Aba360>(periodo ? "os" : "resumo");
   const [editandoCadastro, setEditandoCadastro] = useState(false);
   const [criandoAcesso, setCriandoAcesso] = useState(false);
+  const [novoChamado, setNovoChamado] = useState(false);
+  const [novaOs, setNovaOs] = useState(false);
+  const [abrirPreventivaToken, setAbrirPreventivaToken] = useState(0);
+  const [abrirComponenteToken, setAbrirComponenteToken] = useState(0);
+  const [detalheOs, setDetalheOs] = useState<{
+    ordem: OrdemServicoResumo;
+    originElementId?: string;
+  } | null>(null);
+  const clienteDetalheAnterior = useRef(clienteId);
 
   // AC-1: só carrega/renderiza o conteúdo com leitura no módulo pcm (mesma checagem das demais
   // telas do PCM; superadmin já é bypass dentro de podeAcessarModulo). Sem permissão nova.
@@ -187,6 +217,13 @@ export function VisaoClientePage({
   useEffect(() => {
     if (!permissoesCarregando && temAcesso) carregar();
   }, [permissoesCarregando, temAcesso, carregar]);
+
+  useEffect(() => {
+    if (clienteDetalheAnterior.current !== clienteId) {
+      clienteDetalheAnterior.current = clienteId;
+      setDetalheOs(null);
+    }
+  }, [clienteId]);
 
   if (permissoesCarregando) {
     return (
@@ -265,9 +302,37 @@ export function VisaoClientePage({
     assessment,
   } = estado.visao;
 
+  function abrirDetalheOs(osId: string) {
+    const ordem = [...backlog, ...historico].find((item) => item.id === osId);
+    if (!ordem) {
+      onAbrirOs?.(osId);
+      return;
+    }
+    setDetalheOs({
+      ordem,
+      originElementId:
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement.id || undefined
+          : undefined,
+    });
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <CabecalhoCliente cliente={cliente} />
+      <Cliente360AcoesRapidas
+        habilitado={Boolean(temEscrita && user)}
+        onNovoChamado={() => setNovoChamado(true)}
+        onNovaOs={() => setNovaOs(true)}
+        onNovaPreventiva={() => {
+          setAba("preventivas");
+          setAbrirPreventivaToken((token) => token + 1);
+        }}
+        onNovoComponente={() => {
+          setAba("ativos");
+          setAbrirComponenteToken((token) => token + 1);
+        }}
+      />
       {(user?.papel === "superadmin" || user?.papel === "supervisor") && (
         <div className="flex justify-end">
           <button
@@ -311,27 +376,94 @@ export function VisaoClientePage({
         />
       )}
 
-      <div className="border-b border-line-soft overflow-x-auto">
-        <div className="flex min-w-max gap-2">
-          {ABAS.filter((item) => item.id !== "comercial" || painelComercial).map((item) => {
-            const Icon = item.icon;
-            const ativo = aba === item.id;
+      <nav aria-label="Áreas do Cliente 360" className="border-b border-line-soft">
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {GRUPOS_ABAS.map((grupo) => {
+            const abasDoGrupo = ABAS.filter(
+              (item) => item.grupo === grupo.id && (item.id !== "comercial" || painelComercial),
+            );
+            const abasVisiveis = abasDoGrupo.slice(0, LIMITE_ABAS_VISIVEIS[grupo.id]);
+            const abasNoMais = abasDoGrupo.slice(LIMITE_ABAS_VISIVEIS[grupo.id]);
+            const grupoAtivo = abasDoGrupo.some((item) => item.id === aba);
             return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setAba(item.id)}
-                className={`inline-flex items-center gap-2 border-b-2 px-3 py-3 text-body font-semibold transition-colors ${
-                  ativo ? "border-orange text-ink" : "border-transparent text-ink-3 hover:text-ink"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </button>
+              <section key={grupo.id} aria-label={grupo.label} className="min-w-0">
+                <p
+                  className={`pt-2 text-micro font-semibold uppercase tracking-wider ${
+                    grupoAtivo ? "text-orange" : "text-ink-3"
+                  }`}
+                >
+                  {grupo.label}
+                </p>
+                <div className="flex flex-wrap">
+                  {abasVisiveis.map((item) => {
+                    const Icon = item.icon;
+                    const ativo = aba === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setAba(item.id)}
+                        aria-current={ativo ? "page" : undefined}
+                        className={`inline-flex items-center gap-1.5 border-b-2 px-2.5 py-2 text-caption font-medium transition-colors ${
+                          ativo
+                            ? "border-orange text-ink"
+                            : "border-transparent text-ink-3 hover:text-ink"
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                  {abasNoMais.length > 0 && (
+                    <details
+                      className="group relative"
+                      open={abasNoMais.some((item) => item.id === aba) || undefined}
+                    >
+                      <summary
+                        className={`list-none cursor-pointer border-b-2 px-2.5 py-2 text-caption font-medium marker:hidden hover:text-ink ${
+                          abasNoMais.some((item) => item.id === aba)
+                            ? "border-orange text-ink"
+                            : "border-transparent text-ink-3"
+                        }`}
+                      >
+                        Mais
+                        <span className="sr-only"> em {grupo.label}</span>
+                      </summary>
+                      <div
+                        className="absolute right-0 z-20 mt-1 grid min-w-48 rounded-lg border border-line bg-card p-1 shadow-modal"
+                        aria-label={`Mais áreas de ${grupo.label}`}
+                      >
+                        {abasNoMais.map((item) => {
+                          const Icon = item.icon;
+                          const ativo = aba === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={(event) => {
+                                setAba(item.id);
+                                event.currentTarget.closest("details")?.removeAttribute("open");
+                              }}
+                              aria-current={ativo ? "page" : undefined}
+                              className={`flex items-center gap-2 rounded-md px-3 py-2 text-left text-caption font-medium ${
+                                ativo ? "bg-orange-soft text-ink" : "text-ink-2 hover:bg-line-soft"
+                              }`}
+                            >
+                              <Icon className="h-3.5 w-3.5" />
+                              {item.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              </section>
             );
           })}
         </div>
-      </div>
+      </nav>
 
       {aba === "resumo" && (
         <Resumo360
@@ -341,12 +473,12 @@ export function VisaoClientePage({
           equipamentos={equipamentos}
           qualidade={qualidade}
           grupos={grupos}
-          onAbrirOs={onAbrirOs}
+          onAbrirOs={abrirDetalheOs}
           temEscrita={temEscrita}
         />
       )}
 
-      {aba === "timeline" && <TimelineCliente eventos={eventos} onAbrirOs={onAbrirOs} />}
+      {aba === "timeline" && <TimelineCliente eventos={eventos} onAbrirOs={abrirDetalheOs} />}
 
       {aba === "os" && (
         <div className="flex flex-col gap-3">
@@ -361,11 +493,11 @@ export function VisaoClientePage({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <PainelBacklog
               ordens={periodo ? filtrarPorPeriodo(backlog, periodo) : backlog}
-              onSelecionar={onAbrirOs}
+              onSelecionar={abrirDetalheOs}
             />
             <PainelHistorico
               ordens={periodo ? filtrarPorPeriodo(historico, periodo) : historico}
-              onSelecionar={onAbrirOs}
+              onSelecionar={abrirDetalheOs}
             />
           </div>
         </div>
@@ -379,6 +511,8 @@ export function VisaoClientePage({
           temEscrita={temEscrita}
           userId={user.id}
           compacto
+          abrirNovoToken={abrirPreventivaToken}
+          onAbrirOs={abrirDetalheOs}
         />
       )}
 
@@ -389,7 +523,12 @@ export function VisaoClientePage({
       {aba === "ativos" && (
         <div className="flex flex-col gap-4">
           {user && (
-            <PainelItensDoCliente clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
+            <PainelItensDoCliente
+              clienteId={cliente.id}
+              temEscrita={temEscrita}
+              userId={user.id}
+              abrirNovoToken={abrirComponenteToken}
+            />
           )}
           <details className="rounded-lg border border-line bg-card">
             <summary className="cursor-pointer px-4 py-3 text-body font-semibold text-ink">
@@ -412,7 +551,7 @@ export function VisaoClientePage({
           clienteId={cliente.id}
           temEscrita={temEscrita}
           userId={user.id}
-          onAbrirOs={onAbrirOs}
+          onAbrirOs={abrirDetalheOs}
         />
       )}
 
@@ -435,6 +574,37 @@ export function VisaoClientePage({
       {aba === "comunicacao" && (
         <PainelComunicacao cliente={cliente} eventos={eventos} temEscrita={temEscrita} />
       )}
+      {detalheOs && (
+        <OrdemServicoDetalheDrawer
+          aberto
+          ordem={detalheOs.ordem}
+          clienteId={cliente.id}
+          temEscrita={temEscrita}
+          originElementId={detalheOs.originElementId}
+          onFechar={() => setDetalheOs(null)}
+          onMutada={carregar}
+        />
+      )}
+      {novoChamado && user && (
+        <NovoChamadoModal
+          clientes={[{ id: cliente.id, nome: cliente.nome }]}
+          onCancel={() => setNovoChamado(false)}
+          onSalvar={async (dados) => {
+            await criarChamado(supabaseChamadosAdapter, { ...dados, userId: user.id });
+            setNovoChamado(false);
+            await carregar();
+          }}
+        />
+      )}
+      <NovaOrdemServicoModal
+        aberto={novaOs}
+        clienteFixoId={cliente.id}
+        onFechar={() => setNovaOs(false)}
+        onCriada={() => {
+          setNovaOs(false);
+          void carregar();
+        }}
+      />
     </div>
   );
 }

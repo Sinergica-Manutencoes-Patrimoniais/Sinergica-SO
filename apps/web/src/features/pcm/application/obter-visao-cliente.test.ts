@@ -81,6 +81,26 @@ describe("obterVisaoCliente", () => {
     expect(resultado.eventos).toHaveLength(1);
   });
 
+  it("E01-S163 AC-9: exclui apontamentos de início/fim de visita das OS e métricas do Cliente 360", async () => {
+    const gateway = gatewayMock({
+      listarBacklogCliente: vi.fn(async () => [
+        os({ id: "inicio", titulo: " INÍCIO VISITA " }),
+        os({ id: "manutencao", titulo: "Trocar disjuntor" }),
+      ]),
+      listarHistoricoCliente: vi.fn(async () => [
+        os({ id: "fim", titulo: "Fim visita", status: "finalizado" }),
+      ]),
+    });
+
+    const resultado = await obterVisaoCliente(gateway, "c1");
+
+    expect(resultado.tipo).toBe("ok");
+    if (resultado.tipo !== "ok") throw new Error("esperava ok");
+    expect(resultado.backlog.map((item) => item.id)).toEqual(["manutencao"]);
+    expect(resultado.historico).toEqual([]);
+    expect(resultado.metricas.osAbertas).toBe(1);
+  });
+
   // AC-5: cliente sem nenhuma OS → backlog e histórico vazios, sem erro
   it("AC-5: cliente sem OS retorna backlog e histórico vazios", async () => {
     const gateway = gatewayMock({

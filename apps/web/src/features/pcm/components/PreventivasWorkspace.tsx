@@ -1,21 +1,39 @@
 import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Pause, Play, Plus, RefreshCw, Send } from "lucide-react";
+import { Calendar, Clock3, List, Pause, Play, Plus, RefreshCw, Send } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { erroDetalhado } from "../../../lib/http/edge-function-error";
 import { supabase } from "../../../lib/supabase-client";
+import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
 import type {
   AvaliacaoPreventiva,
   OcorrenciaPreventiva,
   OpcaoPreventiva,
   PlanoPreventivo,
 } from "../application/preventivas-gateway";
-import { calcularStatusOcorrenciaPreventiva } from "../domain/preventivas";
 import {
+  calcularStatusOcorrenciaPreventiva,
+  podeEditarEstruturaPlano,
+} from "../domain/preventivas";
+import {
+  atualizarPlanoPreventivo,
   listarCatalogoPreventivas,
   listarPreventivas,
 } from "../infrastructure/supabase-preventivas-adapter";
+import { PreventivaDetalheDrawer } from "./PreventivaDetalheDrawer";
 import { PreventivasCalendarioView } from "./PreventivasCalendarioView";
+import { PreventivasListaView } from "./PreventivasListaView";
+import { PreventivasTimelineView } from "./PreventivasTimelineView";
+
+type VisaoPreventivas = "lista" | "timeline" | "calendario";
+
+const CHAVE_VISAO_PREVENTIVAS = "pcm.preventivas.visao";
+
+function visaoInicialPreventivas(): VisaoPreventivas {
+  if (typeof window === "undefined") return "lista";
+  const salva = window.localStorage.getItem(CHAVE_VISAO_PREVENTIVAS);
+  return salva === "timeline" || salva === "calendario" || salva === "lista" ? salva : "lista";
+}
 
 type FormPlano = {
   nome: string;
@@ -103,6 +121,8 @@ export function PreventivasWorkspace({
   podeValidarContratoAuvo = false,
   userId,
   compacto = false,
+  abrirNovoToken = 0,
+  onAbrirOs,
 }: {
   clienteId?: string;
   clienteNome?: string;
@@ -110,11 +130,15 @@ export function PreventivasWorkspace({
   podeValidarContratoAuvo?: boolean;
   userId: string;
   compacto?: boolean;
+  abrirNovoToken?: number;
+  onAbrirOs?: (osId: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [novo, setNovo] = useState(false);
+  const [visao, setVisao] = useState<VisaoPreventivas>(visaoInicialPreventivas);
   const [validandoContrato, setValidandoContrato] = useState(false);
   const [form, setForm] = useState<FormPlano>(() => criarFormVazio(clienteId));
+  const [planoEditando, setPlanoEditando] = useState<PlanoPreventivo | null>(null);
   const [formValidacao, setFormValidacao] = useState<FormValidacaoContrato>(() =>
     criarFormValidacao(clienteId),
   );
@@ -124,7 +148,9 @@ export function PreventivasWorkspace({
   const [avaliacaoParaBacklog, setAvaliacaoParaBacklog] = useState<AvaliacaoPreventiva | null>(
     null,
   );
-  const [ocorrenciaEmFoco, setOcorrenciaEmFoco] = useState<string | null>(null);
+  const [detalhePreventiva, setDetalhePreventiva] = useState<
+    { tipo: "ocorrencia"; id: string } | { tipo: "plano"; id: string } | null
+  >(null);
   const [paginaHistorico, setPaginaHistorico] = useState(0);
   const [filtroResultadoHistorico, setFiltroResultadoHistorico] =
     useState<FiltroResultadoHistorico>("todos");
@@ -140,15 +166,16 @@ export function PreventivasWorkspace({
   const catalogo = useQuery({
     queryKey: ["pcm", "preventivas", "catalogo", clienteId ?? "todos"],
     queryFn: () => listarCatalogoPreventivas({ clienteId }),
-    enabled: novo || selecionada !== null || validandoContrato,
+    enabled: novo || planoEditando !== null || selecionada !== null || validandoContrato,
   });
 
   useEffect(() => {
     setNovo(false);
+    setPlanoEditando(null);
     setValidandoContrato(false);
     setSelecionada(null);
     setAvaliacaoParaBacklog(null);
-    setOcorrenciaEmFoco(null);
+    setDetalhePreventiva(null);
     setPaginaHistorico(0);
     setFiltroResultadoHistorico("todos");
     setFiltroPeriodoHistorico("todos");
@@ -158,6 +185,10 @@ export function PreventivasWorkspace({
     setForm(criarFormVazio(clienteId));
     setFormValidacao(criarFormValidacao(clienteId));
   }, [clienteId]);
+
+  useEffect(() => {
+    if (abrirNovoToken > 0 && temEscrita) setNovo(true);
+  }, [abrirNovoToken, temEscrita]);
 
   const dados = preventivas.data;
   const planoPorId = useMemo(
@@ -238,16 +269,96 @@ export function PreventivasWorkspace({
     setSalvando(true);
     setErroAcao(null);
     try {
-      const { error } = await supabase
-        .schema("pcm")
-        .from("planos_preventivos")
-        .update({
-          estado: plano.estado === "pausado" ? "ativo" : "pausado",
-          updated_by: userId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", plano.id);
-      if (error) throw error;
+      await atualizarPlanoPreventivo({
+        planoId: plano.id,
+        clienteId: plano.cliente_id,
+        userId,
+        alteracoes: { estado: plano.estado === "pausado" ? "ativo" : "pausado" },
+      });
+      await atualizar();
+    } catch (causa) {
+      setErroAcao(causa instanceof Error ? causa.message : "Não foi possível atualizar o plano.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function pausarECriarNovoPlano(plano: PlanoPreventivo) {
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      await atualizarPlanoPreventivo({
+        planoId: plano.id,
+        clienteId: plano.cliente_id,
+        userId,
+        alteracoes: { estado: "pausado" },
+      });
+      setForm({
+        nome: `${plano.nome} — novo ciclo`,
+        clienteId: plano.cliente_id,
+        alvoTipo: plano.sistema_id ? "sistema" : "equipamento",
+        alvoId: plano.sistema_id ?? plano.equipamento_id ?? "",
+        questionarioId: plano.questionario_id,
+        tipoTarefaId: plano.tipo_tarefa_id,
+        primeiraData: new Date().toISOString().slice(0, 10),
+        intervaloN: plano.intervalo_n,
+        unidade: plano.intervalo_unidade,
+      });
+      setNovo(true);
+      await atualizar();
+    } catch (causa) {
+      setErroAcao(causa instanceof Error ? causa.message : "Não foi possível pausar o plano.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  function iniciarEdicaoPlano(plano: PlanoPreventivo) {
+    setErroAcao(null);
+    setForm({
+      nome: plano.nome,
+      clienteId: plano.cliente_id,
+      alvoTipo: plano.sistema_id ? "sistema" : "equipamento",
+      alvoId: plano.sistema_id ?? plano.equipamento_id ?? "",
+      questionarioId: plano.questionario_id,
+      tipoTarefaId: plano.tipo_tarefa_id,
+      primeiraData: plano.primeira_data,
+      intervaloN: plano.intervalo_n,
+      unidade: plano.intervalo_unidade,
+    });
+    setPlanoEditando(plano);
+  }
+
+  async function salvarEdicaoPlano() {
+    if (
+      !planoEditando ||
+      !form.nome ||
+      !form.alvoId ||
+      !form.questionarioId ||
+      !form.tipoTarefaId
+    ) {
+      setErroAcao("Preencha nome, alvo, questionário Auvo e tipo de tarefa.");
+      return;
+    }
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      await atualizarPlanoPreventivo({
+        planoId: planoEditando.id,
+        clienteId: planoEditando.cliente_id,
+        userId,
+        alteracoes: {
+          nome: form.nome,
+          sistema_id: form.alvoTipo === "sistema" ? form.alvoId : null,
+          equipamento_id: form.alvoTipo === "equipamento" ? form.alvoId : null,
+          questionario_id: form.questionarioId,
+          tipo_tarefa_id: form.tipoTarefaId,
+          primeira_data: form.primeiraData,
+          intervalo_n: form.intervaloN,
+          intervalo_unidade: form.unidade,
+        },
+      });
+      setPlanoEditando(null);
       await atualizar();
     } catch (causa) {
       setErroAcao(causa instanceof Error ? causa.message : "Não foi possível atualizar o plano.");
@@ -422,9 +533,37 @@ export function PreventivasWorkspace({
     inicioHistorico,
     inicioHistorico + TAMANHO_PAGINA_HISTORICO,
   );
-  const ocorrenciaSelecionada = ocorrenciaEmFoco
-    ? (ocorrencias.find((ocorrencia) => ocorrencia.id === ocorrenciaEmFoco) ?? null)
-    : null;
+  const ocorrenciaSelecionada =
+    detalhePreventiva?.tipo === "ocorrencia"
+      ? (ocorrencias.find((ocorrencia) => ocorrencia.id === detalhePreventiva.id) ?? null)
+      : null;
+  const planoSelecionado =
+    detalhePreventiva?.tipo === "plano"
+      ? (planoPorId.get(detalhePreventiva.id) ?? null)
+      : ocorrenciaSelecionada
+        ? (planoPorId.get(ocorrenciaSelecionada.plano_id) ?? null)
+        : null;
+  const itensDaVisao = ocorrencias.map((ocorrencia) => ({
+    id: ocorrencia.id,
+    nomePlano: planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido",
+    vencimento: ocorrencia.vencimento,
+    visitaEm: ocorrencia.visita_em,
+    estado: estadoDaOcorrencia(ocorrencia),
+    resultado: ocorrencia.resultado_estado,
+  }));
+
+  function selecionarOcorrencia(ocorrenciaId: string) {
+    setDetalhePreventiva({ tipo: "ocorrencia", id: ocorrenciaId });
+  }
+
+  function mudarVisao(proxima: VisaoPreventivas) {
+    setVisao(proxima);
+    window.localStorage.setItem(CHAVE_VISAO_PREVENTIVAS, proxima);
+    if (clienteId) {
+      registrarEventoCliente360({ nome: "preventiva_view_changed", clienteId, visao: proxima });
+    }
+  }
+
   return (
     <div className={`flex flex-col gap-5 ${compacto ? "py-4" : "p-6"}`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -456,98 +595,53 @@ export function PreventivasWorkspace({
         </p>
       )}
       <section className="rounded-lg border border-line bg-surface p-4">
-        <h2 className="font-semibold text-ink">Calendário de vencimentos</h2>
-        <p className="mt-1 text-sm text-ink-3">
-          A visita usa a data agendada; sem agendamento, aparece no vencimento previsto.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold text-ink">Planejamento preventivo</h2>
+            <p className="mt-1 text-sm text-ink-3">
+              Lista para triagem, Timeline para sequência e Calendário para distribuição mensal.
+            </p>
+          </div>
+          <fieldset className="flex rounded-md border border-line">
+            <legend className="sr-only">Visão de preventivas</legend>
+            {[
+              { id: "lista" as const, label: "Lista", Icon: List },
+              { id: "timeline" as const, label: "Timeline", Icon: Clock3 },
+              { id: "calendario" as const, label: "Calendário", Icon: Calendar },
+            ].map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={visao === id}
+                onClick={() => mudarVisao(id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-caption font-medium ${
+                  visao === id ? "bg-navy text-white" : "text-ink-2 hover:bg-line-soft"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </fieldset>
+        </div>
         <div className="mt-3">
           {ocorrencias.length === 0 ? (
             <p className="text-body text-ink-3">Nenhuma ocorrência planejada.</p>
+          ) : visao === "lista" ? (
+            <PreventivasListaView ocorrencias={itensDaVisao} onSelecionar={selecionarOcorrencia} />
+          ) : visao === "timeline" ? (
+            <PreventivasTimelineView
+              ocorrencias={itensDaVisao}
+              onSelecionar={selecionarOcorrencia}
+            />
           ) : (
             <PreventivasCalendarioView
-              ocorrencias={ocorrencias.map((ocorrencia) => ({
-                id: ocorrencia.id,
-                nomePlano: planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido",
-                vencimento: ocorrencia.vencimento,
-                visitaEm: ocorrencia.visita_em,
-                estado: estadoDaOcorrencia(ocorrencia),
-                resultado: ocorrencia.resultado_estado,
-              }))}
-              onSelecionar={(ocorrenciaId) => {
-                setOcorrenciaEmFoco(ocorrenciaId);
-                requestAnimationFrame(() =>
-                  document
-                    .getElementById("detalhe-preventiva")
-                    ?.scrollIntoView?.({ behavior: "smooth", block: "center" }),
-                );
-              }}
+              ocorrencias={itensDaVisao}
+              onSelecionar={selecionarOcorrencia}
             />
           )}
         </div>
       </section>
-      {ocorrenciaSelecionada && (
-        <section id="detalhe-preventiva" className="rounded-lg border border-line bg-surface p-4">
-          <h2 className="font-semibold text-ink">Detalhe da preventiva</h2>
-          <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="font-medium text-ink">
-                {planoPorId.get(ocorrenciaSelecionada.plano_id)?.nome ?? "Plano removido"}
-              </p>
-              <p className="text-sm text-ink-3">
-                Alvo: {planoPorId.get(ocorrenciaSelecionada.plano_id)?.alvo_nome ?? "não informado"}{" "}
-                · Vence em{" "}
-                {new Intl.DateTimeFormat("pt-BR").format(
-                  new Date(`${ocorrenciaSelecionada.vencimento}T00:00:00`),
-                )}
-              </p>
-              <p className="text-sm text-ink-3">
-                Visita: {dataHoraLocal(ocorrenciaSelecionada.visita_em)} · Técnico:{" "}
-                {ocorrenciaSelecionada.tecnico_nome ?? "não informado"} ·{" "}
-                {ocorrenciaSelecionada.os_numero
-                  ? `OS ${ocorrenciaSelecionada.os_numero}`
-                  : "OS ainda não criada"}
-              </p>
-              {ocorrenciaSelecionada.erro_envio && (
-                <p className="text-sm text-red">{ocorrenciaSelecionada.erro_envio}</p>
-              )}
-            </div>
-            <span
-              className={`rounded-full px-2 py-1 text-caption font-semibold ${classeResultado(ocorrenciaSelecionada)}`}
-            >
-              Resultado: {rotuloResultado(ocorrenciaSelecionada)}
-            </span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {ocorrenciaSelecionada.auvo_task_url && (
-              <a
-                href={ocorrenciaSelecionada.auvo_task_url}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-md border border-line px-3 py-1.5 text-caption font-semibold text-ink hover:bg-line-soft"
-              >
-                Abrir formulário no Auvo
-              </a>
-            )}
-            {temEscrita && ocorrenciaSelecionada.envio_estado !== "disponivel" && (
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setSelecionada(ocorrenciaSelecionada);
-                  setTecnicoId(ocorrenciaSelecionada.tecnico_funcionario_id ?? "");
-                  setVisita(
-                    ocorrenciaSelecionada.visita_em
-                      ? ocorrenciaSelecionada.visita_em.slice(0, 16)
-                      : "",
-                  );
-                }}
-              >
-                <Send className="mr-2 h-4 w-4" />
-                Confirmar visita
-              </Button>
-            )}
-          </div>
-        </section>
-      )}
       <section className="rounded-lg border border-line bg-surface p-4">
         <h2 className="font-semibold text-ink">Histórico de execuções</h2>
         <p className="mt-1 text-sm text-ink-3">
@@ -600,7 +694,7 @@ export function PreventivasWorkspace({
                 <article
                   id={`preventiva-${ocorrencia.id}`}
                   key={ocorrencia.id}
-                  className={`rounded-md border px-3 py-3 ${ocorrenciaEmFoco === ocorrencia.id ? "border-orange ring-1 ring-orange" : "border-line"}`}
+                  className={`rounded-md border px-3 py-3 ${ocorrenciaSelecionada?.id === ocorrencia.id ? "border-orange ring-1 ring-orange" : "border-line"}`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -634,7 +728,12 @@ export function PreventivasWorkspace({
                         Abrir formulário no Auvo
                       </a>
                     ) : null}
-                    <Button variant="secondary" onClick={() => setOcorrenciaEmFoco(ocorrencia.id)}>
+                    <Button
+                      variant="secondary"
+                      onClick={() =>
+                        setDetalhePreventiva({ tipo: "ocorrencia", id: ocorrencia.id })
+                      }
+                    >
                       Ver detalhe
                     </Button>
                     {temEscrita &&
@@ -690,36 +789,95 @@ export function PreventivasWorkspace({
           {planos.length === 0 ? (
             <p className="text-body text-ink-3">Nenhum plano preventivo.</p>
           ) : (
-            planos.map((plano) => (
-              <div
-                key={plano.id}
-                className="flex items-center justify-between rounded-md border border-line px-3 py-2"
-              >
-                <div>
-                  <p className="font-medium text-ink">{plano.nome}</p>
-                  <p className="text-sm text-ink-3">
-                    A cada {plano.intervalo_n} {plano.intervalo_unidade} · {plano.estado}
-                  </p>
+            planos.map((plano) => {
+              const ocorrenciasDoPlano = ocorrencias.filter(
+                (ocorrencia) => ocorrencia.plano_id === plano.id,
+              );
+              const podeEditarEstrutura = podeEditarEstruturaPlano(ocorrenciasDoPlano);
+              return (
+                <div key={plano.id} className="rounded-md border border-line px-3 py-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-ink">{plano.nome}</p>
+                      <p className="text-sm text-ink-3">
+                        A cada {plano.intervalo_n} {plano.intervalo_unidade} · {plano.estado}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        onClick={() => setDetalhePreventiva({ tipo: "plano", id: plano.id })}
+                      >
+                        Ver plano
+                      </Button>
+                      {temEscrita && (
+                        <>
+                          {podeEditarEstrutura && (
+                            <Button
+                              variant="secondary"
+                              disabled={salvando}
+                              onClick={() => iniciarEdicaoPlano(plano)}
+                            >
+                              Editar plano
+                            </Button>
+                          )}
+                          {!podeEditarEstrutura && plano.estado !== "pausado" && (
+                            <Button
+                              variant="secondary"
+                              disabled={salvando}
+                              onClick={() => void pausarECriarNovoPlano(plano)}
+                            >
+                              Pausar e criar novo plano
+                            </Button>
+                          )}
+                          <Button
+                            variant="secondary"
+                            disabled={salvando}
+                            onClick={() => void alternarPlano(plano)}
+                          >
+                            {plano.estado === "pausado" ? (
+                              <Play className="mr-2 h-4 w-4" />
+                            ) : (
+                              <Pause className="mr-2 h-4 w-4" />
+                            )}
+                            {plano.estado === "pausado" ? "Retomar" : "Pausar"}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {!podeEditarEstrutura && (
+                    <p className="mt-2 text-caption text-ink-3">
+                      Alvo e recorrência estão bloqueados porque o plano já possui ocorrência
+                      materializada. Pause e crie um novo plano para iniciar outro ciclo.
+                    </p>
+                  )}
                 </div>
-                {temEscrita && (
-                  <Button
-                    variant="secondary"
-                    disabled={salvando}
-                    onClick={() => void alternarPlano(plano)}
-                  >
-                    {plano.estado === "pausado" ? (
-                      <Play className="mr-2 h-4 w-4" />
-                    ) : (
-                      <Pause className="mr-2 h-4 w-4" />
-                    )}
-                    {plano.estado === "pausado" ? "Retomar" : "Pausar"}
-                  </Button>
-                )}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>
+      {planoSelecionado && (
+        <PreventivaDetalheDrawer
+          ocorrencia={ocorrenciaSelecionada}
+          plano={planoSelecionado}
+          ocorrenciasDoPlano={ocorrencias.filter(
+            (ocorrencia) => ocorrencia.plano_id === planoSelecionado.id,
+          )}
+          temEscrita={temEscrita}
+          onClose={() => setDetalhePreventiva(null)}
+          onConfirmarVisita={(ocorrencia) => {
+            setSelecionada(ocorrencia);
+            setTecnicoId(ocorrencia.tecnico_funcionario_id ?? "");
+            setVisita(ocorrencia.visita_em ? ocorrencia.visita_em.slice(0, 16) : "");
+          }}
+          onAbrirOs={(osId) => {
+            setDetalhePreventiva(null);
+            onAbrirOs?.(osId);
+          }}
+        />
+      )}
       <Modal
         open={novo}
         onOpenChange={setNovo}
@@ -824,6 +982,103 @@ export function PreventivasWorkspace({
           <Button disabled={salvando || catalogo.isLoading} onClick={() => void criarPlano()}>
             <Calendar className="mr-2 h-4 w-4" />
             Criar plano
+          </Button>
+        </div>
+      </Modal>
+      <Modal
+        open={planoEditando !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto) setPlanoEditando(null);
+        }}
+        titulo="Editar plano preventivo"
+        descricao="Alvo e recorrência podem ser alterados somente antes da primeira ocorrência materializada."
+      >
+        <div className="grid gap-3">
+          <Campo label="Nome" id="editar-preventiva-nome">
+            <input
+              id="editar-preventiva-nome"
+              value={form.nome}
+              onChange={(e) => setForm({ ...form, nome: e.target.value })}
+              className="input"
+            />
+          </Campo>
+          <Campo label="Tipo de alvo" id="editar-preventiva-alvo-tipo">
+            <select
+              id="editar-preventiva-alvo-tipo"
+              className="input"
+              value={form.alvoTipo}
+              onChange={(e) =>
+                setForm({ ...form, alvoTipo: e.target.value as FormPlano["alvoTipo"], alvoId: "" })
+              }
+            >
+              <option value="equipamento">Equipamento / componente</option>
+              <option value="sistema">Sistema</option>
+            </select>
+          </Campo>
+          <Campo label="Alvo" id="editar-preventiva-alvo">
+            <Select
+              id="editar-preventiva-alvo"
+              value={form.alvoId}
+              onChange={(alvoId) => setForm({ ...form, alvoId })}
+              opcoes={alvos}
+              placeholder="Selecione o alvo"
+            />
+          </Campo>
+          <Campo label="Questionário do Auvo" id="editar-preventiva-questionario">
+            <Select
+              id="editar-preventiva-questionario"
+              value={form.questionarioId}
+              onChange={(questionarioId) => setForm({ ...form, questionarioId })}
+              opcoes={catalogo.data?.questionarios ?? []}
+            />
+          </Campo>
+          <Campo label="Tipo de tarefa do Auvo" id="editar-preventiva-tipo">
+            <Select
+              id="editar-preventiva-tipo"
+              value={form.tipoTarefaId}
+              onChange={(tipoTarefaId) => setForm({ ...form, tipoTarefaId })}
+              opcoes={catalogo.data?.tipos ?? []}
+            />
+          </Campo>
+          <div className="grid grid-cols-3 gap-2">
+            <Campo label="Primeiro vencimento" id="editar-preventiva-data">
+              <input
+                id="editar-preventiva-data"
+                className="input"
+                type="date"
+                value={form.primeiraData}
+                onChange={(e) => setForm({ ...form, primeiraData: e.target.value })}
+              />
+            </Campo>
+            <Campo label="A cada" id="editar-preventiva-intervalo">
+              <input
+                id="editar-preventiva-intervalo"
+                className="input"
+                min="1"
+                type="number"
+                value={form.intervaloN}
+                onChange={(e) => setForm({ ...form, intervaloN: Number(e.target.value) })}
+              />
+            </Campo>
+            <Campo label="Unidade" id="editar-preventiva-unidade">
+              <select
+                id="editar-preventiva-unidade"
+                className="input"
+                value={form.unidade}
+                onChange={(e) =>
+                  setForm({ ...form, unidade: e.target.value as FormPlano["unidade"] })
+                }
+              >
+                <option value="semanas">semanas</option>
+                <option value="meses">meses</option>
+              </select>
+            </Campo>
+          </div>
+          <Button
+            disabled={salvando || catalogo.isLoading}
+            onClick={() => void salvarEdicaoPlano()}
+          >
+            Salvar alterações
           </Button>
         </div>
       </Modal>

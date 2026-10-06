@@ -6,12 +6,36 @@ const consultas: Array<{
   in: ReturnType<typeof vi.fn>;
 }> = [];
 let respostas: Record<string, unknown[]> = {};
+let planoParaAtualizacao: Record<string, unknown> | null = null;
+let ocorrenciasMaterializadas = 0;
+const atualizacoes: unknown[] = [];
 
 function consulta(tabela: string) {
+  let opcoesSelect: { count?: string; head?: boolean } | undefined;
+  let atualizando = false;
+  let filtrosDaAtualizacao = 0;
   const cadeia = {
-    select: vi.fn(() => cadeia),
-    eq: vi.fn(() => cadeia),
+    select: vi.fn((_colunas?: string, opcoes?: { count?: string; head?: boolean }) => {
+      opcoesSelect = opcoes;
+      return cadeia;
+    }),
+    eq: vi.fn(() => {
+      if (atualizando) {
+        filtrosDaAtualizacao += 1;
+        return filtrosDaAtualizacao === 2 ? Promise.resolve({ error: null }) : cadeia;
+      }
+      if (tabela === "ocorrencias_preventivas" && opcoesSelect?.head) {
+        return Promise.resolve({ count: ocorrenciasMaterializadas, error: null });
+      }
+      return cadeia;
+    }),
     in: vi.fn(() => cadeia),
+    maybeSingle: vi.fn(() => Promise.resolve({ data: planoParaAtualizacao, error: null })),
+    update: vi.fn((alteracoes: unknown) => {
+      atualizando = true;
+      atualizacoes.push(alteracoes);
+      return cadeia;
+    }),
     order: vi.fn(() =>
       tabela === "avaliacoes_preventivas"
         ? cadeia
@@ -29,7 +53,7 @@ vi.mock("../../../lib/supabase-client", () => ({
   },
 }));
 
-import { listarPreventivas } from "./supabase-preventivas-adapter";
+import { atualizarPlanoPreventivo, listarPreventivas } from "./supabase-preventivas-adapter";
 
 describe("listarPreventivas — E01-S53 AC-8", () => {
   it("consulta somente a cadeia de IDs do cliente aberto", async () => {
@@ -74,5 +98,72 @@ describe("listarPreventivas — E01-S53 AC-8", () => {
       avaliacoes: [],
     });
     expect(consultas.map((item) => item.tabela)).toEqual(["planos_preventivos"]);
+  });
+});
+
+describe("atualizarPlanoPreventivo — E01-S163 AC-13 e AC-14", () => {
+  const planoBase = {
+    id: "plano-a",
+    cliente_id: "cliente-a",
+    sistema_id: null,
+    equipamento_id: "equipamento-a",
+    primeira_data: "2026-10-10",
+    intervalo_unidade: "meses",
+    intervalo_n: 1,
+  };
+
+  it("rejeita plano de outro cliente antes de qualquer escrita", async () => {
+    planoParaAtualizacao = { ...planoBase, cliente_id: "cliente-b" };
+    ocorrenciasMaterializadas = 0;
+    atualizacoes.length = 0;
+    consultas.length = 0;
+
+    await expect(
+      atualizarPlanoPreventivo({
+        planoId: "plano-a",
+        clienteId: "cliente-a",
+        userId: "user-1",
+        alteracoes: { nome: "Plano revisado" },
+      }),
+    ).rejects.toThrow("não pertence ao cliente em contexto");
+
+    expect(atualizacoes).toEqual([]);
+  });
+
+  it("bloqueia alteração estrutural quando já existem ocorrências, sem regravá-las", async () => {
+    planoParaAtualizacao = planoBase;
+    ocorrenciasMaterializadas = 1;
+    atualizacoes.length = 0;
+    consultas.length = 0;
+
+    await expect(
+      atualizarPlanoPreventivo({
+        planoId: "plano-a",
+        clienteId: "cliente-a",
+        userId: "user-1",
+        alteracoes: { intervalo_n: 2 },
+      }),
+    ).rejects.toThrow("não podem ser alterados após a primeira ocorrência");
+
+    expect(atualizacoes).toEqual([]);
+  });
+
+  it("permite metadados sem reescrever ocorrências existentes", async () => {
+    planoParaAtualizacao = planoBase;
+    ocorrenciasMaterializadas = 1;
+    atualizacoes.length = 0;
+    consultas.length = 0;
+
+    await atualizarPlanoPreventivo({
+      planoId: "plano-a",
+      clienteId: "cliente-a",
+      userId: "user-1",
+      alteracoes: { nome: "Plano revisado" },
+    });
+
+    expect(atualizacoes).toEqual([
+      expect.objectContaining({ nome: "Plano revisado", updated_by: "user-1" }),
+    ]);
+    expect(consultas.map((item) => item.tabela)).not.toContain("ocorrencias_preventivas");
   });
 });

@@ -92,6 +92,10 @@ export interface OrdemServicoResumo {
   descricao?: string | null;
   tecnicoFuncionarioId?: string | null;
   tecnicoNome?: string | null;
+  /** Chamado de origem, quando a OS foi aberta a partir de um atendimento. */
+  chamadoId?: string | null;
+  /** Referência externa somente para exibição/deep-link do histórico do chamado. */
+  auvoTaskId?: number | null;
 }
 
 /** Equipamento vinculado ao cliente, vindo do cache plano do Auvo (E01-S11) — AC-6. */

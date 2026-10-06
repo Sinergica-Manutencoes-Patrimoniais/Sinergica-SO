@@ -23,6 +23,13 @@ export interface OcorrenciaPreventiva {
   } | null;
 }
 
+/** A recorrência materializada é evidência: alvo e âncora só podem mudar antes da primeira linha. */
+export function podeEditarEstruturaPlano(
+  ocorrencias: readonly Pick<OcorrenciaPreventiva, "vencimento">[],
+): boolean {
+  return ocorrencias.length === 0;
+}
+
 function dataUtc(iso: string): Date {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!match) throw new Error("Data inválida.");

@@ -5,6 +5,8 @@ export interface AlocacaoFerramentaCliente {
   id: string;
   ferramentaId: string;
   ferramentaNome: string;
+  categoriaId?: string | null;
+  categoriaNome?: string | null;
   clienteId: string;
   clienteNome: string;
   alocadaEm: string;
