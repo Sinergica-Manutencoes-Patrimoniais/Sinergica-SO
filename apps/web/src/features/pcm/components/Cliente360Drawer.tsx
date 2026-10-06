@@ -17,6 +17,8 @@ export function Cliente360Drawer({
   children,
   onFechar,
   originElementId,
+  ariaLabel,
+  closeLabel,
 }: {
   aberto: boolean;
   titulo: string;
@@ -24,6 +26,8 @@ export function Cliente360Drawer({
   children: ReactNode;
   onFechar: () => void;
   originElementId?: string;
+  ariaLabel?: string;
+  closeLabel?: string;
 }) {
   const painelRef = useRef<HTMLDialogElement | null>(null);
   const focoAnterior = useRef<HTMLElement | null>(null);
@@ -78,7 +82,7 @@ export function Cliente360Drawer({
         ref={painelRef}
         tabIndex={-1}
         aria-modal="true"
-        aria-label={titulo}
+        aria-label={ariaLabel ?? titulo}
         className="drawer-panel relative flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-line bg-card shadow-modal"
       >
         <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-line bg-card px-4 py-3">
@@ -89,7 +93,7 @@ export function Cliente360Drawer({
           <button
             type="button"
             onClick={onFechar}
-            aria-label={`Fechar ${titulo}`}
+            aria-label={closeLabel ?? `Fechar ${titulo}`}
             className="shrink-0 text-ink-3 hover:text-ink"
           >
             <X className="h-5 w-5" />
