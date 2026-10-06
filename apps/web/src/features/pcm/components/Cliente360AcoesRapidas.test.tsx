@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Cliente360AcoesRapidas } from "./Cliente360AcoesRapidas";
 
-describe("Cliente360AcoesRapidas", () => {
+describe("Cliente360AcoesRapidas — E01-S163 AC-23", () => {
   it("não expõe ações para quem não tem escrita", () => {
     render(
       <Cliente360AcoesRapidas

@@ -29,7 +29,7 @@ import {
 } from "../application/hierarquia";
 import { executarPlanoEstrutura } from "../application/importacao-estrutura";
 import { ImportacaoEstruturaModal } from "../components/ImportacaoEstruturaModal";
-import { normalizarBusca360 } from "../domain/cliente-360-filtros";
+import { filtrarArvoreEstrutura360, normalizarBusca360 } from "../domain/cliente-360-filtros";
 import type {
   Area,
   AreaFormData,
@@ -56,23 +56,6 @@ function achatar(nodes: LocalArvoreNode[]): LocalArvoreNode[] {
   return nodes.flatMap((node) => [node, ...achatar(node.filhos)]);
 }
 
-/** Mantém a trilha dos Locais encontrados para que a árvore filtrada nunca perca seu contexto. */
-function filtrarArvoreEstrutura(
-  nodes: LocalArvoreNode[],
-  busca: string,
-  tipoId: string,
-  incluirSubarvore: boolean,
-): LocalArvoreNode[] {
-  return nodes.flatMap((node) => {
-    const correspondeBusca = normalizarBusca360(`${node.nome} ${node.sigla ?? ""}`).includes(busca);
-    const correspondeTipo = !tipoId || node.tipoId === tipoId;
-    if (incluirSubarvore || (correspondeBusca && correspondeTipo)) return [node];
-
-    const filhos = filtrarArvoreEstrutura(node.filhos, busca, tipoId, false);
-    return filhos.length > 0 ? [{ ...node, filhos }] : [];
-  });
-}
-
 export function EstruturaClientePage({
   cliente,
   temEscrita,
@@ -88,7 +71,12 @@ export function EstruturaClientePage({
   const [areas, setAreas] = useState<Area[]>([]);
   const [arvores, setArvores] = useState<Record<string, LocalArvoreNode[]>>({});
   const [expandidas, setExpandidas] = useState<Set<string>>(new Set());
-  const [filtroEstrutura, setFiltroEstrutura] = useState({ busca: "", tipoId: "" });
+  const [filtroEstrutura, setFiltroEstrutura] = useState({
+    busca: "",
+    tipoId: "",
+    areaId: "",
+    ativos: "todos" as "todos" | "com_ativos" | "sem_ativos",
+  });
   const clienteAnterior = useRef(clienteId);
   const [modalArea, setModalArea] = useState<ModalArea>(null);
   const [modalLocal, setModalLocal] = useState<ModalLocal>(null);
@@ -152,7 +140,7 @@ export function EstruturaClientePage({
   useEffect(() => {
     if (clienteAnterior.current !== clienteId) {
       clienteAnterior.current = clienteId;
-      setFiltroEstrutura({ busca: "", tipoId: "" });
+      setFiltroEstrutura({ busca: "", tipoId: "", areaId: "", ativos: "todos" });
     }
   }, [clienteId]);
 
@@ -309,17 +297,34 @@ export function EstruturaClientePage({
   }
 
   const buscaEstrutura = normalizarBusca360(filtroEstrutura.busca);
+  const locaisComAtivos = new Set(
+    [...componentes, ...sistemas]
+      .filter((item) => item.ativo && item.localId)
+      .map((item) => item.localId as string),
+  );
+  const areasComAtivosDiretos = new Set(
+    [...componentes, ...sistemas]
+      .filter((item) => item.ativo && item.localId === null && item.areaId)
+      .map((item) => item.areaId as string),
+  );
   const estruturaFiltrada = areas.flatMap((area) => {
+    if (filtroEstrutura.areaId && area.id !== filtroEstrutura.areaId) return [];
     const areaCorresponde = normalizarBusca360(`${area.nome} ${area.sigla ?? ""}`).includes(
       buscaEstrutura,
     );
-    const locais = filtrarArvoreEstrutura(
-      arvores[area.id] ?? [],
-      buscaEstrutura,
-      filtroEstrutura.tipoId,
-      areaCorresponde && !filtroEstrutura.tipoId,
-    );
-    if (!areaCorresponde && locais.length === 0) return [];
+    const locais = filtrarArvoreEstrutura360(arvores[area.id] ?? [], {
+      busca: buscaEstrutura,
+      tipoId: filtroEstrutura.tipoId,
+      incluirSubarvore: areaCorresponde && !filtroEstrutura.tipoId,
+      locaisComAtivos,
+      ativos: filtroEstrutura.ativos,
+    });
+    const areaComAtivos = areasComAtivosDiretos.has(area.id);
+    const areaCorrespondeAtivos =
+      filtroEstrutura.ativos === "todos" ||
+      (filtroEstrutura.ativos === "com_ativos" && (areaComAtivos || locais.length > 0)) ||
+      (filtroEstrutura.ativos === "sem_ativos" && !areaComAtivos);
+    if ((!areaCorresponde && locais.length === 0) || !areaCorrespondeAtivos) return [];
     return [{ area, locais }];
   });
 
@@ -354,7 +359,7 @@ export function EstruturaClientePage({
       </div>
 
       {areas.length > 0 && (
-        <div className="grid gap-2 rounded-lg border border-line bg-card p-3 sm:grid-cols-[minmax(0,1fr)_13rem_auto]">
+        <div className="grid gap-2 rounded-lg border border-line bg-card p-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_13rem_13rem_13rem_auto]">
           <label className="relative block">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
             <input
@@ -381,14 +386,46 @@ export function EstruturaClientePage({
               </option>
             ))}
           </select>
+          <select
+            aria-label="Filtrar estrutura por área"
+            value={filtroEstrutura.areaId}
+            onChange={(event) =>
+              setFiltroEstrutura((atual) => ({ ...atual, areaId: event.target.value }))
+            }
+            className="input min-w-0"
+          >
+            <option value="">Todas as áreas</option>
+            {areas.map((area) => (
+              <option key={area.id} value={area.id}>
+                {area.nome}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Filtrar estrutura por ativos vinculados"
+            value={filtroEstrutura.ativos}
+            onChange={(event) =>
+              setFiltroEstrutura((atual) => ({
+                ...atual,
+                ativos: event.target.value as typeof atual.ativos,
+              }))
+            }
+            className="input min-w-0"
+          >
+            <option value="todos">Todos os locais</option>
+            <option value="com_ativos">Com ativos vinculados</option>
+            <option value="sem_ativos">Sem ativos vinculados</option>
+          </select>
           <button
             type="button"
-            onClick={() => setFiltroEstrutura({ busca: "", tipoId: "" })}
+            onClick={() =>
+              setFiltroEstrutura({ busca: "", tipoId: "", areaId: "", ativos: "todos" })
+            }
             className="text-caption font-semibold text-orange hover:text-orange-deep"
           >
             Limpar
           </button>
-          <p className="sm:col-span-3 text-caption text-ink-3">
+          <p className="sm:col-span-2 xl:col-span-5 text-caption text-ink-3">
             {estruturaFiltrada.length} áreas visíveis de {areas.length}
           </p>
         </div>

@@ -38,7 +38,7 @@ const ocorrencia: OcorrenciaPreventiva = {
   auvo_task_url: "https://app.auvo.com.br/tarefa/123",
 };
 
-describe("PreventivaDetalheDrawer — E01-S163", () => {
+describe("PreventivaDetalheDrawer — E01-S163 AC-11 e AC-12", () => {
   it("mostra contexto da ocorrência, plano, próximas ocorrências e OS associada", () => {
     render(
       <PreventivaDetalheDrawer
@@ -75,5 +75,23 @@ describe("PreventivaDetalheDrawer — E01-S163", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Fechar detalhe da preventiva" }));
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("AC-12: apresenta o plano mesmo antes de materializar ocorrências", () => {
+    render(
+      <PreventivaDetalheDrawer
+        plano={plano}
+        ocorrenciasDoPlano={[]}
+        temEscrita={false}
+        onClose={vi.fn()}
+        onConfirmarVisita={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "Detalhe do plano preventivo Extintores" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Não há próximas ocorrências materializadas.")).toBeInTheDocument();
+    expect(screen.getByText("Ainda não há execução concluída neste plano.")).toBeInTheDocument();
   });
 });

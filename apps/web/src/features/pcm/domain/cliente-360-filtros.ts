@@ -136,3 +136,49 @@ export function filtrarSistemas360<T extends SistemaFiltravel360>(
     return true;
   });
 }
+
+export type FiltroAtivosEstrutura360 = "todos" | "com_ativos" | "sem_ativos";
+
+type NoEstruturaFiltravel360<T> = {
+  id: string;
+  nome: string;
+  sigla?: string | null;
+  tipoId: string | null;
+  filhos: T[];
+};
+
+/** Mantém os ancestrais dos Locais encontrados para a árvore não perder contexto operacional. */
+export function filtrarArvoreEstrutura360<T extends NoEstruturaFiltravel360<T>>(
+  nodes: readonly T[],
+  filtros: {
+    busca: string;
+    tipoId: string;
+    incluirSubarvore: boolean;
+    locaisComAtivos: ReadonlySet<string>;
+    ativos: FiltroAtivosEstrutura360;
+  },
+  caminho: string[] = [],
+): T[] {
+  const busca = normalizarBusca360(filtros.busca);
+  const termosBusca = busca ? busca.split(" ") : [];
+  return nodes.flatMap((node) => {
+    const caminhoDoNo = [...caminho, node.nome, node.sigla ?? ""];
+    const caminhoNormalizado = normalizarBusca360(caminhoDoNo.join(" "));
+    const correspondeBusca = termosBusca.every((termo) => caminhoNormalizado.includes(termo));
+    const correspondeTipo = !filtros.tipoId || node.tipoId === filtros.tipoId;
+    const possuiAtivos = filtros.locaisComAtivos.has(node.id);
+    const correspondeAtivos =
+      filtros.ativos === "todos" ||
+      (filtros.ativos === "com_ativos" && possuiAtivos) ||
+      (filtros.ativos === "sem_ativos" && !possuiAtivos);
+    if (filtros.incluirSubarvore && filtros.ativos === "todos") return [node];
+    if (correspondeBusca && correspondeTipo && correspondeAtivos) return [node];
+
+    const filhos = filtrarArvoreEstrutura360(
+      node.filhos,
+      { ...filtros, incluirSubarvore: false },
+      caminhoDoNo,
+    );
+    return filhos.length > 0 ? [{ ...node, filhos }] : [];
+  });
+}

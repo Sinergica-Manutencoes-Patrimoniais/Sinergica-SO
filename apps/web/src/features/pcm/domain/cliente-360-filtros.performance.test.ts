@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { filtrarComponentes360 } from "./cliente-360-filtros";
 
-describe("filtros do Cliente 360 — desempenho", () => {
+describe("filtros do Cliente 360 — E01-S163 AC-21 desempenho", () => {
   it("mantém p95 abaixo de 100 ms para 1.000 componentes em memória", () => {
     const itens = Array.from({ length: 1_000 }, (_, indice) => ({
       id: `item-${indice}`,

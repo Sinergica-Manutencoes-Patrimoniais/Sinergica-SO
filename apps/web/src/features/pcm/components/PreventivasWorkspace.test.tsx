@@ -5,12 +5,16 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { ResultadoPreventivas } from "../application/preventivas-gateway";
 
-const { listarPreventivas, listarCatalogoPreventivas } = vi.hoisted(() => ({
-  listarPreventivas: vi.fn(),
-  listarCatalogoPreventivas: vi.fn(),
-}));
+const { atualizarPlanoPreventivo, listarPreventivas, listarCatalogoPreventivas } = vi.hoisted(
+  () => ({
+    atualizarPlanoPreventivo: vi.fn(),
+    listarPreventivas: vi.fn(),
+    listarCatalogoPreventivas: vi.fn(),
+  }),
+);
 
 vi.mock("../infrastructure/supabase-preventivas-adapter", () => ({
+  atualizarPlanoPreventivo,
   listarPreventivas,
   listarCatalogoPreventivas,
 }));
@@ -67,8 +71,10 @@ const dados: ResultadoPreventivas = {
 function renderWorkspace(
   props: Partial<React.ComponentProps<typeof PreventivasWorkspace>> = {},
   dadosPreventivas = dados,
+  falharConsulta = false,
 ) {
-  listarPreventivas.mockResolvedValue(dadosPreventivas);
+  if (falharConsulta) listarPreventivas.mockRejectedValue(new Error("indisponível"));
+  else listarPreventivas.mockResolvedValue(dadosPreventivas);
   listarCatalogoPreventivas.mockResolvedValue({
     clientes: [{ id: "cliente-a", nome: "Cliente A" }],
     sistemas: [{ id: "sistema-a", nome: "Sistema A", cliente_id: "cliente-a" }],
@@ -85,7 +91,7 @@ function renderWorkspace(
   );
 }
 
-describe("PreventivasWorkspace — E01-S53 AC-8", () => {
+describe("PreventivasWorkspace — E01-S53 / E01-S163 AC-10 e AC-15", () => {
   it("fixa cliente e limita alvos no 360", async () => {
     renderWorkspace({ clienteId: "cliente-a", clienteNome: "Cliente A" });
     expect((await screen.findAllByText("Plano A")).length).toBeGreaterThan(0);
@@ -184,6 +190,69 @@ describe("PreventivasWorkspace — E01-S53 AC-8", () => {
 
     expect(await screen.findByText("Detalhe da preventiva")).toBeInTheDocument();
     expect(screen.getAllByText(/OS CH-123/)).toHaveLength(2);
+  });
+
+  it("AC-12: abre o detalhe do plano mesmo sem ocorrência materializada", async () => {
+    renderWorkspace({}, { ...dados, ocorrencias: [], avaliacoes: [] });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Ver plano" }));
+
+    expect(await screen.findByText("Detalhe do plano preventivo")).toBeInTheDocument();
+    expect(screen.getByText("Não há próximas ocorrências materializadas.")).toBeInTheDocument();
+  });
+
+  it("AC-13: permite editar a estrutura somente antes de materializar ocorrência", async () => {
+    atualizarPlanoPreventivo.mockResolvedValue(undefined);
+    renderWorkspace({}, { ...dados, ocorrencias: [], avaliacoes: [] });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Editar plano" }));
+    await userEvent.clear(screen.getByLabelText("Nome"));
+    await userEvent.type(screen.getByLabelText("Nome"), "Plano revisado");
+    await userEvent.click(screen.getByRole("button", { name: "Salvar alterações" }));
+
+    expect(atualizarPlanoPreventivo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        planoId: "plano-a",
+        clienteId: "cliente-a",
+        alteracoes: expect.objectContaining({ nome: "Plano revisado" }),
+      }),
+    );
+  });
+
+  it("AC-13: bloqueia a edição estrutural após a primeira ocorrência", async () => {
+    renderWorkspace();
+
+    await screen.findAllByText("Plano A");
+
+    expect(screen.queryByRole("button", { name: "Editar plano" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Alvo e recorrência estão bloqueados porque o plano já possui ocorrência/),
+    ).toBeInTheDocument();
+  });
+
+  it("AC-13 e AC-14: pausa o plano materializado e inicia um novo ciclo sem reutilizar a ocorrência", async () => {
+    atualizarPlanoPreventivo.mockResolvedValue(undefined);
+    renderWorkspace();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Pausar e criar novo plano" }));
+
+    expect(atualizarPlanoPreventivo).toHaveBeenCalledWith(
+      expect.objectContaining({ planoId: "plano-a", alteracoes: { estado: "pausado" } }),
+    );
+    expect(await screen.findByText("Novo plano preventivo")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Plano A — novo ciclo")).toBeInTheDocument();
+  });
+
+  it("AC-15: expõe erro local e retry sem depender do restante do Cliente 360", async () => {
+    renderWorkspace({}, dados, true);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Não foi possível carregar preventivas.",
+    );
+    const chamadasAntesDoRetry = listarPreventivas.mock.calls.length;
+    await userEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
+
+    expect(listarPreventivas).toHaveBeenCalledTimes(chamadasAntesDoRetry + 1);
   });
 
   it("pagina o histórico sem reduzir os eventos disponíveis no calendário", async () => {

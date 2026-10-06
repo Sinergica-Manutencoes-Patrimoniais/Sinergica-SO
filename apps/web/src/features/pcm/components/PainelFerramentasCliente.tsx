@@ -33,6 +33,13 @@ export function PainelFerramentasCliente({
   const alocacoes = useFerramentasAlocadas(supabaseFerramentaAlocacaoClienteAdapter, clienteId);
   const devolver = useDevolverFerramenta(supabaseFerramentaAlocacaoClienteAdapter, clienteId);
 
+  useEffect(() => {
+    if (clienteAnterior.current !== clienteId) {
+      clienteAnterior.current = clienteId;
+      setFiltros({ busca: "", categoriaId: "", situacao: "todas", inicio: "", fim: "" });
+    }
+  }, [clienteId]);
+
   if (alocacoes.isLoading) return <Skeleton className="h-24 w-full" />;
   if (alocacoes.error) {
     return (
@@ -51,13 +58,6 @@ export function PainelFerramentasCliente({
       </div>
     );
   }
-
-  useEffect(() => {
-    if (clienteAnterior.current !== clienteId) {
-      clienteAnterior.current = clienteId;
-      setFiltros({ busca: "", categoriaId: "", situacao: "todas", inicio: "", fim: "" });
-    }
-  }, [clienteId]);
 
   const todasAlocacoes = alocacoes.data ?? [];
   const busca = normalizarBusca360(filtros.busca);

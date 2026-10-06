@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  filtrarArvoreEstrutura360,
   filtrarComponentes360,
   filtrarSistemas360,
   normalizarBusca360,
@@ -28,7 +29,7 @@ const itens = [
   },
 ];
 
-describe("filtros do Cliente 360", () => {
+describe("filtros do Cliente 360 — E01-S163 AC-16, AC-17 e AC-18", () => {
   it("normaliza caixa, acento e separadores para busca", () => {
     expect(normalizarBusca360(" BÔMBA-d’Água ")).toBe("bomba d agua");
   });
@@ -103,5 +104,37 @@ describe("filtros do Cliente 360", () => {
         syncStatuses: [],
       }),
     ).toEqual([sistemas[1]]);
+  });
+
+  it("AC-16: filtra Estrutura por caminho, tipo e ativos preservando ancestrais", () => {
+    const estrutura = [
+      {
+        id: "torre-a",
+        nome: "Torre A",
+        sigla: "TOA",
+        tipoId: "andar",
+        filhos: [
+          {
+            id: "sala-101",
+            nome: "Sala 101",
+            sigla: "S01",
+            tipoId: "sala",
+            filhos: [],
+          },
+        ],
+      },
+    ];
+
+    const resultado = filtrarArvoreEstrutura360(estrutura, {
+      busca: "torre sala",
+      tipoId: "sala",
+      incluirSubarvore: false,
+      locaisComAtivos: new Set(["sala-101"]),
+      ativos: "com_ativos",
+    });
+
+    expect(resultado).toHaveLength(1);
+    expect(resultado[0]?.id).toBe("torre-a");
+    expect(resultado[0]?.filhos.map((item) => item.id)).toEqual(["sala-101"]);
   });
 });

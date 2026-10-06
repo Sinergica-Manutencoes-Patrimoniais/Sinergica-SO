@@ -14,7 +14,7 @@
 
 **Purpose**: Estabelecer os contratos comuns de contexto, query e drawer antes das fatias de negócio.
 
-- [ ] T001 [P] Criar testes e tipos da união `ContextoDetalhe360`, incluindo fechamento na troca de cliente e retorno seguro de foco, em `apps/web/src/features/pcm/domain/cliente-360-contexto.test.ts` e `cliente-360-contexto.ts` (AC-7, AC-15, AC-24).
+- [X] T001 [P] Criar testes e tipos da união `ContextoDetalhe360`, incluindo fechamento na troca de cliente e retorno seguro de foco, em `apps/web/src/features/pcm/domain/cliente-360-contexto.test.ts` e `cliente-360-contexto.ts` (AC-7, AC-15, AC-24).
 - [ ] T002 [P] Criar query-key factory cliente-scoped e testes de invalidação em `apps/web/src/features/pcm/application/cliente-360-query-keys.test.ts` e `cliente-360-query-keys.ts`, reutilizando chaves globais quando representam o mesmo dado (AC-8, AC-21).
 - [ ] T003 Implementar shell acessível de drawer, sem conteúdo de negócio, em `apps/web/src/features/pcm/components/Cliente360Drawer.tsx` e seu teste, cobrindo focus trap, Escape em pilha, retorno de foco, loading/error e reduced motion (AC-7, AC-15, AC-24).
 
@@ -29,7 +29,7 @@
 **Independent Test**: Aplicar recomendações num componente sem siglas, cancelar sem gravação; repetir, salvar e reabrir com valores persistidos.
 
 - [ ] T004 [P] [US1] Escrever testes falhos de “Aplicar recomendações”, edição parcial, sugestão inválida e proteção de identificador existente em `apps/web/src/features/pcm/components/CampoIdentificador.test.tsx` (AC-1, AC-2, AC-4).
-- [ ] T005 [P] [US1] Escrever testes falhos da operação lógica de persistência e rollback/erro sem ativo parcial em `apps/web/src/features/pcm/application/identificador-ativo.test.ts` (AC-3).
+- [X] T005 [P] [US1] Escrever testes falhos da operação lógica de persistência e rollback/erro sem ativo parcial em `apps/web/src/features/pcm/application/identificador-ativo.test.ts` (AC-3).
 - [X] T006 [US1] Implementar estado de preview e ação explícita em `apps/web/src/features/pcm/components/CampoIdentificador.tsx`, sem escrita remota ao aplicar (AC-1, AC-2, AC-4).
 - [X] T007 [US1] Ajustar `apps/web/src/features/pcm/application/identificador-ativo.ts` para validar/aplicar siglas e identificador pela operação lógica existente, preservando erro contextual e unicidade (AC-2, AC-3).
 - [ ] T008 [US1] Integrar e testar o contrato em `apps/web/src/features/pcm/components/EquipamentoModal.tsx`, `EquipamentoModal.test.tsx`, `SistemaModal.tsx` e novo `SistemaModal.test.tsx`, incluindo cancelar e aviso de QR code (AC-1, AC-3, AC-4).
@@ -44,7 +44,7 @@
 
 **Independent Test**: Abrir OS com chamado no Cliente 360, agir, fechar e manter contexto; registros de visita não aparecem nem contam.
 
-- [ ] T009 [P] [US2] Expandir testes de domínio em `apps/web/src/features/pcm/domain/ordens-servico.test.ts` para variações exatas normalizadas e títulos semelhantes que não devem ser excluídos (AC-9).
+- [X] T009 [P] [US2] Expandir testes de domínio em `apps/web/src/features/pcm/domain/ordens-servico.test.ts` para variações exatas normalizadas e títulos semelhantes que não devem ser excluídos (AC-9).
 - [ ] T010 [P] [US2] Escrever regressão falha da composição de backlog, histórico, KPI e timeline do Cliente 360 em `apps/web/src/features/pcm/domain/cliente-360.test.ts` (AC-9).
 - [ ] T011 [P] [US2] Escrever testes falhos do conteúdo compartilhado e composição de `ChamadoPainel` em novo `apps/web/src/features/pcm/components/OrdemServicoDetalhe.test.tsx` (AC-5, AC-6, AC-8).
 - [ ] T012 [US2] Extrair o conteúdo selecionado de `apps/web/src/features/pcm/pages/OrdensServicoPage.tsx` para novo `apps/web/src/features/pcm/components/OrdemServicoDetalhe.tsx`, mantendo a página global sobre o mesmo componente (AC-5, AC-6).
@@ -63,17 +63,17 @@
 
 **Independent Test**: Abrir a mesma ocorrência nas três visões e validar plano, histórico, OS, Auvo e bloqueio de recorrência após materialização.
 
-- [ ] T017 [P] [US3] Escrever testes falhos da política `podeEditarEstruturaPlano` e imutabilidade de ocorrências em `apps/web/src/features/pcm/domain/preventivas.test.ts` (AC-13, AC-14).
+- [X] T017 [P] [US3] Escrever testes falhos da política `podeEditarEstruturaPlano` e imutabilidade de ocorrências em `apps/web/src/features/pcm/domain/preventivas.test.ts` (AC-13, AC-14).
 - [ ] T018 [P] [US3] Escrever testes falhos de Lista/Timeline/Calendário equivalentes e preferência local válida em `apps/web/src/features/pcm/components/PreventivasWorkspace.test.tsx` (AC-10, AC-11, AC-15).
-- [ ] T019 [P] [US3] Escrever testes falhos do drawer de ocorrência/plano, seções vazias e associação com OS/Auvo em novo `apps/web/src/features/pcm/components/PreventivaDetalheDrawer.test.tsx` (AC-11, AC-12, AC-15).
-- [ ] T020 [P] [US3] Escrever teste de integração falho do comando de atualização e bloqueio estrutural no adapter em `apps/web/src/features/pcm/infrastructure/supabase-preventivas-adapter.test.ts` (AC-13, AC-14).
-- [ ] T021 [US3] Implementar política pura de edição em `apps/web/src/features/pcm/domain/preventivas.ts` e ampliar contratos em `apps/web/src/features/pcm/application/preventivas-gateway.ts` sem efeitos sobre ocorrências (AC-13, AC-14).
+- [X] T019 [P] [US3] Escrever testes falhos do drawer de ocorrência/plano, seções vazias e associação com OS/Auvo em novo `apps/web/src/features/pcm/components/PreventivaDetalheDrawer.test.tsx` (AC-11, AC-12, AC-15).
+- [X] T020 [P] [US3] Escrever teste de integração falho do comando de atualização e bloqueio estrutural no adapter em `apps/web/src/features/pcm/infrastructure/supabase-preventivas-adapter.test.ts` (AC-13, AC-14).
+- [X] T021 [US3] Implementar política pura de edição em `apps/web/src/features/pcm/domain/preventivas.ts` e ampliar contratos em `apps/web/src/features/pcm/application/preventivas-gateway.ts` sem efeitos sobre ocorrências (AC-13, AC-14).
 - [X] T022 [P] [US3] Criar `apps/web/src/features/pcm/components/PreventivasListaView.tsx` com ordenação operacional, estados e seleção por teclado (AC-10, AC-11, AC-15).
 - [X] T023 [P] [US3] Criar `apps/web/src/features/pcm/components/PreventivasTimelineView.tsx` com sequência prevista/enviada/executada/falha e seleção por teclado (AC-10, AC-11, AC-15).
-- [ ] T024 [US3] Implementar `apps/web/src/features/pcm/components/PreventivaDetalheDrawer.tsx` para ocorrência/plano, próximas ocorrências, histórico, OS, Auvo e ações autorizadas (AC-11, AC-12, AC-15).
-- [ ] T025 [US3] Implementar atualização validada em `apps/web/src/features/pcm/infrastructure/supabase-preventivas-adapter.ts`, rejeitando cliente divergente/campos estruturais bloqueados e preservando histórico (AC-13, AC-14).
+- [X] T024 [US3] Implementar `apps/web/src/features/pcm/components/PreventivaDetalheDrawer.tsx` para ocorrência/plano, próximas ocorrências, histórico, OS, Auvo e ações autorizadas (AC-11, AC-12, AC-15).
+- [X] T025 [US3] Implementar atualização validada em `apps/web/src/features/pcm/infrastructure/supabase-preventivas-adapter.ts`, rejeitando cliente divergente/campos estruturais bloqueados e preservando histórico (AC-13, AC-14).
 - [X] T026 [US3] Refatorar `apps/web/src/features/pcm/components/PreventivasWorkspace.tsx` para switcher único, Lista inicial, preferência local validada e drawer compartilhado; manter `PreventivasCalendarioView.tsx` como terceira visão (AC-10, AC-11, AC-12, AC-15).
-- [ ] T027 [US3] Implementar ação “Pausar e criar novo plano” predefinindo formulário sem reutilizar id ou ocorrências e cobrir no teste do workspace (AC-13, AC-14).
+- [X] T027 [US3] Implementar ação “Pausar e criar novo plano” predefinindo formulário sem reutilizar id ou ocorrências e cobrir no teste do workspace (AC-13, AC-14).
 
 **Checkpoint**: US3 é funcional isoladamente na aba Preventivas e não exige filtro/navegação novos.
 
@@ -85,9 +85,9 @@
 
 **Independent Test**: Combinar dois filtros em cada aba, validar contagem/empty state, limpar e trocar de cliente sem dado residual.
 
-- [ ] T028 [P] [US4] Escrever testes falhos de normalização, AND/OR, sentinels e preservação de ancestrais em novo `apps/web/src/features/pcm/domain/cliente-360-filtros.test.ts` (AC-16, AC-17, AC-18, AC-19, AC-20).
+- [X] T028 [P] [US4] Escrever testes falhos de normalização, AND/OR, sentinels e preservação de ancestrais em novo `apps/web/src/features/pcm/domain/cliente-360-filtros.test.ts` (AC-16, AC-17, AC-18, AC-19, AC-20).
 - [ ] T029 [P] [US4] Escrever teste falho de categoria e período no read-model de ferramentas em `apps/web/src/features/pcm/infrastructure/supabase-ferramenta-alocacao-cliente-adapter.test.ts` (AC-19, AC-21).
-- [ ] T030 [US4] Implementar tipos, defaults e predicados puros em novo `apps/web/src/features/pcm/domain/cliente-360-filtros.ts`, usando mapas/conjuntos pré-computados (AC-16, AC-17, AC-18, AC-19, AC-20, AC-21).
+- [X] T030 [US4] Implementar tipos, defaults e predicados puros em novo `apps/web/src/features/pcm/domain/cliente-360-filtros.ts`, usando mapas/conjuntos pré-computados (AC-16, AC-17, AC-18, AC-19, AC-20, AC-21).
 - [ ] T031 [P] [US4] Escrever testes de componente falhos para busca, filtros, contagem, clear e empty states em `PainelItensDoCliente.test.tsx`, novo `PainelSistemasCliente.test.tsx`, novo `PainelFerramentasCliente.test.tsx` e novo `EstruturaClientePage.test.tsx` (AC-16, AC-17, AC-18, AC-19, AC-20).
 - [X] T032 [P] [US4] Integrar filtros de Componentes em `apps/web/src/features/pcm/components/PainelItensDoCliente.tsx` usando relações já carregadas e estado resetado por cliente (AC-17, AC-20, AC-21).
 - [X] T033 [P] [US4] Integrar filtros de Sistemas em `apps/web/src/features/pcm/components/PainelSistemasCliente.tsx`, incluindo composição vazia/não vazia (AC-18, AC-20, AC-21).
@@ -107,8 +107,8 @@
 
 - [ ] T037 [P] [US5] Escrever testes falhos da faixa contextual compacta do cliente, configuração Operação/Ativos/Gestão, overflow e aba ativa em `apps/web/src/features/pcm/pages/VisaoClientePage.test.ts` (AC-22).
 - [ ] T038 [P] [US5] Escrever teste falho de visibilidade por permissão e predefinição do cliente nas quatro ações rápidas em novo `apps/web/src/features/pcm/components/Cliente360AcoesRapidas.test.tsx` (AC-23).
-- [ ] T039 [US5] Criar faixa contextual horizontal do cliente e refatorar a configuração `ABAS` em `apps/web/src/features/pcm/pages/VisaoClientePage.tsx` para grupos e “Mais”, preservando ids, dados essenciais e conteúdo existentes (AC-22).
-- [ ] T040 [US5] Criar `apps/web/src/features/pcm/components/Cliente360AcoesRapidas.tsx` que reutiliza os fluxos existentes de Chamado, OS, Preventiva e Componente com cliente predefinido e checagem de permissão (AC-23).
+- [X] T039 [US5] Criar faixa contextual horizontal do cliente e refatorar a configuração `ABAS` em `apps/web/src/features/pcm/pages/VisaoClientePage.tsx` para grupos e “Mais”, preservando ids, dados essenciais e conteúdo existentes (AC-22).
+- [X] T040 [US5] Criar `apps/web/src/features/pcm/components/Cliente360AcoesRapidas.tsx` que reutiliza os fluxos existentes de Chamado, OS, Preventiva e Componente com cliente predefinido e checagem de permissão (AC-23).
 - [ ] T041 [US5] Cobrir navegação por teclado, anúncios, focus trap, Escape em pilha e reduced motion nos testes de `VisaoClientePage`, `Cliente360Drawer` e ações rápidas (AC-24).
 
 **Checkpoint**: Todas as áreas atuais seguem alcançáveis, sem rótulos truncados.
@@ -117,8 +117,8 @@
 
 ## Phase 7: Polish and release gates
 
-- [ ] T042 [P] Adicionar telemetria sem dados sensíveis nos pontos definidos em `research.md` e testes de payload em arquivos adjacentes (AC-1, AC-5, AC-10, AC-20).
-- [ ] T043 Criar `apps/web/e2e/cliente-360-cockpit.spec.ts` com dois clientes e matriz de permissões, cobrindo identificador, drawer OS/Chamado, apontamentos excluídos, preventivas e filtros (AC-1, AC-3, AC-5, AC-7, AC-9, AC-10, AC-11, AC-13, AC-16, AC-17, AC-18, AC-19, AC-21, AC-23, AC-24).
+- [X] T042 [P] Adicionar telemetria sem dados sensíveis nos pontos definidos em `research.md` e testes de payload em arquivos adjacentes (AC-1, AC-5, AC-10, AC-20).
+- [X] T043 Criar `apps/web/e2e/cliente-360-cockpit.spec.ts` com dois clientes e matriz de permissões, cobrindo identificador, drawer OS/Chamado, apontamentos excluídos, preventivas e filtros (AC-1, AC-3, AC-5, AC-7, AC-9, AC-10, AC-11, AC-13, AC-16, AC-17, AC-18, AC-19, AC-21, AC-23, AC-24).
 - [ ] T044 Executar o roteiro de `quickstart.md`, corrigir regressões e registrar evidências objetivas de desempenho e isolamento no PR (AC-9, AC-21, AC-24).
 - [ ] T045 Executar `pnpm run eval:spec` e `pnpm run ci:local`, incluindo `db-tests`, antes de solicitar PR; não fazer push/PR fora de `@devops`/humano (AC-1 a AC-24).
 - [ ] T046 Executar `graphify update .` após as alterações quando a ferramenta estiver disponível e remover a linha E01-S163 do ROADMAP somente no fechamento conforme Definition of Done (AC-1 a AC-24).

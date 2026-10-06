@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Cliente360Drawer } from "./Cliente360Drawer";
 
-describe("Cliente360Drawer", () => {
+describe("Cliente360Drawer — E01-S163 AC-24", () => {
   it("fecha com Escape e devolve o foco ao acionador", () => {
     const onFechar = vi.fn();
     render(
