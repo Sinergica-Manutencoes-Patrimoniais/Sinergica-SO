@@ -30,10 +30,12 @@ export function PainelItensDoCliente({
   clienteId,
   temEscrita,
   userId,
+  abrirNovoToken = 0,
 }: {
   clienteId: string;
   temEscrita: boolean;
   userId: string;
+  abrirNovoToken?: number;
 }) {
   const [filtros, setFiltros] = useState(FILTROS_COMPONENTES_360_VAZIO);
   const clienteAnterior = useRef(clienteId);
@@ -81,6 +83,10 @@ export function PainelItensDoCliente({
       setFiltros(FILTROS_COMPONENTES_360_VAZIO);
     }
   }, [clienteId]);
+
+  useEffect(() => {
+    if (abrirNovoToken > 0 && temEscrita) setModal({ modo: "novo" });
+  }, [abrirNovoToken, temEscrita]);
 
   async function salvar(dados: EquipamentoFormData) {
     setErroAcao(null);

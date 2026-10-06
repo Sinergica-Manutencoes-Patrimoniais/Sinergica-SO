@@ -119,6 +119,7 @@ export function PreventivasWorkspace({
   podeValidarContratoAuvo = false,
   userId,
   compacto = false,
+  abrirNovoToken = 0,
 }: {
   clienteId?: string;
   clienteNome?: string;
@@ -126,6 +127,7 @@ export function PreventivasWorkspace({
   podeValidarContratoAuvo?: boolean;
   userId: string;
   compacto?: boolean;
+  abrirNovoToken?: number;
 }) {
   const queryClient = useQueryClient();
   const [novo, setNovo] = useState(false);
@@ -175,6 +177,10 @@ export function PreventivasWorkspace({
     setForm(criarFormVazio(clienteId));
     setFormValidacao(criarFormValidacao(clienteId));
   }, [clienteId]);
+
+  useEffect(() => {
+    if (abrirNovoToken > 0 && temEscrita) setNovo(true);
+  }, [abrirNovoToken, temEscrita]);
 
   const dados = preventivas.data;
   const planoPorId = useMemo(

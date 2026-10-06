@@ -16,6 +16,7 @@ import {
   DollarSign,
   ExternalLink,
   FolderTree,
+  Headset,
   Layers,
   LayoutGrid,
   Link2,
@@ -35,6 +36,7 @@ import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
 import { supabaseConfigAdapter } from "../../config/infrastructure/supabase-config-adapter";
+import { criarChamado } from "../application/chamados";
 import type {
   AssessmentClienteResumo,
   Cliente360Evento,
@@ -60,6 +62,8 @@ import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
 import { ClienteFormModal } from "../components/ClienteFormModal";
 import { ClienteNaoEncontrado } from "../components/ClienteNaoEncontrado";
+import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
+import { NovoChamadoModal } from "../components/NovoChamadoModal";
 import { OrdemServicoDetalheDrawer } from "../components/OrdemServicoDetalheDrawer";
 import { PainelBacklog } from "../components/PainelBacklog";
 import { PainelEquipamentos } from "../components/PainelEquipamentos";
@@ -74,6 +78,7 @@ import {
   type PreferenciaContato,
   type ResponsavelCliente,
 } from "../domain/cliente-responsaveis";
+import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
 import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
@@ -167,6 +172,10 @@ export function VisaoClientePage({
   const [aba, setAba] = useState<Aba360>(periodo ? "os" : "resumo");
   const [editandoCadastro, setEditandoCadastro] = useState(false);
   const [criandoAcesso, setCriandoAcesso] = useState(false);
+  const [novoChamado, setNovoChamado] = useState(false);
+  const [novaOs, setNovaOs] = useState(false);
+  const [abrirPreventivaToken, setAbrirPreventivaToken] = useState(0);
+  const [abrirComponenteToken, setAbrirComponenteToken] = useState(0);
   const [detalheOs, setDetalheOs] = useState<{
     ordem: OrdemServicoResumo;
     originElementId?: string;
@@ -304,6 +313,36 @@ export function VisaoClientePage({
   return (
     <div className="flex flex-col gap-5">
       <CabecalhoCliente cliente={cliente} />
+      {temEscrita && user && (
+        <div className="flex flex-wrap justify-end gap-2" aria-label="Ações rápidas do cliente">
+          <Button size="sm" variant="secondary" onClick={() => setNovoChamado(true)}>
+            <Headset className="h-4 w-4" /> Novo chamado
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setNovaOs(true)}>
+            <ClipboardList className="h-4 w-4" /> Nova OS
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              setAba("preventivas");
+              setAbrirPreventivaToken((token) => token + 1);
+            }}
+          >
+            <Calendar className="h-4 w-4" /> Nova preventiva
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              setAba("ativos");
+              setAbrirComponenteToken((token) => token + 1);
+            }}
+          >
+            <Layers className="h-4 w-4" /> Novo componente
+          </Button>
+        </div>
+      )}
       {(user?.papel === "superadmin" || user?.papel === "supervisor") && (
         <div className="flex justify-end">
           <button
@@ -437,6 +476,7 @@ export function VisaoClientePage({
           temEscrita={temEscrita}
           userId={user.id}
           compacto
+          abrirNovoToken={abrirPreventivaToken}
         />
       )}
 
@@ -447,7 +487,12 @@ export function VisaoClientePage({
       {aba === "ativos" && (
         <div className="flex flex-col gap-4">
           {user && (
-            <PainelItensDoCliente clienteId={cliente.id} temEscrita={temEscrita} userId={user.id} />
+            <PainelItensDoCliente
+              clienteId={cliente.id}
+              temEscrita={temEscrita}
+              userId={user.id}
+              abrirNovoToken={abrirComponenteToken}
+            />
           )}
           <details className="rounded-lg border border-line bg-card">
             <summary className="cursor-pointer px-4 py-3 text-body font-semibold text-ink">
@@ -504,6 +549,26 @@ export function VisaoClientePage({
           onMutada={carregar}
         />
       )}
+      {novoChamado && user && (
+        <NovoChamadoModal
+          clientes={[{ id: cliente.id, nome: cliente.nome }]}
+          onCancel={() => setNovoChamado(false)}
+          onSalvar={async (dados) => {
+            await criarChamado(supabaseChamadosAdapter, { ...dados, userId: user.id });
+            setNovoChamado(false);
+            await carregar();
+          }}
+        />
+      )}
+      <NovaOrdemServicoModal
+        aberto={novaOs}
+        clienteFixoId={cliente.id}
+        onFechar={() => setNovaOs(false)}
+        onCriada={() => {
+          setNovaOs(false);
+          void carregar();
+        }}
+      />
     </div>
   );
 }
