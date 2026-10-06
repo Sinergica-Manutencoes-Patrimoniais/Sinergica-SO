@@ -24,6 +24,13 @@ export interface EntradaIdentificadorAtivo {
 
 export type SiglaInformada = { nivel: NivelComSigla; id: string; sigla: string };
 
+export type IdentificadorPreparado = {
+  identificador: string;
+  nnDoSequencial: boolean;
+  /** Compensa apenas siglas que esta operação persistiu; seguro chamar uma única vez. */
+  desfazer: () => Promise<void>;
+};
+
 function aplicarSiglasInformadas(
   niveis: Awaited<ReturnType<IdentificadorAtivoGateway["obterNiveis"]>>,
   siglasInformadas: readonly SiglaInformada[],
@@ -74,20 +81,82 @@ export async function resolverIdentificadorNaCriacao(
     userId: string;
   },
 ) {
+  const preparado = await prepararIdentificadorNaCriacao(gateway, input, opcoes);
+  return {
+    identificador: preparado.identificador,
+    nnDoSequencial: preparado.nnDoSequencial,
+  };
+}
+
+/**
+ * Resolve o identificador e oferece uma compensação das siglas persistidas. O chamador deve
+ * invocar `desfazer` se a criação/edição do ativo falhar, para não deixar o caminho parcialmente
+ * alterado por uma operação que não chegou a concluir.
+ */
+export async function prepararIdentificadorNaCriacao(
+  gateway: IdentificadorAtivoGateway,
+  input: EntradaIdentificadorAtivo,
+  opcoes: {
+    siglasInformadas: SiglaInformada[];
+    identificadorManual: string | null;
+    userId: string;
+  },
+): Promise<IdentificadorPreparado> {
   if (opcoes.identificadorManual) {
     return {
       identificador: normalizarIdentificadorManual(opcoes.identificadorManual),
       nnDoSequencial: false,
+      desfazer: async () => undefined,
     };
   }
-  for (const sigla of opcoes.siglasInformadas) {
-    await gateway.definirSigla(sigla.nivel, sigla.id, validarSigla(sigla.sigla), opcoes.userId);
+
+  const niveisOriginais = await gateway.obterNiveis(input);
+  const siglaOriginal = (nivel: NivelComSigla, id: string): string | null => {
+    if (nivel === "cliente" && niveisOriginais.cliente.id === id)
+      return niveisOriginais.cliente.sigla;
+    if (nivel === "area" && niveisOriginais.area?.id === id) return niveisOriginais.area.sigla;
+    if (nivel === "categoria" && niveisOriginais.categoria.id === id)
+      return niveisOriginais.categoria.sigla;
+    if (nivel === "local") {
+      const local = niveisOriginais.locais.find((item) => item.id === id);
+      if (local) return local.sigla;
+    }
+    throw new Error("Nível de sigla inválido para o identificador.");
+  };
+  const alteradas: Array<SiglaInformada & { anterior: string | null }> = [];
+  const desfazer = async () => {
+    for (const sigla of [...alteradas].reverse()) {
+      await gateway.definirSigla(sigla.nivel, sigla.id, sigla.anterior, opcoes.userId);
+    }
+  };
+
+  try {
+    for (const sigla of opcoes.siglasInformadas) {
+      const validada = validarSigla(sigla.sigla);
+      const anterior = siglaOriginal(sigla.nivel, sigla.id);
+      if (anterior === validada) continue;
+      await gateway.definirSigla(sigla.nivel, sigla.id, validada, opcoes.userId);
+      alteradas.push({ ...sigla, anterior });
+    }
+  } catch (erro) {
+    await desfazer();
+    throw erro;
   }
-  const niveis = await gateway.obterNiveis(input);
-  const { prefixo, numeroDoNome } = montarPrefixoIdentificador({
-    ...niveis,
-    nomeAtivo: input.nomeAtivo,
-  });
-  const nn = numeroDoNome ?? (await gateway.proximoSequencial(prefixo));
-  return { identificador: montarIdentificador(prefixo, nn), nnDoSequencial: numeroDoNome === null };
+
+  try {
+    const niveis = await gateway.obterNiveis(input);
+    const { prefixo, numeroDoNome } = montarPrefixoIdentificador({
+      ...niveis,
+      nomeAtivo: input.nomeAtivo,
+    });
+    const nn = numeroDoNome ?? (await gateway.proximoSequencial(prefixo));
+    return {
+      identificador: montarIdentificador(prefixo, nn),
+      nnDoSequencial: numeroDoNome === null,
+      desfazer,
+    };
+  } catch (erro) {
+    await desfazer();
+    throw erro;
+  }
 }

@@ -7,7 +7,11 @@ import {
   validarSistema,
 } from "../domain/sistemas";
 import type { CriarComIdentificadorOpcoes } from "./equipamentos";
-import { IdentificadorDuplicadoError, resolverIdentificadorNaCriacao } from "./identificador-ativo";
+import {
+  IdentificadorDuplicadoError,
+  prepararIdentificadorNaCriacao,
+  resolverIdentificadorNaCriacao,
+} from "./identificador-ativo";
 import type { EditarSistemaCommand, SistemaCommand, SistemasGateway } from "./sistemas-gateway";
 
 export function listarSistemas(gateway: SistemasGateway, clienteId?: string) {
@@ -32,19 +36,18 @@ export async function criarSistema(
 ) {
   const validado = validarSistema(input);
   if (!opcoesIdentificador) return gateway.criar({ ...validado, userId: input.userId });
-  const resolver = () =>
-    resolverIdentificadorNaCriacao(
-      opcoesIdentificador.identificador,
-      {
-        clienteId: validado.clienteId,
-        areaId: validado.areaId ?? null,
-        localId: validado.localId ?? null,
-        categoriaId: validado.categoriaId as string,
-        nomeAtivo: validado.nome,
-      },
-      { ...opcoesIdentificador, userId: input.userId },
-    );
-  const primeiro = await resolver();
+  const entradaIdentificador = {
+    clienteId: validado.clienteId,
+    areaId: validado.areaId ?? null,
+    localId: validado.localId ?? null,
+    categoriaId: validado.categoriaId as string,
+    nomeAtivo: validado.nome,
+  };
+  const primeiro = await prepararIdentificadorNaCriacao(
+    opcoesIdentificador.identificador,
+    entradaIdentificador,
+    { ...opcoesIdentificador, userId: input.userId },
+  );
   try {
     return await gateway.criar({
       ...validado,
@@ -52,13 +55,21 @@ export async function criarSistema(
       userId: input.userId,
     });
   } catch (erro) {
-    if (!(erro instanceof IdentificadorDuplicadoError)) throw erro;
+    if (!(erro instanceof IdentificadorDuplicadoError)) {
+      await primeiro.desfazer();
+      throw erro;
+    }
     if (!primeiro.nnDoSequencial) {
+      await primeiro.desfazer();
       throw new Error(
         `O identificador ${primeiro.identificador} já existe. Mude o número no nome ou edite o identificador.`,
       );
     }
-    const segundo = await resolver();
+    const segundo = await resolverIdentificadorNaCriacao(
+      opcoesIdentificador.identificador,
+      entradaIdentificador,
+      { ...opcoesIdentificador, userId: input.userId },
+    );
     try {
       return await gateway.criar({
         ...validado,
@@ -67,8 +78,10 @@ export async function criarSistema(
       });
     } catch (segundoErro) {
       if (segundoErro instanceof IdentificadorDuplicadoError) {
+        await primeiro.desfazer();
         throw new Error("Não foi possível reservar o identificador. Tente salvar de novo.");
       }
+      await primeiro.desfazer();
       throw segundoErro;
     }
   }
@@ -87,7 +100,7 @@ export async function editarSistema(
   ) {
     return gateway.editar({ ...validado, id: input.id, userId: input.userId });
   }
-  const resolvido = await resolverIdentificadorNaCriacao(
+  const preparado = await prepararIdentificadorNaCriacao(
     opcoesIdentificador.identificador,
     {
       clienteId: validado.clienteId,
@@ -98,13 +111,18 @@ export async function editarSistema(
     },
     { ...opcoesIdentificador, userId: input.userId },
   );
-  return gateway.editar({
-    ...validado,
-    id: input.id,
-    codigo: resolvido.identificador,
-    alterarIdentificador: true,
-    userId: input.userId,
-  });
+  try {
+    return await gateway.editar({
+      ...validado,
+      id: input.id,
+      codigo: preparado.identificador,
+      alterarIdentificador: true,
+      userId: input.userId,
+    });
+  } catch (erro) {
+    await preparado.desfazer();
+    throw erro;
+  }
 }
 
 export async function desativarSistema(gateway: SistemasGateway, id: string, userId: string) {

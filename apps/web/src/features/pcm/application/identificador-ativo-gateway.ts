@@ -16,6 +16,11 @@ export interface IdentificadorAtivoGateway {
     localId: string | null;
     categoriaId: string;
   }): Promise<NiveisIdentificador>;
-  definirSigla(nivel: NivelComSigla, id: string, sigla: string, userId: string): Promise<void>;
+  definirSigla(
+    nivel: NivelComSigla,
+    id: string,
+    sigla: string | null,
+    userId: string,
+  ): Promise<void>;
   proximoSequencial(prefixo: string): Promise<string>;
 }
