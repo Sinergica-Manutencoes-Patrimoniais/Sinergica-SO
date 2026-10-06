@@ -1,6 +1,6 @@
 import { Button, ConfirmDialog, Skeleton } from "@sinergica/ui";
-import { Link2, Pencil, Plus } from "lucide-react";
-import { useState } from "react";
+import { Link2, Pencil, Plus, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import {
   useAreasDoCliente,
   useCriarSistema,
@@ -10,6 +10,7 @@ import {
   useMembrosSistemasDoCliente,
   useSistemasDoCliente,
 } from "../application/ativos-cliente-queries";
+import { FILTROS_SISTEMAS_360_VAZIO, filtrarSistemas360 } from "../domain/cliente-360-filtros";
 import { montarArvore } from "../domain/hierarquia";
 import type { Sistema, SistemaFormData } from "../domain/sistemas";
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
@@ -32,6 +33,8 @@ export function PainelSistemasCliente({
   userId: string;
   onAbrirOs?: (osId: string) => void;
 }) {
+  const [filtros, setFiltros] = useState(FILTROS_SISTEMAS_360_VAZIO);
+  const clienteAnterior = useRef(clienteId);
   const [modal, setModal] = useState<Modal>(null);
   const [sistemaAbertoId, setSistemaAbertoId] = useState<string | null>(null);
   const [paraDesativar, setParaDesativar] = useState<Sistema | null>(null);
@@ -54,6 +57,14 @@ export function PainelSistemasCliente({
       (quantidadePorSistema.get(membro.sistemaId) ?? 0) + 1,
     );
   }
+  const sistemasFiltrados = filtrarSistemas360(sistemas.data ?? [], quantidadePorSistema, filtros);
+
+  useEffect(() => {
+    if (clienteAnterior.current !== clienteId) {
+      clienteAnterior.current = clienteId;
+      setFiltros(FILTROS_SISTEMAS_360_VAZIO);
+    }
+  }, [clienteId]);
 
   async function salvar(dados: SistemaFormData) {
     if (modal?.modo === "editar") {
@@ -101,13 +112,120 @@ export function PainelSistemasCliente({
           </Button>
         )}
       </div>
+      {(sistemas.data ?? []).length > 0 && (
+        <div className="grid gap-2 rounded-lg border border-line bg-card p-3 lg:grid-cols-8">
+          <label className="relative block lg:col-span-2">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
+            <input
+              value={filtros.busca}
+              onChange={(event) => setFiltros((atual) => ({ ...atual, busca: event.target.value }))}
+              className="input w-full pl-9"
+              placeholder="Buscar por nome ou código"
+            />
+          </label>
+          <FiltroSelect
+            label="Categoria"
+            value={filtros.categoriaIds[0] ?? ""}
+            onChange={(categoriaId) =>
+              setFiltros((atual) => ({
+                ...atual,
+                categoriaIds: categoriaId ? [categoriaId] : [],
+              }))
+            }
+            opcoes={(sistemas.data ?? []).flatMap((sistema) =>
+              sistema.categoriaId && sistema.categoria
+                ? [{ id: sistema.categoriaId, nome: sistema.categoria }]
+                : [],
+            )}
+          />
+          <FiltroSelect
+            label="Área"
+            value={filtros.areaIds[0] ?? ""}
+            onChange={(areaId) =>
+              setFiltros((atual) => ({ ...atual, areaIds: areaId ? [areaId] : [] }))
+            }
+            opcoes={(areas.data ?? []).map((area) => ({ id: area.id, nome: area.nome }))}
+          />
+          <FiltroSelect
+            label="Local"
+            value={filtros.localIds[0] ?? ""}
+            onChange={(localId) =>
+              setFiltros((atual) => ({ ...atual, localIds: localId ? [localId] : [] }))
+            }
+            opcoes={(locais.data ?? []).map((local) => ({ id: local.id, nome: local.nome }))}
+          />
+          <FiltroSelect
+            label="Composição"
+            value={filtros.composicao}
+            onChange={(composicao) =>
+              setFiltros((atual) => ({
+                ...atual,
+                composicao: (composicao || "todos") as typeof atual.composicao,
+              }))
+            }
+            opcoes={[
+              { id: "todos", nome: "Toda composição" },
+              { id: "com_itens", nome: "Com itens" },
+              { id: "vazios", nome: "Sem itens" },
+            ]}
+            semOpcaoTodos
+          />
+          <FiltroSelect
+            label="Sincronização"
+            value={filtros.syncStatuses[0] ?? ""}
+            onChange={(syncStatus) =>
+              setFiltros((atual) => ({
+                ...atual,
+                syncStatuses: syncStatus ? [syncStatus] : [],
+              }))
+            }
+            opcoes={[
+              { id: "synced", nome: "Sincronizado" },
+              { id: "pending", nome: "Pendente" },
+              { id: "error", nome: "Com erro" },
+            ]}
+          />
+          <div className="flex items-center gap-2">
+            <FiltroSelect
+              label="Situação"
+              value={filtros.situacao}
+              onChange={(situacao) =>
+                setFiltros((atual) => ({
+                  ...atual,
+                  situacao: (situacao || "todos") as typeof atual.situacao,
+                }))
+              }
+              opcoes={[
+                { id: "todos", nome: "Todas situações" },
+                { id: "ativos", nome: "Ativos" },
+                { id: "inativos", nome: "Inativos" },
+              ]}
+              semOpcaoTodos
+            />
+            <button
+              type="button"
+              onClick={() => setFiltros(FILTROS_SISTEMAS_360_VAZIO)}
+              className="shrink-0 text-caption font-semibold text-orange hover:text-orange-deep"
+            >
+              Limpar
+            </button>
+          </div>
+          <p className="lg:col-span-8 text-caption text-ink-3">
+            {sistemasFiltrados.length} visíveis de {(sistemas.data ?? []).length}
+          </p>
+        </div>
+      )}
       {(sistemas.data ?? []).length === 0 ? (
         <div className="rounded-lg border border-line bg-card px-5 py-10 text-center">
           <Link2 className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-body text-ink-3">Nenhum Sistema cadastrado para este cliente.</p>
         </div>
+      ) : sistemasFiltrados.length === 0 ? (
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center text-body text-ink-3">
+          Nenhum sistema para estes filtros.
+        </div>
       ) : (
-        (sistemas.data ?? []).map((sistema) => {
+        sistemasFiltrados.map((sistema) => {
           const local = sistema.localId ? localPorId.get(sistema.localId) : null;
           const posicao =
             local?.caminho ?? (sistema.areaId ? (areaPorId.get(sistema.areaId) ?? "—") : "—");
@@ -198,6 +316,37 @@ export function PainelSistemasCliente({
         />
       )}
     </div>
+  );
+}
+
+function FiltroSelect({
+  label,
+  value,
+  onChange,
+  opcoes,
+  semOpcaoTodos = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (valor: string) => void;
+  opcoes: Array<{ id: string; nome: string }>;
+  semOpcaoTodos?: boolean;
+}) {
+  const unicas = [...new Map(opcoes.map((opcao) => [opcao.id, opcao])).values()];
+  return (
+    <select
+      aria-label={`Filtrar sistemas por ${label}`}
+      className="input min-w-0"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      {!semOpcaoTodos && <option value="">Todas as opções</option>}
+      {unicas.map((opcao) => (
+        <option key={opcao.id} value={opcao.id}>
+          {opcao.nome}
+        </option>
+      ))}
+    </select>
   );
 }
 

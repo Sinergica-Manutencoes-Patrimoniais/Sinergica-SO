@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { filtrarComponentes360, normalizarBusca360 } from "./cliente-360-filtros";
+import {
+  filtrarComponentes360,
+  filtrarSistemas360,
+  normalizarBusca360,
+} from "./cliente-360-filtros";
 
 const itens = [
   {
@@ -63,5 +67,41 @@ describe("filtros do Cliente 360", () => {
         },
       ),
     ).toEqual([itens[1]]);
+  });
+
+  it("filtra sistemas pela composição calculada com os membros já carregados", () => {
+    const sistemas = [
+      {
+        id: "sis-pci",
+        nome: "PCI",
+        codigo: "PCI-01",
+        categoriaId: "pci",
+        areaId: "torre-a",
+        localId: null,
+        ativo: true,
+        auvoSyncStatus: "synced",
+      },
+      {
+        id: "sis-vazio",
+        nome: "Automação",
+        codigo: null,
+        categoriaId: "automacao",
+        areaId: "torre-b",
+        localId: null,
+        ativo: true,
+        auvoSyncStatus: "pending",
+      },
+    ];
+    expect(
+      filtrarSistemas360(sistemas, new Map([["sis-pci", 2]]), {
+        busca: "",
+        categoriaIds: [],
+        areaIds: [],
+        localIds: [],
+        composicao: "vazios",
+        situacao: "todos",
+        syncStatuses: [],
+      }),
+    ).toEqual([sistemas[1]]);
   });
 });
