@@ -52,6 +52,7 @@ const dados: ResultadoPreventivas = {
       erro_envio: null,
       resultado_estado: "nao_ok" as const,
       resultado_atualizado_em: "2026-10-10T12:00:00Z",
+      os_id: "os-1",
       os_numero: "CH-123",
       tecnico_nome: "Técnico A",
       auvo_task_url: "https://app.auvo.com.br/tarefa/123",
@@ -189,7 +190,19 @@ describe("PreventivasWorkspace — E01-S53 / E01-S163 AC-10 e AC-15", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Plano A: No Auvo" }));
 
     expect(await screen.findByText("Detalhe da preventiva")).toBeInTheDocument();
-    expect(screen.getAllByText(/OS CH-123/)).toHaveLength(2);
+    expect(screen.getAllByText(/OS CH-123/).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("AC-11: abre a OS associada sem manter o drawer preventivo sobreposto", async () => {
+    const onAbrirOs = vi.fn();
+    renderWorkspace({ onAbrirOs });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Calendário" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Plano A: No Auvo" }));
+    await userEvent.click(screen.getByRole("button", { name: "Abrir OS CH-123" }));
+
+    expect(onAbrirOs).toHaveBeenCalledWith("os-1");
+    expect(screen.queryByText("Detalhe da preventiva")).not.toBeInTheDocument();
   });
 
   it("AC-12: abre o detalhe do plano mesmo sem ocorrência materializada", async () => {

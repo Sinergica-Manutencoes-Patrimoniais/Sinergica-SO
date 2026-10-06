@@ -122,6 +122,7 @@ export function PreventivasWorkspace({
   userId,
   compacto = false,
   abrirNovoToken = 0,
+  onAbrirOs,
 }: {
   clienteId?: string;
   clienteNome?: string;
@@ -130,6 +131,7 @@ export function PreventivasWorkspace({
   userId: string;
   compacto?: boolean;
   abrirNovoToken?: number;
+  onAbrirOs?: (osId: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [novo, setNovo] = useState(false);
@@ -869,6 +871,10 @@ export function PreventivasWorkspace({
             setSelecionada(ocorrencia);
             setTecnicoId(ocorrencia.tecnico_funcionario_id ?? "");
             setVisita(ocorrencia.visita_em ? ocorrencia.visita_em.slice(0, 16) : "");
+          }}
+          onAbrirOs={(osId) => {
+            setDetalhePreventiva(null);
+            onAbrirOs?.(osId);
           }}
         />
       )}

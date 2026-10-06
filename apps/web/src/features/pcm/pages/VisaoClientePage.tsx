@@ -512,6 +512,7 @@ export function VisaoClientePage({
           userId={user.id}
           compacto
           abrirNovoToken={abrirPreventivaToken}
+          onAbrirOs={abrirDetalheOs}
         />
       )}
 
