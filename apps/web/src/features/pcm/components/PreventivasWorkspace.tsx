@@ -10,7 +10,10 @@ import type {
   OpcaoPreventiva,
   PlanoPreventivo,
 } from "../application/preventivas-gateway";
-import { calcularStatusOcorrenciaPreventiva } from "../domain/preventivas";
+import {
+  calcularStatusOcorrenciaPreventiva,
+  podeEditarEstruturaPlano,
+} from "../domain/preventivas";
 import {
   listarCatalogoPreventivas,
   listarPreventivas,
@@ -265,6 +268,40 @@ export function PreventivasWorkspace({
       await atualizar();
     } catch (causa) {
       setErroAcao(causa instanceof Error ? causa.message : "Não foi possível atualizar o plano.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function pausarECriarNovoPlano(plano: PlanoPreventivo) {
+    setSalvando(true);
+    setErroAcao(null);
+    try {
+      const { error } = await supabase
+        .schema("pcm")
+        .from("planos_preventivos")
+        .update({
+          estado: "pausado",
+          updated_by: userId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", plano.id);
+      if (error) throw error;
+      setForm({
+        nome: `${plano.nome} — novo ciclo`,
+        clienteId: plano.cliente_id,
+        alvoTipo: plano.sistema_id ? "sistema" : "equipamento",
+        alvoId: plano.sistema_id ?? plano.equipamento_id ?? "",
+        questionarioId: plano.questionario_id,
+        tipoTarefaId: plano.tipo_tarefa_id,
+        primeiraData: new Date().toISOString().slice(0, 10),
+        intervaloN: plano.intervalo_n,
+        unidade: plano.intervalo_unidade,
+      });
+      setNovo(true);
+      await atualizar();
+    } catch (causa) {
+      setErroAcao(causa instanceof Error ? causa.message : "Não foi possível pausar o plano.");
     } finally {
       setSalvando(false);
     }
@@ -677,45 +714,62 @@ export function PreventivasWorkspace({
           {planos.length === 0 ? (
             <p className="text-body text-ink-3">Nenhum plano preventivo.</p>
           ) : (
-            planos.map((plano) => (
-              <div
-                key={plano.id}
-                className="flex items-center justify-between rounded-md border border-line px-3 py-2"
-              >
-                <div>
-                  <p className="font-medium text-ink">{plano.nome}</p>
-                  <p className="text-sm text-ink-3">
-                    A cada {plano.intervalo_n} {plano.intervalo_unidade} · {plano.estado}
-                  </p>
-                </div>
-                <Button
-                  variant="secondary"
-                  disabled={!ocorrencias.some((ocorrencia) => ocorrencia.plano_id === plano.id)}
-                  onClick={() => {
-                    const proxima = ocorrencias
-                      .filter((ocorrencia) => ocorrencia.plano_id === plano.id)
-                      .sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0];
-                    if (proxima) selecionarOcorrencia(proxima.id);
-                  }}
+            planos.map((plano) => {
+              const ocorrenciasDoPlano = ocorrencias.filter(
+                (ocorrencia) => ocorrencia.plano_id === plano.id,
+              );
+              const podeEditarEstrutura = podeEditarEstruturaPlano(ocorrenciasDoPlano);
+              return (
+                <div
+                  key={plano.id}
+                  className="flex items-center justify-between rounded-md border border-line px-3 py-2"
                 >
-                  Ver plano
-                </Button>
-                {temEscrita && (
+                  <div>
+                    <p className="font-medium text-ink">{plano.nome}</p>
+                    <p className="text-sm text-ink-3">
+                      A cada {plano.intervalo_n} {plano.intervalo_unidade} · {plano.estado}
+                    </p>
+                  </div>
                   <Button
                     variant="secondary"
-                    disabled={salvando}
-                    onClick={() => void alternarPlano(plano)}
+                    disabled={!ocorrencias.some((ocorrencia) => ocorrencia.plano_id === plano.id)}
+                    onClick={() => {
+                      const proxima = ocorrencias
+                        .filter((ocorrencia) => ocorrencia.plano_id === plano.id)
+                        .sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0];
+                      if (proxima) selecionarOcorrencia(proxima.id);
+                    }}
                   >
-                    {plano.estado === "pausado" ? (
-                      <Play className="mr-2 h-4 w-4" />
-                    ) : (
-                      <Pause className="mr-2 h-4 w-4" />
-                    )}
-                    {plano.estado === "pausado" ? "Retomar" : "Pausar"}
+                    Ver plano
                   </Button>
-                )}
-              </div>
-            ))
+                  {temEscrita && (
+                    <div className="flex gap-2">
+                      {!podeEditarEstrutura && plano.estado !== "pausado" && (
+                        <Button
+                          variant="secondary"
+                          disabled={salvando}
+                          onClick={() => void pausarECriarNovoPlano(plano)}
+                        >
+                          Pausar e criar novo plano
+                        </Button>
+                      )}
+                      <Button
+                        variant="secondary"
+                        disabled={salvando}
+                        onClick={() => void alternarPlano(plano)}
+                      >
+                        {plano.estado === "pausado" ? (
+                          <Play className="mr-2 h-4 w-4" />
+                        ) : (
+                          <Pause className="mr-2 h-4 w-4" />
+                        )}
+                        {plano.estado === "pausado" ? "Retomar" : "Pausar"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </section>

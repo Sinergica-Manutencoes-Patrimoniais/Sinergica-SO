@@ -3,6 +3,7 @@ import {
   type PlanoPreventivoRecorrente,
   calcularStatusOcorrenciaPreventiva,
   gerarVencimentosPreventivos,
+  podeEditarEstruturaPlano,
 } from "./preventivas";
 
 describe("preventivas", () => {
@@ -78,5 +79,10 @@ describe("preventivas", () => {
     expect(() => gerarVencimentosPreventivos(plano, "2026-01-01", "2026-12-31")).toThrow(
       "Data inválida",
     );
+  });
+
+  it("bloqueia edição estrutural após materializar uma ocorrência", () => {
+    expect(podeEditarEstruturaPlano([])).toBe(true);
+    expect(podeEditarEstruturaPlano([{ vencimento: "2026-10-06" }])).toBe(false);
   });
 });
