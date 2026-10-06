@@ -2,8 +2,18 @@ import { Button, ConfirmDialog, Modal, Skeleton, useToast } from "@sinergica/ui"
 // EstruturaClientePage.tsx — E01-S76 (AC-1, AC-2, AC-3): CRUD de Área > Local (árvore) de um
 // cliente. Mora como aba dentro de VisaoClientePage (design.md — "aba em VisaoClientePage.tsx").
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, FolderTree, Pencil, Plus, Tag, Trash2, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  FolderTree,
+  Pencil,
+  Plus,
+  Search,
+  Tag,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { baixarPlanilha } from "../../../lib/sheetjs";
 import { ativosClienteQueryKeys } from "../application/ativos-cliente-queries";
 import type { ClienteHeader } from "../application/cliente-360-gateway";
@@ -19,6 +29,7 @@ import {
 } from "../application/hierarquia";
 import { executarPlanoEstrutura } from "../application/importacao-estrutura";
 import { ImportacaoEstruturaModal } from "../components/ImportacaoEstruturaModal";
+import { normalizarBusca360 } from "../domain/cliente-360-filtros";
 import type {
   Area,
   AreaFormData,
@@ -45,6 +56,23 @@ function achatar(nodes: LocalArvoreNode[]): LocalArvoreNode[] {
   return nodes.flatMap((node) => [node, ...achatar(node.filhos)]);
 }
 
+/** Mantém a trilha dos Locais encontrados para que a árvore filtrada nunca perca seu contexto. */
+function filtrarArvoreEstrutura(
+  nodes: LocalArvoreNode[],
+  busca: string,
+  tipoId: string,
+  incluirSubarvore: boolean,
+): LocalArvoreNode[] {
+  return nodes.flatMap((node) => {
+    const correspondeBusca = normalizarBusca360(`${node.nome} ${node.sigla ?? ""}`).includes(busca);
+    const correspondeTipo = !tipoId || node.tipoId === tipoId;
+    if (incluirSubarvore || (correspondeBusca && correspondeTipo)) return [node];
+
+    const filhos = filtrarArvoreEstrutura(node.filhos, busca, tipoId, false);
+    return filhos.length > 0 ? [{ ...node, filhos }] : [];
+  });
+}
+
 export function EstruturaClientePage({
   cliente,
   temEscrita,
@@ -60,6 +88,8 @@ export function EstruturaClientePage({
   const [areas, setAreas] = useState<Area[]>([]);
   const [arvores, setArvores] = useState<Record<string, LocalArvoreNode[]>>({});
   const [expandidas, setExpandidas] = useState<Set<string>>(new Set());
+  const [filtroEstrutura, setFiltroEstrutura] = useState({ busca: "", tipoId: "" });
+  const clienteAnterior = useRef(clienteId);
   const [modalArea, setModalArea] = useState<ModalArea>(null);
   const [modalLocal, setModalLocal] = useState<ModalLocal>(null);
   const [tiposDeLocal, setTiposDeLocal] = useState<LocalTipo[]>([]);
@@ -118,6 +148,13 @@ export function EstruturaClientePage({
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  useEffect(() => {
+    if (clienteAnterior.current !== clienteId) {
+      clienteAnterior.current = clienteId;
+      setFiltroEstrutura({ busca: "", tipoId: "" });
+    }
+  }, [clienteId]);
 
   function alternarExpandida(areaId: string) {
     setExpandidas((atual) => {
@@ -271,6 +308,21 @@ export function EstruturaClientePage({
     );
   }
 
+  const buscaEstrutura = normalizarBusca360(filtroEstrutura.busca);
+  const estruturaFiltrada = areas.flatMap((area) => {
+    const areaCorresponde = normalizarBusca360(`${area.nome} ${area.sigla ?? ""}`).includes(
+      buscaEstrutura,
+    );
+    const locais = filtrarArvoreEstrutura(
+      arvores[area.id] ?? [],
+      buscaEstrutura,
+      filtroEstrutura.tipoId,
+      areaCorresponde && !filtroEstrutura.tipoId,
+    );
+    if (!areaCorresponde && locais.length === 0) return [];
+    return [{ area, locais }];
+  });
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -300,6 +352,47 @@ export function EstruturaClientePage({
           )}
         </div>
       </div>
+
+      {areas.length > 0 && (
+        <div className="grid gap-2 rounded-lg border border-line bg-card p-3 sm:grid-cols-[minmax(0,1fr)_13rem_auto]">
+          <label className="relative block">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
+            <input
+              value={filtroEstrutura.busca}
+              onChange={(event) =>
+                setFiltroEstrutura((atual) => ({ ...atual, busca: event.target.value }))
+              }
+              className="input w-full pl-9"
+              placeholder="Buscar área, local ou sigla"
+            />
+          </label>
+          <select
+            aria-label="Filtrar estrutura por tipo de local"
+            value={filtroEstrutura.tipoId}
+            onChange={(event) =>
+              setFiltroEstrutura((atual) => ({ ...atual, tipoId: event.target.value }))
+            }
+            className="input min-w-0"
+          >
+            <option value="">Todos os tipos</option>
+            {tiposDeLocal.map((tipo) => (
+              <option key={tipo.id} value={tipo.id}>
+                {tipo.nome}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setFiltroEstrutura({ busca: "", tipoId: "" })}
+            className="text-caption font-semibold text-orange hover:text-orange-deep"
+          >
+            Limpar
+          </button>
+          <p className="sm:col-span-3 text-caption text-ink-3">
+            {estruturaFiltrada.length} áreas visíveis de {areas.length}
+          </p>
+        </div>
+      )}
 
       <TiposDeLocalPainel
         tipos={tiposDeLocal}
@@ -333,9 +426,13 @@ export function EstruturaClientePage({
           <FolderTree className="mx-auto h-9 w-9 text-ink-3" />
           <p className="mt-3 text-body text-ink-3">Nenhuma Área cadastrada.</p>
         </div>
+      ) : estruturaFiltrada.length === 0 ? (
+        <div className="rounded-lg border border-line bg-card px-5 py-10 text-center text-body text-ink-3">
+          Nenhuma estrutura para estes filtros.
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {areas.map((area) => (
+          {estruturaFiltrada.map(({ area, locais }) => (
             <section key={area.id} className="rounded-lg border border-line bg-card">
               <div className="flex items-center gap-2 border-b border-line-soft px-4 py-3">
                 <button
@@ -384,13 +481,13 @@ export function EstruturaClientePage({
               </div>
               {expandidas.has(area.id) && (
                 <div className="px-4 py-2">
-                  {(arvores[area.id]?.length ?? 0) === 0 ? (
+                  {locais.length === 0 ? (
                     <p className="py-3 text-caption text-ink-3">
                       Nenhum Local cadastrado nesta Área.
                     </p>
                   ) : (
                     <LocalTree
-                      nodes={arvores[area.id] ?? []}
+                      nodes={locais}
                       areaId={area.id}
                       nivel={0}
                       temEscrita={temEscrita}
