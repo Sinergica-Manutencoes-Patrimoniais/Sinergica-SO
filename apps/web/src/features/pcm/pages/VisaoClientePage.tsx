@@ -146,6 +146,13 @@ const GRUPOS_ABAS: Array<{ id: GrupoAba360; label: string }> = [
   { id: "gestao", label: "Gestão e relacionamento" },
 ];
 
+/** Mantém a faixa principal curta; áreas secundárias continuam disponíveis em um overflow nativo. */
+const LIMITE_ABAS_VISIVEIS: Record<GrupoAba360, number> = {
+  operacao: 4,
+  ativos: 3,
+  gestao: 3,
+};
+
 export function VisaoClientePage({
   clienteId,
   onAbrirOs,
@@ -392,6 +399,8 @@ export function VisaoClientePage({
             const abasDoGrupo = ABAS.filter(
               (item) => item.grupo === grupo.id && (item.id !== "comercial" || painelComercial),
             );
+            const abasVisiveis = abasDoGrupo.slice(0, LIMITE_ABAS_VISIVEIS[grupo.id]);
+            const abasNoMais = abasDoGrupo.slice(LIMITE_ABAS_VISIVEIS[grupo.id]);
             const grupoAtivo = abasDoGrupo.some((item) => item.id === aba);
             return (
               <section key={grupo.id} aria-label={grupo.label} className="min-w-0">
@@ -403,7 +412,7 @@ export function VisaoClientePage({
                   {grupo.label}
                 </p>
                 <div className="flex flex-wrap">
-                  {abasDoGrupo.map((item) => {
+                  {abasVisiveis.map((item) => {
                     const Icon = item.icon;
                     const ativo = aba === item.id;
                     return (
@@ -423,6 +432,49 @@ export function VisaoClientePage({
                       </button>
                     );
                   })}
+                  {abasNoMais.length > 0 && (
+                    <details
+                      className="group relative"
+                      open={abasNoMais.some((item) => item.id === aba) || undefined}
+                    >
+                      <summary
+                        className={`list-none cursor-pointer border-b-2 px-2.5 py-2 text-caption font-medium marker:hidden hover:text-ink ${
+                          abasNoMais.some((item) => item.id === aba)
+                            ? "border-orange text-ink"
+                            : "border-transparent text-ink-3"
+                        }`}
+                      >
+                        Mais
+                        <span className="sr-only"> em {grupo.label}</span>
+                      </summary>
+                      <div
+                        className="absolute right-0 z-20 mt-1 grid min-w-48 rounded-lg border border-line bg-card p-1 shadow-lg"
+                        aria-label={`Mais áreas de ${grupo.label}`}
+                      >
+                        {abasNoMais.map((item) => {
+                          const Icon = item.icon;
+                          const ativo = aba === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={(event) => {
+                                setAba(item.id);
+                                event.currentTarget.closest("details")?.removeAttribute("open");
+                              }}
+                              aria-current={ativo ? "page" : undefined}
+                              className={`flex items-center gap-2 rounded-md px-3 py-2 text-left text-caption font-medium ${
+                                ativo ? "bg-orange-soft text-ink" : "text-ink-2 hover:bg-line-soft"
+                              }`}
+                            >
+                              <Icon className="h-3.5 w-3.5" />
+                              {item.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </details>
+                  )}
                 </div>
               </section>
             );

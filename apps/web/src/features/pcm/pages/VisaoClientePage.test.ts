@@ -31,4 +31,11 @@ describe("VisaoClientePage — E01-S53 AC-8", () => {
     expect(fonte).toContain("Nova preventiva");
     expect(fonte).toContain("Novo componente");
   });
+
+  it("mantém áreas secundárias alcançáveis no overflow Mais", () => {
+    expect(fonte).toContain("LIMITE_ABAS_VISIVEIS");
+    expect(fonte).toContain("abasNoMais");
+    expect(fonte).toContain("Mais áreas de ${grupo.label}");
+    expect(fonte).toContain('event.currentTarget.closest("details")?.removeAttribute("open")');
+  });
 });
