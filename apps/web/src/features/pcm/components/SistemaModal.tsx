@@ -105,6 +105,14 @@ export function SistemaModal({
               alterarIdentificador,
             }))
           }
+          onAplicarRecomendacoes={(codigo) =>
+            setDados((atual) => ({
+              ...atual,
+              codigo,
+              identificadorManual: null,
+              alterarIdentificador: Boolean(sistema),
+            }))
+          }
           siglasInformadas={dados.siglasInformadas ?? []}
           onSiglasChange={(siglasInformadas) =>
             setDados((atual) => ({ ...atual, siglasInformadas }))

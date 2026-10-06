@@ -8,8 +8,16 @@ import { CampoIdentificador } from "./CampoIdentificador";
 const mocks = vi.hoisted(() => ({ previa: vi.fn() }));
 
 vi.mock("@sinergica/ui", () => ({
-  Button: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
-    <button type="button" onClick={onClick}>
+  Button: ({
+    children,
+    onClick,
+    disabled,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+  }) => (
+    <button type="button" onClick={onClick} disabled={disabled}>
       {children}
     </button>
   ),
@@ -38,8 +46,14 @@ vi.mock("../infrastructure/supabase-identificador-ativo-adapter", () => ({
   supabaseIdentificadorAtivoAdapter: {},
 }));
 
-function Campo({ modo = "editar" }: { modo?: "criar" | "editar" }) {
-  const [valor, setValor] = useState("GUA-ELE-BOM-01");
+function Campo({
+  modo = "editar",
+  valorInicial = "GUA-ELE-BOM-01",
+}: {
+  modo?: "criar" | "editar";
+  valorInicial?: string;
+}) {
+  const [valor, setValor] = useState(valorInicial);
   const [siglas, setSiglas] = useState<
     Array<{ nivel: "cliente" | "area" | "local" | "categoria"; id: string; sigla: string }>
   >([]);
@@ -49,6 +63,7 @@ function Campo({ modo = "editar" }: { modo?: "criar" | "editar" }) {
       input={null}
       valor={valor}
       onManualChange={(proximo) => setValor(proximo)}
+      onAplicarRecomendacoes={(proximo) => setValor(proximo)}
       siglasInformadas={siglas}
       onSiglasChange={setSiglas}
     />
@@ -76,5 +91,35 @@ describe("CampoIdentificador", () => {
     render(<Campo modo="criar" />);
     expect(screen.getByText("Siglas faltando")).toBeInTheDocument();
     expect(screen.getByText("Torre A")).toBeInTheDocument();
+  });
+
+  it("só preenche o identificador após aplicar as recomendações", async () => {
+    mocks.previa.mockImplementation((_gateway, _input, siglas) => ({
+      data:
+        siglas.length === 0
+          ? {
+              prefixo: null,
+              nn: null,
+              faltantes: [{ nivel: "area", id: "a1", nome: "Torre A" }],
+            }
+          : { prefixo: "GUA-TOA-ELE-QUG", nn: "04", faltantes: [] },
+    }));
+    render(<Campo modo="criar" valorInicial="" />);
+
+    expect(screen.getByDisplayValue("—")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Aplicar recomendações" }));
+
+    expect(screen.getByDisplayValue("GUA-TOA-ELE-QUG-04")).toBeInTheDocument();
+  });
+
+  it("bloqueia a aplicação enquanto uma sugestão está inválida", async () => {
+    mocks.previa.mockReturnValue({
+      data: { prefixo: null, nn: null, faltantes: [{ nivel: "area", id: "a1", nome: "Torre A" }] },
+    });
+    render(<Campo modo="criar" valorInicial="" />);
+
+    await userEvent.clear(screen.getByDisplayValue("TOA"));
+
+    expect(screen.getByRole("button", { name: "Aplicar recomendações" })).toBeDisabled();
   });
 });

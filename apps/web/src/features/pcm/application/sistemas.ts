@@ -74,9 +74,37 @@ export async function criarSistema(
   }
 }
 
-export function editarSistema(gateway: SistemasGateway, input: EditarSistemaCommand) {
+export async function editarSistema(
+  gateway: SistemasGateway,
+  input: EditarSistemaCommand,
+  opcoesIdentificador?: CriarComIdentificadorOpcoes,
+) {
   const validado = validarSistema(input);
-  return gateway.editar({ ...validado, id: input.id, userId: input.userId });
+  if (
+    !opcoesIdentificador ||
+    !validado.alterarIdentificador ||
+    opcoesIdentificador.identificadorManual !== null
+  ) {
+    return gateway.editar({ ...validado, id: input.id, userId: input.userId });
+  }
+  const resolvido = await resolverIdentificadorNaCriacao(
+    opcoesIdentificador.identificador,
+    {
+      clienteId: validado.clienteId,
+      areaId: validado.areaId ?? null,
+      localId: validado.localId ?? null,
+      categoriaId: validado.categoriaId as string,
+      nomeAtivo: validado.nome,
+    },
+    { ...opcoesIdentificador, userId: input.userId },
+  );
+  return gateway.editar({
+    ...validado,
+    id: input.id,
+    codigo: resolvido.identificador,
+    alterarIdentificador: true,
+    userId: input.userId,
+  });
 }
 
 export async function desativarSistema(gateway: SistemasGateway, id: string, userId: string) {

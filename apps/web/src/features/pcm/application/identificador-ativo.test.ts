@@ -32,13 +32,31 @@ const input = {
 };
 
 describe("identificador de ativo", () => {
-  it("pré-visualiza sem reservar sequencial", async () => {
+  it("pré-visualiza o próximo sequencial sem reservá-lo", async () => {
     const { gateway } = gatewayFake();
     await expect(previsualizarIdentificador(gateway, input)).resolves.toEqual({
       prefixo: "GUA-TOA-SHA-ELE-QUG",
-      nn: null,
+      nn: "04",
       faltantes: [],
     });
+  });
+
+  it("recalcula a prévia com as siglas aceitas sem gravá-las", async () => {
+    const { gateway, escritas } = gatewayFake({
+      ...niveis,
+      cliente: { ...niveis.cliente, sigla: null },
+    });
+
+    await expect(
+      previsualizarIdentificador(gateway, input, [
+        { nivel: "cliente", id: "cliente", sigla: "GUA" },
+      ]),
+    ).resolves.toEqual({
+      prefixo: "GUA-TOA-SHA-ELE-QUG",
+      nn: "04",
+      faltantes: [],
+    });
+    expect(escritas).toEqual([]);
   });
 
   it("grava siglas informadas, recarrega níveis e reserva o sequencial", async () => {

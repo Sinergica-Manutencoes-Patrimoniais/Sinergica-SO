@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { EquipamentoItem } from "../domain/equipamentos";
-import { atualizarPosicaoComponente, criarEquipamento } from "./equipamentos";
+import { atualizarPosicaoComponente, criarEquipamento, editarEquipamento } from "./equipamentos";
 import type { EquipamentosGateway } from "./equipamentos-gateway";
 import { IdentificadorDuplicadoError } from "./identificador-ativo";
 import type { IdentificadorAtivoGateway } from "./identificador-ativo-gateway";
@@ -57,6 +57,46 @@ describe("criarEquipamento", () => {
     expect(gateway.criar).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({ identificador: "GUA-ELE-BOM-02" }),
+    );
+  });
+});
+
+describe("editarEquipamento — E01-S163", () => {
+  it("persiste siglas aceitas e recalcula o identificador antes de atualizar o ativo", async () => {
+    const gateway = gatewayFake();
+    const identificador: IdentificadorAtivoGateway = {
+      obterNiveis: vi.fn(async () => ({
+        cliente: { id: "cli-1", nome: "Guainumbí", sigla: "GUA" },
+        area: null,
+        locais: [],
+        categoria: { id: "cat-1", nome: "Elétrica", sigla: "ELE" },
+      })),
+      definirSigla: vi.fn(),
+      proximoSequencial: vi.fn().mockResolvedValue("01"),
+    };
+
+    await editarEquipamento(
+      gateway,
+      {
+        id: "item-1",
+        nome: "Bomba",
+        categoriaId: "cat-1",
+        clientId: "cli-1",
+        identificador: "GUA-ELE-BOM-01",
+        alterarIdentificador: true,
+        identificadorManual: null,
+        userId: "user-1",
+      },
+      {
+        identificador,
+        siglasInformadas: [{ nivel: "cliente", id: "cli-1", sigla: "GUA" }],
+        identificadorManual: null,
+      },
+    );
+
+    expect(identificador.definirSigla).toHaveBeenCalledWith("cliente", "cli-1", "GUA", "user-1");
+    expect(gateway.editar).toHaveBeenCalledWith(
+      expect.objectContaining({ identificador: "GUA-ELE-BOM-01", alterarIdentificador: true }),
     );
   });
 });

@@ -30,8 +30,8 @@
 
 - [ ] T004 [P] [US1] Escrever testes falhos de “Aplicar recomendações”, edição parcial, sugestão inválida e proteção de identificador existente em `apps/web/src/features/pcm/components/CampoIdentificador.test.tsx` (AC-1, AC-2, AC-4).
 - [ ] T005 [P] [US1] Escrever testes falhos da operação lógica de persistência e rollback/erro sem ativo parcial em `apps/web/src/features/pcm/application/identificador-ativo.test.ts` (AC-3).
-- [ ] T006 [US1] Implementar estado de preview e ação explícita em `apps/web/src/features/pcm/components/CampoIdentificador.tsx`, sem escrita remota ao aplicar (AC-1, AC-2, AC-4).
-- [ ] T007 [US1] Ajustar `apps/web/src/features/pcm/application/identificador-ativo.ts` para validar/aplicar siglas e identificador pela operação lógica existente, preservando erro contextual e unicidade (AC-2, AC-3).
+- [X] T006 [US1] Implementar estado de preview e ação explícita em `apps/web/src/features/pcm/components/CampoIdentificador.tsx`, sem escrita remota ao aplicar (AC-1, AC-2, AC-4).
+- [X] T007 [US1] Ajustar `apps/web/src/features/pcm/application/identificador-ativo.ts` para validar/aplicar siglas e identificador pela operação lógica existente, preservando erro contextual e unicidade (AC-2, AC-3).
 - [ ] T008 [US1] Integrar e testar o contrato em `apps/web/src/features/pcm/components/EquipamentoModal.tsx`, `EquipamentoModal.test.tsx`, `SistemaModal.tsx` e novo `SistemaModal.test.tsx`, incluindo cancelar e aviso de QR code (AC-1, AC-3, AC-4).
 
 **Checkpoint**: US1 pode ser demonstrada isoladamente e não altera nenhum cockpit.

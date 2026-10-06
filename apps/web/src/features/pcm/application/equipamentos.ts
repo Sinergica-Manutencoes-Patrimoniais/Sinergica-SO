@@ -84,13 +84,39 @@ export async function criarEquipamento(
 export async function editarEquipamento(
   gateway: EquipamentosGateway,
   input: EditarEquipamentoCommand,
+  opcoesIdentificador?: CriarComIdentificadorOpcoes,
 ) {
   const validado = validarEquipamento(input);
   if (validado.parentItemId) {
     const pai = await gateway.obterItem(validado.parentItemId);
     validarParentItem(validado.clientId ?? null, pai);
   }
-  return gateway.editar({ ...validado, id: input.id, userId: input.userId });
+  if (
+    !opcoesIdentificador ||
+    !validado.alterarIdentificador ||
+    opcoesIdentificador.identificadorManual !== null
+  ) {
+    return gateway.editar({ ...validado, id: input.id, userId: input.userId });
+  }
+
+  const resolvido = await resolverIdentificadorNaCriacao(
+    opcoesIdentificador.identificador,
+    {
+      clienteId: validado.clientId as string,
+      areaId: validado.areaId ?? null,
+      localId: validado.localId ?? null,
+      categoriaId: validado.categoriaId as string,
+      nomeAtivo: validado.nome,
+    },
+    { ...opcoesIdentificador, userId: input.userId },
+  );
+  return gateway.editar({
+    ...validado,
+    id: input.id,
+    identificador: resolvido.identificador,
+    alterarIdentificador: true,
+    userId: input.userId,
+  });
 }
 
 /** AC-6 — resolve o caminho de instalação (Cliente>Área>Local) + Sistemas do Item, pra tela de

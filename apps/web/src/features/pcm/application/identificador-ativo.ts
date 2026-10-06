@@ -4,6 +4,7 @@ import {
   montarPrefixoIdentificador,
   normalizarIdentificadorManual,
 } from "../domain/identificador-ativo";
+import { validarSigla } from "../domain/siglas";
 import type { IdentificadorAtivoGateway, NivelComSigla } from "./identificador-ativo-gateway";
 
 export class IdentificadorDuplicadoError extends Error {
@@ -21,17 +22,42 @@ export interface EntradaIdentificadorAtivo {
   nomeAtivo: string;
 }
 
+export type SiglaInformada = { nivel: NivelComSigla; id: string; sigla: string };
+
+function aplicarSiglasInformadas(
+  niveis: Awaited<ReturnType<IdentificadorAtivoGateway["obterNiveis"]>>,
+  siglasInformadas: readonly SiglaInformada[],
+) {
+  const siglaPara = (nivel: NivelComSigla, item: { id: string; sigla: string | null }) =>
+    siglasInformadas.find((sigla) => sigla.nivel === nivel && sigla.id === item.id)?.sigla ??
+    item.sigla;
+  return {
+    cliente: { ...niveis.cliente, sigla: siglaPara("cliente", niveis.cliente) },
+    area: niveis.area ? { ...niveis.area, sigla: siglaPara("area", niveis.area) } : null,
+    locais: niveis.locais.map((local) => ({
+      ...local,
+      sigla: siglaPara("local", local),
+    })),
+    categoria: { ...niveis.categoria, sigla: siglaPara("categoria", niveis.categoria) },
+  };
+}
+
 export async function previsualizarIdentificador(
   gateway: IdentificadorAtivoGateway,
   input: EntradaIdentificadorAtivo,
+  siglasInformadas: readonly SiglaInformada[] = [],
 ) {
-  const niveis = await gateway.obterNiveis(input);
+  const niveis = aplicarSiglasInformadas(await gateway.obterNiveis(input), siglasInformadas);
   try {
     const { prefixo, numeroDoNome } = montarPrefixoIdentificador({
       ...niveis,
       nomeAtivo: input.nomeAtivo,
     });
-    return { prefixo, nn: numeroDoNome, faltantes: [] };
+    return {
+      prefixo,
+      nn: numeroDoNome ?? (await gateway.proximoSequencial(prefixo)),
+      faltantes: [],
+    };
   } catch (erro) {
     if (erro instanceof SiglasFaltantesError)
       return { prefixo: null, nn: null, faltantes: erro.faltantes };
@@ -43,7 +69,7 @@ export async function resolverIdentificadorNaCriacao(
   gateway: IdentificadorAtivoGateway,
   input: EntradaIdentificadorAtivo,
   opcoes: {
-    siglasInformadas: Array<{ nivel: NivelComSigla; id: string; sigla: string }>;
+    siglasInformadas: SiglaInformada[];
     identificadorManual: string | null;
     userId: string;
   },
@@ -55,7 +81,7 @@ export async function resolverIdentificadorNaCriacao(
     };
   }
   for (const sigla of opcoes.siglasInformadas) {
-    await gateway.definirSigla(sigla.nivel, sigla.id, sigla.sigla, opcoes.userId);
+    await gateway.definirSigla(sigla.nivel, sigla.id, validarSigla(sigla.sigla), opcoes.userId);
   }
   const niveis = await gateway.obterNiveis(input);
   const { prefixo, numeroDoNome } = montarPrefixoIdentificador({

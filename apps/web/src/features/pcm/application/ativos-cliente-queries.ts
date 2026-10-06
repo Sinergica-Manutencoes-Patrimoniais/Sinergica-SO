@@ -28,7 +28,7 @@ import {
 import type { FerramentaAlocacaoClienteGateway } from "./ferramenta-alocacao-cliente-gateway";
 import type { HierarquiaGateway } from "./hierarquia-gateway";
 import { previsualizarIdentificador } from "./identificador-ativo";
-import type { EntradaIdentificadorAtivo } from "./identificador-ativo";
+import type { EntradaIdentificadorAtivo, SiglaInformada } from "./identificador-ativo";
 import type { IdentificadorAtivoGateway } from "./identificador-ativo-gateway";
 import {
   criarSistema,
@@ -50,7 +50,10 @@ export const ativosClienteQueryKeys = {
   ferramentasAlocadas: (clienteId: string) =>
     ["pcm", "ativos-cliente", clienteId, "ferramentas-alocadas"] as const,
   ferramentasDisponiveis: () => ["pcm", "ativos-cliente", "ferramentas-disponiveis"] as const,
-  previaIdentificador: (input: EntradaIdentificadorAtivo | null) =>
+  previaIdentificador: (
+    input: EntradaIdentificadorAtivo | null,
+    siglasInformadas: readonly SiglaInformada[],
+  ) =>
     [
       "pcm",
       "ativos",
@@ -60,6 +63,10 @@ export const ativosClienteQueryKeys = {
       input?.localId ?? "",
       input?.categoriaId ?? "",
       input?.nomeAtivo ?? "",
+      siglasInformadas
+        .map((sigla) => `${sigla.nivel}:${sigla.id}:${sigla.sigla}`)
+        .sort()
+        .join("|"),
     ] as const,
 };
 
@@ -226,7 +233,9 @@ export function useCriarComponente(
           ? {
               identificador,
               siglasInformadas: input.siglasInformadas ?? [],
-              identificadorManual: input.identificadorManual ?? null,
+              identificadorManual: input.alterarIdentificador
+                ? (input.identificadorManual ?? null)
+                : null,
             }
           : undefined,
       ),
@@ -234,10 +243,24 @@ export function useCriarComponente(
   });
 }
 
-export function useEditarComponente(gateway: EquipamentosGateway) {
+export function useEditarComponente(
+  gateway: EquipamentosGateway,
+  identificador?: IdentificadorAtivoGateway,
+) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: EditarEquipamentoCommand) => editarEquipamento(gateway, input),
+    mutationFn: (input: EditarEquipamentoCommand) =>
+      editarEquipamento(
+        gateway,
+        input,
+        identificador && input.alterarIdentificador && input.identificadorManual === null
+          ? {
+              identificador,
+              siglasInformadas: input.siglasInformadas ?? [],
+              identificadorManual: null,
+            }
+          : undefined,
+      ),
     onSuccess: (_resultado, input) => invalidarComponentes(queryClient, input.clientId ?? ""),
   });
 }
@@ -264,7 +287,9 @@ export function useCriarSistema(
           ? {
               identificador,
               siglasInformadas: input.siglasInformadas ?? [],
-              identificadorManual: input.identificadorManual ?? null,
+              identificadorManual: input.alterarIdentificador
+                ? (input.identificadorManual ?? null)
+                : null,
             }
           : undefined,
       ),
@@ -272,10 +297,24 @@ export function useCriarSistema(
   });
 }
 
-export function useEditarSistema(gateway: SistemasGateway) {
+export function useEditarSistema(
+  gateway: SistemasGateway,
+  identificador?: IdentificadorAtivoGateway,
+) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: EditarSistemaCommand) => editarSistema(gateway, input),
+    mutationFn: (input: EditarSistemaCommand) =>
+      editarSistema(
+        gateway,
+        input,
+        identificador && input.alterarIdentificador && input.identificadorManual === null
+          ? {
+              identificador,
+              siglasInformadas: input.siglasInformadas ?? [],
+              identificadorManual: null,
+            }
+          : undefined,
+      ),
     onSuccess: (_resultado, input) => invalidarSistemas(queryClient, input.clienteId),
   });
 }
@@ -330,12 +369,13 @@ export function useDevolverFerramenta(
 export function usePreviaIdentificador(
   gateway: IdentificadorAtivoGateway,
   input: EntradaIdentificadorAtivo | null,
+  siglasInformadas: readonly SiglaInformada[] = [],
 ) {
   return useQuery({
-    queryKey: ativosClienteQueryKeys.previaIdentificador(input),
+    queryKey: ativosClienteQueryKeys.previaIdentificador(input, siglasInformadas),
     queryFn: () => {
       if (!input) throw new Error("Dados insuficientes para gerar o identificador.");
-      return previsualizarIdentificador(gateway, input);
+      return previsualizarIdentificador(gateway, input, siglasInformadas);
     },
     enabled: Boolean(input?.clienteId && input.categoriaId && input.nomeAtivo.trim()),
     placeholderData: keepPreviousData,

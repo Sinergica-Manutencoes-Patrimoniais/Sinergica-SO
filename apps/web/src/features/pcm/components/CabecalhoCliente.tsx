@@ -109,7 +109,7 @@ function ContextoItem({
 }) {
   return (
     <div className={`flex min-w-0 items-center gap-1.5 text-caption text-ink-3 ${className}`}>
-      <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
       <span className="sr-only">{label}</span>
       <span className="truncate" title={value}>
         {value}

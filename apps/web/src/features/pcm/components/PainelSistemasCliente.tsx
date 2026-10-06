@@ -41,7 +41,7 @@ export function PainelSistemasCliente({
   const areas = useAreasDoCliente(supabaseHierarquiaAdapter, clienteId);
   const locais = useLocaisDoCliente(supabaseHierarquiaAdapter, clienteId);
   const criar = useCriarSistema(supabaseSistemasAdapter, supabaseIdentificadorAtivoAdapter);
-  const editar = useEditarSistema(supabaseSistemasAdapter);
+  const editar = useEditarSistema(supabaseSistemasAdapter, supabaseIdentificadorAtivoAdapter);
   const desativar = useDesativarSistema(supabaseSistemasAdapter, clienteId);
   const carregando = sistemas.isLoading || membros.isLoading || areas.isLoading || locais.isLoading;
   const erro = sistemas.error ?? membros.error ?? areas.error ?? locais.error;

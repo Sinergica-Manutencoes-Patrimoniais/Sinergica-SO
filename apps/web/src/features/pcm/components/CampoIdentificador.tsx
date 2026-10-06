@@ -1,18 +1,17 @@
 import { Button, ConfirmDialog } from "@sinergica/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePreviaIdentificador } from "../application/ativos-cliente-queries";
-import type { EntradaIdentificadorAtivo } from "../application/identificador-ativo";
+import type { EntradaIdentificadorAtivo, SiglaInformada } from "../application/identificador-ativo";
 import type { NivelComSigla } from "../application/identificador-ativo-gateway";
-import { sugerirSigla } from "../domain/siglas";
+import { sugerirSigla, validarSigla } from "../domain/siglas";
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
-
-type SiglaInformada = { nivel: NivelComSigla; id: string; sigla: string };
 
 export function CampoIdentificador({
   modo,
   input,
   valor,
   onManualChange,
+  onAplicarRecomendacoes,
   siglasInformadas,
   onSiglasChange,
 }: {
@@ -20,35 +19,54 @@ export function CampoIdentificador({
   input: EntradaIdentificadorAtivo | null;
   valor: string;
   onManualChange: (valor: string, alterado: boolean) => void;
+  onAplicarRecomendacoes: (valor: string) => void;
   siglasInformadas: SiglaInformada[];
   onSiglasChange: (siglas: SiglaInformada[]) => void;
 }) {
   const [editando, setEditando] = useState(false);
   const [confirmarAlteracao, setConfirmarAlteracao] = useState(false);
-  const previa = usePreviaIdentificador(supabaseIdentificadorAtivoAdapter, input);
+  const [recomendacoesAplicadas, setRecomendacoesAplicadas] = useState(false);
+  const previa = usePreviaIdentificador(supabaseIdentificadorAtivoAdapter, input, siglasInformadas);
   const resultado = previa.data;
   const sugestao = resultado?.prefixo ? `${resultado.prefixo}-${resultado.nn ?? "##"}` : "—";
 
   useEffect(() => {
-    const faltantes = resultado?.faltantes ?? [];
-    const novas = faltantes
-      .filter(
-        (faltante) =>
-          !siglasInformadas.some(
-            (item) => item.id === faltante.id && item.nivel === faltante.nivel,
-          ),
-      )
-      .map((faltante) => ({
-        nivel: faltante.nivel,
-        id: faltante.id,
-        sigla: sugerirSigla(faltante.nome, { manterNumero: true }).sigla,
-      }));
-    if (novas.length) onSiglasChange([...siglasInformadas, ...novas]);
-  }, [resultado?.faltantes, siglasInformadas, onSiglasChange]);
+    if (!recomendacoesAplicadas || !resultado?.prefixo) return;
+    setRecomendacoesAplicadas(false);
+    onAplicarRecomendacoes(sugestao);
+  }, [onAplicarRecomendacoes, recomendacoesAplicadas, resultado?.prefixo, sugestao]);
 
   function atualizarSigla(nivel: NivelComSigla, id: string, sigla: string) {
     const restante = siglasInformadas.filter((item) => item.id !== id || item.nivel !== nivel);
     onSiglasChange([...restante, { nivel, id, sigla: sigla.toUpperCase() }]);
+  }
+
+  const sugestoesVisiveis = useMemo(
+    () =>
+      (resultado?.faltantes ?? []).map((faltante) => {
+        const atual = siglasInformadas.find(
+          (item) => item.id === faltante.id && item.nivel === faltante.nivel,
+        );
+        return {
+          ...faltante,
+          sigla: atual?.sigla ?? sugerirSigla(faltante.nome, { manterNumero: true }).sigla,
+        };
+      }),
+    [resultado?.faltantes, siglasInformadas],
+  );
+
+  function aplicarRecomendacoes() {
+    onSiglasChange([
+      ...siglasInformadas.filter(
+        (informada) =>
+          !sugestoesVisiveis.some(
+            (sugestaoVisivel) =>
+              sugestaoVisivel.id === informada.id && sugestaoVisivel.nivel === informada.nivel,
+          ),
+      ),
+      ...sugestoesVisiveis.map(({ nivel, id, sigla }) => ({ nivel, id, sigla })),
+    ]);
+    setRecomendacoesAplicadas(true);
   }
 
   if (!editando) {
@@ -72,6 +90,18 @@ export function CampoIdentificador({
             resultado={resultado.faltantes}
             siglasInformadas={siglasInformadas}
             atualizarSigla={atualizarSigla}
+            podeAplicar={
+              !valor &&
+              sugestoesVisiveis.every((sigla) => {
+                try {
+                  validarSigla(sigla.sigla);
+                  return true;
+                } catch {
+                  return false;
+                }
+              })
+            }
+            onAplicar={aplicarRecomendacoes}
           />
         ) : null}
         <ConfirmDialog
@@ -106,6 +136,18 @@ export function CampoIdentificador({
           resultado={resultado.faltantes}
           siglasInformadas={siglasInformadas}
           atualizarSigla={atualizarSigla}
+          podeAplicar={
+            !valor &&
+            sugestoesVisiveis.every((sigla) => {
+              try {
+                validarSigla(sigla.sigla);
+                return true;
+              } catch {
+                return false;
+              }
+            })
+          }
+          onAplicar={aplicarRecomendacoes}
         />
       ) : null}
     </section>
@@ -116,14 +158,23 @@ function SiglasFaltantes({
   resultado,
   siglasInformadas,
   atualizarSigla,
+  podeAplicar,
+  onAplicar,
 }: {
   resultado: readonly { nivel: NivelComSigla; id: string; nome: string }[];
   siglasInformadas: SiglaInformada[];
   atualizarSigla: (nivel: NivelComSigla, id: string, sigla: string) => void;
+  podeAplicar: boolean;
+  onAplicar: () => void;
 }) {
   return (
     <div className="rounded-md border border-warning-line bg-warning-soft p-3">
-      <p className="mb-2 text-caption font-semibold text-ink-2">Siglas faltando</p>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-caption font-semibold text-ink-2">Siglas faltando</p>
+        <Button type="button" variant="secondary" onClick={onAplicar} disabled={!podeAplicar}>
+          Aplicar recomendações
+        </Button>
+      </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {resultado.map((faltante) => {
           const atual = siglasInformadas.find(

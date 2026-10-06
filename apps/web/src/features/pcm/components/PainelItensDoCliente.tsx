@@ -43,7 +43,10 @@ export function PainelItensDoCliente({
   const sistemas = useSistemasDoCliente(supabaseSistemasAdapter, clienteId);
   const membros = useMembrosSistemasDoCliente(supabaseSistemasAdapter, clienteId);
   const criar = useCriarComponente(supabaseEquipamentosAdapter, supabaseIdentificadorAtivoAdapter);
-  const editar = useEditarComponente(supabaseEquipamentosAdapter);
+  const editar = useEditarComponente(
+    supabaseEquipamentosAdapter,
+    supabaseIdentificadorAtivoAdapter,
+  );
   const desativar = useDesativarComponente(supabaseEquipamentosAdapter, clienteId);
 
   const carregando =
