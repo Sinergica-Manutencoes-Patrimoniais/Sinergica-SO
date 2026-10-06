@@ -1,5 +1,6 @@
 import { supabase } from "../../../lib/supabase-client";
 import type {
+  AtualizarPlanoPreventivoInput,
   AvaliacaoPreventiva,
   CatalogoPreventivas,
   OcorrenciaPreventiva,
@@ -9,8 +10,80 @@ import type {
 
 export type ContextoPreventivas = { clienteId?: string };
 
+type PlanoPreventivoPersistido = Pick<
+  PlanoPreventivo,
+  | "id"
+  | "cliente_id"
+  | "sistema_id"
+  | "equipamento_id"
+  | "primeira_data"
+  | "intervalo_unidade"
+  | "intervalo_n"
+>;
+
 function lancarSeErro(resultado: { error: unknown }) {
   if (resultado.error) throw resultado.error;
+}
+
+function alteracaoEstrutural(
+  atual: PlanoPreventivoPersistido,
+  alteracoes: AtualizarPlanoPreventivoInput["alteracoes"],
+): boolean {
+  return (
+    (alteracoes.sistema_id !== undefined && alteracoes.sistema_id !== atual.sistema_id) ||
+    (alteracoes.equipamento_id !== undefined &&
+      alteracoes.equipamento_id !== atual.equipamento_id) ||
+    (alteracoes.primeira_data !== undefined && alteracoes.primeira_data !== atual.primeira_data) ||
+    (alteracoes.intervalo_unidade !== undefined &&
+      alteracoes.intervalo_unidade !== atual.intervalo_unidade) ||
+    (alteracoes.intervalo_n !== undefined && alteracoes.intervalo_n !== atual.intervalo_n)
+  );
+}
+
+/**
+ * Atualiza um plano sem jamais reescrever suas ocorrências. A validação ocorre aqui, próxima da
+ * escrita, porque uma tela antiga ou uma chamada concorrente não pode burlar o bloqueio visual.
+ */
+export async function atualizarPlanoPreventivo({
+  planoId,
+  clienteId,
+  userId,
+  alteracoes,
+}: AtualizarPlanoPreventivoInput): Promise<void> {
+  const planoResultado = await supabase
+    .schema("pcm")
+    .from("planos_preventivos")
+    .select("id,cliente_id,sistema_id,equipamento_id,primeira_data,intervalo_unidade,intervalo_n")
+    .eq("id", planoId)
+    .maybeSingle();
+  lancarSeErro(planoResultado);
+  const plano = planoResultado.data as PlanoPreventivoPersistido | null;
+  if (!plano) throw new Error("Plano preventivo não encontrado.");
+  if (plano.cliente_id !== clienteId) {
+    throw new Error("O plano preventivo não pertence ao cliente em contexto.");
+  }
+
+  if (alteracaoEstrutural(plano, alteracoes)) {
+    const ocorrenciasResultado = await supabase
+      .schema("pcm")
+      .from("ocorrencias_preventivas")
+      .select("id", { count: "exact", head: true })
+      .eq("plano_id", planoId);
+    lancarSeErro(ocorrenciasResultado);
+    if ((ocorrenciasResultado.count ?? 0) > 0) {
+      throw new Error(
+        "Alvo e recorrência não podem ser alterados após a primeira ocorrência. Pause e crie um novo plano.",
+      );
+    }
+  }
+
+  const { error } = await supabase
+    .schema("pcm")
+    .from("planos_preventivos")
+    .update({ ...alteracoes, updated_by: userId, updated_at: new Date().toISOString() })
+    .eq("id", planoId)
+    .eq("cliente_id", clienteId);
+  lancarSeErro({ error });
 }
 
 /**

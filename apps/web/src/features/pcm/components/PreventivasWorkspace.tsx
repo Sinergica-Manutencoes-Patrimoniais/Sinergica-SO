@@ -15,6 +15,7 @@ import {
   podeEditarEstruturaPlano,
 } from "../domain/preventivas";
 import {
+  atualizarPlanoPreventivo,
   listarCatalogoPreventivas,
   listarPreventivas,
 } from "../infrastructure/supabase-preventivas-adapter";
@@ -261,16 +262,12 @@ export function PreventivasWorkspace({
     setSalvando(true);
     setErroAcao(null);
     try {
-      const { error } = await supabase
-        .schema("pcm")
-        .from("planos_preventivos")
-        .update({
-          estado: plano.estado === "pausado" ? "ativo" : "pausado",
-          updated_by: userId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", plano.id);
-      if (error) throw error;
+      await atualizarPlanoPreventivo({
+        planoId: plano.id,
+        clienteId: plano.cliente_id,
+        userId,
+        alteracoes: { estado: plano.estado === "pausado" ? "ativo" : "pausado" },
+      });
       await atualizar();
     } catch (causa) {
       setErroAcao(causa instanceof Error ? causa.message : "Não foi possível atualizar o plano.");
@@ -283,16 +280,12 @@ export function PreventivasWorkspace({
     setSalvando(true);
     setErroAcao(null);
     try {
-      const { error } = await supabase
-        .schema("pcm")
-        .from("planos_preventivos")
-        .update({
-          estado: "pausado",
-          updated_by: userId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", plano.id);
-      if (error) throw error;
+      await atualizarPlanoPreventivo({
+        planoId: plano.id,
+        clienteId: plano.cliente_id,
+        userId,
+        alteracoes: { estado: "pausado" },
+      });
       setForm({
         nome: `${plano.nome} — novo ciclo`,
         clienteId: plano.cliente_id,
