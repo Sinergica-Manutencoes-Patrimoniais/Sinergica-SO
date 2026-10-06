@@ -431,7 +431,7 @@ export function VisaoClientePage({
                         <span className="sr-only"> em {grupo.label}</span>
                       </summary>
                       <div
-                        className="absolute right-0 z-20 mt-1 grid min-w-48 rounded-lg border border-line bg-card p-1 shadow-lg"
+                        className="absolute right-0 z-20 mt-1 grid min-w-48 rounded-lg border border-line bg-card p-1 shadow-modal"
                         aria-label={`Mais áreas de ${grupo.label}`}
                       >
                         {abasNoMais.map((item) => {

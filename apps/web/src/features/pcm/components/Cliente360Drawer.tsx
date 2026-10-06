@@ -75,8 +75,13 @@ export function Cliente360Drawer({
   if (!aberto) return null;
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="presentation">
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: o diálogo fornece Escape e botão de fechar. */}
-      <div className="absolute inset-0 bg-black/30" onClick={onFechar} aria-hidden />
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={`Fechar ${titulo} pelo fundo`}
+        className="absolute inset-0 cursor-default bg-black/30"
+        onClick={onFechar}
+      />
       <dialog
         open
         ref={painelRef}
