@@ -16,7 +16,6 @@ import {
   DollarSign,
   ExternalLink,
   FolderTree,
-  Headset,
   Layers,
   LayoutGrid,
   Link2,
@@ -60,6 +59,7 @@ import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao
 import { ArvoreAtivos } from "../components/ArvoreAtivos";
 import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
+import { Cliente360AcoesRapidas } from "../components/Cliente360AcoesRapidas";
 import { ClienteFormModal } from "../components/ClienteFormModal";
 import { ClienteNaoEncontrado } from "../components/ClienteNaoEncontrado";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
@@ -320,36 +320,19 @@ export function VisaoClientePage({
   return (
     <div className="flex flex-col gap-5">
       <CabecalhoCliente cliente={cliente} />
-      {temEscrita && user && (
-        <div className="flex flex-wrap justify-end gap-2" aria-label="Ações rápidas do cliente">
-          <Button size="sm" variant="secondary" onClick={() => setNovoChamado(true)}>
-            <Headset className="h-4 w-4" /> Novo chamado
-          </Button>
-          <Button size="sm" variant="secondary" onClick={() => setNovaOs(true)}>
-            <ClipboardList className="h-4 w-4" /> Nova OS
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              setAba("preventivas");
-              setAbrirPreventivaToken((token) => token + 1);
-            }}
-          >
-            <Calendar className="h-4 w-4" /> Nova preventiva
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              setAba("ativos");
-              setAbrirComponenteToken((token) => token + 1);
-            }}
-          >
-            <Layers className="h-4 w-4" /> Novo componente
-          </Button>
-        </div>
-      )}
+      <Cliente360AcoesRapidas
+        habilitado={Boolean(temEscrita && user)}
+        onNovoChamado={() => setNovoChamado(true)}
+        onNovaOs={() => setNovaOs(true)}
+        onNovaPreventiva={() => {
+          setAba("preventivas");
+          setAbrirPreventivaToken((token) => token + 1);
+        }}
+        onNovoComponente={() => {
+          setAba("ativos");
+          setAbrirComponenteToken((token) => token + 1);
+        }}
+      />
       {(user?.papel === "superadmin" || user?.papel === "supervisor") && (
         <div className="flex justify-end">
           <button

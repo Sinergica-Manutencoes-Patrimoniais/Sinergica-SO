@@ -24,12 +24,12 @@ describe("VisaoClientePage — E01-S53 AC-8", () => {
     expect(fonte).toContain('label: "Operação"');
     expect(fonte).toContain('label: "Ativos"');
     expect(fonte).toContain('label: "Gestão e relacionamento"');
-    expect(fonte).toContain('aria-label="Ações rápidas do cliente"');
+    expect(fonte).toContain("<Cliente360AcoesRapidas");
     expect(fonte).toContain("temEscrita && user");
-    expect(fonte).toContain("Novo chamado");
-    expect(fonte).toContain("Nova OS");
-    expect(fonte).toContain("Nova preventiva");
-    expect(fonte).toContain("Novo componente");
+    expect(fonte).toContain("onNovoChamado");
+    expect(fonte).toContain("onNovaOs");
+    expect(fonte).toContain("onNovaPreventiva");
+    expect(fonte).toContain("onNovoComponente");
   });
 
   it("mantém áreas secundárias alcançáveis no overflow Mais", () => {
