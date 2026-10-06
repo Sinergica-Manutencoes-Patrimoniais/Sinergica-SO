@@ -60,6 +60,7 @@ import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
 import { ClienteFormModal } from "../components/ClienteFormModal";
 import { ClienteNaoEncontrado } from "../components/ClienteNaoEncontrado";
+import { OrdemServicoDetalheDrawer } from "../components/OrdemServicoDetalheDrawer";
 import { PainelBacklog } from "../components/PainelBacklog";
 import { PainelEquipamentos } from "../components/PainelEquipamentos";
 import { PainelFerramentasCliente as PainelFerramentasClienteTab } from "../components/PainelFerramentasCliente";
@@ -166,6 +167,11 @@ export function VisaoClientePage({
   const [aba, setAba] = useState<Aba360>(periodo ? "os" : "resumo");
   const [editandoCadastro, setEditandoCadastro] = useState(false);
   const [criandoAcesso, setCriandoAcesso] = useState(false);
+  const [detalheOs, setDetalheOs] = useState<{
+    ordem: OrdemServicoResumo;
+    originElementId?: string;
+  } | null>(null);
+  const clienteDetalheAnterior = useRef(clienteId);
 
   // AC-1: só carrega/renderiza o conteúdo com leitura no módulo pcm (mesma checagem das demais
   // telas do PCM; superadmin já é bypass dentro de podeAcessarModulo). Sem permissão nova.
@@ -195,6 +201,13 @@ export function VisaoClientePage({
   useEffect(() => {
     if (!permissoesCarregando && temAcesso) carregar();
   }, [permissoesCarregando, temAcesso, carregar]);
+
+  useEffect(() => {
+    if (clienteDetalheAnterior.current !== clienteId) {
+      clienteDetalheAnterior.current = clienteId;
+      setDetalheOs(null);
+    }
+  }, [clienteId]);
 
   if (permissoesCarregando) {
     return (
@@ -272,6 +285,21 @@ export function VisaoClientePage({
     grupos,
     assessment,
   } = estado.visao;
+
+  function abrirDetalheOs(osId: string) {
+    const ordem = [...backlog, ...historico].find((item) => item.id === osId);
+    if (!ordem) {
+      onAbrirOs?.(osId);
+      return;
+    }
+    setDetalheOs({
+      ordem,
+      originElementId:
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement.id || undefined
+          : undefined,
+    });
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -371,12 +399,12 @@ export function VisaoClientePage({
           equipamentos={equipamentos}
           qualidade={qualidade}
           grupos={grupos}
-          onAbrirOs={onAbrirOs}
+          onAbrirOs={abrirDetalheOs}
           temEscrita={temEscrita}
         />
       )}
 
-      {aba === "timeline" && <TimelineCliente eventos={eventos} onAbrirOs={onAbrirOs} />}
+      {aba === "timeline" && <TimelineCliente eventos={eventos} onAbrirOs={abrirDetalheOs} />}
 
       {aba === "os" && (
         <div className="flex flex-col gap-3">
@@ -391,11 +419,11 @@ export function VisaoClientePage({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <PainelBacklog
               ordens={periodo ? filtrarPorPeriodo(backlog, periodo) : backlog}
-              onSelecionar={onAbrirOs}
+              onSelecionar={abrirDetalheOs}
             />
             <PainelHistorico
               ordens={periodo ? filtrarPorPeriodo(historico, periodo) : historico}
-              onSelecionar={onAbrirOs}
+              onSelecionar={abrirDetalheOs}
             />
           </div>
         </div>
@@ -442,7 +470,7 @@ export function VisaoClientePage({
           clienteId={cliente.id}
           temEscrita={temEscrita}
           userId={user.id}
-          onAbrirOs={onAbrirOs}
+          onAbrirOs={abrirDetalheOs}
         />
       )}
 
@@ -464,6 +492,17 @@ export function VisaoClientePage({
 
       {aba === "comunicacao" && (
         <PainelComunicacao cliente={cliente} eventos={eventos} temEscrita={temEscrita} />
+      )}
+      {detalheOs && (
+        <OrdemServicoDetalheDrawer
+          aberto
+          ordem={detalheOs.ordem}
+          clienteId={cliente.id}
+          temEscrita={temEscrita}
+          originElementId={detalheOs.originElementId}
+          onFechar={() => setDetalheOs(null)}
+          onMutada={carregar}
+        />
       )}
     </div>
   );
