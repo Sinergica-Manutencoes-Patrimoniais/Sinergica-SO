@@ -15,6 +15,7 @@ import {
   listarCatalogoPreventivas,
   listarPreventivas,
 } from "../infrastructure/supabase-preventivas-adapter";
+import { PreventivaDetalheDrawer } from "./PreventivaDetalheDrawer";
 import { PreventivasCalendarioView } from "./PreventivasCalendarioView";
 import { PreventivasListaView } from "./PreventivasListaView";
 import { PreventivasTimelineView } from "./PreventivasTimelineView";
@@ -449,11 +450,6 @@ export function PreventivasWorkspace({
 
   function selecionarOcorrencia(ocorrenciaId: string) {
     setOcorrenciaEmFoco(ocorrenciaId);
-    requestAnimationFrame(() =>
-      document
-        .getElementById("detalhe-preventiva")
-        ?.scrollIntoView?.({ behavior: "smooth", block: "center" }),
-    );
   }
 
   function mudarVisao(proxima: VisaoPreventivas) {
@@ -539,69 +535,6 @@ export function PreventivasWorkspace({
           )}
         </div>
       </section>
-      {ocorrenciaSelecionada && (
-        <section id="detalhe-preventiva" className="rounded-lg border border-line bg-surface p-4">
-          <h2 className="font-semibold text-ink">Detalhe da preventiva</h2>
-          <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="font-medium text-ink">
-                {planoPorId.get(ocorrenciaSelecionada.plano_id)?.nome ?? "Plano removido"}
-              </p>
-              <p className="text-sm text-ink-3">
-                Alvo: {planoPorId.get(ocorrenciaSelecionada.plano_id)?.alvo_nome ?? "não informado"}{" "}
-                · Vence em{" "}
-                {new Intl.DateTimeFormat("pt-BR").format(
-                  new Date(`${ocorrenciaSelecionada.vencimento}T00:00:00`),
-                )}
-              </p>
-              <p className="text-sm text-ink-3">
-                Visita: {dataHoraLocal(ocorrenciaSelecionada.visita_em)} · Técnico:{" "}
-                {ocorrenciaSelecionada.tecnico_nome ?? "não informado"} ·{" "}
-                {ocorrenciaSelecionada.os_numero
-                  ? `OS ${ocorrenciaSelecionada.os_numero}`
-                  : "OS ainda não criada"}
-              </p>
-              {ocorrenciaSelecionada.erro_envio && (
-                <p className="text-sm text-red">{ocorrenciaSelecionada.erro_envio}</p>
-              )}
-            </div>
-            <span
-              className={`rounded-full px-2 py-1 text-caption font-semibold ${classeResultado(ocorrenciaSelecionada)}`}
-            >
-              Resultado: {rotuloResultado(ocorrenciaSelecionada)}
-            </span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {ocorrenciaSelecionada.auvo_task_url && (
-              <a
-                href={ocorrenciaSelecionada.auvo_task_url}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-md border border-line px-3 py-1.5 text-caption font-semibold text-ink hover:bg-line-soft"
-              >
-                Abrir formulário no Auvo
-              </a>
-            )}
-            {temEscrita && ocorrenciaSelecionada.envio_estado !== "disponivel" && (
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setSelecionada(ocorrenciaSelecionada);
-                  setTecnicoId(ocorrenciaSelecionada.tecnico_funcionario_id ?? "");
-                  setVisita(
-                    ocorrenciaSelecionada.visita_em
-                      ? ocorrenciaSelecionada.visita_em.slice(0, 16)
-                      : "",
-                  );
-                }}
-              >
-                <Send className="mr-2 h-4 w-4" />
-                Confirmar visita
-              </Button>
-            )}
-          </div>
-        </section>
-      )}
       <section className="rounded-lg border border-line bg-surface p-4">
         <h2 className="font-semibold text-ink">Histórico de execuções</h2>
         <p className="mt-1 text-sm text-ink-3">
@@ -755,6 +688,18 @@ export function PreventivasWorkspace({
                     A cada {plano.intervalo_n} {plano.intervalo_unidade} · {plano.estado}
                   </p>
                 </div>
+                <Button
+                  variant="secondary"
+                  disabled={!ocorrencias.some((ocorrencia) => ocorrencia.plano_id === plano.id)}
+                  onClick={() => {
+                    const proxima = ocorrencias
+                      .filter((ocorrencia) => ocorrencia.plano_id === plano.id)
+                      .sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0];
+                    if (proxima) selecionarOcorrencia(proxima.id);
+                  }}
+                >
+                  Ver plano
+                </Button>
                 {temEscrita && (
                   <Button
                     variant="secondary"
@@ -774,6 +719,22 @@ export function PreventivasWorkspace({
           )}
         </div>
       </section>
+      {ocorrenciaSelecionada && (
+        <PreventivaDetalheDrawer
+          ocorrencia={ocorrenciaSelecionada}
+          plano={planoPorId.get(ocorrenciaSelecionada.plano_id) ?? null}
+          ocorrenciasDoPlano={ocorrencias.filter(
+            (ocorrencia) => ocorrencia.plano_id === ocorrenciaSelecionada.plano_id,
+          )}
+          temEscrita={temEscrita}
+          onClose={() => setOcorrenciaEmFoco(null)}
+          onConfirmarVisita={(ocorrencia) => {
+            setSelecionada(ocorrencia);
+            setTecnicoId(ocorrencia.tecnico_funcionario_id ?? "");
+            setVisita(ocorrencia.visita_em ? ocorrencia.visita_em.slice(0, 16) : "");
+          }}
+        />
+      )}
       <Modal
         open={novo}
         onOpenChange={setNovo}

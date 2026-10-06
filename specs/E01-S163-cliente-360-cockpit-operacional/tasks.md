@@ -72,7 +72,7 @@
 - [X] T023 [P] [US3] Criar `apps/web/src/features/pcm/components/PreventivasTimelineView.tsx` com sequência prevista/enviada/executada/falha e seleção por teclado (AC-10, AC-11, AC-15).
 - [ ] T024 [US3] Implementar `apps/web/src/features/pcm/components/PreventivaDetalheDrawer.tsx` para ocorrência/plano, próximas ocorrências, histórico, OS, Auvo e ações autorizadas (AC-11, AC-12, AC-15).
 - [ ] T025 [US3] Implementar atualização validada em `apps/web/src/features/pcm/infrastructure/supabase-preventivas-adapter.ts`, rejeitando cliente divergente/campos estruturais bloqueados e preservando histórico (AC-13, AC-14).
-- [ ] T026 [US3] Refatorar `apps/web/src/features/pcm/components/PreventivasWorkspace.tsx` para switcher único, Lista inicial, preferência local validada e drawer compartilhado; manter `PreventivasCalendarioView.tsx` como terceira visão (AC-10, AC-11, AC-12, AC-15).
+- [X] T026 [US3] Refatorar `apps/web/src/features/pcm/components/PreventivasWorkspace.tsx` para switcher único, Lista inicial, preferência local validada e drawer compartilhado; manter `PreventivasCalendarioView.tsx` como terceira visão (AC-10, AC-11, AC-12, AC-15).
 - [ ] T027 [US3] Implementar ação “Pausar e criar novo plano” predefinindo formulário sem reutilizar id ou ocorrências e cobrir no teste do workspace (AC-13, AC-14).
 
 **Checkpoint**: US3 é funcional isoladamente na aba Preventivas e não exige filtro/navegação novos.
