@@ -56,9 +56,14 @@
       .global-nav .global-active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -25px; height: 3px; background: var(--orange); }
       .workspace { padding: 26px 34px 54px; max-width: 1860px; margin: auto; }
       .crumb { color: var(--orange); font-weight: 750; font-size: 14px; display: inline-flex; gap: 7px; align-items: center; background: none; border: 0; padding: 0; }
-      .client-header { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px; }
-      h1 { font-size: 28px; line-height: 1.15; margin: 0 0 6px; letter-spacing: -.8px; }
-      .subtitle { color: var(--muted); font-size: 15px; }
+      .client-header { display: flex; justify-content: space-between; align-items: center; gap: 22px; margin-top: 16px; min-height: 68px; padding: 12px 0 14px; border-bottom: 1px solid var(--border); }
+      .client-context { min-width: 0; display: flex; gap: 17px; align-items: center; white-space: nowrap; overflow: hidden; }
+      .client-name { color: #fff; font-size: 20px; font-weight: 760; letter-spacing: -.45px; }
+      .rail-item { color: #b5c0d5; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+      .rail-item b { color: #dce4f5; font-size: 10px; letter-spacing: .5px; text-transform: uppercase; margin-right: 5px; }
+      .rail-address { max-width: 355px; }
+      .rail-contact { max-width: 245px; }
+      .client-status { color: #84e6aa; background: rgba(40, 181, 96, .12); border: 1px solid rgba(64, 201, 114, .28); padding: 5px 8px; border-radius: 999px; font-size: 11px; font-weight: 750; }
       .header-actions { display: flex; gap: 9px; }
       .button { border: 1px solid var(--border); background: var(--surface); color: #e8edfa; border-radius: 9px; height: 39px; padding: 0 14px; font-weight: 750; display: inline-flex; align-items: center; gap: 8px; }
       .button.primary { background: #293e78; border-color: #365198; color: white; }
@@ -172,7 +177,7 @@
       .tag { font-size: 10px; color: #c9d3e9; background: #263148; border-radius: 99px; padding: 4px 7px; }
       .prototype-note { position: fixed; bottom: 15px; left: 273px; color: #b7c5e4; font-size: 11px; z-index: 4; background: rgba(15, 23, 40, .84); border: 1px solid rgba(84, 103, 145, .48); padding: 8px 12px; border-radius: 999px; backdrop-filter: blur(8px); }
       .prototype-note b { color: #fff; }
-      @media (max-width: 1300px) { .global-nav { gap: 17px; padding: 0 22px; } .workspace { padding: 22px; } .client-summary { grid-template-columns: 1.35fr repeat(3, 1fr); } .filterbar { grid-template-columns: 1.4fr repeat(2, 1fr); } .drawer { width: 580px; } }
+      @media (max-width: 1300px) { .global-nav { gap: 17px; padding: 0 22px; } .workspace { padding: 22px; } .client-summary { grid-template-columns: 1.35fr repeat(3, 1fr); } .filterbar { grid-template-columns: 1.4fr repeat(2, 1fr); } .drawer { width: 580px; } .rail-contact, .rail-city { display:none; } }
     </style>
   </head>
   <body>
@@ -203,7 +208,15 @@
         <div class="workspace">
           <button class="crumb">‹ Voltar para clientes</button>
           <div class="client-header">
-            <div><h1>H2 Sports Bar &amp; Poker</h1><div class="subtitle">Cliente 360 · Unidade Moema · São Paulo/SP</div></div>
+            <div class="client-context" aria-label="Informações do cliente">
+              <span class="client-name">H2 Sports Bar &amp; Poker</span>
+              <span class="client-status">Ativo · com contrato</span>
+              <span class="rail-item rail-address">⌖ Av. Júlio de Mesquita, 36 · Cambuí, Campinas/SP</span>
+              <span class="rail-item"><b>CNPJ</b>68.004.456/0001-63</span>
+              <span class="rail-item rail-contact">☏ (19) 3251-7070 · mr...@bol.com.br</span>
+              <span class="rail-item rail-city">Campinas · SP</span>
+              <span class="rail-item"><b>Auvo</b>#12807216</span>
+            </div>
             <div class="header-actions">
               <button class="button" onclick="showView('assets')">◈ Novo componente</button>
               <button class="button primary" onclick="openDrawer()">☏ Novo chamado</button>

@@ -21,6 +21,7 @@ Decisões de experiência e manutenção:
 - Recomendações de sigla precisam de ação explícita. O sistema preenche uma prévia revisável, sem gravar silenciosamente.
 - Filtros devem responder a perguntas operacionais reais e usar os dados já limitados ao cliente. Índice novo só será proposto após medição demonstrar necessidade.
 - A navegação com muitas abas deve ganhar agrupamento e ações rápidas, sem remover os hubs globais especializados.
+- O cabeçalho deve trocar o card alto e carregado por uma faixa contextual única: nome, endereço, situação, CNPJ, contato, cidade/UF e vínculo Auvo em leitura horizontal discreta. Ações operacionais ficam visíveis, mas sem competir visualmente com a identidade do cliente.
 
 ## User Scenarios & Testing
 
@@ -107,7 +108,7 @@ Fabrício encontra rapidamente Operação, Ativos e Gestão e inicia as ações 
 
 **Acceptance Scenarios**:
 
-1. **AC-22 — Navegação agrupada**: **Given** o Cliente 360, **When** a navegação é exibida, **Then** as abas são agrupadas em Operação, Ativos e Gestão/Relacionamento, a área ativa é inequívoca e o overflow responsivo fica em “Mais”, sem rótulo truncado.
+1. **AC-22 — Cabeçalho e navegação agrupados**: **Given** o Cliente 360 em desktop, **When** o cabeçalho é exibido, **Then** nome, endereço, situação, CNPJ, contato, cidade/UF e identificador Auvo são apresentados em uma faixa contextual horizontal, compacta e de hierarquia tipográfica moderada; as abas são agrupadas em Operação, Ativos e Gestão/Relacionamento, a área ativa é inequívoca e o overflow responsivo fica em “Mais”, sem rótulo truncado ou perda de informação do cliente.
 2. **AC-23 — Ações rápidas**: **Given** usuário com permissão, **When** acessa o cabeçalho do cliente, **Then** encontra atalhos para Novo Chamado, Nova OS, Nova Preventiva e Novo Componente; ações não autorizadas não são oferecidas.
 3. **AC-24 — Acessibilidade contextual**: **Given** navegação por teclado ou drawer aberto, **When** Tab, Shift+Tab e Escape são usados, **Then** foco é contido enquanto aberto, Escape fecha apenas a camada superior e o foco retorna ao acionador; rótulos e estados são anunciados.
 
@@ -142,7 +143,7 @@ Fabrício encontra rapidamente Operação, Ativos e Gestão e inicia as ações 
 - **FR-012**: O sistema MUST combinar filtros conforme AC-16 a AC-20 e apresentar contagem, limpeza e empty states distintos.
 - **FR-013**: O sistema MUST avaliar filtros sobre dados limitados ao `clienteId`; estado e query keys MUST incluir o cliente.
 - **FR-014**: O sistema MUST usar os índices e consultas existentes primeiro; qualquer migration de índice exige evidência de plano de execução e ADR/revisão próprios.
-- **FR-015**: O sistema MUST agrupar a navegação extensa e oferecer overflow acessível, mantendo todas as áreas atuais alcançáveis.
+- **FR-015**: O sistema MUST apresentar os dados essenciais do cliente em faixa horizontal compacta, sem card alto nem excesso de ênfase tipográfica, e agrupar a navegação extensa com overflow acessível, mantendo todas as áreas atuais alcançáveis.
 - **FR-016**: O sistema MUST exibir ações rápidas apenas quando a política vigente autorizar a operação.
 - **FR-017**: O sistema MUST suportar teclado, retorno de foco, Escape em pilha, rótulos acessíveis e redução de movimento nos drawers.
 - **FR-018**: O sistema MUST registrar eventos de produto sem dados sensíveis para abertura de drawer, troca de visão, uso de filtro, aplicação de siglas e conclusão/cancelamento de ação.
@@ -167,7 +168,7 @@ Fabrício encontra rapidamente Operação, Ativos e Gestão e inicia as ações 
 - **SC-006**: Nenhuma edição de plano altera ocorrências materializadas, datas executadas, resultados ou vínculos históricos.
 - **SC-007**: Aplicar recomendações reduz a zero a redigitação das siglas sugeridas e nunca persiste valor antes da confirmação “Salvar”.
 - **SC-008**: Testes automatizados demonstram isolamento entre dois clientes em filtros, drawers, queries e mutações.
-- **SC-009**: Todos os grupos e ações do cockpit são alcançáveis e operáveis somente por teclado, sem truncamento de rótulo nos viewports suportados.
+- **SC-009**: Todos os grupos, dados essenciais do cliente e ações do cockpit são alcançáveis e operáveis somente por teclado, sem truncamento de rótulo nos viewports suportados.
 
 ## Assumptions
 

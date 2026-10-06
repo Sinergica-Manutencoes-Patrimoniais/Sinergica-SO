@@ -19,6 +19,7 @@ import type {
   ResultadoEquipamentos,
 } from "../application/cliente-360-gateway";
 import { STATUS_HISTORICO } from "../domain/cliente-360";
+import { ehOsRegistroVisita } from "../domain/ordens-servico";
 
 // Linha de OS como vem do PostgREST (snake_case). Mapeada para OrdemServicoResumo (camelCase).
 interface OrdemServicoRow {
@@ -614,24 +615,26 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
     // Ponto 4 do feedback (2026-07-10): quem acessa a 360 durante uma ligação do cliente precisa
     // ver, sem clicar em mais nada, quem atendeu (técnico) e o que foi feito (descrição) — não só
     // a categoria. `tecnicoNome`/`descricao` viajam separados do `subtitulo` pra render estruturado.
-    const eventosOs = ((os.data ?? []) as OrdemServicoRow[]).map((ordem) => ({
-      id: `os-${ordem.id}`,
-      tipo: "os" as const,
-      titulo: `Chamado ${ordem.numero} · ${rotuloStatusOperacional(ordem.status)}`,
-      subtitulo: [ordem.titulo, ordem.local_descricao ?? ordem.solicitante ?? ordem.categoria]
-        .filter(Boolean)
-        .join(" — "),
-      data: ordem.auvo_synced_at ?? ordem.created_at,
-      criticidade: STATUS_HISTORICO.includes(ordem.status as (typeof STATUS_HISTORICO)[number])
-        ? ("sucesso" as const)
-        : ordem.score_pcm >= 80
-          ? ("critica" as const)
-          : ("atencao" as const),
-      tecnicoNome: ordem.tecnico_funcionario_id
-        ? (funcionarios.get(ordem.tecnico_funcionario_id) ?? null)
-        : null,
-      descricao: ordem.descricao,
-    }));
+    const eventosOs = ((os.data ?? []) as OrdemServicoRow[])
+      .filter((ordem) => !ehOsRegistroVisita(ordem.titulo))
+      .map((ordem) => ({
+        id: `os-${ordem.id}`,
+        tipo: "os" as const,
+        titulo: `Chamado ${ordem.numero} · ${rotuloStatusOperacional(ordem.status)}`,
+        subtitulo: [ordem.titulo, ordem.local_descricao ?? ordem.solicitante ?? ordem.categoria]
+          .filter(Boolean)
+          .join(" — "),
+        data: ordem.auvo_synced_at ?? ordem.created_at,
+        criticidade: STATUS_HISTORICO.includes(ordem.status as (typeof STATUS_HISTORICO)[number])
+          ? ("sucesso" as const)
+          : ordem.score_pcm >= 80
+            ? ("critica" as const)
+            : ("atencao" as const),
+        tecnicoNome: ordem.tecnico_funcionario_id
+          ? (funcionarios.get(ordem.tecnico_funcionario_id) ?? null)
+          : null,
+        descricao: ordem.descricao,
+      }));
 
     const eventosInspecao = ((inspecoes.data ?? []) as InspecaoEventoRow[]).map((inspecao) => ({
       id: `inspecao-${inspecao.id}`,

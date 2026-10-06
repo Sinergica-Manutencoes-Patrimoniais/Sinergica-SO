@@ -1,3 +1,4 @@
+import { ehOsRegistroVisita } from "../domain/ordens-servico";
 // Caso de uso principal da Visão 360 (E01-S12) — orquestra o gateway, sem I/O direto.
 import type {
   AssessmentClienteResumo,
@@ -52,7 +53,7 @@ export async function obterVisaoCliente(
   const cliente = await gateway.buscarCliente(clienteId);
   if (cliente === null) return { tipo: "nao_encontrado" };
 
-  const [backlog, historico, equipamentos, eventos, qualidade, grupos, assessment] =
+  const [backlogBruto, historicoBruto, equipamentos, eventos, qualidade, grupos, assessment] =
     await Promise.all([
       gateway.listarBacklogCliente(clienteId),
       gateway.listarHistoricoCliente(clienteId),
@@ -62,6 +63,12 @@ export async function obterVisaoCliente(
       carregarGrupos(gateway, clienteId),
       carregarAssessment(gateway, clienteId),
     ]);
+
+  // E01-S163 AC-9: apontamentos de jornada do técnico são linhas legítimas da origem, mas não
+  // são trabalho de manutenção. A regra de domínio é a mesma do hub global; aplicar aqui evita
+  // que a composição do Cliente 360 volte a exibi-los ou conte-os nos indicadores.
+  const backlog = backlogBruto.filter((ordem) => !ehOsRegistroVisita(ordem.titulo));
+  const historico = historicoBruto.filter((ordem) => !ehOsRegistroVisita(ordem.titulo));
 
   return {
     tipo: "ok",

@@ -91,6 +91,15 @@ Valores: `lista`, `timeline`, `calendario`.
 - Em largura insuficiente, itens secundários vão para “Mais”; o item ativo nunca fica invisível sem o rótulo do grupo.
 - Ordem das abas dentro do grupo é estável.
 
+### Client context rail
+
+- Substitui o card de cliente alto por uma única faixa horizontal antes da navegação.
+- Ordem de leitura: nome do cliente, endereço, situação, CNPJ, contato, cidade/UF e identificador Auvo.
+- Nome é a única ênfase primária; demais dados usam tamanho e peso de texto secundários, com ícones funcionais de localização, telefone/e-mail e integração.
+- Status é apresentado uma única vez, em chip discreto; não repetir “cliente/ativo/ativo com contrato”.
+- Ações operacionais seguem à direita ou em overflow responsivo, sem reduzir a legibilidade do contexto.
+- Em viewport sem largura suficiente, preservar nome, situação e endereço e mover metadados adicionais para “Mais dados do cliente”; não ocultar dados por truncamento silencioso.
+
 ## 6. Quick actions
 
 `Novo Chamado`, `Nova OS`, `Nova Preventiva`, `Novo Componente`.

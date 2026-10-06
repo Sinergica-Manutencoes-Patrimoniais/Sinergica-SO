@@ -49,7 +49,7 @@
 - [ ] T011 [P] [US2] Escrever testes falhos do conteúdo compartilhado e composição de `ChamadoPainel` em novo `apps/web/src/features/pcm/components/OrdemServicoDetalhe.test.tsx` (AC-5, AC-6, AC-8).
 - [ ] T012 [US2] Extrair o conteúdo selecionado de `apps/web/src/features/pcm/pages/OrdensServicoPage.tsx` para novo `apps/web/src/features/pcm/components/OrdemServicoDetalhe.tsx`, mantendo a página global sobre o mesmo componente (AC-5, AC-6).
 - [ ] T013 [US2] Compor `OrdemServicoDetalhe` no novo `apps/web/src/features/pcm/components/OrdemServicoDetalheDrawer.tsx` sobre `Cliente360Drawer`, com validação de `clienteId` e estados locais de falha (AC-5, AC-6, AC-7).
-- [ ] T014 [US2] Aplicar `ehOsRegistroVisita` no read-model comum de `apps/web/src/features/pcm/domain/cliente-360.ts` antes de listas, KPIs e timeline, sem alterar agenda/apontamento (AC-9).
+- [X] T014 [US2] Aplicar `ehOsRegistroVisita` nos read-models comuns de `apps/web/src/features/pcm/application/obter-visao-cliente.ts` e `apps/web/src/features/pcm/infrastructure/supabase-cliente-360-adapter.ts` antes de listas, KPIs e timeline, sem alterar agenda/apontamento (AC-9).
 - [ ] T015 [US2] Integrar callbacks de seleção em Resumo, Timeline, backlog e histórico dentro de `apps/web/src/features/pcm/pages/VisaoClientePage.tsx` e atualizar seus testes para preservar aba, filtros, rolagem e foco (AC-5, AC-7).
 - [ ] T016 [US2] Unificar handlers de autorização/mutação e invalidação entre `OrdensServicoPage.tsx`, `ChamadoPainel.tsx` e o drawer usando as query keys da fundação, com testes de sucesso e negação (AC-6, AC-8).
 
@@ -105,9 +105,9 @@
 
 **Independent Test**: Em desktop e viewport estreito, alcançar todas as áreas e abrir/cancelar ações rápidas usando somente teclado.
 
-- [ ] T037 [P] [US5] Escrever testes falhos da configuração Operação/Ativos/Gestão, overflow e aba ativa em `apps/web/src/features/pcm/pages/VisaoClientePage.test.ts` (AC-22).
+- [ ] T037 [P] [US5] Escrever testes falhos da faixa contextual compacta do cliente, configuração Operação/Ativos/Gestão, overflow e aba ativa em `apps/web/src/features/pcm/pages/VisaoClientePage.test.ts` (AC-22).
 - [ ] T038 [P] [US5] Escrever teste falho de visibilidade por permissão e predefinição do cliente nas quatro ações rápidas em novo `apps/web/src/features/pcm/components/Cliente360AcoesRapidas.test.tsx` (AC-23).
-- [ ] T039 [US5] Refatorar a configuração `ABAS` e o cabeçalho em `apps/web/src/features/pcm/pages/VisaoClientePage.tsx` para grupos e “Mais”, preservando ids e conteúdo existentes (AC-22).
+- [ ] T039 [US5] Criar faixa contextual horizontal do cliente e refatorar a configuração `ABAS` em `apps/web/src/features/pcm/pages/VisaoClientePage.tsx` para grupos e “Mais”, preservando ids, dados essenciais e conteúdo existentes (AC-22).
 - [ ] T040 [US5] Criar `apps/web/src/features/pcm/components/Cliente360AcoesRapidas.tsx` que reutiliza os fluxos existentes de Chamado, OS, Preventiva e Componente com cliente predefinido e checagem de permissão (AC-23).
 - [ ] T041 [US5] Cobrir navegação por teclado, anúncios, focus trap, Escape em pilha e reduced motion nos testes de `VisaoClientePage`, `Cliente360Drawer` e ações rápidas (AC-24).
 

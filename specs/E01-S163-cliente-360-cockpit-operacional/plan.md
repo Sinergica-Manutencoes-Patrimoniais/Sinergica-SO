@@ -90,6 +90,7 @@ Não há violação constitucional a justificar.
 
 ### 6. Navegação e ações rápidas
 
+- Substituir o card alto do cliente por `ClientContextRail`: uma faixa que reúne identidade, endereço, situação, CNPJ, contato, cidade/UF e vínculo Auvo com hierarquia moderada; em largura limitada, metadados vão para “Mais dados do cliente”, nunca somem por truncamento.
 - Substituir a faixa plana de `ABAS` por configuração agrupada; preservar ids atuais para reduzir regressão.
 - Em viewport estreito, apresentar overflow acessível “Mais”; o grupo/aba ativos permanecem perceptíveis.
 - Ações rápidas chamam os modais/flows existentes com `clienteId` predefinido e são condicionadas à política já usada por cada ação.
