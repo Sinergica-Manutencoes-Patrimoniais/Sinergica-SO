@@ -179,6 +179,7 @@ describe("PreventivasWorkspace — E01-S53 AC-8", () => {
 
   it("abre o detalhe da ocorrência ao selecioná-la no calendário", async () => {
     renderWorkspace();
+    await userEvent.click(await screen.findByRole("button", { name: "Calendário" }));
     await userEvent.click(await screen.findByRole("button", { name: "Plano A: No Auvo" }));
 
     expect(await screen.findByText("Detalhe da preventiva")).toBeInTheDocument();
@@ -198,6 +199,7 @@ describe("PreventivasWorkspace — E01-S53 AC-8", () => {
     renderWorkspace({}, { ...dados, ocorrencias, avaliacoes: [] });
 
     expect(await screen.findByText("Histórico: 1–10 de 11")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Calendário" }));
     expect(screen.getAllByRole("button", { name: "Plano A: No Auvo" })).toHaveLength(11);
     expect(screen.getByText(/OS CH-11/)).toBeInTheDocument();
     expect(screen.queryByText(/OS CH-1 ·/)).not.toBeInTheDocument();

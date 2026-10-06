@@ -1,6 +1,6 @@
 import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Pause, Play, Plus, RefreshCw, Send } from "lucide-react";
+import { Calendar, Clock3, List, Pause, Play, Plus, RefreshCw, Send } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { erroDetalhado } from "../../../lib/http/edge-function-error";
 import { supabase } from "../../../lib/supabase-client";
@@ -16,6 +16,18 @@ import {
   listarPreventivas,
 } from "../infrastructure/supabase-preventivas-adapter";
 import { PreventivasCalendarioView } from "./PreventivasCalendarioView";
+import { PreventivasListaView } from "./PreventivasListaView";
+import { PreventivasTimelineView } from "./PreventivasTimelineView";
+
+type VisaoPreventivas = "lista" | "timeline" | "calendario";
+
+const CHAVE_VISAO_PREVENTIVAS = "pcm.preventivas.visao";
+
+function visaoInicialPreventivas(): VisaoPreventivas {
+  if (typeof window === "undefined") return "lista";
+  const salva = window.localStorage.getItem(CHAVE_VISAO_PREVENTIVAS);
+  return salva === "timeline" || salva === "calendario" || salva === "lista" ? salva : "lista";
+}
 
 type FormPlano = {
   nome: string;
@@ -113,6 +125,7 @@ export function PreventivasWorkspace({
 }) {
   const queryClient = useQueryClient();
   const [novo, setNovo] = useState(false);
+  const [visao, setVisao] = useState<VisaoPreventivas>(visaoInicialPreventivas);
   const [validandoContrato, setValidandoContrato] = useState(false);
   const [form, setForm] = useState<FormPlano>(() => criarFormVazio(clienteId));
   const [formValidacao, setFormValidacao] = useState<FormValidacaoContrato>(() =>
@@ -425,6 +438,29 @@ export function PreventivasWorkspace({
   const ocorrenciaSelecionada = ocorrenciaEmFoco
     ? (ocorrencias.find((ocorrencia) => ocorrencia.id === ocorrenciaEmFoco) ?? null)
     : null;
+  const itensDaVisao = ocorrencias.map((ocorrencia) => ({
+    id: ocorrencia.id,
+    nomePlano: planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido",
+    vencimento: ocorrencia.vencimento,
+    visitaEm: ocorrencia.visita_em,
+    estado: estadoDaOcorrencia(ocorrencia),
+    resultado: ocorrencia.resultado_estado,
+  }));
+
+  function selecionarOcorrencia(ocorrenciaId: string) {
+    setOcorrenciaEmFoco(ocorrenciaId);
+    requestAnimationFrame(() =>
+      document
+        .getElementById("detalhe-preventiva")
+        ?.scrollIntoView?.({ behavior: "smooth", block: "center" }),
+    );
+  }
+
+  function mudarVisao(proxima: VisaoPreventivas) {
+    setVisao(proxima);
+    window.localStorage.setItem(CHAVE_VISAO_PREVENTIVAS, proxima);
+  }
+
   return (
     <div className={`flex flex-col gap-5 ${compacto ? "py-4" : "p-6"}`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -456,31 +492,49 @@ export function PreventivasWorkspace({
         </p>
       )}
       <section className="rounded-lg border border-line bg-surface p-4">
-        <h2 className="font-semibold text-ink">Calendário de vencimentos</h2>
-        <p className="mt-1 text-sm text-ink-3">
-          A visita usa a data agendada; sem agendamento, aparece no vencimento previsto.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold text-ink">Planejamento preventivo</h2>
+            <p className="mt-1 text-sm text-ink-3">
+              Lista para triagem, Timeline para sequência e Calendário para distribuição mensal.
+            </p>
+          </div>
+          <fieldset className="flex rounded-md border border-line">
+            <legend className="sr-only">Visão de preventivas</legend>
+            {[
+              { id: "lista" as const, label: "Lista", Icon: List },
+              { id: "timeline" as const, label: "Timeline", Icon: Clock3 },
+              { id: "calendario" as const, label: "Calendário", Icon: Calendar },
+            ].map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={visao === id}
+                onClick={() => mudarVisao(id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-caption font-medium ${
+                  visao === id ? "bg-navy text-white" : "text-ink-2 hover:bg-line-soft"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </fieldset>
+        </div>
         <div className="mt-3">
           {ocorrencias.length === 0 ? (
             <p className="text-body text-ink-3">Nenhuma ocorrência planejada.</p>
+          ) : visao === "lista" ? (
+            <PreventivasListaView ocorrencias={itensDaVisao} onSelecionar={selecionarOcorrencia} />
+          ) : visao === "timeline" ? (
+            <PreventivasTimelineView
+              ocorrencias={itensDaVisao}
+              onSelecionar={selecionarOcorrencia}
+            />
           ) : (
             <PreventivasCalendarioView
-              ocorrencias={ocorrencias.map((ocorrencia) => ({
-                id: ocorrencia.id,
-                nomePlano: planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido",
-                vencimento: ocorrencia.vencimento,
-                visitaEm: ocorrencia.visita_em,
-                estado: estadoDaOcorrencia(ocorrencia),
-                resultado: ocorrencia.resultado_estado,
-              }))}
-              onSelecionar={(ocorrenciaId) => {
-                setOcorrenciaEmFoco(ocorrenciaId);
-                requestAnimationFrame(() =>
-                  document
-                    .getElementById("detalhe-preventiva")
-                    ?.scrollIntoView?.({ behavior: "smooth", block: "center" }),
-                );
-              }}
+              ocorrencias={itensDaVisao}
+              onSelecionar={selecionarOcorrencia}
             />
           )}
         </div>
