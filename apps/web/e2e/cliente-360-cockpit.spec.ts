@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { type Page, expect, test } from "@playwright/test";
 
 const clienteA = process.env.E2E_CLIENTE_360_A;
 const clienteB = process.env.E2E_CLIENTE_360_B;
@@ -18,7 +18,9 @@ async function abrirCliente360(page: Page, nome: string) {
 }
 
 test.describe("Cliente 360 cockpit — E01-S163", () => {
-  test("isola leituras entre dois clientes e oferece as três visões preventivas", async ({ page }) => {
+  test("isola leituras entre dois clientes e oferece as três visões preventivas", async ({
+    page,
+  }) => {
     test.skip(
       !clienteA || !clienteB || !nomeClienteA || !nomeClienteB,
       "Requer dois clientes de fixture, sem criar dados no Supabase de produção.",
