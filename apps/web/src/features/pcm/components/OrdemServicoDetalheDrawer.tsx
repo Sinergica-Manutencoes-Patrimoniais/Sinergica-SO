@@ -1,11 +1,14 @@
 import { Button, Skeleton } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 import { cliente360QueryKeys } from "../application/cliente-360-query-keys";
 import { operacaoQueryKeys, useAlterarStatusOperacao } from "../application/operacao-queries";
 import type { StatusOrdemServico } from "../domain/ordens-servico";
 import { rotuloStatusOs } from "../domain/ordens-servico";
 import { supabaseOperacaoAdapter } from "../infrastructure/supabase-operacao-adapter";
+import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
+import { ChamadoPainel } from "./ChamadoPainel";
 import { Cliente360Drawer } from "./Cliente360Drawer";
 
 const STATUS: StatusOrdemServico[] = [
@@ -41,6 +44,12 @@ export function OrdemServicoDetalheDrawer({
     queryKey: cliente360QueryKeys.detalheOs(clienteId, ordem.id),
     queryFn: ({ signal }) => supabaseOperacaoAdapter.obterDetalhe(ordem.id, signal),
     enabled: aberto,
+  });
+  const dadosAbertura = useQuery({
+    queryKey: cliente360QueryKeys.dadosAberturaOs(clienteId),
+    queryFn: () => carregarDadosAberturaOs(supabaseOrdemServicoAdapter),
+    enabled: aberto && Boolean(ordem.chamadoId),
+    staleTime: 5 * 60 * 1000,
   });
   const alterarStatus = useAlterarStatusOperacao(supabaseOperacaoAdapter);
 
@@ -115,6 +124,30 @@ export function OrdemServicoDetalheDrawer({
                 ))}
               </select>
             </label>
+          )}
+          {ordem.chamadoId && (
+            <section className="border-t border-line pt-5" aria-label="Chamado associado">
+              <h3 className="text-body font-semibold text-ink">Chamado associado</h3>
+              {dadosAbertura.isLoading ? (
+                <Skeleton className="mt-3 h-24 w-full" />
+              ) : (
+                <>
+                  {dadosAbertura.isError && (
+                    <p className="mb-2 text-caption text-ink-2">
+                      As ações que exigem dados de abertura estão indisponíveis no momento; o
+                      histórico do chamado continua acessível.
+                    </p>
+                  )}
+                  <ChamadoPainel
+                    chamadoId={ordem.chamadoId}
+                    dadosOs={dadosAbertura.data ?? null}
+                    temEscrita={temEscrita}
+                    auvoTaskId={ordem.auvoTaskId ?? null}
+                    onMutou={() => void onMutada()}
+                  />
+                </>
+              )}
+            </section>
           )}
         </div>
       )}

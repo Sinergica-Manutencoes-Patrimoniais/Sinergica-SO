@@ -39,6 +39,8 @@ interface OrdemServicoRow {
   solicitante: string | null;
   created_at: string;
   tecnico_funcionario_id: string | null;
+  chamado_id: string | null;
+  auvo_task_id: number | null;
 }
 
 interface FuncionarioRow {
@@ -113,7 +115,7 @@ interface EquipamentoClienteListaRow {
 }
 
 const COLUNAS_OS =
-  "id,numero,titulo,descricao,categoria,status,score_pcm,gravidade,urgencia,tendencia,auvo_sync_status,auvo_synced_at,local_descricao,solicitante,created_at,tecnico_funcionario_id" as const;
+  "id,numero,titulo,descricao,categoria,status,score_pcm,gravidade,urgencia,tendencia,auvo_sync_status,auvo_synced_at,local_descricao,solicitante,created_at,tecnico_funcionario_id,chamado_id,auvo_task_id" as const;
 
 // Lista de status de histórico como literal PostgREST — derivada da fonte única do domínio, nunca
 // redigitada aqui (mantém `('finalizado','cancelado')` num só lugar).
@@ -187,6 +189,8 @@ function mapearOs(row: OrdemServicoRow, funcionarios: Map<string, string>): Orde
     tecnicoNome: row.tecnico_funcionario_id
       ? (funcionarios.get(row.tecnico_funcionario_id) ?? null)
       : null,
+    chamadoId: row.chamado_id,
+    auvoTaskId: row.auvo_task_id,
   };
 }
 

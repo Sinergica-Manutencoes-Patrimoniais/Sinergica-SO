@@ -5,4 +5,6 @@ export const cliente360QueryKeys = {
     [...cliente360QueryKeys.raiz(clienteId), "os", osId] as const,
   detalhePreventiva: (clienteId: string, ocorrenciaId: string) =>
     [...cliente360QueryKeys.raiz(clienteId), "ocorrencia-preventiva", ocorrenciaId] as const,
+  dadosAberturaOs: (clienteId: string) =>
+    [...cliente360QueryKeys.raiz(clienteId), "dados-abertura-os"] as const,
 };
