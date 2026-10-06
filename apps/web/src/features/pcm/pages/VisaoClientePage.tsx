@@ -100,6 +100,8 @@ type Aba360 =
   | "comercial"
   | "comunicacao";
 
+type GrupoAba360 = "operacao" | "ativos" | "gestao";
+
 // E01-S111: rótulos de exibição da preferência de contato de um responsável do cliente.
 const PREFERENCIA_CONTATO_LABEL: Record<PreferenciaContato, string> = {
   whatsapp: "WhatsApp",
@@ -108,28 +110,34 @@ const PREFERENCIA_CONTATO_LABEL: Record<PreferenciaContato, string> = {
   outro: "Outro",
 };
 
-const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon }> = [
-  { id: "resumo", label: "Resumo", icon: Activity },
-  { id: "timeline", label: "Timeline", icon: RefreshCw },
-  { id: "os", label: "OS", icon: ClipboardList },
-  { id: "preventivas", label: "Preventivas", icon: Calendar },
-  { id: "qualidade", label: "Inspeções", icon: Calendar },
+const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon; grupo: GrupoAba360 }> = [
+  { id: "resumo", label: "Resumo", icon: Activity, grupo: "operacao" },
+  { id: "timeline", label: "Timeline", icon: RefreshCw, grupo: "operacao" },
+  { id: "os", label: "OS", icon: ClipboardList, grupo: "operacao" },
+  { id: "preventivas", label: "Preventivas", icon: Calendar, grupo: "operacao" },
+  { id: "qualidade", label: "Inspeções", icon: Calendar, grupo: "operacao" },
   // E01-S90 AC-4: assessment vigente do cliente (documento de estado, distinto de Inspeções ABNT).
-  { id: "assessment", label: "Assessment", icon: ClipboardCheck },
+  { id: "assessment", label: "Assessment", icon: ClipboardCheck, grupo: "operacao" },
   // E01-S76: Área>Local (árvore) — onde os Itens estão instalados.
-  { id: "estrutura", label: "Estrutura", icon: FolderTree },
-  { id: "ativos", label: "Componentes", icon: Layers },
+  { id: "estrutura", label: "Estrutura", icon: FolderTree, grupo: "ativos" },
+  { id: "ativos", label: "Componentes", icon: Layers, grupo: "ativos" },
   // E01-S86 AC-2: compor Sistema (checkbox+filtro), mesmo componente do PCM.
-  { id: "sistemas", label: "Sistemas", icon: Link2 },
-  { id: "ferramentas", label: "Ferramentas", icon: Package },
-  { id: "arvore", label: "Árvore", icon: Network },
+  { id: "sistemas", label: "Sistemas", icon: Link2, grupo: "ativos" },
+  { id: "ferramentas", label: "Ferramentas", icon: Package, grupo: "ativos" },
+  { id: "arvore", label: "Árvore", icon: Network, grupo: "ativos" },
   // E01-S78: board visual dos ativos por Local (fase 1 do "mapa do andar").
-  { id: "board", label: "Board", icon: LayoutGrid },
-  { id: "financeiro", label: "Financeiro", icon: DollarSign },
+  { id: "board", label: "Board", icon: LayoutGrid, grupo: "ativos" },
+  { id: "financeiro", label: "Financeiro", icon: DollarSign, grupo: "gestao" },
   // E03-S01 AC-9: funil da Conta. Só aparece quando o shell injeta `painelComercial` — sem o
   // módulo Comercial, a aba nem existe.
-  { id: "comercial", label: "Comercial", icon: Briefcase },
-  { id: "comunicacao", label: "Comunicação", icon: MessageCircle },
+  { id: "comercial", label: "Comercial", icon: Briefcase, grupo: "gestao" },
+  { id: "comunicacao", label: "Comunicação", icon: MessageCircle, grupo: "gestao" },
+];
+
+const GRUPOS_ABAS: Array<{ id: GrupoAba360; label: string }> = [
+  { id: "operacao", label: "Operação" },
+  { id: "ativos", label: "Ativos" },
+  { id: "gestao", label: "Gestão e relacionamento" },
 ];
 
 export function VisaoClientePage({
@@ -311,27 +319,49 @@ export function VisaoClientePage({
         />
       )}
 
-      <div className="border-b border-line-soft overflow-x-auto">
-        <div className="flex min-w-max gap-2">
-          {ABAS.filter((item) => item.id !== "comercial" || painelComercial).map((item) => {
-            const Icon = item.icon;
-            const ativo = aba === item.id;
+      <nav aria-label="Áreas do Cliente 360" className="border-b border-line-soft">
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {GRUPOS_ABAS.map((grupo) => {
+            const abasDoGrupo = ABAS.filter(
+              (item) => item.grupo === grupo.id && (item.id !== "comercial" || painelComercial),
+            );
+            const grupoAtivo = abasDoGrupo.some((item) => item.id === aba);
             return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setAba(item.id)}
-                className={`inline-flex items-center gap-2 border-b-2 px-3 py-3 text-body font-semibold transition-colors ${
-                  ativo ? "border-orange text-ink" : "border-transparent text-ink-3 hover:text-ink"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </button>
+              <section key={grupo.id} aria-label={grupo.label} className="min-w-0">
+                <p
+                  className={`pt-2 text-micro font-semibold uppercase tracking-wider ${
+                    grupoAtivo ? "text-orange" : "text-ink-3"
+                  }`}
+                >
+                  {grupo.label}
+                </p>
+                <div className="flex flex-wrap">
+                  {abasDoGrupo.map((item) => {
+                    const Icon = item.icon;
+                    const ativo = aba === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setAba(item.id)}
+                        aria-current={ativo ? "page" : undefined}
+                        className={`inline-flex items-center gap-1.5 border-b-2 px-2.5 py-2 text-caption font-medium transition-colors ${
+                          ativo
+                            ? "border-orange text-ink"
+                            : "border-transparent text-ink-3 hover:text-ink"
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
             );
           })}
         </div>
-      </div>
+      </nav>
 
       {aba === "resumo" && (
         <Resumo360
