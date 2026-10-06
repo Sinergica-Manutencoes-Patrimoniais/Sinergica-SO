@@ -1,6 +1,6 @@
 import { Button, Skeleton } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 import { cliente360QueryKeys } from "../application/cliente-360-query-keys";
@@ -42,6 +42,7 @@ export function OrdemServicoDetalheDrawer({
   onMutada: () => Promise<void>;
 }) {
   const queryClient = useQueryClient();
+  const [statusAtual, setStatusAtual] = useState(ordem.status);
   const detalhe = useQuery({
     queryKey: cliente360QueryKeys.detalheOs(clienteId, ordem.id),
     queryFn: ({ signal }) => supabaseOperacaoAdapter.obterDetalhe(ordem.id, signal),
@@ -61,6 +62,10 @@ export function OrdemServicoDetalheDrawer({
     }
   }, [aberto, clienteId]);
 
+  useEffect(() => {
+    setStatusAtual(ordem.status);
+  }, [ordem.status]);
+
   async function mudarStatus(status: StatusOrdemServico) {
     try {
       await alterarStatus.mutateAsync({ ids: [ordem.id], status });
@@ -69,6 +74,7 @@ export function OrdemServicoDetalheDrawer({
         queryClient.invalidateQueries({ queryKey: operacaoQueryKeys.detalhe(ordem.id) }),
         onMutada(),
       ]);
+      setStatusAtual(status);
       registrarEventoCliente360({
         nome: "cliente360_mutation_finished",
         clienteId,
@@ -119,7 +125,7 @@ export function OrdemServicoDetalheDrawer({
             </p>
           </section>
           <dl className="grid grid-cols-1 gap-3 rounded-lg border border-line bg-surface p-4 text-caption sm:grid-cols-2">
-            <Campo titulo="Status" valor={rotuloStatusOs(ordem.status)} />
+            <Campo titulo="Status" valor={rotuloStatusOs(statusAtual)} />
             <Campo titulo="Categoria" valor={ordem.categoria} />
             <Campo titulo="Técnico" valor={ordem.tecnicoNome ?? "Não atribuído"} />
             <Campo
@@ -137,7 +143,7 @@ export function OrdemServicoDetalheDrawer({
               Alterar status
               <select
                 className="input mt-1 w-full"
-                value={ordem.status}
+                value={statusAtual}
                 disabled={alterarStatus.isPending}
                 onChange={(event) => void mudarStatus(event.target.value as StatusOrdemServico)}
               >
