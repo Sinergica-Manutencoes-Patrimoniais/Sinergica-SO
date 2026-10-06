@@ -89,10 +89,10 @@
 - [ ] T029 [P] [US4] Escrever teste falho de categoria e período no read-model de ferramentas em `apps/web/src/features/pcm/infrastructure/supabase-ferramenta-alocacao-cliente-adapter.test.ts` (AC-19, AC-21).
 - [ ] T030 [US4] Implementar tipos, defaults e predicados puros em novo `apps/web/src/features/pcm/domain/cliente-360-filtros.ts`, usando mapas/conjuntos pré-computados (AC-16, AC-17, AC-18, AC-19, AC-20, AC-21).
 - [ ] T031 [P] [US4] Escrever testes de componente falhos para busca, filtros, contagem, clear e empty states em `PainelItensDoCliente.test.tsx`, novo `PainelSistemasCliente.test.tsx`, novo `PainelFerramentasCliente.test.tsx` e novo `EstruturaClientePage.test.tsx` (AC-16, AC-17, AC-18, AC-19, AC-20).
-- [ ] T032 [P] [US4] Integrar filtros de Componentes em `apps/web/src/features/pcm/components/PainelItensDoCliente.tsx` usando relações já carregadas e estado resetado por cliente (AC-17, AC-20, AC-21).
-- [ ] T033 [P] [US4] Integrar filtros de Sistemas em `apps/web/src/features/pcm/components/PainelSistemasCliente.tsx`, incluindo composição vazia/não vazia (AC-18, AC-20, AC-21).
-- [ ] T034 [P] [US4] Integrar filtros e poda contextual em `apps/web/src/features/pcm/pages/EstruturaClientePage.tsx`, mantendo ancestrais dos matches (AC-16, AC-20, AC-21).
-- [ ] T035 [P] [US4] Ampliar `supabase-ferramenta-alocacao-cliente-adapter.ts` com categoria já existente e integrar filtros em `PainelFerramentasCliente.tsx`, sem inventar relação com técnico (AC-19, AC-20, AC-21).
+- [X] T032 [P] [US4] Integrar filtros de Componentes em `apps/web/src/features/pcm/components/PainelItensDoCliente.tsx` usando relações já carregadas e estado resetado por cliente (AC-17, AC-20, AC-21).
+- [X] T033 [P] [US4] Integrar filtros de Sistemas em `apps/web/src/features/pcm/components/PainelSistemasCliente.tsx`, incluindo composição vazia/não vazia (AC-18, AC-20, AC-21).
+- [X] T034 [P] [US4] Integrar filtros e poda contextual em `apps/web/src/features/pcm/pages/EstruturaClientePage.tsx`, mantendo ancestrais dos matches (AC-16, AC-20, AC-21).
+- [X] T035 [P] [US4] Ampliar `supabase-ferramenta-alocacao-cliente-adapter.ts` com categoria já existente e integrar filtros em `PainelFerramentasCliente.tsx`, sem inventar relação com técnico (AC-19, AC-20, AC-21).
 - [X] T036 [US4] Criar benchmark/teste de performance com 1.000 itens em novo `apps/web/src/features/pcm/domain/cliente-360-filtros.performance.test.ts`, registrar p95 e interromper para ADR separado se o orçamento falhar (AC-21).
 
 **Checkpoint**: Cada aba filtrável pode ser entregue e demonstrada separadamente.
