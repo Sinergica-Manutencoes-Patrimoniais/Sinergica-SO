@@ -76,7 +76,7 @@ describe("PainelItensDoCliente — E01-S159 AC-1", () => {
       screen.getByPlaceholderText("Buscar por nome ou identificador"),
       "inexistente",
     );
-    expect(screen.getByText("Nenhum componente para esta busca.")).toBeInTheDocument();
+    expect(screen.getByText("Nenhum componente para estes filtros.")).toBeInTheDocument();
   });
 
   it("mantém lista e busca, mas esconde ações sem escrita", async () => {
