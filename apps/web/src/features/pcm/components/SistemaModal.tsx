@@ -96,7 +96,7 @@ export function SistemaModal({
                 }
               : null
           }
-          valor={dados.identificadorManual ?? ""}
+          valor={dados.identificadorManual ?? dados.codigo ?? ""}
           onManualChange={(identificadorManual, alterarIdentificador) =>
             setDados((atual) => ({
               ...atual,

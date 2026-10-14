@@ -17,7 +17,20 @@ vi.mock("./SeletorCategoria", () => ({
 }));
 
 vi.mock("./CampoIdentificador", () => ({
-  CampoIdentificador: () => <output data-testid="campo-identificador" />,
+  CampoIdentificador: ({
+    valor,
+    onAplicarRecomendacoes,
+  }: {
+    valor: string;
+    onAplicarRecomendacoes: (identificador: string) => void;
+  }) => (
+    <>
+      <output data-testid="campo-identificador">{valor}</output>
+      <button type="button" onClick={() => onAplicarRecomendacoes("GUA-TOR-A01-PCI-EXT-01")}>
+        Aplicar recomendações
+      </button>
+    </>
+  ),
 }));
 
 vi.mock("../infrastructure/supabase-hierarquia-adapter", () => ({
@@ -49,6 +62,21 @@ const componente: EquipamentoItem = {
 };
 
 describe("EquipamentoModal", () => {
+  it("mostra a recomendação aplicada no campo Identificador", async () => {
+    render(
+      <EquipamentoModal
+        clientes={[{ id: "cliente-1", nome: "Guainumbí", auvoId: null }]}
+        clienteFixoId="cliente-1"
+        onCancel={vi.fn()}
+        onSalvar={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Aplicar recomendações" }));
+
+    expect(screen.getByTestId("campo-identificador")).toHaveTextContent("GUA-TOR-A01-PCI-EXT-01");
+  });
+
   it("zera Área e Local ao trocar o cliente", async () => {
     render(
       <EquipamentoModal

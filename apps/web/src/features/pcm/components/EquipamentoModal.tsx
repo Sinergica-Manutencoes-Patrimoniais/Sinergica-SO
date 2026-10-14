@@ -123,7 +123,7 @@ export function EquipamentoModal({
                 }
               : null
           }
-          valor={dados.identificadorManual ?? ""}
+          valor={dados.identificadorManual ?? dados.identificador ?? ""}
           onManualChange={(identificadorManual, alterarIdentificador) =>
             setDados((atual) => ({
               ...atual,
