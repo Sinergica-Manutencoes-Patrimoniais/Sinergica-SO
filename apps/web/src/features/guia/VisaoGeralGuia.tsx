@@ -8,6 +8,19 @@ export function VisaoGeralGuia() {
         subtitulo="Guia rápido pra quem está começando a usar o sistema."
       />
 
+      <Callout titulo="Vai operar a manutenção?">
+        <p>
+          Consulte os roteiros de Chamados, OS, Cliente 360 e cadastro de ativos no manual da
+          operação.
+        </p>
+        <a
+          href="/?guia=pcm#pcm-inicio"
+          className="self-start text-body text-orange-deep hover:underline"
+        >
+          Abrir manual da operação
+        </a>
+      </Callout>
+
       <Secao titulo="Pra que serve">
         <p>
           O Sinérgica SO é o sistema operacional da Sinérgica Manutenções — o lugar único onde a
@@ -32,7 +45,8 @@ export function VisaoGeralGuia() {
           aplicativo
           <strong className="text-ink"> Auvo</strong> continua sendo usado pelos técnicos em campo
           (check-in, fotos, assinatura) — o PCM não substitui o Auvo, ele decide o que vira trabalho
-          e acompanha o que já foi feito, sincronizando os dois automaticamente.
+          e acompanha o que já foi feito. Para abrir uma OS no Auvo, confira a prévia e confirme a
+          abertura; salvar no PCM ou mudar de fase não confirma o envio ao campo.
         </p>
       </Secao>
 

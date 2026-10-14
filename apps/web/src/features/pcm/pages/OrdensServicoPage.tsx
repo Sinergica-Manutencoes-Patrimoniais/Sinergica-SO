@@ -40,6 +40,7 @@ import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { listarProximasPreventivas } from "../application/pmoc";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
 import { AbrirOsAuvoModal } from "../components/AbrirOsAuvoModal";
+import { AjudaPcm } from "../components/AjudaPcm";
 import { ChamadoPainel } from "../components/ChamadoPainel";
 import { DetalhesTarefaAuvo } from "../components/DetalhesTarefaAuvo";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
@@ -465,6 +466,7 @@ export function OrdensServicoPage({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-heading font-semibold text-ink">Operação</h1>
+          <AjudaPcm assunto="inicio" rotulo="Manual de Chamados e OS" />
           <p className="text-body text-ink-3">
             Chamados e OS — do intake à execução (mesmo item, em fases), com sync Auvo
           </p>

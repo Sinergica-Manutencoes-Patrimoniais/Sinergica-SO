@@ -28,6 +28,7 @@ import {
   editarLocal,
 } from "../application/hierarquia";
 import { executarPlanoEstrutura } from "../application/importacao-estrutura";
+import { AjudaPcm } from "../components/AjudaPcm";
 import { ImportacaoEstruturaModal } from "../components/ImportacaoEstruturaModal";
 import { filtrarArvoreEstrutura360, normalizarBusca360 } from "../domain/cliente-360-filtros";
 import type {
@@ -333,6 +334,7 @@ export function EstruturaClientePage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-body font-semibold text-ink">Estrutura do cliente</h1>
+          <AjudaPcm assunto="estrutura" rotulo="Ajuda com Áreas e Locais" />
           <p className="mt-0.5 text-caption text-ink-3">
             Áreas e Locais (árvore) — onde os Itens estão instalados
           </p>

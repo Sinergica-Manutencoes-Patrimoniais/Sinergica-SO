@@ -7,6 +7,7 @@ import type {
   EquipamentoFormData,
   EquipamentoItem,
 } from "../domain/equipamentos";
+import { AjudaPcm } from "./AjudaPcm";
 import { CampoIdentificador } from "./CampoIdentificador";
 import { SeletorCategoria } from "./SeletorCategoria";
 import { SeletorPosicao } from "./SeletorPosicao";
@@ -70,6 +71,9 @@ export function EquipamentoModal({
       tamanho="lg"
     >
       <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
+        <div className="md:col-span-2">
+          <AjudaPcm assunto="componentes" rotulo="Ajuda com cadastro e etiquetas" />
+        </div>
         <Field label="Nome *" value={dados.nome} onChange={(v) => setCampo("nome", v)} />
         <SeletorCategoria
           value={dados.categoriaId ?? null}

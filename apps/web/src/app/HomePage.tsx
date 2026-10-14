@@ -422,7 +422,9 @@ export function HomePage() {
   const { mode, toggleMode } = useTheme();
   const { podeAcessar } = usePermissoes();
   const { confirmarSaida } = useNavGuard();
-  const [activeModulo, setActiveModulo] = useState<AreaAtiva>("inicio");
+  const [activeModulo, setActiveModulo] = useState<AreaAtiva>(() =>
+    new URLSearchParams(window.location.search).get("guia") === "pcm" ? "guia" : "inicio",
+  );
   const [configTab, setConfigTab] = useState<
     "grupos" | "usuarios" | "integracoes" | "ia" | "gasto-ia" | "priorizacao" | "localizacao-auvo"
   >("grupos");
@@ -442,7 +444,9 @@ export function HomePage() {
   // tela, não o Kanban de trabalho (que segue disponível, só deixou de ser o default da E03-S02).
   const [comercialView, setComercialView] = useState<ComercialView>("dashboard");
   // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
-  const [guiaView, setGuiaView] = useState<GuiaView>("visao-geral");
+  const [guiaView, setGuiaView] = useState<GuiaView>(() =>
+    new URLSearchParams(window.location.search).get("guia") === "pcm" ? "pcm" : "visao-geral",
+  );
   const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
   const [novaOsAberta, setNovaOsAberta] = useState(false);
   const [feedbackOs, setFeedbackOs] = useState<string | null>(null);

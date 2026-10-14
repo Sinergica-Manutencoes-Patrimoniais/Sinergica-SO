@@ -20,6 +20,7 @@ import {
   listarCatalogoPreventivas,
   listarPreventivas,
 } from "../infrastructure/supabase-preventivas-adapter";
+import { AjudaPcm } from "./AjudaPcm";
 import { PreventivaDetalheDrawer } from "./PreventivaDetalheDrawer";
 import { PreventivasCalendarioView } from "./PreventivasCalendarioView";
 import { PreventivasListaView } from "./PreventivasListaView";
@@ -598,6 +599,7 @@ export function PreventivasWorkspace({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold text-ink">Planejamento preventivo</h2>
+            <AjudaPcm assunto="preventivas" rotulo="Ajuda com planos e ocorrências" />
             <p className="mt-1 text-sm text-ink-3">
               Lista para triagem, Timeline para sequência e Calendário para distribuição mensal.
             </p>

@@ -2,6 +2,7 @@ import { Button, Modal } from "@sinergica/ui";
 import { useState } from "react";
 import type { EquipamentoClienteOpcao } from "../domain/equipamentos";
 import type { Sistema, SistemaFormData } from "../domain/sistemas";
+import { AjudaPcm } from "./AjudaPcm";
 import { CampoIdentificador } from "./CampoIdentificador";
 import { SeletorCategoria } from "./SeletorCategoria";
 import { SeletorPosicao } from "./SeletorPosicao";
@@ -58,6 +59,7 @@ export function SistemaModal({
       titulo={sistema ? "Editar Sistema" : "Novo Sistema"}
     >
       <div className="flex flex-col gap-3">
+        <AjudaPcm assunto="sistemas" rotulo="Ajuda com Sistemas e composição" />
         {!clienteFixoId && (
           <label className="block">
             <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
