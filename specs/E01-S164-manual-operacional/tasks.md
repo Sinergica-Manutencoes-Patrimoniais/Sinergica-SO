@@ -27,7 +27,7 @@
 - `pnpm run ci:local`: todos os gates verdes, incluindo testes, lint, arquitetura, fidelidade, tipagem e build (79,28 s).
 - Leitura visual conferida em capturas desktop e mobile; busca ajustada para o ícone não cobrir o texto.
 - `graphify` indisponível nesta máquina; mapa não regenerado. Sem mudança de backend, schema ou integração.
-- Publicação encaminhada pela conexão GitHub do aplicativo, autenticada; o token da CLI continua inválido. A entrega inclui como base o ajuste anterior de Identificador (`38165d2`).
+- Branch `feat/E01-S164-manual-operacional` publicada via SSH com hooks verdes. A criação de PR está bloqueada: token da CLI inválido, e a conexão GitHub do aplicativo consulta o repositório, mas retorna `403 Resource not accessible by integration` ao criar PR. Sem sessão de navegador disponível. Merge para `main` ainda não realizado. Inclui o ajuste anterior de Identificador (`38165d2`).
 
 ## Dependências e estratégia
 
