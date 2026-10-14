@@ -138,7 +138,6 @@ _75 concluídas no histórico · maior ID usado: E01-S164_
 | E01-S141 | Relatório de Inspeção: item vira Chamado pendente | Claude (sessão Lucas) | Superada por E01-S143 (2026-08-10) — Lu… | [spec](../../specs/E01-S141-inspecao-item-vira-chamado/spec.md) |
 | E01-S145 | Fluidez e performance de Chamados/OS | Codex | Implementado localmente (2026-08-10). M… | [spec](../../specs/E01-S145-fluidez-performance-chamados/product.md) |
 | E01-S163 | Cliente 360 como cockpit operacional | Codex | Spec, plano e tarefas prontos para Terra (2026-10-06) | [spec](../../specs/E01-S163-cliente-360-cockpit-operacional/spec.md) |
-| E01-S164 | Manual operacional e ajuda contextual do PCM | Codex | Implementado localmente; CI e E2E verdes; publicação pendente | [spec](../../specs/E01-S164-manual-operacional/spec.md) |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S34_

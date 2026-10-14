@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feat/E01-S164-manual-operacional`
 **Created**: 2026-10-14
-**Status**: Implemented locally — publication pending
+**Status**: Implemented
 **Input**: Atualizar o manual para a versão atual, priorizando abertura de Chamados e OS, Cliente 360 e cadastro de Componentes/Sistemas; oferecer ajuda discreta nas telas para autonomia do Fabrício.
 
 ## User Scenarios & Testing

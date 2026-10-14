@@ -27,7 +27,7 @@
 - `pnpm run ci:local`: todos os gates verdes, incluindo testes, lint, arquitetura, fidelidade, tipagem e build (79,28 s).
 - Leitura visual conferida em capturas desktop e mobile; busca ajustada para o ícone não cobrir o texto.
 - `graphify` indisponível nesta máquina; mapa não regenerado. Sem mudança de backend, schema ou integração.
-- Publicação pendente: `gh auth status` informa token GitHub inválido. Esta entrega local inclui como base o ajuste anterior de Identificador (`38165d2`).
+- Publicação encaminhada pela conexão GitHub do aplicativo, autenticada; o token da CLI continua inválido. A entrega inclui como base o ajuste anterior de Identificador (`38165d2`).
 
 ## Dependências e estratégia
 
