@@ -56,6 +56,7 @@ import {
 import { editarCliente } from "../application/clientes-crud";
 import { listarClientes } from "../application/listar-clientes";
 import { type VisaoCliente, obterVisaoCliente } from "../application/obter-visao-cliente";
+import { AjudaPcm } from "../components/AjudaPcm";
 import { ArvoreAtivos } from "../components/ArvoreAtivos";
 import { BoardAtivos } from "../components/BoardAtivos";
 import { CabecalhoCliente } from "../components/CabecalhoCliente";
@@ -320,6 +321,9 @@ export function VisaoClientePage({
   return (
     <div className="flex flex-col gap-5">
       <CabecalhoCliente cliente={cliente} />
+      <div className="flex justify-end">
+        <AjudaPcm assunto="cliente-360" rotulo="Como trabalhar pelo Cliente 360" />
+      </div>
       <Cliente360AcoesRapidas
         habilitado={Boolean(temEscrita && user)}
         onNovoChamado={() => setNovoChamado(true)}

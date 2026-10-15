@@ -46,7 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S25_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S163_
+_75 concluídas no histórico · maior ID usado: E01-S164_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|

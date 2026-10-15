@@ -4,6 +4,7 @@ import { Button, Modal } from "@sinergica/ui";
 import { useEffect, useState } from "react";
 import { erroDetalhado } from "../../../lib/http/edge-function-error";
 import { supabase } from "../../../lib/supabase-client";
+import { AjudaPcm } from "./AjudaPcm";
 
 interface PreviewAuvo {
   jaAberta: boolean;
@@ -82,6 +83,7 @@ export function AbrirOsAuvoModal({
       descricao="Confira dados. Nada foi enviado durante esta prévia."
     >
       <div className="space-y-3 text-body">
+        <AjudaPcm assunto="auvo" rotulo="Ajuda com envio e pendências Auvo" />
         {!preview && !erro && <p className="py-8 text-body text-ink-3">Montando prévia…</p>}
         {preview && (
           <div className="space-y-3 text-body">

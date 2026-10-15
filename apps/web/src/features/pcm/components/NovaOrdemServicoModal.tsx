@@ -23,6 +23,7 @@ import {
 } from "../domain/priorizacao-backlog";
 import { podeGerarTitulo } from "../domain/titulo-os";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
+import { AjudaPcm } from "./AjudaPcm";
 import { SeletorLocal } from "./SeletorLocal";
 
 const GUT_OPCOES = [1, 2, 3, 4, 5];
@@ -313,6 +314,7 @@ export function NovaOrdemServicoModal({
       tamanho="lg"
     >
       <form onSubmit={submit} className="flex flex-col gap-5">
+        <AjudaPcm assunto="os" rotulo="Como abrir e encaminhar uma OS" />
         {erro && (
           <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
             {erro}

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import type { ChamadoFormData } from "../domain/chamados";
+import { AjudaPcm } from "./AjudaPcm";
 import { SeletorLocal } from "./SeletorLocal";
 
 export function NovoChamadoModal({
@@ -57,6 +58,7 @@ export function NovoChamadoModal({
       tamanho="md"
     >
       <div className="flex flex-col gap-3">
+        <AjudaPcm assunto="chamados" rotulo="Como abrir e tratar um Chamado" />
         <label className="block">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Cliente *</span>
           <select
