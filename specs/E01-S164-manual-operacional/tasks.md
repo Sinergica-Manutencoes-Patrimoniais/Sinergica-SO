@@ -28,6 +28,7 @@
 - Leitura visual conferida em capturas desktop e mobile; busca ajustada para o ícone não cobrir o texto.
 - `graphify` indisponível nesta máquina; mapa não regenerado. Sem mudança de backend, schema ou integração.
 - Branch `feat/E01-S164-manual-operacional` publicada via SSH com hooks verdes. Autenticação da CLI GitHub renovada pelo usuário para promover a entrega por PR. Inclui o ajuste anterior de Identificador (`38165d2`).
+- Gate remoto de segurança da PR #70 identificou `source-map-js` 1.2.1 vulnerável (GHSA-68fv-2mgg-jv7q). Lockfile atualizado somente para o patch 1.2.2; `pnpm audit --prod --audit-level=high` sem vulnerabilidades e `pnpm run ci:local` novamente verde (85,44 s).
 
 ## Dependências e estratégia
 
