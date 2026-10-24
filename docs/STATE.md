@@ -1,153 +1,67 @@
 ---
 name: STATE
-description: Memória de trabalho volátil — onde paramos, próximo passo, bloqueios.
+description: Handoff do Plano de Manutenção para continuação em outro computador.
 alwaysApply: true
 ---
 
 # STATE — Memória viva do projeto
 
-> Só a sessão mais recente fica aqui. Histórico completo, cronológico, em
-> `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
-> carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
+## 2026-10-24 — Handoff do Plano de Manutenção (Codex)
 
-## 2026-10-01 — Handoff E01-S53/T11, Preventivas na Visão 360 (Codex)
+- **Branch de continuação:** `codex/handoff-plano-manutencao`, criada de `origin/main`
+  no commit `22aca3918224bc45175e80c6ec88b957fdb604aa` (PR #70).
+- **Pedido desta sessão:** Lucas pediu para subir todo o material ao Git e fornecer um prompt
+  para continuar em outro computador. Esta entrega é documental: não implementa o novo módulo,
+  não altera banco, não faz deploy e não envia tarefas reais ao Auvo.
+- **Ponto de entrada:** [README do planejamento](planejamento/plano-manutencao/README.md).
+  Ler depois [decisões consolidadas](planejamento/plano-manutencao/decisoes-consolidadas.md),
+  os originais em `fontes/` e [prompt de continuação](planejamento/plano-manutencao/continuar.md).
+- **Feature ativa:** preparação do Plano de Manutenção do Fabrício; ainda não existe story/spec
+  executável criada para essa iniciativa. Não tratar o briefing como implementação concluída.
+  `E01-S53` é a base existente de Preventivas, não a spec completa do novo fluxo.
+- **Próxima ação concreta:** ler os documentos acima, confirmar somente as três pendências
+  registradas e preparar a divisão em stories/specs via Spec Kit. Conferir o próximo ID e marcar
+  owner no ROADMAP antes de codar; nunca carregar o ROADMAP inteiro.
 
-- Branch `feat/preventivas-pcm-auvo`, base de Preventivas no commit local `d8453e5`.
-- `specs/E01-S53-preventivo-service-orders/spec.md` (AC-8), `design.md` e `tasks.md`
-  atualizados: plano executável em três entregas para Terra. Alterações de docs desta sessão
-  ainda não commitadas; não houve alteração de código, push ou deploy nesta sessão.
-- Próxima ação: Terra lê AC-8 e seção `E01-S53/T11` em `tasks.md`, implementa consultas filtradas
-  por cliente, extrai workspace reutilizável e monta aba `Preventivas` em `VisaoClientePage`.
-  Rodar testes focados, typecheck e E2E UI conforme gates da task. O cliente da 360 fica fixo;
-  a tela global continua sem filtro.
-- Gate Auvo de AC-3 ainda pendente de task real autorizada; T11 não o altera. E2E autenticado
-  depende de sessão de teste; usar interceptação REST para a regressão de escopo da aba.
+### Decisões recentes
 
-## 2026-09-30 — Ondas S159–S161 concluídas localmente (Codex)
+- O fluxo operacional definido pelo Fabrício prevalece sobre limitações do código atual.
+  Lucas pediu preservar a nomenclatura de UI **Componentes e Sistemas**, cadastros e códigos.
+- Novo fluxo para preventivas, corretivas, PMOC e chamados manuais: Plano → Versão → Rotina →
+  Ocorrência → Chamado → uma ou várias OS → Visita → tarefa Auvo por OS → execução → validação PCM.
+- Calendário contratual vem antes da geração: semana suprimida por feriado não gera Visita
+  nem ocorrência correspondente, não conta nos indicadores operacionais e não tem reposição
+  automática. Mudança do dia fixo tem vigência e preserva histórico/exceções aprovadas.
+- Conclusão Auvo é conclusão em campo. PCM valida/encerra OS individualmente; Chamado recebe
+  indicação de apto e depende de encerramento próprio após atendimento integral.
+- Preventiva Não OK pode ser concluída, com necessidade corretiva vinculada. Continuação recebe
+  somente escopo e esforço restantes; técnico sugere e PCM revisa.
+- Confirmação PCM obrigatória; ciência do cliente configurável e não exigida por padrão.
+  Terceiros têm horas separadas; capacidade interna inclui somente esforço Sinérgica.
+- Despesas previstas/realizadas, comprovantes e vínculo Financeiro são geridos pelo SO.
+- Requisitos detalhados e precedência das fontes estão nas decisões consolidadas.
 
-- S159: cadastro/edição de Componentes e Sistemas dentro da Visão 360; regressão E2E escrita.
-- S160: árvore de ativos, teste de componente e E2E escritos.
-- S161: exportação/importação Excel com plano puro (diff, referências, validações, ordem), executor sequencial pelos casos de uso, confirmação, progresso e relatório `.xlsx`. A planilha de exemplo foi conferida: abas e cabeçalhos aderem ao contrato.
-- Gates locais focados: 11 testes Vitest, typecheck, listagem Playwright e `ci:local` verdes. E2E autenticado não foi executado: faltam `SUPABASE_TEST_EMAIL` e `SUPABASE_TEST_PASSWORD`.
-- **Deploy Supabase concluído (2026-09-30):** migration `0223` aplicada atomicamente pela Management API (2 colunas + 4 registros de trigger + histórico confirmados). `pcm-auvo-push` v37, `pcm-auvo-pull` v38, `pcm-auvo-sync-all` v40 e `pcm-auvo-webhook` v44 publicadas com `--use-api`; smoke sem credencial retornou 401 nas quatro.
+### Pendências efetivas
 
-## 2026-09-29 — Specs da iniciativa "Cadastro de ativos v2" (E01-S154..S161) (Claude)
+1. Fabrício define quem poderá aprovar/suspender/encerrar planos e autorizar cancelamentos.
+   Permissões serão configuráveis, sem nomes fixos no código.
+2. Fabrício define se o planejador pode aprovar o próprio plano ou exige outra pessoa.
+3. Confirmar com exemplo a sequência de rotinas mensais/trimestrais após feriado:
+   próxima visita válida versus próxima oportunidade periódica, e preservação da âncora.
+   A supressão da semana já está aprovada; não reabrir essa decisão.
+- Os 25 tempos SPCI zerados do Rimini são **Tempo a validar**, não esforço zero. Não impedem
+  documentar o rascunho, mas impedem declarar sua capacidade completa/validada.
+- O gatilho real Auvo e seu contrato precisam ser reavaliados na futura implementação.
+  Testes que criam tarefas reais exigem liberação operacional expressa do Fabrício.
+- Credenciais locais e sessão autenticada não são transportadas pelo Git. Reconfigurar o ambiente
+  no outro computador sem solicitar tokens/senhas nesta conversa ou versionar `.env`.
 
-Lucas mandou o diagrama "Cliente: Guainumbí" (estrutura + Sistemas amarelos + Componentes
-laranjas) e 6 regras. Comparei com o código de `main` e fechamos as decisões em conversa (não
-precisa re-perguntar):
-- **Componente** = nome de UI de `pcm.equipamentos`. "Equipamento" é o nome do Auvo. O código
-  **não** é renomeado (ADR-0022).
-- Componente em **no máximo 1** Sistema. O vínculo **não** vai ao Auvo; lá os dois são Equipment.
-- Componente e Sistema em qualquer nível (Cliente/Área/Local). Cliente obrigatório no SO.
-- Categoria = catálogo `equipamento_categorias` (já espelhado com o Auvo), mais as 6 novas
-  (ELE/HID/TRV/CLI/SEG/PCI), que **convivem** com as atuais. Lucas higieniza depois.
-- Sigla de **3** caracteres por bloco, sugerida automaticamente e editável. Identificador
-  `GUA-TOA-A02-SHA-ELE-QDC-01`, só para itens **novos criados pelo SO**, **fixo** depois;
-  alteração manual com aviso de QR Code. Número no fim do nome ("Ar Condicionado 01") vira o `NN`.
-- Descrição no Auvo = nome completo. Ferramentas são da Sinérgica: na 360, só alocar/devolver.
-- Visão em árvore na 360 (v1 lista recolhível; diagrama em caixas fica para depois).
+### Entregas anteriores preservadas
 
-**Artefatos (branch `docs/E01-S154-S161-cadastro-ativos`):** product + design compartilhados em
-`specs/E01-S155-posicao-flexivel-ativos/`, ADR-0022, spec+tasks de S154..S161, planilha de exemplo
-em `specs/E01-S161-importacao-excel-estrutura/exemplo-planilha.xlsx`, e as linhas no ROADMAP.
-Specs escritas para o Sonnet executar: paths, migrations, nomes de trigger (a ordem alfabética
-importa), mensagens literais e gates.
-
-**Incidente de ambiente:** o checkout local estava corrompido (`.git` com 0 bytes, `supabase/` e
-`specs/` vazios; Lucas tinha movido a pasta). Reclonado em `/Users/lucasazevedo/GitHub/Sinergica/Sinergica-SO`.
-O antigo ficou em `Sinergica-SO.quebrado-2026-09-29`. A única diferença eram 2 linhas S154/S155 do
-ROADMAP (2026-09-25), nunca pushadas e sem spec escrita, **substituídas** por esta iniciativa.
-
-## 2026-09-30 — Onda 1 integrada em main: E01-S154 + S155 + S156 (Codex)
-
-- **E01-S156 completa, 11/11 tasks:** domínio de siglas, catálogo com `sigla`, `categoria_id`
-  em Componentes/Sistemas, seletor com criação inline, tela de catálogo, adapters e hooks.
-- Migrations `0219`/`0220` já estavam aplicadas: auditoria pela Management API confirmou 5
-  colunas, 3 constraints validadas, 6 seeds e 2 triggers. Outbox confirma 6 creates de categoria
-  e nenhum update de Componentes desde o início da onda.
-- `pcm-auvo-push`, `pcm-auvo-pull`, `pcm-auvo-sync-all`, `pcm-auvo-webhook` e
-  `pcm-auvo-webhooks-register` foram redeployadas pela Management API; todas respondem 401 sem
-  credenciais, nunca 500. Vitest focado, Deno e typecheck verdes; pgTAP novo aguarda `db-tests`
-  no CI, pois esta máquina não tem Docker.
-- Próximo passo: CI e validação humana em browser; depois, **E01-S157** (onda 2).
-
-## 2026-09-30 — Implementação Onda 1: E01-S154 + S155 (histórico)
-
-Continuação da sessão de 2026-09-29 (acima). Lucas pediu pra implementar as 4 ondas ponta a ponta
-(frontend+backend+banco). Decisões de processo tomadas nesta sessão:
-- Branch **por onda** (não por story nem uma única): `feat/onda1-componente-posicao-categoria`
-  cobre E01-S154+S155+S156, a partir de `docs/E01-S154-S161-cadastro-ativos`.
-- Migrations e Edge Functions são **aplicadas de verdade** durante a implementação (não só
-  escritas) — Lucas passou um `SUPABASE_ACCESS_TOKEN` (`sbp_...`) pra isso.
-- **Sem `supabase` CLI** (Lucas não tem instalado / pediu pra não depender dele — ficava pedindo
-  senha de banco e travava). Uso a **API de gerência do Supabase direto via `curl`**
-  (`POST https://api.supabase.com/v1/projects/nudannsrfvjggoergvyn/database/query`, header
-  `Authorization: Bearer <token>`) — é o mesmo backend que `supabase db query --linked` chama.
-  Token vive só em `<scratchpad>/.sb-token` (fora do repo, nunca commitado) + helper
-  `<scratchpad>/sbquery.sh`. Cada migration é smoke-testada com `begin; ...; rollback;` antes de
-  aplicar de verdade (mesmo padrão já usado em E03-S05).
-- **Sem Docker** nesta máquina — pgTAP é escrito (roda no CI `db-tests`) mas não executado local.
-  **Sem `SUPABASE_TEST_EMAIL`/`PASSWORD`** — E2E é escrito e validado só por `playwright test
-  --list` (parse/estrutura), não executado de ponta a ponta.
-
-**Achado de ambiente, início da sessão:** o checkout local (`Sinergica-SO`) estava corrompido
-(`.git` 0 bytes, `supabase/`/`specs/` vazios — Lucas tinha movido a pasta). Reclonado do zero em
-`/Users/lucasazevedo/GitHub/Sinergica/Sinergica-SO`; o antigo virou
-`Sinergica-SO.quebrado-2026-09-29` (não apagado). Único conteúdo que não estava no GitHub: as 2
-linhas velhas de ROADMAP da E01-S154/S155 (2026-09-25), já substituídas pela iniciativa nova.
-
-**E01-S154 (Componente + Sistema 1:N) — completa, 10/10 tasks:**
-- Migration `0216` (índice único `sistema_itens(item_id)`) aplicada em produção — pré-checagem
-  read-only confirmou 0 duplicatas antes. Achado de ambiente: `0211` existia no remoto mas não
-  local (mismatch pré-existente) — resolvido com `migration repair --status reverted 0211` antes
-  do primeiro push (só mexe na tabela de histórico, não em schema).
-- `validarMembroSemOutroSistema` (domínio) + `SistemaItemOpcao.sistemaId/sistemaNome` (gateway) +
-  `listarItensDisponiveis` resolvendo pertencimento atual (adapter) + seletor de composição
-  desabilitando item de outro Sistema com "em «Nome»".
-- Modal perde os campos Tipo/Equipamento pai (dado legado preservado, só some da UI).
-- UI renomeada ponta a ponta pra "Componente" (nav, modal, Nova OS, badges, mensagens de erro,
-  glossário) — exceções PMOC/laudos/Auvo tempo-real preservadas (ADR-0022).
-- **SPEC_DEVIATION registrado** (em `specs/E01-S154-.../tasks.md`): o filtro "Equipamento/
-  Componente" e os badges por item em `EquipamentosPage`/`BoardAtivos`/`DrawerDetalheAtivo` não
-  estavam na spec e colidiriam com o nome novo da entidade — renomeados pra "Principal"/
-  "Subcomponente (legado)".
-- 506 testes de `features/pcm` verdes, `ci:local` (biome+tsc) verde. 8 commits.
-
-**E01-S155 (posição flexível) — completa, 11/11 tasks:**
-- Migrations `0217`/`0218` aplicadas em produção após smoke test transacional com rollback; nenhuma fez `UPDATE` em massa em `pcm.equipamentos`/`pcm.sistemas`/`pcm.equipamento_categorias` e não houve enqueue Auvo em massa.
-- `SeletorPosicao` entra em Componente e Sistema; trocar cliente limpa Área/Local; o cliente do Componente não oferece mais "Sem vínculo". Painel da 360 e move no Board usam `atualizarPosicaoComponente`, portanto movem legado sem exigir os campos do cadastro completo.
-- E2E de Componente só na Área e Sistema no Local foi escrito em `hierarquia-sistemas.spec.ts` e listado pelo Playwright; não executado sem `SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD`. `tsc --noEmit`, testes do seletor/modal e suite PCM anterior verdes; pgTAP fica para CI (`db-tests`) porque não há Docker.
-- Glossário ganhou Posição e Área efetiva; Instalação aponta para Posição. Sem SPEC_DEVIATION.
-
-**Próximo passo histórico:** E01-S156 (categoria como catálogo) — concluída acima.
-
-## Em andamento / próximo passo
-- **Ativo:** E01-S53/T11, aba Preventivas na Visão 360. Plano e gates em
-  `specs/E01-S53-preventivo-service-orders/tasks.md`; iniciar pela entrega 11.1.
-- **Próxima ação concreta:** filtrar consultas de planos, ocorrências e avaliações por
-  `clienteId` no banco; cobrir A/B e cliente vazio com teste. Terra segue 11.2 e 11.3 após gate.
-
-## Bloqueios abertos
-> Carregados da rotação desta sessão — confirmados como ainda abertos, não copiados às cegas.
-- [ ] **Validação viva do contrato Auvo em E01-S53 AC-3:** confirmar tarefa de teste com
-  técnico, data, alvo e questionário antes de habilitar abertura preventiva. Independente de T11.
-- [ ] **`.claude/skills/revisao-adversarial/SKILL.md` nunca foi criada** — referenciada em
-  `AGENTS.md`/`Definition-of-Done.md` desde 2026-07-02, conteúdo nunca materializado como skill de
-  verdade. Quem destrava: Lucas, com pedido direto.
-- [ ] **Rotacionar o JWT secret legado do projeto Supabase** — exposto sem querer num diagnóstico
-  de sessão em 2026-07-02. Não catastrófico, mas é boa prática. Quem destrava: @devops/Lucas.
-- [ ] **Lote visual E00-S14..S23 (S20 AC-4/5/6, S21, S23) sem navegador pra validar visualmente**
-  — decisão de pular mantida por 2 sessões seguidas. Quem destrava: sessão com Playwright/
-  `claude-in-chrome` disponível, ou revisão humana do Lucas.
-- [ ] **`SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD` ausentes em `.env.local` da raiz** —
-  bloqueou verificação visual real em pelo menos 4 sessões seguidas agora (E00-S24, as 4 mudanças
-  de 2026-08-19, e a Onda 1 de 2026-09-30). `e2e/auth.setup.ts` falha rápido sem eles. Quem
-  destrava: Lucas, com as credenciais reais de teste — ou aceitar que verificação visual continua
-  sendo feita só por ele, manualmente, depois do merge.
-- [ ] **Docker não existe mais nesta máquina** (confirmado por Lucas, 2026-09-30) — todo pgTAP da
-  Onda 1 em diante é escrito mas roda só no CI `db-tests`, nunca localmente. Não é regressão, é a
-  realidade do ambiente agora; pare de tentar `supabase test db` local.
-- [ ] **E01-S157 AC-10 e E2E real** — `SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD` continuam
-  ausentes e nenhum cliente Auvo seguro foi indicado. Quem destrava: Lucas fornece as credenciais e
-  aponta o cliente de teste; não criar Equipment de validação em cliente produtivo.
+- PR #70 já integrada na main: identificador com sugestões e manual operacional/ajuda.
+- [Levantamento funcional e apresentação](entregas/2026-10-14/README.md): Markdown, HTML offline
+  com 109 capturas únicas e ZIP, agora versionados. Referência histórica em 14/10/2026;
+  não equivalem à homologação do novo módulo nem ao estado vivo de produção.
+- Histórico do STATE antigo preservado em
+  [2026-09-29 a 2026-10-01](state-historico/2026-09-29-a-2026-10-01.md).
+  Suas pendências de ambiente são históricas e não devem ser copiadas como estado atual.
