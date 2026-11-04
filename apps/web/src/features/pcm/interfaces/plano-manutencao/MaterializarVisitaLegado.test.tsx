@@ -21,3 +21,14 @@ it("encaminha Visita integrada para conferência independente da fila", async ()
   expect(await screen.findByText(`Fila visita: ${id(1)}`)).toBeInTheDocument();
   expect(api.rpc.mock.calls.filter(([nome]) => nome === "sso_alterar_fila_visita")).toHaveLength(0);
 });
+
+
+it("pré-seleciona a Visita da jornada sem enviar vínculo automaticamente", async () => {
+  api.rpc.mockImplementation((nome) => nome === "sso_visitas_legadas_mediadas" ? { abortSignal: async () => ({ data: [{ preparada_id: id(1), visita_id: id(2), serie_id: id(3), semana_origem: "2026-11-02", vencimento_original: "2026-11-06", alvo_tipo: "sistema", alvo_id: id(4) }], error: null }) } : Promise.resolve({ data: null, error: null }));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><MaterializarVisitaLegado userId="usuario" clienteId={id(5)} planoId={id(6)} legadoId={id(7)} relacaoId={id(8)} preparadaInicial={id(1)} /></QueryClientProvider>);
+  await screen.findByRole("option", { name: /2026-11-06/ });
+  expect(screen.getByLabelText("Ocorrência preparada")).toHaveValue(id(1));
+  expect(screen.getByRole("button", { name: "Processar Visita" })).toBeDisabled();
+  expect(api.rpc.mock.calls.filter(([nome]) => nome === "sso_materializar_visita_legada_mediada")).toHaveLength(0);
+});

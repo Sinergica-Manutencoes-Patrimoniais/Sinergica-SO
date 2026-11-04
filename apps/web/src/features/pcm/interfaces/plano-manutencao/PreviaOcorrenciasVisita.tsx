@@ -7,6 +7,7 @@ import { OrigemGeracaoRotina } from "./OrigemGeracaoRotina";
 import { ConferenciaPmocCiclo } from "./ConferenciaPmocCiclo";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { FilaPreventivaPcm } from "./FilaPreventivaPcm";
+import { IntegrarOrigemOcorrencia } from "./IntegrarOrigemOcorrencia";
 
 type Candidato={visita_id:string;semana_origem:string;vencimento_original:string;estado_visita:string;feriado_declarado:boolean;vigencia_declarada:boolean;ocorrencia_preparada:boolean};
 type Pedido={requestId:string;ocorrenciaId:string;clienteId:string;planoId:string;versaoId:string;rotinaId:string;visitaId:string;revision:number;fonte:string;modo?:"canonico"|"anterior"};
@@ -58,7 +59,7 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:
     </li>)}</ul>}
     {candidatos.hasNextPage&&<button type="button" onClick={() => void candidatos.fetchNextPage()}>Mais Visitas</button>}
     {periodo && !candidatos.isError && import.meta.env.VITE_SSO_LOTE_VISITA_CANONICA_ENABLED === "true" && <LoteOcorrenciasVisita userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} serieId={serieId} revision={revision} candidatos={candidatos.data?.pages.flat() ?? []} consultando={candidatos.isFetching} />}
-    {resultado && import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" && <section aria-label="Próximo passo da Visita preparada"><p>Visita {resultado.visitaId} · ocorrência preparada {resultado.ocorrenciaId}.</p><button type="button" aria-expanded={filaAberta} onClick={() => setFilaAberta((aberta) => !aberta)}>{filaAberta ? "Ocultar fila da Visita" : "Conferir inclusão na fila"}</button>{filaAberta && <FilaPreventivaPcm userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={resultado.ocorrenciaId} tipo="visita" />}</section>}
+    {resultado && <section aria-label="Próximo passo da Visita preparada"><p>Visita {resultado.visitaId} · ocorrência preparada {resultado.ocorrenciaId}.</p>{import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" && <button type="button" aria-expanded={filaAberta} onClick={() => setFilaAberta((aberta) => !aberta)}>{filaAberta ? "Ocultar fila da Visita" : "Conferir inclusão na fila"}</button>}{filaAberta && <FilaPreventivaPcm userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={resultado.ocorrenciaId} tipo="visita" />}<IntegrarOrigemOcorrencia userId={userId} clienteId={clienteId} planoId={planoId} revision={revision} preparadaId={resultado.ocorrenciaId} tipo="visita" /></section>}
     {pedido==="invalido"&&<p role="alert">Tentativa ilegível. Procure suporte.</p>}{pedido&&pedido!=="invalido"&&<button type="button" disabled={envio.isPending} onClick={() => enviar(pedido)}>Repetir mesmo pedido</button>}{mensagem&&<p role="status">{mensagem}</p>}
   </section>;
 }

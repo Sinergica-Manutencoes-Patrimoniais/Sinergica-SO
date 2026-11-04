@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: retirada aplicada, legado e concorrência
+
+- ADR-1531/migration 1674 e `AplicarRetiradasFila` oferecem comando explícito, paginado e idempotente para aplicar retirada já aprovada e efetiva a entrada sem execução comprovada; leitura não escreve, e OS/fontes incertas permanecem para PCM. Fixture e dois testes de UI passaram; faltam concorrência, fontes não vinculadas e validação operacional.
+- ADR-1532/migration 1675 serializam edição e materialização do Plano Preventivo legado pela mesma linha. Em clone descartável, teste de duas sessões passou em ambas ordens, incluindo commit e rollback; cobre READ COMMITTED e comandos canônicos, não escrita privilegiada direta nem fontes externas. Migrations até 1675 compilaram.
+- Recibos de geração abrem vínculo contextual ao legado, com seleção e confirmação explícitas; 35 testes focados passaram e typecheck passou. Sem Auvo/deploy. Guarda 1045 e homologação bloqueadas; decisão de data-base continua pendente.
+
 ## 2026-11-04 — S165/S166: continuidade de ocorrência mantida e consulta por IDs
 
 - ADR-1528/migration 1671 permite consumir somente a ocorrência histórica específica com decisão e selo de continuidade vigentes, mesmo após retirada da Rotina; não permite novos ciclos nem altera OS/histórico. Fixtures sintéticas de calendário/Visita passaram em clone com ACL preservadas e rollback; selos foram inseridos como fixture, não provam aprovação real ou concorrência. Guarda 1045 mantida.

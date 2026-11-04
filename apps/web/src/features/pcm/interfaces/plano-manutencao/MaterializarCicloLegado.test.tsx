@@ -91,3 +91,15 @@ it("encaminha ciclo integrado para conferência independente da fila", async () 
   concluir({ data: { requestId: pedido.p_request_id, preparadaId: pedido.p_preparada_id, osCriada: false, tarefaAuvoCriada: false, equivalenciaGeralComprovada: false, ocorrenciaLegadaCriada: true }, error: null });
   expect(await screen.findByText("Fila do ciclo: preparada")).toBeInTheDocument();
 });
+
+
+it("pré-seleciona ciclo contextual e exige confirmação antes de integrar", async () => {
+  api.schema.mockReturnValue({ rpc: api.rpc });
+  api.rpc.mockImplementation((nome: string) => nome === "sso_ciclos_legados_mediados" ? { abortSignal: () => Promise.resolve({ data: [item], error: null }) } : Promise.resolve({ data: null, error: null }));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><MaterializarCicloLegado {...props} preparadaInicial="preparada" /></QueryClientProvider>);
+  await screen.findByRole("option", { name: /2026-11-01/ });
+  expect(screen.getByLabelText("Ocorrência preparada")).toHaveValue("preparada");
+  expect(screen.getByRole("button", { name: "Processar ciclo" })).toBeDisabled();
+  expect(api.rpc.mock.calls.filter(([nome]) => nome === "sso_materializar_legado_mediado")).toHaveLength(0);
+});

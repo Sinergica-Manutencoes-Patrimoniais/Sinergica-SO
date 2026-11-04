@@ -7,6 +7,7 @@ import { janelaPadraoCalendario } from "../../domain/calendario-contratual";
 import { obterPaginaSnapshotExportacao } from "../../infrastructure/supabase-snapshot-exportacao";
 import { FilaAposPreparacao } from "./FilaAposPreparacao";
 import { FilaDasOcorrenciasPreparadas } from "./FilaDasOcorrenciasPreparadas";
+import { IntegrarOrigemOcorrencia } from "./IntegrarOrigemOcorrencia";
 
 const uuid = z.string().uuid();
 const esperadoSchema = z.object({ ciclo: z.number().int().nonnegative().safe(), vencimento: z.string().date() }).strict();
@@ -117,7 +118,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
       {origensAtuais && <><ul>{origensAtuais.map((r) => <li key={r.rotinaId}>{r.nome} · {r.alvo} · {r.itens.length} ciclo(s){r.itens.map((i) => <span key={i.ciclo}> · {i.vencimento}: {i.estado}</span>)}</li>)}</ul>{bloqueadas.length > 0 && <p role="alert">Há origem PMOC, pendência ou conflito. Resolva essas Rotinas ou retire-as da seleção e confira novamente.</p>}{comCiclos.length === 0 && <p>Nenhuma Rotina selecionada tem ciclos na janela.</p>}
         <label><input type="checkbox" disabled={bloqueadas.length > 0 || comCiclos.length === 0} checked={assinatura === assinaturaAtual} onChange={(e) => setAssinatura(e.target.checked ? assinaturaAtual : null)} /> Conferi cada Rotina, alvo, ciclo e origem; autorizo a preparação sequencial.</label><button type="button" disabled={assinatura !== assinaturaAtual || bloqueadas.length > 0 || comCiclos.length === 0} onClick={iniciar}>Preparar Rotinas selecionadas</button></>}
     </>}
-    {!ocupado && recibosDisponiveis.length > 0 && <section aria-label="Ocorrências preparadas na janela"><h5>Ocorrências preparadas</h5><ul>{recibosDisponiveis.flatMap((r) => r.preparadas.map((id) => <li key={id}>Rotina {r.rotinaId} · ocorrência {id} <FilaAposPreparacao userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={id} /></li>))}</ul>{import.meta.env.VITE_SSO_FILA_SELECIONADA_ENABLED === "true" && <FilaDasOcorrenciasPreparadas userId={userId} clienteId={clienteId} planoId={planoId} preparadas={recibosDisponiveis.flatMap((r) => r.preparadas)} />}</section>}
+    {!ocupado && recibosDisponiveis.length > 0 && <section aria-label="Ocorrências preparadas na janela"><h5>Ocorrências preparadas</h5><ul>{recibosDisponiveis.flatMap((r) => r.preparadas.map((id) => <li key={id}>Rotina {r.rotinaId} · ocorrência {id} <FilaAposPreparacao userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={id} /><IntegrarOrigemOcorrencia userId={userId} clienteId={clienteId} planoId={planoId} revision={revision} preparadaId={id} tipo="calendario" /></li>))}</ul>{import.meta.env.VITE_SSO_FILA_SELECIONADA_ENABLED === "true" && <FilaDasOcorrenciasPreparadas userId={userId} clienteId={clienteId} planoId={planoId} preparadas={recibosDisponiveis.flatMap((r) => r.preparadas)} />}</section>}
     {aviso && <p role="status">{aviso}</p>}
   </section>;
 }

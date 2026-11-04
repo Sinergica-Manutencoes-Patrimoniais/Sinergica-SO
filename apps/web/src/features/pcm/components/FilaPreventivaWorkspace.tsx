@@ -7,6 +7,7 @@ import { DecidirVencimento } from "../interfaces/plano-manutencao/DecidirVencime
 import { FilaPreventivaPcm } from "../interfaces/plano-manutencao/FilaPreventivaPcm";
 import { EstadoOcorrenciaVinculada } from "../interfaces/plano-manutencao/EstadoOcorrenciaVinculada";
 import { FilaVisitaWorkspace } from "./FilaVisitaWorkspace";
+import { AplicarRetiradasFila } from "../interfaces/plano-manutencao/AplicarRetiradasFila";
 
 const tamanhoPagina = 50;
 const entrada = z.object({
@@ -172,6 +173,7 @@ function Conteudo({ clienteId, userId }: { clienteId: string; userId: string }) 
       {fila.hasNextPage && <p>Existem mais páginas; esta não é a lista completa.</p>}
     </>}
     {planoSelecionado && import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" && <FilaVisitaWorkspace userId={userId} clienteId={clienteId} planoId={planoId} estado={estadoFiltro} inicio={inicioFiltro} fim={fimFiltro} />}
+    {planoSelecionado && import.meta.env.VITE_SSO_RESOLUCAO_IMPACTO_ENABLED === "true" && <AplicarRetiradasFila userId={userId} clienteId={clienteId} planoId={planoId} />}
     {cicloGerenciado && <div hidden={!planoSelecionado}>{!ciclosVisiveis.has(cicloGerenciado.cicloId) && <p>A gestão aberta permanece disponível mesmo com a entrada fora dos resultados carregados. A ação usa uma consulta independente e atual. <button type="button" onClick={() => setCicloGerenciado(null)}>Fechar gestão</button></p>}<FilaPreventivaPcm userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={cicloGerenciado.preparadaId} /></div>}
   </section>;
 }
