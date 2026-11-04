@@ -6,12 +6,18 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: continuidade e decisão com comparação
+
+- ADR-1510/migration 1653 preservam na revisão seguinte a ocorrência selada na versão anterior mesmo que ela não tenha sido novamente materializada. Ensaios sintéticos em três versões para calendário e Visita passaram com rollback; aprovação testada com guarda 1045 desativada somente na transação de teste. Não autoriza homologação nem prova concorrência.
+- ADR-1511/migration 1654 e interface associam a comparação à Rotina lógica e apresentam referência anterior e rascunho, inclusive em continuidade selada; falha de comparação bloqueia decisão. Confirmação é invalidada ao mudar comparação ou data; 2 testes focados passaram após correção de reconfirmação. Compilação em clone passou; comparação ainda não é selo transacional e faltam testes SQL funcionais próprios.
+- Preparação individual e em lote de Visitas agora permite abrir conferência da fila a partir do recibo, sem inclusão automática; 9 testes focados passaram. Typecheck passou após ajustes. Gates seguem desligados; sem Auvo real ou deploy. Decisão do usuário sobre mudança de data permanece pendente.
+
 ## 2026-11-04 — S165/S166: resolução obsoleta e revalidação de fonte
 
 - ADR-1506/migration 1649 e `ResolverRetiradaImpacto.tsx` distinguem retirada vigente e obsoleta sem alterar recibo histórico; fixtures sintéticas de calendário e Visita passaram após restauração do escopo. Mudança de data com ocorrência futura depende de definição PCM solicitada ao usuário.
 - ADR-1507/migration 1650 fazem fila de Visita apresentar fonte atual e recusam novo Chamado quando registro está cancelado/em verificação ou fonte deixa de ser elegível; flags continuam desligadas. Fixture sintética passou para fonte alterada, bloqueio e cancelamento, sem OS. Clone sem owner/cron/net não comprova ACL de produção, concorrência ou todos os consumidores.
 - Ensaio `manual_E01-S165_aprovacao_calendario_clone.sql` passou no clone e rollback: início/submissão, decisão, classificação PMOC, aprovação real, replay, vigência e selo. A ACL e a guarda 1045 foram alteradas SOMENTE na transação sintética, fuso foi fixture; Visita, concorrência e fontes reais não foram provados. ADR-1508/migration 1651 adicionam wrapper autenticado e adapter mediado, sem abrir a guarda 1045. Fixture sintética passou para ACL, gate fechado, ator/Cliente divergentes, revogação e rejeição pela 1045; replay usou recibo inserido como fixture e não prova aprovação real pelo wrapper nem corrida. Typecheck passou.
-- Typecheck e 10 testes focados de interface passaram; migrations 1614–1650 e fixtures 1649/1650 passaram no clone. Backup remoto `bf369ba` preserva o trabalho capturado, exceto arquivos criados após captura. Homologação, gates e deploy seguem bloqueados; sem Auvo real.
+- Typecheck e 10 testes focados de interface passaram; migrations 1614–1650 e fixtures 1649/1650 passaram no clone. Backup remoto `560c84b` preserva o lote capturado; alteracoes posteriores exigem novo snapshot. Homologação, gates e deploy seguem bloqueados; sem Auvo real.
 
 ## 2026-11-04 — S165/S166: retirada de escopo e fila por Visita (em andamento)
 

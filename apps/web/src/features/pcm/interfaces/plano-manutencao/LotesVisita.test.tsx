@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const externo = vi.hoisted(() => ({ rpc: vi.fn(), getUser: vi.fn() }));
+vi.mock("./FilaPreventivaPcm", () => ({ FilaPreventivaPcm: ({ preparadaId, tipo }: { preparadaId: string; tipo: string }) => <p>Fila {tipo}: {preparadaId}</p> }));
 vi.mock("../../../../lib/supabase-client", () => ({ supabase: { schema: () => ({ rpc: externo.rpc }), auth: { getUser: externo.getUser } } }));
 import { LoteOcorrenciasVisita } from "./LoteOcorrenciasVisita";
 import { LoteVisitaLegado } from "./LoteVisitaLegado";
@@ -22,7 +23,7 @@ const visitas = [{ preparada_id: preparada, visita_id: visita, semana_origem: "2
 function canonico(query: QueryClient, clienteId = cliente, dados: Array<{visita_id:string;semana_origem:string;vencimento_original:string;estado_visita:string;feriado_declarado:boolean;vigencia_declarada:boolean;ocorrencia_preparada:boolean}> = [...candidatos]) { return <QueryClientProvider client={query}><LoteOcorrenciasVisita userId="usuario" clienteId={clienteId} planoId={plano} versaoId={versao} rotinaId={rotina} serieId={serie} revision={3} candidatos={dados} consultando={false} /></QueryClientProvider>; }
 function anterior(query: QueryClient, clienteId = cliente, dados: Array<{preparada_id:string;visita_id:string;semana_origem:string;vencimento_original:string;alvo_tipo:string;alvo_id:string}> = [...visitas]) { return <QueryClientProvider client={query}><LoteVisitaLegado userId="usuario" clienteId={clienteId} planoId={plano} legadoId={legado} relacaoId={relacao} visitas={dados} consultando={false} /></QueryClientProvider>; }
 beforeEach(() => { externo.getUser.mockResolvedValue({ data: { user: { id: "usuario" } }, error: null }); });
-afterEach(() => { cleanup(); vi.resetAllMocks(); sessionStorage.clear(); });
+afterEach(() => { cleanup(); vi.resetAllMocks(); vi.unstubAllEnvs(); sessionStorage.clear(); });
 
 it("não seleciona feriado declarado ou Visita sem vigência", () => {
   const bloqueadas = [{ ...candidatos[0], feriado_declarado: true }, { ...candidatos[0], visita_id: "16610000-0000-4000-8000-000000000082", vigencia_declarada: false }];
@@ -96,4 +97,19 @@ it("não envia lote ao trocar a sessão depois da conferência", async () => {
   await screen.findByText(/Resultado não confirmado/i);
   expect(externo.rpc).not.toHaveBeenCalled();
   expect(screen.getByRole("button", { name: "Repetir mesmo lote" })).toBeInTheDocument();
+});
+
+
+it("encaminha as ocorrências retornadas pelo lote para conferência da fila", async () => {
+  vi.stubEnv("VITE_SSO_FILA_VISITA_ENABLED", "true");
+  externo.rpc.mockImplementation(async (_nome, p) => ({ error: null, data: { requestId: p.p_request_id, atomico: true, osCriada: false, tarefaAuvoCriada: false, fonteFeriadosCompleta: false, itens: p.p_itens.map((i: { visitaId: string; ocorrenciaId: string }) => ({ requestId: crypto.randomUUID(), visitaId: i.visitaId, ocorrenciaId: i.ocorrenciaId, cicloVisitaId: crypto.randomUUID(), criada: true, osCriada: false, tarefaAuvoCriada: false, fonteFeriadosCompleta: false })) } }));
+  render(canonico(q()));
+  fireEvent.click(screen.getByRole("checkbox", { name: new RegExp(visita) }));
+  fireEvent.change(screen.getByLabelText("Fonte consultada para cada dia"), { target: { value: "PCM" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /conferi cada visita/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Preparar lote" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Conferir inclusão na fila" }));
+  const ocorrencia = externo.rpc.mock.calls[0]?.[1].p_itens[0].ocorrenciaId;
+  expect(screen.getByText(`Fila visita: ${ocorrencia}`)).toBeInTheDocument();
+  expect(externo.rpc).toHaveBeenCalledTimes(1);
 });

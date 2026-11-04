@@ -1,0 +1,49 @@
+// @vitest-environment jsdom
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+const externo = vi.hoisted(() => ({ rpc: vi.fn() }));
+vi.mock("../../../../lib/supabase-client", () => ({ supabase: { schema: () => ({ rpc: externo.rpc }), auth: { getUser: async () => ({ data: { user: { id: "usuario" } }, error: null }) } } }));
+import { DecisaoImpactoOcorrencia } from "./DecisaoImpactoOcorrencia";
+import { DecisaoImpactoVisita } from "./DecisaoImpactoVisita";
+
+const preparada = "16630000-1111-4000-8000-000000000061";
+const rascunho = "16630000-1111-4000-8000-000000000022";
+const rotinaId = "16630000-1111-4000-8000-000000000031";
+const logica = "16630000-1111-4000-8000-000000000032";
+const alvo = "16630000-1111-4000-8000-000000000033";
+const visita = "16630000-1111-4000-8000-000000000081";
+const ciclo = "16630000-1111-4000-8000-000000000082";
+const usuario = "usuario"; const cliente = "cliente"; const plano = "plano"; const revision = 2;
+const rotina = { id: rotinaId, nome: "Rotina original", alvo_tipo: "sistema", sistema_id: alvo, equipamento_id: null, grupo_id: null, modo: "calendario", intervalo_n: 1, intervalo_unidade: "meses", data_base: "2026-11-04", tempo_minutos: null, tipo_tempo: null, tolerancia_antes: 0, tolerancia_depois: 0, instrucao: null, questionario_id: null };
+const comum = { preparada_id: preparada, rascunho_id: rascunho, rotina_id: rotinaId, revisao_decisao: 0, ultima_decisao: null, ultima_revisao_plano: null };
+afterEach(() => { cleanup(); sessionStorage.clear(); vi.unstubAllEnvs(); externo.rpc.mockReset(); });
+
+it.each(["calendario", "visita"] as const)("exige nova confirmação ao mudar comparação ou data para %s", async (tipo) => {
+  vi.stubEnv("VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED", "true");
+  const linha = tipo === "calendario" ? { ...comum, ciclo: 1, vencimento_original: "2026-11-04", ultimo_motivo: null } : { ...comum, semana_origem: "2026-11-02", visita_id: visita, ciclo_canonico_id: ciclo };
+  const comparacao = { preparadaId: preparada, rascunhoId: rascunho, revisaoPlano: revision, tipo, rotinaLogicaId: logica, alvoOcorrenciaTipo: "sistema", alvoOcorrenciaId: alvo, vencimentoOriginal: "2026-11-04", anterior: rotina, rascunho: { ...rotina, nome: "Rascunho" }, fontesCompletas: false, aprovacaoAutorizada: false };
+  externo.rpc.mockImplementation((nome: string) => ({ abortSignal: () => Promise.resolve({ data: nome === "sso_comparar_rotina_impacto" ? comparacao : [linha], error: null }) }));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const props = { userId: usuario, clienteId: cliente, planoId: plano, revision };
+  render(<QueryClientProvider client={client}>{tipo === "calendario" ? <DecisaoImpactoOcorrencia {...props} /> : <DecisaoImpactoVisita {...props} />}</QueryClientProvider>);
+  const seletor = await screen.findByLabelText("Ocorrência");
+  await screen.findByRole("option", { name: tipo === "calendario" ? /Ciclo 1/ : /Semana 2026-11-02/ });
+  fireEvent.change(seletor, { target: { value: preparada } });
+  await screen.findByText(/Versão anterior: Rotina original/);
+  fireEvent.change(screen.getByLabelText("Motivo"), { target: { value: "Conferido" } });
+  const confirmar = screen.getByRole("checkbox", { name: /Conferi a decisão parcial/ });
+  const botao = screen.getByRole("button", { name: "Registrar decisão" });
+  fireEvent.click(confirmar);
+  expect(botao).toBeEnabled();
+  const chaveComparacao = ["comparacao-impacto-selecionado", usuario, cliente, plano, revision, rascunho, preparada, tipo];
+  act(() => client.setQueryData(chaveComparacao, { ...comparacao, rascunho: { ...rotina, nome: "Rascunho alterado" } }));
+  await waitFor(() => { expect(confirmar).not.toBeChecked(); expect(botao).toBeDisabled(); });
+  fireEvent.click(confirmar);
+  expect(botao).toBeEnabled();
+  const chaveLista = [tipo === "calendario" ? "decisoes-impacto-ocorrencia" : "impactos-visita", usuario, cliente, plano, revision];
+  const alterada = tipo === "calendario" ? { ...linha, vencimento_original: "2026-11-05" } : { ...linha, semana_origem: "2026-11-09" };
+  act(() => client.setQueryData(chaveLista, { pages: [[alterada]], pageParams: [null] }));
+  await waitFor(() => { expect(confirmar).not.toBeChecked(); expect(botao).toBeDisabled(); });
+  expect(externo.rpc.mock.calls.filter(([nome]) => nome === "sso_decidir_impacto_mediada")).toHaveLength(0);
+});

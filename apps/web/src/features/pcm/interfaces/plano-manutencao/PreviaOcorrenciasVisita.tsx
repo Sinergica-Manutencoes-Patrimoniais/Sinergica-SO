@@ -1,10 +1,12 @@
 import { useInfiniteQuery,useMutation,useQueryClient } from "@tanstack/react-query";
 import { useRef,useState } from "react";
+import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { LoteOcorrenciasVisita } from "./LoteOcorrenciasVisita";
 import { OrigemGeracaoRotina } from "./OrigemGeracaoRotina";
 import { ConferenciaPmocCiclo } from "./ConferenciaPmocCiclo";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { FilaPreventivaPcm } from "./FilaPreventivaPcm";
 
 type Candidato={visita_id:string;semana_origem:string;vencimento_original:string;estado_visita:string;feriado_declarado:boolean;vigencia_declarada:boolean;ocorrencia_preparada:boolean};
 type Pedido={requestId:string;ocorrenciaId:string;clienteId:string;planoId:string;versaoId:string;rotinaId:string;visitaId:string;revision:number;fonte:string;modo?:"canonico"|"anterior"};
@@ -15,6 +17,7 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:
   const chave=`sso-preparar-ocorrencia-visita:${JSON.stringify([userId,clienteId,planoId,rotinaId,serieId])}`;const cache=useQueryClient();const trava=useRef(false);
   const [inicio,setInicio]=useState("");const [fim,setFim]=useState("");const [periodo,setPeriodo]=useState<{inicio:string;fim:string}|null>(null);
   const [fonte,setFonte]=useState("");const [selecionado,setSelecionado]=useState("");const [mensagem,setMensagem]=useState("");
+  const [resultado,setResultado]=useState<{visitaId:string;ocorrenciaId:string}|null>(null);const [filaAberta,setFilaAberta]=useState(false);
   const [confirmado,setConfirmado]=useState<string|null>(null);const modo=import.meta.env.VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED === "true" ? "canonico" : "anterior";
   const [pedido,setPedido]=useState<Pedido|"invalido"|null>(() => {try{const salvo=sessionStorage.getItem(chave);if(!salvo)return null;const p=JSON.parse(salvo) as Pedido;
     return p&&p.clienteId===clienteId&&p.planoId===planoId&&p.versaoId===versaoId&&p.rotinaId===rotinaId&&typeof p.requestId==="string"&&typeof p.ocorrenciaId==="string"&&
@@ -28,9 +31,9 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:
   const envio=useMutation({mutationFn:async(p:Pedido) => {await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");if((p.modo??"anterior")!==modo)throw new Error("Fluxo da tentativa mudou; procure suporte.");const {data,error}=await supabase.schema("pcm").rpc(modo==="canonico"?"sso_preparar_visita_canonica":"sso_preparar_ocorrencia_por_visita",{
     p_request_id:p.requestId,p_ocorrencia_id:p.ocorrenciaId,p_plano_id:p.planoId,p_versao_id:p.versaoId,p_rotina_id:p.rotinaId,
     p_visita_id:p.visitaId,p_expected_revision:p.revision,p_fonte_dia_util:p.fonte,...(modo==="canonico"?{p_cliente_id:p.clienteId}:{})});if(error)throw error;
-    if(!data||data.requestId!==p.requestId||data.visitaId!==p.visitaId||typeof data.ocorrenciaId!=="string"||(modo==="canonico"?(typeof data.cicloVisitaId!=="string"||data.osCriada!==false||data.tarefaAuvoCriada!==false):data.preparada!==true))throw new Error("Resposta inválida.");await conferirSessaoDiagnostico(userId);},
-    onSuccess:async(_r,p) => {try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");sessionStorage.removeItem(chave);}catch{setMensagem("Registro preparado, mas tentativa não foi removida. Procure suporte.");return;}
-      setPedido(null);setConfirmado(null);setMensagem("Ocorrência preparada; não está na fila oficial e não cria OS ou tarefa.");await cache.invalidateQueries({queryKey:["previa-ocorrencia-visita",userId,clienteId,planoId,versaoId,rotinaId,serieId]});},
+    if(!data||data.requestId!==p.requestId||data.visitaId!==p.visitaId||typeof data.ocorrenciaId!=="string"||(modo==="canonico"?(typeof data.cicloVisitaId!=="string"||data.osCriada!==false||data.tarefaAuvoCriada!==false):data.preparada!==true))throw new Error("Resposta inválida.");const ocorrenciaId=z.string().uuid().parse(data.ocorrenciaId);await conferirSessaoDiagnostico(userId);return {ocorrenciaId,visitaId:p.visitaId,modo:p.modo??"anterior"};},
+    onSuccess:async(r,p) => {try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");sessionStorage.removeItem(chave);}catch{setMensagem("Registro preparado, mas tentativa não foi removida. Procure suporte.");return;}
+      setPedido(null);setConfirmado(null);setResultado(r.modo==="canonico"?{visitaId:r.visitaId,ocorrenciaId:r.ocorrenciaId}:null);setFilaAberta(false);setMensagem("Ocorrência preparada; ainda não incluída na fila e sem OS ou tarefa.");await cache.invalidateQueries({queryKey:["previa-ocorrencia-visita",userId,clienteId,planoId,versaoId,rotinaId,serieId]});},
     onError:() => setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte."),onSettled:() => {trava.current=false;}});
   const enviar=(p:Pedido) => {if(trava.current)return;trava.current=true;envio.mutate(p);};
   const assinaturaConfirmacao=(c:Candidato) => JSON.stringify([userId,clienteId,planoId,versaoId,rotinaId,serieId,revision,modo,fonte.trim(),c]);
@@ -55,6 +58,7 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:
     </li>)}</ul>}
     {candidatos.hasNextPage&&<button type="button" onClick={() => void candidatos.fetchNextPage()}>Mais Visitas</button>}
     {periodo && !candidatos.isError && import.meta.env.VITE_SSO_LOTE_VISITA_CANONICA_ENABLED === "true" && <LoteOcorrenciasVisita userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} serieId={serieId} revision={revision} candidatos={candidatos.data?.pages.flat() ?? []} consultando={candidatos.isFetching} />}
+    {resultado && import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" && <section aria-label="Próximo passo da Visita preparada"><p>Visita {resultado.visitaId} · ocorrência preparada {resultado.ocorrenciaId}.</p><button type="button" aria-expanded={filaAberta} onClick={() => setFilaAberta((aberta) => !aberta)}>{filaAberta ? "Ocultar fila da Visita" : "Conferir inclusão na fila"}</button>{filaAberta && <FilaPreventivaPcm userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={resultado.ocorrenciaId} tipo="visita" />}</section>}
     {pedido==="invalido"&&<p role="alert">Tentativa ilegível. Procure suporte.</p>}{pedido&&pedido!=="invalido"&&<button type="button" disabled={envio.isPending} onClick={() => enviar(pedido)}>Repetir mesmo pedido</button>}{mensagem&&<p role="status">{mensagem}</p>}
   </section>;
 }
