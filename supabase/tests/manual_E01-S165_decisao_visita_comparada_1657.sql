@@ -1,9 +1,23 @@
--- Executar em clone com migrations até 1657, em BEGIN/ROLLBACK. Inclui fixture sintética.
+-- Executar em clone com migrations até 1659, em BEGIN/ROLLBACK. Inclui fixture sintética.
 \ir manual_E01-S165_impacto_visita_mediado.sql
 update pcm.sso_decisao_comparada_gate set habilitado=true where id;
 update config.sso_concessoes set ativa=true where usuario_id='16610000-0000-0000-0000-000000000001' and acao='visita.confirmar';
 set local role authenticated;
-create temporary table comparacao_1657 as select pcm.sso_comparar_rotina_impacto('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,'16610000-0000-0000-0000-000000000181',(select preparada_id from pcm.sso_listar_decisoes_visita_mediada('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,null,20)),'visita') as foto;
+create temporary table comparacao_1657 as select pcm.sso_comparar_rotina_impacto_v2('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,'16610000-0000-0000-0000-000000000181',(select preparada_id from pcm.sso_listar_decisoes_visita_mediada('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,null,20)),'visita') as foto;
+-- Simula mudança só da identidade exibida, mantendo alvo, data e regra.
+reset role;
+update pcm.ocorrencias_visita_preparadas set semana_origem=semana_origem+7 where plano_id='16610000-0000-0000-0000-000000000121';
+set local role authenticated;
+do $$ declare p uuid;f jsonb;begin
+ select (foto->>'preparadaId')::uuid,foto into p,f from comparacao_1657;
+ begin
+  perform pcm.sso_decidir_impacto_comparado('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-000000000193','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121','16610000-0000-0000-0000-000000000181',p,2,1,'exige_reconciliacao','conferido','visita',f);
+  raise exception 'identidade_obsoleta_aceita';
+ exception when serialization_failure then if sqlerrm<>'comparacao_obsoleta' then raise;end if;end;
+end; $$;
+reset role;
+update pcm.ocorrencias_visita_preparadas set semana_origem=semana_origem-7 where plano_id='16610000-0000-0000-0000-000000000121';
+set local role authenticated;
 do $$ declare p uuid;r jsonb;begin
  select (foto->>'preparadaId')::uuid into p from comparacao_1657;
  -- Replay anterior à migração continua acessível; criação sem comparação não pode passar.

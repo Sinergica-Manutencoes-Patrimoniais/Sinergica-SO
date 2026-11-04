@@ -1,8 +1,22 @@
--- Executar em clone com migrations até 1657, em BEGIN/ROLLBACK. Inclui fixture sintética.
+-- Executar em clone com migrations até 1659, em BEGIN/ROLLBACK. Inclui fixture sintética.
 \ir manual_E01-S165_impacto_calendario_mediado.sql
 update pcm.sso_decisao_comparada_gate set habilitado=true where id;
 set local role authenticated;
-create temporary table comparacao_1657 as select pcm.sso_comparar_rotina_impacto('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,'16630000-1111-4000-8000-000000000022',(select preparada_id from pcm.sso_listar_decisoes_calendario_mediada('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,null,20)),'calendario') as foto;
+create temporary table comparacao_1657 as select pcm.sso_comparar_rotina_impacto_v2('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,'16630000-1111-4000-8000-000000000022',(select preparada_id from pcm.sso_listar_decisoes_calendario_mediada('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,null,20)),'calendario') as foto;
+-- Simula mudança só da identidade exibida, mantendo alvo, data e regra.
+reset role;
+update pcm.ocorrencias_rotina_preparadas set ciclo=ciclo+1 where plano_id='16630000-1111-4000-8000-000000000011';
+set local role authenticated;
+do $$ declare p uuid;f jsonb;begin
+ select (foto->>'preparadaId')::uuid,foto into p,f from comparacao_1657;
+ begin
+  perform pcm.sso_decidir_impacto_comparado('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-000000000099','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011','16630000-1111-4000-8000-000000000022',p,2,1,'exige_reconciliacao','conferido','calendario',f);
+  raise exception 'identidade_obsoleta_aceita';
+ exception when serialization_failure then if sqlerrm<>'comparacao_obsoleta' then raise;end if;end;
+end; $$;
+reset role;
+update pcm.ocorrencias_rotina_preparadas set ciclo=ciclo-1 where plano_id='16630000-1111-4000-8000-000000000011';
+set local role authenticated;
 do $$ declare p uuid;r jsonb;begin
  select (foto->>'preparadaId')::uuid into p from comparacao_1657;
  -- Replay anterior à migração continua acessível; criação sem comparação não pode passar.

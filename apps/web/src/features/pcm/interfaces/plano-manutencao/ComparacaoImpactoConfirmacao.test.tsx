@@ -22,8 +22,8 @@ afterEach(() => { cleanup(); sessionStorage.clear(); vi.unstubAllEnvs(); externo
 it.each(["calendario", "visita"] as const)("exige nova confirmação ao mudar comparação ou data para %s", async (tipo) => {
   vi.stubEnv("VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED", "true");
   const linha = tipo === "calendario" ? { ...comum, ciclo: 1, vencimento_original: "2026-11-04", ultimo_motivo: null } : { ...comum, semana_origem: "2026-11-02", visita_id: visita, ciclo_canonico_id: ciclo };
-  const comparacao = { preparadaId: preparada, rascunhoId: rascunho, revisaoPlano: revision, tipo, rotinaLogicaId: logica, alvoOcorrenciaTipo: "sistema", alvoOcorrenciaId: alvo, vencimentoOriginal: "2026-11-04", anterior: rotina, rascunho: { ...rotina, nome: "Rascunho" }, fontesCompletas: false, aprovacaoAutorizada: false };
-  externo.rpc.mockImplementation((nome: string) => ({ abortSignal: () => Promise.resolve({ data: nome === "sso_comparar_rotina_impacto" ? comparacao : [linha], error: null }) }));
+  const comparacao = { preparadaId: preparada, rascunhoId: rascunho, revisaoPlano: revision, tipo, rotinaLogicaId: logica, alvoOcorrenciaTipo: "sistema", alvoOcorrenciaId: alvo, vencimentoOriginal: "2026-11-04", ciclo: tipo === "calendario" ? 1 : null, visitaId: tipo === "visita" ? visita : null, semanaOrigem: tipo === "visita" ? "2026-11-02" : null, anterior: rotina, rascunho: { ...rotina, nome: "Rascunho" }, questionarioComparacao: { estado: "sem_questionario", historicoHash: null, atualHash: null }, fontesCompletas: false, aprovacaoAutorizada: false };
+  externo.rpc.mockImplementation((nome: string) => ({ abortSignal: () => Promise.resolve({ data: nome === "sso_comparar_rotina_impacto_v2" ? comparacao : [linha], error: null }) }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   const props = { userId: usuario, clienteId: cliente, planoId: plano, revision };
   render(<QueryClientProvider client={client}>{tipo === "calendario" ? <DecisaoImpactoOcorrencia {...props} /> : <DecisaoImpactoVisita {...props} />}</QueryClientProvider>);

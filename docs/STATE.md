@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: decisão com questionário e seleção de Visitas
+
+- ADR-1516/migration 1659 incluem ciclo ou Visita/semana na comparação conferida. ADR-1517/migration 1660 incluem fotografias por hash de questionário histórico e fonte atual, revalidando antes de decisão e aprovação. Migrations 1614–1660 e fixtures de calendário/Visita passaram em clone revertido: alteração com mesmo ID, replay, fotografia atual e fotografia alterada antes de aprovação. Para alcançar o trigger, 1045 foi desativada somente na transação sintética. Faltam concorrência e revisão adversarial; schema estrito v2 exige rollout coordenado servidor/cliente.
+- A lista de obrigações permite incluir Visitas selecionadas uma a uma, com confirmação, progresso e recuperação idempotente após falha parcial; UI explicita que a operação não é atômica. Não cria OS/Auvo. Quatro testes focados de seleção e comparação passaram; gates continuam desligados. A definição sobre mudança da data-base permanece pendente.
+
 ## 2026-11-04 — S165/S166: decisão comparada e fila de calendário
 
 - ADR-1514/migration 1657 e formulários conectam a decisão à comparação conferida no servidor. Gate desligado; com ele ativo, nova decisão pela rota antiga é recusada, mantendo replay antigo. Fotografia nova não pode ser associada a decisão histórica; comparação obsoleta é recusada. Migrations 1614–1657 e fixtures de calendário/Visita passaram em clone revertido; faltam concorrência real, revisão adversarial e comprovação do conteúdo/versão de questionário e fontes OS. Guarda 1045 intacta.
