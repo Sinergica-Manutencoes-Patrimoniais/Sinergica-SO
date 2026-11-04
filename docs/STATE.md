@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: classificação e recuperação de conflito
+
+- ADR-1540/migration 1683 impedem classificar um par Plano/legado como não relacionado se houver ponte explícita de ocorrência mesmo após retirada da relação. Migrations 1614–1683 compilaram em clone e fixtures de calendário/Visita passaram com rollback; concorrência e custo de travas pendentes. Guarda 1045 intacta.
+- A resolução de retirada e reabertura de Grupo liberam nova conferência somente após rejeição definitiva da primeira tentativa; pedidos recuperados ou com resultado incerto mantêm requestId. Sete testes focados e typecheck passaram. Sem Auvo/deploy. Homologação permanece bloqueada; decisão sobre data-base pendente.
+
 ## 2026-11-04 — S165/S166: classificação de legado e reabertura de Grupo
 
 - ADR-1537/migration 1680 e interface permitem PCM classificar par Plano/legado como não relacionado com motivo, contexto e fotografia; avaliação deixa de contar apenas classificação ainda atual e volta a apontar pendência quando fontes mudam. Fixture em clone cobriu classificação/replay, alteração, ACL anônima; faltam concorrência, revogação e testes específicos de UI. Reforço de função foi aplicado por CREATE OR REPLACE no clone, portanto falta prova de compilação limpa na ordem final. Fontes externas não são comprovadas; guarda 1045 intacta.

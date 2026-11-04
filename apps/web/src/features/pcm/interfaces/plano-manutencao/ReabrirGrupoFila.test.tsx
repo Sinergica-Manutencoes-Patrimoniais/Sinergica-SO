@@ -19,3 +19,28 @@ it.each(["calendario", "visita"] as const)("reabre %s apenas após confirmação
   await waitFor(() => expect(screen.getByText(/Fila voltou para verificação/)).toBeInTheDocument());
   expect(api.rpc).toHaveBeenCalledWith("sso_reabrir_fila_grupo", expect.objectContaining({ p_tipo: tipo, p_fila_revisao: 2, p_motivo: "Fonte mudou" }));
 });
+
+it("permite reconferir quando primeira tentativa recebe conflito definitivo", async () => {
+  api.rpc.mockResolvedValue({ error: { code: "40001" }, data: null });
+  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  render(<QueryClientProvider client={client}><ReabrirGrupoFila userId="usuario" clienteId={id(1)} planoId={id(2)} preparadaId={id(3)} tipo="calendario" revisao={2} /></QueryClientProvider>);
+  fireEvent.change(screen.getByLabelText("Motivo da reabertura"), { target: { value: "Fonte mudou" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /confirmo devolver/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Reabrir conferência" }));
+  await waitFor(() => expect(screen.getByText(/A fila mudou antes/)).toBeInTheDocument());
+  expect(sessionStorage.length).toBe(0);
+  expect(screen.getByRole("button", { name: "Reabrir conferência" })).toBeDisabled();
+});
+it("preserva pedido incerto mesmo se repetição recebe conflito", async () => {
+  api.rpc.mockResolvedValueOnce({ error: { code: "NETWORK" }, data: null }).mockResolvedValueOnce({ error: { code: "40001" }, data: null });
+  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  render(<QueryClientProvider client={client}><ReabrirGrupoFila userId="usuario" clienteId={id(1)} planoId={id(2)} preparadaId={id(3)} tipo="visita" revisao={2} /></QueryClientProvider>);
+  fireEvent.change(screen.getByLabelText("Motivo da reabertura"), { target: { value: "Fonte mudou" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /confirmo devolver/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Reabrir conferência" }));
+  await waitFor(() => expect(screen.getByText(/Resultado não confirmado/)).toBeInTheDocument());
+  fireEvent.click(screen.getByRole("button", { name: "Repetir mesma reabertura" }));
+  await waitFor(() => expect(api.rpc).toHaveBeenCalledTimes(2));
+  expect(sessionStorage.length).toBe(1);
+  expect(screen.getByRole("button", { name: "Repetir mesma reabertura" })).toBeInTheDocument();
+});
