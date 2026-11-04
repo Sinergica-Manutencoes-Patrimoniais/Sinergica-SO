@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: login sintético corrigido, jornada pendente
+
+- Fonte do GoTrue indicou audiência ausente; com `GOTRUE_JWT_AUD=authenticated` o login e `/user` reais retornaram 200 no ambiente de rede interna, gateway confirmou clone descartável. A jornada única expirou ao esperar a prévia de Grupo; nenhuma declaração foi enviada. Serviços foram removidos antes de preservar DOM/rede, portanto causa da falha é desconhecida e não se comprovou a jornada UI→backend. Não houve Auvo ou escrita na origem.
+- `e2e/s166-isolado/fixture.ts` prepara captura de rota/status sem tokens/corpos e screenshot com conteúdo oculto; README registra audiência. Captura nova não foi executada nem comprova isolamento completo. Roteiro `manual_E01-S165_concorrencia_relacao_decisao.md` documenta ensaio de relação/decisão, não reexecutado após registro.
+- Recursos descartáveis foram removidos segundo executor; disco host indica 10 GiB livres (15 GiB antes de duas tentativas), causa não confirmada. Não repetir download de imagens ou jornada até verificar espaço e causa. A aprovação segue bloqueada; data-base e equivalência de fontes externas aguardam definição.
+
 ## 2026-11-04 — S165/S166: ensaio de navegador isolado
 
 - Ambiente descartável de rede interna com PostgreSQL, Auth, PostgREST, Vite e navegador foi montado sem portas públicas de banco; clone com ACL e migrations 1614–1683, identidade verificada no gateway e teste pontual de saída externa negado. GoTrue migrou somente o clone. Login do usuário sintético falhou com 400 invalid_credentials apesar de conferência de fixture; não houve jornada UI→backend, JWT forjado, Auvo ou escrita na origem. Contêineres, rede, dump, dependências e imagem baixada do ensaio foram removidos; espaço livre no host permanece 13 GiB contra 15 GiB antes, causa não confirmada.
