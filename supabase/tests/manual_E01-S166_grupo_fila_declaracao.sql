@@ -1,4 +1,5 @@
--- Após migrations até 1676, executar em clone sintético e BEGIN/ROLLBACK.
+-- Histórico: executar SOMENTE com migrations 1676–1678, em clone sintético e BEGIN/ROLLBACK.
+-- A partir de 1679, usar manual_E01-S166_grupo_fila_afirmacao.sql (afirmação explícita obrigatória).
 \ir manual_E01-S166_grupo_fila_fixture.sql
 insert into pcm.sso_series_ciclo_calendario(id,plano_id,rotina_logica_id,alvo_tipo,alvo_id,ancora,intervalo_n,intervalo_unidade) values ('17390000-0000-4000-8000-000000000015','17390000-0000-4000-8000-000000000007','17390000-0000-4000-8000-000000000010','grupo','17390000-0000-4000-8000-000000000006','2026-01-01',1,'meses');
 insert into pcm.sso_ciclos_calendario_canonicos(id,serie_id,indice,vencimento_original) values ('17390000-0000-4000-8000-000000000016','17390000-0000-4000-8000-000000000015',0,'2026-01-01');

@@ -8,10 +8,10 @@ vi.mock("./diagnostico-revisao-sessao", () => ({ conferirSessaoDiagnostico: vi.f
 vi.mock("./RegistrarOcorrenciaGrupo", () => ({ RegistrarOcorrenciaGrupo: () => <p>Registrar Grupo</p> }));
 import { ConferirGrupoFila } from "./ConferirGrupoFila";
 const id = (n: number) => `16610000-0000-4000-8000-${String(n).padStart(12, "0")}`;
-const previa = { tipo: "calendario", preparadaId: id(1), cicloId: id(2), grupoId: id(3), filaRevisao: 1, filaEstado: "verificacao", gruposRegistrados: 1, efeitosLocais: 0, fotografiaHash: "a".repeat(64), confirmavel: true, fontesExternasComprovadas: false };
+const previa = { tipo: "calendario", preparadaId: id(1), cicloId: id(2), grupoId: id(3), filaRevisao: 1, filaEstado: "verificacao", gruposRegistrados: 1, efeitosLocais: 0, fotografiaHash: "a".repeat(64), confirmavel: true, fontesExternasComprovadas: false, declaracaoAtual: false, podeReabrir: false };
 afterEach(() => { cleanup(); sessionStorage.clear(); vi.resetAllMocks(); });
 it("registra fontes e motivo sem confirmar automaticamente a fila", async () => {
-  api.rpc.mockImplementation((nome, p) => nome === "sso_prever_fila_grupo" ? { abortSignal: async () => ({ data: previa, error: null }) } : Promise.resolve({ data: { requestId: p.p_request, clienteId: p.p_cliente, planoId: p.p_plano, preparadaId: p.p_preparada, tipo: p.p_tipo, cicloId: id(2), grupoId: id(3), filaAlterada: false, osAlteradas: false, fontesExternasComprovadas: false, declaracaoExplicita: true }, error: null }));
+  api.rpc.mockImplementation((nome, p) => nome === "sso_prever_fila_grupo_v2" ? { abortSignal: async () => ({ data: previa, error: null }) } : Promise.resolve({ data: { requestId: p.p_request, clienteId: p.p_cliente, planoId: p.p_plano, preparadaId: p.p_preparada, tipo: p.p_tipo, cicloId: id(2), grupoId: id(3), filaAlterada: false, osAlteradas: false, fontesExternasComprovadas: false, declaracaoExplicita: true }, error: null }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   render(<QueryClientProvider client={client}><ConferirGrupoFila userId="usuario" clienteId={id(4)} planoId={id(5)} preparadaId={id(1)} tipo="calendario" /></QueryClientProvider>);
   await screen.findByText(/identidades registradas 1/);

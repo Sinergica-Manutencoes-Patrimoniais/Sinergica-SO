@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: classificação de legado e reabertura de Grupo
+
+- ADR-1537/migration 1680 e interface permitem PCM classificar par Plano/legado como não relacionado com motivo, contexto e fotografia; avaliação deixa de contar apenas classificação ainda atual e volta a apontar pendência quando fontes mudam. Fixture em clone cobriu classificação/replay, alteração, ACL anônima; faltam concorrência, revogação e testes específicos de UI. Reforço de função foi aplicado por CREATE OR REPLACE no clone, portanto falta prova de compilação limpa na ordem final. Fontes externas não são comprovadas; guarda 1045 intacta.
+- ADR-1538/migration 1681 permitem reabrir conferência de Grupo explicitamente para calendário e Visita, sem alterar OS ou gerar ocorrência. Três testes de UI e fixture SQL de calendário passaram; faltam SQL de Visita, concorrência e inventário dos demais escritores legados de OS. Gates e homologação seguem bloqueados; sem Auvo/deploy. Decisão sobre data-base ainda pendente.
+
 ## 2026-11-04 — S165/S166: Grupo e OS na aprovação
 
 - ADR-1533/migration 1676 e ADR-1536/migration 1679 integram Grupo à conferência de fila sem unidades artificiais. PCM informa fontes/motivo e afirma não ter identificado execução nessas fontes; fotografia dos efeitos locais é revalidada e confirmação da fila é separada. Endpoint antigo aceita replay de declaração existente; novas exigem afirmação explícita. Teste UI e fixture 1679 passaram em clone revertido; a fixture antiga 1676 representa contrato anterior e não deve ser usada isoladamente após 1679. Visita, concorrência e fontes externas permanecem pendentes.
