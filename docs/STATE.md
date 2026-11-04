@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S166: componente Grupo com backend real isolado
+
+- Em rede Docker interna e clone descartável, com GoTrue (audience e hook reais), PostgREST, Vite e navegador, login, consulta da prévia e declaração PCM do componente `ConferirGrupoFila` retornaram 200. Uma declaração registrada; fila permaneceu em verificação e nenhuma OS foi criada. Evidência sanitizada em `apps/web/e2e/s166-isolado/evidencia-2026-11-04.txt`; roteiro manual no README. A página montou componente isolado, fixture foi SQL, GoTrue migrou somente clone; não prova navegação completa, Visita, concorrência ou fontes externas. Clone/recursos do ensaio removidos.
+- Sem apagar dados em uso, fstrim online no datadisk do Colima devolveu espaço: host passou de ~10 para ~18 GiB livres antes do ensaio; após limpar e aparar novamente, ~17 GiB. Trava 1045 e homologação permanecem bloqueadas; data-base e fontes externas aguardam definição.
+
 ## 2026-11-04 — S165/S166: fuso de auth, disco e concorrência Visita
 
 - Hipótese para a prévia ausente no E2E: GoTrue isolado não tinha o hook de token que adiciona `user_role`, exigido por `sso_autorizar_acao`. Configuração do hook para próximo ensaio consta no README isolado; não houve nova jornada nem confirmação da hipótese. Ambiente anterior foi removido.

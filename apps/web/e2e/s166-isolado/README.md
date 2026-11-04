@@ -17,7 +17,7 @@ No segundo ensaio, com esta configuração, o login sintético retornou 200; a j
 
 Fontes da versão examinada: [obtenção da audiência](https://github.com/supabase/auth/blob/v2.197.0/internal/api/helpers.go), [consulta do usuário](https://github.com/supabase/auth/blob/v2.197.0/internal/models/user.go), [configuração JWT](https://github.com/supabase/auth/blob/v2.197.0/internal/conf/configuration.go).
 
-Os futuros testes devem importar `test` de `./fixture`. Em caso de falha, ela anexa categorias de console e métodos/rotas/status sem headers, query strings ou corpos, além de captura visual com textos e imagens ocultos. Ainda é necessário assegurar que apenas dados sintéticos entrem no navegador e comprovar a rede interna e identidade do clone; a fixture não é uma barreira de rede completa. A configuração só aceita gateway em `127.0.0.1` e não executa um ensaio por si só.
+Os futuros testes devem importar `test` de `./fixture`. Em caso de falha, ela anexa categorias de console e métodos/rotas/status sem headers, query strings ou corpos, além de captura visual integralmente mascarada (sem detalhes da tela). Ainda é necessário assegurar que apenas dados sintéticos entrem no navegador e comprovar a rede interna e identidade do clone; a fixture não é uma barreira de rede completa. A configuração só aceita gateway em `127.0.0.1` e não executa um ensaio por si só.
 
 ## Hipótese para prévia de Grupo indisponível
 
@@ -33,3 +33,17 @@ GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI=pg-functions://postgres/config/custom_access
 Manter `GOTRUE_JWT_AUD=authenticated`. Antes de tentar a UI, verificar no clone as permissões necessárias de `supabase_auth_admin` sobre o hook e suas dependências; não ampliar permissões em outro banco. Após login real, conferir em memória que o claim `user_role` coincide com o papel sintético esperado e emitir apenas um resultado booleano, sem imprimir ou persistir JWT, payload, senha ou resposta do login. Não gerar JWT manualmente nem dispensar as validações da aplicação. Capturar a resposta da RPC apenas por status e rótulo de rota usando a fixture sanitizada.
 
 Referências: [configuração local do projeto](../../../../supabase/config.toml), [hook do projeto](../../../../supabase/migrations/0008_E00-S09_resolver_hook_permissoes.sql), [autorização da ação](../../../../supabase/migrations/0246_E01-S170_modulos_elegiveis.sql), [configuração oficial de hooks GoTrue](https://supabase.com/docs/guides/self-hosting/self-hosted-auth-hooks).
+
+## Evidência do ensaio de Grupo
+
+Em 2026-11-04, um ensaio sintético com hook JWT ativo passou por login real, prévia e declaração PCM usando componente real, GoTrue e PostgREST em rede Docker interna e clone separado. A declaração foi persistida uma vez; a fila permaneceu em verificação. Rotas e status sanitizados estão em `evidencia-2026-11-04.txt`. A página de montagem, o proxy e a fixture usados foram temporários; portanto essa evidência não torna o harness reproduzível e não cobre navegação completa do aplicativo, concorrência, Visita ou homologação. GoTrue aplicou suas migrations no clone; nenhum Auvo foi acionado.
+
+Para reconstruir este recorte, ainda de forma manual:
+
+1. Provisionar uma rede Docker interna sem portas externas, PostgreSQL dedicado e banco `sso_s166_teste`; restaurar uma cópia do banco-base isolado com ACLs e aplicar migrations 1614–1683. Atestar pelo PostgREST que a conexão alcança o clone antes de inserir dados.
+2. Iniciar GoTrue e PostgREST na mesma rede e namespace do navegador, com `GOTRUE_JWT_AUD=authenticated` e o hook informado acima; usar chaves efêmeras exclusivas do ensaio. GoTrue atualizou tabelas de autenticação no clone.
+3. Carregar `supabase/tests/manual_E01-S166_grupo_fila_fixture.sql` no clone; preparar série e ciclo, entrada em `verificacao` e gates necessários com os comandos iniciais de `supabase/tests/manual_E01-S166_grupo_fila_afirmacao.sql`. Ajustar a conta sintética para login real e confirmar em memória o claim do papel emitido pelo hook.
+4. Montar `ConferirGrupoFila` numa página temporária com QueryClient e o cliente Supabase real; expor o proxy Auth/PostgREST somente em `127.0.0.1` no namespace interno e servir a página localmente. Fazer login sintético, informar fontes e motivo, confirmar e registrar a declaração. Não enviar dados ao Auvo.
+5. Conferir resposta da prévia e declaração, uma declaração persistida e fila ainda em `verificacao`. Capturar apenas rotas/status sanitizados. Remover banco, serviços, rede, dependências e imagem usados exclusivamente no ensaio.
+
+Este roteiro descreve a preparação realizada; não há script de automação, teste `.spec.ts` ou proxy versionado. A validação de toda a jornada no aplicativo permanece pendente.

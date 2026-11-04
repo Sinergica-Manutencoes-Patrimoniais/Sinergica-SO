@@ -32,8 +32,8 @@ export const test = base.extend({
     try { await use(page); } finally {
       await testInfo.attach("s166-eventos", { body: eventos.join("\n"), contentType: "text/plain" });
       if (testInfo.status !== testInfo.expectedStatus && !page.isClosed()) {
-        // Não registrar texto, valores ou imagens da tela nos artefatos.
-        const imagem = await page.screenshot({ style: `* { color: transparent !important; text-shadow: none !important; caret-color: transparent !important; background-image: none !important; } img, svg, canvas, video, iframe { visibility: hidden !important; }`, animations: "disabled" });
+        // Mascarar toda a página: CSS não cobre com segurança pseudo-elementos ou quadros.
+        const imagem = await page.screenshot({ mask: [page.locator("html")], animations: "disabled" });
         await testInfo.attach("s166-tela-sanitizada", { body: imagem, contentType: "image/png" });
       }
     }
