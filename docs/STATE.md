@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: decisão comparada e fila de calendário
+
+- ADR-1514/migration 1657 e formulários conectam a decisão à comparação conferida no servidor. Gate desligado; com ele ativo, nova decisão pela rota antiga é recusada, mantendo replay antigo. Fotografia nova não pode ser associada a decisão histórica; comparação obsoleta é recusada. Migrations 1614–1657 e fixtures de calendário/Visita passaram em clone revertido; faltam concorrência real, revisão adversarial e comprovação do conteúdo/versão de questionário e fontes OS. Guarda 1045 intacta.
+- Preparação por calendário, individual e em lote, abre conferência da fila a partir dos recibos, sem inclusão automática. Typecheck e 13 testes de interface passaram.
+- Ensaios de três versões estendidos até geração: calendário e Visita reutilizam a ocorrência original e registram um único uso, sem OS/Auvo; aprovação exercitada somente em clone com guarda 1045 desabilitada na transação revertida. Não habilitar gates nem publicar. A decisão operacional sobre mudança de data continua pendente.
+
 ## 2026-11-04 — S165/S166: continuidade e decisão com comparação
 
 - ADR-1510/migration 1653 preservam na revisão seguinte a ocorrência selada na versão anterior mesmo que ela não tenha sido novamente materializada. Ensaios sintéticos em três versões para calendário e Visita passaram com rollback; aprovação testada com guarda 1045 desativada somente na transação de teste. Não autoriza homologação nem prova concorrência.

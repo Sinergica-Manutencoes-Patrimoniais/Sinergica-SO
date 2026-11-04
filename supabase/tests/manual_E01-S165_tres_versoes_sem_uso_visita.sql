@@ -155,10 +155,18 @@ do $$ declare a jsonb;b jsonb;begin
  if a is distinct from b or a->>'state'<>'aprovado' then raise exception 'replay_terceira_versao_divergente';end if;
 end; $$;
 reset role;
+select set_config('sso.fixture.rotina',(select id::text from pcm.rotinas_manutencao where versao_id='16610000-0000-0000-0000-000000000302'),true);
+set local role authenticated;
+do $$ declare a jsonb;b jsonb;begin
+ a:=pcm.sso_preparar_visita_canonica('16610000-0000-0000-0000-000000000401','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000402','16610000-0000-0000-0000-000000000121','16610000-0000-0000-0000-000000000302',current_setting('sso.fixture.rotina')::uuid,'16610000-0000-0000-0000-000000000081',7,'fonte teste'); b:=pcm.sso_preparar_visita_canonica('16610000-0000-0000-0000-000000000401','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000402','16610000-0000-0000-0000-000000000121','16610000-0000-0000-0000-000000000302',current_setting('sso.fixture.rotina')::uuid,'16610000-0000-0000-0000-000000000081',7,'fonte teste');
+ if a is distinct from b or a->>'criada' is distinct from 'false' then raise exception 'reuso_terceira_versao_divergente: %',a;end if;
+end; $$;
+reset role;
 do $$ begin
  if (select count(*) from pcm.sso_continuidades_visita_aprovadas where versao_id='16610000-0000-0000-0000-000000000302')<>1 then raise exception 'selo_terceira_versao_ausente_ou_duplicado';end if;
  if (select count(*) from pcm.ocorrencias_visita_preparadas where plano_id='16610000-0000-0000-0000-000000000121')<>1 then raise exception 'visita_duplicada';end if;
  if exists(select 1 from pcm.ordens_servico where client_id='16610000-0000-0000-0000-00000000000a') then raise exception 'os_indevida';end if;
  if (select count(*) from pcm.auvo_sync_outbox)<>(select outbox from baseline_pmoc_visita) then raise exception 'envio_auvo_indevido';end if;
+ if (select count(*) from pcm.sso_ciclo_visita_usos_versao where versao_id='16610000-0000-0000-0000-000000000302')<>1 then raise exception 'uso_terceira_versao_ausente_ou_duplicado';end if;
 end; $$;
 rollback;

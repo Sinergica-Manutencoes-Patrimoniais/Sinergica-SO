@@ -4,10 +4,11 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({ rpc: vi.fn(), schema: vi.fn() }));
 vi.mock("../../../../lib/supabase-client", () => ({ supabase: { schema: api.schema, auth: { getUser: async () => ({ data: { user: { id: "u" } }, error: null }) } } }));
+vi.mock("./FilaPreventivaPcm", () => ({ FilaPreventivaPcm: ({ preparadaId }: { preparadaId: string }) => <p>Fila calendário: {preparadaId}</p> }));
 import { MaterializarCicloCanonico } from "./MaterializarCicloCanonico";
 import { MaterializarLoteCalendario } from "./MaterializarLoteCalendario";
 
-afterEach(() => { cleanup(); sessionStorage.clear(); vi.resetAllMocks(); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); sessionStorage.clear(); vi.resetAllMocks(); vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 const base = { userId: "u", clienteId: "00000000-0000-4000-8000-000000000001", planoId: "00000000-0000-4000-8000-000000000002", versaoId: "00000000-0000-4000-8000-000000000003", rotinaId: "00000000-0000-4000-8000-000000000004", revision: 1 };
 
 it.each(["ciclo", "lote"] as const)("%s não apaga outra tentativa enquanto aguarda resposta", async (tipo) => {
@@ -26,8 +27,8 @@ it.each(["ciclo", "lote"] as const)("%s não apaga outra tentativa enquanto agua
   const substituto = JSON.stringify({ requestId: "outra-tentativa" });
   sessionStorage.setItem(chave, substituto);
   concluir({ data: tipo === "ciclo"
-    ? { requestId: pedido.p_request_id, indice: 0, vencimentoOriginal: "2026-10-30", criada: true, osCriada: false, tarefaAuvoCriada: false }
-    : { requestId: pedido.p_request_id, inicio: pedido.p_inicio, fim: pedido.p_fim, atomico: true, total: 1, criadas: 1, osCriada: false, tarefaAuvoCriada: false }, error: null });
+    ? { requestId: pedido.p_request_id, indice: 0, vencimentoOriginal: "2026-10-30", preparadaId: "00000000-0000-4000-8000-000000000011", cicloCanonicoId: "00000000-0000-4000-8000-000000000012", criada: true, osCriada: false, tarefaAuvoCriada: false }
+    : { requestId: pedido.p_request_id, inicio: pedido.p_inicio, fim: pedido.p_fim, atomico: true, total: 1, criadas: 1, itens: [{ indice: 0, vencimentoOriginal: "2026-10-30", preparadaId: "00000000-0000-4000-8000-000000000011", cicloCanonicoId: "00000000-0000-4000-8000-000000000012", criada: true }], osCriada: false, tarefaAuvoCriada: false }, error: null });
   await waitFor(() => expect(screen.getByText(/tentativa alterada ou não removida/i)).toBeTruthy());
   expect(sessionStorage.getItem(chave)).toBe(substituto);
 });
@@ -52,8 +53,8 @@ it.each(["ciclo", "lote"] as const)("%s repete exatamente o pedido após falha i
   api.schema.mockReturnValue({ rpc: api.rpc });
   api.rpc.mockResolvedValueOnce({ data: null, error: new Error("rede") });
   api.rpc.mockImplementationOnce((_nome, p) => Promise.resolve({ data: tipo === "ciclo"
-    ? { requestId: p.p_request_id, indice: 0, vencimentoOriginal: "2026-10-30", criada: true, osCriada: false, tarefaAuvoCriada: false }
-    : { requestId: p.p_request_id, inicio: p.p_inicio, fim: p.p_fim, atomico: true, total: 1, criadas: 1, osCriada: false, tarefaAuvoCriada: false }, error: null }));
+    ? { requestId: p.p_request_id, indice: 0, vencimentoOriginal: "2026-10-30", preparadaId: "00000000-0000-4000-8000-000000000011", cicloCanonicoId: "00000000-0000-4000-8000-000000000012", criada: true, osCriada: false, tarefaAuvoCriada: false }
+    : { requestId: p.p_request_id, inicio: p.p_inicio, fim: p.p_fim, atomico: true, total: 1, criadas: 1, itens: [{ indice: 0, vencimentoOriginal: "2026-10-30", preparadaId: "00000000-0000-4000-8000-000000000011", cicloCanonicoId: "00000000-0000-4000-8000-000000000012", criada: true }], osCriada: false, tarefaAuvoCriada: false }, error: null }));
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   render(<QueryClientProvider client={client}>{tipo === "ciclo"
     ? <MaterializarCicloCanonico {...base} ciclo={0} vencimento="2026-10-30" />
@@ -71,8 +72,8 @@ it.each(["ciclo", "lote"] as const)("%s repete exatamente o pedido após falha i
 it.each(["ciclo", "lote"] as const)("%s atualiza o histórico canônico após preparação", async (tipo) => {
   api.schema.mockReturnValue({ rpc: api.rpc });
   api.rpc.mockImplementation((_nome, p) => Promise.resolve({ data: tipo === "ciclo"
-    ? { requestId: p.p_request_id, indice: 0, vencimentoOriginal: "2026-10-30", criada: true, osCriada: false, tarefaAuvoCriada: false }
-    : { requestId: p.p_request_id, inicio: p.p_inicio, fim: p.p_fim, atomico: true, total: 1, criadas: 1, osCriada: false, tarefaAuvoCriada: false }, error: null }));
+    ? { requestId: p.p_request_id, indice: 0, vencimentoOriginal: "2026-10-30", preparadaId: "00000000-0000-4000-8000-000000000011", cicloCanonicoId: "00000000-0000-4000-8000-000000000012", criada: true, osCriada: false, tarefaAuvoCriada: false }
+    : { requestId: p.p_request_id, inicio: p.p_inicio, fim: p.p_fim, atomico: true, total: 1, criadas: 1, itens: [{ indice: 0, vencimentoOriginal: "2026-10-30", preparadaId: "00000000-0000-4000-8000-000000000011", cicloCanonicoId: "00000000-0000-4000-8000-000000000012", criada: true }], osCriada: false, tarefaAuvoCriada: false }, error: null }));
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   const invalidar = vi.spyOn(client, "invalidateQueries");
   render(<QueryClientProvider client={client}>{tipo === "ciclo"
@@ -99,4 +100,24 @@ it.each(["ciclo", "lote"] as const)("%s não oferece tentativa de usuário anter
   rerender(componente("outro"));
   expect(screen.queryByRole("button", { name: "Repetir tentativa pendente" })).toBeNull();
   expect(sessionStorage.getItem(chave)).not.toBeNull();
+});
+
+
+it("encaminha ciclo e lote à conferência da fila", async () => {
+  vi.stubEnv("VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED", "true");
+  for (const tipo of ["ciclo", "lote"] as const) {
+  vi.stubEnv("VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED", "true");
+  api.rpc.mockReset();
+  api.schema.mockReturnValue({ rpc: api.rpc });
+  const item = { indice: 0, vencimentoOriginal: "2026-10-30", preparadaId: "00000000-0000-4000-8000-000000000011", cicloCanonicoId: "00000000-0000-4000-8000-000000000012", criada: true };
+  api.rpc.mockImplementation((_nome, p) => Promise.resolve({ data: tipo === "ciclo" ? { requestId: p.p_request_id, ...item, osCriada: false, tarefaAuvoCriada: false } : { requestId: p.p_request_id, inicio: p.p_inicio, fim: p.p_fim, atomico: true, total: 1, criadas: 1, itens: [item], osCriada: false, tarefaAuvoCriada: false }, error: null }));
+  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  render(<QueryClientProvider client={client}>{tipo === "ciclo" ? <MaterializarCicloCanonico {...base} ciclo={0} vencimento="2026-10-30" /> : <MaterializarLoteCalendario {...base} inicio="2026-10-30" fim="2026-10-30" ciclos={[{ ciclo: 0, vencimento: "2026-10-30" }]} />}</QueryClientProvider>);
+  fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.click(screen.getByRole("button", { name: tipo === "ciclo" ? "Preparar ciclo" : "Preparar lote" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Conferir inclusão na fila" }));
+  expect(screen.getByText(`Fila calendário: ${item.preparadaId}`)).toBeInTheDocument();
+  expect(api.rpc).toHaveBeenCalledTimes(1);
+  cleanup();
+  }
 });

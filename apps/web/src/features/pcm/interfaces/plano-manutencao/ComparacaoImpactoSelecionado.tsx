@@ -4,8 +4,8 @@ import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 const rotina = z.object({ id: z.string().uuid(), nome: z.string(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), sistema_id: z.string().uuid().nullable(), equipamento_id: z.string().uuid().nullable(), grupo_id: z.string().uuid().nullable(), modo: z.enum(["calendario", "visita"]), intervalo_n: z.number().int().nullable(), intervalo_unidade: z.string().nullable(), data_base: z.string().nullable(), tempo_minutos: z.number().nullable(), tipo_tempo: z.string().nullable(), tolerancia_antes: z.number().nullable(), tolerancia_depois: z.number().nullable(), instrucao: z.string().nullable(), questionario_id: z.string().uuid().nullable() }).strict();
-const resposta = z.object({ preparadaId: z.string().uuid(), rascunhoId: z.string().uuid(), revisaoPlano: z.number().int().positive(), tipo: z.enum(["calendario", "visita"]), rotinaLogicaId: z.string().uuid(), alvoOcorrenciaTipo: z.enum(["sistema", "componente", "grupo"]), alvoOcorrenciaId: z.string().uuid(), vencimentoOriginal: z.string().date(), anterior: rotina, rascunho: rotina.nullable(), fontesCompletas: z.literal(false), aprovacaoAutorizada: z.literal(false) }).strict();
-type Comparacao = z.infer<typeof resposta>;
+export const comparacaoImpactoSchema = z.object({ preparadaId: z.string().uuid(), rascunhoId: z.string().uuid(), revisaoPlano: z.number().int().positive(), tipo: z.enum(["calendario", "visita"]), rotinaLogicaId: z.string().uuid(), alvoOcorrenciaTipo: z.enum(["sistema", "componente", "grupo"]), alvoOcorrenciaId: z.string().uuid(), vencimentoOriginal: z.string().date(), anterior: rotina, rascunho: rotina.nullable(), fontesCompletas: z.literal(false), aprovacaoAutorizada: z.literal(false) }).strict();
+export type ComparacaoImpacto = z.infer<typeof comparacaoImpactoSchema>;
 type Props = { userId: string; clienteId: string; planoId: string; revisao: number; rascunhoId?: string; preparadaId?: string; tipo: "calendario" | "visita" };
 export function useComparacaoImpacto({ userId, clienteId, planoId, revisao, rascunhoId, preparadaId, tipo }: Props) {
   return useQuery({ queryKey: ["comparacao-impacto-selecionado", userId, clienteId, planoId, revisao, rascunhoId, preparadaId, tipo], enabled: !!rascunhoId && !!preparadaId, retry: false, gcTime: 0,
@@ -14,7 +14,7 @@ export function useComparacaoImpacto({ userId, clienteId, planoId, revisao, rasc
       await conferirSessaoDiagnostico(userId, signal);
       const { data, error } = await supabase.schema("pcm").rpc("sso_comparar_rotina_impacto", { p_ator_id: userId, p_cliente_id: clienteId, p_plano_id: planoId, p_expected_plano: revisao, p_rascunho_id: rascunhoId, p_preparada_id: preparadaId, p_tipo: tipo }).abortSignal(signal);
       if (error) throw error;
-      const r = resposta.parse(data);
+      const r = comparacaoImpactoSchema.parse(data);
       if (r.preparadaId !== preparadaId || r.rascunhoId !== rascunhoId || r.revisaoPlano !== revisao || r.tipo !== tipo) throw new Error("Comparação divergente.");
       await conferirSessaoDiagnostico(userId, signal); return r;
     } });
@@ -25,7 +25,7 @@ function DadosRotina({ titulo, valor }: { titulo: string; valor: z.infer<typeof 
   const tipo = { sistema: "Sistema", componente: "Componente", grupo: "Grupo Quantitativo" }[valor.alvo_tipo];
   return <div><strong>{titulo}: {valor.nome}</strong><p>{tipo}: {alvo ?? "não informado"} · {valor.modo === "visita" ? "por Visita" : "por calendário"} · intervalo {valor.intervalo_n ?? "não informado"} {valor.intervalo_unidade ?? ""} · data-base {valor.data_base ?? "não informada"}</p><p>Tolerância: {valor.tolerancia_antes ?? "não informada"} dias antes / {valor.tolerancia_depois ?? "não informada"} dias depois · questionário {valor.questionario_id ?? "não informado"}</p></div>;
 }
-export function DetalhesComparacaoImpacto({ dados }: { dados: Comparacao }) {
+export function DetalhesComparacaoImpacto({ dados }: { dados: ComparacaoImpacto }) {
   const tipo = { sistema: "Sistema", componente: "Componente", grupo: "Grupo Quantitativo" }[dados.alvoOcorrenciaTipo];
   return <section aria-label="Comparação da Rotina da ocorrência"><p>Ocorrência: {tipo} {dados.alvoOcorrenciaId} · vencimento original {dados.vencimentoOriginal}.</p><DadosRotina titulo="Versão anterior" valor={dados.anterior} /><DadosRotina titulo="Rascunho" valor={dados.rascunho} /><p>Comparação parcial: OS e conteúdo dos questionários exigem conferência própria.</p></section>;
 }

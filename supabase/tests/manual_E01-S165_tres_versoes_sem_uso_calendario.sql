@@ -174,9 +174,17 @@ do $$ declare a jsonb;b jsonb;begin
  if a is distinct from b or a->>'state'<>'aprovado' then raise exception 'replay_terceira_versao_divergente';end if;
 end; $$;
 reset role;
+select set_config('sso.fixture.rotina',(select id::text from pcm.rotinas_manutencao where versao_id='16630000-1111-4000-8000-000000000302'),true);
+set local role authenticated;
+do $$ declare a jsonb;b jsonb;begin
+ a:=pcm.sso_materializar_ciclo_canonico('16630000-1111-4000-8000-000000000401','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011','16630000-1111-4000-8000-000000000302',current_setting('sso.fixture.rotina')::uuid,7,current_date+30); b:=pcm.sso_materializar_ciclo_canonico('16630000-1111-4000-8000-000000000401','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011','16630000-1111-4000-8000-000000000302',current_setting('sso.fixture.rotina')::uuid,7,current_date+30);
+ if a is distinct from b or a->>'criada' is distinct from 'false' then raise exception 'reuso_terceira_versao_divergente: %',a;end if;
+end; $$;
+reset role;
 do $$ begin
  if (select count(*) from pcm.sso_continuidades_ciclo_aprovadas where versao_id='16630000-1111-4000-8000-000000000302')<>1 then raise exception 'selo_terceira_versao_ausente_ou_duplicado';end if;
  if (select count(*) from pcm.ocorrencias_rotina_preparadas where plano_id='16630000-1111-4000-8000-000000000011')<>1 then raise exception 'ocorrencia_duplicada';end if;
  if exists(select 1 from pcm.ordens_servico where client_id='16630000-1111-4000-8000-00000000000a') then raise exception 'os_indevida';end if;
+ if (select count(*) from pcm.sso_ciclo_canonico_usos_versao where versao_id='16630000-1111-4000-8000-000000000302')<>1 then raise exception 'uso_terceira_versao_ausente_ou_duplicado';end if;
 end; $$;
 rollback;
