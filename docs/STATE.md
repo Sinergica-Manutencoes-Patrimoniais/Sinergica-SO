@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: fuso de auth, disco e concorrência Visita
+
+- Hipótese para a prévia ausente no E2E: GoTrue isolado não tinha o hook de token que adiciona `user_role`, exigido por `sso_autorizar_acao`. Configuração do hook para próximo ensaio consta no README isolado; não houve nova jornada nem confirmação da hipótese. Ambiente anterior foi removido.
+- Disco: Data com 10 GiB livres; `~/.colima` ocupa 15 GiB, datadisk com cerca de 14 GiB alocados no host e 6,2 GiB em uso na VM. Diferença é compatível com blocos liberados ainda alocados, sem prova da origem temporal; não foi feita limpeza nem compactação.
+- Fixture de Visita para 1678 passou em clone com alteração de OS: contenção 55P03, fotografia aceita após rollback e rejeitada após commit. Ponte/OS sintéticas foram inseridas com FK desligada no clone; outras guardas e 1045 ficaram desligadas somente em transações revertidas para isolar o trigger. Não prova aprovação real ou latência sob carga.
+- Guarda 1045 e homologação mantidas; decisão sobre data-base e comprovação de fontes externas seguem pendentes.
+
 ## 2026-11-04 — S165/S166: login sintético corrigido, jornada pendente
 
 - Fonte do GoTrue indicou audiência ausente; com `GOTRUE_JWT_AUD=authenticated` o login e `/user` reais retornaram 200 no ambiente de rede interna, gateway confirmou clone descartável. A jornada única expirou ao esperar a prévia de Grupo; nenhuma declaração foi enviada. Serviços foram removidos antes de preservar DOM/rede, portanto causa da falha é desconhecida e não se comprovou a jornada UI→backend. Não houve Auvo ou escrita na origem.
