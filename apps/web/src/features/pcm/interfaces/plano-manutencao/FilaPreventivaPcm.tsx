@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { ConferirGrupoFila } from "./ConferirGrupoFila";
 
 const uuid = z.string().uuid();
 const linha = z.object({ ciclo_id: uuid, preparada_id: uuid, estado: z.enum(["aguardando", "verificacao", "cancelado"]),
@@ -18,7 +19,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
   const cache = useQueryClient(); const trava = useRef(false);
   const [ocupado, setOcupado] = useState(false); const [motivo, setMotivo] = useState("");
   const [operacao, setOperacao] = useState<"cancelar" | "confirmar">("cancelar");
-  const [confirmacao, setConfirmacao] = useState<string | null>(null); const [aviso, setAviso] = useState("");
+  const [confirmacao, setConfirmacao] = useState<string | null>(null); const [aviso, setAviso] = useState(""); const [grupoAberto, setGrupoAberto] = useState(false);
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try {
     const valor = sessionStorage.getItem(chave); if (!valor) return null; const p = pedidoSchema.parse(JSON.parse(valor));
     return p.clienteId === clienteId && p.planoId === planoId && (p.contextoPreparadaId ?? p.preparadaId) === preparadaId ? p : "invalido";
@@ -91,6 +92,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
     {visivel && <p>{existentes.length > 1 ? "Identidade ambígua; procure suporte." : registro ? `Entrada ${registro.estado} · revisão ${registro.revisao}.` : "Nenhuma entrada registrada para o ciclo canônico consultado."}</p>}
     {visivel && tipo === "visita" && registro?.situacao_atual === "verificacao" && <p role="alert">Fonte ou vigência exigem nova conferência. O estado registrado não comprova que o ciclo continua aguardando.</p>}
     {visivel && tipo === "visita" && registro?.situacao_atual === "conferida" && <p>Situação atual parcialmente conferida; fontes externas ainda exigem atenção.</p>}
+    {visivel && registro?.estado === "verificacao" && import.meta.env.VITE_SSO_REGISTRAR_OCORRENCIA_GRUPO_ENABLED === "true" && import.meta.env.VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED === "true" && <section><button type="button" aria-expanded={grupoAberto} onClick={() => setGrupoAberto((a) => !a)}>{grupoAberto ? "Ocultar conferência de Grupo" : "Conferir Grupo Quantitativo"}</button>{grupoAberto && <ConferirGrupoFila userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={registro.preparada_id} tipo={tipo} />}</section>}
     {visivel && outraOcorrencia && <p role="status">Este ciclo foi registrado pela ocorrência {registro?.preparada_id}. A ação usará a ocorrência original e preservará esta versão.</p>}
     {pendente === "invalido" && <p role="alert">Tentativa ilegível; procure suporte.</p>}
     {pendente && pendente !== "invalido" ? <button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</button> : !pendente && <>

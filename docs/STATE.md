@@ -6,6 +6,18 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: Grupo e OS na aprovação
+
+- ADR-1533/migration 1676 e ADR-1536/migration 1679 integram Grupo à conferência de fila sem unidades artificiais. PCM informa fontes/motivo e afirma não ter identificado execução nessas fontes; fotografia dos efeitos locais é revalidada e confirmação da fila é separada. Endpoint antigo aceita replay de declaração existente; novas exigem afirmação explícita. Teste UI e fixture 1679 passaram em clone revertido; a fixture antiga 1676 representa contrato anterior e não deve ser usada isoladamente após 1679. Visita, concorrência e fontes externas permanecem pendentes.
+- ADR-1535/migration 1678 revalidam OS conhecidas antes da aprovação. Fixture calendário passou em clone isolando trigger com outras guardas desabilitadas somente em transação revertida; não prova aprovação real. Travas globais exigem avaliação de concorrência/latência e faltam Visita/fontes externas. Guarda 1045 permanece.
+- Migrations 1614–1679 compilaram, teste UI e typecheck passaram; fixture de retirada Visita 1674 também passou. Gates e homologação bloqueados; sem Auvo/deploy. Decisão de mudança da data-base continua pendente.
+
+## 2026-11-04 — S165/S166: Grupo na fila e revalidação de OS
+
+- ADR-1533/migration 1676 e `ConferirGrupoFila` permitem declaração explícita PCM com fonte/motivo e fotografia de efeitos locais para Grupo sem ponte legada; confirmação da fila é passo separado, sem unidades artificiais ou certeza de fontes externas. Fixture de calendário e teste de UI passaram; Visita, concorrência e fontes externas pendentes.
+- ADR-1535/migration 1678 revalidam OS conhecidas da decisão na aprovação. Fixture de calendário passou isolando o trigger e desabilitando guardas somente na transação revertida; não prova aprovação real. Travas de tabelas são globais e exigem ensaio de concorrência/latência; Visita e fontes não vinculadas pendentes. Guarda 1045 intacta.
+- Fixture de retirada por Visita passou em clone; migrations 1614–1678 compilaram, typecheck passou. Gates e homologação seguem bloqueados; sem Auvo/deploy. Mudança de data-base continua aguardando decisão.
+
 ## 2026-11-04 — S165/S166: retirada aplicada, legado e concorrência
 
 - ADR-1531/migration 1674 e `AplicarRetiradasFila` oferecem comando explícito, paginado e idempotente para aplicar retirada já aprovada e efetiva a entrada sem execução comprovada; leitura não escreve, e OS/fontes incertas permanecem para PCM. Fixture e dois testes de UI passaram; faltam concorrência, fontes não vinculadas e validação operacional.
