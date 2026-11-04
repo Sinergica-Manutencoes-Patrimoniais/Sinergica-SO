@@ -66,7 +66,7 @@ select is(
   'AC-4: KPI respeita busca server-side'
 );
 select is(
-  (select count(*) from pcm.operacao_itens where categoria = 'corretiva' and created_at::date = current_date),
+  (select count(*) from pcm.operacao_itens where cliente_id = '00000000-0000-0000-0000-00000000145a' and categoria = 'corretiva' and created_at::date = current_date),
   3::bigint,
   'AC-2: read model filtra categoria e intervalo de data'
 );

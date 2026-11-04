@@ -1,0 +1,5 @@
+# ADR 0789 — Conferência de objeto associado a tentativa cancelada
+
+PCM com capacidade atual `cadastro.aprovar` no Cliente pode listar tentativas canceladas de um lote/linha e registrar conferência auditada e idempotente da presença do nome reservado no catálogo de objetos de bucket privado. A projeção não retorna caminho nem digest. Cada conferência registra ator e instante; a anotação indica apenas se havia metadado catalogado, não comprova existência física, integridade, ausência posterior ou que objeto seja seguro para descarte. Nenhum objeto é baixado, removido, sobrescrito ou tornado público.
+
+Somente reservas efetivamente canceladas entram nessa trilha; tombstones anteriores a reserva não têm nome reservado para conferir. A consulta e o comando exigem gate desligado por padrão, Cliente e lote/linha válidos, permissão atual e isolamento `READ COMMITTED` no comando. Registros auditados não decidem automaticamente limpeza nem autorizam publicação. Descarte eventual exige política, autoridade, implementação e revisão específicas, fora deste fluxo.

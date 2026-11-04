@@ -1,0 +1,24 @@
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
+
+const contagem = z.number().int().nonnegative().safe();
+const centavos = z.string().regex(/^(0|[1-9]\d*)$/);
+const dataCivil = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((s) => { const t=Date.parse(`${s}T00:00:00Z`); return !s.startsWith("0000") && Number.isFinite(t) && new Date(t).toISOString().slice(0,10)===s; });
+const resultado = z.object({ inicio: dataCivil, fim: dataCivil, despesas: z.object({ quantidade: contagem, previstoCentavos: centavos, realizadoCentavos: centavos, semPrevisto: contagem, semRealizado: contagem }).strict(), faturaveis: z.object({ quantidade: contagem, originalCentavos: centavos, conferidoCentavos: centavos, semConferencia: contagem }).strict(), medidasSomaveisEntreSi: z.literal(false), criterioFaturavel: z.literal("data_competencia") }).strict().refine((r)=>r.despesas.semPrevisto<=r.despesas.quantidade && r.despesas.semRealizado<=r.despesas.quantidade && r.faturaveis.semConferencia<=r.faturaveis.quantidade);
+export function RelatorioDespesasFaturaveis(props: { usuario: string; cliente: string }) {
+  return <Conteudo key={JSON.stringify([props.usuario,props.cliente])} {...props}/>;
+}
+function Conteudo({ usuario, cliente }: { usuario: string; cliente: string }) {
+  const mediado=import.meta.env.VITE_SSO_RELATORIO_DESPESAS_FATURAVEIS_MEDIADO_ENABLED==="true";
+  const [inicio, setInicio] = useState(""); const [fim, setFim] = useState(""); const [periodo, setPeriodo] = useState<{ inicio: string; fim: string } | null>(null); const [erro, setErro] = useState("");
+  const consulta = useQuery({ queryKey: ["relatorio-despesas-faturaveis", usuario, cliente, periodo, mediado], enabled: !!periodo, gcTime: 0, retry: false,
+    queryFn: async ({ signal }) => { if (!periodo) throw new Error("Período ausente"); const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==usuario || signal.aborted)throw new Error("Sessão alterada."); const parametros={p_cliente_id:cliente,p_inicio:periodo.inicio,p_fim:periodo.fim};const requisicao=mediado?supabase.schema("financeiro").rpc("sso_relatorio_despesas_faturaveis_mediado",{...parametros,p_ator_esperado:usuario}):supabase.schema("financeiro").rpc("sso_relatorio_despesas_faturaveis",parametros);const { data, error } = await requisicao.abortSignal(signal); if (error) throw error; const r = resultado.parse(data); if (r.inicio !== periodo.inicio || r.fim !== periodo.fim) throw new Error("Período divergente"); const depois=await supabase.auth.getUser();if(depois.error || depois.data.user?.id!==usuario || signal.aborted)throw new Error("Sessão alterada."); return r; } });
+  return <section aria-label="Despesas e faturáveis por período"><h3>Despesas e faturáveis por período</h3><p>Despesas por data; faturáveis pela data de competência. Previsão, realizado e faturável são medidas distintas e não devem ser somadas entre si.</p>
+    <form onSubmit={(e) => { e.preventDefault(); const a = Date.parse(`${inicio}T00:00:00Z`); const b = Date.parse(`${fim}T00:00:00Z`); if (!dataCivil.safeParse(inicio).success || !dataCivil.safeParse(fim).success || a > b || b - a > 730 * 86400000) { setErro("Informe período válido de até 730 dias."); return; } setErro(""); setPeriodo({ inicio, fim }); }}><label>Início <input type="date" required value={inicio} onChange={(e) => setInicio(e.target.value)} /></label><label>Fim inclusivo <input type="date" required value={fim} onChange={(e) => setFim(e.target.value)} /></label><button type="submit">Consultar</button></form>
+    {erro && <p role="alert">{erro}</p>}{consulta.isFetching && <output>Consultando relatório...</output>}{consulta.isError && <p role="alert">Relatório indisponível ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Reconsultar</button></p>}
+    {periodo && (inicio !== periodo.inicio || fim !== periodo.fim) && <p>Período alterado. Consulte novamente para atualizar os valores.</p>}
+    {consulta.data && periodo && inicio === periodo.inicio && fim === periodo.fim && !consulta.isFetching && !consulta.isError && <><p>Período consultado: {consulta.data.inicio} a {consulta.data.fim}, inclusive.</p><p>Despesas: {consulta.data.despesas.quantidade}; previsto {consulta.data.despesas.previstoCentavos} centavos; realizado {consulta.data.despesas.realizadoCentavos} centavos. Sem previsão: {consulta.data.despesas.semPrevisto}; sem realizado: {consulta.data.despesas.semRealizado}.</p><p>Faturáveis: {consulta.data.faturaveis.quantidade}; original {consulta.data.faturaveis.originalCentavos} centavos; conferido {consulta.data.faturaveis.conferidoCentavos} centavos. Sem conferência: {consulta.data.faturaveis.semConferencia}.</p></>}
+  </section>;
+}

@@ -1,8 +1,10 @@
 import { Button, ConfirmDialog, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
+import { useQuery } from "@tanstack/react-query";
 import { Boxes, Layers, Link2, Pencil, Plus, RefreshCw, Trash2, Wrench } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { supabase } from "../../../lib/supabase-client";
 import {
   criarEquipamento,
   desativarEquipamento,
@@ -21,6 +23,9 @@ import type {
 } from "../domain/equipamentos";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
+import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
+import { HistoricoGrupo } from "../interfaces/estrutura-tecnica/HistoricoGrupo";
+import { MovimentacaoDetalhe } from "../interfaces/estrutura-tecnica/MovimentacaoDetalhe";
 
 type Estado =
   | { fase: "carregando" }
@@ -33,6 +38,24 @@ type Modal =
   | null;
 
 type FiltroTipo = "todos" | ItemTipo;
+
+async function conferirGestao(userId: string, clientes: Array<string | null | undefined>) {
+  const antes = await supabase.auth.getUser();
+  if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
+  for (const cliente of new Set(clientes)) {
+    if (!cliente || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", cliente) !== true) throw new Error("Permissão de cadastro indisponível.");
+  }
+  const depois = await supabase.auth.getUser();
+  if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+}
+
+function CapacidadeEquipamento({ userId, clienteId, temEscrita, children }: { userId: string; clienteId: string | null; temEscrita: boolean; children: (permitido: boolean) => ReactNode }) {
+  const habilitado = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  const consulta = useQuery({ queryKey: ["cadastro-legado-capacidade", userId, clienteId], gcTime: 0, retry: false,
+    enabled: habilitado && temEscrita && !!userId && !!clienteId, refetchOnWindowFocus: true,
+    queryFn: async () => { await conferirGestao(userId, [clienteId]); return true; } });
+  return <>{children(temEscrita && (!habilitado || (!consulta.isFetching && !consulta.isError && consulta.data === true)))}</>;
+}
 
 export function EquipamentosPage() {
   const { user } = useAuth();
@@ -74,6 +97,9 @@ export function EquipamentosPage() {
   async function salvar(input: EquipamentoFormData) {
     if (!user) return;
     setErroAcao(null);
+    if (import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true") {
+      await conferirGestao(user.id, modal?.modo === "editar" ? [modal.equipamento.clientId, input.clientId] : [input.clientId]);
+    }
     if (modal?.modo === "editar") {
       await editarEquipamento(supabaseEquipamentosAdapter, {
         ...input,
@@ -110,6 +136,7 @@ export function EquipamentosPage() {
 
   async function desativar() {
     if (!user || !desativarInfo) return;
+    if (import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true") await conferirGestao(user.id, [desativarInfo.equipamento.clientId]);
     await desativarEquipamento(supabaseEquipamentosAdapter, {
       id: desativarInfo.equipamento.id,
       userId: user.id,
@@ -230,18 +257,17 @@ export function EquipamentosPage() {
         <section className="rounded-lg border border-line bg-card overflow-hidden">
           <div className="divide-y divide-line-soft">
             {equipamentosFiltrados.map((equipamento) => (
-              <EquipamentoLinha
-                key={equipamento.id}
+              <CapacidadeEquipamento key={equipamento.id} userId={user?.id ?? ""} clienteId={equipamento.clientId} temEscrita={temEscrita}>{(permitido) => <EquipamentoLinha
                 equipamento={equipamento}
-                onEditar={temEscrita ? () => setModal({ modo: "editar", equipamento }) : undefined}
+                onEditar={permitido ? () => setModal({ modo: "editar", equipamento }) : undefined}
                 onDesativar={
-                  temEscrita && equipamento.ativo
+                  permitido && equipamento.ativo
                     ? () => abrirConfirmacaoDesativar(equipamento)
                     : undefined
                 }
                 onAmpliarImagem={setImagemAmpliada}
                 onVerDetalhe={() => setItemDetalheId(equipamento.id)}
-              />
+              />}</CapacidadeEquipamento>
             ))}
           </div>
         </section>
@@ -258,7 +284,12 @@ export function EquipamentosPage() {
       )}
 
       {itemDetalheId && (
-        <ItemDetalheModal itemId={itemDetalheId} onFechar={() => setItemDetalheId(null)} />
+        <ItemDetalheModal
+          itemId={itemDetalheId}
+          userId={user?.id ?? ""}
+          onFechar={() => setItemDetalheId(null)}
+          onAtualizado={() => void carregar()}
+        />
       )}
 
       <ModalPrimitivo
@@ -383,8 +414,14 @@ function EquipamentoLinha({
 
 /** AC-6 — Detalhe do Item: breadcrumb Cliente>Área>Local + chips de Sistema + componentes
  * filhos aninhados sob o Equipamento pai. */
-function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () => void }) {
+function ItemDetalheModal({
+  itemId,
+  userId,
+  onFechar,
+  onAtualizado,
+}: { itemId: string; userId: string; onFechar: () => void; onAtualizado: () => void }) {
   const [contexto, setContexto] = useState<ItemContexto | null | "carregando">("carregando");
+  const [historicoAberto, setHistoricoAberto] = useState(false);
 
   useEffect(() => {
     setContexto("carregando");
@@ -444,6 +481,31 @@ function ItemDetalheModal({ itemId, onFechar }: { itemId: string; onFechar: () =
               )}
             </div>
 
+            {contexto.item.clientId && userId && (
+              <div>
+                <button type="button" onClick={() => setHistoricoAberto((atual) => !atual)}>
+                  {historicoAberto ? "Fechar histórico" : "Ver histórico"}
+                </button>
+                {historicoAberto && (
+                  <HistoricoGrupo
+                    tipo="componente"
+                    userId={userId}
+                    clienteId={contexto.item.clientId}
+                    grupoId={itemId}
+                  />
+                )}
+                <MovimentacaoDetalhe
+                  userId={userId}
+                  clienteId={contexto.item.clientId}
+                  item={contexto.item}
+                  onConcluido={() => {
+                    onAtualizado();
+                    setContexto("carregando");
+                    void obterContextoItem(supabaseEquipamentosAdapter, itemId).then(setContexto);
+                  }}
+                />
+              </div>
+            )}
             {contexto.componentesFilhos.length > 0 && (
               <div>
                 <h5 className="mb-1.5 text-caption font-semibold uppercase tracking-wider text-ink-3">

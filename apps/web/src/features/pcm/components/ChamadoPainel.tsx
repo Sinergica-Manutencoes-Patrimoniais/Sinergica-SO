@@ -6,9 +6,10 @@
 // REQUISITO (Lucas, 2026-07-29): o histórico continua acessível MESMO depois do Chamado virar OS —
 // por isso o painel carrega sempre pelo `chamadoId`, independente do status do Chamado.
 import { Button, Modal, Skeleton } from "@sinergica/ui";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
-import { useFormularioSujo } from "../../../app/use-formulario-sujo";
+import { supabase } from "../../../lib/supabase-client";
 import {
   cancelarChamado,
   definirDataPlanejadaChamado,
@@ -21,10 +22,20 @@ import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { type Chamado, ORIGEM_CHAMADO_LABEL, STATUS_CHAMADO_LABEL } from "../domain/chamados";
 import { type StatusOrdemServico, auvoTaskDeepLink } from "../domain/ordens-servico";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
+import { supabaseChamadosOsLeituraAdapter } from "../infrastructure/supabase-chamados-os-leitura-adapter";
+import { supabaseChamadosOsComandoAdapter } from "../infrastructure/supabase-chamados-os-comando-adapter";
+import { converterChamadoIntegral, listarComponentesConversao } from "../infrastructure/supabase-conversao-integral-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
+import { EntradaOrdensChamado } from "../interfaces/chamados-os/OrdensDoChamado";
+import { CriarOsChamado } from "../interfaces/chamados-os/CriarOsChamado";
+import { CanonicalizarVinculoLegado } from "../interfaces/chamados-os/CanonicalizarVinculoLegado";
+import { ConversaoIntegral } from "../interfaces/chamados-os/ConversaoIntegral";
+import { AvaliacaoEscopo } from "../interfaces/chamados-os/AvaliacaoEscopo";
+import { GestaoEscopo } from "../interfaces/chamados-os/GestaoEscopo";
 import { AnotacoesChamado } from "./AnotacoesChamado";
 import { HistoricoAtendimentoChamado } from "./HistoricoAtendimentoChamado";
+import { GerarOsModal } from "./GerarOsModal";
 
 type SubModal =
   | {
@@ -44,6 +55,7 @@ export function ChamadoPainel({
   destinoConversao = null,
   onConversaoFinalizada,
   onOsPlanejada,
+  onAbrirOsVinculada,
 }: {
   chamadoId: string;
   dadosOs: DadosAberturaOs | null;
@@ -56,30 +68,32 @@ export function ChamadoPainel({
   onConversaoFinalizada?: () => void;
   /** E01-S125: conversão por drop para Planejamento ainda pede abertura Auvo, sem trigger. */
   onOsPlanejada?: (osId: string) => void;
+  onAbrirOsVinculada?: (clienteId: string, osId: string) => void;
 }) {
   const { user } = useAuth();
-  const [chamado, setChamado] = useState<Chamado | null>(null);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
   const [subModal, setSubModal] = useState<SubModal>(null);
-
-  const carregarChamado = useCallback(async () => {
-    setCarregando(true);
-    try {
-      setChamado(await obterChamado(supabaseChamadosAdapter, chamadoId));
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível carregar o Chamado.");
-    } finally {
-      setCarregando(false);
-    }
-  }, [chamadoId]);
+  const consulta = useQuery({
+    queryKey: ["chamado-painel", user?.id, chamadoId], enabled: !!user?.id, gcTime: 0,
+    queryFn: async ({ signal }) => {
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== user?.id || signal.aborted) throw new Error("Sessão alterada.");
+      const resultado = await obterChamado(supabaseChamadosAdapter, chamadoId);
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== user?.id || signal.aborted) throw new Error("Sessão alterada.");
+      if (resultado && resultado.id !== chamadoId) throw new Error("Chamado divergente.");
+      return resultado;
+    },
+  });
+  const chamado = !consulta.isFetching && !consulta.isError ? consulta.data ?? null : null;
+  const erro = consulta.isError ? "Não foi possível carregar o Chamado." : null;
+  const carregarChamado = async () => { await consulta.refetch(); };
 
   useEffect(() => {
-    carregarChamado();
-  }, [carregarChamado]);
+    setSubModal(null);
+  }, [user?.id, chamadoId]);
 
   useEffect(() => {
-    if (!destinoConversao || !dadosOs || !temEscrita || chamado?.status !== "aberto") return;
+    if (import.meta.env.VITE_SSO_CONVERSAO_INTEGRAL_ENABLED === "true" || !destinoConversao || !dadosOs || !temEscrita || chamado?.status !== "aberto") return;
     setSubModal({
       modo: "gerar-os",
       destino: destinoConversao === "backlog" ? "backlog" : "convertido_os",
@@ -162,13 +176,14 @@ export function ChamadoPainel({
     onMutou();
   }
 
-  if (carregando) {
+  if (consulta.isFetching) {
     return <Skeleton className="h-4 w-40" />;
   }
   if (!chamado) {
     return (
       <div className="px-4 py-3 text-caption text-ink-3">
-        {erro ?? "Chamado vinculado não encontrado."}
+        {erro ?? (user ? "Chamado vinculado não encontrado." : "Sessão indisponível.")}
+        {erro && <button type="button" onClick={() => void carregarChamado()}> Tentar novamente</button>}
       </div>
     );
   }
@@ -200,17 +215,49 @@ export function ChamadoPainel({
           </a>
         ) : (
           <span className="rounded-full bg-line-soft px-2 py-0.5 text-micro font-semibold text-ink-2">
-            Sem OS no Auvo
+            Vínculo Auvo da OS atual não informado
           </span>
         )}
       </div>
 
       <DetalheChamado
+        key={chamado.id}
         chamado={chamado}
         podeEditar={temEscrita}
         onSalvarPlanejamento={salvarPlanejamento}
         onSalvarExecucao={salvarExecucao}
       />
+
+      {user && (
+        <EntradaOrdensChamado
+          habilitado={import.meta.env.VITE_SSO_ORDENS_CHAMADO_ENABLED}
+          usuario={user.id}
+          cliente={chamado.clienteId}
+          chamado={chamado.id}
+          chamadoEsperado={chamadoId}
+          leitura={supabaseChamadosOsLeituraAdapter}
+          onAbrirOs={onAbrirOsVinculada ? (osId) => onAbrirOsVinculada(chamado.clienteId, osId) : undefined}
+        />
+      )}
+
+      {user && temEscrita && (
+        <CriarOsChamado habilitado={import.meta.env.VITE_SSO_CRIAR_OS_CHAMADO_ENABLED}
+          usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id}
+          chamadoEsperado={chamadoId} gateway={supabaseChamadosOsComandoAdapter}
+          aoConcluir={() => { void carregarChamado(); onMutou(); }} />
+      )}
+      {user && temEscrita && chamado.id === chamadoId && <CanonicalizarVinculoLegado
+        usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id} />}
+      {user && temEscrita && <ConversaoIntegral habilitado={import.meta.env.VITE_SSO_CONVERSAO_INTEGRAL_ENABLED}
+        usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id} chamadoEsperado={chamadoId}
+        chamadoCompleto={chamado} dadosOs={dadosOs} statusHubInicial={destinoConversao}
+        listarEquipamentos={listarComponentesConversao}
+        consultarRevisao={supabaseChamadosOsComandoAdapter.consultarRevisao} criar={converterChamadoIntegral}
+        aoConcluir={(pedido) => { if (pedido.statusHub === "planejamento") onOsPlanejada?.(pedido.osId); void carregarChamado(); onMutou(); onConversaoFinalizada?.(); }} />}
+      {destinoConversao && import.meta.env.VITE_SSO_CONVERSAO_INTEGRAL_ENABLED === "true" && <p>Confirme o movimento no formulário de conversão integral acima.</p>}
+      {user && <AvaliacaoEscopo habilitado={import.meta.env.VITE_SSO_ESCOPO_CHAMADO_ENABLED}
+        usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id} chamadoEsperado={chamadoId} />}
+      {user && <GestaoEscopo usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id} chamadoEsperado={chamadoId} />}
 
       <div className="border-t border-line-soft px-4 py-3">
         <HistoricoAtendimentoChamado gateway={supabaseChamadosAdapter} chamadoId={chamado.id} />
@@ -226,7 +273,7 @@ export function ChamadoPainel({
 
       {podeAgir && (
         <div className="flex flex-wrap gap-2 border-t border-line-soft px-4 py-3">
-          <Button
+          {import.meta.env.VITE_SSO_CONVERSAO_INTEGRAL_ENABLED !== "true" && <><Button
             variant="primary"
             size="sm"
             onClick={() => setSubModal({ modo: "gerar-os", destino: "convertido_os" })}
@@ -239,7 +286,7 @@ export function ChamadoPainel({
             onClick={() => setSubModal({ modo: "gerar-os", destino: "backlog" })}
           >
             Enviar ao backlog
-          </Button>
+          </Button></>}
           <Button variant="danger" size="sm" onClick={() => setSubModal({ modo: "cancelar" })}>
             Cancelar Chamado
           </Button>
@@ -404,190 +451,6 @@ function DetalheChamado({
   );
 }
 
-function GerarOsModal({
-  chamado,
-  destino,
-  dadosOs,
-  onCancel,
-  onConfirmar,
-}: {
-  chamado: Chamado;
-  destino: "convertido_os" | "backlog";
-  dadosOs: DadosAberturaOs;
-  onCancel: () => void;
-  onConfirmar: (campos: {
-    tipoTarefaId: string;
-    tecnicoId: string | null;
-    dataPrevista: string | null;
-    gravidade: number;
-    urgencia: number;
-    tendencia: number;
-  }) => Promise<void>;
-}) {
-  const [tipoTarefaId, setTipoTarefaId] = useState(dadosOs.tiposTarefa[0]?.id ?? "");
-  const [tecnicoId, setTecnicoId] = useState("");
-  const [dataPrevista, setDataPrevista] = useState("");
-  const [gravidade, setGravidade] = useState<number | "">(destino === "backlog" ? "" : 3);
-  const [urgencia, setUrgencia] = useState<number | "">(destino === "backlog" ? "" : 3);
-  const [tendencia, setTendencia] = useState<number | "">(destino === "backlog" ? "" : 3);
-  const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-
-  useFormularioSujo(
-    {
-      tipoTarefaId: dadosOs.tiposTarefa[0]?.id ?? "",
-      tecnicoId: "",
-      dataPrevista: "",
-      gravidade: destino === "backlog" ? "" : 3,
-      urgencia: destino === "backlog" ? "" : 3,
-      tendencia: destino === "backlog" ? "" : 3,
-    },
-    { tipoTarefaId, tecnicoId, dataPrevista, gravidade, urgencia, tendencia },
-  );
-
-  const gutCompleto = gravidade !== "" && urgencia !== "" && tendencia !== "";
-
-  async function confirmar() {
-    if (!gutCompleto) return;
-    setSalvando(true);
-    setErro(null);
-    try {
-      await onConfirmar({
-        tipoTarefaId,
-        tecnicoId: tecnicoId || null,
-        dataPrevista: dataPrevista || null,
-        gravidade: gravidade as number,
-        urgencia: urgencia as number,
-        tendencia: tendencia as number,
-      });
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível gerar a OS.");
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  return (
-    <Modal
-      open
-      onOpenChange={(open) => {
-        if (!open) onCancel();
-      }}
-      titulo={destino === "convertido_os" ? "Gerar OS" : "Enviar ao backlog"}
-    >
-      <div className="flex flex-col gap-3">
-        <p className="text-body text-ink-2">
-          {chamado.numero} · {chamado.titulo}
-        </p>
-        <div className="block">
-          <label
-            htmlFor="chamado-gerar-os-tipo-tarefa"
-            className="mb-1 block text-caption font-semibold text-ink-3"
-          >
-            Tipo de tarefa *
-          </label>
-          {dadosOs.tiposTarefa.length === 0 ? (
-            <p className="text-caption text-ink-3">
-              Nenhum tipo de tarefa cadastrado. Cadastre em PCM → Cadastros → Tipos de Tarefa.
-            </p>
-          ) : (
-            <select
-              id="chamado-gerar-os-tipo-tarefa"
-              value={tipoTarefaId}
-              onChange={(e) => setTipoTarefaId(e.target.value)}
-              className="input w-full"
-            >
-              {dadosOs.tiposTarefa.map((tipo) => (
-                <option key={tipo.id} value={tipo.id}>
-                  {tipo.nome}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-        <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">
-            Técnico responsável
-          </span>
-          <select
-            value={tecnicoId}
-            onChange={(e) => setTecnicoId(e.target.value)}
-            className="input w-full"
-          >
-            <option value="">Sem técnico</option>
-            {dadosOs.tecnicos.map((tecnico) => (
-              <option key={tecnico.id} value={tecnico.id}>
-                {tecnico.nome}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-caption font-semibold text-ink-3">Data prevista</span>
-          <input
-            type="date"
-            value={dataPrevista}
-            onChange={(e) => setDataPrevista(e.target.value)}
-            className="input w-full"
-          />
-        </label>
-        {destino === "backlog" && (
-          <div className="grid grid-cols-3 gap-2">
-            <GutSelect label="Gravidade *" value={gravidade} onChange={setGravidade} />
-            <GutSelect label="Urgência *" value={urgencia} onChange={setUrgencia} />
-            <GutSelect label="Tendência *" value={tendencia} onChange={setTendencia} />
-          </div>
-        )}
-        {erro && (
-          <div className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
-            {erro}
-          </div>
-        )}
-        <div className="flex justify-end gap-2 border-t border-line-soft pt-3">
-          <Button variant="secondary" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button
-            variant="primary"
-            onClick={confirmar}
-            disabled={salvando || !tipoTarefaId || !gutCompleto}
-            loading={salvando}
-          >
-            {salvando ? "Salvando…" : "Confirmar"}
-          </Button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-function GutSelect({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number | "";
-  onChange: (v: number | "") => void;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-caption font-semibold text-ink-3">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : "")}
-        className="input w-full"
-      >
-        <option value="">—</option>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <option key={n} value={n}>
-            {n}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
 
 function CancelarChamadoModal({
   chamado,

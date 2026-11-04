@@ -26,16 +26,28 @@ export function CampoIdentificador({
 }) {
   const [editando, setEditando] = useState(false);
   const [confirmarAlteracao, setConfirmarAlteracao] = useState(false);
-  const [recomendacoesAplicadas, setRecomendacoesAplicadas] = useState(false);
+  // A edição comum de um cadastro existente não altera o código público.
+  // Rascunhos elegíveis e correções excepcionais usam a jornada própria.
+  // As guardas transacionais do servidor continuam obrigatórias no rollout.
+  const edicaoGovernada = modo === "editar";
+  const [contextoRecomendacoes, setContextoRecomendacoes] = useState<string | null>(null);
+  const contexto = JSON.stringify([input?.clienteId, input?.areaId, input?.localId, input?.categoriaId, input?.nomeAtivo]);
   const previa = usePreviaIdentificador(supabaseIdentificadorAtivoAdapter, input, siglasInformadas);
-  const resultado = previa.data;
+  const resultado = previa.isPlaceholderData || previa.isFetching || previa.isError
+    ? undefined
+    : previa.data;
   const sugestao = resultado?.prefixo ? `${resultado.prefixo}-${resultado.nn ?? "##"}` : "—";
 
   useEffect(() => {
-    if (!recomendacoesAplicadas || !resultado?.prefixo) return;
-    setRecomendacoesAplicadas(false);
+    if (contextoRecomendacoes === null) return;
+    if (edicaoGovernada || contextoRecomendacoes !== contexto) {
+      setContextoRecomendacoes(null);
+      return;
+    }
+    if (!resultado?.prefixo) return;
+    setContextoRecomendacoes(null);
     onAplicarRecomendacoes(sugestao);
-  }, [onAplicarRecomendacoes, recomendacoesAplicadas, resultado?.prefixo, sugestao]);
+  }, [onAplicarRecomendacoes, contextoRecomendacoes, contexto, edicaoGovernada, resultado?.prefixo, sugestao]);
 
   function atualizarSigla(nivel: NivelComSigla, id: string, sigla: string) {
     const restante = siglasInformadas.filter((item) => item.id !== id || item.nivel !== nivel);
@@ -67,27 +79,32 @@ export function CampoIdentificador({
       ),
       ...sugestoesVisiveis.map(({ nivel, id, sigla }) => ({ nivel, id, sigla })),
     ]);
-    setRecomendacoesAplicadas(true);
+    setContextoRecomendacoes(contexto);
     registrarEventoCliente360({ nome: "identificador_recommendations_applied" });
   }
 
-  if (!editando) {
+  if (!editando || edicaoGovernada) {
     return (
       <section className="space-y-2 md:col-span-2">
         <label className="block">
           <span className="mb-1 block text-caption font-semibold text-ink-3">Identificador</span>
           <div className="flex gap-2">
             <input readOnly value={valor || sugestao} className="input w-full bg-line-soft" />
-            <Button
+            {!edicaoGovernada && <Button
               type="button"
               variant="secondary"
-              onClick={() => (modo === "editar" ? setConfirmarAlteracao(true) : setEditando(true))}
+              onClick={() => setEditando(true)}
             >
               Editar identificador
-            </Button>
+            </Button>}
           </div>
         </label>
-        {resultado?.faltantes.length ? (
+        {edicaoGovernada && (
+          <p className="text-caption text-ink-3">
+            Para alterar o código, use a consulta de códigos públicos. Rascunhos sem uso podem ser editados; correções excepcionais exigem autorização e preservam o código anterior.
+          </p>
+        )}
+        {!edicaoGovernada && resultado?.faltantes.length ? (
           <SiglasFaltantes
             resultado={resultado.faltantes}
             siglasInformadas={siglasInformadas}

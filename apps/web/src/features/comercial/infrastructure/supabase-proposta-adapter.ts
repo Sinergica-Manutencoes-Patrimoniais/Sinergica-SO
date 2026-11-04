@@ -23,6 +23,40 @@ const ITEM_COLS =
   "id,proposta_id,tipo,descricao,nivel_id,material_id,quantidade,custo_unitario_centavos,total_centavos";
 const VERSAO_COLS = "id,proposta_id,versao,payload,criado_em,criado_por";
 
+/** Invalida geração pendente quando sessão muda ou perfil é atualizado. */
+export function observarMudancaSessaoPdf(invalidar: () => void): () => void {
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((evento) => {
+    if (evento === "SIGNED_OUT" || evento === "SIGNED_IN" || evento === "USER_UPDATED") invalidar();
+  });
+  return () => subscription.unsubscribe();
+}
+
+/** Reconsulta RLS atual sem transferir novamente conteúdo privado ao entregar o PDF. */
+export async function confirmarAcessoVersaoPdf(
+  usuarioId: string,
+  propostaId: string,
+  versaoId: string,
+) {
+  try {
+    const antes = await supabase.auth.getUser();
+    if (antes.error || antes.data.user?.id !== usuarioId) return false;
+    const { data, error } = await supabase
+      .schema("comercial")
+      .from("proposta_versoes")
+      .select("id")
+      .eq("proposta_id", propostaId)
+      .eq("id", versaoId)
+      .maybeSingle();
+    if (error || data?.id !== versaoId) return false;
+    const depois = await supabase.auth.getUser();
+    return !depois.error && depois.data.user?.id === usuarioId;
+  } catch {
+    return false;
+  }
+}
+
 interface PropostaRow {
   id: string;
   oportunidade_id: string;
@@ -208,6 +242,24 @@ export const supabasePropostaAdapter: PropostaGateway = {
   },
 
   async vincularAssessment(input: VincularAssessmentCommand) {
+    if (import.meta.env.VITE_SSO_VINCULO_ASSESSMENT_MEDIADO_ENABLED === "true") {
+      if (!input.clienteId) throw new Error("Cliente não informado para o vínculo.");
+      const antes = await supabase.auth.getUser();
+      if (antes.error || !antes.data.user) throw new Error("Sessão indisponível.");
+      const { data: recibo, error: erroVinculo } = await supabase.schema("comercial").rpc("sso_vincular_assessment", {
+        p_ator_id: antes.data.user.id, p_cliente_id: input.clienteId, p_proposta_id: input.propostaId, p_inspecao_id: input.assessmentId,
+      });
+      if (erroVinculo) throw erroVinculo;
+      if (!recibo || recibo.clienteId !== input.clienteId || recibo.propostaId !== input.propostaId || recibo.assessmentId !== input.assessmentId) throw new Error("Resposta de vínculo divergente.");
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== antes.data.user.id) throw new Error("Sessão alterada após vínculo; consulte a proposta antes de repetir.");
+      const { data, error } = await supabase.schema("comercial").from("propostas").select(PROPOSTA_COLS).eq("id", input.propostaId).single();
+      if (error) throw error;
+      const final = await supabase.auth.getUser();
+      if (final.error || final.data.user?.id !== antes.data.user.id) throw new Error("Sessão alterada após vínculo; consulte a proposta antes de repetir.");
+      if (data.id !== input.propostaId || data.assessment_id !== input.assessmentId) throw new Error("Vínculo alterado; consulte a proposta novamente.");
+      return mapProposta(data as PropostaRow);
+    }
     const { data, error } = await supabase
       .schema("comercial")
       .from("propostas")
@@ -222,7 +274,7 @@ export const supabasePropostaAdapter: PropostaGateway = {
   async forcarPrecoAbaixoDoPiso(input: ForcarPrecoCommand) {
     const { data, error } = await supabase
       .schema("comercial")
-      .rpc("fn_forcar_preco_abaixo_piso", {
+      .rpc("forcar_preco_abaixo_piso_seguro", {
         p_proposta_id: input.propostaId,
         p_preco_centavos: input.precoCentavos,
         p_motivo: input.motivo ?? null,

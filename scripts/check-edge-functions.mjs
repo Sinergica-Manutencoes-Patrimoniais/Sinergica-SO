@@ -54,18 +54,17 @@ function findInvokeCalls(files) {
   // Casa `functions.invoke("literal")` / `.invoke('literal')`. Nome dinâmico (variável, template
   // literal com interpolação) não é verificável estaticamente — vira aviso, nunca falso positivo.
   const calls = [];
-  const literalRe = /functions\.invoke\(\s*["'`]([a-zA-Z0-9_-]+)["'`]/g;
-  const dynamicRe = /functions\.invoke\(\s*(?!["'`])/g;
+  const invokeRe = /functions\.invoke\(/g;
+  const literalRe = /^\s*(["'`])([a-zA-Z0-9_-]+)\1\s*(?=[,)])/;
   for (const file of files) {
     const text = readFileSync(file, "utf8");
     let m;
-    literalRe.lastIndex = 0;
-    while ((m = literalRe.exec(text)) !== null) {
-      calls.push({ file, name: m[1], dynamic: false });
-    }
-    dynamicRe.lastIndex = 0;
-    while ((m = dynamicRe.exec(text)) !== null) {
-      calls.push({ file, name: null, dynamic: true });
+    invokeRe.lastIndex = 0;
+    while ((m = invokeRe.exec(text)) !== null) {
+      const literal = literalRe.exec(text.slice(invokeRe.lastIndex));
+      calls.push(literal
+        ? { file, name: literal[2], dynamic: false }
+        : { file, name: null, dynamic: true });
     }
   }
   return calls;

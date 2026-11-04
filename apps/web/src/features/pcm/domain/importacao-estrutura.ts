@@ -43,7 +43,7 @@ export interface ResultadoPlano {
   linha: LinhaPlanilha;
   resultado: "CRIAR" | "EDITAR" | "EXCLUIR" | "SEM MUDANÇA" | "ERRO" | "AVISO";
   detalhes: string[];
-  dependeDe: number[];
+  dependeDe: string[];
   /** Valores já normalizados/resolvidos pelo dry-run. Nunca altera a planilha original. */
   valoresExecutar?: Record<string, string>;
 }
@@ -58,13 +58,10 @@ export function montarPlanilhaEstrutura(estado: EstadoEstrutura): Record<string,
   const locaisPorId = new Map(estado.locais.map((local) => [local.id, local]));
   const areaNome = new Map(estado.areas.map((area) => [area.id, area.nome]));
   const caminho = (id: string | null) => {
-    const nomes: string[] = [];
-    let local = id ? locaisPorId.get(id) : undefined;
-    while (local) {
-      nomes.unshift(local.nome);
-      local = local.parentId ? locaisPorId.get(local.parentId) : undefined;
-    }
-    return nomes.join(" > ");
+    if (!id) return "";
+    const local = locaisPorId.get(id);
+    if (!local) throw new Error("Local não encontrado; confira a estrutura antes da exportação.");
+    return caminhoLocalComIndice(local, locaisPorId);
   };
   const membro = new Map(estado.membros.map((m) => [m.itemId, m.sistemaId]));
   const sistemaNome = new Map(estado.sistemas.map((s) => [s.id, s.nome]));
@@ -204,12 +201,12 @@ export function planejarImportacao(
   const areasCriadasNaPlanilha = new Map(
     linhas
       .filter((linha) => linha.aba === "Áreas" && linha.acao === "CRIAR")
-      .map((linha) => [normalizar(linha.valores.Nome ?? ""), linha.numero]),
+      .map((linha) => [normalizar(linha.valores.Nome ?? ""), `Áreas:${linha.numero}`]),
   );
   const sistemasCriadosNaPlanilha = new Map(
     linhas
       .filter((linha) => linha.aba === "Sistemas" && linha.acao === "CRIAR")
-      .map((linha) => [normalizar(linha.valores.Nome ?? ""), linha.numero]),
+      .map((linha) => [normalizar(linha.valores.Nome ?? ""), `Sistemas:${linha.numero}`]),
   );
   const locaisCriadosNaPlanilha = new Map(
     linhas
@@ -219,7 +216,7 @@ export function planejarImportacao(
           linha.valores.Área ?? "",
           [linha.valores["Local pai"], linha.valores.Nome].filter(Boolean).join(" > "),
         ),
-        linha.numero,
+        `Locais:${linha.numero}`,
       ]),
   );
 
@@ -235,7 +232,7 @@ export function planejarImportacao(
     const avisos: string[] = [];
     const id = valores.Id?.trim() ?? "";
     const atual = porTipo[linha.aba].get(id);
-    const dependeDe: number[] = [];
+    const dependeDe: string[] = [];
     if (valores.erro) erros.push(valores.erro);
     if (linhas.length > 2000) erros.push("Planilha com mais de 2000 alterações. Divida em partes.");
     if (id && (idsRepetidos.get(id)?.length ?? 0) > 1) {
@@ -251,9 +248,9 @@ export function planejarImportacao(
     const area = areaNome ? areasPorNome.get(normalizar(areaNome)) : undefined;
     if (linha.aba === "Locais" && linha.acao !== "EXCLUIR" && !area) {
       const criada = criadosArea.get(normalizar(areaNome));
-      if (criada) dependeDe.push(criada.linha.numero);
+      if (criada) dependeDe.push(`Áreas:${criada.linha.numero}`);
       else if (areasCriadasNaPlanilha.has(normalizar(areaNome)))
-        dependeDe.push(areasCriadasNaPlanilha.get(normalizar(areaNome)) as number);
+        dependeDe.push(areasCriadasNaPlanilha.get(normalizar(areaNome)) as string);
       else erros.push(`Área «${areaNome}» não existe.`);
     }
     if (["Sistemas", "Componentes"].includes(linha.aba) && linha.acao !== "EXCLUIR") {
@@ -261,7 +258,7 @@ export function planejarImportacao(
       if (!categoriaNome) erros.push("Categoria é obrigatória.");
       else if (!categorias.has(normalizar(categoriaNome)))
         erros.push(`Categoria «${categoriaNome}» não existe. Cadastre em Categorias de Ativo.`);
-      if (areaNome && !area && !criadosArea.has(normalizar(areaNome))) {
+      if (areaNome && !area) {
         const criada = areasCriadasNaPlanilha.get(normalizar(areaNome));
         if (criada) dependeDe.push(criada);
         else erros.push(`Área «${areaNome}» não existe.`);
@@ -286,7 +283,7 @@ export function planejarImportacao(
         )
       )
         erros.push(`Sistema «${valores.Sistema}» não existe.`);
-      if (criado) dependeDe.push(criado.linha.numero);
+      if (criado) dependeDe.push(`Sistemas:${criado.linha.numero}`);
       if (criadoDepois) dependeDe.push(criadoDepois);
     }
 
@@ -437,7 +434,7 @@ function resolverLocal(
   areaId: string | null,
   locais: Local[],
   criados: Map<string, ResultadoPlano>,
-  criadosNaPlanilha: Map<string, number>,
+  criadosNaPlanilha: Map<string, string>,
 ) {
   const chave = chaveLocalPorId(areaId, caminho);
   const encontrados = locais.filter(
@@ -449,7 +446,7 @@ function resolverLocal(
   if (encontrados.length === 1) return {};
   const chavePorNome = chaveLocal(areaNome, caminho);
   const criado = criados.get(chavePorNome);
-  if (criado) return { dependeDe: criado.linha.numero };
+  if (criado) return { dependeDe: `Locais:${criado.linha.numero}` };
   const criadoDepois = criadosNaPlanilha.get(chavePorNome);
   if (criadoDepois) return { dependeDe: criadoDepois };
   void chave;
@@ -464,11 +461,19 @@ function chaveLocalPorId(areaId: string | null, caminho: string) {
 }
 function caminhoDoLocal(local: Local, locais: Local[]) {
   const porId = new Map(locais.map((item) => [item.id, item]));
+  return caminhoLocalComIndice(local, porId);
+}
+function caminhoLocalComIndice(local: Local, porId: ReadonlyMap<string, Local>) {
   const nomes = [local.nome];
-  let pai = local.parentId ? porId.get(local.parentId) : undefined;
-  while (pai) {
+  const visitados = new Set([local.id]);
+  let paiId = local.parentId;
+  while (paiId) {
+    if (visitados.has(paiId)) throw new Error("Hierarquia de Locais contém ciclo; corrija o cadastro antes da conferência.");
+    const pai = porId.get(paiId);
+    if (!pai || pai.areaId !== local.areaId) throw new Error("Hierarquia de Locais incompleta ou com Área divergente; confira o cadastro antes da importação.");
+    visitados.add(paiId);
     nomes.unshift(pai.nome);
-    pai = pai.parentId ? porId.get(pai.parentId) : undefined;
+    paiId = pai.parentId;
   }
   return nomes.join(" > ");
 }

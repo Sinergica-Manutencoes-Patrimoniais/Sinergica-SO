@@ -795,8 +795,10 @@ function DetalhePmoc({
               <p className="mt-1 text-caption text-ink-3">
                 {TIPO_MANUTENCAO_LABEL[agenda.maintenanceType]}
               </p>
-              {agenda.ordemServicoId ? (
-                <p className="mt-2 text-micro font-semibold text-success">OS criada</p>
+              {agenda.ordemServicoId || (agenda.ordensServicoIds?.length ?? 0) > 0 ? (
+                <p className="mt-2 text-micro font-semibold text-success">
+                  {(agenda.ordensServicoIds?.length ?? 1) > 1 ? `${agenda.ordensServicoIds!.length} OS vinculadas` : "OS criada"}
+                </p>
               ) : (
                 podeEditar &&
                 agenda.status !== "cancelado" && (

@@ -1,0 +1,36 @@
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
+
+const item = z.object({ outbox_id: z.string().uuid(), funcionario_id: z.string().uuid(), estado: z.enum(["pending", "processing", "error"]), tentativas: z.number().int().nonnegative(), enfileirado_em: z.string() }).strict();
+const nota = z.object({ request_id: z.string().uuid(), observacao: z.string(), estado: z.string(), tentativas: z.number().int(), criado_em: z.string() }).strict();
+const pedido = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), visitaId: z.string().uuid(), revisaoVisita: z.number().int().positive(), outboxId: z.string().uuid(), estado: z.enum(["pending", "processing", "error"]), tentativas: z.number().int().nonnegative(), observacao: z.string().min(1).max(1000) }).strict();
+type Pedido = z.infer<typeof pedido>;
+export function TriagemSyncEquipe({ userId, clienteId, visitaId, revisaoVisita }: { userId: string; clienteId: string; visitaId: string; revisaoVisita: number }) {
+  const [selecionado, setSelecionado] = useState<string | null>(null);
+  const [texto, setTexto] = useState("");
+  const [mensagem, setMensagem] = useState("");
+  const chave = `triagem-sync-equipe:${JSON.stringify([userId, clienteId, visitaId])}`;
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(chave); if (!raw) return null; const p = pedido.parse(JSON.parse(raw)); return p.clienteId === clienteId && p.visitaId === visitaId ? p : "invalido"; } catch { return "invalido"; } });
+  const ocupado = useRef(false);
+  const cache = useQueryClient();
+  const itens = useInfiniteQuery({ queryKey: ["triagem-sync-equipe", userId, clienteId, visitaId], gcTime: 0, initialPageParam: null as string | null,
+    queryFn: async ({ pageParam, signal }) => { const { data, error } = await supabase.schema("pcm").rpc("sso_sync_funcionarios_visita", { p_cliente_id: clienteId, p_visita_id: visitaId, p_apos: pageParam, p_limite: 50 }).abortSignal(signal); if (error) throw error; return z.array(item).parse(data); },
+    getNextPageParam: (pagina) => pagina.length === 50 ? pagina.at(-1)?.outbox_id : undefined });
+  const historico = useInfiniteQuery({ queryKey: ["triagem-sync-equipe-notas", userId, clienteId, visitaId, selecionado], enabled: !!selecionado, gcTime: 0, initialPageParam: null as { data: string; id: string } | null,
+    queryFn: async ({ pageParam, signal }) => { const { data, error } = await supabase.schema("pcm").rpc("sso_historico_sync_funcionario_visita", { p_cliente_id: clienteId, p_visita_id: visitaId, p_outbox_id: selecionado, p_apos: pageParam?.data ?? null, p_apos_id: pageParam?.id ?? null, p_limite: 50 }).abortSignal(signal); if (error) throw error; return z.array(nota).parse(data); },
+    getNextPageParam: (pagina) => pagina.length === 50 && pagina.at(-1) ? { data: pagina[pagina.length - 1]!.criado_em, id: pagina[pagina.length - 1]!.request_id } : undefined });
+  const comando = useMutation({ mutationFn: async (p: Pedido) => { const { data, error } = await supabase.schema("pcm").rpc("sso_anotar_sync_funcionario_visita", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_visita_id: p.visitaId, p_revisao_visita: p.revisaoVisita, p_outbox_id: p.outboxId, p_estado: p.estado, p_tentativas: p.tentativas, p_observacao: p.observacao }); if (error) throw error; const r = z.object({ requestId: z.string().uuid(), outboxId: z.string().uuid(), visitaId: z.string().uuid(), revisaoVisita: z.number().int(), autorizaRetry: z.literal(false) }).strict().parse(data); if (r.requestId !== p.requestId || r.outboxId !== p.outboxId || r.visitaId !== p.visitaId || r.revisaoVisita !== p.revisaoVisita) throw new Error("Resposta divergente"); } });
+  const enviar = async (p: Pedido) => { if (ocupado.current) return; ocupado.current = true; try { await comando.mutateAsync(p); sessionStorage.removeItem(chave); setPendente(null); setTexto(""); setMensagem("Anotação registrada; nenhuma sincronização foi iniciada."); await cache.invalidateQueries({ queryKey: ["triagem-sync-equipe-notas", userId, clienteId, visitaId] }); } catch { setMensagem("Resultado não confirmado. Repita o mesmo registro ou procure suporte."); } finally { ocupado.current = false; } };
+  return <section aria-label="Triagem administrativa da equipe"><h3>Triagem administrativa da equipe</h3>
+    <p>Funcionários podem ser compartilhados entre Clientes. A fila pertence ao funcionário, não apenas a esta Visita. Estado remoto desconhecido; esta tela não reenvia.</p>
+    {itens.isFetching && <output>Consultando pendências...</output>}{itens.isError && <p role="alert">Consulta indisponível ou sem permissão. <button type="button" onClick={() => void itens.refetch()}>Tentar novamente</button></p>}
+    {!itens.isFetching && !itens.isError && <ul>{itens.data?.pages.flat().map((i) => <li key={i.outbox_id}>Funcionário {i.funcionario_id} · {i.estado} · {i.tentativas} tentativa(s) · {i.enfileirado_em}{" "}<button type="button" onClick={() => setSelecionado(i.outbox_id)}>Histórico e anotação</button>
+      {selecionado === i.outbox_id && <><form onSubmit={(e) => { e.preventDefault(); if (pendente || ocupado.current || itens.isFetching || itens.isError) return; const parsed = pedido.safeParse({ requestId: crypto.randomUUID(), clienteId, visitaId, revisaoVisita, outboxId: i.outbox_id, estado: i.estado, tentativas: i.tentativas, observacao: texto.trim() }); if (!parsed.success) { setMensagem("Informe a anotação."); return; } try { if (sessionStorage.getItem(chave)) return; sessionStorage.setItem(chave, JSON.stringify(parsed.data)); } catch { setMensagem("Não foi possível guardar o pedido; nada foi enviado."); return; } setPendente(parsed.data); void enviar(parsed.data); }}><label>Anotação sem dados sensíveis <textarea required maxLength={1000} value={texto} disabled={!!pendente || comando.isPending} onChange={(e) => setTexto(e.target.value)} /></label><button type="submit" disabled={!!pendente || comando.isPending}>Registrar nota</button></form>
+        {historico.isFetching && <output>Carregando histórico...</output>}{historico.isError && <p role="alert">Histórico indisponível. <button type="button" onClick={() => void historico.refetch()}>Tentar novamente</button></p>}
+        {!historico.isFetching && !historico.isError && <ul>{historico.data?.pages.flat().map((n) => <li key={n.request_id}>{n.criado_em} · {n.estado} · {n.tentativas} tentativa(s) · {n.observacao}</li>)}</ul>}{historico.hasNextPage && <button type="button" disabled={historico.isFetching} onClick={() => void historico.fetchNextPage()}>Mais notas</button>}</>}
+    </li>)}</ul>}{itens.hasNextPage && <button type="button" disabled={itens.isFetching} onClick={() => void itens.fetchNextPage()}>Mais pendências</button>}
+    {pendente === "invalido" && <p role="alert">Pedido ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={comando.isPending} onClick={() => void enviar(pendente)}>Repetir mesmo registro local</button>}{mensagem && <p role="status">{mensagem}</p>}
+  </section>;
+}

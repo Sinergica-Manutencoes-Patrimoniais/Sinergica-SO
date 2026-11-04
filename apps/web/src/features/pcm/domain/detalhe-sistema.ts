@@ -57,6 +57,7 @@ export type PreventivaSistema = {
     tecnicoNome: string | null;
     osId: string | null;
     osNumero: string | null;
+    ordensVinculadas?: Array<{ id: string; numero: string; status: string }>;
     auvoTaskId: number | null;
   }>;
 };

@@ -6,6 +6,7 @@ const consultas: Array<{
   in: ReturnType<typeof vi.fn>;
 }> = [];
 let respostas: Record<string, unknown[]> = {};
+let contagensOs: number[] | null = null;
 let planoParaAtualizacao: Record<string, unknown> | null = null;
 let ocorrenciasMaterializadas = 0;
 const atualizacoes: unknown[] = [];
@@ -30,6 +31,7 @@ function consulta(tabela: string) {
       return cadeia;
     }),
     in: vi.fn(() => cadeia),
+    is: vi.fn(() => cadeia),
     maybeSingle: vi.fn(() => Promise.resolve({ data: planoParaAtualizacao, error: null })),
     update: vi.fn((alteracoes: unknown) => {
       atualizando = true;
@@ -37,10 +39,17 @@ function consulta(tabela: string) {
       return cadeia;
     }),
     order: vi.fn(() =>
-      tabela === "avaliacoes_preventivas"
+      tabela === "avaliacoes_preventivas" || tabela === "ordens_servico" ||
+      tabela === "planos_preventivos" || tabela === "ocorrencias_preventivas" ||
+      tabela === "sistemas" || tabela === "equipamentos"
         ? cadeia
         : Promise.resolve({ data: respostas[tabela] ?? [], error: null }),
     ),
+    range: vi.fn((inicio: number, fim: number) => Promise.resolve({
+      data: (respostas[tabela] ?? []).slice(inicio, fim + 1),
+      count: tabela === "ordens_servico" && contagensOs ? contagensOs.shift() : (respostas[tabela] ?? []).length,
+      error: null,
+    })),
     limit: vi.fn(() => Promise.resolve({ data: respostas[tabela] ?? [], error: null })),
   };
   consultas.push({ tabela, eq: cadeia.eq, in: cadeia.in });
@@ -56,12 +65,28 @@ vi.mock("../../../lib/supabase-client", () => ({
 import { atualizarPlanoPreventivo, listarPreventivas } from "./supabase-preventivas-adapter";
 
 describe("listarPreventivas — E01-S53 AC-8", () => {
+  it("resolve nomes dos Sistemas e Componentes sem trocar seus cadastros", async () => {
+    respostas = {
+      planos_preventivos: [
+        { id: "plano-a", cliente_id: "cliente-a", sistema_id: "sistema-a", equipamento_id: null },
+        { id: "plano-b", cliente_id: "cliente-a", sistema_id: null, equipamento_id: "componente-a" },
+      ],
+      sistemas: [{ id: "sistema-a", nome: "Sistema A" }],
+      equipamentos: [{ id: "componente-a", nome: "Componente A" }],
+      ocorrencias_preventivas: [],
+    };
+    consultas.length = 0;
+    const resultado = await listarPreventivas({ clienteId: "cliente-a" });
+    expect(resultado.planos.map((p) => p.alvo_nome)).toEqual(["Sistema A", "Componente A"]);
+    expect(consultas.find((item) => item.tabela === "sistemas")?.eq).toHaveBeenCalledWith("cliente_id", "cliente-a");
+    expect(consultas.find((item) => item.tabela === "equipamentos")?.eq).toHaveBeenCalledWith("client_id", "cliente-a");
+  });
   it("consulta somente a cadeia de IDs do cliente aberto", async () => {
     respostas = {
       planos_preventivos: [{ id: "plano-a", cliente_id: "cliente-a" }],
       ocorrencias_preventivas: [{ id: "ocorrencia-a", plano_id: "plano-a" }],
       avaliacoes_preventivas: [{ id: "avaliacao-a", ocorrencia_id: "ocorrencia-a" }],
-      ordens_servico: [{ ocorrencia_preventiva_id: "ocorrencia-a", status: "finalizado" }],
+      ordens_servico: [{ id: "os-a", numero: "OS-A", ocorrencia_preventiva_id: "ocorrencia-a", status: "finalizado" }],
     };
     consultas.length = 0;
 
@@ -69,7 +94,7 @@ describe("listarPreventivas — E01-S53 AC-8", () => {
 
     expect(resultado.planos).toEqual([{ id: "plano-a", cliente_id: "cliente-a" }]);
     expect(resultado.ocorrencias).toEqual([
-      { id: "ocorrencia-a", plano_id: "plano-a", os_status: "finalizado" },
+      { id: "ocorrencia-a", plano_id: "plano-a", os_status: "finalizado", os_id: "os-a", os_numero: "OS-A", ordens_vinculadas: [{ id: "os-a", numero: "OS-A", status: "finalizado" }] },
     ]);
     expect(resultado.avaliacoes).toEqual([{ id: "avaliacao-a", ocorrencia_id: "ocorrencia-a" }]);
     expect(consultas.find((item) => item.tabela === "planos_preventivos")?.eq).toHaveBeenCalledWith(
@@ -79,6 +104,7 @@ describe("listarPreventivas — E01-S53 AC-8", () => {
     expect(
       consultas.find((item) => item.tabela === "ocorrencias_preventivas")?.in,
     ).toHaveBeenCalledWith("plano_id", ["plano-a"]);
+    expect(consultas.find((item) => item.tabela === "ocorrencias_preventivas")?.eq).toHaveBeenCalledWith("origem", "legado");
     expect(
       consultas.find((item) => item.tabela === "avaliacoes_preventivas")?.in,
     ).toHaveBeenCalledWith("ocorrencia_id", ["ocorrencia-a"]);
@@ -86,6 +112,77 @@ describe("listarPreventivas — E01-S53 AC-8", () => {
       "ocorrencia_preventiva_id",
       ["ocorrencia-a"],
     );
+    expect(consultas.find((item) => item.tabela === "ordens_servico")?.eq).toHaveBeenCalledWith("client_id", "cliente-a");
+  });
+
+  it("preserva todas as OS da ocorrência sem escolher uma como representativa", async () => {
+    respostas = {
+      planos_preventivos: [{ id: "plano-a", cliente_id: "cliente-a" }],
+      ocorrencias_preventivas: [{ id: "ocorrencia-a", plano_id: "plano-a" }],
+      avaliacoes_preventivas: [],
+      ordens_servico: [
+        { id: "os-a", numero: "OS-A", ocorrencia_preventiva_id: "ocorrencia-a", status: "finalizado" },
+        { id: "os-b", numero: "OS-B", ocorrencia_preventiva_id: "ocorrencia-a", status: "planejamento" },
+      ],
+    };
+    const resultado = await listarPreventivas({ clienteId: "cliente-a" });
+    expect(resultado.ocorrencias[0]).toMatchObject({
+      os_status: null,
+      ordens_vinculadas: [
+        { id: "os-a", numero: "OS-A", status: "finalizado" },
+        { id: "os-b", numero: "OS-B", status: "planejamento" },
+      ],
+    });
+    expect(resultado.ocorrencias[0]?.os_id).toBeUndefined();
+    expect(resultado.ocorrencias[0]?.os_numero).toBeUndefined();
+  });
+
+  it("carrega todas as páginas de OS sem perder vínculos da mesma ocorrência", async () => {
+    respostas = {
+      planos_preventivos: [{ id: "plano-a", cliente_id: "cliente-a" }],
+      ocorrencias_preventivas: [{ id: "ocorrencia-a", plano_id: "plano-a" }],
+      avaliacoes_preventivas: [],
+      ordens_servico: Array.from({ length: 501 }, (_, i) => ({
+        id: `os-${String(i).padStart(4, "0")}`, numero: `OS-${i}`,
+        ocorrencia_preventiva_id: "ocorrencia-a", status: "planejamento",
+      })),
+    };
+    const resultado = await listarPreventivas({ clienteId: "cliente-a" });
+    expect(resultado.ocorrencias[0]?.ordens_vinculadas).toHaveLength(501);
+    expect(resultado.ocorrencias[0]?.os_id).toBeUndefined();
+  });
+
+  it("recusa a lista quando a quantidade de OS muda entre páginas", async () => {
+    respostas = {
+      planos_preventivos: [{ id: "plano-a", cliente_id: "cliente-a" }],
+      ocorrencias_preventivas: [{ id: "ocorrencia-a", plano_id: "plano-a" }],
+      avaliacoes_preventivas: [],
+      ordens_servico: Array.from({ length: 501 }, (_, i) => ({
+        id: `os-${String(i).padStart(4, "0")}`, numero: `OS-${i}`,
+        ocorrencia_preventiva_id: "ocorrencia-a", status: "planejamento",
+      })),
+    };
+    contagensOs = [501, 500];
+    try {
+      await expect(listarPreventivas({ clienteId: "cliente-a" })).rejects.toThrow("Não foi possível conferir todas as OS.");
+    } finally {
+      contagensOs = null;
+    }
+  });
+
+  it("carrega Planos além de uma página sem buscar ocorrências fora de seus lotes", async () => {
+    respostas = {
+      planos_preventivos: Array.from({ length: 501 }, (_, i) => ({
+        id: `plano-${String(i).padStart(4, "0")}`, cliente_id: "cliente-a", primeira_data: "2026-01-01",
+      })),
+      ocorrencias_preventivas: [],
+    };
+    consultas.length = 0;
+    const resultado = await listarPreventivas({ clienteId: "cliente-a" });
+    expect(resultado.planos).toHaveLength(501);
+    const lotes = consultas.filter((item) => item.tabela === "ocorrencias_preventivas");
+    expect(lotes).toHaveLength(6);
+    for (const lote of lotes) expect(lote.in.mock.calls[0]?.[1].length).toBeLessThanOrEqual(100);
   });
 
   it("não busca filhas quando o cliente não tem planos", async () => {

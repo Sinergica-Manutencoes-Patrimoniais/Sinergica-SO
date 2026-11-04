@@ -16,6 +16,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "../../../app/auth-context";
 import { listarReservasFerramenta } from "../application/ferramenta-reservas";
 import { listarProximasPreventivas } from "../application/pmoc";
 import {
@@ -47,6 +48,7 @@ import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter"
 import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 import { supabaseSincronizarAuvoAdapter } from "../infrastructure/supabase-sincronizar-auvo-adapter";
+import { TriagemOrigemCampo } from "../interfaces/origem-campo/Triagem";
 
 type EstadoSincronizacaoAuvo =
   | { fase: "ocioso" }
@@ -89,6 +91,7 @@ export function PcmDashboardPage({
   onVerFerramentas: () => void;
   onVerRelatorioDiario: (data?: string) => void;
 }) {
+  const { user } = useAuth();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [sincronizacaoAuvo, setSincronizacaoAuvo] = useState<EstadoSincronizacaoAuvo>({
     fase: "ocioso",
@@ -274,6 +277,7 @@ export function PcmDashboardPage({
 
   return (
     <div className="flex flex-col gap-4">
+      {user && <TriagemOrigemCampo userId={user.id} />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-heading font-semibold text-ink">PCM · Operação</h1>

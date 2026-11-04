@@ -1,6 +1,7 @@
 import { inferirTipoOsHub } from "../domain/hub-os";
 import type {
   CriarOrdemServicoInput,
+  CriarOrdemServicoCommand,
   DadosAberturaOs,
   OrdemServicoCriada,
   OrdemServicoGateway,
@@ -14,6 +15,11 @@ export async function abrirOrdemServico(
   gateway: OrdemServicoGateway,
   input: CriarOrdemServicoInput,
 ): Promise<OrdemServicoCriada> {
+  return gateway.criarOrdemServico(prepararAberturaOrdemServico(input));
+}
+
+/** Prepara o mesmo payload usado pela abertura atual, sem gravar ou enviar dados. */
+export function prepararAberturaOrdemServico(input: CriarOrdemServicoInput): CriarOrdemServicoCommand {
   const titulo = input.titulo.trim();
   if (!input.clientId) throw new Error("Cliente é obrigatório.");
   if (!titulo) throw new Error("Título é obrigatório.");
@@ -26,14 +32,14 @@ export async function abrirOrdemServico(
   // o caller sabe que a OS nasce de uma visita PMOC (E01-S05 "Criar OS" síncrono) — omitido em
   // toda criação manual normal. `chamadoId` (E01-S88 AC-3) segue o mesmo padrão pro Chamado.
   const pmocScheduleId = input.pmocScheduleId ?? null;
-  return gateway.criarOrdemServico({
+  return {
     ...input,
     titulo,
     tipoOs: inferirTipoOsHub(input.categoria, pmocScheduleId),
     pmocScheduleId,
     chamadoId: input.chamadoId ?? null,
     origemInspecaoItemId: input.origemInspecaoItemId ?? null,
-  });
+  };
 }
 
 /** E01-S151: "Confirmar chamado" — a decisão do Fabrício de que um item PRE-XXXXXXXX vira Chamado

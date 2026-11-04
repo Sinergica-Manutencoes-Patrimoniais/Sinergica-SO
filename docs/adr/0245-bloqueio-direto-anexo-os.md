@@ -1,0 +1,7 @@
+# ADR-0245 — Bloqueio coordenado do acesso direto a anexos de OS
+
+**Estado:** preparação, gate fechado; não homologada nem implantada.
+
+Uma policy restritiva de `SELECT` no Storage aplica-se somente ao bucket `os-anexos`. Com gate desligado retorna verdadeiro para todas as operações e mantém as policies existentes. Após abertura coordenada, sessões de Cliente e sessões internas que não comprovem usuário ativo e permissão atual de leitura do PCM não leem nem assinam objetos desse bucket diretamente; a leitura de publicações revisadas deve passar pela rota mediada da ADR-0239. Outros buckets não são afetados. A autorização interna atual é consultada no banco, sem confiar apenas em JWT antigo.
+
+O bloqueio pode interromper leitura direta legítima de anexos antigos da própria OS, inclusive enviados pelo Cliente: inventariar consumidores e fornecer migração de cada categoria para acesso mediado antes de ativar. Isso não revoga URLs assinadas já emitidas, que podem continuar válidas até expirar; plano de remediação precisa medir validade máxima, esperar expiração ou empregar mecanismo comprovado de invalidação do Storage, sem apagar dados cegamente. Testar Storage e Auth reais, sessões revogadas, uploads e revisões internas, integração de objetos históricos, publicação, concorrência, buckets não relacionados e revisão adversarial. Fechar o gate não apaga dados nem substitui esses testes.

@@ -1,0 +1,44 @@
+-- Vínculo sintético já incorporado; apenas banco isolado, nenhuma rede e rollback.
+begin;
+set local app.auvo_sync_write='true';
+select plan(11);
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
+ ('17840000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','foto-vinculo-s178@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into config.usuarios(user_id,papel,nome,ativo) values ('17840000-0000-0000-0000-000000000001','colaborador','Foto vínculo',true);
+insert into config.usuario_modulos(user_id,modulo,nivel) values ('17840000-0000-0000-0000-000000000001','pcm','escrita');
+insert into pcm.clientes(id,nome,ativo,created_by) values ('17840000-0000-0000-0000-00000000000a','Cliente A',true,'17840000-0000-0000-0000-000000000001'),('17840000-0000-0000-0000-00000000000b','Cliente B',true,'17840000-0000-0000-0000-000000000001');
+insert into config.sso_concessoes(usuario_id,acao,cliente_id) values ('17840000-0000-0000-0000-000000000001','cadastro.gerir','17840000-0000-0000-0000-00000000000a'),('17840000-0000-0000-0000-000000000001','cadastro.aprovar','17840000-0000-0000-0000-00000000000a');
+insert into pcm.sistemas(id,cliente_id,nome,codigo) values ('17840000-0000-0000-0000-000000000011','17840000-0000-0000-0000-00000000000a','Sistema A','S178-VINCULO-A'),('17840000-0000-0000-0000-000000000012','17840000-0000-0000-0000-00000000000b','Sistema B','S178-VINCULO-B');
+insert into pcm.sso_levantamentos(id,cliente_id,origem,chave_origem,conteudo,criado_por) values ('17840000-0000-0000-0000-000000000021','17840000-0000-0000-0000-00000000000a','manual','vinculo-a','[]','17840000-0000-0000-0000-000000000001'),('17840000-0000-0000-0000-000000000022','17840000-0000-0000-0000-00000000000b','manual','vinculo-b','[]','17840000-0000-0000-0000-000000000001');
+insert into pcm.sso_levantamento_linhas(lote_id,chave,tipo,atributos) values ('17840000-0000-0000-0000-000000000021','s','sistema','{}'),('17840000-0000-0000-0000-000000000022','s','sistema','{}');
+-- Simular efeito oficial prévio sem disparar comandos ou integrações.
+set local session_replication_role=replica;
+insert into pcm.sso_levantamento_incorporacoes(lote_id,linha_chave,tipo,entidade_id,revisao,ator_id,request_id) values ('17840000-0000-0000-0000-000000000021','s','sistema','17840000-0000-0000-0000-000000000011',2,'17840000-0000-0000-0000-000000000001','17840000-0000-0000-0000-000000000031');
+set local session_replication_role=origin;
+insert into pcm.sso_fotos_levantamento(id,cliente_id,lote_id,linha_chave,objeto_id,ator_id,request_id) values ('17840000-0000-0000-0000-000000000041','17840000-0000-0000-0000-00000000000a','17840000-0000-0000-0000-000000000021','s','17840000-0000-0000-0000-000000000051','17840000-0000-0000-0000-000000000001','17840000-0000-0000-0000-000000000061'),('17840000-0000-0000-0000-000000000042','17840000-0000-0000-0000-00000000000b','17840000-0000-0000-0000-000000000022','s','17840000-0000-0000-0000-000000000052','17840000-0000-0000-0000-000000000001','17840000-0000-0000-0000-000000000062');
+insert into pcm.sso_decisoes_foto_levantamento(foto_id,revisao,decisao,motivo,ator_id,request_id) values ('17840000-0000-0000-0000-000000000041',1,'aceita','teste','17840000-0000-0000-0000-000000000001','17840000-0000-0000-0000-000000000071');
+set local request.jwt.claims='{"sub":"17840000-0000-0000-0000-000000000001","role":"authenticated","user_role":"colaborador"}';
+set local role authenticated;
+select throws_ok($$select pcm.sso_vincular_foto_staging_ativo_mediado('17840000-0000-0000-0000-000000000081','17840000-0000-0000-0000-000000000041','sistema','17840000-0000-0000-0000-000000000011',1)$$,'55000',null,'gate fechado impede vínculo');
+select throws_ok($$select pcm.sso_vincular_foto_staging_ativo('17840000-0000-0000-0000-000000000081','17840000-0000-0000-0000-000000000041','sistema','17840000-0000-0000-0000-000000000011',1)$$,'42501',null,'núcleo revogado ao navegador');
+select ok(not has_function_privilege('anon','pcm.sso_vincular_foto_staging_ativo_mediado(uuid,uuid,text,uuid,integer)','EXECUTE'),'anon não pode vincular');
+reset role;
+update pcm.sso_foto_staging_ativo_gate set habilitado=true where id;
+set local role authenticated;
+select throws_ok($$select pcm.sso_vincular_foto_staging_ativo_mediado('17840000-0000-0000-0000-000000000082','17840000-0000-0000-0000-000000000042','sistema','17840000-0000-0000-0000-000000000012',1)$$,'42501',null,'foto do outro Cliente negada');
+select throws_ok($$select pcm.sso_vincular_foto_staging_ativo_mediado('17840000-0000-0000-0000-000000000083','17840000-0000-0000-0000-000000000041','sistema','17840000-0000-0000-0000-000000000012',1)$$,'23514',null,'destino de outro Cliente negado');
+select lives_ok($$select pcm.sso_vincular_foto_staging_ativo_mediado('17840000-0000-0000-0000-000000000081','17840000-0000-0000-0000-000000000041','sistema','17840000-0000-0000-0000-000000000011',1)$$,'vínculo autorizado');
+select lives_ok($$select pcm.sso_vincular_foto_staging_ativo_mediado('17840000-0000-0000-0000-000000000081','17840000-0000-0000-0000-000000000041','sistema','17840000-0000-0000-0000-000000000011',1)$$,'retry idêntico');
+select throws_ok($$select pcm.sso_vincular_foto_staging_ativo_mediado('17840000-0000-0000-0000-000000000081','17840000-0000-0000-0000-000000000041','componente','17840000-0000-0000-0000-000000000011',1)$$,'23505',null,'requestId com payload divergente conflita');
+reset role;
+insert into pcm.sso_decisoes_foto_levantamento(foto_id,revisao,decisao,motivo,ator_id,request_id) values ('17840000-0000-0000-0000-000000000041',2,'rejeitada','revisão','17840000-0000-0000-0000-000000000001','17840000-0000-0000-0000-000000000072');
+set local role authenticated;
+select lives_ok($$select pcm.sso_vincular_foto_staging_ativo_mediado('17840000-0000-0000-0000-000000000081','17840000-0000-0000-0000-000000000041','sistema','17840000-0000-0000-0000-000000000011',1)$$,'retry recupera resultado histórico após rejeição');
+reset role;
+update config.sso_concessoes set ativa=false where usuario_id='17840000-0000-0000-0000-000000000001' and acao='cadastro.aprovar';
+set local role authenticated;
+select throws_ok($$select pcm.sso_vincular_foto_staging_ativo_mediado('17840000-0000-0000-0000-000000000081','17840000-0000-0000-0000-000000000041','sistema','17840000-0000-0000-0000-000000000011',1)$$,'42501',null,'revogação impede replay');
+select throws_ok($$select pcm.sso_consultar_destino_foto_ativo_mediado_v2('17840000-0000-0000-0000-000000000041')$$,'42501',null,'revogação impede consultar destino');
+reset role;
+select * from finish();
+rollback;

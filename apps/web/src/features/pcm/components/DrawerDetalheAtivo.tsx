@@ -3,7 +3,7 @@
 // E01-S79: passa a permitir editar o ativo direto do drawer (antes só visualização).
 import { Skeleton } from "@sinergica/ui";
 import { Pencil, Puzzle, Wrench, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { obterDetalheAtivo } from "../application/board-ativos";
@@ -22,6 +22,11 @@ import { ultimaManutencao } from "../domain/historico-ativo";
 import { supabaseBoardAtivosAdapter } from "../infrastructure/supabase-board-ativos-adapter";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { EquipamentoModal } from "./EquipamentoModal";
+import { FotosStagingAtivo } from "../interfaces/estrutura-tecnica/FotosStagingAtivo";
+import { DocumentosStagingAtivo } from "../interfaces/estrutura-tecnica/DocumentosStagingAtivo";
+import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
+import { ResultadosDoAlvo } from "../interfaces/pendencias-tecnicas/ResultadosAtivo";
+import { EdicaoRascunhoCodigo } from "../interfaces/codigos-publicos/EdicaoRascunho";
 
 type Estado =
   | { fase: "carregando" }
@@ -52,6 +57,8 @@ export function DrawerDetalheAtivo({
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [editando, setEditando] = useState(false);
   const [opcoes, setOpcoes] = useState<OpcoesEdicao | null>(null);
+  const itemIdAtual = useRef(itemId);
+  itemIdAtual.current = itemId;
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -63,7 +70,9 @@ export function DrawerDetalheAtivo({
 
   useEffect(() => {
     let vivo = true;
-    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
+    setEstado({ fase: "carregando" });
+    setEditando(false);
+    setOpcoes(null);
     obterDetalheAtivo(supabaseEquipamentosAdapter, supabaseBoardAtivosAdapter, itemId)
       .then((detalhe) => {
         if (vivo) setEstado({ fase: "pronto", detalhe });
@@ -77,34 +86,50 @@ export function DrawerDetalheAtivo({
   }, [itemId]);
 
   async function abrirEdicao() {
+    const itemDaAbertura = itemId;
     setEditando(true);
     if (!opcoes) {
       const [clientes, equipamentos] = await Promise.all([
         listarClientesEquipamento(supabaseEquipamentosAdapter),
         listarEquipamentos(supabaseEquipamentosAdapter),
       ]);
-      setOpcoes({ clientes, equipamentos });
+      if (itemIdAtual.current === itemDaAbertura) setOpcoes({ clientes, equipamentos });
     }
   }
 
   async function salvarEdicao(input: EquipamentoFormData) {
-    if (!user || estado.fase !== "pronto" || !estado.detalhe.contexto) return;
+    if (!user || estado.fase !== "pronto" || estado.detalhe.contexto?.item.id !== itemId) return;
     await editarEquipamento(supabaseEquipamentosAdapter, {
       ...input,
       id: estado.detalhe.contexto.item.id,
       userId: user.id,
     });
+    if (itemIdAtual.current !== itemId) return;
     setEditando(false);
     const detalhe = await obterDetalheAtivo(
       supabaseEquipamentosAdapter,
       supabaseBoardAtivosAdapter,
       itemId,
     );
-    setEstado({ fase: "pronto", detalhe });
-    onAtualizado?.();
+    if (itemIdAtual.current === itemId) {
+      setEstado({ fase: "pronto", detalhe });
+      onAtualizado?.();
+    }
   }
 
-  const item = estado.fase === "pronto" ? estado.detalhe.contexto?.item : null;
+  async function atualizarDetalheCodigo() {
+    const id = itemId;
+    try {
+      const detalhe = await obterDetalheAtivo(supabaseEquipamentosAdapter, supabaseBoardAtivosAdapter, id);
+      if (itemIdAtual.current === id) { setEstado({ fase: "pronto", detalhe }); onAtualizado?.(); }
+    } catch {
+      if (itemIdAtual.current === id) setEstado({ fase: "erro", mensagem: "Código alterado; não foi possível atualizar o detalhe. Abra novamente." });
+    }
+  }
+
+  const detalheAtual = estado.fase === "pronto" && estado.detalhe.contexto?.item.id === itemId
+    ? estado.detalhe : null;
+  const item = detalheAtual?.contexto?.item ?? null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -146,7 +171,13 @@ export function DrawerDetalheAtivo({
         {estado.fase === "erro" && (
           <div className="p-8 text-center text-body text-danger">{estado.mensagem}</div>
         )}
-        {estado.fase === "pronto" && <Conteudo detalhe={estado.detalhe} />}
+        {detalheAtual && <Conteudo detalhe={detalheAtual} />}
+        {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <EdicaoRascunhoCodigo userId={user.id} clienteId={item.clientId} tipo="componente" ativoId={item.id} onAtualizado={() => { void atualizarDetalheCodigo(); }} />}
+        {estado.fase === "pronto" && !estado.detalhe.contexto && <Conteudo detalhe={estado.detalhe} />}
+        {user && item?.tipo === "componente" && item.clientId && <ResultadosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} nome={item.nome} />}
+        {user && item?.tipo === "componente" && item.clientId && <FotosStagingAtivo userId={user.id} clienteId={item.clientId} tipo="componente" entidadeId={item.id} />}
+        {user && item?.tipo === "componente" && item.clientId && <DocumentosStagingAtivo userId={user.id} clienteId={item.clientId} tipo="componente" entidadeId={item.id} />}
+        {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <HistoricoCadastroLevantamento userId={user.id} clienteId={item.clientId} tipo={item.tipo} entidadeId={item.id} />}
       </div>
 
       {editando && item && opcoes && (

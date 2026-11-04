@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { montarComandoSalvarComposicao, montarItensImportadosDoLevantamento } from "./proposta";
+import {
+  montarComandoSalvarComposicao,
+  montarItensImportadosDoLevantamento,
+  podeVincularLevantamentoAtual,
+} from "./proposta";
+
+it("só oferece vínculo quando seleção consta na consulta atual sem falha ou reconsulta", () => {
+  const opcoes = [{ id: "a" }];
+  expect(podeVincularLevantamentoAtual("a", opcoes, false, false)).toBe(true);
+  expect(podeVincularLevantamentoAtual("a", opcoes, true, false)).toBe(false);
+  expect(podeVincularLevantamentoAtual("a", opcoes, false, true)).toBe(false);
+  expect(podeVincularLevantamentoAtual("b", opcoes, false, false)).toBe(false);
+});
 
 describe("montarComandoSalvarComposicao", () => {
   it("soma os itens, calcula preço/piso pela fórmula e usa o preço sugerido por padrão", () => {
@@ -32,6 +44,21 @@ describe("montarComandoSalvarComposicao", () => {
     expect(comando.precoCentavos).toBe(22_000);
     expect(comando.precoCentavos).not.toBe(comando.precoSugeridoCentavos);
   });
+
+  it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1])(
+    "recusa preço final inválido %s antes de chamar o servidor",
+    (precoFinalCentavos) => {
+      expect(() =>
+        montarComandoSalvarComposicao({
+          propostaId: "p1",
+          itens: [],
+          margem: 0,
+          aliquota: 0,
+          precoFinalCentavos,
+        }),
+      ).toThrow();
+    },
+  );
 
   it("lista vazia de itens dá custo zero, sem lançar", () => {
     const comando = montarComandoSalvarComposicao({

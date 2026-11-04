@@ -64,6 +64,10 @@ export interface OutboxRowDb {
    * de uma view SQL saber se uma entidade está em dry-run de propósito (não é erro) ou se algo
    * quebrou. Chamado uma vez por entidade vista no lote, nunca por linha. */
   upsertEntityStatus(entity: string, writeEnabled: boolean): Promise<void>;
+  /** Disponível somente no rollout coordenado da política de Equipment. */
+  decidirEquipment?(rowId: string): Promise<{ representacao: "equipment" | "somente_sso" | "indeterminada"; vinculoExistente: boolean }>;
+  reservarEquipment?(outboxId: string, rowId: string): Promise<void>;
+  confirmarEquipment?(outboxId: string, rowId: string, auvoId: number, operacao: "create" | "update"): Promise<void>;
 }
 
 export interface ProcessResult {
@@ -98,13 +102,46 @@ export async function processOutboxRow(
     return { ok: false, error: "writeEnabled=false, pulado (dry-run)" };
   }
 
-  const origem = await db.fetchOrigem(descriptor.pcmTable, row.row_id);
+  let origem = await db.fetchOrigem(descriptor.pcmTable, row.row_id);
   if (!origem) {
     return {
       ok: false,
       error:
         `linha de origem ${row.row_id} não encontrada em pcm.${descriptor.pcmTable}`,
     };
+  }
+
+  // A flag nasce desligada. A consulta é conservadora, mas ainda não serializa
+  // mudança de política com a chamada remota; ADR-1002 impede ativação até fencing.
+  const fluxoReservado = row.entity === "equipamentos" && Deno.env.get("SSO_RESERVA_EQUIPMENT_OUTBOX_ENABLED") === "true";
+  if (row.entity === "equipamentos" && (fluxoReservado || Deno.env.get("SSO_POLITICA_EQUIPMENT_OUTBOX_ENABLED") === "true")) {
+    if (!db.decidirEquipment) return { ok: false, error: "política Equipment indisponível; reconciliação necessária" };
+    const decisao = await db.decidirEquipment(row.row_id);
+    if (decisao.representacao !== "equipment")
+      return { ok: false, error: decisao.representacao === "somente_sso" && decisao.vinculoExistente
+        ? "Componente somente SSO com vínculo Auvo preservado; reconciliação necessária"
+        : "Componente sem autorização para Equipment; reconciliação necessária" };
+    if (origem.auvo_id != null && origem.auvo_equipment_id != null && String(origem.auvo_id) !== String(origem.auvo_equipment_id))
+      return { ok: false, error: "identificadores Auvo divergentes; reconciliação necessária" };
+    if (origem.auvo_id == null && origem.auvo_equipment_id != null)
+      return { ok: false, error: "vínculo Auvo legado exige reconciliação antes do envio" };
+  }
+
+  if (fluxoReservado) {
+    if (row.op === "delete") return { ok: false, error: "exclusão Equipment exige reconciliação específica" };
+    if (!db.reservarEquipment || !db.confirmarEquipment) return { ok: false, error: "reserva Equipment indisponível" };
+    // Uma atualização sem vínculo poderia cair no POST legado. Não criar Equipment
+    // a partir dessa ambiguidade: encaminhar para reconciliação antes da reserva.
+    if (row.op === "update" && origem.auvo_id == null && origem.auvo_equipment_id == null)
+      return { ok: false, error: "atualização Equipment sem vínculo Auvo; reconciliação necessária" };
+    await db.reservarEquipment(row.id, row.row_id);
+    // Após a reserva, qualquer falha é incerta e não libera nem repete o envio.
+    const origemReservada = await db.fetchOrigem(descriptor.pcmTable, row.row_id);
+    if (!origemReservada) throw new Error("origem indisponível após reserva; reconciliação necessária");
+    if (String(origemReservada.auvo_id ?? "") !== String(origem.auvo_id ?? "") ||
+        String(origemReservada.auvo_equipment_id ?? "") !== String(origem.auvo_equipment_id ?? ""))
+      throw new Error("vínculo alterado durante reserva; reconciliação necessária");
+    origem = origemReservada;
   }
 
   const auvoIdColumn = descriptor.auvoIdColumn ?? "auvo_id";
@@ -178,6 +215,13 @@ export async function processOutboxRow(
     auvoId = createdAuvoId;
   }
 
+  if (fluxoReservado) {
+    const idNumerico = typeof auvoId === "number" ? auvoId : Number(auvoId);
+    if (!Number.isSafeInteger(idNumerico) || idNumerico <= 0) throw new Error("ID Auvo inválido após envio; reconciliação necessária");
+    await db.confirmarEquipment!(row.id, row.row_id, idNumerico, row.op as "create" | "update");
+    return { ok: true };
+  }
+
   await db.applyAuvoSync(descriptor.pcmTable, row.row_id, {
     [auvoIdColumn]: auvoId,
     auvo_sync_status: "synced",
@@ -197,6 +241,24 @@ function extractCreatedAuvoId(response: unknown): number | null {
 
 function makeSupabaseOutboxRowDb(db: UntypedSupabaseClient): OutboxRowDb {
   return {
+    async reservarEquipment(outboxId, rowId) {
+      const { data, error } = await db.schema("pcm").rpc("sso_reservar_equipment_outbox", { p_outbox_id: outboxId, p_componente_id: rowId });
+      if (error) throw error;
+      if (!data || data.outboxId !== outboxId || data.componenteId !== rowId) throw new Error("Recibo de reserva Equipment inválido.");
+    },
+    async confirmarEquipment(outboxId, rowId, auvoId, operacao) {
+      const { data, error } = await db.schema("pcm").rpc("sso_confirmar_equipment_outbox", { p_outbox_id: outboxId, p_componente_id: rowId, p_auvo_id: auvoId, p_operacao: operacao });
+      if (error) throw error;
+      if (!data || data.outboxId !== outboxId || data.componenteId !== rowId || data.auvoId !== auvoId || data.operacao !== operacao)
+        throw new Error("Recibo de confirmação Equipment inválido.");
+    },
+    async decidirEquipment(rowId) {
+      const { data, error } = await db.schema("pcm").rpc("sso_decidir_equipment_outbox", { p_componente_id: rowId });
+      if (error) throw error;
+      if (!data || data.componenteId !== rowId || !["equipment", "somente_sso", "indeterminada"].includes(data.representacao) || typeof data.vinculoExistente !== "boolean")
+        throw new Error("Resposta de política Equipment inválida.");
+      return { representacao: data.representacao, vinculoExistente: data.vinculoExistente };
+    },
     async fetchOrigem(table, rowId) {
       const { data, error } = await db.schema("pcm").from(table).select("*").eq(
         "id",
@@ -340,7 +402,7 @@ if (import.meta.main) {
 
         const { error: updateError } = await supa.schema("pcm").from(
           "auvo_sync_outbox",
-        ).update(update).eq("id", linha.id);
+        ).update(update).eq("id", linha.id).eq("status", "processing");
         if (updateError) {
           // Não deixa uma falha ao GRAVAR o resultado mascarar o resultado original — só loga.
           console.error(

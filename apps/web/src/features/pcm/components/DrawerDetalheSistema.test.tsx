@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { AuthProvider } from "../../../app/auth-context";
 import type {
   CadastroSistema,
   ComponenteSistema,
@@ -22,6 +23,12 @@ vi.mock("../infrastructure/supabase-detalhe-sistema-adapter", () => ({
 }));
 vi.mock("./DrawerDetalheAtivo", () => ({
   DrawerDetalheAtivo: () => <div>Detalhe do componente</div>,
+}));
+vi.mock("../../auth/application/get-session", () => ({
+  getSession: vi.fn().mockResolvedValue({ status: "autenticado", usuario: { id: "usuario-teste", email: "teste@example.test", nome: "Teste", papel: "colaborador" } }),
+}));
+vi.mock("../../auth/infrastructure/supabase-auth-adapter", () => ({
+  supabaseAuthAdapter: { onAuthStateChange: () => () => {}, signOut: vi.fn() },
 }));
 
 import { DrawerDetalheSistema } from "./DrawerDetalheSistema";
@@ -88,12 +95,14 @@ function renderDrawer(
     onAbrirOs,
     ...render(
       <QueryClientProvider client={queryClient}>
+        <AuthProvider>
         <DrawerDetalheSistema
           sistemaId="s-1"
           clienteEsperadoId="c-1"
           onClose={onClose}
           onAbrirOs={onAbrirOs}
         />
+        </AuthProvider>
       </QueryClientProvider>,
     ),
   };
@@ -157,5 +166,24 @@ describe("DrawerDetalheSistema — E01-S162", () => {
 
     expect(await screen.findByText("Preventiva da bomba")).toBeInTheDocument();
     expect(screen.queryByText("Ver OS no Auvo")).not.toBeInTheDocument();
+  });
+
+  it("permite abrir cada OS da mesma ocorrência sem escolher uma como única", async () => {
+    const abrir = vi.fn();
+    renderDrawer(vi.fn(), abrir, [{
+      id: "plano-1", plano: "Preventiva", alvo: "Bomba", planoPausado: false,
+      periodicidade: "1 meses", proximoVencimento: "2026-10-15",
+      ocorrencias: [{
+        id: "ocorrencia-1", vencimento: "2026-10-15", visitaEm: null, estado: "disponivel",
+        resultado: "pendente", concluidaEm: null, tecnicoNome: null, osId: null, osNumero: null,
+        auvoTaskId: null, ordensVinculadas: [
+          { id: "os-a", numero: "OS-A", status: "finalizado" },
+          { id: "os-b", numero: "OS-B", status: "planejamento" },
+        ],
+      }],
+    }]);
+    await userEvent.click(await screen.findByRole("button", { name: "OS-B · planejamento" }));
+    expect(abrir).toHaveBeenCalledWith("os-b");
+    expect(screen.getByRole("button", { name: "OS-A · finalizado" })).toBeInTheDocument();
   });
 });

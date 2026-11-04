@@ -1,4 +1,5 @@
 import { Button, ConfirmDialog, Skeleton } from "@sinergica/ui";
+import { useQuery } from "@tanstack/react-query";
 import { Link2, Pencil, Plus, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -17,9 +18,12 @@ import type { Sistema, SistemaFormData } from "../domain/sistemas";
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
+import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
+import { supabase } from "../../../lib/supabase-client";
 import { ComposicaoSistema } from "./ComposicaoSistema";
 import { DrawerDetalheSistema } from "./DrawerDetalheSistema";
 import { SistemaModal } from "./SistemaModal";
+import { SistemasDistribuidos } from "../interfaces/estrutura-tecnica/SistemasDistribuidos";
 
 type Modal = { modo: "novo" } | { modo: "editar"; sistema: Sistema } | null;
 
@@ -48,6 +52,20 @@ export function PainelSistemasCliente({
   const criar = useCriarSistema(supabaseSistemasAdapter, supabaseIdentificadorAtivoAdapter);
   const editar = useEditarSistema(supabaseSistemasAdapter, supabaseIdentificadorAtivoAdapter);
   const desativar = useDesativarSistema(supabaseSistemasAdapter, clienteId);
+  const capacidadeHabilitada = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  const capacidade = useQuery({
+    queryKey: ["cadastro-legado-capacidade", userId, clienteId], enabled: capacidadeHabilitada && temEscrita,
+    gcTime: 0, retry: false, refetchOnWindowFocus: true,
+    queryFn: async () => {
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
+      const permitido = await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId);
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+      return permitido;
+    },
+  });
+  const podeEditar = temEscrita && (!capacidadeHabilitada || (!capacidade.isFetching && !capacidade.isError && capacidade.data === true));
   const carregando = sistemas.isLoading || membros.isLoading || areas.isLoading || locais.isLoading;
   const erro = sistemas.error ?? membros.error ?? areas.error ?? locais.error;
   const localPorId = caminhosLocais(locais.data ?? []);
@@ -79,6 +97,13 @@ export function PainelSistemasCliente({
   }, [assinaturaFiltros, clienteId]);
 
   async function salvar(dados: SistemaFormData) {
+    if (!podeEditar) throw new Error("Permissão de cadastro indisponível.");
+    if (capacidadeHabilitada) {
+      const sessao = await supabase.auth.getUser();
+      if (sessao.error || sessao.data.user?.id !== userId || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId) !== true) throw new Error("Permissão de cadastro indisponível.");
+      const atual = await supabase.auth.getUser();
+      if (atual.error || atual.data.user?.id !== userId) throw new Error("Sessão alterada.");
+    }
     if (modal?.modo === "editar") {
       await editar.mutateAsync({ ...dados, id: modal.sistema.id, userId });
     } else {
@@ -113,12 +138,13 @@ export function PainelSistemasCliente({
 
   return (
     <div className="flex flex-col gap-3">
+      <SistemasDistribuidos key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="text-body font-semibold text-ink">Sistemas</h3>
           <p className="text-caption text-ink-3">Agrupe componentes por função</p>
         </div>
-        {temEscrita && (
+        {podeEditar && (
           <Button variant="accent" size="sm" onClick={() => setModal({ modo: "novo" })}>
             <Plus className="h-4 w-4" /> Novo sistema
           </Button>
@@ -266,7 +292,7 @@ export function PainelSistemasCliente({
                 >
                   {sistemaAbertoId === sistema.id ? "Fechar" : "Compor itens"}
                 </Button>
-                {temEscrita && (
+                {podeEditar && (
                   <>
                     <Button
                       variant="ghost"
@@ -286,7 +312,7 @@ export function PainelSistemasCliente({
                   <ComposicaoSistema
                     gateway={supabaseSistemasAdapter}
                     sistema={sistema}
-                    temEscrita={temEscrita}
+                    temEscrita={podeEditar}
                     userId={userId}
                     onSalvo={() => void membros.refetch()}
                   />
@@ -316,6 +342,13 @@ export function PainelSistemasCliente({
         rotuloConfirmar="Desativar"
         onConfirmar={async () => {
           if (!paraDesativar) return;
+          if (!podeEditar) throw new Error("Permissão de cadastro indisponível.");
+          if (capacidadeHabilitada) {
+            const sessao = await supabase.auth.getUser();
+            if (sessao.error || sessao.data.user?.id !== userId || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId) !== true) throw new Error("Permissão de cadastro indisponível.");
+            const atual = await supabase.auth.getUser();
+            if (atual.error || atual.data.user?.id !== userId) throw new Error("Sessão alterada.");
+          }
           await desativar.mutateAsync({ id: paraDesativar.id, userId });
         }}
       />

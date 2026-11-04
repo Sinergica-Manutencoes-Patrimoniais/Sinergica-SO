@@ -1,0 +1,33 @@
+-- Dados sintéticos; executar apenas em banco isolado e reverter integralmente.
+begin;
+-- Exercita o núcleo legado sob concessão transacional; não altera o rollout do mediador.
+grant execute on function pcm.sso_listar_aliases_ativo(uuid,text,uuid,uuid,integer) to authenticated;
+set local app.auvo_sync_write='true';
+select plan(9);
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('17910000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','aliases-s177@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into config.usuarios(user_id,papel,nome,ativo) values ('17910000-0000-0000-0000-000000000001','colaborador','Alias teste',true);
+insert into config.usuario_modulos(user_id,modulo,nivel) values ('17910000-0000-0000-0000-000000000001','pcm','leitura');
+insert into pcm.clientes(id,nome,ativo,created_by) values ('17910000-0000-0000-0000-00000000000a','Cliente A',true,'17910000-0000-0000-0000-000000000001'),('17910000-0000-0000-0000-00000000000b','Cliente B',true,'17910000-0000-0000-0000-000000000001');
+insert into config.sso_concessoes(usuario_id,acao,cliente_id) values ('17910000-0000-0000-0000-000000000001','cadastro.ler','17910000-0000-0000-0000-00000000000a');
+insert into pcm.sistemas(id,cliente_id,nome,codigo) values ('17910000-0000-0000-0000-000000000011','17910000-0000-0000-0000-00000000000a','Sistema A','S177-ALIAS-ATUAL-A'),('17910000-0000-0000-0000-000000000012','17910000-0000-0000-0000-00000000000b','Sistema B','S177-ALIAS-ATUAL-B');
+insert into pcm.sso_codigo_aliases(id,cliente_id,sistema_id,codigo,criado_por,motivo) values ('17910000-0000-0000-0000-000000000021','17910000-0000-0000-0000-00000000000a','17910000-0000-0000-0000-000000000011','S177-ALIAS-ANTIGO-A','17910000-0000-0000-0000-000000000001','teste'),('17910000-0000-0000-0000-000000000022','17910000-0000-0000-0000-00000000000a','17910000-0000-0000-0000-000000000011','S177-ALIAS-ANTIGO-B','17910000-0000-0000-0000-000000000001','teste');
+set local request.jwt.claims='{"sub":"17910000-0000-0000-0000-000000000001","role":"authenticated","user_role":"colaborador"}';
+set local role authenticated;
+select throws_ok($$select * from pcm.sso_listar_aliases_ativo('17910000-0000-0000-0000-00000000000a','sistema','17910000-0000-0000-0000-000000000011',null,1)$$,'55000',null,'gate fechado');
+select ok(not has_function_privilege('anon','pcm.sso_listar_aliases_ativo(uuid,text,uuid,uuid,integer)','EXECUTE'),'anon não consulta');
+reset role;
+update pcm.sso_listagem_aliases_gate set habilitado=true where id;
+set local role authenticated;
+select is((select codigo from pcm.sso_listar_aliases_ativo('17910000-0000-0000-0000-00000000000a','sistema','17910000-0000-0000-0000-000000000011',null,1)),'S177-ALIAS-ANTIGO-A','primeira página autorizada');
+select is((select codigo from pcm.sso_listar_aliases_ativo('17910000-0000-0000-0000-00000000000a','sistema','17910000-0000-0000-0000-000000000011','17910000-0000-0000-0000-000000000021',1)),'S177-ALIAS-ANTIGO-B','cursor avança');
+select throws_ok($$select * from pcm.sso_listar_aliases_ativo('17910000-0000-0000-0000-00000000000b','sistema','17910000-0000-0000-0000-000000000012',null,1)$$,'42501',null,'Cliente B negado');
+select throws_ok($$select * from pcm.sso_listar_aliases_ativo('17910000-0000-0000-0000-00000000000a','sistema','17910000-0000-0000-0000-000000000012',null,1)$$,'42501',null,'ativo de outro Cliente negado');
+select throws_ok($$select * from pcm.sso_codigo_aliases$$,'42501',null,'tabela interna revogada');
+select throws_ok($$select * from pcm.sso_listar_aliases_ativo('17910000-0000-0000-0000-00000000000a','sistema','17910000-0000-0000-0000-000000000011',null,0)$$,'22023',null,'limite inválido');
+reset role;
+update config.sso_concessoes set ativa=false where usuario_id='17910000-0000-0000-0000-000000000001';
+set local role authenticated;
+select throws_ok($$select * from pcm.sso_listar_aliases_ativo('17910000-0000-0000-0000-00000000000a','sistema','17910000-0000-0000-0000-000000000011',null,1)$$,'42501',null,'revogação respeitada');
+reset role;
+select * from finish();
+rollback;

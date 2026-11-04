@@ -1,0 +1,9 @@
+import { criarLeituraUnificada, type Dependencias } from "./leitura-unificada.ts";
+const usuario="18090000-0000-4000-8000-000000000001",despesa="18090000-0000-4000-8000-000000000002",objeto="18090000-0000-4000-8000-000000000003",bytes=new Uint8Array([37,80,68,70,45,49]);
+const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),x=>x.toString(16).padStart(2,"0")).join("");
+const req=()=>new Request("http://localhost",{method:"POST",headers:{"x-despesa-id":despesa}}),assert=(v:boolean)=>{if(!v)throw Error("Asserção falhou");};
+const deps=():Dependencias=>({autenticar:async()=>({usuario}),habilitado:async()=>true,limitar:async()=>true,resolver:async()=>({origem:"mediado",objetoId:objeto,digest}),baixar:async()=>bytes});
+Deno.test("origem mediada verifica hash e origem legada permanece disponível",async()=>{const d=deps();assert((await criarLeituraUnificada(d)(req())).status===200);d.resolver=async()=>({origem:"legado",objetoId:objeto,digest:null});assert((await criarLeituraUnificada(d)(req())).status===200);});
+Deno.test("hash divergente ou alteração de classificação não usam fallback",async()=>{const d=deps();d.baixar=async()=>new Uint8Array([37,80,68,70,45,50]);assert((await criarLeituraUnificada(d)(req())).status===409);d.baixar=async()=>bytes;let n=0;d.resolver=async()=>++n===1?{origem:"mediado",objetoId:objeto,digest}:{origem:"legado",objetoId:objeto,digest:null};assert((await criarLeituraUnificada(d)(req())).status===404);});
+Deno.test("revogação na releitura impede resposta",async()=>{const d=deps();let n=0;d.resolver=async()=>++n===1?{origem:"mediado",objetoId:objeto,digest}:null;assert((await criarLeituraUnificada(d)(req())).status===404);});
+Deno.test("auditoria histórica negada impede resposta",async()=>{const d=deps();d.auditar=async()=>false;assert((await criarLeituraUnificada(d)(req())).status===404);});

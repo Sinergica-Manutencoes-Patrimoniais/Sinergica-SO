@@ -38,6 +38,7 @@ export type OcorrenciaPreventiva = {
   os_concluida_em?: string | null;
   tecnico_nome?: string | null;
   auvo_task_url?: string | null;
+  ordens_vinculadas?: Array<{ id: string; numero: string; status: string }>;
 };
 
 export type AvaliacaoPreventiva = {

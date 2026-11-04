@@ -5,7 +5,8 @@ import type { CriarLevantamentoCommand, LevantamentoGateway } from "./levantamen
 
 export const levantamentoQueryKeys = {
   daConta: (clienteId: string) => ["comercial", "levantamentos", "conta", clienteId] as const,
-  itens: (inspecaoId: string) => ["comercial", "levantamentos", inspecaoId, "itens"] as const,
+  itens: (inspecaoId: string, clienteId: string) =>
+    ["comercial", "levantamentos", inspecaoId, "itens", clienteId] as const,
 };
 
 export function useLevantamentosDaConta(
@@ -29,7 +30,7 @@ export function useItensLevantamento(
   habilitado = true,
 ) {
   return useQuery({
-    queryKey: levantamentoQueryKeys.itens(inspecaoId ?? "nenhum"),
+    queryKey: levantamentoQueryKeys.itens(inspecaoId ?? "nenhum", clienteId),
     queryFn: () => gateway.listarItensLevantamento(inspecaoId as string, clienteId),
     enabled: habilitado && inspecaoId !== null,
   });

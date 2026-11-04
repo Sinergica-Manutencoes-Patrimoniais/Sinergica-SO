@@ -21,6 +21,102 @@ type PlanoPreventivoPersistido = Pick<
   | "intervalo_n"
 >;
 
+type OrdemPreventivaRow = {
+  id: string;
+  ocorrencia_preventiva_id: string;
+  status: string;
+  numero: string;
+  tecnico_funcionario_id: string | null;
+  check_out_at: string | null;
+  auvo_detalhes: { taskUrl?: unknown } | null;
+};
+
+export async function listarPaginasPreventivas<T extends { id: string }>(
+  buscar: (inicio: number, fim: number) => PromiseLike<{ data: T[] | null; count: number | null; error: unknown }>,
+): Promise<T[]> {
+  const itens: T[] = [];
+  const ids = new Set<string>();
+  let total: number | null = null;
+  while (total === null || itens.length < total) {
+    const inicio = itens.length;
+    const { data, count, error } = await buscar(inicio, inicio + 499);
+    if (error) throw error;
+    if (count === null || !Number.isSafeInteger(count) || count < 0 || count > 50_000 ||
+      (total !== null && count !== total) || !Array.isArray(data)) throw new Error("Não foi possível conferir todos os registros.");
+    total = count;
+    if (data.length > 500 || inicio + data.length > total || (data.length === 0 && inicio < total))
+      throw new Error("Paginação incompleta.");
+    for (const item of data) {
+      const id = typeof item.id === "string" ? item.id.toLowerCase() : "";
+      if (!id || ids.has(id) || (itens.length && id <= itens[itens.length - 1]!.id.toLowerCase()))
+        throw new Error("Paginação divergente.");
+      ids.add(id);
+      itens.push(item);
+    }
+  }
+  return itens;
+}
+
+async function listarNomesDosAlvos(tabela: "sistemas" | "equipamentos", ids: string[], clienteId?: string) {
+  const unicos = [...new Set(ids)];
+  const resultado: Array<{ id: string; nome: string }> = [];
+  for (let i = 0; i < unicos.length; i += 100) {
+    const lote = unicos.slice(i, i + 100);
+    const pagina = await listarPaginasPreventivas<{ id: string; nome: string }>((inicio, fim) => {
+      let consulta = supabase.schema("pcm").from(tabela).select("id,nome", { count: "exact" }).in("id", lote);
+      if (clienteId !== undefined) consulta = consulta.eq(tabela === "sistemas" ? "cliente_id" : "client_id", clienteId);
+      return consulta.order("id").range(inicio, fim) as unknown as PromiseLike<{ data: Array<{ id: string; nome: string }> | null; count: number | null; error: unknown }>;
+    });
+    if (pagina.some((item) => !lote.includes(item.id) || typeof item.nome !== "string"))
+      throw new Error("Alvo fora do contexto.");
+    resultado.push(...pagina);
+  }
+  return resultado;
+}
+
+/** A contagem e as páginas podem mudar entre consultas; nesse caso a leitura falha fechada. */
+export async function listarOrdensDasOcorrencias(ocorrenciaIds: string[], clienteId?: string): Promise<OrdemPreventivaRow[]> {
+  if (ocorrenciaIds.length === 0) return [];
+  const tamanhoPagina = 500;
+  const limite = 50_000;
+  const ids = new Set<string>();
+  const ordens: OrdemPreventivaRow[] = [];
+  for (let loteInicio = 0; loteInicio < ocorrenciaIds.length; loteInicio += 100) {
+    const lote = ocorrenciaIds.slice(loteInicio, loteInicio + 100);
+    const autorizadas = new Set(lote);
+    let total: number | null = null;
+    let carregadas = 0;
+    let ultimoId = "";
+    while (total === null || carregadas < total) {
+      const inicio = carregadas;
+      let consulta = supabase.schema("pcm").from("ordens_servico")
+        .select("id,ocorrencia_preventiva_id,status,numero,tecnico_funcionario_id,check_out_at,auvo_detalhes", { count: "exact" })
+        .in("ocorrencia_preventiva_id", lote)
+        .is("deleted_at", null);
+      if (clienteId !== undefined) consulta = consulta.eq("client_id", clienteId);
+      const { data, error, count } = await consulta
+        .order("id", { ascending: true })
+        .range(inicio, inicio + tamanhoPagina - 1);
+      if (error) throw error;
+      if (!Number.isSafeInteger(count) || count === null || count < 0 || count > limite || ordens.length + count - carregadas > limite ||
+        (total !== null && count !== total) || !Array.isArray(data)) throw new Error("Não foi possível conferir todas as OS.");
+      total = count;
+      if (data.length > tamanhoPagina || inicio + data.length > total || (data.length === 0 && inicio < total))
+        throw new Error("Paginação de OS incompleta.");
+      for (const ordem of data as OrdemPreventivaRow[]) {
+        const id = typeof ordem.id === "string" ? ordem.id.toLowerCase() : "";
+        if (!id || ids.has(id) || !autorizadas.has(ordem.ocorrencia_preventiva_id) || (ultimoId && id <= ultimoId))
+          throw new Error("Paginação de OS divergente.");
+        ids.add(id);
+        ultimoId = id;
+        ordens.push(ordem);
+        carregadas++;
+      }
+    }
+  }
+  return ordens;
+}
+
 function lancarSeErro(resultado: { error: unknown }) {
   if (resultado.error) throw resultado.error;
 }
@@ -93,30 +189,25 @@ export async function atualizarPlanoPreventivo({
 export async function listarPreventivas(
   contexto: ContextoPreventivas = {},
 ): Promise<ResultadoPreventivas> {
-  let planosQuery = supabase.schema("pcm").from("planos_preventivos").select("*");
-  if (contexto.clienteId) planosQuery = planosQuery.eq("cliente_id", contexto.clienteId);
-  const planosResultado = await planosQuery.order("primeira_data");
-  lancarSeErro(planosResultado);
-  const planosSemAlvo = (planosResultado.data ?? []) as PlanoPreventivo[];
+  const planosSemAlvo = await listarPaginasPreventivas<PlanoPreventivo>((inicio, fim) => {
+    let consulta = supabase.schema("pcm").from("planos_preventivos").select("*", { count: "exact" });
+    if (contexto.clienteId !== undefined) consulta = consulta.eq("cliente_id", contexto.clienteId);
+    return consulta.order("id", { ascending: true }).range(inicio, fim) as unknown as PromiseLike<{ data: PlanoPreventivo[] | null; count: number | null; error: unknown }>;
+  });
+  planosSemAlvo.sort((a, b) => (a.primeira_data ?? "").localeCompare(b.primeira_data ?? "") || a.id.localeCompare(b.id));
   const sistemaIds = planosSemAlvo
     .map((plano) => plano.sistema_id)
     .filter((id): id is string => id != null);
   const equipamentoIds = planosSemAlvo
     .map((plano) => plano.equipamento_id)
     .filter((id): id is string => id != null);
-  const [sistemasResultado, equipamentosResultado] = await Promise.all([
-    sistemaIds.length
-      ? supabase.schema("pcm").from("sistemas").select("id,nome").in("id", sistemaIds)
-      : Promise.resolve({ data: [], error: null }),
-    equipamentoIds.length
-      ? supabase.schema("pcm").from("equipamentos").select("id,nome").in("id", equipamentoIds)
-      : Promise.resolve({ data: [], error: null }),
+  const [sistemas, equipamentos] = await Promise.all([
+    listarNomesDosAlvos("sistemas", sistemaIds, contexto.clienteId),
+    listarNomesDosAlvos("equipamentos", equipamentoIds, contexto.clienteId),
   ]);
-  lancarSeErro(sistemasResultado);
-  lancarSeErro(equipamentosResultado);
   const alvoPorId = new Map<string, string>([
-    ...(sistemasResultado.data ?? []).map((sistema) => [sistema.id, sistema.nome] as const),
-    ...(equipamentosResultado.data ?? []).map(
+    ...sistemas.map((sistema) => [sistema.id, sistema.nome] as const),
+    ...equipamentos.map(
       (equipamento) => [equipamento.id, equipamento.nome] as const,
     ),
   ]);
@@ -127,18 +218,22 @@ export async function listarPreventivas(
   const planoIds = planos.map((plano) => plano.id);
   if (planoIds.length === 0) return { planos: [], ocorrencias: [], avaliacoes: [] };
 
-  const ocorrenciasResultado = await supabase
-    .schema("pcm")
-    .from("ocorrencias_preventivas")
-    .select("*")
-    .in("plano_id", planoIds)
-    .order("vencimento");
-  lancarSeErro(ocorrenciasResultado);
-  const ocorrencias = (ocorrenciasResultado.data ?? []) as OcorrenciaPreventiva[];
+  const ocorrencias: OcorrenciaPreventiva[] = [];
+  for (let i = 0; i < planoIds.length; i += 100) {
+    const lote = planoIds.slice(i, i + 100);
+    const pagina = await listarPaginasPreventivas<OcorrenciaPreventiva>((inicio, fim) => supabase
+      .schema("pcm").from("ocorrencias_preventivas").select("*", { count: "exact" })
+      .in("plano_id", lote).eq("origem", "legado")
+      .order("id", { ascending: true }).range(inicio, fim) as unknown as PromiseLike<{ data: OcorrenciaPreventiva[] | null; count: number | null; error: unknown }>);
+    if (pagina.some((ocorrencia) => !lote.includes(ocorrencia.plano_id))) throw new Error("Ocorrência fora do contexto.");
+    ocorrencias.push(...pagina);
+    if (ocorrencias.length > 50_000) throw new Error("Limite de ocorrências excedido.");
+  }
+  ocorrencias.sort((a, b) => (a.vencimento ?? "").localeCompare(b.vencimento ?? "") || a.id.localeCompare(b.id));
   const ocorrenciaIds = ocorrencias.map((ocorrencia) => ocorrencia.id);
   if (ocorrenciaIds.length === 0) return { planos, ocorrencias: [], avaliacoes: [] };
 
-  const [avaliacoesResultado, osResultado] = await Promise.all([
+  const [avaliacoesResultado, ordensPreventivas] = await Promise.all([
     supabase
       .schema("pcm")
       .from("avaliacoes_preventivas")
@@ -146,38 +241,23 @@ export async function listarPreventivas(
       .in("ocorrencia_id", ocorrenciaIds)
       .order("recebido_em", { ascending: false })
       .limit(30),
-    supabase
-      .schema("pcm")
-      .from("ordens_servico")
-      .select(
-        "id,ocorrencia_preventiva_id,status,numero,tecnico_funcionario_id,check_out_at,auvo_detalhes",
-      )
-      .in("ocorrencia_preventiva_id", ocorrenciaIds)
-      .order("updated_at", { ascending: false }),
+    listarOrdensDasOcorrencias(ocorrenciaIds, contexto.clienteId),
   ]);
   lancarSeErro(avaliacoesResultado);
-  lancarSeErro(osResultado);
-  type OrdemPreventivaRow = {
-    id: string;
-    ocorrencia_preventiva_id: string;
-    status: string;
-    numero: string;
-    tecnico_funcionario_id: string | null;
-    check_out_at: string | null;
-    auvo_detalhes: { taskUrl?: unknown } | null;
-  };
-  const osPorOcorrencia = new Map(
-    ((osResultado.data ?? []) as OrdemPreventivaRow[]).map((ordem) => [
-      ordem.ocorrencia_preventiva_id,
-      ordem,
-    ]),
-  );
+  const osPorOcorrencia = new Map<string, OrdemPreventivaRow[]>();
+  for (const ordem of ordensPreventivas) {
+    const ordens = osPorOcorrencia.get(ordem.ocorrencia_preventiva_id) ?? [];
+    ordens.push(ordem);
+    osPorOcorrencia.set(ordem.ocorrencia_preventiva_id, ordens);
+  }
   const tecnicoIds = [
     ...new Set(
       ocorrencias
         .map(
           (ocorrencia) =>
-            osPorOcorrencia.get(ocorrencia.id)?.tecnico_funcionario_id ??
+            (osPorOcorrencia.get(ocorrencia.id)?.length === 1
+              ? osPorOcorrencia.get(ocorrencia.id)?.[0]?.tecnico_funcionario_id
+              : null) ??
             ocorrencia.tecnico_funcionario_id,
         )
         .filter((id): id is string => Boolean(id)),
@@ -193,13 +273,15 @@ export async function listarPreventivas(
   return {
     planos,
     ocorrencias: ocorrencias.map((ocorrencia) => {
-      const ordem = osPorOcorrencia.get(ocorrencia.id);
+      const ordens = osPorOcorrencia.get(ocorrencia.id) ?? [];
+      const ordem = ordens.length === 1 ? ordens[0] : undefined;
       const tecnicoNome = tecnicoPorId.get(
         ordem?.tecnico_funcionario_id ?? ocorrencia.tecnico_funcionario_id ?? "",
       );
       const taskUrl = ordem?.auvo_detalhes?.taskUrl;
       return {
         ...ocorrencia,
+        ordens_vinculadas: ordens.map(({ id, numero, status }) => ({ id, numero, status })),
         os_status: ordem?.status ?? null,
         ...(ordem?.id ? { os_id: ordem.id } : {}),
         ...(ordem?.numero ? { os_numero: ordem.numero } : {}),

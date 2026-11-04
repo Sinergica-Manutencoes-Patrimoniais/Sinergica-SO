@@ -14,7 +14,7 @@ export interface PerfilUsuario {
 
 export interface AuthGateway {
   signInWithPassword(email: string, senha: string): Promise<SessaoBasica>;
-  signOut(): Promise<void>;
+  signOut(usuarioEsperado?: string): Promise<void>;
   getSession(): Promise<SessaoBasica | null>;
   /** Retorna null quando não há linha em config.usuarios para o userId (perfil ausente). */
   getPerfil(userId: string): Promise<PerfilUsuario | null>;

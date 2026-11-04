@@ -1,5 +1,9 @@
 # Decisões do Plano de Manutenção
 
+> Atualização de 26/10/2026: [definições após o Caderno Técnico](definicoes-fabricio-caderno-v1.md)
+> prevalecem sobre este registro histórico. P01/P02/P03 encerradas. Plano aceita escopo amplo;
+> alvo inequívoco pertence à Rotina; feriado distingue modo por Visita de modo por calendário.
+
 Consolidação da conversa com Lucas e das respostas do Fabrício recebidas em 16/10/2026.
 Preservada em 24/10/2026 para continuação em outro computador. Esta é uma base de negócio
 para as futuras specs, não uma declaração de implementação.

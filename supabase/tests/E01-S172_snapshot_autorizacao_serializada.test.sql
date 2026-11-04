@@ -1,0 +1,11 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(5);
+select has_function('pcm','sso_snapshot_capacidade_autorizado',array['uuid','date','integer'],'snapshot tem entrada serializada');
+select ok(coalesce(has_function_privilege('authenticated',to_regprocedure('pcm.sso_snapshot_capacidade_autorizado(uuid,date,integer)'),'execute'),false),'authenticated usa entrada serializada');
+select ok(not has_function_privilege('authenticated','pcm.sso_mediar_snapshot_capacidade(uuid,date)','execute'),'entrada anterior não permite contornar a guarda');
+select ok(not has_function_privilege('authenticated','pcm.sso_mediar_snapshot_capacidade_v5(uuid,date)','execute'),'entrada v5 anterior não permite contornar a guarda');
+select is((select provolatile::text from pg_proc where oid=to_regprocedure('pcm.sso_snapshot_capacidade_autorizado(uuid,date,integer)')),'v','guarda obtém snapshot após travar autorização');
+select * from finish();
+rollback;

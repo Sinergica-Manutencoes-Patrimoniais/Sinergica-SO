@@ -21,6 +21,7 @@ import {
   listarPreventivas,
 } from "../infrastructure/supabase-preventivas-adapter";
 import { AjudaPcm } from "./AjudaPcm";
+import { FilaPreventivaWorkspace } from "./FilaPreventivaWorkspace";
 import { PreventivaDetalheDrawer } from "./PreventivaDetalheDrawer";
 import { PreventivasCalendarioView } from "./PreventivasCalendarioView";
 import { PreventivasListaView } from "./PreventivasListaView";
@@ -487,7 +488,7 @@ export function PreventivasWorkspace({
     ]);
   }
   const estadoDaOcorrencia = (ocorrencia: OcorrenciaPreventiva) =>
-    calcularStatusOcorrenciaPreventiva(
+    (ocorrencia.ordens_vinculadas?.length ?? 0) > 1 ? "conferencia" as const : calcularStatusOcorrenciaPreventiva(
       {
         vencimento: ocorrencia.vencimento,
         ordemServico: ocorrencia.auvo_task_id
@@ -594,6 +595,9 @@ export function PreventivasWorkspace({
         <p role="alert" className="rounded-md bg-red-soft p-3 text-body text-red">
           {erroAcao ?? "Não foi possível carregar o formulário."}
         </p>
+      )}
+      {clienteId && import.meta.env.VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED === "true" && (
+        <FilaPreventivaWorkspace clienteId={clienteId} userId={userId} />
       )}
       <section className="rounded-lg border border-line bg-surface p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -704,7 +708,9 @@ export function PreventivasWorkspace({
                         {planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido"}
                       </p>
                       <p className="text-sm text-ink-3">
-                        {ocorrencia.os_numero
+                        {(ocorrencia.ordens_vinculadas?.length ?? 0) > 1
+                          ? `${ocorrencia.ordens_vinculadas!.length} OS vinculadas — conferir ordens`
+                          : ocorrencia.os_numero
                           ? `OS ${ocorrencia.os_numero}`
                           : `Tarefa Auvo #${ocorrencia.auvo_task_id}`}{" "}
                         · Técnico: {ocorrencia.tecnico_nome ?? "não informado"} ·{" "}
@@ -712,6 +718,9 @@ export function PreventivasWorkspace({
                           ? `Executada em ${dataHoraLocal(ocorrencia.os_concluida_em)}`
                           : rotuloEstado(ocorrencia)}
                       </p>
+                      {(ocorrencia.ordens_vinculadas?.length ?? 0) > 1 && <ul aria-label="Ordens vinculadas à ocorrência">
+                        {ocorrencia.ordens_vinculadas!.map((ordem) => <li key={ordem.id}>OS {ordem.numero} · {ordem.status}</li>)}
+                      </ul>}
                     </div>
                     <span
                       className={`rounded-full px-2 py-1 text-caption font-semibold ${classeResultado(ocorrencia)}`}

@@ -3,6 +3,7 @@
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
 
 begin;
+set local app.auvo_sync_write = 'true';
 select plan(6);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
@@ -10,6 +11,16 @@ values
   ('00000000-0000-0000-0000-000000000411', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'fin-leitura-s04@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
   ('00000000-0000-0000-0000-000000000412', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'fin-escrita-s04@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
+
+-- A política atual consulta os módulos persistidos, não apenas os claims do JWT.
+insert into config.usuarios (user_id, papel, nome, ativo) values
+  ('00000000-0000-0000-0000-000000000411', 'colaborador', 'Financeiro leitura S04', true),
+  ('00000000-0000-0000-0000-000000000412', 'colaborador', 'Financeiro escrita S04', true)
+on conflict (user_id) do nothing;
+insert into config.usuario_modulos (user_id, modulo, nivel) values
+  ('00000000-0000-0000-0000-000000000411', 'financeiro', 'leitura'),
+  ('00000000-0000-0000-0000-000000000412', 'financeiro', 'escrita')
+on conflict (user_id, modulo) do nothing;
 
 -- cliente de teste (pcm.clientes) — necessário pra FK de contratos
 insert into pcm.clientes (id, nome, created_by)

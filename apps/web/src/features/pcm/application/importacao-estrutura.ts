@@ -22,6 +22,7 @@ import {
 import type { SistemasGateway } from "./sistemas-gateway";
 
 export interface RelatorioImportacao {
+  aba: ResultadoPlano["linha"]["aba"];
   numero: number;
   status: "OK" | "FALHOU" | "PULADA";
   mensagem: string;
@@ -36,12 +37,14 @@ export async function executarPlanoImportacao(
   const executaveis = plano.resultados.filter((resultado) =>
     ["CRIAR", "EDITAR", "EXCLUIR"].includes(resultado.resultado),
   );
-  const falhas = new Set<number>();
+  const falhas = new Set<string>();
   const relatorio: RelatorioImportacao[] = [];
   for (const [indice, resultado] of executaveis.entries()) {
     onProgresso(indice + 1, executaveis.length);
     if (resultado.dependeDe.some((linha) => falhas.has(linha))) {
+      falhas.add(`${resultado.linha.aba}:${resultado.linha.numero}`);
       relatorio.push({
+        aba: resultado.linha.aba,
         numero: resultado.linha.numero,
         status: "PULADA",
         mensagem: "Depende de linha que falhou.",
@@ -50,10 +53,16 @@ export async function executarPlanoImportacao(
     }
     try {
       await executarLinha(resultado);
-      relatorio.push({ numero: resultado.linha.numero, status: "OK", mensagem: "Aplicada." });
-    } catch (erro) {
-      falhas.add(resultado.linha.numero);
       relatorio.push({
+        aba: resultado.linha.aba,
+        numero: resultado.linha.numero,
+        status: "OK",
+        mensagem: "Aplicada.",
+      });
+    } catch (erro) {
+      falhas.add(`${resultado.linha.aba}:${resultado.linha.numero}`);
+      relatorio.push({
+        aba: resultado.linha.aba,
         numero: resultado.linha.numero,
         status: "FALHOU",
         mensagem: erro instanceof Error ? erro.message : "Falha ao aplicar linha.",

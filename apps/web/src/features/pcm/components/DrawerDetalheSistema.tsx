@@ -1,6 +1,12 @@
 import { Button, Skeleton } from "@sinergica/ui";
 import { ExternalLink, Puzzle, RefreshCw, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../../app/auth-context";
+import { FotosStagingAtivo } from "../interfaces/estrutura-tecnica/FotosStagingAtivo";
+import { DocumentosStagingAtivo } from "../interfaces/estrutura-tecnica/DocumentosStagingAtivo";
+import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
+import { ResultadosDoAlvo } from "../interfaces/pendencias-tecnicas/ResultadosAtivo";
+import { EdicaoRascunhoCodigo } from "../interfaces/codigos-publicos/EdicaoRascunho";
 import {
   useCadastroSistema,
   useComponentesSistema,
@@ -47,6 +53,7 @@ export function DrawerDetalheSistema({
   onClose: () => void;
   onAbrirOs?: (osId: string) => void;
 }) {
+  const { user } = useAuth();
   const focoAnterior = useRef<HTMLElement | null>(null);
   const [componenteAbertoId, setComponenteAbertoId] = useState<string | null>(null);
   const componenteAbertoIdRef = useRef<string | null>(null);
@@ -114,6 +121,11 @@ export function DrawerDetalheSistema({
         )}
         {cadastro.data && (
           <div className="flex flex-col gap-4 p-4">
+            {user && clienteId && !cadastro.error && <EdicaoRascunhoCodigo userId={user.id} clienteId={clienteId} tipo="sistema" ativoId={sistemaId} onAtualizado={() => { void cadastro.refetch(); }} />}
+            {user && clienteId && !cadastro.isFetching && <ResultadosDoAlvo userId={user.id} clienteId={clienteId} tipo="sistema" id={sistemaId} nome={cadastro.data.nome} />}
+            {user && clienteId && <FotosStagingAtivo userId={user.id} clienteId={clienteId} tipo="sistema" entidadeId={sistemaId} />}
+            {user && clienteId && <DocumentosStagingAtivo userId={user.id} clienteId={clienteId} tipo="sistema" entidadeId={sistemaId} />}
+            {user && clienteId && <HistoricoCadastroLevantamento userId={user.id} clienteId={clienteId} tipo="sistema" entidadeId={sistemaId} />}
             <section className="rounded-lg border border-line bg-surface p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -399,7 +411,13 @@ function ListaPreventivas({
                       {resultadoPreventiva(ocorrencia.resultado)} · {ocorrencia.estado}
                     </span>
                     <span className="flex gap-2">
-                      {ocorrencia.osId && (
+                      {(ocorrencia.ordensVinculadas?.length ?? 0) > 1 && <span>Conferir ordens:</span>}
+                      {(ocorrencia.ordensVinculadas?.length ?? 0) > 1
+                        ? ocorrencia.ordensVinculadas!.map((ordem) => <button
+                            key={ordem.id} type="button" onClick={() => onAbrirOs(ordem.id)}
+                            className="font-semibold text-orange hover:underline"
+                          >{ordem.numero} · {ordem.status}</button>)
+                        : ocorrencia.osId && (
                         <button
                           type="button"
                           onClick={() => onAbrirOs(ocorrencia.osId as string)}

@@ -1,0 +1,12 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(6);
+select has_function('pcm','sso_ocorrencias_cronograma_conferidas',array['uuid','uuid','uuid','date','date','text','uuid','integer'],'fonte tem entrada mediada');
+select ok(has_function_privilege('authenticated','pcm.sso_ocorrencias_cronograma_conferidas(uuid,uuid,uuid,date,date,text,uuid,integer)','execute'),'autenticado pode solicitar fonte');
+select ok(not has_function_privilege('anon','pcm.sso_ocorrencias_cronograma_conferidas(uuid,uuid,uuid,date,date,text,uuid,integer)','execute'),'anônimo não executa');
+select ok(not has_function_privilege('service_role','pcm.sso_ocorrencias_cronograma_conferidas(uuid,uuid,uuid,date,date,text,uuid,integer)','execute'),'service role não contorna sessão');
+select ok(not has_function_privilege('authenticated','pcm.sso_ocorrencias_cronograma_exportacao(uuid,uuid,uuid,date,date,text,uuid,integer)','execute'),'núcleo não contorna validação de origem');
+select ok(not has_table_privilege('authenticated','pcm.sso_cronograma_exportacao_gate','update'),'usuário não altera gate');
+select * from finish();
+rollback;

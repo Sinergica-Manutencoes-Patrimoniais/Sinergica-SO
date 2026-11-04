@@ -1,0 +1,16 @@
+{
+  "version": "5",
+  "specifiers": {
+    "npm:@zip.js/zip.js@2.24.0": "2.24.0"
+  },
+  "npm": {
+    "@zip.js/zip.js@2.24.0": {
+      "integrity": "sha512-WlaVKzdqBK+RF3bdiXZWbdCnvGB6PdO4IHC1mn/2Yfl3bASgqUNegnU3+PNg61iecwoPfUi5BgLUPqBukXpyWw=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:@zip.js/zip.js@2.24.0"
+    ]
+  }
+}

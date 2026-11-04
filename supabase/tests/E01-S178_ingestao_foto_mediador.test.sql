@@ -1,0 +1,28 @@
+-- Dados sintéticos; usar somente banco descartável e rollback.
+begin;
+set local app.auvo_sync_write='true';
+select plan(11);
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('17940000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','ingestao-mediador@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into config.usuarios(user_id,papel,nome,ativo) values ('17940000-0000-0000-0000-000000000001','colaborador','Mediador teste',true);
+insert into config.usuario_modulos(user_id,modulo,nivel) values ('17940000-0000-0000-0000-000000000001','pcm','escrita');
+insert into pcm.clientes(id,nome,ativo,created_by) values ('17940000-0000-0000-0000-00000000000a','Cliente mediador',true,'17940000-0000-0000-0000-000000000001');
+insert into config.sso_concessoes(usuario_id,acao,cliente_id) values ('17940000-0000-0000-0000-000000000001','cadastro.aprovar','17940000-0000-0000-0000-00000000000a');
+insert into pcm.sso_levantamentos(id,cliente_id,origem,chave_origem,conteudo,criado_por) values ('17940000-0000-0000-0000-000000000021','17940000-0000-0000-0000-00000000000a','manual','mediador','[]','17940000-0000-0000-0000-000000000001');
+insert into pcm.sso_levantamento_linhas(lote_id,chave,tipo,atributos) values ('17940000-0000-0000-0000-000000000021','a','sistema','{}');
+select throws_ok($$select pcm.sso_ingestao_foto_servico('reservar','17940000-0000-0000-0000-000000000001','17940000-0000-0000-0000-000000000041','17940000-0000-0000-0000-000000000021','a',repeat('a',64),null)$$,'55000',null,'gate fechado');
+select ok(not has_function_privilege('authenticated','pcm.sso_ingestao_foto_servico(text,uuid,uuid,uuid,text,text,uuid)','EXECUTE'),'authenticated não executa mediador');
+select ok(has_function_privilege('service_role','pcm.sso_ingestao_foto_servico(text,uuid,uuid,uuid,text,text,uuid)','EXECUTE'),'somente serviço tem acesso ao mediador');
+update pcm.sso_ingestao_foto_gate set habilitado=true where id;
+update pcm.sso_fotos_levantamento_gate set habilitado=true where id;
+select is(pcm.sso_ingestao_foto_servico('reservar','17940000-0000-0000-0000-000000000001','17940000-0000-0000-0000-000000000041','17940000-0000-0000-0000-000000000021','a',repeat('a',64),null)->>'estado','nova','reserva mediada');
+select is(pcm.sso_ingestao_foto_servico('reservar','17940000-0000-0000-0000-000000000001','17940000-0000-0000-0000-000000000041','17940000-0000-0000-0000-000000000021','a',repeat('a',64),null)->>'estado','pendente','retry não inicia nova reserva');
+select throws_ok($$select pcm.sso_ingestao_foto_servico('confirmar','17940000-0000-0000-0000-000000000001','17940000-0000-0000-0000-000000000041','17940000-0000-0000-0000-000000000021','outra',repeat('a',64),'17940000-0000-0000-0000-000000000051')$$,'42501',null,'confirmação não troca linha');
+insert into storage.objects(id,bucket_id,name) select '17940000-0000-0000-0000-000000000051','sso-levantamento-fotos',nome from pcm.sso_ingestao_foto_reservas where request_id='17940000-0000-0000-0000-000000000041';
+select lives_ok($$select pcm.sso_ingestao_foto_servico('confirmar','17940000-0000-0000-0000-000000000001','17940000-0000-0000-0000-000000000041','17940000-0000-0000-0000-000000000021','a',repeat('a',64),'17940000-0000-0000-0000-000000000051')$$,'confirma objeto da reserva');
+select is(pcm.sso_resolver_foto_digest_servico('17940000-0000-0000-0000-000000000001',(select foto_id from pcm.sso_ingestao_foto_reservas where request_id='17940000-0000-0000-0000-000000000041'))->>'digest',repeat('a',64),'resolver usa digest da reserva');
+select throws_ok($$select pcm.sso_resolver_foto_digest_servico('17940000-0000-0000-0000-000000000001','17940000-0000-0000-0000-000000000099')$$,'42501',null,'foto inexistente não é resolvida');
+update config.sso_concessoes set ativa=false where usuario_id='17940000-0000-0000-0000-000000000001';
+select throws_ok($$select pcm.sso_ingestao_foto_servico('confirmar','17940000-0000-0000-0000-000000000001','17940000-0000-0000-0000-000000000041','17940000-0000-0000-0000-000000000021','a',repeat('a',64),'17940000-0000-0000-0000-000000000051')$$,'42501',null,'revogação impede replay');
+select throws_ok($$select pcm.sso_resolver_foto_digest_servico('17940000-0000-0000-0000-000000000001',(select foto_id from pcm.sso_ingestao_foto_reservas where request_id='17940000-0000-0000-0000-000000000041'))$$,'42501',null,'revogação impede leitura');
+select * from finish();
+rollback;

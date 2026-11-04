@@ -1,5 +1,9 @@
 export type EstadoFalhaEnvioPreventiva = "falha" | "incerto";
 
+export function origemPreventivaLegada(ocorrencia: { origem?: unknown }): boolean {
+  return ocorrencia.origem === "legado";
+}
+
 /**
  * Só falha conhecida antes do efeito remoto é repetível. Depois de iniciar POST/PATCH/GET no
  * Auvo, timeout ou resposta incompleta podem ter criado a task: reconciliação obrigatória.

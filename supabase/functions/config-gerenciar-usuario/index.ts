@@ -140,7 +140,13 @@ serve(async (req) => {
         if (vinculoError) throw vinculoError;
       }
     } catch (e) {
-      await serviceClient.auth.admin.deleteUser(createdUserId);
+      const { error: cleanupError } = await serviceClient.auth.admin.deleteUser(createdUserId);
+      if (cleanupError) {
+        // Não declarar reversão completa se o Auth manteve a identidade criada.
+        // O ID é necessário para reconciliação interna; nunca registrar senha ou payload.
+        console.error(JSON.stringify({ ts: new Date().toISOString(), nivel: "error", fn: FN, reqId, msg: "falha_reconciliar_usuario_auth", userId: createdUserId }));
+        throw new HttpError(500, "Criação não concluída e reversão não confirmada. Contate o suporte antes de tentar novamente.");
+      }
       if (e && typeof e === "object" && "code" in e && e.code === "23505") {
         throw new HttpError(409, "Este cliente ou usuário já possui acesso ao portal");
       }

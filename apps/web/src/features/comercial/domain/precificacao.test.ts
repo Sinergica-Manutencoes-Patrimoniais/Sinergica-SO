@@ -70,6 +70,41 @@ describe("calcularPrecificacao", () => {
       calcularPrecificacao({ custoTotalCentavos: -1, margem: 0.2, aliquota: 0.1 }),
     ).toThrow(PrecificacaoInvalidaError);
   });
+
+  it("recusa custo ou preço em centavos fora da precisão segura", () => {
+    expect(() =>
+      calcularPrecificacao({
+        custoTotalCentavos: Number.MAX_SAFE_INTEGER + 1,
+        margem: 0,
+        aliquota: 0,
+      }),
+    ).toThrow(PrecificacaoInvalidaError);
+    expect(() =>
+      calcularPrecificacao({
+        custoTotalCentavos: Number.MAX_SAFE_INTEGER,
+        margem: 0.5,
+        aliquota: 0,
+      }),
+    ).toThrow(PrecificacaoInvalidaError);
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+    "recusa margem ou alíquota não finita: %s",
+    (valor) => {
+      expect(() =>
+        calcularPrecificacao({ custoTotalCentavos: 10_000, margem: valor, aliquota: 0 }),
+      ).toThrow(PrecificacaoInvalidaError);
+      expect(() =>
+        calcularPrecificacao({ custoTotalCentavos: 10_000, margem: 0, aliquota: valor }),
+      ).toThrow(PrecificacaoInvalidaError);
+    },
+  );
+
+  it("recusa resultado não finito mesmo com entradas finitas", () => {
+    expect(() =>
+      calcularPrecificacao({ custoTotalCentavos: 10_000, margem: Number.MAX_VALUE, aliquota: 0 }),
+    ).toThrow(PrecificacaoInvalidaError);
+  });
 });
 
 describe("precoAbaixoDoPiso", () => {
@@ -81,6 +116,14 @@ describe("precoAbaixoDoPiso", () => {
 });
 
 describe("precoVendaMaterial", () => {
+  it("recusa custo e preço fora da precisão segura em centavos", () => {
+    expect(() =>
+      precoVendaMaterial({ custoReferenciaCentavos: Number.MAX_SAFE_INTEGER + 1, markupPct: 0 }),
+    ).toThrow(PrecificacaoInvalidaError);
+    expect(() =>
+      precoVendaMaterial({ custoReferenciaCentavos: Number.MAX_SAFE_INTEGER, markupPct: 50 }),
+    ).toThrow(PrecificacaoInvalidaError);
+  });
   it("aplica markup em pontos percentuais sobre o custo de referência", () => {
     expect(precoVendaMaterial({ custoReferenciaCentavos: 1_000, markupPct: 20 })).toBe(1_200);
   });
@@ -94,6 +137,15 @@ describe("precoVendaMaterial", () => {
       PrecificacaoInvalidaError,
     );
   });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.MAX_VALUE])(
+    "recusa markup que gera preço não finito: %s",
+    (valor) => {
+      expect(() =>
+        precoVendaMaterial({ custoReferenciaCentavos: 100_000, markupPct: valor }),
+      ).toThrow(PrecificacaoInvalidaError);
+    },
+  );
 });
 
 describe("resolverCustoMoHora", () => {

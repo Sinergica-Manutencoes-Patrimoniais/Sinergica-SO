@@ -1,9 +1,10 @@
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertRejects, assertThrows } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
   criarChamadoAutomatico,
   criarOsDaTarefa,
   marcarChamadoAutomaticoComOs,
   montarLinhaOs,
+  indexarChamadosPorNumero,
   proximosNumerosChamado,
   resolverClienteIdsPorAuvoIds,
   resolverFuncionarioIdsPorAuvoIds,
@@ -30,6 +31,7 @@ function fakeDb(fixtures: {
   chamadoInseridoId?: string;
   usuarioSistema?: { user_id: string } | null;
   osInseridaId?: string;
+  chamadoUpdateConfirmado?: boolean;
 }) {
   const calls: Call[] = [];
   return {
@@ -96,7 +98,12 @@ function fakeDb(fixtures: {
               },
               update: (row: Record<string, unknown>) => {
                 calls.push({ table, method: "update", args: [row] });
-                return { eq: () => Promise.resolve({ error: null }) };
+                return { eq: () => ({ or: (filtro: string) => {
+                  calls.push({ table, method: "or", args: [filtro] });
+                  return { select: () => ({ maybeSingle: () => Promise.resolve({
+                    data: fixtures.chamadoUpdateConfirmado === false ? null : { id: "chamado-1" }, error: null,
+                  }) }) };
+                } }) };
               },
             };
           }
@@ -154,7 +161,7 @@ Deno.test("criarOsDaTarefa — cliente resolvido cria Chamado automático + OS e
     chamadoNumero: "CH-0007",
     chamadoInseridoId: "chamado-novo-1",
     usuarioSistema: { user_id: "user-sistema-1" },
-    osInseridaId: "os-nova-1",
+    osInseridaId: "00000000-0000-4000-8000-000000000001",
   });
   const resultado = await criarOsDaTarefa(db as never, {
     taskId: 999,
@@ -162,15 +169,15 @@ Deno.test("criarOsDaTarefa — cliente resolvido cria Chamado automático + OS e
     customerId: 501,
     status: "solicitacao",
   });
-  assertEquals(resultado, { id: "os-nova-1", status: "solicitacao" });
+  assertEquals(resultado, { id: "00000000-0000-4000-8000-000000000001", status: "solicitacao" });
   const chamadoInsert = db.calls.find((c) => c.table === "chamados" && c.method === "insert");
   assertEquals((chamadoInsert?.args[0] as Record<string, unknown>).origem, "auvo_sync");
   const osInsert = db.calls.find((c) => c.table === "ordens_servico" && c.method === "insert");
   assertEquals((osInsert?.args[0] as Record<string, unknown>).chamado_id, "chamado-novo-1");
-  assertEquals("numero" in (osInsert?.args[0] as Record<string, unknown>), false);
+  assertEquals((osInsert?.args[0] as Record<string, unknown>).numero, "CH-0007");
   const chamadoUpdate = db.calls.find((c) => c.table === "chamados" && c.method === "update");
   assertEquals((chamadoUpdate?.args[0] as Record<string, unknown>).status, "convertido_os");
-  assertEquals((chamadoUpdate?.args[0] as Record<string, unknown>).ordem_servico_id, "os-nova-1");
+  assertEquals((chamadoUpdate?.args[0] as Record<string, unknown>).ordem_servico_id, "00000000-0000-4000-8000-000000000001");
 });
 
 Deno.test("criarOsDaTarefa — cliente não sincronizado devolve null sem lançar (AC-4)", async () => {
@@ -198,11 +205,17 @@ Deno.test("criarChamadoAutomatico — E01-S99: cria Chamado origem=auvo_sync e r
 
 Deno.test("marcarChamadoAutomaticoComOs — fecha o ciclo (status + ordem_servico_id + evento)", async () => {
   const db = fakeDb({});
-  await marcarChamadoAutomaticoComOs(db as never, "chamado-1", "os-1");
+  await marcarChamadoAutomaticoComOs(db as never, "chamado-1", "00000000-0000-4000-8000-000000000001");
   const update = db.calls.find((c) => c.table === "chamados" && c.method === "update");
   assertEquals((update?.args[0] as Record<string, unknown>).status, "convertido_os");
-  assertEquals((update?.args[0] as Record<string, unknown>).ordem_servico_id, "os-1");
+  assertEquals((update?.args[0] as Record<string, unknown>).ordem_servico_id, "00000000-0000-4000-8000-000000000001");
   assertEquals(db.calls.some((c) => c.table === "chamados_eventos" && c.method === "insert"), true);
+});
+
+Deno.test("marcarChamadoAutomaticoComOs — não registra evento quando vínculo não foi confirmado", async () => {
+  const db = fakeDb({ chamadoUpdateConfirmado: false });
+  await assertRejects(() => marcarChamadoAutomaticoComOs(db as never, "chamado-1", "00000000-0000-4000-8000-000000000001"));
+  assertEquals(db.calls.some((c) => c.table === "chamados_eventos" && c.method === "insert"), false);
 });
 
 Deno.test("proximosNumerosChamado — E01-S99: reserva N números numa chamada só; 0/negativo não chama a RPC", async () => {
@@ -214,15 +227,16 @@ Deno.test("proximosNumerosChamado — E01-S99: reserva N números numa chamada s
   assertEquals(dbVazio.calls.length, 0);
 });
 
-Deno.test("montarLinhaOs — monta a linha sem I/O, referenciando o Chamado, sem numero próprio", () => {
+Deno.test("montarLinhaOs — preserva número explícito do Chamado criado", () => {
   const linha = montarLinhaOs(
     { taskId: 999, titulo: "Vazamento", customerId: 501, status: "em_execucao" },
-    { clienteId: "cliente-1", chamadoId: "chamado-1", systemUserId: "user-sistema-1" },
+    { clienteId: "cliente-1", chamadoId: "chamado-1", numeroChamado: "CH-0001", systemUserId: "user-sistema-1" },
   );
   const { auvo_synced_at, ...resto } = linha;
   assertEquals(resto, {
     client_id: "cliente-1",
     chamado_id: "chamado-1",
+    numero: "CH-0001",
     titulo: "Vazamento",
     categoria: "corretiva",
     status: "em_execucao",
@@ -258,6 +272,7 @@ Deno.test("montarLinhaOs — E01-S38: inclui técnico/data agendada/check-in-out
     {
       clienteId: "cliente-1",
       chamadoId: "chamado-1",
+      numeroChamado: "CH-0001",
       systemUserId: "user-sistema-1",
       tecnicoFuncionarioId: "funcionario-1",
     },
@@ -268,6 +283,15 @@ Deno.test("montarLinhaOs — E01-S38: inclui técnico/data agendada/check-in-out
   assertEquals(linha.check_in_at, "2026-06-25T07:49:38");
   assertEquals(linha.check_out_at, "2026-06-25T07:54:48");
   assertEquals(linha.auvo_detalhes, { address: "Rua Exemplo, 123", priority: 3 });
+});
+
+Deno.test("associa Chamados retornados fora de ordem pelo número e rejeita faltas ou duplicatas", () => {
+  const esperado = ["CH-1", "CH-2"];
+  const mapa = indexarChamadosPorNumero(esperado, [{ id: "id-2", numero: "CH-2" }, { id: "id-1", numero: "CH-1" }]);
+  assertEquals(mapa.get("CH-1"), "id-1");
+  assertEquals(mapa.get("CH-2"), "id-2");
+  assertThrows(() => indexarChamadosPorNumero(esperado, [{ id: "id-1", numero: "CH-1" }]));
+  assertThrows(() => indexarChamadosPorNumero(esperado, [{ id: "id-1", numero: "CH-1" }, { id: "id-2", numero: "CH-1" }]));
 });
 
 Deno.test("resolverFuncionarioIdsPorAuvoIds — resolve em lote e dedup, sem query pra lista vazia", async () => {

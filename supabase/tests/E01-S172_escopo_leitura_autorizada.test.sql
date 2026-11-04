@@ -1,0 +1,10 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(4);
+select has_function('pcm','sso_consultar_escopo_autorizado',array['uuid','uuid'],'escopo tem entrada serializada');
+select ok(coalesce(has_function_privilege('authenticated',to_regprocedure('pcm.sso_consultar_escopo_autorizado(uuid,uuid)'),'execute'),false),'usuário autenticado acessa a entrada mediada');
+select ok(not coalesce(has_function_privilege('anon',to_regprocedure('pcm.sso_consultar_escopo_autorizado(uuid,uuid)'),'execute'),true),'anônimo não consulta');
+select ok(not has_function_privilege('authenticated','pcm.sso_consultar_escopo_origem(uuid,uuid)','execute'),'núcleo anterior não contorna guarda');
+select * from finish();
+rollback;

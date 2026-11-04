@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -21,23 +21,22 @@ function fixture({ folder = true, declared = true, invoke = "literal" } = {}) {
       ? 'supabase.functions.invoke("demo")'
       : invoke === "missing"
         ? 'supabase.functions.invoke("ausente")'
-        : "supabase.functions.invoke(nome)";
+        : invoke === "multiline"
+          ? 'supabase.functions.invoke(\n  "demo")'
+          : invoke === "concatenated"
+            ? 'supabase.functions.invoke("demo" + suffix)'
+          : invoke === "template"
+            ? 'supabase.functions.invoke(`demo-${suffix}`)'
+          : "supabase.functions.invoke(nome)";
   writeFileSync(join(root, "apps", "web", "src", "adapter.ts"), call);
   return root;
 }
 
 function run(root) {
   try {
-    const stdout = execFileSync(process.execPath, [SCRIPT, root], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    return { ok: true, output: stdout };
-  } catch (error) {
-    return {
-      ok: false,
-      output: `${error.stdout?.toString() ?? ""}${error.stderr?.toString() ?? ""}`,
-    };
+    const result = spawnSync(process.execPath, [SCRIPT, root], { encoding: "utf8" });
+    if (result.error) throw result.error;
+    return { ok: result.status === 0, output: `${result.stdout ?? ""}${result.stderr ?? ""}` };
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -62,4 +61,21 @@ test("falha para invoke literal sem pasta", () => {
 test("invoke dinâmico é aviso, não falso positivo", () => {
   const result = run(fixture({ invoke: "dynamic" }));
   assert.equal(result.ok, true);
+  assert.match(result.output, /nome dinâmico/);
 });
+
+test("invoke literal em múltiplas linhas não gera aviso dinâmico", () => {
+  const result = run(fixture({ invoke: "multiline" }));
+  assert.equal(result.ok, true);
+  assert.doesNotMatch(result.output, /nome dinâmico/);
+  assert.match(result.output, /1 invoke\(s\) verificado\(s\)/);
+});
+
+for (const invoke of ["concatenated", "template"]) {
+  test(`invoke ${invoke} não é confundido com nome literal`, () => {
+    const result = run(fixture({ invoke }));
+    assert.equal(result.ok, true);
+    assert.match(result.output, /nome dinâmico/);
+    assert.match(result.output, /0 invoke\(s\) verificado\(s\)/);
+  });
+}

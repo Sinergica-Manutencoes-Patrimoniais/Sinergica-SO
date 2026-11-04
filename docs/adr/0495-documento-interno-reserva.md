@@ -1,0 +1,5 @@
+# ADR-0495 — documento interno e reserva de saldo
+
+Status: proposto; gates fechados, não aplicado nem homologado. Um comando autorizado transforma seleção local 0716 em documento interno não fiscal e reserva integral do saldo observado. Revalida revisão do item, competência e saldo oficial sob locks e registra documento/reserva imutáveis, com idempotência e unicidade por item. Não emite nota fiscal, não cria lançamento, não aloca documento financeiro, não envia cobrança nem realiza efeito externo.
+
+Para impedir dupla utilização, um gatilho bloqueia novas alocações existentes enquanto houver reserva ativa, mesmo se o gate de criação for posteriormente desligado. Ainda não existe comando de liberação ou conversão da reserva; ativar agora pode bloquear operação financeira permanentemente. A proteção de outras rotas de alteração de origem, concorrência, fechamento, reversão e escopo deve ser auditada e testada antes de qualquer ativação. O documento interno não satisfaz por si só a emissão fiscal ou a integração financeira da story.

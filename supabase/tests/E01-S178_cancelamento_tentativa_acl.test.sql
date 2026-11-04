@@ -1,0 +1,13 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = extensions, public;
+select plan(7);
+select ok(not (select habilitado from pcm.sso_cancelamento_aprovacao_gate where id), 'gate inicia fechado');
+select ok(not has_function_privilege('anon', 'pcm.sso_cancelar_tentativa_aprovacao(uuid,uuid,uuid,uuid)', 'execute'), 'anon não cancela');
+select ok(has_function_privilege('authenticated', 'pcm.sso_cancelar_tentativa_aprovacao(uuid,uuid,uuid,uuid)', 'execute'), 'usuário autenticado alcança mediador');
+select ok(not has_function_privilege('authenticated', 'pcm.sso_exigir_aprovacao_nao_cancelada(uuid,uuid,uuid)', 'execute'), 'guarda interna permanece privada');
+select ok(not has_table_privilege('authenticated', 'pcm.sso_aprovacao_tentativas_canceladas', 'select'), 'cancelamentos não são consultáveis diretamente');
+select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid = 'pcm.sso_aprovacao_tentativas_canceladas'::regclass), 'cancelamentos têm RLS forçada');
+select matches(pg_get_functiondef('pcm.sso_aprovar_linhas_parcialmente(uuid,uuid,integer,jsonb,text,boolean)'::regprocedure), 'sso_exigir_aprovacao_nao_cancelada', 'aprovação consulta a guarda de cancelamento');
+select * from finish();
+rollback;

@@ -101,6 +101,26 @@ describe("salvarComposicaoSistema", () => {
 });
 
 describe("criarSistema — E01-S157", () => {
+  it("restaura a sigla se nova reserva falhar após colisão", async () => {
+    const gateway = gatewayFake([]);
+    gateway.criar = vi.fn().mockRejectedValue(new IdentificadorDuplicadoError("GUA-HID-SIH-01"));
+    let sigla: string | null = null;
+    const identificador: IdentificadorAtivoGateway = {
+      obterNiveis: async () => ({
+        cliente: { id: "cli-1", nome: "Guainumbí", sigla },
+        area: null,
+        locais: [],
+        categoria: { id: "cat-1", nome: "Hidráulica", sigla: "HID" },
+      }),
+      definirSigla: async (_nivel, _id, valor) => { sigla = valor; },
+      proximoSequencial: vi.fn().mockResolvedValueOnce("01").mockRejectedValueOnce(new Error("reserva indisponível")),
+    };
+    await expect(criarSistema(gateway,
+      { clienteId: "cli-1", categoriaId: "cat-1", nome: "Sistema Hidrante", userId: "user-1" },
+      { identificador, siglasInformadas: [{ nivel: "cliente", id: "cli-1", sigla: "GUA" }], identificadorManual: null },
+    )).rejects.toThrow("reserva indisponível");
+    expect(sigla).toBeNull();
+  });
   it("refaz uma única reserva quando o sequencial colide", async () => {
     const gateway = gatewayFake([]);
     gateway.criar = vi

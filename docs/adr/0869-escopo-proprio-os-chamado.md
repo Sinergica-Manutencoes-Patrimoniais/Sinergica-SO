@@ -1,0 +1,7 @@
+# ADR 0869 — Escopo próprio por OS de um Chamado
+
+E01-S167 AC-1 exige várias OS com escopos diferentes no mesmo Chamado. O núcleo 1047, preparado antes da interface, exige igualdade do título e da descrição com o Chamado; isso impede representar parcelas distintas. Teste em banco diagnóstico reproduziu `campos_inconsistentes` ao tentar criar a terceira OS com título e descrição próprios.
+
+Preparar migration aditiva que retire somente essas duas comparações, preservando validação do título, autorização, revisão, requestId, vínculo de Cliente/Chamado, fotos de origem, eventos, auditoria e gates. A alteração usa inspeção e substituição exata da definição instalada; se a definição divergir ou a comparação não ocorrer exatamente uma vez, a migration deve falhar sem aplicar mudança. A interface experimental inicia com os dados do Chamado, permite edição por OS e conserva a tentativa completa no retry. Não modifica título ou descrição do Chamado e não declara que o texto, por si só, prove composição integral ou execução do escopo; o comando continua atualizando status e vínculo legado conforme contrato existente.
+
+O núcleo continua privado, com gate fechado e barreiras legadas presentes. Não aplicar ou habilitar em produção antes de testar concorrência, consumidores, migração/rollback, composição de escopo, RLS, CI e revisão adversarial. Fechar gates e flag interrompe o caminho novo sem apagar OS; restaurar a igualdade é incompatível com novas OS de títulos distintos e requer avaliação de dados e consumidores, nunca sobrescrever histórico.

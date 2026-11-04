@@ -1,0 +1,3 @@
+-- ADR-0520: transição de unicidade ainda não resolvida.
+-- Migration intencionalmente sem efeito; preserva a restrição legada de item/documento.
+-- Múltiplas parcelas no mesmo documento permanecem pendentes de projeto e validação.
