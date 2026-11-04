@@ -18,6 +18,7 @@ import { FusoPlanoDeclarado } from "./FusoPlanoDeclarado";
 import { VincularSerieRotina } from "./VincularSerieRotina";
 import { PreviaCiclos } from "./PreviaCiclos";
 import { PreviaVencimentosPlano } from "./PreviaVencimentosPlano";
+import { PrepararRotinasJanela } from "./PrepararRotinasJanela";
 import { CiclosUniformes } from "./CiclosUniformes";
 import { ContratoPerguntas } from "./ContratoPerguntas";
 import { IniciarRevisaoContratos } from "./IniciarRevisaoContratos";
@@ -292,6 +293,7 @@ export function DetalhePlano({
         <p>Dados congelados na aprovação; a situação atual dos alvos pode ser diferente.</p>
       )}
       {import.meta.env.VITE_SSO_PREVIA_VENCIMENTOS_PLANO_ENABLED === "true" && versao?.estado === "aprovado" && <PreviaVencimentosPlano userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} revisaoPlano={plano.revisao} />}
+      {import.meta.env.VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED === "true" && import.meta.env.VITE_SSO_LOTE_CALENDARIO_CONFERIDO_ENABLED === "true" && import.meta.env.VITE_SSO_ORIGEM_LOTE_ENABLED === "true" && versao?.estado === "aprovado" && <PrepararRotinasJanela userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} revision={plano.revisao} />}
       {import.meta.env.VITE_SSO_COPIA_PLANO_ENABLED === "true" && versao?.estado === "aprovado" && (
         <CopiarPlanoAprovado key={`${userId}:${clienteId}:${plano.id}:${versao.id}:${plano.revisao}`} userId={userId} clienteId={clienteId}
           planoId={plano.id} planoNome={plano.nome} revisao={plano.revisao} versaoId={versao.id} versaoNumero={versao.numero} />

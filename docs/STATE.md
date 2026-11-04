@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: fuso, conflito e lote de Rotinas
+
+- ADR-1523/migration 1666 usam a data civil da versão aplicável nas transições de suspensão, encerramento, retomada e decisão de vencido quando os gates existentes de fuso estão ativos; gates desligados preservam o comportamento anterior, configuração parcial e fuso ausente bloqueiam. Fixture passou em clone revertido com fusos em dias diferentes; não comprova concorrência nem fontes contratuais externas.
+- A jornada de geração por calendário permite conferir até 25 Rotinas e processá-las sequencialmente, com progresso e recuperação por item; não é atômica entre Rotinas e não cria OS/Auvo. ADR-1521/migration 1664 mantêm gate de origem durante lote conferido; fixture de gate, ator, PMOC e replay passou em clone revertido. Faltam integração real e concorrência.
+- Telas de impacto recuperam de erro SQL 40001 definitivo mediante reconferência, preservando resultado incerto; 4 testes focados passaram. Jornada multirrotina: 2 testes focados passaram; typecheck passou. Guarda 1045 e homologação seguem bloqueadas; decisão sobre data-base pendente.
+
 ## 2026-11-04 — S165/S166: histórico de origem, OS e fila após integração
 
 - ADR-1519/migration 1662 integra OS ativas encontradas em vínculos conhecidos à comparação e confirmação da decisão; fontes sem vínculo seguem incompletas e há limite de 100 OS. Fixture sintética de calendário passou em clone revertido: deduplicação da mesma OS por duas fontes, divergência de Cliente sem exposição e status alterado invalidando fotografia; conflito inconsistente foi inserido com triggers desabilitados apenas na fixture. Visita, fontes não vinculadas, custos/travas e concorrência permanecem pendentes.

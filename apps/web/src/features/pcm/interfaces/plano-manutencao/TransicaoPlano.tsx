@@ -38,7 +38,7 @@ function Conteudo({userId,clienteId,plano,bloqueado,onAbrirRotinas}:Props) {
   function enviar(p:Pedido){if(trava.current)return;trava.current=true;envio.mutate(p);}
   const permitido=acessoConferido&&!bloqueado;
   return <section aria-label="Transição do Plano"><h4>Transição do Plano</h4>
-    <p>Esta etapa aceita vigência do dia atual em São Paulo. Não altera OS, não aciona Auvo e não comprova interrupção dos geradores legados.</p>
+    <p>Esta etapa aceita apenas o dia atual conforme a configuração de fuso. Sem configuração ativa, usa São Paulo; se o fuso histórico exigido estiver incompleto, é necessária conferência. Não altera OS, não aciona Auvo e não comprova interrupção dos geradores legados.</p>
     {import.meta.env.VITE_SSO_INVENTARIO_GERACAO_LEGADA_ENABLED === "true" && acessoConferido && <InventarioGeracaoLegada userId={userId} clienteId={clienteId} />}
     {import.meta.env.VITE_SSO_RELACAO_PLANO_LEGADO_ENABLED === "true" && acessoConferido && <RelacaoPlanoLegado userId={userId} clienteId={clienteId} planoId={plano.id} revision={plano.revisao} />}
     {permissao.isFetching && <output>Verificando permissão…</output>}{permissao.isError && <p role="alert">Permissão indisponível. <button type="button" onClick={() => void permissao.refetch()}>Tentar novamente</button></p>}
