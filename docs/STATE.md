@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: validação integrada e fontes
+
+- Clone com migrations 1614–1683 e rollback exercitou aprovação mediada, replay, continuidade de três versões e geração sem duplicidade em calendário e Visita. Gates ativados e 1045 desligada somente dentro das transações sintéticas; depois 1045 estava habilitada e não restaram Planos de fixture. Fonte/decisão sintética não comprova exclusividade externa, concorrência nem homologação.
+- Teste de interface de calendário até fila passou com componentes reais e RPC simulada; não cobre banco/rede/concorrência e não cria OS/Auvo.
+- Existem feriados declarados por Cliente/contrato, mas código não comprova cobertura oficial. Para operação faltam identificação de local/UF, contratos e períodos, relação aplicável e fonte/responsável, além de definir se PCM pode manter lista conferida ou se outra fonte deve ser integrada. Isso não substitui reconciliação PMOC/legado. A questão de mudança de data-base já foi encaminhada ao usuário e continua pendente.
+
 ## 2026-11-04 — S165/S166: classificação e recuperação de conflito
 
 - ADR-1540/migration 1683 impedem classificar um par Plano/legado como não relacionado se houver ponte explícita de ocorrência mesmo após retirada da relação. Migrations 1614–1683 compilaram em clone e fixtures de calendário/Visita passaram com rollback; concorrência e custo de travas pendentes. Guarda 1045 intacta.
