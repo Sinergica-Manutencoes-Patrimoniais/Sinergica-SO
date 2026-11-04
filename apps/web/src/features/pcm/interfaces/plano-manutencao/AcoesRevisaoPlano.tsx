@@ -120,7 +120,7 @@ export function AcoesRevisaoPlano({
   const operacao = useMutation({
     mutationFn: (pedido: Operacao) =>
       pedido.tipo === "aprovacao_revisao"
-        ? aprovarRevisaoPreparada(validarAprovacaoPlano(pedido.comando))
+        ? aprovarRevisaoPreparada(validarAprovacaoPlano(pedido.comando), { userId, clienteId })
         : pedido.tipo === "aprovacao"
         ? aprovarPlano(supabasePlanoManutencaoAdapter, pedido.comando)
         : pedido.tipo === "inicio"

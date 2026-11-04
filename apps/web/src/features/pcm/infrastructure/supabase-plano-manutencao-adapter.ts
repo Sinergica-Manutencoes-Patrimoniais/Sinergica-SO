@@ -41,9 +41,10 @@ async function executar(nome: string, parametros: Record<string, string | number
   return resultadoSchema.parse(data);
 }
 
-// Preparada atrás de flag na UI; a função do banco permanece revogada e com gate fechado.
-export function aprovarRevisaoPreparada(c: { requestId: string; expectedRevision: number; planoId: string; vigencia: string }) {
-  return executar("sso_aprovar_revisao_preparada", {
+// A mediação possui gate desligado e a aprovação permanece bloqueada pela guarda de impactos.
+export function aprovarRevisaoPreparada(c: { requestId: string; expectedRevision: number; planoId: string; vigencia: string }, contexto: { userId: string; clienteId: string }) {
+  return executar("sso_aprovar_revisao_mediada", {
+    p_ator_id: contexto.userId, p_cliente_id: contexto.clienteId,
     p_request_id: c.requestId, p_expected_revision: c.expectedRevision,
     p_plano_id: c.planoId, p_vigencia: c.vigencia,
   });
