@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const uuid = z.string().uuid();
 const linha = z.object({ ciclo_id: uuid, preparada_id: uuid, estado: z.enum(["aguardando", "verificacao", "cancelado"]),
-  revisao: z.number().int().positive(), vencimento: z.string().date(), atualizado_em: z.string().datetime({ offset: true }) }).strict();
+  revisao: z.number().int().positive(), vencimento: z.string().date(), atualizado_em: z.string().datetime({ offset: true }), situacao_atual: z.enum(["conferida", "verificacao", "cancelada"]).optional() }).strict();
 const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, planoId: uuid, preparadaId: uuid, contextoPreparadaId: uuid.optional(),
   acao: z.enum(["incluir", "cancelar", "confirmar"]), revisao: z.number().int().nonnegative(), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
@@ -26,11 +26,12 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
   async function sessao(signal?: AbortSignal) { const r = await supabase.auth.getUser(); if (r.error || r.data.user?.id !== userId || signal?.aborted) throw new Error("Sessão alterada."); }
   const lista = useQuery({ queryKey: ["fila-preventiva-pcm", userId, clienteId, planoId, "preparada", preparadaId, tipo], gcTime: 0, retry: false,
     queryFn: async ({ signal }) => {
-      await sessao(signal); const { data, error } = await supabase.schema("pcm").rpc(tipo === "visita" ? "sso_consultar_fila_visita" : "sso_consultar_entrada_fila_preventiva", {
+      await sessao(signal); const { data, error } = await supabase.schema("pcm").rpc(tipo === "visita" ? "sso_consultar_fila_visita_v2" : "sso_consultar_entrada_fila_preventiva", {
         p_cliente_id: clienteId, p_plano_id: planoId, p_preparada_id: preparadaId,
       }).abortSignal(signal);
       if (error) throw error; const itens = z.array(linha).max(2).parse(data); let anterior = "";
       for (const item of itens) {
+        if (tipo === "visita" && !item.situacao_atual) throw new Error("Situação indisponível.");
         if (item.ciclo_id.toLowerCase() <= anterior) throw new Error("Entrada divergente.");
         anterior = item.ciclo_id.toLowerCase();
       }
@@ -77,6 +78,8 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
     {lista.isFetching && <output>Consultando fila…</output>}
     {lista.isError && <p role="alert">Fila indisponível. <button type="button" onClick={() => void lista.refetch()}>Tentar novamente</button></p>}
     {visivel && <p>{existentes.length > 1 ? "Identidade ambígua; procure suporte." : registro ? `Entrada ${registro.estado} · revisão ${registro.revisao}.` : "Nenhuma entrada registrada para o ciclo canônico consultado."}</p>}
+    {visivel && tipo === "visita" && registro?.situacao_atual === "verificacao" && <p role="alert">Fonte ou vigência exigem nova conferência. O estado registrado não comprova que o ciclo continua aguardando.</p>}
+    {visivel && tipo === "visita" && registro?.situacao_atual === "conferida" && <p>Situação atual parcialmente conferida; fontes externas ainda exigem atenção.</p>}
     {visivel && outraOcorrencia && <p role="status">Este ciclo foi registrado pela ocorrência {registro?.preparada_id}. A ação usará a ocorrência original e preservará esta versão.</p>}
     {pendente === "invalido" && <p role="alert">Tentativa ilegível; procure suporte.</p>}
     {pendente && pendente !== "invalido" ? <button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</button> : !pendente && <>

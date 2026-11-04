@@ -8,7 +8,7 @@ const uuid = z.string().uuid();
 const linha = z.object({ ciclo_id: uuid, preparada_id: uuid, estado: z.enum(["aguardando", "verificacao", "cancelado"]),
   revisao: z.number().int().positive(), vencimento: z.string().date(), atualizado_em: z.string().datetime({ offset: true }),
   rotina_id: uuid, rotina_nome: z.string().nullable(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: uuid,
-  versao_origem_id: uuid, visita_id: uuid }).strict();
+  versao_origem_id: uuid, visita_id: uuid, situacao_atual: z.enum(["conferida", "verificacao", "cancelada"]) }).strict();
 type Cursor = { vencimento: string; ciclo: string } | null;
 type Props = { userId: string; clienteId: string; planoId: string; estado: string; inicio: string; fim: string };
 
@@ -24,7 +24,7 @@ function Conteudo({ userId, clienteId, planoId, estado, inicio, fim }: Props) {
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
-      const { data, error } = await supabase.schema("pcm").rpc("sso_listar_fila_visita_cronologica", {
+      const { data, error } = await supabase.schema("pcm").rpc("sso_listar_fila_visita_cronologica_v2", {
         p_cliente_id: clienteId, p_plano_id: planoId, p_estado: estado === "todos" ? null : estado,
         p_inicio: inicio || null, p_fim: fim || null, p_apos_vencimento: pageParam?.vencimento ?? null,
         p_apos_ciclo: pageParam?.ciclo ?? null, p_limite: 50,
@@ -53,7 +53,7 @@ function Conteudo({ userId, clienteId, planoId, estado, inicio, fim }: Props) {
     {visivel && <>
       {itens.length === 0 && <p>Nenhuma Visita nesta consulta.</p>}
       <ul>{itens.map((item) => <li key={item.ciclo_id}>
-        Vencimento {item.vencimento.split("-").reverse().join("/")} · {item.estado === "aguardando" ? "registro aguardando" : item.estado === "verificacao" ? "conferir: execução desconhecida" : "registro cancelado"} · {item.rotina_nome ? `Rotina de referência: ${item.rotina_nome}` : "Rotina não identificada"} · alvo {item.alvo_tipo}: {item.alvo_id} · Visita {item.visita_id} · ciclo {item.ciclo_id} · revisão {item.revisao}
+        Vencimento {item.vencimento.split("-").reverse().join("/")} · {item.estado === "aguardando" ? "registro aguardando" : item.estado === "verificacao" ? "conferir: execução desconhecida" : "registro cancelado"} · {item.rotina_nome ? `Rotina de referência: ${item.rotina_nome}` : "Rotina não identificada"} · alvo {item.alvo_tipo}: {item.alvo_id} · Visita {item.visita_id} · ciclo {item.ciclo_id} · revisão {item.revisao} · {item.situacao_atual === "conferida" ? "fonte conferida parcialmente" : item.situacao_atual === "verificacao" ? "fonte exige nova verificação" : "entrada cancelada"}
         <button type="button" aria-expanded={gestao?.ciclo === item.ciclo_id} onClick={() => setGestao(gestao?.ciclo === item.ciclo_id ? null : { ciclo: item.ciclo_id, preparada: item.preparada_id })}>
           {gestao?.ciclo === item.ciclo_id ? "Ocultar gestão" : "Gerenciar entrada"}
         </button>
