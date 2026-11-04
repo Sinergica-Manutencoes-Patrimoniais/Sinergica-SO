@@ -6,6 +6,7 @@ import { confirmarSnapshotExportacao, lerSnapshotExportacao } from "../../applic
 import { janelaPadraoCalendario } from "../../domain/calendario-contratual";
 import { obterPaginaSnapshotExportacao } from "../../infrastructure/supabase-snapshot-exportacao";
 import { FilaAposPreparacao } from "./FilaAposPreparacao";
+import { FilaDasOcorrenciasPreparadas } from "./FilaDasOcorrenciasPreparadas";
 
 const uuid = z.string().uuid();
 const esperadoSchema = z.object({ ciclo: z.number().int().nonnegative().safe(), vencimento: z.string().date() }).strict();
@@ -14,7 +15,7 @@ const rotinaSchema = z.object({ rotinaId: uuid, nome: z.string().min(1), alvo: z
 const reciboSchema = z.object({ rotinaId: uuid, preparadas: z.array(uuid).min(1).max(31) }).strict();
 const pedidoSchema = z.object({ clienteId: uuid, planoId: uuid, versaoId: uuid, revision: z.number().int().positive().safe(),
   inicio: z.string().date(), fim: z.string().date(), rotinas: z.array(rotinaSchema).min(1).max(25), proxima: z.number().int().nonnegative(),
-  recibos: z.array(reciboSchema).max(25) }).strict().superRefine((p, ctx) => {
+  recibos: z.array(reciboSchema).max(25), tentativaIncerta: z.boolean().optional() }).strict().superRefine((p, ctx) => {
     if (p.proxima > p.rotinas.length || p.recibos.length !== p.proxima || p.recibos.some((r, i) => r.rotinaId !== p.rotinas[i]?.rotinaId) ||
       new Set(p.rotinas.map((r) => r.rotinaId.toLowerCase())).size !== p.rotinas.length || new Set(p.rotinas.map((r) => r.requestId.toLowerCase())).size !== p.rotinas.length)
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Sequência divergente." });
@@ -71,13 +72,25 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
       while (atual.proxima < atual.rotinas.length) {
         await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(atual)) throw new Error("Tentativa alterada.");
         const r = atual.rotinas[atual.proxima]!;
+        // Registre antes do envio: após recarga ou falha de rede, o pedido pode ter sido confirmado.
+        const jaIncerta = atual.tentativaIncerta !== false;
+        const enviado = pedidoSchema.parse({ ...atual, tentativaIncerta: true });
+        sessionStorage.setItem(chave, JSON.stringify(enviado)); atual = enviado; setPendente(atual);
         const { data, error } = await supabase.schema("pcm").rpc("sso_materializar_lote_calendario_origem_conferida", { p_ator_id: userId, p_request_id: r.requestId, p_cliente_id: atual.clienteId, p_plano_id: atual.planoId, p_versao_id: atual.versaoId, p_rotina_id: r.rotinaId, p_expected_revision: atual.revision, p_inicio: atual.inicio, p_fim: atual.fim, p_esperados: r.esperados });
-        if (error) throw error;
+        if (error) {
+          if (!jaIncerta && typeof error === "object" && "code" in error && error.code === "40001") {
+            await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(atual)) throw new Error("Tentativa alterada.");
+            sessionStorage.removeItem(chave); setPendente(null); setConcluidos(atual.recibos); setAssinatura(null); setOrigens(null);
+            setAviso(`A revisão ou a origem mudou após ${atual.proxima} de ${atual.rotinas.length} Rotinas. Confira novamente as restantes; as anteriores permanecem preparadas.`);
+            return;
+          }
+          throw error;
+        }
         const resposta = z.object({ requestId: uuid, inicio: z.string().date(), fim: z.string().date(), total: z.number().int().nonnegative(), criadas: z.number().int().nonnegative(), itens: z.array(z.object({ indice: z.number().int().nonnegative().safe(), vencimentoOriginal: z.string().date(), preparadaId: uuid, cicloCanonicoId: uuid, criada: z.boolean() }).strict()).max(31), atomico: z.literal(true), osCriada: z.literal(false), tarefaAuvoCriada: z.literal(false) }).passthrough().parse(data);
         const esperados = r.esperados.slice().sort((a, b) => a.ciclo - b.ciclo);
         if (resposta.requestId !== r.requestId || resposta.inicio !== atual.inicio || resposta.fim !== atual.fim || resposta.total !== r.esperados.length || resposta.itens.length !== resposta.total || resposta.criadas !== resposta.itens.filter((i) => i.criada).length || new Set(resposta.itens.map((i) => i.preparadaId.toLowerCase())).size !== resposta.itens.length || JSON.stringify(resposta.itens.map((i) => ({ ciclo: i.indice, vencimento: i.vencimentoOriginal })).sort((a, b) => a.ciclo - b.ciclo)) !== JSON.stringify(esperados)) throw new Error("Recibo divergente.");
         await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(atual)) throw new Error("Tentativa alterada.");
-        const proximo = pedidoSchema.parse({ ...atual, proxima: atual.proxima + 1, recibos: [...atual.recibos, { rotinaId: r.rotinaId, preparadas: resposta.itens.map((i) => i.preparadaId) }] });
+        const proximo = pedidoSchema.parse({ ...atual, proxima: atual.proxima + 1, recibos: [...atual.recibos, { rotinaId: r.rotinaId, preparadas: resposta.itens.map((i) => i.preparadaId) }], tentativaIncerta: false });
         sessionStorage.setItem(chave, JSON.stringify(proximo)); atual = proximo; setPendente(atual);
       }
       await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(atual)) throw new Error("Tentativa alterada.");
@@ -88,8 +101,9 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
   }
   function iniciar() {
     if (trava.current || pendente || !visivel || !origensAtuais || bloqueadas.length > 0 || comCiclos.length === 0 || assinatura !== assinaturaAtual) return;
-    try { const p = pedidoSchema.parse({ clienteId, planoId, versaoId, revision, inicio, fim, rotinas: comCiclos.map((r) => ({ rotinaId: r.rotinaId, nome: r.nome, alvo: r.alvo, requestId: crypto.randomUUID(), esperados: r.itens.map(({ ciclo, vencimento }) => ({ ciclo, vencimento })) })), proxima: 0, recibos: [] }); if (sessionStorage.getItem(chave) !== null) throw new Error("Tentativa existente."); sessionStorage.setItem(chave, JSON.stringify(p)); setConcluidos([]); setPendente(p); void executar(p); } catch { setAviso("Não foi possível guardar a sequência; nada foi enviado."); }
+    try { const p = pedidoSchema.parse({ clienteId, planoId, versaoId, revision, inicio, fim, rotinas: comCiclos.map((r) => ({ rotinaId: r.rotinaId, nome: r.nome, alvo: r.alvo, requestId: crypto.randomUUID(), esperados: r.itens.map(({ ciclo, vencimento }) => ({ ciclo, vencimento })) })), proxima: 0, recibos: [], tentativaIncerta: false }); if (sessionStorage.getItem(chave) !== null) throw new Error("Tentativa existente."); sessionStorage.setItem(chave, JSON.stringify(p)); setConcluidos([]); setPendente(p); void executar(p); } catch { setAviso("Não foi possível guardar a sequência; nada foi enviado."); }
   }
+  const recibosDisponiveis = pendente && pendente !== "invalido" ? pendente.recibos : concluidos;
   return <section aria-label="Preparar Rotinas por calendário"><h4>Preparar Rotinas por calendário</h4>
     <p>Confira até 25 Rotinas no mesmo período. A preparação é sequencial por Rotina: falha não desfaz as anteriores. Retome o pedido pendente para continuar; não cria OS ou tarefa Auvo. A fonte de feriados e a exclusividade global ainda não são comprovadas.</p>
     {snapshot.isFetching && <p role="status">Consultando Rotinas…</p>}{snapshot.isError && <p role="alert">Rotinas indisponíveis. <button type="button" onClick={() => void snapshot.refetch()}>Tentar novamente</button></p>}
@@ -103,7 +117,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
       {origensAtuais && <><ul>{origensAtuais.map((r) => <li key={r.rotinaId}>{r.nome} · {r.alvo} · {r.itens.length} ciclo(s){r.itens.map((i) => <span key={i.ciclo}> · {i.vencimento}: {i.estado}</span>)}</li>)}</ul>{bloqueadas.length > 0 && <p role="alert">Há origem PMOC, pendência ou conflito. Resolva essas Rotinas ou retire-as da seleção e confira novamente.</p>}{comCiclos.length === 0 && <p>Nenhuma Rotina selecionada tem ciclos na janela.</p>}
         <label><input type="checkbox" disabled={bloqueadas.length > 0 || comCiclos.length === 0} checked={assinatura === assinaturaAtual} onChange={(e) => setAssinatura(e.target.checked ? assinaturaAtual : null)} /> Conferi cada Rotina, alvo, ciclo e origem; autorizo a preparação sequencial.</label><button type="button" disabled={assinatura !== assinaturaAtual || bloqueadas.length > 0 || comCiclos.length === 0} onClick={iniciar}>Preparar Rotinas selecionadas</button></>}
     </>}
-    {concluidos.length > 0 && <section aria-label="Ocorrências preparadas na janela"><h5>Ocorrências preparadas</h5><ul>{concluidos.flatMap((r) => r.preparadas.map((id) => <li key={id}>Rotina {r.rotinaId} · ocorrência {id} <FilaAposPreparacao userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={id} /></li>))}</ul></section>}
+    {!ocupado && recibosDisponiveis.length > 0 && <section aria-label="Ocorrências preparadas na janela"><h5>Ocorrências preparadas</h5><ul>{recibosDisponiveis.flatMap((r) => r.preparadas.map((id) => <li key={id}>Rotina {r.rotinaId} · ocorrência {id} <FilaAposPreparacao userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={id} /></li>))}</ul>{import.meta.env.VITE_SSO_FILA_SELECIONADA_ENABLED === "true" && <FilaDasOcorrenciasPreparadas userId={userId} clienteId={clienteId} planoId={planoId} preparadas={recibosDisponiveis.flatMap((r) => r.preparadas)} />}</section>}
     {aviso && <p role="status">{aviso}</p>}
   </section>;
 }

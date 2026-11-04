@@ -71,3 +71,20 @@ it.each(["calendario", "visita"] as const)("libera nova conferência após confl
   expect(screen.queryByRole("button", { name: "Repetir tentativa pendente" })).toBeNull();
   expect(screen.getByRole("button", { name: "Registrar decisão" })).toBeDisabled();
 });
+
+it.each(["calendario", "visita"] as const)("preserva tentativa anterior quando replay recebe conflito 40001 em %s", async (tipo) => {
+  vi.stubEnv("VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED", "true");
+  const chave = `${tipo === "calendario" ? "sso-impacto-revisao" : "sso-impacto-visita"}:${JSON.stringify([usuario, cliente, plano])}`;
+  const pedido = JSON.stringify({ requestId: "16630000-1111-4000-8000-000000000098", clienteId: cliente, planoId: plano, rascunhoId: rascunho, preparadaId: preparada, planoRevision: revision, decisaoRevision: 1, decisao: "exige_reconciliacao", motivo: "Conferido" });
+  sessionStorage.setItem(chave, pedido);
+  externo.rpc.mockImplementation((nome: string) => nome === "sso_decidir_impacto_mediada"
+    ? Promise.resolve({ data: null, error: { code: "40001", message: "revisao_decisao_obsoleta" } })
+    : { abortSignal: () => Promise.resolve({ data: [], error: null }) });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const props = { userId: usuario, clienteId: cliente, planoId: plano, revision };
+  render(<QueryClientProvider client={client}>{tipo === "calendario" ? <DecisaoImpactoOcorrencia {...props} /> : <DecisaoImpactoVisita {...props} />}</QueryClientProvider>);
+  fireEvent.click(screen.getByRole("button", { name: "Repetir tentativa pendente" }));
+  await screen.findByText(/Resultado não confirmado/);
+  expect(sessionStorage.getItem(chave)).toBe(pedido);
+  expect(screen.getByRole("button", { name: "Repetir tentativa pendente" })).toBeInTheDocument();
+});

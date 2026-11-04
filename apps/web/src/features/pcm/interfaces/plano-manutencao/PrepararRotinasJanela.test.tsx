@@ -47,3 +47,27 @@ it("bloqueia a preparação quando uma Rotina exige conferência de PMOC", async
   expect(screen.getByRole("button", { name: "Preparar Rotinas selecionadas" })).toBeDisabled();
   expect(api.rpc).toHaveBeenCalledTimes(2);
 });
+
+it.each([false, true])("preserva recibos e trata 40001 conforme incerteza anterior (%s)", async (incerta) => {
+  let chamadas = 0;
+  api.rpc.mockImplementation(async (nome, p) => {
+    if (nome === "sso_origens_lote_calendario") return { data: { revisao: 1, inicio: p.p_inicio, fim: p.p_fim, itens: [{ ciclo: 0, vencimento: "2026-11-10", estado: "plano", agendamentoId: null }], fontesCompletas: false, exclusividadeGlobalComprovada: false }, error: null };
+    chamadas++;
+    if (chamadas === 1) return { data: { requestId: p.p_request_id, inicio: p.p_inicio, fim: p.p_fim, total: 1, criadas: 1, itens: [{ indice: 0, vencimentoOriginal: "2026-11-10", preparadaId: id(31), cicloCanonicoId: id(41), criada: true }], atomico: true, osCriada: false, tarefaAuvoCriada: false }, error: null };
+    if (incerta && chamadas === 2) return { data: null, error: new Error("rede") };
+    return { data: null, error: { code: "40001", message: "revisao_obsoleta" } };
+  });
+  montar(); await screen.findByRole("checkbox", { name: /Rotina A/ }); await selecionar();
+  fireEvent.click(await screen.findByRole("checkbox", { name: /autorizo a preparação sequencial/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Preparar Rotinas selecionadas" }));
+  if (incerta) {
+    await screen.findByText(/Sequência interrompida após 1 de 2/);
+    fireEvent.click(screen.getByRole("button", { name: "Retomar sequência" }));
+    await waitFor(() => expect(chamadas).toBe(3));
+    expect(screen.getByRole("button", { name: "Retomar sequência" })).toBeInTheDocument();
+  } else {
+    await screen.findByText(/A revisão ou a origem mudou após 1 de 2/);
+    expect(screen.queryByRole("button", { name: "Retomar sequência" })).toBeNull();
+  }
+  expect(screen.getByLabelText("Ocorrências preparadas na janela")).toHaveTextContent(id(31));
+});

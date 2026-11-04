@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: recuperação segura e fila multirrotina
+
+- Resultados confirmados da geração multirrotina podem ser selecionados para inclusão explícita na fila, inclusive após interrupção; IDs são reconferidos no Plano. Seis testes focados passaram; sem inclusão automática.
+- Recuperação de conflitos em decisões e fila distingue rejeição definitiva na primeira tentativa de replay ou envio incerto: estes preservam o pedido para reconciliação. Na rejeição inicial por continuidade, PCM pode cancelar explicitamente a entrada sem alterar OS. O lote multirrotina registra incerteza antes do envio e preserva recibos anteriores; 4 testes focados de lote e 8 de decisão/fila passaram. Tratamento de erro de cache foi ajustado depois desses testes; typecheck passou.
+- Nenhuma migration nesta etapa; concorrência e integração real seguem pendentes. Guarda 1045 e homologação bloqueadas; sem Auvo/deploy. Decisão sobre data-base pendente.
+
 ## 2026-11-04 — S165/S166: fuso, conflito e lote de Rotinas
 
 - ADR-1523/migration 1666 usam a data civil da versão aplicável nas transições de suspensão, encerramento, retomada e decisão de vencido quando os gates existentes de fuso estão ativos; gates desligados preservam o comportamento anterior, configuração parcial e fuso ausente bloqueiam. Fixture passou em clone revertido com fusos em dias diferentes; não comprova concorrência nem fontes contratuais externas.
