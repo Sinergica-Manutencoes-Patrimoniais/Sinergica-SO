@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: teste integrado de navegador e concorrência
+
+- Ensaio em clone de duas decisões comparadas autenticadas na mesma ocorrência/revisão: primeira confirmou; segunda aguardou e recebeu 40001, sem sobrescrever. Não prova disputa com escritor real de OS/ponte nem todos os caminhos; 1045 preservada.
+- O Playwright compartilhado carrega configuração local que aponta a ambiente real e reutiliza servidor; não usá-lo para dados sintéticos. Foram preparados arquivos isolados `playwright.s166-isolado.config.ts`, `vite.s166-isolado.config.ts`, `e2e/s166-isolado/servidor.mjs` e `fixture.ts`, mas NÃO existe ainda gateway/Auth/PostgREST, clone nem jornada E2E validada. Filtro HTTP/service workers não garante isolamento total de rede; falta bloqueio no ambiente e comprovar destino do gateway antes de qualquer escrita. Não houve operação externa nem teste de navegador.
+- Fontes positivas PMOC/legado ainda não provam equivalência integral ou ausência de obrigações externas; fonte autoritativa e critérios de reconciliação não estão definidos. Decisão sobre data-base pendente; 1045 e homologação bloqueadas.
+
 ## 2026-11-04 — S165/S166: fontes e concorrência
 
 - Auditoria de origem: vínculos positivos PMOC/legado não comprovam equivalência integral de alvo/escopo nem ausência de obrigações externas; fonte oficial de feriados não foi encontrada no código. Não é seguro liberar a guarda 1045 somente por inferência. A decisão sobre mudança de data permanece aguardando usuário.
