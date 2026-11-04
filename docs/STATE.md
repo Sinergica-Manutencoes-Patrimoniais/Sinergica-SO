@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: fontes e concorrência
+
+- Auditoria de origem: vínculos positivos PMOC/legado não comprovam equivalência integral de alvo/escopo nem ausência de obrigações externas; fonte oficial de feriados não foi encontrada no código. Não é seguro liberar a guarda 1045 somente por inferência. A decisão sobre mudança de data permanece aguardando usuário.
+- Dois ensaios em sessões separadas com clone sintético até 1683 passaram: escrita concorrente em ordens_servico recusou aplicação de retirada 1674 com 55P03; escrita concorrente de ponte recusou prévia de classificação 1683 com 55P03. Não comprovam outras ordens, throughput ou fontes externas. Sem alteração funcional, Auvo ou deploy.
+
 ## 2026-11-04 — S165/S166: validação integrada e fontes
 
 - Clone com migrations 1614–1683 e rollback exercitou aprovação mediada, replay, continuidade de três versões e geração sem duplicidade em calendário e Visita. Gates ativados e 1045 desligada somente dentro das transações sintéticas; depois 1045 estava habilitada e não restaram Planos de fixture. Fonte/decisão sintética não comprova exclusividade externa, concorrência nem homologação.
