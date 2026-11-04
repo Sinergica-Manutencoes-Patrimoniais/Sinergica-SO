@@ -1,9 +1,9 @@
--- Executar em clone com migrations até 1659, em BEGIN/ROLLBACK. Inclui fixture sintética.
+-- Executar em clone com migrations até 1662, em BEGIN/ROLLBACK. Inclui fixture sintética.
 \ir manual_E01-S165_impacto_visita_mediado.sql
 update pcm.sso_decisao_comparada_gate set habilitado=true where id;
 update config.sso_concessoes set ativa=true where usuario_id='16610000-0000-0000-0000-000000000001' and acao='visita.confirmar';
 set local role authenticated;
-create temporary table comparacao_1657 as select pcm.sso_comparar_rotina_impacto_v2('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,'16610000-0000-0000-0000-000000000181',(select preparada_id from pcm.sso_listar_decisoes_visita_mediada('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,null,20)),'visita') as foto;
+create temporary table comparacao_1657 as select pcm.sso_comparar_rotina_impacto_v3('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,'16610000-0000-0000-0000-000000000181',(select preparada_id from pcm.sso_listar_decisoes_visita_mediada('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,null,20)),'visita') as foto;
 -- Simula mudança só da identidade exibida, mantendo alvo, data e regra.
 reset role;
 update pcm.ocorrencias_visita_preparadas set semana_origem=semana_origem+7 where plano_id='16610000-0000-0000-0000-000000000121';

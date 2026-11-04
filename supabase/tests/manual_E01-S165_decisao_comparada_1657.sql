@@ -1,8 +1,8 @@
--- Executar em clone com migrations até 1659, em BEGIN/ROLLBACK. Inclui fixture sintética.
+-- Executar em clone com migrations até 1662, em BEGIN/ROLLBACK. Inclui fixture sintética.
 \ir manual_E01-S165_impacto_calendario_mediado.sql
 update pcm.sso_decisao_comparada_gate set habilitado=true where id;
 set local role authenticated;
-create temporary table comparacao_1657 as select pcm.sso_comparar_rotina_impacto_v2('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,'16630000-1111-4000-8000-000000000022',(select preparada_id from pcm.sso_listar_decisoes_calendario_mediada('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,null,20)),'calendario') as foto;
+create temporary table comparacao_1657 as select pcm.sso_comparar_rotina_impacto_v3('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,'16630000-1111-4000-8000-000000000022',(select preparada_id from pcm.sso_listar_decisoes_calendario_mediada('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,null,20)),'calendario') as foto;
 -- Simula mudança só da identidade exibida, mantendo alvo, data e regra.
 reset role;
 update pcm.ocorrencias_rotina_preparadas set ciclo=ciclo+1 where plano_id='16630000-1111-4000-8000-000000000011';

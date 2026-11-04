@@ -5,6 +5,7 @@ import { afterEach, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({ rpc: vi.fn(), schema: vi.fn() }));
 vi.mock("../../../../lib/supabase-client", () => ({ supabase: { schema: api.schema } }));
 vi.mock("./diagnostico-revisao-sessao", () => ({ conferirSessaoDiagnostico: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("./FilaAposPreparacao", () => ({ FilaAposPreparacao: ({ preparadaId }: { preparadaId: string }) => <p>Fila do ciclo: {preparadaId}</p> }));
 import { MaterializarCicloLegado } from "./MaterializarCicloLegado";
 
 const props = { userId: "u", clienteId: "c", planoId: "p", legadoId: "l", relacaoId: "r", revision: 1 };
@@ -37,7 +38,7 @@ it("não apaga tentativa substituída por outra instância durante envio", async
   await waitFor(() => expect(api.rpc).toHaveBeenCalledWith("sso_materializar_legado_mediado", expect.anything()));
   const pedido = api.rpc.mock.calls.find(([nome]) => nome === "sso_materializar_legado_mediado")![1];
   sessionStorage.setItem(chave, "tentativa de outra instância");
-  concluir({ data: { requestId: pedido.p_request_id, osCriada: false, tarefaAuvoCriada: false, equivalenciaGeralComprovada: false, ocorrenciaLegadaCriada: true }, error: null });
+  concluir({ data: { requestId: pedido.p_request_id, preparadaId: pedido.p_preparada_id, osCriada: false, tarefaAuvoCriada: false, equivalenciaGeralComprovada: false, ocorrenciaLegadaCriada: true }, error: null });
   await waitFor(() => expect(screen.getByText(/tentativa.*alterada/i)).toBeTruthy());
   expect(sessionStorage.getItem(chave)).toBe("tentativa de outra instância");
 });
@@ -78,4 +79,15 @@ it("permite reconfirmar candidato atualizado antes de enviar", async () => {
   expect((screen.getByRole("button", { name: "Processar ciclo" }) as HTMLButtonElement).disabled).toBe(false);
   fireEvent.click(screen.getByRole("button", { name: "Processar ciclo" }));
   await waitFor(() => expect(api.rpc).toHaveBeenCalledWith("sso_materializar_legado_mediado", expect.objectContaining({ p_ator_id: "u", p_preparada_id: "preparada" })));
+});
+
+
+it("encaminha ciclo integrado para conferência independente da fila", async () => {
+  const { concluir } = preparar();
+  await selecionar();
+  fireEvent.click(screen.getByRole("button", { name: "Processar ciclo" }));
+  await waitFor(() => expect(api.rpc).toHaveBeenCalledWith("sso_materializar_legado_mediado", expect.anything()));
+  const pedido = api.rpc.mock.calls.find(([nome]) => nome === "sso_materializar_legado_mediado")![1];
+  concluir({ data: { requestId: pedido.p_request_id, preparadaId: pedido.p_preparada_id, osCriada: false, tarefaAuvoCriada: false, equivalenciaGeralComprovada: false, ocorrenciaLegadaCriada: true }, error: null });
+  expect(await screen.findByText("Fila do ciclo: preparada")).toBeInTheDocument();
 });

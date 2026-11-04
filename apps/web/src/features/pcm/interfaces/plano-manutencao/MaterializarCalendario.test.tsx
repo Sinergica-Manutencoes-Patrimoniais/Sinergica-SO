@@ -115,7 +115,7 @@ it("encaminha ciclo e lote à conferência da fila", async () => {
   render(<QueryClientProvider client={client}>{tipo === "ciclo" ? <MaterializarCicloCanonico {...base} ciclo={0} vencimento="2026-10-30" /> : <MaterializarLoteCalendario {...base} inicio="2026-10-30" fim="2026-10-30" ciclos={[{ ciclo: 0, vencimento: "2026-10-30" }]} />}</QueryClientProvider>);
   fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: tipo === "ciclo" ? "Preparar ciclo" : "Preparar lote" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Conferir inclusão na fila" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Conferir fila" }));
   expect(screen.getByText(`Fila calendário: ${item.preparadaId}`)).toBeInTheDocument();
   expect(api.rpc).toHaveBeenCalledTimes(1);
   cleanup();

@@ -7,7 +7,7 @@ update pcm.plano_versoes set snapshot=jsonb_set(jsonb_set(snapshot,'{rotinas,0,q
 update pcm.rotinas_manutencao set questionario_id='16610000-0000-0000-0000-000000000141' where versao_id='16610000-0000-0000-0000-000000000181';
 set local session_replication_role=origin;
 set local role authenticated;
-create temporary table comparacao_1660 as select pcm.sso_comparar_rotina_impacto_v2('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,'16610000-0000-0000-0000-000000000181',(select (foto->>'preparadaId')::uuid from comparacao_1657),'visita') foto;
+create temporary table comparacao_1660 as select pcm.sso_comparar_rotina_impacto_v3('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,'16610000-0000-0000-0000-000000000181',(select (foto->>'preparadaId')::uuid from comparacao_1657),'visita') foto;
 do $$ begin if (select foto->'questionarioComparacao'->>'estado' from comparacao_1660)<>'conteudo_integral_igual' then raise exception 'questionario_deveria_ser_igual';end if;end; $$;
 reset role;
 update pcm.questionarios set perguntas='[{"pergunta":"alterada"}]'::jsonb where id='16610000-0000-0000-0000-000000000141';
@@ -15,7 +15,7 @@ set local role authenticated;
 do $$ declare f jsonb;p_id uuid;begin select foto,(foto->>'preparadaId')::uuid into f,p_id from comparacao_1660;
  begin perform pcm.sso_decidir_impacto_comparado('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-000000000451','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121','16610000-0000-0000-0000-000000000181',p_id,2,2,'manter_sem_alterar','conferido','visita',f);raise exception 'mudanca_questionario_aceita';exception when serialization_failure then if sqlerrm<>'comparacao_obsoleta' then raise;end if;end;
 end; $$;
-create temporary table comparacao_atual_1660 as select pcm.sso_comparar_rotina_impacto_v2('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,'16610000-0000-0000-0000-000000000181',(select (foto->>'preparadaId')::uuid from comparacao_1657),'visita') foto;
+create temporary table comparacao_atual_1660 as select pcm.sso_comparar_rotina_impacto_v3('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',2,'16610000-0000-0000-0000-000000000181',(select (foto->>'preparadaId')::uuid from comparacao_1657),'visita') foto;
 do $$ declare f jsonb;p_id uuid;a jsonb;b jsonb;begin select foto,(foto->>'preparadaId')::uuid into f,p_id from comparacao_atual_1660;
  if f->'questionarioComparacao'->>'estado'<>'conteudo_integral_diferente' then raise exception 'diferenca_nao_detectada';end if;
  a:=pcm.sso_decidir_impacto_comparado('16610000-0000-0000-0000-000000000001','16610000-0000-0000-0000-000000000452','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121','16610000-0000-0000-0000-000000000181',p_id,2,2,'manter_sem_alterar','conferido','visita',f);

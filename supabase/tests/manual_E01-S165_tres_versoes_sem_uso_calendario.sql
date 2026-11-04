@@ -147,9 +147,27 @@ end; $$;
 do $$ begin
  if exists(select 1 from pcm.sso_ciclo_canonico_usos_versao where versao_id='16630000-1111-4000-8000-000000000022') then raise exception 'fixture_ja_rematerializada';end if;
 end; $$;
+-- Somente fixture: snapshots distintos para provar que V1 não é confundida com V2.
+set local session_replication_role=replica;
+update pcm.plano_versoes set snapshot=jsonb_set(snapshot,'{rotinas,0,instrucao}',to_jsonb('Instrução da origem'::text)) where id='16630000-1111-4000-8000-000000000021';
+update pcm.plano_versoes set snapshot=jsonb_set(snapshot,'{rotinas,0,instrucao}',to_jsonb('Instrução da versão anterior'::text)) where id='16630000-1111-4000-8000-000000000022';
+set local session_replication_role=origin;
 set local role authenticated;
 select pcm.sso_iniciar_revisao_plano('16630000-1111-4000-8000-000000000301',4,'16630000-1111-4000-8000-000000000011','16630000-1111-4000-8000-000000000302');
 select pcm.sso_transicionar_revisao_plano('16630000-1111-4000-8000-000000000303',5,'16630000-1111-4000-8000-000000000011','submeter');
+do $$ declare r jsonb;begin r:=pcm.sso_comparar_rotina_impacto_v3('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',6,'16630000-1111-4000-8000-000000000302',(select preparada_id from pcm.sso_listar_decisoes_calendario_mediada('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',6,null,20) limit 1),'calendario');
+ if r->'origemOcorrencia'->>'versaoId'<>'16630000-1111-4000-8000-000000000021' or r->'origemOcorrencia'->>'estado'<>'disponivel' or r->'origemOcorrencia'->'rotina'->>'instrucao'<>'Instrução da origem' or r->'anterior'->>'instrucao'<>'Instrução da versão anterior' then raise exception 'origem_historica_divergente: %',r;end if;
+ if r->'origemOcorrencia'->>'questionarioEstado'<>'indeterminado' then raise exception 'questionario_nao_deveria_ser_inferido: %',r;end if;
+end; $$;
+savepoint origem_sem_snapshot;
+reset role;
+set local session_replication_role=replica;
+update pcm.plano_versoes set snapshot='{}'::jsonb where id='16630000-1111-4000-8000-000000000021';
+set local session_replication_role=origin;
+set local role authenticated;
+do $$ declare r jsonb;begin r:=pcm.sso_comparar_rotina_impacto_v3('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',6,'16630000-1111-4000-8000-000000000302',(select preparada_id from pcm.sso_listar_decisoes_calendario_mediada('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',6,null,20) limit 1),'calendario');if r->'origemOcorrencia'->>'estado'<>'historico_indeterminado' or r->'origemOcorrencia'->'rotina'<>'null'::jsonb then raise exception 'snapshot_ausente_inferido: %',r;end if;end; $$;
+rollback to savepoint origem_sem_snapshot;
+
 do $$ declare p uuid;n integer;r jsonb;begin
  select count(*),min(preparada_id::text)::uuid into n,p from pcm.sso_listar_decisoes_calendario_mediada('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',6,null,20);
  if n<>1 or p is null then raise exception 'continuidade_nao_listada_ou_duplicada: %',n;end if;

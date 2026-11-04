@@ -113,3 +113,17 @@ it("encaminha as ocorrências retornadas pelo lote para conferência da fila", a
   expect(screen.getByText(`Fila visita: ${ocorrencia}`)).toBeInTheDocument();
   expect(externo.rpc).toHaveBeenCalledTimes(1);
 });
+
+
+it("permite conferir a fila depois de integrar Visitas ao legado", async () => {
+  vi.stubEnv("VITE_SSO_FILA_VISITA_ENABLED", "true");
+  externo.rpc.mockImplementation(async (_nome, p) => ({ error: null, data: { requestId: p.p_request_id, itens: p.p_preparadas.map((preparadaId: string) => ({ preparadaId, osCriada: false, tarefaAuvoCriada: false, planoLegadoCriado: false, filaOficialIntegrada: false })), atomico: true, planoLegadoCriado: false, osCriada: false, tarefaAuvoCriada: false, filaOficialIntegrada: false } }));
+  render(anterior(q()));
+  fireEvent.click(screen.getByRole("checkbox", { name: new RegExp(visita) }));
+  fireEvent.change(screen.getByLabelText("Motivo"), { target: { value: "Conferido" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /conferi a relação/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Vincular lote" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Conferir fila" }));
+  expect(screen.getByText(`Fila visita: ${preparada}`)).toBeInTheDocument();
+  expect(externo.rpc).toHaveBeenCalledTimes(1);
+});

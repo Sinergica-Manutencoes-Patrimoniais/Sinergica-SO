@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: histórico de origem, OS e fila após integração
+
+- ADR-1519/migration 1662 integra OS ativas encontradas em vínculos conhecidos à comparação e confirmação da decisão; fontes sem vínculo seguem incompletas e há limite de 100 OS. Fixture sintética de calendário passou em clone revertido: deduplicação da mesma OS por duas fontes, divergência de Cliente sem exposição e status alterado invalidando fotografia; conflito inconsistente foi inserido com triggers desabilitados apenas na fixture. Visita, fontes não vinculadas, custos/travas e concorrência permanecem pendentes.
+- ADR-1520/migration 1663 acrescenta à comparação a Rotina e questionário da versão que originou a ocorrência, distinguindo-a da versão imediatamente anterior. Com migrations 1614–1663, ensaios de 3 versões e fixtures de decisão/questionário passaram em clone para calendário e Visita; snapshot ausente é indeterminado. Aprovação testada com 1045 desligada somente na transação revertida.
+- Após integração com legado, recibos de calendário e Visita, individual/lote, oferecem conferência da fila sem ação automática; 28 testes focados e typecheck passaram. Homologação/deploy bloqueados, sem Auvo real. Decisão sobre ocorrência futura após mudança da data-base ainda pendente.
+
 ## 2026-11-04 — S165/S166: decisão com questionário e seleção de Visitas
 
 - ADR-1516/migration 1659 incluem ciclo ou Visita/semana na comparação conferida. ADR-1517/migration 1660 incluem fotografias por hash de questionário histórico e fonte atual, revalidando antes de decisão e aprovação. Migrations 1614–1660 e fixtures de calendário/Visita passaram em clone revertido: alteração com mesmo ID, replay, fotografia atual e fotografia alterada antes de aprovação. Para alcançar o trigger, 1045 foi desativada somente na transação sintética. Faltam concorrência e revisão adversarial; schema estrito v2 exige rollout coordenado servidor/cliente.
