@@ -15,7 +15,7 @@ it("confere as ocorrências do Plano antes de oferecer inclusão selecionada", a
   api.rpc.mockReturnValue({ abortSignal: async () => ({ data: [linha(1), linha(2)], error: null }) });
   montar([id(1), id(2)]); fireEvent.click(screen.getByRole("button", { name: "Selecionar ocorrências para fila" }));
   expect(await screen.findByText(`Itens conferidos: ${id(1)}, ${id(2)}`)).toBeInTheDocument();
-  expect(api.rpc).toHaveBeenCalledWith("sso_listar_obrigacoes_preparadas_mediada", expect.objectContaining({ p_cliente_id: id(23), p_plano_id: id(24) }));
+  expect(api.rpc).toHaveBeenCalledWith("sso_obrigacoes_calendario_por_ids", expect.objectContaining({ p_cliente_id: id(23), p_plano_id: id(24), p_preparadas: [id(1), id(2)] }));
 });
 
 it("não oferece inclusão se um recibo não estiver na fonte do Plano", async () => {

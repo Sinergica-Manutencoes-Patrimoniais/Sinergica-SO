@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: continuidade de ocorrência mantida e consulta por IDs
+
+- ADR-1528/migration 1671 permite consumir somente a ocorrência histórica específica com decisão e selo de continuidade vigentes, mesmo após retirada da Rotina; não permite novos ciclos nem altera OS/histórico. Fixtures sintéticas de calendário/Visita passaram em clone com ACL preservadas e rollback; selos foram inseridos como fixture, não provam aprovação real ou concorrência. Guarda 1045 mantida.
+- ADR-1527/migration 1670 substituem varredura limitada da janela por consulta autorizada de até 775 IDs; 6 testes de interface e fixture SQL de autorização/limite passaram. O cliente depende da migration e requer rollout coordenado; flags continuam desligadas.
+- Ações de revisão preservam pedido e requestId após resultado incerto mesmo que retry receba 22023/23514/40001; 3 testes focados passaram. Typecheck passou. Migrations 1614–1671 e três fixtures 1670/1671 passaram em clone com ACL preservadas e rollback, sem cron/net. Faltam integração real, concorrência e decisão pendente sobre data-base; sem deploy ou Auvo.
+
 ## 2026-11-04 — S165/S166: recuperação segura e fila multirrotina
 
 - Resultados confirmados da geração multirrotina podem ser selecionados para inclusão explícita na fila, inclusive após interrupção; IDs são reconferidos no Plano. Seis testes focados passaram; sem inclusão automática.

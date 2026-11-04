@@ -18,25 +18,15 @@ function Conteudo({ userId, clienteId, planoId, preparadas }: Props) {
   const valida = ids.length > 0 && ids.length <= 775 && ids.length === unicos.size;
   const consulta = useQuery({ queryKey: ["obrigacoes-preparadas-janela", userId, clienteId, planoId, ids], enabled: aberta && valida, retry: false, gcTime: 0,
     queryFn: async ({ signal }) => {
-      let cursor: { tipo: "calendario" | "visita"; id: string } | null = null;
-      const encontradas: z.infer<typeof linha>[] = [];
-      for (let pagina = 0; pagina < 20; pagina++) {
-        const antes = await supabase.auth.getUser();
-        if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
-        const { data, error } = await supabase.schema("pcm").rpc("sso_listar_obrigacoes_preparadas_mediada", { p_cliente_id: clienteId, p_plano_id: planoId, p_apos_tipo: cursor?.tipo ?? null, p_apos_id: cursor?.id ?? null, p_limite: 50 }).abortSignal(signal);
-        if (error) throw error;
-        const itens = z.array(linha).max(50).parse(data);
-        for (const item of itens) {
-          if (cursor && (item.tipo < cursor.tipo || (item.tipo === cursor.tipo && item.preparada_id.toLowerCase() <= cursor.id.toLowerCase()))) throw new Error("Página divergente.");
-          cursor = { tipo: item.tipo, id: item.preparada_id };
-          if (item.tipo === "calendario" && unicos.has(item.preparada_id.toLowerCase())) encontradas.push(item);
-        }
-        const depois = await supabase.auth.getUser();
-        if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
-        if (encontradas.length === ids.length) return encontradas;
-        if (itens.length < 50) throw new Error("Ocorrência não encontrada no Plano.");
-      }
-      throw new Error("Limite da conferência excedido.");
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      const { data, error } = await supabase.schema("pcm").rpc("sso_obrigacoes_calendario_por_ids", { p_cliente_id: clienteId, p_plano_id: planoId, p_preparadas: ids }).abortSignal(signal);
+      if (error) throw error;
+      const itens = z.array(linha).max(775).parse(data);
+      if (itens.length !== ids.length || itens.some((item, i) => item.tipo !== "calendario" || item.preparada_id.toLowerCase() !== ids[i])) throw new Error("Registros incompletos ou divergentes.");
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      return itens;
     } });
   const conferida = valida && !!consulta.data && !consulta.isFetching && !consulta.isError;
   return <section aria-label="Encaminhar ocorrências da janela à fila"><p>Confira os registros gerados e selecione até 25 para inclusão na fila. A inclusão exige confirmação própria e ocorre um item por vez.</p>

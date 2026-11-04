@@ -129,7 +129,7 @@ export function AcoesRevisaoPlano({
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: planoManutencaoKeys.raiz(userId, clienteId) }),
   });
-  async function enviar(pedido: Operacao) {
+  async function enviar(pedido: Operacao, primeiraTentativa = false) {
     if (trava.current) return;
     setErro("");
     setDetalhes([]);
@@ -154,7 +154,7 @@ export function AcoesRevisaoPlano({
     } catch (falha) {
       const codigo =
         typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
-      if (["22023", "23514", "40001"].includes(codigo)) {
+      if (primeiraTentativa && ["22023", "23514", "40001"].includes(codigo)) {
         try {
           await exigirAtor();
           if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
@@ -228,7 +228,7 @@ export function AcoesRevisaoPlano({
             : { tipo: "transicao", comando: validarTransicaoRevisao({ ...base, acao: escolha }) };
       sessionStorage.setItem(chave, JSON.stringify(pedido));
       setPendente(pedido);
-      void enviar(pedido);
+      void enviar(pedido, true);
     } catch {
       setErro("Confira a vigência e o armazenamento antes de confirmar.");
     }

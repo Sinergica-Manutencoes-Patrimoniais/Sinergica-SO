@@ -1601,3 +1601,20 @@ it("não sobrescreve operação de revisão surgida após abrir a confirmação"
   expect(api.transicionarRevisao).not.toHaveBeenCalled();
   expect(sessionStorage.getItem(chave)).toBe("pedido anterior ainda incerto");
 });
+
+it.each(["22023", "23514", "40001"])("preserva submissão incerta quando retry retorna %s", async (code) => {
+  const planoId = "16500000-0000-4000-8000-000000000011";
+  api.autorizarAcao.mockResolvedValue(true);
+  api.listarPlanos.mockResolvedValue([{ id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 3 }]);
+  api.transicionarRevisao.mockRejectedValueOnce(new Error("rede")).mockRejectedValueOnce({ code }).mockResolvedValueOnce({ warnings: [] });
+  montar();
+  fireEvent.click(await screen.findByRole("button", { name: "Enviar Preventivo para revisão" }));
+  fireEvent.click(screen.getByRole("button", { name: "Confirmar envio para revisão" }));
+  await screen.findByText(/não foi possível confirmar a operação/i);
+  fireEvent.click(screen.getByRole("button", { name: "Tentar operação de Preventivo novamente" }));
+  await waitFor(() => expect(api.transicionarRevisao).toHaveBeenCalledTimes(2));
+  expect(screen.getByRole("button", { name: "Tentar operação de Preventivo novamente" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Tentar operação de Preventivo novamente" }));
+  await waitFor(() => expect(api.transicionarRevisao).toHaveBeenCalledTimes(3));
+  expect(api.transicionarRevisao.mock.calls[0]?.[0]).toEqual(api.transicionarRevisao.mock.calls[2]?.[0]);
+});
