@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: ensaio de navegador isolado
+
+- Ambiente descartável de rede interna com PostgreSQL, Auth, PostgREST, Vite e navegador foi montado sem portas públicas de banco; clone com ACL e migrations 1614–1683, identidade verificada no gateway e teste pontual de saída externa negado. GoTrue migrou somente o clone. Login do usuário sintético falhou com 400 invalid_credentials apesar de conferência de fixture; não houve jornada UI→backend, JWT forjado, Auvo ou escrita na origem. Contêineres, rede, dump, dependências e imagem baixada do ensaio foram removidos; espaço livre no host permanece 13 GiB contra 15 GiB antes, causa não confirmada.
+- Em clone separado, comandos autenticados reais de retirada da declaração legada e decisão comparada foram serializados (a decisão aguardou commit); não cobre criação física de ponte nem OS. Roteiro `supabase/tests/manual_E01-S165_concorrencia_relacao_decisao.md` foi preparado após o ensaio e não reexecutado. Guarda 1045 intacta.
+- Continuam pendentes a definição da data-base e a fonte/critérios de equivalência para reconciliar PMOC/legado/Auvo; homologação bloqueada.
+
 ## 2026-11-04 — S165/S166: teste integrado de navegador e concorrência
 
 - Ensaio em clone de duas decisões comparadas autenticadas na mesma ocorrência/revisão: primeira confirmou; segunda aguardou e recebeu 40001, sem sobrescrever. Não prova disputa com escritor real de OS/ponte nem todos os caminhos; 1045 preservada.
