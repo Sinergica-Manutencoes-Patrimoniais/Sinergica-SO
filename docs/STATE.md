@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: conflitos candidatos e retorno
+
+- Reconciliação agora distingue rejeição inicial definitiva 40001, permitindo nova conferência, de pedido com resultado incerto após falha de rede, preservando replay. Testes UI 5/5 e typecheck web passaram.
+- Comparação de calendário destaca datas coincidentes como possíveis conflitos para conferência, sem afirmar equivalência e lembrando que datas diferentes também podem exigir análise. Testes UI 2/2 passaram. Clone demonstrou coexistência de ciclos preparados de Planos relacionados sem escolha; isso não prova equivalência nem duplicidade de execução. A comparação é teórica e não cobre Visita ou OS.
+- RPC real de resultado preventivo com dados sintéticos concorreu com declaração e aprovação nas duas ordens; retorno foi preservado e efeito impediu aprovação ou exigiu nova conciliação. Trava da aprovação reteve temporariamente retorno de outro Cliente; impacto sob carga não medido. Roteiro `supabase/tests/manual_E01-S165_reconciliacao_legada_inerte_concorrencia.md`.
+- Não foi identificada base para exigir classificação negativa de cada par de ciclos. Guardas protegem reservas escolhidas; falta demonstrar cobertura de fontes e revisão antes de alterar 1045. Flags/homologação seguem fechadas; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: reconferência e retorno concorrente
 
 - Interface permite reconferência após fotografia ficar desatualizada e oferece a conciliação também na tela de Visita, sob flag desligada. Cinco testes focados e typecheck web passaram.

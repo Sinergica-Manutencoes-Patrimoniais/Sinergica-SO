@@ -16,5 +16,16 @@ it("apresenta os ciclos por origem sem afirmar equivalência geral", async () =>
  fireEvent.click(screen.getByRole("button", { name: "Comparar datas" }));
  expect(await screen.findByText(/2026-11-01 · SSO ciclo 0/)).toBeTruthy();
  expect(screen.getByText(/2026-11-02 · sem ciclo SSO · legado índice 2/)).toBeTruthy();
- expect(screen.getByText(/Igualdade na janela não comprova equivalência geral/)).toBeTruthy();
+ expect(screen.getByText(/sem comprovar equivalência/)).toBeTruthy();
+});
+
+it("sinaliza datas coincidentes como candidatos para conferência", async () => {
+ api.rpc.mockReturnValue({ abortSignal: async () => ({ data: { comparacao: "datas_iguais_na_janela", ciclosSso: 1, ciclosLegados: 1, datasComuns: 1, equivalenciaGeralComprovada: false, impactoCalculado: false, geradorAlterado: false, datasTeoricas: true, datas: [{ data: "2026-11-01", sso: true, legado: true, indiceSso: 0, indiceLegado: 2 }] }, error: null }) });
+ const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+ render(<QueryClientProvider client={client}><CompararCalendarioLegado userId="u" clienteId="c" planoId="p" versaoId="v" rotinaId="r" legadoId="l" /></QueryClientProvider>);
+ fireEvent.change(screen.getByLabelText("Início"), { target: { value: "2026-11-01" } });
+ fireEvent.change(screen.getByLabelText("Fim"), { target: { value: "2026-11-03" } });
+ fireEvent.click(screen.getByRole("button", { name: "Comparar datas" }));
+ expect(await screen.findByText(/2026-11-01 · SSO ciclo 0 · legado índice 2 · possível conflito: conferir/)).toBeTruthy();
+ expect(screen.getByText(/Datas diferentes também podem exigir análise/)).toBeTruthy();
 });

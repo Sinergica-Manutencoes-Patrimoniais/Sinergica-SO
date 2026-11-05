@@ -15,3 +15,9 @@ Em clone preparado da mesma forma, obter a fotografia antes da disputa. Na sess�
 Para ordem inversa, restaurar fixture somente no clone descartável e registrar declaração na sessão A, mantendo transação aberta. Iniciar o upsert na sessão B: observar espera por lock. Confirmar A; o upsert deve registrar a avaliação. Em seguida, `pcm.sso_indice_legado_reservado_sso` deve falhar com `efeito_legado_exige_reconciliacao`, preservando o retorno recebido e exigindo tratamento do conflito.
 
 Os dois ensaios passaram com `service_role` e evento sintético. Não houve rede ou integração Auvo; não substituem prova dos demais caminhos de OS e retorno.
+
+## Resultado preventivo sintético
+
+Com a mesma preparação e fotografia, substituir o upsert de avaliação pela RPC `pcm.atualizar_resultado_preventiva(legada_id,'ok',now())`, autenticada como `service_role`. Na ordem retorno primeiro, a declaração recebeu `55P03`; após confirmação do retorno, rejeitou a fotografia antiga com `40001` e a atual com `efeito_exige_reconciliacao`. Na ordem declaração primeiro, o retorno aguardou o commit e depois foi preservado; o mediador da reserva passou a recusar com `efeito_legado_exige_reconciliacao`. Os dois ensaios passaram em clone descartável.
+
+Em outro clone, preparou-se a fixture de aprovação sintética de `manual_E01-S165_aprovacao_reserva_rascunho_1722.sql`, com uma ocorrência adicional criada artificialmente. Um retorno em transação conteve aprovação simultânea; após o retorno ser confirmado, a aprovação simulada recusou com `impacto_parcial_pendente`. Na ordem inversa, uma aprovação simulada em transação conteve temporariamente retorno sintético de outro Cliente, que concluiu após rollback da aprovação. A exceção à guarda 1045 foi restrita à transação revertida; essa trava global pode afetar latência, sem medição de carga neste ensaio.
