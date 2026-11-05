@@ -1480,6 +1480,8 @@ it("habilita confirmação da revisão somente com protocolo 1731 ligado", () =>
   const plano = { id: "16500000-0000-4000-8000-000000000011", clienteId, nome: "Preventivo", estado: "em_revisao" as const, revisao: 3 };
   render(<QueryClientProvider client={client}><AcoesRevisaoPlano userId="usuario" clienteId={clienteId} plano={plano} bloqueado={false} /></QueryClientProvider>);
   fireEvent.click(screen.getByRole("button", { name: "Aprovar revisão de versão" }));
+  expect(screen.getByRole("button", { name: "Confirmar aprovação" })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("Início da vigência"), { target: { value: "2026-11-06" } });
   expect(screen.getByRole("button", { name: "Confirmar aprovação" })).toBeEnabled();
   expect(screen.getByText(/servidor verificará as permissões e os impactos/i)).toBeTruthy();
   vi.unstubAllEnvs();

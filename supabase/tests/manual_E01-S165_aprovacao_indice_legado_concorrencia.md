@@ -34,4 +34,12 @@ Em uma ordem, executar `pcm.atualizar_resultado_preventiva` como `service_role` 
 
 Os três cenários passaram com o código real da migration 1731. A aprovação foi revertida e o gate ativado somente no clone; o retorno era sintético. O ensaio não comprova homologação nem elimina a contenção global entre Clientes.
 
+## Tentativas diretas e revogação
+
+Em clone com migrations até 1731, usar a fixture de revisão e testar como `authenticated` e `service_role`: escrita direta do gate e inserção de token devem ser recusadas; execução direta de `sso_aprovar_revisao_preparada` deve ser negada. Como `authenticated` autorizado, chamar `sso_aprovar_plano` diretamente para a revisão deve falhar com `revisao_sem_vigencia_segura`. `REPEATABLE READ` deve ser recusado pela aprovação mediada, e `authenticated` não pode configurar `session_replication_role=replica`.
+
+Ativar o gate dedicado somente no clone. Abrir transação de revogação de `plano.gerir` e tentar aprovação em outra sessão: deve receber `autorizacao_em_alteracao`; após confirmar revogação, aprovação deve receber erro de permissão. Restaurar a concessão no clone e inverter a ordem: manter aprovação aberta e tentar revogação em outra sessão; deve ser recusada com `autorizacao_em_alteracao`. Reverter aprovação e descartar o clone.
+
+Essas verificações passaram em clone. A transação da aprovação foi revertida; não substituem auditoria global de privilégios nem validação de todas as fontes.
+
 Revisão estática da contenção: `sso_fotografia_os_comparacao_aprovacao` (migration 1678) chama `sso_travar_fontes_impacto_grupo` (1619), cuja trava `SHARE` inclui `pcm.ordens_servico` e tabelas de vínculo. Selos 1722/1723 e mediador 1724 acrescentam outras travas de tabela; triggers da migration 0787 ainda usam protocolo advisory global quando o gate correspondente está habilitado. Trocar apenas o lock de tabela por lock das linhas já encontradas não protege contra inserções futuras de OS ou vínculos. Uma solução granular requer protocolo comum a todos os escritores relevantes, inclusive mudanças de Cliente e dados recebidos, revisão da ordem de travas e ensaios que provem contenção no mesmo Cliente e independência entre Clientes. Não foi implementada substituição nem medida carga.

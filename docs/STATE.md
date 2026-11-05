@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: infraestrutura isolada e calendário
+
+- `apps/web/e2e/s166-isolado/bootstrap-interno.py` cria rede interna, clone sintético sem portas/mounts, aplica migrations 1614–1731 e sobe Auth/PostgREST; login sintético e leitura autenticada passaram, recursos foram removidos. Não usa dados reais; navegador/proxy isolados e jornada UI ainda não existem. README registra limites; imagem Playwright não estava local.
+- S166 AC-1: fixture de feriado passou 15/15 em clone para supressão, ausência de Visita/ocorrência/esforço/OS/outbox e consulta de referência vazia; indicadores agregados não foram exercitados. AC-3: mudança de dia preservou confirmada, extra, reprogramada, histórico e OS sintética com ID Auvo; exceção aprovada não foi comprovada. Sem chamada Auvo.
+- Interface exige vigência na aprovação e sinaliza fotografia obsoleta para reconferência; testes focados 2/2 passaram. Revisão adversarial 1731 cobriu ACL, isolamento e revogação concorrente, sem bypass encontrado; protocolo segue com gate desligado e homologação pendente.
+- Próximo passo: completar navegador/proxy isolados e jornada UI→backend; cobrir indicadores e exceção aprovada, fontes restantes e CI. Não houve deploy ou acionamento externo.
+
 ## 2026-11-05 — S165/S166: jornadas integradas com guarda real
 
 - Jornadas integradas de Calendário e Visita passaram em clones com 1045 efetiva e gate 1731 ligado apenas nas transações de teste: decisão, aprovação/replay, selo, retirada/replay e geração/replay. Calendário também protegeu OS legada tardia e preservou ocorrência anterior. Fixtures `supabase/tests/manual_E01-S165_jornada_real_calendario_1731.sql` e `supabase/tests/manual_E01-S165_jornada_real_visita_1731.sql`; dados, relógio e algumas fontes sintéticos, transações revertidas.

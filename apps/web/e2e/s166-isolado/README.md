@@ -47,3 +47,18 @@ Para reconstruir este recorte, ainda de forma manual:
 5. Conferir resposta da prévia e declaração, uma declaração persistida e fila ainda em `verificacao`. Capturar apenas rotas/status sanitizados. Remover banco, serviços, rede, dependências e imagem usados exclusivamente no ensaio.
 
 Este roteiro descreve a preparação realizada; não há script de automação, teste `.spec.ts` ou proxy versionado. A validação de toda a jornada no aplicativo permanece pendente.
+
+## Bootstrap do banco descartável
+
+`bootstrap-interno.py` cria rede Docker interna e PostgreSQL dedicado, sem portas publicadas nem mounts. O comando `carregar` valida identidade/isolamento antes de restaurar uma cópia do banco-base sintético `sso-validacao-isolada-20261104`, preserva ACLs e aplica migrations 1614–1731. Execute apenas com esse banco-base isolado, nunca com produção. Requer imagens locais e Docker; não baixa imagens. O ID é escolhido pelo executor e pertence apenas ao ensaio.
+
+```sh
+python3 apps/web/e2e/s166-isolado/bootstrap-interno.py criar --id 32bd19ca417e
+python3 apps/web/e2e/s166-isolado/bootstrap-interno.py carregar --id 32bd19ca417e
+python3 apps/web/e2e/s166-isolado/bootstrap-interno.py servicos --id 32bd19ca417e
+python3 apps/web/e2e/s166-isolado/bootstrap-interno.py login --id 32bd19ca417e
+python3 apps/web/e2e/s166-isolado/bootstrap-interno.py verificar --id 32bd19ca417e
+python3 apps/web/e2e/s166-isolado/bootstrap-interno.py remover --id 32bd19ca417e
+```
+
+Testado em 2026-11-05: criação, restauração de 98 migrations, verificação e remoção passaram. Senhas e chave JWT são efêmeras e sintéticas. GoTrue e PostgREST responderam 200 na rede interna, sem portas publicadas. O comando `login` cria conta sintética no clone, autentica pelo GoTrue, confere claim em memória e consulta o próprio usuário via PostgREST; foi executado com sucesso sem expor senha ou token. Este bootstrap **não** inicia navegador, proxy ou teste UI e, por isso, não comprova jornada integrada nem bloqueio de rede dessas partes. Em caso de falha durante `carregar`, remova os recursos e recrie; não reutilize banco parcialmente restaurado.

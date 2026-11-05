@@ -344,7 +344,7 @@ export function AcoesRevisaoPlano({
           {escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_DIAGNOSTICO_FUSO_VIGENCIA_ENABLED === "true" && <DiagnosticoFusoVigencia userId={userId} clienteId={clienteId} planoId={plano.id} revisao={plano.revisao} />}
           {escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED === "true" && <PreflightAprovacaoRevisao userId={userId} clienteId={clienteId} planoId={plano.id} revisao={plano.revisao} vigencia={vigencia} />}
           {escolha === "aprovar_revisao" && <p role="status">{import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED === "true" ? "O servidor verificará as permissões e os impactos antes de aprovar." : "A aprovação permanece bloqueada enquanto o protocolo de revisão estiver desativado."}</p>}
-          <Button disabled={operacao.isPending || bloqueado || revisaoMudou || (escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true")} onClick={confirmar}>
+          <Button disabled={operacao.isPending || bloqueado || revisaoMudou || ((escolha === "aprovar" || escolha === "aprovar_revisao") && !vigencia) || (escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true")} onClick={confirmar}>
             {escolha === "iniciar"
               ? "Confirmar início da revisão"
               : escolha === "aprovar" || escolha === "aprovar_revisao"
