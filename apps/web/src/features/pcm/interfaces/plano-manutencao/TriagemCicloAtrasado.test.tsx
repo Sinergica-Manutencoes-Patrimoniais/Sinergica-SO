@@ -10,11 +10,11 @@ vi.mock("../../../../lib/supabase-client", () => ({
   },
 }));
 import { TriagemCicloAtrasado } from "./TriagemCicloAtrasado";
-const cliente = "00000000-0000-4000-8000-000000000001",
-  plano = "00000000-0000-4000-8000-000000000002",
-  rotina = "00000000-0000-4000-8000-000000000003",
-  preparada = "00000000-0000-4000-8000-000000000004",
-  versao = "00000000-0000-4000-8000-000000000005";
+const cliente = "00000000-0000-4000-8000-000000000001";
+const plano = "00000000-0000-4000-8000-000000000002";
+const rotina = "00000000-0000-4000-8000-000000000003";
+const preparada = "00000000-0000-4000-8000-000000000004";
+const versao = "00000000-0000-4000-8000-000000000005";
 const chave = `sso-triagem-atraso:${JSON.stringify(["u", cliente, plano, rotina])}`;
 const candidato = {
   preparada_id: preparada,
@@ -86,7 +86,9 @@ it("não remove tentativa substituída enquanto triagem é processada", async ()
   await waitFor(() =>
     expect(api.rpc).toHaveBeenCalledWith("sso_triar_ciclo_atrasado", expect.anything()),
   );
-  const p = api.rpc.mock.calls.find(([n]) => n === "sso_triar_ciclo_atrasado")![1];
+  const chamada = api.rpc.mock.calls.find(([n]) => n === "sso_triar_ciclo_atrasado");
+  if (!chamada) throw new Error("Chamada ausente");
+  const p = chamada[1];
   sessionStorage.setItem(chave, "outra tentativa");
   resolver({
     data: {
@@ -209,7 +211,9 @@ it("repete exatamente o pedido após falha de rede", async () => {
     expect(api.rpc.mock.calls.filter(([n]) => n === "sso_triar_ciclo_atrasado")).toHaveLength(2),
   );
   const tentativas = api.rpc.mock.calls.filter(([n]) => n === "sso_triar_ciclo_atrasado");
-  expect(tentativas[1]![1]).toEqual(tentativas[0]![1]);
+  const [primeira, segunda] = tentativas;
+  if (!primeira || !segunda) throw new Error("Chamadas ausentes");
+  expect(segunda[1]).toEqual(primeira[1]);
   await waitFor(() => expect(sessionStorage.getItem(chave)).toBeNull());
 });
 it("não confirma triagem quando resposta identifica outro candidato", async () => {

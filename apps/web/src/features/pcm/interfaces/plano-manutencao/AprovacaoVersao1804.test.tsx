@@ -13,9 +13,9 @@ vi.mock("../../infrastructure/supabase-plano-manutencao-adapter", () => ({
   supabasePlanoManutencaoAdapter: {},
 }));
 import { AcoesRevisaoPlano } from "./AcoesRevisaoPlano";
-const clienteId = "16500000-0000-4000-8000-00000000000a",
-  planoId = "16500000-0000-4000-8000-000000000011",
-  versaoId = "16500000-0000-4000-8000-000000000012";
+const clienteId = "16500000-0000-4000-8000-00000000000a";
+const planoId = "16500000-0000-4000-8000-000000000011";
+const versaoId = "16500000-0000-4000-8000-000000000012";
 const chave = `sso-plano-revisao:usuario:${clienteId}:${planoId}`;
 const recibo = (c: { requestId: string; planoId: string; expectedRevision: number }) => ({
   requestId: c.requestId,

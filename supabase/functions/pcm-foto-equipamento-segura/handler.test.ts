@@ -18,6 +18,10 @@ Deno.test("revogação após download impede bytes e caminho",async()=>{
   const resposta=await criarHandler({identidade:async()=>({usuario:"u",userRole:"colaborador"}),limitar:async()=>true,resolver:async()=>++chamadas===1 ? caminho : null,baixar:async()=>png,cors:()=>({})})(req());
   assertEquals(resposta.status,404);assertEquals(chamadas,2);assertEquals((await resposta.text()).includes(caminho),false);
 });
+Deno.test("sessão revogada após download impede entrega da foto",async()=>{
+  let chamadas=0;const resposta=await criarHandler({identidade:async()=>{if(++chamadas===2)throw new Error("sessão revogada");return {usuario:"u",userRole:"colaborador"};},limitar:async()=>true,resolver:async()=>"cliente/segredo.png",baixar:async()=>png,cors:()=>({})})(req());
+  assertEquals(resposta.status,401);assertEquals(chamadas,2);assertEquals((await resposta.text()).includes("segredo"),false);
+});
 Deno.test("sucesso entrega bytes sem revelar caminho e falha storage não o expõe",async()=>{
   const caminho="cliente/segredo.png";const deps={identidade:async()=>({usuario:"u",userRole:"colaborador"}),limitar:async()=>true,resolver:async()=>caminho,baixar:async()=>png,cors:()=>({})};
   const sucesso=await criarHandler(deps)(req());assertEquals(sucesso.status,200);assertEquals(sucesso.headers.get("cache-control"),"private, no-store");assertEquals([...sucesso.headers.values()].some(v=>v.includes(caminho)),false);assertEquals((await sucesso.arrayBuffer()).byteLength,8);

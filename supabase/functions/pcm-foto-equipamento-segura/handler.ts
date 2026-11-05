@@ -23,6 +23,8 @@ export function criarHandler(deps: Dependencias) {
       const vinculoId=dados.vinculoId;const caminho=await deps.resolver(vinculoId,identidade);if(!caminho)return falha(404);
       const arquivo=await deps.baixar(caminho);if(arquivo.size>10485760)return falha(413);
       const bytes=new Uint8Array(await arquivo.arrayBuffer());const jpeg=bytes.length>=3 && bytes[0]===255 && bytes[1]===216 && bytes[2]===255;const png=bytes.length>=8 && [137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);if(!jpeg && !png)return falha(415);
+      let atual:Identidade;try{atual=await deps.identidade(req);}catch{return falha(401);}
+      if(atual.usuario!==identidade.usuario || atual.userRole!==identidade.userRole)return falha(401);
       if(await deps.resolver(vinculoId,identidade)!==caminho)return falha(404);
       return new Response(bytes,{headers:{...cors,"Content-Type":jpeg ? "image/jpeg" : "image/png","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Security-Policy":"default-src 'none'; sandbox"}});
     }catch{return falha(503);}
