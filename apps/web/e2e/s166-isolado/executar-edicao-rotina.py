@@ -66,7 +66,7 @@ insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,origem,creat
     rotina=scalar("select id from pcm.rotinas_manutencao where versao_id='16610000-0000-0000-0000-000000000181' and rotina_logica_id='16610000-0000-0000-0000-000000000124'")
     cfg={'email':'origem-s166@test.local','password':password,'etapa':'editar','rotina':rotina,'data':scalar('select (current_date+30)::text')}
     driver(cfg)
-    comprovado=scalar("select (sistema_id='16610000-0000-0000-0000-000000000998' and modo='calendario' and intervalo_n=2 and intervalo_unidade='meses')::text from pcm.rotinas_manutencao where id='"+rotina+"'")
+    comprovado=scalar("select (sistema_id='16610000-0000-0000-0000-000000000998' and modo='calendario' and intervalo_n=2 and intervalo_unidade='meses' and tolerancia_antes=2 and tolerancia_depois=5)::text from pcm.rotinas_manutencao where id='"+rotina+"'")
     if comprovado!='true':raise RuntimeError('Edição não comprovada no banco.')
     if os_antes!=scalar("select to_jsonb(o)::text from pcm.ordens_servico o where id='17680000-0000-4000-8000-000000000002'") or origem_antes!=scalar("select to_jsonb(o)::text from pcm.sso_origens_os_preventiva o where os_id='17680000-0000-4000-8000-000000000002'"):raise RuntimeError('OS ou fotografia histórica alterada.')
     print('Alvo e recorrência editados pela UI e confirmados no banco sintético.')
@@ -88,6 +88,9 @@ insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,origem,creat
     cfg.update(etapa='gerar-editado');driver(cfg)
     if scalar("select count(*) from pcm.ocorrencias_rotina_preparadas where versao_id='16610000-0000-0000-0000-000000000181' and alvo_id='16610000-0000-0000-0000-000000000998'")!='1':raise RuntimeError('Geração da Rotina editada não comprovada.')
     if os_antes!=scalar("select to_jsonb(o)::text from pcm.ordens_servico o where id='17680000-0000-4000-8000-000000000002'") or origem_antes!=scalar("select to_jsonb(o)::text from pcm.sso_origens_os_preventiva o where os_id='17680000-0000-4000-8000-000000000002'"):raise RuntimeError('OS histórica alterada após geração.')
+    tolerancia=scalar("select (o.tolerancia_antes=2 and o.tolerancia_depois=5 and o.vencimento_original=r.data_base and (v.snapshot->'rotinas'->0->>'tolerancia_antes')::int=2 and (v.snapshot->'rotinas'->0->>'tolerancia_depois')::int=5)::text from pcm.ocorrencias_rotina_preparadas o join pcm.rotinas_manutencao r on r.id=o.rotina_id join pcm.plano_versoes v on v.id=o.versao_id where o.versao_id='16610000-0000-0000-0000-000000000181' and o.alvo_id='16610000-0000-0000-0000-000000000998'")
+    if tolerancia!='true':raise RuntimeError('Tolerância de ocorrência/versão divergente.')
+    print('Tolerâncias 2/5 preservadas na versão aprovada e ocorrência gerada.')
     if os_total!=scalar('select count(*) from pcm.ordens_servico') or outbox_total!=scalar('select count(*) from pcm.auvo_sync_outbox'):raise RuntimeError('Saída operacional inesperada.')
     print('Rotina aprovada gerou ocorrência pela UI; OS histórica preservada.')
 

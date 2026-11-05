@@ -1,24 +1,401 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { ClassificarLegadoNaoRelacionado } from "./ClassificarLegadoNaoRelacionado";
 import { ConferenciaPlanoLegado } from "./ConferenciaPlanoLegado";
 import { MaterializarCicloLegado } from "./MaterializarCicloLegado";
 import { MaterializarVisitaLegado } from "./MaterializarVisitaLegado";
-type Pedido = { requestId: string; clienteId: string; planoId: string; legadoId: string; revisao: number; decisao: "declarar" | "retirar"; motivo: string };
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+type Pedido = {
+  requestId: string;
+  clienteId: string;
+  planoId: string;
+  legadoId: string;
+  revisao: number;
+  decisao: "declarar" | "retirar";
+  motivo: string;
+};
 
-export function RelacaoPlanoLegado({ userId, clienteId, planoId, revision, origemPreparada }: { userId: string; clienteId: string; planoId: string; revision: number; origemPreparada?: { tipo: "calendario" | "visita"; id: string } }) {
-  const cache = useQueryClient(); const primeira = useRef(false); const chave = `sso-relacao-plano-legado:${JSON.stringify([userId, clienteId, planoId])}`;
-  const [legadoId, setLegadoId] = useState(""); const [motivo, setMotivo] = useState(""); const [confirmado, setConfirmado] = useState<string | null>(null); const [aviso, setAviso] = useState("");
-  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(chave); if (!raw) return null; const p = JSON.parse(raw) as Pedido; return p.clienteId === clienteId && p.planoId === planoId && typeof p.legadoId === "string" && typeof p.requestId === "string" && Number.isSafeInteger(p.revisao) && ["declarar", "retirar"].includes(p.decisao) && typeof p.motivo === "string" ? p : "invalido"; } catch { return "invalido"; } });
-  const planos = useInfiniteQuery({ queryKey: ["planos-legados-relacao", userId, clienteId, planoId], initialPageParam: null as string | null, gcTime: 0, queryFn: async ({ pageParam, signal }) => { await conferirSessaoDiagnostico(userId, signal); const { data, error } = await supabase.schema("pcm").rpc("sso_planos_legados_mediados", { p_ator_id: userId, p_cliente_id: clienteId, p_plano_id: planoId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; if (!Array.isArray(data)) throw new Error("Lista inválida."); await conferirSessaoDiagnostico(userId, signal); return data as { id: string; nome: string; estado: string; sistema_id: string | null; equipamento_id: string | null; primeira_data: string; intervalo_n: number; intervalo_unidade: string }[]; }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.id : undefined });
-  const historico = useInfiniteQuery({ queryKey: ["historico-relacao-plano-legado", userId, clienteId, planoId, legadoId], enabled: !!legadoId, initialPageParam: null as number | null, gcTime: 0, queryFn: async ({ pageParam, signal }) => { await conferirSessaoDiagnostico(userId, signal); const { data, error } = await supabase.schema("pcm").rpc("sso_historico_relacao_legada_mediado", { p_ator_id: userId, p_cliente_id: clienteId, p_plano_id: planoId, p_legado_id: legadoId, p_antes: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; if (!Array.isArray(data)) throw new Error("Histórico inválido."); await conferirSessaoDiagnostico(userId, signal); return data as { request_id: string; revisao: number; decisao: "declarar" | "retirar"; motivo: string; ator_id: string; criado_em: string }[]; }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.revisao : undefined });
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { await conferirSessaoDiagnostico(userId); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente."); const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_relacao_legada_mediada", { p_ator_id: userId, p_request_id: p.requestId, p_cliente_id: p.clienteId, p_plano_id: p.planoId, p_plano_legado_id: p.legadoId, p_expected_revision: p.revisao, p_decisao: p.decisao, p_motivo: p.motivo }); if (error) throw error; if (!data || data.requestId !== p.requestId || data.equivalenciaComprovada !== false || data.geradorAlterado !== false) throw new Error("Resposta inválida."); await conferirSessaoDiagnostico(userId); }, onSuccess: async (_r, p) => { try { await conferirSessaoDiagnostico(userId); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); } catch { setAviso("Tentativa local não pôde ser removida; procure suporte."); return; } setPendente(null); setConfirmado(null); setAviso("Decisão registrada; gerador não foi alterado."); await cache.invalidateQueries({ queryKey: ["historico-relacao-plano-legado", userId, clienteId, planoId] }); }, onError: async (error, p) => { if (primeira.current && typeof error === "object" && error !== null && "code" in error && error.code === "P0011" && "message" in error && error.message === "revisao_obsoleta") { try { await conferirSessaoDiagnostico(userId); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); setPendente(null); setConfirmado(null); setAviso("A relação mudou. Atualize e confira novamente."); await cache.invalidateQueries({queryKey:["historico-relacao-plano-legado",userId,clienteId,planoId]}); return; } catch { setAviso("Tentativa preservada; procure suporte."); return; } } setAviso("Resultado não confirmado; repita a mesma tentativa ou procure suporte em conflito."); }, onSettled: () => { primeira.current = false; } });
-  const enviar = (p: Pedido) => { try { const anterior = sessionStorage.getItem(chave); if (anterior !== null && anterior !== JSON.stringify(p)) throw new Error(); primeira.current = anterior === null; sessionStorage.setItem(chave, JSON.stringify(p)); } catch { setAviso("Não foi possível guardar tentativa; nada enviado."); return; } setPendente(p); envio.mutate(p); };
-  const ultimo = historico.data?.pages[0]?.[0]; const decisao = ultimo?.decisao === "declarar" ? "retirar" : "declarar"; const assinatura = JSON.stringify([clienteId, planoId, legadoId, revision, ultimo, decisao, motivo.trim()]); const confirmacaoAtual = confirmado === assinatura;
-  return <section aria-label="Relação com Plano legado"><h5>Relação declarada com Plano Preventivo legado</h5><p>Declaração humana não comprova equivalência de alvo ou recorrência, não deduplica e não altera gerador. Pode haver múltiplas relações.</p>{planos.isError && <p role="alert">Lista indisponível. <button type="button" onClick={() => void planos.refetch()}>Tentar novamente</button></p>}<label>Plano legado <select disabled={!!pendente} value={legadoId} onChange={(e) => { setLegadoId(e.target.value); setConfirmado(null); }}><option value="">Selecione</option>{planos.data?.pages.flat().map((p) => <option key={p.id} value={p.id}>{p.nome} · {p.estado} · alvo {p.sistema_id ?? p.equipamento_id} · {p.intervalo_n} {p.intervalo_unidade} desde {p.primeira_data}</option>)}</select></label>{planos.hasNextPage && <button type="button" onClick={() => void planos.fetchNextPage()}>Mais Planos</button>}
-    {legadoId && <ClassificarLegadoNaoRelacionado key={legadoId} userId={userId} clienteId={clienteId} planoId={planoId} legadoId={legadoId} revision={revision} />}{historico.isError && <p role="alert">Histórico indisponível. <button type="button" onClick={() => void historico.refetch()}>Tentar novamente</button></p>}{legadoId && historico.data && <form onSubmit={(e) => { e.preventDefault(); if (pendente || historico.isFetching || historico.isError || !confirmacaoAtual || !motivo.trim()) return; enviar({ requestId: crypto.randomUUID(), clienteId, planoId, legadoId, revisao: ultimo?.revisao ?? 0, decisao, motivo: motivo.trim() }); }}><fieldset disabled={!!pendente || envio.isPending || historico.isFetching}><p>Próxima decisão: {decisao}</p><label>Motivo <textarea required maxLength={2000} value={motivo} onChange={(e) => { setMotivo(e.target.value); setConfirmado(null); }} /></label><label><input type="checkbox" checked={confirmacaoAtual} onChange={(e) => setConfirmado(e.target.checked ? assinatura : null)} /> Confirmo a decisão declarada</label><button disabled={!confirmacaoAtual}>Registrar decisão</button></fieldset></form>}
-    {historico.data && <ul>{historico.data.pages.flat().map((h) => <li key={h.request_id}>Revisão {h.revisao} · {h.decisao} · {h.motivo} · {h.ator_id} · {h.criado_em}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}{import.meta.env.VITE_SSO_CONFERENCIA_PLANO_LEGADO_ENABLED === "true" && !historico.isFetching && !historico.isError && ultimo?.decisao === "declarar" && <ConferenciaPlanoLegado key={legadoId} revision={revision} userId={userId} clienteId={clienteId} planoId={planoId} legadoId={legadoId} />}{import.meta.env.VITE_SSO_MATERIALIZAR_CICLO_LEGADO_ENABLED === "true" && (!origemPreparada || origemPreparada.tipo === "calendario") && !historico.isFetching && !historico.isError && ultimo?.decisao === "declarar" && <MaterializarCicloLegado key={legadoId} userId={userId} clienteId={clienteId} planoId={planoId} legadoId={legadoId} relacaoId={ultimo.request_id} revision={revision} preparadaInicial={origemPreparada?.tipo === "calendario" ? origemPreparada.id : undefined} />}{import.meta.env.VITE_SSO_MATERIALIZAR_VISITA_LEGADO_ENABLED === "true" && (!origemPreparada || origemPreparada.tipo === "visita") && !historico.isFetching && !historico.isError && ultimo?.decisao === "declarar" && <MaterializarVisitaLegado key={`visita:${legadoId}`} revision={revision} userId={userId} clienteId={clienteId} planoId={planoId} legadoId={legadoId} relacaoId={ultimo.request_id} preparadaInicial={origemPreparada?.tipo === "visita" ? origemPreparada.id : undefined} />}{pendente === "invalido" && <p role="alert">Tentativa ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
-  </section>;
+export function RelacaoPlanoLegado({
+  userId,
+  clienteId,
+  planoId,
+  revision,
+  origemPreparada,
+}: {
+  userId: string;
+  clienteId: string;
+  planoId: string;
+  revision: number;
+  origemPreparada?: { tipo: "calendario" | "visita"; id: string };
+}) {
+  const cache = useQueryClient();
+  const primeira = useRef(false);
+  const chave = `sso-relacao-plano-legado:${JSON.stringify([userId, clienteId, planoId])}`;
+  const [legadoId, setLegadoId] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [confirmado, setConfirmado] = useState<string | null>(null);
+  const [aviso, setAviso] = useState("");
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(chave);
+      if (!raw) return null;
+      const p = JSON.parse(raw) as Pedido;
+      return p.clienteId === clienteId &&
+        p.planoId === planoId &&
+        typeof p.legadoId === "string" &&
+        typeof p.requestId === "string" &&
+        Number.isSafeInteger(p.revisao) &&
+        ["declarar", "retirar"].includes(p.decisao) &&
+        typeof p.motivo === "string"
+        ? p
+        : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  const planos = useInfiniteQuery({
+    queryKey: ["planos-legados-relacao", userId, clienteId, planoId],
+    initialPageParam: null as string | null,
+    gcTime: 0,
+    queryFn: async ({ pageParam, signal }) => {
+      await conferirSessaoDiagnostico(userId, signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_planos_legados_mediados", {
+          p_ator_id: userId,
+          p_cliente_id: clienteId,
+          p_plano_id: planoId,
+          p_apos: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      if (!Array.isArray(data)) throw new Error("Lista inválida.");
+      await conferirSessaoDiagnostico(userId, signal);
+      return data as {
+        id: string;
+        nome: string;
+        estado: string;
+        sistema_id: string | null;
+        equipamento_id: string | null;
+        primeira_data: string;
+        intervalo_n: number;
+        intervalo_unidade: string;
+      }[];
+    },
+    getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.id : undefined),
+  });
+  const historico = useInfiniteQuery({
+    queryKey: ["historico-relacao-plano-legado", userId, clienteId, planoId, legadoId],
+    enabled: !!legadoId,
+    initialPageParam: null as number | null,
+    gcTime: 0,
+    queryFn: async ({ pageParam, signal }) => {
+      await conferirSessaoDiagnostico(userId, signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_historico_relacao_legada_mediado", {
+          p_ator_id: userId,
+          p_cliente_id: clienteId,
+          p_plano_id: planoId,
+          p_legado_id: legadoId,
+          p_antes: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      if (!Array.isArray(data)) throw new Error("Histórico inválido.");
+      await conferirSessaoDiagnostico(userId, signal);
+      return data as {
+        request_id: string;
+        revisao: number;
+        decisao: "declarar" | "retirar";
+        motivo: string;
+        ator_id: string;
+        criado_em: string;
+      }[];
+    },
+    getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.revisao : undefined),
+  });
+  const envio = useMutation({
+    mutationFn: async (p: Pedido) => {
+      await conferirSessaoDiagnostico(userId);
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+        throw new Error("Tentativa divergente.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_declarar_relacao_legada_mediada", {
+          p_ator_id: userId,
+          p_request_id: p.requestId,
+          p_cliente_id: p.clienteId,
+          p_plano_id: p.planoId,
+          p_plano_legado_id: p.legadoId,
+          p_expected_revision: p.revisao,
+          p_decisao: p.decisao,
+          p_motivo: p.motivo,
+        });
+      if (error) throw error;
+      if (
+        !data ||
+        data.requestId !== p.requestId ||
+        data.equivalenciaComprovada !== false ||
+        data.geradorAlterado !== false
+      )
+        throw new Error("Resposta inválida.");
+      await conferirSessaoDiagnostico(userId);
+    },
+    onSuccess: async (_r, p) => {
+      try {
+        await conferirSessaoDiagnostico(userId);
+        if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
+        sessionStorage.removeItem(chave);
+      } catch {
+        setAviso("Tentativa local não pôde ser removida; procure suporte.");
+        return;
+      }
+      setPendente(null);
+      setConfirmado(null);
+      setAviso("Decisão registrada; gerador não foi alterado.");
+      await cache.invalidateQueries({
+        queryKey: ["historico-relacao-plano-legado", userId, clienteId, planoId],
+      });
+    },
+    onError: async (error, p) => {
+      if (
+        primeira.current &&
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "P0011" &&
+        "message" in error &&
+        error.message === "revisao_obsoleta"
+      ) {
+        try {
+          await conferirSessaoDiagnostico(userId);
+          if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
+          sessionStorage.removeItem(chave);
+          setPendente(null);
+          setConfirmado(null);
+          setAviso("A relação mudou. Atualize e confira novamente.");
+          await cache.invalidateQueries({
+            queryKey: ["historico-relacao-plano-legado", userId, clienteId, planoId],
+          });
+          return;
+        } catch {
+          setAviso("Tentativa preservada; procure suporte.");
+          return;
+        }
+      }
+      setAviso(
+        "Resultado não confirmado; repita a mesma tentativa ou procure suporte em conflito.",
+      );
+    },
+    onSettled: () => {
+      primeira.current = false;
+    },
+  });
+  const enviar = (p: Pedido) => {
+    try {
+      const anterior = sessionStorage.getItem(chave);
+      if (anterior !== null && anterior !== JSON.stringify(p)) throw new Error();
+      primeira.current = anterior === null;
+      sessionStorage.setItem(chave, JSON.stringify(p));
+    } catch {
+      setAviso("Não foi possível guardar tentativa; nada enviado.");
+      return;
+    }
+    setPendente(p);
+    envio.mutate(p);
+  };
+  const ultimo = historico.data?.pages[0]?.[0];
+  const decisao = ultimo?.decisao === "declarar" ? "retirar" : "declarar";
+  const assinatura = JSON.stringify([
+    clienteId,
+    planoId,
+    legadoId,
+    revision,
+    ultimo,
+    decisao,
+    motivo.trim(),
+  ]);
+  const confirmacaoAtual = confirmado === assinatura;
+  return (
+    <section aria-label="Relação com Plano legado">
+      <h5>Relação declarada com Plano Preventivo legado</h5>
+      <p>
+        Declaração humana não comprova equivalência de alvo ou recorrência, não deduplica e não
+        altera gerador. Pode haver múltiplas relações.
+      </p>
+      {planos.isError && (
+        <p role="alert">
+          Lista indisponível.{" "}
+          <button type="button" onClick={() => void planos.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      <label>
+        Plano legado{" "}
+        <select
+          disabled={!!pendente}
+          value={legadoId}
+          onChange={(e) => {
+            setLegadoId(e.target.value);
+            setConfirmado(null);
+          }}
+        >
+          <option value="">Selecione</option>
+          {planos.data?.pages.flat().map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.nome} · {p.estado} · alvo {p.sistema_id ?? p.equipamento_id} · {p.intervalo_n}{" "}
+              {p.intervalo_unidade} desde {p.primeira_data}
+            </option>
+          ))}
+        </select>
+      </label>
+      {planos.hasNextPage && (
+        <button type="button" onClick={() => void planos.fetchNextPage()}>
+          Mais Planos
+        </button>
+      )}
+      {legadoId && (
+        <ClassificarLegadoNaoRelacionado
+          key={legadoId}
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          legadoId={legadoId}
+          revision={revision}
+        />
+      )}
+      {historico.isError && (
+        <p role="alert">
+          Histórico indisponível.{" "}
+          <button type="button" onClick={() => void historico.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {legadoId && historico.data && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (
+              pendente ||
+              historico.isFetching ||
+              historico.isError ||
+              !confirmacaoAtual ||
+              !motivo.trim()
+            )
+              return;
+            enviar({
+              requestId: crypto.randomUUID(),
+              clienteId,
+              planoId,
+              legadoId,
+              revisao: ultimo?.revisao ?? 0,
+              decisao,
+              motivo: motivo.trim(),
+            });
+          }}
+        >
+          <fieldset disabled={!!pendente || envio.isPending || historico.isFetching}>
+            <p>Próxima decisão: {decisao}</p>
+            <label>
+              Motivo{" "}
+              <textarea
+                required
+                maxLength={2000}
+                value={motivo}
+                onChange={(e) => {
+                  setMotivo(e.target.value);
+                  setConfirmado(null);
+                }}
+              />
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={confirmacaoAtual}
+                onChange={(e) => setConfirmado(e.target.checked ? assinatura : null)}
+              />{" "}
+              Confirmo a decisão declarada
+            </label>
+            <button type="submit" disabled={!confirmacaoAtual}>
+              Registrar decisão
+            </button>
+          </fieldset>
+        </form>
+      )}
+      {historico.data && (
+        <ul>
+          {historico.data.pages.flat().map((h) => (
+            <li key={h.request_id}>
+              Revisão {h.revisao} · {h.decisao} · {h.motivo} · {h.ator_id} · {h.criado_em}
+            </li>
+          ))}
+        </ul>
+      )}
+      {historico.hasNextPage && (
+        <button type="button" onClick={() => void historico.fetchNextPage()}>
+          Mais histórico
+        </button>
+      )}
+      {import.meta.env.VITE_SSO_CONFERENCIA_PLANO_LEGADO_ENABLED === "true" &&
+        !historico.isFetching &&
+        !historico.isError &&
+        ultimo?.decisao === "declarar" && (
+          <ConferenciaPlanoLegado
+            key={legadoId}
+            revision={revision}
+            userId={userId}
+            clienteId={clienteId}
+            planoId={planoId}
+            legadoId={legadoId}
+          />
+        )}
+      {import.meta.env.VITE_SSO_MATERIALIZAR_CICLO_LEGADO_ENABLED === "true" &&
+        (!origemPreparada || origemPreparada.tipo === "calendario") &&
+        !historico.isFetching &&
+        !historico.isError &&
+        ultimo?.decisao === "declarar" && (
+          <MaterializarCicloLegado
+            key={legadoId}
+            userId={userId}
+            clienteId={clienteId}
+            planoId={planoId}
+            legadoId={legadoId}
+            relacaoId={ultimo.request_id}
+            revision={revision}
+            preparadaInicial={
+              origemPreparada?.tipo === "calendario" ? origemPreparada.id : undefined
+            }
+          />
+        )}
+      {import.meta.env.VITE_SSO_MATERIALIZAR_VISITA_LEGADO_ENABLED === "true" &&
+        (!origemPreparada || origemPreparada.tipo === "visita") &&
+        !historico.isFetching &&
+        !historico.isError &&
+        ultimo?.decisao === "declarar" && (
+          <MaterializarVisitaLegado
+            key={`visita:${legadoId}`}
+            revision={revision}
+            userId={userId}
+            clienteId={clienteId}
+            planoId={planoId}
+            legadoId={legadoId}
+            relacaoId={ultimo.request_id}
+            preparadaInicial={origemPreparada?.tipo === "visita" ? origemPreparada.id : undefined}
+          />
+        )}
+      {pendente === "invalido" && <p role="alert">Tentativa ilegível; procure suporte.</p>}
+      {pendente && pendente !== "invalido" && (
+        <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>
+          Repetir tentativa pendente
+        </button>
+      )}
+      {aviso && <output>{aviso}</output>}
+    </section>
+  );
 }

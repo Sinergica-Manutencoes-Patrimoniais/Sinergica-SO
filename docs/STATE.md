@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: tolerância e gates locais
+
+- Jornada UI/backend isolada configurou tolerância antes=2/depois=5, aprovou e gerou ocorrência com os valores preservados e vencimento ancorado; OS histórica intacta. Teste domínio 10/10 cobriu limites e próximo ciclo. Avaliação atual de prazo é informativa e usa data fornecida na tela; integração automática com execução não comprovada.
+- Gates locais: Spec Kit, Mermaid e typecheck web passaram. `audit:esteira` falhou com 1.597 achados, Squawk com 474 alertas em 42 migrations, arquitetura com 4 violações XLSX e verificação de Edge Functions por funções não declaradas; são resultados do workspace amplo, não prova de regressão desta story. CI completa e db-tests desde zero não executados. Registro `supabase/tests/manual_E01-S165_S166_verificacao_ci_local.md`.
+- Biome focal de quatro arquivos S165/S166 foi corrigido; verificação focal passou e 15 testes passaram. Próximo passo: avaliar gates amplos, cobertura das fontes e homologação; gates default fechados, sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: edição até geração pela UI
 
 - ADR-1626/migration 1768 tratam revisão obsoleta da edição de Rotina com P0011; formulário preserva tentativa incerta/40001 real. Clone compilou, fixture de edição/aprovação e revisão independente passaram; rollout UI/backend coordenado.

@@ -37,6 +37,14 @@ describe("tolerância por calendário", () => {
       "apos_a_tolerancia",
     );
   });
+  it("avalia datas informadas de execução sem deslocar a recorrência bimestral", () => {
+    const ciclo = { vencimento: "2026-12-05", diasAntes: 2, diasDepois: 5 };
+    expect(avaliarToleranciaCalendario({ ...ciclo, data: "2026-12-02" }).situacao).toBe("antes_da_tolerancia");
+    expect(avaliarToleranciaCalendario({ ...ciclo, data: "2026-12-03" }).situacao).toBe("dentro_da_tolerancia");
+    expect(avaliarToleranciaCalendario({ ...ciclo, data: "2026-12-10" }).situacao).toBe("dentro_da_tolerancia");
+    expect(avaliarToleranciaCalendario({ ...ciclo, data: "2026-12-11" }).situacao).toBe("apos_a_tolerancia");
+    expect(projetarVencimentosPorCalendario({ dataBase: ciclo.vencimento, intervalo: 2, unidade: "meses", inicio: "2026-12-05", fim: "2027-02-05", feriados: [] }).map((item) => item.vencimento)).toEqual(["2026-12-05", "2027-02-05"]);
+  });
   it("recusa tolerâncias inválidas e datas inexistentes", () => {
     for (const diasAntes of [-1, 0.5, Number.NaN, 2147483648])
       expect(() =>
