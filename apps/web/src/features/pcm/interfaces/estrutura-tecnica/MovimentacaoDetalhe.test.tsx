@@ -8,7 +8,7 @@ import {
   waitFor,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   autorizarAcao: vi.fn(),
   listarAreas: vi.fn(),
@@ -16,6 +16,11 @@ const api = vi.hoisted(() => ({
   listarPorCliente: vi.fn(),
   listarDestinos: vi.fn(),
   moverComponente: vi.fn(),
+  getUser: vi.fn(),
+}));
+vi.mock("../../../../lib/supabase-client", () => ({
+  supabase: { auth: { getUser: api.getUser } },
+  supabaseUrl: "http://127.0.0.1:1",
 }));
 vi.mock("../../infrastructure/supabase-capacidades-sso-adapter", () => ({
   supabaseCapacidadesSsoAdapter: api,
@@ -30,6 +35,9 @@ vi.mock("../../infrastructure/supabase-estrutura-tecnica-adapter", () => ({
   supabaseEstruturaTecnicaAdapter: api,
 }));
 import { MovimentacaoDetalhe } from "./MovimentacaoDetalhe";
+beforeEach(() => {
+  api.getUser.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+});
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
@@ -228,6 +236,8 @@ it("preserva seleção e bloqueia comando durante falha de nova busca, retomando
   await screen.findByRole("alert");
   const selecao = screen.getByLabelText("Área de destino") as HTMLSelectElement;
   expect(selecao.value).toBe("area-inicial");
+  expect(selecao.closest("fieldset")).toHaveAttribute("hidden");
+  expect(screen.queryByRole("option", { name: "Área inicial" })).toBeNull();
   expect((selecao.closest("fieldset") as HTMLFieldSetElement).disabled).toBe(true);
   falharBusca = false;
   fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
@@ -272,6 +282,7 @@ it("resposta atrasada não atualiza tela após troca de usuário", async () => {
     }),
   );
   const aoConcluir = vi.fn();
+  const clienteId = "17610000-0000-4000-8000-000000000021";
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const item = {
     id: "17610000-0000-4000-8000-000000000061",
@@ -282,18 +293,26 @@ it("resposta atrasada não atualiza tela após troca de usuário", async () => {
   };
   const tela = render(
     <QueryClientProvider client={client}>
-      <MovimentacaoDetalhe userId="u1" clienteId="c" item={item} onConcluido={aoConcluir} />
+      <MovimentacaoDetalhe userId="u1" clienteId={clienteId} item={item} onConcluido={aoConcluir} />
     </QueryClientProvider>,
   );
   fireEvent.click(await screen.findByRole("button", { name: "Movimentar Componente" }));
   fireEvent.click(await screen.findByRole("button", { name: "Confirmar movimentação" }));
+  await waitFor(() => expect(api.moverComponente).toHaveBeenCalledTimes(1));
+  const comando = api.moverComponente.mock.calls[0]?.[0];
+  if (!comando) throw new Error("Comando não enviado");
+  const chave = `sso-movimento:u1:${clienteId}:${item.id}`;
+  const guardado = sessionStorage.getItem(chave);
+  expect(guardado).not.toBeNull();
   tela.rerender(
     <QueryClientProvider client={client}>
-      <MovimentacaoDetalhe userId="u2" clienteId="c" item={item} onConcluido={aoConcluir} />
+      <MovimentacaoDetalhe userId="u2" clienteId={clienteId} item={item} onConcluido={aoConcluir} />
     </QueryClientProvider>,
   );
   await screen.findByRole("button", { name: "Movimentar Componente" });
-  concluir({});
-  await waitFor(() => expect(sessionStorage.getItem(`sso-movimento:u1:c:${item.id}`)).toBeNull());
+  concluir({ requestId: comando.requestId, aggregateId: comando.componenteId,
+    revision: comando.expectedRevision + 1, linkedIds: { clienteId } });
+  await waitFor(() => expect(api.getUser.mock.calls.length).toBeGreaterThanOrEqual(2));
+  expect(sessionStorage.getItem(chave)).toBe(guardado);
   expect(aoConcluir).not.toHaveBeenCalled();
 });

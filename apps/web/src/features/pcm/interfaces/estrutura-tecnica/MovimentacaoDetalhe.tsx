@@ -171,6 +171,7 @@ function MovimentacaoContexto({ userId, clienteId, item, onConcluido }: Moviment
             </button>
           )}
           <fieldset
+            hidden={consultas.some((q) => q.isError || q.isFetching || q.isPlaceholderData)}
             disabled={consultas.some((q) => q.isError || q.isFetching || q.isPlaceholderData)}
           >
             <MovimentarComponente
