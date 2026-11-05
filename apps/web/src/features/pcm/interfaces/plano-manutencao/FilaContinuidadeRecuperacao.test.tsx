@@ -54,3 +54,30 @@ it("não oferece confirmação enquanto há avaliação superveniente", async ()
   expect(screen.queryByRole("option", { name: "Reconferir fonte e marcar aguardando" })).toBeNull();
   expect(screen.getByRole("button", { name: "Cancelar entrada local" })).toBeInTheDocument();
 });
+
+it("permite nova conferência após conflito definitivo na primeira tentativa de Visita", async () => {
+  const chaveVisita = `sso-fila-visita:${JSON.stringify(["usuario", clienteId, planoId, preparadaId])}`;
+  api.rpc.mockImplementation((nome: string) => nome === "sso_consultar_fila_visita_v2"
+    ? { abortSignal: () => Promise.resolve({ data: [linha], error: null }) }
+    : Promise.resolve({ data: null, error: { code: "P0012", message: "fila_ou_revisao_indisponivel" } }));
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><FilaPreventivaPcm userId="usuario" clienteId={clienteId} planoId={planoId} preparadaId={preparadaId} tipo="visita" /></QueryClientProvider>);
+  await screen.findByText(/Entrada verificacao/);
+  fireEvent.change(screen.getByLabelText("Motivo"), { target: { value: "Conferido" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /Conferi a ocorrência/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Cancelar entrada local" }));
+  await screen.findByText(/A fila mudou/);
+  expect(sessionStorage.getItem(chaveVisita)).toBeNull();
+});
+
+it("preserva pedido de Visita anterior quando replay recebe P0012", async () => {
+  const chaveVisita = `sso-fila-visita:${JSON.stringify(["usuario", clienteId, planoId, preparadaId])}`;
+  const pedido = JSON.stringify({ requestId: "16630000-1111-4000-8000-000000000063", clienteId, planoId, preparadaId, acao: "cancelar", revisao: 1, motivo: "Conferido" });
+  sessionStorage.setItem(chaveVisita, pedido);
+  api.rpc.mockImplementation((nome: string) => nome === "sso_consultar_fila_visita_v2"
+    ? { abortSignal: () => Promise.resolve({ data: [linha], error: null }) }
+    : Promise.resolve({ data: null, error: { code: "P0012", message: "fila_ou_revisao_indisponivel" } }));
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><FilaPreventivaPcm userId="usuario" clienteId={clienteId} planoId={planoId} preparadaId={preparadaId} tipo="visita" /></QueryClientProvider>);
+  fireEvent.click(screen.getByRole("button", { name: "Repetir mesmo pedido" }));
+  await screen.findByText(/Resultado não confirmado/);
+  expect(sessionStorage.getItem(chaveVisita)).toBe(pedido);
+});

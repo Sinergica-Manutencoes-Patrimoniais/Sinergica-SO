@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: conflitos HTTP de aprovação e fila
+
+- ADR-1604/migration 1746 convertem apenas revisão obsoleta do núcleo de aprovação para P0011; UI distingue primeira rejeição de replay incerto. HTTP real em clone passou de timeout >7s para resposta P0011; typecheck passou. Harness `apps/web/e2e/s166-isolado/executar-aprovacao-obsoleta.py`.
+- ADR-1605/migration 1747 tratam conflito de revisão da fila Visita com P0012; HTTP em clone respondeu em 5ms após timeout anterior >6s. Fixture de replay e testes UI 5/5 passaram, preservando tentativa incerta. Outros 40001 não foram alterados.
+- UI/backend Visita validaram conflitos de revisão 1744 e prévia 1745 em clone; gates somente sintéticos. Próximo passo: auditar outros conflitos de negócio e revisão integral/CI antes de homologação. Sem deploy/Auvo real.
+
 ## 2026-11-05 — S165/S166: revisão obsoleta e aprovação com avaliação
 
 - Aprovação mediada 1731 em clone, com 1045 intacta e 1742, recusou avaliação tardia (`comparacao_avaliacao_obsoleta`); após remover fontes sintéticas aprovou e repetiu. Ponte/relação/avaliação sintéticas; fixture `supabase/tests/manual_E01-S165_aprovacao_real_avaliacao_tardia_1742.sql`.

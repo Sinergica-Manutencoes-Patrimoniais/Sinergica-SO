@@ -154,7 +154,7 @@ export function AcoesRevisaoPlano({
     } catch (falha) {
       const codigo =
         typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
-      if (primeiraTentativa && ["22023", "23514", "40001"].includes(codigo)) {
+      if (primeiraTentativa && (["22023", "23514", "40001"].includes(codigo) || (pedido.tipo === "aprovacao_revisao" && codigo === "P0011" && typeof falha === "object" && falha !== null && "message" in falha && falha.message === "revisao_obsoleta"))) {
         try {
           await exigirAtor();
           if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {

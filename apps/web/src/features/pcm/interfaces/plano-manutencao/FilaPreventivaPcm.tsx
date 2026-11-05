@@ -63,6 +63,17 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
       sessionStorage.removeItem(chave); setPendente(null); setConfirmacao(null); setMotivo("");
       setAviso(p.acao === "incluir" ? (r.estado === "verificacao" ? "Ciclo incluído para conferência: ausência de vínculo não comprova ausência de execução. Nenhuma OS ou tarefa Auvo foi criada." : "Ciclo registrado na fila local; nenhuma OS ou tarefa Auvo foi criada.") : p.acao === "confirmar" ? "Entrada confirmada como aguardando; nenhuma OS ou tarefa Auvo foi criada." : "Entrada da fila local cancelada; fonte preventiva e OS não foram alteradas.");
     } catch (error) {
+      const conflitoFila = primeiraTentativa && tipo === "visita" && typeof error === "object" && error !== null && "code" in error && error.code === "P0012" && "message" in error && error.message === "fila_ou_revisao_indisponivel";
+      if (conflitoFila) {
+        try {
+          await sessao();
+          if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
+          sessionStorage.removeItem(chave); setPendente(null); setConfirmacao(null);
+          setAviso("A fila mudou. Atualize os dados e confira novamente.");
+          await cache.invalidateQueries({ queryKey: ["fila-preventiva-pcm", userId, clienteId, planoId] }).catch(() => undefined);
+        } catch { setAviso("Tentativa preservada; procure suporte para reconciliar a sessão."); }
+        return;
+      }
       const rejeicaoContinuidade = primeiraTentativa && p.acao !== "cancelar" && typeof error === "object" && error !== null && "code" in error && error.code === "23514" && "message" in error && typeof error.message === "string" && ["vigencia_ocorrencia_indeterminada", "escopo_retirado_ou_indeterminado", "continuidade_ciclo_nao_aprovada", "continuidade_visita_nao_aprovada", "snapshot_indisponivel"].includes(error.message);
       if (rejeicaoContinuidade) {
         try {
