@@ -19,13 +19,13 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,revision}: Props) 
   const [pedido,setPedido]=useState<Pedido|"invalido"|null>(() => {try{const salvo=sessionStorage.getItem(chave);if(!salvo)return null;const p=JSON.parse(salvo) as Pedido;
     return p&&p.clienteId===clienteId&&p.planoId===planoId&&p.versaoId===versaoId&&p.rotinaId===rotinaId&&typeof p.serieId==="string"&&typeof p.requestId==="string"&&Number.isSafeInteger(p.revision)&&(p.tentativaIncerta===undefined||typeof p.tentativaIncerta==="boolean") ? p : "invalido";}catch{return "invalido";}});
   const regras=useInfiniteQuery({queryKey:["rotina-serie-regras",userId,clienteId],gcTime:0,initialPageParam:null as string|null,
-    queryFn:({pageParam,signal}) => supabaseCalendarioContratualAdapter.listarRegras(clienteId,50,pageParam,signal),
+    queryFn:async({pageParam,signal}) => {await conferirSessaoDiagnostico(userId,signal);const pagina=await supabaseCalendarioContratualAdapter.listarRegras(clienteId,50,pageParam,signal);await conferirSessaoDiagnostico(userId,signal);return pagina;},
     getNextPageParam:(pagina) => pagina.length===50 ? pagina.at(-1)?.id : undefined});
   const vinculos=useInfiniteQuery({queryKey:["rotina-serie-vinculos",userId,clienteId,planoId,rotinaId],gcTime:0,initialPageParam:null as string|null,
-    queryFn:async({pageParam,signal}) => {const {data,error}=await supabase.schema("pcm").rpc("sso_listar_series_rotina_mediado",{
+    queryFn:async({pageParam,signal}) => {await conferirSessaoDiagnostico(userId,signal);const {data,error}=await supabase.schema("pcm").rpc("sso_listar_series_rotina_mediado",{
       p_ator:userId,p_cliente:clienteId,p_plano:planoId,p_rotina:rotinaId,p_apos:pageParam,p_limite:50}).abortSignal(signal);if(error)throw error;
       if(!Array.isArray(data)||data.some((v) => typeof v.serie_id!=="string"||typeof v.criado_em!=="string"))throw new Error("Vínculos inválidos.");
-      return data as {serie_id:string;criado_em:string}[];},getNextPageParam:(pagina) => pagina.length===50 ? pagina.at(-1)?.serie_id : undefined});
+      await conferirSessaoDiagnostico(userId,signal);return data as {serie_id:string;criado_em:string}[];},getNextPageParam:(pagina) => pagina.length===50 ? pagina.at(-1)?.serie_id : undefined});
   const envio=useMutation({mutationFn:async(p:Pedido) => {await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");const {data,error}=await supabase.schema("pcm").rpc("sso_vincular_serie_rotina_mediado",{
     p_ator:userId,p_cliente:p.clienteId,p_request:p.requestId,p_plano:p.planoId,p_versao:p.versaoId,p_rotina:p.rotinaId,p_serie:p.serieId,p_revisao:p.revision});
     if(error)throw error;if(!data||data.requestId!==p.requestId||data.planoId!==p.planoId||data.serieId!==p.serieId)throw new Error("Resposta inválida.");await conferirSessaoDiagnostico(userId);},

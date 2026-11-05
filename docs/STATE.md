@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: revisão de decisão obsoleta
+
+- ADR-1646/migration 1788 convertem apenas `revisao_decisao_obsoleta` dos núcleos de impacto Calendário/Visita a P0014; UI reconhece conflito específico inicial e preserva 40001 genuíno/replay incerto. ACL/replay revisados estaticamente sem falha concreta.
+- Consultas de séries da Rotina conferem sessão antes/depois e respeitam cancelamento, evitando preencher cache de contexto anterior.
+- **Nenhum teste, typecheck, build ou ensaio executado por solicitação atual.** Migrations 1780–1788 e UI aguardam validação em lote, incluindo compilação, ACL, replay e jornadas. Sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: recibos antigos e cache por Cliente
 
 - ADR-1644/migration 1786 permitem somente consultar recibo legado de geração contratual existente, com ator/Cliente/permissões/gates e trava; ausência preserva pedido, novos pedidos usam protocolo coordenado. Núcleos permanecem privados; revisão estática sem falha concreta.
