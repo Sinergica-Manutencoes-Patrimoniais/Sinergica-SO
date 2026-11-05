@@ -9,10 +9,9 @@ vi.mock("../../../auth/infrastructure/supabase-auth-adapter", () => ({
   }),
 }));
 
+const auth = vi.hoisted(() => ({ getUser: vi.fn() }));
 vi.mock("../../../../lib/supabase-client", () => ({
-  supabase: new Proxy({}, {
-    get: () => { throw new Error("Acesso inesperado ao Supabase em teste unitário"); },
-  }),
+  supabase: { auth },
   supabaseUrl: "http://127.0.0.1:1",
 }));
 
@@ -29,6 +28,14 @@ vi.mock("../../infrastructure/supabase-estrutura-tecnica-adapter", () => ({
   supabaseEstruturaTecnicaAdapter: gateway,
 }));
 import { GruposQuantitativos } from "./GruposQuantitativos";
+
+function recibo(comando: { requestId: string; grupoId: string; expectedRevision: number; localId: string; sistemaId: string | null }) {
+  const chave = Object.keys(sessionStorage).find((k) => k.startsWith("sso-grupo-pendente:usuario:"));
+  const clienteId = chave?.slice("sso-grupo-pendente:usuario:".length);
+  return { requestId: comando.requestId, aggregateId: comando.grupoId, revision: comando.expectedRevision + 1,
+    created: comando.expectedRevision === 0, state: true, warnings: [],
+    linkedIds: { clienteId, localId: comando.localId, ...(comando.sistemaId ? { sistemaId: comando.sistemaId } : {}) } };
+}
 
 function montar(clienteId = "cliente-a") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -50,6 +57,7 @@ function montar(clienteId = "cliente-a") {
 describe("consulta de Grupos Quantitativos", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    auth.getUser.mockResolvedValue({ data: { user: { id: "usuario" } }, error: null });
   });
   afterEach(() => {
     cleanup();
@@ -232,7 +240,7 @@ describe("consulta de Grupos Quantitativos", () => {
     gateway.listarGrupos.mockResolvedValue([]);
     gateway.salvarGrupo
       .mockRejectedValueOnce(new Error("conexão interrompida"))
-      .mockResolvedValueOnce({});
+      .mockImplementationOnce(async (comando) => recibo(comando));
     const tela = montar();
     fireEvent.click(await screen.findByRole("button", { name: "Novo grupo" }));
     fireEvent.change(screen.getByLabelText("Nome do grupo"), { target: { value: "Luminárias" } });
@@ -250,6 +258,24 @@ describe("consulta de Grupos Quantitativos", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Tentar salvar novamente" }));
     await waitFor(() => expect(gateway.salvarGrupo).toHaveBeenCalledTimes(2));
     expect(gateway.salvarGrupo.mock.calls[0]?.[0]).toEqual(gateway.salvarGrupo.mock.calls[1]?.[0]);
+  });
+  it.each(["recibo divergente", "sessão alterada"])("preserva pedido após %s", async (cenario) => {
+    gateway.autorizarAcao.mockResolvedValue(true);
+    gateway.listarGrupos.mockResolvedValue([]);
+    gateway.salvarGrupo.mockImplementation(async (comando) => {
+      if (cenario === "sessão alterada") auth.getUser.mockResolvedValue({ data: { user: { id: "outro" } }, error: null });
+      return cenario === "recibo divergente" ? { ...recibo(comando), requestId: "incorreto" } : recibo(comando);
+    });
+    montar();
+    fireEvent.click(await screen.findByRole("button", { name: "Novo grupo" }));
+    fireEvent.change(screen.getByLabelText("Nome do grupo"), { target: { value: "Luminárias" } });
+    fireEvent.change(screen.getByLabelText("Quantidade"), { target: { value: "20" } });
+    fireEvent.change(screen.getByLabelText("Local"), { target: { value: "17610000-0000-4000-8000-000000000031" } });
+    fireEvent.change(screen.getByLabelText("Categoria"), { target: { value: "17610000-0000-4000-8000-000000000041" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar grupo" }));
+    await screen.findByRole("alert");
+    expect(sessionStorage.getItem("sso-grupo-pendente:usuario:cliente-a")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Tentar salvar novamente" })).toBeTruthy();
   });
   it("permite corrigir nome vazio sem registrar pedido pendente", async () => {
     gateway.autorizarAcao.mockResolvedValue(true);
@@ -287,7 +313,7 @@ describe("consulta de Grupos Quantitativos", () => {
         revisao: 3,
       },
     ]);
-    gateway.salvarGrupo.mockResolvedValue({});
+    gateway.salvarGrupo.mockImplementation(async (comando) => recibo(comando));
     montar();
     fireEvent.click(await screen.findByRole("button", { name: "Editar Luminárias" }));
     fireEvent.change(screen.getByLabelText("Quantidade"), { target: { value: "21" } });
@@ -391,7 +417,7 @@ describe("consulta de Grupos Quantitativos", () => {
       ).toBe(false),
     );
   });
-  it("conflito de revisão confirmado permite recarregar sem bloquear a próxima edição", async () => {
+  it("erro de serialização preserva pedido para recuperação", async () => {
     gateway.autorizarAcao.mockResolvedValue(true);
     gateway.listarGrupos.mockResolvedValue([]);
     gateway.salvarGrupo.mockRejectedValue({ code: "40001", message: "revisao_obsoleta" });
@@ -406,14 +432,14 @@ describe("consulta de Grupos Quantitativos", () => {
       target: { value: "17610000-0000-4000-8000-000000000041" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Salvar grupo" }));
-    expect((await screen.findByRole("alert")).textContent).toMatch(/revisão/i);
-    expect(sessionStorage.getItem("sso-grupo-pendente:usuario:cliente-conflito")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Tentar salvar novamente" })).toBeNull();
+    expect((await screen.findByRole("alert")).textContent).toMatch(/não foi possível confirmar/i);
+    expect(sessionStorage.getItem("sso-grupo-pendente:usuario:cliente-conflito")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Tentar salvar novamente" })).toBeTruthy();
   });
   it("cadastra grupo com Sistema e característica técnica", async () => {
     gateway.autorizarAcao.mockResolvedValue(true);
     gateway.listarGrupos.mockResolvedValue([]);
-    gateway.salvarGrupo.mockResolvedValue({});
+    gateway.salvarGrupo.mockImplementation(async (comando) => recibo(comando));
     montar("cliente-caracteristicas");
     fireEvent.click(await screen.findByRole("button", { name: "Novo grupo" }));
     fireEvent.change(screen.getByLabelText("Nome do grupo"), { target: { value: "Luminárias" } });
@@ -512,7 +538,7 @@ describe("consulta de Grupos Quantitativos", () => {
           depois: { quantidade: 21 },
         },
       ]);
-    gateway.salvarGrupo.mockResolvedValue({});
+    gateway.salvarGrupo.mockImplementation(async (comando) => recibo(comando));
     montar();
     fireEvent.click(await screen.findByRole("button", { name: "Histórico de Luminárias" }));
     expect(await screen.findByText(/Quantidade: 19 para 20/)).toBeTruthy();
@@ -595,7 +621,9 @@ describe("consulta de Grupos Quantitativos", () => {
       fireEvent.submit(formulario);
     });
     await waitFor(() => expect(gateway.salvarGrupo).toHaveBeenCalledTimes(1));
-    await act(async () => concluir({}));
+    const comando = gateway.salvarGrupo.mock.calls[0]?.[0];
+    if (!comando) throw new Error("Comando não enviado.");
+    await act(async () => concluir(recibo(comando)));
     expect(screen.queryByRole("alert")).toBeNull();
   });
   it("não apaga operação diferente quando resposta anterior chega", async () => {

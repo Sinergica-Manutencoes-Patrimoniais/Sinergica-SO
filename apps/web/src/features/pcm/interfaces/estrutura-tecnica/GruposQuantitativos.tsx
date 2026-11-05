@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "../../../../lib/supabase-client";
 import { validarComandoGrupo } from "../../application/estrutura-tecnica";
 import type {
   GrupoQuantitativo,
@@ -64,6 +65,12 @@ function GruposQuantitativosContexto({
   const [atributos, setAtributos] = useState<{ id: string; nome: string; valor: string }[]>([]);
   const [erroSalvar, setErroSalvar] = useState("");
   const emEnvio = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  async function conferirSessao() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+  }
   const [recuperacao] = useState(() => {
     try {
       const valor = sessionStorage.getItem(chavePendente);
@@ -141,7 +148,7 @@ function GruposQuantitativosContexto({
     } : null);
     setAberto(true);
   }
-  async function enviar(comando: SalvarGrupoCommand) {
+  async function enviar(comando: SalvarGrupoCommand, primeiraTentativa = false) {
     if (emEnvio.current) return;
     emEnvio.current = true;
     setErroSalvar("");
@@ -150,7 +157,16 @@ function GruposQuantitativosContexto({
         setErroSalvar("Operação local alterada ou indisponível. Consulte suporte antes de repetir.");
         return;
       }
-      await salvar.mutateAsync(comando);
+      await conferirSessao();
+      const recibo = await salvar.mutateAsync(comando);
+      if (
+        recibo.requestId !== comando.requestId || recibo.aggregateId !== comando.grupoId ||
+        recibo.revision !== comando.expectedRevision + 1 ||
+        recibo.created !== (comando.expectedRevision === 0) ||
+        recibo.linkedIds.clienteId !== clienteId || recibo.linkedIds.localId !== comando.localId ||
+        (recibo.linkedIds.sistemaId ?? null) !== comando.sistemaId
+      ) throw new Error("Recibo divergente.");
+      await conferirSessao();
       removerPendenteCorrespondente(comando);
       setPendente(null);
       setAberto(false);
@@ -163,12 +179,14 @@ function GruposQuantitativosContexto({
       setAtributos([]);
     } catch (erro) {
       if (
+        primeiraTentativa &&
         typeof erro === "object" &&
         erro !== null &&
         "code" in erro &&
         (erro.code === "22023" || erro.code === "23514")
       ) {
         try {
+          await conferirSessao();
           removerPendenteCorrespondente(comando);
           setPendente(null);
           restaurarEdicao(comando);
@@ -178,20 +196,6 @@ function GruposQuantitativosContexto({
           return;
         } catch {
           /* Conserva a operação quando não for possível removê-la da sessão. */
-        }
-      }
-      if (typeof erro === "object" && erro !== null && "code" in erro && erro.code === "40001") {
-        try {
-          removerPendenteCorrespondente(comando);
-          setPendente(null);
-          restaurarEdicao(comando);
-          setErroSalvar(
-            "A revisão mudou. Os dados digitados foram preservados; compare e adote a revisão atual antes de salvar.",
-          );
-          void grupos.refetch();
-          return;
-        } catch {
-          /* Preserva pedido se não for possível removê-lo com segurança. */
         }
       }
       setErroSalvar(
@@ -240,7 +244,7 @@ function GruposQuantitativosContexto({
       return;
     }
     setPendente(comando);
-    void enviar(comando);
+    void enviar(comando, true);
   }
   return (
     <section

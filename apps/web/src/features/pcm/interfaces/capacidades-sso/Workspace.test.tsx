@@ -56,24 +56,19 @@ describe("configuração de capacidades", () => {
       { userId: usuario, nome: "Operador", papel: "colaborador", ativo: true },
     ]);
     gateway.listarClientes.mockResolvedValue([{ id: cliente, nome: "Condomínio A" }]);
-    gateway.definirConcessao.mockResolvedValue({
-      aggregateId: usuario,
-      revision: 1,
-      state: true,
-      created: true,
-      linkedIds: {},
-      warnings: [],
-      requestId: request,
-    });
-    gateway.definirPerfil.mockResolvedValue({
-      aggregateId: perfil,
-      revision: 2,
-      state: true,
-      created: false,
-      linkedIds: {},
-      warnings: [],
-      requestId: request,
-    });
+    gateway.definirConcessao.mockImplementation(async (c) => ({
+      aggregateId: usuario, revision: c.expectedRevision + 1, state: c.ativa,
+      created: c.expectedRevision === 0, linkedIds: {}, warnings: [], requestId: c.requestId,
+    }));
+    gateway.definirPerfil.mockImplementation(async (c) => ({
+      aggregateId: c.perfilId, revision: c.expectedRevision + 1, state: c.ativo,
+      created: c.expectedRevision === 0, linkedIds: {}, warnings: [], requestId: c.requestId,
+    }));
+    gateway.definirVinculoPerfil.mockImplementation(async (c) => ({
+      aggregateId: usuario, revision: c.expectedRevision + 1, state: c.ativo,
+      created: c.expectedRevision === 0, linkedIds: { usuarioId: c.usuarioId, perfilId: c.perfilId },
+      warnings: [], requestId: c.requestId,
+    }));
   });
   afterEach(() => {
     cleanup();
@@ -89,21 +84,23 @@ describe("configuração de capacidades", () => {
     fireEvent.click(screen.getByRole("button", { name: "Conceder ação" }));
   }
 
-  it("confirma recibo mediado com pedido e conteúdo antes de concluir", async () => {
+  it("confirma recibo direto mesmo com consulta mediada indisponível", async () => {
+    servico.rpc.mockResolvedValue({ data: null, error: { code: "55000" } });
     await iniciarConcessao();
-    await waitFor(() => expect(servico.rpc).toHaveBeenCalledWith("sso_consultar_recibo_capacidades", {
-      p_request_id: request,
-      p_payload: expect.objectContaining({ usuarioId: usuario, perfilId: null, clienteId: cliente, acao: "plano.gerir" }),
-    }));
-    expect(servico.schema).toHaveBeenCalledWith("config");
     await screen.findByText("Alteração registrada.");
+    expect(servico.rpc).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: /repetir alteração pendente/i })).toBeNull();
   });
 
-  it.each([null, { requestId: "17020000-0000-0000-0000-000000000098", confirmado: true }, { requestId: request, confirmado: false }])(
-    "preserva pedido quando confirmação estiver ausente ou divergente: %s",
-    async (data) => {
-      servico.rpc.mockResolvedValueOnce({ data, error: null });
+  it.each(["requestId", "revision", "state", "created"])(
+    "preserva pedido quando recibo direto diverge em %s",
+    async (campo) => {
+      gateway.definirConcessao.mockImplementationOnce(async (c) => ({
+        aggregateId: usuario, revision: campo === "revision" ? 8 : c.expectedRevision + 1,
+        state: campo === "state" ? !c.ativa : c.ativa,
+        created: campo === "created" ? false : true, linkedIds: {}, warnings: [],
+        requestId: campo === "requestId" ? "17020000-0000-0000-0000-000000000098" : c.requestId,
+      }));
       await iniciarConcessao();
       await screen.findByRole("alert");
       expect(await screen.findByRole("button", { name: /repetir alteração pendente/i })).toBeTruthy();

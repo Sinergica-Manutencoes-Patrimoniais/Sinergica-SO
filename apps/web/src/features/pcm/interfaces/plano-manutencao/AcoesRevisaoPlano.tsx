@@ -19,14 +19,14 @@ import type {
   TransicionarRevisaoCommand,
 } from "../../application/plano-manutencao-gateway";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
-import { aprovarRevisaoPreparada, supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
+import { aprovarRevisaoPreparada, aprovarVersaoEsperada, prepararAprovacaoVersao, supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
 import { DiagnosticoFusoVigencia } from "./DiagnosticoFusoVigencia";
 import { PreflightAprovacaoRevisao } from "./PreflightAprovacaoRevisao";
 
 type Operacao =
   | { tipo: "transicao"; comando: TransicionarRevisaoCommand }
-  | { tipo: "aprovacao"; comando: AprovarPlanoCommand }
-  | { tipo: "aprovacao_revisao"; comando: AprovarPlanoCommand }
+  | { tipo: "aprovacao"; comando: AprovarPlanoCommand; versaoEsperada?: string }
+  | { tipo: "aprovacao_revisao"; comando: AprovarPlanoCommand; versaoEsperada?: string }
   | { tipo: "inicio"; comando: IniciarRevisaoPlanoCommand };
 
 function validarOperacao(valor: unknown, planoId: string): Operacao {
@@ -41,11 +41,12 @@ function validarOperacao(valor: unknown, planoId: string): Operacao {
           ? validarInicioRevisao(valor.comando as IniciarRevisaoPlanoCommand)
           : null;
   if (!comando || comando.planoId !== planoId) throw new Error("Plano divergente");
+  const versao = "versaoEsperada" in valor ? z.string().uuid().parse(valor.versaoEsperada) : undefined;
   return valor.tipo === "transicao"
     ? { tipo: "transicao", comando: comando as TransicionarRevisaoCommand }
     : valor.tipo === "inicio"
       ? { tipo: "inicio", comando: comando as IniciarRevisaoPlanoCommand }
-      : { tipo: valor.tipo === "aprovacao_revisao" ? "aprovacao_revisao" : "aprovacao", comando: comando as AprovarPlanoCommand };
+      : { tipo: valor.tipo === "aprovacao_revisao" ? "aprovacao_revisao" : "aprovacao", comando: comando as AprovarPlanoCommand, ...(versao ? { versaoEsperada: versao } : {}) };
 }
 
 const descricao: Record<string, string> = {
@@ -120,7 +121,9 @@ export function AcoesRevisaoPlano({
   }
   const operacao = useMutation({
     mutationFn: (pedido: Operacao) =>
-      pedido.tipo === "aprovacao_revisao"
+      (pedido.tipo === "aprovacao" || pedido.tipo === "aprovacao_revisao") && pedido.versaoEsperada
+        ? aprovarVersaoEsperada(pedido.comando, { userId, clienteId, versaoId: pedido.versaoEsperada, revisaoPreparada: pedido.tipo === "aprovacao_revisao" })
+        : pedido.tipo === "aprovacao_revisao"
         ? aprovarRevisaoPreparada(validarAprovacaoPlano(pedido.comando), { userId, clienteId })
         : pedido.tipo === "aprovacao"
         ? aprovarPlano(supabasePlanoManutencaoAdapter, pedido.comando)
@@ -151,7 +154,8 @@ export function AcoesRevisaoPlano({
           resultado.revision !== pedido.comando.expectedRevision + 1 ||
           resultado.state !== "aprovado" || resultado.created !== false ||
           resultado.linkedIds.clienteId !== clienteId ||
-          !z.string().uuid().safeParse(resultado.linkedIds.versaoId).success
+          !z.string().uuid().safeParse(resultado.linkedIds.versaoId).success ||
+          (pedido.versaoEsperada !== undefined && resultado.linkedIds.versaoId !== pedido.versaoEsperada)
         ) throw new Error("Recibo de aprovação divergente.");
       }
       if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
@@ -215,14 +219,16 @@ export function AcoesRevisaoPlano({
       trava.current = false;
     }
   }
-  function confirmar() {
+  async function confirmar() {
     if (!escolha || revisaoMudou || bloqueado || operacao.isPending || trava.current || (escolha === "aprovar_revisao" && (import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true" || import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true"))) return;
-    const base = {
-      requestId: crypto.randomUUID(),
-      expectedRevision: plano.revisao,
-      planoId: plano.id,
-    };
+    trava.current = true;
+    let entregue = false;
     try {
+      const base = {
+        requestId: crypto.randomUUID(),
+        expectedRevision: plano.revisao,
+        planoId: plano.id,
+      };
       if (sessionStorage.getItem(chave) !== null) {
         setErro(
           "Existe uma operação pendente neste Plano. Confira o pedido anterior antes de continuar.",
@@ -237,9 +243,16 @@ export function AcoesRevisaoPlano({
           return;
         }
       }
+      let versaoEsperada: string | undefined;
+      if ((escolha === "aprovar" || escolha === "aprovar_revisao") && import.meta.env.VITE_SSO_APROVACAO_VERSAO_ESPERADA_ENABLED === "true") {
+        await exigirAtor();
+        versaoEsperada = await prepararAprovacaoVersao(userId, clienteId, plano.id, plano.revisao);
+        await exigirAtor();
+        if (sessionStorage.getItem(chave) !== null) throw new Error("Tentativa concorrente.");
+      }
       const pedido: Operacao =
         escolha === "aprovar" || escolha === "aprovar_revisao"
-          ? { tipo: escolha === "aprovar" ? "aprovacao" : "aprovacao_revisao", comando: validarAprovacaoPlano({ ...base, vigencia }) }
+          ? { tipo: escolha === "aprovar" ? "aprovacao" : "aprovacao_revisao", comando: validarAprovacaoPlano({ ...base, vigencia }), ...(versaoEsperada ? { versaoEsperada } : {}) }
           : escolha === "iniciar"
             ? {
                 tipo: "inicio",
@@ -248,9 +261,13 @@ export function AcoesRevisaoPlano({
             : { tipo: "transicao", comando: validarTransicaoRevisao({ ...base, acao: escolha }) };
       sessionStorage.setItem(chave, JSON.stringify(pedido));
       setPendente(pedido);
+      trava.current = false;
+      entregue = true;
       void enviar(pedido, true);
     } catch {
       setErro("Confira a vigência e o armazenamento antes de confirmar.");
+    } finally {
+      if (!entregue) trava.current = false;
     }
   }
   return (

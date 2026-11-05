@@ -1,5 +1,6 @@
 import { Button, Card } from "@sinergica/ui";
 import { useMemo, useRef, useState } from "react";
+import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { concessaoSchema, perfilSchema, vinculoSchema } from "../../application/capacidades-sso";
 import type { PaginaCapacidade } from "../../application/capacidades-sso-gateway";
@@ -197,6 +198,27 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     await conferirSessao();
   }
 
+  function validarRecibo(chave: string, payload: object, id: string, resposta: unknown) {
+    const comando = validar(chave, payload, id);
+    const recibo = z.object({
+      requestId: z.string().uuid(), aggregateId: z.string().uuid(),
+      revision: z.number().int().positive(), state: z.boolean(), created: z.boolean(),
+      linkedIds: z.record(z.string()), warnings: z.array(z.string()),
+    }).strict().parse(resposta);
+    const dados = comando.dados;
+    if (recibo.requestId.toLowerCase() !== id.toLowerCase() ||
+        recibo.revision !== dados.expectedRevision + 1 ||
+        recibo.created !== (dados.expectedRevision === 0) ||
+        recibo.state !== (comando.tipo === "concessao" ? comando.dados.ativa : comando.dados.ativo))
+      throw new Error("Recibo divergente.");
+    if (comando.tipo === "perfil" && recibo.aggregateId.toLowerCase() !== comando.dados.perfilId.toLowerCase())
+      throw new Error("Recibo divergente.");
+    if (comando.tipo === "vinculo" &&
+        (recibo.linkedIds.usuarioId?.toLowerCase() !== comando.dados.usuarioId.toLowerCase() ||
+         recibo.linkedIds.perfilId?.toLowerCase() !== comando.dados.perfilId.toLowerCase()))
+      throw new Error("Recibo divergente.");
+  }
+
   async function executar(
     chave: string,
     payload: object,
@@ -236,8 +258,9 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     }
     try {
       await conferirSessao();
-      await enviar(requestId);
-      await confirmarRecibo(chave, payload, requestId);
+      const resposta = await enviar(requestId);
+      validarRecibo(chave, payload, requestId, resposta);
+      await conferirSessao();
       if (!registro.concluir(chave, requestId, payload)) {
         setErro(
           "Alteração confirmada, mas a tentativa local mudou. Procure suporte antes de continuar.",

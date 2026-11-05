@@ -35,10 +35,28 @@ const resultadoSchema = z
     requestId: z.string().uuid(),
   })
   .strict();
-async function executar(nome: string, parametros: Record<string, string | number | null>) {
+async function executar(nome: string, parametros: Record<string, string | number | boolean | null>) {
   const { data, error } = await supabase.schema("pcm").rpc(nome, parametros);
   if (error) throw error;
   return resultadoSchema.parse(data);
+}
+
+export async function prepararAprovacaoVersao(userId: string, clienteId: string, planoId: string, revision: number) {
+  const { data, error } = await supabase.schema("pcm").rpc("sso_preparar_aprovacao_versao", {
+    p_ator: userId, p_cliente: clienteId, p_plano: planoId, p_revisao: revision,
+  });
+  if (error) throw error;
+  const resultado = z.object({ planoId: z.string().uuid(), clienteId: z.string().uuid(), revision: z.number().int().positive(), versaoId: z.string().uuid() }).strict().parse(data);
+  if (resultado.planoId !== planoId || resultado.clienteId !== clienteId || resultado.revision !== revision) throw new Error("Preparação divergente.");
+  return resultado.versaoId;
+}
+
+export function aprovarVersaoEsperada(c: { requestId: string; expectedRevision: number; planoId: string; vigencia: string }, contexto: { userId: string; clienteId: string; versaoId: string; revisaoPreparada: boolean }) {
+  return executar("sso_aprovar_versao_esperada", {
+    p_ator: contexto.userId, p_cliente: contexto.clienteId, p_request: c.requestId,
+    p_revisao: c.expectedRevision, p_plano: c.planoId, p_versao: contexto.versaoId,
+    p_vigencia: c.vigencia, p_revisao_preparada: contexto.revisaoPreparada,
+  });
 }
 
 // A mediação possui gate desligado e a aprovação permanece bloqueada pela guarda de impactos.
