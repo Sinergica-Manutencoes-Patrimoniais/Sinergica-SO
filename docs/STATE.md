@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: recibos anteriores e validação em lote (Codex)
+
+- ADR-1647/migration 1789 e a interface permitem consultar, sem gerar ocorrência, recibo anterior de preparação por Visita. A consulta exige ator, Cliente, permissões e payload correspondentes; ausência permanece indeterminada e preserva o pedido. `VITE_SSO_RECIBO_PREPARACAO_VISITA_ENABLED` inicia desligada.
+- Preparação individual/em lote e recuperação de recibo confirmado atualizam consultas de reserva futura do mesmo usuário, Cliente e Plano. Revisões estáticas não identificaram outra lacuna inequívoca nos caminhos examinados de aprovação e geração por Calendário/Visita.
+- **Próximo passo:** quando autorizado o lote de validação, verificar compilação da 1789, ACL/revogação, concorrência/replay e recibo ausente, atualização das reservas e jornadas de impacto, aprovação, geração e fila. Investigar também `visita_candidata_alterada` no trigger 1703: usa `40001`; eventual retry e comportamento individual/em lote não foram reproduzidos. Evidências anteriores usam dados sintéticos e não comprovam fontes externas ou homologação.
+- Nenhum teste, typecheck, build ou ensaio executado neste lote por solicitação do usuário. Sem deploy ou tarefas reais no Auvo; flags permanecem desligadas por padrão.
+
 ## 2026-11-05 — S165/S166: mensagens e regras de Visita
 
 - Mensagens após decisões de impacto indicam que aprovação depende das validações e autorizações, sem afirmar bloqueio permanente. `GerarVisitaContratual` confere sessão ao consultar regras, oculta dados durante recarga/erro e invalida candidatas futuras ao criar Visita.
