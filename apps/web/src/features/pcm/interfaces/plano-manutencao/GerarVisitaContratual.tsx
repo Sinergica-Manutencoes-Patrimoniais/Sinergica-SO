@@ -46,6 +46,7 @@ function GerarVisitaContratualSessao({ userId, clienteId, serieId }: { userId: s
     try { const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); }
     catch { setPendente("invalido"); setAviso("Tentativa alterada ou não removida; procure suporte."); return; }
     setPendente(null); setConfirmado(null); setAviso(r.decisao === "criada" ? "Visita regular em rascunho criada com origem contratual; sem OS ou Auvo." : "Semana suprimida por feriado declarado; nenhuma Visita ou reposição criada.");
+    if (r.decisao === "suprimida_feriado") void cache.invalidateQueries({ queryKey: ["historico-supressao-gerador", userId, clienteId] });
   }, onError: (error,p) => {const e=error as {code?:string;message?:string};if(p.protocolo!=="coordenado"&&e.code==="55000"&&e.message==="recibo_legado_indisponivel")setAviso("Recibo antigo não encontrado. O pedido permanece guardado e a situação original não foi comprovada; procure suporte para conferir.");else setAviso("Resultado não confirmado; repita a tentativa. Em conflito de semana ou dúvida de horário procure suporte.");}, onSettled: () => { trava.current = false; } });
   const enviar = (pedido: Pedido) => { if (trava.current) return;
     if (!pendente && import.meta.env.VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED !== "true") {setAviso("Geração coordenada indisponível; nenhum pedido criado.");return;}
