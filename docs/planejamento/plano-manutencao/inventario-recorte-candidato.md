@@ -1,4 +1,6 @@
 # Inventário estático preliminar — base origin/main
+
+**Atenção:** gerado a partir do backup `84c9fcf`; não inclui alterações posteriores, como as migrations 1802 e 1803. Não aplicar ou usar como lista final de entrega. Regerar e revisar o fechamento depois da conclusão do lote.
 Migrations novas: 1548 ; raízes de quatro stories: 470 ; candidatas ao fecho: 622 ; adicionais por referência textual: 152
 
 ## Candidatas adicionais por referência (última definição ou ALTER anterior; apenas hipótese)
