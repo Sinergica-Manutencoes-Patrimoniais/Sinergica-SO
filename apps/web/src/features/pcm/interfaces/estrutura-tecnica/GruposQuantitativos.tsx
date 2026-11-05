@@ -8,25 +8,25 @@ import type {
 import { useGruposQuantitativos } from "../../application/estrutura-tecnica-queries";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { supabaseEstruturaTecnicaAdapter } from "../../infrastructure/supabase-estrutura-tecnica-adapter";
-import { HistoricoGrupo } from "./HistoricoGrupo";
-import { FotosGrupo } from "./FotosGrupo";
-import { ReclassificarGrupo } from "./ReclassificarGrupo";
-import { MoverGrupo } from "./MoverGrupo";
-import { QuantidadeMotivadaGrupo } from "./QuantidadeMotivadaGrupo";
-import { HierarquiaGrupos } from "./HierarquiaGrupos";
-import { DiagnosticoVinculosGrupos } from "./DiagnosticoVinculosGrupos";
-import { DiagnosticoAncestraisGrupos } from "./DiagnosticoAncestraisGrupos";
-import { FotosStagingGrupo } from "./FotosStagingGrupo";
-import { FotosVerificadasGrupo } from "./FotosVerificadasGrupo";
-import { DocumentosStagingAtivo } from "./DocumentosStagingAtivo";
+import { HistoricoCadastroLevantamento } from "../levantamentos/HistoricoCadastroLevantamento";
+import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
+import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
 import { AtribuirCodigoGrupo } from "./AtribuirCodigoGrupo";
 import { CodigoAtualGrupo } from "./CodigoAtualGrupo";
-import { HistoricoCadastroLevantamento } from "../levantamentos/HistoricoCadastroLevantamento";
-import { RemoverCaracteristicaGrupo } from "./RemoverCaracteristicaGrupo";
+import { DiagnosticoAncestraisGrupos } from "./DiagnosticoAncestraisGrupos";
+import { DiagnosticoVinculosGrupos } from "./DiagnosticoVinculosGrupos";
+import { DocumentosStagingAtivo } from "./DocumentosStagingAtivo";
 import { EstadoGrupo, GruposInativos } from "./EstadoGrupo";
-import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
-import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
+import { FotosGrupo } from "./FotosGrupo";
+import { FotosStagingGrupo } from "./FotosStagingGrupo";
+import { FotosVerificadasGrupo } from "./FotosVerificadasGrupo";
+import { HierarquiaGrupos } from "./HierarquiaGrupos";
+import { HistoricoGrupo } from "./HistoricoGrupo";
+import { MoverGrupo } from "./MoverGrupo";
 import { PlanosDoAlvo } from "./PlanosDoAlvo";
+import { QuantidadeMotivadaGrupo } from "./QuantidadeMotivadaGrupo";
+import { ReclassificarGrupo } from "./ReclassificarGrupo";
+import { RemoverCaracteristicaGrupo } from "./RemoverCaracteristicaGrupo";
 
 type GruposQuantitativosProps = {
   userId: string;
@@ -107,7 +107,10 @@ function GruposQuantitativosContexto({
   const itens = grupos.data?.pages.flat() ?? [];
   const correspondeFiltro = (grupo: GrupoQuantitativo) =>
     (!filtroLocal || grupo.localId === filtroLocal) &&
-    (!filtroSistema || (filtroSistema === "sem-sistema" ? grupo.sistemaId === null : grupo.sistemaId === filtroSistema)) &&
+    (!filtroSistema ||
+      (filtroSistema === "sem-sistema"
+        ? grupo.sistemaId === null
+        : grupo.sistemaId === filtroSistema)) &&
     (!filtroCategoria || grupo.categoriaId === filtroCategoria);
   const edicaoDesatualizada = Boolean(
     editando &&
@@ -116,9 +119,10 @@ function GruposQuantitativosContexto({
   const edicaoIndisponivel = Boolean(
     editando && (grupos.isFetching || grupos.isError || edicaoDesatualizada),
   );
-  const grupoAtual = editando && !grupos.isFetching && !grupos.isError
-    ? itens.find((grupo) => grupo.id === editando.id)
-    : undefined;
+  const grupoAtual =
+    editando && !grupos.isFetching && !grupos.isError
+      ? itens.find((grupo) => grupo.id === editando.id)
+      : undefined;
   function removerPendenteCorrespondente(comando: SalvarGrupoCommand) {
     if (sessionStorage.getItem(chavePendente) !== JSON.stringify(comando)) {
       throw new Error("A operação guardada foi alterada.");
@@ -131,14 +135,28 @@ function GruposQuantitativosContexto({
     setLocalId(comando.localId);
     setCategoriaId(comando.categoriaId);
     setSistemaId(comando.sistemaId ?? "");
-    setAtributos(Object.entries(comando.caracteristicas).map(([nome, valor]) => ({
-      id: crypto.randomUUID(), nome, valor,
-    })));
-    setEditando(comando.expectedRevision > 0 ? {
-      id: comando.grupoId, clienteId, localId: comando.localId, categoriaId: comando.categoriaId,
-      sistemaId: comando.sistemaId, nome: comando.nome, quantidade: comando.quantidade,
-      caracteristicas: comando.caracteristicas, revisao: comando.expectedRevision,
-    } : null);
+    setAtributos(
+      Object.entries(comando.caracteristicas).map(([nome, valor]) => ({
+        id: crypto.randomUUID(),
+        nome,
+        valor,
+      })),
+    );
+    setEditando(
+      comando.expectedRevision > 0
+        ? {
+            id: comando.grupoId,
+            clienteId,
+            localId: comando.localId,
+            categoriaId: comando.categoriaId,
+            sistemaId: comando.sistemaId,
+            nome: comando.nome,
+            quantidade: comando.quantidade,
+            caracteristicas: comando.caracteristicas,
+            revisao: comando.expectedRevision,
+          }
+        : null,
+    );
     setAberto(true);
   }
   async function enviar(comando: SalvarGrupoCommand) {
@@ -147,7 +165,9 @@ function GruposQuantitativosContexto({
     setErroSalvar("");
     try {
       if (sessionStorage.getItem(chavePendente) !== JSON.stringify(comando)) {
-        setErroSalvar("Operação local alterada ou indisponível. Consulte suporte antes de repetir.");
+        setErroSalvar(
+          "Operação local alterada ou indisponível. Consulte suporte antes de repetir.",
+        );
         return;
       }
       await salvar.mutateAsync(comando);
@@ -431,15 +451,60 @@ function GruposQuantitativosContexto({
           )}
           {editando && !grupos.isFetching && !grupos.isError && edicaoDesatualizada && (
             <div role="alert">
-              <p>A revisão mudou ou o grupo não está mais disponível. Seus dados digitados foram preservados.</p>
-              {grupoAtual && <>
-                <p>Revisão atual {grupoAtual.revisao}: {grupoAtual.nome} · {grupoAtual.quantidade} unidades · {locais.find((local) => local.id === grupoAtual.localId)?.nome ?? "Local indisponível"} · {categorias.find((categoria) => categoria.id === grupoAtual.categoriaId)?.nome ?? "Categoria indisponível"} · {grupoAtual.sistemaId ? sistemas.find((sistema) => sistema.id === grupoAtual.sistemaId)?.nome ?? "Sistema indisponível" : "sem Sistema"}.</p>
-                <p>Características atuais:</p>
-                {Object.keys(grupoAtual.caracteristicas).length ? <ul>{Object.entries(grupoAtual.caracteristicas).map(([chave, valor]) => <li key={chave}>{chave}: {valor}</li>)}</ul> : <p>Nenhuma característica informada.</p>}
-                <p>Compare com os campos acima. Adotar esta revisão mantém seus campos digitados; salvar ainda será uma ação separada.</p>
-                <button type="button" onClick={() => { setEditando(grupoAtual); setErroSalvar(""); }}>Adotar revisão atual e manter edição</button>
-              </>}
-              {!grupoAtual && <p>Atualize a lista ou cancele a edição; não é possível adotar uma revisão indisponível.</p>}
+              <p>
+                A revisão mudou ou o grupo não está mais disponível. Seus dados digitados foram
+                preservados.
+              </p>
+              {grupoAtual && (
+                <>
+                  <p>
+                    Revisão atual {grupoAtual.revisao}: {grupoAtual.nome} · {grupoAtual.quantidade}{" "}
+                    unidades ·{" "}
+                    {locais.find((local) => local.id === grupoAtual.localId)?.nome ??
+                      "Local indisponível"}{" "}
+                    ·{" "}
+                    {categorias.find((categoria) => categoria.id === grupoAtual.categoriaId)
+                      ?.nome ?? "Categoria indisponível"}{" "}
+                    ·{" "}
+                    {grupoAtual.sistemaId
+                      ? (sistemas.find((sistema) => sistema.id === grupoAtual.sistemaId)?.nome ??
+                        "Sistema indisponível")
+                      : "sem Sistema"}
+                    .
+                  </p>
+                  <p>Características atuais:</p>
+                  {Object.keys(grupoAtual.caracteristicas).length ? (
+                    <ul>
+                      {Object.entries(grupoAtual.caracteristicas).map(([chave, valor]) => (
+                        <li key={chave}>
+                          {chave}: {valor}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>Nenhuma característica informada.</p>
+                  )}
+                  <p>
+                    Compare com os campos acima. Adotar esta revisão mantém seus campos digitados;
+                    salvar ainda será uma ação separada.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditando(grupoAtual);
+                      setErroSalvar("");
+                    }}
+                  >
+                    Adotar revisão atual e manter edição
+                  </button>
+                </>
+              )}
+              {!grupoAtual && (
+                <p>
+                  Atualize a lista ou cancele a edição; não é possível adotar uma revisão
+                  indisponível.
+                </p>
+              )}
             </div>
           )}
           <button type="submit" disabled={edicaoIndisponivel}>
@@ -463,13 +528,50 @@ function GruposQuantitativosContexto({
       {!grupos.isPending && !grupos.isError && itens.length === 0 && (
         <p>Nenhum grupo cadastrado neste Cliente.</p>
       )}
-      {!grupos.isPending && !grupos.isError && itens.length > 0 && <fieldset>
-        <legend>Filtrar grupos nas páginas carregadas</legend>
-        <label>Local <select value={filtroLocal} onChange={(e) => setFiltroLocal(e.target.value)}><option value="">Todos</option>{locais.map((local) => <option key={local.id} value={local.id}>{local.nome}</option>)}</select></label>
-        <label>Sistema <select value={filtroSistema} onChange={(e) => setFiltroSistema(e.target.value)}><option value="">Todos</option><option value="sem-sistema">Sem Sistema</option>{sistemas.map((sistema) => <option key={sistema.id} value={sistema.id}>{sistema.nome}</option>)}</select></label>
-        <label>Categoria <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}><option value="">Todas</option>{categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>)}</select></label>
-        <p>{itens.filter(correspondeFiltro).length} grupo(s) nas páginas carregadas{grupos.hasNextPage ? "; carregue mais para ampliar a busca" : ""}. Quantidades não incluem outras páginas.</p>
-      </fieldset>}
+      {!grupos.isPending && !grupos.isError && itens.length > 0 && (
+        <fieldset>
+          <legend>Filtrar grupos nas páginas carregadas</legend>
+          <label>
+            Local{" "}
+            <select value={filtroLocal} onChange={(e) => setFiltroLocal(e.target.value)}>
+              <option value="">Todos</option>
+              {locais.map((local) => (
+                <option key={local.id} value={local.id}>
+                  {local.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Sistema{" "}
+            <select value={filtroSistema} onChange={(e) => setFiltroSistema(e.target.value)}>
+              <option value="">Todos</option>
+              <option value="sem-sistema">Sem Sistema</option>
+              {sistemas.map((sistema) => (
+                <option key={sistema.id} value={sistema.id}>
+                  {sistema.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Categoria{" "}
+            <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}>
+              <option value="">Todas</option>
+              {categorias.map((categoria) => (
+                <option key={categoria.id} value={categoria.id}>
+                  {categoria.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p>
+            {itens.filter(correspondeFiltro).length} grupo(s) nas páginas carregadas
+            {grupos.hasNextPage ? "; carregue mais para ampliar a busca" : ""}. Quantidades não
+            incluem outras páginas.
+          </p>
+        </fieldset>
+      )}
       {!grupos.isError && itens.length > 0 && (
         <ul>
           {itens.map((grupo) => (
@@ -509,21 +611,126 @@ function GruposQuantitativosContexto({
               {historicoId === grupo.id && (
                 <HistoricoGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />
               )}
-              {correspondeFiltro(grupo) && !grupos.isFetching && <ResultadosDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupo.id} nome={grupo.nome}/>}
-              {correspondeFiltro(grupo) && !grupos.isFetching && <PendenciasDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupo.id}/>}
-              {correspondeFiltro(grupo) && !grupos.isFetching && <PlanosDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupo.id}/>}
-              <FotosGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} podeEditar={permissao.data.gestao} />
+              {correspondeFiltro(grupo) && !grupos.isFetching && (
+                <ResultadosDoAlvo
+                  userId={userId}
+                  clienteId={clienteId}
+                  tipo="grupo"
+                  id={grupo.id}
+                  nome={grupo.nome}
+                />
+              )}
+              {correspondeFiltro(grupo) && !grupos.isFetching && (
+                <PendenciasDoAlvo
+                  userId={userId}
+                  clienteId={clienteId}
+                  tipo="grupo"
+                  id={grupo.id}
+                />
+              )}
+              {correspondeFiltro(grupo) && !grupos.isFetching && (
+                <PlanosDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupo.id} />
+              )}
+              <FotosGrupo
+                userId={userId}
+                clienteId={clienteId}
+                grupoId={grupo.id}
+                podeEditar={permissao.data.gestao}
+              />
               <FotosStagingGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />
               <FotosVerificadasGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />
-              <DocumentosStagingAtivo userId={userId} clienteId={clienteId} tipo="grupo_quantitativo" entidadeId={grupo.id} />
-              <HistoricoCadastroLevantamento userId={userId} clienteId={clienteId} tipo="grupo_quantitativo" entidadeId={grupo.id} />
-              {permissao.data.gestao && <AtribuirCodigoGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />}
+              <DocumentosStagingAtivo
+                userId={userId}
+                clienteId={clienteId}
+                tipo="grupo_quantitativo"
+                entidadeId={grupo.id}
+              />
+              <HistoricoCadastroLevantamento
+                userId={userId}
+                clienteId={clienteId}
+                tipo="grupo_quantitativo"
+                entidadeId={grupo.id}
+              />
+              {permissao.data.gestao && (
+                <AtribuirCodigoGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />
+              )}
               <CodigoAtualGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />
-              {permissao.data.gestao && <RemoverCaracteristicaGrupo userId={userId} clienteId={clienteId} grupo={grupo} disponivel={!grupos.isFetching && !grupos.isError && !aberto && !pendente && !recuperacao.falhou}/>}
-              {permissao.data.gestao && <ReclassificarGrupo userId={userId} clienteId={clienteId} grupo={grupo} categorias={categorias} sistemas={sistemas} disponivel={!grupos.isFetching && !grupos.isError && !aberto && !pendente && !recuperacao.falhou} />}
-              {permissao.data.gestao && <MoverGrupo userId={userId} clienteId={clienteId} grupo={grupo} locais={locais} disponivel={!grupos.isFetching && !grupos.isError && !aberto && !pendente && !recuperacao.falhou} />}
-              {permissao.data.gestao && <QuantidadeMotivadaGrupo userId={userId} clienteId={clienteId} grupo={grupo} disponivel={!grupos.isFetching && !grupos.isError && !aberto && !pendente && !recuperacao.falhou} />}
-              {permissao.data.gestao && <EstadoGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} nome={grupo.nome} revisao={grupo.revisao} ativo disponivel={!grupos.isFetching && !grupos.isError && !aberto && !pendente && !recuperacao.falhou}/>}
+              {permissao.data.gestao && (
+                <RemoverCaracteristicaGrupo
+                  userId={userId}
+                  clienteId={clienteId}
+                  grupo={grupo}
+                  disponivel={
+                    !grupos.isFetching &&
+                    !grupos.isError &&
+                    !aberto &&
+                    !pendente &&
+                    !recuperacao.falhou
+                  }
+                />
+              )}
+              {permissao.data.gestao && (
+                <ReclassificarGrupo
+                  userId={userId}
+                  clienteId={clienteId}
+                  grupo={grupo}
+                  categorias={categorias}
+                  sistemas={sistemas}
+                  disponivel={
+                    !grupos.isFetching &&
+                    !grupos.isError &&
+                    !aberto &&
+                    !pendente &&
+                    !recuperacao.falhou
+                  }
+                />
+              )}
+              {permissao.data.gestao && (
+                <MoverGrupo
+                  userId={userId}
+                  clienteId={clienteId}
+                  grupo={grupo}
+                  locais={locais}
+                  disponivel={
+                    !grupos.isFetching &&
+                    !grupos.isError &&
+                    !aberto &&
+                    !pendente &&
+                    !recuperacao.falhou
+                  }
+                />
+              )}
+              {permissao.data.gestao && (
+                <QuantidadeMotivadaGrupo
+                  userId={userId}
+                  clienteId={clienteId}
+                  grupo={grupo}
+                  disponivel={
+                    !grupos.isFetching &&
+                    !grupos.isError &&
+                    !aberto &&
+                    !pendente &&
+                    !recuperacao.falhou
+                  }
+                />
+              )}
+              {permissao.data.gestao && (
+                <EstadoGrupo
+                  userId={userId}
+                  clienteId={clienteId}
+                  grupoId={grupo.id}
+                  nome={grupo.nome}
+                  revisao={grupo.revisao}
+                  ativo
+                  disponivel={
+                    !grupos.isFetching &&
+                    !grupos.isError &&
+                    !aberto &&
+                    !pendente &&
+                    !recuperacao.falhou
+                  }
+                />
+              )}
               {permissao.data.gestao &&
                 !grupos.isFetching &&
                 !aberto &&
@@ -566,7 +773,9 @@ function GruposQuantitativosContexto({
           {grupos.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
         </button>
       )}
-      {permissao.data.gestao && <GruposInativos userId={userId} clienteId={clienteId} locais={locais}/>}
+      {permissao.data.gestao && (
+        <GruposInativos userId={userId} clienteId={clienteId} locais={locais} />
+      )}
     </section>
   );
 }
