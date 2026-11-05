@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: recibos antigos e cache por Cliente
+
+- ADR-1644/migration 1786 permitem somente consultar recibo legado de geração contratual existente, com ator/Cliente/permissões/gates e trava; ausência preserva pedido, novos pedidos usam protocolo coordenado. Núcleos permanecem privados; revisão estática sem falha concreta.
+- ADR-1645/migration 1787 qualificam ID ambíguo no gate da listagem de escopo 0631 usada pela 1782. Revisão estática sem falha concreta; compilação não verificada.
+- Reserva futura inclui Cliente nas chaves de séries/Visitas; mudanças de vínculo/vigência invalidam candidatas e prévias correspondentes. Nenhum teste/build/typecheck/ensaio executado por solicitação atual. Migrations 1780–1787 e UI aguardam validação em lote; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: replay de escolha e projeções após aprovação
 
 - Escolhas de nova data Calendário/Visita preservam pedido em 40001 genuíno; apenas conflito específico inicial libera reconferência. Aprovação de revisão invalida também projeções de obrigações, fila e geração após recibo confirmado, evitando dados anteriores à versão.

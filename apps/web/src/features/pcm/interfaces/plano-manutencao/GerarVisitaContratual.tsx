@@ -15,10 +15,10 @@ function GerarVisitaContratualSessao({ userId, clienteId, serieId }: { userId: s
     const antes = await supabase.auth.getUser(); if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
     const parametros = { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_serie_id: p.serieId, p_regra_id: p.regraId,
       p_semana: p.semana, p_visita_id: p.visitaId, p_inicio_em: p.inicio, p_responsavel_id: null, p_cobertura: p.cobertura };
-    const protocolo = p.protocolo ?? (import.meta.env.VITE_SSO_GERACAO_VISITA_SUPRESSAO_ENABLED === "true" ? "suprimivel" : "legado");
+    const protocolo = p.protocolo ?? "legado";
+    if(protocolo === "coordenado" && import.meta.env.VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED !== "true") throw new Error("Geração coordenada indisponível.");
     const consulta = protocolo === "coordenado" ? supabase.schema("pcm").rpc("sso_gerar_visita_ou_suprimir", { ...parametros, p_ator_id: userId })
-      : protocolo === "suprimivel" ? supabase.schema("pcm").rpc("sso_pcm_gerar_visita_suprimivel", { ...parametros, p_ator_id: userId })
-      : supabase.schema("pcm").rpc("sso_pcm_gerar_visita", parametros);
+      : supabase.schema("pcm").rpc("sso_recibo_geracao_visita_legada", {p_ator:userId,p_request:p.requestId,p_cliente:p.clienteId,p_serie:p.serieId,p_regra:p.regraId,p_semana:p.semana,p_visita:p.visitaId,p_inicio:p.inicio,p_responsavel:null,p_cobertura:p.cobertura});
     const { data, error } = await consulta; if (error) throw error;
     let decisao: string;
     if (protocolo === "coordenado") {
@@ -44,10 +44,10 @@ function GerarVisitaContratualSessao({ userId, clienteId, serieId }: { userId: s
     try { const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); }
     catch { setPendente("invalido"); setAviso("Tentativa alterada ou não removida; procure suporte."); return; }
     setPendente(null); setConfirmado(null); setAviso(r.decisao === "criada" ? "Visita regular em rascunho criada com origem contratual; sem OS ou Auvo." : "Semana suprimida por feriado declarado; nenhuma Visita ou reposição criada.");
-  }, onError: () => setAviso("Resultado não confirmado; repita a tentativa. Em conflito de semana ou dúvida de horário procure suporte."), onSettled: () => { trava.current = false; } });
+  }, onError: (error,p) => {const e=error as {code?:string;message?:string};if(p.protocolo!=="coordenado"&&e.code==="55000"&&e.message==="recibo_legado_indisponivel")setAviso("Recibo antigo não encontrado. O pedido permanece guardado e a situação original não foi comprovada; procure suporte para conferir.");else setAviso("Resultado não confirmado; repita a tentativa. Em conflito de semana ou dúvida de horário procure suporte.");}, onSettled: () => { trava.current = false; } });
   const enviar = (pedido: Pedido) => { if (trava.current) return;
-    const p: Pedido = pendente ? pedido : { ...pedido, protocolo: import.meta.env.VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED === "true" ? "coordenado" :
-      import.meta.env.VITE_SSO_GERACAO_VISITA_SUPRESSAO_ENABLED === "true" ? "suprimivel" : "legado" };
+    if (!pendente && import.meta.env.VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED !== "true") {setAviso("Geração coordenada indisponível; nenhum pedido criado.");return;}
+    const p: Pedido = pendente ? pedido : { ...pedido, protocolo: "coordenado" };
     trava.current = true; try { const salvo = sessionStorage.getItem(chave); if (pendente ? salvo !== JSON.stringify(p) : salvo !== null) throw new Error(); sessionStorage.setItem(chave, JSON.stringify(p)); } catch { trava.current = false; setPendente("invalido"); setAviso("Não foi possível guardar tentativa; nada enviado. Procure suporte."); return; } setPendente(p); envio.mutate(p); };
   const regraSelecionada = regras.data?.pages.flat().find((r) => r.id === regraId);
   const snapshot = regraSelecionada ? JSON.stringify([regraSelecionada, semana, inicio, cobertura]) : null;

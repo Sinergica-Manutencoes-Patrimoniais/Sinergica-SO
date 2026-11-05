@@ -11,6 +11,8 @@ export function VigenciaSerieRotina({userId,clienteId,planoId,rotinaId,serieId}:
     await Promise.all([
       cache.invalidateQueries({queryKey:["previa-ocorrencia-visita",userId,clienteId,planoId]}),
       cache.invalidateQueries({queryKey:["ciclos-uniformes",userId,clienteId,planoId]}),
+      cache.invalidateQueries({queryKey:["reserva-futuro-visitas",userId,clienteId,planoId]}),
+      cache.invalidateQueries({queryKey:["reserva-futuro",userId,clienteId,planoId]}),
     ]);
   }
   const [selecionado,setSelecionado]=useState("");const [acao,setAcao]=useState<Pedido["acao"]>("criar");const [data,setData]=useState("");const [motivo,setMotivo]=useState("");const [mensagem,setMensagem]=useState("");
