@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — validação complementar do lote (Codex)
+
+- Jornadas isoladas Calendário e Visita até a fila passaram com dados/relógio sintéticos. S170 1790 e S176 1799: cenários preparados de revogação/replay passaram nas duas ordens relevantes; fixtures 1798 e 1796/1797 passaram, bem como disputas de vínculo/Cliente e hierarquia executadas no clone. São amostras, não homologação completa nem prova de fontes externas.
+- Arquivos de teste antigos foram atualizados para contratos atuais; rodadas focadas passaram. Seis suítes antes dependentes de variáveis Supabase passaram sem elas após mocks locais; o código de produção de ambiente não foi alterado. Lint focal passou nos arquivos recentes revisados.
+- CI ampla anterior continua reprovada: lint geral 2.272 erros; Squawk 474 achados/42 migrations, incluindo erros de parser em SQL histórico; check Edge 39 problemas. Não foram desabilitados checks, alteradas migrations históricas ou declaradas funções para deploy. Cenário de legado anterior à 1796 permanece pendente de clone seguro com seeds oficiais, sem copiar dados da base integralmente.
+- Próximo passo: tratar bloqueios de CI e segurança por escopo, validar versões completas dos testes e concorrências restantes e só então considerar PR/merge. Não foi feito deploy nem acionado Auvo.
+
 ## 2026-11-05 — validação conjunta S165/S166/S170/S176 (Codex)
 
 - Build e typecheck web passaram. Rodada web focada inicial: 84 passaram, 3 falharam, 4 ignorados; as 3 expectativas de capacidades foram corrigidas e o arquivo passou 17/17. Outros arquivos de revisão/geração e adaptador passaram em rodadas focadas após atualização de fixtures; isso não é uma suíte completa verde.
