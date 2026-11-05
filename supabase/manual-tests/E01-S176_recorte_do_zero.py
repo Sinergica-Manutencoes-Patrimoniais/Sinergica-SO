@@ -21,7 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-migrations.json"
 FOTOS = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-fotos-40e3c9f.json"
-OVERLAY_0803 = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-diagnostico-0803.json"
+OVERLAY_DINAMICO = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-diagnostico-dinamico.json"
 IMAGE = "public.ecr.aws/supabase/postgres:17.6.1.141"
 AUTH_IMAGE = "public.ecr.aws/supabase/gotrue:v2.197.0"
 REST_IMAGE = "public.ecr.aws/supabase/postgrest:v14.5"
@@ -179,26 +179,41 @@ def main(opcoes):
     names = [p for p, _ in blobs]
     if len(names) != len(set(names)) or names != sorted(names): raise RuntimeError("Ordem ou duplicidade no manifesto")
     if opcoes.diagnostico_0415:
-        overlay = json.loads(OVERLAY_0803.read_text())
+        overlay = json.loads(OVERLAY_DINAMICO.read_text())
         if overlay["base_main"] != base or overlay["fonte_backup"] != source:
             raise RuntimeError("Sobreposição diagnóstica com procedência divergente")
         additions = overlay["migrations_adicionais"]
-        if len(additions) != 1 or Path(additions[0]["caminho"]).name != "0803_E01-S168_recebimento_origem_visita.sql":
+        esperadas = (
+            "0803_E01-S168_recebimento_origem_visita.sql",
+            "0805_E01-S168_guarda_cobertura_origem_visita.sql",
+            "0807_E01-S173_pendencia_origem_visita.sql",
+            "0811_E01-S168_previa_cobertura_visita.sql",
+            "0904_E01-S168_cobertura_retorno_grupo.sql",
+            "0905_E01-S168_perguntas_retorno_grupo.sql",
+        )
+        if tuple(item["caminho"] for item in additions) != tuple("supabase/migrations/" + nome for nome in esperadas):
             raise RuntimeError("Sobreposição diagnóstica inesperada")
-        item = additions[0]
-        path = item["caminho"]
-        if path in base_files or path in names or any(Path(p).name[:4] == "0803" for p in base_files + names):
-            raise RuntimeError("Migration 0803 duplicada")
-        data = git("show", source + ":" + path)
-        if hashlib.sha256(data).hexdigest() != item["sha256"] or git("rev-parse", source + ":" + path).decode().strip() != item["git_blob"]:
-            raise RuntimeError("Hash da sobreposição 0803 divergente")
-        blobs.append((path, data))
+        for item in additions:
+            path = item["caminho"]
+            numero = Path(path).name[:4]
+            if path in base_files or path in names or any(Path(p).name[:4] == numero for p in base_files + names):
+                raise RuntimeError("Migration diagnóstica duplicada: " + numero)
+            data = git("show", source + ":" + path)
+            if hashlib.sha256(data).hexdigest() != item["sha256"] or git("rev-parse", source + ":" + path).decode().strip() != item["git_blob"]:
+                raise RuntimeError("Hash da sobreposição diagnóstica divergente: " + numero)
+            blobs.append((path, data))
         blobs.sort(key=lambda item: item[0])
         names = [p for p, _ in blobs]
         numeros_diag = [Path(p).name[:4] for p in names]
-        if any(numeros_diag.count(n) != 1 for n in ("0402", "0726", "0729", "0803", "0903")) or not (numeros_diag.index("0402") < numeros_diag.index("0726") < numeros_diag.index("0729") < numeros_diag.index("0803") < numeros_diag.index("0903")):
-            raise RuntimeError("Dependências diagnósticas da 0803 ausentes ou fora de ordem")
-        print("DIAGNÓSTICO: sobreposição 0803 ativa; resultado NÃO prova recorte implantável.", flush=True)
+        cadeias = (("0402", "0726", "0729", "0803", "0903"),
+                   ("0371", "0726", "0729", "0807", "0906"),
+                   ("0582", "0805", "0904", "1692"),
+                   ("0562", "0811", "0905", "1692"),
+                   ("0815", "0823", "0904", "0905"))
+        for cadeia in cadeias:
+            if any(numeros_diag.count(n) != 1 for n in cadeia) or [numeros_diag.index(n) for n in cadeia] != sorted(numeros_diag.index(n) for n in cadeia):
+                raise RuntimeError("Dependências diagnósticas ausentes ou fora de ordem")
+        print("DIAGNÓSTICO: sobreposição de dependências dinâmicas ativa; resultado NÃO prova recorte implantável.", flush=True)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
