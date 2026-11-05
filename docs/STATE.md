@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: arquitetura e verificação de CI
+
+- Quatro violações XLSX foram corrigidas movendo serialização à infraestrutura e injetando extratores nos serviços; `arch:check`, typecheck web e 38 testes focados passaram. Revisão detectou chamadores Deno sem dependência e import sem extensão; corrigidos, `deno check` dos dois caminhos e smoke direto/worker com 59 linhas passaram. Prévia de cronograma ainda faz XML/matriz na thread principal, fora do timeout de extração; risco de desempenho permanece.
+- `check:edge-functions` permanece falhando por 28 funções não declaradas: adicioná-las ao config pode incluí-las no deploy, incluindo função com rollout explicitamente pendente. Config e check preservados, sem deploy; outros bloqueios da esteira e Squawk continuam registrados abaixo.
+- AC7 S166: tolerância configurada e ancoragem foram comprovadas; avaliação atual recebe data informada. Spec não exige explicitamente cálculo automático a partir da execução; não foi inventada regra. Gates default fechados, sem Auvo real.
+- Próximo passo: resolver gates CI com escopo e segurança apropriados e completar revisão de fontes antes de homologação.
+
 ## 2026-11-05 — S165/S166: tolerância e gates locais
 
 - Jornada UI/backend isolada configurou tolerância antes=2/depois=5, aprovou e gerou ocorrência com os valores preservados e vencimento ancorado; OS histórica intacta. Teste domínio 10/10 cobriu limites e próximo ciclo. Avaliação atual de prazo é informativa e usa data fornecida na tela; integração automática com execução não comprovada.

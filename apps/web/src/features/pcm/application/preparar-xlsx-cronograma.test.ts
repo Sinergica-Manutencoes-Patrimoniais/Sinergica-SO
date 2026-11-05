@@ -16,7 +16,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 it("prepara cronograma real em memória, com matriz e avisos, sem aprovação", async () => {
   const bytes = readFileSync("../../docs/planejamento/plano-manutencao/fontes/plano-rimini-2026-final.xlsx");
-  const resultado = await prepararXlsxCronograma(bytes, "fonte", "cliente", new AbortController().signal);
+  const resultado = await prepararXlsxCronograma(bytes, "fonte", "cliente", new AbortController().signal, extrairXlsxEmWorker);
   expect(resultado.previa.estado).toBe("conferivel");
   if (resultado.previa.estado !== "conferivel") throw new Error("prévia bloqueada");
   expect(resultado.previa.linhas).toHaveLength(59);
@@ -32,7 +32,7 @@ it("prepara cronograma real em memória, com matriz e avisos, sem aprovação", 
 it("identifica e interpreta a mesma cópia, mesmo quando o chamador altera os bytes", async () => {
   const bytes = readFileSync("../../docs/planejamento/plano-manutencao/fontes/plano-rimini-2026-final.xlsx");
   const esperado = createHash("sha256").update(bytes).digest("hex");
-  const leitura = prepararXlsxCronograma(bytes, "fonte", "cliente", new AbortController().signal);
+  const leitura = prepararXlsxCronograma(bytes, "fonte", "cliente", new AbortController().signal, extrairXlsxEmWorker);
   bytes.fill(0);
   const resultado = await leitura;
   expect(resultado.sha256).toBe(esperado);
@@ -41,7 +41,7 @@ it("identifica e interpreta a mesma cópia, mesmo quando o chamador altera os by
 
 it("rejeita preparação cancelada sem retornar matriz", async () => {
   const abortar = new AbortController(); abortar.abort();
-  await expect(prepararXlsxCronograma(new Uint8Array([1]), "fonte", "cliente", abortar.signal)).rejects.toMatchObject({ name: "AbortError" });
+  await expect(prepararXlsxCronograma(new Uint8Array([1]), "fonte", "cliente", abortar.signal, extrairXlsxEmWorker)).rejects.toMatchObject({ name: "AbortError" });
 });
 
 it("não disponibiliza matriz quando há fórmula em campo necessário", async () => {
@@ -53,7 +53,7 @@ it("não disponibiliza matriz quando há fórmula em campo necessário", async (
   expect(alterado).not.toBe(xml);
   partes.set(caminho, new TextEncoder().encode(alterado));
   vi.mocked(extrairXlsxEmWorker).mockResolvedValueOnce(partes);
-  const resultado = await prepararXlsxCronograma(bytes, "fonte", "cliente", new AbortController().signal);
+  const resultado = await prepararXlsxCronograma(bytes, "fonte", "cliente", new AbortController().signal, extrairXlsxEmWorker);
   expect(resultado.previa.estado).toBe("pendente");
   expect(resultado.matriz).toBeNull();
   expect(resultado.evidencias.find((celula) => celula.referencia === "I5")?.formula).toBe("1");
@@ -61,7 +61,7 @@ it("não disponibiliza matriz quando há fórmula em campo necessário", async (
 
 it("conserva os metadados da fórmula compartilhada como evidência", async () => {
   const bytes = readFileSync("../../docs/planejamento/plano-manutencao/fontes/plano-i-home-2026.xlsx");
-  const resultado = await prepararXlsxCronograma(bytes, "fonte", "cliente", new AbortController().signal);
+  const resultado = await prepararXlsxCronograma(bytes, "fonte", "cliente", new AbortController().signal, extrairXlsxEmWorker);
   expect(resultado.evidencias.find((celula) => celula.referencia === "N5")).toMatchObject({
     formula: 'IF(L5="","",L5/60)', valor: "0.5", formulaCompartilhada: { indice: 0, referencia: "N5:N36" },
   });

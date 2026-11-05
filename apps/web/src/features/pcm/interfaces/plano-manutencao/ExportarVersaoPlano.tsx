@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { criarRelatorioPdf } from "../../../../lib/pdf/relatorio-pdf";
 import { supabase } from "../../../../lib/supabase-client";
 import type { PlanoResumo, RotinaDetalhe, VersaoPlano } from "../../application/plano-manutencao-gateway";
-import { contextoExportacaoValido, csvVersaoPlano, textoVersaoPlano, xlsxVersaoPlano } from "../../domain/exportacao-plano";
+import { contextoExportacaoValido, csvVersaoPlano, textoVersaoPlano } from "../../domain/exportacao-plano";
+import { xlsxVersaoPlano } from "../../infrastructure/exportacao-plano-xlsx";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 
 // Exporta somente o snapshot já consultado da versão aprovada. Não projeta calendário operacional.

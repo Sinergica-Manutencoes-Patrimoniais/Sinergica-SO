@@ -31,11 +31,6 @@ export function csvVersaoPlano(dados: DadosExportacaoVersao): string {
   return "\ufeff" + linhasVersaoPlano(dados).map((linha) => linha.map(celulaCsv).join(";")).join("\r\n") + "\r\n";
 }
 
-export async function xlsxVersaoPlano(dados: DadosExportacaoVersao): Promise<Blob> {
-  const { default: writeExcelFile } = await import("write-excel-file/universal");
-  return writeExcelFile(linhasVersaoPlano(dados), { sheet: "Versão do Plano" }).toBlob();
-}
-
 /** Confere vínculos locais; não comprova conteúdo ou autorização do servidor. */
 export function contextoExportacaoValido(clienteId: string, plano: { id: string; clienteId: string }, versao: { id: string; planoId: string; estado: string }, rotinas: readonly { id: string; planoId: string; versaoId: string }[]): boolean {
   if (!clienteId || !plano.id || !plano.clienteId || !versao.id || !versao.planoId || versao.estado !== "aprovado") return false;

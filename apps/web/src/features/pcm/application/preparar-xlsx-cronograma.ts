@@ -1,10 +1,10 @@
-import { extrairXlsxEmWorker } from "../infrastructure/extrair-xlsx-worker";
+import type { ExtratorXlsx } from "./extrator-xlsx";
 import { lerPartesOoxml } from "./ler-partes-ooxml";
 import { matrizCronogramaOoxml } from "./matriz-cronograma-ooxml";
 import { previaCronogramaOoxml } from "./previa-cronograma-ooxml";
 
 /** Preparação local experimental; não envia, grava ou aprova o arquivo. */
-export async function prepararXlsxCronograma(bytes: Uint8Array, fonteId: string, clienteId: string, signal: AbortSignal) {
+export async function prepararXlsxCronograma(bytes: Uint8Array, fonteId: string, clienteId: string, signal: AbortSignal, extrairXlsxEmWorker: ExtratorXlsx) {
   signal.throwIfAborted();
   if (!bytes.length || bytes.byteLength > 5_242_880) throw new Error("Arquivo comprimido inválido.");
   const copia = new Uint8Array(bytes);

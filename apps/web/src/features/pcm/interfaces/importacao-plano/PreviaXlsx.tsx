@@ -1,3 +1,4 @@
+import { extrairXlsxEmWorker } from "../../infrastructure/extrair-xlsx-worker";
 import { useEffect, useRef, useState } from "react";
 import { prepararXlsxCronograma } from "../../application/preparar-xlsx-cronograma";
 import { gerarModeloCronogramaXlsx } from "../../infrastructure/modelo-cronograma-xlsx";
@@ -67,7 +68,7 @@ export function PreviaXlsx({ fonteId, clienteId, enviarExperimental, reconciliar
         try {
           const bytes = new Uint8Array(await arquivo.arrayBuffer());
           controle.signal.throwIfAborted();
-          const resposta = await prepararXlsxCronograma(bytes, fonteId, clienteId, controle.signal);
+          const resposta = await prepararXlsxCronograma(bytes, fonteId, clienteId, controle.signal, extrairXlsxEmWorker);
           if (atual === sequencia.current && !controle.signal.aborted) { original.current = bytes; setResultado(resposta); setEstado("pronto"); }
         } catch {
           if (atual === sequencia.current && !controle.signal.aborted) setEstado("erro");

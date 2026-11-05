@@ -1,10 +1,10 @@
-import { extrairXlsxLimitado } from "../infrastructure/extrair-xlsx-limitado.ts";
+import type { ExtratorXlsx } from "./extrator-xlsx.ts";
 import { lerPartesOoxml } from "./ler-partes-ooxml.ts";
 import { matrizCronogramaOoxml } from "./matriz-cronograma-ooxml.ts";
 import { previaCronogramaOoxml } from "./previa-cronograma-ooxml.ts";
 
 /** Preparação sem rede ou gravação. Não executa autenticação nem isola CPU. */
-export async function processarXlsxCronograma(entrada: Uint8Array, fonteId: string, clienteId: string, parser: Pick<DOMParser, "parseFromString">, signal?: AbortSignal) {
+export async function processarXlsxCronograma(entrada: Uint8Array, fonteId: string, clienteId: string, parser: Pick<DOMParser, "parseFromString">, signal: AbortSignal | undefined, extrairXlsxLimitado: ExtratorXlsx) {
   signal?.throwIfAborted();
   if (!entrada.length || entrada.byteLength > 5_242_880) throw new Error("Arquivo comprimido inválido.");
   const bytes = new Uint8Array(entrada);

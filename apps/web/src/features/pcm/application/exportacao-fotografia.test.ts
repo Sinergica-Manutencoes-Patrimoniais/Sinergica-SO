@@ -2,7 +2,8 @@ import { expect, it, vi } from "vitest";
 import { PDFDocument, PDFPage } from "pdf-lib";
 import type { SnapshotExportacao } from "./snapshot-exportacao";
 import { prepararExportacaoFotografia, projetarFotografiaExportacao } from "./exportacao-fotografia";
-import { linhasVersaoPlano, textoVersaoPlano, xlsxVersaoPlano } from "../domain/exportacao-plano";
+import { linhasVersaoPlano, textoVersaoPlano } from "../domain/exportacao-plano";
+import { xlsxVersaoPlano } from "../infrastructure/exportacao-plano-xlsx";
 import { gerarPdfVersaoPlano } from "../infrastructure/pdf-versao-plano";
 
 const identidade = { clienteId: "00000000-0000-4000-8000-000000000001", planoId: "00000000-0000-4000-8000-000000000002", versaoId: "00000000-0000-4000-8000-000000000003" };

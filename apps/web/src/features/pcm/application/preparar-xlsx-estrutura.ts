@@ -1,10 +1,10 @@
-import { extrairXlsxEmWorker } from "../infrastructure/extrair-xlsx-worker";
+import type { ExtratorXlsx } from "./extrator-xlsx";
 import { analisarEstruturaOoxml } from "./importacao-estrutura-ooxml";
 import { lerPartesOoxml } from "./ler-partes-ooxml";
 import { interpretarLivroOoxml } from "./metadados-ooxml";
 
 /** Preparação experimental; não conectar à recepção ou a arquivos de usuário antes dos gates. */
-export async function prepararArquivoEstrutura(bytes: Uint8Array, signal: AbortSignal) {
+export async function prepararArquivoEstrutura(bytes: Uint8Array, signal: AbortSignal, extrairXlsxEmWorker: ExtratorXlsx) {
   signal.throwIfAborted();
   if (!bytes.length || bytes.byteLength > 5_242_880) throw new Error("Arquivo comprimido inválido.");
   const copia = new Uint8Array(bytes);

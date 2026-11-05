@@ -1,6 +1,7 @@
 import { DOMParser as XmlDomParser } from "npm:@xmldom/xmldom@0.9.12";
 import { SaxesParser } from "npm:saxes@6.0.0";
 import { processarXlsxCronograma } from "../../../../apps/web/src/features/pcm/application/processar-xlsx-cronograma.ts";
+import { extrairXlsxLimitado } from "../../../../apps/web/src/features/pcm/infrastructure/extrair-xlsx-limitado.ts";
 
 const PLANILHA = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
 
@@ -77,5 +78,5 @@ export function processarXlsxEdge(bytes: Uint8Array, fonte: string, cliente: str
       return new XmlDomParser({ onError: (_nivel, mensagem) => { throw new Error(mensagem); } }).parseFromString(xml, tipo);
     },
   };
-  return processarXlsxCronograma(bytes, fonte, cliente, parser as unknown as Pick<DOMParser, "parseFromString">, signal);
+  return processarXlsxCronograma(bytes, fonte, cliente, parser as unknown as Pick<DOMParser, "parseFromString">, signal, extrairXlsxLimitado);
 }

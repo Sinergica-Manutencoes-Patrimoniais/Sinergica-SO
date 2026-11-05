@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import { strFromU8, unzipSync } from "fflate";
-import { contextoExportacaoValido, csvVersaoPlano, linhasVersaoPlano, xlsxVersaoPlano } from "./exportacao-plano";
+import { contextoExportacaoValido, csvVersaoPlano, linhasVersaoPlano } from "./exportacao-plano";
+import { xlsxVersaoPlano } from "../infrastructure/exportacao-plano-xlsx";
 
 it("aceita somente Rotinas distintas da mesma versão e Plano do Cliente", () => {
   const plano = { id: "p", clienteId: "c" };
