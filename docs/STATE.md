@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: conflitos de preparação e retirada
+
+- ADRs 1613–1615/migrations 1755–1757 convertem conflitos explícitos na preparação individual/lote Visita, resolução de retirada e ciclo canônico Calendário em P0011/P0012/P0016. Interfaces distinguem primeira rejeição de replay incerto; erros reais de serialização e ACL permanecem. Revisões independentes sem bypass concreto.
+- Clone compilou até 1757. HTTP autenticado testou os dois comandos de Visita; fixtures SQL cobriram resolução e ciclo, com replay; testes UI Visita 5/5, retirada 4/4 e ciclo 3/3. HTTP específico 1756/1757 ainda não foi testado. Sem deploy/Auvo.
+- Próximo passo: auditar conflitos restantes e completar revisão integral/CI antes de homologação; gates default fechados.
+
 ## 2026-11-05 — S165/S166: conflitos de lote e fila
 
 - ADRs 1610–1612/migrations 1752–1754 tratam conflitos de negócio em prévia e lote de Calendário, comparação/retirada de impacto, confirmação da fila Calendário e exceção Visita, com P0011/P0012/P0015. Erros reais e replay incerto preservados; frontend/backend exigem rollout coordenado. Revisões cruzadas não encontraram bypass concreto.

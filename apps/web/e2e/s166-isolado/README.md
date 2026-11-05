@@ -88,3 +88,5 @@ Executado com sucesso em 2026-11-05, incluindo verificação do estado aprovado 
 `executar-conflito-reserva.py` altera a revisão após a prévia de reserva de Calendário em rascunho e verifica que a interface libera nova conferência. `executar-conflito-visita.py visita-escolha` consulta uma Visita candidata e altera a revisão no clone antes da escolha; a interface reconhece a rejeição e pede nova conferência. Os dados e alterações são sintéticos e os dois ensaios foram executados sem Auvo.
 
 `executar-conflito-lote.py` consulta prévia e envia comando de lote com revisão obsoleta via HTTP autenticado. Ambos responderam `P0015`; o estado aprovado e os gates necessários foram ajustados somente na fixture do clone. A política de replay multirrotina foi testada separadamente na interface com respostas simuladas.
+
+`executar-preparo-visita-conflito.py` autentica conta sintética e envia preparações individual e em lote com revisão obsoleta, verificando `P0016` por HTTP. Os gates foram ligados no clone; os testes de interface para primeira rejeição e replay incerto usam respostas simuladas.

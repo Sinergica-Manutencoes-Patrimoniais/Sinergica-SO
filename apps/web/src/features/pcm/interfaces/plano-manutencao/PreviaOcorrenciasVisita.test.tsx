@@ -28,3 +28,11 @@ it("encaminha o recibo de preparação individual para a fila, sem incluí-lo au
   expect(screen.getByText(`Fila visita: ${id("2")}`)).toBeInTheDocument();
   expect(externo.rpc.mock.calls.filter(([nome]) => nome === "sso_alterar_fila_visita")).toHaveLength(0);
 });
+
+it.each(["primeira", "replay"] as const)("trata revisão obsoleta na %s tentativa", async (cenario) => {
+  let chamadas=0;
+  externo.rpc.mockImplementation((nome) => nome === "sso_prever_visitas_rotina" ? { abortSignal: async () => ({ data: [{ visita_id: id("1"), semana_origem: "2026-11-02", vencimento_original: "2026-11-06", estado_visita: "planejada", feriado_declarado: false, vigencia_declarada: true, ocorrencia_preparada: false }], error: null }) } : Promise.resolve({ data: null, error: cenario === "replay" && chamadas++ === 0 ? new Error("rede") : { code: "P0016", message: "revisao_ou_plano_indisponivel" } }));
+  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}})}><PreviaOcorrenciasVisita userId="usuario" clienteId={id("4")} planoId={id("5")} versaoId={id("6")} rotinaId={id("7")} serieId={id("8")} revision={1} /></QueryClientProvider>);
+  fireEvent.change(screen.getByLabelText("Início"),{target:{value:"2026-11-01"}});fireEvent.change(screen.getByLabelText("Fim"),{target:{value:"2026-11-30"}});fireEvent.click(screen.getByRole("button",{name:"Consultar Visitas"}));fireEvent.click(await screen.findByRole("button",{name:"Conferir preparação"}));fireEvent.change(screen.getByLabelText("Fonte consultada para declarar dia sem feriado"),{target:{value:"PCM"}});fireEvent.click(screen.getByRole("checkbox",{name:/confirmei visita/i}));fireEvent.click(screen.getByRole("button",{name:"Preparar ocorrência sem envio"}));
+  if(cenario==="primeira"){await screen.findByText(/A revisão mudou/);expect(sessionStorage.length).toBe(0);}else{fireEvent.click(await screen.findByRole("button",{name:"Repetir mesmo pedido"}));await screen.findByText(/Resultado não confirmado/);expect(sessionStorage.length).toBe(1);}
+});

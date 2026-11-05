@@ -35,3 +35,13 @@ it("prepara ciclo e inclui a mesma ocorrência na fila após confirmação indep
   await waitFor(() => expect(within(fila).getByText(/Entrada verificacao/)).toBeInTheDocument());
   expect(api.rpc).toHaveBeenCalledWith("sso_alterar_fila_preventiva_pcm", expect.objectContaining({ p_preparada_id: id(6), p_acao: "incluir", p_expected_revision: 0 }));
 });
+
+it.each(["primeira", "replay"] as const)("trata conflito P0011 na %s tentativa de geração", async (etapa) => {
+  let chamadas=0;
+  api.rpc.mockImplementation(() => Promise.resolve({data:null,error:etapa === "replay" && chamadas++ === 0 ? new Error("rede") : {code:"P0011",message:"revisao_obsoleta"}}));
+  const client=new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}});
+  render(<QueryClientProvider client={client}><MaterializarCicloCanonico userId="usuario" clienteId={id(1)} planoId={id(2)} versaoId={id(3)} rotinaId={id(4)} revision={1} ciclo={2} vencimento="2026-11-20" /></QueryClientProvider>);
+  fireEvent.click(screen.getByRole("checkbox",{name:/conferi ciclo/i}));fireEvent.click(screen.getByRole("button",{name:"Preparar ciclo"}));
+  if(etapa === "primeira") {await screen.findByText(/A revisão mudou/);expect(sessionStorage.length).toBe(0);}
+  else {await screen.findByText(/Resultado não confirmado/);fireEvent.click(screen.getByRole("button",{name:"Repetir tentativa pendente"}));await waitFor(()=>expect(api.rpc).toHaveBeenCalledTimes(2));expect(sessionStorage.length).toBe(1);}
+});

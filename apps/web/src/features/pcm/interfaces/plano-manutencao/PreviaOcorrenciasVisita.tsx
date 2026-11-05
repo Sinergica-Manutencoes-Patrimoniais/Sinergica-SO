@@ -1,3 +1,4 @@
+import { conflitoPreparacaoVisita } from "./conflito-preparacao-visita";
 import { useInfiniteQuery,useMutation,useQueryClient } from "@tanstack/react-query";
 import { useRef,useState } from "react";
 import { z } from "zod";
@@ -15,7 +16,7 @@ export function PreviaOcorrenciasVisita(props: Parameters<typeof Conteudo>[0]) {
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId,props.versaoId,props.rotinaId,props.serieId])} {...props} />;
 }
 function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:{userId:string;clienteId:string;planoId:string;versaoId:string;rotinaId:string;serieId:string;revision:number}) {
-  const chave=`sso-preparar-ocorrencia-visita:${JSON.stringify([userId,clienteId,planoId,rotinaId,serieId])}`;const cache=useQueryClient();const trava=useRef(false);
+  const chave=`sso-preparar-ocorrencia-visita:${JSON.stringify([userId,clienteId,planoId,rotinaId,serieId])}`;const cache=useQueryClient();const trava=useRef(false);const primeira=useRef(false);
   const [inicio,setInicio]=useState("");const [fim,setFim]=useState("");const [periodo,setPeriodo]=useState<{inicio:string;fim:string}|null>(null);
   const [fonte,setFonte]=useState("");const [selecionado,setSelecionado]=useState("");const [mensagem,setMensagem]=useState("");
   const [resultado,setResultado]=useState<{visitaId:string;ocorrenciaId:string}|null>(null);const [filaAberta,setFilaAberta]=useState(false);
@@ -35,8 +36,8 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:
     if(!data||data.requestId!==p.requestId||data.visitaId!==p.visitaId||typeof data.ocorrenciaId!=="string"||(modo==="canonico"?(typeof data.cicloVisitaId!=="string"||data.osCriada!==false||data.tarefaAuvoCriada!==false):data.preparada!==true))throw new Error("Resposta inválida.");const ocorrenciaId=z.string().uuid().parse(data.ocorrenciaId);await conferirSessaoDiagnostico(userId);return {ocorrenciaId,visitaId:p.visitaId,modo:p.modo??"anterior"};},
     onSuccess:async(r,p) => {try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");sessionStorage.removeItem(chave);}catch{setMensagem("Registro preparado, mas tentativa não foi removida. Procure suporte.");return;}
       setPedido(null);setConfirmado(null);setResultado(r.modo==="canonico"?{visitaId:r.visitaId,ocorrenciaId:r.ocorrenciaId}:null);setFilaAberta(false);setMensagem("Ocorrência preparada; ainda não incluída na fila e sem OS ou tarefa.");await cache.invalidateQueries({queryKey:["previa-ocorrencia-visita",userId,clienteId,planoId,versaoId,rotinaId,serieId]});},
-    onError:() => setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte."),onSettled:() => {trava.current=false;}});
-  const enviar=(p:Pedido) => {if(trava.current)return;trava.current=true;envio.mutate(p);};
+    onError:async(error,p) => {if(primeira.current&&conflitoPreparacaoVisita(error)){try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(chave);setPedido(null);setConfirmado(null);setMensagem("A revisão mudou. Atualize e confira novamente.");return;}catch{setMensagem("Tentativa preservada; procure suporte.");return;}}setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte.");},onSettled:() => {trava.current=false;primeira.current=false;}});
+  const enviar=(p:Pedido,nova=false) => {if(trava.current)return;trava.current=true;primeira.current=nova;envio.mutate(p);};
   const assinaturaConfirmacao=(c:Candidato) => JSON.stringify([userId,clienteId,planoId,versaoId,rotinaId,serieId,revision,modo,fonte.trim(),c]);
   return <section aria-label="Prévia de ocorrências por Visita"><h5>Prévia por Visita</h5>
     <OrigemGeracaoRotina userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revision} />
@@ -53,7 +54,7 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:
       {selecionado===c.visita_id&&!c.feriado_declarado&&c.vigencia_declarada&&(!c.ocorrencia_preparada||modo==="canonico")&&<form onSubmit={(event) => {event.preventDefault();if(pedido||trava.current||confirmado!==assinaturaConfirmacao(c)||!fonte.trim()||candidatos.isFetching||candidatos.isError)return;
         const p:Pedido={requestId:crypto.randomUUID(),ocorrenciaId:crypto.randomUUID(),clienteId,planoId,versaoId,rotinaId,visitaId:c.visita_id,revision,fonte:fonte.trim(),modo};
         try{if(sessionStorage.getItem(chave)!==null){setMensagem("Há tentativa anterior; reabra para recuperar.");return;}sessionStorage.setItem(chave,JSON.stringify(p));}
-        catch{setMensagem("Não foi possível guardar tentativa; nada foi enviado.");return;}setPedido(p);enviar(p);
+        catch{setMensagem("Não foi possível guardar tentativa; nada foi enviado.");return;}setPedido(p);enviar(p,true);
       }}><fieldset disabled={!!pedido||envio.isPending}><label>Fonte consultada para declarar dia sem feriado <input required maxLength={500} value={fonte} onChange={(e) => {setFonte(e.target.value);setConfirmado(null);}}/></label>
         <label><input type="checkbox" checked={confirmado===assinaturaConfirmacao(c)} onChange={(e) => setConfirmado(e.target.checked ? assinaturaConfirmacao(c) : null)}/> Confirmei Visita, semana, vigência e fonte declarada</label><button type="submit" disabled={confirmado!==assinaturaConfirmacao(c)}>Preparar ocorrência sem envio</button></fieldset></form>}
     </li>)}</ul>}
