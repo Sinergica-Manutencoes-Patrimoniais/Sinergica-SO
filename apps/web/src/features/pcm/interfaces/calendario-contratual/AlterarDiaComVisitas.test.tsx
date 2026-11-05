@@ -13,5 +13,6 @@ for(const incerta of [false,true]) for(const code of ["40001","P0018"]) it((ince
  const client=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={client}><AlterarDiaComVisitas userId={id(1)} clienteId={id(2)} serieId={id(3)} revisao={1} dia={2} vigencia="2026-11-02" bloqueado={false}/></QueryClientProvider>);
  await screen.findByText(/1 Visita\(s\) carregada/);fireEvent.click(screen.getByRole("checkbox"));fireEvent.click(screen.getByRole("button",{name:"Alterar regra e Visitas"}));
  if(incerta){fireEvent.click(await screen.findByRole("button",{name:"Repetir mesmo pedido"}));await screen.findByText(/Resultado não confirmado/);expect(sessionStorage.length).toBe(1);}
- else {await screen.findByText(/Regra ou Visitas mudaram/);expect(sessionStorage.length).toBe(0);expect(screen.queryByRole("button",{name:"Repetir mesmo pedido"})).toBeNull();}
+ else if(code==="P0018") {await screen.findByText(/Regra ou Visitas mudaram/);expect(sessionStorage.length).toBe(0);expect(screen.queryByRole("button",{name:"Repetir mesmo pedido"})).toBeNull();}
+ else {await screen.findByText(/Resultado não confirmado/);expect(sessionStorage.length).toBe(1);expect(screen.getByRole("button",{name:"Repetir mesmo pedido"})).toBeTruthy();}
 });

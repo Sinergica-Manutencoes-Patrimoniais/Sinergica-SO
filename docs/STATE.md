@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: lote 1775 e alteração de dia
+
+- UI de alteração de dia preserva pedido perante 40001 real; apenas P0018 específico inicial libera reconferência. Teste focado 4/4 passou. Três arquivos de testes foram formatados sem mudança funcional e passaram Biome.
+- Clone compilou 1614–1775 em ordem e passou 24 fixtures SQL; 8 arquivos UI/33 testes passaram após atualizar mock antigo para P0019. Outro lote direcionado passou 37 testes e typecheck. Registro `supabase/tests/manual_E01-S165_S166_lote_isolado_1775.md`; não equivale à CI completa ou ACL global.
+- `lint:migrations` permanece exit 1 com 474 avisos Squawk em 42 migrations históricas; 1775 não foi apontada. Gates default fechados; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: classificação legada e lote consolidado
 
 - ADR-1633/migration 1775 tratam conflito definitivo de classificação de legado com P0019; UI preserva pedido incerto e erro real. Clone compilou 1614–1775, fixture SQL testou conflito/positivo/replay e HTTP isolado devolveu P0019 e recibo de replay anterior; UI 2/2, revisão independente sem bypass concreto. Rollout frontend/backend coordenado.
