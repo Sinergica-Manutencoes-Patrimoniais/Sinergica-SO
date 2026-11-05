@@ -123,3 +123,11 @@ nas verificações de gates, colisões de pedido e ACL. A transação foi revert
 descartáveis foram removidos; a saída para o Auvo foi suprimida no cenário. O ensaio não comprova
 concorrência, integração externa ou permissões do ambiente de destino e não constitui homologação
 ou autorização para release.
+
+No ensaio isolado da migration 1808, foram aplicadas 228 migrations da base e 661 candidatas.
+A fixture passou nas consultas de recibo existente e ausente e nas verificações selecionadas de
+autorização; a concorrência da 1807 exercitou disputas de modo, gate e revogação. O cenário
+sintético usou anti-loop e suprimiu a saída ao Auvo; os recursos descartáveis foram removidos.
+O replay concorrente foi verificado pelo SQLSTATE, sem comparar a igualdade dos recibos; não
+houve ensaio de corrida da 1808. O resultado não comprova integração externa ou permissões no
+destino e não constitui homologação ou autorização de release.
