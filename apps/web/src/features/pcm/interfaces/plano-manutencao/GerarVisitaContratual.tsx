@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 type Pedido = { requestId: string; clienteId: string; serieId: string; regraId: string; semana: string; visitaId: string; inicio: string; cobertura: string; protocolo?: "coordenado" | "suprimivel" | "legado" };
@@ -8,12 +8,12 @@ export function GerarVisitaContratual({ userId, clienteId, serieId }: { userId: 
   return <GerarVisitaContratualSessao key={JSON.stringify([userId, clienteId, serieId])} userId={userId} clienteId={clienteId} serieId={serieId} />;
 }
 function GerarVisitaContratualSessao({ userId, clienteId, serieId }: { userId: string; clienteId: string; serieId: string }) {
-  const cache = useQueryClient(); const chave = `sso-gerar-visita-contratual:${JSON.stringify([userId, clienteId, serieId])}`; const trava = useRef(false); const [regraId, setRegraId] = useState(""); const [semana, setSemana] = useState(""); const [inicio, setInicio] = useState(""); const [cobertura, setCobertura] = useState(""); const [confirmado, setConfirmado] = useState<string | null>(null); const [aviso, setAviso] = useState("");
+  const cache = useQueryClient(); const chave = `sso-gerar-visita-contratual:${JSON.stringify([userId, clienteId, serieId])}`; const trava = useRef(false); const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []); const [regraId, setRegraId] = useState(""); const [semana, setSemana] = useState(""); const [inicio, setInicio] = useState(""); const [cobertura, setCobertura] = useState(""); const [confirmado, setConfirmado] = useState<string | null>(null); const [aviso, setAviso] = useState("");
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(chave); if (!raw) return null; const p = JSON.parse(raw) as Pedido; return p.clienteId === clienteId && p.serieId === serieId && typeof p.requestId === "string" && typeof p.visitaId === "string" && typeof p.regraId === "string" && typeof p.semana === "string" && typeof p.inicio === "string" && typeof p.cobertura === "string" && (p.protocolo === undefined || ["coordenado", "suprimivel", "legado"].includes(p.protocolo)) ? p : "invalido"; } catch { return "invalido"; } });
   const regras = useInfiniteQuery({ queryKey: ["regras-geracao-visita", userId, clienteId, serieId], initialPageParam: 0, gcTime: 0, queryFn: async ({ pageParam, signal }) => { await conferirSessaoDiagnostico(userId, signal); const { data, error } = await supabase.schema("pcm").rpc("sso_pcm_listar_regras_visita", { p_cliente_id: clienteId, p_serie_id: serieId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; if (!Array.isArray(data)) throw new Error("Lista inválida."); await conferirSessaoDiagnostico(userId, signal); return data as { id: string; numero: number; ancora_semana: string; dia_semana: number; intervalo_semanas: number; hora_inicio: string; fuso: string; vigencia_inicio: string; vigencia_fim: string | null }[]; }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.numero : undefined });
   const envio = useMutation({ mutationFn: async (p: Pedido) => {
     if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
-    const antes = await supabase.auth.getUser(); if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
+    const antes = await supabase.auth.getUser(); if (antes.error || antes.data.user?.id !== userId || !montado.current || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Sessão alterada.");
     const parametros = { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_serie_id: p.serieId, p_regra_id: p.regraId,
       p_semana: p.semana, p_visita_id: p.visitaId, p_inicio_em: p.inicio, p_responsavel_id: null, p_cobertura: p.cobertura };
     const protocolo = p.protocolo ?? "legado";
@@ -35,7 +35,7 @@ function GerarVisitaContratualSessao({ userId, clienteId, serieId }: { userId: s
         (data.decisao === "suprimida_feriado" && data.visitaCriada !== false)) throw new Error("Resultado inválido.");
       decisao = data.decisao;
     }
-    const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+    const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
     return { decisao };
   }, onSuccess: async (r, p) => { if (r.decisao === "criada") await Promise.all([
     cache.invalidateQueries({ queryKey: ["visitas", userId, clienteId] }),
@@ -43,11 +43,11 @@ function GerarVisitaContratualSessao({ userId, clienteId, serieId }: { userId: s
     cache.invalidateQueries({ queryKey: ["ciclos-uniformes", userId, clienteId] }),
     cache.invalidateQueries({ queryKey: ["reserva-futuro-visitas", userId, clienteId] }),
   ]);
-    try { const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); }
-    catch { setPendente("invalido"); setAviso("Tentativa alterada ou não removida; procure suporte."); return; }
+    try { const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || !montado.current || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); }
+    catch { if (!montado.current) return; setPendente("invalido"); setAviso("Tentativa alterada ou não removida; procure suporte."); return; }
     setPendente(null); setConfirmado(null); setAviso(r.decisao === "criada" ? "Visita regular em rascunho criada com origem contratual; sem OS ou Auvo." : "Semana suprimida por feriado declarado; nenhuma Visita ou reposição criada.");
     if (r.decisao === "suprimida_feriado") void cache.invalidateQueries({ queryKey: ["historico-supressao-gerador", userId, clienteId] });
-  }, onError: (error,p) => {const e=error as {code?:string;message?:string};if(p.protocolo!=="coordenado"&&e.code==="55000"&&e.message==="recibo_legado_indisponivel")setAviso("Recibo antigo não encontrado. O pedido permanece guardado e a situação original não foi comprovada; procure suporte para conferir.");else setAviso("Resultado não confirmado; repita a tentativa. Em conflito de semana ou dúvida de horário procure suporte.");}, onSettled: () => { trava.current = false; } });
+  }, onError: (error,p) => {if (!montado.current) return;const e=error as {code?:string;message?:string};if(p.protocolo!=="coordenado"&&e.code==="55000"&&e.message==="recibo_legado_indisponivel")setAviso("Recibo antigo não encontrado. O pedido permanece guardado e a situação original não foi comprovada; procure suporte para conferir.");else setAviso("Resultado não confirmado; repita a tentativa. Em conflito de semana ou dúvida de horário procure suporte.");}, onSettled: () => { trava.current = false; } });
   const enviar = (pedido: Pedido) => { if (trava.current) return;
     if (!pendente && import.meta.env.VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED !== "true") {setAviso("Geração coordenada indisponível; nenhum pedido criado.");return;}
     const p: Pedido = pendente ? pedido : { ...pedido, protocolo: "coordenado" };

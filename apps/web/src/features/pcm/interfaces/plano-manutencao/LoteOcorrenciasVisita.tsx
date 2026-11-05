@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { FilaPreventivaPcm } from "./FilaPreventivaPcm";
@@ -73,6 +73,12 @@ function Conteudo({
   const cache = useQueryClient();
   const storage = `lote-visita:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId, serieId])}`;
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  async function conferirSessao() {
+    await conferirSessaoDiagnostico(userId);
+    if (!montado.current) throw new Error("Tela desmontada.");
+  }
   const primeira = useRef(false);
   const [selecionadas, setSelecionadas] = useState<string[]>([]);
   const [fonte, setFonte] = useState("");
@@ -99,7 +105,7 @@ function Conteudo({
   });
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessao();
       if (sessionStorage.getItem(storage) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase
@@ -146,16 +152,16 @@ function Conteudo({
           JSON.stringify(p.itens.map((i) => i.visitaId).sort())
       )
         throw new Error("Resposta divergente.");
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessao();
       return r;
     },
     onSuccess: async (r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId);
+        await conferirSessao();
         if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(storage);
       } catch {
-        setAviso("Lote confirmado, mas tentativa local não removida; procure suporte.");
+        if (montado.current) setAviso("Lote confirmado, mas tentativa local não removida; procure suporte.");
         return;
       }
       setPendente(null);
@@ -189,9 +195,10 @@ function Conteudo({
       ]);
     },
     onError: async (error, p) => {
+      if (!montado.current) return;
       if (primeira.current && conflitoPreparacaoVisita(error)) {
         try {
-          await conferirSessaoDiagnostico(userId);
+          await conferirSessao();
           if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(storage);
           setPendente(null);
@@ -199,7 +206,7 @@ function Conteudo({
           setAviso("A revisão ou a Visita selecionada mudou. Atualize e confira novamente.");
           return;
         } catch {
-          setAviso("Tentativa preservada; procure suporte.");
+          if (montado.current) setAviso("Tentativa preservada; procure suporte.");
           return;
         }
       }
