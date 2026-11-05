@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — quatro stories: preparação do lote (Codex)
+
+- S176: ADR-1654/1655 e migrations 1796/1797 preparam guardas de Cliente e hierarquia; 1799 serializa autorização na movimentação; 1800 prepara caminho físico por ativo e 1801 consulta preventivas legadas. S166: 1798 remove limite de idade para preparação individual de vencido. Todas aguardam aplicação e validação.
+- Bootstrap sintético foi atualizado para aplicar até 1801; foram preparados testes SQL S170 (1790/1795) e S176 (1796/1797), sem execução. Ainda faltam provas de concorrência, vínculos legados inconsistentes e fixtures específicas para 1793/1798.
+- Criticidade e completude de ativos não têm fonte canônica identificada; aguardam definição funcional. Gates e flags permanecem fechados. Não houve testes, build, deploy ou tarefas reais no Auvo nesta rodada.
+
 ## 2026-11-05 — S170/S176/S165/S166: integração em desenvolvimento (Codex)
 
 - S170: ADR-1648/1790 serializam administração de capacidades antes da autorização; tela revalida sessão e oculta dados durante reconsulta. ADR-1653/1795 adicionam quatro vínculos ação/módulo declarados nas migrations de origem, sem criar concessões; podem tornar efetivas concessões existentes e exigem revisão antes de aplicar.

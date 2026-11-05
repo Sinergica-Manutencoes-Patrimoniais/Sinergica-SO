@@ -1,5 +1,7 @@
 # Ensaio isolado S166 — preparação pendente
 
+**Estado do roteiro:** o bootstrap está preparado para aplicar migrations 1614–1801 em ordem sobre a base sintética até 1613; esta versão ainda não foi executada. As descrições e resultados abaixo são históricos e não comprovam o lote atual. O bootstrap falha se faltar 1801, houver numeração duplicada ou qualquer migration falhar; não ignora falhas.
+
 Este diretório ainda não contém um ensaio UI/backend completo. Nunca use a configuração Playwright padrão do projeto: ela carrega `.env.local` e pode reutilizar servidor existente. O arquivo `playwright.s166-isolado.config.ts` é apenas parte da infraestrutura; seu filtro HTTP não prova isolamento completo de rede.
 
 Antes de executar uma jornada: criar rede Docker interna, serviços e navegador exclusivamente nela, banco descartável separado, atestar via gateway a identidade do banco, bloquear saída externa no nível da rede e usar credenciais criadas somente para esse ensaio. Não tocar Auvo. Remover recursos descartáveis ao final.
@@ -50,7 +52,7 @@ Este roteiro descreve a preparação realizada; não há script de automação, 
 
 ## Bootstrap do banco descartável
 
-`bootstrap-interno.py` cria rede Docker interna e PostgreSQL dedicado, sem portas publicadas nem mounts. O comando `carregar` valida identidade/isolamento antes de restaurar uma cópia do banco-base sintético `sso-validacao-isolada-20261104`, preserva ACLs e aplica migrations 1614–1735. Execute apenas com esse banco-base isolado, nunca com produção. Requer imagens locais e Docker; não baixa imagens. O ID é escolhido pelo executor e pertence apenas ao ensaio.
+`bootstrap-interno.py` cria rede Docker interna e PostgreSQL dedicado, sem portas publicadas nem mounts. O comando `carregar` valida identidade/isolamento antes de restaurar uma cópia do banco-base sintético `sso-validacao-isolada-20261104`, preserva ACLs e aplica migrations 1614–1801. Execute apenas com esse banco-base isolado, nunca com produção. Requer imagens locais e Docker; não baixa imagens. O ID é escolhido pelo executor e pertence apenas ao ensaio.
 
 ```sh
 python3 apps/web/e2e/s166-isolado/bootstrap-interno.py criar --id 32bd19ca417e
