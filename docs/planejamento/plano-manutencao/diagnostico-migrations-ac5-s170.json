@@ -1,0 +1,345 @@
+{
+  "status": "incompleto; não aplicar",
+  "fonte": "/Users/lucasazevedo/GitHub/Sinergica/Sinergica-SO/supabase/migrations",
+  "lacunas": [
+    "dependências transitivas de tabelas, triggers, SQL dinâmico, overloads e estado do banco ainda não comprovadas",
+    "grants existentes podem ter efeito imediato se gates prévios estiverem habilitados",
+    "migrations S173 e acesso Storage requerem revisão de escopo e segurança"
+  ],
+  "migrations": [
+    {
+      "file": "0969_E01-S168_reconciliar_finalizacao_legada.sql",
+      "sha256": "b6d3c6a8b59bb280735b16ed42ed537fa40c6bff5bdd41794eb18e07143ed77a",
+      "git_blob": "4f45d1a44f4b443f81a529f75822df3f2628f23c",
+      "gates": [
+        "sso_atestacao_pcm_gate",
+        "sso_finalizar_os_validada_gate"
+      ],
+      "authenticated_grants": [],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "0971_E01-S168_mediacao_finalizacao.sql",
+      "sha256": "caf532d9b09b8754e72c8c478a879094ad3419e814d95341521fb7a9550fde57",
+      "git_blob": "b89a67a8dcf7a73e038031c6c75119b6ff37c4ed",
+      "gates": [
+        "sso_mediacao_finalizacao_os_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_mediar_previa_finalizacao_os(uuid,uuid)",
+        "pcm.sso_mediar_finalizacao_os(uuid,uuid,uuid,uuid,uuid,integer,text,timestamptz)",
+        "pcm.sso_mediar_consulta_finalizacao_os(uuid,uuid,uuid,uuid,integer,text,timestamptz)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "0972_E01-S168_lock_gates_finalizacao.sql",
+      "sha256": "d237d44f7b8ff5166840b90008b834c211c822c0ec240d4c541401b6191c6f2f",
+      "git_blob": "55115d9104fc3fd70ca15eea7c3ced4f4572b358",
+      "gates": [
+        "sso_atestacao_pcm_gate",
+        "sso_finalizar_os_validada_gate",
+        "sso_mediacao_finalizacao_os_gate",
+        "sso_upload_evidencia_resposta_gate",
+        "sso_validacao_resposta_gate",
+        "validacao_os_gate"
+      ],
+      "authenticated_grants": [],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "0976_E01-S168_serializar_autorizacao_finalizacao.sql",
+      "sha256": "124aa796fe9f53a55f5a97cfade45dfc2b240e00c75f5db8dc80db4bd50f40ee",
+      "git_blob": "31a6e02ffe6ddfc076811b55f89da342a8c22c0b",
+      "gates": [
+        "sso_atestacao_pcm_gate",
+        "sso_finalizar_os_validada_gate",
+        "sso_mediacao_finalizacao_os_gate",
+        "sso_upload_evidencia_resposta_gate",
+        "sso_validacao_resposta_gate",
+        "validacao_os_gate"
+      ],
+      "authenticated_grants": [],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1023_E01-S173_mediacao_pendencias_retorno.sql",
+      "sha256": "b9d3149bfd22d2fabfd580478644a548a3439fdaf2410e4aadd92bede21ef88e",
+      "git_blob": "bab4201cdc9145a68c55645434688bf442f0ed2d",
+      "gates": [
+        "sso_mediacao_pendencias_retorno_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_preparar_pendencias_retorno_mediado(uuid,uuid,uuid,uuid,integer)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1024_E01-S173_consultas_mediadas_retorno.sql",
+      "sha256": "71766646b10c05f76c4abf8614837d22ff32792cbd53366c47377d1450503475",
+      "git_blob": "f7016d1b70beffa2ec19e3473c591cf04577d197",
+      "gates": [
+        "sso_condicao_retorno_gate",
+        "sso_mediacao_pendencias_retorno_gate",
+        "validacao_os_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_listar_condicoes_retorno_mediado(uuid,uuid,uuid,integer)",
+        "pcm.sso_listar_decisoes_retorno_mediado(uuid,uuid,integer,integer)",
+        "pcm.sso_listar_pendencias_contexto_mediado(uuid,uuid,integer)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1566_E01-S168_aprovar_finalizar_atomico.sql",
+      "sha256": "a4cd42445bc7e6beb10bd00c7fc868bf8d408cae6c999b450fc49130cb5024d8",
+      "git_blob": "18a7568c2d52a2d8b3c45f15f83f7a5ce5cd2bbf",
+      "gates": [
+        "sso_aprovacao_finalizacao_atomica_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_aprovar_finalizar_os_atomico(uuid,uuid,uuid,uuid,integer,integer,text,uuid,text,timestamptz)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1567_E01-S168_mediar_decisao_retorno.sql",
+      "sha256": "9dd26ff1feb51bdb9e5ca4d8e849c4d4bdb5a76595e9d57d46f7eaf1a3d1aa31",
+      "git_blob": "5db70b3c7a48c31df3ea83a1294d09f7700b569b",
+      "gates": [
+        "sso_mediacao_decisao_retorno_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_decidir_retorno_mediado(uuid,uuid,uuid,integer,text,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1589_E01-S168_listar_retorno_grupo_visita.sql",
+      "sha256": "93bdf778de6bffa2d120822fd41f6ffcbf599adcbe732eb78401c7cd6f1c231d",
+      "git_blob": "9912a820cb7cda964134aa4180cefa4041b558f1",
+      "gates": [
+        "origem_campo_inbox_gate",
+        "validacao_os_gate"
+      ],
+      "authenticated_grants": [],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1590_E01-S168_classificacao_mediada.sql",
+      "sha256": "04c04bd7ba043b148009e3d896ca98b4476dccf56c7db06bd0734a661905d362",
+      "git_blob": "f0cb8e7af2cba9b844a846d563c940ec104db55a",
+      "gates": [
+        "sso_classificacao_retorno_mediada_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_listar_retornos_classificaveis_mediada(uuid,uuid,integer)",
+        "pcm.sso_classificar_retorno_campo_mediada(uuid,uuid,uuid,uuid,uuid,jsonb)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1594_E01-S168_listar_atestacoes_mediada.sql",
+      "sha256": "41a11f3b71b9ed0599b05be08c5beeff092abd7a5166568b13a68ccca58fbbcf",
+      "git_blob": "00611a4865ec67cac528772d0bfe202fafd94094",
+      "gates": [
+        "sso_atestacao_pcm_gate",
+        "sso_classificacao_retorno_mediada_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_listar_atestacoes_pcm_mediada(uuid,uuid,uuid,integer)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1595_E01-S168_condicao_evidencia_mediada.sql",
+      "sha256": "db8f91e0968b5b3bb3ae62466336d9faa9fd788d35e83705bb3f4b35eb9c8a2b",
+      "git_blob": "cd9033dbeb08bd1b9725cec86480f015a2eb0c9f",
+      "gates": [
+        "sso_classificacao_retorno_mediada_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_checar_evidencias_mediada(uuid,uuid)",
+        "pcm.sso_listar_condicoes_evidencia_mediada(uuid,uuid,uuid,integer)",
+        "pcm.sso_registrar_condicao_evidencias_mediada(uuid,uuid,uuid,uuid,integer,integer,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1596_E01-S168_condicao_estrutural_mediada.sql",
+      "sha256": "b24d29399357ab29fbd09e9adf8e55a18fb4bd9ff0344c2e9525d64243f6c767",
+      "git_blob": "548b2e0c59af05175517eb290a9145e57ffa8d4c",
+      "gates": [],
+      "authenticated_grants": [
+        "pcm.sso_checar_obrigatorias_mediada(uuid,uuid)",
+        "pcm.sso_prever_perguntas_contrato_mediada(uuid,uuid,integer,integer)",
+        "pcm.sso_registrar_condicao_estrutural_mediada(uuid,uuid,uuid,uuid,integer,integer,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1597_E01-S168_conferencia_cobertura_mediada.sql",
+      "sha256": "4461d80e133c6582777c9ae17525bf584336ef2fecaef9dfb84d59ace062122e",
+      "git_blob": "058a1dae3740a9ea50faf4dee695382f045b8edc",
+      "gates": [],
+      "authenticated_grants": [
+        "pcm.sso_listar_conferencias_cobertura_mediada(uuid,uuid,uuid,integer)",
+        "pcm.sso_conferir_cobertura_mediada(uuid,uuid,uuid,uuid,integer,text)",
+        "pcm.sso_reconciliar_cobertura_mediada(uuid,uuid,uuid)",
+        "pcm.sso_listar_reatestacoes_mediada(uuid,uuid,uuid,uuid,integer)",
+        "pcm.sso_reatestar_cobertura_mediada(uuid,uuid,uuid,uuid,integer,integer,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1598_E01-S168_aprovacao_pcm_mediada.sql",
+      "sha256": "fba8f0406cf5472dd7ca61e7b28d29d865cc9228c25305dc0fc56131de897fdd",
+      "git_blob": "810c283081d1b13645d0759ac5ba20d5ea99f08d",
+      "gates": [
+        "sso_atestacao_pcm_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_atestar_aprovar_retorno_mediado(uuid,uuid,uuid,uuid,integer,integer,text)"
+      ],
+      "dynamic_sql": true,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1599_E01-S168_evidencia_declarada_mediada.sql",
+      "sha256": "102dd71d84f5e7d36867821ce65ee668ba2544b3ac4530817c0f003310b3fc7d",
+      "git_blob": "8c8dd70a0d2c98c3e2282efd1005c5931fce7111",
+      "gates": [
+        "sso_classificacao_retorno_mediada_gate"
+      ],
+      "authenticated_grants": [
+        "pcm.sso_listar_retornos_declarados_mediada(uuid,uuid,integer)",
+        "pcm.sso_listar_evidencias_declaradas_mediada(uuid,uuid,integer,integer)",
+        "pcm.sso_anotar_evidencia_retorno_mediada(uuid,uuid,uuid,uuid,integer,text,text,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1600_E01-S168_evidencia_resposta_mediada.sql",
+      "sha256": "9c5fe130a684fb280df79fffcc0293d6d35dad254a0d57d5f7be7631ea9e3973",
+      "git_blob": "dc5ee0957c84a9e0bffb7f1085423813bea83a3b",
+      "gates": [],
+      "authenticated_grants": [
+        "pcm.sso_listar_respostas_retorno_mediada(uuid,uuid,uuid,integer)",
+        "pcm.sso_listar_evidencias_resposta_mediada(uuid,uuid,uuid,integer)",
+        "pcm.sso_prever_evidencias_resposta_mediada(uuid,uuid,uuid,integer)",
+        "pcm.sso_vincular_evidencia_resposta_mediada(uuid,uuid,uuid,uuid,uuid,integer,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1601_E01-S168_validacao_resposta_mediada.sql",
+      "sha256": "712761e1a5497785bc90e8135ccad9478951867318f195c65b06fdf962526eb3",
+      "git_blob": "c0f3513b4c67be371c5ad2172d19dbdc7e1007f8",
+      "gates": [],
+      "authenticated_grants": [
+        "pcm.sso_listar_validacoes_resposta_mediada(uuid,uuid,uuid,integer,integer)",
+        "pcm.sso_validar_resposta_evidencia_mediada(uuid,uuid,uuid,uuid,uuid,integer,integer,text,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1602_E01-S168_fotos_retorno_mediadas.sql",
+      "sha256": "97d43a220a3a0a504305b56daf9d01ffd19a3c0c877dc6a3b0eb89e63600136c",
+      "git_blob": "e14a2c3d440467d3d45e1e8fbb9888d88fd4017d",
+      "gates": [],
+      "authenticated_grants": [
+        "pcm.sso_listar_fotos_candidatas_mediada(uuid,uuid,uuid,integer)",
+        "pcm.sso_listar_fotos_referenciadas_mediada(uuid,uuid,uuid,integer)",
+        "pcm.sso_referenciar_foto_retorno_mediada(uuid,uuid,uuid,uuid,text)",
+        "pcm.sso_listar_fotos_resposta_mediada(uuid,uuid,integer,integer)",
+        "pcm.sso_associar_foto_resposta_mediada(uuid,uuid,uuid,integer,uuid,uuid,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1603_E01-S168_upload_resposta_mediado.sql",
+      "sha256": "351b15e92b11cc263803383952886a5760be511b2b9fb3b0c83b122d108876a3",
+      "git_blob": "21adc07e82b25a56e6f9c099e4ed6f15c5a5530a",
+      "gates": [],
+      "authenticated_grants": [
+        "pcm.sso_listar_uploads_resposta_mediada(uuid,uuid,integer,integer)",
+        "pcm.sso_resolver_upload_resposta_mediada(uuid,uuid,text)",
+        "pcm.sso_registrar_upload_resposta_mediada(uuid,uuid,uuid,integer,uuid,text,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1604_E01-S168_reclassificacao_mediada.sql",
+      "sha256": "ba6c292fc25c1acb3c2bd42c0434c1ed10e60b089d7ab34ad4b7091c8d942695",
+      "git_blob": "7823c9d5a4de5bd7d7e2a717776aa892e2678538",
+      "gates": [],
+      "authenticated_grants": [
+        "pcm.sso_contexto_reclassificacao_mediada(uuid,uuid,uuid)",
+        "pcm.sso_previa_reclassificacao_mediada(uuid,uuid)",
+        "pcm.sso_historico_reclassificacao_mediada(uuid,uuid,uuid,uuid,integer)",
+        "pcm.sso_propor_reclassificacao_mediada(uuid,uuid,uuid,uuid,integer,integer,text,text,text)",
+        "pcm.sso_decidir_reclassificacao_mediada(uuid,uuid,uuid,uuid,integer,integer,text,text)",
+        "pcm.sso_reabrir_reclassificacao_mediada(uuid,uuid,uuid,integer,text)"
+      ],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    },
+    {
+      "file": "1698_E01-S168_listar_envelopes_fotografia_os.sql",
+      "sha256": "b8d38417057a88feba7cf392fdb96afb90acfa2dbbb3f30a59f68c1bdf33332c",
+      "git_blob": "3a87b09dcb2550bf5bf4fa26ea63afc1b1097bcd",
+      "gates": [
+        "origem_campo_inbox_gate",
+        "validacao_os_gate"
+      ],
+      "authenticated_grants": [],
+      "dynamic_sql": false,
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+    }
+  ],
+  "dependencias_adicionais_detectadas": {
+    "1024": [
+      "0380: sso_listar_pendencias_contexto"
+    ],
+    "1597": [
+      "0550: sso_reconciliar_cobertura_validacao"
+    ],
+    "1600": [
+      "0533: respostas e vinculação de evidências",
+      "0536: prévia de evidências"
+    ],
+    "1602": [
+      "0538: fotos candidatas/referenciadas",
+      "0547: fotos por resposta"
+    ],
+    "1604": [
+      "0702: proposta de reclassificação",
+      "0705: decisão e prévia",
+      "0709: contexto e histórico",
+      "0713: reabertura"
+    ],
+    "0971": [
+      "0969: finalização e consulta por pedido"
+    ]
+  },
+  "metodo": "Busca textual de criações de tabelas/views/funções e nomes qualificados, sem execução. Nomes criados na própria migration constam no inventário; definições dinâmicas, triggers, políticas, overloads e ordem real não foram exaustivamente resolvidas."
+}
