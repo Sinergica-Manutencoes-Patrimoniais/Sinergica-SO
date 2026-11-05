@@ -163,13 +163,13 @@ export function AlterarDiaComVisitas({
     },
   });
   const itens = consulta.data?.pages.flat() ?? [];
+  const candidatas = itens.filter((v) => v.classificacao === "candidata_revisao");
   const completa =
     !!consulta.data &&
     !consulta.hasNextPage &&
     !consulta.isFetching &&
     !consulta.isError &&
-    itens.length <= 500;
-  const candidatas = itens.filter((v) => v.classificacao === "candidata_revisao");
+    candidatas.length <= 500;
   const revisoes = candidatas
     .map((v) => ({
       visitaId: v.visita_id,
@@ -362,8 +362,8 @@ export function AlterarDiaComVisitas({
                   Carregar mais Visitas
                 </button>
               )}
-              {itens.length > 500 && (
-                <p role="alert">Mais de 500 Visitas: operação em lote ainda não disponível.</p>
+              {candidatas.length > 500 && (
+                <p role="alert">Mais de 500 Visitas candidatas: operação em lote ainda não disponível.</p>
               )}
               <label>
                 <input
