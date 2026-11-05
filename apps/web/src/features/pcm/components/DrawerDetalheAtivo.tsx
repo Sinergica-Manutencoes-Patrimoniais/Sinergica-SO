@@ -176,8 +176,8 @@ export function DrawerDetalheAtivo({
         {detalheAtual && <Conteudo detalhe={detalheAtual} />}
         {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <EdicaoRascunhoCodigo userId={user.id} clienteId={item.clientId} tipo="componente" ativoId={item.id} onAtualizado={() => { void atualizarDetalheCodigo(); }} />}
         {estado.fase === "pronto" && !estado.detalhe.contexto && <Conteudo detalhe={estado.detalhe} />}
-        {user && item?.tipo === "componente" && item.clientId && <ResultadosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} nome={item.nome} />}
-        {user && item?.tipo === "componente" && item.clientId && <PendenciasDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />}
+        {user && item && item.clientId && <ResultadosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} nome={item.nome} />}
+        {user && item && item.clientId && <PendenciasDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />}
         {user && item && item.clientId && <PlanosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />}
         {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <FotosStagingAtivo userId={user.id} clienteId={item.clientId} tipo={item.tipo} entidadeId={item.id} />}
         {user && item?.tipo === "componente" && item.clientId && <DocumentosStagingAtivo userId={user.id} clienteId={item.clientId} tipo="componente" entidadeId={item.id} />}

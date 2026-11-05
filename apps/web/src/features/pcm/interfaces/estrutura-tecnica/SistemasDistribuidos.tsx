@@ -367,7 +367,8 @@ function DetalheMembro({ userId, clienteId, itemId, nome, tipo }: { userId: stri
   const [aberto, setAberto] = useState(false);
   return <section><button type="button" aria-expanded={aberto} aria-label={`${aberto ? "Ocultar" : "Ver"} histórico de ${nome}`} onClick={() => setAberto(v => !v)}>{aberto ? "Ocultar histórico" : "Ver histórico"}</button>
     {aberto && <><HistoricoGrupo tipo="componente" userId={userId} clienteId={clienteId} grupoId={itemId} />
-      {tipo === "componente" && <ResultadosDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId} nome={nome} />}
+      {tipo && <ResultadosDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId} nome={nome} />}
+      {tipo && <PendenciasDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId} />}
       {tipo && <FotosStagingAtivo userId={userId} clienteId={clienteId} tipo={tipo} entidadeId={itemId} />}
       {!tipo && <p>Tipo do cadastro não disponível nas páginas carregadas; fotos não consultadas.</p>}</>}
   </section>;
