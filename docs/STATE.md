@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: vínculos de série por Visita
+
+- Jornada na navegação normal por Visita identificou ACL privada em listagem de série. ADR-1635/migration 1777 criam consulta mediada autenticada e UI a consome sem expor núcleo privado. Fixture SQL cobriu positivo/ator/Cliente/ACL; ainda falta concorrência de consulta.
+- ADR-1636/migration 1778 criam comando mediado de vínculo, preservando núcleo privado, autorização/gates/replay; conflito de revisão usa P0011 e UI preserva tentativa incerta. Clone limpo compilou 1614–1778 e fixture passou para positivo/replay/P0011/ator/Cliente/ACL; UI 3/3 e revisão independente passaram. HTTP específico do conflito não testado.
+- Navegação normal em clone percorreu aprovação 1045 real → retirada → preparação da nova Visita; OS sintética independente preservada, sem nova OS/outbox. Relógio simulado e escolha/vínculo/PMOC eram fixture; não prova criação do vínculo pela UI nem homologação. Gates default fechados; sem Auvo/deploy.
+
 ## 2026-11-05 — S165/S166: jornada pela aplicação normal
 
 - `apps/web/e2e/s166-isolado/executar-app-revisao.py` passou em aplicação real, clone e rede interna: login → PCM/Cliente/Preventivas → edição de alvo/recorrência/tolerâncias → submissão → impacto Visita/PMOC/fuso → aprovação 1045 real → origem e geração Calendário. Banco confirmou nova versão/ocorrência, tolerâncias 2/5, OS/fotografia históricas intactas e nenhuma OS/outbox adicional. Fixture/vínculo/Chamado sintéticos e gates ligados apenas no clone; não equivale a homologação.
