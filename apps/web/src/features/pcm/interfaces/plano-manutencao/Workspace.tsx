@@ -113,30 +113,7 @@ function ConteudoPlanoManutencao({
       setAberto(false);
       setEditando(null);
       setNome("");
-    } catch (falha) {
-      if (
-        typeof falha === "object" &&
-        falha !== null &&
-        "code" in falha &&
-        falha.code === "40001"
-      ) {
-        try {
-          await conferirSessao();
-          if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) {
-            setErro("O pedido local mudou durante o salvamento. Reabra e reconcilie antes de continuar.");
-            return;
-          }
-          sessionStorage.removeItem(chave);
-          setPendente(null);
-          setAberto(false);
-          setEditando(null);
-          setErro("O Plano foi alterado. Confira a lista antes de editar novamente.");
-          void planos.refetch();
-          return;
-        } catch {
-          /* Conserva pedido quando o armazenamento falha. */
-        }
-      }
+    } catch {
       setErro("Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados.");
     } finally {
       trava.current = false;
