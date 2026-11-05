@@ -1,6 +1,6 @@
 import { Button } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { PlanoResumo, RotinaDetalhe } from "../../application/plano-manutencao-gateway";
@@ -33,9 +33,11 @@ function conferirPagina(ids: string[], apos: string | null) {
   }
 }
 
-export function CopiarRotinaModelo({ userId, clienteId, plano, versaoId, rotina }: {
+export function CopiarRotinaModelo(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.plano.id, props.versaoId, props.rotina.id])} {...props} />; }
+function Conteudo({ userId, clienteId, plano, versaoId, rotina }: {
   userId: string; clienteId: string; plano: PlanoResumo; versaoId: string; rotina: RotinaDetalhe;
 }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-copia-rotina:${userId}:${clienteId}:${plano.id}:${versaoId}:${rotina.id}`;
   const [recuperacao] = useState(() => {
     try {
@@ -128,7 +130,7 @@ export function CopiarRotinaModelo({ userId, clienteId, plano, versaoId, rotina 
     trava.current = true; setOcupado(true); setMensagem("");
     const serializado = JSON.stringify(pedido);
     try {
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
       const { data, error } = await supabase.schema("pcm").rpc("sso_copiar_rotina_modelo", {
         p_request_id: pedido.requestId, p_ator_esperado: pedido.atorId, p_origem_cliente_id: pedido.origemClienteId,
@@ -139,9 +141,9 @@ export function CopiarRotinaModelo({ userId, clienteId, plano, versaoId, rotina 
       if (error) throw error;
       const recibo = reciboSchema.parse(data);
       if (recibo.requestId !== pedido.requestId || recibo.aggregateId !== pedido.destinoPlanoId || recibo.revision !== pedido.destinoRevision + 1 || recibo.linkedIds.clienteId !== pedido.destinoClienteId || recibo.linkedIds.rotinaId !== pedido.destinoRotinaId || recibo.origemPlanoId !== pedido.origemPlanoId || recibo.origemVersaoId !== pedido.origemVersaoId || recibo.origemRotinaId !== pedido.origemRotinaId) throw new Error("Recibo divergente");
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       await cache.invalidateQueries({ queryKey: planoManutencaoKeys.raiz(userId, pedido.destinoClienteId) });
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
       sessionStorage.removeItem(chave); setPendente(null); setConfirmacao(null);
       setMensagem("Rotina copiada para o rascunho. Confira alvo, questionário, recorrência e exigências antes de aprovar.");
@@ -153,7 +155,7 @@ export function CopiarRotinaModelo({ userId, clienteId, plano, versaoId, rotina 
     trava.current = true; setOcupado(true); setMensagem("");
     const serializado = JSON.stringify(pedido);
     try {
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
       const { requestId, atorId, ...dados } = pedido;
       const payload: Record<string, unknown> = { ...dados };
@@ -169,9 +171,9 @@ export function CopiarRotinaModelo({ userId, clienteId, plano, versaoId, rotina 
       if (recibo.requestId !== pedido.requestId || recibo.aggregateId !== pedido.destinoPlanoId || recibo.revision !== pedido.destinoRevision + 1 ||
         recibo.linkedIds.clienteId !== pedido.destinoClienteId || recibo.linkedIds.rotinaId !== pedido.destinoRotinaId ||
         recibo.origemPlanoId !== pedido.origemPlanoId || recibo.origemVersaoId !== pedido.origemVersaoId || recibo.origemRotinaId !== pedido.origemRotinaId) throw new Error("Recibo divergente");
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       await cache.invalidateQueries({ queryKey: planoManutencaoKeys.raiz(userId, pedido.destinoClienteId) });
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
       sessionStorage.removeItem(chave); setPendente(null); setConfirmacao(null);
       setMensagem("Cópia confirmada. Confira questionário, recorrência e exigências no destino.");

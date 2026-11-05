@@ -1,6 +1,6 @@
 import { Button } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -30,9 +30,11 @@ const comparacoes = {
   conteudo_integral_diferente: "Cadastro atual diferente da fotografia histórica; a diferença pode incluir metadados.",
 } as const;
 
-export function ConferenciaRotinaCopiada({ userId, clienteId, planoId, versaoId, rotinaId, revisao }: {
+export function ConferenciaRotinaCopiada(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId, props.rotinaId])} {...props} />; }
+function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revisao }: {
   userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; revisao: number;
 }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-conferencia-rotina-copiada:${userId}:${clienteId}:${planoId}:${versaoId}:${rotinaId}`;
   const [recuperacao] = useState(() => {
     try {
@@ -54,14 +56,14 @@ export function ConferenciaRotinaCopiada({ userId, clienteId, planoId, versaoId,
   const consulta = useQuery({
     queryKey: chaveConsulta, gcTime: 0, refetchOnWindowFocus: true,
     queryFn: async ({ signal }) => {
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_consultar_conferencia_copia", {
         p_cliente_id: clienteId, p_plano_id: planoId, p_versao_id: versaoId, p_rotina_id: rotinaId,
       }).abortSignal(signal);
       if (error) throw error;
       const resultado = consultaSchema.parse(data);
       if (resultado.clienteId !== clienteId || resultado.planoId !== planoId || resultado.versaoId !== versaoId || resultado.rotinaId !== rotinaId) throw new Error("Contexto divergente");
-      await conferirAtor(); return resultado;
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada."); return resultado;
     },
   });
   const disponivel = !consulta.isFetching && !consulta.isError && consulta.data?.copiada === true && consulta.data.planoRevision === revisao;
@@ -72,7 +74,7 @@ export function ConferenciaRotinaCopiada({ userId, clienteId, planoId, versaoId,
     trava.current = true; setOcupado(true); setAviso("");
     const serializado = JSON.stringify(pedido);
     try {
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
       const { data, error } = await supabase.schema("pcm").rpc("sso_conferir_rotina_copiada", {
         p_request_id: pedido.requestId, p_ator_esperado: pedido.atorId, p_cliente_id: pedido.clienteId, p_plano_id: pedido.planoId,
@@ -82,7 +84,7 @@ export function ConferenciaRotinaCopiada({ userId, clienteId, planoId, versaoId,
       if (error) throw error;
       const resultado = reciboSchema.parse(data);
       if (resultado.requestId !== pedido.requestId || resultado.clienteId !== clienteId || resultado.planoId !== planoId || resultado.versaoId !== versaoId || resultado.rotinaId !== rotinaId || resultado.planoRevision !== pedido.planoRevision || resultado.conteudoSha256 !== pedido.conteudoSha256) throw new Error("Recibo divergente");
-      await conferirAtor(); await cache.invalidateQueries({ queryKey: chaveConsulta }); await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada."); await cache.invalidateQueries({ queryKey: chaveConsulta }); await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
       sessionStorage.removeItem(chave); setPendente(null); setConfirmacao(null); setJustificativa("");
       setAviso("Conferência registrada. Ela não aprova o Plano nem substitui validação normativa.");
