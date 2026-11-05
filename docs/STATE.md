@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: vínculo e feriado pela borda real
+
+- `apps/web/e2e/s166-isolado/executar-legado.py` passou em rede interna: UI real selecionou e vinculou legada existente pela 1735 e incluiu a preparada em `aguardando`; banco confirmou ponte única e nenhuma OS. Relação/ocorrência são fixtures sintéticas; não cobre navegação integral nem Auvo.
+- AC-1: `supabase/tests/manual_E01-S166_geracao_ou_supressao_integrada.sql` passou 15/15 em clone pela RPC pública 1271, incluindo gate, supressão/auditoria, repetição, capacidade e ocorrência zero, revogação e ausência de OS/outbox. Indicadores agregados específicos não foram localizados.
+- Revisão adicional da 1735 não reproduziu bypass por alias duplicado: constraint de identidade impediu montagem. Travas globais ainda podem afetar latência de outros Clientes; carga não medida. Nenhuma migration nova.
+- Próximo passo: revisão adversarial integral das stories e CI, observando limites de fontes e UI; flags/gates default desligados, homologação pendente. Sem deploy/Auvo real.
+
 ## 2026-11-05 — S165/S166: vínculo legado e fila após avaliação
 
 - ADR-1593/migration 1735 expõem vínculo mediado de ocorrência legada existente, selecionada explicitamente pelo PCM, sem gerar OS/Auvo. Jornada AC-6 em clone: suspensão/retomada, decisão, preparação vencida, relação declarada, vínculo e fila `aguardando`. Interface de seleção usa flag desligada; testes focados 2/2 e typecheck passaram, ainda sem browser integrado dessa ação.

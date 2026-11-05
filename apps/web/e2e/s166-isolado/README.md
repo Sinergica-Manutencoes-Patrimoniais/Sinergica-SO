@@ -50,7 +50,7 @@ Este roteiro descreve a preparação realizada; não há script de automação, 
 
 ## Bootstrap do banco descartável
 
-`bootstrap-interno.py` cria rede Docker interna e PostgreSQL dedicado, sem portas publicadas nem mounts. O comando `carregar` valida identidade/isolamento antes de restaurar uma cópia do banco-base sintético `sso-validacao-isolada-20261104`, preserva ACLs e aplica migrations 1614–1732. Execute apenas com esse banco-base isolado, nunca com produção. Requer imagens locais e Docker; não baixa imagens. O ID é escolhido pelo executor e pertence apenas ao ensaio.
+`bootstrap-interno.py` cria rede Docker interna e PostgreSQL dedicado, sem portas publicadas nem mounts. O comando `carregar` valida identidade/isolamento antes de restaurar uma cópia do banco-base sintético `sso-validacao-isolada-20261104`, preserva ACLs e aplica migrations 1614–1735. Execute apenas com esse banco-base isolado, nunca com produção. Requer imagens locais e Docker; não baixa imagens. O ID é escolhido pelo executor e pertence apenas ao ensaio.
 
 ```sh
 python3 apps/web/e2e/s166-isolado/bootstrap-interno.py criar --id 32bd19ca417e
@@ -74,3 +74,7 @@ Executado com sucesso em 2026-11-05, incluindo verificação do estado aprovado 
 ## Exceção de Visita e mudança de dia
 
 `python3 apps/web/e2e/s166-isolado/executar-excecao.py` usa componentes reais para aprovar uma exceção e alterar o dia no clone sintético. Verifica preservação da Visita com exceção, confirmada, extra, reprogramada e OS, além do movimento de Visita elegível. Executado com sucesso em 2026-11-05. Não acessa Auvo; os IDs externos na fixture são sintéticos. Os recursos temporários são removidos; a imagem Playwright permanece local conforme solicitação.
+
+## Vínculo legado existente e fila
+
+`python3 apps/web/e2e/s166-isolado/executar-legado.py` prepara relação e ocorrência sintéticas no clone, usa a interface real para escolher a ocorrência legada, vincular e incluir a preparada na fila Aguardando; verifica ponte, estado e ausência de OS. Executado com sucesso em 2026-11-05 com backend 1735, rede interna e conta sintética. A preparação inicial e declaração de relação são feitas por comandos no clone; o ensaio não demonstra a navegação completa do produto nem cobre Auvo.
