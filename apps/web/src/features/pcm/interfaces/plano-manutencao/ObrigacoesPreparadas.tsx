@@ -118,13 +118,16 @@ export function ObrigacoesPreparadas({
     },
   });
   const itens = lista.data?.pages.flat() ?? [];
-  const consistentes = itens.every(
-    (item, i) =>
+  const consistentes = itens.every((item, i) => {
+    const anterior = itens[i - 1];
+    return (
       i === 0 ||
-      item.tipo > itens[i - 1]!.tipo ||
-      (item.tipo === itens[i - 1]!.tipo &&
-        item.preparada_id.toLowerCase() > itens[i - 1]!.preparada_id.toLowerCase()),
-  );
+      (anterior !== undefined &&
+        (item.tipo > anterior.tipo ||
+          (item.tipo === anterior.tipo &&
+            item.preparada_id.toLowerCase() > anterior.preparada_id.toLowerCase())))
+    );
+  });
   const visiveis = !!lista.data && !lista.isFetching && !lista.isError && consistentes;
   return (
     <section aria-label="Obrigações preparadas">
@@ -264,85 +267,99 @@ export function ObrigacoesPreparadas({
       {visiveis &&
         import.meta.env.VITE_SSO_ATESTADO_GRUPO_ENABLED === "true" &&
         itens
-          .filter((item) => item.ocorrencia_grupo_id)
+          .filter((item): item is Obrigacao & { ocorrencia_grupo_id: string } =>
+            Boolean(item.ocorrencia_grupo_id),
+          )
           .map((item) => (
             <AtestadoGrupo
               key={`atestado:${item.ocorrencia_grupo_id}`}
               userId={userId}
               clienteId={clienteId}
-              ocorrenciaId={item.ocorrencia_grupo_id!}
+              ocorrenciaId={item.ocorrencia_grupo_id}
             />
           ))}
       {visiveis &&
         import.meta.env.VITE_SSO_FOTO_GRUPO_ENABLED === "true" &&
         itens
-          .filter((item) => item.ocorrencia_grupo_id)
+          .filter((item): item is Obrigacao & { ocorrencia_grupo_id: string } =>
+            Boolean(item.ocorrencia_grupo_id),
+          )
           .map((item) => (
             <FotosAtestadoGrupo
               key={`foto:${item.ocorrencia_grupo_id}`}
               userId={userId}
               clienteId={clienteId}
-              ocorrenciaId={item.ocorrencia_grupo_id!}
+              ocorrenciaId={item.ocorrencia_grupo_id}
             />
           ))}
       {visiveis &&
         import.meta.env.VITE_SSO_REGISTRAR_FOTO_GRUPO_ENABLED === "true" &&
         itens
-          .filter((item) => item.ocorrencia_grupo_id)
+          .filter((item): item is Obrigacao & { ocorrencia_grupo_id: string } =>
+            Boolean(item.ocorrencia_grupo_id),
+          )
           .map((item) => (
             <RegistrarFotoGrupo
               key={`registro-foto:${item.ocorrencia_grupo_id}`}
               userId={userId}
               clienteId={clienteId}
-              ocorrenciaId={item.ocorrencia_grupo_id!}
+              ocorrenciaId={item.ocorrencia_grupo_id}
             />
           ))}
       {visiveis &&
         import.meta.env.VITE_SSO_DECISAO_FOTO_GRUPO_ENABLED === "true" &&
         itens
-          .filter((item) => item.ocorrencia_grupo_id)
+          .filter((item): item is Obrigacao & { ocorrencia_grupo_id: string } =>
+            Boolean(item.ocorrencia_grupo_id),
+          )
           .map((item) => (
             <DecisaoFotoGrupo
               key={`decisao-foto:${item.ocorrencia_grupo_id}`}
               userId={userId}
               clienteId={clienteId}
-              ocorrenciaId={item.ocorrencia_grupo_id!}
+              ocorrenciaId={item.ocorrencia_grupo_id}
             />
           ))}
       {visiveis &&
         import.meta.env.VITE_SSO_QUANTIDADE_GRUPO_ENABLED === "true" &&
         itens
-          .filter((item) => item.ocorrencia_grupo_id)
+          .filter((item): item is Obrigacao & { ocorrencia_grupo_id: string } =>
+            Boolean(item.ocorrencia_grupo_id),
+          )
           .map((item) => (
             <QuantidadeGrupo
               key={`quantidade:${item.ocorrencia_grupo_id}`}
               userId={userId}
               clienteId={clienteId}
-              ocorrenciaId={item.ocorrencia_grupo_id!}
+              ocorrenciaId={item.ocorrencia_grupo_id}
             />
           ))}
       {visiveis &&
         import.meta.env.VITE_SSO_COMPARAR_QUANTIDADE_GRUPO_ENABLED === "true" &&
         itens
-          .filter((item) => item.ocorrencia_grupo_id)
+          .filter((item): item is Obrigacao & { ocorrencia_grupo_id: string } =>
+            Boolean(item.ocorrencia_grupo_id),
+          )
           .map((item) => (
             <ComparacaoQuantidadeGrupo
               key={`comparacao:${item.ocorrencia_grupo_id}`}
               userId={userId}
               clienteId={clienteId}
-              ocorrenciaId={item.ocorrencia_grupo_id!}
+              ocorrenciaId={item.ocorrencia_grupo_id}
             />
           ))}
       {visiveis &&
         import.meta.env.VITE_SSO_ESFORCO_GRUPO_ENABLED === "true" &&
         itens
-          .filter((item) => item.ocorrencia_grupo_id)
+          .filter((item): item is Obrigacao & { ocorrencia_grupo_id: string } =>
+            Boolean(item.ocorrencia_grupo_id),
+          )
           .map((item) => (
             <EsforcoGrupo
               key={`esforco:${item.ocorrencia_grupo_id}`}
               userId={userId}
               clienteId={clienteId}
-              ocorrenciaId={item.ocorrencia_grupo_id!}
+              ocorrenciaId={item.ocorrencia_grupo_id}
             />
           ))}
       {lista.hasNextPage && (

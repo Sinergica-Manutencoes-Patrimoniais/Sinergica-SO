@@ -130,10 +130,14 @@ function Conteudo({
       if (error) throw error;
       const r = z.array(candidatoSchema).max(100).parse(data);
       if (
-        r.some(
-          (v, i) =>
-            v.vencimento < inicio || v.vencimento > fim || (i > 0 && v.indice <= r[i - 1]!.indice),
-        )
+        r.some((v, i) => {
+          const anterior = r[i - 1];
+          return (
+            v.vencimento < inicio ||
+            v.vencimento > fim ||
+            (i > 0 && (anterior === undefined || v.indice <= anterior.indice))
+          );
+        })
       )
         throw new Error("Prévia divergente.");
       await conferirSessaoDiagnostico(userId);

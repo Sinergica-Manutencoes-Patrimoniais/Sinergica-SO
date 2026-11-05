@@ -252,7 +252,7 @@ function Conteudo({ userId, clienteId, grupo, categorias, sistemas, disponivel }
           </>
         )
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

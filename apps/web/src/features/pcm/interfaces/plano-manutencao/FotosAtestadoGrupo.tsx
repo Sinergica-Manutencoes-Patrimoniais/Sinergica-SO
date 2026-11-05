@@ -12,7 +12,10 @@ export function FotosAtestadoGrupo({
   const itens = fotos.data?.pages.flat() ?? [];
   const consistentes =
     new Set(itens.map((i) => i.id)).size === itens.length &&
-    itens.every((i, n) => n === 0 || itens[n - 1]!.revisao > i.revisao);
+    itens.every((i, n) => {
+      const anterior = itens[n - 1];
+      return n === 0 || (anterior !== undefined && anterior.revisao > i.revisao);
+    });
   const baixar = async (id: string) => {
     if (
       baixando ||

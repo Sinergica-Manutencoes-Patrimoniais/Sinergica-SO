@@ -213,13 +213,15 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
           result.revisao !== revision ||
           result.inicio !== inicio ||
           result.fim !== fim ||
-          result.itens.some(
-            (x, i) =>
+          result.itens.some((x, i) => {
+            const anterior = result.itens[i - 1];
+            return (
               x.vencimento < inicio ||
               x.vencimento > fim ||
-              (i > 0 && x.ciclo <= result.itens[i - 1]!.ciclo) ||
-              (x.estado === "pmoc_vinculado") !== (x.agendamentoId !== null),
-          )
+              (i > 0 && (anterior === undefined || x.ciclo <= anterior.ciclo)) ||
+              (x.estado === "pmoc_vinculado") !== (x.agendamentoId !== null)
+            );
+          })
         )
           throw new Error("Prévia divergente.");
         await sessao();
@@ -259,7 +261,8 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
         await sessao();
         if (sessionStorage.getItem(chave) !== JSON.stringify(atual))
           throw new Error("Tentativa alterada.");
-        const r = atual.rotinas[atual.proxima]!;
+        const r = atual.rotinas[atual.proxima];
+        if (!r) throw new Error("Rotina da tentativa indisponível.");
         // Registre antes do envio: após recarga ou falha de rede, o pedido pode ter sido confirmado.
         const jaIncerta = atual.tentativaIncerta !== false;
         const enviado = pedidoSchema.parse({ ...atual, tentativaIncerta: true });

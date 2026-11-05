@@ -173,9 +173,13 @@ function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
     },
   });
   const itens = lista.data?.pages.flat() ?? [];
-  const consistentes = itens.every(
-    (x, i) => i === 0 || x.vinculo_id.toLowerCase() > itens[i - 1]!.vinculo_id.toLowerCase(),
-  );
+  const consistentes = itens.every((x, i) => {
+    const anterior = itens[i - 1];
+    return (
+      i === 0 ||
+      (anterior !== undefined && x.vinculo_id.toLowerCase() > anterior.vinculo_id.toLowerCase())
+    );
+  });
   const disponivel = !!lista.data && !lista.isFetching && !lista.isError && consistentes;
   const item = disponivel ? itens.find((x) => x.vinculo_id === selecionado) : undefined;
   const assinatura = JSON.stringify([

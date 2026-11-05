@@ -143,19 +143,19 @@ export function ProporEncerramentoOcorrencia({
   const enviar = (p: Pedido) => {
     if (trava.current) return;
     trava.current = true;
+    const enviado = { ...p, tentativaIncerta: true };
     try {
       const anterior = sessionStorage.getItem(chave);
       if (anterior !== null && anterior !== JSON.stringify(p)) throw new Error();
       primeira.current = p.tentativaIncerta === false;
-      p = { ...p, tentativaIncerta: true };
-      sessionStorage.setItem(chave, JSON.stringify(p));
+      sessionStorage.setItem(chave, JSON.stringify(enviado));
     } catch {
       trava.current = false;
       setAviso("Não foi possível guardar tentativa; nada enviado.");
       return;
     }
-    setPendente(p);
-    envio.mutate(p);
+    setPendente(enviado);
+    envio.mutate(enviado);
   };
   const fotografia = JSON.stringify([
     clienteId,

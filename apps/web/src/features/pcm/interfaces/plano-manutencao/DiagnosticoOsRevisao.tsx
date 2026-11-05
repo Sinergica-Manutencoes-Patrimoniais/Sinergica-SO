@@ -95,9 +95,13 @@ export function DiagnosticoOsRevisao({
     getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.os_id : undefined),
   });
   const itens = abertas.data?.pages.flat() ?? [];
-  const divergentes = itens.some(
-    (os, indice) => indice > 0 && os.os_id.toLowerCase() <= itens[indice - 1]!.os_id.toLowerCase(),
-  );
+  const divergentes = itens.some((os, indice) => {
+    const anterior = itens[indice - 1];
+    return (
+      indice > 0 &&
+      (anterior === undefined || os.os_id.toLowerCase() <= anterior.os_id.toLowerCase())
+    );
+  });
   const acessoConfirmado =
     habilitado &&
     !divergentes &&

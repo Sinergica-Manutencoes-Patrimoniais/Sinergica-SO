@@ -44,9 +44,11 @@ function Lista({ userId, clienteId, grupoId }: Props) {
     getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
   });
   const itens = consulta.data?.pages.flat() ?? [];
-  const divergente = itens.some(
-    (item, indice) => indice > 0 && item.id.toLowerCase() <= itens[indice - 1]!.id.toLowerCase(),
-  );
+  const divergente = itens.some((item, indice) => {
+    if (indice === 0) return false;
+    const anterior = itens[indice - 1];
+    return !anterior || item.id.toLowerCase() <= anterior.id.toLowerCase();
+  });
   return (
     <section aria-label="Fotos verificadas do Grupo">
       <h5>Fotos verificadas do Grupo</h5>

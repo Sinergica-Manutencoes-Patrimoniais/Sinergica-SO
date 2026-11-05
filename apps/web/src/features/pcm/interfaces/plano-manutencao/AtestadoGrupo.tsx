@@ -142,7 +142,10 @@ function Conteudo({ userId, clienteId, ocorrenciaId }: Props) {
   const itens = historico.data?.pages.flat() ?? [];
   const consistentes =
     new Set(itens.map((i) => i.request_id)).size === itens.length &&
-    itens.every((i, n) => n === 0 || itens[n - 1]!.revisao > i.revisao);
+    itens.every((i, n) => {
+      const anterior = itens[n - 1];
+      return n === 0 || (anterior !== undefined && anterior.revisao > i.revisao);
+    });
   const disponivel =
     !!historico.data && !historico.isFetching && !historico.isError && consistentes;
   const revisao = itens[0]?.revisao ?? 0;

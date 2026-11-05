@@ -54,9 +54,13 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
     getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.vinculo_id : undefined),
   });
   const itens = consulta.data?.pages.flat() ?? [];
-  const consistentes = itens.every(
-    (item, i) => i === 0 || item.vinculo_id.toLowerCase() > itens[i - 1]!.vinculo_id.toLowerCase(),
-  );
+  const consistentes = itens.every((item, i) => {
+    const anterior = itens[i - 1];
+    return (
+      i === 0 ||
+      (anterior !== undefined && item.vinculo_id.toLowerCase() > anterior.vinculo_id.toLowerCase())
+    );
+  });
   const visiveis = !!consulta.data && !consulta.isFetching && !consulta.isError && consistentes;
   const estado: Record<string, string> = {
     declarado_pcm: "vínculo declarado pelo PCM",

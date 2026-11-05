@@ -116,13 +116,15 @@ function ComOrigens(props: Props) {
         r.revisao !== revision ||
         r.inicio !== inicio ||
         r.fim !== fim ||
-        r.itens.some(
-          (x, i) =>
+        r.itens.some((x, i) => {
+          const anterior = r.itens[i - 1];
+          return (
             x.vencimento < inicio ||
             x.vencimento > fim ||
-            (i > 0 && x.ciclo <= r.itens[i - 1]!.ciclo) ||
-            (x.estado === "pmoc_vinculado") !== (x.agendamentoId !== null),
-        )
+            (i > 0 && (anterior === undefined || x.ciclo <= anterior.ciclo)) ||
+            (x.estado === "pmoc_vinculado") !== (x.agendamentoId !== null)
+          );
+        })
       )
         throw new Error("Origens divergentes.");
       await conferirSessaoDiagnostico(userId, signal);

@@ -81,7 +81,9 @@ export function ExportarCronogramaFotografia({
   const periodoValido = Number.isFinite(periodoDias) && periodoDias >= 0 && periodoDias <= 366;
   const contratosDivergentes = contratosCarregados.some(
     (contrato, indice) =>
-      indice > 0 && contrato.id.toLowerCase() <= contratosCarregados[indice - 1]!.id.toLowerCase(),
+      indice > 0 &&
+      (contratosCarregados[indice - 1] === undefined ||
+        contrato.id.toLowerCase() <= (contratosCarregados[indice - 1]?.id.toLowerCase() ?? "")),
   );
   const escopoDisponivel =
     !contratoDeclarado ||

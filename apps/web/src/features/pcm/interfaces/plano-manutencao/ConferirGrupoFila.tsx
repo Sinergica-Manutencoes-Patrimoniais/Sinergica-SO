@@ -214,7 +214,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo }: Props) {
         A decisão é uma declaração PCM das fontes consultadas; não comprova ausência de execução
         fora das fontes conhecidas. A fila só muda após confirmação separada.
       </p>
-      {previa.isFetching && <p role="status">Conferindo Grupo…</p>}
+      {previa.isFetching && <output className="block">Conferindo Grupo…</output>}
       {previa.isError && (
         <p role="alert">
           Grupo ou fila indisponíveis para conferência.{" "}

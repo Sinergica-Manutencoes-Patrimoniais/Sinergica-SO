@@ -190,13 +190,20 @@ function Conteudo({ userId, clienteId, ocorrenciaId }: Props) {
   const listaCandidatas = candidatas.data?.pages.flat() ?? [];
   const listaFotos = fotos.data?.pages.flat() ?? [];
   const descendente = (itens: { revisao: number }[]) =>
-    itens.every((i, n) => n === 0 || itens[n - 1]!.revisao > i.revisao);
+    itens.every((i, n) => {
+      const anterior = itens[n - 1];
+      return n === 0 || (anterior !== undefined && anterior.revisao > i.revisao);
+    });
   const consistentes =
     descendente(listaAtestados) &&
     descendente(listaFotos) &&
-    listaCandidatas.every(
-      (i, n) => n === 0 || listaCandidatas[n - 1]!.nota_id.toLowerCase() < i.nota_id.toLowerCase(),
-    ) &&
+    listaCandidatas.every((i, n) => {
+      const anterior = listaCandidatas[n - 1];
+      return (
+        n === 0 ||
+        (anterior !== undefined && anterior.nota_id.toLowerCase() < i.nota_id.toLowerCase())
+      );
+    }) &&
     new Set(listaAtestados.map((i) => i.request_id)).size === listaAtestados.length &&
     new Set(listaFotos.map((i) => i.id)).size === listaFotos.length;
   const disponivel =

@@ -1244,24 +1244,22 @@ it("cria Rotina completa e repete mesmo pedido após falha incerta", async () =>
   api.listarAlvos.mockImplementation(async (_plano: string, tipo: string) =>
     tipo === "sistema" ? [{ id: alvoId, nome: "Extintores" }] : [],
   );
-  api.adicionarRotinaCompleta
-    .mockRejectedValueOnce(new Error("rede"))
-    .mockImplementationOnce(
-      async (c: {
-        requestId: string;
-        planoId: string;
-        rotinaId: string;
-        expectedRevision: number;
-      }) => ({
-        requestId: c.requestId,
-        aggregateId: c.planoId,
-        revision: c.expectedRevision + 1,
-        created: true,
-        state: "rascunho",
-        linkedIds: { clienteId, rotinaId: c.rotinaId },
-        warnings: [],
-      }),
-    );
+  api.adicionarRotinaCompleta.mockRejectedValueOnce(new Error("rede")).mockImplementationOnce(
+    async (c: {
+      requestId: string;
+      planoId: string;
+      rotinaId: string;
+      expectedRevision: number;
+    }) => ({
+      requestId: c.requestId,
+      aggregateId: c.planoId,
+      revision: c.expectedRevision + 1,
+      created: true,
+      state: "rascunho",
+      linkedIds: { clienteId, rotinaId: c.rotinaId },
+      warnings: [],
+    }),
+  );
   const tela = montar();
   fireEvent.click(await screen.findByRole("button", { name: "Ver Rotinas de Preventivo" }));
   fireEvent.click(await screen.findByRole("button", { name: "Nova Rotina" }));

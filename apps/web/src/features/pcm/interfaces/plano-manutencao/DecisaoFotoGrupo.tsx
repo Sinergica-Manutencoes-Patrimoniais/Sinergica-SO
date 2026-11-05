@@ -145,7 +145,10 @@ function Conteudo({ userId, clienteId, ocorrenciaId }: Props) {
   const listaFotos = fotos.data?.pages.flat() ?? [];
   const decisoes = historico.data?.pages.flat() ?? [];
   const descendente = (itens: { revisao: number }[]) =>
-    itens.every((i, n) => n === 0 || itens[n - 1]!.revisao > i.revisao);
+    itens.every((i, n) => {
+      const anterior = itens[n - 1];
+      return n === 0 || (anterior !== undefined && anterior.revisao > i.revisao);
+    });
   const consistentes =
     descendente(listaFotos) &&
     descendente(decisoes) &&

@@ -122,9 +122,10 @@ export function ExigenciaLegalRotina({
     getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.revisao : undefined),
   });
   const linhas = historico.data?.pages.flat() ?? [];
-  const historicoDivergente = linhas.some(
-    (item, i) => i > 0 && item.revisao >= linhas[i - 1]!.revisao,
-  );
+  const historicoDivergente = linhas.some((item, i) => {
+    const anterior = linhas[i - 1];
+    return i > 0 && (anterior === undefined || item.revisao >= anterior.revisao);
+  });
   const fotografia =
     historico.data && !historico.isFetching && !historico.isError && !historicoDivergente
       ? JSON.stringify([

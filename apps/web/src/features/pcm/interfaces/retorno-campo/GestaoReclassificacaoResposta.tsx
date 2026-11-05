@@ -190,31 +190,27 @@ function Conteudo({ userId, clienteId, retornoId, respostaId }: Props) {
       if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
       const { data, error } =
         p.tipo === "proposta"
-          ? await supabase
-              .schema("pcm")
-              .rpc("sso_propor_reclassificacao_mediada", {
-                p_request_id: p.requestId,
-                p_cliente_id: p.clienteId,
-                p_retorno_id: p.retornoId,
-                p_resposta_id: p.respostaId,
-                p_expected_revision: p.propostaRevision,
-                p_expected_validacao: p.validacaoRevision,
-                p_resultado: p.resultado,
-                p_observacao: p.observacao || null,
-                p_motivo: p.motivo,
-              })
-          : await supabase
-              .schema("pcm")
-              .rpc("sso_decidir_reclassificacao_mediada", {
-                p_request_id: p.requestId,
-                p_cliente_id: p.clienteId,
-                p_retorno_id: p.retornoId,
-                p_proposta_id: p.propostaId,
-                p_expected_decisao: p.decisaoRevision,
-                p_expected_validacao: p.validacaoRevision,
-                p_decisao: p.decisao,
-                p_motivo: p.motivo,
-              });
+          ? await supabase.schema("pcm").rpc("sso_propor_reclassificacao_mediada", {
+              p_request_id: p.requestId,
+              p_cliente_id: p.clienteId,
+              p_retorno_id: p.retornoId,
+              p_resposta_id: p.respostaId,
+              p_expected_revision: p.propostaRevision,
+              p_expected_validacao: p.validacaoRevision,
+              p_resultado: p.resultado,
+              p_observacao: p.observacao || null,
+              p_motivo: p.motivo,
+            })
+          : await supabase.schema("pcm").rpc("sso_decidir_reclassificacao_mediada", {
+              p_request_id: p.requestId,
+              p_cliente_id: p.clienteId,
+              p_retorno_id: p.retornoId,
+              p_proposta_id: p.propostaId,
+              p_expected_decisao: p.decisaoRevision,
+              p_expected_validacao: p.validacaoRevision,
+              p_decisao: p.decisao,
+              p_motivo: p.motivo,
+            });
       if (error) throw error;
       const r = z
         .object({
@@ -458,7 +454,7 @@ function Conteudo({ userId, clienteId, retornoId, respostaId }: Props) {
           </>
         )
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
       <h6>Histórico de propostas e decisões</h6>
       {hist.data && hist.data.pages.flat().length === 0 && <p>Nenhum registro nesta fonte.</p>}
       {hist.data && (
@@ -680,7 +676,7 @@ function ReaberturaReclassificacao({
           </form>
         )
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

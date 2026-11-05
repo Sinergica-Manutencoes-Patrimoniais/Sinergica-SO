@@ -302,7 +302,7 @@ function Conteudo({ userId, clienteId, grupo, disponivel }: Props) {
           )}
         </>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

@@ -396,7 +396,7 @@ export function EvidenciasDeclaradas({ userId, clienteId }: { userId: string; cl
           Repetir mesmo pedido
         </button>
       )}
-      {mensagem && <p role="status">{mensagem}</p>}
+      {mensagem && <output className="block">{mensagem}</output>}
     </section>
   );
 }

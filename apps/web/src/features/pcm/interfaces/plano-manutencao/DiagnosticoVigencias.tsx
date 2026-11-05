@@ -95,7 +95,10 @@ export function DiagnosticoVigencias({
   const itens = lista.data?.pages.flat() ?? [];
   const divergentes =
     new Set(itens.map((v) => v.versao_id.toLowerCase())).size !== itens.length ||
-    itens.some((v, i) => i > 0 && v.numero <= itens[i - 1]!.numero);
+    itens.some((v, i) => {
+      const anterior = itens[i - 1];
+      return i > 0 && (anterior === undefined || v.numero <= anterior.numero);
+    });
   const disponivel =
     habilitado &&
     !divergentes &&

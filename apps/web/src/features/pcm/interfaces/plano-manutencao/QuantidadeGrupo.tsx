@@ -190,8 +190,10 @@ function Conteudo({ userId, clienteId, ocorrenciaId }: Props) {
   const listaAtestados = atestados.data?.pages.flat() ?? [];
   const listaHistorico = historico.data?.pages.flat() ?? [];
   const ordemValida = (itens: { revisao: number; request_id: string }[]) =>
-    itens.every((item, i) => i === 0 || itens[i - 1]!.revisao > item.revisao) &&
-    new Set(itens.map((item) => item.request_id)).size === itens.length;
+    itens.every((item, i) => {
+      const anterior = itens[i - 1];
+      return i === 0 || (anterior !== undefined && anterior.revisao > item.revisao);
+    }) && new Set(itens.map((item) => item.request_id)).size === itens.length;
   const disponivel =
     !!atestados.data &&
     !!historico.data &&

@@ -189,10 +189,14 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
     },
   });
   const itens = lista.data?.pages.flat() ?? [];
-  const consistentes = itens.every(
-    (x, i) =>
-      i === 0 || x.agendamento_id.toLowerCase() > itens[i - 1]!.agendamento_id.toLowerCase(),
-  );
+  const consistentes = itens.every((x, i) => {
+    const anterior = itens[i - 1];
+    return (
+      i === 0 ||
+      (anterior !== undefined &&
+        x.agendamento_id.toLowerCase() > anterior.agendamento_id.toLowerCase())
+    );
+  });
   const disponivel = !!lista.data && !lista.isFetching && !lista.isError && consistentes;
   const selecionadoItem = disponivel
     ? itens.find((x) => x.agendamento_id === selecionado)
