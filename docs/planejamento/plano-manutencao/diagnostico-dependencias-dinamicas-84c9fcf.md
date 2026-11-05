@@ -63,3 +63,14 @@ correção funcional, concorrência, RLS ou compatibilidade com dados e integra�
 
 O candidato permanece separado do pacote de release. Gates de segurança continuam fechados;
 homologação e deploy dependem de revisão e validações próprias. Não houve acionamento do Auvo.
+
+Na validação integrada posterior, também sem seeds artificiais, foram aplicadas 228 migrations
+da base e 656 candidatas. As quatro fixtures pgTAP passaram: S170, 12 verificações; S176, 10;
+S165, 180; e S166, 7, totalizando **209 verificações**. A fila continha as seis entradas
+produzidas pelos seeds oficiais de categorias e permaneceu integralmente igual após cada fixture.
+Os recursos descartáveis do ensaio foram removidos.
+
+A fixture S165 usa modo `replica` em cenários de adulteração: esses trechos não comprovam o
+funcionamento das guardas desativadas nesse modo. O resultado também não comprova concorrência,
+interface, permissões em produção ou prontidão para release. Gates e condições de homologação
+permanecem como registrados acima.
