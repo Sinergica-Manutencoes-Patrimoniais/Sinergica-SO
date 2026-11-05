@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: riscos de rollout e cancelamento UI
+
+- `apps/web/e2e/s166-isolado/executar-fila-cancelamento.py` passou em navegador/HTTP/clone isolados: UI cancelou Visita, leitura/banco confirmaram `cancelado`, botão de inclusão desabilitado. Preparação e permissões sintéticas; SQL anterior já recusou reinclusão por RPC. Sem navegação integral nem Auvo.
+- Os 11 alertas Squawk reais foram detalhados em `supabase/tests/manual_E01-S165_S166_auditoria_squawk_1769.md`: principal risco 0304 valida constraint em `ocorrencias_preventivas`, tabela preexistente; outras FKs/constraints podem bloquear em rollout parcial e 1719 requer compatibilidade com NULL. Migration posterior não evita locks anteriores; ensaio com volume representativo e janela de aplicação são necessários antes de rollout.
+- Auditoria de aprovação não identificou defeito novo nas fontes SSO auditadas; não comprova fontes externas/CI. Gates default fechados, sem deploy/Auvo. Próximo passo: testes de banco/CI e ensaio de rollout seguro para homologação.
+
 ## 2026-11-05 — S165/S166: auditoria de gates e cancelamento
 
 - AC6 Visita em clone até 1769: preparo/inclusão/replay/cancelamento reais, reinclusão e Chamado após cancelamento recusados, fonte alterada sinalizada, sem OS; setup/permissões sintéticos. Sem prova UI desta jornada.
