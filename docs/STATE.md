@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: jornada pela aplicação normal
+
+- `apps/web/e2e/s166-isolado/executar-app-revisao.py` passou em aplicação real, clone e rede interna: login → PCM/Cliente/Preventivas → edição de alvo/recorrência/tolerâncias → submissão → impacto Visita/PMOC/fuso → aprovação 1045 real → origem e geração Calendário. Banco confirmou nova versão/ocorrência, tolerâncias 2/5, OS/fotografia históricas intactas e nenhuma OS/outbox adicional. Fixture/vínculo/Chamado sintéticos e gates ligados apenas no clone; não equivale a homologação.
+- Inventário de flags/gates por cenário foi ampliado em `docs/planejamento/plano-manutencao/inventario-flags-s165-s166.md`; não habilita configurações nem comprova fontes externas.
+- Compatibilidade de transição 1776: UI antiga com banco novo preserva pedido mas não recupera automaticamente; UI nova/banco antigo pode repetir 40001. Sequência indicada: banco primeiro e interface depois, gate fechado durante intervalo, sem deploy realizado. Roteiro `supabase/tests/manual_E01-S165_rollout_transicao_1776.md`.
+- Próximo passo: CI, fontes externas e ensaio de rollout antes de homologação; gates default fechados, sem Auvo real.
+
 ## 2026-11-05 — S165/S166: transição e navegação normal
 
 - ADR-1634/migration 1776 tratam `revisao_obsoleta` na suspensão/encerramento/retomada com P0011; UI preserva replay incerto/40001 real. HTTP suspensão em clone passou de timeout >7s para resposta P0011; fixture SQL, UI 3/3, typecheck e revisão independente passaram. Rollout coordenado UI/backend.
