@@ -3,44 +3,368 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ReatestarCobertura } from "./ReatestarCobertura";
-type Pedido = { requestId: string; clienteId: string; retornoId: string; evidenciaId: string | null; revision: number; justificativa: string };
-const pedidoSchema=z.object({requestId:z.string().uuid(),clienteId:z.string().uuid(),retornoId:z.string().uuid(),evidenciaId:z.string().uuid().nullable(),revision:z.number().int().nonnegative().safe(),justificativa:z.string().trim().min(1).max(2000)}).strict();
-const historicoSchema=z.object({id:z.string().uuid(),evidencia_id:z.string().uuid().nullable(),revisao_evidencias:z.number().int().nonnegative().safe(),perguntas:z.number().int().nonnegative().safe(),justificativa:z.string(),ator_id:z.string().uuid(),criado_em:z.string().datetime({offset:true})}).strict();
+type Pedido = {
+  requestId: string;
+  clienteId: string;
+  retornoId: string;
+  evidenciaId: string | null;
+  revision: number;
+  justificativa: string;
+};
+const pedidoSchema = z
+  .object({
+    requestId: z.string().uuid(),
+    clienteId: z.string().uuid(),
+    retornoId: z.string().uuid(),
+    evidenciaId: z.string().uuid().nullable(),
+    revision: z.number().int().nonnegative().safe(),
+    justificativa: z.string().trim().min(1).max(2000),
+  })
+  .strict();
+const historicoSchema = z
+  .object({
+    id: z.string().uuid(),
+    evidencia_id: z.string().uuid().nullable(),
+    revisao_evidencias: z.number().int().nonnegative().safe(),
+    perguntas: z.number().int().nonnegative().safe(),
+    justificativa: z.string(),
+    ator_id: z.string().uuid(),
+    criado_em: z.string().datetime({ offset: true }),
+  })
+  .strict();
 
-export function ConferenciaCobertura(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId])} {...props} />; }
-function Conteudo({ userId, clienteId, retornoId, revision, evidencias }: { userId: string; clienteId: string; retornoId: string; revision: number; evidencias: { id: string; referencia: string }[] }) {
-  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
-  const cache = useQueryClient(); const storageKey = `sso-cobertura-retorno:${JSON.stringify([userId, clienteId, retornoId])}`;
+export function ConferenciaCobertura(props: Parameters<typeof Conteudo>[0]) {
+  return (
+    <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId])} {...props} />
+  );
+}
+function Conteudo({
+  userId,
+  clienteId,
+  retornoId,
+  revision,
+  evidencias,
+}: {
+  userId: string;
+  clienteId: string;
+  retornoId: string;
+  revision: number;
+  evidencias: { id: string; referencia: string }[];
+}) {
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
+  const cache = useQueryClient();
+  const storageKey = `sso-cobertura-retorno:${JSON.stringify([userId, clienteId, retornoId])}`;
   const trava = useRef(false);
-  const [evidencia, setEvidencia] = useState(""); const [justificativa, setJustificativa] = useState(""); const [aviso, setAviso] = useState("");
-  const [confirmacao,setConfirmacao]=useState<string | null>(null);
-  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(storageKey); if (!raw) return null; const p = pedidoSchema.parse(JSON.parse(raw));
-    return p.clienteId === clienteId && p.retornoId === retornoId ? p : "invalido";
-  } catch { return "invalido"; } });
-  const historico = useInfiniteQuery({ queryKey: ["retorno-conferencias-cobertura", userId, clienteId, retornoId], gcTime: 0, initialPageParam: null as string | null,
-    queryFn: async ({ pageParam, signal }) => { const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || !montado.current || signal.aborted)throw new Error("Sessão alterada.");const { data, error } = await supabase.schema("pcm").rpc("sso_listar_conferencias_cobertura_mediada", { p_cliente_id: clienteId, p_retorno_id: retornoId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error;const pagina=z.array(historicoSchema).max(20).parse(data);let anterior=pageParam?.toLowerCase() ?? "";for(const item of pagina){if(item.id.toLowerCase()<=anterior)throw new Error("Histórico inválido.");anterior=item.id.toLowerCase();}const depois=await supabase.auth.getUser();if(depois.error || depois.data.user?.id!==userId || !montado.current || signal.aborted)throw new Error("Sessão alterada.");return pagina; }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.id : undefined });
-  const requisitos = useQuery({ queryKey: ["retorno-requisitos-evidencia", userId, clienteId, retornoId], gcTime: 0,
-    queryFn: async ({ signal }) => { const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || !montado.current || signal.aborted)throw new Error("Sessão alterada.");const { data, error } = await supabase.schema("pcm").rpc("sso_checar_evidencias_mediada", { p_cliente_id: clienteId, p_retorno_id: retornoId }).abortSignal(signal); if (error) throw error;const r=z.object({requisitoIndeterminado:z.number().int().nonnegative().safe(),exigenciasAplicaveis:z.number().int().nonnegative().safe(),semDecisaoPcmAceita:z.number().int().nonnegative().safe(),aprovacaoDisponivel:z.literal(false)}).passthrough().parse(data);const depois=await supabase.auth.getUser();if(depois.error || depois.data.user?.id!==userId || !montado.current || signal.aborted)throw new Error("Sessão alterada.");return r; } });
-  const evidenciaAtual=evidencia ? evidencias.find((item)=>item.id===evidencia) : null;
-  const fotografia=JSON.stringify({userId,clienteId,retornoId,revision,evidencia:evidenciaAtual ?? (evidencia ? "indisponivel" : null),justificativa:justificativa.trim(),requisitos:requisitos.data});
-  const confirmado=confirmacao===fotografia;
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || !montado.current || sessionStorage.getItem(storageKey)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");const { data, error } = await supabase.schema("pcm").rpc("sso_conferir_cobertura_mediada", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_retorno_id: p.retornoId, p_evidencia_id: p.evidenciaId, p_expected_evidencias: p.revision, p_justificativa: p.justificativa }); if (error) throw error;
-    const r=z.object({conferenciaId:z.string().uuid(),retornoId:z.string().uuid(),coberturaEstrutural:z.literal(true),evidenciaExternaComprovada:z.literal(false),requestId:z.string().uuid()}).strict().parse(data);if(r.requestId!==p.requestId || r.retornoId!==p.retornoId)throw new Error("Recibo divergente.");const depois=await supabase.auth.getUser();if(depois.error || depois.data.user?.id!==userId || !montado.current)throw new Error("Sessão alterada.");
-  }, onSuccess: async (_r,p) => { try { await cache.invalidateQueries({ queryKey: ["retorno-conferencias-cobertura", userId, clienteId, retornoId], refetchType:"none" });const atual=await supabase.auth.getUser();if(atual.error || atual.data.user?.id!==userId || !montado.current || sessionStorage.getItem(storageKey)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");sessionStorage.removeItem(storageKey); } catch { setAviso("Não foi possível confirmar sessão ou tentativa. Consulte o recibo antes de outra conferência."); return; } setPendente(null); setAviso("Cobertura estrutural conferida; evidência externa não foi comprovada e OS não foi encerrada."); await cache.refetchQueries({ queryKey: ["retorno-conferencias-cobertura", userId, clienteId, retornoId], type:"active" }); }, onError: () => setAviso("Resultado não confirmado, vínculo ou cobertura podem estar incompletos. Repita a tentativa; procure suporte em conflito."), onSettled:()=>{trava.current=false;} });
-  const enviar = (p: Pedido) => { if(trava.current)return;try { pedidoSchema.parse(p);const salvo=sessionStorage.getItem(storageKey);const texto=JSON.stringify(p);if(salvo!==null && salvo!==texto || salvo===null && pendente)throw new Error("Tentativa divergente.");if(salvo===null)sessionStorage.setItem(storageKey,texto); } catch { setAviso("Não foi possível guardar tentativa; nada enviado."); return; } trava.current=true;setPendente(p); envio.mutate(p); };
-  return <section aria-label="Conferência estrutural"><h4>Conferência estrutural pelo PCM</h4>
-    <p>O sistema confere vínculo e respostas do snapshot. A evidência é apenas declarada; seu arquivo externo não é verificado. Isso não aprova nem encerra OS.</p>
-    {requisitos.isError && <p role="alert">Requisitos de evidência indisponíveis. <button type="button" onClick={() => void requisitos.refetch()}>Tentar novamente</button></p>}
-    {!requisitos.isFetching && !requisitos.isError && requisitos.data && <p>{requisitos.data.requisitoIndeterminado} requisito(s) indeterminado(s); {requisitos.data.exigenciasAplicaveis} exigência(s) aplicável(is).</p>}
-    <form onSubmit={(e) => { e.preventDefault(); const dispensa = requisitos.data?.requisitoIndeterminado === 0 && requisitos.data.exigenciasAplicaveis === 0; if (pendente || !confirmado || requisitos.isFetching || requisitos.isError || !requisitos.data || (evidencia && !evidenciaAtual) || (!evidencia && !dispensa) || !justificativa.trim()) return; enviar({ requestId: crypto.randomUUID(), clienteId, retornoId, evidenciaId: evidencia || null, revision, justificativa: justificativa.trim() }); }}>
-      <fieldset disabled={!!pendente || envio.isPending || requisitos.isFetching || requisitos.isError || !requisitos.data}><label>Evidência declarada <select value={evidencia} onChange={(e) => setEvidencia(e.target.value)}><option value="">Nenhuma (somente se contrato dispensar todas)</option>{evidencias.map((e) => <option key={e.id} value={e.id}>{e.referencia}</option>)}</select></label>{" "}
-      <label>Justificativa <textarea required maxLength={2000} value={justificativa} onChange={(e) => setJustificativa(e.target.value)} /></label>
-      <label><input type="checkbox" checked={confirmado} onChange={(e)=>setConfirmacao(e.target.checked?fotografia:null)} /> Conferi a evidência, os requisitos e a revisão {revision}.</label>
-      <button type="submit" disabled={!confirmado}>Conferir na revisão {revision}</button></fieldset>
-    </form>
-    {historico.isError && <p role="alert">Histórico indisponível. <button type="button" onClick={() => void historico.refetch()}>Tentar novamente</button></p>}
-    {!historico.isFetching && !historico.isError && historico.data && <ul>{historico.data.pages.flat().map((c) => <li key={c.id}>Evidência {c.evidencia_id ?? "nenhuma, conforme contrato"} · revisão {c.revisao_evidencias} · {c.perguntas} perguntas · {c.justificativa} · {c.ator_id} · {c.criado_em}
-      {import.meta.env.VITE_SSO_REATESTACAO_COBERTURA_ENABLED === "true" && <ReatestarCobertura userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={c.id} />}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
-    {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
-  </section>;
+  const [evidencia, setEvidencia] = useState("");
+  const [justificativa, setJustificativa] = useState("");
+  const [aviso, setAviso] = useState("");
+  const [confirmacao, setConfirmacao] = useState<string | null>(null);
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (!raw) return null;
+      const p = pedidoSchema.parse(JSON.parse(raw));
+      return p.clienteId === clienteId && p.retornoId === retornoId ? p : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  const historico = useInfiniteQuery({
+    queryKey: ["retorno-conferencias-cobertura", userId, clienteId, retornoId],
+    gcTime: 0,
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam, signal }) => {
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== userId || !montado.current || signal.aborted)
+        throw new Error("Sessão alterada.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_listar_conferencias_cobertura_mediada", {
+          p_cliente_id: clienteId,
+          p_retorno_id: retornoId,
+          p_apos: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const pagina = z.array(historicoSchema).max(20).parse(data);
+      let anterior = pageParam?.toLowerCase() ?? "";
+      for (const item of pagina) {
+        if (item.id.toLowerCase() <= anterior) throw new Error("Histórico inválido.");
+        anterior = item.id.toLowerCase();
+      }
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId || !montado.current || signal.aborted)
+        throw new Error("Sessão alterada.");
+      return pagina;
+    },
+    getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.id : undefined),
+  });
+  const requisitos = useQuery({
+    queryKey: ["retorno-requisitos-evidencia", userId, clienteId, retornoId],
+    gcTime: 0,
+    queryFn: async ({ signal }) => {
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== userId || !montado.current || signal.aborted)
+        throw new Error("Sessão alterada.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_checar_evidencias_mediada", { p_cliente_id: clienteId, p_retorno_id: retornoId })
+        .abortSignal(signal);
+      if (error) throw error;
+      const r = z
+        .object({
+          requisitoIndeterminado: z.number().int().nonnegative().safe(),
+          exigenciasAplicaveis: z.number().int().nonnegative().safe(),
+          semDecisaoPcmAceita: z.number().int().nonnegative().safe(),
+          aprovacaoDisponivel: z.literal(false),
+        })
+        .passthrough()
+        .parse(data);
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId || !montado.current || signal.aborted)
+        throw new Error("Sessão alterada.");
+      return r;
+    },
+  });
+  const evidenciaAtual = evidencia ? evidencias.find((item) => item.id === evidencia) : null;
+  const fotografia = JSON.stringify({
+    userId,
+    clienteId,
+    retornoId,
+    revision,
+    evidencia: evidenciaAtual ?? (evidencia ? "indisponivel" : null),
+    justificativa: justificativa.trim(),
+    requisitos: requisitos.data,
+  });
+  const confirmado = confirmacao === fotografia;
+  const envio = useMutation({
+    mutationFn: async (p: Pedido) => {
+      const antes = await supabase.auth.getUser();
+      if (
+        antes.error ||
+        antes.data.user?.id !== userId ||
+        !montado.current ||
+        sessionStorage.getItem(storageKey) !== JSON.stringify(p)
+      )
+        throw new Error("Sessão ou tentativa alterada.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_conferir_cobertura_mediada", {
+          p_request_id: p.requestId,
+          p_cliente_id: p.clienteId,
+          p_retorno_id: p.retornoId,
+          p_evidencia_id: p.evidenciaId,
+          p_expected_evidencias: p.revision,
+          p_justificativa: p.justificativa,
+        });
+      if (error) throw error;
+      const r = z
+        .object({
+          conferenciaId: z.string().uuid(),
+          retornoId: z.string().uuid(),
+          coberturaEstrutural: z.literal(true),
+          evidenciaExternaComprovada: z.literal(false),
+          requestId: z.string().uuid(),
+        })
+        .strict()
+        .parse(data);
+      if (r.requestId !== p.requestId || r.retornoId !== p.retornoId)
+        throw new Error("Recibo divergente.");
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId || !montado.current)
+        throw new Error("Sessão alterada.");
+    },
+    onSuccess: async (_r, p) => {
+      try {
+        await cache.invalidateQueries({
+          queryKey: ["retorno-conferencias-cobertura", userId, clienteId, retornoId],
+          refetchType: "none",
+        });
+        const atual = await supabase.auth.getUser();
+        if (
+          atual.error ||
+          atual.data.user?.id !== userId ||
+          !montado.current ||
+          sessionStorage.getItem(storageKey) !== JSON.stringify(p)
+        )
+          throw new Error("Sessão ou tentativa alterada.");
+        sessionStorage.removeItem(storageKey);
+      } catch {
+        setAviso(
+          "Não foi possível confirmar sessão ou tentativa. Consulte o recibo antes de outra conferência.",
+        );
+        return;
+      }
+      setPendente(null);
+      setAviso(
+        "Cobertura estrutural conferida; evidência externa não foi comprovada e OS não foi encerrada.",
+      );
+      await cache.refetchQueries({
+        queryKey: ["retorno-conferencias-cobertura", userId, clienteId, retornoId],
+        type: "active",
+      });
+    },
+    onError: () =>
+      setAviso(
+        "Resultado não confirmado, vínculo ou cobertura podem estar incompletos. Repita a tentativa; procure suporte em conflito.",
+      ),
+    onSettled: () => {
+      trava.current = false;
+    },
+  });
+  const enviar = (p: Pedido) => {
+    if (trava.current) return;
+    try {
+      pedidoSchema.parse(p);
+      const salvo = sessionStorage.getItem(storageKey);
+      const texto = JSON.stringify(p);
+      if ((salvo !== null && salvo !== texto) || (salvo === null && pendente))
+        throw new Error("Tentativa divergente.");
+      if (salvo === null) sessionStorage.setItem(storageKey, texto);
+    } catch {
+      setAviso("Não foi possível guardar tentativa; nada enviado.");
+      return;
+    }
+    trava.current = true;
+    setPendente(p);
+    envio.mutate(p);
+  };
+  return (
+    <section aria-label="Conferência estrutural">
+      <h4>Conferência estrutural pelo PCM</h4>
+      <p>
+        O sistema confere vínculo e respostas do snapshot. A evidência é apenas declarada; seu
+        arquivo externo não é verificado. Isso não aprova nem encerra OS.
+      </p>
+      {requisitos.isError && (
+        <p role="alert">
+          Requisitos de evidência indisponíveis.{" "}
+          <button type="button" onClick={() => void requisitos.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {!requisitos.isFetching && !requisitos.isError && requisitos.data && (
+        <p>
+          {requisitos.data.requisitoIndeterminado} requisito(s) indeterminado(s);{" "}
+          {requisitos.data.exigenciasAplicaveis} exigência(s) aplicável(is).
+        </p>
+      )}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const dispensa =
+            requisitos.data?.requisitoIndeterminado === 0 &&
+            requisitos.data.exigenciasAplicaveis === 0;
+          if (
+            pendente ||
+            !confirmado ||
+            requisitos.isFetching ||
+            requisitos.isError ||
+            !requisitos.data ||
+            (evidencia && !evidenciaAtual) ||
+            (!evidencia && !dispensa) ||
+            !justificativa.trim()
+          )
+            return;
+          enviar({
+            requestId: crypto.randomUUID(),
+            clienteId,
+            retornoId,
+            evidenciaId: evidencia || null,
+            revision,
+            justificativa: justificativa.trim(),
+          });
+        }}
+      >
+        <fieldset
+          disabled={
+            !!pendente ||
+            envio.isPending ||
+            requisitos.isFetching ||
+            requisitos.isError ||
+            !requisitos.data
+          }
+        >
+          <label>
+            Evidência declarada{" "}
+            <select value={evidencia} onChange={(e) => setEvidencia(e.target.value)}>
+              <option value="">Nenhuma (somente se contrato dispensar todas)</option>
+              {evidencias.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.referencia}
+                </option>
+              ))}
+            </select>
+          </label>{" "}
+          <label>
+            Justificativa{" "}
+            <textarea
+              required
+              maxLength={2000}
+              value={justificativa}
+              onChange={(e) => setJustificativa(e.target.value)}
+            />
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={confirmado}
+              onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)}
+            />{" "}
+            Conferi a evidência, os requisitos e a revisão {revision}.
+          </label>
+          <button type="submit" disabled={!confirmado}>
+            Conferir na revisão {revision}
+          </button>
+        </fieldset>
+      </form>
+      {historico.isError && (
+        <p role="alert">
+          Histórico indisponível.{" "}
+          <button type="button" onClick={() => void historico.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {!historico.isFetching && !historico.isError && historico.data && (
+        <ul>
+          {historico.data.pages.flat().map((c) => (
+            <li key={c.id}>
+              Evidência {c.evidencia_id ?? "nenhuma, conforme contrato"} · revisão{" "}
+              {c.revisao_evidencias} · {c.perguntas} perguntas · {c.justificativa} · {c.ator_id} ·{" "}
+              {c.criado_em}
+              {import.meta.env.VITE_SSO_REATESTACAO_COBERTURA_ENABLED === "true" && (
+                <ReatestarCobertura
+                  userId={userId}
+                  clienteId={clienteId}
+                  retornoId={retornoId}
+                  conferenciaId={c.id}
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {historico.hasNextPage && (
+        <button type="button" onClick={() => void historico.fetchNextPage()}>
+          Mais histórico
+        </button>
+      )}
+      {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
+      {pendente && pendente !== "invalido" && (
+        <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>
+          Repetir tentativa pendente
+        </button>
+      )}
+      {aviso && <p role="status">{aviso}</p>}
+    </section>
+  );
 }
