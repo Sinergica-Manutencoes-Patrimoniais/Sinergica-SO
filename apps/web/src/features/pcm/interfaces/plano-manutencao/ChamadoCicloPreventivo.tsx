@@ -191,7 +191,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo }: Props) {
           Repetir tentativa pendente
         </button>
       )}
-      {mensagem && <p role="status">{mensagem}</p>}
+      {mensagem && <output className="block">{mensagem}</output>}
       {chamadoId && (
         <>
           <button

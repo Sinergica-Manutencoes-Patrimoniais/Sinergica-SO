@@ -319,7 +319,7 @@ function Conteudo({
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
       {integradas.length > 0 && (
         <section aria-label="Filas dos ciclos integrados">
           <p>Ocorrências integradas; cada fila exige conferência independente.</p>

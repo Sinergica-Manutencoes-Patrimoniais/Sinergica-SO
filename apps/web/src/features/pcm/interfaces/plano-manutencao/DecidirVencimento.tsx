@@ -349,7 +349,7 @@ function Conteudo({
           Repetir mesmo pedido
         </button>
       )}
-      {mensagem && <p role="status">{mensagem}</p>}
+      {mensagem && <output className="block">{mensagem}</output>}
     </div>
   );
 }

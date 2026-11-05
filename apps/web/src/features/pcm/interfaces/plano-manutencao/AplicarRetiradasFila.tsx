@@ -187,7 +187,7 @@ function Conteudo({
           </>
         )
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

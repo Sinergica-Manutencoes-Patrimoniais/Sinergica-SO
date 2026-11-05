@@ -81,7 +81,7 @@ export function FotosAtestadoGrupo({
           Mais fotos
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

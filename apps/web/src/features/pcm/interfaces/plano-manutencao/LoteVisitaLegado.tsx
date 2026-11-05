@@ -267,7 +267,7 @@ function Conteudo({
           Repetir mesmo lote
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
       {integradas.length > 0 && (
         <section aria-label="Filas das Visitas integradas">
           <p>Ocorrências integradas; cada fila exige conferência independente.</p>

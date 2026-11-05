@@ -335,7 +335,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo }: Props) {
           Repetir mesma declaração
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

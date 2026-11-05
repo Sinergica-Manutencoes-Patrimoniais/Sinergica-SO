@@ -299,7 +299,7 @@ function Conteudo({
           Repetir mesmo vínculo
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
       {integrada && (
         <FilaAposPreparacao
           userId={userId}

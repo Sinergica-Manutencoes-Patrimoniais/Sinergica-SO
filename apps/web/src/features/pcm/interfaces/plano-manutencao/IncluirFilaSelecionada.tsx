@@ -347,7 +347,7 @@ function Conteudo({ userId, clienteId, planoId, itens, carregando, tipo = "calen
           ))}
         </ul>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

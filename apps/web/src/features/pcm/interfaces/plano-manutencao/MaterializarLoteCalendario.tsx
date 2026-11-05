@@ -409,7 +409,7 @@ function MaterializarLoteSessao({
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
       {resultados.length > 0 && (
         <section aria-label="Resultados dos ciclos preparados">
           <h6>Ocorrências preparadas</h6>

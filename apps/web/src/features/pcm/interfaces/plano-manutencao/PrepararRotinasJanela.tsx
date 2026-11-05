@@ -622,7 +622,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
           )}
         </section>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }
