@@ -6,9 +6,9 @@ import type {
   EditarRotinaCommand,
   EditarRotinaGateway,
   IniciarRevisaoPlanoCommand,
-  RevisarPlanoGateway,
   RetirarRotinaCommand,
   RetirarRotinaGateway,
+  RevisarPlanoGateway,
   RotinaCommand,
   SalvarPlanoCommand,
   SalvarPlanoGateway,
@@ -72,9 +72,20 @@ const revisaoCampos = {
   expectedRevision: inteiro.min(1),
   planoId: z.string().uuid(),
 };
-const retiradaSchema = z.object({ ...revisaoCampos, rotinaId: z.string().uuid(), motivo: z.string().trim().min(1).max(2000) }).strict();
-export function validarRetiradaRotina(comando: RetirarRotinaCommand): RetirarRotinaCommand { return retiradaSchema.parse(comando); }
-export async function retirarRotinaRascunho(gateway: RetirarRotinaGateway, comando: RetirarRotinaCommand) {
+const retiradaSchema = z
+  .object({
+    ...revisaoCampos,
+    rotinaId: z.string().uuid(),
+    motivo: z.string().trim().min(1).max(2000),
+  })
+  .strict();
+export function validarRetiradaRotina(comando: RetirarRotinaCommand): RetirarRotinaCommand {
+  return retiradaSchema.parse(comando);
+}
+export async function retirarRotinaRascunho(
+  gateway: RetirarRotinaGateway,
+  comando: RetirarRotinaCommand,
+) {
   return gateway.retirarRotina(validarRetiradaRotina(comando));
 }
 const transicaoSchema = z
@@ -88,12 +99,19 @@ const aprovacaoSchema = z
       .transform((v) => v as string),
   })
   .strict();
-const iniciarRevisaoSchema = z.object({ ...revisaoCampos, novaVersaoId: z.string().uuid() }).strict();
+const iniciarRevisaoSchema = z
+  .object({ ...revisaoCampos, novaVersaoId: z.string().uuid() })
+  .strict();
 
-export function validarInicioRevisao(comando: IniciarRevisaoPlanoCommand): IniciarRevisaoPlanoCommand {
+export function validarInicioRevisao(
+  comando: IniciarRevisaoPlanoCommand,
+): IniciarRevisaoPlanoCommand {
   return iniciarRevisaoSchema.parse(comando);
 }
-export async function iniciarRevisao(gateway: Pick<RevisarPlanoGateway, "iniciarRevisao">, comando: IniciarRevisaoPlanoCommand) {
+export async function iniciarRevisao(
+  gateway: Pick<RevisarPlanoGateway, "iniciarRevisao">,
+  comando: IniciarRevisaoPlanoCommand,
+) {
   return gateway.iniciarRevisao(validarInicioRevisao(comando));
 }
 
