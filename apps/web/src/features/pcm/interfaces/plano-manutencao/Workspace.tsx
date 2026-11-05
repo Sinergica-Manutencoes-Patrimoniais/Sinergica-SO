@@ -79,7 +79,7 @@ function ConteudoPlanoManutencao({
     permissao.data === true && !permissao.isFetching && !permissao.isError,
   );
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso aos Planos...</output>;
+    return <output>Verificando acesso aos Planos…</output>;
   if (permissao.isError)
     return (
       <div role="alert">
@@ -188,7 +188,7 @@ function ConteudoPlanoManutencao({
             disabled={salvar.isPending || consultaBloqueada}
             onClick={() => void enviar(pendente)}
           >
-            {salvar.isPending ? "Salvando..." : "Tentar salvar novamente"}
+            {salvar.isPending ? "Salvando…" : "Tentar salvar novamente"}
           </Button>
         </div>
       )}
@@ -217,7 +217,7 @@ function ConteudoPlanoManutencao({
           </Button>
         </form>
       )}
-      {planos.isPending && <output>Carregando Planos...</output>}
+      {planos.isPending && <output>Carregando Planos…</output>}
       {planos.isError && (
         <div role="alert">
           Não foi possível carregar Planos.{" "}

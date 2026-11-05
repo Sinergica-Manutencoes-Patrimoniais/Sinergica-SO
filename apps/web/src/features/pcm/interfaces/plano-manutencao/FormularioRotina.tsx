@@ -96,7 +96,7 @@ function Seletor({
           ))}
         </select>
       </label>
-      {opcoes.isPending && <output>Carregando opções...</output>}
+      {opcoes.isPending && <output>Carregando opções…</output>}
       {opcoes.isError && (
         <div role="alert">
           Não foi possível carregar opções.{" "}

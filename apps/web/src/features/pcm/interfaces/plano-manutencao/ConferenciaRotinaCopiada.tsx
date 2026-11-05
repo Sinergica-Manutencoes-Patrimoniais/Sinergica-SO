@@ -100,7 +100,7 @@ export function ConferenciaRotinaCopiada({ userId, clienteId, planoId, versaoId,
   }
   return <section aria-label="Conferência da Rotina copiada" className="mt-2 rounded-md border border-line p-3">
     <h5>Conferência da cópia</h5>
-    {consulta.isFetching && <p role="status">Consultando estado atual...</p>}
+    {consulta.isFetching && <p role="status">Consultando estado atual…</p>}
     {consulta.isError && <p role="alert">Consulta indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {recuperacao.invalido && <p role="alert">Tentativa guardada inválida. Procure suporte antes de registrar outra.</p>}
     {pendente ? <><p>Há uma tentativa pendente para a revisão {pendente.planoRevision}. A resposta pode ter sido perdida.</p><Button variant="secondary" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</Button></> : !consulta.isFetching && !consulta.isError && consulta.data && <>

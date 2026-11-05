@@ -69,6 +69,15 @@ const dados: ResultadoPreventivas = {
   ],
 };
 
+function dataNoMesAtual(dia: number): string {
+  const agora = new Date();
+  return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+}
+
+function dadosCalendarioAtual(): ResultadoPreventivas {
+  return { ...dados, ocorrencias: dados.ocorrencias.map((ocorrencia) => ({ ...ocorrencia, vencimento: dataNoMesAtual(10) })) };
+}
+
 function renderWorkspace(
   props: Partial<React.ComponentProps<typeof PreventivasWorkspace>> = {},
   dadosPreventivas = dados,
@@ -185,7 +194,7 @@ describe("PreventivasWorkspace — E01-S53 / E01-S163 AC-10 e AC-15", () => {
   });
 
   it("abre o detalhe da ocorrência ao selecioná-la no calendário", async () => {
-    renderWorkspace();
+    renderWorkspace({}, dadosCalendarioAtual());
     await userEvent.click(await screen.findByRole("button", { name: "Calendário" }));
     await userEvent.click(await screen.findByRole("button", { name: "Plano A: No Auvo" }));
 
@@ -195,7 +204,7 @@ describe("PreventivasWorkspace — E01-S53 / E01-S163 AC-10 e AC-15", () => {
 
   it("AC-11: abre a OS associada sem manter o drawer preventivo sobreposto", async () => {
     const onAbrirOs = vi.fn();
-    renderWorkspace({ onAbrirOs });
+    renderWorkspace({ onAbrirOs }, dadosCalendarioAtual());
 
     await userEvent.click(await screen.findByRole("button", { name: "Calendário" }));
     await userEvent.click(await screen.findByRole("button", { name: "Plano A: No Auvo" }));
@@ -276,7 +285,7 @@ describe("PreventivasWorkspace — E01-S53 / E01-S163 AC-10 e AC-15", () => {
       id: `ocorrencia-${indice + 1}`,
       auvo_task_id: indice + 1,
       os_numero: `CH-${indice + 1}`,
-      vencimento: `2026-10-${String(indice + 1).padStart(2, "0")}`,
+      vencimento: dataNoMesAtual(indice + 1),
     }));
     renderWorkspace({}, { ...dados, ocorrencias, avaliacoes: [] });
 

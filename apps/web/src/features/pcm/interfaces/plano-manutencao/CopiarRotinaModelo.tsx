@@ -202,7 +202,7 @@ export function CopiarRotinaModelo({ userId, clienteId, plano, versaoId, rotina 
       </select></label>
       {clientes.hasNextPage && <Button variant="secondary" disabled={clientes.isFetching} onClick={() => void clientes.fetchNextPage()}>Mais Clientes</Button>}
       {clientes.isError && <p role="alert">Não foi possível carregar Clientes.</p>}
-      {autorizacao.isFetching && <p>Verificando acesso ao destino...</p>}
+      {autorizacao.isFetching && <p>Verificando acesso ao destino…</p>}
       {!autorizacao.isFetching && (autorizacao.isError || autorizacao.data === false) && <p role="alert">Acesso ao Cliente de destino indisponível.</p>}
       {podeConsultar && <><label>Plano de destino <select className="input" value={destinoPlano} disabled={planos.isFetching || planos.isError || ocupado} onChange={(e) => { setDestinoPlano(e.target.value); setAlvo(""); setConfirmacao(null); }}>
         <option value="">Selecione um rascunho</option>{(planos.data?.pages.flat() ?? []).filter((p) => p.estado === "rascunho" && p.id !== plano.id && p.clienteId === destinoCliente).map((p) => <option key={p.id} value={p.id}>{p.nome} · revisão {p.revisao}</option>)}

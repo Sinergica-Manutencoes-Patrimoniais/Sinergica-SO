@@ -41,7 +41,7 @@ export function QuestionarioAprovado({
     gcTime: 0,
     retry: false,
   });
-  if (consulta.isFetching) return <output>Carregando questionário histórico...</output>;
+  if (consulta.isFetching) return <output>Carregando questionário histórico…</output>;
   if (consulta.isError)
     return (
       <div role="alert">

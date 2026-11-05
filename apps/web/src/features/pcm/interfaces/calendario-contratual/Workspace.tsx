@@ -86,7 +86,7 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [...raiz, "regras"] }),
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso ao calendário...</output>;
+    return <output>Verificando acesso ao calendário…</output>;
   if (permissao.isError)
     return (
       <p role="alert">
@@ -238,9 +238,9 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
             iniciar();
           }}
         >
-          {contratos.isPending && <output>Carregando contratos...</output>}
+          {contratos.isPending && <output>Carregando contratos…</output>}
           {contratos.isFetching && !contratos.isPending && (
-            <output>Atualizando contratos...</output>
+            <output>Atualizando contratos…</output>
           )}
           {contratos.isError && (
             <p role="alert">
@@ -399,8 +399,8 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
           </Button>
         </form>
       )}
-      {regras.isPending && <output>Carregando regras...</output>}
-      {regras.isFetching && !regras.isPending && <output>Atualizando regras...</output>}
+      {regras.isPending && <output>Carregando regras…</output>}
+      {regras.isFetching && !regras.isPending && <output>Atualizando regras…</output>}
       {regras.isError && (
         <p role="alert">
           Não foi possível carregar regras.{" "}
