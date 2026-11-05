@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: atualização de fuso e uso canônico
+
+- Declaração de fuso agora invalida preflight de aprovação e conferência de séries; lote de Calendário invalida consulta de uso canônico. Objetivo: evitar dados anteriores após mutação; sem mudança de regras ou gates.
+- Inspeção de RPCs privadas restantes encontrou mediadores por flags ou geração sujeita a rollout coordenado; nenhuma mediação adicional inequívoca foi criada.
+- **Nenhum teste, typecheck, build ou ensaio executado por solicitação atual.** Alterações de UI e migrations 1780–1785 aguardam validação em lote. Sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: esforço e replay de legado
 
 - `EsforcoGrupo` usa apenas mediador existente quando flag ligada; com ela desligada informa indisponibilidade, sem chamar núcleo privado. Nenhuma flag habilitada.

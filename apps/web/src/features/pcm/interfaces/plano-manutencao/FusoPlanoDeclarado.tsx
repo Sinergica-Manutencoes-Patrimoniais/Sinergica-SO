@@ -50,7 +50,11 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
     await conferirSessaoDiagnostico(userId); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave);
   } catch { setAviso("Declaração confirmada, mas tentativa local não foi removida. Consulte suporte."); return; }
     setPendente(null); setConfirmacao(null); setAviso("Fuso declarado; geração continua inalterada e fonte não validada.");
-    void cache.refetchQueries({ queryKey: ["historico-fuso-plano", userId, clienteId, planoId], type: "active" });
+    void Promise.allSettled([
+      cache.refetchQueries({ queryKey: ["historico-fuso-plano", userId, clienteId, planoId], type: "active" }),
+      cache.invalidateQueries({ queryKey: ["preflight-aprovacao-revisao", userId, clienteId, planoId] }),
+      cache.invalidateQueries({ queryKey: ["conferencia-fuso-series", userId, clienteId, planoId] }),
+    ]);
   }, onError: () => setAviso("Resultado não confirmado ou revisão mudou. Repita a mesma tentativa; procure suporte em conflito."), onSettled: () => { trava.current = false; } });
   function enviar(p: Pedido, repetir = false) { if (trava.current) return; try { const salvo = sessionStorage.getItem(chave);
     if (repetir ? salvo !== JSON.stringify(p) : salvo !== null) throw new Error(); if (!repetir) sessionStorage.setItem(chave, JSON.stringify(p));
