@@ -158,6 +158,16 @@ def main(opcoes):
     global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id
     fixtures = None
     aprovacao_1804 = None
+    aprovacao_1805 = None
+    if opcoes.aprovacao_1805:
+        if not opcoes.aprovacao_1804 or not opcoes.integracao_candidata:
+            raise RuntimeError("Migration 1805 exige --aprovacao-1804 e --integracao-candidata")
+        caminho_1805 = "supabase/migrations/1805_E01-S165_exigir_versao_aprovacao.sql"
+        aprovacao_1805 = (ROOT / caminho_1805).read_bytes()
+        if hashlib.sha256(aprovacao_1805).hexdigest() != "2485e4c342f909e672f1773c2d3fe095b8bc885457292fd378fc79dc6c7dbf07":
+            raise RuntimeError("Hash da migration 1805 divergente")
+        import s165_aprovacao_1805_isolada
+        fixture_1805 = s165_aprovacao_1805_isolada.preparar(ROOT)
     if opcoes.aprovacao_1804:
         if not opcoes.integracao_candidata:
             raise RuntimeError("Fixture 1804 exige --integracao-candidata")
@@ -282,6 +292,11 @@ def main(opcoes):
             raise RuntimeError("Migration 1804 fora de ordem")
         blobs.append((s165_aprovacao_1804_isolada.MIGRATION, aprovacao_1804[0]))
         names.append(s165_aprovacao_1804_isolada.MIGRATION)
+    if aprovacao_1805 is not None:
+        if any(Path(p).name.startswith("1805_") for p in base_files + names) or names[-1] >= caminho_1805:
+            raise RuntimeError("Ordem ou duplicidade da migration 1805")
+        blobs.append((caminho_1805, aprovacao_1805))
+        names.append(caminho_1805)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -448,11 +463,15 @@ end; $$;"""
             print("DIAGNÓSTICO: ações antecipadas somente no clone; resultado NÃO prova recorte implantável.", flush=True)
         sql(prefix + data, path)
     print("Migrations candidatas aplicadas:", len(blobs), flush=True)
+    if aprovacao_1805 is not None:
+        print("Migration 1805 aplicada com gate desligado; isto não comprova sua guarda.", flush=True)
     if query("select (select count(*) from auth.users)=0 and (select count(*) from pcm.clientes)=0 and (select count(*) from vault.secrets)=0") != "t": raise RuntimeError("Banco contém dados inesperados")
     if fixtures is not None:
         s176_runner_pgtap.executar(CONTAINER, fixtures, sql, query, watchdog_triggered)
     if aprovacao_1804 is not None:
-        s165_aprovacao_1804_isolada.executar(CONTAINER, aprovacao_1804[1], query, watchdog_triggered)
+        s165_aprovacao_1804_isolada.executar(CONTAINER, aprovacao_1804[1:], query, watchdog_triggered)
+    if aprovacao_1805 is not None:
+        s165_aprovacao_1805_isolada.executar(CONTAINER, fixture_1805, query, watchdog_triggered)
     if opcoes.concorrencia_parcial:
         import s176_runner_concorrencia
         s176_runner_concorrencia.executar(CONTAINER, watchdog_triggered)
@@ -473,6 +492,7 @@ if __name__ == "__main__":
     parser.add_argument("--fixtures-pgtap", action="store_true", help="Executa quatro fixtures sintéticas apenas no candidato de integração descartável.")
     parser.add_argument("--concorrencia-parcial", action="store_true", help="Executa dois cenários concorrentes parciais apenas no candidato de integração descartável.")
     parser.add_argument("--aprovacao-1804", action="store_true", help="Aplica 1804 fixada e executa fixture sintética com rollback; exige integração candidata.")
+    parser.add_argument("--aprovacao-1805", action="store_true", help="Aplica 1805 fixada após 1804, com gate desligado; exige --aprovacao-1804.")
     opcoes = parser.parse_args()
     code = 0
     try: main(opcoes)

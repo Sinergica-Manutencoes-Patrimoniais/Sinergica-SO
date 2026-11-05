@@ -10,6 +10,8 @@ ARQUIVOS = {
 }
 MIGRATION = "supabase/migrations/1804_E01-S165_aprovacao_versao_esperada.sql"
 MIGRATION_SHA256 = "dc22888e1da288fcb28dbfead1a71cb637215c9fe7a1d2be967863e1e86bd9ac"
+INICIAL = "manual_E01-S165_aprovacao_inicial_1804.sql"
+INICIAL_SHA256 = "527f1532bacb378c51625f4b60ff9b55a94bffc457ad8b9824d1032b51151091"
 
 
 def preparar(root):
@@ -34,10 +36,18 @@ def preparar(root):
     completo = principal.replace("\\ir manual_E01-S165_nova_data_futura_1702.sql", intermediaria)
     if re.search(r"(?m)^\s*\\", completo):
         raise RuntimeError("Comando psql inesperado na fixture")
-    return migration, completo.encode("utf-8")
+    inicial = (root / "supabase/tests" / INICIAL).read_bytes()
+    if hashlib.sha256(inicial).hexdigest() != INICIAL_SHA256:
+        raise RuntimeError("Hash da fixture inicial divergente")
+    texto_inicial = inicial.decode("utf-8")
+    if (not re.search(r"(?im)^\s*begin\s*;", texto_inicial)
+        or not re.search(r"(?im)^\s*rollback\s*;\s*$", texto_inicial)
+        or re.search(r"(?im)^\s*(commit|end transaction)\s*;|^\s*\\|session_replication_role", texto_inicial)):
+        raise RuntimeError("Transação da fixture inicial divergente")
+    return migration, completo.encode("utf-8"), inicial
 
 
-def executar(container, fixture, query, watchdog):
+def executar(container, fixtures, query, watchdog):
     if watchdog.is_set():
         raise RuntimeError("Monitor interrompeu o ensaio")
     snapshot_sql = """select jsonb_build_object(
@@ -46,15 +56,21 @@ def executar(container, fixture, query, watchdog):
       'auditoria',(select count(*) from audit.events),
       'fila',(select coalesce(jsonb_agg(to_jsonb(o) order by o.id),'[]'::jsonb) from pcm.auvo_sync_outbox o),
       'gate1804',(select habilitado from pcm.sso_aprovacao_versao_esperada_gate where id))::text"""
-    antes = query(snapshot_sql)
-    try:
-        p = subprocess.run(["rtk", "proxy", "docker", "exec", "-i", container, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-qAt"],
-            input=b"\\set VERBOSITY verbose\n" + fixture + b"\n\\echo SSO_ROLLBACK_1804_CONCLUIDO\n", capture_output=True, timeout=180)
-    except subprocess.TimeoutExpired:
-        raise RuntimeError("Prazo da fixture 1804 excedido") from None
-    if p.returncode:
-        m = re.search(rb"ERROR:\s+([A-Z0-9]{5}):", p.stderr)
-        raise RuntimeError("Fixture 1804 falhou; SQLSTATE " + (m.group(1).decode() if m else "não identificado"))
-    if b"SSO_ROLLBACK_1804_CONCLUIDO" not in p.stdout.splitlines() or query(snapshot_sql) != antes:
-        raise RuntimeError("Rollback ou estado de referência da fixture 1804 não comprovado")
-    print("Fixture 1804 aprovada em clone; setup com replica não comprova guardas desativadas.", flush=True)
+    for nome, fixture in (("revisão", fixtures[0]), ("inicial", fixtures[1])):
+        if watchdog.is_set():
+            raise RuntimeError("Monitor interrompeu o ensaio")
+        antes = query(snapshot_sql)
+        try:
+            p = subprocess.run(["rtk", "proxy", "docker", "exec", "-i", container, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-qAt"],
+                input=b"\\set VERBOSITY verbose\n" + fixture + b"\n\\echo SSO_ROLLBACK_1804_CONCLUIDO\n", capture_output=True, timeout=180)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("Prazo da fixture 1804 " + nome + " excedido") from None
+        if p.returncode:
+            m = re.search(rb"ERROR:\s+([A-Z0-9]{5}):", p.stderr)
+            raise RuntimeError("Fixture 1804 " + nome + " falhou; SQLSTATE " + (m.group(1).decode() if m else "não identificado"))
+        if b"SSO_ROLLBACK_1804_CONCLUIDO" not in p.stdout.splitlines() or query(snapshot_sql) != antes:
+            raise RuntimeError("Rollback ou estado de referência não comprovado: " + nome)
+        if nome == "revisão":
+            print("Fixture de revisão 1804 aprovada; setup com replica não comprova guardas desativadas.", flush=True)
+        else:
+            print("Fixture de aprovação inicial 1804 aprovada; outbox suprimido no setup sintético.", flush=True)
