@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const externo = vi.hoisted(() => ({ rpc: vi.fn(), getUser: vi.fn() }));
 vi.mock("../../../../lib/supabase-client", () => ({ supabase: { auth: { getUser: externo.getUser }, schema: () => ({ rpc: externo.rpc }) } }));
@@ -12,6 +12,46 @@ import { PreviaOcorrenciasVisita } from "./PreviaOcorrenciasVisita";
 const id = (n: string) => `16610000-0000-4000-8000-${n.padStart(12, "0")}`;
 beforeEach(() => { vi.stubEnv("VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED", "true"); vi.stubEnv("VITE_SSO_FILA_VISITA_ENABLED", "true"); externo.getUser.mockResolvedValue({ data: { user: { id: "usuario" } }, error: null }); });
 afterEach(() => { cleanup(); vi.resetAllMocks(); vi.unstubAllEnvs(); sessionStorage.clear(); });
+
+it("mantém o pedido anterior quando o recibo não é encontrado", async () => {
+  vi.stubEnv("VITE_SSO_RECIBO_PREPARACAO_VISITA_ENABLED", "true");
+  const chave = `sso-preparar-ocorrencia-visita:${JSON.stringify(["usuario", id("4"), id("5"), id("7"), id("8")])}`;
+  const pedido = JSON.stringify({ requestId: id("10"), ocorrenciaId: id("11"), clienteId: id("4"), planoId: id("5"), versaoId: id("6"), rotinaId: id("7"), visitaId: id("1"), revision: 1, fonte: "PCM", modo: "anterior" });
+  sessionStorage.setItem(chave, pedido);
+  externo.rpc.mockResolvedValue({ data: { encontrado: false }, error: null });
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><PreviaOcorrenciasVisita userId="usuario" clienteId={id("4")} planoId={id("5")} versaoId={id("6")} rotinaId={id("7")} serieId={id("8")} revision={1} /></QueryClientProvider>);
+  fireEvent.click(screen.getByRole("button", { name: "Consultar recibo anterior" }));
+  await screen.findByText(/situação ainda é indeterminada/);
+  expect(sessionStorage.getItem(chave)).toBe(pedido);
+  expect(externo.rpc.mock.calls.some(([nome]) => nome === "sso_preparar_visita_canonica" || nome === "sso_preparar_ocorrencia_por_visita")).toBe(false);
+});
+
+it.each(["valido", "invalido"] as const)("trata recibo anterior %s sem gerar novamente", async (cenario) => {
+  vi.stubEnv("VITE_SSO_RECIBO_PREPARACAO_VISITA_ENABLED", "true");
+  const chave = `sso-preparar-ocorrencia-visita:${JSON.stringify(["usuario", id("4"), id("5"), id("7"), id("8")])}`;
+  const pedido = JSON.stringify({ requestId: id("10"), ocorrenciaId: id("11"), clienteId: id("4"), planoId: id("5"), versaoId: id("6"), rotinaId: id("7"), visitaId: id("1"), revision: 1, fonte: "PCM", modo: "anterior" });
+  sessionStorage.setItem(chave, pedido);
+  // O núcleo pode reutilizar uma ocorrência distinta da solicitada.
+  externo.rpc.mockResolvedValue({ data: { encontrado: true, resultado: { requestId: id("10"), ocorrenciaId: id("12"), visitaId: cenario === "valido" ? id("1") : id("13"), preparada: true } }, error: null });
+  const query = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const invalidar = vi.spyOn(query, "invalidateQueries");
+  render(<QueryClientProvider client={query}><PreviaOcorrenciasVisita userId="usuario" clienteId={id("4")} planoId={id("5")} versaoId={id("6")} rotinaId={id("7")} serieId={id("8")} revision={1} /></QueryClientProvider>);
+  fireEvent.click(screen.getByRole("button", { name: "Consultar recibo anterior" }));
+  if (cenario === "valido") {
+    await screen.findByText(/Recibo anterior confirmado/);
+    expect(sessionStorage.getItem(chave)).toBeNull();
+    await waitFor(() => {
+      for (const prefixo of ["previa-ocorrencia-visita", "obrigacoes-preparadas", "ciclos-uniformes", "reserva-futuro-visitas", "reserva-futuro"]) {
+        expect(invalidar).toHaveBeenCalledWith({ queryKey: [prefixo, "usuario", id("4"), id("5")] });
+      }
+    });
+  } else {
+    await screen.findByText(/Não foi possível conferir o recibo/);
+    expect(sessionStorage.getItem(chave)).toBe(pedido);
+    expect(invalidar).not.toHaveBeenCalled();
+  }
+  expect(externo.rpc.mock.calls.some(([nome]) => nome === "sso_preparar_visita_canonica" || nome === "sso_preparar_ocorrencia_por_visita")).toBe(false);
+});
 
 it("reconsulta o mesmo período e exige nova conferência após atualização", async () => {
   let chamadas = 0;
