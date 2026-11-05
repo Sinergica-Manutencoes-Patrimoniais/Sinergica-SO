@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: avaliação tardia e HTTP pendente
+
+- ADR-1599/migration 1741 impedem geração substituta quando avaliação chegou à ponte antiga após retirada. Clone validou Calendário e Visita; Visita cobriu duas ordens de concorrência com aprovação 1731 real, ponte e relógio sintéticos. Gates default fechados; sem Auvo/deploy.
+- UI 1739: proxy recebeu um POST completo mas PostgREST não respondeu em 45 s; listagem/comparação deram 200. Chamada SQL equivalente em clone separado rejeitou foto obsoleta em 2,7 ms. Amostras de sessão não identificaram causa; não afirmar PASS ou defeito do produto. Recursos descartáveis removidos.
+- Próximo passo: identificar causa na camada PostgREST/proxy com teste reproduzível sem dados reais; continuar revisão de fontes e CI antes de homologação.
+
 ## 2026-11-05 — S165/S166: vínculo Visita e comparação pela UI
 
 - ADR-1598/migration 1740 impedem novo vínculo de Visita com legado já avaliado, serializam avaliação e preservam replay. Clone testou negativa, vínculo positivo e concorrência nas duas ordens; sem Auvo.
