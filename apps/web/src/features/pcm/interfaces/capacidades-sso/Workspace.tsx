@@ -2,9 +2,9 @@ import { Button, Card } from "@sinergica/ui";
 import { useMemo, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { concessaoSchema, perfilSchema, vinculoSchema } from "../../application/capacidades-sso";
+import type { PaginaCapacidade } from "../../application/capacidades-sso-gateway";
 import { useConfiguracaoCapacidades } from "../../application/capacidades-sso-queries";
 import { criarRegistroRequisicoes } from "../../application/requisicoes-capacidades";
-import type { PaginaCapacidade } from "../../application/capacidades-sso-gateway";
 import { ACOES_INDIVIDUAIS, ACOES_SSO, type AcaoSso } from "../../domain/capacidades-sso";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 
@@ -60,15 +60,21 @@ function SecaoDados<T>({
           <Button onClick={() => void query.refetch()}>Tentar novamente</Button>
         </div>
       )}
-      {!query.isPending && !query.isFetching && !query.isError && children(query.data?.pages.flat() ?? [])}
+      {!query.isPending &&
+        !query.isFetching &&
+        !query.isError &&
+        children(query.data?.pages.flat() ?? [])}
       {(query.hasNextPage || query.isFetchingNextPage || (query.data?.pages.length ?? 0) > 1) && (
         <Button
           aria-disabled={query.isFetching || query.isError || !query.hasNextPage}
           onClick={() => {
-            if (!query.isFetching && !query.isError && query.hasNextPage) void query.fetchNextPage();
+            if (!query.isFetching && !query.isError && query.hasNextPage)
+              void query.fetchNextPage();
           }}
         >
-          {!query.hasNextPage && !query.isFetching ? "Todas as páginas carregadas" : "Carregar mais"}
+          {!query.hasNextPage && !query.isFetching
+            ? "Todas as páginas carregadas"
+            : "Carregar mais"}
         </Button>
       )}
     </section>
@@ -85,12 +91,14 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
       const { data, error } = await supabase.auth.getUser();
       if (error || data.user?.id !== userId) throw new Error("Sessão alterada.");
     };
-    const segura = <T,>(listar: (pagina: PaginaCapacidade) => Promise<T[]>) => async (pagina: PaginaCapacidade) => {
-      await conferir();
-      const resultado = await listar(pagina);
-      await conferir();
-      return resultado;
-    };
+    const segura =
+      <T,>(listar: (pagina: PaginaCapacidade) => Promise<T[]>) =>
+      async (pagina: PaginaCapacidade) => {
+        await conferir();
+        const resultado = await listar(pagina);
+        await conferir();
+        return resultado;
+      };
     return {
       ...supabaseCapacidadesSsoAdapter,
       listarPerfis: segura(supabaseCapacidadesSsoAdapter.listarPerfis),
@@ -129,9 +137,12 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   const [acao, setAcao] = useState<AcaoSso>("plano.gerir");
   const [escopo, setEscopo] = useState("");
   const [confirmarGlobal, setConfirmarGlobal] = useState(false);
-  const usuarios = api.usuarios.isError || api.usuarios.isFetching ? [] : (api.usuarios.data?.pages.flat() ?? []);
-  const perfis = api.perfis.isError || api.perfis.isFetching ? [] : (api.perfis.data?.pages.flat() ?? []);
-  const clientes = api.clientes.isError || api.clientes.isFetching ? [] : (api.clientes.data?.pages.flat() ?? []);
+  const usuarios =
+    api.usuarios.isError || api.usuarios.isFetching ? [] : (api.usuarios.data?.pages.flat() ?? []);
+  const perfis =
+    api.perfis.isError || api.perfis.isFetching ? [] : (api.perfis.data?.pages.flat() ?? []);
+  const clientes =
+    api.clientes.isError || api.clientes.isFetching ? [] : (api.clientes.data?.pages.flat() ?? []);
   const usuarioConfirmado =
     !api.usuarios.isFetching &&
     !api.usuarios.isError &&
@@ -175,8 +186,11 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   ) {
     if (emEnvio.current) return false;
     emEnvio.current = true;
-    try { return await executarInterno(chave, payload, enviar); }
-    finally { emEnvio.current = false; }
+    try {
+      return await executarInterno(chave, payload, enviar);
+    } finally {
+      emEnvio.current = false;
+    }
   }
 
   async function executarInterno(
@@ -207,7 +221,9 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
       await enviar(requestId);
       await conferirSessao();
       if (!registro.concluir(chave, requestId, payload)) {
-        setErro("Alteração confirmada, mas a tentativa local mudou. Procure suporte antes de continuar.");
+        setErro(
+          "Alteração confirmada, mas a tentativa local mudou. Procure suporte antes de continuar.",
+        );
         atualizarPendente((n) => n + 1);
         return false;
       }
@@ -215,9 +231,16 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
       setMensagem("Alteração registrada.");
       return true;
     } catch (error) {
-      if (typeof error === "object" && error !== null && "code" in error && error.code === "55P03") {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "55P03"
+      ) {
         atualizarPendente((n) => n + 1);
-        setErro("Outra alteração de permissões está em andamento. A tentativa foi preservada; confira o estado e repita a mesma operação quando a alteração concorrente terminar.");
+        setErro(
+          "Outra alteração de permissões está em andamento. A tentativa foi preservada; confira o estado e repita a mesma operação quando a alteração concorrente terminar.",
+        );
         return false;
       }
       // Uma recusa em uma repetição não comprova que tentativa anterior não
@@ -265,15 +288,21 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
         if (typeof payload[campo] === "string") payload[campo] = payload[campo].toLowerCase();
       }
       await conferirSessao();
-      const { data, error } = await supabase.schema("config").rpc("sso_consultar_recibo_capacidades", { p_request_id: requestId, p_payload: payload });
-      if (error || !data || data.requestId !== requestId || data.confirmado !== true) throw new Error("Recibo indisponível.");
+      const { data, error } = await supabase
+        .schema("config")
+        .rpc("sso_consultar_recibo_capacidades", { p_request_id: requestId, p_payload: payload });
+      if (error || !data || data.requestId !== requestId || data.confirmado !== true)
+        throw new Error("Recibo indisponível.");
       await conferirSessao();
-      if (!registro.concluir(pendente.chave, requestId, pendente.payload)) throw new Error("Tentativa alterada.");
+      if (!registro.concluir(pendente.chave, requestId, pendente.payload))
+        throw new Error("Tentativa alterada.");
       atualizarPendente((n) => n + 1);
       setMensagem("Alteração confirmada. Consulte a configuração atual antes de continuar.");
       void Promise.all([api.perfis.refetch(), api.vinculos.refetch(), api.concessoes.refetch()]);
     } catch {
-      setErro("Recibo indisponível ou não confirmado. A tentativa foi preservada; isso não prova que a alteração falhou.");
+      setErro(
+        "Recibo indisponível ou não confirmado. A tentativa foi preservada; isso não prova que a alteração falhou.",
+      );
     } finally {
       emEnvio.current = false;
       setConsultandoRecibo(false);
@@ -346,9 +375,11 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
           <Button disabled={ocupado} onClick={() => void recuperar()}>
             Repetir alteração pendente
           </Button>
-          {import.meta.env.VITE_SSO_RECIBO_CAPACIDADES_ENABLED === "true" && <Button disabled={ocupado || consultandoRecibo} onClick={() => void consultarRecibo()}>
-            Consultar confirmação
-          </Button>}
+          {import.meta.env.VITE_SSO_RECIBO_CAPACIDADES_ENABLED === "true" && (
+            <Button disabled={ocupado || consultandoRecibo} onClick={() => void consultarRecibo()}>
+              Consultar confirmação
+            </Button>
+          )}
         </Card>
       )}
       <Card className="space-y-3 p-4">

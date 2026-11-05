@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-migrations.json"
 FOTOS = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-fotos-40e3c9f.json"
 OVERLAY_DINAMICO = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-diagnostico-dinamico.json"
+OVERLAY_INTEGRACAO = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-integracao-84c9fcf.json"
 IMAGE = "public.ecr.aws/supabase/postgres:17.6.1.141"
 AUTH_IMAGE = "public.ecr.aws/supabase/gotrue:v2.197.0"
 REST_IMAGE = "public.ecr.aws/supabase/postgrest:v14.5"
@@ -214,6 +215,52 @@ def main(opcoes):
             if any(numeros_diag.count(n) != 1 for n in cadeia) or [numeros_diag.index(n) for n in cadeia] != sorted(numeros_diag.index(n) for n in cadeia):
                 raise RuntimeError("Dependências diagnósticas ausentes ou fora de ordem")
         print("DIAGNÓSTICO: sobreposição de dependências dinâmicas ativa; resultado NÃO prova recorte implantável.", flush=True)
+    if opcoes.integracao_candidata:
+        overlay = json.loads(OVERLAY_INTEGRACAO.read_text())
+        if overlay["base_main"] != base or overlay["fonte_backup"] != source:
+            raise RuntimeError("Sobreposição de integração com procedência divergente")
+        esperadas = (
+            "0323_E01-S180_despesas_visita_fundacao.sql", "0334_E01-S172_disponibilidade_semanal.sql",
+            "0669_E01-S173_rastreabilidade_pendencia.sql", "0803_E01-S168_recebimento_origem_visita.sql",
+            "0805_E01-S168_guarda_cobertura_origem_visita.sql", "0807_E01-S173_pendencia_origem_visita.sql",
+            "0811_E01-S168_previa_cobertura_visita.sql", "0904_E01-S168_cobertura_retorno_grupo.sql",
+            "0905_E01-S168_perguntas_retorno_grupo.sql", "0907_E01-S173_consumidores_origem_grupo.sql",
+            "1587_E01-S168_retorno_grupo_chamado.sql", "1588_E01-S173_pendencias_grupo_chamado.sql",
+            "1591_E01-S168_cobertura_grupo_chamado.sql", "1675_E01-S53_serializar_materializacao_legada.sql",
+        )
+        additions = overlay["migrations_adicionais"]
+        if tuple(item["caminho"] for item in additions) != tuple("supabase/migrations/" + nome for nome in esperadas):
+            raise RuntimeError("Sobreposição de integração inesperada")
+        for item in additions:
+            path = item["caminho"]
+            numero = Path(path).name[:4]
+            if path in base_files or path in names or any(Path(p).name[:4] == numero for p in base_files + names):
+                raise RuntimeError("Migration de integração duplicada: " + numero)
+            data = git("show", source + ":" + path)
+            if hashlib.sha256(data).hexdigest() != item["sha256"] or git("rev-parse", source + ":" + path).decode().strip() != item["git_blob"]:
+                raise RuntimeError("Hash da sobreposição de integração divergente: " + numero)
+            blobs.append((path, data))
+        blobs.sort(key=lambda item: item[0])
+        names = [p for p, _ in blobs]
+        if base_files != sorted(base_files) or base_files[-1] >= names[0]:
+            raise RuntimeError("Ordem cronológica entre base e integração divergente")
+        numeros_integracao = [Path(p).name[:4] for p in base_files + names]
+        prerequisitos = {
+            "0323": ("0079", "0239", "0282"), "0334": ("0031", "0239", "0246"),
+            "0669": ("0371", "0375", "0438", "0441", "0456"),
+            "0803": ("0402", "0726", "0729"), "0805": ("0582", "0726", "0729"),
+            "0807": ("0371", "0726", "0729"), "0811": ("0562", "0726", "0729"),
+            "0904": ("0805", "0815", "0823"), "0905": ("0811", "0815", "0823"),
+            "0907": ("0669", "0891", "0906"), "1587": ("0903", "0905", "1586"),
+            "1588": ("0906", "0907", "1586"), "1591": ("0904", "1586"), "1675": ("0224",),
+        }
+        for alvo, dependencias in prerequisitos.items():
+            if numeros_integracao.count(alvo) != 1 or any(numeros_integracao.count(n) != 1 or numeros_integracao.index(n) >= numeros_integracao.index(alvo) for n in dependencias):
+                raise RuntimeError("Pré-requisito de integração ausente ou fora de ordem: " + alvo)
+        for anterior, posterior in (("0323", "0415"), ("0334", "0415"), ("0803", "0903"), ("0807", "0906"), ("0904", "1692"), ("0905", "1692"), ("1675", "1714")):
+            if numeros_integracao.count(posterior) != 1 or numeros_integracao.index(anterior) >= numeros_integracao.index(posterior):
+                raise RuntimeError("Consumidor de integração ausente ou fora de ordem: " + posterior)
+        print("INTEGRAÇÃO CANDIDATA: migrations originais sem seeds artificiais; resultado NÃO autoriza release.", flush=True)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -384,13 +431,17 @@ end; $$;"""
     if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
     if opcoes.diagnostico_0415:
         print("PASS DIAGNÓSTICO: ações antecipadas; NÃO prova recorte implantável nem testes funcionais.")
+    elif opcoes.integracao_candidata:
+        print("PASS INTEGRAÇÃO CANDIDATA: compilação apenas; NÃO autoriza release nem prova testes funcionais.")
     else:
         print("PASS: compilação das migrations selecionadas em banco descartável; testes funcionais não executados.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--diagnostico-0415", action="store_true", help="Antecipa duas ações somente no clone; resultado não prova recorte implantável.")
+    grupo = parser.add_mutually_exclusive_group()
+    grupo.add_argument("--diagnostico-0415", action="store_true", help="Antecipa duas ações somente no clone; resultado não prova recorte implantável.")
+    grupo.add_argument("--integracao-candidata", action="store_true", help="Inclui migrations originais candidatas, sem seeds artificiais; não autoriza release.")
     opcoes = parser.parse_args()
     code = 0
     try: main(opcoes)
