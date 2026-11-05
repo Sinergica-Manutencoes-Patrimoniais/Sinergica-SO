@@ -110,3 +110,9 @@ revisão e entre aprovação e revogação, em ambas as ordens, além da verific
 replays após commit. A fila de saída foi suprimida no cenário sintético e o clone foi removido.
 O ensaio não comprova alteração concorrente do gate nem os privilégios do proprietário no ambiente
 real; não constitui homologação ou autorização de release.
+
+No ensaio da migration 1806, foram aplicadas 228 migrations da base e 659 candidatas. Passaram a
+fixture de token com gate desligado e ligado, as disputas de revisão, revogação e alteração de
+gate nas duas ordens, e os cenários de pós-commit e replay. A fila de saída foi suprimida nos
+cenários sintéticos e o clone foi removido. O resultado não comprova os privilégios do proprietário
+no destino nem a integração externa e não constitui homologação ou autorização de release.
