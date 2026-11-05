@@ -54,17 +54,29 @@ const pedido = z
   })
   .strict();
 type Pedido = z.infer<typeof pedido>;
-export function ConferenciaPmocCiclo(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId, props.rotinaId, props.vencimento])} {...props} />; }
-function Conteudo({
-  userId,
-  clienteId,
-  planoId,
-  versaoId,
-  rotinaId,
-  revision,
-  vencimento,
-}: Props) {
-  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+export function ConferenciaPmocCiclo(props: Parameters<typeof Conteudo>[0]) {
+  return (
+    <Conteudo
+      key={JSON.stringify([
+        props.userId,
+        props.clienteId,
+        props.planoId,
+        props.versaoId,
+        props.rotinaId,
+        props.vencimento,
+      ])}
+      {...props}
+    />
+  );
+}
+function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision, vencimento }: Props) {
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const cache = useQueryClient();
   const trava = useRef(false);
   const primeiraTentativa = useRef(false);
@@ -140,10 +152,14 @@ function Conteudo({
     getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.agendamento_id : undefined),
   });
   const itens = lista.data?.pages.flat() ?? [];
-  const consistentes = itens.every(
-    (x, i) =>
-      i === 0 || x.agendamento_id.toLowerCase() > itens[i - 1]!.agendamento_id.toLowerCase(),
-  );
+  const consistentes = itens.every((x, i) => {
+    if (i === 0) return true;
+    const anterior = itens[i - 1];
+    return (
+      anterior !== undefined &&
+      x.agendamento_id.toLowerCase() > anterior.agendamento_id.toLowerCase()
+    );
+  });
   const disponivel = !!lista.data && !lista.isFetching && !lista.isError && consistentes;
   const atual = disponivel ? itens.find((x) => x.agendamento_id === selecionado) : undefined;
   const assinatura = JSON.stringify([
@@ -160,7 +176,8 @@ function Conteudo({
   ]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_classificar_pmoc_ciclo", {
@@ -200,11 +217,13 @@ function Conteudo({
         r.classificacao !== p.classificacao
       )
         throw new Error("Recibo divergente.");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
@@ -241,7 +260,8 @@ function Conteudo({
             ].includes(e.message ?? "")))
       ) {
         try {
-          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);

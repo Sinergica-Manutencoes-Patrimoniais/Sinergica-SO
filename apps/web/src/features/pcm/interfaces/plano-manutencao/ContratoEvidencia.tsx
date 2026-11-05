@@ -67,7 +67,12 @@ function Conteudo({
   revision: number;
 }) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const cache = useQueryClient();
   const trava = useRef(false);
   const storageKey = `sso-contrato-evidencia:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId])}`;
@@ -203,7 +208,13 @@ function Conteudo({
       if (sessionStorage.getItem(storageKey) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || !montado.current || sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error("Sessão ou tentativa alterada.");
+      if (
+        antes.error ||
+        antes.data.user?.id !== userId ||
+        !montado.current ||
+        sessionStorage.getItem(storageKey) !== JSON.stringify(p)
+      )
+        throw new Error("Sessão ou tentativa alterada.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_configurar_evidencia_mediada", {
         p_ator_id: userId,
         p_request_id: p.requestId,
@@ -296,7 +307,11 @@ function Conteudo({
   const itensPergunta = perguntas.data?.pages.flat() ?? [];
   const itensHistorico = historico.data?.pages.flat() ?? [];
   const divergente =
-    itensPergunta.some((item, i) => i > 0 && item.indice <= itensPergunta[i - 1]!.indice) ||
+    itensPergunta.some((item, i) => {
+      if (i === 0) return false;
+      const anterior = itensPergunta[i - 1];
+      return anterior === undefined || item.indice <= anterior.indice;
+    }) ||
     new Set(itensPergunta.map((item) => item.pergunta_id)).size !== itensPergunta.length ||
     new Set(itensHistorico.map((item) => item.id.toLowerCase())).size !== itensHistorico.length;
   const acessoConfirmado =

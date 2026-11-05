@@ -46,7 +46,14 @@ const reciboSchema = z
   })
   .strict();
 
-export function CopiarPlanoAprovado(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId])} {...props} />; }
+export function CopiarPlanoAprovado(props: Parameters<typeof Conteudo>[0]) {
+  return (
+    <Conteudo
+      key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId])}
+      {...props}
+    />
+  );
+}
 function Conteudo({
   userId,
   clienteId,
@@ -64,7 +71,13 @@ function Conteudo({
   versaoId: string;
   versaoNumero: number;
 }) {
-  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const chave = `sso-copia-plano:${userId}:${clienteId}:${planoId}`;
   const [recuperacao] = useState(() => {
     try {
@@ -101,7 +114,8 @@ function Conteudo({
     setMensagem("");
     const serializado = JSON.stringify(pedido);
     try {
-      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirAtor();
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado)
         throw new Error("Tentativa local alterada");
       const { data, error } = await supabase.schema("pcm").rpc("sso_copiar_plano_mediado", {
@@ -138,11 +152,13 @@ function Conteudo({
         )
       )
         throw new Error("Identidades não renovadas");
-      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirAtor();
+      if (!montado.current) throw new Error("Tela desmontada.");
       await queryClient.invalidateQueries({
         queryKey: planoManutencaoKeys.raiz(userId, clienteId),
       });
-      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirAtor();
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado)
         throw new Error("Tentativa local alterada");
       sessionStorage.removeItem(chave);
