@@ -324,7 +324,7 @@ function GruposQuantitativosContexto({
           </button>
         </div>
       )}
-      {permissao.data.gestao && aberto && !pendente && (
+      {permissao.data.gestao && aberto && !pendente && !grupos.isFetching && !grupos.isError && (
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -539,10 +539,10 @@ function GruposQuantitativosContexto({
           </button>
         </div>
       )}
-      {!grupos.isPending && !grupos.isError && itens.length === 0 && (
+      {!grupos.isPending && !grupos.isFetching && !grupos.isError && itens.length === 0 && (
         <p>Nenhum grupo cadastrado neste Cliente.</p>
       )}
-      {!grupos.isPending && !grupos.isError && itens.length > 0 && (
+      {!grupos.isPending && !grupos.isFetching && !grupos.isError && itens.length > 0 && (
         <fieldset>
           <legend>Filtrar grupos nas páginas carregadas</legend>
           <label>
@@ -586,7 +586,7 @@ function GruposQuantitativosContexto({
           </p>
         </fieldset>
       )}
-      {!grupos.isError && itens.length > 0 && (
+      {!grupos.isFetching && !grupos.isError && itens.length > 0 && (
         <ul>
           {itens.map((grupo) => (
             <li key={grupo.id} hidden={!correspondeFiltro(grupo)}>
@@ -778,7 +778,7 @@ function GruposQuantitativosContexto({
           ))}
         </ul>
       )}
-      {!grupos.isError && grupos.hasNextPage && (
+      {!grupos.isFetching && !grupos.isError && grupos.hasNextPage && (
         <button
           type="button"
           disabled={grupos.isFetchingNextPage}

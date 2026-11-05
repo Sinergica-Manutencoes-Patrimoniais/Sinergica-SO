@@ -22,16 +22,22 @@ export function HierarquiaGrupos({ userId, clienteId }: { userId: string; client
     gcTime: 0,
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => {
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
       const { data, error } = await supabase
         .schema("pcm")
-        .rpc("sso_listar_hierarquia_grupos", {
+        .rpc("sso_listar_hierarquia_grupos_mediada", {
+          p_ator_id: userId,
           p_cliente_id: clienteId,
           p_apos: pageParam,
           p_limite: 20,
         })
         .abortSignal(signal);
       if (error) throw error;
-      return z.array(linha).max(20).parse(data);
+      const pagina = z.array(linha).max(20).parse(data);
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      return pagina;
     },
     getNextPageParam: (pagina) =>
       pagina.length === 20 ? pagina[pagina.length - 1]?.grupo_id : undefined,
@@ -40,7 +46,7 @@ export function HierarquiaGrupos({ userId, clienteId }: { userId: string; client
   return (
     <section aria-label="Grupos e Sistemas">
       <h4>Grupos por posição e Sistema</h4>
-      {q.isPending && <output>Carregando…</output>}
+      {(q.isPending || q.isFetching) && <output>Carregando…</output>}
       {q.isError && (
         <p role="alert">
           Não foi possível carregar a hierarquia.{" "}
@@ -49,7 +55,7 @@ export function HierarquiaGrupos({ userId, clienteId }: { userId: string; client
           </button>
         </p>
       )}
-      {q.data && (
+      {!q.isFetching && !q.isError && q.data && (
         <>
           <ul>
             {q.data.pages.flat().map((g) => (
@@ -71,7 +77,7 @@ export function HierarquiaGrupos({ userId, clienteId }: { userId: string; client
           {q.data.pages.flat().length === 0 && <p>Nenhum Grupo disponível.</p>}
         </>
       )}
-      {q.hasNextPage && (
+      {!q.isFetching && !q.isError && q.hasNextPage && (
         <button type="button" disabled={q.isFetching} onClick={() => void q.fetchNextPage()}>
           Carregar mais Grupos
         </button>
