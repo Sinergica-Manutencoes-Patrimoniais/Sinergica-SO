@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — fotos cadastrais de Grupo (Codex)
+
+- S176: ADR-1660/1661 e migrations 1802/1803 preparam leitura e envio de fotos cadastrais em bucket próprio, separados da rota de atestado. Novas fotos registram digest conferido na leitura; fotos antigas sem digest permanecem identificadas como não verificadas. Gates e flags iniciam fechados; Storage e banco não formam transação única.
+- Clone sintético compilou 1802/1803 e verificou gate, ACL, papel divergente e replay de reserva/vínculo com metadados sintéticos. UI passou 6/6; handlers extraídos passaram 5/5 ingestão e 4/4 leitura com dependências simuladas; `deno check` dos índices passou sem rede. Nenhum desses resultados comprova Storage/Auth reais ou concorrência.
+- Pendente: revisar publicação explícita das Edge Functions e validar fluxo real em infraestrutura descartável com Storage, Auth, rede interna e espaço suficiente; CI geral permanece reprovada. Sem deploy ou Auvo real.
+
 ## 2026-11-05 — legado e verificador Edge (Codex)
 
 - Ensaio de vínculo inconsistente anterior às guardas passou em clone somente de schema com seeds originais: vínculo legado preservado, nova inconsistência recusada e remoção possível; banco descartado, sem tarefas Auvo. Não comprova ACL nem concorrência.
