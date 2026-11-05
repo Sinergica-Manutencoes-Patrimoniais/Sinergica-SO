@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 const api=vi.hoisted(()=>({rpc:vi.fn()}));
 vi.mock("../../../../lib/supabase-client",()=>({supabase:{schema:()=>({rpc:api.rpc}),auth:{getUser:async()=>({data:{user:{id:"usuario"}},error:null})}}}));
@@ -21,4 +21,17 @@ it.each(["calendario","visita"] as const)("apresenta candidatos e envia escolha 
  if(tipo==="visita")fireEvent.change(screen.getByLabelText("Fonte de feriados conferida"),{target:{value:"Calendário conferido"}});
  fireEvent.change(screen.getByLabelText("Motivo"),{target:{value:"Escolha conferida"}});fireEvent.click(screen.getByRole("checkbox",{name:/Conferi a ocorrência original/}));fireEvent.click(screen.getByRole("button",{name:"Registrar escolha"}));
  await screen.findByText(/escolhida; aplicação depende de aprovação/);expect(api.rpc.mock.calls.some(([nome])=>nome===(tipo==="calendario"?"sso_escolher_nova_data_calendario":"sso_escolher_nova_visita"))).toBe(true);
+});
+
+
+it.each(["definitiva","incerta"] as const)("trata candidata em disputa com tentativa %s",async cenario=>{
+ vi.stubEnv("VITE_SSO_NOVA_DATA_VISITA_ENABLED","true");
+ const comparacao={preparadaId,rascunhoId,revisaoPlano:2,tipo:"visita",rotinaLogicaId:logica,alvoOcorrenciaTipo:"sistema",alvoOcorrenciaId:alvo,vencimentoOriginal:"2026-11-04",ciclo:null,visitaId:visita,semanaOrigem:"2026-11-02",anterior:rotina,rascunho:rotina,questionarioComparacao:{estado:"sem_questionario",historicoHash:null,atualHash:null},origemOcorrencia:{versaoId:"16630000-1111-4000-8000-000000000021",numero:1,estado:"disponivel",rotina,questionarioEstado:"sem_questionario",questionarioHash:null},osImpacto:[],osOutroCliente:false,fontesCompletas:false,aprovacaoAutorizada:false} as ComparacaoImpacto;
+ let tentativas=0;api.rpc.mockImplementation((nome:string)=>nome==="sso_listar_candidatas_nova_visita"?Promise.resolve({data:[{visita_id:visita,vencimento:"2026-12-05",serie_id:serie,semana_origem:"2026-11-30"}],error:null}):Promise.resolve({data:null,error:cenario==="incerta"&&tentativas++===0?{code:"timeout"}:{code:"23505",message:"candidata_ja_escolhida"}}));
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}})}><EscolherNovaVisita {...base} comparacao={comparacao}/></QueryClientProvider>);
+ fireEvent.change(screen.getByLabelText("Início da janela"),{target:{value:"2026-12-01"}});fireEvent.change(screen.getByLabelText("Fim da janela"),{target:{value:"2026-12-31"}});fireEvent.click(screen.getByRole("button",{name:"Consultar datas"}));await screen.findByRole("option",{name:/2026-12-05/});
+ fireEvent.change(screen.getByLabelText("Visita candidata"),{target:{value:visita}});fireEvent.change(screen.getByLabelText("Fonte de feriados conferida"),{target:{value:"Calendário conferido"}});fireEvent.change(screen.getByLabelText("Motivo"),{target:{value:"Conferido"}});fireEvent.click(screen.getByRole("checkbox",{name:/Conferi a ocorrência original/}));fireEvent.click(screen.getByRole("button",{name:"Registrar escolha"}));
+ const chave=`sso-nova-visita:${JSON.stringify([base.userId,base.clienteId,base.planoId,rascunhoId,preparadaId,1])}`;
+ if(cenario==="definitiva"){await screen.findByText(/A escolha não pôde ser aplicada/);expect(sessionStorage.getItem(chave)).toBeNull();}
+ else {await screen.findByText(/Resultado não confirmado/);const pedido=sessionStorage.getItem(chave);expect(pedido).not.toBeNull();fireEvent.click(screen.getByRole("button",{name:"Repetir tentativa pendente"}));await waitFor(()=>expect(api.rpc.mock.calls.filter(([nome])=>nome==="sso_escolher_nova_visita")).toHaveLength(2));await waitFor(()=>expect(screen.getByRole("button",{name:"Repetir tentativa pendente"})).toBeEnabled());expect(sessionStorage.getItem(chave)).toBe(pedido);}
 });

@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: revisão adversarial de nova data
+
+- Revisão adversarial identificou e reproduziu escolha histórica impedindo reutilizar Visita, geração antes da vigência e OS tardia por ponte legada. ADRs 1563/1564 e migrations 1707/1708 corrigem os três casos: a verificação da escolha atual é serializada por Plano, geração antecipada é recusada e OS por ponte é reconferida sob trava. Clone limpo compilou até 1708 e fixtures focadas passaram. Concorrência de duas escolhas e fontes externas permanecem pendentes; sem PASS.
+- Geração concorrente de calendário e Visita após escolha/retirada foi ensaiada em clones: segunda sessão bloqueada e replay igual após commit. Aprovação e data foram simuladas somente nos clones; concorrência de feriados e aprovação operacional não comprovadas. UI de Visita: 4 testes focados passaram; typecheck passou. Guarda 1045 e gates seguem bloqueados, sem Auvo/deploy.
+
 ## 2026-11-04 — S165/S166: escolha explícita de nova data
 
 - ADRs 1558/1559 e migrations 1702/1703 ligam escolha explícita PCM de ciclo de calendário ou Visita candidata existente à avaliação, selo de aprovação, retirada segura de fila e geração sem correspondência automática nem alteração de OS. 1704/1705 tratam fontes nativas SSO sem exigir ponte legada fictícia; 1706 reconfere candidata de Visita sob trava antes de retirar fila. Flags e guarda 1045 seguem fechadas.
