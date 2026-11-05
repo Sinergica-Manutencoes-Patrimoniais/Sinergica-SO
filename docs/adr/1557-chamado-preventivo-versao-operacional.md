@@ -1,0 +1,3 @@
+# ADR-1557 — Chamado preventivo usa versão operacional
+
+Status: proposto; exige validação em clone e revisão. Ao criar novo Chamado para ciclo de calendário ou Visita, obter a versão/Rotina operacional selada antes de consultar o snapshot e o nome. A ocorrência, sua versão original, ciclo, alvo e vencimento permanecem históricos. Replay e Chamado já existente mantêm resultados anteriores. A consulta é coordenada por locks com mudanças de selos/versões e preserva gates, autorizações e a guarda 1045; nenhum envio ao Auvo é feito. O teste deve provar criação real com fonte SSO, incluindo replay, fotografia da OS e histórico; selos/fixture sintéticos não demonstram aprovação real ou concorrência.

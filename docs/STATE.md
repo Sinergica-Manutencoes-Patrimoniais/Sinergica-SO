@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: escolha explícita de nova data
+
+- ADRs 1558/1559 e migrations 1702/1703 ligam escolha explícita PCM de ciclo de calendário ou Visita candidata existente à avaliação, selo de aprovação, retirada segura de fila e geração sem correspondência automática nem alteração de OS. 1704/1705 tratam fontes nativas SSO sem exigir ponte legada fictícia; 1706 reconfere candidata de Visita sob trava antes de retirar fila. Flags e guarda 1045 seguem fechadas.
+- Ensaios de calendário e Visita cobriram escolha → aprovação mediada → selo → bloqueio antes da retirada → retirada/replay → geração/replay. Migrations até 1706 compilaram em clone; fixtures negativas de candidata alterada/feriado passaram. 1045 e data civil foram simuladas apenas nas transações revertidas; cenários com pontes/OS sintéticas não comprovam aprovação operacional, fontes externas, relógio real ou concorrência. Typecheck e 7 testes focados UI passaram.
+- ADR1556/1700 exige configuração integral e triggers previstos na aprovação mediada; ADR1557/1701 usa versão operacional na criação de Chamados mantendo replay/histórico. Homologação e deploy continuam bloqueados; não é necessário perguntar de novo regra automática de data, pois PCM escolhe.
+
 ## 2026-11-04 — S165/S166: versão operacional por ciclo e retorno
 
 - Correção de interpretação: fontes aprovadas definem SSO como estrutura oficial e Auvo como executor; não exigem comprovar ausência global de tarefas Auvo para aprovação interna. P01/P02/P03 estão fechadas. Mudança de data exige nova versão/vigência e prévia para PCM, sem correspondência automática presumida; pergunta anterior ao usuário não deve ser tratada como regra funcional reaberta. Contrato externo continua gate para envio real.
