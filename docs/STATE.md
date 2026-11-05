@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: mensagens e regras de Visita
+
+- Mensagens após decisões de impacto indicam que aprovação depende das validações e autorizações, sem afirmar bloqueio permanente. `GerarVisitaContratual` confere sessão ao consultar regras, oculta dados durante recarga/erro e invalida candidatas futuras ao criar Visita.
+- Revisão estática do recibo legado 1786 não identificou falha concreta de replay. **Nenhum teste, typecheck, build ou ensaio executado por solicitação atual.** Alterações e migrations 1780–1788 aguardam validação em lote; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: revisão de decisão obsoleta
 
 - ADR-1646/migration 1788 convertem apenas `revisao_decisao_obsoleta` dos núcleos de impacto Calendário/Visita a P0014; UI reconhece conflito específico inicial e preserva 40001 genuíno/replay incerto. ACL/replay revisados estaticamente sem falha concreta.
