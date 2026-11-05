@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — validação em lote S165/S166/S170/S176 (Codex)
+
+- No candidato `codex/integracao-s165-s166-s170-s176`, typecheck passou; Vitest completo passou 1.766 testes, 9 de integração Supabase foram pulados (286 arquivos passaram, 3 pulados). Lote de interfaces: 538 testes/92 arquivos passaram com variáveis Supabase removidas; testes simulados não comprovam serviços reais.
+- Em clone descartável com Auth/PostgREST/Storage, 228 migrations da base e 695 candidatas compilaram. Fixtures S170 (12), S176 vínculos (10), S165 (180), S166 (7), S176 isolamento (11), e cenários 1804–1808 passaram; dados sintéticos, ressalvas de outbox/replica indicadas pelo harness, sem Auvo real. Gates AC5 e isolamento conferidos fechados e recursos próprios removidos. Não prova jornada AC5 completa, concorrência, ACL/owners no destino ou release.
+- A proteção 1809 permanece desligada por padrão e acesso direto legado segue amplo enquanto estiver desligada; ativação exige revisão de concessões e compatibilidade. 1810 media consultas das novas telas por Cliente e gate; ainda exige ensaios adicionais. Seis Edge Functions sem declaração continuam bloqueando verificação e precisam de estratégia segura de publicação. CI integral, Squawk, revisão de rollout e homologação pendentes. Nenhum deploy.
+
 ## 2026-11-05 — integração AC5 e preservação (Codex)
 
 - S170 AC5: jornada de retorno do PCM integrada ao candidato atrás de flag desligada; preparado cenário de rejeição de evidência com motivo além dos cenários de aceitação, devolução e reabertura. O caso novo não foi executado e as simulações não provam autorização ou Storage reais.
