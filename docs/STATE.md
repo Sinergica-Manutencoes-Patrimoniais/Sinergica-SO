@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: transição e navegação normal
+
+- ADR-1634/migration 1776 tratam `revisao_obsoleta` na suspensão/encerramento/retomada com P0011; UI preserva replay incerto/40001 real. HTTP suspensão em clone passou de timeout >7s para resposta P0011; fixture SQL, UI 3/3, typecheck e revisão independente passaram. Rollout coordenado UI/backend.
+- `apps/web/e2e/s166-isolado/executar-app-normal.py` percorreu aplicação real isolada de login até Cliente → Preventivas → Planos → Rotinas, com dados/flags sintéticos. Ainda não prova aprovação/geração pela navegação completa ou fontes externas.
+- Inventário `docs/planejamento/plano-manutencao/inventario-flags-s165-s166.md` registra 125 flags encontradas e gates comprovados das jornadas centrais; oito flags centrais adicionadas ao `.env.example` como false. Mapeamento completo e habilitação por jornada permanecem pendentes. Sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: lote 1775 e alteração de dia
 
 - UI de alteração de dia preserva pedido perante 40001 real; apenas P0018 específico inicial libera reconferência. Teste focado 4/4 passou. Três arquivos de testes foram formatados sem mudança funcional e passaram Biome.

@@ -7,15 +7,15 @@ import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-cap
 import { InventarioGeracaoLegada } from "./InventarioGeracaoLegada";
 import { RelacaoPlanoLegado } from "./RelacaoPlanoLegado";
 
-type Pedido={requestId:string;planoId:string;clienteId:string;revision:number;acao:"suspender"|"encerrar"|"retomar";vigencia:string;motivo:string};
-const pedidoSchema=z.object({requestId:z.string().uuid(),planoId:z.string().uuid(),clienteId:z.string().uuid(),revision:z.number().int().nonnegative().safe(),acao:z.enum(["suspender","encerrar","retomar"]),vigencia:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),motivo:z.string().trim().min(1).max(2000)}).strict();
+type Pedido={requestId:string;planoId:string;clienteId:string;revision:number;acao:"suspender"|"encerrar"|"retomar";vigencia:string;motivo:string;tentativaIncerta?:boolean};
+const pedidoSchema=z.object({requestId:z.string().uuid(),planoId:z.string().uuid(),clienteId:z.string().uuid(),revision:z.number().int().nonnegative().safe(),acao:z.enum(["suspender","encerrar","retomar"]),vigencia:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),motivo:z.string().trim().min(1).max(2000),tentativaIncerta:z.boolean().optional()}).strict();
 type Props={userId:string;clienteId:string;plano:PlanoResumo;bloqueado:boolean;onAbrirRotinas?:()=>void};
 export function TransicaoPlano(props:Props) {
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.plano.id])} {...props} />;
 }
 function Conteudo({userId,clienteId,plano,bloqueado,onAbrirRotinas}:Props) {
   const chave=`sso-plano-transicao:${JSON.stringify([userId,clienteId,plano.id])}`;const cache=useQueryClient();
-  const trava=useRef(false);
+  const trava=useRef(false);const primeira=useRef(false);
   const [acao,setAcao]=useState<Pedido["acao"]>(plano.estado === "suspenso" ? "retomar" : "suspender");const [vigencia,setVigencia]=useState("");const [motivo,setMotivo]=useState("");const [mensagem,setMensagem]=useState("");
   const [confirmado,setConfirmado]=useState<string|null>(null);
   const fotografia=JSON.stringify({userId,clienteId,planoId:plano.id,revisao:plano.revisao,estado:plano.estado,acao,vigencia,motivo});
@@ -34,8 +34,8 @@ function Conteudo({userId,clienteId,plano,bloqueado,onAbrirRotinas}:Props) {
     if(error)throw error;const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||!data||data.requestId!==p.requestId||data.aggregateId!==p.planoId||data.revision!==p.revision+1||data.linkedIds?.clienteId!==p.clienteId)throw new Error("Resposta inválida ou sessão alterada.");},
     onSuccess:async (_resultado,p) => {try{await Promise.all([cache.invalidateQueries({queryKey:["plano-manutencao",userId,clienteId]}),cache.invalidateQueries({queryKey:["plano-transicoes-historico",userId,clienteId,plano.id]})]);const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId||sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");sessionStorage.removeItem(chave);}catch{setMensagem("Transição confirmada, mas tentativa não pôde ser conferida ou removida. Preserve o pedido e procure suporte.");return;}
       setPedido(null);setConfirmado(null);setMensagem("Estado registrado. OS existentes e geradores legados não foram alterados.");},
-    onError:() => setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte."),onSettled:()=>{trava.current=false;}});
-  function enviar(p:Pedido){if(trava.current)return;trava.current=true;envio.mutate(p);}
+    onError:async (erro,p) => {const e=erro as {code?:string;message?:string};if(primeira.current&&e.code==="P0011"&&e.message==="revisao_obsoleta"){try{const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId||sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(chave);setPedido(null);setConfirmado(null);setMensagem("O Plano mudou. Atualize e confira a transição novamente.");await cache.invalidateQueries({queryKey:["plano-manutencao",userId,clienteId]});return;}catch{/* Preserva pedido se sessão ou armazenamento divergirem. */}}setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte.");},onSettled:()=>{trava.current=false;primeira.current=false;}});
+  function enviar(p:Pedido){if(trava.current)return;trava.current=true;try{if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();primeira.current=p.tentativaIncerta===false;p=pedidoSchema.parse({...p,tentativaIncerta:true});sessionStorage.setItem(chave,JSON.stringify(p));setPedido(p);envio.mutate(p);}catch{trava.current=false;setMensagem("Não foi possível guardar tentativa; nada foi enviado.");}}
   const permitido=acessoConferido&&!bloqueado;
   return <section aria-label="Transição do Plano"><h4>Transição do Plano</h4>
     <p>Esta etapa aceita apenas o dia atual conforme a configuração de fuso. Sem configuração ativa, usa São Paulo; se o fuso histórico exigido estiver incompleto, é necessária conferência. Não altera OS, não aciona Auvo e não comprova interrupção dos geradores legados.</p>
@@ -46,7 +46,7 @@ function Conteudo({userId,clienteId,plano,bloqueado,onAbrirRotinas}:Props) {
     {plano.estado === "suspenso" && <p>Retomada não gera atrasados automaticamente. A prévia de cada Rotina por calendário pode mostrar ciclos previstos, inclusive sem ocorrência preparada; a triagem e a decisão disponíveis são preliminares e não criam ocorrências. A decisão operacional completa continua pendente. {onAbrirRotinas && (import.meta.env.VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED === "true" || import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_ENABLED === "true") && <button type="button" disabled={bloqueado} onClick={onAbrirRotinas}>Abrir Rotinas para conferência</button>}</p>}
     {(plano.estado === "aprovado" || plano.estado === "ativo" || plano.estado === "suspenso") && <form onSubmit={(event) => {event.preventDefault();if(!permitido||pedido||trava.current||confirmado!==fotografia||!vigencia||!motivo.trim())return;
       const acaoAtual = plano.estado === "suspenso" ? "retomar" : acao === "retomar" ? "suspender" : acao;
-      const p:Pedido={requestId:crypto.randomUUID(),planoId:plano.id,clienteId,revision:plano.revisao,acao:acaoAtual,vigencia,motivo:motivo.trim()};
+      const p:Pedido={requestId:crypto.randomUUID(),planoId:plano.id,clienteId,revision:plano.revisao,acao:acaoAtual,vigencia,motivo:motivo.trim(),tentativaIncerta:false};
       try{if(sessionStorage.getItem(chave)!==null){setMensagem("Há tentativa anterior; reabra para recuperar.");return;}sessionStorage.setItem(chave,JSON.stringify(p));}
       catch{setMensagem("Não foi possível guardar tentativa; nada foi enviado.");return;}setPedido(p);enviar(p);
     }}><fieldset disabled={!!pedido||envio.isPending||bloqueado}>
