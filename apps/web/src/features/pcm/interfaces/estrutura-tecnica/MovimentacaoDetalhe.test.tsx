@@ -36,7 +36,7 @@ vi.mock("../../infrastructure/supabase-estrutura-tecnica-adapter", () => ({
 }));
 import { MovimentacaoDetalhe } from "./MovimentacaoDetalhe";
 beforeEach(() => {
-  api.getUser.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+  api.getUser.mockResolvedValue({ data: { user: { id: "u" } }, error: null });
 });
 afterEach(() => {
   cleanup();
@@ -249,7 +249,20 @@ it("preserva seleção e bloqueia comando durante falha de nova busca, retomando
     (screen.getByLabelText("Área de destino").closest("fieldset") as HTMLFieldSetElement).disabled,
   ).toBe(false);
 });
+it("recusa destinos quando sessão muda durante revalidação de permissão", async () => {
+  api.autorizarAcao.mockResolvedValue(true);
+  api.listarDestinos.mockImplementation(async (_c: string, tipo: string) => tipo === "area" ? [{ id: "area-inicial", nome: "Área inicial", areaId: null }] : []);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><MovimentacaoDetalhe userId="u" clienteId="c" item={{ id: "i", estruturaRevisao: 1, areaId: null, localId: null, parentItemId: null }} onConcluido={() => {}} /></QueryClientProvider>);
+  fireEvent.click(await screen.findByRole("button", { name: "Movimentar Componente" }));
+  await screen.findByRole("option", { name: "Área inicial" });
+  api.getUser.mockResolvedValue({ data: { user: { id: "outro" } }, error: null });
+  await client.invalidateQueries({ queryKey: ["estrutura-tecnica", "u", "c", "pode-movimentar"] });
+  expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível verificar permissão");
+  expect(screen.queryByRole("option", { name: "Área inicial" })).toBeNull();
+});
 it("não transfere formulário nem destinos entre usuários no mesmo Cliente", async () => {
+  api.getUser.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
   api.autorizarAcao.mockResolvedValue(true);
   api.listarDestinos.mockImplementation(async (_c: string, tipo: string) =>
     tipo === "area" ? [{ id: "area-inicial", nome: "Área inicial", areaId: null }] : [],
@@ -263,6 +276,7 @@ it("não transfere formulário nem destinos entre usuários no mesmo Cliente", a
   );
   fireEvent.click(await screen.findByRole("button", { name: "Movimentar Componente" }));
   await screen.findByRole("option", { name: "Área inicial" });
+  api.getUser.mockResolvedValue({ data: { user: { id: "u2" } }, error: null });
   tela.rerender(
     <QueryClientProvider client={client}>
       <MovimentacaoDetalhe userId="u2" clienteId="c" item={item} onConcluido={() => {}} />
@@ -273,6 +287,7 @@ it("não transfere formulário nem destinos entre usuários no mesmo Cliente", a
   expect(screen.queryByRole("option", { name: "Área inicial" })).toBeNull();
 });
 it("resposta atrasada não atualiza tela após troca de usuário", async () => {
+  api.getUser.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
   api.autorizarAcao.mockResolvedValue(true);
   api.listarDestinos.mockResolvedValue([]);
   let concluir!: (valor: object) => void;
@@ -304,6 +319,7 @@ it("resposta atrasada não atualiza tela após troca de usuário", async () => {
   const chave = `sso-movimento:u1:${clienteId}:${item.id}`;
   const guardado = sessionStorage.getItem(chave);
   expect(guardado).not.toBeNull();
+  api.getUser.mockResolvedValue({ data: { user: { id: "u2" } }, error: null });
   tela.rerender(
     <QueryClientProvider client={client}>
       <MovimentacaoDetalhe userId="u2" clienteId={clienteId} item={item} onConcluido={aoConcluir} />

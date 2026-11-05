@@ -141,6 +141,10 @@ export function RelacaoPlanoLegado({
       if (
         !data ||
         data.requestId !== p.requestId ||
+        data.planoId !== p.planoId ||
+        data.planoLegadoId !== p.legadoId ||
+        data.revisao !== p.revisao + 1 ||
+        data.decisao !== p.decisao ||
         data.equivalenciaComprovada !== false ||
         data.geradorAlterado !== false
       )
