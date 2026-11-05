@@ -1,3 +1,4 @@
+import { consultarEstadosLegadas } from "./estados-legadas-inertes";
 import { supabase } from "../../../lib/supabase-client";
 import { listarOrdensDasOcorrencias, listarPaginasPreventivas } from "./supabase-preventivas-adapter";
 import type { DetalheSistemaGateway } from "../application/detalhe-sistema-gateway";
@@ -413,6 +414,7 @@ export const supabaseDetalheSistemaAdapter: DetalheSistemaGateway = {
     }
     ocorrencias.sort((a, b) => a.vencimento.localeCompare(b.vencimento) || a.id.localeCompare(b.id));
     const ocorrenciaIds = ocorrencias.map((ocorrencia) => ocorrencia.id);
+    const estadosLegadas = await consultarEstadosLegadas(clienteId, ocorrenciaIds);
     const [ordens, tecnicos] = await Promise.all([
       listarOrdensDasOcorrencias(ocorrenciaIds, clienteId),
       [
@@ -462,13 +464,14 @@ export const supabaseDetalheSistemaAdapter: DetalheSistemaGateway = {
         proximoVencimento:
           plano.estado === "pausado"
             ? null
-            : (ocorrenciasDoPlano.find((ocorrencia) => ocorrencia.vencimento >= hoje)?.vencimento ??
+            : (ocorrenciasDoPlano.find((ocorrencia) => estadosLegadas.get(ocorrencia.id) !== "substituida" && ocorrencia.vencimento >= hoje)?.vencimento ??
               null),
         ocorrencias: ocorrenciasDoPlano.map((ocorrencia) => {
           const vinculadas = osPorOcorrencia.get(ocorrencia.id) ?? [];
           const ordem = vinculadas.length === 1 ? vinculadas[0] : undefined;
           return {
             id: ocorrencia.id,
+            reconciliacaoLegada: estadosLegadas.get(ocorrencia.id) ?? "normal",
             vencimento: ocorrencia.vencimento,
             visitaEm: ocorrencia.visita_em,
             estado: ocorrencia.envio_estado,

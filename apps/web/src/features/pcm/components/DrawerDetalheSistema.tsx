@@ -408,7 +408,7 @@ function ListaPreventivas({
                     <span>
                       {dataBr(ocorrencia.visitaEm ?? ocorrencia.vencimento)} ·{" "}
                       {ocorrencia.tecnicoNome ?? "Técnico não informado"} ·{" "}
-                      {resultadoPreventiva(ocorrencia.resultado)} · {ocorrencia.estado}
+                      {ocorrencia.reconciliacaoLegada === "substituida" ? "Substituída por ciclo SSO" : `${resultadoPreventiva(ocorrencia.resultado)} · ${ocorrencia.estado}`}
                     </span>
                     <span className="flex gap-2">
                       {(ocorrencia.ordensVinculadas?.length ?? 0) > 1 && <span>Conferir ordens:</span>}

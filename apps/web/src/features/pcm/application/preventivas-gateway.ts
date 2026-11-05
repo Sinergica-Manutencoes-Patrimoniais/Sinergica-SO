@@ -24,6 +24,7 @@ export type PlanoPreventivo = {
 export type OcorrenciaPreventiva = {
   id: string;
   plano_id: string;
+  reconciliacao_legada?: "normal" | "substituida";
   vencimento: string;
   visita_em: string | null;
   envio_estado: "prevista" | "enviando" | "falha" | "incerto" | "disponivel";

@@ -49,6 +49,7 @@ export type PreventivaSistema = {
   proximoVencimento: string | null;
   ocorrencias: Array<{
     id: string;
+    reconciliacaoLegada?: "normal" | "substituida";
     vencimento: string;
     visitaEm: string | null;
     estado: string;

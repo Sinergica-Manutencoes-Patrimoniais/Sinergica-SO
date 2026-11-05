@@ -1,3 +1,4 @@
+import { consultarEstadosLegadas } from "./estados-legadas-inertes";
 import { supabase } from "../../../lib/supabase-client";
 import type {
   AtualizarPlanoPreventivoInput,
@@ -229,6 +230,15 @@ export async function listarPreventivas(
     ocorrencias.push(...pagina);
     if (ocorrencias.length > 50_000) throw new Error("Limite de ocorrências excedido.");
   }
+  const clientesPorPlano = new Map(planos.map((plano) => [plano.id, plano.cliente_id]));
+  const lotesPorCliente = new Map<string, string[]>();
+  if (import.meta.env.VITE_SSO_RECONCILIAR_LEGADA_INERTE_ENABLED === "true") for (const ocorrencia of ocorrencias) {
+    const cliente = clientesPorPlano.get(ocorrencia.plano_id);
+    if (!cliente) throw new Error("Cliente da ocorrência indisponível.");
+    const lote = lotesPorCliente.get(cliente) ?? []; lote.push(ocorrencia.id); lotesPorCliente.set(cliente, lote);
+  }
+  const estadosLegadas = new Map<string, "normal" | "substituida">();
+  for (const [cliente, ids] of lotesPorCliente) for (const [id, estado] of await consultarEstadosLegadas(cliente, ids)) estadosLegadas.set(id, estado);
   ocorrencias.sort((a, b) => (a.vencimento ?? "").localeCompare(b.vencimento ?? "") || a.id.localeCompare(b.id));
   const ocorrenciaIds = ocorrencias.map((ocorrencia) => ocorrencia.id);
   if (ocorrenciaIds.length === 0) return { planos, ocorrencias: [], avaliacoes: [] };
@@ -281,6 +291,7 @@ export async function listarPreventivas(
       const taskUrl = ordem?.auvo_detalhes?.taskUrl;
       return {
         ...ocorrencia,
+        reconciliacao_legada: estadosLegadas.get(ocorrencia.id) ?? "normal",
         ordens_vinculadas: ordens.map(({ id, numero, status }) => ({ id, numero, status })),
         os_status: ordem?.status ?? null,
         ...(ordem?.id ? { os_id: ordem.id } : {}),

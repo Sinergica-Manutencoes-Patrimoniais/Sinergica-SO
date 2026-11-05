@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: conciliação de legado inerte após vigência
+
+- ADRs 1587–1588/migrations 1729–1730 implementam conferência PCM auditada de legado inerte especificamente reservado ao SSO, com CAS, reconferência, histórico e revalidação do selo, vigência e efeitos. A geração SSO aceita somente declaração vigente e íntegra; o envio/OS legado continua bloqueado. Consultas operacionais ocultam substituída, enquanto detalhe/histórico preservam identificação. Interface está sob flag desligada.
+- Clone compilou migrations 1614–1730; fixture integrada passou para geração legada anterior à vigência, conciliação, replay, Cliente divergente, envio bloqueado, Chamado SSO e nova conferência após mudança. Selo e relógio sintéticos; 1045 intacta. Em duas sessões, alteração primeiro tornou foto obsoleta e declaração primeiro impediu envio legado. Outros escritores e aprovação real não foram integralmente provados.
+- Testes focados da interface e typecheck passaram antes do ajuste final de recibos; teste de recibos 2/2 passou. ACL dos comandos exige ator, concessão por Cliente e gate; leitura de estados herda policy PCM existente, que não comprova concessão individual por Cliente (ADR-1588). Flags e homologação permanecem bloqueadas; sem deploy/Auvo.
+- Concorrência dos geradores Visita e legado com escolha `somente_sso` passou em clone com aprovação e relógio simulados: contenção, retry, uma preparada SSO e nenhuma duplicata legada. Próximo passo: revisar segurança por Cliente, cobertura dos demais escritores e aprovação real antes de alterar 1045; validar fluxo em lote com flags apropriadas em ambiente isolado.
+
 ## 2026-11-04 — S165/S166: triagem inicial e concorrência de geradores
 
 - ADR-1586/migration 1728 permitem decisão preliminar de vencido após ativação inicial, sem exigir retomada, mantendo autorização e verificação da vigência. Plano encerrado recusa decisão nova e aceita replay; suspenso mantém triagem preliminar. Clone compilou e fixtures cobriram ativação, replay, Cliente divergente, data corrente, estados e versão anterior dentro/fora da vigência; testes usam fallback civil São Paulo, não comprovam fuso fotografado.

@@ -545,7 +545,7 @@ export function PreventivasWorkspace({
       : ocorrenciaSelecionada
         ? (planoPorId.get(ocorrenciaSelecionada.plano_id) ?? null)
         : null;
-  const itensDaVisao = ocorrencias.map((ocorrencia) => ({
+  const itensDaVisao = ocorrencias.filter((ocorrencia) => ocorrencia.reconciliacao_legada !== "substituida").map((ocorrencia) => ({
     id: ocorrencia.id,
     nomePlano: planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido",
     vencimento: ocorrencia.vencimento,
@@ -631,7 +631,7 @@ export function PreventivasWorkspace({
           </fieldset>
         </div>
         <div className="mt-3">
-          {ocorrencias.length === 0 ? (
+          {itensDaVisao.length === 0 ? (
             <p className="text-body text-ink-3">Nenhuma ocorrência planejada.</p>
           ) : visao === "lista" ? (
             <PreventivasListaView ocorrencias={itensDaVisao} onSelecionar={selecionarOcorrencia} />
