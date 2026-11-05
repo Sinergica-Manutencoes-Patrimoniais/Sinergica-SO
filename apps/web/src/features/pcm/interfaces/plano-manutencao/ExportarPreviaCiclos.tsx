@@ -10,7 +10,20 @@ type Ciclo = {
 };
 function celula(valor: string | number): string {
   let texto = String(valor);
-  if (/^[\s\u0000-\u001f]*[=+\-@]/u.test(texto) || /^[\t\r\n]/u.test(texto)) texto = `'${texto}`;
+  let indice = 0;
+  while (
+    indice < texto.length &&
+    (/\s/u.test(texto.charAt(indice)) || texto.charCodeAt(indice) <= 31)
+  )
+    indice++;
+  const primeiro = texto.charCodeAt(0);
+  if (
+    "=+-@".includes(texto[indice] ?? "\0") ||
+    primeiro === 9 ||
+    primeiro === 10 ||
+    primeiro === 13
+  )
+    texto = `'${texto}`;
   return `"${texto.replace(/"/g, '""')}"`;
 }
 export function ExportarPreviaCiclos({
@@ -132,8 +145,7 @@ export function ExportarPreviaCiclos({
           "",
           "fonte oficial de feriados não consultada",
         ]);
-      const conteudo =
-        "\uFEFF" + linhas.map((linha) => linha.map(celula).join(";")).join("\r\n") + "\r\n";
+      const conteudo = `\uFEFF${linhas.map((linha) => linha.map(celula).join(";")).join("\r\n")}\r\n`;
       if (!(await supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir", clienteId)))
         throw new Error("Acesso indisponível.");
       const url = URL.createObjectURL(new Blob([conteudo], { type: "text/csv;charset=utf-8" }));

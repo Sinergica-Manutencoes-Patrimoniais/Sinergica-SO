@@ -138,6 +138,7 @@ export function ExportarCronogramaFotografia({
     },
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Trocar a identidade deve limpar o formulário e abortar a exportação anterior.
   useLayoutEffect(() => {
     setOcupado(false);
     setErro("");

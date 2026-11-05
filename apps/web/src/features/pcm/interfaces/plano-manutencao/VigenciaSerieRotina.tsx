@@ -306,14 +306,17 @@ export function VigenciaSerieRotina({
             (acao === "encerrar" && (!vigente || vigente.fim !== null))
           )
             return;
+          const dadosVigencia =
+            acao === "criar" ? { id: crypto.randomUUID(), revisao: 0 } : vigente;
+          if (!dadosVigencia) return;
           const p: Pedido = {
             requestId: crypto.randomUUID(),
             clienteId,
             planoId,
             rotinaId,
             serieId,
-            vigenciaId: acao === "criar" ? crypto.randomUUID() : vigente!.id,
-            revision: acao === "criar" ? 0 : vigente!.revisao,
+            vigenciaId: dadosVigencia.id,
+            revision: dadosVigencia.revisao,
             acao,
             data,
             motivo: motivo.trim(),

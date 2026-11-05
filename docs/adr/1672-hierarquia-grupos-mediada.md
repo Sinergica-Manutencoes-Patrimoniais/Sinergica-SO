@@ -1,3 +1,9 @@
+---
+name: adr-1672-hierarquia-grupos-mediada
+description: Decisão de mediação de leitura para estrutura técnica.
+alwaysApply: false
+---
+
 # ADR-1672 — Listagem mediada da hierarquia de Grupos
 
 ## Contexto

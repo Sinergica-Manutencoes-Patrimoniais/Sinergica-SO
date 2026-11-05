@@ -263,7 +263,8 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
         <button
           type="button"
           onClick={() => {
-            setEscolha(ocorrenciaEmConferencia!);
+            if (!ocorrenciaEmConferencia) return;
+            setEscolha(ocorrenciaEmConferencia);
             setConfirmado(null);
           }}
         >

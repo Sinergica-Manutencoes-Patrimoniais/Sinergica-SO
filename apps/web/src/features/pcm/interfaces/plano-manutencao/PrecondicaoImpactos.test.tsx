@@ -73,7 +73,9 @@ it("impede envios simultâneos e não apaga tentativa divergente após confirma�
       api.rpc.mock.calls.filter(([nome]) => nome === "sso_registrar_precondicao_impacto_mediada"),
     ).toHaveLength(1),
   );
-  const pedido = JSON.parse(sessionStorage.getItem(chave)!);
+  const salvo = sessionStorage.getItem(chave);
+  if (salvo === null) throw new Error("Tentativa ausente");
+  const pedido = JSON.parse(salvo);
   const divergente = JSON.stringify({ ...pedido, requestId: "outro-pedido" });
   sessionStorage.setItem(chave, divergente);
   await act(async () =>

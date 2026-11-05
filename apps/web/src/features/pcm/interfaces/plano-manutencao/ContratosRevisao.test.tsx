@@ -182,7 +182,8 @@ it("repete o mesmo pedido de obrigatoriedade após resultado incerto", async () 
   fixtures();
   vi.stubEnv("VITE_SSO_CONTRATO_PERGUNTAS_ENABLED", "true");
   vi.stubEnv("VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED", "true");
-  const consulta = api.rpc.getMockImplementation()!;
+  const consulta = api.rpc.getMockImplementation();
+  if (!consulta) throw new Error("Mock de consulta ausente");
   api.rpc.mockImplementation((nome: string, args: unknown) =>
     nome === "sso_configurar_pergunta_mediada"
       ? Promise.resolve({ error: { code: "42501" } })
@@ -250,7 +251,8 @@ it.each([true, false])(
     api.listarPlanos.mockResolvedValue([
       { id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 8 },
     ]);
-    const consulta = api.rpc.getMockImplementation()!;
+    const consulta = api.rpc.getMockImplementation();
+    if (!consulta) throw new Error("Mock de consulta ausente");
     api.rpc.mockImplementation((nome: string, args: unknown) =>
       nome === "sso_iniciar_revisao_contratos_mediada"
         ? Promise.resolve({

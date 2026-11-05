@@ -82,7 +82,9 @@ it("projeta ciclos anteriores à referência e oferece decisão sem criar ocorr�
   expect(screen.getByText(/1 Rotina\(s\) por Visita não projetada/)).toBeTruthy();
   const botoes = screen.getAllByRole("button", { name: "Conferir este ciclo" });
   expect(botoes).toHaveLength(2);
-  fireEvent.click(botoes[0]!);
+  const primeiro = botoes[0];
+  if (!primeiro) throw new Error("Primeiro ciclo ausente");
+  fireEvent.click(primeiro);
   expect(screen.getByText("Decisão do ciclo 0 em 2026-01-15")).toBeTruthy();
   expect(api.confirmar).toHaveBeenCalledTimes(1);
 });

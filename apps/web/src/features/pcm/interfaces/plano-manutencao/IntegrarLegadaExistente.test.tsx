@@ -98,7 +98,10 @@ for (const incerto of [false, true])
       await waitFor(() => expect(repetir).toBeEnabled());
       fireEvent.click(repetir);
       await waitFor(() => expect(api.rpc).toHaveBeenCalledTimes(2));
-      expect(api.rpc.mock.calls[0]![1].p_request).toBe(api.rpc.mock.calls[1]![1].p_request);
+      const primeira = api.rpc.mock.calls[0];
+      const segunda = api.rpc.mock.calls[1];
+      if (!primeira || !segunda) throw new Error("Tentativas ausentes");
+      expect(primeira[1].p_request).toBe(segunda[1].p_request);
     } else {
       expect(await screen.findByText(/Vínculo registrado/)).toBeTruthy();
       expect(screen.getByText("Fila para conferência")).toBeTruthy();

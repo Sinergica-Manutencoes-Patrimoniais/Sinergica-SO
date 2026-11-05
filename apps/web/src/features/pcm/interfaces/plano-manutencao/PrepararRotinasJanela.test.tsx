@@ -129,10 +129,14 @@ it("prepara Rotinas sequencialmente e retoma o pedido da Rotina incerta", async 
     api.rpc.mock.calls.filter(
       ([nome]) => nome === "sso_materializar_lote_calendario_origem_conferida",
     );
-  const pendente = tentativas()[1]![1];
+  const segundaTentativa = tentativas()[1];
+  if (!segundaTentativa) throw new Error("Tentativa pendente ausente");
+  const pendente = segundaTentativa[1];
   fireEvent.click(screen.getByRole("button", { name: "Retomar sequência" }));
   await waitFor(() => expect(screen.getByText(/Preparação concluída/)).toBeInTheDocument());
-  expect(tentativas()[2]![1]).toEqual(pendente);
+  const repeticao = tentativas()[2];
+  if (!repeticao) throw new Error("Repetição ausente");
+  expect(repeticao[1]).toEqual(pendente);
   expect(screen.getByLabelText("Ocorrências preparadas na janela")).toHaveTextContent(id(31));
   expect(screen.getByLabelText("Ocorrências preparadas na janela")).toHaveTextContent(id(32));
   expect(

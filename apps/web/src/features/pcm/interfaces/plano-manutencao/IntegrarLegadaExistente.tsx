@@ -152,20 +152,20 @@ function Conteudo({
       await conferirSessaoDiagnostico(userId);
       if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw Error();
-      p = pedido.parse({ ...p, tentativaIncerta: true });
-      sessionStorage.setItem(chave, JSON.stringify(p));
-      setPendente(p);
+      const enviado = pedido.parse({ ...p, tentativaIncerta: true });
+      sessionStorage.setItem(chave, JSON.stringify(enviado));
+      setPendente(enviado);
       const { data, error } = await supabase
         .schema("pcm")
         .rpc("sso_integrar_legado_existente_mediado", {
           p_ator: userId,
-          p_request: p.request,
-          p_cliente: p.cliente,
-          p_preparada: p.preparada,
-          p_legada: p.legada,
-          p_ciclo: p.ciclo,
-          p_relacao: p.relacao,
-          p_motivo: p.motivo,
+          p_request: enviado.request,
+          p_cliente: enviado.cliente,
+          p_preparada: enviado.preparada,
+          p_legada: enviado.legada,
+          p_ciclo: enviado.ciclo,
+          p_relacao: enviado.relacao,
+          p_motivo: enviado.motivo,
         });
       if (error) throw error;
       const r = z
@@ -183,15 +183,15 @@ function Conteudo({
         .passthrough()
         .parse(data);
       if (
-        r.requestId !== p.request ||
-        r.preparadaId !== p.preparada ||
-        r.legadaId !== p.legada ||
-        r.cicloId !== p.ciclo
+        r.requestId !== enviado.request ||
+        r.preparadaId !== enviado.preparada ||
+        r.legadaId !== enviado.legada ||
+        r.cicloId !== enviado.ciclo
       )
         throw Error();
       await conferirSessaoDiagnostico(userId);
       if (!montado.current) throw new Error("Tela desmontada.");
-      if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw Error();
+      if (sessionStorage.getItem(chave) !== JSON.stringify(enviado)) throw Error();
       sessionStorage.removeItem(chave);
       setPendente(null);
       setConfirmacao(null);

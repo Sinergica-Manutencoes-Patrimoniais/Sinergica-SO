@@ -55,22 +55,22 @@ it.each(["inicial", "replay", "serializacao"] as const)(
       code: cenario === "serializacao" ? "40001" : "P0011",
       message: "revisao_obsoleta",
     };
-    api.rpc.mockImplementation((nome: string) =>
-      nome === "sso_listar_vigencias_serie_mediada"
-        ? {
-            abortSignal: async () => ({
-              data: [{ id: id(6), inicio: "2026-01-01", fim: null, revisao: 1 }],
-              error: null,
-            }),
-          }
-        : nome === "sso_listar_eventos_vigencia_mediada"
-          ? { abortSignal: async () => ({ data: [], error: null }) }
-          : (envios++,
-            Promise.resolve({
-              data: null,
-              error: cenario === "replay" && envios === 1 ? new Error("rede") : erro,
-            })),
-    );
+    api.rpc.mockImplementation((nome: string) => {
+      if (nome === "sso_listar_vigencias_serie_mediada")
+        return {
+          abortSignal: async () => ({
+            data: [{ id: id(6), inicio: "2026-01-01", fim: null, revisao: 1 }],
+            error: null,
+          }),
+        };
+      if (nome === "sso_listar_eventos_vigencia_mediada")
+        return { abortSignal: async () => ({ data: [], error: null }) };
+      envios++;
+      return Promise.resolve({
+        data: null,
+        error: cenario === "replay" && envios === 1 ? new Error("rede") : erro,
+      });
+    });
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     });

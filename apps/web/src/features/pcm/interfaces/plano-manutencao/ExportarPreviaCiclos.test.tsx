@@ -31,10 +31,11 @@ afterEach(() => {
 
 function montar(
   ciclos = [{ ciclo: 1, vencimento: "2026-12-25", toleranciaAntes: 2, toleranciaDepois: 3 }],
+  clienteId = "=cliente",
 ) {
   render(
     <ExportarPreviaCiclos
-      clienteId="=cliente"
+      clienteId={clienteId}
       planoId="plano"
       versaoId="versao"
       rotinaId="rotina"
@@ -86,4 +87,17 @@ it("não cria download se a autorização for revogada durante a geração", asy
   expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível exportar");
   expect(criarUrl).not.toHaveBeenCalled();
   expect(clicar).not.toHaveBeenCalled();
+});
+
+it.each([
+  ["\u0001  =cmd", true],
+  ["\tvalor", true],
+  ["  +cmd", true],
+  ["valor normal", false],
+])("protege célula CSV com entrada %j", async (valor, protegida) => {
+  montar(undefined, valor);
+  fireEvent.click(screen.getByRole("button", { name: "Exportar prévia parcial em CSV" }));
+  await waitFor(() => expect(criarUrl).toHaveBeenCalledTimes(1));
+  const csv = await lerBlob(criarUrl.mock.calls[0]?.[0] as Blob);
+  expect(csv).toContain(`"${protegida ? "'" : ""}${valor}"`);
 });

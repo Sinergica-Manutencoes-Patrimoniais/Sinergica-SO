@@ -91,17 +91,16 @@ export function SelecionarAlvoCronograma({
       else if (anterior.nome !== r.alvoNome)
         alvos.set(chave, { ...anterior, nome: `${anterior.nome} / ${r.alvoNome}` });
     }
-  const termo = busca
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("pt-BR");
+  const removerMarcas = (valor: string) =>
+    Array.from(valor.normalize("NFD"))
+      .filter((caractere) => {
+        const codigo = caractere.codePointAt(0);
+        return codigo === undefined || codigo < 0x300 || codigo > 0x36f;
+      })
+      .join("");
+  const termo = removerMarcas(busca.trim()).toLocaleLowerCase("pt-BR");
   const alvosExibidos = [...alvos.values()].filter((alvo) =>
-    alvo.nome
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase("pt-BR")
-      .includes(termo),
+    removerMarcas(alvo.nome).toLocaleLowerCase("pt-BR").includes(termo),
   );
   return (
     <section aria-label="Selecionar alvo da fotografia aprovada">

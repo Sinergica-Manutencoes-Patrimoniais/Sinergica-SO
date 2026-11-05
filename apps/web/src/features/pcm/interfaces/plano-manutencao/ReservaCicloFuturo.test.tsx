@@ -96,7 +96,8 @@ it.each(["primeira", "replay"] as const)(
     } else {
       expect(await screen.findByRole("button", { name: "Repetir mesma tentativa" })).toBeTruthy();
       expect(sessionStorage.length).toBe(1);
-      const anterior = api.rpc.getMockImplementation()!;
+      const anterior = api.rpc.getMockImplementation();
+      if (!anterior) throw new Error("Mock de consulta ausente");
       api.rpc.mockImplementation((nome: string, ...args: unknown[]) =>
         nome === "sso_decidir_reserva_visita_futura"
           ? Promise.resolve({

@@ -298,94 +298,89 @@ function Conteudo({
       ) : (
         !consulta.isFetching &&
         !consulta.isError &&
-        consulta.data && (
+        consulta.data &&
+        (!consulta.data.copiada ? (
+          <p>Não há cópia identificada neste fluxo.</p>
+        ) : consulta.data.planoRevision !== revisao ? (
+          <p role="alert">A revisão mudou. Recarregue o Plano antes de conferir.</p>
+        ) : (
           <>
-            {!consulta.data.copiada ? (
-              <p>Não há cópia identificada neste fluxo.</p>
-            ) : consulta.data.planoRevision !== revisao ? (
-              <p role="alert">A revisão mudou. Recarregue o Plano antes de conferir.</p>
-            ) : (
-              <>
-                <p>
-                  {consulta.data.conferenciaAtual
-                    ? "Há declaração para a revisão e conteúdo atuais."
-                    : "Conferência atual pendente."}{" "}
-                  Alterações posteriores exigem nova conferência.
-                </p>
-                <p>
-                  Examine a Rotina, alvo, data-base, tolerâncias, questionário completo e exigências
-                  aplicáveis antes de declarar. Esta tela não substitui essa análise.
-                </p>
-                <p>
-                  {comparacoes[consulta.data.comparacaoQuestionario]} A comparação não valida o
-                  conteúdo nem aprova o Plano.
-                </p>
-                {consulta.data.questionarioAtual ? (
-                  <div>
-                    <strong>Questionário atual: {consulta.data.questionarioAtual.nome}</strong>
-                    {consulta.data.questionarioAtual.cabecalho && (
-                      <p>{consulta.data.questionarioAtual.cabecalho}</p>
-                    )}
-                    <ol>
-                      {consulta.data.questionarioAtual.perguntas.map((texto, indice) => (
-                        <li key={`${indice}:${texto ?? "desconhecida"}`}>
-                          {texto ?? "Conteúdo não reconhecido; consultar a fonte."}
-                        </li>
-                      ))}
-                    </ol>
-                    {consulta.data.questionarioAtual.rodape && (
-                      <p>{consulta.data.questionarioAtual.rodape}</p>
-                    )}
-                    <p>
-                      Esta é uma projeção parcial: campos, opções e estruturas não reconhecidas não
-                      são exibidos. Consulte também a fonte completa; o conteúdo atual pode divergir
-                      da versão histórica.
-                    </p>
-                  </div>
-                ) : (
-                  <p>Nenhum questionário está vinculado à Rotina atual.</p>
+            <p>
+              {consulta.data.conferenciaAtual
+                ? "Há declaração para a revisão e conteúdo atuais."
+                : "Conferência atual pendente."}{" "}
+              Alterações posteriores exigem nova conferência.
+            </p>
+            <p>
+              Examine a Rotina, alvo, data-base, tolerâncias, questionário completo e exigências
+              aplicáveis antes de declarar. Esta tela não substitui essa análise.
+            </p>
+            <p>
+              {comparacoes[consulta.data.comparacaoQuestionario]} A comparação não valida o conteúdo
+              nem aprova o Plano.
+            </p>
+            {consulta.data.questionarioAtual ? (
+              <div>
+                <strong>Questionário atual: {consulta.data.questionarioAtual.nome}</strong>
+                {consulta.data.questionarioAtual.cabecalho && (
+                  <p>{consulta.data.questionarioAtual.cabecalho}</p>
                 )}
-                <label>
-                  Justificativa{" "}
-                  <textarea
-                    className="input"
-                    maxLength={2000}
-                    value={justificativa}
-                    disabled={ocupado || recuperacao.invalido}
-                    onChange={(e) => {
-                      setJustificativa(e.target.value);
-                      setConfirmacao(null);
-                    }}
-                  />
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={confirmado}
-                    disabled={ocupado || recuperacao.invalido || !disponivel}
-                    onChange={(e) =>
-                      setConfirmacao(e.target.checked ? assinaturaConferencia : null)
-                    }
-                  />{" "}
-                  Declaro ter conferido os dados e o questionário atual para este destino.
-                </label>
-                <Button
-                  variant="secondary"
-                  disabled={
-                    !disponivel ||
-                    !confirmado ||
-                    !justificativa.trim() ||
-                    ocupado ||
-                    recuperacao.invalido
-                  }
-                  onClick={iniciar}
-                >
-                  Registrar conferência
-                </Button>
-              </>
+                <ol>
+                  {consulta.data.questionarioAtual.perguntas.map((texto, indice) => (
+                    <li key={`${indice}:${texto ?? "desconhecida"}`}>
+                      {texto ?? "Conteúdo não reconhecido; consultar a fonte."}
+                    </li>
+                  ))}
+                </ol>
+                {consulta.data.questionarioAtual.rodape && (
+                  <p>{consulta.data.questionarioAtual.rodape}</p>
+                )}
+                <p>
+                  Esta é uma projeção parcial: campos, opções e estruturas não reconhecidas não são
+                  exibidos. Consulte também a fonte completa; o conteúdo atual pode divergir da
+                  versão histórica.
+                </p>
+              </div>
+            ) : (
+              <p>Nenhum questionário está vinculado à Rotina atual.</p>
             )}
+            <label>
+              Justificativa{" "}
+              <textarea
+                className="input"
+                maxLength={2000}
+                value={justificativa}
+                disabled={ocupado || recuperacao.invalido}
+                onChange={(e) => {
+                  setJustificativa(e.target.value);
+                  setConfirmacao(null);
+                }}
+              />
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={confirmado}
+                disabled={ocupado || recuperacao.invalido || !disponivel}
+                onChange={(e) => setConfirmacao(e.target.checked ? assinaturaConferencia : null)}
+              />{" "}
+              Declaro ter conferido os dados e o questionário atual para este destino.
+            </label>
+            <Button
+              variant="secondary"
+              disabled={
+                !disponivel ||
+                !confirmado ||
+                !justificativa.trim() ||
+                ocupado ||
+                recuperacao.invalido
+              }
+              onClick={iniciar}
+            >
+              Registrar conferência
+            </Button>
           </>
-        )
+        ))
       )}
       {aviso && <output className="block">{aviso}</output>}
     </section>

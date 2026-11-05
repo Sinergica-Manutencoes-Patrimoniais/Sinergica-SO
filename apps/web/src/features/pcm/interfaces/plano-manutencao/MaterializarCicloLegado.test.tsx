@@ -75,9 +75,9 @@ it("não apaga tentativa substituída por outra instância durante envio", async
   await waitFor(() =>
     expect(api.rpc).toHaveBeenCalledWith("sso_materializar_legado_mediado", expect.anything()),
   );
-  const pedido = api.rpc.mock.calls.find(
-    ([nome]) => nome === "sso_materializar_legado_mediado",
-  )![1];
+  const chamada = api.rpc.mock.calls.find(([nome]) => nome === "sso_materializar_legado_mediado");
+  if (!chamada) throw new Error("Pedido de materialização ausente");
+  const pedido = chamada[1];
   sessionStorage.setItem(chave, "tentativa de outra instância");
   concluir({
     data: {
@@ -170,9 +170,9 @@ it("encaminha ciclo integrado para conferência independente da fila", async () 
   await waitFor(() =>
     expect(api.rpc).toHaveBeenCalledWith("sso_materializar_legado_mediado", expect.anything()),
   );
-  const pedido = api.rpc.mock.calls.find(
-    ([nome]) => nome === "sso_materializar_legado_mediado",
-  )![1];
+  const chamada = api.rpc.mock.calls.find(([nome]) => nome === "sso_materializar_legado_mediado");
+  if (!chamada) throw new Error("Pedido de materialização ausente");
+  const pedido = chamada[1];
   concluir({
     data: {
       requestId: pedido.p_request_id,

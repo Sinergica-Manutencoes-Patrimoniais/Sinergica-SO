@@ -307,8 +307,7 @@ export function FormularioRotina({
       for (let i = 0; i < sessionStorage.length; i++) {
         const item = sessionStorage.key(i);
         if (
-          item &&
-          item.endsWith(sufixo) &&
+          item?.endsWith(sufixo) &&
           (item.startsWith("sso-rotina-") || item === `sso-plano-revisao${sufixo}`)
         ) {
           setErro(

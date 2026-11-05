@@ -1,3 +1,9 @@
+---
+name: adr-1670-leitura-documento-staging-mediada
+description: Decisão de mediação de leitura para estrutura técnica.
+alwaysApply: false
+---
+
 # ADR-1670 — Leitura mediada de documento aceito de levantamento
 
 ## Contexto

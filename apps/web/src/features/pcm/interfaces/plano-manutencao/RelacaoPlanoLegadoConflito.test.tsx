@@ -141,7 +141,9 @@ it.each([
     fireEvent.click(screen.getByRole("button", { name: "Registrar decisão" }));
     await screen.findByText(/Resultado não confirmado/);
     expect(sessionStorage.length).toBe(1);
-    const salvo = sessionStorage.getItem(sessionStorage.key(0)!);
+    const chave = sessionStorage.key(0);
+    if (chave === null) throw new Error("Chave de tentativa ausente");
+    const salvo = sessionStorage.getItem(chave);
     expect(salvo).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Repetir tentativa pendente" }));
     await waitFor(() => expect(sessionStorage.length).toBe(0));
