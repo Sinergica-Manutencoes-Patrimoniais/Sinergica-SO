@@ -104,3 +104,9 @@ de versão ativado na fixture, uma nova aprovação pelo caminho legado foi bloq
 legado e novo passaram. O token estava ausente após rollback; a fila de saída foi suprimida no
 cenário sintético e os recursos descartáveis foram removidos. O ensaio não comprova concorrência
 nem comportamento após commit e não constitui homologação ou autorização de release.
+
+Em ensaio posterior com as 658 migrations candidatas, passaram as disputas entre aprovação e
+revisão e entre aprovação e revogação, em ambas as ordens, além da verificação do token e dos
+replays após commit. A fila de saída foi suprimida no cenário sintético e o clone foi removido.
+O ensaio não comprova alteração concorrente do gate nem os privilégios do proprietário no ambiente
+real; não constitui homologação ou autorização de release.
