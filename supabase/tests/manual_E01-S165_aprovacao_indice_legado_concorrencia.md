@@ -34,6 +34,8 @@ Em uma ordem, executar `pcm.atualizar_resultado_preventiva` como `service_role` 
 
 Os três cenários passaram com o código real da migration 1731. A aprovação foi revertida e o gate ativado somente no clone; o retorno era sintético. O ensaio não comprova homologação nem elimina a contenção global entre Clientes.
 
+Com migrations até 1737, repetiu-se a disputa com o gerador integral `pcm.materializar_ocorrencias_preventivas` e aprovação mediada 1731 real. O gate dedicado foi habilitado somente no clone, sem substituir a guarda. Na ordem gerador primeiro, aprovação concorrente recebeu contenção; após confirmação do gerador, aprovação recusou com `impacto_parcial_pendente`. Na ordem aprovação primeiro, gerador recebeu contenção; após rollback da aprovação, o retry criou duas ocorrências sintéticas. A fixture e seu gate foram descartados; nenhuma tarefa Auvo foi criada.
+
 ## Tentativas diretas e revogação
 
 Em clone com migrations até 1731, usar a fixture de revisão e testar como `authenticated` e `service_role`: escrita direta do gate e inserção de token devem ser recusadas; execução direta de `sso_aprovar_revisao_preparada` deve ser negada. Como `authenticated` autorizado, chamar `sso_aprovar_plano` diretamente para a revisão deve falhar com `revisao_sem_vigencia_segura`. `REPEATABLE READ` deve ser recusado pela aprovação mediada, e `authenticated` não pode configurar `session_replication_role=replica`.

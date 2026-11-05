@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: avaliação na fila de Visita
+
+- Revisão reproduziu fila de Visita tratando legada com avaliação como candidata inerte. ADR-1596/migration 1738 tornam estado indeterminado sob trava e preservam fila para conferência; leitura 1650 usa mesma função. Clone testou com/sem avaliação, replay e concorrência nas duas ordens. Fixtures `supabase/tests/manual_E01-S165_avaliacao_fila_visita_1738.sql` e roteiro concorrente correspondente.
+- Aprovação real 1731 concorreu com gerador legado em clone: contenção em ambas ordens; geração anterior fez aprovação recusar impacto pendente. Gate ativado somente no clone, 1045 efetiva. Não comprova todas as fontes.
+- Browser isolado repetiu aprovação/retirada/geração Visita com migrations até 1737; teste UI simulado 5/5 cobriu aviso de avaliação e bloqueio da escolha. Prévia com avaliação ainda não foi exercitada com backend real pela UI. Sem deploy/Auvo; gates default fechados.
+- Próximo passo: executar jornada integrada após 1738 e revisão adversarial/CI antes de homologação.
+
 ## 2026-11-05 — S165/S166: avaliações legadas na revisão
 
 - Revisão adversarial reproduziu avaliador que tratava legado com avaliação como inerte. ADR-1594/migration 1736 mantêm pendência e serializam chegada da avaliação; Calendário e Visita passaram em clone, concorrência Visita nas duas ordens passou (`supabase/tests/manual_E01-S165_avaliador_impacto_concorrencia_1736.md`).
