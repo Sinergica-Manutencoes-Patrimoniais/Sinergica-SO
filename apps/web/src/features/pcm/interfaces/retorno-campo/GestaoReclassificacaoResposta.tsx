@@ -4,70 +4,683 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Props = { userId: string; clienteId: string; retornoId: string; respostaId: string };
 const resultado = z.enum(["ok", "nao_ok", "nao_aplicavel", "nao_inspecionado", "corrigido"]);
-const pedido = z.discriminatedUnion("tipo", [z.object({ tipo: z.literal("proposta"), requestId: z.string().uuid(), clienteId: z.string().uuid(), retornoId: z.string().uuid(), respostaId: z.string().uuid(), propostaRevision: z.number().int().nonnegative(), validacaoRevision: z.number().int().nonnegative(), resultado, observacao: z.string().max(4000), motivo: z.string().min(1).max(2000) }).strict(), z.object({ tipo: z.literal("decisao"), requestId: z.string().uuid(), clienteId: z.string().uuid(), retornoId: z.string().uuid(), respostaId: z.string().uuid(), propostaId: z.string().uuid(), decisaoRevision: z.number().int().nonnegative(), validacaoRevision: z.number().int().nonnegative(), decisao: z.enum(["aceita", "rejeitada"]), motivo: z.string().min(1).max(2000) }).strict()]); type Pedido = z.infer<typeof pedido>;
-const contexto = z.object({ respostaId: z.string().uuid(), propostaRevision: z.number().int().nonnegative(), decisaoRevision: z.number().int().nonnegative(), validacaoRevision: z.number().int().nonnegative(), historicoReconciliado: z.boolean(), ultimaValidacao: z.string().nullable(), jaAprovado: z.boolean() }).strict();
-const evento = z.object({ id: z.string().uuid(), tipo: z.enum(["proposta", "decisao"]), revisao: z.number().int().positive(), resultado: z.string().nullable(), observacao: z.string().nullable(), decisao: z.string().nullable(), motivo: z.string(), ator_id: z.string().uuid(), criado_em: z.string().datetime({ offset: true }) }).strict();
-const previa = z.object({ respostaId: z.string().uuid(), original: z.object({ resultado: z.string(), observacao: z.string().nullable() }).strict(), proposta: z.object({ id: z.string().uuid(), revisao: z.number().int().positive(), resultado: z.string(), observacao: z.string().nullable(), decisao: z.enum(["aceita", "rejeitada"]).nullable(), decisaoRevisao: z.number().int().positive().nullable() }).strict().nullable(), efetivada: z.literal(false), integracaoTransversalConcluida: z.literal(false) }).strict();
-export function GestaoReclassificacaoResposta(props: Props) { if (import.meta.env.VITE_SSO_GESTAO_RECLASSIFICACAO_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.respostaId])} {...props}/>; }
-function Conteudo({ userId, clienteId, retornoId, respostaId }: Props) {
-  const montado=useRef(false);
-  useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
-  async function conferirSessao(signal?: AbortSignal) { const atual=await supabase.auth.getUser(); if(atual.error||atual.data.user?.id!==userId||!montado.current||signal?.aborted)throw new Error("Sessão alterada."); }
-  const key = `sso-reclassificacao:${JSON.stringify([userId, clienteId, retornoId, respostaId])}`;
-  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(key); if (!raw) return null; const p = pedido.parse(JSON.parse(raw)); return p.clienteId === clienteId && p.retornoId === retornoId && p.respostaId === respostaId ? p : "invalido"; } catch { return "invalido"; } });
-  const [classificacao, setClassificacao] = useState<z.infer<typeof resultado>>("ok"); const [observacao, setObservacao] = useState(""); const [motivo, setMotivo] = useState(""); const [decisao, setDecisao] = useState<"aceita" | "rejeitada">("aceita"); const [confirma, setConfirma] = useState(false); const [aviso, setAviso] = useState(""); const trava = useRef(false); const client = useQueryClient();
-  const base = ["retorno-gestao-reclassificacao", userId, clienteId, retornoId, respostaId];
-  const ctx = useQuery({ queryKey: [...base, "contexto"], gcTime: 0, queryFn: async ({ signal }) => { await conferirSessao(signal); const { data, error } = await supabase.schema("pcm").rpc("sso_contexto_reclassificacao_mediada", { p_cliente_id: clienteId, p_retorno_id: retornoId, p_resposta_id: respostaId }).abortSignal(signal); if (error) throw error; const r = contexto.parse(data); if (r.respostaId !== respostaId) throw new Error("Resposta divergente"); await conferirSessao(signal); return r; } });
-  const proj = useQuery({ queryKey: [...base, "previa"], gcTime: 0, queryFn: async ({ signal }) => { await conferirSessao(signal); const { data, error } = await supabase.schema("pcm").rpc("sso_previa_reclassificacao_mediada", { p_cliente_id: clienteId, p_resposta_id: respostaId }).abortSignal(signal); if (error) throw error; const r = previa.parse(data); if (r.respostaId !== respostaId) throw new Error("Resposta divergente"); await conferirSessao(signal); return r; } });
-  const hist = useInfiniteQuery({ queryKey: [...base, "historico"], gcTime: 0, initialPageParam: null as string | null, queryFn: async ({ pageParam, signal }) => { await conferirSessao(signal); const { data, error } = await supabase.schema("pcm").rpc("sso_historico_reclassificacao_mediada", { p_cliente_id: clienteId, p_retorno_id: retornoId, p_resposta_id: respostaId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; const pagina=z.array(evento).max(20).parse(data); await conferirSessao(signal); return pagina; }, getNextPageParam: p => p.length === 20 ? p.at(-1)?.id : undefined });
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { await conferirSessao(); if(sessionStorage.getItem(key)!==JSON.stringify(p))throw new Error("Tentativa alterada."); const { data, error } = p.tipo === "proposta" ? await supabase.schema("pcm").rpc("sso_propor_reclassificacao_mediada", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_retorno_id: p.retornoId, p_resposta_id: p.respostaId, p_expected_revision: p.propostaRevision, p_expected_validacao: p.validacaoRevision, p_resultado: p.resultado, p_observacao: p.observacao || null, p_motivo: p.motivo }) : await supabase.schema("pcm").rpc("sso_decidir_reclassificacao_mediada", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_retorno_id: p.retornoId, p_proposta_id: p.propostaId, p_expected_decisao: p.decisaoRevision, p_expected_validacao: p.validacaoRevision, p_decisao: p.decisao, p_motivo: p.motivo }); if (error) throw error; const r = z.object({ requestId: z.string().uuid(), revision: z.number().int().positive(), efetivada: z.literal(false) }).passthrough().parse(data); if (r.requestId !== p.requestId || r.revision !== (p.tipo === "proposta" ? p.propostaRevision : p.decisaoRevision) + 1 || (p.tipo === "proposta" ? r.respostaId !== respostaId : r.propostaId !== p.propostaId)) throw new Error("Resposta divergente"); await conferirSessao(); }, onSuccess: async (_r, p) => { try { await conferirSessao(); if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(key); } catch { if(montado.current)setAviso("Comando registrado; tentativa local não foi limpa. Consulte suporte."); return; } setPendente(null); setConfirma(false); setAviso("Registro salvo como não efetivado."); await Promise.all([client.invalidateQueries({ queryKey: base }), client.invalidateQueries({ queryKey: ["retorno-reclassificacao-previa", userId, clienteId, respostaId] })]); }, onError: () => { if(montado.current)setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte."); }, onSettled: () => { trava.current = false; } });
-  function enviar(p: Pedido) { if (trava.current) return; trava.current = true; envio.mutate(p); }
-  function iniciar(tipo: "proposta" | "decisao") { if (pendente || trava.current || !confirma || !motivo.trim() || ctx.isFetching || ctx.isError || proj.isFetching || proj.isError || !ctx.data || !proj.data || !ctx.data.historicoReconciliado || (ctx.data.jaAprovado && ctx.data.ultimaValidacao !== "reabrir")) return; try { const comum = { requestId: crypto.randomUUID(), clienteId, retornoId, respostaId, validacaoRevision: ctx.data.validacaoRevision, motivo: motivo.trim() }; const p = pedido.parse(tipo === "proposta" ? { ...comum, tipo, propostaRevision: ctx.data.propostaRevision, resultado: classificacao, observacao: observacao.trim() } : { ...comum, tipo, propostaId: proj.data.proposta?.id, decisaoRevision: ctx.data.decisaoRevision, decisao }); if (p.tipo === "proposta" && p.resultado === "nao_aplicavel" && !p.observacao) throw new Error(); if (sessionStorage.getItem(key) !== null) throw new Error(); sessionStorage.setItem(key, JSON.stringify(p)); setPendente(p); enviar(p); } catch { setAviso("Confira revisão, justificativa e seleção. Nada enviado."); } }
-  const bloqueado = !ctx.data || !proj.data || ctx.isFetching || proj.isFetching || ctx.isError || proj.isError || !ctx.data.historicoReconciliado || (ctx.data.jaAprovado && ctx.data.ultimaValidacao !== "reabrir");
-  return <section><h5>Propostas de reclassificação</h5><p>Proposta e decisão não alteram resposta efetiva. Integração de validação, encerramento e Pendências permanece bloqueada.</p>
-    <ReaberturaReclassificacao userId={userId} clienteId={clienteId} retornoId={retornoId} respostaId={respostaId} revision={ctx.data?.validacaoRevision ?? null} reconciliado={ctx.data?.historicoReconciliado === true} consultaAtual={!ctx.isFetching && !ctx.isError} onAtualizar={() => { void client.invalidateQueries({ queryKey: base }); }}/>
-    {(ctx.isError || proj.isError || hist.isError) && <p role="alert">Consulta indisponível. <button type="button" onClick={() => { void ctx.refetch(); void proj.refetch(); void hist.refetch(); }}>Tentar novamente</button></p>}
-    {ctx.data && <p>Revisão proposta {ctx.data.propostaRevision} · decisão {ctx.data.decisaoRevision} · validação {ctx.data.validacaoRevision} · {ctx.data.historicoReconciliado ? "histórico reconciliado" : "histórico não reconciliado"} · última validação {ctx.data.ultimaValidacao ?? "nenhuma"}. {ctx.data.jaAprovado && ctx.data.ultimaValidacao !== "reabrir" ? "Reabertura explícita necessária." : ""}</p>}
-    {proj.data?.proposta && <p>Última proposta {proj.data.proposta.resultado} · decisão {proj.data.proposta.decisao ?? "ausente"} · não efetivada.</p>}
-    {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}{pendente && pendente !== "invalido" ? <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa</button> : !pendente && <><label>Resultado proposto <select value={classificacao} onChange={e => setClassificacao(e.target.value as z.infer<typeof resultado>)}>{resultado.options.map(x => <option key={x} value={x}>{x}</option>)}</select></label><label>Observação / justificativa de Não aplicável <textarea maxLength={4000} value={observacao} onChange={e => setObservacao(e.target.value)}/></label><label>Motivo da proposta ou decisão <textarea required maxLength={2000} value={motivo} onChange={e => setMotivo(e.target.value)}/></label><label><input type="checkbox" checked={confirma} onChange={e => setConfirma(e.target.checked)}/> Confirmo registro não efetivado.</label><button type="button" disabled={bloqueado || !confirma || !motivo.trim() || envio.isPending || (classificacao === "nao_aplicavel" && !observacao.trim())} onClick={() => iniciar("proposta")}>Registrar proposta</button><label>Decisão <select value={decisao} onChange={e => setDecisao(e.target.value as typeof decisao)}><option value="aceita">Aceitar proposta</option><option value="rejeitada">Rejeitar proposta</option></select></label><button type="button" disabled={bloqueado || !proj.data?.proposta || !confirma || !motivo.trim() || envio.isPending} onClick={() => iniciar("decisao")}>Registrar decisão</button></>}
-    {aviso && <p role="status">{aviso}</p>}<h6>Histórico de propostas e decisões</h6>{hist.data && hist.data.pages.flat().length === 0 && <p>Nenhum registro nesta fonte.</p>}{hist.data && <ol>{hist.data.pages.flat().map(e => <li key={e.id}>{e.tipo} · revisão {e.revisao} · {e.resultado ?? e.decisao} · {e.observacao ?? "sem observação"} · {e.motivo} · {e.ator_id} · <time dateTime={e.criado_em}>{new Date(e.criado_em).toLocaleString("pt-BR")}</time></li>)}</ol>}{hist.hasNextPage && <button type="button" disabled={hist.isFetchingNextPage} onClick={() => void hist.fetchNextPage()}>Mais registros</button>}
-  </section>;
+const pedido = z.discriminatedUnion("tipo", [
+  z
+    .object({
+      tipo: z.literal("proposta"),
+      requestId: z.string().uuid(),
+      clienteId: z.string().uuid(),
+      retornoId: z.string().uuid(),
+      respostaId: z.string().uuid(),
+      propostaRevision: z.number().int().nonnegative(),
+      validacaoRevision: z.number().int().nonnegative(),
+      resultado,
+      observacao: z.string().max(4000),
+      motivo: z.string().min(1).max(2000),
+    })
+    .strict(),
+  z
+    .object({
+      tipo: z.literal("decisao"),
+      requestId: z.string().uuid(),
+      clienteId: z.string().uuid(),
+      retornoId: z.string().uuid(),
+      respostaId: z.string().uuid(),
+      propostaId: z.string().uuid(),
+      decisaoRevision: z.number().int().nonnegative(),
+      validacaoRevision: z.number().int().nonnegative(),
+      decisao: z.enum(["aceita", "rejeitada"]),
+      motivo: z.string().min(1).max(2000),
+    })
+    .strict(),
+]);
+type Pedido = z.infer<typeof pedido>;
+const contexto = z
+  .object({
+    respostaId: z.string().uuid(),
+    propostaRevision: z.number().int().nonnegative(),
+    decisaoRevision: z.number().int().nonnegative(),
+    validacaoRevision: z.number().int().nonnegative(),
+    historicoReconciliado: z.boolean(),
+    ultimaValidacao: z.string().nullable(),
+    jaAprovado: z.boolean(),
+  })
+  .strict();
+const evento = z
+  .object({
+    id: z.string().uuid(),
+    tipo: z.enum(["proposta", "decisao"]),
+    revisao: z.number().int().positive(),
+    resultado: z.string().nullable(),
+    observacao: z.string().nullable(),
+    decisao: z.string().nullable(),
+    motivo: z.string(),
+    ator_id: z.string().uuid(),
+    criado_em: z.string().datetime({ offset: true }),
+  })
+  .strict();
+const previa = z
+  .object({
+    respostaId: z.string().uuid(),
+    original: z.object({ resultado: z.string(), observacao: z.string().nullable() }).strict(),
+    proposta: z
+      .object({
+        id: z.string().uuid(),
+        revisao: z.number().int().positive(),
+        resultado: z.string(),
+        observacao: z.string().nullable(),
+        decisao: z.enum(["aceita", "rejeitada"]).nullable(),
+        decisaoRevisao: z.number().int().positive().nullable(),
+      })
+      .strict()
+      .nullable(),
+    efetivada: z.literal(false),
+    integracaoTransversalConcluida: z.literal(false),
+  })
+  .strict();
+export function GestaoReclassificacaoResposta(props: Props) {
+  if (import.meta.env.VITE_SSO_GESTAO_RECLASSIFICACAO_ENABLED !== "true") return null;
+  return (
+    <Conteudo
+      key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.respostaId])}
+      {...props}
+    />
+  );
 }
-const reaberturaSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), retornoId: z.string().uuid(), revision: z.number().int().nonnegative(), motivo: z.string().min(1).max(2000) }).strict();
-type Reabertura = z.infer<typeof reaberturaSchema>;
-function ReaberturaReclassificacao({ userId, clienteId, retornoId, respostaId, revision, reconciliado, consultaAtual, onAtualizar }: Props & { revision: number | null; reconciliado: boolean; consultaAtual: boolean; onAtualizar: () => void }) {
-  const montado=useRef(false);
-  useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
-  async function conferirSessao(){const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId||!montado.current)throw new Error("Sessão alterada.");}
-  const key = `sso-reabrir-reclassificacao:${JSON.stringify([userId, clienteId, retornoId, respostaId])}`;
-  const [pendente, setPendente] = useState<Reabertura | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(key); if (!raw) return null; const p = reaberturaSchema.parse(JSON.parse(raw)); return p.clienteId === clienteId && p.retornoId === retornoId ? p : "invalido"; } catch { return "invalido"; } });
-  const [motivo, setMotivo] = useState(""); const [confirmado, setConfirmado] = useState(false); const [aviso, setAviso] = useState(""); const trava = useRef(false);
+function Conteudo({ userId, clienteId, retornoId, respostaId }: Props) {
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
+  async function conferirSessao(signal?: AbortSignal) {
+    const atual = await supabase.auth.getUser();
+    if (atual.error || atual.data.user?.id !== userId || !montado.current || signal?.aborted)
+      throw new Error("Sessão alterada.");
+  }
+  const key = `sso-reclassificacao:${JSON.stringify([userId, clienteId, retornoId, respostaId])}`;
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (!raw) return null;
+      const p = pedido.parse(JSON.parse(raw));
+      return p.clienteId === clienteId && p.retornoId === retornoId && p.respostaId === respostaId
+        ? p
+        : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  const [classificacao, setClassificacao] = useState<z.infer<typeof resultado>>("ok");
+  const [observacao, setObservacao] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [decisao, setDecisao] = useState<"aceita" | "rejeitada">("aceita");
+  const [confirma, setConfirma] = useState(false);
+  const [aviso, setAviso] = useState("");
+  const trava = useRef(false);
+  const client = useQueryClient();
+  const base = ["retorno-gestao-reclassificacao", userId, clienteId, retornoId, respostaId];
+  const ctx = useQuery({
+    queryKey: [...base, "contexto"],
+    gcTime: 0,
+    queryFn: async ({ signal }) => {
+      await conferirSessao(signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_contexto_reclassificacao_mediada", {
+          p_cliente_id: clienteId,
+          p_retorno_id: retornoId,
+          p_resposta_id: respostaId,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const r = contexto.parse(data);
+      if (r.respostaId !== respostaId) throw new Error("Resposta divergente");
+      await conferirSessao(signal);
+      return r;
+    },
+  });
+  const proj = useQuery({
+    queryKey: [...base, "previa"],
+    gcTime: 0,
+    queryFn: async ({ signal }) => {
+      await conferirSessao(signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_previa_reclassificacao_mediada", {
+          p_cliente_id: clienteId,
+          p_resposta_id: respostaId,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const r = previa.parse(data);
+      if (r.respostaId !== respostaId) throw new Error("Resposta divergente");
+      await conferirSessao(signal);
+      return r;
+    },
+  });
+  const hist = useInfiniteQuery({
+    queryKey: [...base, "historico"],
+    gcTime: 0,
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam, signal }) => {
+      await conferirSessao(signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_historico_reclassificacao_mediada", {
+          p_cliente_id: clienteId,
+          p_retorno_id: retornoId,
+          p_resposta_id: respostaId,
+          p_apos: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const pagina = z.array(evento).max(20).parse(data);
+      await conferirSessao(signal);
+      return pagina;
+    },
+    getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.id : undefined),
+  });
   const envio = useMutation({
-    mutationFn: async (p: Reabertura) => {
-      if (import.meta.env.VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED !== "true") throw new Error("Reabertura desabilitada");
+    mutationFn: async (p: Pedido) => {
       await conferirSessao();
-      if(sessionStorage.getItem(key)!==JSON.stringify(p))throw new Error("Tentativa alterada.");
-      const { data, error } = await supabase.schema("pcm").rpc("sso_reabrir_reclassificacao_mediada", {
-        p_request_id:p.requestId,p_cliente_id:p.clienteId,p_retorno_id:p.retornoId,p_expected_revision:p.revision,p_motivo:p.motivo,
-      });
-      if(error)throw error;
-      const r=z.object({requestId:z.string().uuid(),retornoId:z.string().uuid(),revision:z.number().int().positive(),respostaEfetivada:z.literal(false),historicoPreservado:z.literal(true)}).strict().parse(data);
-      if(r.requestId!==p.requestId||r.retornoId!==p.retornoId||r.revision!==p.revision+1)throw new Error("Resposta divergente");
+      if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
+      const { data, error } =
+        p.tipo === "proposta"
+          ? await supabase
+              .schema("pcm")
+              .rpc("sso_propor_reclassificacao_mediada", {
+                p_request_id: p.requestId,
+                p_cliente_id: p.clienteId,
+                p_retorno_id: p.retornoId,
+                p_resposta_id: p.respostaId,
+                p_expected_revision: p.propostaRevision,
+                p_expected_validacao: p.validacaoRevision,
+                p_resultado: p.resultado,
+                p_observacao: p.observacao || null,
+                p_motivo: p.motivo,
+              })
+          : await supabase
+              .schema("pcm")
+              .rpc("sso_decidir_reclassificacao_mediada", {
+                p_request_id: p.requestId,
+                p_cliente_id: p.clienteId,
+                p_retorno_id: p.retornoId,
+                p_proposta_id: p.propostaId,
+                p_expected_decisao: p.decisaoRevision,
+                p_expected_validacao: p.validacaoRevision,
+                p_decisao: p.decisao,
+                p_motivo: p.motivo,
+              });
+      if (error) throw error;
+      const r = z
+        .object({
+          requestId: z.string().uuid(),
+          revision: z.number().int().positive(),
+          efetivada: z.literal(false),
+        })
+        .passthrough()
+        .parse(data);
+      if (
+        r.requestId !== p.requestId ||
+        r.revision !== (p.tipo === "proposta" ? p.propostaRevision : p.decisaoRevision) + 1 ||
+        (p.tipo === "proposta" ? r.respostaId !== respostaId : r.propostaId !== p.propostaId)
+      )
+        throw new Error("Resposta divergente");
       await conferirSessao();
     },
-    onSuccess: async (_r,p) => {
+    onSuccess: async (_r, p) => {
       try {
         await conferirSessao();
-        if(sessionStorage.getItem(key)!==JSON.stringify(p))throw new Error();
+        if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(key);
-      } catch { if(montado.current)setAviso("Reabertura registrada; tentativa local não foi limpa. Consulte suporte."); return; }
-      setPendente(null);setConfirmado(false);setAviso("Reabertura registrada; histórico preservado e resposta não efetivada.");onAtualizar();
+      } catch {
+        if (montado.current)
+          setAviso("Comando registrado; tentativa local não foi limpa. Consulte suporte.");
+        return;
+      }
+      setPendente(null);
+      setConfirma(false);
+      setAviso("Registro salvo como não efetivado.");
+      await Promise.all([
+        client.invalidateQueries({ queryKey: base }),
+        client.invalidateQueries({
+          queryKey: ["retorno-reclassificacao-previa", userId, clienteId, respostaId],
+        }),
+      ]);
     },
-    onError: () => {if(montado.current)setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte.");},
-    onSettled: () => {trava.current=false;},
+    onError: () => {
+      if (montado.current)
+        setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte.");
+    },
+    onSettled: () => {
+      trava.current = false;
+    },
   });
-  function enviar(p: Reabertura) { if (trava.current) return; trava.current = true; envio.mutate(p); }
-  function iniciar() { if (pendente || trava.current || revision === null || !consultaAtual || !reconciliado || !confirmado || !motivo.trim()) return; try { const p = reaberturaSchema.parse({ requestId: crypto.randomUUID(), clienteId, retornoId, revision, motivo: motivo.trim() }); if (sessionStorage.getItem(key) !== null) throw new Error(); sessionStorage.setItem(key, JSON.stringify(p)); setPendente(p); enviar(p); } catch { setAviso("Confira motivo e revisão. Nada enviado."); } }
+  function enviar(p: Pedido) {
+    if (trava.current) return;
+    trava.current = true;
+    envio.mutate(p);
+  }
+  function iniciar(tipo: "proposta" | "decisao") {
+    if (
+      pendente ||
+      trava.current ||
+      !confirma ||
+      !motivo.trim() ||
+      ctx.isFetching ||
+      ctx.isError ||
+      proj.isFetching ||
+      proj.isError ||
+      !ctx.data ||
+      !proj.data ||
+      !ctx.data.historicoReconciliado ||
+      (ctx.data.jaAprovado && ctx.data.ultimaValidacao !== "reabrir")
+    )
+      return;
+    try {
+      const comum = {
+        requestId: crypto.randomUUID(),
+        clienteId,
+        retornoId,
+        respostaId,
+        validacaoRevision: ctx.data.validacaoRevision,
+        motivo: motivo.trim(),
+      };
+      const p = pedido.parse(
+        tipo === "proposta"
+          ? {
+              ...comum,
+              tipo,
+              propostaRevision: ctx.data.propostaRevision,
+              resultado: classificacao,
+              observacao: observacao.trim(),
+            }
+          : {
+              ...comum,
+              tipo,
+              propostaId: proj.data.proposta?.id,
+              decisaoRevision: ctx.data.decisaoRevision,
+              decisao,
+            },
+      );
+      if (p.tipo === "proposta" && p.resultado === "nao_aplicavel" && !p.observacao)
+        throw new Error();
+      if (sessionStorage.getItem(key) !== null) throw new Error();
+      sessionStorage.setItem(key, JSON.stringify(p));
+      setPendente(p);
+      enviar(p);
+    } catch {
+      setAviso("Confira revisão, justificativa e seleção. Nada enviado.");
+    }
+  }
+  const bloqueado =
+    !ctx.data ||
+    !proj.data ||
+    ctx.isFetching ||
+    proj.isFetching ||
+    ctx.isError ||
+    proj.isError ||
+    !ctx.data.historicoReconciliado ||
+    (ctx.data.jaAprovado && ctx.data.ultimaValidacao !== "reabrir");
+  return (
+    <section>
+      <h5>Propostas de reclassificação</h5>
+      <p>
+        Proposta e decisão não alteram resposta efetiva. Integração de validação, encerramento e
+        Pendências permanece bloqueada.
+      </p>
+      <ReaberturaReclassificacao
+        userId={userId}
+        clienteId={clienteId}
+        retornoId={retornoId}
+        respostaId={respostaId}
+        revision={ctx.data?.validacaoRevision ?? null}
+        reconciliado={ctx.data?.historicoReconciliado === true}
+        consultaAtual={!ctx.isFetching && !ctx.isError}
+        onAtualizar={() => {
+          void client.invalidateQueries({ queryKey: base });
+        }}
+      />
+      {(ctx.isError || proj.isError || hist.isError) && (
+        <p role="alert">
+          Consulta indisponível.{" "}
+          <button
+            type="button"
+            onClick={() => {
+              void ctx.refetch();
+              void proj.refetch();
+              void hist.refetch();
+            }}
+          >
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {ctx.data && (
+        <p>
+          Revisão proposta {ctx.data.propostaRevision} · decisão {ctx.data.decisaoRevision} ·
+          validação {ctx.data.validacaoRevision} ·{" "}
+          {ctx.data.historicoReconciliado ? "histórico reconciliado" : "histórico não reconciliado"}{" "}
+          · última validação {ctx.data.ultimaValidacao ?? "nenhuma"}.{" "}
+          {ctx.data.jaAprovado && ctx.data.ultimaValidacao !== "reabrir"
+            ? "Reabertura explícita necessária."
+            : ""}
+        </p>
+      )}
+      {proj.data?.proposta && (
+        <p>
+          Última proposta {proj.data.proposta.resultado} · decisão{" "}
+          {proj.data.proposta.decisao ?? "ausente"} · não efetivada.
+        </p>
+      )}
+      {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}
+      {pendente && pendente !== "invalido" ? (
+        <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>
+          Repetir tentativa
+        </button>
+      ) : (
+        !pendente && (
+          <>
+            <label>
+              Resultado proposto{" "}
+              <select
+                value={classificacao}
+                onChange={(e) => setClassificacao(e.target.value as z.infer<typeof resultado>)}
+              >
+                {resultado.options.map((x) => (
+                  <option key={x} value={x}>
+                    {x}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Observação / justificativa de Não aplicável{" "}
+              <textarea
+                maxLength={4000}
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+              />
+            </label>
+            <label>
+              Motivo da proposta ou decisão{" "}
+              <textarea
+                required
+                maxLength={2000}
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+              />
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={confirma}
+                onChange={(e) => setConfirma(e.target.checked)}
+              />{" "}
+              Confirmo registro não efetivado.
+            </label>
+            <button
+              type="button"
+              disabled={
+                bloqueado ||
+                !confirma ||
+                !motivo.trim() ||
+                envio.isPending ||
+                (classificacao === "nao_aplicavel" && !observacao.trim())
+              }
+              onClick={() => iniciar("proposta")}
+            >
+              Registrar proposta
+            </button>
+            <label>
+              Decisão{" "}
+              <select
+                value={decisao}
+                onChange={(e) => setDecisao(e.target.value as typeof decisao)}
+              >
+                <option value="aceita">Aceitar proposta</option>
+                <option value="rejeitada">Rejeitar proposta</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              disabled={
+                bloqueado || !proj.data?.proposta || !confirma || !motivo.trim() || envio.isPending
+              }
+              onClick={() => iniciar("decisao")}
+            >
+              Registrar decisão
+            </button>
+          </>
+        )
+      )}
+      {aviso && <p role="status">{aviso}</p>}
+      <h6>Histórico de propostas e decisões</h6>
+      {hist.data && hist.data.pages.flat().length === 0 && <p>Nenhum registro nesta fonte.</p>}
+      {hist.data && (
+        <ol>
+          {hist.data.pages.flat().map((e) => (
+            <li key={e.id}>
+              {e.tipo} · revisão {e.revisao} · {e.resultado ?? e.decisao} ·{" "}
+              {e.observacao ?? "sem observação"} · {e.motivo} · {e.ator_id} ·{" "}
+              <time dateTime={e.criado_em}>{new Date(e.criado_em).toLocaleString("pt-BR")}</time>
+            </li>
+          ))}
+        </ol>
+      )}
+      {hist.hasNextPage && (
+        <button
+          type="button"
+          disabled={hist.isFetchingNextPage}
+          onClick={() => void hist.fetchNextPage()}
+        >
+          Mais registros
+        </button>
+      )}
+    </section>
+  );
+}
+const reaberturaSchema = z
+  .object({
+    requestId: z.string().uuid(),
+    clienteId: z.string().uuid(),
+    retornoId: z.string().uuid(),
+    revision: z.number().int().nonnegative(),
+    motivo: z.string().min(1).max(2000),
+  })
+  .strict();
+type Reabertura = z.infer<typeof reaberturaSchema>;
+function ReaberturaReclassificacao({
+  userId,
+  clienteId,
+  retornoId,
+  respostaId,
+  revision,
+  reconciliado,
+  consultaAtual,
+  onAtualizar,
+}: Props & {
+  revision: number | null;
+  reconciliado: boolean;
+  consultaAtual: boolean;
+  onAtualizar: () => void;
+}) {
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
+  async function conferirSessao() {
+    const atual = await supabase.auth.getUser();
+    if (atual.error || atual.data.user?.id !== userId || !montado.current)
+      throw new Error("Sessão alterada.");
+  }
+  const key = `sso-reabrir-reclassificacao:${JSON.stringify([userId, clienteId, retornoId, respostaId])}`;
+  const [pendente, setPendente] = useState<Reabertura | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (!raw) return null;
+      const p = reaberturaSchema.parse(JSON.parse(raw));
+      return p.clienteId === clienteId && p.retornoId === retornoId ? p : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  const [motivo, setMotivo] = useState("");
+  const [confirmado, setConfirmado] = useState(false);
+  const [aviso, setAviso] = useState("");
+  const trava = useRef(false);
+  const envio = useMutation({
+    mutationFn: async (p: Reabertura) => {
+      if (import.meta.env.VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED !== "true")
+        throw new Error("Reabertura desabilitada");
+      await conferirSessao();
+      if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_reabrir_reclassificacao_mediada", {
+          p_request_id: p.requestId,
+          p_cliente_id: p.clienteId,
+          p_retorno_id: p.retornoId,
+          p_expected_revision: p.revision,
+          p_motivo: p.motivo,
+        });
+      if (error) throw error;
+      const r = z
+        .object({
+          requestId: z.string().uuid(),
+          retornoId: z.string().uuid(),
+          revision: z.number().int().positive(),
+          respostaEfetivada: z.literal(false),
+          historicoPreservado: z.literal(true),
+        })
+        .strict()
+        .parse(data);
+      if (
+        r.requestId !== p.requestId ||
+        r.retornoId !== p.retornoId ||
+        r.revision !== p.revision + 1
+      )
+        throw new Error("Resposta divergente");
+      await conferirSessao();
+    },
+    onSuccess: async (_r, p) => {
+      try {
+        await conferirSessao();
+        if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error();
+        sessionStorage.removeItem(key);
+      } catch {
+        if (montado.current)
+          setAviso("Reabertura registrada; tentativa local não foi limpa. Consulte suporte.");
+        return;
+      }
+      setPendente(null);
+      setConfirmado(false);
+      setAviso("Reabertura registrada; histórico preservado e resposta não efetivada.");
+      onAtualizar();
+    },
+    onError: () => {
+      if (montado.current)
+        setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte.");
+    },
+    onSettled: () => {
+      trava.current = false;
+    },
+  });
+  function enviar(p: Reabertura) {
+    if (trava.current) return;
+    trava.current = true;
+    envio.mutate(p);
+  }
+  function iniciar() {
+    if (
+      pendente ||
+      trava.current ||
+      revision === null ||
+      !consultaAtual ||
+      !reconciliado ||
+      !confirmado ||
+      !motivo.trim()
+    )
+      return;
+    try {
+      const p = reaberturaSchema.parse({
+        requestId: crypto.randomUUID(),
+        clienteId,
+        retornoId,
+        revision,
+        motivo: motivo.trim(),
+      });
+      if (sessionStorage.getItem(key) !== null) throw new Error();
+      sessionStorage.setItem(key, JSON.stringify(p));
+      setPendente(p);
+      enviar(p);
+    } catch {
+      setAviso("Confira motivo e revisão. Nada enviado.");
+    }
+  }
   if (import.meta.env.VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED !== "true") return null;
-  return <section><h6>Reabertura para reclassificação</h6><p>Reabertura registra nova revisão. Não apaga conferências anteriores nem garante invalidação de todos os consumidores; propostas bloqueiam aprovação, criação de Pendências e finalização enquanto a trava estiver habilitada.</p>{pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}{pendente && pendente !== "invalido" ? <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir reabertura</button> : !pendente && <form onSubmit={e => { e.preventDefault(); iniciar(); }}><label>Motivo <textarea required maxLength={2000} value={motivo} onChange={e => setMotivo(e.target.value)}/></label><label><input type="checkbox" checked={confirmado} onChange={e => setConfirmado(e.target.checked)}/> Confirmo reabertura do retorno, sem efetivar resposta.</label><button type="submit" disabled={revision === null || !consultaAtual || !reconciliado || !confirmado || !motivo.trim() || envio.isPending}>Reabrir retorno</button></form>}{aviso && <p role="status">{aviso}</p>}</section>;
+  return (
+    <section>
+      <h6>Reabertura para reclassificação</h6>
+      <p>
+        Reabertura registra nova revisão. Não apaga conferências anteriores nem garante invalidação
+        de todos os consumidores; propostas bloqueiam aprovação, criação de Pendências e finalização
+        enquanto a trava estiver habilitada.
+      </p>
+      {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}
+      {pendente && pendente !== "invalido" ? (
+        <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>
+          Repetir reabertura
+        </button>
+      ) : (
+        !pendente && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              iniciar();
+            }}
+          >
+            <label>
+              Motivo{" "}
+              <textarea
+                required
+                maxLength={2000}
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+              />
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={confirmado}
+                onChange={(e) => setConfirmado(e.target.checked)}
+              />{" "}
+              Confirmo reabertura do retorno, sem efetivar resposta.
+            </label>
+            <button
+              type="submit"
+              disabled={
+                revision === null ||
+                !consultaAtual ||
+                !reconciliado ||
+                !confirmado ||
+                !motivo.trim() ||
+                envio.isPending
+              }
+            >
+              Reabrir retorno
+            </button>
+          </form>
+        )
+      )}
+      {aviso && <p role="status">{aviso}</p>}
+    </section>
+  );
 }

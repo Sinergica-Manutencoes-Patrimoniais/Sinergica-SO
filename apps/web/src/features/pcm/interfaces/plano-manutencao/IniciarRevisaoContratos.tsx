@@ -17,13 +17,24 @@ export function IniciarRevisaoContratos({
   planoId,
   revision,
   permitirNova = true,
-}: { userId: string; clienteId: string; planoId: string; revision: number; permitirNova?: boolean }) {
+}: {
+  userId: string;
+  clienteId: string;
+  planoId: string;
+  revision: number;
+  permitirNova?: boolean;
+}) {
   const cache = useQueryClient();
   const storageKey = `sso-revisao-contratos:${JSON.stringify([userId, clienteId, planoId])}`;
   const trava = useRef(false);
   const mediada = import.meta.env.VITE_SSO_REVISAO_CONTRATOS_MEDIADA_ENABLED === "true";
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   async function conferirSessao() {
     const { data, error } = await supabase.auth.getUser();
     if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
@@ -54,27 +65,48 @@ export function IniciarRevisaoContratos({
     }
   });
   const envio = useMutation({
-    mutationFn: async (p: Pedido) => { await conferirSessao();
-      if (sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
-      const funcao = p.modo === modo
-        ? "sso_iniciar_revisao_contratos_mediada"
-        : "sso_consultar_recibo_revisao_contratos";
+    mutationFn: async (p: Pedido) => {
+      await conferirSessao();
+      if (sessionStorage.getItem(storageKey) !== JSON.stringify(p))
+        throw new Error("Tentativa alterada.");
+      const funcao =
+        p.modo === modo
+          ? "sso_iniciar_revisao_contratos_mediada"
+          : "sso_consultar_recibo_revisao_contratos";
       const { data, error } = await supabase.schema("pcm").rpc(funcao, {
-        p_ator: userId, p_cliente: p.clienteId, p_plano: p.planoId,
-        p_request: p.requestId, p_expected_revision: p.revision,
-        p_nova_versao: p.versaoId, p_modo: p.modo,
+        p_ator: userId,
+        p_cliente: p.clienteId,
+        p_plano: p.planoId,
+        p_request: p.requestId,
+        p_expected_revision: p.revision,
+        p_nova_versao: p.versaoId,
+        p_modo: p.modo,
       });
       if (error) throw error;
       if (
         !data ||
         data.requestId !== p.requestId ||
-        data.aggregateId !== p.planoId || data.created !== true || data.state !== "rascunho" ||
-        !Number.isSafeInteger(data.revision) || data.revision <= p.revision ||
-        data.linkedIds?.clienteId !== p.clienteId || data.linkedIds?.versaoId !== p.versaoId ||
-        !Number.isSafeInteger(data.contratosCopiados) || data.contratosCopiados < 0 ||
-        !Number.isSafeInteger(data.itensNaoCopiados) || data.itensNaoCopiados < 0 ||
-        (p.modo !== "contratos" && (!Number.isSafeInteger(data.evidenciasCopiadas) || data.evidenciasCopiadas < 0 || !Number.isSafeInteger(data.evidenciasNaoCopiadas) || data.evidenciasNaoCopiadas < 0)) ||
-        (p.modo === "exigencias" && (!Number.isSafeInteger(data.exigenciasPropostas) || data.exigenciasPropostas < 0 || !Number.isSafeInteger(data.exigenciasNaoCopiadas) || data.exigenciasNaoCopiadas < 0)) ||
+        data.aggregateId !== p.planoId ||
+        data.created !== true ||
+        data.state !== "rascunho" ||
+        !Number.isSafeInteger(data.revision) ||
+        data.revision <= p.revision ||
+        data.linkedIds?.clienteId !== p.clienteId ||
+        data.linkedIds?.versaoId !== p.versaoId ||
+        !Number.isSafeInteger(data.contratosCopiados) ||
+        data.contratosCopiados < 0 ||
+        !Number.isSafeInteger(data.itensNaoCopiados) ||
+        data.itensNaoCopiados < 0 ||
+        (p.modo !== "contratos" &&
+          (!Number.isSafeInteger(data.evidenciasCopiadas) ||
+            data.evidenciasCopiadas < 0 ||
+            !Number.isSafeInteger(data.evidenciasNaoCopiadas) ||
+            data.evidenciasNaoCopiadas < 0)) ||
+        (p.modo === "exigencias" &&
+          (!Number.isSafeInteger(data.exigenciasPropostas) ||
+            data.exigenciasPropostas < 0 ||
+            !Number.isSafeInteger(data.exigenciasNaoCopiadas) ||
+            data.exigenciasNaoCopiadas < 0)) ||
         data.reconferenciaNecessaria !== true ||
         (p.modo === "exigencias" && data.reconferenciaExigenciasNecessaria !== true)
       )
@@ -88,7 +120,8 @@ export function IniciarRevisaoContratos({
       };
     },
     onSuccess: async (r, p) => {
-      try { await conferirSessao();
+      try {
+        await conferirSessao();
         if (sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(storageKey);
       } catch {
@@ -115,9 +148,20 @@ export function IniciarRevisaoContratos({
   const enviar = (p: Pedido) => {
     if (trava.current) return;
     if (!permitirNova && !pendente) return;
-    if (!mediada) { setAviso("Revisão mediada indisponível; a tentativa permanece guardada."); return; }
+    if (!mediada) {
+      setAviso("Revisão mediada indisponível; a tentativa permanece guardada.");
+      return;
+    }
     try {
-      const anterior = sessionStorage.getItem(storageKey); if (p.modo !== modo && (!pendente || pendente === "invalido" || JSON.stringify(pendente) !== JSON.stringify(p) || anterior !== JSON.stringify(p))) throw new Error("Tentativa anterior indisponível.");
+      const anterior = sessionStorage.getItem(storageKey);
+      if (
+        p.modo !== modo &&
+        (!pendente ||
+          pendente === "invalido" ||
+          JSON.stringify(pendente) !== JSON.stringify(p) ||
+          anterior !== JSON.stringify(p))
+      )
+        throw new Error("Tentativa anterior indisponível.");
       if (anterior !== null && anterior !== JSON.stringify(p)) throw new Error();
       sessionStorage.setItem(storageKey, JSON.stringify(p));
     } catch {
@@ -134,7 +178,10 @@ export function IniciarRevisaoContratos({
       {!mediada && <p>Revisão mediada indisponível. Tentativas pendentes permanecem guardadas.</p>}
       <h3>Iniciar revisão com contratos de perguntas</h3>
       {pendente && pendente !== "invalido" && pendente.modo !== modo && (
-        <p>A configuração mudou. Esta tentativa será apenas consultada; se não houver recibo, permanecerá guardada para tratamento.</p>
+        <p>
+          A configuração mudou. Esta tentativa será apenas consultada; se não houver recibo,
+          permanecerá guardada para tratamento.
+        </p>
       )}
       <p>
         Copia somente contratos com pergunta e questionário iguais à versão aprovada.{" "}
@@ -173,7 +220,11 @@ export function IniciarRevisaoContratos({
       </button>
       {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
       {pendente && pendente !== "invalido" && (
-        <button type="button" disabled={!mediada || envio.isPending} onClick={() => enviar(pendente)}>
+        <button
+          type="button"
+          disabled={!mediada || envio.isPending}
+          onClick={() => enviar(pendente)}
+        >
           Repetir tentativa pendente
         </button>
       )}

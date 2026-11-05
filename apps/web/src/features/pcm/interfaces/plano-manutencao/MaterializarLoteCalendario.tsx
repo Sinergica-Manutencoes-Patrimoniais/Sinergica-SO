@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { FilaAposPreparacao } from "./FilaAposPreparacao";
 import { IntegrarOrigemOcorrencia } from "./IntegrarOrigemOcorrencia";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 const pedidoSchema = z
   .object({
     requestId: z.string().uuid(),
@@ -129,7 +129,8 @@ function ComOrigens(props: Props) {
       return r;
     },
   });
-  if (q.isFetching || q.isPending) return <output className="block">Conferindo origem dos ciclos…</output>;
+  if (q.isFetching || q.isPending)
+    return <output className="block">Conferindo origem dos ciclos…</output>;
   if (q.isError || !q.data)
     return (
       <p role="alert">
@@ -186,7 +187,12 @@ function MaterializarLoteSessao({
   const [aviso, setAviso] = useState("");
   const trava = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const [resultados, setResultados] = useState<
     Array<{ indice: number; vencimentoOriginal: string; preparadaId: string; criada: boolean }>
   >([]);
@@ -221,7 +227,8 @@ function MaterializarLoteSessao({
       const antes = await supabase.auth.getUser();
       if (
         antes.error ||
-        antes.data.user?.id !== userId || !montado.current ||
+        antes.data.user?.id !== userId ||
+        !montado.current ||
         sessionStorage.getItem(chave) !== JSON.stringify(p)
       )
         throw new Error("Sessão ou tentativa alterada.");
@@ -272,7 +279,8 @@ function MaterializarLoteSessao({
       const depois = await supabase.auth.getUser();
       if (
         depois.error ||
-        depois.data.user?.id !== userId || !montado.current ||
+        depois.data.user?.id !== userId ||
+        !montado.current ||
         r.requestId !== p.requestId ||
         r.inicio !== p.inicio ||
         r.fim !== p.fim ||
@@ -311,7 +319,8 @@ function MaterializarLoteSessao({
         const atual = await supabase.auth.getUser();
         if (
           atual.error ||
-          atual.data.user?.id !== userId || !montado.current ||
+          atual.data.user?.id !== userId ||
+          !montado.current ||
           sessionStorage.getItem(chave) !== JSON.stringify(p)
         )
           throw new Error();

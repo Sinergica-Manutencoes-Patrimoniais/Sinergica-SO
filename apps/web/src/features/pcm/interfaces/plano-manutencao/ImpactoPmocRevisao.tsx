@@ -70,7 +70,12 @@ export function ImpactoPmocRevisao(props: Props) {
 }
 function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const cache = useQueryClient();
   const trava = useRef(false);
   const primeiraTentativa = useRef(false);
@@ -186,7 +191,8 @@ function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
   ]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_decidir_impacto_pmoc", {
@@ -224,11 +230,13 @@ function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
         r.decisao !== p.decisao
       )
         throw new Error("Resposta divergente.");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
@@ -256,7 +264,8 @@ function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
           (e.code === "P0014" && e.message === "revisao_decisao_obsoleta"))
       ) {
         try {
-          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);
@@ -303,7 +312,9 @@ function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
         Considera vínculos declarados da versão anterior e seus usos. Outros agendamentos e
         equivalência contratual permanecem indeterminados.
       </p>
-      {(lista.isFetching || resumo.isFetching) && <output className="block">Consultando impactos PMOC…</output>}
+      {(lista.isFetching || resumo.isFetching) && (
+        <output className="block">Consultando impactos PMOC…</output>
+      )}
       {(lista.isError || resumo.isError || !consistentes) && (
         <p role="alert">
           Impactos indisponíveis ou divergentes.{" "}
@@ -411,7 +422,9 @@ function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
               />{" "}
               Conferi vínculo, alvo e decisão
             </label>
-            <button type="submit" disabled={!item || confirmado !== assinatura}>Registrar decisão</button>
+            <button type="submit" disabled={!item || confirmado !== assinatura}>
+              Registrar decisão
+            </button>
           </fieldset>
         </form>
       )}

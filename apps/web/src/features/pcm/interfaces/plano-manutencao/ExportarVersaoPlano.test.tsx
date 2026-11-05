@@ -8,8 +8,8 @@ import type {
   VersaoPlano,
 } from "../../application/plano-manutencao-gateway";
 vi.mock("../../../../lib/supabase-client", () => ({ supabase: { schema: () => ({}) } }));
-import { ExportarVersaoPlano } from "./ExportarVersaoPlano";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { ExportarVersaoPlano } from "./ExportarVersaoPlano";
 
 afterEach(() => {
   vi.unstubAllEnvs();

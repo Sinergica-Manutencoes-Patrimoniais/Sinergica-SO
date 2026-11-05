@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "../../../../lib/supabase-client";
 import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
 type Pedido = {
   requestId: string;
   clienteId: string;
@@ -35,7 +35,12 @@ export function PrecondicaoImpactos(props: Props) {
 }
 function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const cache = useQueryClient();
   const chave = `sso-precondicao-impactos:${JSON.stringify([userId, clienteId, planoId])}`;
   const [confirmacao, setConfirmacao] = useState<string | null>(null);
@@ -103,7 +108,8 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
   });
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessao();
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase
@@ -131,14 +137,16 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
         data.osAlteradas !== false
       )
         throw new Error("Resposta inválida.");
-      await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessao();
+      if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_resultado, p) => {
       try {
         await cache.invalidateQueries({
           queryKey: ["precondicoes-impactos", userId, clienteId, planoId],
         });
-        await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessao();
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p))
           throw new Error("Tentativa divergente.");
         sessionStorage.removeItem(chave);
@@ -154,7 +162,8 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
       const e = error as { code?: string; message?: string };
       if (primeiraTentativa.current && e.code === "P0011" && e.message === "revisao_obsoleta") {
         try {
-          await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessao();
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);

@@ -43,7 +43,12 @@ export function TransicaoPlano(props: Props) {
 }
 function Conteudo({ userId, clienteId, plano, bloqueado, onAbrirRotinas }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const chave = `sso-plano-transicao:${JSON.stringify([userId, clienteId, plano.id])}`;
   const cache = useQueryClient();
   const trava = useRef(false);

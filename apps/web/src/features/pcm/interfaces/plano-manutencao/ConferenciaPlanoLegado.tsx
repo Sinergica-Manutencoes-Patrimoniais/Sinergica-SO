@@ -1,9 +1,9 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
-import { ReservaCicloFuturo } from "./ReservaCicloFuturo";
 import { CompararCalendarioLegado } from "./CompararCalendarioLegado";
+import { ReservaCicloFuturo } from "./ReservaCicloFuturo";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 type Item = {
   rotinaId: string | null;
   rotinaLogicaId: string;

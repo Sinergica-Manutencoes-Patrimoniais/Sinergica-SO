@@ -2,7 +2,6 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-import { lerComposicao176 } from "./lerComposicao176";
 import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
 import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
 import { FotosStagingAtivo } from "./FotosStagingAtivo";
@@ -10,6 +9,7 @@ import { FotosStagingGrupo } from "./FotosStagingGrupo";
 import { FotosVerificadasGrupo } from "./FotosVerificadasGrupo";
 import { HistoricoGrupo } from "./HistoricoGrupo";
 import { PlanosDoAlvo } from "./PlanosDoAlvo";
+import { lerComposicao176 } from "./lerComposicao176";
 
 /** Projeção de vínculos presentes: não interpreta ausência de vínculo como ausência física. */
 export function SistemasDistribuidos({
@@ -49,7 +49,15 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const data = await lerComposicao176(userId, clienteId, "sistemas", pageParam, signal, null, sistemaId ?? null);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "sistemas",
+        pageParam,
+        signal,
+        null,
+        sistemaId ?? null,
+      );
       return z
         .array(
           z.object({
@@ -70,7 +78,15 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const data = await lerComposicao176(userId, clienteId, "locais", pageParam, signal, null, null);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "locais",
+        pageParam,
+        signal,
+        null,
+        null,
+      );
       return z
         .array(z.object({ id: z.string().uuid(), nome: z.string(), ativo: z.boolean() }))
         .max(50)
@@ -84,7 +100,15 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const data = await lerComposicao176(userId, clienteId, "itens", pageParam, signal, null, null);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "itens",
+        pageParam,
+        signal,
+        null,
+        null,
+      );
       return z
         .array(
           z.object({
@@ -115,7 +139,15 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const data = await lerComposicao176(userId, clienteId, "vinculos", pageParam, signal, null, sistemaId ?? null);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "vinculos",
+        pageParam,
+        signal,
+        null,
+        sistemaId ?? null,
+      );
       return z
         .array(z.object({ sistema_id: z.string().uuid(), item_id: z.string().uuid() }))
         .max(50)
@@ -135,15 +167,43 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const data = await lerComposicao176(userId, clienteId, "grupos", pageParam, signal, null, sistemaId ?? null);
-      return z.array(z.object({
-        id: z.string().uuid(), cliente_id: z.string().uuid(), local_id: z.string().uuid(),
-        categoria_id: z.string().uuid(), sistema_id: z.string().uuid().nullable(), nome: z.string(),
-        quantidade: z.number().int().positive().safe(), caracteristicas: z.record(z.string()),
-        revisao: z.number().int().positive(),
-      }).transform((g) => ({ id: g.id, clienteId: g.cliente_id, localId: g.local_id,
-        categoriaId: g.categoria_id, sistemaId: g.sistema_id, nome: g.nome, quantidade: g.quantidade,
-        caracteristicas: g.caracteristicas, revisao: g.revisao }))).max(50).parse(data);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "grupos",
+        pageParam,
+        signal,
+        null,
+        sistemaId ?? null,
+      );
+      return z
+        .array(
+          z
+            .object({
+              id: z.string().uuid(),
+              cliente_id: z.string().uuid(),
+              local_id: z.string().uuid(),
+              categoria_id: z.string().uuid(),
+              sistema_id: z.string().uuid().nullable(),
+              nome: z.string(),
+              quantidade: z.number().int().positive().safe(),
+              caracteristicas: z.record(z.string()),
+              revisao: z.number().int().positive(),
+            })
+            .transform((g) => ({
+              id: g.id,
+              clienteId: g.cliente_id,
+              localId: g.local_id,
+              categoriaId: g.categoria_id,
+              sistemaId: g.sistema_id,
+              nome: g.nome,
+              quantidade: g.quantidade,
+              caracteristicas: g.caracteristicas,
+              revisao: g.revisao,
+            })),
+        )
+        .max(50)
+        .parse(data);
     },
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
   });

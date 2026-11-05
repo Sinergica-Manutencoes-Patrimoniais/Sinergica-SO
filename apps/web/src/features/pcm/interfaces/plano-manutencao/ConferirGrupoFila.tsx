@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
-import { RegistrarOcorrenciaGrupo } from "./RegistrarOcorrenciaGrupo";
 import { ReabrirGrupoFila } from "./ReabrirGrupoFila";
+import { RegistrarOcorrenciaGrupo } from "./RegistrarOcorrenciaGrupo";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 const uuid = z.string().uuid();
 const previaSchema = z

@@ -74,7 +74,12 @@ function Conteudo({
   const storage = `lote-visita:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId, serieId])}`;
   const trava = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   async function conferirSessao() {
     await conferirSessaoDiagnostico(userId);
     if (!montado.current) throw new Error("Tela desmontada.");
@@ -161,7 +166,8 @@ function Conteudo({
         if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(storage);
       } catch {
-        if (montado.current) setAviso("Lote confirmado, mas tentativa local não removida; procure suporte.");
+        if (montado.current)
+          setAviso("Lote confirmado, mas tentativa local não removida; procure suporte.");
         return;
       }
       setPendente(null);

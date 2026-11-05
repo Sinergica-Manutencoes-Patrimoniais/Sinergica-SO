@@ -5,12 +5,12 @@ import { supabase } from "../../../../lib/supabase-client";
 import type { CamposComparacaoRotina } from "../../application/plano-manutencao-gateway";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
-import { DiagnosticoOsRevisao } from "./DiagnosticoOsRevisao";
-import { IndiciosRevisaoRotina } from "./IndiciosRevisaoRotina";
 import { ComparacaoQuestionario } from "./ComparacaoQuestionario";
-import { DiagnosticoVigencias } from "./DiagnosticoVigencias";
 import { DecisaoImpactoOcorrencia } from "./DecisaoImpactoOcorrencia";
 import { DecisaoImpactoVisita } from "./DecisaoImpactoVisita";
+import { DiagnosticoOsRevisao } from "./DiagnosticoOsRevisao";
+import { DiagnosticoVigencias } from "./DiagnosticoVigencias";
+import { IndiciosRevisaoRotina } from "./IndiciosRevisaoRotina";
 
 function Campos({ titulo, dados }: { titulo: string; dados: CamposComparacaoRotina | null }) {
   if (!dados)

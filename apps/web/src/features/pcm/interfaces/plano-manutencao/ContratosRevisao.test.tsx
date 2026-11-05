@@ -219,56 +219,89 @@ it("repete o mesmo pedido de obrigatoriedade após resultado incerto", async () 
   expect(pedidos[1]?.[1]).toEqual(pedidos[0]?.[1]);
 });
 
+it.each([true, false])(
+  "recupera revisão pendente após recarregar o Plano em rascunho, mediação %s",
+  async (habilitada) => {
+    fixtures();
+    vi.stubEnv("VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED", "true");
+    vi.stubEnv("VITE_SSO_REVISAO_CONTRATOS_MEDIADA_ENABLED", habilitada ? "true" : "false");
+    vi.stubEnv("VITE_SSO_REVISAO_COM_EVIDENCIAS_ENABLED", "false");
+    vi.stubEnv("VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED", "false");
+    const pedido = {
+      requestId: "16500000-0000-4000-8000-000000000077",
+      clienteId,
+      planoId,
+      revision: 7,
+      versaoId,
+      modo: "contratos",
+    };
+    const chave = `sso-revisao-contratos:${JSON.stringify(["usuario", clienteId, planoId])}`;
+    const salvo = JSON.stringify(pedido);
+    sessionStorage.setItem(chave, salvo);
+    api.listarPlanos.mockResolvedValue([
+      { id: planoId, clienteId, nome: "Preventivo", estado: "aprovado", revisao: 7 },
+    ]);
+    const anterior = render(compor(client()));
+    await abrir();
+    expect(screen.getByRole("button", { name: "Repetir tentativa pendente" })).toBeInTheDocument();
+    anterior.unmount();
 
-it.each([true, false])("recupera revisão pendente após recarregar o Plano em rascunho, mediação %s", async (habilitada) => {
-  fixtures();
-  vi.stubEnv("VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED", "true");
-  vi.stubEnv("VITE_SSO_REVISAO_CONTRATOS_MEDIADA_ENABLED", habilitada ? "true" : "false");
-  vi.stubEnv("VITE_SSO_REVISAO_COM_EVIDENCIAS_ENABLED", "false");
-  vi.stubEnv("VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED", "false");
-  const pedido = {
-    requestId: "16500000-0000-4000-8000-000000000077",
-    clienteId, planoId, revision: 7, versaoId, modo: "contratos",
-  };
-  const chave = `sso-revisao-contratos:${JSON.stringify(["usuario", clienteId, planoId])}`;
-  const salvo = JSON.stringify(pedido);
-  sessionStorage.setItem(chave, salvo);
-  api.listarPlanos.mockResolvedValue([{ id: planoId, clienteId, nome: "Preventivo", estado: "aprovado", revisao: 7 }]);
-  const anterior = render(compor(client()));
-  await abrir();
-  expect(screen.getByRole("button", { name: "Repetir tentativa pendente" })).toBeInTheDocument();
-  anterior.unmount();
-
-  // Um retorno incerto pode esconder que a revisão já tornou o Plano rascunho.
-  api.listarPlanos.mockResolvedValue([{ id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 8 }]);
-  const consulta = api.rpc.getMockImplementation()!;
-  api.rpc.mockImplementation((nome: string, args: unknown) =>
-    nome === "sso_iniciar_revisao_contratos_mediada"
-      ? Promise.resolve({ data: {
-          requestId: pedido.requestId, aggregateId: planoId, revision: 8, state: "rascunho",
-          created: true, linkedIds: { clienteId, versaoId }, contratosCopiados: 0,
-          itensNaoCopiados: 0, reconferenciaNecessaria: true,
-        }, error: null })
-      : consulta(nome, args),
-  );
-  render(compor(client()));
-  await abrir();
-  const repetir = screen.getByRole("button", { name: "Repetir tentativa pendente" });
-  expect(screen.getByRole("button", { name: "Iniciar revisão com contratos" })).toBeDisabled();
-  expect(sessionStorage.getItem(chave)).toBe(salvo);
-  if (!habilitada) {
-    expect(repetir).toBeDisabled();
-    expect(screen.getByText(/mediação.*indisponível|revisão mediada indisponível/i)).toBeInTheDocument();
-    expect(api.rpc.mock.calls.filter(([nome]) => nome === "sso_iniciar_revisao_contratos_mediada")).toHaveLength(0);
-    return;
-  }
-  fireEvent.click(repetir);
-  await waitFor(() => expect(sessionStorage.getItem(chave)).toBeNull());
-  expect(api.rpc.mock.calls.filter(([nome]) => nome === "sso_iniciar_revisao_contratos_mediada")).toEqual([
-    ["sso_iniciar_revisao_contratos_mediada", {
-      p_ator: "usuario", p_cliente: clienteId, p_plano: planoId,
-      p_request: pedido.requestId, p_expected_revision: 7, p_nova_versao: versaoId, p_modo: "contratos",
-    }],
-  ]);
-  expect(screen.queryByRole("button", { name: "Iniciar revisão com contratos" })).toBeNull();
-});
+    // Um retorno incerto pode esconder que a revisão já tornou o Plano rascunho.
+    api.listarPlanos.mockResolvedValue([
+      { id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 8 },
+    ]);
+    const consulta = api.rpc.getMockImplementation()!;
+    api.rpc.mockImplementation((nome: string, args: unknown) =>
+      nome === "sso_iniciar_revisao_contratos_mediada"
+        ? Promise.resolve({
+            data: {
+              requestId: pedido.requestId,
+              aggregateId: planoId,
+              revision: 8,
+              state: "rascunho",
+              created: true,
+              linkedIds: { clienteId, versaoId },
+              contratosCopiados: 0,
+              itensNaoCopiados: 0,
+              reconferenciaNecessaria: true,
+            },
+            error: null,
+          })
+        : consulta(nome, args),
+    );
+    render(compor(client()));
+    await abrir();
+    const repetir = screen.getByRole("button", { name: "Repetir tentativa pendente" });
+    expect(screen.getByRole("button", { name: "Iniciar revisão com contratos" })).toBeDisabled();
+    expect(sessionStorage.getItem(chave)).toBe(salvo);
+    if (!habilitada) {
+      expect(repetir).toBeDisabled();
+      expect(
+        screen.getByText(/mediação.*indisponível|revisão mediada indisponível/i),
+      ).toBeInTheDocument();
+      expect(
+        api.rpc.mock.calls.filter(([nome]) => nome === "sso_iniciar_revisao_contratos_mediada"),
+      ).toHaveLength(0);
+      return;
+    }
+    fireEvent.click(repetir);
+    await waitFor(() => expect(sessionStorage.getItem(chave)).toBeNull());
+    expect(
+      api.rpc.mock.calls.filter(([nome]) => nome === "sso_iniciar_revisao_contratos_mediada"),
+    ).toEqual([
+      [
+        "sso_iniciar_revisao_contratos_mediada",
+        {
+          p_ator: "usuario",
+          p_cliente: clienteId,
+          p_plano: planoId,
+          p_request: pedido.requestId,
+          p_expected_revision: 7,
+          p_nova_versao: versaoId,
+          p_modo: "contratos",
+        },
+      ],
+    ]);
+    expect(screen.queryByRole("button", { name: "Iniciar revisão com contratos" })).toBeNull();
+  },
+);

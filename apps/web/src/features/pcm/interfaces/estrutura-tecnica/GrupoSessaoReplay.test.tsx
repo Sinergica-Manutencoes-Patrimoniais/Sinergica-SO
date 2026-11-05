@@ -1,20 +1,20 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, cleanup } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MoverGrupo } from "./MoverGrupo";
-import { ReclassificarGrupo } from "./ReclassificarGrupo";
 import { QuantidadeMotivadaGrupo } from "./QuantidadeMotivadaGrupo";
+import { ReclassificarGrupo } from "./ReclassificarGrupo";
 
 const mocks = vi.hoisted(() => ({ getUser: vi.fn(), rpc: vi.fn() }));
 vi.mock("../../../../lib/supabase-client", () => ({
   supabase: { auth: { getUser: mocks.getUser }, schema: () => ({ rpc: mocks.rpc }) },
 }));
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
-const userId = id(1),
-  clienteId = id(2),
-  grupoId = id(3),
-  requestId = id(4);
+const userId = id(1);
+const clienteId = id(2);
+const grupoId = id(3);
+const requestId = id(4);
 const grupo = {
   id: grupoId,
   clienteId,

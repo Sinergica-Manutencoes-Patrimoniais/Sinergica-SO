@@ -90,7 +90,9 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   const montado = useRef(false);
   useEffect(() => {
     montado.current = true;
-    return () => { montado.current = false; };
+    return () => {
+      montado.current = false;
+    };
   }, []);
   const gateway = useMemo(() => {
     const conferir = async () => {
@@ -278,7 +280,12 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     try {
       await conferirSessao();
       const atual = registro.pendente();
-      if (!atual || atual.chave !== chave || atual.id !== requestId || JSON.stringify(atual.payload) !== JSON.stringify(payload))
+      if (
+        !atual ||
+        atual.chave !== chave ||
+        atual.id !== requestId ||
+        JSON.stringify(atual.payload) !== JSON.stringify(payload)
+      )
         throw new Error("Tentativa alterada.");
       const resposta = await enviar(requestId);
       validarRecibo(chave, payload, requestId, resposta);

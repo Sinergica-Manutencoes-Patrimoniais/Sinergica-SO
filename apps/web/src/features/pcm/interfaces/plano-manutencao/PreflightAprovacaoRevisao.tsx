@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../../../../lib/supabase-client";
 import { z } from "zod";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { supabase } from "../../../../lib/supabase-client";
 import { AvaliacaoImpactoRevisao } from "./AvaliacaoImpactoRevisao";
-import { PrecondicaoImpactos } from "./PrecondicaoImpactos";
 import { ImpactoPmocRevisao } from "./ImpactoPmocRevisao";
 import { InventarioPmocRevisao } from "./InventarioPmocRevisao";
+import { PrecondicaoImpactos } from "./PrecondicaoImpactos";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 export function PreflightAprovacaoRevisao({
   userId,

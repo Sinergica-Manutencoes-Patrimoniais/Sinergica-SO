@@ -2,10 +2,10 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCalendarioContratualAdapter } from "../../infrastructure/supabase-calendario-contratual-adapter";
-import { VigenciaSerieRotina } from "./VigenciaSerieRotina";
-import { PreviaOcorrenciasVisita } from "./PreviaOcorrenciasVisita";
 import { CiclosUniformes } from "./CiclosUniformes";
 import { GerarVisitaContratual } from "./GerarVisitaContratual";
+import { PreviaOcorrenciasVisita } from "./PreviaOcorrenciasVisita";
+import { VigenciaSerieRotina } from "./VigenciaSerieRotina";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 type Pedido = {
@@ -42,7 +42,12 @@ export function VincularSerieRotina(props: Props) {
 }
 function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const chave = `sso-rotina-serie:${JSON.stringify([userId, clienteId, planoId, rotinaId])}`;
   const cache = useQueryClient();
   const primeira = useRef(false);
@@ -115,7 +120,8 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: 
   });
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase
@@ -138,11 +144,13 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: 
         data.serieId !== p.serieId
       )
         throw new Error("Resposta inválida.");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p))
           throw new Error("Tentativa divergente.");
         sessionStorage.removeItem(chave);
@@ -169,7 +177,8 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: 
       const e = error as { code?: string; message?: string };
       if (primeira.current && e.code === "P0011" && e.message === "revisao_obsoleta") {
         try {
-          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p))
             throw new Error("Tentativa divergente.");
           sessionStorage.removeItem(chave);

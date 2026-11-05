@@ -1,8 +1,8 @@
 import { Button } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
-import { supabase } from "../../../../lib/supabase-client";
 
 export function QuestionarioAprovado({
   userId,

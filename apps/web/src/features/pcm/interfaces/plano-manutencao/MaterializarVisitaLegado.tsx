@@ -1,11 +1,11 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
-import { LoteVisitaLegado } from "./LoteVisitaLegado";
-import { ReservaCicloLegado } from "./ReservaCicloLegado";
-import { ReconciliarLegadaInerte } from "./ReconciliarLegadaInerte";
 import { FilaAposPreparacao } from "./FilaAposPreparacao";
+import { LoteVisitaLegado } from "./LoteVisitaLegado";
+import { ReconciliarLegadaInerte } from "./ReconciliarLegadaInerte";
+import { ReservaCicloLegado } from "./ReservaCicloLegado";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 type Pedido = {
   requestId: string;
   clienteId: string;
@@ -49,7 +49,12 @@ function Conteudo({
   revision?: number;
 }) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const trava = useRef(false);
   const cache = useQueryClient();
   const chave = `sso-materializar-visita-legado:${JSON.stringify([userId, clienteId, planoId, legadoId])}`;
@@ -151,11 +156,13 @@ function Conteudo({
     },
     onSuccess: async (r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         await cache.invalidateQueries({
           queryKey: ["visitas-integracao-legado", userId, clienteId, planoId, legadoId],
         });
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p))
           throw new Error("Tentativa divergente.");
         sessionStorage.removeItem(chave);
@@ -291,7 +298,9 @@ function Conteudo({
             />{" "}
             Conferi a Visita e autorizo somente o vínculo
           </label>
-          <button type="submit" disabled={!confirmacaoAtual}>Processar Visita</button>
+          <button type="submit" disabled={!confirmacaoAtual}>
+            Processar Visita
+          </button>
         </fieldset>
       </form>
       {lista.hasNextPage && (

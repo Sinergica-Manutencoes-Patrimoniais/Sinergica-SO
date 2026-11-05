@@ -74,7 +74,12 @@ export function InventarioPmocRevisao(props: Props) {
 }
 function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const cache = useQueryClient();
   const trava = useRef(false);
   const primeiraTentativa = useRef(false);
@@ -206,7 +211,8 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
   ]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_classificar_pmoc_revisao", {
@@ -245,11 +251,13 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
         r.classificacao !== p.classificacao
       )
         throw new Error("Resposta divergente.");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
@@ -277,7 +285,8 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
           (e.code === "P0014" && e.message === "revisao_decisao_obsoleta"))
       ) {
         try {
-          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);
@@ -323,7 +332,9 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
         histórico preservado vale somente para vencimentos anteriores à vigência ou cancelados. A
         classificação não altera agendamento ou OS.
       </p>
-      {(lista.isFetching || resumo.isFetching) && <output className="block">Consultando inventário…</output>}
+      {(lista.isFetching || resumo.isFetching) && (
+        <output className="block">Consultando inventário…</output>
+      )}
       {(lista.isError || resumo.isError || !consistentes) && (
         <p role="alert">
           Inventário indisponível ou divergente.{" "}
@@ -463,7 +474,10 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
               />{" "}
               Conferi a classificação e a evidência
             </label>
-            <button type="submit" disabled={!selecionadoItem || !classificacao || confirmado !== assinatura}>
+            <button
+              type="submit"
+              disabled={!selecionadoItem || !classificacao || confirmado !== assinatura}
+            >
               Registrar classificação
             </button>
           </fieldset>

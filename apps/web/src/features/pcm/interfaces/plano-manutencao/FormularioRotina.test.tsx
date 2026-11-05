@@ -10,8 +10,8 @@ vi.mock("../../../../lib/supabase-client", () => ({
 vi.mock("../../infrastructure/supabase-plano-manutencao-adapter", () => ({
   supabasePlanoManutencaoAdapter: api,
 }));
-import { FormularioRotina } from "./FormularioRotina";
 import { validarRotinaCompleta } from "../../application/plano-manutencao";
+import { FormularioRotina } from "./FormularioRotina";
 
 afterEach(() => {
   cleanup();

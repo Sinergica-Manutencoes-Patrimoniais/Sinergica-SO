@@ -57,7 +57,12 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
   const cache = useQueryClient();
   const trava = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const chave = `sso-triagem-atraso:${JSON.stringify([userId, clienteId, planoId, rotinaId])}`;
   const [data, setData] = useState("");
   const [referencia, setReferencia] = useState("");
@@ -84,7 +89,8 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
     gcTime: 0,
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || !montado.current)
+        throw new Error("Sessão alterada.");
       const { data: linhas, error } = await supabase
         .schema("pcm")
         .rpc("sso_listar_candidatos_atraso", {
@@ -99,7 +105,8 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
       if (error) throw error;
       const resultado = z.array(candidatoSchema).max(20).parse(linhas);
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || !montado.current)
+        throw new Error("Sessão alterada.");
       let anterior = pageParam ?? "";
       for (const linha of resultado) {
         if (linha.rotina_id !== rotinaId || linha.preparada_id <= anterior)
@@ -122,7 +129,8 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
       const antes = await supabase.auth.getUser();
       if (
         antes.error ||
-        antes.data.user?.id !== userId || !montado.current ||
+        antes.data.user?.id !== userId ||
+        !montado.current ||
         sessionStorage.getItem(chave) !== JSON.stringify(p)
       )
         throw new Error("Sessão ou tentativa alterada.");
@@ -139,7 +147,8 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
       const depois = await supabase.auth.getUser();
       if (
         depois.error ||
-        depois.data.user?.id !== userId || !montado.current ||
+        depois.data.user?.id !== userId ||
+        !montado.current ||
         !r ||
         r.requestId !== p.requestId ||
         r.preparadaId !== p.preparadaId ||
@@ -161,7 +170,8 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
         const atual = await supabase.auth.getUser();
         if (
           atual.error ||
-          atual.data.user?.id !== userId || !montado.current ||
+          atual.data.user?.id !== userId ||
+          !montado.current ||
           sessionStorage.getItem(chave) !== JSON.stringify(p)
         )
           throw new Error();
@@ -228,7 +238,9 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
           Data de referência declarada{" "}
           <input type="date" required value={data} onChange={(e) => setData(e.target.value)} />
         </label>
-        <button type="submit" disabled={!!pendente}>Consultar candidatos</button>
+        <button type="submit" disabled={!!pendente}>
+          Consultar candidatos
+        </button>
       </form>
       {candidatos.isError && (
         <p role="alert">
@@ -337,7 +349,9 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
               />{" "}
               Conferi o candidato e a data de referência
             </label>
-            <button type="submit" disabled={!confirmacaoAtual}>Registrar triagem</button>
+            <button type="submit" disabled={!confirmacaoAtual}>
+              Registrar triagem
+            </button>
           </fieldset>
         </form>
       )}

@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
-import { supabase } from "../../../../lib/supabase-client";
 import { usePermissoes } from "../../../../app/permissoes-context";
-import { ChamadoPainel } from "../../components/ChamadoPainel";
+import { supabase } from "../../../../lib/supabase-client";
 import { carregarDadosAberturaOs } from "../../application/abrir-ordem-servico";
+import { ChamadoPainel } from "../../components/ChamadoPainel";
 import { supabaseOrdemServicoAdapter } from "../../infrastructure/supabase-ordem-servico-adapter";
 
 const uuid = z.string().uuid();

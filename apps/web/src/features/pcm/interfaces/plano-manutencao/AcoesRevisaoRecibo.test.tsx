@@ -10,7 +10,10 @@ vi.mock("../../../../lib/supabase-client", () => ({
 }));
 vi.mock("../../infrastructure/supabase-plano-manutencao-adapter", () => ({
   aprovarRevisaoPreparada: api.aprovar,
-  supabasePlanoManutencaoAdapter: { iniciarRevisao: api.iniciar, transicionarRevisao: api.transicionar },
+  supabasePlanoManutencaoAdapter: {
+    iniciarRevisao: api.iniciar,
+    transicionarRevisao: api.transicionar,
+  },
 }));
 import { AcoesRevisaoPlano } from "./AcoesRevisaoPlano";
 
@@ -94,17 +97,33 @@ it.each(["pedido", "plano", "estado", "revisao", "cliente", "versao"] as const)(
   },
 );
 
-
-it.each(["inicio", "submeter", "devolver"].flatMap(modo => ["requestId", "aggregateId", "revision", "state", "created", "clienteId", ...(modo === "inicio" ? ["versaoId"] : [])].map(campo => ({modo, campo}))))("preserva recibo divergente em $campo e repete $modo", async ({modo, campo}) => {
+it.each(
+  ["inicio", "submeter", "devolver"].flatMap((modo) =>
+    [
+      "requestId",
+      "aggregateId",
+      "revision",
+      "state",
+      "created",
+      "clienteId",
+      ...(modo === "inicio" ? ["versaoId"] : []),
+    ].map((campo) => ({ modo, campo })),
+  ),
+)("preserva recibo divergente em $campo e repete $modo", async ({ modo, campo }) => {
   const requestId = "16500000-0000-4000-8000-000000000014";
-  const comando = modo === "inicio"
-    ? { requestId, expectedRevision: 3, planoId, novaVersaoId: versaoId }
-    : { requestId, expectedRevision: 3, planoId, acao: modo };
+  const comando =
+    modo === "inicio"
+      ? { requestId, expectedRevision: 3, planoId, novaVersaoId: versaoId }
+      : { requestId, expectedRevision: 3, planoId, acao: modo };
   const pedido = { tipo: modo === "inicio" ? "inicio" : "transicao", comando };
   const retorno = {
-    requestId, aggregateId: planoId, revision: 4,
+    requestId,
+    aggregateId: planoId,
+    revision: 4,
     state: modo === "submeter" ? "em_revisao" : "rascunho",
-    created: modo === "inicio", linkedIds: { clienteId, ...(modo === "inicio" ? { versaoId } : {}) }, warnings: [],
+    created: modo === "inicio",
+    linkedIds: { clienteId, ...(modo === "inicio" ? { versaoId } : {}) },
+    warnings: [],
   };
   const funcao = modo === "inicio" ? api.iniciar : api.transicionar;
   const divergente = { ...retorno, linkedIds: { ...retorno.linkedIds } };
@@ -117,15 +136,29 @@ it.each(["inicio", "submeter", "devolver"].flatMap(modo => ["requestId", "aggreg
   if (campo === "versaoId") divergente.linkedIds.versaoId = outroId;
   funcao.mockResolvedValueOnce(divergente).mockResolvedValueOnce(retorno);
   sessionStorage.setItem(chave, JSON.stringify(pedido));
-  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}})}>
-    <AcoesRevisaoPlano userId="usuario" clienteId={clienteId} plano={{id:planoId,clienteId,nome:"Preventivo",estado:"rascunho",revisao:3}} bloqueado={false}/>
-  </QueryClientProvider>);
-  const repetir = screen.getByRole("button", {name:/Tentar operação de Preventivo novamente/});
+  render(
+    <QueryClientProvider
+      client={
+        new QueryClient({
+          defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+        })
+      }
+    >
+      <AcoesRevisaoPlano
+        userId="usuario"
+        clienteId={clienteId}
+        plano={{ id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 3 }}
+        bloqueado={false}
+      />
+    </QueryClientProvider>,
+  );
+  const repetir = screen.getByRole("button", { name: /Tentar operação de Preventivo novamente/ });
   fireEvent.click(repetir);
   await screen.findByText(/Não foi possível confirmar a operação/);
   expect(sessionStorage.getItem(chave)).toBe(JSON.stringify(pedido));
-  await waitFor(()=>expect(repetir).toBeEnabled()); fireEvent.click(repetir);
-  await waitFor(()=>expect(sessionStorage.getItem(chave)).toBeNull());
+  await waitFor(() => expect(repetir).toBeEnabled());
+  fireEvent.click(repetir);
+  await waitFor(() => expect(sessionStorage.getItem(chave)).toBeNull());
   expect(funcao).toHaveBeenCalledTimes(2);
   expect(funcao.mock.calls[0]?.[0]).toEqual(comando);
   expect(funcao.mock.calls[1]?.[0]).toEqual(comando);

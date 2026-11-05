@@ -1,13 +1,13 @@
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useLayoutEffect, useRef, useState } from "react";
+import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
 import type { FiltroFotografiaExportacao } from "../../application/exportacao-fotografia";
+import { consultarCapacidadeCronograma } from "../../infrastructure/capacidade-cronograma";
 import { prepararCronogramaAutenticado } from "../../infrastructure/exportacao-cronograma-autenticada";
 import { consultarFeriadosCronograma } from "../../infrastructure/feriados-cronograma";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCalendarioContratualAdapter } from "../../infrastructure/supabase-calendario-contratual-adapter";
-import { z } from "zod";
 import { SelecionarAlvoCronograma } from "./SelecionarAlvoCronograma";
-import { consultarCapacidadeCronograma } from "../../infrastructure/capacidade-cronograma";
 
 /** Integração experimental desligada; gates dependem de revisão e testes oficiais. */
 export function ExportarCronogramaFotografia({

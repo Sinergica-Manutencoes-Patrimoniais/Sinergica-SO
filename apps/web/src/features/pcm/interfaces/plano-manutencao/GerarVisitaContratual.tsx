@@ -37,7 +37,12 @@ function GerarVisitaContratualSessao({
   const chave = `sso-gerar-visita-contratual:${JSON.stringify([userId, clienteId, serieId])}`;
   const trava = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const [regraId, setRegraId] = useState("");
   const [semana, setSemana] = useState("");
   const [inicio, setInicio] = useState("");
@@ -101,7 +106,13 @@ function GerarVisitaContratualSessao({
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || !montado.current || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Sessão alterada.");
+      if (
+        antes.error ||
+        antes.data.user?.id !== userId ||
+        !montado.current ||
+        sessionStorage.getItem(chave) !== JSON.stringify(p)
+      )
+        throw new Error("Sessão alterada.");
       const parametros = {
         p_request_id: p.requestId,
         p_cliente_id: p.clienteId,
@@ -182,7 +193,8 @@ function GerarVisitaContratualSessao({
         decisao = data.decisao;
       }
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || !montado.current)
+        throw new Error("Sessão alterada.");
       return { decisao };
     },
     onSuccess: async (r, p) => {
@@ -360,7 +372,9 @@ function GerarVisitaContratualSessao({
             />{" "}
             Confirmei a cobertura declarada e o instante com offset, inclusive horário ambíguo
           </label>
-          <button type="submit" disabled={!confirmacaoAtual}>Processar semana</button>
+          <button type="submit" disabled={!confirmacaoAtual}>
+            Processar semana
+          </button>
         </fieldset>
       </form>
       {regras.hasNextPage && (

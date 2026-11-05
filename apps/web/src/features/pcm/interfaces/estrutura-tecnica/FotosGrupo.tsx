@@ -64,7 +64,9 @@ function Fotos({
   const montado = useRef(false);
   useEffect(() => {
     montado.current = true;
-    return () => { montado.current = false; };
+    return () => {
+      montado.current = false;
+    };
   }, []);
   const client = useQueryClient();
   const fotos = useInfiniteQuery({
@@ -103,8 +105,10 @@ function Fotos({
       if (Array.from(digest, (v) => v.toString(16).padStart(2, "0")).join("") !== p.hash)
         throw new Error("Arquivo diferente da tentativa");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada");
-      if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
+      if (antes.error || antes.data.user?.id !== userId || !montado.current)
+        throw new Error("Sessão alterada");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+        throw new Error("Tentativa alterada.");
       const { data, error } = await supabase.functions.invoke("pcm-ingestao-foto-cadastral-grupo", {
         body: arquivo,
         headers: {
@@ -135,7 +139,8 @@ function Fotos({
           throw new Error("Tentativa divergente");
         sessionStorage.removeItem(chave);
       } catch {
-        if (montado.current) setAviso("Foto vinculada; tentativa local não foi limpa. Consulte suporte.");
+        if (montado.current)
+          setAviso("Foto vinculada; tentativa local não foi limpa. Consulte suporte.");
         return;
       }
       setPendente(null);
@@ -144,9 +149,10 @@ function Fotos({
       await client.invalidateQueries({ queryKey: ["fotos-grupo", userId, clienteId, grupoId] });
     },
     onError: () => {
-      if (montado.current) setAviso(
-        "Não foi possível confirmar. Selecione o mesmo arquivo e repita a tentativa ou consulte suporte.",
-      );
+      if (montado.current)
+        setAviso(
+          "Não foi possível confirmar. Selecione o mesmo arquivo e repita a tentativa ou consulte suporte.",
+        );
     },
     onSettled: () => {
       trava.current = false;

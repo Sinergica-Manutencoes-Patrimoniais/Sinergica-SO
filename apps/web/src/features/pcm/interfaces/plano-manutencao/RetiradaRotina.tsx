@@ -7,9 +7,9 @@ import type {
   RetirarRotinaCommand,
   RotinaDetalhe,
 } from "../../application/plano-manutencao-gateway";
+import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
-import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
 
 export function RetiradaRotina({
   userId,
@@ -50,7 +50,12 @@ export function RetiradaRotina({
   const mudou = aberto && revisaoInicial !== plano.revisao;
   const ativoAnterior = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   useEffect(() => {
     const ativo = aberto || Boolean(pendente) || recuperacao.falhou;
     if (ativo !== ativoAnterior.current) {
@@ -68,9 +73,14 @@ export function RetiradaRotina({
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
         throw new Error("Tentativa divergente.");
       const recibo = await retirarRotinaRascunho(supabasePlanoManutencaoAdapter, comando);
-      if (recibo.requestId !== comando.requestId || recibo.aggregateId !== comando.planoId ||
-        recibo.revision !== comando.expectedRevision + 1 || recibo.created !== false ||
-        recibo.linkedIds.clienteId !== clienteId || recibo.linkedIds.rotinaId !== comando.rotinaId)
+      if (
+        recibo.requestId !== comando.requestId ||
+        recibo.aggregateId !== comando.planoId ||
+        recibo.revision !== comando.expectedRevision + 1 ||
+        recibo.created !== false ||
+        recibo.linkedIds.clienteId !== clienteId ||
+        recibo.linkedIds.rotinaId !== comando.rotinaId
+      )
         throw new Error("Recibo de retirada divergente.");
       await conferirSessaoDiagnostico(userId);
       if (!montado.current) throw new Error("Tela desmontada.");

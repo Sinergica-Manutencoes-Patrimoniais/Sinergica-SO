@@ -56,7 +56,12 @@ function Conteudo({
   onAtualizar,
 }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const cache = useQueryClient();
   const trava = useRef(false);
   const chave = `sso-natureza-alvo:${JSON.stringify([userId, clienteId, planoId, rotinaId])}`;
@@ -152,7 +157,8 @@ function Conteudo({
     setOcupado(true);
     setAviso("");
     try {
-      await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessao();
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase
@@ -189,7 +195,8 @@ function Conteudo({
         r.revision !== p.revisao + 1
       )
         throw new Error("Recibo divergente.");
-      await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessao();
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       sessionStorage.removeItem(chave);

@@ -2,8 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { FilaAposPreparacao } from "./FilaAposPreparacao";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 type Candidato = {
   preparada_id: string;
   vencimento_original: string;
@@ -55,7 +55,12 @@ function Conteudo({
   consultando: boolean;
 }) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const cache = useQueryClient();
   const chave = `sso-lote-ciclos-legados:${JSON.stringify([userId, clienteId, planoId, legadoId])}`;
   const [selecionadas, setSelecionadas] = useState<string[]>([]);
@@ -94,7 +99,8 @@ function Conteudo({
   });
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_lote_legado_mediado", {
@@ -143,12 +149,14 @@ function Conteudo({
           JSON.stringify([...p.preparadas].sort())
       )
         throw new Error("Resultado inválido.");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       return r;
     },
     onSuccess: async (r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
@@ -310,7 +318,10 @@ function Conteudo({
             />{" "}
             Conferi os ciclos e a atomicidade
           </label>
-          <button type="submit" disabled={janelaInvalida || !confirmacaoAtual || selecionadas.length === 0}>
+          <button
+            type="submit"
+            disabled={janelaInvalida || !confirmacaoAtual || selecionadas.length === 0}
+          >
             Processar lote
           </button>
         </fieldset>

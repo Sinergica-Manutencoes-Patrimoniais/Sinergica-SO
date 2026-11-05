@@ -1,9 +1,9 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { supabase } from "../../../../lib/supabase-client";
 import { DecisaoPmoc } from "./DecisaoPmoc";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 type Pedido = {
   requestId: string;
   clienteId: string;
@@ -16,7 +16,21 @@ type Pedido = {
   justificativa: string;
 };
 
-export function PropostaPmoc(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId, props.rotinaId, props.vencimento])} {...props} />; }
+export function PropostaPmoc(props: Parameters<typeof Conteudo>[0]) {
+  return (
+    <Conteudo
+      key={JSON.stringify([
+        props.userId,
+        props.clienteId,
+        props.planoId,
+        props.versaoId,
+        props.rotinaId,
+        props.vencimento,
+      ])}
+      {...props}
+    />
+  );
+}
 function Conteudo({
   userId,
   clienteId,
@@ -34,7 +48,13 @@ function Conteudo({
   revision: number;
   vencimento: string;
 }) {
-  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const emEnvio = useRef(false);
   const primeiraTentativa = useRef(false);
   const cache = useQueryClient();
@@ -152,7 +172,8 @@ function Conteudo({
   });
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(storageKey) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_propor_pmoc_mediado", {
@@ -175,11 +196,13 @@ function Conteudo({
         typeof data.propostaId !== "string"
       )
         throw new Error("Resposta inválida.");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(storageKey);
       } catch {
@@ -200,7 +223,8 @@ function Conteudo({
           (e.code === "P0017" && e.message === "plano_alterado"))
       ) {
         try {
-          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(storageKey);
           setPendente(null);

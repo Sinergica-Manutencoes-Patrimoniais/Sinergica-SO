@@ -113,7 +113,10 @@ const casos = [
     ),
     recibo: {
       requestId: id(8),
-      planoId: id(3), revisao: 1, vigencia: "2026-11-06", fotografiaRegistrada: true,
+      planoId: id(3),
+      revisao: 1,
+      vigencia: "2026-11-06",
+      fotografiaRegistrada: true,
       fontesCompletasComprovadas: false,
       provaTransacionalIntegral: false,
       aprovacaoAutorizada: false,

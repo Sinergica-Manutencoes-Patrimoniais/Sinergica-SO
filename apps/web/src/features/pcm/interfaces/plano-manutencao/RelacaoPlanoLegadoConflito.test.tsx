@@ -81,19 +81,58 @@ it.each(["primeira", "replay"] as const)(
   },
 );
 
-
-it.each([["planoId", "outro"], ["planoLegadoId", "outro"], ["revisao", 99], ["decisao", "retirar"]])(
+it.each([
+  ["planoId", "outro"],
+  ["planoLegadoId", "outro"],
+  ["revisao", 99],
+  ["decisao", "retirar"],
+])(
   "preserva pedido para recibo divergente em %s e repete a mesma chamada",
   async (campo, valor) => {
     let n = 0;
     api.rpc.mockImplementation((nome: string, args: Record<string, unknown>) => {
-      if (nome === "sso_planos_legados_mediados") return { abortSignal: async () => ({ data: [{ id: "legado", nome: "Legado", estado: "ativo", sistema_id: null, equipamento_id: null, primeira_data: "2026-01-01", intervalo_n: 1, intervalo_unidade: "meses" }], error: null }) };
-      if (nome === "sso_historico_relacao_legada_mediado") return { abortSignal: async () => ({ data: [], error: null }) };
-      const recibo = { requestId: args.p_request_id, planoId: args.p_plano_id, planoLegadoId: args.p_plano_legado_id, revisao: Number(args.p_expected_revision) + 1, decisao: args.p_decisao, equivalenciaComprovada: false, geradorAlterado: false };
-      return Promise.resolve({ data: ++n === 1 ? { ...recibo, [campo]: valor } : recibo, error: null });
+      if (nome === "sso_planos_legados_mediados")
+        return {
+          abortSignal: async () => ({
+            data: [
+              {
+                id: "legado",
+                nome: "Legado",
+                estado: "ativo",
+                sistema_id: null,
+                equipamento_id: null,
+                primeira_data: "2026-01-01",
+                intervalo_n: 1,
+                intervalo_unidade: "meses",
+              },
+            ],
+            error: null,
+          }),
+        };
+      if (nome === "sso_historico_relacao_legada_mediado")
+        return { abortSignal: async () => ({ data: [], error: null }) };
+      const recibo = {
+        requestId: args.p_request_id,
+        planoId: args.p_plano_id,
+        planoLegadoId: args.p_plano_legado_id,
+        revisao: Number(args.p_expected_revision) + 1,
+        decisao: args.p_decisao,
+        equivalenciaComprovada: false,
+        geradorAlterado: false,
+      };
+      return Promise.resolve({
+        data: ++n === 1 ? { ...recibo, [campo]: valor } : recibo,
+        error: null,
+      });
     });
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-    render(<QueryClientProvider client={client}><RelacaoPlanoLegado userId="usuario" clienteId="cliente" planoId="plano" revision={1} /></QueryClientProvider>);
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={client}>
+        <RelacaoPlanoLegado userId="usuario" clienteId="cliente" planoId="plano" revision={1} />
+      </QueryClientProvider>,
+    );
     await screen.findByRole("option", { name: /Legado/ });
     fireEvent.change(screen.getByLabelText("Plano legado"), { target: { value: "legado" } });
     await screen.findByText(/Próxima decisão/);
@@ -106,7 +145,9 @@ it.each([["planoId", "outro"], ["planoLegadoId", "outro"], ["revisao", 99], ["de
     expect(salvo).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Repetir tentativa pendente" }));
     await waitFor(() => expect(sessionStorage.length).toBe(0));
-    const chamadas = api.rpc.mock.calls.filter(([nome]) => nome === "sso_declarar_relacao_legada_mediada");
+    const chamadas = api.rpc.mock.calls.filter(
+      ([nome]) => nome === "sso_declarar_relacao_legada_mediada",
+    );
     expect(chamadas).toHaveLength(2);
     expect(chamadas[1]).toEqual(chamadas[0]);
   },

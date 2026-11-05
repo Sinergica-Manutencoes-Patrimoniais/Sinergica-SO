@@ -363,7 +363,9 @@ export function AlterarDiaComVisitas({
                 </button>
               )}
               {candidatas.length > 500 && (
-                <p role="alert">Mais de 500 Visitas candidatas: operação em lote ainda não disponível.</p>
+                <p role="alert">
+                  Mais de 500 Visitas candidatas: operação em lote ainda não disponível.
+                </p>
               )}
               <label>
                 <input

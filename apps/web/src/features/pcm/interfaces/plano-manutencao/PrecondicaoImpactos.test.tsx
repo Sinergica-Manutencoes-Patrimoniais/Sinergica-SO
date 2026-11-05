@@ -80,7 +80,10 @@ it("impede envios simultâneos e não apaga tentativa divergente após confirma�
     finalizar?.({
       data: {
         requestId: pedido.requestId,
-        planoId: pedido.planoId, revisao: pedido.revisao, vigencia: pedido.vigencia, fotografiaRegistrada: true,
+        planoId: pedido.planoId,
+        revisao: pedido.revisao,
+        vigencia: pedido.vigencia,
+        fotografiaRegistrada: true,
         fontesCompletasComprovadas: false,
         provaTransacionalIntegral: false,
         aprovacaoAutorizada: false,
@@ -167,34 +170,46 @@ it("preserva tentativa incerta e erro real de serialização", async () => {
   expect(sessionStorage.getItem(chave)).toBe(salvo);
 });
 
-
 it.each([
   ["planoId", "outro-plano"],
   ["revisao", 2],
   ["vigencia", "2026-11-02"],
   ["fotografiaRegistrada", false],
-])("preserva o pedido quando o recibo diverge em %s e repete o mesmo pedido", async (campo, valor) => {
-  let chamadas = 0;
-  const parametros: unknown[] = [];
-  api.rpc.mockImplementation((nome: string, args: Record<string, unknown>) => {
-    if (nome === "sso_listar_precondicoes_impacto_mediada")
-      return { abortSignal: () => Promise.resolve({ data: [], error: null }) };
-    parametros.push(args);
-    const recibo = {
-      requestId: args.p_request_id, planoId: args.p_plano_id, revisao: args.p_expected_revision,
-      vigencia: args.p_vigencia, fotografiaRegistrada: true, fontesCompletasComprovadas: false,
-      provaTransacionalIntegral: false, aprovacaoAutorizada: false, versaoAlterada: false, osAlteradas: false,
-    };
-    return Promise.resolve({ data: ++chamadas === 1 ? { ...recibo, [campo]: valor } : recibo, error: null });
-  });
-  montar();
-  fireEvent.click(screen.getByLabelText(/Confirmo apenas registrar/));
-  fireEvent.click(screen.getByRole("button", { name: "Registrar fotografia" }));
-  await screen.findByText(/Resultado não confirmado/);
-  const salvo = sessionStorage.getItem(chave);
-  expect(salvo).not.toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Repetir tentativa pendente" }));
-  await waitFor(() => expect(sessionStorage.getItem(chave)).toBeNull());
-  expect(parametros).toHaveLength(2);
-  expect(parametros[1]).toEqual(parametros[0]);
-});
+])(
+  "preserva o pedido quando o recibo diverge em %s e repete o mesmo pedido",
+  async (campo, valor) => {
+    let chamadas = 0;
+    const parametros: unknown[] = [];
+    api.rpc.mockImplementation((nome: string, args: Record<string, unknown>) => {
+      if (nome === "sso_listar_precondicoes_impacto_mediada")
+        return { abortSignal: () => Promise.resolve({ data: [], error: null }) };
+      parametros.push(args);
+      const recibo = {
+        requestId: args.p_request_id,
+        planoId: args.p_plano_id,
+        revisao: args.p_expected_revision,
+        vigencia: args.p_vigencia,
+        fotografiaRegistrada: true,
+        fontesCompletasComprovadas: false,
+        provaTransacionalIntegral: false,
+        aprovacaoAutorizada: false,
+        versaoAlterada: false,
+        osAlteradas: false,
+      };
+      return Promise.resolve({
+        data: ++chamadas === 1 ? { ...recibo, [campo]: valor } : recibo,
+        error: null,
+      });
+    });
+    montar();
+    fireEvent.click(screen.getByLabelText(/Confirmo apenas registrar/));
+    fireEvent.click(screen.getByRole("button", { name: "Registrar fotografia" }));
+    await screen.findByText(/Resultado não confirmado/);
+    const salvo = sessionStorage.getItem(chave);
+    expect(salvo).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Repetir tentativa pendente" }));
+    await waitFor(() => expect(sessionStorage.getItem(chave)).toBeNull());
+    expect(parametros).toHaveLength(2);
+    expect(parametros[1]).toEqual(parametros[0]);
+  },
+);

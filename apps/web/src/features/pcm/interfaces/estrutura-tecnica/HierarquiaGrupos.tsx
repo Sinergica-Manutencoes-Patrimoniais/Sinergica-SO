@@ -23,7 +23,8 @@ export function HierarquiaGrupos({ userId, clienteId }: { userId: string; client
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       const { data, error } = await supabase
         .schema("pcm")
         .rpc("sso_listar_hierarquia_grupos_mediada", {
@@ -36,7 +37,8 @@ export function HierarquiaGrupos({ userId, clienteId }: { userId: string; client
       if (error) throw error;
       const pagina = z.array(linha).max(20).parse(data);
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       return pagina;
     },
     getNextPageParam: (pagina) =>

@@ -7,11 +7,14 @@ import {
   validarCriacaoRegraContratual,
 } from "../../application/calendario-contratual";
 import type { CriarRegraContratualCommand } from "../../application/calendario-contratual-gateway";
-import { rejeicaoInicialRegraComprovada, supabaseCalendarioContratualAdapter } from "../../infrastructure/supabase-calendario-contratual-adapter";
+import {
+  rejeicaoInicialRegraComprovada,
+  supabaseCalendarioContratualAdapter,
+} from "../../infrastructure/supabase-calendario-contratual-adapter";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
-import { SimulacaoRegra } from "./SimulacaoRegra";
 import { AlterarDiaContratual } from "./AlterarDiaContratual";
 import { FeriadosDeclarados } from "./FeriadosDeclarados";
+import { SimulacaoRegra } from "./SimulacaoRegra";
 
 const dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 const limite = 20;
@@ -57,7 +60,12 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
   } | null>(null);
   const emEnvio = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   async function conferirSessao() {
     const { data, error } = await supabase.auth.getUser();
     if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
@@ -120,7 +128,8 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
     setErro("");
     try {
       await conferirSessao();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(c))
+        throw new Error("Tentativa alterada.");
       await salvar.mutateAsync(c);
       await conferirSessao();
       if (sessionStorage.getItem(chave) !== JSON.stringify(c))
@@ -144,14 +153,20 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
       if (primeira && rejeicaoInicialRegraComprovada(falha)) {
         try {
           await conferirSessao();
-          if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
+          if (sessionStorage.getItem(chave) !== JSON.stringify(c))
+            throw new Error("Tentativa alterada.");
           sessionStorage.removeItem(chave);
           setPendente(null);
           setErro("A regra foi recusada. Confira os dados antes de salvar novamente.");
           return;
-        } catch { /* Mantém a tentativa quando sessão ou armazenamento mudaram. */ }
+        } catch {
+          /* Mantém a tentativa quando sessão ou armazenamento mudaram. */
+        }
       }
-      if (montado.current) setErro("Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados ou consulte suporte.");
+      if (montado.current)
+        setErro(
+          "Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados ou consulte suporte.",
+        );
     } finally {
       emEnvio.current = false;
     }

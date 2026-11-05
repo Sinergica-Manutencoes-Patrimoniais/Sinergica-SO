@@ -2,8 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { FilaAposPreparacao } from "./FilaAposPreparacao";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 const uuid = z.string().uuid();
 const linha = z
   .object({
@@ -67,7 +67,12 @@ function Conteudo({
   alvo,
 }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const chave = `sso-vincular-legada-existente:${JSON.stringify([userId, clienteId, planoId, legadoId, preparadaId])}`;
   const trava = useRef(false);
   const [selecionada, setSelecionada] = useState("");
@@ -144,7 +149,8 @@ function Conteudo({
     trava.current = true;
     setOcupado(true);
     try {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw Error();
       p = pedido.parse({ ...p, tentativaIncerta: true });
       sessionStorage.setItem(chave, JSON.stringify(p));
@@ -183,7 +189,8 @@ function Conteudo({
         r.cicloId !== p.ciclo
       )
         throw Error();
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw Error();
       sessionStorage.removeItem(chave);
       setPendente(null);

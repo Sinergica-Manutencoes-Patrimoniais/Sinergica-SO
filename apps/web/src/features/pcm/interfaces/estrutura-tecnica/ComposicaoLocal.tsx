@@ -1,7 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
-import { lerComposicao176 } from "./lerComposicao176";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
 import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
@@ -14,6 +13,7 @@ import { FotosStagingGrupo } from "./FotosStagingGrupo";
 import { FotosVerificadasGrupo } from "./FotosVerificadasGrupo";
 import { HistoricoGrupo } from "./HistoricoGrupo";
 import { PlanosDoAlvo } from "./PlanosDoAlvo";
+import { lerComposicao176 } from "./lerComposicao176";
 
 type Props = { userId: string; clienteId: string; localId: string; caminho: string[] };
 const item = z.object({
@@ -68,7 +68,16 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const data = await lerComposicao176(userId, clienteId, "itens", pageParam, signal, localId, null, true);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "itens",
+        pageParam,
+        signal,
+        localId,
+        null,
+        true,
+      );
       return z.array(item).max(50).parse(data);
     },
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
@@ -79,7 +88,16 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const data = await lerComposicao176(userId, clienteId, "grupos", pageParam, signal, localId, null, false);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "grupos",
+        pageParam,
+        signal,
+        localId,
+        null,
+        false,
+      );
       return z.array(grupo).max(50).parse(data);
     },
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
@@ -90,7 +108,16 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const data = await lerComposicao176(userId, clienteId, "vinculos", pageParam, signal, localId, null, false);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "vinculos",
+        pageParam,
+        signal,
+        localId,
+        null,
+        false,
+      );
       return z.array(vinculo).max(50).parse(data);
     },
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
@@ -101,7 +128,16 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const data = await lerComposicao176(userId, clienteId, "sistemas", pageParam, signal, null, null, false);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "sistemas",
+        pageParam,
+        signal,
+        null,
+        null,
+        false,
+      );
       return z
         .array(z.object({ id: z.string().uuid(), nome: z.string(), ativo: z.boolean() }))
         .max(50)
@@ -115,7 +151,16 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const data = await lerComposicao176(userId, clienteId, "categorias", pageParam, signal, null, null, false);
+      const data = await lerComposicao176(
+        userId,
+        clienteId,
+        "categorias",
+        pageParam,
+        signal,
+        null,
+        null,
+        false,
+      );
       return z
         .array(z.object({ id: z.string().uuid(), nome: z.string() }))
         .max(50)

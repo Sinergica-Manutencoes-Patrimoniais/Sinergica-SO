@@ -10,8 +10,8 @@ vi.mock("./diagnostico-revisao-sessao", () => ({ conferirSessaoDiagnostico: asyn
 vi.mock("../../infrastructure/supabase-capacidades-sso-adapter", () => ({
   supabaseCapacidadesSsoAdapter: { autorizarAcao: async () => true },
 }));
-import { PropostaPmoc } from "./PropostaPmoc";
 import { DecisaoPmoc } from "./DecisaoPmoc";
+import { PropostaPmoc } from "./PropostaPmoc";
 const id = (n: number) => `16630000-1111-4000-8000-${String(n).padStart(12, "0")}`;
 afterEach(() => {
   cleanup();

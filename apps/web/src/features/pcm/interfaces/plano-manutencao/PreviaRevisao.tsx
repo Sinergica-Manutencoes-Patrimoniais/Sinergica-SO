@@ -1,7 +1,7 @@
 import { Button } from "@sinergica/ui";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
+import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
 
 export function PreviaRevisao({
   userId,

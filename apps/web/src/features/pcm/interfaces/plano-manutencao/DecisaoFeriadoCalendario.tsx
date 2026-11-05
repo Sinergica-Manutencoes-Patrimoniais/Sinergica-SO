@@ -83,7 +83,12 @@ function Formulario({
   const chave = `sso-feriado-ciclo:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId, ciclo])}`;
   const trava = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const [aberto, setAberto] = useState(false);
   const [feriadoId, setFeriadoId] = useState("");
   const [motivo, setMotivo] = useState("");
@@ -102,7 +107,8 @@ function Formulario({
   });
   async function conferirSessao() {
     const atual = await supabase.auth.getUser();
-    if (atual.error || atual.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+    if (atual.error || atual.data.user?.id !== userId || !montado.current)
+      throw new Error("Sessão alterada.");
   }
   const consulta = useQuery({
     queryKey: ["feriados-ciclo", userId, clienteId, planoId, versaoId, rotinaId, ciclo],
@@ -342,7 +348,9 @@ function Formulario({
                   />{" "}
                   Conferi a fonte declarada e a data
                 </label>
-                <button type="submit" disabled={!foto || confirmado !== foto}>Registrar tratamento PCM</button>
+                <button type="submit" disabled={!foto || confirmado !== foto}>
+                  Registrar tratamento PCM
+                </button>
               </fieldset>
             </form>
           )}

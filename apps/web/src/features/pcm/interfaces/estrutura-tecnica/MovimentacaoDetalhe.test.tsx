@@ -251,14 +251,27 @@ it("preserva seleção e bloqueia comando durante falha de nova busca, retomando
 });
 it("recusa destinos quando sessão muda durante revalidação de permissão", async () => {
   api.autorizarAcao.mockResolvedValue(true);
-  api.listarDestinos.mockImplementation(async (_c: string, tipo: string) => tipo === "area" ? [{ id: "area-inicial", nome: "Área inicial", areaId: null }] : []);
+  api.listarDestinos.mockImplementation(async (_c: string, tipo: string) =>
+    tipo === "area" ? [{ id: "area-inicial", nome: "Área inicial", areaId: null }] : [],
+  );
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><MovimentacaoDetalhe userId="u" clienteId="c" item={{ id: "i", estruturaRevisao: 1, areaId: null, localId: null, parentItemId: null }} onConcluido={() => {}} /></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <MovimentacaoDetalhe
+        userId="u"
+        clienteId="c"
+        item={{ id: "i", estruturaRevisao: 1, areaId: null, localId: null, parentItemId: null }}
+        onConcluido={() => {}}
+      />
+    </QueryClientProvider>,
+  );
   fireEvent.click(await screen.findByRole("button", { name: "Movimentar Componente" }));
   await screen.findByRole("option", { name: "Área inicial" });
   api.getUser.mockResolvedValue({ data: { user: { id: "outro" } }, error: null });
   await client.invalidateQueries({ queryKey: ["estrutura-tecnica", "u", "c", "pode-movimentar"] });
-  expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível verificar permissão");
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Não foi possível verificar permissão",
+  );
   expect(screen.queryByRole("option", { name: "Área inicial" })).toBeNull();
 });
 it("não transfere formulário nem destinos entre usuários no mesmo Cliente", async () => {
@@ -326,8 +339,12 @@ it("resposta atrasada não atualiza tela após troca de usuário", async () => {
     </QueryClientProvider>,
   );
   await screen.findByRole("button", { name: "Movimentar Componente" });
-  concluir({ requestId: comando.requestId, aggregateId: comando.componenteId,
-    revision: comando.expectedRevision + 1, linkedIds: { clienteId } });
+  concluir({
+    requestId: comando.requestId,
+    aggregateId: comando.componenteId,
+    revision: comando.expectedRevision + 1,
+    linkedIds: { clienteId },
+  });
   await waitFor(() => expect(api.getUser.mock.calls.length).toBeGreaterThanOrEqual(2));
   expect(sessionStorage.getItem(chave)).toBe(guardado);
   expect(aoConcluir).not.toHaveBeenCalled();

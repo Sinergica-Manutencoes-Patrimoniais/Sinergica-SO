@@ -17,12 +17,10 @@ const item = {
 };
 
 beforeEach(() => {
-  auth.getUser
-    .mockReset()
-    .mockResolvedValue({
-      data: { user: { id: "17690000-0000-4000-8000-000000000001" } },
-      error: null,
-    });
+  auth.getUser.mockReset().mockResolvedValue({
+    data: { user: { id: "17690000-0000-4000-8000-000000000001" } },
+    error: null,
+  });
 });
 afterEach(() => {
   cleanup();

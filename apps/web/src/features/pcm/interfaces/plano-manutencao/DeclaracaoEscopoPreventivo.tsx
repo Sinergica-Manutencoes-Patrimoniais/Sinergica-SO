@@ -415,7 +415,9 @@ export function DeclaracaoEscopoPreventivo({
                 />{" "}
                 Confirmo esta declaração humana, sem encerramento
               </label>
-              <button type="submit" disabled={!confirmado}>Registrar declaração</button>
+              <button type="submit" disabled={!confirmado}>
+                Registrar declaração
+              </button>
             </fieldset>
           </form>
           <h5>Histórico recente</h5>

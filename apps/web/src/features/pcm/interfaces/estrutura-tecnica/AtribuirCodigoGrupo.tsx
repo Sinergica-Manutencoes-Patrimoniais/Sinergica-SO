@@ -44,7 +44,9 @@ function Conteudo({
   const montado = useRef(false);
   useEffect(() => {
     montado.current = true;
-    return () => { montado.current = false; };
+    return () => {
+      montado.current = false;
+    };
   }, []);
   const [codigo, setCodigo] = useState("");
   const [confirmacao, setConfirmacao] = useState<string | null>(null);
@@ -69,14 +71,12 @@ function Conteudo({
         sessionStorage.getItem(chave) !== JSON.stringify(p)
       )
         throw new Error("Sessão ou tentativa alterada.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_atribuir_codigo_grupo", {
-          p_request_id: p.requestId,
-          p_cliente_id: clienteId,
-          p_grupo_id: grupoId,
-          p_codigo: p.codigo,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_atribuir_codigo_grupo", {
+        p_request_id: p.requestId,
+        p_cliente_id: clienteId,
+        p_grupo_id: grupoId,
+        p_codigo: p.codigo,
+      });
       if (error) throw error;
       if (
         !data ||
@@ -88,7 +88,8 @@ function Conteudo({
       )
         throw new Error("Resposta inválida.");
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || !montado.current)
+        throw new Error("Sessão alterada.");
     },
     onSuccess: async (_data, p) => {
       try {
@@ -114,11 +115,13 @@ function Conteudo({
           type: "active",
         });
       } catch {
-        if (montado.current) setAviso("Código confirmado, mas tentativa local não pôde ser limpa. Consulte suporte.");
+        if (montado.current)
+          setAviso("Código confirmado, mas tentativa local não pôde ser limpa. Consulte suporte.");
       }
     },
     onError: () => {
-      if (montado.current) setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte.");
+      if (montado.current)
+        setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte.");
     },
     onSettled: () => {
       trava.current = false;

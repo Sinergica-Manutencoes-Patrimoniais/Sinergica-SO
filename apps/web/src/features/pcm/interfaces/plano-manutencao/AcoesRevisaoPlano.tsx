@@ -198,7 +198,10 @@ function Conteudo({
           throw new Error("Recibo de aprovação divergente.");
       }
       if (pedido.tipo === "inicio" || pedido.tipo === "transicao") {
-        const estadoEsperado = pedido.tipo === "inicio" || pedido.comando.acao === "devolver" ? "rascunho" : "em_revisao";
+        const estadoEsperado =
+          pedido.tipo === "inicio" || pedido.comando.acao === "devolver"
+            ? "rascunho"
+            : "em_revisao";
         if (
           resultado.requestId !== pedido.comando.requestId ||
           resultado.aggregateId !== pedido.comando.planoId ||
@@ -207,7 +210,8 @@ function Conteudo({
           resultado.state !== estadoEsperado ||
           resultado.created !== (pedido.tipo === "inicio") ||
           (pedido.tipo === "inicio" && resultado.linkedIds.versaoId !== pedido.comando.novaVersaoId)
-        ) throw new Error("Recibo de revisão divergente.");
+        )
+          throw new Error("Recibo de revisão divergente.");
       }
       if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
         setErro(

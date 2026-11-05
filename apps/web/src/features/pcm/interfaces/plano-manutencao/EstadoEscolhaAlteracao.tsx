@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { ResolverRetiradaImpacto } from "./ResolverRetiradaImpacto";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 type Props = {
   userId: string;

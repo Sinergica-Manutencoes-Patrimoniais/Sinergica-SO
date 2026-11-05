@@ -9,9 +9,9 @@ vi.mock("../../../../lib/supabase-client", () => ({
     auth: { getUser: async () => ({ data: { user: { id: "usuario" } }, error: null }) },
   },
 }));
+import type { ComparacaoImpacto } from "./ComparacaoImpactoSelecionado";
 import { EscolherNovaDataCalendario } from "./EscolherNovaDataCalendario";
 import { EscolherNovaVisita } from "./EscolherNovaVisita";
-import type { ComparacaoImpacto } from "./ComparacaoImpactoSelecionado";
 const preparadaId = "16630000-1111-4000-8000-000000000061";
 const rascunhoId = "16630000-1111-4000-8000-000000000022";
 const rotinaId = "16630000-1111-4000-8000-000000000031";

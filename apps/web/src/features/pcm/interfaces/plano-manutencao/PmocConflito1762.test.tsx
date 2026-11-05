@@ -7,8 +7,8 @@ vi.mock("../../../../lib/supabase-client", () => ({
   supabase: { schema: () => ({ rpc: api.rpc }) },
 }));
 vi.mock("./diagnostico-revisao-sessao", () => ({ conferirSessaoDiagnostico: async () => {} }));
-import { ImpactoPmocRevisao } from "./ImpactoPmocRevisao";
 import { ConferenciaPmocCiclo } from "./ConferenciaPmocCiclo";
+import { ImpactoPmocRevisao } from "./ImpactoPmocRevisao";
 const id = (n: number) => `16630000-1111-4000-8000-${String(n).padStart(12, "0")}`;
 const dia = "2026-11-05";
 afterEach(() => {
