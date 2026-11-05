@@ -75,7 +75,7 @@ export function AlterarDiaComVisitas({ userId, clienteId, serieId, revisao, dia,
         p_expected_revision: p.expectedRevision, p_dia_semana: p.diaSemana, p_vigencia: p.vigencia, p_revisoes: p.revisoes,
       });
       if (error) {
-        if (!jaIncerta && error.code === "40001") {
+        if (!jaIncerta && (error.code === "40001" || (error.code === "P0018" && ["revisao_obsoleta", "fotografia_visitas_alterada", "impactos_alterados"].includes(error.message)))) {
           await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
           sessionStorage.removeItem(chave); setPedido(null); setConfirmacao(null);
           setAviso("Regra ou Visitas mudaram. Confira novamente todas as páginas; nenhuma alteração foi aplicada nesta tentativa.");

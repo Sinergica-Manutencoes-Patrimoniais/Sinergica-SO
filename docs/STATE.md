@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: conflitos de calendário, PMOC e legado
+
+- ADRs 1619–1621/migrations 1761–1763 tratam conflitos explícitos de regras/feriados, avaliação e classificação PMOC, relação e lote legado. UI reconhece rejeição específica somente no primeiro envio, preservando replay incerto e 40001 real; ACL/assinaturas mantidas e revisões independentes sem bypass concreto.
+- Clone compilou até 1763; HTTP autenticado cobriu prévia de regra. Fixtures SQL cobriram conflitos PMOC/ciclo e relação/lote legado. UI mudança de dia 4/4, PMOC 4/4 e relação 2/2; typecheck passou. Feriado e legado ainda sem HTTP específico; operações históricas de regras e outros conflitos não foram todas auditadas.
+- Próximo passo: demais caminhos ativos, revisão integral e CI antes de homologação. Gates default fechados; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: conflitos de origem e reconciliação
 
 - ADRs 1616–1618/migrations 1758–1760 convertem conflitos explícitos de revisão da origem da Rotina, diagnósticos/pré-condição de impacto e fotografia de reconciliação para P0010/P0011/P0017; UI mantém pedidos incertos e erros reais 40001. Revisões cruzadas preservaram ACL, assinaturas e ordem de replay; rollout frontend/backend coordenado.
