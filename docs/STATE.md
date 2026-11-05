@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: vigência e diagnósticos sem validação executada
+
+- ADR-1637/migration 1779 mediam leitura/histórico/decisão de vigência de série e corrigem ambiguidade de ID; antes da orientação de suspender testes, clone compilou até 1779 e fixture/UI passaram segundo registros dos agentes. Geração sobre série recém-vinculada segue sem comprovação prática; driver foi ajustado.
+- ADR-1638/migration 1780 mediam os diagnósticos de modo Visita e exigência aprovada que chamavam RPCs privadas; telas usam mediadores e conferem sessão. Revisão estática independente sem bypass concreto. VigenciaSerieRotina invalida prévias de Visita/ciclos após alteração ou conflito para evitar cache obsoleto.
+- Conforme solicitação atual, **não executar testes, typecheck, build ou ensaios**; 1780 e invalidação de cache ainda não foram validadas. Antes de homologar, executar lote de validação adequado, incluindo compilação 1780, ACL/Cliente, UI/replay e jornada da série recém-vinculada. Gates default fechados; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: vínculos de série por Visita
 
 - Jornada na navegação normal por Visita identificou ACL privada em listagem de série. ADR-1635/migration 1777 criam consulta mediada autenticada e UI a consome sem expor núcleo privado. Fixture SQL cobriu positivo/ator/Cliente/ACL; ainda falta concorrência de consulta.
