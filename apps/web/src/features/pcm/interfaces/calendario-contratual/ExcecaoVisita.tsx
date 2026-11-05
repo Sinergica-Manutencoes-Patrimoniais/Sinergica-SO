@@ -64,7 +64,12 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
   const [aviso, setAviso] = useState("");
   const trava = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const cache = useQueryClient();
   async function conferirAtor() {
     const r = await supabase.auth.getUser();
@@ -110,7 +115,8 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
           motivo.trim(),
         ])
       : null;
-  async function enviar(p: Pedido) {
+  async function enviar(pedidoInicial: Pedido) {
+    let p = pedidoInicial;
     if (trava.current) return;
     trava.current = true;
     setOcupado(true);
@@ -136,13 +142,11 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
         p_motivo: p.motivo,
       });
       if (error) {
-        if (
-          !jaIncerta &&
-          (error.code === "P0011" && error.message === "visita_obsoleta")
-        ) {
+        if (!jaIncerta && error.code === "P0011" && error.message === "visita_obsoleta") {
           await conferirAtor();
           if (sessionStorage.getItem(chave) !== serializado) throw new Error("Pedido alterado");
-          if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave);
+          if (!montado.current) throw new Error("Tela desmontada.");
+          sessionStorage.removeItem(chave);
           setPedido(null);
           setConfirmacao(null);
           setAviso("A Visita mudou. Confira os dados novamente.");
@@ -164,7 +168,8 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
         throw new Error("Recibo divergente");
       await conferirAtor();
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Pedido alterado");
-      if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave);
+      if (!montado.current) throw new Error("Tela desmontada.");
+      sessionStorage.removeItem(chave);
       setPedido(null);
       setConfirmacao(null);
       setAviso("Exceção aprovada. A Visita será preservada na mudança de dia.");

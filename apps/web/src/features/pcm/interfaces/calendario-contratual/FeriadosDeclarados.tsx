@@ -6,11 +6,11 @@ import type {
   ContratoCalendario,
   RegraContratualResumo,
 } from "../../application/calendario-contratual-gateway";
-import { ImpactosFeriado } from "./ImpactosFeriado";
 import { CoincidenciasCalendario } from "./CoincidenciasCalendario";
-import { SupressoesFeriado } from "./SupressoesFeriado";
-import { RegistrarSupressao } from "./RegistrarSupressao";
 import { HistoricoSupressaoGerador } from "./HistoricoSupressaoGerador";
+import { ImpactosFeriado } from "./ImpactosFeriado";
+import { RegistrarSupressao } from "./RegistrarSupressao";
+import { SupressoesFeriado } from "./SupressoesFeriado";
 
 type Feriado = {
   id: string;
@@ -177,8 +177,10 @@ function ConteudoFeriados({ userId, clienteId, contratos, regras = [], onUsar }:
     const lidas = c.lidas + p.itens.length;
     if (p.itens.length === 0 || (p.total !== null ? lidas >= p.total : p.itens.length < 50))
       return undefined;
+    const ultimo = p.itens.at(-1);
+    if (!ultimo) return undefined;
     return {
-      apos: p.itens[p.itens.length - 1]!.id,
+      apos: ultimo.id,
       assinatura: p.assinatura,
       total: p.total,
       lidas,
@@ -260,40 +262,76 @@ function ConteudoFeriados({ userId, clienteId, contratos, regras = [], onUsar }:
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || !montado.current || sessionStorage.getItem(chave) !== JSON.stringify(p))
+      if (
+        antes.error ||
+        antes.data.user?.id !== userId ||
+        !montado.current ||
+        sessionStorage.getItem(chave) !== JSON.stringify(p)
+      )
         throw new Error("Sessão ou tentativa alterada.");
       const parametros = {
-        p_request_id: p.requestId, p_cliente_id: p.clienteId, p_feriado_id: p.id,
-        p_expected_revision: p.revision, p_acao: p.acao, p_contrato_id: p.contratoId,
-        p_data: p.data, p_fonte: p.fonte, p_motivo: p.motivo,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_feriado_id: p.id,
+        p_expected_revision: p.revision,
+        p_acao: p.acao,
+        p_contrato_id: p.contratoId,
+        p_data: p.data,
+        p_fonte: p.fonte,
+        p_motivo: p.motivo,
       };
-      const consulta = import.meta.env.VITE_SSO_DECISAO_FERIADO_MEDIADA_ENABLED === "true"
-        ? supabase.schema("pcm").rpc("sso_decidir_feriado_mediado", { ...parametros, p_ator_id: userId })
-        : supabase.schema("pcm").rpc("sso_decidir_feriado_declarado", parametros);
+      const consulta =
+        import.meta.env.VITE_SSO_DECISAO_FERIADO_MEDIADA_ENABLED === "true"
+          ? supabase
+              .schema("pcm")
+              .rpc("sso_decidir_feriado_mediado", { ...parametros, p_ator_id: userId })
+          : supabase.schema("pcm").rpc("sso_decidir_feriado_declarado", parametros);
       const { data: resultado, error } = await consulta;
       if (error) throw error;
-      if (!resultado || resultado.requestId !== p.requestId || resultado.feriadoId !== p.id ||
-          resultado.revision !== p.revision + 1 || resultado.ativo !== (p.acao === "declarar"))
+      if (
+        !resultado ||
+        resultado.requestId !== p.requestId ||
+        resultado.feriadoId !== p.id ||
+        resultado.revision !== p.revision + 1 ||
+        resultado.ativo !== (p.acao === "declarar")
+      )
         throw new Error("Resposta inválida.");
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || !montado.current)
+        throw new Error("Sessão alterada.");
     },
     onSuccess: async (_resultado, p) => {
       try {
         const atual = await supabase.auth.getUser();
-        if (atual.error || atual.data.user?.id !== userId || !montado.current || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
+        if (
+          atual.error ||
+          atual.data.user?.id !== userId ||
+          !montado.current ||
+          sessionStorage.getItem(chave) !== JSON.stringify(p)
+        )
+          throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
-        if (montado.current) { setPedido("invalido"); setMensagem("Tentativa alterada ou não removida; procure suporte."); }
+        if (montado.current) {
+          setPedido("invalido");
+          setMensagem("Tentativa alterada ou não removida; procure suporte.");
+        }
         return;
       }
       onUsar(null, []);
       void cache.invalidateQueries({ queryKey: ["feriados-declarados", userId, clienteId] });
       setPedido(null);
-      setMensagem("Declaração registrada; datas usadas anteriormente na simulação foram limpas. Não houve geração ou alteração de Visitas.");
+      setMensagem(
+        "Declaração registrada; datas usadas anteriormente na simulação foram limpas. Não houve geração ou alteração de Visitas.",
+      );
     },
-    onError: () => { if (montado.current) setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte."); },
-    onSettled: () => { trava.current = false; },
+    onError: () => {
+      if (montado.current)
+        setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte.");
+    },
+    onSettled: () => {
+      trava.current = false;
+    },
   });
   function enviar(p: Pedido, repeticao = false) {
     if (trava.current) return;

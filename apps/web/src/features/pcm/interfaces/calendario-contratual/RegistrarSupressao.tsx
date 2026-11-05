@@ -61,7 +61,9 @@ function Conteudo({
   const montado = useRef(false);
   useEffect(() => {
     montado.current = true;
-    return () => { montado.current = false; };
+    return () => {
+      montado.current = false;
+    };
   }, []);
   const cache = useQueryClient();
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
@@ -88,8 +90,10 @@ function Conteudo({
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
-      if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
+      if (antes.error || antes.data.user?.id !== userId || !montado.current)
+        throw new Error("Sessão alterada.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+        throw new Error("Tentativa divergente.");
       const { data: r, error } = await supabase
         .schema("pcm")
         .rpc("sso_registrar_supressao_semana", {
@@ -122,13 +126,21 @@ function Conteudo({
     onSuccess: async (_r, p) => {
       try {
         const sessao = await supabase.auth.getUser();
-        if (sessao.error || sessao.data.user?.id !== userId || !montado.current || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
+        if (
+          sessao.error ||
+          sessao.data.user?.id !== userId ||
+          !montado.current ||
+          sessionStorage.getItem(chave) !== JSON.stringify(p)
+        )
+          throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
         setAviso("Supressão registrada; tentativa não removida. Consulte suporte.");
         return;
       }
-      void cache.invalidateQueries({ queryKey: ["supressoes-feriado", userId, clienteId, feriadoId] });
+      void cache.invalidateQueries({
+        queryKey: ["supressoes-feriado", userId, clienteId, feriadoId],
+      });
       setPendente(null);
       setRegraId("");
       setConfirmado(false);
