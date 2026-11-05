@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { EvidenciasDeclaradas } from "./EvidenciasDeclaradas";
 
@@ -9,6 +9,8 @@ type Resposta = {perguntaId:string;resultado:string;observacao:string};
 type Pedido = {requestId:string;clienteId:string;envelopeId:string;resolucaoId:string;retornoId:string;respostas:Resposta[]};
 
 export function ClassificarRetorno({userId,clienteId}:{userId:string;clienteId:string}) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave=`sso-classificacao-retorno:${JSON.stringify([userId,clienteId])}`;
   const trava=useRef(false);
   const [selecionado,setSelecionado]=useState("");
@@ -20,16 +22,16 @@ export function ClassificarRetorno({userId,clienteId}:{userId:string;clienteId:s
   } catch {return "invalido";}});
   const cache=useQueryClient();
   const envelopes=useInfiniteQuery({queryKey:["retorno-campo-classificar",userId,clienteId],gcTime:0,initialPageParam:null as string | null,
-    queryFn:async ({pageParam,signal}) => {const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");const {data,error}=await supabase.schema("pcm").rpc("sso_listar_retornos_classificaveis_mediada",{
+    queryFn:async ({pageParam,signal}) => {const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId || !montado.current||signal.aborted)throw new Error("Sessão alterada.");const {data,error}=await supabase.schema("pcm").rpc("sso_listar_retornos_classificaveis_mediada",{
       p_cliente_id:clienteId,p_apos:pageParam,p_limite:30}).abortSignal(signal);
       if(error)throw error; if(!Array.isArray(data) || data.some((e) => typeof e.envelope_id!=="string" || typeof e.resolucao_id!=="string" ||
         typeof e.os_id!=="string" || typeof e.task_id!=="string" || !Array.isArray(e.perguntas) || e.perguntas.some((p:unknown) => !p || typeof p!=="object" || !("id" in p) || typeof p.id!=="string"))) throw new Error("Envelope inválido.");
-      let cursor=pageParam?.toLowerCase()??null;for(const item of data){const id=item.envelope_id.toLowerCase();if(cursor!==null&&id<=cursor)throw new Error("Página divergente.");cursor=id;}const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
+      let cursor=pageParam?.toLowerCase()??null;for(const item of data){const id=item.envelope_id.toLowerCase();if(cursor!==null&&id<=cursor)throw new Error("Página divergente.");cursor=id;}const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId || !montado.current||signal.aborted)throw new Error("Sessão alterada.");
       return data as Envelope[];},getNextPageParam:(pagina) => pagina.length===30 ? pagina.at(-1)?.envelope_id : undefined});
-  const envio=useMutation({mutationFn:async (p:Pedido) => {const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");const {data,error}=await supabase.schema("pcm").rpc("sso_classificar_retorno_campo_mediada",{
+  const envio=useMutation({mutationFn:async (p:Pedido) => {const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId || !montado.current||sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");const {data,error}=await supabase.schema("pcm").rpc("sso_classificar_retorno_campo_mediada",{
     p_request_id:p.requestId,p_cliente_id:p.clienteId,p_envelope_id:p.envelopeId,p_resolucao_id:p.resolucaoId,p_retorno_id:p.retornoId,p_respostas:p.respostas});
-    if(error)throw error;if(!data || data.requestId!==p.requestId || data.retornoId!==p.retornoId || data.coberturaComprovada!==false)throw new Error("Resposta inválida.");const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId)throw new Error("Sessão alterada.");},
-    onSuccess:async (_resultado, p) => {try {if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(chave);}catch {setMensagem("Classificação registrada, mas tentativa local mudou ou não foi removida. Procure suporte.");return;}
+    if(error)throw error;if(!data || data.requestId!==p.requestId || data.retornoId!==p.retornoId || data.coberturaComprovada!==false)throw new Error("Resposta inválida.");const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId || !montado.current)throw new Error("Sessão alterada.");},
+    onSuccess:async (_resultado, p) => {try {const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId||!montado.current)throw new Error("Sessão alterada.");if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(chave);}catch {setMensagem("Classificação registrada, mas tentativa local mudou ou não foi removida. Procure suporte.");return;}
       setPedido(null);setRespostas({});setSelecionado("");setMensagem("Classificação declarada. Cobertura e execução não foram comprovadas.");await cache.invalidateQueries({queryKey:["retorno-campo-classificar",userId,clienteId]});},
     onError:() => setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte."),onSettled:() => {trava.current=false;}});
   const enviar=(p:Pedido) => {if(trava.current)return;trava.current=true;envio.mutate(p);};

@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; justificativa: string };
 
 export function CondicaoEstrutural({ userId, clienteId, retornoId, conferenciaId, evidencias, decisao, historicoCompleto }: { userId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; historicoCompleto: boolean }) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient(); const storageKey = `sso-condicao-retorno:${JSON.stringify([userId, clienteId, retornoId, conferenciaId])}`;
   const trava = useRef(false);
-  async function conferirSessao(signal?: AbortSignal) { const atual=await supabase.auth.getUser(); if(atual.error||atual.data.user?.id!==userId||signal?.aborted)throw new Error("Sessão alterada."); }
+  async function conferirSessao(signal?: AbortSignal) { const atual=await supabase.auth.getUser(); if(atual.error||atual.data.user?.id!==userId || !montado.current||signal?.aborted)throw new Error("Sessão alterada."); }
   const [confirmado, setConfirmado] = useState(false); const [justificativa, setJustificativa] = useState(""); const [aviso, setAviso] = useState("");
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(storageKey); if (!raw) return null; const p = JSON.parse(raw) as Pedido;
     return p.clienteId === clienteId && p.retornoId === retornoId && p.conferenciaId === conferenciaId && typeof p.requestId === "string" && Number.isSafeInteger(p.evidencias) && Number.isSafeInteger(p.decisao) && typeof p.justificativa === "string" ? p : "invalido";

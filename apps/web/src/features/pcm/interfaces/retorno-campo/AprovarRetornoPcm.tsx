@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
@@ -9,7 +9,9 @@ type Pedido = { requestId: string; clienteId: string; retornoId: string; confere
 const respostaAprovacao = z.object({ retornoId: z.string().uuid(), condicaoEvidenciaId: z.string().uuid(), decisaoId: z.string().uuid(), revision: z.number().int().positive(), pendenciasProcessadas: z.number().int().nonnegative(), osEncerrada: z.literal(false), conteudoAutenticado: z.literal(false), requestId: z.string().uuid() }).strict();
 const historicoSchema = z.object({request_id:z.string().uuid(),condicao_evidencia_id:z.string().uuid(),decisao_id:z.string().uuid(),revisao_decisao:z.number().int().positive(),justificativa:z.string(),ator_id:z.string().uuid(),criado_em:z.string().datetime({offset:true})}).strict();
 
-export function AprovarRetornoPcm({ userId, clienteId, retornoId, conferenciaId, evidencias, decisao, historicoCompleto }: { userId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; historicoCompleto: boolean }) {
+export function AprovarRetornoPcm(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.conferenciaId])} {...props} />; }
+function Conteudo({ userId, clienteId, retornoId, conferenciaId, evidencias, decisao, historicoCompleto }: { userId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; historicoCompleto: boolean }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient(); const storageKey = `sso-atestacao-pcm:${JSON.stringify([userId, clienteId, retornoId, conferenciaId])}`;
   const trava = useRef(false);
   const [confirmado, setConfirmado] = useState<string | null>(null); const [justificativa, setJustificativa] = useState(""); const [aviso, setAviso] = useState("");
@@ -23,12 +25,12 @@ export function AprovarRetornoPcm({ userId, clienteId, retornoId, conferenciaId,
       const { data, error } = await supabase.schema("pcm").rpc("sso_listar_atestacoes_pcm_mediada", { p_cliente_id: clienteId, p_retorno_id: retornoId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error;
       const pagina=z.array(historicoSchema).max(20).parse(data);let anterior=pageParam?.toLowerCase()??"";for(const item of pagina){const atual=item.request_id.toLowerCase();if(atual<=anterior)throw new Error("Página divergente.");anterior=atual;}
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");return pagina; }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.request_id : undefined });
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||sessionStorage.getItem(storageKey)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");
+  const envio = useMutation({ mutationFn: async (p: Pedido) => { const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId|| !montado.current ||sessionStorage.getItem(storageKey)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_atestar_aprovar_retorno_mediado", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_retorno_id: p.retornoId, p_conferencia_id: p.conferenciaId, p_expected_evidencias: p.evidencias, p_expected_decisao: p.decisao, p_justificativa: p.justificativa }); if (error) throw error; const resultado = respostaAprovacao.parse(data); if (resultado.requestId.toLowerCase() !== p.requestId.toLowerCase() || resultado.retornoId.toLowerCase() !== p.retornoId.toLowerCase() || resultado.revision !== p.decisao + 1) throw new Error("Resposta não corresponde ao pedido.");
     const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId)throw new Error("Sessão alterada.");return resultado;
   }, onSuccess: async (r,p) => { try {
     await cache.invalidateQueries({ queryKey: ["retorno-atestacoes-pcm", userId, clienteId, retornoId] }); await cache.invalidateQueries({ queryKey: ["retorno-decisoes", userId, clienteId, retornoId] });
-    const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId||sessionStorage.getItem(storageKey)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");sessionStorage.removeItem(storageKey);
+    const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId|| !montado.current ||sessionStorage.getItem(storageKey)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");sessionStorage.removeItem(storageKey);
     setPendente(null); setConfirmado(null); setAviso(`Retorno aprovado pelo PCM; ${r.pendenciasProcessadas} Não OK processada(s). OS e Chamado não foram encerrados; conteúdo não foi autenticado.`);
   } catch { setAviso("Decisão confirmada, mas tentativa local não pôde ser removida; procure suporte."); }
   }, onError: () => setAviso("Resultado não confirmado ou requisitos mudaram. Repita a mesma tentativa; procure suporte em conflito."),onSettled:()=>{trava.current=false;} });

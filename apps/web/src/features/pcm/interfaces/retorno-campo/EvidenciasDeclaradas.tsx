@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { DecisoesRetorno } from "./DecisoesRetorno";
 import { ConferenciaCobertura } from "./ConferenciaCobertura";
@@ -13,9 +13,11 @@ import { PendenciasRetornoAprovado } from "./PendenciasRetornoAprovado";
 type Retorno = {retorno_id:string;os_id:string;envelope_id:string;revisao_evidencias:number};
 type Pedido = {requestId:string;clienteId:string;retornoId:string;evidenciaId:string;revision:number;tipo:string;referencia:string;descricao:string};
 export function EvidenciasDeclaradas({userId,clienteId}:{userId:string;clienteId:string}) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave=`sso-retorno-evidencia:${JSON.stringify([userId,clienteId])}`;
   const trava=useRef(false);
-  async function conferirSessao(signal?:AbortSignal){const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId||signal?.aborted)throw new Error("Sessão alterada.");}
+  async function conferirSessao(signal?:AbortSignal){const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId || !montado.current||signal?.aborted)throw new Error("Sessão alterada.");}
   const [selecionado,setSelecionado]=useState("");const [tipo,setTipo]=useState("observacao");
   const [referencia,setReferencia]=useState("");const [descricao,setDescricao]=useState("");const [mensagem,setMensagem]=useState("");
   const [pedido,setPedido]=useState<Pedido | "invalido" | null>(() => {try {const valor=sessionStorage.getItem(chave);if(!valor)return null;

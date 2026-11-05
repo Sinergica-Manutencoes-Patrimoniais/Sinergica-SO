@@ -1,12 +1,14 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; respostaId: string; evidenciaId: string; decisaoRevision: number; uploadsRevision: number; decisao: "aceita_pcm" | "rejeitada_pcm"; justificativa: string };
 const pedidoSchema=z.object({requestId:z.string().uuid(),clienteId:z.string().uuid(),retornoId:z.string().uuid(),respostaId:z.string().uuid(),evidenciaId:z.string().uuid(),decisaoRevision:z.number().int().nonnegative().safe(),uploadsRevision:z.number().int().positive().safe(),decisao:z.enum(["aceita_pcm","rejeitada_pcm"]),justificativa:z.string().trim().min(1).max(2000)}).strict();
 const historicoSchema = z.object({ id: z.string().uuid(), evidencia_id: z.string().uuid(), revisao: z.number().int().positive().safe(), revisao_uploads: z.number().int().positive().safe(), decisao: z.enum(["aceita_pcm", "rejeitada_pcm"]), justificativa: z.string(), ator_id: z.string().uuid(), criado_em: z.string() }).strict();
 
-export function ValidacaoResposta({ userId, clienteId, retornoId, respostaId, evidenciaId, uploadsRevision }: { userId: string; clienteId: string; retornoId: string; respostaId: string; evidenciaId: string; uploadsRevision: number }) {
+export function ValidacaoResposta(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.respostaId, props.evidenciaId])} {...props} />; }
+function Conteudo({ userId, clienteId, retornoId, respostaId, evidenciaId, uploadsRevision }: { userId: string; clienteId: string; retornoId: string; respostaId: string; evidenciaId: string; uploadsRevision: number }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient(); const storageKey = `sso-validacao-resposta:${JSON.stringify([userId, clienteId, retornoId, respostaId, evidenciaId])}`;
   const enviando = useRef(false);
   const [decisao, setDecisao] = useState<Pedido["decisao"]>("rejeitada_pcm"); const [justificativa, setJustificativa] = useState(""); const [aviso, setAviso] = useState("");
@@ -19,7 +21,7 @@ export function ValidacaoResposta({ userId, clienteId, retornoId, respostaId, ev
       for (const item of pagina) { if (item.revisao >= anterior) throw new Error("Histórico inválido."); anterior = item.revisao; } const depois=await supabase.auth.getUser();if(depois.error || depois.data.user?.id!==userId || signal.aborted)throw new Error("Sessão alterada.");return pagina;
     }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.revisao : undefined });
   const envio = useMutation({ mutationFn: async (p: Pedido) => {
-    const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error("Sessão ou tentativa divergente.");
+    const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || !montado.current || sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error("Sessão ou tentativa divergente.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_validar_resposta_evidencia_mediada", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_retorno_id: p.retornoId, p_resposta_id: p.respostaId, p_evidencia_id: p.evidenciaId, p_expected_decisao: p.decisaoRevision, p_expected_uploads: p.uploadsRevision, p_decisao: p.decisao, p_justificativa: p.justificativa });
     if (error) throw error;
     const recibo = z.object({ validacaoId: z.string().uuid(), revision: z.number().int().positive().safe(), requestId: z.string().uuid(), conteudoAutenticado: z.literal(false) }).strict().parse(data);
@@ -27,7 +29,7 @@ export function ValidacaoResposta({ userId, clienteId, retornoId, respostaId, ev
     const depois=await supabase.auth.getUser();if(depois.error || depois.data.user?.id!==userId)throw new Error("Sessão alterada.");
   }, onSuccess: async (_resultado, p) => {
     await cache.invalidateQueries({ queryKey: ["retorno-validacoes-resposta", userId, clienteId, retornoId, respostaId] });
-    try { const atual=await supabase.auth.getUser();if(atual.error || atual.data.user?.id!==userId || sessionStorage.getItem(storageKey) !== JSON.stringify(p)) { setAviso("Sessão ou tentativa mudou. Procure suporte; tentativa preservada."); return; } sessionStorage.removeItem(storageKey); }
+    try { const atual=await supabase.auth.getUser();if(atual.error || atual.data.user?.id!==userId || !montado.current || sessionStorage.getItem(storageKey) !== JSON.stringify(p)) { setAviso("Sessão ou tentativa mudou. Procure suporte; tentativa preservada."); return; } sessionStorage.removeItem(storageKey); }
     catch { setAviso("Tentativa local não pôde ser removida; procure suporte."); return; }
     setPendente(null); setAviso("Decisão humana registrada; conteúdo não foi autenticado e OS não foi encerrada.");
   }, onError: () => setAviso("Resultado não confirmado, evidência ou revisão pode ter mudado. Repita a mesma tentativa; procure suporte em conflito."), onSettled: () => { enviando.current = false; } });

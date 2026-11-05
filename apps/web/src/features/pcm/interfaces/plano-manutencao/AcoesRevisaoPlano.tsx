@@ -1,6 +1,6 @@
 import { Button } from "@sinergica/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import {
@@ -81,12 +81,14 @@ function lerDetalhes(erro: unknown): Aviso[] {
   }
 }
 
-export function AcoesRevisaoPlano({
+export function AcoesRevisaoPlano(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.plano.id])} {...props} />; }
+function Conteudo({
   userId,
   clienteId,
   plano,
   bloqueado,
 }: { userId: string; clienteId: string; plano: PlanoResumo; bloqueado: boolean }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-plano-revisao:${userId}:${clienteId}:${plano.id}`;
   const [recuperacao] = useState(() => {
     try {
@@ -143,10 +145,10 @@ export function AcoesRevisaoPlano({
     }
     trava.current = true;
     try {
-      await exigirAtor();
+      await exigirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) throw new Error("Tentativa alterada.");
       const resultado = await operacao.mutateAsync(pedido);
-      await exigirAtor();
+      await exigirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (pedido.tipo === "aprovacao" || pedido.tipo === "aprovacao_revisao") {
         if (
           resultado.requestId !== pedido.comando.requestId ||
@@ -180,7 +182,7 @@ export function AcoesRevisaoPlano({
         typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
       if (primeiraTentativa && (["22023", "23514"].includes(codigo) || (pedido.tipo === "aprovacao_revisao" && codigo === "P0011" && typeof falha === "object" && falha !== null && "message" in falha && falha.message === "revisao_obsoleta"))) {
         try {
-          await exigirAtor();
+          await exigirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
             setErro("O pedido local mudou durante a operação. Reabra e reconcilie antes de continuar.");
             return;
@@ -245,9 +247,9 @@ export function AcoesRevisaoPlano({
       }
       let versaoEsperada: string | undefined;
       if ((escolha === "aprovar" || escolha === "aprovar_revisao") && import.meta.env.VITE_SSO_APROVACAO_VERSAO_ESPERADA_ENABLED === "true") {
-        await exigirAtor();
+        await exigirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
         versaoEsperada = await prepararAprovacaoVersao(userId, clienteId, plano.id, plano.revisao);
-        await exigirAtor();
+        await exigirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== null) throw new Error("Tentativa concorrente.");
       }
       const pedido: Operacao =

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -12,7 +12,9 @@ const previaSchema = z.object({ osId: uuid, status: z.string().min(1), updatedAt
 const respostaSchema = z.object({ requestId: uuid, retornoId: uuid, osId: uuid, revision: z.number().int().positive(), pendenciasProcessadas: z.number().int().nonnegative(), osEncerrada: z.literal(true), chamadoAlterado: z.literal(false), conteudoAutenticado: z.literal(false) }).strict();
 
 /** Operação única: aprovação e encerramento individual sucedem ou falham juntos. */
-export function AprovarFinalizarAtomico({ userId, clienteId, retornoId, conferenciaId, evidencias, decisao, historicoCompleto }: { userId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; historicoCompleto: boolean }) {
+export function AprovarFinalizarAtomico(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.conferenciaId])} {...props} />; }
+function Conteudo({ userId, clienteId, retornoId, conferenciaId, evidencias, decisao, historicoCompleto }: { userId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; historicoCompleto: boolean }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-aprovacao-finalizacao:${JSON.stringify([userId, clienteId, retornoId, conferenciaId])}`;
   const cache = useQueryClient(); const trava = useRef(false);
   const [justificativa, setJustificativa] = useState(""); const [confirmacao, setConfirmacao] = useState<string | null>(null); const [aviso, setAviso] = useState("");
@@ -21,16 +23,16 @@ export function AprovarFinalizarAtomico({ userId, clienteId, retornoId, conferen
   const previa = useQuery({ queryKey: ["retorno-previa-finalizacao-os", userId, clienteId, retornoId], gcTime: 0, retry: false,
     queryFn: async ({ signal }) => { await sessao(signal); const { data, error } = await supabase.schema("pcm").rpc("sso_mediar_previa_finalizacao_os", { p_cliente_id: clienteId, p_retorno_id: retornoId }).abortSignal(signal); if (error) throw error; const r = previaSchema.parse(data); await sessao(signal); return r; } });
   const envio = useMutation({ mutationFn: async (p: Pedido) => {
-    await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
+    await sessao(); if (!montado.current) throw new Error("Tela desmontada."); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_aprovar_finalizar_os_atomico", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_retorno_id: p.retornoId, p_conferencia_id: p.conferenciaId, p_expected_evidencias: p.evidencias, p_expected_decisao: p.decisao, p_justificativa: p.justificativa, p_expected_os_id: p.osId, p_expected_status: p.status, p_expected_updated_at: p.updatedAt });
     if (error) throw error; const r = respostaSchema.parse(data);
     if (r.requestId !== p.requestId || r.retornoId !== p.retornoId || r.osId !== p.osId || r.revision !== p.decisao + 1) throw new Error("Resposta divergente.");
-    await sessao(); return r;
+    await sessao(); if (!montado.current) throw new Error("Tela desmontada."); return r;
   }, onSuccess: async (r, p) => { try {
     await cache.invalidateQueries({ queryKey: ["retorno-previa-finalizacao-os", userId, clienteId, retornoId] });
     await cache.invalidateQueries({ queryKey: ["retorno-atestacoes-pcm", userId, clienteId, retornoId] });
     await cache.invalidateQueries({ queryKey: ["retorno-decisoes", userId, clienteId, retornoId] });
-    await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
+    await sessao(); if (!montado.current) throw new Error("Tela desmontada."); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
     sessionStorage.removeItem(chave); setPendente(null); setConfirmacao(null); setAviso(`Retorno aprovado e OS finalizada; ${r.pendenciasProcessadas} pendência(s) processada(s). Chamado não alterado.`);
   } catch { setAviso("Resultado confirmado, mas tentativa local não pôde ser removida. Procure suporte."); } }, onError: () => setAviso("Resultado não confirmado. Repita a mesma tentativa; procure suporte em caso de conflito."), onSettled: () => { trava.current = false; } });
   function enviar(p: Pedido, repetir = false) { if (trava.current) return; try { const salva = sessionStorage.getItem(chave); if (repetir ? salva !== JSON.stringify(p) : salva !== null) throw new Error("Tentativa divergente."); if (!repetir) sessionStorage.setItem(chave, JSON.stringify(p)); } catch { setAviso("Não foi possível conferir ou guardar a tentativa."); return; } setPendente(p); trava.current = true; envio.mutate(p); }

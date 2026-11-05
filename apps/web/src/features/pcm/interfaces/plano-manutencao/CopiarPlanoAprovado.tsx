@@ -1,6 +1,6 @@
 import { Button } from "@sinergica/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
@@ -19,9 +19,11 @@ const reciboSchema = z.object({
   rotinas: z.array(z.object({ origemRotinaId: uuid, origemLogicaId: uuid, rotinaId: uuid, rotinaLogicaId: uuid }).strict()).min(1).max(1000),
 }).strict();
 
-export function CopiarPlanoAprovado({ userId, clienteId, planoId, planoNome, revisao, versaoId, versaoNumero }: {
+export function CopiarPlanoAprovado(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId])} {...props} />; }
+function Conteudo({ userId, clienteId, planoId, planoNome, revisao, versaoId, versaoNumero }: {
   userId: string; clienteId: string; planoId: string; planoNome: string; revisao: number; versaoId: string; versaoNumero: number;
 }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-copia-plano:${userId}:${clienteId}:${planoId}`;
   const [recuperacao] = useState(() => {
     try {
@@ -49,7 +51,7 @@ export function CopiarPlanoAprovado({ userId, clienteId, planoId, planoNome, rev
     trava.current = true; setOcupado(true); setMensagem("");
     const serializado = JSON.stringify(pedido);
     try {
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa local alterada");
       const { data, error } = await supabase.schema("pcm").rpc("sso_copiar_plano_mediado", {
         p_request_id: pedido.requestId, p_cliente_id: pedido.clienteId,
@@ -64,9 +66,9 @@ export function CopiarPlanoAprovado({ userId, clienteId, planoId, planoNome, rev
         if (new Set(recibo.rotinas.map((r) => r[campo])).size !== recibo.rotinas.length) throw new Error("Recibo duplicado");
       }
       if (recibo.rotinas.some((r) => r.origemRotinaId === r.rotinaId || r.origemLogicaId === r.rotinaLogicaId)) throw new Error("Identidades não renovadas");
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       await queryClient.invalidateQueries({ queryKey: planoManutencaoKeys.raiz(userId, clienteId) });
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa local alterada");
       sessionStorage.removeItem(chave); setPendente(null); setConfirmar(false);
       setMensagem(`Rascunho criado (${recibo.planoId}). Confira os questionários antes de aprovar. Nenhuma execução foi criada.`);
