@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — recorte de integração e lint (Codex)
+
+- O recorte candidato está incompleto: 1795 exige ações originalmente incluídas em 0434/0437/0445/0465, que também criam ou alteram recursos de outras stories. O rascunho isolado foi ampliado com candidatas e mantém manifesto de origem; não foi aplicado e não comprova fechamento.
+- Uma tentativa de lint formatou indevidamente 192 arquivos além do escopo. Eles foram restaurados individualmente ao backup `40e3c9f`, após comparar o resultado do formatador com a cópia e confirmar as edições dos agentes; nenhum outro arquivo foi restaurado.
+- O cenário real P0020 da 1793 ainda precisa de fixture com guardas ativas; a fixture herdada usava `session_replication_role=replica` no setup e não foi usada como prova. CI e revisão de rollout continuam pendentes; sem deploy/Auvo real.
+
 ## 2026-11-05 — repetição e concorrência de fotos (Codex)
 
 - No harness de fotos S176, duas solicitações simultâneas com o mesmo requestId convergiram e o replay retornou a mesma foto; no caso sintético, duas solicitações distintas produziram exatamente duas reservas, fotos e objetos. A barreira foi no cliente e não forçou uma ordem interna específica.
