@@ -146,20 +146,18 @@ function Conteudo({
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_resolver_impacto_retirada", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_plano_id: p.planoId,
-          p_rascunho_id: p.rascunhoId,
-          p_preparada_id: p.preparadaId,
-          p_expected_plano: p.planoRevision,
-          p_expected_decisao: p.decisaoRevision,
-          p_tipo: p.tipo,
-          p_motivo: p.motivo,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_resolver_impacto_retirada", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_plano_id: p.planoId,
+        p_rascunho_id: p.rascunhoId,
+        p_preparada_id: p.preparadaId,
+        p_expected_plano: p.planoRevision,
+        p_expected_decisao: p.decisaoRevision,
+        p_tipo: p.tipo,
+        p_motivo: p.motivo,
+      });
       if (error) throw error;
       const r = z
         .object({

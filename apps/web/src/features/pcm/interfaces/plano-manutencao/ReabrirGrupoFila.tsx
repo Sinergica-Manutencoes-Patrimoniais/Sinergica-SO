@@ -70,18 +70,16 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo, revisao }: Pr
       const enviado = pedidoSchema.parse({ ...p, tentativaIncerta: true });
       sessionStorage.setItem(chave, JSON.stringify(enviado));
       setPendente(enviado);
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_reabrir_fila_grupo", {
-          p_ator: userId,
-          p_request: p.requestId,
-          p_cliente: p.clienteId,
-          p_plano: p.planoId,
-          p_preparada: p.preparadaId,
-          p_tipo: p.tipo,
-          p_fila_revisao: p.revisao,
-          p_motivo: p.motivo,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_reabrir_fila_grupo", {
+        p_ator: userId,
+        p_request: p.requestId,
+        p_cliente: p.clienteId,
+        p_plano: p.planoId,
+        p_preparada: p.preparadaId,
+        p_tipo: p.tipo,
+        p_fila_revisao: p.revisao,
+        p_motivo: p.motivo,
+      });
       if (error) {
         if (
           !jaIncerta &&

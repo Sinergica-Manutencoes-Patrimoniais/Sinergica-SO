@@ -124,17 +124,15 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
         sessionStorage.getItem(chave) !== JSON.stringify(p)
       )
         throw new Error("Sessão ou tentativa alterada.");
-      const { data: r, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_triar_ciclo_atrasado", {
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_preparada_id: p.preparadaId,
-          p_expected_revision: p.revisao,
-          p_data_referencia: p.data,
-          p_decisao: p.decisao,
-          p_motivo: p.motivo,
-        });
+      const { data: r, error } = await supabase.schema("pcm").rpc("sso_triar_ciclo_atrasado", {
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_preparada_id: p.preparadaId,
+        p_expected_revision: p.revisao,
+        p_data_referencia: p.data,
+        p_decisao: p.decisao,
+        p_motivo: p.motivo,
+      });
       if (error) throw error;
       const depois = await supabase.auth.getUser();
       if (

@@ -45,7 +45,10 @@ describe("configuração de capacidades", () => {
     sessionStorage.clear();
     servico.getUser.mockResolvedValue({ data: { user: { id: usuario } }, error: null });
     servico.schema.mockReturnValue({ rpc: servico.rpc });
-    servico.rpc.mockImplementation(async (_nome, args) => ({ data: { requestId: args.p_request_id, confirmado: true }, error: null }));
+    servico.rpc.mockImplementation(async (_nome, args) => ({
+      data: { requestId: args.p_request_id, confirmado: true },
+      error: null,
+    }));
     vi.stubGlobal("crypto", { randomUUID: () => request });
     gateway.listarPerfis.mockResolvedValue([
       { id: perfil, nome: "Equipe PCM", ativo: true, revisao: 1 },
@@ -57,17 +60,31 @@ describe("configuração de capacidades", () => {
     ]);
     gateway.listarClientes.mockResolvedValue([{ id: cliente, nome: "Condomínio A" }]);
     gateway.definirConcessao.mockImplementation(async (c) => ({
-      aggregateId: usuario, revision: c.expectedRevision + 1, state: c.ativa,
-      created: c.expectedRevision === 0, linkedIds: {}, warnings: [], requestId: c.requestId,
+      aggregateId: usuario,
+      revision: c.expectedRevision + 1,
+      state: c.ativa,
+      created: c.expectedRevision === 0,
+      linkedIds: {},
+      warnings: [],
+      requestId: c.requestId,
     }));
     gateway.definirPerfil.mockImplementation(async (c) => ({
-      aggregateId: c.perfilId, revision: c.expectedRevision + 1, state: c.ativo,
-      created: c.expectedRevision === 0, linkedIds: {}, warnings: [], requestId: c.requestId,
+      aggregateId: c.perfilId,
+      revision: c.expectedRevision + 1,
+      state: c.ativo,
+      created: c.expectedRevision === 0,
+      linkedIds: {},
+      warnings: [],
+      requestId: c.requestId,
     }));
     gateway.definirVinculoPerfil.mockImplementation(async (c) => ({
-      aggregateId: usuario, revision: c.expectedRevision + 1, state: c.ativo,
-      created: c.expectedRevision === 0, linkedIds: { usuarioId: c.usuarioId, perfilId: c.perfilId },
-      warnings: [], requestId: c.requestId,
+      aggregateId: usuario,
+      revision: c.expectedRevision + 1,
+      state: c.ativo,
+      created: c.expectedRevision === 0,
+      linkedIds: { usuarioId: c.usuarioId, perfilId: c.perfilId },
+      warnings: [],
+      requestId: c.requestId,
     }));
   });
   afterEach(() => {
@@ -96,14 +113,19 @@ describe("configuração de capacidades", () => {
     "preserva pedido quando recibo direto diverge em %s",
     async (campo) => {
       gateway.definirConcessao.mockImplementationOnce(async (c) => ({
-        aggregateId: usuario, revision: campo === "revision" ? 8 : c.expectedRevision + 1,
+        aggregateId: usuario,
+        revision: campo === "revision" ? 8 : c.expectedRevision + 1,
         state: campo === "state" ? !c.ativa : c.ativa,
-        created: campo === "created" ? false : true, linkedIds: {}, warnings: [],
+        created: campo === "created" ? false : true,
+        linkedIds: {},
+        warnings: [],
         requestId: campo === "requestId" ? "17020000-0000-0000-0000-000000000098" : c.requestId,
       }));
       await iniciarConcessao();
       await screen.findByRole("alert");
-      expect(await screen.findByRole("button", { name: /repetir alteração pendente/i })).toBeTruthy();
+      expect(
+        await screen.findByRole("button", { name: /repetir alteração pendente/i }),
+      ).toBeTruthy();
       const enviado = gateway.definirConcessao.mock.calls[0]?.[0];
       fireEvent.click(screen.getByRole("button", { name: /repetir alteração pendente/i }));
       await waitFor(() => expect(gateway.definirConcessao).toHaveBeenCalledTimes(2));
@@ -113,11 +135,16 @@ describe("configuração de capacidades", () => {
 
   it("preserva tentativa se a sessão mudar após a escrita", async () => {
     gateway.definirConcessao.mockImplementationOnce(async () => {
-      servico.getUser.mockResolvedValue({ data: { user: { id: "17020000-0000-0000-0000-000000000003" } }, error: null });
+      servico.getUser.mockResolvedValue({
+        data: { user: { id: "17020000-0000-0000-0000-000000000003" } },
+        error: null,
+      });
       return {};
     });
     await iniciarConcessao();
-    await screen.findByText("Resultado não confirmado. A tentativa foi preservada; confira o estado e procure suporte em caso de conflito.");
+    await screen.findByText(
+      "Resultado não confirmado. A tentativa foi preservada; confira o estado e procure suporte em caso de conflito.",
+    );
     expect(servico.rpc).not.toHaveBeenCalled();
     expect(await screen.findByRole("button", { name: /repetir alteração pendente/i })).toBeTruthy();
   });

@@ -207,22 +207,20 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_classificar_pmoc_revisao", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_plano_id: p.planoId,
-          p_rascunho_id: p.rascunhoId,
-          p_agendamento_id: p.agendamentoId,
-          p_expected_plano: p.revisao,
-          p_expected_decisao: p.decisaoRevision,
-          p_classificacao: p.classificacao,
-          p_evidencia: p.evidencia,
-          p_motivo: p.motivo,
-          p_expected_fotografia: p.fotografia,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_classificar_pmoc_revisao", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_plano_id: p.planoId,
+        p_rascunho_id: p.rascunhoId,
+        p_agendamento_id: p.agendamentoId,
+        p_expected_plano: p.revisao,
+        p_expected_decisao: p.decisaoRevision,
+        p_classificacao: p.classificacao,
+        p_evidencia: p.evidencia,
+        p_motivo: p.motivo,
+        p_expected_fotografia: p.fotografia,
+      });
       if (error) throw error;
       const r = z
         .object({

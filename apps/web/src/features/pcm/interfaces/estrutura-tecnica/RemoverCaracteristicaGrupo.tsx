@@ -79,13 +79,19 @@ function Conteudo({ userId, clienteId, grupo, disponivel }: Props) {
     getNextPageParam: (p) => (p.length === 20 ? p[p.length - 1]?.revisao_nova : undefined),
   });
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   async function conferirSessao() {
     const { data, error } = await supabase.auth.getUser();
     if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
   }
   const envio = useMutation({
-    mutationFn: async (p: Pedido) => { await conferirSessao();
+    mutationFn: async (p: Pedido) => {
+      await conferirSessao();
       const { data, error } = await supabase.schema("pcm").rpc("sso_remover_caracteristica_grupo", {
         p_request_id: p.requestId,
         p_grupo_id: p.grupoId,
@@ -112,7 +118,8 @@ function Conteudo({ userId, clienteId, grupo, disponivel }: Props) {
         throw new Error("Resposta divergente");
     },
     onSuccess: async (_r, p) => {
-      try { await conferirSessao();
+      try {
+        await conferirSessao();
         if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(key);
       } catch {

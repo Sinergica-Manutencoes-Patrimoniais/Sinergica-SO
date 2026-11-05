@@ -2,10 +2,127 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-export function DocumentosStagingAtivo({userId,clienteId,tipo,entidadeId}:{userId:string;clienteId:string;tipo:"grupo_quantitativo"|"sistema"|"componente";entidadeId:string}){
-  const ativo=import.meta.env.VITE_SSO_DOCUMENTOS_STAGING_ATIVO_ENABLED==="true";
-  const q=useInfiniteQuery({queryKey:["estrutura-tecnica",userId,clienteId,tipo,entidadeId,"documentos-staging"],enabled:ativo,gcTime:0,initialPageParam:null as string|null,queryFn:async({pageParam,signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_listar_documentos_staging_ativo",{p_tipo:tipo,p_entidade_id:entidadeId,p_apos:pageParam,p_limite:20}).abortSignal(signal);if(error)throw error;return z.array(z.object({id:z.string().uuid(),titulo:z.string(),criado_em:z.string().datetime({offset:true})}).strict()).max(20).parse(data);},getNextPageParam:p=>p.length===20 ? p[p.length - 1]?.id : undefined});
-  if(!ativo)return null;
-  return <section aria-label="Documentos aceitos do levantamento"><h4>Documentos aceitos do levantamento</h4><p>Vínculo temporário; aceite não comprova segurança do arquivo. Acesso depende da decisão e permissão atuais.</p>{q.isPending && <output>Carregando…</output>}{q.isError && <p role="alert">Documentos indisponíveis. <button type="button" onClick={()=>void q.refetch()}>Tentar novamente</button></p>}{q.data?.pages.flat().map(d=><Documento key={d.id} vinculoId={d.id} titulo={d.titulo}/>)}{q.hasNextPage && <button type="button" disabled={q.isFetching} onClick={()=>void q.fetchNextPage()}>Mais documentos</button>}</section>;
+export function DocumentosStagingAtivo({
+  userId,
+  clienteId,
+  tipo,
+  entidadeId,
+}: {
+  userId: string;
+  clienteId: string;
+  tipo: "grupo_quantitativo" | "sistema" | "componente";
+  entidadeId: string;
+}) {
+  const ativo = import.meta.env.VITE_SSO_DOCUMENTOS_STAGING_ATIVO_ENABLED === "true";
+  const q = useInfiniteQuery({
+    queryKey: ["estrutura-tecnica", userId, clienteId, tipo, entidadeId, "documentos-staging"],
+    enabled: ativo,
+    gcTime: 0,
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam, signal }) => {
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_listar_documentos_staging_ativo", {
+          p_tipo: tipo,
+          p_entidade_id: entidadeId,
+          p_apos: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      return z
+        .array(
+          z
+            .object({
+              id: z.string().uuid(),
+              titulo: z.string(),
+              criado_em: z.string().datetime({ offset: true }),
+            })
+            .strict(),
+        )
+        .max(20)
+        .parse(data);
+    },
+    getNextPageParam: (p) => (p.length === 20 ? p[p.length - 1]?.id : undefined),
+  });
+  if (!ativo) return null;
+  return (
+    <section aria-label="Documentos aceitos do levantamento">
+      <h4>Documentos aceitos do levantamento</h4>
+      <p>
+        Vínculo temporário; aceite não comprova segurança do arquivo. Acesso depende da decisão e
+        permissão atuais.
+      </p>
+      {q.isPending && <output>Carregando…</output>}
+      {q.isError && (
+        <p role="alert">
+          Documentos indisponíveis.{" "}
+          <button type="button" onClick={() => void q.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {q.data?.pages.flat().map((d) => (
+        <Documento key={d.id} vinculoId={d.id} titulo={d.titulo} />
+      ))}
+      {q.hasNextPage && (
+        <button type="button" disabled={q.isFetching} onClick={() => void q.fetchNextPage()}>
+          Mais documentos
+        </button>
+      )}
+    </section>
+  );
 }
-function Documento({vinculoId,titulo}:{vinculoId:string;titulo:string}){const [url,setUrl]=useState<string|null>(null);const [erro,setErro]=useState(false);const [obtendo,setObtendo]=useState(false);useEffect(()=>()=>{if(url)URL.revokeObjectURL(url);},[url]);async function preparar(){setObtendo(true);setErro(false);try{const {data,error}=await supabase.functions.invoke("pcm-documento-staging-ativo-seguro",{body:{vinculoId}});if(error || !(data instanceof Blob) || data.type!=="application/pdf" || data.size>10485760)throw new Error("Documento inválido");setUrl(URL.createObjectURL(data));}catch{setErro(true);}finally{setObtendo(false);}}return <div>{titulo} · {url ? <><a href={url} download="documento.pdf">Baixar PDF</a><button type="button" onClick={()=>setUrl(null)}>Descartar cópia temporária</button></> : <button type="button" disabled={obtendo} onClick={()=>void preparar()}>Preparar download</button>}{erro && <p role="alert">Documento indisponível ou acesso não autorizado.</p>}</div>;}
+function Documento({ vinculoId, titulo }: { vinculoId: string; titulo: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [erro, setErro] = useState(false);
+  const [obtendo, setObtendo] = useState(false);
+  useEffect(
+    () => () => {
+      if (url) URL.revokeObjectURL(url);
+    },
+    [url],
+  );
+  async function preparar() {
+    setObtendo(true);
+    setErro(false);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "pcm-documento-staging-ativo-seguro",
+        { body: { vinculoId } },
+      );
+      if (
+        error ||
+        !(data instanceof Blob) ||
+        data.type !== "application/pdf" ||
+        data.size > 10485760
+      )
+        throw new Error("Documento inválido");
+      setUrl(URL.createObjectURL(data));
+    } catch {
+      setErro(true);
+    } finally {
+      setObtendo(false);
+    }
+  }
+  return (
+    <div>
+      {titulo} ·{" "}
+      {url ? (
+        <>
+          <a href={url} download="documento.pdf">
+            Baixar PDF
+          </a>
+          <button type="button" onClick={() => setUrl(null)}>
+            Descartar cópia temporária
+          </button>
+        </>
+      ) : (
+        <button type="button" disabled={obtendo} onClick={() => void preparar()}>
+          Preparar download
+        </button>
+      )}
+      {erro && <p role="alert">Documento indisponível ou acesso não autorizado.</p>}
+    </div>
+  );
+}

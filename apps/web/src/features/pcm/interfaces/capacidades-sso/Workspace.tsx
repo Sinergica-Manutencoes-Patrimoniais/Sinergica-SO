@@ -200,22 +200,36 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
 
   function validarRecibo(chave: string, payload: object, id: string, resposta: unknown) {
     const comando = validar(chave, payload, id);
-    const recibo = z.object({
-      requestId: z.string().uuid(), aggregateId: z.string().uuid(),
-      revision: z.number().int().positive(), state: z.boolean(), created: z.boolean(),
-      linkedIds: z.record(z.string()), warnings: z.array(z.string()),
-    }).strict().parse(resposta);
+    const recibo = z
+      .object({
+        requestId: z.string().uuid(),
+        aggregateId: z.string().uuid(),
+        revision: z.number().int().positive(),
+        state: z.boolean(),
+        created: z.boolean(),
+        linkedIds: z.record(z.string()),
+        warnings: z.array(z.string()),
+      })
+      .strict()
+      .parse(resposta);
     const dados = comando.dados;
-    if (recibo.requestId.toLowerCase() !== id.toLowerCase() ||
-        recibo.revision !== dados.expectedRevision + 1 ||
-        recibo.created !== (dados.expectedRevision === 0) ||
-        recibo.state !== (comando.tipo === "concessao" ? comando.dados.ativa : comando.dados.ativo))
+    if (
+      recibo.requestId.toLowerCase() !== id.toLowerCase() ||
+      recibo.revision !== dados.expectedRevision + 1 ||
+      recibo.created !== (dados.expectedRevision === 0) ||
+      recibo.state !== (comando.tipo === "concessao" ? comando.dados.ativa : comando.dados.ativo)
+    )
       throw new Error("Recibo divergente.");
-    if (comando.tipo === "perfil" && recibo.aggregateId.toLowerCase() !== comando.dados.perfilId.toLowerCase())
+    if (
+      comando.tipo === "perfil" &&
+      recibo.aggregateId.toLowerCase() !== comando.dados.perfilId.toLowerCase()
+    )
       throw new Error("Recibo divergente.");
-    if (comando.tipo === "vinculo" &&
-        (recibo.linkedIds.usuarioId?.toLowerCase() !== comando.dados.usuarioId.toLowerCase() ||
-         recibo.linkedIds.perfilId?.toLowerCase() !== comando.dados.perfilId.toLowerCase()))
+    if (
+      comando.tipo === "vinculo" &&
+      (recibo.linkedIds.usuarioId?.toLowerCase() !== comando.dados.usuarioId.toLowerCase() ||
+        recibo.linkedIds.perfilId?.toLowerCase() !== comando.dados.perfilId.toLowerCase())
+    )
       throw new Error("Recibo divergente.");
   }
 

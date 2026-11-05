@@ -164,21 +164,19 @@ function DecisaoImpactoOcorrenciaAtiva({
         throw new Error("Tentativa divergente.");
       const { data, error } =
         p.decisao === "alterar_conteudo"
-          ? await supabase
-              .schema("pcm")
-              .rpc("sso_escolher_alteracao_ciclo", {
-                p_ator: userId,
-                p_request: p.requestId,
-                p_cliente: p.clienteId,
-                p_plano: p.planoId,
-                p_rascunho: p.rascunhoId,
-                p_preparada: p.preparadaId,
-                p_revisao_plano: p.planoRevision,
-                p_revisao_decisao: p.decisaoRevision,
-                p_tipo: "calendario",
-                p_motivo: p.motivo,
-                p_comparacao: p.comparacao,
-              })
+          ? await supabase.schema("pcm").rpc("sso_escolher_alteracao_ciclo", {
+              p_ator: userId,
+              p_request: p.requestId,
+              p_cliente: p.clienteId,
+              p_plano: p.planoId,
+              p_rascunho: p.rascunhoId,
+              p_preparada: p.preparadaId,
+              p_revisao_plano: p.planoRevision,
+              p_revisao_decisao: p.decisaoRevision,
+              p_tipo: "calendario",
+              p_motivo: p.motivo,
+              p_comparacao: p.comparacao,
+            })
           : await supabase
               .schema("pcm")
               .rpc(p.comparacao ? "sso_decidir_impacto_comparado" : "sso_decidir_impacto_mediada", {

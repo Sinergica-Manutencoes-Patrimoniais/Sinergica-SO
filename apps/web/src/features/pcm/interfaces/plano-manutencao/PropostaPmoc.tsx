@@ -153,20 +153,18 @@ export function PropostaPmoc({
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(storageKey) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_propor_pmoc_mediado", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_plano_id: p.planoId,
-          p_expected_revision: p.revision,
-          p_versao_id: p.versaoId,
-          p_rotina_id: p.rotinaId,
-          p_vencimento: p.vencimento,
-          p_agendamento_id: p.agendamentoId,
-          p_justificativa: p.justificativa,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_propor_pmoc_mediado", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_plano_id: p.planoId,
+        p_expected_revision: p.revision,
+        p_versao_id: p.versaoId,
+        p_rotina_id: p.rotinaId,
+        p_vencimento: p.vencimento,
+        p_agendamento_id: p.agendamentoId,
+        p_justificativa: p.justificativa,
+      });
       if (error) throw error;
       if (
         !data ||

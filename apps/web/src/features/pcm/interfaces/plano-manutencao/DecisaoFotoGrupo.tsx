@@ -96,17 +96,15 @@ function Conteudo({ userId, clienteId, ocorrenciaId }: Props) {
       await sessao();
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa alterada.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_decidir_foto_grupo_mediada", {
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_ocorrencia_id: p.ocorrenciaId,
-          p_foto_id: p.fotoId,
-          p_expected_revision: p.revisao,
-          p_decisao: p.decisao,
-          p_motivo: p.motivo,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_decidir_foto_grupo_mediada", {
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_ocorrencia_id: p.ocorrenciaId,
+        p_foto_id: p.fotoId,
+        p_expected_revision: p.revisao,
+        p_decisao: p.decisao,
+        p_motivo: p.motivo,
+      });
       if (error) throw error;
       const r = z
         .object({

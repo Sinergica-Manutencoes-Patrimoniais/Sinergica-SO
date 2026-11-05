@@ -108,25 +108,21 @@ function Conteudo({ userId, clienteId, ocorrenciaId }: Props) {
         throw new Error("Tentativa alterada.");
       const result =
         p.tipo === "intencao"
-          ? await supabase
-              .schema("pcm")
-              .rpc("sso_preparar_intencao_grupo_mediada", {
-                p_request_id: p.requestId,
-                p_cliente_id: p.clienteId,
-                p_ocorrencia_id: p.ocorrenciaId,
-                p_titulo: p.titulo,
-                p_motivo: p.motivo,
-              })
-          : await supabase
-              .schema("pcm")
-              .rpc("sso_decidir_intencao_grupo_mediada", {
-                p_request_id: p.requestId,
-                p_cliente_id: p.clienteId,
-                p_ocorrencia_id: p.ocorrenciaId,
-                p_intencao_id: p.intencaoId,
-                p_os_id: p.osId,
-                p_motivo: p.motivo,
-              });
+          ? await supabase.schema("pcm").rpc("sso_preparar_intencao_grupo_mediada", {
+              p_request_id: p.requestId,
+              p_cliente_id: p.clienteId,
+              p_ocorrencia_id: p.ocorrenciaId,
+              p_titulo: p.titulo,
+              p_motivo: p.motivo,
+            })
+          : await supabase.schema("pcm").rpc("sso_decidir_intencao_grupo_mediada", {
+              p_request_id: p.requestId,
+              p_cliente_id: p.clienteId,
+              p_ocorrencia_id: p.ocorrenciaId,
+              p_intencao_id: p.intencaoId,
+              p_os_id: p.osId,
+              p_motivo: p.motivo,
+            });
       if (result.error) throw result.error;
       const resposta =
         p.tipo === "intencao"

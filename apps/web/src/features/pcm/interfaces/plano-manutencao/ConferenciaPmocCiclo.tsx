@@ -161,24 +161,22 @@ export function ConferenciaPmocCiclo({
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_classificar_pmoc_ciclo", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_plano_id: p.planoId,
-          p_versao_id: p.versaoId,
-          p_rotina_id: p.rotinaId,
-          p_expected_revision: p.revision,
-          p_vencimento: p.vencimento,
-          p_agendamento_id: p.agendamentoId,
-          p_expected_decisao: p.decisaoRevision,
-          p_expected_fotografia: p.fotografia,
-          p_evidencia: p.evidencia,
-          p_motivo: p.motivo,
-          p_classificacao: p.classificacao,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_classificar_pmoc_ciclo", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_plano_id: p.planoId,
+        p_versao_id: p.versaoId,
+        p_rotina_id: p.rotinaId,
+        p_expected_revision: p.revision,
+        p_vencimento: p.vencimento,
+        p_agendamento_id: p.agendamentoId,
+        p_expected_decisao: p.decisaoRevision,
+        p_expected_fotografia: p.fotografia,
+        p_evidencia: p.evidencia,
+        p_motivo: p.motivo,
+        p_classificacao: p.classificacao,
+      });
       if (error) throw error;
       const r = z
         .object({

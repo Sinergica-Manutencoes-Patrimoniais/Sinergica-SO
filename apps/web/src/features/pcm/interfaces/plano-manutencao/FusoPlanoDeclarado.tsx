@@ -147,19 +147,17 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_declarar_fuso_mediado", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_plano_id: p.planoId,
-          p_expected_revision: p.revisao,
-          p_fuso: p.fuso,
-          p_contrato_referencia_id: null,
-          p_fonte: p.fonte,
-          p_motivo: p.motivo,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_fuso_mediado", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_plano_id: p.planoId,
+        p_expected_revision: p.revisao,
+        p_fuso: p.fuso,
+        p_contrato_referencia_id: null,
+        p_fonte: p.fonte,
+        p_motivo: p.motivo,
+      });
       if (error) throw error;
       const r = z
         .object({

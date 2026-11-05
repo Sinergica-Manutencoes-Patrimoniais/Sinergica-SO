@@ -203,20 +203,18 @@ function Conteudo({
         throw new Error("Tentativa divergente.");
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_configurar_pergunta_mediada", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_plano_id: p.planoId,
-          p_expected_revision: p.revision,
-          p_versao_id: p.versaoId,
-          p_rotina_id: p.rotinaId,
-          p_pergunta_id: p.perguntaId,
-          p_obrigatoria: p.obrigatoria,
-          p_justificativa: p.justificativa,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_configurar_pergunta_mediada", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_plano_id: p.planoId,
+        p_expected_revision: p.revision,
+        p_versao_id: p.versaoId,
+        p_rotina_id: p.rotinaId,
+        p_pergunta_id: p.perguntaId,
+        p_obrigatoria: p.obrigatoria,
+        p_justificativa: p.justificativa,
+      });
       if (error) throw error;
       const r = z
         .object({

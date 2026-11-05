@@ -75,27 +75,33 @@ export function MovimentarComponente({
     setErro("");
     try {
       await conferirSessao();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa alterada.");
-      const recibo = z.object({
-        requestId: z.string().uuid(),
-        aggregateId: z.string().uuid(),
-        revision: z.number().int().positive(),
-        linkedIds: z.object({
-          clienteId: z.string().uuid(),
-          areaId: z.string().uuid().optional(),
-          localId: z.string().uuid().optional(),
-          parentId: z.string().uuid().optional(),
-        }),
-      }).passthrough().parse(await enviar(comando));
+      if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
+        throw new Error("Tentativa alterada.");
+      const recibo = z
+        .object({
+          requestId: z.string().uuid(),
+          aggregateId: z.string().uuid(),
+          revision: z.number().int().positive(),
+          linkedIds: z.object({
+            clienteId: z.string().uuid(),
+            areaId: z.string().uuid().optional(),
+            localId: z.string().uuid().optional(),
+            parentId: z.string().uuid().optional(),
+          }),
+        })
+        .passthrough()
+        .parse(await enviar(comando));
       if (
         recibo.requestId !== comando.requestId ||
         recibo.aggregateId !== comando.componenteId ||
-        (recibo.revision !== comando.expectedRevision && recibo.revision !== comando.expectedRevision + 1) ||
+        (recibo.revision !== comando.expectedRevision &&
+          recibo.revision !== comando.expectedRevision + 1) ||
         recibo.linkedIds.clienteId !== clienteId ||
         (recibo.linkedIds.areaId ?? null) !== comando.areaId ||
         (recibo.linkedIds.localId ?? null) !== comando.localId ||
         (recibo.linkedIds.parentId ?? null) !== comando.parentId
-      ) throw new Error("Recibo divergente.");
+      )
+        throw new Error("Recibo divergente.");
       await conferirSessao();
       removerPendenteCorrespondente(comando);
       setPendente(null);
@@ -121,7 +127,9 @@ export function MovimentarComponente({
           /* Preserva pedido se o armazenamento falhar. */
         }
       }
-      setErro("Resultado não confirmado. Repita a mesma tentativa ou procure suporte para reconciliação.");
+      setErro(
+        "Resultado não confirmado. Repita a mesma tentativa ou procure suporte para reconciliação.",
+      );
     } finally {
       setOcupado(false);
     }

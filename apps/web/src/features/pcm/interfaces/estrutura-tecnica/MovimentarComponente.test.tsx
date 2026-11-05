@@ -8,10 +8,21 @@ import { MovimentarComponente } from "./MovimentarComponente";
 const componenteId = "17690000-0000-4000-8000-000000000011";
 const areaId = "17690000-0000-4000-8000-000000000021";
 const chave = `sso-movimento:17690000-0000-4000-8000-000000000001:17690000-0000-4000-8000-000000000002:${componenteId}`;
-const item = { id: componenteId, estruturaRevisao: 3, areaId: null, localId: null, parentItemId: null };
+const item = {
+  id: componenteId,
+  estruturaRevisao: 3,
+  areaId: null,
+  localId: null,
+  parentItemId: null,
+};
 
 beforeEach(() => {
-  auth.getUser.mockReset().mockResolvedValue({ data: { user: { id: "17690000-0000-4000-8000-000000000001" } }, error: null });
+  auth.getUser
+    .mockReset()
+    .mockResolvedValue({
+      data: { user: { id: "17690000-0000-4000-8000-000000000001" } },
+      error: null,
+    });
 });
 afterEach(() => {
   cleanup();
@@ -20,21 +31,44 @@ afterEach(() => {
 });
 
 it("preserva pedido após resposta incerta e recusas de replay, até confirmar o mesmo comando", async () => {
-  const enviar = vi.fn()
+  const enviar = vi
+    .fn()
     .mockRejectedValueOnce(new Error("conexão interrompida"))
     .mockRejectedValueOnce({ code: "40001" })
     .mockRejectedValueOnce({ code: "23514" })
-    .mockImplementationOnce(async (comando) => ({ requestId: comando.requestId, aggregateId: comando.componenteId, revision: comando.expectedRevision + 1, linkedIds: { clienteId: "17690000-0000-4000-8000-000000000002", areaId } }));
+    .mockImplementationOnce(async (comando) => ({
+      requestId: comando.requestId,
+      aggregateId: comando.componenteId,
+      revision: comando.expectedRevision + 1,
+      linkedIds: { clienteId: "17690000-0000-4000-8000-000000000002", areaId },
+    }));
   const concluido = vi.fn();
-  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
-    areas={[{ id: areaId, nome: "Área A" }]} locais={[]} pais={[]} enviar={enviar} onConcluido={concluido} />);
+  render(
+    <MovimentarComponente
+      userId="17690000-0000-4000-8000-000000000001"
+      clienteId="17690000-0000-4000-8000-000000000002"
+      item={item}
+      areas={[{ id: areaId, nome: "Área A" }]}
+      locais={[]}
+      pais={[]}
+      enviar={enviar}
+      onConcluido={concluido}
+    />,
+  );
   fireEvent.change(screen.getByLabelText("Área de destino"), { target: { value: areaId } });
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
   await screen.findByRole("button", { name: "Tentar movimentação novamente" });
   const guardado = sessionStorage.getItem(chave);
   expect(guardado).not.toBeNull();
   const pedido = JSON.parse(guardado as string);
-  expect(pedido).toEqual({ requestId: expect.any(String), expectedRevision: 3, componenteId, areaId, localId: null, parentId: null });
+  expect(pedido).toEqual({
+    requestId: expect.any(String),
+    expectedRevision: 3,
+    componenteId,
+    areaId,
+    localId: null,
+    parentId: null,
+  });
   for (const numero of [2, 3]) {
     fireEvent.click(screen.getByRole("button", { name: "Tentar movimentação novamente" }));
     await waitFor(() => expect(enviar).toHaveBeenCalledTimes(numero));
@@ -51,12 +85,24 @@ it("preserva pedido após resposta incerta e recusas de replay, até confirmar o
 
 it("recibo divergente preserva o pedido para reconciliação", async () => {
   const enviar = vi.fn().mockImplementation(async (comando) => ({
-    requestId: "17690000-0000-4000-8000-000000000099", aggregateId: comando.componenteId,
-    revision: comando.expectedRevision + 1, linkedIds: { clienteId: "17690000-0000-4000-8000-000000000002" },
+    requestId: "17690000-0000-4000-8000-000000000099",
+    aggregateId: comando.componenteId,
+    revision: comando.expectedRevision + 1,
+    linkedIds: { clienteId: "17690000-0000-4000-8000-000000000002" },
   }));
   const concluido = vi.fn();
-  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
-    areas={[]} locais={[]} pais={[]} enviar={enviar} onConcluido={concluido} />);
+  render(
+    <MovimentarComponente
+      userId="17690000-0000-4000-8000-000000000001"
+      clienteId="17690000-0000-4000-8000-000000000002"
+      item={item}
+      areas={[]}
+      locais={[]}
+      pais={[]}
+      enviar={enviar}
+      onConcluido={concluido}
+    />,
+  );
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
   await screen.findByRole("button", { name: "Tentar movimentação novamente" });
   const guardado = sessionStorage.getItem(chave);
@@ -68,14 +114,31 @@ it("recibo divergente preserva o pedido para reconciliação", async () => {
 });
 
 it("sessão trocada após envio não confirma nem descarta o pedido", async () => {
-  auth.getUser.mockResolvedValueOnce({ data: { user: { id: "17690000-0000-4000-8000-000000000001" } }, error: null })
+  auth.getUser
+    .mockResolvedValueOnce({
+      data: { user: { id: "17690000-0000-4000-8000-000000000001" } },
+      error: null,
+    })
     .mockResolvedValueOnce({ data: { user: { id: "outra" } }, error: null });
   const enviar = vi.fn().mockImplementation(async (comando) => ({
-    requestId: comando.requestId, aggregateId: comando.componenteId, revision: comando.expectedRevision, linkedIds: { clienteId: "17690000-0000-4000-8000-000000000002" },
+    requestId: comando.requestId,
+    aggregateId: comando.componenteId,
+    revision: comando.expectedRevision,
+    linkedIds: { clienteId: "17690000-0000-4000-8000-000000000002" },
   }));
   const concluido = vi.fn();
-  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
-    areas={[]} locais={[]} pais={[]} enviar={enviar} onConcluido={concluido} />);
+  render(
+    <MovimentarComponente
+      userId="17690000-0000-4000-8000-000000000001"
+      clienteId="17690000-0000-4000-8000-000000000002"
+      item={item}
+      areas={[]}
+      locais={[]}
+      pais={[]}
+      enviar={enviar}
+      onConcluido={concluido}
+    />,
+  );
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
   await screen.findByRole("button", { name: "Tentar movimentação novamente" });
   const guardado = sessionStorage.getItem(chave);
@@ -88,15 +151,30 @@ it("sessão trocada após envio não confirma nem descarta o pedido", async () =
 
 it.each([
   { clienteId: "17690000-0000-4000-8000-000000000003", areaId },
-  { clienteId: "17690000-0000-4000-8000-000000000002", areaId: "17690000-0000-4000-8000-000000000022" },
+  {
+    clienteId: "17690000-0000-4000-8000-000000000002",
+    areaId: "17690000-0000-4000-8000-000000000022",
+  },
 ])("recibo com Cliente ou destino divergente preserva o pedido", async (linkedIds) => {
   const enviar = vi.fn().mockImplementation(async (comando) => ({
-    requestId: comando.requestId, aggregateId: comando.componenteId,
-    revision: comando.expectedRevision + 1, linkedIds,
+    requestId: comando.requestId,
+    aggregateId: comando.componenteId,
+    revision: comando.expectedRevision + 1,
+    linkedIds,
   }));
   const concluido = vi.fn();
-  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
-    areas={[{ id: areaId, nome: "Área A" }]} locais={[]} pais={[]} enviar={enviar} onConcluido={concluido} />);
+  render(
+    <MovimentarComponente
+      userId="17690000-0000-4000-8000-000000000001"
+      clienteId="17690000-0000-4000-8000-000000000002"
+      item={item}
+      areas={[{ id: areaId, nome: "Área A" }]}
+      locais={[]}
+      pais={[]}
+      enviar={enviar}
+      onConcluido={concluido}
+    />,
+  );
   fireEvent.change(screen.getByLabelText("Área de destino"), { target: { value: areaId } });
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
   await screen.findByRole("button", { name: "Tentar movimentação novamente" });
@@ -110,8 +188,18 @@ it.each([
 
 it("uma rejeição definitiva na primeira tentativa permite corrigir sem guardar pedido incerto", async () => {
   const enviar = vi.fn().mockRejectedValueOnce({ code: "23514" });
-  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
-    areas={[]} locais={[]} pais={[]} enviar={enviar} onConcluido={vi.fn()} />);
+  render(
+    <MovimentarComponente
+      userId="17690000-0000-4000-8000-000000000001"
+      clienteId="17690000-0000-4000-8000-000000000002"
+      item={item}
+      areas={[]}
+      locais={[]}
+      pais={[]}
+      enviar={enviar}
+      onConcluido={vi.fn()}
+    />,
+  );
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
   await screen.findByText(/servidor rejeitou os vínculos/i);
   expect(sessionStorage.getItem(chave)).toBeNull();

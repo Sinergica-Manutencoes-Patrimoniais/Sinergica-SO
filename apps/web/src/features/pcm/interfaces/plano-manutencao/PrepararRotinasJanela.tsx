@@ -169,18 +169,16 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
       const obtidas: Origem[] = [];
       for (const r of escolhido) {
         await sessao();
-        const { data, error } = await supabase
-          .schema("pcm")
-          .rpc("sso_origens_lote_calendario", {
-            p_ator_id: userId,
-            p_cliente_id: clienteId,
-            p_plano_id: planoId,
-            p_versao_id: versaoId,
-            p_rotina_id: r.id,
-            p_expected_revision: revision,
-            p_inicio: inicio,
-            p_fim: fim,
-          });
+        const { data, error } = await supabase.schema("pcm").rpc("sso_origens_lote_calendario", {
+          p_ator_id: userId,
+          p_cliente_id: clienteId,
+          p_plano_id: planoId,
+          p_versao_id: versaoId,
+          p_rotina_id: r.id,
+          p_expected_revision: revision,
+          p_inicio: inicio,
+          p_fim: fim,
+        });
         if (error) throw error;
         const result = z
           .object({
@@ -287,7 +285,8 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
             !jaIncerta &&
             typeof error === "object" &&
             "code" in error &&
-            error.code === "P0015" && "message" in error &&
+            error.code === "P0015" &&
+            "message" in error &&
             (error.message === "revisao_obsoleta" || error.message === "previa_divergente")
           ) {
             await sessao();

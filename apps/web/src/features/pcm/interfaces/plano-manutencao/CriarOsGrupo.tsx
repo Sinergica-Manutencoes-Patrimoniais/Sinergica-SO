@@ -65,13 +65,11 @@ function Conteudo({ userId, clienteId, ocorrenciaId, intencaoId, disponivel }: P
         sessionStorage.getItem(chave) !== JSON.stringify(pedido)
       )
         throw new Error("Sessão ou tentativa alterada.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_criar_os_grupo", {
-          p_request_id: pedido.requestId,
-          p_cliente_id: pedido.clienteId,
-          p_intencao_id: pedido.intencaoId,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_criar_os_grupo", {
+        p_request_id: pedido.requestId,
+        p_cliente_id: pedido.clienteId,
+        p_intencao_id: pedido.intencaoId,
+      });
       if (error) throw error;
       const resposta = respostaSchema.parse(data);
       if (

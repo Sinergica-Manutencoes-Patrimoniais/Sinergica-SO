@@ -122,20 +122,18 @@ function GerarVisitaContratualSessao({
           ? supabase
               .schema("pcm")
               .rpc("sso_gerar_visita_ou_suprimir", { ...parametros, p_ator_id: userId })
-          : supabase
-              .schema("pcm")
-              .rpc("sso_recibo_geracao_visita_legada", {
-                p_ator: userId,
-                p_request: p.requestId,
-                p_cliente: p.clienteId,
-                p_serie: p.serieId,
-                p_regra: p.regraId,
-                p_semana: p.semana,
-                p_visita: p.visitaId,
-                p_inicio: p.inicio,
-                p_responsavel: null,
-                p_cobertura: p.cobertura,
-              });
+          : supabase.schema("pcm").rpc("sso_recibo_geracao_visita_legada", {
+              p_ator: userId,
+              p_request: p.requestId,
+              p_cliente: p.clienteId,
+              p_serie: p.serieId,
+              p_regra: p.regraId,
+              p_semana: p.semana,
+              p_visita: p.visitaId,
+              p_inicio: p.inicio,
+              p_responsavel: null,
+              p_cobertura: p.cobertura,
+            });
       const { data, error } = await consulta;
       if (error) throw error;
       let decisao: string;

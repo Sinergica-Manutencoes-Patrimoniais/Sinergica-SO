@@ -158,13 +158,11 @@ function Formulario({
       };
       const consulta =
         p.vencimento !== undefined && p.feriadoRevisao !== undefined
-          ? supabase
-              .schema("pcm")
-              .rpc("sso_decidir_feriado_conferido", {
-                ...parametros,
-                p_feriado_revision: p.feriadoRevisao,
-                p_vencimento: p.vencimento,
-              })
+          ? supabase.schema("pcm").rpc("sso_decidir_feriado_conferido", {
+              ...parametros,
+              p_feriado_revision: p.feriadoRevisao,
+              p_vencimento: p.vencimento,
+            })
           : supabase.schema("pcm").rpc("sso_decidir_feriado_calendario", parametros);
       const { data, error } = await consulta;
       if (error) throw error;

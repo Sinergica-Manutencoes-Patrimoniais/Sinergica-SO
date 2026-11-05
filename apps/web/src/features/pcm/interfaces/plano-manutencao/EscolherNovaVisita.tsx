@@ -161,23 +161,21 @@ function Conteudo({
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_escolher_nova_visita", {
-          p_ator: userId,
-          p_request: p.requestId,
-          p_cliente: p.clienteId,
-          p_plano: p.planoId,
-          p_rascunho: p.rascunhoId,
-          p_preparada: p.preparadaId,
-          p_revisao_plano: p.planoRevision,
-          p_revisao_decisao: p.decisaoRevision,
-          p_visita: p.visita,
-          p_data_confirmada: p.data,
-          p_fonte: p.fonte,
-          p_motivo: p.motivo,
-          p_comparacao: p.comparacao,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_escolher_nova_visita", {
+        p_ator: userId,
+        p_request: p.requestId,
+        p_cliente: p.clienteId,
+        p_plano: p.planoId,
+        p_rascunho: p.rascunhoId,
+        p_preparada: p.preparadaId,
+        p_revisao_plano: p.planoRevision,
+        p_revisao_decisao: p.decisaoRevision,
+        p_visita: p.visita,
+        p_data_confirmada: p.data,
+        p_fonte: p.fonte,
+        p_motivo: p.motivo,
+        p_comparacao: p.comparacao,
+      });
       if (error) throw error;
       if (
         !data ||

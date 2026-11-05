@@ -372,56 +372,54 @@ function Conteudo({
         p_motivo: p.motivo,
         p_foto_esperada: p.foto,
       };
-      const { data: r, error } = await supabase
-        .schema("pcm")
-        .rpc(
-          p.rascunho
-            ? p.modo === "calendario"
-              ? "sso_escolher_reserva_calendario_rascunho"
-              : "sso_decidir_reserva_visita_rascunho"
-            : p.modo === "calendario"
-              ? "sso_decidir_reserva_calendario_futuro"
-              : "sso_decidir_reserva_visita_futura",
-          p.rascunho
-            ? p.modo === "calendario"
-              ? {
-                  p_ator: userId,
-                  p_request: p.request,
-                  p_cliente: p.cliente,
-                  p_plano: p.plano,
-                  p_rascunho: p.versao,
-                  p_rotina: p.rotina,
-                  p_indice_sso: p.indiceSso,
-                  p_legado: p.legado,
-                  p_indice_legado: p.indice,
-                  p_revisao_plano: p.revisaoPlano,
-                  p_revisao_escolha: p.revisaoReserva,
-                  p_decisao: p.decisao,
-                  p_confirmado: true,
-                  p_motivo: p.motivo,
-                  p_foto_esperada: p.foto,
-                }
-              : {
-                  p_ator: userId,
-                  p_request: p.request,
-                  p_cliente: p.cliente,
-                  p_plano: p.plano,
-                  p_rascunho: p.versao,
-                  p_rotina: p.rotina,
-                  p_visita: p.visita,
-                  p_legado: p.legado,
-                  p_indice: p.indice,
-                  p_revisao_plano: p.revisaoPlano,
-                  p_revisao_escolha: p.revisaoReserva,
-                  p_decisao: p.decisao,
-                  p_confirmado: true,
-                  p_motivo: p.motivo,
-                  p_foto_esperada: p.foto,
-                }
-            : p.modo === "calendario"
-              ? { ...comum, p_data: p.data }
-              : { ...comum, p_visita: p.visita },
-        );
+      const { data: r, error } = await supabase.schema("pcm").rpc(
+        p.rascunho
+          ? p.modo === "calendario"
+            ? "sso_escolher_reserva_calendario_rascunho"
+            : "sso_decidir_reserva_visita_rascunho"
+          : p.modo === "calendario"
+            ? "sso_decidir_reserva_calendario_futuro"
+            : "sso_decidir_reserva_visita_futura",
+        p.rascunho
+          ? p.modo === "calendario"
+            ? {
+                p_ator: userId,
+                p_request: p.request,
+                p_cliente: p.cliente,
+                p_plano: p.plano,
+                p_rascunho: p.versao,
+                p_rotina: p.rotina,
+                p_indice_sso: p.indiceSso,
+                p_legado: p.legado,
+                p_indice_legado: p.indice,
+                p_revisao_plano: p.revisaoPlano,
+                p_revisao_escolha: p.revisaoReserva,
+                p_decisao: p.decisao,
+                p_confirmado: true,
+                p_motivo: p.motivo,
+                p_foto_esperada: p.foto,
+              }
+            : {
+                p_ator: userId,
+                p_request: p.request,
+                p_cliente: p.cliente,
+                p_plano: p.plano,
+                p_rascunho: p.versao,
+                p_rotina: p.rotina,
+                p_visita: p.visita,
+                p_legado: p.legado,
+                p_indice: p.indice,
+                p_revisao_plano: p.revisaoPlano,
+                p_revisao_escolha: p.revisaoReserva,
+                p_decisao: p.decisao,
+                p_confirmado: true,
+                p_motivo: p.motivo,
+                p_foto_esperada: p.foto,
+              }
+          : p.modo === "calendario"
+            ? { ...comum, p_data: p.data }
+            : { ...comum, p_visita: p.visita },
+      );
       if (error) throw error;
       const base = z.object({
         requestId: z.string().uuid(),

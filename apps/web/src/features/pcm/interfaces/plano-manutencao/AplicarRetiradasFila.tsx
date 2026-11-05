@@ -53,17 +53,15 @@ function Conteudo({
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_aplicar_retiradas_fila", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_plano_id: p.planoId,
-          p_limite: 50,
-          p_apos_tipo: p.cursor?.tipo ?? null,
-          p_apos_ciclo: p.cursor?.ciclo ?? null,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_aplicar_retiradas_fila", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_plano_id: p.planoId,
+        p_limite: 50,
+        p_apos_tipo: p.cursor?.tipo ?? null,
+        p_apos_ciclo: p.cursor?.ciclo ?? null,
+      });
       if (error) throw error;
       const r = z
         .object({

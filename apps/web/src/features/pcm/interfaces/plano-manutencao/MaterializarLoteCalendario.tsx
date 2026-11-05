@@ -234,13 +234,11 @@ function MaterializarLoteSessao({
         p_fim: p.fim,
       };
       const { data, error } = await (p.esperados
-        ? supabase
-            .schema("pcm")
-            .rpc("sso_materializar_lote_calendario_conferido", {
-              ...parametros,
-              p_ator_id: userId,
-              p_esperados: p.esperados,
-            })
+        ? supabase.schema("pcm").rpc("sso_materializar_lote_calendario_conferido", {
+            ...parametros,
+            p_ator_id: userId,
+            p_esperados: p.esperados,
+          })
         : supabase.schema("pcm").rpc("sso_materializar_lote_calendario", parametros));
       if (error) throw error;
       const r = z

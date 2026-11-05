@@ -130,20 +130,18 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: 
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_declarar_origem_rotina", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_plano_id: p.planoId,
-          p_versao_id: p.versaoId,
-          p_rotina_id: p.rotinaId,
-          p_expected_revision: p.revision,
-          p_origem: p.origem,
-          p_motivo: p.motivo,
-          p_confirma: true,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_origem_rotina", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_plano_id: p.planoId,
+        p_versao_id: p.versaoId,
+        p_rotina_id: p.rotinaId,
+        p_expected_revision: p.revision,
+        p_origem: p.origem,
+        p_motivo: p.motivo,
+        p_confirma: true,
+      });
       if (error) throw error;
       const r = z
         .object({

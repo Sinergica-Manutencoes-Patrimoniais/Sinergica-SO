@@ -104,18 +104,16 @@ export function DecisaoPmoc({
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(storageKey) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_decidir_pmoc_mediado", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_proposta_id: p.propostaId,
-          p_expected_revision: p.revision,
-          p_decisao: p.decisao,
-          p_evidencia_referencia: p.evidencia,
-          p_justificativa: p.justificativa,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_decidir_pmoc_mediado", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_proposta_id: p.propostaId,
+        p_expected_revision: p.revision,
+        p_decisao: p.decisao,
+        p_evidencia_referencia: p.evidencia,
+        p_justificativa: p.justificativa,
+      });
       if (error) throw error;
       if (
         !data ||

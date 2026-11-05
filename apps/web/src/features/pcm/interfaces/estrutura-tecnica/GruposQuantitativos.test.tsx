@@ -4,9 +4,14 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../auth/infrastructure/supabase-auth-adapter", () => ({
-  supabaseAuthAdapter: new Proxy({}, {
-    get: () => { throw new Error("Acesso inesperado à autenticação em teste unitário"); },
-  }),
+  supabaseAuthAdapter: new Proxy(
+    {},
+    {
+      get: () => {
+        throw new Error("Acesso inesperado à autenticação em teste unitário");
+      },
+    },
+  ),
 }));
 
 const auth = vi.hoisted(() => ({ getUser: vi.fn() }));
@@ -29,12 +34,30 @@ vi.mock("../../infrastructure/supabase-estrutura-tecnica-adapter", () => ({
 }));
 import { GruposQuantitativos } from "./GruposQuantitativos";
 
-function recibo(comando: { requestId: string; grupoId: string; expectedRevision: number; localId: string; sistemaId: string | null }) {
-  const chave = Object.keys(sessionStorage).find((k) => k.startsWith("sso-grupo-pendente:usuario:"));
+function recibo(comando: {
+  requestId: string;
+  grupoId: string;
+  expectedRevision: number;
+  localId: string;
+  sistemaId: string | null;
+}) {
+  const chave = Object.keys(sessionStorage).find((k) =>
+    k.startsWith("sso-grupo-pendente:usuario:"),
+  );
   const clienteId = chave?.slice("sso-grupo-pendente:usuario:".length);
-  return { requestId: comando.requestId, aggregateId: comando.grupoId, revision: comando.expectedRevision + 1,
-    created: comando.expectedRevision === 0, state: true, warnings: [],
-    linkedIds: { clienteId, localId: comando.localId, ...(comando.sistemaId ? { sistemaId: comando.sistemaId } : {}) } };
+  return {
+    requestId: comando.requestId,
+    aggregateId: comando.grupoId,
+    revision: comando.expectedRevision + 1,
+    created: comando.expectedRevision === 0,
+    state: true,
+    warnings: [],
+    linkedIds: {
+      clienteId,
+      localId: comando.localId,
+      ...(comando.sistemaId ? { sistemaId: comando.sistemaId } : {}),
+    },
+  };
 }
 
 function montar(clienteId = "cliente-a") {
@@ -263,15 +286,22 @@ describe("consulta de Grupos Quantitativos", () => {
     gateway.autorizarAcao.mockResolvedValue(true);
     gateway.listarGrupos.mockResolvedValue([]);
     gateway.salvarGrupo.mockImplementation(async (comando) => {
-      if (cenario === "sessão alterada") auth.getUser.mockResolvedValue({ data: { user: { id: "outro" } }, error: null });
-      return cenario === "recibo divergente" ? { ...recibo(comando), requestId: "incorreto" } : recibo(comando);
+      if (cenario === "sessão alterada")
+        auth.getUser.mockResolvedValue({ data: { user: { id: "outro" } }, error: null });
+      return cenario === "recibo divergente"
+        ? { ...recibo(comando), requestId: "incorreto" }
+        : recibo(comando);
     });
     montar();
     fireEvent.click(await screen.findByRole("button", { name: "Novo grupo" }));
     fireEvent.change(screen.getByLabelText("Nome do grupo"), { target: { value: "Luminárias" } });
     fireEvent.change(screen.getByLabelText("Quantidade"), { target: { value: "20" } });
-    fireEvent.change(screen.getByLabelText("Local"), { target: { value: "17610000-0000-4000-8000-000000000031" } });
-    fireEvent.change(screen.getByLabelText("Categoria"), { target: { value: "17610000-0000-4000-8000-000000000041" } });
+    fireEvent.change(screen.getByLabelText("Local"), {
+      target: { value: "17610000-0000-4000-8000-000000000031" },
+    });
+    fireEvent.change(screen.getByLabelText("Categoria"), {
+      target: { value: "17610000-0000-4000-8000-000000000041" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Salvar grupo" }));
     await screen.findByRole("alert");
     expect(sessionStorage.getItem("sso-grupo-pendente:usuario:cliente-a")).not.toBeNull();

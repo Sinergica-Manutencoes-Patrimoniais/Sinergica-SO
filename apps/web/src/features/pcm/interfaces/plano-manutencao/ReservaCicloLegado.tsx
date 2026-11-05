@@ -221,24 +221,22 @@ function Conteudo({ userId, clienteId, planoId, legadoId, revision, modo, consul
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_decidir_reserva_ciclo_legado", {
-          p_ator: userId,
-          p_request: p.requestId,
-          p_cliente: p.cliente,
-          p_plano: p.plano,
-          p_legado: p.legado,
-          p_indice: p.indice,
-          p_modo: p.modo,
-          p_preparada: p.preparada,
-          p_decisao: p.decisao,
-          p_revisao_plano: p.revisaoPlano,
-          p_revisao_reserva: p.revisaoReserva,
-          p_confirmado: true,
-          p_motivo: p.motivo,
-          p_foto_esperada: p.fotoEsperada,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_decidir_reserva_ciclo_legado", {
+        p_ator: userId,
+        p_request: p.requestId,
+        p_cliente: p.cliente,
+        p_plano: p.plano,
+        p_legado: p.legado,
+        p_indice: p.indice,
+        p_modo: p.modo,
+        p_preparada: p.preparada,
+        p_decisao: p.decisao,
+        p_revisao_plano: p.revisaoPlano,
+        p_revisao_reserva: p.revisaoReserva,
+        p_confirmado: true,
+        p_motivo: p.motivo,
+        p_foto_esperada: p.fotoEsperada,
+      });
       if (error) throw error;
       const r = z
         .object({

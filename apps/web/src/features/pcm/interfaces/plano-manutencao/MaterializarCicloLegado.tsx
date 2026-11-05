@@ -114,18 +114,16 @@ function Conteudo({
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_materializar_legado_mediado", {
-          p_ator_id: userId,
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_preparada_id: p.preparadaId,
-          p_plano_legado_id: p.legadoId,
-          p_relacao_request_id: p.relacaoId,
-          p_ciclo_id: p.cicloId,
-          p_motivo: p.motivo,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_materializar_legado_mediado", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_preparada_id: p.preparadaId,
+        p_plano_legado_id: p.legadoId,
+        p_relacao_request_id: p.relacaoId,
+        p_ciclo_id: p.cicloId,
+        p_motivo: p.motivo,
+      });
       if (error) throw error;
       if (
         !data ||

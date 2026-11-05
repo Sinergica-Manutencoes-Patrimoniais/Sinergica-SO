@@ -46,7 +46,8 @@ function validarOperacao(valor: unknown, planoId: string): Operacao {
           ? validarInicioRevisao(valor.comando as IniciarRevisaoPlanoCommand)
           : null;
   if (!comando || comando.planoId !== planoId) throw new Error("Plano divergente");
-  const versao = "versaoEsperada" in valor ? z.string().uuid().parse(valor.versaoEsperada) : undefined;
+  const versao =
+    "versaoEsperada" in valor ? z.string().uuid().parse(valor.versaoEsperada) : undefined;
   return valor.tipo === "transicao"
     ? { tipo: "transicao", comando: comando as TransicionarRevisaoCommand }
     : valor.tipo === "inicio"
@@ -131,14 +132,19 @@ export function AcoesRevisaoPlano({
   const operacao = useMutation({
     mutationFn: (pedido: Operacao) =>
       (pedido.tipo === "aprovacao" || pedido.tipo === "aprovacao_revisao") && pedido.versaoEsperada
-        ? aprovarVersaoEsperada(pedido.comando, { userId, clienteId, versaoId: pedido.versaoEsperada, revisaoPreparada: pedido.tipo === "aprovacao_revisao" })
+        ? aprovarVersaoEsperada(pedido.comando, {
+            userId,
+            clienteId,
+            versaoId: pedido.versaoEsperada,
+            revisaoPreparada: pedido.tipo === "aprovacao_revisao",
+          })
         : pedido.tipo === "aprovacao_revisao"
-        ? aprovarRevisaoPreparada(validarAprovacaoPlano(pedido.comando), { userId, clienteId })
-        : pedido.tipo === "aprovacao"
-          ? aprovarPlano(supabasePlanoManutencaoAdapter, pedido.comando)
-          : pedido.tipo === "inicio"
-            ? iniciarRevisao(supabasePlanoManutencaoAdapter, pedido.comando)
-            : transicionarRevisao(supabasePlanoManutencaoAdapter, pedido.comando),
+          ? aprovarRevisaoPreparada(validarAprovacaoPlano(pedido.comando), { userId, clienteId })
+          : pedido.tipo === "aprovacao"
+            ? aprovarPlano(supabasePlanoManutencaoAdapter, pedido.comando)
+            : pedido.tipo === "inicio"
+              ? iniciarRevisao(supabasePlanoManutencaoAdapter, pedido.comando)
+              : transicionarRevisao(supabasePlanoManutencaoAdapter, pedido.comando),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: planoManutencaoKeys.raiz(userId, clienteId) }),
   });
@@ -168,11 +174,14 @@ export function AcoesRevisaoPlano({
           resultado.requestId !== pedido.comando.requestId ||
           resultado.aggregateId !== pedido.comando.planoId ||
           resultado.revision !== pedido.comando.expectedRevision + 1 ||
-          resultado.state !== "aprovado" || resultado.created !== false ||
+          resultado.state !== "aprovado" ||
+          resultado.created !== false ||
           resultado.linkedIds.clienteId !== clienteId ||
           !z.string().uuid().safeParse(resultado.linkedIds.versaoId).success ||
-          (pedido.versaoEsperada !== undefined && resultado.linkedIds.versaoId !== pedido.versaoEsperada)
-        ) throw new Error("Recibo de aprovação divergente.");
+          (pedido.versaoEsperada !== undefined &&
+            resultado.linkedIds.versaoId !== pedido.versaoEsperada)
+        )
+          throw new Error("Recibo de aprovação divergente.");
       }
       if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
         setErro(
@@ -297,7 +306,10 @@ export function AcoesRevisaoPlano({
         }
       }
       let versaoEsperada: string | undefined;
-      if ((escolha === "aprovar" || escolha === "aprovar_revisao") && import.meta.env.VITE_SSO_APROVACAO_VERSAO_ESPERADA_ENABLED === "true") {
+      if (
+        (escolha === "aprovar" || escolha === "aprovar_revisao") &&
+        import.meta.env.VITE_SSO_APROVACAO_VERSAO_ESPERADA_ENABLED === "true"
+      ) {
         await exigirAtor();
         versaoEsperada = await prepararAprovacaoVersao(userId, clienteId, plano.id, plano.revisao);
         await exigirAtor();

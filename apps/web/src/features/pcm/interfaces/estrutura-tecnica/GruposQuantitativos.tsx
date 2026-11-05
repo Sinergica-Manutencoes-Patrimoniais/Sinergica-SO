@@ -66,7 +66,12 @@ function GruposQuantitativosContexto({
   const [erroSalvar, setErroSalvar] = useState("");
   const emEnvio = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   async function conferirSessao() {
     const { data, error } = await supabase.auth.getUser();
     if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
@@ -180,12 +185,15 @@ function GruposQuantitativosContexto({
       await conferirSessao();
       const recibo = await salvar.mutateAsync(comando);
       if (
-        recibo.requestId !== comando.requestId || recibo.aggregateId !== comando.grupoId ||
+        recibo.requestId !== comando.requestId ||
+        recibo.aggregateId !== comando.grupoId ||
         recibo.revision !== comando.expectedRevision + 1 ||
         recibo.created !== (comando.expectedRevision === 0) ||
-        recibo.linkedIds.clienteId !== clienteId || recibo.linkedIds.localId !== comando.localId ||
+        recibo.linkedIds.clienteId !== clienteId ||
+        recibo.linkedIds.localId !== comando.localId ||
         (recibo.linkedIds.sistemaId ?? null) !== comando.sistemaId
-      ) throw new Error("Recibo divergente.");
+      )
+        throw new Error("Recibo divergente.");
       await conferirSessao();
       removerPendenteCorrespondente(comando);
       setPendente(null);
