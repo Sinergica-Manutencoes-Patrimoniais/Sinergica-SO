@@ -43,12 +43,19 @@ def executar(container, fixture, query, watchdog):
     try:
         resultado = subprocess.run(
             ["rtk", "proxy", "docker", "exec", "-i", container, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-qAt"],
-            input=b"set search_path=public,extensions;\n" + fixture + b"\nselect 'SSO_UPLOAD_1811_OK';\n", capture_output=True, timeout=180,
+            input=b"\\set VERBOSITY verbose\nset search_path=public,extensions;\n" + fixture + b"\nselect 'SSO_UPLOAD_1811_OK';\n", capture_output=True, timeout=180,
         )
     except subprocess.TimeoutExpired:
         raise RuntimeError("Prazo excedido na fixture 1811") from None
-    if resultado.returncode or resultado.stdout.decode(errors="replace").splitlines().count("SSO_UPLOAD_1811_OK") != 1:
-        raise RuntimeError("Fixture SQL de upload 1811 falhou")
+    if resultado.returncode:
+        erro = resultado.stderr.decode(errors="replace")
+        estado = re.search(r"ERROR:\s+([0-9A-Z]{5}):", erro)
+        linha = re.search(r"(?m)^psql:<stdin>:(\d+):", erro)
+        raise RuntimeError("Fixture SQL de upload 1811 falhou; SQLSTATE "
+            + (estado.group(1) if estado else "não identificado")
+            + "; linha expandida " + (linha.group(1) if linha else "não identificada"))
+    if resultado.stdout.decode(errors="replace").splitlines().count("SSO_UPLOAD_1811_OK") != 1:
+        raise RuntimeError("Fixture SQL de upload 1811 sem confirmação de rollback")
     if query(snapshot_sql) != antes:
         raise RuntimeError("Rollback da fixture 1811 não preservou snapshot")
     if watchdog.is_set():
