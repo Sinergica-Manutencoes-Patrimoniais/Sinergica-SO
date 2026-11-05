@@ -5,11 +5,34 @@ import { projetarVisitasContratuais } from "../../domain/calendario-contratual";
 import { SimulacaoMudancaDia } from "./SimulacaoMudancaDia";
 
 type PeriodoDeclaracoes = { inicio: string; fim: string };
-export function SimulacaoRegra({ regra, feriadosDeclarados = [], periodoDeclaracoes = null }: { regra: RegraContratualResumo; feriadosDeclarados?: readonly string[]; periodoDeclaracoes?: PeriodoDeclaracoes | null }) {
-  return <ConteudoSimulacao key={JSON.stringify([regra,feriadosDeclarados,periodoDeclaracoes])} regra={regra} feriadosDeclarados={feriadosDeclarados} periodoDeclaracoes={periodoDeclaracoes} />;
+export function SimulacaoRegra({
+  regra,
+  feriadosDeclarados = [],
+  periodoDeclaracoes = null,
+}: {
+  regra: RegraContratualResumo;
+  feriadosDeclarados?: readonly string[];
+  periodoDeclaracoes?: PeriodoDeclaracoes | null;
+}) {
+  return (
+    <ConteudoSimulacao
+      key={JSON.stringify([regra, feriadosDeclarados, periodoDeclaracoes])}
+      regra={regra}
+      feriadosDeclarados={feriadosDeclarados}
+      periodoDeclaracoes={periodoDeclaracoes}
+    />
+  );
 }
 
-function ConteudoSimulacao({ regra, feriadosDeclarados, periodoDeclaracoes }: { regra: RegraContratualResumo; feriadosDeclarados: readonly string[]; periodoDeclaracoes: PeriodoDeclaracoes | null }) {
+function ConteudoSimulacao({
+  regra,
+  feriadosDeclarados,
+  periodoDeclaracoes,
+}: {
+  regra: RegraContratualResumo;
+  feriadosDeclarados: readonly string[];
+  periodoDeclaracoes: PeriodoDeclaracoes | null;
+}) {
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
   const [feriado, setFeriado] = useState("");
@@ -49,8 +72,21 @@ function ConteudoSimulacao({ regra, feriadosDeclarados, periodoDeclaracoes }: { 
         Simulação parcial: não consulta feriados oficiais, exceções, Visitas existentes ou
         reprogramações. Considere somente os feriados hipotéticos informados aqui. Não cria Visitas.
       </p>
-      {periodoDeclaracoes && <p>Declarações carregadas para {periodoDeclaracoes.inicio} a {periodoDeclaracoes.fim}; a lista pode estar incompleta e não comprova feriados oficiais.</p>}
-      {periodoDeclaracoes && inicio && fim && (inicio < periodoDeclaracoes.inicio || fim > periodoDeclaracoes.fim) && <p role="alert">A simulação excede o período consultado de declarações. Datas fora dele não foram conferidas.</p>}
+      {periodoDeclaracoes && (
+        <p>
+          Declarações carregadas para {periodoDeclaracoes.inicio} a {periodoDeclaracoes.fim}; a
+          lista pode estar incompleta e não comprova feriados oficiais.
+        </p>
+      )}
+      {periodoDeclaracoes &&
+        inicio &&
+        fim &&
+        (inicio < periodoDeclaracoes.inicio || fim > periodoDeclaracoes.fim) && (
+          <p role="alert">
+            A simulação excede o período consultado de declarações. Datas fora dele não foram
+            conferidas.
+          </p>
+        )}
       <label>
         Início da simulação
         <input

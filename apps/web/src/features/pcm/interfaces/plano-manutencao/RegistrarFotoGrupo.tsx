@@ -5,32 +5,372 @@ import { supabase } from "../../../../lib/supabase-client";
 import { useFotosGrupo } from "./useFotosGrupo";
 
 const uuid = z.string().uuid();
-const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, ocorrenciaId: uuid, atestadoId: uuid, notaId: uuid, revisao: z.number().int().nonnegative(), justificativa: z.string().trim().min(1).max(2000) }).strict();
+const pedidoSchema = z
+  .object({
+    requestId: uuid,
+    clienteId: uuid,
+    ocorrenciaId: uuid,
+    atestadoId: uuid,
+    notaId: uuid,
+    revisao: z.number().int().nonnegative(),
+    justificativa: z.string().trim().min(1).max(2000),
+  })
+  .strict();
 type Pedido = z.infer<typeof pedidoSchema>;
-const atestadoSchema = z.object({ request_id: uuid, revisao: z.number().int().positive(), os_id: uuid, declaracao: z.string(), referencia_evidencia: z.string(), ator_id: uuid, criado_em: z.string() }).strict();
-const candidataSchema = z.object({ nota_id: uuid, os_id: uuid, mime_declarado: z.enum(["image/jpeg", "image/png"]), criado_em: z.string() }).strict();
+const atestadoSchema = z
+  .object({
+    request_id: uuid,
+    revisao: z.number().int().positive(),
+    os_id: uuid,
+    declaracao: z.string(),
+    referencia_evidencia: z.string(),
+    ator_id: uuid,
+    criado_em: z.string(),
+  })
+  .strict();
+const candidataSchema = z
+  .object({
+    nota_id: uuid,
+    os_id: uuid,
+    mime_declarado: z.enum(["image/jpeg", "image/png"]),
+    criado_em: z.string(),
+  })
+  .strict();
 type Props = { userId: string; clienteId: string; ocorrenciaId: string };
-export function RegistrarFotoGrupo(props: Props) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.ocorrenciaId])} {...props} />; }
+export function RegistrarFotoGrupo(props: Props) {
+  return (
+    <Conteudo
+      key={JSON.stringify([props.userId, props.clienteId, props.ocorrenciaId])}
+      {...props}
+    />
+  );
+}
 function Conteudo({ userId, clienteId, ocorrenciaId }: Props) {
-  const cache = useQueryClient(); const storage = `foto-grupo:${JSON.stringify([userId, clienteId, ocorrenciaId])}`; const trava = useRef(false);
-  const [atestado, setAtestado] = useState(""); const [nota, setNota] = useState(""); const [justificativa, setJustificativa] = useState(""); const [confirmacao, setConfirmacao] = useState<string | null>(null); const [aviso, setAviso] = useState("");
-  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(storage); if (!raw) return null; const p = pedidoSchema.parse(JSON.parse(raw)); return p.clienteId === clienteId && p.ocorrenciaId === ocorrenciaId ? p : "invalido"; } catch { return "invalido"; } });
-  async function sessao(signal?: AbortSignal) { const r = await supabase.auth.getUser(); if (r.error || r.data.user?.id !== userId || signal?.aborted) throw new Error("Sessão alterada."); }
-  function ordemDecrescente<T extends { revisao: number }>(itens: T[], antes: number | null) { let anterior = antes ?? Number.POSITIVE_INFINITY; for (const i of itens) { if (i.revisao >= anterior) throw new Error("Página divergente."); anterior = i.revisao; } return itens; }
-  const atestados = useInfiniteQuery({ queryKey: ["atestados-grupo", userId, clienteId, ocorrenciaId], initialPageParam: null as number | null, gcTime: 0, retry: false, queryFn: async ({ pageParam, signal }) => { await sessao(signal); const { data, error } = await supabase.schema("pcm").rpc("sso_listar_atestados_grupo_mediada", { p_cliente_id: clienteId, p_ocorrencia_id: ocorrenciaId, p_antes: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; const pagina = ordemDecrescente(z.array(atestadoSchema).max(20).parse(data), pageParam); await sessao(signal); return pagina; }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.revisao : undefined });
-  const candidatas = useInfiniteQuery({ queryKey: ["fotos-candidatas-grupo", userId, clienteId, ocorrenciaId], initialPageParam: null as string | null, gcTime: 0, retry: false, queryFn: async ({ pageParam, signal }) => { await sessao(signal); const { data, error } = await supabase.schema("pcm").rpc("sso_listar_fotos_candidatas_grupo_mediada", { p_cliente_id: clienteId, p_ocorrencia_id: ocorrenciaId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; const pagina = z.array(candidataSchema).max(20).parse(data); let anterior = pageParam?.toLowerCase() ?? ""; for (const i of pagina) { if (i.nota_id.toLowerCase() <= anterior) throw new Error("Página divergente."); anterior = i.nota_id.toLowerCase(); } await sessao(signal); return pagina; }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.nota_id : undefined });
+  const cache = useQueryClient();
+  const storage = `foto-grupo:${JSON.stringify([userId, clienteId, ocorrenciaId])}`;
+  const trava = useRef(false);
+  const [atestado, setAtestado] = useState("");
+  const [nota, setNota] = useState("");
+  const [justificativa, setJustificativa] = useState("");
+  const [confirmacao, setConfirmacao] = useState<string | null>(null);
+  const [aviso, setAviso] = useState("");
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(storage);
+      if (!raw) return null;
+      const p = pedidoSchema.parse(JSON.parse(raw));
+      return p.clienteId === clienteId && p.ocorrenciaId === ocorrenciaId ? p : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  async function sessao(signal?: AbortSignal) {
+    const r = await supabase.auth.getUser();
+    if (r.error || r.data.user?.id !== userId || signal?.aborted)
+      throw new Error("Sessão alterada.");
+  }
+  function ordemDecrescente<T extends { revisao: number }>(itens: T[], antes: number | null) {
+    let anterior = antes ?? Number.POSITIVE_INFINITY;
+    for (const i of itens) {
+      if (i.revisao >= anterior) throw new Error("Página divergente.");
+      anterior = i.revisao;
+    }
+    return itens;
+  }
+  const atestados = useInfiniteQuery({
+    queryKey: ["atestados-grupo", userId, clienteId, ocorrenciaId],
+    initialPageParam: null as number | null,
+    gcTime: 0,
+    retry: false,
+    queryFn: async ({ pageParam, signal }) => {
+      await sessao(signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_listar_atestados_grupo_mediada", {
+          p_cliente_id: clienteId,
+          p_ocorrencia_id: ocorrenciaId,
+          p_antes: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const pagina = ordemDecrescente(z.array(atestadoSchema).max(20).parse(data), pageParam);
+      await sessao(signal);
+      return pagina;
+    },
+    getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.revisao : undefined),
+  });
+  const candidatas = useInfiniteQuery({
+    queryKey: ["fotos-candidatas-grupo", userId, clienteId, ocorrenciaId],
+    initialPageParam: null as string | null,
+    gcTime: 0,
+    retry: false,
+    queryFn: async ({ pageParam, signal }) => {
+      await sessao(signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_listar_fotos_candidatas_grupo_mediada", {
+          p_cliente_id: clienteId,
+          p_ocorrencia_id: ocorrenciaId,
+          p_apos: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const pagina = z.array(candidataSchema).max(20).parse(data);
+      let anterior = pageParam?.toLowerCase() ?? "";
+      for (const i of pagina) {
+        if (i.nota_id.toLowerCase() <= anterior) throw new Error("Página divergente.");
+        anterior = i.nota_id.toLowerCase();
+      }
+      await sessao(signal);
+      return pagina;
+    },
+    getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.nota_id : undefined),
+  });
   const fotos = useFotosGrupo(userId, clienteId, ocorrenciaId);
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { await sessao(); if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error("Tentativa alterada."); const { data, error } = await supabase.schema("pcm").rpc("sso_registrar_foto_atestado_grupo_mediada", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_ocorrencia_id: p.ocorrenciaId, p_atestado_id: p.atestadoId, p_nota_id: p.notaId, p_expected_revision: p.revisao, p_justificativa: p.justificativa }); if (error) throw error; const r = z.object({ requestId: uuid, fotoId: uuid, revisao: z.number().int().positive(), conteudoAutenticado: z.literal(false), ocorrenciaEncerrada: z.literal(false) }).strict().parse(data); if (r.requestId !== p.requestId || r.revisao !== p.revisao + 1) throw new Error("Resposta divergente."); await sessao(); }, onSuccess: async (_, p) => { try { await cache.invalidateQueries({ queryKey: ["fotos-atestado-grupo", userId, clienteId, ocorrenciaId], refetchType: "none" }); await sessao(); if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error("Tentativa alterada."); sessionStorage.removeItem(storage); setPendente(null); setConfirmacao(null); setAviso("Foto referenciada; conteúdo não autenticado e ocorrência não encerrada."); void fotos.refetch(); } catch { setAviso("Foto confirmada, mas tentativa local não foi removida; procure suporte."); } }, onError: () => setAviso("Resultado não confirmado, foto indisponível ou revisão alterada. Repita a tentativa ou procure suporte."), onSettled: () => { trava.current = false; } });
-  const listaAtestados = atestados.data?.pages.flat() ?? []; const listaCandidatas = candidatas.data?.pages.flat() ?? []; const listaFotos = fotos.data?.pages.flat() ?? [];
-  const descendente = (itens: { revisao: number }[]) => itens.every((i, n) => n === 0 || itens[n - 1]!.revisao > i.revisao);
-  const consistentes = descendente(listaAtestados) && descendente(listaFotos) && listaCandidatas.every((i, n) => n === 0 || listaCandidatas[n - 1]!.nota_id.toLowerCase() < i.nota_id.toLowerCase()) && new Set(listaAtestados.map((i) => i.request_id)).size === listaAtestados.length && new Set(listaFotos.map((i) => i.id)).size === listaFotos.length;
-  const disponivel = !!atestados.data && !!candidatas.data && !!fotos.data && !atestados.isFetching && !candidatas.isFetching && !fotos.isFetching && !atestados.isError && !candidatas.isError && !fotos.isError && consistentes;
-  const revisao = listaFotos[0]?.revisao ?? 0; const atestadoSelecionado = listaAtestados.find((i) => i.request_id === atestado); const fotoSelecionada = listaCandidatas.find((i) => i.nota_id === nota && i.os_id === atestadoSelecionado?.os_id);
-  const fotografia = disponivel && atestadoSelecionado && fotoSelecionada ? JSON.stringify([userId, clienteId, ocorrenciaId, atestadoSelecionado, fotoSelecionada, revisao, justificativa.trim()]) : null;
-  const enviar = (entrada: Pedido) => { if (trava.current || (!pendente && (!fotografia || confirmacao !== fotografia))) return; try { const p = pedidoSchema.parse(entrada); const salvo = sessionStorage.getItem(storage); if (pendente ? salvo !== JSON.stringify(p) : salvo !== null) throw new Error("Tentativa divergente."); if (!pendente) sessionStorage.setItem(storage, JSON.stringify(p)); trava.current = true; setPendente(p); envio.mutate(p); } catch { setAviso("Tentativa não pôde ser guardada ou divergiu; nada enviado."); } };
-  return <section aria-label="Referenciar foto do Grupo"><h5>Referenciar foto privada da OS</h5><p>Foto e atestado serão vinculados; conteúdo e autoria não são autenticados e a ocorrência não será encerrada.</p>
-    {(atestados.isError || candidatas.isError || fotos.isError || !consistentes) && <p role="alert">Listas indisponíveis ou divergentes. <button type="button" onClick={() => { void atestados.refetch(); void candidatas.refetch(); void fotos.refetch(); }}>Reconsultar</button></p>}
-    <fieldset disabled={!disponivel || !!pendente || envio.isPending}><label>Atestado <select value={atestado} onChange={(e) => { setAtestado(e.target.value); setConfirmacao(null); }}><option value="">Selecione</option>{listaAtestados.map((a) => <option key={a.request_id} value={a.request_id}>Revisão {a.revisao} · OS {a.os_id}</option>)}</select></label><label>Foto da OS <select value={nota} onChange={(e) => { setNota(e.target.value); setConfirmacao(null); }}><option value="">Selecione</option>{listaCandidatas.map((n) => <option key={n.nota_id} value={n.nota_id}>Nota {n.nota_id} · OS {n.os_id} · {n.mime_declarado} · {n.criado_em}</option>)}</select></label><label>Justificativa <textarea value={justificativa} maxLength={2000} onChange={(e) => { setJustificativa(e.target.value); setConfirmacao(null); }} /></label><p>Revisão de fotos: {revisao}</p><label><input type="checkbox" checked={!!fotografia && confirmacao === fotografia} onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)} /> Confirmo a associação</label><button type="button" disabled={!fotografia || confirmacao !== fotografia || !justificativa.trim()} onClick={() => enviar({ requestId: crypto.randomUUID(), clienteId, ocorrenciaId, atestadoId: atestado, notaId: nota, revisao, justificativa: justificativa.trim() })}>Registrar foto</button></fieldset>
-    {atestados.hasNextPage && <button type="button" disabled={atestados.isFetching} onClick={() => void atestados.fetchNextPage()}>Mais atestados</button>}{candidatas.hasNextPage && <button type="button" disabled={candidatas.isFetching} onClick={() => void candidatas.fetchNextPage()}>Mais fotos candidatas</button>}{fotos.hasNextPage && <button type="button" disabled={fotos.isFetching} onClick={() => void fotos.fetchNextPage()}>Mais fotos registradas</button>}{pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
-  </section>;
+  const envio = useMutation({
+    mutationFn: async (p: Pedido) => {
+      await sessao();
+      if (sessionStorage.getItem(storage) !== JSON.stringify(p))
+        throw new Error("Tentativa alterada.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_registrar_foto_atestado_grupo_mediada", {
+          p_request_id: p.requestId,
+          p_cliente_id: p.clienteId,
+          p_ocorrencia_id: p.ocorrenciaId,
+          p_atestado_id: p.atestadoId,
+          p_nota_id: p.notaId,
+          p_expected_revision: p.revisao,
+          p_justificativa: p.justificativa,
+        });
+      if (error) throw error;
+      const r = z
+        .object({
+          requestId: uuid,
+          fotoId: uuid,
+          revisao: z.number().int().positive(),
+          conteudoAutenticado: z.literal(false),
+          ocorrenciaEncerrada: z.literal(false),
+        })
+        .strict()
+        .parse(data);
+      if (r.requestId !== p.requestId || r.revisao !== p.revisao + 1)
+        throw new Error("Resposta divergente.");
+      await sessao();
+    },
+    onSuccess: async (_, p) => {
+      try {
+        await cache.invalidateQueries({
+          queryKey: ["fotos-atestado-grupo", userId, clienteId, ocorrenciaId],
+          refetchType: "none",
+        });
+        await sessao();
+        if (sessionStorage.getItem(storage) !== JSON.stringify(p))
+          throw new Error("Tentativa alterada.");
+        sessionStorage.removeItem(storage);
+        setPendente(null);
+        setConfirmacao(null);
+        setAviso("Foto referenciada; conteúdo não autenticado e ocorrência não encerrada.");
+        void fotos.refetch();
+      } catch {
+        setAviso("Foto confirmada, mas tentativa local não foi removida; procure suporte.");
+      }
+    },
+    onError: () =>
+      setAviso(
+        "Resultado não confirmado, foto indisponível ou revisão alterada. Repita a tentativa ou procure suporte.",
+      ),
+    onSettled: () => {
+      trava.current = false;
+    },
+  });
+  const listaAtestados = atestados.data?.pages.flat() ?? [];
+  const listaCandidatas = candidatas.data?.pages.flat() ?? [];
+  const listaFotos = fotos.data?.pages.flat() ?? [];
+  const descendente = (itens: { revisao: number }[]) =>
+    itens.every((i, n) => n === 0 || itens[n - 1]!.revisao > i.revisao);
+  const consistentes =
+    descendente(listaAtestados) &&
+    descendente(listaFotos) &&
+    listaCandidatas.every(
+      (i, n) => n === 0 || listaCandidatas[n - 1]!.nota_id.toLowerCase() < i.nota_id.toLowerCase(),
+    ) &&
+    new Set(listaAtestados.map((i) => i.request_id)).size === listaAtestados.length &&
+    new Set(listaFotos.map((i) => i.id)).size === listaFotos.length;
+  const disponivel =
+    !!atestados.data &&
+    !!candidatas.data &&
+    !!fotos.data &&
+    !atestados.isFetching &&
+    !candidatas.isFetching &&
+    !fotos.isFetching &&
+    !atestados.isError &&
+    !candidatas.isError &&
+    !fotos.isError &&
+    consistentes;
+  const revisao = listaFotos[0]?.revisao ?? 0;
+  const atestadoSelecionado = listaAtestados.find((i) => i.request_id === atestado);
+  const fotoSelecionada = listaCandidatas.find(
+    (i) => i.nota_id === nota && i.os_id === atestadoSelecionado?.os_id,
+  );
+  const fotografia =
+    disponivel && atestadoSelecionado && fotoSelecionada
+      ? JSON.stringify([
+          userId,
+          clienteId,
+          ocorrenciaId,
+          atestadoSelecionado,
+          fotoSelecionada,
+          revisao,
+          justificativa.trim(),
+        ])
+      : null;
+  const enviar = (entrada: Pedido) => {
+    if (trava.current || (!pendente && (!fotografia || confirmacao !== fotografia))) return;
+    try {
+      const p = pedidoSchema.parse(entrada);
+      const salvo = sessionStorage.getItem(storage);
+      if (pendente ? salvo !== JSON.stringify(p) : salvo !== null)
+        throw new Error("Tentativa divergente.");
+      if (!pendente) sessionStorage.setItem(storage, JSON.stringify(p));
+      trava.current = true;
+      setPendente(p);
+      envio.mutate(p);
+    } catch {
+      setAviso("Tentativa não pôde ser guardada ou divergiu; nada enviado.");
+    }
+  };
+  return (
+    <section aria-label="Referenciar foto do Grupo">
+      <h5>Referenciar foto privada da OS</h5>
+      <p>
+        Foto e atestado serão vinculados; conteúdo e autoria não são autenticados e a ocorrência não
+        será encerrada.
+      </p>
+      {(atestados.isError || candidatas.isError || fotos.isError || !consistentes) && (
+        <p role="alert">
+          Listas indisponíveis ou divergentes.{" "}
+          <button
+            type="button"
+            onClick={() => {
+              void atestados.refetch();
+              void candidatas.refetch();
+              void fotos.refetch();
+            }}
+          >
+            Reconsultar
+          </button>
+        </p>
+      )}
+      <fieldset disabled={!disponivel || !!pendente || envio.isPending}>
+        <label>
+          Atestado{" "}
+          <select
+            value={atestado}
+            onChange={(e) => {
+              setAtestado(e.target.value);
+              setConfirmacao(null);
+            }}
+          >
+            <option value="">Selecione</option>
+            {listaAtestados.map((a) => (
+              <option key={a.request_id} value={a.request_id}>
+                Revisão {a.revisao} · OS {a.os_id}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Foto da OS{" "}
+          <select
+            value={nota}
+            onChange={(e) => {
+              setNota(e.target.value);
+              setConfirmacao(null);
+            }}
+          >
+            <option value="">Selecione</option>
+            {listaCandidatas.map((n) => (
+              <option key={n.nota_id} value={n.nota_id}>
+                Nota {n.nota_id} · OS {n.os_id} · {n.mime_declarado} · {n.criado_em}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Justificativa{" "}
+          <textarea
+            value={justificativa}
+            maxLength={2000}
+            onChange={(e) => {
+              setJustificativa(e.target.value);
+              setConfirmacao(null);
+            }}
+          />
+        </label>
+        <p>Revisão de fotos: {revisao}</p>
+        <label>
+          <input
+            type="checkbox"
+            checked={!!fotografia && confirmacao === fotografia}
+            onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)}
+          />{" "}
+          Confirmo a associação
+        </label>
+        <button
+          type="button"
+          disabled={!fotografia || confirmacao !== fotografia || !justificativa.trim()}
+          onClick={() =>
+            enviar({
+              requestId: crypto.randomUUID(),
+              clienteId,
+              ocorrenciaId,
+              atestadoId: atestado,
+              notaId: nota,
+              revisao,
+              justificativa: justificativa.trim(),
+            })
+          }
+        >
+          Registrar foto
+        </button>
+      </fieldset>
+      {atestados.hasNextPage && (
+        <button
+          type="button"
+          disabled={atestados.isFetching}
+          onClick={() => void atestados.fetchNextPage()}
+        >
+          Mais atestados
+        </button>
+      )}
+      {candidatas.hasNextPage && (
+        <button
+          type="button"
+          disabled={candidatas.isFetching}
+          onClick={() => void candidatas.fetchNextPage()}
+        >
+          Mais fotos candidatas
+        </button>
+      )}
+      {fotos.hasNextPage && (
+        <button
+          type="button"
+          disabled={fotos.isFetching}
+          onClick={() => void fotos.fetchNextPage()}
+        >
+          Mais fotos registradas
+        </button>
+      )}
+      {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
+      {pendente && pendente !== "invalido" && (
+        <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>
+          Repetir tentativa pendente
+        </button>
+      )}
+      {aviso && <p role="status">{aviso}</p>}
+    </section>
+  );
 }

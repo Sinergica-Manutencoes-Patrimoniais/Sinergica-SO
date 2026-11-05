@@ -27,7 +27,8 @@ export function QuestionarioAprovado({
     ],
     queryFn: async ({ signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       const resultado = await supabasePlanoManutencaoAdapter.consultarQuestionarioAprovado(
         planoId,
         versaoId,
@@ -35,7 +36,8 @@ export function QuestionarioAprovado({
         signal,
       );
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       return resultado;
     },
     gcTime: 0,
@@ -73,12 +75,18 @@ export function QuestionarioAprovado({
   });
   return (
     <section aria-label="Questionário histórico">
-      <p>Textos registrados na aprovação desta versão. Esta projeção não apresenta necessariamente opções, obrigatoriedade ou todos os campos do questionário; confira a fotografia completa antes de utilizá-lo.</p>
+      <p>
+        Textos registrados na aprovação desta versão. Esta projeção não apresenta necessariamente
+        opções, obrigatoriedade ou todos os campos do questionário; confira a fotografia completa
+        antes de utilizá-lo.
+      </p>
       <strong>{questionario.nome}</strong>
       {questionario.cabecalho && <p>{questionario.cabecalho}</p>}
       <ol>
         {itens.map((item) => (
-          <li key={item.chave}>{item.texto ?? "Conteúdo não reconhecido; consulte a fotografia completa."}</li>
+          <li key={item.chave}>
+            {item.texto ?? "Conteúdo não reconhecido; consulte a fotografia completa."}
+          </li>
         ))}
       </ol>
       {desconhecidos > 0 && (

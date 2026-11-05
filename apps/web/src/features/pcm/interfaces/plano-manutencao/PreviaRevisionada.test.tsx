@@ -6,18 +6,35 @@ const api = vi.hoisted(() => ({ preverRevisaoRevisionada: vi.fn(), getUser: vi.f
 vi.mock("../../infrastructure/supabase-plano-manutencao-adapter", () => ({
   supabasePlanoManutencaoAdapter: api,
 }));
-vi.mock("../../../../lib/supabase-client", () => ({ supabase: { auth: { getUser: api.getUser } } }));
+vi.mock("../../../../lib/supabase-client", () => ({
+  supabase: { auth: { getUser: api.getUser } },
+}));
 import { PreviaRevisionada } from "./PreviaRevisionada";
-beforeEach(() => { api.getUser.mockResolvedValue({ data: { user: { id: "u" } }, error: null }); });
+beforeEach(() => {
+  api.getUser.mockResolvedValue({ data: { user: { id: "u" } }, error: null });
+});
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
 });
 it("oculta a comparação se a sessão mudar durante a leitura", async () => {
-  api.getUser.mockResolvedValueOnce({ data: { user: { id: "u" } }, error: null }).mockResolvedValueOnce({ data: { user: { id: "outro" } }, error: null });
-  api.preverRevisaoRevisionada.mockResolvedValue({ revision: 5, versaoAnteriorId: "v1", versaoRascunhoId: "v2", nextCursor: null, impactosOperacionaisPendentes: true, items: [] });
+  api.getUser
+    .mockResolvedValueOnce({ data: { user: { id: "u" } }, error: null })
+    .mockResolvedValueOnce({ data: { user: { id: "outro" } }, error: null });
+  api.preverRevisaoRevisionada.mockResolvedValue({
+    revision: 5,
+    versaoAnteriorId: "v1",
+    versaoRascunhoId: "v2",
+    nextCursor: null,
+    impactosOperacionaisPendentes: true,
+    items: [],
+  });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><PreviaRevisionada userId="u" clienteId="c" planoId="p" revisao={5} /></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <PreviaRevisionada userId="u" clienteId="c" planoId="p" revisao={5} />
+    </QueryClientProvider>,
+  );
   expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível comparar");
   expect(screen.queryByText("Nenhuma Rotina para comparar.")).toBeNull();
 });

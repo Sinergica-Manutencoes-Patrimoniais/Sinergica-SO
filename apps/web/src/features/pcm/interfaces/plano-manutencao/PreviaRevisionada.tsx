@@ -53,14 +53,14 @@ function Campos({ titulo, dados }: { titulo: string; dados: CamposComparacaoRoti
 }
 type Props = { userId: string; clienteId: string; planoId: string; revisao: number };
 export function PreviaRevisionada(props: Props) {
-  return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId,props.revisao])} {...props} />;
+  return (
+    <Conteudo
+      key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.revisao])}
+      {...props}
+    />
+  );
 }
-function Conteudo({
-  userId,
-  clienteId,
-  planoId,
-  revisao,
-}: Props) {
+function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
   const [selecionada, setSelecionada] = useState<string | null>(null);
   const consulta = useInfiniteQuery({
     queryKey: [
@@ -71,17 +71,19 @@ function Conteudo({
     ],
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => {
-      const antes=await supabase.auth.getUser();
-      if(antes.error || antes.data.user?.id!==userId || signal.aborted)throw new Error("Sessão alterada.");
-      const pagina=await supabasePlanoManutencaoAdapter.preverRevisaoRevisionada(
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
+      const pagina = await supabasePlanoManutencaoAdapter.preverRevisaoRevisionada(
         planoId,
         revisao,
         20,
         pageParam,
         signal,
       );
-      const depois=await supabase.auth.getUser();
-      if(depois.error || depois.data.user?.id!==userId || signal.aborted)throw new Error("Sessão alterada.");
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       return pagina;
     },
     getNextPageParam: (pagina) => pagina.nextCursor ?? undefined,
@@ -103,11 +105,46 @@ function Conteudo({
         Comparação informativa de conteúdo. Impactos em Ocorrências e OS não foram calculados; a
         aprovação exige verificações adicionais no servidor.
       </p>
-      {import.meta.env.VITE_SSO_IMPACTO_REVISAO_OS_ENABLED === "true" && <DiagnosticoOsRevisao userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
-      {import.meta.env.VITE_SSO_INDICIOS_REVISAO_ROTINA_ENABLED === "true" && <IndiciosRevisaoRotina userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
-      {import.meta.env.VITE_SSO_DIAGNOSTICO_VIGENCIAS_ENABLED === "true" && <DiagnosticoVigencias userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
-      {import.meta.env.VITE_SSO_DECISAO_IMPACTO_OCORRENCIA_ENABLED === "true" && <DecisaoImpactoOcorrencia userId={userId} clienteId={clienteId} planoId={planoId} revision={revisao} />}
-      {import.meta.env.VITE_SSO_DECISAO_IMPACTO_VISITA_ENABLED === "true" && <DecisaoImpactoVisita userId={userId} clienteId={clienteId} planoId={planoId} revision={revisao} />}
+      {import.meta.env.VITE_SSO_IMPACTO_REVISAO_OS_ENABLED === "true" && (
+        <DiagnosticoOsRevisao
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          revisao={revisao}
+        />
+      )}
+      {import.meta.env.VITE_SSO_INDICIOS_REVISAO_ROTINA_ENABLED === "true" && (
+        <IndiciosRevisaoRotina
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          revisao={revisao}
+        />
+      )}
+      {import.meta.env.VITE_SSO_DIAGNOSTICO_VIGENCIAS_ENABLED === "true" && (
+        <DiagnosticoVigencias
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          revisao={revisao}
+        />
+      )}
+      {import.meta.env.VITE_SSO_DECISAO_IMPACTO_OCORRENCIA_ENABLED === "true" && (
+        <DecisaoImpactoOcorrencia
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          revision={revisao}
+        />
+      )}
+      {import.meta.env.VITE_SSO_DECISAO_IMPACTO_VISITA_ENABLED === "true" && (
+        <DecisaoImpactoVisita
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          revision={revisao}
+        />
+      )}
       {consulta.isFetching && <output>Carregando comparação…</output>}
       {consulta.isError && (
         <p role="alert">
@@ -158,7 +195,15 @@ function Conteudo({
                       )}
                       <Campos titulo="Versão aprovada" dados={item.anterior} />
                       <Campos titulo="Rascunho" dados={item.rascunho} />
-                      {import.meta.env.VITE_SSO_COMPARACAO_QUESTIONARIO_ENABLED === "true" && <ComparacaoQuestionario userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} rotinaId={item.rotinaLogicaId} />}
+                      {import.meta.env.VITE_SSO_COMPARACAO_QUESTIONARIO_ENABLED === "true" && (
+                        <ComparacaoQuestionario
+                          userId={userId}
+                          clienteId={clienteId}
+                          planoId={planoId}
+                          revisao={revisao}
+                          rotinaId={item.rotinaLogicaId}
+                        />
+                      )}
                     </div>
                   )}
                 </li>

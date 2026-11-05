@@ -40,7 +40,8 @@ function Seletor({
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       const pagina = await supabasePlanoManutencaoAdapter.listarAlvos(
         planoId,
         tipo,
@@ -50,7 +51,8 @@ function Seletor({
         signal,
       );
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       return pagina;
     },
     getNextPageParam: (ultima) => (ultima.length === 20 ? ultima.at(-1)?.id : undefined),
@@ -63,7 +65,8 @@ function Seletor({
         : undefined,
     gcTime: 0,
   });
-  const disponiveis = !opcoes.isError && !opcoes.isPlaceholderData && !opcoes.isPending && !opcoes.isFetching;
+  const disponiveis =
+    !opcoes.isError && !opcoes.isPlaceholderData && !opcoes.isPending && !opcoes.isFetching;
   const itens = disponiveis ? (opcoes.data?.pages.flat() ?? []) : [];
   return (
     <div>
@@ -194,7 +197,9 @@ export function FormularioRotina({
       await salvar.mutateAsync(comando);
       await conferirSessao();
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) {
-        setErro("Rotina salva, mas a tentativa local mudou. Procure suporte; o registro foi preservado.");
+        setErro(
+          "Rotina salva, mas a tentativa local mudou. Procure suporte; o registro foi preservado.",
+        );
         onAtualizar();
         return;
       }
@@ -244,10 +249,20 @@ export function FormularioRotina({
           /* Mantém o pedido se o armazenamento falhar. */
         }
       }
-      const codigo = typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
-      const mensagem = typeof falha === "object" && falha !== null && "message" in falha ? falha.message : "";
-      setErro(codigo === "42501" ? "Permissão indisponível. O pedido permanece pendente para conferência." : codigo === "55P03" && mensagem === "autorizacao_em_alteracao" ? "As permissões estão sendo atualizadas. Aguarde e repita o mesmo pedido." : "Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados.");
-    } finally { enviando.current = false; }
+      const codigo =
+        typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
+      const mensagem =
+        typeof falha === "object" && falha !== null && "message" in falha ? falha.message : "";
+      setErro(
+        codigo === "42501"
+          ? "Permissão indisponível. O pedido permanece pendente para conferência."
+          : codigo === "55P03" && mensagem === "autorizacao_em_alteracao"
+            ? "As permissões estão sendo atualizadas. Aguarde e repita o mesmo pedido."
+            : "Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados.",
+      );
+    } finally {
+      enviando.current = false;
+    }
   }
   function iniciar() {
     if (!consultaDisponivel || revisaoMudou || enviando.current || pendente) return;
@@ -358,7 +373,12 @@ export function FormularioRotina({
               <option value="grupo">Grupo Quantitativo</option>
             </select>
           </label>
-          {tipo === "componente" && <p>Equipamentos e Componentes usam o cadastro existente. A seleção identifica o registro pelo seu ID; a classificação técnica deve ser conferida no cadastro.</p>}
+          {tipo === "componente" && (
+            <p>
+              Equipamentos e Componentes usam o cadastro existente. A seleção identifica o registro
+              pelo seu ID; a classificação técnica deve ser conferida no cadastro.
+            </p>
+          )}
           <Seletor
             userId={userId}
             clienteId={clienteId}

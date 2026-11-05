@@ -1,10 +1,120 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-const uuid = z.string().uuid(); const quantidade = z.string().regex(/^(0|[1-9][0-9]{0,18})$/); const revisao = z.number().int().positive();
-const schema = z.object({ ocorrenciaId: uuid, grupoId: uuid, versaoId: uuid, vigenciaInicio: z.string().nullable(), vigenciaFim: z.string().nullable(), vencimentoOriginal: z.string(), vencimentoNaVigencia: z.boolean().nullable(), quantidadeRegistrada: quantidade, revisaoRegistrada: revisao, registradaEm: z.string(), quantidadeAtual: quantidade.nullable(), revisaoAtual: revisao.nullable(), grupoAtualDisponivel: z.boolean(), grupoAtualAtivo: z.boolean().nullable(), quantidadeDiferente: z.boolean().nullable(), fotografiaCongeladaNaAprovacao: z.boolean(), quantidadeAtualNoRegistro: quantidade.nullable(), revisaoAtualNoRegistro: revisao.nullable(), historicoRecalculado: z.literal(false), vigenciaCompletamenteValidada: z.literal(false) }).strict();
-export function ComparacaoQuantidadeGrupo({ userId, clienteId, ocorrenciaId }: { userId: string; clienteId: string; ocorrenciaId: string }) {
-  const consulta = useQuery({ queryKey: ["comparacao-quantidade-grupo", userId, clienteId, ocorrenciaId], gcTime: 0, retry: false, queryFn: async ({ signal }) => { const antes = await supabase.auth.getUser(); if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada."); const { data, error } = await supabase.schema("pcm").rpc("sso_comparar_quantidade_grupo_mediada", { p_cliente_id: clienteId, p_ocorrencia_id: ocorrenciaId }).abortSignal(signal); if (error) throw error; const resultado = schema.parse(data); if (resultado.ocorrenciaId !== ocorrenciaId) throw new Error("Identidade divergente."); const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada."); return resultado; } });
+const uuid = z.string().uuid();
+const quantidade = z.string().regex(/^(0|[1-9][0-9]{0,18})$/);
+const revisao = z.number().int().positive();
+const schema = z
+  .object({
+    ocorrenciaId: uuid,
+    grupoId: uuid,
+    versaoId: uuid,
+    vigenciaInicio: z.string().nullable(),
+    vigenciaFim: z.string().nullable(),
+    vencimentoOriginal: z.string(),
+    vencimentoNaVigencia: z.boolean().nullable(),
+    quantidadeRegistrada: quantidade,
+    revisaoRegistrada: revisao,
+    registradaEm: z.string(),
+    quantidadeAtual: quantidade.nullable(),
+    revisaoAtual: revisao.nullable(),
+    grupoAtualDisponivel: z.boolean(),
+    grupoAtualAtivo: z.boolean().nullable(),
+    quantidadeDiferente: z.boolean().nullable(),
+    fotografiaCongeladaNaAprovacao: z.boolean(),
+    quantidadeAtualNoRegistro: quantidade.nullable(),
+    revisaoAtualNoRegistro: revisao.nullable(),
+    historicoRecalculado: z.literal(false),
+    vigenciaCompletamenteValidada: z.literal(false),
+  })
+  .strict();
+export function ComparacaoQuantidadeGrupo({
+  userId,
+  clienteId,
+  ocorrenciaId,
+}: { userId: string; clienteId: string; ocorrenciaId: string }) {
+  const consulta = useQuery({
+    queryKey: ["comparacao-quantidade-grupo", userId, clienteId, ocorrenciaId],
+    gcTime: 0,
+    retry: false,
+    queryFn: async ({ signal }) => {
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_comparar_quantidade_grupo_mediada", {
+          p_cliente_id: clienteId,
+          p_ocorrencia_id: ocorrenciaId,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const resultado = schema.parse(data);
+      if (resultado.ocorrenciaId !== ocorrenciaId) throw new Error("Identidade divergente.");
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
+      return resultado;
+    },
+  });
   const c = !consulta.isError && !consulta.isFetching ? consulta.data : undefined;
-  return <section aria-label="Comparação da quantidade do Grupo"><h5>Quantidade histórica e atual</h5><p>Nenhuma ocorrência é recalculada. A fotografia da aprovação não prova a quantidade no início de vigência futura ou no vencimento.</p>{consulta.isPending && <p>Consultando…</p>}{consulta.isError && <p role="alert">Comparação indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}{c && <><p>{c.fotografiaCongeladaNaAprovacao ? "Fotografia da aprovação" : "Fotografia no registro; quantidade na aprovação indeterminada"}: {c.quantidadeRegistrada} · revisão {c.revisaoRegistrada} · ocorrência registrada em {c.registradaEm}.</p>{c.fotografiaCongeladaNaAprovacao && <p>Cadastro no registro da ocorrência: {c.quantidadeAtualNoRegistro ?? "indeterminado"} · revisão {c.revisaoAtualNoRegistro ?? "indeterminada"}.</p>}<p>Atual: {c.grupoAtualDisponivel ? `${c.quantidadeAtual} · revisão ${c.revisaoAtual} · ${c.grupoAtualAtivo ? "ativo" : "inativo ou excluído"}` : "indeterminada"}. Diferença: {c.quantidadeDiferente === null ? "indeterminada" : c.quantidadeDiferente ? "sim" : "não"}.</p><p>Versão {c.versaoId} · vigência {c.vigenciaInicio ?? "indeterminada"} a {c.vigenciaFim ?? "sem fim registrado"} · vencimento original {c.vencimentoOriginal} · no intervalo: {c.vencimentoNaVigencia === null ? "indeterminado" : c.vencimentoNaVigencia ? "sim" : "não"}. A comparação não valida integralmente a vigência.</p></>}</section>;
+  return (
+    <section aria-label="Comparação da quantidade do Grupo">
+      <h5>Quantidade histórica e atual</h5>
+      <p>
+        Nenhuma ocorrência é recalculada. A fotografia da aprovação não prova a quantidade no início
+        de vigência futura ou no vencimento.
+      </p>
+      {consulta.isPending && <p>Consultando…</p>}
+      {consulta.isError && (
+        <p role="alert">
+          Comparação indisponível.{" "}
+          <button type="button" onClick={() => void consulta.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {c && (
+        <>
+          <p>
+            {c.fotografiaCongeladaNaAprovacao
+              ? "Fotografia da aprovação"
+              : "Fotografia no registro; quantidade na aprovação indeterminada"}
+            : {c.quantidadeRegistrada} · revisão {c.revisaoRegistrada} · ocorrência registrada em{" "}
+            {c.registradaEm}.
+          </p>
+          {c.fotografiaCongeladaNaAprovacao && (
+            <p>
+              Cadastro no registro da ocorrência: {c.quantidadeAtualNoRegistro ?? "indeterminado"} ·
+              revisão {c.revisaoAtualNoRegistro ?? "indeterminada"}.
+            </p>
+          )}
+          <p>
+            Atual:{" "}
+            {c.grupoAtualDisponivel
+              ? `${c.quantidadeAtual} · revisão ${c.revisaoAtual} · ${c.grupoAtualAtivo ? "ativo" : "inativo ou excluído"}`
+              : "indeterminada"}
+            . Diferença:{" "}
+            {c.quantidadeDiferente === null
+              ? "indeterminada"
+              : c.quantidadeDiferente
+                ? "sim"
+                : "não"}
+            .
+          </p>
+          <p>
+            Versão {c.versaoId} · vigência {c.vigenciaInicio ?? "indeterminada"} a{" "}
+            {c.vigenciaFim ?? "sem fim registrado"} · vencimento original {c.vencimentoOriginal} ·
+            no intervalo:{" "}
+            {c.vencimentoNaVigencia === null
+              ? "indeterminado"
+              : c.vencimentoNaVigencia
+                ? "sim"
+                : "não"}
+            . A comparação não valida integralmente a vigência.
+          </p>
+        </>
+      )}
+    </section>
+  );
 }

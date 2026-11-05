@@ -117,13 +117,11 @@ function Conteudo({
         p_limite: 20,
       };
       if (!mediada) throw new Error("Consulta mediada indisponível.");
-      const requisicao = supabase
-        .schema("pcm")
-        .rpc("sso_consultar_ciclos_uniformes_mediada", {
-          ...parametros,
-          p_ator_esperado: userId,
-          p_cliente_id: clienteId,
-        });
+      const requisicao = supabase.schema("pcm").rpc("sso_consultar_ciclos_uniformes_mediada", {
+        ...parametros,
+        p_ator_esperado: userId,
+        p_cliente_id: clienteId,
+      });
       const { data, error } = await requisicao.abortSignal(signal);
       if (error) throw error;
       const pagina = z.array(ciclo).max(20).parse(data);

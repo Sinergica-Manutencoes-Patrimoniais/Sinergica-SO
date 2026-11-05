@@ -2,13 +2,128 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-const api=vi.hoisted(()=>({rpc:vi.fn(),erros:[] as Array<{code:string;message?:string}>}));
-vi.mock("../../../../lib/supabase-client",()=>({supabase:{schema:()=>({rpc:api.rpc})}}));
-vi.mock("./diagnostico-revisao-sessao",()=>({conferirSessaoDiagnostico:vi.fn().mockResolvedValue(undefined)}));
+const api = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  erros: [] as Array<{ code: string; message?: string }>,
+}));
+vi.mock("../../../../lib/supabase-client", () => ({
+  supabase: { schema: () => ({ rpc: api.rpc }) },
+}));
+vi.mock("./diagnostico-revisao-sessao", () => ({
+  conferirSessaoDiagnostico: vi.fn().mockResolvedValue(undefined),
+}));
 import { InventarioPmocRevisao } from "./InventarioPmocRevisao";
-const id=(n:number)=>`16630000-1111-4000-8000-${String(n).padStart(12,"0")}`;
-const foto={id:id(3),imovelId:id(4),contratoId:id(5),data:"2026-12-01",tipo:"preventiva",estado:"pendente",registroId:null,auvoOsId:null,clienteId:id(1),imovelNome:"Imóvel",imovelExcluidoEm:null,imovelAtualizadoEm:null,contratoConferidoId:id(5),contratoInicio:null,contratoFim:null,contratoEstado:null,contratoExcluidoEm:null,contratoAtualizadoEm:null};
-afterEach(()=>{cleanup();sessionStorage.clear();vi.unstubAllEnvs();vi.resetAllMocks();api.erros=[];});
-async function iniciar(){vi.stubEnv("VITE_SSO_INVENTARIO_PMOC_REVISAO_ENABLED","true");api.rpc.mockImplementation((nome:string)=>nome==="sso_classificar_pmoc_revisao"?Promise.resolve({error:api.erros.shift(),data:null}):{abortSignal:async()=>({error:null,data:nome==="sso_listar_inventario_pmoc_revisao"?[{agendamento_id:id(3),rascunho_id:id(6),vencimento:foto.data,estado:foto.estado,tipo:foto.tipo,revisao_decisao:0,classificacao:null,revisao_plano:null,fotografia_atual:false,fotografia:foto,evidencia:null,motivo:null}]:{revisaoPlano:3,vigencia:"2026-12-01",agendamentosObservados:1,classificacoesAusentes:1,classificacoesObsoletas:0,cadeiasInconsistentes:0,historicosFuturos:0,relacoesDivergentes:0,classificacaoHumana:true,fontesExternasComprovadas:false,aprovacaoAutorizada:false}})});const client=new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}});render(<QueryClientProvider client={client}><InventarioPmocRevisao userId={id(9)} clienteId={id(1)} planoId={id(2)} revisao={3} vigencia="2026-12-01"/></QueryClientProvider>);await screen.findByRole("option",{name:/Imóvel/});fireEvent.change(screen.getByLabelText("Agendamento"),{target:{value:id(3)}});fireEvent.change(screen.getByLabelText("Classificação"),{target:{value:"nao_relacionado"}});fireEvent.change(screen.getByLabelText("Referência da evidência"),{target:{value:"documento"}});fireEvent.change(screen.getByLabelText("Motivo"),{target:{value:"conferido"}});fireEvent.click(screen.getByRole("checkbox",{name:/Conferi a classificação/}));fireEvent.click(screen.getByRole("button",{name:"Registrar classificação"}));}
-it("libera nova conferência em conflito definitivo inicial",async()=>{api.erros=[{code:"P0013",message:"fotografia_pmoc_alterada"}];await iniciar();await waitFor(()=>expect(screen.getByText(/Dados alterados/)).toBeInTheDocument());expect(sessionStorage.length).toBe(0);});
-it("preserva tentativa incerta após conflito em replay",async()=>{api.erros=[{code:"NETWORK"},{code:"P0013",message:"fotografia_pmoc_alterada"}];await iniciar();await screen.findByText(/Resultado não confirmado/);fireEvent.click(screen.getByRole("button",{name:"Repetir tentativa pendente"}));await waitFor(()=>expect(api.rpc.mock.calls.filter(x=>x[0]==="sso_classificar_pmoc_revisao")).toHaveLength(2));expect(sessionStorage.length).toBe(1);});
+const id = (n: number) => `16630000-1111-4000-8000-${String(n).padStart(12, "0")}`;
+const foto = {
+  id: id(3),
+  imovelId: id(4),
+  contratoId: id(5),
+  data: "2026-12-01",
+  tipo: "preventiva",
+  estado: "pendente",
+  registroId: null,
+  auvoOsId: null,
+  clienteId: id(1),
+  imovelNome: "Imóvel",
+  imovelExcluidoEm: null,
+  imovelAtualizadoEm: null,
+  contratoConferidoId: id(5),
+  contratoInicio: null,
+  contratoFim: null,
+  contratoEstado: null,
+  contratoExcluidoEm: null,
+  contratoAtualizadoEm: null,
+};
+afterEach(() => {
+  cleanup();
+  sessionStorage.clear();
+  vi.unstubAllEnvs();
+  vi.resetAllMocks();
+  api.erros = [];
+});
+async function iniciar() {
+  vi.stubEnv("VITE_SSO_INVENTARIO_PMOC_REVISAO_ENABLED", "true");
+  api.rpc.mockImplementation((nome: string) =>
+    nome === "sso_classificar_pmoc_revisao"
+      ? Promise.resolve({ error: api.erros.shift(), data: null })
+      : {
+          abortSignal: async () => ({
+            error: null,
+            data:
+              nome === "sso_listar_inventario_pmoc_revisao"
+                ? [
+                    {
+                      agendamento_id: id(3),
+                      rascunho_id: id(6),
+                      vencimento: foto.data,
+                      estado: foto.estado,
+                      tipo: foto.tipo,
+                      revisao_decisao: 0,
+                      classificacao: null,
+                      revisao_plano: null,
+                      fotografia_atual: false,
+                      fotografia: foto,
+                      evidencia: null,
+                      motivo: null,
+                    },
+                  ]
+                : {
+                    revisaoPlano: 3,
+                    vigencia: "2026-12-01",
+                    agendamentosObservados: 1,
+                    classificacoesAusentes: 1,
+                    classificacoesObsoletas: 0,
+                    cadeiasInconsistentes: 0,
+                    historicosFuturos: 0,
+                    relacoesDivergentes: 0,
+                    classificacaoHumana: true,
+                    fontesExternasComprovadas: false,
+                    aprovacaoAutorizada: false,
+                  },
+          }),
+        },
+  );
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  render(
+    <QueryClientProvider client={client}>
+      <InventarioPmocRevisao
+        userId={id(9)}
+        clienteId={id(1)}
+        planoId={id(2)}
+        revisao={3}
+        vigencia="2026-12-01"
+      />
+    </QueryClientProvider>,
+  );
+  await screen.findByRole("option", { name: /Imóvel/ });
+  fireEvent.change(screen.getByLabelText("Agendamento"), { target: { value: id(3) } });
+  fireEvent.change(screen.getByLabelText("Classificação"), {
+    target: { value: "nao_relacionado" },
+  });
+  fireEvent.change(screen.getByLabelText("Referência da evidência"), {
+    target: { value: "documento" },
+  });
+  fireEvent.change(screen.getByLabelText("Motivo"), { target: { value: "conferido" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /Conferi a classificação/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Registrar classificação" }));
+}
+it("libera nova conferência em conflito definitivo inicial", async () => {
+  api.erros = [{ code: "P0013", message: "fotografia_pmoc_alterada" }];
+  await iniciar();
+  await waitFor(() => expect(screen.getByText(/Dados alterados/)).toBeInTheDocument());
+  expect(sessionStorage.length).toBe(0);
+});
+it("preserva tentativa incerta após conflito em replay", async () => {
+  api.erros = [{ code: "NETWORK" }, { code: "P0013", message: "fotografia_pmoc_alterada" }];
+  await iniciar();
+  await screen.findByText(/Resultado não confirmado/);
+  fireEvent.click(screen.getByRole("button", { name: "Repetir tentativa pendente" }));
+  await waitFor(() =>
+    expect(api.rpc.mock.calls.filter((x) => x[0] === "sso_classificar_pmoc_revisao")).toHaveLength(
+      2,
+    ),
+  );
+  expect(sessionStorage.length).toBe(1);
+});

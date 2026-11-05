@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
-import { avaliarToleranciaCalendario, janelaPadraoCalendario } from "../../domain/calendario-contratual";
+import {
+  avaliarToleranciaCalendario,
+  janelaPadraoCalendario,
+} from "../../domain/calendario-contratual";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
 import { DecidirVencimento } from "./DecidirVencimento";
 import { ExportarPreviaCiclos } from "./ExportarPreviaCiclos";
@@ -44,18 +47,29 @@ function avaliarData(vencimento: string, data: string, diasAntes: number, diasDe
   }
 }
 
-type Props = { userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; revisaoPlano?: number };
+type Props = {
+  userId: string;
+  clienteId: string;
+  planoId: string;
+  versaoId: string;
+  rotinaId: string;
+  revisaoPlano?: number;
+};
 export function PreviaCiclos(props: Props) {
-  return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId, props.rotinaId])} {...props} />;
+  return (
+    <Conteudo
+      key={JSON.stringify([
+        props.userId,
+        props.clienteId,
+        props.planoId,
+        props.versaoId,
+        props.rotinaId,
+      ])}
+      {...props}
+    />
+  );
 }
-function Conteudo({
-  userId,
-  clienteId,
-  planoId,
-  versaoId,
-  rotinaId,
-  revisaoPlano,
-}: Props) {
+function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revisaoPlano }: Props) {
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
   const [periodo, setPeriodo] = useState<{ inicio: string; fim: string } | null>(null);
@@ -76,7 +90,8 @@ function Conteudo({
     queryFn: async ({ signal }) => {
       if (!periodo) throw new Error("Período de prévia indisponível.");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       const resultado = await supabasePlanoManutencaoAdapter.preverCiclos(
         planoId,
         versaoId,
@@ -86,7 +101,8 @@ function Conteudo({
         signal,
       );
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       return resultado;
     },
     enabled: periodo !== null,
@@ -99,10 +115,41 @@ function Conteudo({
         Prévia informativa: não cria Ocorrências, não confere feriados ou cancelamentos e não
         autoriza programação.
       </p>
-      <p>Para simular, informe feriados hipotéticos abaixo. Nenhuma fonte oficial está conectada. Em Rotina por calendário, feriado não remove vencimento nem desloca a âncora.</p>
-      <label>Feriado hipotético <input type="date" value={feriado} onChange={(e) => setFeriado(e.target.value)} /></label>
-      <button type="button" disabled={!feriado} onClick={() => {if (feriado) {setFeriados((atuais) => [...new Set([...atuais,feriado])].sort());setFeriado("");}}}>Adicionar feriado hipotético</button>
-      {feriados.length > 0 && <ul aria-label="Feriados hipotéticos da prévia">{feriados.map((data) => <li key={data}>{data} <button type="button" onClick={() => setFeriados((atuais) => atuais.filter((item) => item!==data))}>Remover {data}</button></li>)}</ul>}
+      <p>
+        Para simular, informe feriados hipotéticos abaixo. Nenhuma fonte oficial está conectada. Em
+        Rotina por calendário, feriado não remove vencimento nem desloca a âncora.
+      </p>
+      <label>
+        Feriado hipotético{" "}
+        <input type="date" value={feriado} onChange={(e) => setFeriado(e.target.value)} />
+      </label>
+      <button
+        type="button"
+        disabled={!feriado}
+        onClick={() => {
+          if (feriado) {
+            setFeriados((atuais) => [...new Set([...atuais, feriado])].sort());
+            setFeriado("");
+          }
+        }}
+      >
+        Adicionar feriado hipotético
+      </button>
+      {feriados.length > 0 && (
+        <ul aria-label="Feriados hipotéticos da prévia">
+          {feriados.map((data) => (
+            <li key={data}>
+              {data}{" "}
+              <button
+                type="button"
+                onClick={() => setFeriados((atuais) => atuais.filter((item) => item !== data))}
+              >
+                Remover {data}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <form
         className="flex flex-wrap items-end gap-2"
         onSubmit={(e) => {
@@ -147,16 +194,21 @@ function Conteudo({
             }}
           />
         </label>
-        <Button type="button" variant="secondary" disabled={!inicio} onClick={() => {
-          try {
-            const janelaPadrao = janelaPadraoCalendario(inicio);
-            setFim(janelaPadrao.fim);
-            setPeriodo(null);
-            setErro("");
-          } catch {
-            setErro("Informe uma data de início válida que comporte 30 dias.");
-          }
-        }}>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={!inicio}
+          onClick={() => {
+            try {
+              const janelaPadrao = janelaPadraoCalendario(inicio);
+              setFim(janelaPadrao.fim);
+              setPeriodo(null);
+              setErro("");
+            } catch {
+              setErro("Informe uma data de início válida que comporte 30 dias.");
+            }
+          }}
+        >
           Usar 30 dias a partir do início
         </Button>
         <Button type="submit" variant="secondary">
@@ -177,16 +229,84 @@ function Conteudo({
         <p>Nenhum ciclo neste período.</p>
       )}
       {periodo && !ciclos.isFetching && !ciclos.isError && !!ciclos.data?.length && (
-        <label>Comparar data com as tolerâncias <input type="date" value={dataAvaliacao} onChange={(e) => setDataAvaliacao(e.target.value)} /></label>
+        <label>
+          Comparar data com as tolerâncias{" "}
+          <input
+            type="date"
+            value={dataAvaliacao}
+            onChange={(e) => setDataAvaliacao(e.target.value)}
+          />
+        </label>
       )}
-      {import.meta.env.VITE_SSO_EXPORTAR_PREVIA_CICLOS_ENABLED === "true" && periodo && !ciclos.isFetching && !ciclos.isError && ciclos.data && (
-        <ExportarPreviaCiclos clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId}
-          inicio={periodo.inicio} fim={periodo.fim} ciclos={ciclos.data} feriados={feriados} />
+      {import.meta.env.VITE_SSO_EXPORTAR_PREVIA_CICLOS_ENABLED === "true" &&
+        periodo &&
+        !ciclos.isFetching &&
+        !ciclos.isError &&
+        ciclos.data && (
+          <ExportarPreviaCiclos
+            clienteId={clienteId}
+            planoId={planoId}
+            versaoId={versaoId}
+            rotinaId={rotinaId}
+            inicio={periodo.inicio}
+            fim={periodo.fim}
+            ciclos={ciclos.data}
+            feriados={feriados}
+          />
+        )}
+      {revisaoPlano !== undefined && (
+        <OrigemGeracaoRotina
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          versaoId={versaoId}
+          rotinaId={rotinaId}
+          revision={revisaoPlano}
+        />
       )}
-      {revisaoPlano !== undefined && <OrigemGeracaoRotina userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revisaoPlano} />}
-      {import.meta.env.VITE_SSO_DIAGNOSTICO_PMOC_ENABLED === "true" && periodo && !ciclos.isFetching && !ciclos.isError && ciclos.data && <DiagnosticoPmoc userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} inicio={periodo.inicio} fim={periodo.fim} revision={revisaoPlano} />}
-      {import.meta.env.VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED === "true" && periodo && !ciclos.isFetching && !ciclos.isError && ciclos.data && revisaoPlano !== undefined && <MaterializarLoteCalendario userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revisaoPlano} inicio={periodo.inicio} fim={periodo.fim} ciclos={ciclos.data} />}
-      {import.meta.env.VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED === "true" && <TriagemCicloAtrasado userId={userId} clienteId={clienteId} planoId={planoId} rotinaId={rotinaId} ocorrenciaEmConferencia={ocorrenciaEmConferencia} />}
+      {import.meta.env.VITE_SSO_DIAGNOSTICO_PMOC_ENABLED === "true" &&
+        periodo &&
+        !ciclos.isFetching &&
+        !ciclos.isError &&
+        ciclos.data && (
+          <DiagnosticoPmoc
+            userId={userId}
+            clienteId={clienteId}
+            planoId={planoId}
+            versaoId={versaoId}
+            rotinaId={rotinaId}
+            inicio={periodo.inicio}
+            fim={periodo.fim}
+            revision={revisaoPlano}
+          />
+        )}
+      {import.meta.env.VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED === "true" &&
+        periodo &&
+        !ciclos.isFetching &&
+        !ciclos.isError &&
+        ciclos.data &&
+        revisaoPlano !== undefined && (
+          <MaterializarLoteCalendario
+            userId={userId}
+            clienteId={clienteId}
+            planoId={planoId}
+            versaoId={versaoId}
+            rotinaId={rotinaId}
+            revision={revisaoPlano}
+            inicio={periodo.inicio}
+            fim={periodo.fim}
+            ciclos={ciclos.data}
+          />
+        )}
+      {import.meta.env.VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED === "true" && (
+        <TriagemCicloAtrasado
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          rotinaId={rotinaId}
+          ocorrenciaEmConferencia={ocorrenciaEmConferencia}
+        />
+      )}
       {periodo && !ciclos.isFetching && !ciclos.isError && (
         <ul>
           {ciclos.data?.map((item) => (
@@ -194,15 +314,85 @@ function Conteudo({
               Ciclo {item.ciclo}: {item.vencimento.split("-").reverse().join("/")} — tolerância{" "}
               {item.toleranciaAntes} dias antes e {item.toleranciaDepois} dias depois{" "}
               <span>{janela(item.vencimento, item.toleranciaAntes, item.toleranciaDepois)}</span>
-              {dataAvaliacao && <p>Data {dataAvaliacao.split("-").reverse().join("/")}: {avaliarData(item.vencimento, dataAvaliacao, item.toleranciaAntes, item.toleranciaDepois)}. Avaliação informativa; não registra execução nem altera o vencimento.</p>}
-              {feriados.includes(item.vencimento) && <p>Feriado hipotético: vencimento permanece para tratamento PCM; ciclo seguinte continua baseado na âncora.</p>}
-              {import.meta.env.VITE_SSO_PROXIMO_CICLO_ANCORADO_ENABLED === "true" && <ProximoCicloAncorado userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo} />}
-              {import.meta.env.VITE_SSO_MATERIALIZAR_CICLO_CANONICO_ENABLED === "true" && revisaoPlano !== undefined && <MaterializarCicloCanonico userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revisaoPlano} ciclo={item.ciclo} vencimento={item.vencimento} />}
-              {import.meta.env.VITE_SSO_HISTORICO_CICLO_CANONICO_ENABLED === "true" && <HistoricoCicloCanonico userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo} />}
-              {import.meta.env.VITE_SSO_DECISAO_FERIADO_CALENDARIO_ENABLED === "true" && <DecisaoFeriadoCalendario userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo}
-                aoConferirAtraso={import.meta.env.VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED === "true" ? setOcorrenciaEmConferencia : undefined} />}
-              {import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_ENABLED === "true" && revisaoPlano !== undefined && <DecidirVencimento userId={userId} clienteId={clienteId}
-                planoId={planoId} revision={revisaoPlano} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo} vencimento={item.vencimento} />}
+              {dataAvaliacao && (
+                <p>
+                  Data {dataAvaliacao.split("-").reverse().join("/")}:{" "}
+                  {avaliarData(
+                    item.vencimento,
+                    dataAvaliacao,
+                    item.toleranciaAntes,
+                    item.toleranciaDepois,
+                  )}
+                  . Avaliação informativa; não registra execução nem altera o vencimento.
+                </p>
+              )}
+              {feriados.includes(item.vencimento) && (
+                <p>
+                  Feriado hipotético: vencimento permanece para tratamento PCM; ciclo seguinte
+                  continua baseado na âncora.
+                </p>
+              )}
+              {import.meta.env.VITE_SSO_PROXIMO_CICLO_ANCORADO_ENABLED === "true" && (
+                <ProximoCicloAncorado
+                  userId={userId}
+                  clienteId={clienteId}
+                  planoId={planoId}
+                  versaoId={versaoId}
+                  rotinaId={rotinaId}
+                  ciclo={item.ciclo}
+                />
+              )}
+              {import.meta.env.VITE_SSO_MATERIALIZAR_CICLO_CANONICO_ENABLED === "true" &&
+                revisaoPlano !== undefined && (
+                  <MaterializarCicloCanonico
+                    userId={userId}
+                    clienteId={clienteId}
+                    planoId={planoId}
+                    versaoId={versaoId}
+                    rotinaId={rotinaId}
+                    revision={revisaoPlano}
+                    ciclo={item.ciclo}
+                    vencimento={item.vencimento}
+                  />
+                )}
+              {import.meta.env.VITE_SSO_HISTORICO_CICLO_CANONICO_ENABLED === "true" && (
+                <HistoricoCicloCanonico
+                  userId={userId}
+                  clienteId={clienteId}
+                  planoId={planoId}
+                  versaoId={versaoId}
+                  rotinaId={rotinaId}
+                  ciclo={item.ciclo}
+                />
+              )}
+              {import.meta.env.VITE_SSO_DECISAO_FERIADO_CALENDARIO_ENABLED === "true" && (
+                <DecisaoFeriadoCalendario
+                  userId={userId}
+                  clienteId={clienteId}
+                  planoId={planoId}
+                  versaoId={versaoId}
+                  rotinaId={rotinaId}
+                  ciclo={item.ciclo}
+                  aoConferirAtraso={
+                    import.meta.env.VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED === "true"
+                      ? setOcorrenciaEmConferencia
+                      : undefined
+                  }
+                />
+              )}
+              {import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_ENABLED === "true" &&
+                revisaoPlano !== undefined && (
+                  <DecidirVencimento
+                    userId={userId}
+                    clienteId={clienteId}
+                    planoId={planoId}
+                    revision={revisaoPlano}
+                    versaoId={versaoId}
+                    rotinaId={rotinaId}
+                    ciclo={item.ciclo}
+                    vencimento={item.vencimento}
+                  />
+                )}
             </li>
           ))}
         </ul>

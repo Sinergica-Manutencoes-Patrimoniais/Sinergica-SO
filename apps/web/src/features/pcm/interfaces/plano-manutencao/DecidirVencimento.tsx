@@ -195,13 +195,11 @@ function Conteudo({
       };
       if (import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED !== "true")
         throw new Error("Decisão mediada indisponível.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_decisao_vencimento_mediada", {
-          ...parametros,
-          p_ator_id: userId,
-          p_cliente_id: clienteId,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_decisao_vencimento_mediada", {
+        ...parametros,
+        p_ator_id: userId,
+        p_cliente_id: clienteId,
+      });
       if (error) throw error;
       if (
         !data ||

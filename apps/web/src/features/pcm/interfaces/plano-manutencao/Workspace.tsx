@@ -65,7 +65,10 @@ function ConteudoPlanoManutencao({
     queryKey: ["plano-manutencao-permissao", userId, clienteId],
     queryFn: async ({ signal }) => {
       await conferirSessao(signal);
-      const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir", clienteId);
+      const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao(
+        "plano.gerir",
+        clienteId,
+      );
       await conferirSessao(signal);
       return autorizada;
     },
@@ -101,11 +104,14 @@ function ConteudoPlanoManutencao({
     setErro("");
     try {
       await conferirSessao();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa divergente.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
+        throw new Error("Tentativa divergente.");
       await salvar.mutateAsync(comando);
       await conferirSessao();
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) {
-        setErro("Plano salvo, mas a tentativa local mudou. Reabra e reconcilie antes de continuar.");
+        setErro(
+          "Plano salvo, mas a tentativa local mudou. Reabra e reconcilie antes de continuar.",
+        );
         return;
       }
       sessionStorage.removeItem(chave);
@@ -237,12 +243,23 @@ function ConteudoPlanoManutencao({
               userId={userId}
               clienteId={clienteId}
               plano={plano}
-              bloqueado={aberto || Boolean(pendente) || edicaoRotinaId === plano.id || consultaBloqueada}
+              bloqueado={
+                aberto || Boolean(pendente) || edicaoRotinaId === plano.id || consultaBloqueada
+              }
             />
             {import.meta.env.VITE_SSO_TRANSICAO_PLANO_ENABLED === "true" && (
-              <TransicaoPlano userId={userId} clienteId={clienteId} plano={plano}
-                onAbrirRotinas={() => { setEdicaoRotinaId(null); setPlanoAbertoId(plano.id); }}
-                bloqueado={aberto || Boolean(pendente) || Boolean(edicaoRotinaId) || consultaBloqueada} />
+              <TransicaoPlano
+                userId={userId}
+                clienteId={clienteId}
+                plano={plano}
+                onAbrirRotinas={() => {
+                  setEdicaoRotinaId(null);
+                  setPlanoAbertoId(plano.id);
+                }}
+                bloqueado={
+                  aberto || Boolean(pendente) || Boolean(edicaoRotinaId) || consultaBloqueada
+                }
+              />
             )}
             <Button
               variant="ghost"

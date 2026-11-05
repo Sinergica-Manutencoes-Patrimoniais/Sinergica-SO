@@ -2,30 +2,260 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-type Pedido = { requestId: string; clienteId: string; ocorrenciaId: string; osId: string; motivo: string };
+type Pedido = {
+  requestId: string;
+  clienteId: string;
+  ocorrenciaId: string;
+  osId: string;
+  motivo: string;
+};
 const uuid = z.string().uuid();
-const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, ocorrenciaId: uuid, osId: uuid, motivo: z.string().trim().min(1).max(2000) }).strict();
+const pedidoSchema = z
+  .object({
+    requestId: uuid,
+    clienteId: uuid,
+    ocorrenciaId: uuid,
+    osId: uuid,
+    motivo: z.string().trim().min(1).max(2000),
+  })
+  .strict();
 type Props = { userId: string; clienteId: string; planoId: string; ocorrenciaId: string };
-export function VincularOsGrupo(props: Props) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.ocorrenciaId])} {...props} />; }
+export function VincularOsGrupo(props: Props) {
+  return (
+    <Conteudo
+      key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.ocorrenciaId])}
+      {...props}
+    />
+  );
+}
 function Conteudo({ userId, clienteId, ocorrenciaId }: Props) {
-  const chave = `vinculo-os-grupo:${JSON.stringify([userId, clienteId, ocorrenciaId])}`; const cache = useQueryClient(); const trava = useRef(false);
-  const [osId, setOsId] = useState(""); const [motivo, setMotivo] = useState(""); const [confirmacao, setConfirmacao] = useState<string | null>(null); const [aviso, setAviso] = useState("");
-  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(chave); if (!raw) return null; const p = pedidoSchema.parse(JSON.parse(raw)); return p.clienteId === clienteId && p.ocorrenciaId === ocorrenciaId ? p : "invalido"; } catch { return "invalido"; } });
-  async function sessao(signal?: AbortSignal) { const r = await supabase.auth.getUser(); if (r.error || r.data.user?.id !== userId || signal?.aborted) throw new Error("Sessão alterada."); }
-  const candidatas = useInfiniteQuery({ queryKey: ["os-candidatas-grupo", userId, clienteId, ocorrenciaId], initialPageParam: null as string | null, gcTime: 0, retry: false, queryFn: async ({ pageParam, signal }) => { await sessao(signal); const { data, error } = await supabase.schema("pcm").rpc("sso_listar_os_candidatas_grupo_mediada", { p_cliente_id: clienteId, p_ocorrencia_id: ocorrenciaId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; const pagina = z.array(z.object({ id: uuid, numero: z.string(), titulo: z.string(), status: z.string() }).strict()).max(20).parse(data); let anterior = pageParam?.toLowerCase() ?? ""; for (const item of pagina) { if (item.id.toLowerCase() <= anterior) throw new Error("Página divergente."); anterior = item.id.toLowerCase(); } await sessao(signal); return pagina; }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.id : undefined });
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada."); const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_vinculo_os_grupo_mediado", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_ocorrencia_id: p.ocorrenciaId, p_os_id: p.osId, p_motivo: p.motivo }); if (error) throw error; const r = z.object({ requestId: uuid, vinculoDeclarado: z.literal(true), osAlterada: z.literal(false), tarefaCriada: z.literal(false), execucaoComprovada: z.literal(false) }).strict().parse(data); if (r.requestId !== p.requestId) throw new Error("Resposta inválida."); await sessao(); }, onSuccess: async (_, p) => { try { await cache.invalidateQueries({ queryKey: ["os-candidatas-grupo", userId, clienteId, ocorrenciaId], refetchType: "none" }); await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada."); sessionStorage.removeItem(chave); setPendente(null); setConfirmacao(null); setAviso("Vínculo declarado; OS não alterada e execução não comprovada."); void candidatas.refetch(); } catch { setAviso("Vínculo confirmado, mas tentativa local não pôde ser removida; procure suporte."); } }, onError: () => setAviso("Resultado não confirmado. Repita a mesma tentativa ou procure suporte para reconciliação."), onSettled: () => { trava.current = false; } });
+  const chave = `vinculo-os-grupo:${JSON.stringify([userId, clienteId, ocorrenciaId])}`;
+  const cache = useQueryClient();
+  const trava = useRef(false);
+  const [osId, setOsId] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [confirmacao, setConfirmacao] = useState<string | null>(null);
+  const [aviso, setAviso] = useState("");
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(chave);
+      if (!raw) return null;
+      const p = pedidoSchema.parse(JSON.parse(raw));
+      return p.clienteId === clienteId && p.ocorrenciaId === ocorrenciaId ? p : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  async function sessao(signal?: AbortSignal) {
+    const r = await supabase.auth.getUser();
+    if (r.error || r.data.user?.id !== userId || signal?.aborted)
+      throw new Error("Sessão alterada.");
+  }
+  const candidatas = useInfiniteQuery({
+    queryKey: ["os-candidatas-grupo", userId, clienteId, ocorrenciaId],
+    initialPageParam: null as string | null,
+    gcTime: 0,
+    retry: false,
+    queryFn: async ({ pageParam, signal }) => {
+      await sessao(signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_listar_os_candidatas_grupo_mediada", {
+          p_cliente_id: clienteId,
+          p_ocorrencia_id: ocorrenciaId,
+          p_apos: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const pagina = z
+        .array(
+          z
+            .object({ id: uuid, numero: z.string(), titulo: z.string(), status: z.string() })
+            .strict(),
+        )
+        .max(20)
+        .parse(data);
+      let anterior = pageParam?.toLowerCase() ?? "";
+      for (const item of pagina) {
+        if (item.id.toLowerCase() <= anterior) throw new Error("Página divergente.");
+        anterior = item.id.toLowerCase();
+      }
+      await sessao(signal);
+      return pagina;
+    },
+    getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
+  });
+  const envio = useMutation({
+    mutationFn: async (p: Pedido) => {
+      await sessao();
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+        throw new Error("Tentativa alterada.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_declarar_vinculo_os_grupo_mediado", {
+          p_request_id: p.requestId,
+          p_cliente_id: p.clienteId,
+          p_ocorrencia_id: p.ocorrenciaId,
+          p_os_id: p.osId,
+          p_motivo: p.motivo,
+        });
+      if (error) throw error;
+      const r = z
+        .object({
+          requestId: uuid,
+          vinculoDeclarado: z.literal(true),
+          osAlterada: z.literal(false),
+          tarefaCriada: z.literal(false),
+          execucaoComprovada: z.literal(false),
+        })
+        .strict()
+        .parse(data);
+      if (r.requestId !== p.requestId) throw new Error("Resposta inválida.");
+      await sessao();
+    },
+    onSuccess: async (_, p) => {
+      try {
+        await cache.invalidateQueries({
+          queryKey: ["os-candidatas-grupo", userId, clienteId, ocorrenciaId],
+          refetchType: "none",
+        });
+        await sessao();
+        if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+          throw new Error("Tentativa alterada.");
+        sessionStorage.removeItem(chave);
+        setPendente(null);
+        setConfirmacao(null);
+        setAviso("Vínculo declarado; OS não alterada e execução não comprovada.");
+        void candidatas.refetch();
+      } catch {
+        setAviso("Vínculo confirmado, mas tentativa local não pôde ser removida; procure suporte.");
+      }
+    },
+    onError: () =>
+      setAviso(
+        "Resultado não confirmado. Repita a mesma tentativa ou procure suporte para reconciliação.",
+      ),
+    onSettled: () => {
+      trava.current = false;
+    },
+  });
   const itens = candidatas.data?.pages.flat() ?? [];
   const consistentes = new Set(itens.map((x) => x.id.toLowerCase())).size === itens.length;
-  const selecionada = candidatas.data && !candidatas.isFetching && !candidatas.isError && consistentes ? itens.find((x) => x.id === osId) : undefined;
-  const foto = selecionada ? JSON.stringify([userId, clienteId, ocorrenciaId, selecionada, motivo.trim()]) : null;
-  const enviar = (entrada: Pedido) => { if (trava.current || (!pendente && (!foto || confirmacao !== foto))) return; try { const p = pedidoSchema.parse(entrada); const salvo = sessionStorage.getItem(chave); if (pendente ? salvo !== JSON.stringify(p) : salvo !== null) throw new Error("Tentativa divergente."); if (!pendente) sessionStorage.setItem(chave, JSON.stringify(p)); trava.current = true; setPendente(p); envio.mutate(p); } catch { setAviso("Tentativa não pôde ser guardada ou divergiu; nada enviado."); } };
-  return <section aria-label="Vínculo declarado de OS ao Grupo"><h5>Declarar vínculo com OS existente</h5><p>A lista não comprova relação ou execução. A declaração não altera a OS nem cria tarefa Auvo.</p>
-    {candidatas.isError && <p role="alert">Lista indisponível. <button type="button" onClick={() => void candidatas.refetch()}>Tentar novamente</button></p>}
-    {!consistentes && <p role="alert">Páginas divergentes. <button type="button" onClick={() => void candidatas.refetch()}>Reconsultar</button></p>}
-    <label>OS <select value={osId} disabled={!!pendente || !consistentes || candidatas.isFetching || candidatas.isError} onChange={(e) => { setOsId(e.target.value); setConfirmacao(null); }}><option value="">Selecione</option>{itens.map((os) => <option key={os.id} value={os.id}>{os.numero} · {os.titulo} · {os.status}</option>)}</select></label>
-    {candidatas.hasNextPage && <button type="button" disabled={candidatas.isFetchingNextPage} onClick={() => void candidatas.fetchNextPage()}>Mais OS</button>}
-    <label>Motivo <textarea value={motivo} disabled={!!pendente} maxLength={2000} onChange={(e) => { setMotivo(e.target.value); setConfirmacao(null); }} /></label><label><input type="checkbox" checked={!!foto && confirmacao === foto} disabled={!!pendente || !foto} onChange={(e) => setConfirmacao(e.target.checked ? foto : null)} /> Confirmo o vínculo declarado</label>
-    <button type="button" disabled={!foto || confirmacao !== foto || !motivo.trim() || !!pendente || envio.isPending} onClick={() => enviar({ requestId: crypto.randomUUID(), clienteId, ocorrenciaId, osId, motivo: motivo.trim() })}>Declarar vínculo</button>
-    {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
-  </section>;
+  const selecionada =
+    candidatas.data && !candidatas.isFetching && !candidatas.isError && consistentes
+      ? itens.find((x) => x.id === osId)
+      : undefined;
+  const foto = selecionada
+    ? JSON.stringify([userId, clienteId, ocorrenciaId, selecionada, motivo.trim()])
+    : null;
+  const enviar = (entrada: Pedido) => {
+    if (trava.current || (!pendente && (!foto || confirmacao !== foto))) return;
+    try {
+      const p = pedidoSchema.parse(entrada);
+      const salvo = sessionStorage.getItem(chave);
+      if (pendente ? salvo !== JSON.stringify(p) : salvo !== null)
+        throw new Error("Tentativa divergente.");
+      if (!pendente) sessionStorage.setItem(chave, JSON.stringify(p));
+      trava.current = true;
+      setPendente(p);
+      envio.mutate(p);
+    } catch {
+      setAviso("Tentativa não pôde ser guardada ou divergiu; nada enviado.");
+    }
+  };
+  return (
+    <section aria-label="Vínculo declarado de OS ao Grupo">
+      <h5>Declarar vínculo com OS existente</h5>
+      <p>
+        A lista não comprova relação ou execução. A declaração não altera a OS nem cria tarefa Auvo.
+      </p>
+      {candidatas.isError && (
+        <p role="alert">
+          Lista indisponível.{" "}
+          <button type="button" onClick={() => void candidatas.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {!consistentes && (
+        <p role="alert">
+          Páginas divergentes.{" "}
+          <button type="button" onClick={() => void candidatas.refetch()}>
+            Reconsultar
+          </button>
+        </p>
+      )}
+      <label>
+        OS{" "}
+        <select
+          value={osId}
+          disabled={!!pendente || !consistentes || candidatas.isFetching || candidatas.isError}
+          onChange={(e) => {
+            setOsId(e.target.value);
+            setConfirmacao(null);
+          }}
+        >
+          <option value="">Selecione</option>
+          {itens.map((os) => (
+            <option key={os.id} value={os.id}>
+              {os.numero} · {os.titulo} · {os.status}
+            </option>
+          ))}
+        </select>
+      </label>
+      {candidatas.hasNextPage && (
+        <button
+          type="button"
+          disabled={candidatas.isFetchingNextPage}
+          onClick={() => void candidatas.fetchNextPage()}
+        >
+          Mais OS
+        </button>
+      )}
+      <label>
+        Motivo{" "}
+        <textarea
+          value={motivo}
+          disabled={!!pendente}
+          maxLength={2000}
+          onChange={(e) => {
+            setMotivo(e.target.value);
+            setConfirmacao(null);
+          }}
+        />
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={!!foto && confirmacao === foto}
+          disabled={!!pendente || !foto}
+          onChange={(e) => setConfirmacao(e.target.checked ? foto : null)}
+        />{" "}
+        Confirmo o vínculo declarado
+      </label>
+      <button
+        type="button"
+        disabled={!foto || confirmacao !== foto || !motivo.trim() || !!pendente || envio.isPending}
+        onClick={() =>
+          enviar({
+            requestId: crypto.randomUUID(),
+            clienteId,
+            ocorrenciaId,
+            osId,
+            motivo: motivo.trim(),
+          })
+        }
+      >
+        Declarar vínculo
+      </button>
+      {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
+      {pendente && pendente !== "invalido" && (
+        <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>
+          Repetir tentativa pendente
+        </button>
+      )}
+      {aviso && <p role="status">{aviso}</p>}
+    </section>
+  );
 }

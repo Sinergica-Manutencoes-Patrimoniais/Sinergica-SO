@@ -4,19 +4,310 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { FilaAposPreparacao } from "./FilaAposPreparacao";
-const uuid=z.string().uuid();
-const linha=z.object({id:uuid,plano_id:uuid,indice:z.number().int().nonnegative(),vencimento:z.string().date(),envio_estado:z.string(),resultado_estado:z.string(),auvo_task_id:z.number().nullable()}).strict();
-const pedido=z.object({request:uuid,cliente:uuid,plano:uuid,legado:uuid,relacao:uuid,preparada:uuid,legada:uuid,ciclo:uuid,motivo:z.string().trim().min(1).max(2000),tentativaIncerta:z.boolean().optional()}).strict();
-type Pedido=z.infer<typeof pedido>;
-type Props={userId:string;clienteId:string;planoId:string;legadoId:string;relacaoId:string;preparadaId:string;vencimento:string;alvo:string};
-export function IntegrarLegadaExistente(props:Props){return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId,props.legadoId,props.relacaoId,props.preparadaId])} {...props}/>;}
-function Conteudo({userId,clienteId,planoId,legadoId,relacaoId,preparadaId,vencimento,alvo}:Props){
- const chave=`sso-vincular-legada-existente:${JSON.stringify([userId,clienteId,planoId,legadoId,preparadaId])}`;const trava=useRef(false);
- const [selecionada,setSelecionada]=useState("");const [motivo,setMotivo]=useState("");const [confirmacao,setConfirmacao]=useState<string|null>(null);const [aviso,setAviso]=useState("");const [ocupado,setOcupado]=useState(false);const [integrada,setIntegrada]=useState(false);
- const [pendente,setPendente]=useState<Pedido|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(chave);if(!raw)return null;const p=pedido.parse(JSON.parse(raw));return p.cliente===clienteId&&p.plano===planoId&&p.legado===legadoId&&p.preparada===preparadaId&&p.relacao===relacaoId?p:"invalido";}catch{return "invalido";}});
- const lista=useInfiniteQuery({queryKey:["legadas-existentes",userId,clienteId,planoId,legadoId,preparadaId,vencimento],initialPageParam:null as string|null,gcTime:0,retry:false,queryFn:async({pageParam,signal})=>{await conferirSessaoDiagnostico(userId,signal);let q=supabase.schema("pcm").from("ocorrencias_preventivas").select("id,plano_id,indice,vencimento,envio_estado,resultado_estado,auvo_task_id").eq("plano_id",legadoId).eq("origem","legado").eq("vencimento",vencimento).order("id").limit(20);if(pageParam)q=q.gt("id",pageParam);const {data,error}=await q.abortSignal(signal);if(error)throw error;const itens=z.array(linha).max(20).parse(data);let anterior=pageParam??"";for(const item of itens){if(item.plano_id!==legadoId||item.vencimento!==vencimento||item.id<=anterior)throw Error("Página divergente");anterior=item.id;}await conferirSessaoDiagnostico(userId,signal);return itens;},getNextPageParam:p=>p.length===20?p.at(-1)?.id:undefined});
- const item=lista.data?.pages.flat().find(x=>x.id===selecionada);const assinatura=item&&!lista.isFetching&&!lista.isError?JSON.stringify([userId,clienteId,planoId,legadoId,relacaoId,preparadaId,vencimento,alvo,item,motivo.trim()]):null;
- async function enviar(p:Pedido){if(trava.current)return;trava.current=true;setOcupado(true);try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw Error();p=pedido.parse({...p,tentativaIncerta:true});sessionStorage.setItem(chave,JSON.stringify(p));setPendente(p);const {data,error}=await supabase.schema("pcm").rpc("sso_integrar_legado_existente_mediado",{p_ator:userId,p_request:p.request,p_cliente:p.cliente,p_preparada:p.preparada,p_legada:p.legada,p_ciclo:p.ciclo,p_relacao:p.relacao,p_motivo:p.motivo});if(error)throw error;const r=z.object({requestId:uuid,preparadaId:uuid,legadaId:uuid,cicloId:uuid,vinculoCriado:z.literal(true),ocorrenciaLegadaCriada:z.literal(false),osCriada:z.literal(false),tarefaAuvoCriada:z.literal(false),equivalenciaGeralComprovada:z.literal(false)}).passthrough().parse(data);if(r.requestId!==p.request||r.preparadaId!==p.preparada||r.legadaId!==p.legada||r.cicloId!==p.ciclo)throw Error();await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw Error();sessionStorage.removeItem(chave);setPendente(null);setConfirmacao(null);setIntegrada(true);setAviso("Vínculo registrado com a ocorrência existente; confira a fila antes de prosseguir.");}catch{setAviso("Resultado não confirmado. Repita o mesmo pedido ou procure suporte.");}finally{trava.current=false;setOcupado(false);}}
- function iniciar(){if(!item||!assinatura||assinatura!==confirmacao||!motivo.trim()||pendente||ocupado)return;try{const p=pedido.parse({request:crypto.randomUUID(),cliente:clienteId,plano:planoId,legado:legadoId,relacao:relacaoId,preparada:preparadaId,legada:item.id,ciclo:crypto.randomUUID(),motivo:motivo.trim(),tentativaIncerta:false});if(sessionStorage.getItem(chave)!==null)throw Error();sessionStorage.setItem(chave,JSON.stringify(p));setPendente(p);void enviar(p);}catch{setAviso("Não foi possível guardar o pedido; nada foi enviado.");}}
- return <section aria-label="Vincular ocorrência legada existente"><h5>Vincular ocorrência legada existente</h5><p>Confira a ocorrência selecionada para o vencimento {vencimento} e alvo {alvo}. Coincidência de data não comprova equivalência. O servidor verifica a relação, alvo, situação e efeitos; nenhuma OS ou tarefa é criada.</p>{lista.isError&&<p role="alert">Não foi possível consultar as ocorrências. <button type="button" onClick={()=>void lista.refetch()}>Tentar novamente</button></p>}<fieldset disabled={!!pendente||ocupado||lista.isFetching||lista.isError}><label>Ocorrência legada <select value={selecionada} onChange={e=>{setSelecionada(e.target.value);setConfirmacao(null);}}><option value="">Selecione</option>{lista.data?.pages.flat().map(x=><option key={x.id} value={x.id}>Índice {x.indice} · vencimento {x.vencimento} · envio {x.envio_estado} · resultado {x.resultado_estado} · {x.id}</option>)}</select></label><label>Motivo <textarea maxLength={2000} value={motivo} onChange={e=>{setMotivo(e.target.value);setConfirmacao(null);}} /></label><label><input type="checkbox" checked={!!assinatura&&confirmacao===assinatura} disabled={!assinatura||!motivo.trim()} onChange={e=>setConfirmacao(e.target.checked?assinatura:null)}/> Conferi a ocorrência e autorizo somente este vínculo</label><button type="button" disabled={!assinatura||confirmacao!==assinatura||!motivo.trim()} onClick={iniciar}>Vincular ocorrência existente</button></fieldset>{lista.hasNextPage&&<button type="button" disabled={lista.isFetching||!!pendente} onClick={()=>void lista.fetchNextPage()}>Mais ocorrências</button>}{pendente==="invalido"&&<p role="alert">Pedido guardado inválido. Procure suporte.</p>}{pendente&&pendente!=="invalido"&&<button type="button" disabled={ocupado} onClick={()=>void enviar(pendente)}>Repetir mesmo vínculo</button>}{aviso&&<p role="status">{aviso}</p>}{integrada&&<FilaAposPreparacao userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={preparadaId}/>}</section>;
+const uuid = z.string().uuid();
+const linha = z
+  .object({
+    id: uuid,
+    plano_id: uuid,
+    indice: z.number().int().nonnegative(),
+    vencimento: z.string().date(),
+    envio_estado: z.string(),
+    resultado_estado: z.string(),
+    auvo_task_id: z.number().nullable(),
+  })
+  .strict();
+const pedido = z
+  .object({
+    request: uuid,
+    cliente: uuid,
+    plano: uuid,
+    legado: uuid,
+    relacao: uuid,
+    preparada: uuid,
+    legada: uuid,
+    ciclo: uuid,
+    motivo: z.string().trim().min(1).max(2000),
+    tentativaIncerta: z.boolean().optional(),
+  })
+  .strict();
+type Pedido = z.infer<typeof pedido>;
+type Props = {
+  userId: string;
+  clienteId: string;
+  planoId: string;
+  legadoId: string;
+  relacaoId: string;
+  preparadaId: string;
+  vencimento: string;
+  alvo: string;
+};
+export function IntegrarLegadaExistente(props: Props) {
+  return (
+    <Conteudo
+      key={JSON.stringify([
+        props.userId,
+        props.clienteId,
+        props.planoId,
+        props.legadoId,
+        props.relacaoId,
+        props.preparadaId,
+      ])}
+      {...props}
+    />
+  );
+}
+function Conteudo({
+  userId,
+  clienteId,
+  planoId,
+  legadoId,
+  relacaoId,
+  preparadaId,
+  vencimento,
+  alvo,
+}: Props) {
+  const chave = `sso-vincular-legada-existente:${JSON.stringify([userId, clienteId, planoId, legadoId, preparadaId])}`;
+  const trava = useRef(false);
+  const [selecionada, setSelecionada] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [confirmacao, setConfirmacao] = useState<string | null>(null);
+  const [aviso, setAviso] = useState("");
+  const [ocupado, setOcupado] = useState(false);
+  const [integrada, setIntegrada] = useState(false);
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(chave);
+      if (!raw) return null;
+      const p = pedido.parse(JSON.parse(raw));
+      return p.cliente === clienteId &&
+        p.plano === planoId &&
+        p.legado === legadoId &&
+        p.preparada === preparadaId &&
+        p.relacao === relacaoId
+        ? p
+        : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  const lista = useInfiniteQuery({
+    queryKey: ["legadas-existentes", userId, clienteId, planoId, legadoId, preparadaId, vencimento],
+    initialPageParam: null as string | null,
+    gcTime: 0,
+    retry: false,
+    queryFn: async ({ pageParam, signal }) => {
+      await conferirSessaoDiagnostico(userId, signal);
+      let q = supabase
+        .schema("pcm")
+        .from("ocorrencias_preventivas")
+        .select("id,plano_id,indice,vencimento,envio_estado,resultado_estado,auvo_task_id")
+        .eq("plano_id", legadoId)
+        .eq("origem", "legado")
+        .eq("vencimento", vencimento)
+        .order("id")
+        .limit(20);
+      if (pageParam) q = q.gt("id", pageParam);
+      const { data, error } = await q.abortSignal(signal);
+      if (error) throw error;
+      const itens = z.array(linha).max(20).parse(data);
+      let anterior = pageParam ?? "";
+      for (const item of itens) {
+        if (item.plano_id !== legadoId || item.vencimento !== vencimento || item.id <= anterior)
+          throw Error("Página divergente");
+        anterior = item.id;
+      }
+      await conferirSessaoDiagnostico(userId, signal);
+      return itens;
+    },
+    getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.id : undefined),
+  });
+  const item = lista.data?.pages.flat().find((x) => x.id === selecionada);
+  const assinatura =
+    item && !lista.isFetching && !lista.isError
+      ? JSON.stringify([
+          userId,
+          clienteId,
+          planoId,
+          legadoId,
+          relacaoId,
+          preparadaId,
+          vencimento,
+          alvo,
+          item,
+          motivo.trim(),
+        ])
+      : null;
+  async function enviar(p: Pedido) {
+    if (trava.current) return;
+    trava.current = true;
+    setOcupado(true);
+    try {
+      await conferirSessaoDiagnostico(userId);
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw Error();
+      p = pedido.parse({ ...p, tentativaIncerta: true });
+      sessionStorage.setItem(chave, JSON.stringify(p));
+      setPendente(p);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_integrar_legado_existente_mediado", {
+          p_ator: userId,
+          p_request: p.request,
+          p_cliente: p.cliente,
+          p_preparada: p.preparada,
+          p_legada: p.legada,
+          p_ciclo: p.ciclo,
+          p_relacao: p.relacao,
+          p_motivo: p.motivo,
+        });
+      if (error) throw error;
+      const r = z
+        .object({
+          requestId: uuid,
+          preparadaId: uuid,
+          legadaId: uuid,
+          cicloId: uuid,
+          vinculoCriado: z.literal(true),
+          ocorrenciaLegadaCriada: z.literal(false),
+          osCriada: z.literal(false),
+          tarefaAuvoCriada: z.literal(false),
+          equivalenciaGeralComprovada: z.literal(false),
+        })
+        .passthrough()
+        .parse(data);
+      if (
+        r.requestId !== p.request ||
+        r.preparadaId !== p.preparada ||
+        r.legadaId !== p.legada ||
+        r.cicloId !== p.ciclo
+      )
+        throw Error();
+      await conferirSessaoDiagnostico(userId);
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw Error();
+      sessionStorage.removeItem(chave);
+      setPendente(null);
+      setConfirmacao(null);
+      setIntegrada(true);
+      setAviso(
+        "Vínculo registrado com a ocorrência existente; confira a fila antes de prosseguir.",
+      );
+    } catch {
+      setAviso("Resultado não confirmado. Repita o mesmo pedido ou procure suporte.");
+    } finally {
+      trava.current = false;
+      setOcupado(false);
+    }
+  }
+  function iniciar() {
+    if (!item || !assinatura || assinatura !== confirmacao || !motivo.trim() || pendente || ocupado)
+      return;
+    try {
+      const p = pedido.parse({
+        request: crypto.randomUUID(),
+        cliente: clienteId,
+        plano: planoId,
+        legado: legadoId,
+        relacao: relacaoId,
+        preparada: preparadaId,
+        legada: item.id,
+        ciclo: crypto.randomUUID(),
+        motivo: motivo.trim(),
+        tentativaIncerta: false,
+      });
+      if (sessionStorage.getItem(chave) !== null) throw Error();
+      sessionStorage.setItem(chave, JSON.stringify(p));
+      setPendente(p);
+      void enviar(p);
+    } catch {
+      setAviso("Não foi possível guardar o pedido; nada foi enviado.");
+    }
+  }
+  return (
+    <section aria-label="Vincular ocorrência legada existente">
+      <h5>Vincular ocorrência legada existente</h5>
+      <p>
+        Confira a ocorrência selecionada para o vencimento {vencimento} e alvo {alvo}. Coincidência
+        de data não comprova equivalência. O servidor verifica a relação, alvo, situação e efeitos;
+        nenhuma OS ou tarefa é criada.
+      </p>
+      {lista.isError && (
+        <p role="alert">
+          Não foi possível consultar as ocorrências.{" "}
+          <button type="button" onClick={() => void lista.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      <fieldset disabled={!!pendente || ocupado || lista.isFetching || lista.isError}>
+        <label>
+          Ocorrência legada{" "}
+          <select
+            value={selecionada}
+            onChange={(e) => {
+              setSelecionada(e.target.value);
+              setConfirmacao(null);
+            }}
+          >
+            <option value="">Selecione</option>
+            {lista.data?.pages.flat().map((x) => (
+              <option key={x.id} value={x.id}>
+                Índice {x.indice} · vencimento {x.vencimento} · envio {x.envio_estado} · resultado{" "}
+                {x.resultado_estado} · {x.id}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Motivo{" "}
+          <textarea
+            maxLength={2000}
+            value={motivo}
+            onChange={(e) => {
+              setMotivo(e.target.value);
+              setConfirmacao(null);
+            }}
+          />
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={!!assinatura && confirmacao === assinatura}
+            disabled={!assinatura || !motivo.trim()}
+            onChange={(e) => setConfirmacao(e.target.checked ? assinatura : null)}
+          />{" "}
+          Conferi a ocorrência e autorizo somente este vínculo
+        </label>
+        <button
+          type="button"
+          disabled={!assinatura || confirmacao !== assinatura || !motivo.trim()}
+          onClick={iniciar}
+        >
+          Vincular ocorrência existente
+        </button>
+      </fieldset>
+      {lista.hasNextPage && (
+        <button
+          type="button"
+          disabled={lista.isFetching || !!pendente}
+          onClick={() => void lista.fetchNextPage()}
+        >
+          Mais ocorrências
+        </button>
+      )}
+      {pendente === "invalido" && <p role="alert">Pedido guardado inválido. Procure suporte.</p>}
+      {pendente && pendente !== "invalido" && (
+        <button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>
+          Repetir mesmo vínculo
+        </button>
+      )}
+      {aviso && <p role="status">{aviso}</p>}
+      {integrada && (
+        <FilaAposPreparacao
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          preparadaId={preparadaId}
+        />
+      )}
+    </section>
+  );
 }

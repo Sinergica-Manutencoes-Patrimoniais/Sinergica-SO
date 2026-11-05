@@ -3,41 +3,421 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { PropostaExigenciaRevisao } from "./PropostaExigenciaRevisao";
-const itemHistorico = z.object({ request_id:z.string().uuid(), revisao:z.number().int().positive().safe(), classificacao:z.enum(["legal_normativa","nao_classificada"]), referencia:z.string().nullable(), justificativa:z.string(), ator_id:z.string().uuid(), criado_em:z.string().datetime({offset:true}), modo:z.string(), tolerancia_antes:z.number().int().nonnegative().nullable(), tolerancia_depois:z.number().int().nonnegative().nullable() }).strict();
-type Pedido = { requestId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; planoRevision: number; declaracaoRevision: number; classificacao: "legal_normativa" | "nao_classificada"; referencia: string; justificativa: string };
+const itemHistorico = z
+  .object({
+    request_id: z.string().uuid(),
+    revisao: z.number().int().positive().safe(),
+    classificacao: z.enum(["legal_normativa", "nao_classificada"]),
+    referencia: z.string().nullable(),
+    justificativa: z.string(),
+    ator_id: z.string().uuid(),
+    criado_em: z.string().datetime({ offset: true }),
+    modo: z.string(),
+    tolerancia_antes: z.number().int().nonnegative().nullable(),
+    tolerancia_depois: z.number().int().nonnegative().nullable(),
+  })
+  .strict();
+type Pedido = {
+  requestId: string;
+  clienteId: string;
+  planoId: string;
+  versaoId: string;
+  rotinaId: string;
+  planoRevision: number;
+  declaracaoRevision: number;
+  classificacao: "legal_normativa" | "nao_classificada";
+  referencia: string;
+  justificativa: string;
+};
 
-export function ExigenciaLegalRotina({ userId, clienteId, planoId, versaoId, rotinaId, planoRevision, modo }: { userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; planoRevision: number; modo: string }) {
-  const trava = useRef(false); const mediado = import.meta.env.VITE_SSO_EXIGENCIA_ROTINA_MEDIADA_ENABLED === "true";
-  async function conferirSessao(signal?: AbortSignal) { const {data,error}=await supabase.auth.getUser(); if(error || data.user?.id!==userId || signal?.aborted) throw new Error("Sessão alterada."); }
-  const cache = useQueryClient(); const chave = `sso-exigencia-rotina:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId])}`;
-  const [classificacao, setClassificacao] = useState<Pedido["classificacao"]>("nao_classificada"); const [referencia, setReferencia] = useState(""); const [justificativa, setJustificativa] = useState(""); const [aviso, setAviso] = useState("");
+export function ExigenciaLegalRotina({
+  userId,
+  clienteId,
+  planoId,
+  versaoId,
+  rotinaId,
+  planoRevision,
+  modo,
+}: {
+  userId: string;
+  clienteId: string;
+  planoId: string;
+  versaoId: string;
+  rotinaId: string;
+  planoRevision: number;
+  modo: string;
+}) {
+  const trava = useRef(false);
+  const mediado = import.meta.env.VITE_SSO_EXIGENCIA_ROTINA_MEDIADA_ENABLED === "true";
+  async function conferirSessao(signal?: AbortSignal) {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || data.user?.id !== userId || signal?.aborted) throw new Error("Sessão alterada.");
+  }
+  const cache = useQueryClient();
+  const chave = `sso-exigencia-rotina:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId])}`;
+  const [classificacao, setClassificacao] = useState<Pedido["classificacao"]>("nao_classificada");
+  const [referencia, setReferencia] = useState("");
+  const [justificativa, setJustificativa] = useState("");
+  const [aviso, setAviso] = useState("");
   const [confirmacao, setConfirmacao] = useState<string | null>(null);
-  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(chave); if (!raw) return null; const p = JSON.parse(raw) as Pedido; return p.clienteId === clienteId && p.planoId === planoId && p.versaoId === versaoId && p.rotinaId === rotinaId && typeof p.requestId === "string" && Number.isSafeInteger(p.planoRevision) && Number.isSafeInteger(p.declaracaoRevision) && ["legal_normativa", "nao_classificada"].includes(p.classificacao) && typeof p.referencia === "string" && typeof p.justificativa === "string" ? p : "invalido"; } catch { return "invalido"; } });
-  const historico = useInfiniteQuery({ queryKey: ["exigencia-rotina", userId, clienteId, planoId, versaoId, rotinaId], initialPageParam: null as number | null, gcTime: 0, queryFn: async ({ pageParam, signal }) => { await conferirSessao(signal); const { data, error } = await supabase.schema("pcm").rpc(mediado ? "sso_historico_exigencia_rotina_mediado" : "sso_historico_exigencia_rotina", { ...(mediado ? {p_ator_id:userId} : {}), p_cliente_id: clienteId, p_plano_id: planoId, p_versao_id: versaoId, p_rotina_id: rotinaId, p_antes: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; const pagina=z.array(itemHistorico).max(20).parse(data); let anterior=pageParam ?? Number.POSITIVE_INFINITY; for(const item of pagina){if(item.revisao>=anterior)throw new Error("Histórico divergente."); anterior=item.revisao;} await conferirSessao(signal); return pagina; }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.revisao : undefined });
-  const linhas=historico.data?.pages.flat() ?? [];
-  const historicoDivergente=linhas.some((item,i)=>i>0 && item.revisao>=linhas[i-1]!.revisao);
-  const fotografia=historico.data && !historico.isFetching && !historico.isError && !historicoDivergente
-    ? JSON.stringify([userId,clienteId,planoId,versaoId,rotinaId,planoRevision,linhas[0]?.revisao ?? 0,classificacao,referencia.trim(),justificativa.trim()]) : null;
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { await conferirSessao(); if(sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error("Tentativa divergente."); const { data, error } = await supabase.schema("pcm").rpc(mediado ? "sso_declarar_exigencia_rotina_mediado" : "sso_declarar_exigencia_rotina", { ...(mediado ? {p_ator_id:userId} : {}), p_request_id: p.requestId, p_cliente_id: p.clienteId, p_plano_id: p.planoId, p_versao_id: p.versaoId, p_rotina_id: p.rotinaId, p_expected_plano: p.planoRevision, p_expected_declaracao: p.declaracaoRevision, p_classificacao: p.classificacao, p_referencia: p.referencia || null, p_justificativa: p.justificativa }); if (error) throw error; if (!data || data.requestId !== p.requestId || data.rotinaId !== p.rotinaId || data.referenciaValidada !== false || data.toleranciaValidada !== false) throw new Error("Resposta inválida."); await conferirSessao(); }, onSuccess: async (_resultado,p) => { try { await cache.invalidateQueries({ queryKey: ["exigencia-rotina", userId, clienteId, planoId, versaoId, rotinaId] }); await conferirSessao(); if(sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); } catch { setAviso("Declaração registrada, mas tentativa local não foi limpa; procure suporte."); return; } setPendente(null); setAviso("Declaração registrada; tolerância normativa permanece a confirmar."); }, onError: () => setAviso("Resultado não confirmado; repita a mesma tentativa ou procure suporte em conflito."), onSettled: () => { trava.current=false; } });
-  const recibo = useMutation({ mutationFn: async (p: Pedido) => {
-    await conferirSessao(); if (sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error("Tentativa divergente.");
-    const {data,error}=await supabase.schema("pcm").rpc("sso_recibo_exigencia_rotina", {
-      p_ator_id:userId,p_request_id:p.requestId,p_cliente_id:p.clienteId,p_plano_id:p.planoId,p_versao_id:p.versaoId,p_rotina_id:p.rotinaId,
-      p_expected_plano:p.planoRevision,p_expected_declaracao:p.declaracaoRevision,p_classificacao:p.classificacao,
-      p_referencia:p.referencia || null,p_justificativa:p.justificativa,
-    });
-    if(error) throw error; await conferirSessao();
-    if(data===null) return false;
-    if(!data || data.requestId!==p.requestId || data.rotinaId!==p.rotinaId || data.referenciaValidada!==false || data.toleranciaValidada!==false) throw new Error("Recibo divergente.");
-    return true;
-  }, onSuccess: async (encontrado,p) => {
-    if(!encontrado) { setAviso("Recibo ausente; isso não comprova falha. Preserve a tentativa."); return; }
-    try { await cache.invalidateQueries({queryKey:["exigencia-rotina",userId,clienteId,planoId,versaoId,rotinaId]}); await conferirSessao();
-      if(sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave);
-    } catch { setAviso("Declaração confirmada, mas tentativa local não foi limpa; procure suporte."); return; }
-    setPendente(null); setAviso("Declaração anterior confirmada; a tolerância permanece a validar.");
-  }, onError:()=>setAviso("Recibo indisponível. Preserve a tentativa ou procure suporte."), onSettled:()=>{trava.current=false;} });
-  function consultarRecibo(p: Pedido) { if(trava.current) return; trava.current=true; recibo.mutate(p); }
-  const enviar = (p: Pedido) => { if(trava.current) return; try { const salvo=sessionStorage.getItem(chave); const texto=JSON.stringify(p); if((pendente && salvo===null) || (salvo!==null && salvo!==texto)) throw new Error(); if(salvo===null) sessionStorage.setItem(chave,texto); } catch { setAviso("Tentativa divergente ou armazenamento indisponível; nada enviado."); return; } trava.current=true; setPendente(p); envio.mutate(p); };
-  return <section aria-label="Exigência normativa declarada"><h5>Exigência legal ou normativa</h5><p>Referência é declaração humana, não valida a exigência nem sua tolerância. Confirme a tolerância aplicável. Na aprovação, somente o novo snapshot preparado registra a declaração; snapshots antigos não são alterados.</p>{import.meta.env.VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED === "true" && <PropostaExigenciaRevisao userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} />}{modo === "visita" && <p>Rotinas legais normalmente usam calendário; confirme este modo por Visita com o PCM.</p>}{historico.isError && <p role="alert">Histórico indisponível. <button type="button" onClick={() => void historico.refetch()}>Tentar novamente</button></p>}{historico.data && <form onSubmit={(e) => { e.preventDefault(); if (pendente || historico.isFetching || historico.isError || historicoDivergente || !fotografia || confirmacao!==fotografia || !justificativa.trim() || (classificacao === "legal_normativa" && !referencia.trim())) return; enviar({ requestId: crypto.randomUUID(), clienteId, planoId, versaoId, rotinaId, planoRevision, declaracaoRevision: historico.data.pages[0]?.[0]?.revisao ?? 0, classificacao, referencia: referencia.trim(), justificativa: justificativa.trim() }); }}><fieldset disabled={!!pendente || envio.isPending || historico.isFetching}><label>Classificação <select value={classificacao} onChange={(e) => {setClassificacao(e.target.value as Pedido["classificacao"]);setConfirmacao(null);}}><option value="nao_classificada">Não classificada</option><option value="legal_normativa">Legal ou normativa</option></select></label><label>Referência declarada <input maxLength={500} required={classificacao === "legal_normativa"} value={referencia} onChange={(e) => {setReferencia(e.target.value);setConfirmacao(null);}} /></label><label>Justificativa <textarea required maxLength={2000} value={justificativa} onChange={(e) => {setJustificativa(e.target.value);setConfirmacao(null);}} /></label><label><input type="checkbox" disabled={!fotografia} checked={Boolean(fotografia && confirmacao===fotografia)} onChange={(e)=>setConfirmacao(e.target.checked ? fotografia : null)}/> Conferi a Rotina, a revisão e a declaração.</label><button disabled={!fotografia || confirmacao!==fotografia}>Registrar declaração</button></fieldset></form>}{historicoDivergente && !historico.isFetching && <p role="alert">Histórico divergente. <button type="button" onClick={()=>void historico.refetch()}>Consultar novamente</button></p>}{!historicoDivergente && !historico.isFetching && !historico.isError && <ul>{linhas.map((h) => <li key={h.request_id}>Revisão {h.revisao} · {h.classificacao} · referência {h.referencia ?? "não informada"} · modo {h.modo} · tolerância {h.tolerancia_antes}/{h.tolerancia_depois} dias não validada · {h.justificativa} · {h.ator_id} · {h.criado_em}</li>)}</ul>}{historico.hasNextPage && !historicoDivergente && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}{pendente === "invalido" && <p role="alert">Tentativa ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <><button type="button" disabled={envio.isPending || recibo.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>{import.meta.env.VITE_SSO_RECIBO_EXIGENCIA_ROTINA_ENABLED === "true" && <button type="button" disabled={envio.isPending || recibo.isPending} onClick={() => consultarRecibo(pendente)}>Consultar recibo</button>}</>}{aviso && <p role="status">{aviso}</p>}</section>;
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(chave);
+      if (!raw) return null;
+      const p = JSON.parse(raw) as Pedido;
+      return p.clienteId === clienteId &&
+        p.planoId === planoId &&
+        p.versaoId === versaoId &&
+        p.rotinaId === rotinaId &&
+        typeof p.requestId === "string" &&
+        Number.isSafeInteger(p.planoRevision) &&
+        Number.isSafeInteger(p.declaracaoRevision) &&
+        ["legal_normativa", "nao_classificada"].includes(p.classificacao) &&
+        typeof p.referencia === "string" &&
+        typeof p.justificativa === "string"
+        ? p
+        : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  const historico = useInfiniteQuery({
+    queryKey: ["exigencia-rotina", userId, clienteId, planoId, versaoId, rotinaId],
+    initialPageParam: null as number | null,
+    gcTime: 0,
+    queryFn: async ({ pageParam, signal }) => {
+      await conferirSessao(signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc(
+          mediado ? "sso_historico_exigencia_rotina_mediado" : "sso_historico_exigencia_rotina",
+          {
+            ...(mediado ? { p_ator_id: userId } : {}),
+            p_cliente_id: clienteId,
+            p_plano_id: planoId,
+            p_versao_id: versaoId,
+            p_rotina_id: rotinaId,
+            p_antes: pageParam,
+            p_limite: 20,
+          },
+        )
+        .abortSignal(signal);
+      if (error) throw error;
+      const pagina = z.array(itemHistorico).max(20).parse(data);
+      let anterior = pageParam ?? Number.POSITIVE_INFINITY;
+      for (const item of pagina) {
+        if (item.revisao >= anterior) throw new Error("Histórico divergente.");
+        anterior = item.revisao;
+      }
+      await conferirSessao(signal);
+      return pagina;
+    },
+    getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.revisao : undefined),
+  });
+  const linhas = historico.data?.pages.flat() ?? [];
+  const historicoDivergente = linhas.some(
+    (item, i) => i > 0 && item.revisao >= linhas[i - 1]!.revisao,
+  );
+  const fotografia =
+    historico.data && !historico.isFetching && !historico.isError && !historicoDivergente
+      ? JSON.stringify([
+          userId,
+          clienteId,
+          planoId,
+          versaoId,
+          rotinaId,
+          planoRevision,
+          linhas[0]?.revisao ?? 0,
+          classificacao,
+          referencia.trim(),
+          justificativa.trim(),
+        ])
+      : null;
+  const envio = useMutation({
+    mutationFn: async (p: Pedido) => {
+      await conferirSessao();
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+        throw new Error("Tentativa divergente.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc(mediado ? "sso_declarar_exigencia_rotina_mediado" : "sso_declarar_exigencia_rotina", {
+          ...(mediado ? { p_ator_id: userId } : {}),
+          p_request_id: p.requestId,
+          p_cliente_id: p.clienteId,
+          p_plano_id: p.planoId,
+          p_versao_id: p.versaoId,
+          p_rotina_id: p.rotinaId,
+          p_expected_plano: p.planoRevision,
+          p_expected_declaracao: p.declaracaoRevision,
+          p_classificacao: p.classificacao,
+          p_referencia: p.referencia || null,
+          p_justificativa: p.justificativa,
+        });
+      if (error) throw error;
+      if (
+        !data ||
+        data.requestId !== p.requestId ||
+        data.rotinaId !== p.rotinaId ||
+        data.referenciaValidada !== false ||
+        data.toleranciaValidada !== false
+      )
+        throw new Error("Resposta inválida.");
+      await conferirSessao();
+    },
+    onSuccess: async (_resultado, p) => {
+      try {
+        await cache.invalidateQueries({
+          queryKey: ["exigencia-rotina", userId, clienteId, planoId, versaoId, rotinaId],
+        });
+        await conferirSessao();
+        if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
+        sessionStorage.removeItem(chave);
+      } catch {
+        setAviso("Declaração registrada, mas tentativa local não foi limpa; procure suporte.");
+        return;
+      }
+      setPendente(null);
+      setAviso("Declaração registrada; tolerância normativa permanece a confirmar.");
+    },
+    onError: () =>
+      setAviso(
+        "Resultado não confirmado; repita a mesma tentativa ou procure suporte em conflito.",
+      ),
+    onSettled: () => {
+      trava.current = false;
+    },
+  });
+  const recibo = useMutation({
+    mutationFn: async (p: Pedido) => {
+      await conferirSessao();
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+        throw new Error("Tentativa divergente.");
+      const { data, error } = await supabase.schema("pcm").rpc("sso_recibo_exigencia_rotina", {
+        p_ator_id: userId,
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_plano_id: p.planoId,
+        p_versao_id: p.versaoId,
+        p_rotina_id: p.rotinaId,
+        p_expected_plano: p.planoRevision,
+        p_expected_declaracao: p.declaracaoRevision,
+        p_classificacao: p.classificacao,
+        p_referencia: p.referencia || null,
+        p_justificativa: p.justificativa,
+      });
+      if (error) throw error;
+      await conferirSessao();
+      if (data === null) return false;
+      if (
+        !data ||
+        data.requestId !== p.requestId ||
+        data.rotinaId !== p.rotinaId ||
+        data.referenciaValidada !== false ||
+        data.toleranciaValidada !== false
+      )
+        throw new Error("Recibo divergente.");
+      return true;
+    },
+    onSuccess: async (encontrado, p) => {
+      if (!encontrado) {
+        setAviso("Recibo ausente; isso não comprova falha. Preserve a tentativa.");
+        return;
+      }
+      try {
+        await cache.invalidateQueries({
+          queryKey: ["exigencia-rotina", userId, clienteId, planoId, versaoId, rotinaId],
+        });
+        await conferirSessao();
+        if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
+        sessionStorage.removeItem(chave);
+      } catch {
+        setAviso("Declaração confirmada, mas tentativa local não foi limpa; procure suporte.");
+        return;
+      }
+      setPendente(null);
+      setAviso("Declaração anterior confirmada; a tolerância permanece a validar.");
+    },
+    onError: () => setAviso("Recibo indisponível. Preserve a tentativa ou procure suporte."),
+    onSettled: () => {
+      trava.current = false;
+    },
+  });
+  function consultarRecibo(p: Pedido) {
+    if (trava.current) return;
+    trava.current = true;
+    recibo.mutate(p);
+  }
+  const enviar = (p: Pedido) => {
+    if (trava.current) return;
+    try {
+      const salvo = sessionStorage.getItem(chave);
+      const texto = JSON.stringify(p);
+      if ((pendente && salvo === null) || (salvo !== null && salvo !== texto)) throw new Error();
+      if (salvo === null) sessionStorage.setItem(chave, texto);
+    } catch {
+      setAviso("Tentativa divergente ou armazenamento indisponível; nada enviado.");
+      return;
+    }
+    trava.current = true;
+    setPendente(p);
+    envio.mutate(p);
+  };
+  return (
+    <section aria-label="Exigência normativa declarada">
+      <h5>Exigência legal ou normativa</h5>
+      <p>
+        Referência é declaração humana, não valida a exigência nem sua tolerância. Confirme a
+        tolerância aplicável. Na aprovação, somente o novo snapshot preparado registra a declaração;
+        snapshots antigos não são alterados.
+      </p>
+      {import.meta.env.VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED === "true" && (
+        <PropostaExigenciaRevisao
+          userId={userId}
+          clienteId={clienteId}
+          planoId={planoId}
+          versaoId={versaoId}
+          rotinaId={rotinaId}
+        />
+      )}
+      {modo === "visita" && (
+        <p>Rotinas legais normalmente usam calendário; confirme este modo por Visita com o PCM.</p>
+      )}
+      {historico.isError && (
+        <p role="alert">
+          Histórico indisponível.{" "}
+          <button type="button" onClick={() => void historico.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {historico.data && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (
+              pendente ||
+              historico.isFetching ||
+              historico.isError ||
+              historicoDivergente ||
+              !fotografia ||
+              confirmacao !== fotografia ||
+              !justificativa.trim() ||
+              (classificacao === "legal_normativa" && !referencia.trim())
+            )
+              return;
+            enviar({
+              requestId: crypto.randomUUID(),
+              clienteId,
+              planoId,
+              versaoId,
+              rotinaId,
+              planoRevision,
+              declaracaoRevision: historico.data.pages[0]?.[0]?.revisao ?? 0,
+              classificacao,
+              referencia: referencia.trim(),
+              justificativa: justificativa.trim(),
+            });
+          }}
+        >
+          <fieldset disabled={!!pendente || envio.isPending || historico.isFetching}>
+            <label>
+              Classificação{" "}
+              <select
+                value={classificacao}
+                onChange={(e) => {
+                  setClassificacao(e.target.value as Pedido["classificacao"]);
+                  setConfirmacao(null);
+                }}
+              >
+                <option value="nao_classificada">Não classificada</option>
+                <option value="legal_normativa">Legal ou normativa</option>
+              </select>
+            </label>
+            <label>
+              Referência declarada{" "}
+              <input
+                maxLength={500}
+                required={classificacao === "legal_normativa"}
+                value={referencia}
+                onChange={(e) => {
+                  setReferencia(e.target.value);
+                  setConfirmacao(null);
+                }}
+              />
+            </label>
+            <label>
+              Justificativa{" "}
+              <textarea
+                required
+                maxLength={2000}
+                value={justificativa}
+                onChange={(e) => {
+                  setJustificativa(e.target.value);
+                  setConfirmacao(null);
+                }}
+              />
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                disabled={!fotografia}
+                checked={Boolean(fotografia && confirmacao === fotografia)}
+                onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)}
+              />{" "}
+              Conferi a Rotina, a revisão e a declaração.
+            </label>
+            <button disabled={!fotografia || confirmacao !== fotografia}>
+              Registrar declaração
+            </button>
+          </fieldset>
+        </form>
+      )}
+      {historicoDivergente && !historico.isFetching && (
+        <p role="alert">
+          Histórico divergente.{" "}
+          <button type="button" onClick={() => void historico.refetch()}>
+            Consultar novamente
+          </button>
+        </p>
+      )}
+      {!historicoDivergente && !historico.isFetching && !historico.isError && (
+        <ul>
+          {linhas.map((h) => (
+            <li key={h.request_id}>
+              Revisão {h.revisao} · {h.classificacao} · referência {h.referencia ?? "não informada"}{" "}
+              · modo {h.modo} · tolerância {h.tolerancia_antes}/{h.tolerancia_depois} dias não
+              validada · {h.justificativa} · {h.ator_id} · {h.criado_em}
+            </li>
+          ))}
+        </ul>
+      )}
+      {historico.hasNextPage && !historicoDivergente && (
+        <button type="button" onClick={() => void historico.fetchNextPage()}>
+          Mais histórico
+        </button>
+      )}
+      {pendente === "invalido" && <p role="alert">Tentativa ilegível; procure suporte.</p>}
+      {pendente && pendente !== "invalido" && (
+        <>
+          <button
+            type="button"
+            disabled={envio.isPending || recibo.isPending}
+            onClick={() => enviar(pendente)}
+          >
+            Repetir tentativa pendente
+          </button>
+          {import.meta.env.VITE_SSO_RECIBO_EXIGENCIA_ROTINA_ENABLED === "true" && (
+            <button
+              type="button"
+              disabled={envio.isPending || recibo.isPending}
+              onClick={() => consultarRecibo(pendente)}
+            >
+              Consultar recibo
+            </button>
+          )}
+        </>
+      )}
+      {aviso && <p role="status">{aviso}</p>}
+    </section>
+  );
 }

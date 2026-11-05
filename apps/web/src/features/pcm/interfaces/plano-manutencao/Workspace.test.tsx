@@ -63,7 +63,9 @@ it("bloqueia outro Cliente e preserva edição ao voltar ao contexto original", 
     </QueryClientProvider>
   );
   const tela = render(compor(clienteId));
-  await waitFor(() => expect(screen.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeEnabled());
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeEnabled(),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Novo Plano de Manutenção" }));
   fireEvent.change(screen.getByLabelText("Nome do Plano"), {
     target: { value: "Rascunho original" },
@@ -95,7 +97,9 @@ it("não mostra operação em andamento de outro Cliente e conserva comando orig
     </QueryClientProvider>
   );
   const tela = render(compor(clienteId));
-  await waitFor(() => expect(screen.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeEnabled());
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeEnabled(),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Novo Plano de Manutenção" }));
   fireEvent.change(screen.getByLabelText("Nome do Plano"), { target: { value: "Plano pendente" } });
   fireEvent.click(screen.getByRole("button", { name: "Salvar rascunho" }));
@@ -278,7 +282,7 @@ it("não informa ausência de Rotinas durante atualização de versões", async 
   void client.invalidateQueries({
     queryKey: planoManutencaoKeys.versoes("usuario", clienteId, planoId),
   });
-  await screen.findByText("Carregando versões...");
+  await screen.findByText("Carregando versões…");
   expect(screen.queryByText("Nenhuma Rotina cadastrada neste Plano.")).toBeNull();
   await act(async () => {
     concluir([
@@ -1081,7 +1085,9 @@ it("cria rascunho e repete o mesmo pedido após falha incerta", async () => {
   api.listarPlanos.mockResolvedValue([]);
   api.salvarPlano.mockRejectedValueOnce(new Error("rede")).mockResolvedValueOnce({});
   montar();
-  await waitFor(() => expect(screen.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeEnabled());
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeEnabled(),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Novo Plano de Manutenção" }));
   fireEvent.change(screen.getByLabelText("Nome do Plano"), {
     target: { value: "Preventivo Guainumbi" },
@@ -1102,7 +1108,9 @@ it("não sobrescreve salvamento de Plano surgido após abrir formulário", async
   api.autorizarAcao.mockResolvedValue(true);
   api.listarPlanos.mockResolvedValue([]);
   montar();
-  await waitFor(() => expect(screen.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeEnabled());
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeEnabled(),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Novo Plano de Manutenção" }));
   fireEvent.change(screen.getByLabelText("Nome do Plano"), { target: { value: "Preventivo" } });
   sessionStorage.setItem(chave, "pedido anterior ainda incerto");
@@ -1465,8 +1473,18 @@ it("não habilita aprovação da revisão com preflight desligado", () => {
   vi.stubEnv("VITE_SSO_APROVAR_REVISAO_ENABLED", "true");
   vi.stubEnv("VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED", "false");
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const plano = { id: "16500000-0000-4000-8000-000000000011", clienteId, nome: "Preventivo", estado: "em_revisao" as const, revisao: 3 };
-  render(<QueryClientProvider client={client}><AcoesRevisaoPlano userId="usuario" clienteId={clienteId} plano={plano} bloqueado={false} /></QueryClientProvider>);
+  const plano = {
+    id: "16500000-0000-4000-8000-000000000011",
+    clienteId,
+    nome: "Preventivo",
+    estado: "em_revisao" as const,
+    revisao: 3,
+  };
+  render(
+    <QueryClientProvider client={client}>
+      <AcoesRevisaoPlano userId="usuario" clienteId={clienteId} plano={plano} bloqueado={false} />
+    </QueryClientProvider>,
+  );
   fireEvent.click(screen.getByRole("button", { name: "Aprovar revisão de versão" }));
   expect(screen.getByRole("button", { name: "Confirmar aprovação" })).toBeDisabled();
   expect(screen.getByText(/protocolo de revisão estiver desativado/i)).toBeTruthy();
@@ -1477,11 +1495,23 @@ it("habilita confirmação da revisão somente com protocolo 1731 ligado", () =>
   vi.stubEnv("VITE_SSO_APROVAR_REVISAO_ENABLED", "true");
   vi.stubEnv("VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED", "true");
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const plano = { id: "16500000-0000-4000-8000-000000000011", clienteId, nome: "Preventivo", estado: "em_revisao" as const, revisao: 3 };
-  render(<QueryClientProvider client={client}><AcoesRevisaoPlano userId="usuario" clienteId={clienteId} plano={plano} bloqueado={false} /></QueryClientProvider>);
+  const plano = {
+    id: "16500000-0000-4000-8000-000000000011",
+    clienteId,
+    nome: "Preventivo",
+    estado: "em_revisao" as const,
+    revisao: 3,
+  };
+  render(
+    <QueryClientProvider client={client}>
+      <AcoesRevisaoPlano userId="usuario" clienteId={clienteId} plano={plano} bloqueado={false} />
+    </QueryClientProvider>,
+  );
   fireEvent.click(screen.getByRole("button", { name: "Aprovar revisão de versão" }));
   expect(screen.getByRole("button", { name: "Confirmar aprovação" })).toBeDisabled();
-  fireEvent.change(screen.getByLabelText("Início da vigência"), { target: { value: "2026-11-06" } });
+  fireEvent.change(screen.getByLabelText("Início da vigência"), {
+    target: { value: "2026-11-06" },
+  });
   expect(screen.getByRole("button", { name: "Confirmar aprovação" })).toBeEnabled();
   expect(screen.getByText(/servidor verificará as permissões e os impactos/i)).toBeTruthy();
   vi.unstubAllEnvs();
@@ -1616,19 +1646,35 @@ it("não sobrescreve operação de revisão surgida após abrir a confirmação"
   expect(sessionStorage.getItem(chave)).toBe("pedido anterior ainda incerto");
 });
 
-it.each(["22023", "23514", "40001"])("preserva submissão incerta quando retry retorna %s", async (code) => {
-  const planoId = "16500000-0000-4000-8000-000000000011";
-  api.autorizarAcao.mockResolvedValue(true);
-  api.listarPlanos.mockResolvedValue([{ id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 3 }]);
-  api.transicionarRevisao.mockRejectedValueOnce(new Error("rede")).mockRejectedValueOnce({ code }).mockResolvedValueOnce({ warnings: [] });
-  montar();
-  fireEvent.click(await screen.findByRole("button", { name: "Enviar Preventivo para revisão" }));
-  fireEvent.click(screen.getByRole("button", { name: "Confirmar envio para revisão" }));
-  await screen.findByText(/não foi possível confirmar a operação/i);
-  fireEvent.click(screen.getByRole("button", { name: "Tentar operação de Preventivo novamente" }));
-  await waitFor(() => expect(api.transicionarRevisao).toHaveBeenCalledTimes(2));
-  expect(screen.getByRole("button", { name: "Tentar operação de Preventivo novamente" })).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "Tentar operação de Preventivo novamente" }));
-  await waitFor(() => expect(api.transicionarRevisao).toHaveBeenCalledTimes(3));
-  expect(api.transicionarRevisao.mock.calls[0]?.[0]).toEqual(api.transicionarRevisao.mock.calls[2]?.[0]);
-});
+it.each(["22023", "23514", "40001"])(
+  "preserva submissão incerta quando retry retorna %s",
+  async (code) => {
+    const planoId = "16500000-0000-4000-8000-000000000011";
+    api.autorizarAcao.mockResolvedValue(true);
+    api.listarPlanos.mockResolvedValue([
+      { id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 3 },
+    ]);
+    api.transicionarRevisao
+      .mockRejectedValueOnce(new Error("rede"))
+      .mockRejectedValueOnce({ code })
+      .mockResolvedValueOnce({ warnings: [] });
+    montar();
+    fireEvent.click(await screen.findByRole("button", { name: "Enviar Preventivo para revisão" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar envio para revisão" }));
+    await screen.findByText(/não foi possível confirmar a operação/i);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Tentar operação de Preventivo novamente" }),
+    );
+    await waitFor(() => expect(api.transicionarRevisao).toHaveBeenCalledTimes(2));
+    expect(
+      screen.getByRole("button", { name: "Tentar operação de Preventivo novamente" }),
+    ).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Tentar operação de Preventivo novamente" }),
+    );
+    await waitFor(() => expect(api.transicionarRevisao).toHaveBeenCalledTimes(3));
+    expect(api.transicionarRevisao.mock.calls[0]?.[0]).toEqual(
+      api.transicionarRevisao.mock.calls[2]?.[0],
+    );
+  },
+);

@@ -1,28 +1,442 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
-import { useRef,useState } from "react";
+import { useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { ProporEncerramentoOcorrencia } from "./ProporEncerramentoOcorrencia";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
-type Previa = { revisao: number; os: { id: string; status: string }[]; historicoRecente: { requestId: string; revisao: number; motivo: string; osIds: string[]; atorId: string; criadoEm: string }[]; historicoLimitado: boolean; escopoCongelado: false };
-type Pedido = { requestId: string; clienteId: string; ocorrenciaId: string; revisao: number; osIds: string[]; motivo: string; tentativaIncerta?: boolean };
+type Previa = {
+  revisao: number;
+  os: { id: string; status: string }[];
+  historicoRecente: {
+    requestId: string;
+    revisao: number;
+    motivo: string;
+    osIds: string[];
+    atorId: string;
+    criadoEm: string;
+  }[];
+  historicoLimitado: boolean;
+  escopoCongelado: false;
+};
+type Pedido = {
+  requestId: string;
+  clienteId: string;
+  ocorrenciaId: string;
+  revisao: number;
+  osIds: string[];
+  motivo: string;
+  tentativaIncerta?: boolean;
+};
 
-export function DeclaracaoEscopoPreventivo({ userId, clienteId, planoId, versaoId, rotinaId }: { userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string }) {
-  const [ocorrencia, setOcorrencia] = useState(""); const [selecionadas, setSelecionadas] = useState<string[]>([]); const [motivo, setMotivo] = useState(""); const [confirmado, setConfirmado] = useState(false); const [aviso, setAviso] = useState("");
-  const chave = `sso-escopo-preventivo:${JSON.stringify([userId, clienteId, planoId])}`;const trava=useRef(false);const primeira=useRef(false);
-  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(chave); if (!raw) return null; const p = JSON.parse(raw) as Pedido; return p.clienteId === clienteId && typeof p.requestId === "string" && typeof p.ocorrenciaId === "string" && Number.isSafeInteger(p.revisao) && Array.isArray(p.osIds) && p.osIds.every((id) => typeof id === "string") && typeof p.motivo === "string" && (p.tentativaIncerta===undefined||typeof p.tentativaIncerta==="boolean") ? p : "invalido"; } catch { return "invalido"; } });
-  const ocorrencias = useInfiniteQuery({ queryKey: ["ocorrencias-escopo", userId, clienteId, planoId, versaoId, rotinaId], initialPageParam: null as string | null, gcTime: 0, queryFn: async ({ pageParam, signal }) => { await conferirSessaoDiagnostico(userId,signal);const { data, error } = await supabase.schema("pcm").rpc("sso_listar_ocorrencias_escopo_mediado", { p_ator: userId, p_cliente: clienteId, p_plano: planoId, p_versao: versaoId, p_rotina: rotinaId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error;await conferirSessaoDiagnostico(userId,signal); if (!Array.isArray(data)) throw new Error("Lista inválida."); return data as { id: string; vencimento_original: string; alvo_tipo: string; alvo_id: string }[]; }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.id : undefined });
-  const previa = useQuery({ queryKey: ["escopo-preventivo", userId, clienteId, planoId, ocorrencia], enabled: !!ocorrencia, gcTime: 0, queryFn: async ({ signal }) => { await conferirSessaoDiagnostico(userId,signal);const { data, error } = await supabase.schema("pcm").rpc("sso_previa_escopo_preventivo_mediada", { p_ator: userId, p_cliente: clienteId, p_plano: planoId, p_ocorrencia: ocorrencia }).abortSignal(signal); if (error) throw error;await conferirSessaoDiagnostico(userId,signal); if (!data || !Array.isArray(data.os) || !Array.isArray(data.historicoRecente) || data.escopoCongelado !== false) throw new Error("Prévia inválida."); return data as Previa; } });
-  const diagnostico = useQuery({ queryKey: ["diagnostico-fechamento-preventivo", userId, clienteId, planoId, ocorrencia, previa.data?.revisao], enabled: !!ocorrencia && !!previa.data, gcTime: 0, queryFn: async ({ signal }) => { await conferirSessaoDiagnostico(userId,signal);const { data, error } = await supabase.schema("pcm").rpc("sso_diagnosticar_escopo_preventivo_mediado", { p_ator: userId, p_cliente: clienteId, p_plano: planoId, p_ocorrencia: ocorrencia }).abortSignal(signal); if (error) throw error;await conferirSessaoDiagnostico(userId,signal); if (!data || data.fechamentoAutorizado !== false) throw new Error("Diagnóstico inválido."); return data as { declaracaoExistente: boolean; revisao?: number; osDeclaradas?: number; osAtuais?: number; osNaoDeclaradas?: number; osDeclaradasAusentes?: number; osNaoFinalizadas?: number; osSemFinalizacaoValidada?: number }; } });
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa alterada");const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_escopo_preventivo_mediado", { p_ator: userId, p_plano: planoId, p_request: p.requestId, p_cliente: p.clienteId, p_ocorrencia: p.ocorrenciaId, p_revisao: p.revisao, p_os: p.osIds, p_motivo: p.motivo }); if (error) throw error; if (!data || data.requestId !== p.requestId || data.ocorrenciaConcluida !== false || data.escopoCongelado !== false) throw new Error("Resultado inválido."); }, onSuccess: async (_r,p) => { try { await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa alterada");sessionStorage.removeItem(chave); } catch { setAviso("Tentativa não pôde ser removida; procure suporte."); return; } setPendente(null); setConfirmado(false); setAviso("Declaração registrada; ocorrência não foi concluída."); await previa.refetch(); }, onError: async(error,p) => {const e=error as {code?:string;message?:string};if(primeira.current&&e.code==="P0011"&&e.message==="revisao_obsoleta"){try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(chave);setPendente(null);setConfirmado(false);setAviso("Escopo alterado. Confira novamente.");await previa.refetch();return;}catch{/* Preserva pedido em caso de dúvida. */}}setAviso("Resultado não confirmado. Repita a mesma tentativa; em conflito procure suporte.");},onSettled:()=>{trava.current=false;primeira.current=false;} });
-  const enviar = (p: Pedido) => { if(trava.current)return;trava.current=true;try { const anterior=sessionStorage.getItem(chave);if(anterior!==null&&anterior!==JSON.stringify(p))throw new Error("Tentativa alterada");primeira.current=p.tentativaIncerta===false;p={...p,tentativaIncerta:true};sessionStorage.setItem(chave, JSON.stringify(p)); } catch { trava.current=false;setAviso("Não foi possível guardar tentativa; nada enviado."); return; } setPendente(p); envio.mutate(p); };
-  return <section aria-label="Declaração de escopo preventivo"><h4>Declarar escopo preventivo</h4><p>Fotografia declarada pelo PCM, não prova integralidade nem impede novas OS. Não encerra ocorrência ou OS. Somente ocorrências de calendário com vínculo legado comprovado; Visitas não estão cobertas.</p>
-    {ocorrencias.isError && <p role="alert">Lista indisponível. <button type="button" onClick={() => void ocorrencias.refetch()}>Tentar novamente</button></p>}
-    <label>Ocorrência vinculada <select disabled={!!pendente} value={ocorrencia} onChange={(e) => { setOcorrencia(e.target.value); setSelecionadas([]); setConfirmado(false); }}><option value="">Selecione</option>{ocorrencias.data?.pages.flat().map((o) => <option key={o.id} value={o.id}>{o.vencimento_original} · {o.alvo_tipo} {o.alvo_id} · {o.id}</option>)}</select></label>{ocorrencias.hasNextPage && <button type="button" disabled={ocorrencias.isFetching} onClick={() => void ocorrencias.fetchNextPage()}>Mais ocorrências</button>}
-    {previa.isError && <p role="alert">Prévia indisponível, vínculo ausente ou sem acesso. <button type="button" onClick={() => void previa.refetch()}>Tentar novamente</button></p>}
-    {diagnostico.isError && <p role="alert">Diagnóstico indisponível. <button type="button" onClick={() => void diagnostico.refetch()}>Tentar novamente</button></p>}{diagnostico.data && <aside><h5>Diagnóstico de fechamento</h5><p>Fotografia sujeita a mudanças: não comprova integralidade e não autoriza encerramento, mesmo com todas as contagens zeradas.</p>{diagnostico.data.declaracaoExistente ? <p>Revisão {diagnostico.data.revisao} · OS declaradas {diagnostico.data.osDeclaradas} · atuais {diagnostico.data.osAtuais} · não declaradas {diagnostico.data.osNaoDeclaradas} · declaradas ausentes {diagnostico.data.osDeclaradasAusentes} · não finalizadas {diagnostico.data.osNaoFinalizadas} · sem finalização validada {diagnostico.data.osSemFinalizacaoValidada}</p> : <p>Escopo ainda não declarado.</p>}</aside>}
-    {import.meta.env.VITE_SSO_PROPOSTA_ENCERRAMENTO_OCORRENCIA_ENABLED === "true" && !previa.isFetching && !previa.isError && !diagnostico.isFetching && !diagnostico.isError && previa.data?.historicoRecente[0]?.requestId && diagnostico.data?.declaracaoExistente && diagnostico.data.revisao === previa.data.revisao && typeof diagnostico.data.osDeclaradas === "number" && typeof diagnostico.data.osAtuais === "number" && typeof diagnostico.data.osNaoDeclaradas === "number" && typeof diagnostico.data.osDeclaradasAusentes === "number" && typeof diagnostico.data.osNaoFinalizadas === "number" && typeof diagnostico.data.osSemFinalizacaoValidada === "number" && <ProporEncerramentoOcorrencia key={ocorrencia} userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={ocorrencia} declaracaoId={previa.data.historicoRecente[0].requestId} revisao={previa.data.revisao} osDeclaradas={diagnostico.data.osDeclaradas} osAtuais={diagnostico.data.osAtuais} osNaoDeclaradas={diagnostico.data.osNaoDeclaradas} osAusentes={diagnostico.data.osDeclaradasAusentes} osNaoFinalizadas={diagnostico.data.osNaoFinalizadas} osSemValidacao={diagnostico.data.osSemFinalizacaoValidada} />}
-    {previa.data && <><p>Revisão {previa.data.revisao}. {previa.data.os.length > 100 ? "Mais de 100 OS: declaração bloqueada." : `${previa.data.os.length} OS encontradas.`}</p><form onSubmit={(e) => { e.preventDefault(); if (pendente || !confirmado || !motivo.trim() || !selecionadas.length || previa.data.os.length > 100) return; enviar({ requestId: crypto.randomUUID(), clienteId, ocorrenciaId: ocorrencia, revisao: previa.data.revisao, osIds: [...selecionadas].sort(), motivo: motivo.trim(), tentativaIncerta:false }); }}><fieldset disabled={!!pendente || envio.isPending || previa.data.os.length > 100}><legend>OS declaradas</legend>{previa.data.os.map((os) => <label key={os.id}><input type="checkbox" checked={selecionadas.includes(os.id)} onChange={(e) => {setConfirmado(false);setSelecionadas((atual) => e.target.checked ? [...atual, os.id] : atual.filter((id) => id !== os.id));}} /> {os.id} · {os.status} </label>)}<label>Motivo <textarea required maxLength={2000} value={motivo} onChange={(e) => {setConfirmado(false);setMotivo(e.target.value);}} /></label><label><input type="checkbox" checked={confirmado} onChange={(e) => setConfirmado(e.target.checked)} /> Confirmo esta declaração humana, sem encerramento</label><button disabled={!confirmado}>Registrar declaração</button></fieldset></form><h5>Histórico recente</h5>{previa.data.historicoLimitado && <p>Exibidas somente as 20 revisões mais recentes.</p>}<ul>{previa.data.historicoRecente.map((h) => <li key={h.revisao}>Revisão {h.revisao} · {h.criadoEm} · responsável {h.atorId} · {h.osIds.length} OS · {h.motivo}</li>)}</ul></>}
-    {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
-  </section>;
+export function DeclaracaoEscopoPreventivo({
+  userId,
+  clienteId,
+  planoId,
+  versaoId,
+  rotinaId,
+}: { userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string }) {
+  const [ocorrencia, setOcorrencia] = useState("");
+  const [selecionadas, setSelecionadas] = useState<string[]>([]);
+  const [motivo, setMotivo] = useState("");
+  const [confirmado, setConfirmado] = useState(false);
+  const [aviso, setAviso] = useState("");
+  const chave = `sso-escopo-preventivo:${JSON.stringify([userId, clienteId, planoId])}`;
+  const trava = useRef(false);
+  const primeira = useRef(false);
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(chave);
+      if (!raw) return null;
+      const p = JSON.parse(raw) as Pedido;
+      return p.clienteId === clienteId &&
+        typeof p.requestId === "string" &&
+        typeof p.ocorrenciaId === "string" &&
+        Number.isSafeInteger(p.revisao) &&
+        Array.isArray(p.osIds) &&
+        p.osIds.every((id) => typeof id === "string") &&
+        typeof p.motivo === "string" &&
+        (p.tentativaIncerta === undefined || typeof p.tentativaIncerta === "boolean")
+        ? p
+        : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  const ocorrencias = useInfiniteQuery({
+    queryKey: ["ocorrencias-escopo", userId, clienteId, planoId, versaoId, rotinaId],
+    initialPageParam: null as string | null,
+    gcTime: 0,
+    queryFn: async ({ pageParam, signal }) => {
+      await conferirSessaoDiagnostico(userId, signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_listar_ocorrencias_escopo_mediado", {
+          p_ator: userId,
+          p_cliente: clienteId,
+          p_plano: planoId,
+          p_versao: versaoId,
+          p_rotina: rotinaId,
+          p_apos: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      await conferirSessaoDiagnostico(userId, signal);
+      if (!Array.isArray(data)) throw new Error("Lista inválida.");
+      return data as {
+        id: string;
+        vencimento_original: string;
+        alvo_tipo: string;
+        alvo_id: string;
+      }[];
+    },
+    getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
+  });
+  const previa = useQuery({
+    queryKey: ["escopo-preventivo", userId, clienteId, planoId, ocorrencia],
+    enabled: !!ocorrencia,
+    gcTime: 0,
+    queryFn: async ({ signal }) => {
+      await conferirSessaoDiagnostico(userId, signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_previa_escopo_preventivo_mediada", {
+          p_ator: userId,
+          p_cliente: clienteId,
+          p_plano: planoId,
+          p_ocorrencia: ocorrencia,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      await conferirSessaoDiagnostico(userId, signal);
+      if (
+        !data ||
+        !Array.isArray(data.os) ||
+        !Array.isArray(data.historicoRecente) ||
+        data.escopoCongelado !== false
+      )
+        throw new Error("Prévia inválida.");
+      return data as Previa;
+    },
+  });
+  const diagnostico = useQuery({
+    queryKey: [
+      "diagnostico-fechamento-preventivo",
+      userId,
+      clienteId,
+      planoId,
+      ocorrencia,
+      previa.data?.revisao,
+    ],
+    enabled: !!ocorrencia && !!previa.data,
+    gcTime: 0,
+    queryFn: async ({ signal }) => {
+      await conferirSessaoDiagnostico(userId, signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_diagnosticar_escopo_preventivo_mediado", {
+          p_ator: userId,
+          p_cliente: clienteId,
+          p_plano: planoId,
+          p_ocorrencia: ocorrencia,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      await conferirSessaoDiagnostico(userId, signal);
+      if (!data || data.fechamentoAutorizado !== false) throw new Error("Diagnóstico inválido.");
+      return data as {
+        declaracaoExistente: boolean;
+        revisao?: number;
+        osDeclaradas?: number;
+        osAtuais?: number;
+        osNaoDeclaradas?: number;
+        osDeclaradasAusentes?: number;
+        osNaoFinalizadas?: number;
+        osSemFinalizacaoValidada?: number;
+      };
+    },
+  });
+  const envio = useMutation({
+    mutationFn: async (p: Pedido) => {
+      await conferirSessaoDiagnostico(userId);
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+        throw new Error("Tentativa alterada");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_declarar_escopo_preventivo_mediado", {
+          p_ator: userId,
+          p_plano: planoId,
+          p_request: p.requestId,
+          p_cliente: p.clienteId,
+          p_ocorrencia: p.ocorrenciaId,
+          p_revisao: p.revisao,
+          p_os: p.osIds,
+          p_motivo: p.motivo,
+        });
+      if (error) throw error;
+      if (
+        !data ||
+        data.requestId !== p.requestId ||
+        data.ocorrenciaConcluida !== false ||
+        data.escopoCongelado !== false
+      )
+        throw new Error("Resultado inválido.");
+    },
+    onSuccess: async (_r, p) => {
+      try {
+        await conferirSessaoDiagnostico(userId);
+        if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+          throw new Error("Tentativa alterada");
+        sessionStorage.removeItem(chave);
+      } catch {
+        setAviso("Tentativa não pôde ser removida; procure suporte.");
+        return;
+      }
+      setPendente(null);
+      setConfirmado(false);
+      setAviso("Declaração registrada; ocorrência não foi concluída.");
+      await previa.refetch();
+    },
+    onError: async (error, p) => {
+      const e = error as { code?: string; message?: string };
+      if (primeira.current && e.code === "P0011" && e.message === "revisao_obsoleta") {
+        try {
+          await conferirSessaoDiagnostico(userId);
+          if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
+          sessionStorage.removeItem(chave);
+          setPendente(null);
+          setConfirmado(false);
+          setAviso("Escopo alterado. Confira novamente.");
+          await previa.refetch();
+          return;
+        } catch {
+          /* Preserva pedido em caso de dúvida. */
+        }
+      }
+      setAviso("Resultado não confirmado. Repita a mesma tentativa; em conflito procure suporte.");
+    },
+    onSettled: () => {
+      trava.current = false;
+      primeira.current = false;
+    },
+  });
+  const enviar = (p: Pedido) => {
+    if (trava.current) return;
+    trava.current = true;
+    try {
+      const anterior = sessionStorage.getItem(chave);
+      if (anterior !== null && anterior !== JSON.stringify(p))
+        throw new Error("Tentativa alterada");
+      primeira.current = p.tentativaIncerta === false;
+      p = { ...p, tentativaIncerta: true };
+      sessionStorage.setItem(chave, JSON.stringify(p));
+    } catch {
+      trava.current = false;
+      setAviso("Não foi possível guardar tentativa; nada enviado.");
+      return;
+    }
+    setPendente(p);
+    envio.mutate(p);
+  };
+  return (
+    <section aria-label="Declaração de escopo preventivo">
+      <h4>Declarar escopo preventivo</h4>
+      <p>
+        Fotografia declarada pelo PCM, não prova integralidade nem impede novas OS. Não encerra
+        ocorrência ou OS. Somente ocorrências de calendário com vínculo legado comprovado; Visitas
+        não estão cobertas.
+      </p>
+      {ocorrencias.isError && (
+        <p role="alert">
+          Lista indisponível.{" "}
+          <button type="button" onClick={() => void ocorrencias.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      <label>
+        Ocorrência vinculada{" "}
+        <select
+          disabled={!!pendente}
+          value={ocorrencia}
+          onChange={(e) => {
+            setOcorrencia(e.target.value);
+            setSelecionadas([]);
+            setConfirmado(false);
+          }}
+        >
+          <option value="">Selecione</option>
+          {ocorrencias.data?.pages.flat().map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.vencimento_original} · {o.alvo_tipo} {o.alvo_id} · {o.id}
+            </option>
+          ))}
+        </select>
+      </label>
+      {ocorrencias.hasNextPage && (
+        <button
+          type="button"
+          disabled={ocorrencias.isFetching}
+          onClick={() => void ocorrencias.fetchNextPage()}
+        >
+          Mais ocorrências
+        </button>
+      )}
+      {previa.isError && (
+        <p role="alert">
+          Prévia indisponível, vínculo ausente ou sem acesso.{" "}
+          <button type="button" onClick={() => void previa.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {diagnostico.isError && (
+        <p role="alert">
+          Diagnóstico indisponível.{" "}
+          <button type="button" onClick={() => void diagnostico.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {diagnostico.data && (
+        <aside>
+          <h5>Diagnóstico de fechamento</h5>
+          <p>
+            Fotografia sujeita a mudanças: não comprova integralidade e não autoriza encerramento,
+            mesmo com todas as contagens zeradas.
+          </p>
+          {diagnostico.data.declaracaoExistente ? (
+            <p>
+              Revisão {diagnostico.data.revisao} · OS declaradas {diagnostico.data.osDeclaradas} ·
+              atuais {diagnostico.data.osAtuais} · não declaradas {diagnostico.data.osNaoDeclaradas}{" "}
+              · declaradas ausentes {diagnostico.data.osDeclaradasAusentes} · não finalizadas{" "}
+              {diagnostico.data.osNaoFinalizadas} · sem finalização validada{" "}
+              {diagnostico.data.osSemFinalizacaoValidada}
+            </p>
+          ) : (
+            <p>Escopo ainda não declarado.</p>
+          )}
+        </aside>
+      )}
+      {import.meta.env.VITE_SSO_PROPOSTA_ENCERRAMENTO_OCORRENCIA_ENABLED === "true" &&
+        !previa.isFetching &&
+        !previa.isError &&
+        !diagnostico.isFetching &&
+        !diagnostico.isError &&
+        previa.data?.historicoRecente[0]?.requestId &&
+        diagnostico.data?.declaracaoExistente &&
+        diagnostico.data.revisao === previa.data.revisao &&
+        typeof diagnostico.data.osDeclaradas === "number" &&
+        typeof diagnostico.data.osAtuais === "number" &&
+        typeof diagnostico.data.osNaoDeclaradas === "number" &&
+        typeof diagnostico.data.osDeclaradasAusentes === "number" &&
+        typeof diagnostico.data.osNaoFinalizadas === "number" &&
+        typeof diagnostico.data.osSemFinalizacaoValidada === "number" && (
+          <ProporEncerramentoOcorrencia
+            key={ocorrencia}
+            userId={userId}
+            clienteId={clienteId}
+            planoId={planoId}
+            preparadaId={ocorrencia}
+            declaracaoId={previa.data.historicoRecente[0].requestId}
+            revisao={previa.data.revisao}
+            osDeclaradas={diagnostico.data.osDeclaradas}
+            osAtuais={diagnostico.data.osAtuais}
+            osNaoDeclaradas={diagnostico.data.osNaoDeclaradas}
+            osAusentes={diagnostico.data.osDeclaradasAusentes}
+            osNaoFinalizadas={diagnostico.data.osNaoFinalizadas}
+            osSemValidacao={diagnostico.data.osSemFinalizacaoValidada}
+          />
+        )}
+      {previa.data && (
+        <>
+          <p>
+            Revisão {previa.data.revisao}.{" "}
+            {previa.data.os.length > 100
+              ? "Mais de 100 OS: declaração bloqueada."
+              : `${previa.data.os.length} OS encontradas.`}
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (
+                pendente ||
+                !confirmado ||
+                !motivo.trim() ||
+                !selecionadas.length ||
+                previa.data.os.length > 100
+              )
+                return;
+              enviar({
+                requestId: crypto.randomUUID(),
+                clienteId,
+                ocorrenciaId: ocorrencia,
+                revisao: previa.data.revisao,
+                osIds: [...selecionadas].sort(),
+                motivo: motivo.trim(),
+                tentativaIncerta: false,
+              });
+            }}
+          >
+            <fieldset disabled={!!pendente || envio.isPending || previa.data.os.length > 100}>
+              <legend>OS declaradas</legend>
+              {previa.data.os.map((os) => (
+                <label key={os.id}>
+                  <input
+                    type="checkbox"
+                    checked={selecionadas.includes(os.id)}
+                    onChange={(e) => {
+                      setConfirmado(false);
+                      setSelecionadas((atual) =>
+                        e.target.checked ? [...atual, os.id] : atual.filter((id) => id !== os.id),
+                      );
+                    }}
+                  />{" "}
+                  {os.id} · {os.status}{" "}
+                </label>
+              ))}
+              <label>
+                Motivo{" "}
+                <textarea
+                  required
+                  maxLength={2000}
+                  value={motivo}
+                  onChange={(e) => {
+                    setConfirmado(false);
+                    setMotivo(e.target.value);
+                  }}
+                />
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={confirmado}
+                  onChange={(e) => setConfirmado(e.target.checked)}
+                />{" "}
+                Confirmo esta declaração humana, sem encerramento
+              </label>
+              <button disabled={!confirmado}>Registrar declaração</button>
+            </fieldset>
+          </form>
+          <h5>Histórico recente</h5>
+          {previa.data.historicoLimitado && <p>Exibidas somente as 20 revisões mais recentes.</p>}
+          <ul>
+            {previa.data.historicoRecente.map((h) => (
+              <li key={h.revisao}>
+                Revisão {h.revisao} · {h.criadoEm} · responsável {h.atorId} · {h.osIds.length} OS ·{" "}
+                {h.motivo}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
+      {pendente && pendente !== "invalido" && (
+        <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>
+          Repetir tentativa pendente
+        </button>
+      )}
+      {aviso && <p role="status">{aviso}</p>}
+    </section>
+  );
 }
