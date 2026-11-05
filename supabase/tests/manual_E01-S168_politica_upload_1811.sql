@@ -1,5 +1,6 @@
 -- Só clone sintético descartável, migrations até 1811. ON_ERROR_STOP e ROLLBACK.
 -- Testa a policy SQL com claims sintéticas; não substitui Auth/Storage HTTP.
+begin;
 \ir E01-S168_finalizacao_fixture_real.sql
 update pcm.validacao_os_gate set habilitado=true where id;
 update pcm.sso_upload_evidencia_resposta_gate set habilitado=true where id;
@@ -25,3 +26,4 @@ do $$ begin
  if pcm.sso_autorizar_upload_evidencia_resposta('16891000-0000-4000-8000-000000000002/16891000-0000-4000-8000-000000000018/16891000-0000-4000-8000-000000000092') is distinct from false then raise exception 'gate_fechado_aceito'; end if;
 end $$;
 reset role;
+rollback;
