@@ -37,7 +37,11 @@ beforeEach(() => {
       error: null,
     }),
   });
-  api.invoke.mockResolvedValue({ data: new Blob(["foto"], { type: "image/png" }), error: null, response: new Response(null, { headers: { "X-SSO-Foto-Verificacao": "sha256" } }) });
+  api.invoke.mockResolvedValue({
+    data: new Blob(["foto"], { type: "image/png" }),
+    error: null,
+    response: new Response(null, { headers: { "X-SSO-Foto-Verificacao": "sha256" } }),
+  });
   vi.stubGlobal(
     "URL",
     Object.assign(class extends URL {}, {
@@ -94,23 +98,44 @@ it("não cria URL se a tela for desmontada antes da resposta", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Ver foto" }));
   await waitFor(() => expect(api.invoke).toHaveBeenCalledOnce());
   vista.unmount();
-  responder({ data: new Blob(["foto"], { type: "image/png" }), error: null, response: new Response(null, { headers: { "X-SSO-Foto-Verificacao": "sha256" } }) });
+  responder({
+    data: new Blob(["foto"], { type: "image/png" }),
+    error: null,
+    response: new Response(null, { headers: { "X-SSO-Foto-Verificacao": "sha256" } }),
+  });
   await waitFor(() => expect(api.getUser).toHaveBeenCalledTimes(4));
   expect(URL.createObjectURL).not.toHaveBeenCalled();
 });
 
-
-it.each([null, "historica-sem-digest"])("rejeita cabeçalho ausente ou divergente: %s", async (cabecalho) => {
-  api.invoke.mockResolvedValue({ data: new Blob(["foto"], { type: "image/png" }), error: null, response: new Response(null, { headers: cabecalho ? { "X-SSO-Foto-Verificacao": cabecalho } : {} }) });
-  tela();
-  fireEvent.click(await screen.findByRole("button", { name: "Ver foto" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent("Foto indisponível");
-  expect(URL.createObjectURL).not.toHaveBeenCalled();
-});
+it.each([null, "historica-sem-digest"])(
+  "rejeita cabeçalho ausente ou divergente: %s",
+  async (cabecalho) => {
+    api.invoke.mockResolvedValue({
+      data: new Blob(["foto"], { type: "image/png" }),
+      error: null,
+      response: new Response(null, {
+        headers: cabecalho ? { "X-SSO-Foto-Verificacao": cabecalho } : {},
+      }),
+    });
+    tela();
+    fireEvent.click(await screen.findByRole("button", { name: "Ver foto" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Foto indisponível");
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  },
+);
 
 it("abre foto histórica apenas com cabeçalho correspondente e revoga ao desmontar", async () => {
-  api.rpc.mockReturnValue({ abortSignal: async () => ({ data: [{ id: fotoId, criado_em: "2026-11-05T12:00:00Z", verificada: false }], error: null }) });
-  api.invoke.mockResolvedValue({ data: new Blob(["foto"], { type: "image/png" }), error: null, response: new Response(null, { headers: { "X-SSO-Foto-Verificacao": "historica-sem-digest" } }) });
+  api.rpc.mockReturnValue({
+    abortSignal: async () => ({
+      data: [{ id: fotoId, criado_em: "2026-11-05T12:00:00Z", verificada: false }],
+      error: null,
+    }),
+  });
+  api.invoke.mockResolvedValue({
+    data: new Blob(["foto"], { type: "image/png" }),
+    error: null,
+    response: new Response(null, { headers: { "X-SSO-Foto-Verificacao": "historica-sem-digest" } }),
+  });
   const vista = tela();
   expect(await screen.findByText("Foto histórica sem verificação de integridade.")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Ver foto" }));
