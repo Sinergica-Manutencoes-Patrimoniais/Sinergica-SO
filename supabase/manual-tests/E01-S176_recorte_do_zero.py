@@ -5,7 +5,9 @@ O teste para na primeira falha. Não publica portas, não utiliza credenciais re
 não altera serviços existentes. Resultado não substitui Auth/Storage/Edge reais.
 """
 import argparse
+import base64
 import hashlib
+import hmac
 import json
 import re
 import secrets
@@ -21,10 +23,14 @@ MANIFEST = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-migratio
 FOTOS = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-fotos-40e3c9f.json"
 IMAGE = "public.ecr.aws/supabase/postgres:17.6.1.141"
 AUTH_IMAGE = "public.ecr.aws/supabase/gotrue:v2.197.0"
+REST_IMAGE = "public.ecr.aws/supabase/postgrest:v14.5"
+STORAGE_IMAGE = "public.ecr.aws/supabase/storage-api:v1.77.5"
 IDENT = secrets.token_hex(6)
 NETWORK = "sso-recorte-" + IDENT
 CONTAINER = NETWORK + "-db"
 AUTH_CONTAINER = NETWORK + "-auth"
+REST_CONTAINER = NETWORK + "-rest"
+STORAGE_CONTAINER = NETWORK + "-storage"
 created_net = created_container = False
 initial_volumes = None
 space_before = None
@@ -33,6 +39,7 @@ watchdog_triggered = threading.Event()
 watchdog_thread = None
 watchdog_lock = threading.Lock()
 auth_container_id = None
+platform_container_ids = {}
 MINIMO_LIVRE = 8 * 1024**3
 
 
@@ -78,8 +85,11 @@ def query(statement):
 
 
 def definir_senha_auth(password):
-    # Somente este comando precisa do superusuário da imagem. Nunca exibir SQL ou stderr.
-    data = ("\\set VERBOSITY verbose\nalter role supabase_auth_admin password '" + password + "';\n").encode()
+    # Somente esta configuração fixa precisa do superusuário da imagem. Nunca exibir SQL ou stderr.
+    data = ("\\set VERBOSITY verbose\nalter role supabase_auth_admin password '" + password + "';\n"
+        "alter role authenticator password '" + password + "';\n"
+        "alter role supabase_storage_admin password '" + password + "';\n"
+        "alter schema storage owner to supabase_storage_admin;\n").encode()
     try:
         p = subprocess.run(["rtk", "proxy", "docker", "exec", "-i", CONTAINER, "psql", "-X", "-U", "supabase_admin", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "--single-transaction", "-q"], input=data, capture_output=True, timeout=15)
     except subprocess.TimeoutExpired:
@@ -127,7 +137,8 @@ def monitorar(container_id):
         except Exception:
             watchdog_triggered.set()
             with watchdog_lock:
-                for alvo, nome in ((container_id, CONTAINER), (auth_container_id, AUTH_CONTAINER)):
+                alvos = [(container_id, CONTAINER), (auth_container_id, AUTH_CONTAINER), *[(identidade, nome) for nome, identidade in platform_container_ids.items()]]
+                for alvo, nome in alvos:
                     if not alvo: continue
                     try:
                         c = json.loads(docker_monitor("inspect", "--type", "container", alvo))[0]
@@ -168,7 +179,7 @@ def main():
     if len(names) != len(set(names)) or names != sorted(names): raise RuntimeError("Ordem ou duplicidade no manifesto")
     numeros = [Path(p).name[:4] for p in base_files + names]
     if len(numeros) != len(set(numeros)): raise RuntimeError("Número de migration duplicado entre base e candidatas")
-    for imagem in (IMAGE, AUTH_IMAGE):
+    for imagem in (IMAGE, AUTH_IMAGE, REST_IMAGE, STORAGE_IMAGE):
         image = json.loads(docker("image", "inspect", imagem))[0]
         if image["Config"].get("Volumes"): raise RuntimeError("Imagem declara volumes implícitos")
     initial_volumes = set(docker("volume", "ls", "-q").splitlines())
@@ -252,6 +263,57 @@ def main():
     if query("select to_regprocedure('auth.jwt()') is not null and to_regprocedure('auth.uid()') is not null and to_regprocedure('auth.role()') is not null") != "t":
         raise RuntimeError("Migrations oficiais Auth incompletas")
     print("Auth oficial pronto; funções de claims presentes.", flush=True)
+    # Segue a configuração do smoke Storage v1.77.5 em rede interna já validado.
+    # As chaves são sintéticas e ficam apenas no ambiente/metadados dos containers próprios.
+    def chave(role):
+        def enc(v): return base64.urlsafe_b64encode(v).rstrip(b"=")
+        head = enc(b'{"alg":"HS256","typ":"JWT"}')
+        body = enc(json.dumps({"role": role, "iss": "supabase", "iat": int(time.time()), "exp": int(time.time()) + 3600}, separators=(",", ":")).encode())
+        return (head + b"." + body + b"." + enc(hmac.new(jwt_secret.encode(), head + b"." + body, hashlib.sha256).digest())).decode()
+
+    def iniciar_plataforma(nome, imagem, env):
+        args = ["create", "--name", nome, "--network", NETWORK, "--label", "sso.recorte=" + IDENT]
+        for key, value in env.items(): args += ["--env", key + "=" + value]
+        docker(*args, imagem)
+        obj = inspect("container", nome)
+        if obj["Mounts"] or obj["HostConfig"].get("Privileged") or obj["HostConfig"].get("NetworkMode") != NETWORK or obj["HostConfig"].get("PortBindings"):
+            raise RuntimeError("Serviço de plataforma fora do isolamento")
+        with watchdog_lock:
+            platform_container_ids[nome] = obj["Id"]
+            if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio")
+            docker_monitor("start", nome)
+        obj = inspect("container", nome)
+        if set(obj["NetworkSettings"]["Networks"]) != {NETWORK} or any(obj["NetworkSettings"].get("Ports", {}).values()) or obj["Mounts"]:
+            raise RuntimeError("Serviço de plataforma iniciou fora do isolamento")
+
+    rest_env = {
+        "PGRST_DB_URI": "postgres://authenticator:" + auth_password + "@" + CONTAINER + ":5432/postgres",
+        "PGRST_DB_SCHEMAS": "public", "PGRST_DB_ANON_ROLE": "anon", "PGRST_JWT_SECRET": jwt_secret,
+        "PGRST_SERVER_HOST": "0.0.0.0", "PGRST_SERVER_PORT": "3000",
+    }
+    iniciar_plataforma(REST_CONTAINER, REST_IMAGE, rest_env)
+    storage_env = {
+        "ANON_KEY": chave("anon"), "SERVICE_KEY": chave("service_role"),
+        "POSTGREST_URL": "http://" + REST_CONTAINER + ":3000", "AUTH_JWT_SECRET": jwt_secret,
+        "DATABASE_URL": "postgres://supabase_storage_admin:" + auth_password + "@" + CONTAINER + ":5432/postgres",
+        "STORAGE_PUBLIC_URL": "http://" + STORAGE_CONTAINER + ":5000", "STORAGE_BACKEND": "file",
+        "FILE_STORAGE_BACKEND_PATH": "/tmp/sso-storage", "GLOBAL_S3_BUCKET": "sso-synthetic",
+        "TENANT_ID": "sso-synthetic", "REGION": "local", "ENABLE_IMAGE_TRANSFORMATION": "false",
+    }
+    iniciar_plataforma(STORAGE_CONTAINER, STORAGE_IMAGE, storage_env)
+    for nome, porta, caminho in ((REST_CONTAINER, "3000", "/"), (STORAGE_CONTAINER, "5000", "/status")):
+        for _ in range(45):
+            if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio")
+            if not inspect("container", nome)["State"]["Running"]: raise RuntimeError("Serviço de plataforma encerrou antes do readiness")
+            try:
+                status = docker("exec", CONTAINER, "curl", "--silent", "--max-time", "2", "--output", "/dev/null", "--write-out", "%{http_code}", "http://" + nome + ":" + porta + caminho)
+                if status == "200": break
+            except Exception: pass
+            time.sleep(1)
+        else: raise RuntimeError("Serviço de plataforma não ficou pronto")
+    if query("select to_regclass('storage.buckets') is not null and to_regclass('storage.objects') is not null and to_regclass('storage.migrations') is not null") != "t":
+        raise RuntimeError("Migrations oficiais Storage incompletas")
+    print("PostgREST e Storage oficiais prontos; relações de Storage presentes.", flush=True)
     prefix = b"\\set VERBOSITY verbose\n"
     for path in base_files:
         if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
@@ -278,7 +340,7 @@ if __name__ == "__main__":
     finally:
         watchdog_stop.set()
         if watchdog_thread is not None:
-            watchdog_thread.join(timeout=25)
+            watchdog_thread.join(timeout=45)
             if watchdog_thread.is_alive():
                 print("Monitor não encerrou; limpeza bloqueada para evitar corrida.")
                 sys.exit(1)
@@ -291,7 +353,7 @@ if __name__ == "__main__":
             containers = docker("ps", "-a", "--filter", "label=sso.recorte=" + IDENT, "--format", "{{.ID}}").splitlines()
             for container_id in containers:
                 c = inspect("container", container_id)
-                if c["Name"] not in ("/" + CONTAINER, "/" + AUTH_CONTAINER) or c["Config"].get("Labels", {}).get("sso.recorte") != IDENT:
+                if c["Name"] not in ("/" + CONTAINER, "/" + AUTH_CONTAINER, "/" + REST_CONTAINER, "/" + STORAGE_CONTAINER) or c["Config"].get("Labels", {}).get("sso.recorte") != IDENT:
                     raise RuntimeError("identidade do container divergente")
                 volumes = {m["Name"] for m in c["Mounts"] if m.get("Type") == "volume"}
                 if volumes and (initial_volumes is None or volumes.intersection(initial_volumes)):
