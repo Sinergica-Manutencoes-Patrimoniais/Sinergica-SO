@@ -154,16 +154,14 @@ function Conteudo({
         sessionStorage.getItem(storageKey) !== JSON.stringify(p)
       )
         throw new Error("Sessão ou tentativa alterada.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_conferir_cobertura_mediada", {
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_retorno_id: p.retornoId,
-          p_evidencia_id: p.evidenciaId,
-          p_expected_evidencias: p.revision,
-          p_justificativa: p.justificativa,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_conferir_cobertura_mediada", {
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_retorno_id: p.retornoId,
+        p_evidencia_id: p.evidenciaId,
+        p_expected_evidencias: p.revision,
+        p_justificativa: p.justificativa,
+      });
       if (error) throw error;
       const r = z
         .object({
@@ -364,7 +362,7 @@ function Conteudo({
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

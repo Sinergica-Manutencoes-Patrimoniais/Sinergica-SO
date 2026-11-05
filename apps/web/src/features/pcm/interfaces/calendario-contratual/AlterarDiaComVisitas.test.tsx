@@ -23,40 +23,38 @@ afterEach(() => {
 });
 for (const incerta of [false, true])
   for (const code of ["40001", "P0018"])
-    it((incerta
-      ? "mantém replay após falha de rede e rejeição posterior"
-      : "permite nova conferência após rejeição definitiva inicial") +
-      " " +
-      code, async () => {
+    it(`${
+      incerta
+        ? "mantém replay após falha de rede e rejeição posterior"
+        : "permite nova conferência após rejeição definitiva inicial"
+    } ${code}`, async () => {
       let envios = 0;
-      api.rpc.mockImplementation((nome: string) =>
-        nome.startsWith("sso_prever_")
-          ? {
-              abortSignal: async () => ({
-                data: [
-                  {
-                    visita_id: id(4),
-                    semana_origem: "2026-11-02",
-                    regra_origem_id: id(5),
-                    inicio_em: "2026-11-06T12:00:00Z",
-                    estado: "planejada",
-                    revisao: 1,
-                    data_proposta: "2026-11-03",
-                    classificacao: "candidata_revisao",
-                  },
-                ],
-                error: null,
-              }),
-            }
-          : (envios++,
-            Promise.resolve({
-              data: null,
-              error:
-                incerta && envios === 1
-                  ? new Error("rede")
-                  : { code, message: "impactos_alterados" },
-            })),
-      );
+      api.rpc.mockImplementation((nome: string) => {
+        if (nome.startsWith("sso_prever_"))
+          return {
+            abortSignal: async () => ({
+              data: [
+                {
+                  visita_id: id(4),
+                  semana_origem: "2026-11-02",
+                  regra_origem_id: id(5),
+                  inicio_em: "2026-11-06T12:00:00Z",
+                  estado: "planejada",
+                  revisao: 1,
+                  data_proposta: "2026-11-03",
+                  classificacao: "candidata_revisao",
+                },
+              ],
+              error: null,
+            }),
+          };
+        envios++;
+        return Promise.resolve({
+          data: null,
+          error:
+            incerta && envios === 1 ? new Error("rede") : { code, message: "impactos_alterados" },
+        });
+      });
       const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
       render(
         <QueryClientProvider client={client}>

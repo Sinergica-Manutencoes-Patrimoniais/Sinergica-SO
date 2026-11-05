@@ -2,9 +2,9 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { AprovarRetornoPcm } from "./AprovarRetornoPcm";
 import { CondicaoEstrutural } from "./CondicaoEstrutural";
 import { CondicaoEvidencia } from "./CondicaoEvidencia";
-import { AprovarRetornoPcm } from "./AprovarRetornoPcm";
 type Pedido = {
   requestId: string;
   clienteId: string;
@@ -140,17 +140,15 @@ function Conteudo({
       if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(storageKey) !== JSON.stringify(p))
         throw new Error("Tentativa alterada.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_reatestar_cobertura_mediada", {
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_retorno_id: p.retornoId,
-          p_conferencia_id: p.conferenciaId,
-          p_expected_evidencias: p.evidencias,
-          p_expected_decisao: p.decisao,
-          p_justificativa: p.justificativa,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_reatestar_cobertura_mediada", {
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_retorno_id: p.retornoId,
+        p_conferencia_id: p.conferenciaId,
+        p_expected_evidencias: p.evidencias,
+        p_expected_decisao: p.decisao,
+        p_justificativa: p.justificativa,
+      });
       if (error) throw error;
       const recibo = z
         .object({
@@ -348,7 +346,7 @@ function Conteudo({
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

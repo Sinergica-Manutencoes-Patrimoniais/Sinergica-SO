@@ -47,7 +47,9 @@ it("não apaga tentativa substituída enquanto a declaração é processada", as
   tela();
   preencher();
   await waitFor(() => expect(api.rpc).toHaveBeenCalledTimes(1));
-  const pedido = api.rpc.mock.calls[0]![1];
+  const chamada = api.rpc.mock.calls[0];
+  if (!chamada) throw new Error("Chamada ausente");
+  const pedido = chamada[1];
   sessionStorage.setItem(chave, "tentativa nova");
   responder({
     data: {
@@ -108,7 +110,9 @@ it("repete exatamente a mesma declaração após falha incerta", async () => {
   await waitFor(() => expect((repetir as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(repetir);
   await waitFor(() => expect(api.rpc).toHaveBeenCalledTimes(2));
-  expect(api.rpc.mock.calls[1]![1]).toEqual(api.rpc.mock.calls[0]![1]);
+  const [primeira, segunda] = api.rpc.mock.calls;
+  if (!primeira || !segunda) throw new Error("Chamadas ausentes");
+  expect(segunda[1]).toEqual(primeira[1]);
   await waitFor(() => expect(sessionStorage.getItem(chave)).toBeNull());
   expect(onUsar).toHaveBeenCalledWith(null, []);
 });

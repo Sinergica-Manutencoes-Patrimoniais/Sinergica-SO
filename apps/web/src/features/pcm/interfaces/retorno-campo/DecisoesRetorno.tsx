@@ -106,16 +106,14 @@ function Conteudo({
       if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(storageKey) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_decidir_retorno_mediado", {
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_retorno_id: p.retornoId,
-          p_expected_revision: p.revision,
-          p_decisao: p.decisao,
-          p_motivo: p.motivo,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_decidir_retorno_mediado", {
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_retorno_id: p.retornoId,
+        p_expected_revision: p.revision,
+        p_decisao: p.decisao,
+        p_motivo: p.motivo,
+      });
       if (error) throw error;
       const r = respostaDecisao.parse(data);
       if (
@@ -256,7 +254,7 @@ function Conteudo({
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

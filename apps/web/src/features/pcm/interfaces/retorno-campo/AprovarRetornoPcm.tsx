@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
-import { FinalizarOsValidada } from "./FinalizarOsValidada";
 import { AprovarFinalizarAtomico } from "./AprovarFinalizarAtomico";
+import { FinalizarOsValidada } from "./FinalizarOsValidada";
 type Pedido = {
   requestId: string;
   clienteId: string;
@@ -351,7 +351,7 @@ function Conteudo({
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

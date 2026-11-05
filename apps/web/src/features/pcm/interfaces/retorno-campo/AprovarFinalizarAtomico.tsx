@@ -124,20 +124,18 @@ function Conteudo({
       if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa alterada.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_aprovar_finalizar_os_atomico", {
-          p_request_id: p.requestId,
-          p_cliente_id: p.clienteId,
-          p_retorno_id: p.retornoId,
-          p_conferencia_id: p.conferenciaId,
-          p_expected_evidencias: p.evidencias,
-          p_expected_decisao: p.decisao,
-          p_justificativa: p.justificativa,
-          p_expected_os_id: p.osId,
-          p_expected_status: p.status,
-          p_expected_updated_at: p.updatedAt,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_aprovar_finalizar_os_atomico", {
+        p_request_id: p.requestId,
+        p_cliente_id: p.clienteId,
+        p_retorno_id: p.retornoId,
+        p_conferencia_id: p.conferenciaId,
+        p_expected_evidencias: p.evidencias,
+        p_expected_decisao: p.decisao,
+        p_justificativa: p.justificativa,
+        p_expected_os_id: p.osId,
+        p_expected_status: p.status,
+        p_expected_updated_at: p.updatedAt,
+      });
       if (error) throw error;
       const r = respostaSchema.parse(data);
       if (
@@ -300,7 +298,7 @@ function Conteudo({
           Repetir mesma tentativa
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }
