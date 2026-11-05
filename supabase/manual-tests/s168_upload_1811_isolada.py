@@ -45,6 +45,26 @@ def classificar_not_null(erro):
             + (coluna if coluna in COLUNAS_DIAGNOSTICO else "coluna não classificada"))
 
 
+def classificar_permissao(erro):
+    # Retorna apenas rótulos fixos. Nunca inclui nome ou conteúdo arbitrário do erro.
+    funcoes = (
+        "sso_autorizar_upload_foto_grupo",
+        "sso_autorizar_upload_foto_levantamento",
+        "sso_autorizar_upload_documento_levantamento",
+        "sso_autorizar_upload_evidencia_resposta",
+    )
+    for nome in funcoes:
+        if re.search(r"permission denied for function " + re.escape(nome) + r"(?:\b|\()", erro, re.I):
+            return "função " + nome
+    if re.search(r"permission denied for schema storage\b", erro, re.I):
+        return "schema storage"
+    if re.search(r"permission denied for (?:table|relation) objects\b", erro, re.I):
+        return "tabela storage.objects"
+    if re.search(r"row.level security policy", erro, re.I):
+        return "política RLS"
+    return "permissão não classificada"
+
+
 def preparar(root):
     arquivos = (
         (MIGRATION, "7cbbd0afcbbdc741f3bc2873e3bc61fd10ced07bb0ec98cc342c8e529a80c02e"),
@@ -93,7 +113,8 @@ def executar(container, fixture, query, watchdog):
         raise RuntimeError("Fixture SQL de upload 1811 falhou; SQLSTATE "
             + (estado.group(1) if estado else "não identificado")
             + "; linha expandida " + (linha.group(1) if linha else "não identificada")
-            + ("; NOT NULL " + classificar_not_null(erro) if estado and estado.group(1) == "23502" else ""))
+            + ("; NOT NULL " + classificar_not_null(erro) if estado and estado.group(1) == "23502" else "")
+            + ("; permissão " + classificar_permissao(erro) if estado and estado.group(1) == "42501" else ""))
     if resultado.stdout.decode(errors="replace").splitlines().count("SSO_UPLOAD_1811_OK") != 1:
         raise RuntimeError("Fixture SQL de upload 1811 sem confirmação de rollback")
     if query(snapshot_sql) != antes:
