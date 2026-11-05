@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: reconferência e retorno concorrente
+
+- Interface permite reconferência após fotografia ficar desatualizada e oferece a conciliação também na tela de Visita, sob flag desligada. Cinco testes focados e typecheck web passaram.
+- RPC real de avaliação preventiva, com retorno sintético em clone, concorreu com declaração nas duas ordens: contenção/foto obsoleta quando o retorno veio primeiro; retorno preservado e reserva recusada quando veio depois. Roteiro `supabase/tests/manual_E01-S165_reconciliacao_legada_inerte_concorrencia.md`; não prova todos os escritores ou aprovação real.
+- Leitura 1730 mantém escopo da policy PCM 0305, que permite leitura interna global; não existe concessão individual de leitura PCM por Cliente no modelo identificado. Não foi criada restrição artificial que bloqueie leitores legítimos. Guarda 1045 e flags continuam fechadas; sem deploy/Auvo. Próximo passo: comprovar fontes e escritores restantes e revisão integral para aprovação.
+
 ## 2026-11-05 — S165/S166: conciliação de legado inerte após vigência
 
 - ADRs 1587–1588/migrations 1729–1730 implementam conferência PCM auditada de legado inerte especificamente reservado ao SSO, com CAS, reconferência, histórico e revalidação do selo, vigência e efeitos. A geração SSO aceita somente declaração vigente e íntegra; o envio/OS legado continua bloqueado. Consultas operacionais ocultam substituída, enquanto detalhe/histórico preservam identificação. Interface está sob flag desligada.

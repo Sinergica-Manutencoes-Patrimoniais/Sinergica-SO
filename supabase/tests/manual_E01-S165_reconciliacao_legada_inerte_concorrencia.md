@@ -7,3 +7,11 @@ Primeiro, em A, alterar `visita_em` da ocorrência e manter a transação aberta
 Depois, somente no clone, restaurar `visita_em` para nulo e obter nova fotografia. Em A, registrar a declaração autenticada e manter a transação aberta. Em B, definir `lock_timeout` curto e tentar atualizar `envio_estado` para `enviando`: deve receber contenção. Confirmar A e repetir a atualização: deve receber `23514` com `indice_reservado_ao_sso`.
 
 Ambas as ordens passaram em clone com duas sessões. Nenhum envio, OS ou chamada Auvo foi feito. O ensaio cobre `visita_em` e início de envio; não comprova todos os escritores ou aprovação operacional. Descartar o clone.
+
+## Retorno de avaliação sintético
+
+Em clone preparado da mesma forma, obter a fotografia antes da disputa. Na sessão A como `service_role`, iniciar transação e chamar a RPC real `pcm.upsert_avaliacoes_preventivas` com um item sintético para a ocorrência; manter transação aberta. Na sessão B autenticada, a declaração deve receber `55P03`. Confirmar A; repetir com fotografia anterior deve falhar com `40001` e `fotografia_obsoleta`. Fotografia nova deve ser recusada com `efeito_exige_reconciliacao`.
+
+Para ordem inversa, restaurar fixture somente no clone descartável e registrar declaração na sessão A, mantendo transação aberta. Iniciar o upsert na sessão B: observar espera por lock. Confirmar A; o upsert deve registrar a avaliação. Em seguida, `pcm.sso_indice_legado_reservado_sso` deve falhar com `efeito_legado_exige_reconciliacao`, preservando o retorno recebido e exigindo tratamento do conflito.
+
+Os dois ensaios passaram com `service_role` e evento sintético. Não houve rede ou integração Auvo; não substituem prova dos demais caminhos de OS e retorno.
