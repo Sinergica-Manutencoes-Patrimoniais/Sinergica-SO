@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: contenção por Chamado e escolha concorrente
+
+- ADR-1565/migration 1709 substituem trava global sobre tabelas de vínculo de Chamado pela trava da linha do Chamado, com verificação das FKs necessárias. Em clone, ensaio reproduziu bloqueio indevido de OS corretiva de outro Cliente antes da correção e sucesso depois; FK do mesmo Chamado bloqueou e fixture de fotografia preventiva passou. Versão final compilou no lote até 1709; FK específica de Visita, carga e revisão adversarial adicionais pendentes.
+- Duas sessões autenticadas com preparadas distintas disputando a mesma candidata de Visita: A confirmou, B recebeu contenção e no retry `candidata_ja_escolhida`; replay A retornou sucesso e existe uma escolha. Clone sintético até 1709, sem Auvo; não prova todas as fontes ou aprovação real. Guarda 1045 e gates permanecem fechados.
+
 ## 2026-11-04 — S165/S166: revisão adversarial de nova data
 
 - Revisão adversarial identificou e reproduziu escolha histórica impedindo reutilizar Visita, geração antes da vigência e OS tardia por ponte legada. ADRs 1563/1564 e migrations 1707/1708 corrigem os três casos: a verificação da escolha atual é serializada por Plano, geração antecipada é recusada e OS por ponte é reconferida sob trava. Clone limpo compilou até 1708 e fixtures focadas passaram. Concorrência de duas escolhas e fontes externas permanecem pendentes; sem PASS.
