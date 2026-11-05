@@ -34,3 +34,22 @@ it("preserva tentativa incerta para repetição com o mesmo ID", async () => {
   expect(sessionStorage.getItem(chave)).toBe(pedido);
   expect(api.rpc.mock.calls[0]?.[1]).toMatchObject({ p_request_id: "16630000-1111-4000-8000-000000000301" });
 });
+
+it("permite reconferir após conflito definitivo na primeira tentativa", async () => {
+  api.rpc.mockResolvedValue({ data: null, error: { code: "P0012", message: "fila_alterada" } });
+  montar();
+  fireEvent.click(screen.getByRole("checkbox", { name: /autorizo aplicar este lote/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Aplicar retiradas à fila" }));
+  await screen.findByText(/A fila mudou/);
+  expect(sessionStorage.getItem(chave)).toBeNull();
+});
+
+it("preserva tentativa incerta quando replay retorna conflito", async () => {
+  const pedido = JSON.stringify({ requestId: "16630000-1111-4000-8000-000000000301", clienteId, planoId, cursor: null });
+  sessionStorage.setItem(chave, pedido);
+  api.rpc.mockResolvedValue({ data: null, error: { code: "P0012", message: "fila_alterada" } });
+  montar();
+  fireEvent.click(screen.getByRole("button", { name: "Repetir mesmo lote" }));
+  await screen.findByText(/Resultado não confirmado/);
+  expect(sessionStorage.getItem(chave)).toBe(pedido);
+});

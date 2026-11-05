@@ -48,14 +48,14 @@ it("bloqueia a preparação quando uma Rotina exige conferência de PMOC", async
   expect(api.rpc).toHaveBeenCalledTimes(2);
 });
 
-it.each([false, true])("preserva recibos e trata 40001 conforme incerteza anterior (%s)", async (incerta) => {
+it.each([[false,"40001"], [true,"40001"], [false,"P0015"], [true,"P0015"]] as const)("preserva recibos e trata conflito conforme incerteza anterior (%s, %s)", async (incerta, code) => {
   let chamadas = 0;
   api.rpc.mockImplementation(async (nome, p) => {
     if (nome === "sso_origens_lote_calendario") return { data: { revisao: 1, inicio: p.p_inicio, fim: p.p_fim, itens: [{ ciclo: 0, vencimento: "2026-11-10", estado: "plano", agendamentoId: null }], fontesCompletas: false, exclusividadeGlobalComprovada: false }, error: null };
     chamadas++;
     if (chamadas === 1) return { data: { requestId: p.p_request_id, inicio: p.p_inicio, fim: p.p_fim, total: 1, criadas: 1, itens: [{ indice: 0, vencimentoOriginal: "2026-11-10", preparadaId: id(31), cicloCanonicoId: id(41), criada: true }], atomico: true, osCriada: false, tarefaAuvoCriada: false }, error: null };
     if (incerta && chamadas === 2) return { data: null, error: new Error("rede") };
-    return { data: null, error: { code: "40001", message: "revisao_obsoleta" } };
+    return { data: null, error: { code, message: "revisao_obsoleta" } };
   });
   montar(); await screen.findByRole("checkbox", { name: /Rotina A/ }); await selecionar();
   fireEvent.click(await screen.findByRole("checkbox", { name: /autorizo a preparação sequencial/i }));

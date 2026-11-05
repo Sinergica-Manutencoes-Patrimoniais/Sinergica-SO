@@ -63,7 +63,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
       sessionStorage.removeItem(chave); setPendente(null); setConfirmacao(null); setMotivo("");
       setAviso(p.acao === "incluir" ? (r.estado === "verificacao" ? "Ciclo incluído para conferência: ausência de vínculo não comprova ausência de execução. Nenhuma OS ou tarefa Auvo foi criada." : "Ciclo registrado na fila local; nenhuma OS ou tarefa Auvo foi criada.") : p.acao === "confirmar" ? "Entrada confirmada como aguardando; nenhuma OS ou tarefa Auvo foi criada." : "Entrada da fila local cancelada; fonte preventiva e OS não foram alteradas.");
     } catch (error) {
-      const conflitoFila = primeiraTentativa && tipo === "visita" && typeof error === "object" && error !== null && "code" in error && error.code === "P0012" && "message" in error && error.message === "fila_ou_revisao_indisponivel";
+      const conflitoFila = primeiraTentativa && (tipo === "visita" || p.acao === "confirmar") && typeof error === "object" && error !== null && "code" in error && error.code === "P0012" && "message" in error && error.message === "fila_ou_revisao_indisponivel";
       if (conflitoFila) {
         try {
           await sessao();

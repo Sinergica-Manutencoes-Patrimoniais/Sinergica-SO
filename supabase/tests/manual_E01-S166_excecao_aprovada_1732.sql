@@ -48,7 +48,7 @@ do $$ declare r jsonb;begin
 end $$;
 do $$ begin
  begin perform pcm.sso_aprovar_excecao_visita('16660000-0000-0000-0000-000000000001','17320000-0000-0000-0000-000000000012','16660000-0000-0000-0000-00000000000b','17320000-0000-0000-0000-000000000010',1,date_trunc('week',current_date+21)::date+25,'PCM','ajuste','Conferido');raise exception 'cliente_divergente_aceito';exception when insufficient_privilege then null;end;
- begin perform pcm.sso_aprovar_excecao_visita('16660000-0000-0000-0000-000000000001','17320000-0000-0000-0000-000000000013','16660000-0000-0000-0000-00000000000a','17320000-0000-0000-0000-000000000010',2,date_trunc('week',current_date+21)::date+25,'PCM','ajuste','Conferido');raise exception 'revisao_obsoleta_aceita';exception when serialization_failure then null;end;
+ begin perform pcm.sso_aprovar_excecao_visita('16660000-0000-0000-0000-000000000001','17320000-0000-0000-0000-000000000013','16660000-0000-0000-0000-00000000000a','17320000-0000-0000-0000-000000000010',2,date_trunc('week',current_date+21)::date+25,'PCM','ajuste','Conferido');raise exception 'revisao_obsoleta_aceita';exception when sqlstate 'P0011' then if sqlerrm<>'visita_obsoleta' then raise;end if;end;
 end $$;
 do $$ declare a jsonb;b jsonb;begin
  a:=pcm.sso_aprovar_excecao_visita('16660000-0000-0000-0000-000000000001','17320000-0000-0000-0000-000000000011','16660000-0000-0000-0000-00000000000a','17320000-0000-0000-0000-000000000010',1,date_trunc('week',current_date+21)::date+25,'PCM','ajuste','Conferido');

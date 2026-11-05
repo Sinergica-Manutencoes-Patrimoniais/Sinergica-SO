@@ -81,3 +81,14 @@ it("preserva pedido de Visita anterior quando replay recebe P0012", async () => 
   await screen.findByText(/Resultado não confirmado/);
   expect(sessionStorage.getItem(chaveVisita)).toBe(pedido);
 });
+it("trata P0012 na primeira confirmação de Calendário", async () => {
+  vi.stubEnv("VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED", "true");
+  api.rpc.mockImplementation((nome:string) => nome === "sso_consultar_entrada_fila_preventiva_v2" ? {abortSignal:()=>Promise.resolve({data:[linha],error:null})} : Promise.resolve({data:null,error:{code:"P0012",message:"fila_ou_revisao_indisponivel"}}));
+  montar();await screen.findByText(/Entrada verificacao/);fireEvent.change(screen.getByLabelText("Ação"),{target:{value:"confirmar"}});fireEvent.change(screen.getByLabelText("Motivo"),{target:{value:"Conferido"}});fireEvent.click(screen.getByRole("checkbox",{name:/Conferi a ocorrência/}));fireEvent.click(screen.getByRole("button",{name:"Reconferir e marcar aguardando"}));
+  await screen.findByText(/A fila mudou/);expect(sessionStorage.getItem(chave)).toBeNull();
+});
+it("preserva confirmação anterior de Calendário em replay P0012", async () => {
+  const pedido=JSON.stringify({requestId:"16630000-1111-4000-8000-000000000063",clienteId,planoId,preparadaId,acao:"confirmar",revisao:1,motivo:"Conferido"});sessionStorage.setItem(chave,pedido);
+  api.rpc.mockImplementation((nome:string)=>nome==="sso_consultar_entrada_fila_preventiva_v2"?{abortSignal:()=>Promise.resolve({data:[linha],error:null})}:Promise.resolve({data:null,error:{code:"P0012",message:"fila_ou_revisao_indisponivel"}}));
+  montar();fireEvent.click(screen.getByRole("button",{name:"Repetir mesmo pedido"}));await screen.findByText(/Resultado não confirmado/);expect(sessionStorage.getItem(chave)).toBe(pedido);
+});

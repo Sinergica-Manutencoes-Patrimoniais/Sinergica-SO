@@ -31,7 +31,7 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
       const jaIncerta = p.tentativaIncerta !== false; p = pedidoSchema.parse({ ...p, tentativaIncerta: true }); serializado = JSON.stringify(p); sessionStorage.setItem(chave, serializado); setPedido(p);
       const { data, error } = await supabase.schema("pcm").rpc("sso_aprovar_excecao_visita", { p_ator: p.ator, p_request: p.requestId, p_cliente: p.cliente, p_visita: p.visita, p_revisao: p.revisao, p_data: p.data, p_origem: p.origem, p_natureza: p.natureza, p_motivo: p.motivo });
       if (error) {
-        if (!jaIncerta && error.code === "40001") {
+        if (!jaIncerta && (error.code === "40001" || (error.code === "P0011" && error.message === "visita_obsoleta"))) {
           await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Pedido alterado");
           sessionStorage.removeItem(chave); setPedido(null); setConfirmacao(null); setAviso("A Visita mudou. Confira os dados novamente."); void estado.refetch(); return;
         }
