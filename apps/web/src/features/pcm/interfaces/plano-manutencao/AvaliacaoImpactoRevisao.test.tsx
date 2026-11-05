@@ -3,18 +3,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 const fonte = vi.hoisted(() => ({ rpc: vi.fn() }));
-vi.mock("../../../../lib/supabase-client", () => ({ supabase: { schema: () => ({ rpc: fonte.rpc }) } }));
+vi.mock("../../../../lib/supabase-client", () => ({ supabase: { schema: () => ({ rpc: fonte.rpc }), auth: { getUser: async () => ({ data: { user: { id: "usuario" } }, error: null }) } } }));
 import { AvaliacaoImpactoRevisao } from "./AvaliacaoImpactoRevisao";
-const parcial = { coberturaVisitasELegadoIndeterminada: true, impactoIntegralComprovado: false, aprovacaoAutorizada: false, ocorrenciasCalendarioObservadas: 4, decisoesAusentes: 2, decisoesObsoletas: 1, exigemReconciliacao: 1, fontesIndividuaisIncompletas: 3, comOsClienteDivergente: 0 };
+const parcial = { revisaoPlano: 5, coberturaVisitasELegadoIndeterminada: true, impactoIntegralComprovado: false, aprovacaoAutorizada: false, ocorrenciasCalendarioObservadas: 4, decisoesAusentes: 2, decisoesObsoletas: 1, exigemReconciliacao: 1, fontesIndividuaisIncompletas: 3, comOsClienteDivergente: 0 };
 const q = () => new QueryClient({ defaultOptions: { queries: { retry: false } } });
-function montar(query: QueryClient, clienteId = "cliente-a", revisao = 5) { return <QueryClientProvider client={query}><AvaliacaoImpactoRevisao userId="usuario" clienteId={clienteId} planoId="plano" revisao={revisao} /></QueryClientProvider>; }
+function montar(query: QueryClient, clienteId = "cliente-a", revisao = 5) { vi.stubEnv("VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED", "true"); return <QueryClientProvider client={query}><AvaliacaoImpactoRevisao userId="usuario" clienteId={clienteId} planoId="plano" revisao={revisao} /></QueryClientProvider>; }
 afterEach(() => { cleanup(); vi.resetAllMocks(); vi.unstubAllEnvs(); });
 
 it("apresenta contagens parciais sem indicar aprovação", async () => {
   fonte.rpc.mockReturnValue({ abortSignal: async () => ({ data: parcial, error: null }) }); render(montar(q()));
   expect(await screen.findByText(/Ocorrências observadas 4/)).toHaveTextContent("decisões ausentes 2");
   expect(screen.getByText(/mesmo todas as contagens zeradas não liberam aprovação/i)).toBeTruthy();
-  expect(fonte.rpc).toHaveBeenCalledWith("sso_avaliar_decisoes_impacto", { p_cliente_id: "cliente-a", p_plano_id: "plano", p_expected_plano: 5 });
+  expect(fonte.rpc).toHaveBeenCalledWith("sso_avaliar_impacto_revisao_mediado", { p_ator_id: "usuario", p_cliente_id: "cliente-a", p_plano_id: "plano", p_expected_plano: 5, p_tipo: "calendario" });
 });
 
 it("recusa resposta que afirma aprovação ou completude", async () => {

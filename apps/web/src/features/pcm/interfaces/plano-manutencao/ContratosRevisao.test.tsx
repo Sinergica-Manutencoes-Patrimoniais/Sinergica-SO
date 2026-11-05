@@ -15,11 +15,12 @@ const versaoId = "16500000-0000-4000-8000-000000000091";
 const rotinaId = "16500000-0000-4000-8000-000000000081";
 const client = () => new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
 function fixtures() {
+  vi.stubEnv("VITE_SSO_CONTRATO_PERGUNTA_MEDIADO_ENABLED", "true");
   api.autorizarAcao.mockResolvedValue(true);
   api.listarPlanos.mockResolvedValue([{ id: planoId, clienteId, nome: "Preventivo", estado: "em_revisao", revisao: 7 }]);
   api.listarVersoes.mockResolvedValue([{ id: versaoId, planoId, numero: 2, estado: "rascunho", vigenciaInicio: null, vigenciaFim: null }]);
   api.listarRotinas.mockResolvedValue([{ id: rotinaId, planoId, versaoId, nome: "Inspeção", alvoTipo: "sistema", alvoId: "alvo", alvoNome: "Extintores", alvoAtivo: true, modo: "calendario", intervalo: 1, unidade: "meses", dataBase: "2026-11-01", tempoMinutos: 45, tipoTempo: "total", toleranciaAntes: 0, toleranciaDepois: 0, instrucao: "Inspecionar", questionarioId: "q", questionarioNome: "Questionário" }]);
-  api.rpc.mockImplementation((nome: string) => ({ abortSignal: async () => ({ data: nome === "sso_listar_contratos_pergunta_rascunho" ? [{ indice: 1, pergunta_id: "p1", obrigatoria: null, contrato_atual: false, revisao_plano: null }] : nome === "sso_listar_contratos_evidencia_rascunho" ? [{ indice: 1, pergunta_id: "p1", exigida: null, contrato_atual: false }] : [], error: null }) }));
+  api.rpc.mockImplementation((nome: string) => ({ abortSignal: async () => ({ data: nome === "sso_listar_perguntas_mediado" ? [{ indice: 1, pergunta_id: "p1", obrigatoria: null, contrato_atual: false, revisao_plano: null }] : nome === "sso_listar_evidencias_mediado" ? [{ indice: 1, pergunta_id: "p1", exigida: null, contrato_atual: false, revisao_plano: null }] : [], error: null }) }));
 }
 function compor(q: QueryClient, id = clienteId, usuario = "usuario") {
   return <QueryClientProvider client={q}><PlanoManutencaoWorkspace userId={usuario} clienteId={id} clienteNome="Guainumbi" /></QueryClientProvider>;
@@ -68,7 +69,7 @@ it("oculta dados durante falha da autorização", async () => {
 it("repete o mesmo pedido de obrigatoriedade após resultado incerto", async () => {
   fixtures(); vi.stubEnv("VITE_SSO_CONTRATO_PERGUNTAS_ENABLED", "true"); vi.stubEnv("VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED", "true");
   const consulta = api.rpc.getMockImplementation()!;
-  api.rpc.mockImplementation((nome: string, args: unknown) => nome === "sso_configurar_obrigatoriedade_pergunta" ? Promise.resolve({ error: { code: "42501" } }) : consulta(nome, args));
+  api.rpc.mockImplementation((nome: string, args: unknown) => nome === "sso_configurar_pergunta_mediada" ? Promise.resolve({ error: { code: "42501" } }) : consulta(nome, args));
   render(compor(client())); await abrir();
   const secao = await screen.findByRole("region", { name: "Obrigatoriedade das perguntas" });
   await within(secao).findByRole("option", { name: /p1/ });
@@ -77,8 +78,8 @@ it("repete o mesmo pedido de obrigatoriedade após resultado incerto", async () 
   fireEvent.change(within(secao).getByLabelText("Justificativa"), { target: { value: "Conferido pelo PCM" } });
   fireEvent.click(within(secao).getByRole("button", { name: "Guardar contrato na revisão 7" }));
   fireEvent.click(await within(secao).findByRole("button", { name: "Repetir tentativa pendente" }));
-  await waitFor(() => expect(api.rpc.mock.calls.filter(([nome]) => nome === "sso_configurar_obrigatoriedade_pergunta")).toHaveLength(2));
-  const pedidos = api.rpc.mock.calls.filter(([nome]) => nome === "sso_configurar_obrigatoriedade_pergunta");
+  await waitFor(() => expect(api.rpc.mock.calls.filter(([nome]) => nome === "sso_configurar_pergunta_mediada")).toHaveLength(2));
+  const pedidos = api.rpc.mock.calls.filter(([nome]) => nome === "sso_configurar_pergunta_mediada");
   expect(pedidos[0]?.[1]).toMatchObject({ p_cliente_id: clienteId, p_plano_id: planoId, p_versao_id: versaoId, p_rotina_id: rotinaId, p_expected_revision: 7, p_pergunta_id: "p1", p_obrigatoria: true });
   expect(pedidos[1]?.[1]).toEqual(pedidos[0]?.[1]);
 });

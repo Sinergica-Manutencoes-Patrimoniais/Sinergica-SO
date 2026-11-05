@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — validação conjunta S165/S166/S170/S176 (Codex)
+
+- Build e typecheck web passaram. Rodada web focada inicial: 84 passaram, 3 falharam, 4 ignorados; as 3 expectativas de capacidades foram corrigidas e o arquivo passou 17/17. Outros arquivos de revisão/geração e adaptador passaram em rodadas focadas após atualização de fixtures; isso não é uma suíte completa verde.
+- Clone sintético, rede interna: migrations 1614–1801 aplicadas; 25 fixtures distintas de S165/S166/S170/S176 passaram, além de 3/3 verificações da fixture concorrente S166/S177 via TCP interno. Duas jornadas de aplicação com `--fila` passaram após atualizar mensagem esperada do driver: revisão/aprovação/geração Calendário e aprovação/geração Visita. Dados, gates e relógio sintéticos; recursos temporários removidos, sem Auvo real.
+- `pnpm run ci:local` executado uma vez: exit 1. Testes web, lint, Edge Functions, Squawk e verificadores de documentação/interface falharam; build/typecheck passaram. Lint registrou 2.272 erros; Squawk 474 achados em 42 migrations, incluindo limitações de parser. Correções pontuais de testes não tornam a CI verde. Declarações Edge ausentes não foram acrescentadas porque podem alterar deploy automático.
+- Próximo passo: validar roteiros de concorrência/revogação em duas sessões, caso 1793 e fontes/ACL reais em ambiente autorizado; revisar escopo de CI/rollout sem suprimir checks. S176 AC6 admite indicar fonte inexistente: não é necessária nova escala de criticidade/completude para prosseguir. Nenhum merge ou deploy efetuado.
+
 ## 2026-11-05 — quatro stories: preparação do lote (Codex)
 
 - S176: ADR-1654/1655 e migrations 1796/1797 preparam guardas de Cliente e hierarquia; 1799 serializa autorização na movimentação; 1800 prepara caminho físico por ativo e 1801 consulta preventivas legadas. S166: 1798 remove limite de idade para preparação individual de vencido. Todas aguardam aplicação e validação.

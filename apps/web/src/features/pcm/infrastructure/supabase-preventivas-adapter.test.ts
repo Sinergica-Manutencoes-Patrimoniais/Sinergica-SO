@@ -94,7 +94,7 @@ describe("listarPreventivas — E01-S53 AC-8", () => {
 
     expect(resultado.planos).toEqual([{ id: "plano-a", cliente_id: "cliente-a" }]);
     expect(resultado.ocorrencias).toEqual([
-      { id: "ocorrencia-a", plano_id: "plano-a", os_status: "finalizado", os_id: "os-a", os_numero: "OS-A", ordens_vinculadas: [{ id: "os-a", numero: "OS-A", status: "finalizado" }] },
+      { id: "ocorrencia-a", plano_id: "plano-a", reconciliacao_legada: "normal", os_status: "finalizado", os_id: "os-a", os_numero: "OS-A", ordens_vinculadas: [{ id: "os-a", numero: "OS-A", status: "finalizado" }] },
     ]);
     expect(resultado.avaliacoes).toEqual([{ id: "avaliacao-a", ocorrencia_id: "ocorrencia-a" }]);
     expect(consultas.find((item) => item.tabela === "planos_preventivos")?.eq).toHaveBeenCalledWith(

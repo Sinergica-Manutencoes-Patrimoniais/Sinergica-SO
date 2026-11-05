@@ -1,15 +1,16 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({ schema: vi.fn(), rpc: vi.fn() }));
 vi.mock("../../../../lib/supabase-client", () => ({ supabase: { schema: api.schema, auth: { getUser: async () => ({ data: { user: { id: "u" } }, error: null }) } } }));
 import { GerarVisitaContratual } from "./GerarVisitaContratual";
-afterEach(() => { cleanup(); sessionStorage.clear(); vi.resetAllMocks(); });
+beforeEach(() => { vi.stubEnv("VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED", "true"); });
+afterEach(() => { cleanup(); sessionStorage.clear(); vi.resetAllMocks(); vi.unstubAllEnvs(); });
 
 it("consulta regras reais pela fronteira mediada autorizada", async () => {
   api.schema.mockReturnValue({ rpc: api.rpc });
-  api.rpc.mockReturnValue({ abortSignal: () => Promise.resolve({ data: [{ id: "regra", numero: 1, dia_semana: 5, intervalo_semanas: 1, hora_inicio: "09:00", fuso: "America/Sao_Paulo", vigencia_inicio: "2026-01-01", vigencia_fim: null }], error: null }) });
+  api.rpc.mockReturnValue({ abortSignal: () => Promise.resolve({ data: [{ id: "regra", numero: 1, ancora_semana: "2026-10-05", dia_semana: 5, intervalo_semanas: 1, hora_inicio: "09:00", fuso: "America/Sao_Paulo", vigencia_inicio: "2026-01-01", vigencia_fim: null }], error: null }) });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><GerarVisitaContratual userId="u" clienteId="c" serieId="s" /></QueryClientProvider>);
   expect(await screen.findByText(/Regra 1/)).toBeTruthy();
@@ -19,8 +20,8 @@ it("consulta regras reais pela fronteira mediada autorizada", async () => {
 it("envia semana e origem à fronteira mediada sem tarefa externa", async () => {
   api.schema.mockReturnValue({ rpc: api.rpc });
   api.rpc.mockImplementation((nome, p) => nome === "sso_pcm_listar_regras_visita"
-    ? { abortSignal: () => Promise.resolve({ data: [{ id: "regra", numero: 1, dia_semana: 5, intervalo_semanas: 1, hora_inicio: "09:00", fuso: "America/Sao_Paulo", vigencia_inicio: "2026-01-01", vigencia_fim: null }], error: null }) }
-    : Promise.resolve({ data: { requestId: p.p_request_id, decisao: "criada", visitaCriada: true, visitaId: p.p_visita_id, reposicaoCriada: false, fonteOficialComprovada: false }, error: null }));
+    ? { abortSignal: () => Promise.resolve({ data: [{ id: "regra", numero: 1, ancora_semana: "2026-10-05", dia_semana: 5, intervalo_semanas: 1, hora_inicio: "09:00", fuso: "America/Sao_Paulo", vigencia_inicio: "2026-01-01", vigencia_fim: null }], error: null }) }
+    : Promise.resolve({ data: { requestId: p.p_request_id, clienteId: p.p_cliente_id, serieId: p.p_serie_id, semana: p.p_semana, efeitoRemoto: false, decisao: "gerada", detalhe: { requestId: p.p_request_id, decisao: "criada", visitaCriada: true, visitaId: p.p_visita_id } }, error: null }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   render(<QueryClientProvider client={client}><GerarVisitaContratual userId="u" clienteId="c" serieId="s" /></QueryClientProvider>);
   await screen.findByText(/Regra 1/);
@@ -31,7 +32,7 @@ it("envia semana e origem à fronteira mediada sem tarefa externa", async () => 
   fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: "Processar semana" }));
   expect(await screen.findByText(/Visita regular em rascunho criada/)).toBeTruthy();
-  expect(api.rpc.mock.calls[1]![0]).toBe("sso_pcm_gerar_visita");
+  expect(api.rpc.mock.calls[1]![0]).toBe("sso_gerar_visita_ou_suprimir");
   expect(api.rpc.mock.calls[1]![1]).toMatchObject({ p_cliente_id: "c", p_serie_id: "s", p_regra_id: "regra", p_semana: "2026-10-05", p_cobertura: "Calendário consultado" });
 });
 
@@ -39,7 +40,7 @@ it("preserva tentativa substituída enquanto o servidor responde", async () => {
   api.schema.mockReturnValue({ rpc: api.rpc });
   let concluir!: (v: unknown) => void;
   api.rpc.mockImplementation((nome) => nome === "sso_pcm_listar_regras_visita"
-    ? { abortSignal: () => Promise.resolve({ data: [{ id: "regra", numero: 1, dia_semana: 5, intervalo_semanas: 1, hora_inicio: "09:00", fuso: "America/Sao_Paulo", vigencia_inicio: "2026-01-01", vigencia_fim: null }], error: null }) }
+    ? { abortSignal: () => Promise.resolve({ data: [{ id: "regra", numero: 1, ancora_semana: "2026-10-05", dia_semana: 5, intervalo_semanas: 1, hora_inicio: "09:00", fuso: "America/Sao_Paulo", vigencia_inicio: "2026-01-01", vigencia_fim: null }], error: null }) }
     : new Promise((resolve) => { concluir = resolve; }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   render(<QueryClientProvider client={client}><GerarVisitaContratual userId="u" clienteId="c" serieId="s" /></QueryClientProvider>);
@@ -54,7 +55,7 @@ it("preserva tentativa substituída enquanto o servidor responde", async () => {
   const requestId = api.rpc.mock.calls[1]![1].p_request_id;
   const chave = sessionStorage.key(0)!;
   sessionStorage.setItem(chave, "outra tentativa");
-  concluir({ data: { requestId, decisao: "criada", visitaCriada: true, visitaId: api.rpc.mock.calls[1]![1].p_visita_id, reposicaoCriada: false, fonteOficialComprovada: false }, error: null });
+  concluir({ data: { requestId, clienteId: "c", serieId: "s", semana: "2026-10-05", efeitoRemoto: false, decisao: "gerada", detalhe: { requestId, decisao: "criada", visitaCriada: true, visitaId: api.rpc.mock.calls[1]![1].p_visita_id } }, error: null });
   await waitFor(() => expect(screen.getByText(/tentativa alterada ou não removida/i)).toBeTruthy());
   expect(sessionStorage.getItem(chave)).toBe("outra tentativa");
 });
@@ -109,7 +110,7 @@ it("invalida lista de Visitas após criação confirmada", async () => {
   api.schema.mockReturnValue({ rpc: api.rpc });
   api.rpc.mockImplementation((nome, p) => nome === "sso_pcm_listar_regras_visita"
     ? { abortSignal: () => Promise.resolve({ data: [{ id: "regra", numero: 1, ancora_semana: "2026-10-05", dia_semana: 5, intervalo_semanas: 1, hora_inicio: "09:00", fuso: "America/Sao_Paulo", vigencia_inicio: "2026-01-01", vigencia_fim: null }], error: null }) }
-    : Promise.resolve({ data: { requestId: p.p_request_id, decisao: "criada", visitaCriada: true, visitaId: p.p_visita_id, reposicaoCriada: false, fonteOficialComprovada: false }, error: null }));
+    : Promise.resolve({ data: { requestId: p.p_request_id, clienteId: p.p_cliente_id, serieId: p.p_serie_id, semana: p.p_semana, efeitoRemoto: false, decisao: "gerada", detalhe: { requestId: p.p_request_id, decisao: "criada", visitaCriada: true, visitaId: p.p_visita_id } }, error: null }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   const invalidar = vi.spyOn(client, "invalidateQueries");
   render(<QueryClientProvider client={client}><GerarVisitaContratual userId="u" clienteId="c" serieId="s" /></QueryClientProvider>);
@@ -127,7 +128,7 @@ it("não confirma criação quando servidor retorna identidade divergente", asyn
   api.schema.mockReturnValue({ rpc: api.rpc });
   api.rpc.mockImplementation((nome, p) => nome === "sso_pcm_listar_regras_visita"
     ? { abortSignal: () => Promise.resolve({ data: [{ id: "regra", numero: 1, ancora_semana: "2026-10-05", dia_semana: 5, intervalo_semanas: 1, hora_inicio: "09:00", fuso: "America/Sao_Paulo", vigencia_inicio: "2026-01-01", vigencia_fim: null }], error: null }) }
-    : Promise.resolve({ data: { requestId: p.p_request_id, decisao: "criada", visitaCriada: true, visitaId: "outra", reposicaoCriada: false, fonteOficialComprovada: false }, error: null }));
+    : Promise.resolve({ data: { requestId: p.p_request_id, clienteId: p.p_cliente_id, serieId: p.p_serie_id, semana: p.p_semana, efeitoRemoto: false, decisao: "gerada", detalhe: { requestId: p.p_request_id, decisao: "criada", visitaCriada: true, visitaId: "outra" } }, error: null }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   render(<QueryClientProvider client={client}><GerarVisitaContratual userId="u" clienteId="c" serieId="s" /></QueryClientProvider>);
   await screen.findByText(/Regra 1/);
@@ -146,7 +147,7 @@ it("mostra supressão válida sem anunciar criação", async () => {
   api.schema.mockReturnValue({ rpc: api.rpc });
   api.rpc.mockImplementation((nome, p) => nome === "sso_pcm_listar_regras_visita"
     ? { abortSignal: () => Promise.resolve({ data: [{ id: "regra", numero: 1, ancora_semana: "2026-10-05", dia_semana: 5, intervalo_semanas: 1, hora_inicio: "09:00", fuso: "America/Sao_Paulo", vigencia_inicio: "2026-01-01", vigencia_fim: null }], error: null }) }
-    : Promise.resolve({ data: { requestId: p.p_request_id, decisao: "suprimida_feriado", visitaCriada: false, reposicaoCriada: false, fonteOficialComprovada: false }, error: null }));
+    : Promise.resolve({ data: { requestId: p.p_request_id, clienteId: p.p_cliente_id, serieId: p.p_serie_id, semana: p.p_semana, efeitoRemoto: false, decisao: "suprimida_feriado", detalhe: { requestId: p.p_request_id, visitaCriada: false, ocorrenciaCriada: false, osCriada: false, tarefaAuvoCriada: false } }, error: null }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   render(<QueryClientProvider client={client}><GerarVisitaContratual userId="u" clienteId="c" serieId="s" /></QueryClientProvider>);
   await screen.findByText(/Regra 1/);

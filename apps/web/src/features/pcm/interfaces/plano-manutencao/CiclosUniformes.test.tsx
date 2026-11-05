@@ -11,7 +11,7 @@ const usuario="16600000-0000-4000-8000-000000000001";
 const entrada={userId:usuario,clienteId:"cliente",planoId:"plano",versaoId:"versao",rotinaId:"rotina"};
 const usuarioAtual={data:{user:{id:usuario}},error:null};
 const linha=(chave:string)=>({origem:"calendario",chave,vencimento:"2026-12-25",tolerancia_antes:0,tolerancia_depois:0,semana_origem:null,estado_visita:null,feriado:"indeterminado",vigencia_declarada:null,ocorrencia_preparada:null,fonte_incompleta:true});
-function montar(){const c=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={c}><CiclosUniformes {...entrada}/></QueryClientProvider>);fireEvent.change(screen.getByLabelText("De"),{target:{value:"2026-01-01"}});fireEvent.change(screen.getByLabelText("Até"),{target:{value:"2026-12-31"}});fireEvent.click(screen.getByRole("button",{name:"Consultar"}));}
+function montar(){vi.stubEnv("VITE_SSO_CICLOS_UNIFORMES_MEDIADOS_ENABLED","true");const c=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={c}><CiclosUniformes {...entrada}/></QueryClientProvider>);fireEvent.change(screen.getByLabelText("De"),{target:{value:"2026-01-01"}});fireEvent.change(screen.getByLabelText("Até"),{target:{value:"2026-12-31"}});fireEvent.click(screen.getByRole("button",{name:"Consultar"}));}
 afterEach(()=>{cleanup();vi.unstubAllEnvs();vi.resetAllMocks();});
 
 it("apresenta os ciclos em ordem numérica sem alterar seu vencimento",async()=>{

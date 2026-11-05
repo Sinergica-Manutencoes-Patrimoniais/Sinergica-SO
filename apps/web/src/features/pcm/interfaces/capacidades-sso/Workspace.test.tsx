@@ -18,7 +18,14 @@ vi.mock("../../infrastructure/supabase-capacidades-sso-adapter", () => ({
   supabaseCapacidadesSsoAdapter: gateway,
 }));
 vi.mock("../../../../lib/supabase-client", () => ({
-  supabase: { auth: { getUser: async () => ({ data: { user: { id: "17020000-0000-0000-0000-000000000002" } }, error: null }) } },
+  supabase: {
+    auth: {
+      getUser: async () => ({
+        data: { user: { id: "17020000-0000-0000-0000-000000000002" } },
+        error: null,
+      }),
+    },
+  },
 }));
 import { CapacidadesWorkspace } from "./Workspace";
 
@@ -267,7 +274,9 @@ describe("configuração de capacidades", () => {
     fireEvent.click(screen.getByRole("button", { name: "Conceder ação" }));
     await screen.findByRole("alert");
     fireEvent.change(screen.getByLabelText("Motivo da alteração"), { target: { value: "Outro" } });
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Conceder ação" })); });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Conceder ação" }));
+    });
     expect(gateway.definirConcessao).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("alert").textContent).toMatch(/pendente/i);
     fireEvent.change(screen.getByLabelText("Motivo da alteração"), { target: { value: "PCM" } });
@@ -301,7 +310,9 @@ describe("configuração de capacidades", () => {
     fireEvent.change(screen.getByLabelText("Nome do perfil"), {
       target: { value: "x".repeat(121) },
     });
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Criar perfil" })); });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Criar perfil" }));
+    });
     expect(gateway.definirPerfil).not.toHaveBeenCalled();
     expect(screen.getByRole("alert").textContent).toMatch(/confira/i);
     fireEvent.change(screen.getByLabelText("Nome do perfil"), { target: { value: "Campo" } });
