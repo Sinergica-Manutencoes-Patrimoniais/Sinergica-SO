@@ -7,7 +7,6 @@
     "npm:@types/node@*": "22.12.0",
     "npm:dependency-cruiser@18": "18.0.0_acorn@8.17.0",
     "npm:lefthook@^2.1.9": "2.1.10",
-    "npm:squawk-cli@^2.59.0": "2.59.0",
     "npm:turbo@^2.1.0": "2.10.4",
     "npm:typescript@^5.6.0": "5.9.3"
   },
@@ -1009,7 +1008,7 @@
         "npm:@commitlint/config-conventional@^19.3.0",
         "npm:dependency-cruiser@18",
         "npm:lefthook@^2.1.9",
-        "npm:squawk-cli@^2.59.0",
+        "npm:squawk-cli@2.70.0",
         "npm:turbo@^2.1.0",
         "npm:typescript@^5.6.0"
       ]
