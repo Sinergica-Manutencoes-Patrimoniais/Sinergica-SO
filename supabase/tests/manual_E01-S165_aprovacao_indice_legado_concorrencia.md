@@ -7,3 +7,13 @@ Na sessão A, iniciar transação; substituir a função da guarda 1045 por `ret
 Na sessão B, chamar o mediador do índice legado acima; deve receber SQLSTATE `55P03`. Reverter A e conferir que o mediador retorna `false`, não há aprovação persistida e a função da guarda original retornou. Descartar o clone.
 
 Ensaio passou nas condições descritas. A exceção da guarda simula aprovação, sem comprovar aprovação operacional; a chamada concorrente cobre o mediador de índice, não o gerador completo nem Visita. Não executa Auvo nem cria OS.
+
+## Geradores integrais
+
+No mesmo tipo de clone, repetir a aprovação da sessão A mantendo-a aberta; a sessão B autenticada chama `pcm.materializar_ocorrencias_preventivas` para o legado sintético até `current_date+90`. O gerador deve aguardar a transação A. Reverter A e B. Em ensaio, a espera por lock foi observada em `pg_stat_activity`; após rollback de A, B terminou.
+
+Para ensaiar concorrência após aprovação, obter previamente a definição original da função 1045 com `pg_get_functiondef`. Na transação de aprovação sintética, substituir temporariamente a função, aprovar, restaurar a definição original **antes do commit** e conferir sua igualdade após o commit. Somente no clone, simular a data civil de transição em `current_date+1` e a data civil da geração em `pcm.sso_vencimento_ciclo_calendario(current_date+11,1,'meses',1)`. Os relógios simulados exigem descartar o clone ao terminar.
+
+Na sessão A autenticada, chamar `pcm.sso_materializar_ciclo_canonico` para a rotina do rascunho `16630000-1111-4000-8000-000000000022` agora aprovado, revisão 4, na data civil simulada; manter a transação aberta. Na sessão B, executar `pcm.materializar_ocorrencias_preventivas` para o legado `17220000-1111-4000-8000-000000000097` até a mesma data. Confirmar A; se B receber contenção, repetir após a confirmação. Conferir uma preparada SSO no ciclo e zero ocorrências legadas no índice 0 reservado a SSO.
+
+Ensaio passou: B recebeu contenção, retry terminou e as contagens esperadas foram observadas. A aprovação e relógios foram simulados; não comprova aprovação operacional, gerador de Visita, integração externa ou todos os escritores.

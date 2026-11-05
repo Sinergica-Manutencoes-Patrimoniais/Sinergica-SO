@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: triagem inicial e concorrência de geradores
+
+- ADR-1586/migration 1728 permitem decisão preliminar de vencido após ativação inicial, sem exigir retomada, mantendo autorização e verificação da vigência. Plano encerrado recusa decisão nova e aceita replay; suspenso mantém triagem preliminar. Clone compilou e fixtures cobriram ativação, replay, Cliente divergente, data corrente, estados e versão anterior dentro/fora da vigência; testes usam fallback civil São Paulo, não comprovam fuso fotografado.
+- Em clone, gerador legado integral aguardou aprovação sintética; após aprovação e relógio simulados, geradores SSO e legado concorreram em Calendário com contenção/retry, uma ocorrência SSO e nenhuma legada duplicada. Roteiro `supabase/tests/manual_E01-S165_aprovacao_indice_legado_concorrencia.md`; não comprova aprovação real ou Visita.
+- Lacuna pendente: índice legado `somente_sso` preparado antes da vigência pode impedir geração SSO após vigência. Não afrouxar guarda: a linha é exibida por leitores legados e precisa reconciliação explícita após vigência, preservando histórico e coerência de todos leitores/escritores. Cobertura integral, concorrência Visita e revisão adversarial completa continuam pendentes; 1045 e homologação permanecem bloqueadas, sem Auvo/deploy.
+
 ## 2026-11-04 — S165/S166: ponte futura e concorrência de Visita
 
 - ADR-1583/migration 1727 eliminam bloqueio circular da avaliação para escolha explícita `integrar_ponte` em ocorrência legada prevista sem OS, revalidando fotografia e unicidade. Compilação e fixtures Calendário/Visita passaram em clone, incluindo escolha ambígua, foto alterada e OS. Revisão adversarial da alteração estreita não encontrou defeito alto/médio reproduzido; custo em bases grandes não medido.
