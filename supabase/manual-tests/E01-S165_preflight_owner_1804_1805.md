@@ -1,4 +1,4 @@
-# Preflight de proprietário e ACL — aprovação 1804/1805
+# Preflight de proprietário e ACL — aprovação 1804/1805/1806
 
 O SQL de mesmo nome é somente de leitura e termina em `ROLLBACK`. Use `psql -X -v
 ON_ERROR_STOP=1 -f E01-S165_preflight_owner_1804_1805.sql` com conexão e operador autorizados,
@@ -9,8 +9,9 @@ se não puder, a falha não autoriza conceder privilégios automaticamente.
 O preflight exige os dois gates presentes e desligados, tabelas privadas com RLS/FORCE, ausência de
 privilégios diretos ou herdados para os papéis de aplicação nas tabelas privadas, bordas executáveis
 por `authenticated` e não por `anon`, helper privado, proprietários `SECURITY DEFINER` com
-`BYPASSRLS` ou superusuário, permissões de acesso/trava explicitamente verificadas e marcadores do
-ciclo de token nas funções. Exige privilégios de tabela inteiros, uma condição conservadora que pode
+`BYPASSRLS` ou superusuário, `USAGE` no schema e permissões de acesso/trava explicitamente verificadas.
+Inclui o helper de gate da 1806, sua ACL e seus marcadores de token condicionado a pedido novo.
+Exige privilégios de tabela inteiros, uma condição conservadora que pode
 recusar configuração válida baseada apenas em privilégios por coluna. Exceções relatam somente
 nomes de objetos/papéis/permissões, sem conteúdo dos dados.
 
