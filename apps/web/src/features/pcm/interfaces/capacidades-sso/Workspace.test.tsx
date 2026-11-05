@@ -211,12 +211,7 @@ describe("configuração de capacidades", () => {
         }),
     );
     void client.invalidateQueries({ queryKey: ["capacidades-sso", usuario, "perfis"] });
-    await waitFor(() =>
-      expect(
-        (screen.getByRole("button", { name: "Desativar" }) as HTMLButtonElement).disabled,
-      ).toBe(true),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Desativar" }));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Desativar" })).toBeNull());
     expect(gateway.definirPerfil).not.toHaveBeenCalled();
     await act(async () => resolver([]));
   });
@@ -256,8 +251,7 @@ describe("configuração de capacidades", () => {
           }),
       );
       void client.invalidateQueries({ queryKey: ["capacidades-sso", usuario, tipo] });
-      await waitFor(() => expect(botao.disabled).toBe(true));
-      fireEvent.click(botao);
+      await waitFor(() => expect(screen.queryByRole("button", { name: "Revogar" })).toBeNull());
       expect(alterar).not.toHaveBeenCalled();
       await act(async () => resolver([]));
     },
