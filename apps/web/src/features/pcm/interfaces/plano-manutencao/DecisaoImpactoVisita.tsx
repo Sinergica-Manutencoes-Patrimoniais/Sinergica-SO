@@ -1,16 +1,16 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
-import { EstadoEscolhaAlteracao } from "./EstadoEscolhaAlteracao";
-import { EscolherNovaVisita } from "./EscolherNovaVisita";
+import { supabase } from "../../../../lib/supabase-client";
 import {
-  useComparacaoImpacto,
+  type ComparacaoImpacto,
   DetalhesComparacaoImpacto,
   comparacaoImpactoArmazenadaSchema,
-  type ComparacaoImpacto,
+  useComparacaoImpacto,
 } from "./ComparacaoImpactoSelecionado";
-import { supabase } from "../../../../lib/supabase-client";
+import { EscolherNovaVisita } from "./EscolherNovaVisita";
+import { EstadoEscolhaAlteracao } from "./EstadoEscolhaAlteracao";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 const decisaoSchema = z.enum(["manter_sem_alterar", "exige_reconciliacao"]);
 const camposComuns = {
   preparada_id: z.string().uuid(),
@@ -63,7 +63,13 @@ function DecisaoImpactoVisitaAtiva({
   planoId,
   revision,
 }: { userId: string; clienteId: string; planoId: string; revision: number }) {
-  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const emEnvio = useRef(false);
   const primeiraTentativa = useRef(false);
   const conferirSessao = (signal?: AbortSignal) => conferirSessaoDiagnostico(userId, signal);
@@ -130,9 +136,14 @@ function DecisaoImpactoVisitaAtiva({
   const itens = lista.data?.pages.flat() ?? [];
   const divergentes =
     new Set(itens.map((x) => x.preparada_id.toLowerCase())).size !== itens.length ||
-    itens.some(
-      (x, i) => i > 0 && x.preparada_id.toLowerCase() <= itens[i - 1]!.preparada_id.toLowerCase(),
-    );
+    itens.some((x, i) => {
+      if (i === 0) return false;
+      const anterior = itens[i - 1];
+      return (
+        anterior === undefined ||
+        x.preparada_id.toLowerCase() <= anterior.preparada_id.toLowerCase()
+      );
+    });
   const item =
     !divergentes && !lista.isFetching && !lista.isError
       ? itens.find((x) => x.preparada_id === selecionado)
@@ -160,7 +171,8 @@ function DecisaoImpactoVisitaAtiva({
   ]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessao();
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } =
@@ -210,11 +222,13 @@ function DecisaoImpactoVisitaAtiva({
         data.osAlteradas !== false
       )
         throw new Error("Resposta inválida.");
-      await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessao();
+      if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_resultado, p) => {
       try {
-        await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessao();
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p))
           throw new Error("Tentativa divergente.");
         sessionStorage.removeItem(chave);
@@ -253,7 +267,8 @@ function DecisaoImpactoVisitaAtiva({
           (error.code === "P0011" && "message" in error && error.message === "revisao_obsoleta"))
       ) {
         try {
-          await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessao();
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);
@@ -374,7 +389,9 @@ function DecisaoImpactoVisitaAtiva({
                 ))}
             </select>
           </label>
-          {item && comparacao.isFetching && <output className="block">Carregando comparação da Rotina…</output>}
+          {item && comparacao.isFetching && (
+            <output className="block">Carregando comparação da Rotina…</output>
+          )}
           {item && comparacao.isError && (
             <p role="alert">
               Não foi possível comprovar a comparação da Rotina.{" "}
@@ -421,7 +438,8 @@ function DecisaoImpactoVisitaAtiva({
             />{" "}
             Conferi a decisão parcial e suas limitações
           </label>
-          <button type="submit"
+          <button
+            type="submit"
             disabled={
               !dadosComparacao || confirmado !== assinaturaAtual || !item?.ciclo_canonico_id
             }

@@ -32,7 +32,14 @@ const pedidoSchema = z
   })
   .strict();
 type Pedido = z.infer<typeof pedidoSchema>;
-export function ClassificarLegadoNaoRelacionado(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.legadoId])} {...props} />; }
+export function ClassificarLegadoNaoRelacionado(props: Parameters<typeof Conteudo>[0]) {
+  return (
+    <Conteudo
+      key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.legadoId])}
+      {...props}
+    />
+  );
+}
 function Conteudo({
   userId,
   clienteId,
@@ -40,7 +47,13 @@ function Conteudo({
   legadoId,
   revision,
 }: { userId: string; clienteId: string; planoId: string; legadoId: string; revision: number }) {
-  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const chave = `sso-legado-nao-relacionado:${JSON.stringify([userId, clienteId, planoId, legadoId])}`;
   const cache = useQueryClient();
   const primeira = useRef(false);
@@ -85,7 +98,8 @@ function Conteudo({
   const assinatura = JSON.stringify([foto.data?.hash, revision, contexto.trim(), motivo.trim()]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa alterada");
       const { data, error } = await supabase
@@ -109,11 +123,13 @@ function Conteudo({
         data.aprovacaoAutorizada !== false
       )
         throw new Error("Recibo inválido");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
@@ -139,7 +155,8 @@ function Conteudo({
         )
       ) {
         try {
-          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);
@@ -161,7 +178,8 @@ function Conteudo({
       primeira.current = false;
     },
   });
-  const enviar = (p: Pedido) => {
+  const enviar = (pedidoInicial: Pedido) => {
+    let p = pedidoInicial;
     if (envio.isPending) return;
     try {
       const anterior = sessionStorage.getItem(chave);
@@ -234,19 +252,21 @@ function Conteudo({
             disabled={
               confirmado !== assinatura || !contexto.trim() || !motivo.trim() || envio.isPending
             }
-            onClick={() =>
+            onClick={() => {
+              const atual = foto.data;
+              if (!atual) return;
               enviar({
                 requestId: crypto.randomUUID(),
                 clienteId,
                 planoId,
                 legadoId,
                 revisao: revision,
-                hash: foto.data!.hash,
+                hash: atual.hash,
                 contexto: contexto.trim(),
                 motivo: motivo.trim(),
                 tentativaIncerta: false,
-              })
-            }
+              });
+            }}
           >
             Registrar não relacionado
           </button>
