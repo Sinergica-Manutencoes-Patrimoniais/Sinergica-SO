@@ -69,7 +69,7 @@ def executar(container, watchdog):
         a.comando("update pcm.sso_exigir_versao_aprovacao_gate set habilitado=true where id;")
         a.comando("set local role authenticated;")
         a.comando("set local request.jwt.claims='"+CLAIMS+"';")
-        for i in range(1, 5):
+        for i in range(1, 7):
             plano = f"18050000-0000-4000-8000-{i:012d}"
             rotina = f"18050001-0000-4000-8000-{i:012d}"
             r1 = f"18050002-0000-4000-8000-{i:012d}"
@@ -80,7 +80,7 @@ def executar(container, watchdog):
             a.comando(f"select pcm.sso_transicionar_revisao_plano('{r3}',2,'{plano}','submeter');")
         a.comando("reset role;")
         a.comando("create table public.sso_1805_versoes_fixture as select plano_id,id as versao_id from pcm.plano_versoes where plano_id::text like '18050000-0000-4000-8000-%' and estado='rascunho';")
-        a.comando("do $$ begin if (select count(*) from public.sso_1805_versoes_fixture)<>4 then raise exception 'versoes_fixture_invalidas'; end if; end $$;")
+        a.comando("do $$ begin if (select count(*) from public.sso_1805_versoes_fixture)<>6 then raise exception 'versoes_fixture_invalidas'; end if; end $$;")
         a.comando("commit;")
 
         def iniciar(s):
@@ -118,6 +118,36 @@ def executar(container, watchdog):
         iniciar(a); a.comando(aprovar(4)); iniciar(b); b.comando(concessao(False, 2, 3), ("55P03",)); b.comando("rollback;")
         a.comando("commit;"); iniciar(b); b.comando(concessao(False, 2, 3)); b.comando("commit;")
         iniciar(a); a.comando(aprovar(4), ("42501",)); a.comando("rollback;")
+        # Recupera concessão após a ordem anterior; cada comando usa ID distinto.
+        iniciar(a); a.comando(concessao(True, 3, 4)); a.comando("commit;")
+
+        # Alteração do gate obtém primeiro a trava exclusiva: aprovação legada não
+        # pode observar uma decisão intermediária e deve voltar após o commit.
+        a.comando("begin;")
+        a.comando("set local lock_timeout='2s';")
+        a.comando("update pcm.sso_exigir_versao_aprovacao_gate set habilitado=false where id;")
+        iniciar(b)
+        legado = "select pcm.sso_aprovar_plano('18050005-0000-4000-8000-000000000005',3,'18050000-0000-4000-8000-000000000005',current_date);"
+        b.comando(legado, ("55P03",)); b.comando("rollback;")
+        a.comando("commit;"); iniciar(b); b.comando(legado); b.comando("commit;")
+        a.comando("update pcm.sso_exigir_versao_aprovacao_gate set habilitado=true where id;")
+
+        # Ordem inversa: a aprovação nova mantém FOR SHARE no gate até commit;
+        # UPDATE com timeout não pode passar antes do término da transação.
+        iniciar(a); a.comando(aprovar(6))
+        b.comando("begin;"); b.comando("set local lock_timeout='2s';")
+        b.comando("update pcm.sso_exigir_versao_aprovacao_gate set habilitado=false where id;", ("55P03",))
+        b.comando("rollback;"); a.comando("commit;")
+        b.comando("update pcm.sso_exigir_versao_aprovacao_gate set habilitado=false where id;")
+        a.comando("""do $$ begin
+          if (select count(*) from pcm.plano_comandos where request_id in
+            ('18050005-0000-4000-8000-000000000005','18050005-0000-4000-8000-000000000006'))<>2
+          or (select count(*) from pcm.planos_manutencao where id in
+            ('18050000-0000-4000-8000-000000000005','18050000-0000-4000-8000-000000000006') and estado='aprovado' and revisao=4)<>2
+          or exists(select 1 from pcm.sso_aprovacao_versao_tokens)
+          or (select habilitado from pcm.sso_exigir_versao_aprovacao_gate where id) is distinct from false
+          then raise exception 'gate_ou_aprovacoes_divergentes'; end if;
+        end $$;""")
         a.comando("""do $$ begin
           if exists(select 1 from pcm.plano_comandos where request_id in
             ('18050005-0000-4000-8000-000000000001','18050005-0000-4000-8000-000000000003'))
@@ -128,7 +158,7 @@ def executar(container, watchdog):
         end $$;""")
         if watchdog.is_set():
             raise RuntimeError("Monitor interrompeu o ensaio")
-        print("Concorrência 1805: revisão e revogação em ambas ordens; clone exige descarte.", flush=True)
+        print("Concorrência 1805: revisão, revogação e alteração de gate em ambas ordens; clone exige descarte.", flush=True)
     finally:
         if b is not None:
             b.fechar()
