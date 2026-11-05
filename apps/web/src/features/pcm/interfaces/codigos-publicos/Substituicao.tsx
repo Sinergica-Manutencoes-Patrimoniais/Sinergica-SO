@@ -4,8 +4,8 @@ import { useAuth } from "../../../../app/auth-context";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import {
-  substituirCodigoPublico,
   type SubstituicaoCodigo,
+  substituirCodigoPublico,
 } from "../../infrastructure/supabase-codigos-publicos-adapter";
 
 export function SubstituicaoCodigoPublico({
@@ -67,7 +67,12 @@ export function SubstituicaoCodigoPublico({
   const envio = useMutation({
     mutationFn: async (pedido: SubstituicaoCodigo) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || sessionStorage.getItem(storageKey) !== JSON.stringify(pedido)) throw new Error("Sessão ou tentativa alterada.");
+      if (
+        antes.error ||
+        antes.data.user?.id !== userId ||
+        sessionStorage.getItem(storageKey) !== JSON.stringify(pedido)
+      )
+        throw new Error("Sessão ou tentativa alterada.");
       await substituirCodigoPublico(pedido);
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
@@ -75,10 +80,17 @@ export function SubstituicaoCodigoPublico({
     onSuccess: async (_data, pedido) => {
       // A confirmação pode ter alterado o código mesmo quando outra tentativa
       // substituiu o registro local. Reconsulte antes de decidir pela limpeza.
-      await client.invalidateQueries({ queryKey: ["codigos-publicos", userId, clienteId], refetchType: "none" });
+      await client.invalidateQueries({
+        queryKey: ["codigos-publicos", userId, clienteId],
+        refetchType: "none",
+      });
       try {
-        const atual=await supabase.auth.getUser();
-        if (atual.error || atual.data.user?.id !== userId || sessionStorage.getItem(storageKey) !== JSON.stringify(pedido))
+        const atual = await supabase.auth.getUser();
+        if (
+          atual.error ||
+          atual.data.user?.id !== userId ||
+          sessionStorage.getItem(storageKey) !== JSON.stringify(pedido)
+        )
           throw new Error("Tentativa local divergente");
         sessionStorage.removeItem(storageKey);
       } catch {
@@ -92,13 +104,18 @@ export function SubstituicaoCodigoPublico({
       setMotivo("");
       setConfirmacao(null);
       setAviso("Código substituído; código anterior permanece como alias.");
-      void client.refetchQueries({ queryKey: ["codigos-publicos", userId, clienteId], type: "active" });
+      void client.refetchQueries({
+        queryKey: ["codigos-publicos", userId, clienteId],
+        type: "active",
+      });
     },
     onError: () =>
       setAviso(
         "Resultado não confirmado. Repita a mesma tentativa; se houver conflito, procure suporte antes de nova alteração.",
       ),
-    onSettled: () => { trava.current = false; },
+    onSettled: () => {
+      trava.current = false;
+    },
   });
   const enviar = (pedido: SubstituicaoCodigo, repeticao = false) => {
     if (!permitido || trava.current) return;
@@ -130,7 +147,15 @@ export function SubstituicaoCodigoPublico({
       </p>
     );
   if (!permitido) return null;
-  const fotografia=JSON.stringify({userId,clienteId,tipo,ativoId,codigoAnterior,novo:novo.trim().toUpperCase(),motivo:motivo.trim()});
+  const fotografia = JSON.stringify({
+    userId,
+    clienteId,
+    tipo,
+    ativoId,
+    codigoAnterior,
+    novo: novo.trim().toUpperCase(),
+    motivo: motivo.trim(),
+  });
   return (
     <section aria-label="Substituição administrativa de código">
       <h3>Correção excepcional de código</h3>
@@ -173,7 +198,10 @@ export function SubstituicaoCodigoPublico({
             maxLength={200}
             required
             disabled={!!pendente || envio.isPending}
-            onChange={(e) => {setNovo(e.target.value);setConfirmacao(null);}}
+            onChange={(e) => {
+              setNovo(e.target.value);
+              setConfirmacao(null);
+            }}
           />
         </label>
         <label>
@@ -183,12 +211,28 @@ export function SubstituicaoCodigoPublico({
             maxLength={2000}
             required
             disabled={!!pendente || envio.isPending}
-            onChange={(e) => {setMotivo(e.target.value);setConfirmacao(null);}}
+            onChange={(e) => {
+              setMotivo(e.target.value);
+              setConfirmacao(null);
+            }}
           />
         </label>
-        {confirmacao && confirmacao !== fotografia && <p role="alert">Código ou contexto mudou; confira novamente.</p>}
-        <label><input type="checkbox" checked={confirmacao === fotografia} disabled={!!pendente || envio.isPending} onChange={(e)=>setConfirmacao(e.target.checked?fotografia:null)} /> Conferi o código atual, o substituto e o motivo.</label>
-        <button type="submit" disabled={!!pendente || envio.isPending || confirmacao !== fotografia}>
+        {confirmacao && confirmacao !== fotografia && (
+          <p role="alert">Código ou contexto mudou; confira novamente.</p>
+        )}
+        <label>
+          <input
+            type="checkbox"
+            checked={confirmacao === fotografia}
+            disabled={!!pendente || envio.isPending}
+            onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)}
+          />{" "}
+          Conferi o código atual, o substituto e o motivo.
+        </label>
+        <button
+          type="submit"
+          disabled={!!pendente || envio.isPending || confirmacao !== fotografia}
+        >
           Confirmar substituição
         </button>
       </form>
@@ -201,7 +245,7 @@ export function SubstituicaoCodigoPublico({
           </button>
         </p>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

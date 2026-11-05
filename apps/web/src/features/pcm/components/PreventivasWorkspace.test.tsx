@@ -75,7 +75,13 @@ function dataNoMesAtual(dia: number): string {
 }
 
 function dadosCalendarioAtual(): ResultadoPreventivas {
-  return { ...dados, ocorrencias: dados.ocorrencias.map((ocorrencia) => ({ ...ocorrencia, vencimento: dataNoMesAtual(10) })) };
+  return {
+    ...dados,
+    ocorrencias: dados.ocorrencias.map((ocorrencia) => ({
+      ...ocorrencia,
+      vencimento: dataNoMesAtual(10),
+    })),
+  };
 }
 
 function renderWorkspace(

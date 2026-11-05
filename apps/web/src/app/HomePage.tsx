@@ -429,7 +429,14 @@ export function HomePage() {
     new URLSearchParams(window.location.search).get("guia") === "pcm" ? "guia" : "inicio",
   );
   const [configTab, setConfigTab] = useState<
-    "grupos" | "usuarios" | "capacidades" | "integracoes" | "ia" | "gasto-ia" | "priorizacao" | "localizacao-auvo"
+    | "grupos"
+    | "usuarios"
+    | "capacidades"
+    | "integracoes"
+    | "ia"
+    | "gasto-ia"
+    | "priorizacao"
+    | "localizacao-auvo"
   >("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -658,7 +665,9 @@ export function HomePage() {
                   CONFIGURAÇÕES
                 </p>
               )}
-              {CONFIG_NAV.filter((item) => item.id !== "capacidades" || user?.papel === "superadmin").map((item) => {
+              {CONFIG_NAV.filter(
+                (item) => item.id !== "capacidades" || user?.papel === "superadmin",
+              ).map((item) => {
                 const Icon = item.icon;
                 const isActive = item.id === configTab;
                 return (
