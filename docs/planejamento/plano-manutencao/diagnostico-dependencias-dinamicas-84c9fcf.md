@@ -93,3 +93,14 @@ replay. A transação foi revertida e os recursos descartáveis removidos, sem a
 O setup usa `session_replication_role=replica`: não comprova as guardas desativadas durante essa
 preparação. O ensaio não inclui concorrência real nem aprovação inicial via SQL e não constitui
 homologação ou autorização para release.
+
+Em ensaio posterior, a fixture de aprovação inicial da 1804 passou sem usar `replica`: verificou
+rejeição de versão incorreta, aprovação e replay pelos contratos novo e legado. A fila de saída foi
+suprimida no cenário sintético; a transação foi revertida e os recursos descartáveis removidos.
+Esse resultado não comprova concorrência real nem integração externa e não constitui homologação.
+
+No ensaio da migration 1805, foram aplicadas 228 migrations da base e 658 candidatas. Com o gate
+de versão ativado na fixture, uma nova aprovação pelo caminho legado foi bloqueada e os replays
+legado e novo passaram. O token estava ausente após rollback; a fila de saída foi suprimida no
+cenário sintético e os recursos descartáveis foram removidos. O ensaio não comprova concorrência
+nem comportamento após commit e não constitui homologação ou autorização de release.
