@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: auditoria de gates e cancelamento
+
+- AC6 Visita em clone até 1769: preparo/inclusão/replay/cancelamento reais, reinclusão e Chamado após cancelamento recusados, fonte alterada sinalizada, sem OS; setup/permissões sintéticos. Sem prova UI desta jornada.
+- `audit:esteira`: link histórico quebrado corrigido; permanecem 1.599 documentos sem frontmatter, incluindo 1.541 ADRs. Não reescrever ADRs históricos nem enfraquecer gate; baseline diferencial foi avaliada mas não implementada.
+- Squawk: 474 alertas em 42 migrations já capturadas no backup; 415 S165/S166, dos quais 404 são cascata do parser em 0276/0345 que compilaram no PostgreSQL. Outros 11 exigem avaliação de locks/compatibilidade antes de aplicação real. Detalhes `supabase/tests/manual_E01-S165_S166_auditoria_squawk_1769.md`. Nenhuma conclusão sobre produção.
+- Próximo passo: tratar gates/rollout e completar revisão para homologação; gates default fechados, sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: escopo e lote consolidado
 
 - ADR-1627/migration 1769 tratam revisão obsoleta na inclusão/retirada de Rotina com P0011; UI de retirada conserva pedidos incertos e erro real 40001. Clone testou operações e replay; UI 3/3, typecheck e revisão independente passaram. Gates permanecem fechados.

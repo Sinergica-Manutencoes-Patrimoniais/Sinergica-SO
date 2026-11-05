@@ -1,0 +1,7 @@
+# Auditoria Squawk das migrations até 1769
+
+Execução local de `pnpm exec squawk --assume-in-transaction --reporter json supabase/migrations/*.sql`: 474 alertas em 42 arquivos. Todos os 42 arquivos constam no snapshot remoto `origin/backup/sso-wip-20261104`; nenhum consta no HEAD local. Portanto são anteriores ao trabalho posterior ao snapshot, mas não se pode chamá-los de baseline da branch principal ou de migrations já aplicadas em produção sem verificar o ambiente.
+
+S165/S166 concentram 415 alertas em oito arquivos: 404 são erros em cascata do parser em 0276 e 0345, iniciados nas constraints `EXCLUDE USING gist`; ambas já compilaram no PostgreSQL do clone histórico. Isso não prova ausência de outros problemas nos trechos que o parser não conseguiu analisar. Outros 11 alertas dizem respeito a FK e constraints que podem bloquear escritas ou leituras durante validação/criação de índices (0262, 0304, 0313, 0419 e 1501), e à retirada de `NOT NULL` em `preparada_id` (1719), mudança intencional para reservar ciclo ainda não preparado, que exige consumidores compatíveis com NULL.
+
+Os demais 59 alertas pertencem a outras stories. As constraints e índices em tabelas existentes exigem análise de volume, tempo de lock e janela antes da aplicação real; a compilação em clone não mede esse impacto. O gate de CI varre todas as migrations e permanece sujeito a esses alertas. Não foi editada migration capturada no snapshot, desativada regra ou feita alteração em produção; uma migration posterior não elimina o lock da migration anterior.
