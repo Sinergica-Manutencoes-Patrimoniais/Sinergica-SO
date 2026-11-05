@@ -1,6 +1,7 @@
 import { Button } from "@sinergica/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import {
   aprovarPlano,
@@ -143,6 +144,16 @@ export function AcoesRevisaoPlano({
       if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) throw new Error("Tentativa alterada.");
       const resultado = await operacao.mutateAsync(pedido);
       await exigirAtor();
+      if (pedido.tipo === "aprovacao" || pedido.tipo === "aprovacao_revisao") {
+        if (
+          resultado.requestId !== pedido.comando.requestId ||
+          resultado.aggregateId !== pedido.comando.planoId ||
+          resultado.revision !== pedido.comando.expectedRevision + 1 ||
+          resultado.state !== "aprovado" || resultado.created !== false ||
+          resultado.linkedIds.clienteId !== clienteId ||
+          !z.string().uuid().safeParse(resultado.linkedIds.versaoId).success
+        ) throw new Error("Recibo de aprovação divergente.");
+      }
       if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
         setErro("Operação confirmada, mas o pedido local mudou. Reabra e reconcilie antes de continuar.");
         return;

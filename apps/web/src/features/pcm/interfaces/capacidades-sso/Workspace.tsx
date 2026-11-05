@@ -179,6 +179,24 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     throw new Error("Tipo de operação desconhecido.");
   }
 
+  async function confirmarRecibo(chave: string, payloadOriginal: object, id: string) {
+    const comando = validar(chave, payloadOriginal, id);
+    const { requestId, ...dados } = comando.dados;
+    const payload: Record<string, unknown> = { ...dados };
+    if (comando.tipo === "perfil") payload.tipo = "perfil";
+    if (comando.tipo === "vinculo") payload.tipo = "vinculoPerfil";
+    for (const campo of ["usuarioId", "perfilId", "clienteId"]) {
+      if (typeof payload[campo] === "string") payload[campo] = payload[campo].toLowerCase();
+    }
+    await conferirSessao();
+    const { data, error } = await supabase
+      .schema("config")
+      .rpc("sso_consultar_recibo_capacidades", { p_request_id: requestId, p_payload: payload });
+    if (error || !data || data.requestId !== requestId || data.confirmado !== true)
+      throw new Error("Recibo indisponível.");
+    await conferirSessao();
+  }
+
   async function executar(
     chave: string,
     payload: object,
@@ -219,7 +237,7 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     try {
       await conferirSessao();
       await enviar(requestId);
-      await conferirSessao();
+      await confirmarRecibo(chave, payload, requestId);
       if (!registro.concluir(chave, requestId, payload)) {
         setErro(
           "Alteração confirmada, mas a tentativa local mudou. Procure suporte antes de continuar.",
@@ -279,22 +297,8 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     setErro(null);
     setMensagem(null);
     try {
-      const comando = validar(pendente.chave, pendente.payload, pendente.id);
-      const { requestId, ...dados } = comando.dados;
-      const payload: Record<string, unknown> = { ...dados };
-      if (comando.tipo === "perfil") payload.tipo = "perfil";
-      if (comando.tipo === "vinculo") payload.tipo = "vinculoPerfil";
-      for (const campo of ["usuarioId", "perfilId", "clienteId"]) {
-        if (typeof payload[campo] === "string") payload[campo] = payload[campo].toLowerCase();
-      }
-      await conferirSessao();
-      const { data, error } = await supabase
-        .schema("config")
-        .rpc("sso_consultar_recibo_capacidades", { p_request_id: requestId, p_payload: payload });
-      if (error || !data || data.requestId !== requestId || data.confirmado !== true)
-        throw new Error("Recibo indisponível.");
-      await conferirSessao();
-      if (!registro.concluir(pendente.chave, requestId, pendente.payload))
+      await confirmarRecibo(pendente.chave, pendente.payload, pendente.id);
+      if (!registro.concluir(pendente.chave, pendente.id, pendente.payload))
         throw new Error("Tentativa alterada.");
       atualizarPendente((n) => n + 1);
       setMensagem("Alteração confirmada. Consulte a configuração atual antes de continuar.");

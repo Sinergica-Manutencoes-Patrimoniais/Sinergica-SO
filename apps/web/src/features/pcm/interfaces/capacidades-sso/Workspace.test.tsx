@@ -17,15 +17,9 @@ const gateway = vi.hoisted(() => ({
 vi.mock("../../infrastructure/supabase-capacidades-sso-adapter", () => ({
   supabaseCapacidadesSsoAdapter: gateway,
 }));
+const servico = vi.hoisted(() => ({ getUser: vi.fn(), rpc: vi.fn(), schema: vi.fn() }));
 vi.mock("../../../../lib/supabase-client", () => ({
-  supabase: {
-    auth: {
-      getUser: async () => ({
-        data: { user: { id: "17020000-0000-0000-0000-000000000002" } },
-        error: null,
-      }),
-    },
-  },
+  supabase: { auth: { getUser: servico.getUser }, schema: servico.schema },
 }));
 import { CapacidadesWorkspace } from "./Workspace";
 
@@ -49,6 +43,9 @@ describe("configuração de capacidades", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     sessionStorage.clear();
+    servico.getUser.mockResolvedValue({ data: { user: { id: usuario } }, error: null });
+    servico.schema.mockReturnValue({ rpc: servico.rpc });
+    servico.rpc.mockImplementation(async (_nome, args) => ({ data: { requestId: args.p_request_id, confirmado: true }, error: null }));
     vi.stubGlobal("crypto", { randomUUID: () => request });
     gateway.listarPerfis.mockResolvedValue([
       { id: perfil, nome: "Equipe PCM", ativo: true, revisao: 1 },
@@ -81,6 +78,51 @@ describe("configuração de capacidades", () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+  });
+
+  async function iniciarConcessao() {
+    montar();
+    await screen.findByRole("option", { name: "Operador" });
+    fireEvent.change(screen.getByLabelText("Motivo da alteração"), { target: { value: "PCM" } });
+    fireEvent.change(screen.getByLabelText("Usuário"), { target: { value: usuario } });
+    fireEvent.change(screen.getByLabelText("Escopo"), { target: { value: cliente } });
+    fireEvent.click(screen.getByRole("button", { name: "Conceder ação" }));
+  }
+
+  it("confirma recibo mediado com pedido e conteúdo antes de concluir", async () => {
+    await iniciarConcessao();
+    await waitFor(() => expect(servico.rpc).toHaveBeenCalledWith("sso_consultar_recibo_capacidades", {
+      p_request_id: request,
+      p_payload: expect.objectContaining({ usuarioId: usuario, perfilId: null, clienteId: cliente, acao: "plano.gerir" }),
+    }));
+    expect(servico.schema).toHaveBeenCalledWith("config");
+    await screen.findByText("Alteração registrada.");
+    expect(screen.queryByRole("button", { name: /repetir alteração pendente/i })).toBeNull();
+  });
+
+  it.each([null, { requestId: "17020000-0000-0000-0000-000000000098", confirmado: true }, { requestId: request, confirmado: false }])(
+    "preserva pedido quando confirmação estiver ausente ou divergente: %s",
+    async (data) => {
+      servico.rpc.mockResolvedValueOnce({ data, error: null });
+      await iniciarConcessao();
+      await screen.findByRole("alert");
+      expect(await screen.findByRole("button", { name: /repetir alteração pendente/i })).toBeTruthy();
+      const enviado = gateway.definirConcessao.mock.calls[0]?.[0];
+      fireEvent.click(screen.getByRole("button", { name: /repetir alteração pendente/i }));
+      await waitFor(() => expect(gateway.definirConcessao).toHaveBeenCalledTimes(2));
+      expect(gateway.definirConcessao.mock.calls[1]?.[0]).toEqual(enviado);
+    },
+  );
+
+  it("preserva tentativa se a sessão mudar após a escrita", async () => {
+    gateway.definirConcessao.mockImplementationOnce(async () => {
+      servico.getUser.mockResolvedValue({ data: { user: { id: "17020000-0000-0000-0000-000000000003" } }, error: null });
+      return {};
+    });
+    await iniciarConcessao();
+    await screen.findByText("Resultado não confirmado. A tentativa foi preservada; confira o estado e procure suporte em caso de conflito.");
+    expect(servico.rpc).not.toHaveBeenCalled();
+    expect(await screen.findByRole("button", { name: /repetir alteração pendente/i })).toBeTruthy();
   });
 
   it("exige confirmação para escopo global e envia concessão individual", async () => {
