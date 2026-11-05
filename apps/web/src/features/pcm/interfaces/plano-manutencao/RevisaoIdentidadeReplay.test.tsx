@@ -1,0 +1,28 @@
+// @vitest-environment jsdom
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+const api=vi.hoisted(()=>({rpc:vi.fn(),sessao:vi.fn(),getUser:vi.fn()}));
+vi.mock("../../../../lib/supabase-client",()=>({supabase:{schema:()=>({rpc:api.rpc}),auth:{getUser:api.getUser}}}));
+vi.mock("./diagnostico-revisao-sessao",()=>({conferirSessaoDiagnostico:api.sessao}));
+vi.mock("../../infrastructure/supabase-capacidades-sso-adapter",()=>({supabaseCapacidadesSsoAdapter:{autorizarAcao:async()=>true}}));
+import { PropostaPmoc } from "./PropostaPmoc";
+import { DecisaoPmoc } from "./DecisaoPmoc";
+import { ClassificarLegadoNaoRelacionado } from "./ClassificarLegadoNaoRelacionado";
+import { PrecondicaoImpactos } from "./PrecondicaoImpactos";
+const id=(n:number)=>`18110000-0000-4000-8000-${String(n).padStart(12,"0")}`;
+const dados={userId:id(1),clienteId:id(2),planoId:id(3),versaoId:id(4),rotinaId:id(5),revision:1,vencimento:"2026-11-06"};
+const casos=[
+ {nome:"proposta PMOC",chave:`sso-pmoc-proposta:${JSON.stringify([id(1),id(2),id(3),id(5),dados.vencimento])}`,pedido:{requestId:id(8),clienteId:id(2),planoId:id(3),revision:1,versaoId:id(4),rotinaId:id(5),vencimento:dados.vencimento,agendamentoId:id(6),justificativa:"Conferido"},rpc:"sso_propor_pmoc_mediado",botao:"Repetir tentativa pendente",renderizar:(clienteId:string)=><PropostaPmoc {...dados} clienteId={clienteId}/>,recibo:{requestId:id(8),state:"pendente",propostaId:id(7)}},
+ {nome:"decisão PMOC",chave:`sso-pmoc-decisao:${JSON.stringify([id(1),id(2),id(7)])}`,pedido:{requestId:id(8),clienteId:id(2),propostaId:id(7),revision:1,decisao:"rejeitada",evidencia:"Fonte",justificativa:"Conferido"},rpc:"sso_decidir_pmoc_mediado",botao:"Repetir tentativa pendente",renderizar:(clienteId:string)=><DecisaoPmoc userId={id(1)} clienteId={clienteId} propostaId={id(7)}/>,recibo:{requestId:id(8),revision:2,state:"rejeitada",decisaoId:id(9)}},
+ {nome:"legado não relacionado",chave:`sso-legado-nao-relacionado:${JSON.stringify([id(1),id(2),id(3),id(7)])}`,pedido:{requestId:id(8),clienteId:id(2),planoId:id(3),legadoId:id(7),revisao:1,hash:"a".repeat(64),contexto:"Evidência",motivo:"Conferido",tentativaIncerta:true},rpc:"sso_classificar_legado_nao_relacionado",botao:"Repetir classificação pendente",renderizar:(clienteId:string)=><ClassificarLegadoNaoRelacionado userId={id(1)} clienteId={clienteId} planoId={id(3)} legadoId={id(7)} revision={1}/>,recibo:{requestId:id(8),classificacao:"nao_relacionado",aprovacaoAutorizada:false}},
+ {nome:"pré-condição de impactos",chave:`sso-precondicao-impactos:${JSON.stringify([id(1),id(2),id(3)])}`,pedido:{requestId:id(8),clienteId:id(2),planoId:id(3),revisao:1,vigencia:"2026-11-06"},rpc:"sso_registrar_precondicao_impacto_mediada",botao:"Repetir tentativa pendente",renderizar:(clienteId:string)=><PrecondicaoImpactos userId={id(1)} clienteId={clienteId} planoId={id(3)} revisao={1} vigencia="2026-11-06"/>,recibo:{requestId:id(8),fontesCompletasComprovadas:false,provaTransacionalIntegral:false,aprovacaoAutorizada:false,versaoAlterada:false,osAlteradas:false}},
+] as const;
+let mutacao:(nome:string)=>Promise<unknown>;
+beforeEach(()=>{vi.resetAllMocks();sessionStorage.clear();vi.stubEnv("VITE_SSO_PRECONDICAO_IMPACTO_MEDIADA_ENABLED","true");api.getUser.mockResolvedValue({data:{user:{id:id(1)}},error:null});api.sessao.mockResolvedValue(undefined);api.rpc.mockImplementation((nome:string)=>casos.some(c=>c.rpc===nome)?mutacao(nome):{abortSignal:async()=>({data:[],error:null})});});
+afterEach(()=>{cleanup();sessionStorage.clear();vi.unstubAllEnvs();});
+function montar(c:typeof casos[number]){const client=new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}});const view=(cliente:string)=><QueryClientProvider client={client}>{c.renderizar(cliente)}</QueryClientProvider>;return {tela:render(view(id(2))),view};}
+describe.each(casos)("$nome",c=>{
+ it("troca Cliente durante envio preserva pedido e não o associa ao novo contexto",async()=>{sessionStorage.setItem(c.chave,JSON.stringify(c.pedido));let concluir!:(v:unknown)=>void;mutacao=()=>new Promise(resolve=>{concluir=resolve;});const {tela,view}=montar(c);const inicial=await screen.findByRole("button",{name:c.botao});await waitFor(()=>expect(inicial).toBeEnabled());fireEvent.click(inicial);await waitFor(()=>expect(concluir).toBeTypeOf("function"));const salvo=sessionStorage.getItem(c.chave);tela.rerender(view(id(10)));await act(async()=>{concluir({data:c.recibo,error:null});await Promise.resolve();});expect(sessionStorage.getItem(c.chave)).toBe(salvo);expect(screen.queryByRole("button",{name:c.botao})).toBeNull();});
+ it("resultado incerto seguido de conflito preserva o mesmo pedido",async()=>{sessionStorage.setItem(c.chave,JSON.stringify(c.pedido));let n=0;mutacao=async()=>({data:null,error:++n===1?{code:"40001"}:{code:"P0011",message:"revisao_obsoleta"}});montar(c);const inicial=await screen.findByRole("button",{name:c.botao});await waitFor(()=>expect(inicial).toBeEnabled());fireEvent.click(inicial);await screen.findByText(/Resultado não confirmado/);const salvo=sessionStorage.getItem(c.chave);const botao=screen.getByRole("button",{name:c.botao});await waitFor(()=>expect(botao).toBeEnabled());fireEvent.click(botao);await waitFor(()=>expect(n).toBe(2));expect(sessionStorage.getItem(c.chave)).toBe(salvo);const chamadas=api.rpc.mock.calls.filter(([nome])=>nome===c.rpc);expect(chamadas[1]).toEqual(chamadas[0]);});
+});

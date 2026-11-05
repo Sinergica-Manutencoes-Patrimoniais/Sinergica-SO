@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { EstadoEscolhaAlteracao } from "./EstadoEscolhaAlteracao";
@@ -63,6 +63,7 @@ function DecisaoImpactoOcorrenciaAtiva({
   planoId,
   revision,
 }: { userId: string; clienteId: string; planoId: string; revision: number }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const emEnvio = useRef(false);
   const primeiraTentativa = useRef(false);
   const conferirSessao = (signal?: AbortSignal) => conferirSessaoDiagnostico(userId, signal);
@@ -159,7 +160,7 @@ function DecisaoImpactoOcorrenciaAtiva({
   ]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessao();
+      await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } =
@@ -209,11 +210,11 @@ function DecisaoImpactoOcorrenciaAtiva({
         data.osAlteradas !== false
       )
         throw new Error("Resposta inválida.");
-      await conferirSessao();
+      await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_resultado, p) => {
       try {
-        await conferirSessao();
+        await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p))
           throw new Error("Tentativa divergente.");
         sessionStorage.removeItem(chave);
@@ -254,7 +255,7 @@ function DecisaoImpactoOcorrenciaAtiva({
           (error.code === "P0011" && "message" in error && error.message === "revisao_obsoleta"))
       ) {
         try {
-          await conferirSessao();
+          await conferirSessao(); if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);

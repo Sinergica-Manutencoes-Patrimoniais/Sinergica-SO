@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
@@ -32,13 +32,15 @@ const pedidoSchema = z
   })
   .strict();
 type Pedido = z.infer<typeof pedidoSchema>;
-export function ClassificarLegadoNaoRelacionado({
+export function ClassificarLegadoNaoRelacionado(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.legadoId])} {...props} />; }
+function Conteudo({
   userId,
   clienteId,
   planoId,
   legadoId,
   revision,
 }: { userId: string; clienteId: string; planoId: string; legadoId: string; revision: number }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-legado-nao-relacionado:${JSON.stringify([userId, clienteId, planoId, legadoId])}`;
   const cache = useQueryClient();
   const primeira = useRef(false);
@@ -83,7 +85,7 @@ export function ClassificarLegadoNaoRelacionado({
   const assinatura = JSON.stringify([foto.data?.hash, revision, contexto.trim(), motivo.trim()]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa alterada");
       const { data, error } = await supabase
@@ -107,11 +109,11 @@ export function ClassificarLegadoNaoRelacionado({
         data.aprovacaoAutorizada !== false
       )
         throw new Error("Recibo inválido");
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId);
+        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
@@ -137,7 +139,7 @@ export function ClassificarLegadoNaoRelacionado({
         )
       ) {
         try {
-          await conferirSessaoDiagnostico(userId);
+          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);

@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
@@ -54,7 +54,8 @@ const pedido = z
   })
   .strict();
 type Pedido = z.infer<typeof pedido>;
-export function ConferenciaPmocCiclo({
+export function ConferenciaPmocCiclo(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId, props.rotinaId, props.vencimento])} {...props} />; }
+function Conteudo({
   userId,
   clienteId,
   planoId,
@@ -63,6 +64,7 @@ export function ConferenciaPmocCiclo({
   revision,
   vencimento,
 }: Props) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient();
   const trava = useRef(false);
   const primeiraTentativa = useRef(false);
@@ -158,7 +160,7 @@ export function ConferenciaPmocCiclo({
   ]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_classificar_pmoc_ciclo", {
@@ -198,11 +200,11 @@ export function ConferenciaPmocCiclo({
         r.classificacao !== p.classificacao
       )
         throw new Error("Recibo divergente.");
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId);
+        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
@@ -239,7 +241,7 @@ export function ConferenciaPmocCiclo({
             ].includes(e.message ?? "")))
       ) {
         try {
-          await conferirSessaoDiagnostico(userId);
+          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);

@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 type Pedido = {
@@ -36,6 +36,8 @@ function GerarVisitaContratualSessao({
   const cache = useQueryClient();
   const chave = `sso-gerar-visita-contratual:${JSON.stringify([userId, clienteId, serieId])}`;
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const [regraId, setRegraId] = useState("");
   const [semana, setSemana] = useState("");
   const [inicio, setInicio] = useState("");
@@ -99,7 +101,7 @@ function GerarVisitaContratualSessao({
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || !montado.current || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Sessão alterada.");
       const parametros = {
         p_request_id: p.requestId,
         p_cliente_id: p.clienteId,
@@ -180,7 +182,7 @@ function GerarVisitaContratualSessao({
         decisao = data.decisao;
       }
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
       return { decisao };
     },
     onSuccess: async (r, p) => {
@@ -196,11 +198,13 @@ function GerarVisitaContratualSessao({
         if (
           depois.error ||
           depois.data.user?.id !== userId ||
+          !montado.current ||
           sessionStorage.getItem(chave) !== JSON.stringify(p)
         )
           throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
+        if (!montado.current) return;
         setPendente("invalido");
         setAviso("Tentativa alterada ou não removida; procure suporte.");
         return;
@@ -218,6 +222,7 @@ function GerarVisitaContratualSessao({
         });
     },
     onError: (error, p) => {
+      if (!montado.current) return;
       const e = error as { code?: string; message?: string };
       if (
         p.protocolo !== "coordenado" &&
