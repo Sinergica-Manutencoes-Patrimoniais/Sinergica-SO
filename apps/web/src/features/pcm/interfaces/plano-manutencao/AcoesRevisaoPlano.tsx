@@ -151,6 +151,15 @@ export function AcoesRevisaoPlano({
       setPendente(null);
       setEscolha(null);
       setAvisos(resultado.warnings);
+      if (pedido.tipo === "aprovacao_revisao") {
+        void Promise.allSettled([
+          queryClient.invalidateQueries({ queryKey: ["obrigacoes-preparadas", userId, clienteId, plano.id] }),
+          queryClient.invalidateQueries({ queryKey: ["fila-preventiva-pcm", userId, clienteId, plano.id] }),
+          queryClient.invalidateQueries({ queryKey: ["origens-lote", userId, clienteId, plano.id] }),
+          queryClient.invalidateQueries({ queryKey: ["ciclos-uniformes", userId, clienteId, plano.id] }),
+          queryClient.invalidateQueries({ queryKey: ["previa-ocorrencia-visita", userId, clienteId, plano.id] }),
+        ]);
+      }
     } catch (falha) {
       const codigo =
         typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";

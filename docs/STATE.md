@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: replay de escolha e projeções após aprovação
+
+- Escolhas de nova data Calendário/Visita preservam pedido em 40001 genuíno; apenas conflito específico inicial libera reconferência. Aprovação de revisão invalida também projeções de obrigações, fila e geração após recibo confirmado, evitando dados anteriores à versão.
+- Revisão estática da geração/versionamento não identificou outra falha inequívoca; `CiclosUniformes` já usa apenas mediador existente. Nenhum teste, typecheck, build ou ensaio executado por solicitação atual. Migrations 1780–1785 e UI aguardam validação em lote; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: fallbacks e contexto de vínculo
 
 - Ciclos uniformes, decisão de vencimento e transição de Plano deixam de chamar fallbacks privados inacessíveis; mediadores ainda exigem suas flags e pedidos incertos são preservados. Geração contratual tem protocolos antigos distintos e não foi alterada.
