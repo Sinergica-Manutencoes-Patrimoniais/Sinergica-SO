@@ -17,7 +17,7 @@ serve(async(req)=>{
     const vinculoId=dados.vinculoId;
     const resolver=async()=>{const {data,error}=await privilegiado().schema("pcm").rpc("sso_caminho_foto_staging_ativo_servico",{p_vinculo_id:vinculoId,p_usuario_id:usuario,p_user_role:userRole});if(error?.code==="42501")return null;if(error || typeof data!=="string")throw new Error("consulta");return data;};
     const caminho=await resolver();if(!caminho)return falha(404);const {data:arquivo,error}=await privilegiado().storage.from("sso-levantamento-fotos").download(caminho);if(error || !arquivo)return falha(503);if(arquivo.size>10485760)return falha(413);
-    const bytes=new Uint8Array(await arquivo.arrayBuffer());const jpeg=bytes.length>=3 && bytes[0]===255 && bytes[1]===216 && bytes[2]===255;const png=bytes.length>=8 && [137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);if(!jpeg && !png)return falha(415);if(await resolver()!==caminho)return falha(404);
+    const bytes=new Uint8Array(await arquivo.arrayBuffer());const jpeg=bytes.length>=3 && bytes[0]===255 && bytes[1]===216 && bytes[2]===255;const png=bytes.length>=8 && [137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);if(!jpeg && !png)return falha(415);try{if((await requireAuth(req)).userId!==usuario)return falha(401);}catch{return falha(401);}if(await resolver()!==caminho)return falha(404);try{if((await requireAuth(req)).userId!==usuario)return falha(401);}catch{return falha(401);}
     return new Response(bytes,{headers:{...cors,"Content-Type":jpeg ? "image/jpeg" : "image/png","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Security-Policy":"default-src 'none'; sandbox"}});
   }catch{return falha(503);}
 });
