@@ -101,6 +101,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
     {lista.isFetching && <output>Consultando fila…</output>}
     {lista.isError && <p role="alert">Fila indisponível. <button type="button" onClick={() => void lista.refetch()}>Tentar novamente</button></p>}
     {visivel && <p>{existentes.length > 1 ? "Identidade ambígua; procure suporte." : registro ? `Entrada ${registro.estado} · revisão ${registro.revisao}.` : "Nenhuma entrada registrada para o ciclo canônico consultado."}</p>}
+    {visivel && registro?.estado === "cancelado" && <p role="status">Esta entrada foi cancelada e não pode ser incluída novamente por esta tela. O histórico permanece disponível para conferência.</p>}
     {visivel && tipo === "calendario" && registro?.estado === "verificacao" && <p role="alert">A fonte exige conferência. O estado exibido considera as informações atuais e pode diferir do estado registrado; uma avaliação recebida impede criar novo Chamado.</p>}
     {visivel && tipo === "visita" && registro?.situacao_atual === "verificacao" && <p role="alert">Fonte ou vigência exigem nova conferência. O estado registrado não comprova que o ciclo continua aguardando.</p>}
     {visivel && tipo === "visita" && registro?.situacao_atual === "conferida" && <p>Situação atual parcialmente conferida; fontes externas ainda exigem atenção.</p>}

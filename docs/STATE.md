@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: revogação durante geração
+
+- Auditoria reproduziu criação de ciclo após revogação concorrente de `plano.gerir` quando gate de origem estava desligado. ADR-1628/migration 1770 serializam autorização em fronteiras de geração Calendário/Visita e exigem READ COMMITTED antes de autorização/replay.
+- Clone compilou 1770; revogação × lotes dos dois modos recusou concorrência nas duas ordens, replay igual, Cliente sem concessão negado. Criação nova de Calendário também foi testada nas duas ordens após correção. Roteiro `supabase/tests/manual_E01-S166_autorizacao_geracao_concorrencia_1770.md`; sem Auvo/deploy.
+- UI da fila explica que entrada cancelada não pode ser reincluída pela tela; 8 testes focados passaram. Próximo passo: revisão final/CI; gates default fechados.
+
 ## 2026-11-05 — S165/S166: replay de migrations e lock 0304
 
 - PostgreSQL novo descartável aplicou migrations 0001–1769 em transações e passou 17 pgTAP S165/S166 após atualizar quatro expectativas antigas de SQLSTATE em três arquivos de teste. Bootstrap manual parcial de auth e Storage 0001–0046; um teste usou loopback TCP, sem rede externa. Não equivale a `supabase start && supabase test db`, ACL global ou CI completa. Recursos removidos.

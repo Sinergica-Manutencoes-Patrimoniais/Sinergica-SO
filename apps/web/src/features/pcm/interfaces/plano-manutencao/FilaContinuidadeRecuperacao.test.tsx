@@ -12,6 +12,13 @@ const chave = `sso-fila-preventiva-pcm:${JSON.stringify(["usuario", clienteId, p
 const montar = () => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><FilaPreventivaPcm userId="usuario" clienteId={clienteId} planoId={planoId} preparadaId={preparadaId} /></QueryClientProvider>);
 afterEach(() => { cleanup(); sessionStorage.clear(); vi.unstubAllEnvs(); api.rpc.mockReset(); });
 
+it("explica por que uma entrada cancelada não pode ser incluída novamente", async () => {
+  api.rpc.mockImplementation(() => ({ abortSignal: () => Promise.resolve({ data: [{ ...linha, estado: "cancelado", situacao_atual: "cancelada", revisao: 2 }], error: null }) }));
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><FilaPreventivaPcm userId="usuario" clienteId={clienteId} planoId={planoId} preparadaId={preparadaId} tipo="visita" /></QueryClientProvider>);
+  await screen.findByText(/não pode ser incluída novamente por esta tela/);
+  expect(screen.getByRole("button", { name: "Incluir na fila local" })).toBeDisabled();
+});
+
 it("após primeira rejeição de continuidade permite cancelar a entrada sem alterar OS", async () => {
   vi.stubEnv("VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED", "true");
   api.rpc.mockImplementation((nome: string, args: Record<string, unknown>) => {
