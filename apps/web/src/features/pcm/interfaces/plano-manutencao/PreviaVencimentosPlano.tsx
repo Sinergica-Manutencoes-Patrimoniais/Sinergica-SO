@@ -77,7 +77,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revisaoPlano }: { user
       const matches: z.infer<typeof obrigacao>[] = [];
       for (let pagina = 0; pagina < 20; pagina++) {
         const antes = await supabase.auth.getUser(); if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
-        const { data, error } = await supabase.schema("pcm").rpc("sso_listar_obrigacoes_preparadas", {
+        const { data, error } = await supabase.schema("pcm").rpc("sso_listar_obrigacoes_preparadas_mediada", {
           p_cliente_id: clienteId, p_plano_id: planoId, p_apos_tipo: cursor?.tipo ?? null, p_apos_id: cursor?.id ?? null, p_limite: 50,
         }).abortSignal(signal);
         if (error) throw error;

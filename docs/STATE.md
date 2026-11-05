@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: escopo e atualização de prévias
+
+- `PreviaVencimentosPlano` usa mediador 1533 já existente no lugar de RPC privada; depende também de `sso_obrigacoes_preparadas_mediadas_gate`. ADR-1640/migration 1782 mediam seleção/prévia/diagnóstico/declaração de escopo preservando núcleos privados e `execucao.validar`; conflito de revisão usa P0011 e UI mantém replay incerto. Revisão estática sem bypass concreto.
+- Comparação legado e ciclos uniformes recarregam ao repetir janela e ocultam resultado ao alterar datas. Preparação de Visita individual/lote invalida prévias de ciclos e obrigações.
+- **Nenhum teste, typecheck, build ou ensaio executado por solicitação atual.** As migrations 1780–1782 e alterações de UI/cache aguardam validação em lote, ACL, replay, sessão, gates e jornadas. Sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: localização de cópia e cache de Visita
 
 - ADR-1639/migration 1781 mediam localização de cópia de Rotina revisada, antes chamada por UI como RPC privada; núcleo/gates permanecem. Revisão estática independente não identificou bypass concreto.
