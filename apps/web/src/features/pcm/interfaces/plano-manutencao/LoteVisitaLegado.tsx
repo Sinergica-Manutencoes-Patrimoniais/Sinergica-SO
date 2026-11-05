@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
@@ -55,6 +55,8 @@ function Conteudo({
   visitas: Visita[];
   consultando: boolean;
 }) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient();
   const storage = `lote-visita-legado:${JSON.stringify([userId, clienteId, planoId, legadoId, relacaoId])}`;
   const trava = useRef(false);
@@ -80,7 +82,7 @@ function Conteudo({
   });
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(storage) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_lote_visita_legada_mediado", {
@@ -123,12 +125,12 @@ function Conteudo({
           JSON.stringify([...p.preparadas].sort())
       )
         throw new Error("Resposta divergente.");
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       return r;
     },
     onSuccess: async (r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId);
+        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(storage);
       } catch {

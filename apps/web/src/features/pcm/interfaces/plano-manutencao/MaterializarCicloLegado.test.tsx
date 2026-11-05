@@ -83,6 +83,7 @@ it("não apaga tentativa substituída por outra instância durante envio", async
     data: {
       requestId: pedido.p_request_id,
       preparadaId: pedido.p_preparada_id,
+      cicloId: pedido.p_ciclo_id,
       osCriada: false,
       tarefaAuvoCriada: false,
       equivalenciaGeralComprovada: false,
@@ -176,6 +177,7 @@ it("encaminha ciclo integrado para conferência independente da fila", async () 
     data: {
       requestId: pedido.p_request_id,
       preparadaId: pedido.p_preparada_id,
+      cicloId: pedido.p_ciclo_id,
       osCriada: false,
       tarefaAuvoCriada: false,
       equivalenciaGeralComprovada: false,

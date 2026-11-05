@@ -6,6 +6,12 @@ import type {
   CriarRegraContratualGateway,
 } from "../application/calendario-contratual-gateway";
 
+// Somente erros retornados pela RPC com rejeição HTTP da transação recebem esta marca local.
+const rejeicoesTransacionais = new WeakSet<object>();
+export function rejeicaoInicialRegraComprovada(error: unknown): boolean {
+  return typeof error === "object" && error !== null && rejeicoesTransacionais.has(error);
+}
+
 const resultadoSchema = z
   .object({
     aggregateId: z.string().uuid(),
@@ -112,7 +118,7 @@ export const supabaseCalendarioContratualAdapter: CriarRegraContratualGateway &
       .parse(data);
   },
   async criarRegra(c) {
-    const { data, error } = await supabase.schema("pcm").rpc("sso_criar_regra_contratual_v2", {
+    const { data, error, status } = await supabase.schema("pcm").rpc("sso_criar_regra_contratual_v2", {
       p_request_id: c.requestId,
       p_expected_revision: c.expectedRevision,
       p_cliente_id: c.clienteId,
@@ -129,7 +135,10 @@ export const supabaseCalendarioContratualAdapter: CriarRegraContratualGateway &
       p_vigencia_inicio: c.vigenciaInicio,
       p_vigencia_fim: c.vigenciaFim,
     });
-    if (error) throw error;
+    if (error) {
+      if (status === 400 && ["22023", "23514", "P0011"].includes(error.code)) rejeicoesTransacionais.add(error);
+      throw error;
+    }
     const resultado = resultadoSchema.parse(data);
     const iguais = (a: string | undefined, b: string) => a?.toLowerCase() === b.toLowerCase();
     if (

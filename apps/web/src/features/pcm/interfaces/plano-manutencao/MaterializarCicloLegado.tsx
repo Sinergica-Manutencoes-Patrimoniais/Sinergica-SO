@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { LoteCiclosLegados } from "./LoteCiclosLegados";
@@ -50,6 +50,8 @@ function Conteudo({
   revision,
   preparadaInicial,
 }: Props) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient();
   const chave = `sso-materializar-ciclo-legado:${JSON.stringify([userId, clienteId, planoId, legadoId])}`;
   const [preparadaId, setPreparadaId] = useState(preparadaInicial ?? "");
@@ -111,7 +113,7 @@ function Conteudo({
   });
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_materializar_legado_mediado", {
@@ -129,17 +131,19 @@ function Conteudo({
         !data ||
         data.requestId !== p.requestId ||
         data.preparadaId !== p.preparadaId ||
+        data.cicloId !== p.cicloId ||
+        typeof data.ocorrenciaLegadaCriada !== "boolean" ||
         data.osCriada !== false ||
         data.tarefaAuvoCriada !== false ||
         data.equivalenciaGeralComprovada !== false
       )
         throw new Error("Resposta inválida.");
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       return data as { ocorrenciaLegadaCriada: boolean };
     },
     onSuccess: async (r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId);
+        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) {
           setAviso("Tentativa local alterada; procure suporte para reconciliar.");
           return;

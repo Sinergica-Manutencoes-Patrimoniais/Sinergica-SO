@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
@@ -30,6 +30,8 @@ function Conteudo({
   clienteId,
   planoId,
 }: { userId: string; clienteId: string; planoId: string }) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient();
   const trava = useRef(false);
   const primeiraTentativa = useRef(false);
@@ -50,7 +52,7 @@ function Conteudo({
   const assinatura = JSON.stringify([userId, clienteId, planoId, cursor]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_aplicar_retiradas_fila", {
@@ -89,12 +91,12 @@ function Conteudo({
         r.maisPossivel !== (r.visitadas === 50)
       )
         throw new Error("Recibo divergente.");
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       return r;
     },
     onSuccess: async (r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId);
+        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
@@ -119,7 +121,7 @@ function Conteudo({
       const e = error as { code?: string; message?: string };
       if (primeiraTentativa.current && e.code === "P0012" && e.message === "fila_alterada") {
         try {
-          await conferirSessaoDiagnostico(userId);
+          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);
