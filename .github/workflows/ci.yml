@@ -111,7 +111,7 @@ jobs:
           version: 2.116.0
       - name: Subir Supabase local (Docker) — aplica migrations do zero
         run: supabase start
-      # Roteiros manuais e fixtures SQL não têm plano TAP; são validados pelo harness próprio.
+      # Roteiros manuais e fixtures SQL não têm plano TAP; requerem validação isolada separada.
       # O smoke remoto emite TAP literal e, apesar do nome, também integra a verificação local.
       - name: pgTAP — RLS e invariantes (supabase/tests/)
         run: supabase test db supabase/tests/*.test.sql supabase/tests/remote_promotion_smoke.sql

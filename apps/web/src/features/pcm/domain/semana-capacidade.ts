@@ -9,7 +9,12 @@ export function semanaCapacidade(data: string): { inicio: string; fim: string } 
   dia.setUTCDate(dia.getUTCDate() + 6);
   const fimCompleto = dia.toISOString();
   const fim = fimCompleto.slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(inicio) || inicio.startsWith("0000") ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(fim) || fim.startsWith("0000")) return null;
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(inicio) ||
+    inicio.startsWith("0000") ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(fim) ||
+    fim.startsWith("0000")
+  )
+    return null;
   return { inicio, fim };
 }
