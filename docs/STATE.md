@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — integração AC5 e preservação (Codex)
+
+- S170 AC5: jornada de retorno do PCM integrada ao candidato atrás de flag desligada; preparado cenário de rejeição de evidência com motivo além dos cenários de aceitação, devolução e reabertura. O caso novo não foi executado e as simulações não provam autorização ou Storage reais.
+- Dependências de banco do AC5: 32 migrations candidatas identificadas, com rastreio e manifesto ainda em revisão; expansão textual sugeriu outras oito, sem evidência de que sejam necessárias. O harness preparado aceita apenas manifesto revisado e opera em clone descartável; nenhuma dessas migrations foi aplicada por este diagnóstico.
+- Backups remotos: `backup/sso-wip-20261104` em `ab3677f` e `backup/sso-integracao-s165-s166-s170-s176` em `20a516f`. São cópias de trabalho, não aprovação para merge ou deploy.
+- Pendente: concluir o fechamento das dependências AC5, validar as quatro stories em lote, tratar CI, revisar segurança e rollout. Nenhuma tarefa real no Auvo foi disparada.
+
 ## 2026-11-05 — recorte de integração e lint (Codex)
 
 - O recorte candidato está incompleto: 1795 exige ações originalmente incluídas em 0434/0437/0445/0465, que também criam ou alteram recursos de outras stories. O rascunho isolado foi ampliado com candidatas e mantém manifesto de origem; não foi aplicado e não comprova fechamento.

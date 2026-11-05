@@ -851,5 +851,22 @@
       }
     ],
     "observacao": "As 8 além das 32 podem ser transitivas ou falsos positivos de leitura de arquivos inteiros; várias pertencem a S167/S171/S177 e incluem efeitos ou gates de outros fluxos. Não qualificadas para porte."
+  },
+  "rastreio_chamadas_ac5": {
+    "status": "lista candidata de 32 para diagnóstico; não comprova fechamento completo nem segurança de release",
+    "migracoes_lidas_em_fecho_textual_de_chamadas": 63,
+    "adicionais_entre_oito_por_chamada_direta": [],
+    "exclusoes_por_rastreio_preliminar": {
+      "1309,1316": "caminho via tabela equipamentos e migration 0032, não chamada direta de 0380",
+      "1446,1447,1551": "caminho via referências a tabelas de Visita/Chamado e migrations inteiras, não chamada direta identificada",
+      "1484,1509": "caminho via tabela de finalizações e operacao_itens, não chamada direta identificada",
+      "0822": "cadeia por tabela de aliases e arquivos inteiros, não chamada direta identificada"
+    },
+    "triggers_0713": "Guarda decisões/pendências/finalizações, consulta gate e propostas; não chama diretamente as oito candidatas adicionais.",
+    "limites": [
+      "Sobrecargas e funções renomeadas por ALTER FUNCTION não foram resolvidas integralmente.",
+      "Dependências de triggers, policies e SQL gerado indiretamente podem não aparecer na busca.",
+      "A prévia de histórico de banco, gates preexistentes, bucket e ACL efetiva é obrigatória antes de qualquer rollout."
+    ]
   }
 }
