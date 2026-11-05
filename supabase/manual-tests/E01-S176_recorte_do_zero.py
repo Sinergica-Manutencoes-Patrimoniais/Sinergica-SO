@@ -246,7 +246,7 @@ def main(opcoes):
         if not opcoes.isolamento_1810:
             raise RuntimeError("Upload 1811 exige --isolamento-1810 e clone descartável")
         driver = ROOT / "supabase/manual-tests/s168_upload_1811_isolada.py"
-        if hashlib.sha256(driver.read_bytes()).hexdigest() != "2823497625f4f4a8082cec23ee07cd3f4e8d39671016243249b02a4406197d13":
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "751e24f40939ab75c999f54109aaeed5aab97dc9ff6367f454cb36325eadeda4":
             raise RuntimeError("Driver de upload 1811 divergente")
         import s168_upload_1811_isolada
         upload_1811 = s168_upload_1811_isolada.preparar(ROOT)
