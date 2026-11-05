@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { PropostaExigenciaRevisao } from "./PropostaExigenciaRevisao";
@@ -7,7 +7,9 @@ const itemHistorico = z.object({ request_id:z.string().uuid(), revisao:z.number(
 type Pedido = { requestId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; planoRevision: number; declaracaoRevision: number; classificacao: "legal_normativa" | "nao_classificada"; referencia: string; justificativa: string };
 
 export function ExigenciaLegalRotina({ userId, clienteId, planoId, versaoId, rotinaId, planoRevision, modo }: { userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; planoRevision: number; modo: string }) {
-  const trava = useRef(false); const mediado = import.meta.env.VITE_SSO_EXIGENCIA_ROTINA_MEDIADA_ENABLED === "true";
+  const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []); const mediado = import.meta.env.VITE_SSO_EXIGENCIA_ROTINA_MEDIADA_ENABLED === "true";
   async function conferirSessao(signal?: AbortSignal) { const {data,error}=await supabase.auth.getUser(); if(error || data.user?.id!==userId || signal?.aborted) throw new Error("Sessão alterada."); }
   const cache = useQueryClient(); const chave = `sso-exigencia-rotina:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId])}`;
   const [classificacao, setClassificacao] = useState<Pedido["classificacao"]>("nao_classificada"); const [referencia, setReferencia] = useState(""); const [justificativa, setJustificativa] = useState(""); const [aviso, setAviso] = useState("");
@@ -18,7 +20,7 @@ export function ExigenciaLegalRotina({ userId, clienteId, planoId, versaoId, rot
   const historicoDivergente=linhas.some((item,i)=>i>0 && item.revisao>=linhas[i-1]!.revisao);
   const fotografia=historico.data && !historico.isFetching && !historico.isError && !historicoDivergente
     ? JSON.stringify([userId,clienteId,planoId,versaoId,rotinaId,planoRevision,linhas[0]?.revisao ?? 0,classificacao,referencia.trim(),justificativa.trim()]) : null;
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { await conferirSessao(); if(sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error("Tentativa divergente."); const { data, error } = await supabase.schema("pcm").rpc(mediado ? "sso_declarar_exigencia_rotina_mediado" : "sso_declarar_exigencia_rotina", { ...(mediado ? {p_ator_id:userId} : {}), p_request_id: p.requestId, p_cliente_id: p.clienteId, p_plano_id: p.planoId, p_versao_id: p.versaoId, p_rotina_id: p.rotinaId, p_expected_plano: p.planoRevision, p_expected_declaracao: p.declaracaoRevision, p_classificacao: p.classificacao, p_referencia: p.referencia || null, p_justificativa: p.justificativa }); if (error) throw error; if (!data || data.requestId !== p.requestId || data.rotinaId !== p.rotinaId || data.referenciaValidada !== false || data.toleranciaValidada !== false) throw new Error("Resposta inválida."); await conferirSessao(); }, onSuccess: async (_resultado,p) => { try { await cache.invalidateQueries({ queryKey: ["exigencia-rotina", userId, clienteId, planoId, versaoId, rotinaId] }); await conferirSessao(); if(sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); } catch { setAviso("Declaração registrada, mas tentativa local não foi limpa; procure suporte."); return; } setPendente(null); setAviso("Declaração registrada; tolerância normativa permanece a confirmar."); }, onError: () => setAviso("Resultado não confirmado; repita a mesma tentativa ou procure suporte em conflito."), onSettled: () => { trava.current=false; } });
+  const envio = useMutation({ mutationFn: async (p: Pedido) => { await conferirSessao(); if(sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error("Tentativa divergente."); const { data, error } = await supabase.schema("pcm").rpc(mediado ? "sso_declarar_exigencia_rotina_mediado" : "sso_declarar_exigencia_rotina", { ...(mediado ? {p_ator_id:userId} : {}), p_request_id: p.requestId, p_cliente_id: p.clienteId, p_plano_id: p.planoId, p_versao_id: p.versaoId, p_rotina_id: p.rotinaId, p_expected_plano: p.planoRevision, p_expected_declaracao: p.declaracaoRevision, p_classificacao: p.classificacao, p_referencia: p.referencia || null, p_justificativa: p.justificativa }); if (error) throw error; if (!data || data.requestId !== p.requestId || data.rotinaId !== p.rotinaId || data.revisao !== p.declaracaoRevision + 1 || data.snapshotAlterado !== false || data.referenciaValidada !== false || data.toleranciaValidada !== false) throw new Error("Resposta inválida."); await conferirSessao(); }, onSuccess: async (_resultado,p) => { try { await cache.invalidateQueries({ queryKey: ["exigencia-rotina", userId, clienteId, planoId, versaoId, rotinaId] }); await conferirSessao(); if(sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error(); if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave); } catch { setAviso("Declaração registrada, mas tentativa local não foi limpa; procure suporte."); return; } setPendente(null); setAviso("Declaração registrada; tolerância normativa permanece a confirmar."); }, onError: () => setAviso("Resultado não confirmado; repita a mesma tentativa ou procure suporte em conflito."), onSettled: () => { trava.current=false; } });
   const recibo = useMutation({ mutationFn: async (p: Pedido) => {
     await conferirSessao(); if (sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error("Tentativa divergente.");
     const {data,error}=await supabase.schema("pcm").rpc("sso_recibo_exigencia_rotina", {
@@ -28,12 +30,12 @@ export function ExigenciaLegalRotina({ userId, clienteId, planoId, versaoId, rot
     });
     if(error) throw error; await conferirSessao();
     if(data===null) return false;
-    if(!data || data.requestId!==p.requestId || data.rotinaId!==p.rotinaId || data.referenciaValidada!==false || data.toleranciaValidada!==false) throw new Error("Recibo divergente.");
+    if(!data || data.requestId!==p.requestId || data.rotinaId!==p.rotinaId || data.revisao !== p.declaracaoRevision + 1 || data.snapshotAlterado !== false || data.referenciaValidada!==false || data.toleranciaValidada!==false) throw new Error("Recibo divergente.");
     return true;
   }, onSuccess: async (encontrado,p) => {
     if(!encontrado) { setAviso("Recibo ausente; isso não comprova falha. Preserve a tentativa."); return; }
     try { await cache.invalidateQueries({queryKey:["exigencia-rotina",userId,clienteId,planoId,versaoId,rotinaId]}); await conferirSessao();
-      if(sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave);
+      if(sessionStorage.getItem(chave)!==JSON.stringify(p)) throw new Error(); if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave);
     } catch { setAviso("Declaração confirmada, mas tentativa local não foi limpa; procure suporte."); return; }
     setPendente(null); setAviso("Declaração anterior confirmada; a tolerância permanece a validar.");
   }, onError:()=>setAviso("Recibo indisponível. Preserve a tentativa ou procure suporte."), onSettled:()=>{trava.current=false;} });
