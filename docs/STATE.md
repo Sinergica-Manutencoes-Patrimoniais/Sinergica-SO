@@ -6,6 +6,15 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — estado atual e continuidade (Codex)
+
+- Trabalho em andamento no workspace original `codex/handoff-plano-manutencao` e no candidato `/tmp/sso-integracao-s165-s166-s170-s176`, branch `codex/integracao-s165-s166-s170-s176`. Ambos contêm alterações locais; não restaurar ou limpar indiscriminadamente. Referências de backup rastreadas em `origin/backup/sso-wip-20261104` (`dbcc156`) e `origin/backup/sso-integracao-s165-s166-s170-s176` (`af45e46`); novas alterações locais podem não estar incluídas nesses commits. São backups, não aprovação de release.
+- Evidências do lote anterior: typecheck e 1.766 testes Vitest passaram, com 9 de integração ignorados; clone sintético compilou 228 migrations de base e 695 candidatas e aprovou fixtures indicadas na entrada seguinte. Deno check das três rotas de anexos staging passou após correção de tipos; sete testes de equipamento passaram. Resultados correspondem aos estados ensaiados e não comprovam mudanças posteriores nem CI completa, Auth/Storage reais, ACL no destino ou homologação.
+- ADR-1669/migration 1811 e ADR-1670/migration 1812 preparam correção de upload e mediação de documentos, com gate/flag de documento fechados. Fixture 1812 foi ampliada para Cliente autorizado e Cliente cruzado; aguarda execução. A jornada HTTP AC5 e os testes Auth/Storage e sessão revogada das rotas staging ainda não foram concluídos. As últimas tentativas sintéticas pararam por espaço; recursos próprios foram removidos. Não reduzir o limite do monitor para contornar a falta de espaço.
+- A proteção 1809 segue desligada por padrão; acesso legado direto permanece amplo enquanto desligada. Foto staging de Grupo com flag de mediação desligada fica indisponível; a liberação depende de validação e ativação coordenada conforme ADR-1315. As rotas de anexos e demais gates não estão homologados.
+- S166 acima de 500 visitas: ADR-1671 é proposta, sem implementação. Preservar limite atual até especificar limites medidos, fotografia completa, replay, atomicidade e travas de todos os escritores. A edição individual de visita não compartilha necessariamente a trava da série; concorrência e alterações durante a seleção precisam de prova.
+- PR #71 foi fechado sem merge. Netlify informou Deploy Preview pronto em https://deploy-preview-71--so-sinergica.netlify.app; não há acesso para removê-lo. Isso não comprova implantação em produção nem autoriza publicar. Permanecem pendentes revisão de exposição/publicação das Edge Functions, CI integral, Squawk, segurança, testes integrados e homologação. Não disparar tarefas reais no Auvo.
+
 ## 2026-11-05 — validação em lote S165/S166/S170/S176 (Codex)
 
 - No candidato `codex/integracao-s165-s166-s170-s176`, typecheck passou; Vitest completo passou 1.766 testes, 9 de integração Supabase foram pulados (286 arquivos passaram, 3 pulados). Lote de interfaces: 538 testes/92 arquivos passaram com variáveis Supabase removidas; testes simulados não comprovam serviços reais.
