@@ -55,6 +55,6 @@ serve(async req => {
     try { if ((await requireAuth(req)).userId !== usuario) return falha(401); } catch { return falha(401); }
     const final = await resolver(); if (!final || final.identidade !== origem.identidade) return falha(404);
     try { if ((await requireAuth(req)).userId !== usuario) return falha(401); } catch { return falha(401); }
-    return new Response(bytes, { headers: { ...cors, "Content-Type": "application/pdf", "Content-Disposition": "attachment; filename=\"documento.pdf\"", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'; sandbox" } });
+    return new Response(new Uint8Array(bytes), { headers: { ...cors, "Content-Type": "application/pdf", "Content-Disposition": "attachment; filename=\"documento.pdf\"", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'; sandbox" } });
   } catch { return falha(503); }
 });
