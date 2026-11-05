@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: classificação legada e lote consolidado
+
+- ADR-1633/migration 1775 tratam conflito definitivo de classificação de legado com P0019; UI preserva pedido incerto e erro real. Clone compilou 1614–1775, fixture SQL testou conflito/positivo/replay e HTTP isolado devolveu P0019 e recibo de replay anterior; UI 2/2, revisão independente sem bypass concreto. Rollout frontend/backend coordenado.
+- Clone limpo compilou 1614–1774 em ordem e passou 23 fixtures SQL; typecheck web passou. Aprovação real 1731 em clone recusou avaliação tardia e passou após remover fontes sintéticas, com replay idêntico. Isso não prova fontes externas, ACL global, CI remoto ou aprovação com avaliação persistente.
+- Próximo passo: CI e revisão integral para homologação; gates default fechados. Sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: feedback de permissão e auditoria de bordas
 
 - UI de Rotina informa autorização em alteração ou indisponível sem apagar pedido de replay; seis testes focados passaram. Backend/gates não alterados.
