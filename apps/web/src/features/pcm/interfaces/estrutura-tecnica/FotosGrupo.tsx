@@ -61,6 +61,11 @@ function Fotos({
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [aviso, setAviso] = useState("");
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => { montado.current = false; };
+  }, []);
   const client = useQueryClient();
   const fotos = useInfiniteQuery({
     queryKey: ["fotos-grupo", userId, clienteId, grupoId],
@@ -98,7 +103,8 @@ function Fotos({
       if (Array.from(digest, (v) => v.toString(16).padStart(2, "0")).join("") !== p.hash)
         throw new Error("Arquivo diferente da tentativa");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada");
+      if (antes.error || antes.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
       const { data, error } = await supabase.functions.invoke("pcm-ingestao-foto-cadastral-grupo", {
         body: arquivo,
         headers: {
@@ -122,11 +128,14 @@ function Fotos({
     },
     onSuccess: async (_r, { p }) => {
       try {
+        const atual = await supabase.auth.getUser();
+        if (atual.error || atual.data.user?.id !== userId || !montado.current)
+          throw new Error("Sessão alterada");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p))
           throw new Error("Tentativa divergente");
         sessionStorage.removeItem(chave);
       } catch {
-        setAviso("Foto vinculada; tentativa local não foi limpa. Consulte suporte.");
+        if (montado.current) setAviso("Foto vinculada; tentativa local não foi limpa. Consulte suporte.");
         return;
       }
       setPendente(null);
@@ -134,10 +143,11 @@ function Fotos({
       setAviso("Foto vinculada.");
       await client.invalidateQueries({ queryKey: ["fotos-grupo", userId, clienteId, grupoId] });
     },
-    onError: () =>
-      setAviso(
+    onError: () => {
+      if (montado.current) setAviso(
         "Não foi possível confirmar. Selecione o mesmo arquivo e repita a tentativa ou consulte suporte.",
-      ),
+      );
+    },
     onSettled: () => {
       trava.current = false;
     },

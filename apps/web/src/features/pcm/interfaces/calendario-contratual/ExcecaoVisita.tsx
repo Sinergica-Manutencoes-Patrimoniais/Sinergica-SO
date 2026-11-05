@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -18,7 +18,9 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
   const chave = `sso-excecao-visita:${JSON.stringify([userId, clienteId, visitaId])}`;
   const [pedido, setPedido] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(chave); if (!raw) return null; const p = pedidoSchema.parse(JSON.parse(raw)); return p.ator === userId && p.cliente === clienteId && p.visita === visitaId ? p : "invalido"; } catch { return "invalido"; } });
   const [origem, setOrigem] = useState(""); const [natureza, setNatureza] = useState(""); const [motivo, setMotivo] = useState("");
-  const [confirmacao, setConfirmacao] = useState<string | null>(null); const [ocupado, setOcupado] = useState(false); const [aviso, setAviso] = useState(""); const trava = useRef(false); const cache = useQueryClient();
+  const [confirmacao, setConfirmacao] = useState<string | null>(null); const [ocupado, setOcupado] = useState(false); const [aviso, setAviso] = useState(""); const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []); const cache = useQueryClient();
   async function conferirAtor() { const r = await supabase.auth.getUser(); if (r.error || r.data.user?.id !== userId) throw new Error("Sessão alterada"); }
   const estado = useQuery({ queryKey: ["excecao-visita", userId, clienteId, visitaId], enabled: !pedido, gcTime: 0, retry: false, queryFn: async ({ signal }) => {
     await conferirAtor(); const { data, error } = await supabase.schema("pcm").rpc("sso_consultar_excecao_visita", { p_ator: userId, p_cliente: clienteId, p_visita: visitaId }).abortSignal(signal);
@@ -31,14 +33,14 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
       const jaIncerta = p.tentativaIncerta !== false; p = pedidoSchema.parse({ ...p, tentativaIncerta: true }); serializado = JSON.stringify(p); sessionStorage.setItem(chave, serializado); setPedido(p);
       const { data, error } = await supabase.schema("pcm").rpc("sso_aprovar_excecao_visita", { p_ator: p.ator, p_request: p.requestId, p_cliente: p.cliente, p_visita: p.visita, p_revisao: p.revisao, p_data: p.data, p_origem: p.origem, p_natureza: p.natureza, p_motivo: p.motivo });
       if (error) {
-        if (!jaIncerta && (error.code === "40001" || (error.code === "P0011" && error.message === "visita_obsoleta"))) {
+        if (!jaIncerta && (error.code === "P0011" && error.message === "visita_obsoleta")) {
           await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Pedido alterado");
-          sessionStorage.removeItem(chave); setPedido(null); setConfirmacao(null); setAviso("A Visita mudou. Confira os dados novamente."); void estado.refetch(); return;
+          if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave); setPedido(null); setConfirmacao(null); setAviso("A Visita mudou. Confira os dados novamente."); void estado.refetch(); return;
         }
         throw error;
       }
       if (!data || data.requestId !== p.requestId || data.visitaId !== p.visita || data.revisaoVisita !== p.revisao || data.aprovada !== true || data.visitaAlterada !== false || data.osAlteradas !== false || data.tarefaAuvoCriada !== false) throw new Error("Recibo divergente");
-      await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Pedido alterado"); sessionStorage.removeItem(chave); setPedido(null); setConfirmacao(null); setAviso("Exceção aprovada. A Visita será preservada na mudança de dia.");
+      await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Pedido alterado"); if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave); setPedido(null); setConfirmacao(null); setAviso("Exceção aprovada. A Visita será preservada na mudança de dia.");
       await cache.invalidateQueries({ queryKey: ["excecao-visita", userId, clienteId, visitaId] }); aoAprovar();
     } catch { setAviso("Resultado não confirmado. Repita o mesmo pedido ou procure suporte."); } finally { trava.current = false; setOcupado(false); }
   }

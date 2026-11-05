@@ -13,7 +13,7 @@ function Comando(p:Props){
  const [aberto,setAberto]=useState(false),[motivo,setMotivo]=useState(""),[revisao,setRevisao]=useState(p.revisao),[aviso,setAviso]=useState(""),[ocupado,setOcupado]=useState(false);
  const trava=useRef(false),montado=useRef(false),client=useQueryClient();useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
  async function enviar(v:z.infer<typeof pedidoSchema>){if(trava.current||!p.disponivel)return;trava.current=true;setOcupado(true);setAviso("");try{
-  const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==p.userId)throw new Error("sessao_alterada");
+  const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==p.userId)throw new Error("sessao_alterada"); if (sessionStorage.getItem(key) !== JSON.stringify(v)) throw new Error("tentativa_alterada");
   const {data,error}=await supabase.schema("pcm").rpc("sso_alterar_estado_grupo",{p_request_id:v.requestId,p_grupo_id:v.grupoId,p_expected_revision:v.revision,p_ativo:v.ativo,p_motivo:v.motivo});if(error)throw error;
   const r=z.object({aggregateId:z.string().uuid(),revision:z.number().int().positive(),requestId:z.string().uuid(),ativo:z.boolean()}).strict().parse(data);
   if(r.aggregateId!==v.grupoId||r.requestId!==v.requestId||r.revision!==v.revision+1||r.ativo!==v.ativo)throw new Error("resposta_divergente");
