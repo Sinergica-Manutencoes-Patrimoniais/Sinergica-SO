@@ -160,6 +160,18 @@ function Conteudo({
           (pedido.versaoEsperada !== undefined && resultado.linkedIds.versaoId !== pedido.versaoEsperada)
         ) throw new Error("Recibo de aprovação divergente.");
       }
+      if (pedido.tipo === "inicio" || pedido.tipo === "transicao") {
+        const estadoEsperado = pedido.tipo === "inicio" || pedido.comando.acao === "devolver" ? "rascunho" : "em_revisao";
+        if (
+          resultado.requestId !== pedido.comando.requestId ||
+          resultado.aggregateId !== pedido.comando.planoId ||
+          resultado.revision !== pedido.comando.expectedRevision + 1 ||
+          resultado.linkedIds.clienteId !== clienteId ||
+          resultado.state !== estadoEsperado ||
+          resultado.created !== (pedido.tipo === "inicio") ||
+          (pedido.tipo === "inicio" && resultado.linkedIds.versaoId !== pedido.comando.novaVersaoId)
+        ) throw new Error("Recibo de revisão divergente.");
+      }
       if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
         setErro("Operação confirmada, mas o pedido local mudou. Reabra e reconcilie antes de continuar.");
         return;

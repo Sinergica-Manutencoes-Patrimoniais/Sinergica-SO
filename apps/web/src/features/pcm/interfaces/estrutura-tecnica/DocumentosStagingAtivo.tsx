@@ -27,7 +27,7 @@ function Conteudo({ userId, clienteId, tipo, entidadeId }: Props) {
     getNextPageParam: p => p.length === 20 ? p[p.length - 1]?.id : undefined,
   });
   if (!ativo) return null;
-  return <section aria-label="Documentos aceitos do levantamento"><h4>Documentos aceitos do levantamento</h4><p>Vínculo temporário; aceite não comprova segurança do arquivo. Acesso depende da decisão e permissão atuais.</p>{q.isPending && <output>Carregando…</output>}{q.isError && <p role="alert">Documentos indisponíveis. <button type="button" onClick={() => void q.refetch()}>Tentar novamente</button></p>}{!q.isError && q.data?.pages.flat().map(d => <Documento key={d.id} userId={userId} vinculoId={d.id} titulo={d.titulo} />)}{q.hasNextPage && !q.isError && <button type="button" disabled={q.isFetching} onClick={() => void q.fetchNextPage()}>Mais documentos</button>}</section>;
+  return <section aria-label="Documentos aceitos do levantamento"><h4>Documentos aceitos do levantamento</h4><p>Vínculo temporário; aceite não comprova segurança do arquivo. Acesso depende da decisão e permissão atuais.</p>{(q.isPending || q.isFetching) && <output>Carregando…</output>}{q.isError && <p role="alert">Documentos indisponíveis. <button type="button" onClick={() => void q.refetch()}>Tentar novamente</button></p>}{!q.isFetching && !q.isError && q.data?.pages.flat().map(d => <Documento key={d.id} userId={userId} vinculoId={d.id} titulo={d.titulo} />)}{q.hasNextPage && !q.isFetching && !q.isError && <button type="button" disabled={q.isFetching} onClick={() => void q.fetchNextPage()}>Mais documentos</button>}</section>;
 }
 function Documento({ userId, vinculoId, titulo }: { userId: string; vinculoId: string; titulo: string }) {
   const [url, setUrl] = useState<string | null>(null);
