@@ -46,7 +46,7 @@ Esperado: `55P03/autorizacao_em_alteracao`; executar rollback em B. Confirmar A.
 
 ## Movimento primeiro
 
-Na sessão A, repetir o bloco autenticado de B com request `17990000-0000-0000-0000-000000000102`; manter a transação aberta após sucesso. Na sessão B, como owner, iniciar transação com `set local lock_timeout='2s'` e tentar o mesmo UPDATE de revogação acima. Esperado: espera e erro `55P03` por lock timeout, não `autorizacao_em_alteracao`. Reverter B e confirmar A.
+Na sessão A, repetir o bloco autenticado de B com request `17990000-0000-0000-0000-000000000102`; manter a transação aberta após sucesso. Na sessão B, como owner, iniciar transação com `set local lock_timeout='2s'` e tentar o mesmo UPDATE de revogação acima. Esperado: erro imediato `55P03/autorizacao_em_alteracao`, pois a migration 1099 tornou a trava do escritor não bloqueante. Reverter B e confirmar A.
 
 Antes da revogação, repetir o request `...0102` e payload idêntico: o recibo deve ser idêntico, sem segunda alteração. Confirmar a revogação numa nova transação owner e repetir o mesmo request autenticado: esperado `42501`. Como owner, verificar apenas a revisão e o Local do item sintético e a unicidade do request em `pcm.estrutura_comandos`; descartar todo o clone ao final.
 

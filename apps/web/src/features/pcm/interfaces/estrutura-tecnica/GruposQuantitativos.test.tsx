@@ -3,6 +3,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("../../../auth/infrastructure/supabase-auth-adapter", () => ({
+  supabaseAuthAdapter: new Proxy({}, {
+    get: () => { throw new Error("Acesso inesperado à autenticação em teste unitário"); },
+  }),
+}));
+
+vi.mock("../../../../lib/supabase-client", () => ({
+  supabase: new Proxy({}, {
+    get: () => { throw new Error("Acesso inesperado ao Supabase em teste unitário"); },
+  }),
+  supabaseUrl: "http://127.0.0.1:1",
+}));
+
 const gateway = vi.hoisted(() => ({
   autorizarAcao: vi.fn(),
   listarGrupos: vi.fn(),

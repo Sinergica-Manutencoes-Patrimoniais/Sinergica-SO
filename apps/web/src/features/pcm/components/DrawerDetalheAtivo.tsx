@@ -21,14 +21,14 @@ import type {
 import { ultimaManutencao } from "../domain/historico-ativo";
 import { supabaseBoardAtivosAdapter } from "../infrastructure/supabase-board-ativos-adapter";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
-import { EquipamentoModal } from "./EquipamentoModal";
-import { FotosStagingAtivo } from "../interfaces/estrutura-tecnica/FotosStagingAtivo";
-import { DocumentosStagingAtivo } from "../interfaces/estrutura-tecnica/DocumentosStagingAtivo";
-import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
-import { ResultadosDoAlvo } from "../interfaces/pendencias-tecnicas/ResultadosAtivo";
-import { PendenciasDoAlvo } from "../interfaces/pendencias-tecnicas/PendenciasDoAlvo";
-import { PlanosDoAlvo } from "../interfaces/estrutura-tecnica/PlanosDoAlvo";
 import { EdicaoRascunhoCodigo } from "../interfaces/codigos-publicos/EdicaoRascunho";
+import { DocumentosStagingAtivo } from "../interfaces/estrutura-tecnica/DocumentosStagingAtivo";
+import { FotosStagingAtivo } from "../interfaces/estrutura-tecnica/FotosStagingAtivo";
+import { PlanosDoAlvo } from "../interfaces/estrutura-tecnica/PlanosDoAlvo";
+import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
+import { PendenciasDoAlvo } from "../interfaces/pendencias-tecnicas/PendenciasDoAlvo";
+import { ResultadosDoAlvo } from "../interfaces/pendencias-tecnicas/ResultadosAtivo";
+import { EquipamentoModal } from "./EquipamentoModal";
 
 type Estado =
   | { fase: "carregando" }
@@ -122,15 +122,26 @@ export function DrawerDetalheAtivo({
   async function atualizarDetalheCodigo() {
     const id = itemId;
     try {
-      const detalhe = await obterDetalheAtivo(supabaseEquipamentosAdapter, supabaseBoardAtivosAdapter, id);
-      if (itemIdAtual.current === id) { setEstado({ fase: "pronto", detalhe }); onAtualizado?.(); }
+      const detalhe = await obterDetalheAtivo(
+        supabaseEquipamentosAdapter,
+        supabaseBoardAtivosAdapter,
+        id,
+      );
+      if (itemIdAtual.current === id) {
+        setEstado({ fase: "pronto", detalhe });
+        onAtualizado?.();
+      }
     } catch {
-      if (itemIdAtual.current === id) setEstado({ fase: "erro", mensagem: "Código alterado; não foi possível atualizar o detalhe. Abra novamente." });
+      if (itemIdAtual.current === id)
+        setEstado({
+          fase: "erro",
+          mensagem: "Código alterado; não foi possível atualizar o detalhe. Abra novamente.",
+        });
     }
   }
 
-  const detalheAtual = estado.fase === "pronto" && estado.detalhe.contexto?.item.id === itemId
-    ? estado.detalhe : null;
+  const detalheAtual =
+    estado.fase === "pronto" && estado.detalhe.contexto?.item.id === itemId ? estado.detalhe : null;
   const item = detalheAtual?.contexto?.item ?? null;
 
   return (
@@ -174,14 +185,73 @@ export function DrawerDetalheAtivo({
           <div className="p-8 text-center text-body text-danger">{estado.mensagem}</div>
         )}
         {detalheAtual && <Conteudo detalhe={detalheAtual} />}
-        {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <EdicaoRascunhoCodigo userId={user.id} clienteId={item.clientId} tipo="componente" ativoId={item.id} onAtualizado={() => { void atualizarDetalheCodigo(); }} />}
-        {estado.fase === "pronto" && !estado.detalhe.contexto && <Conteudo detalhe={estado.detalhe} />}
-        {user && item && item.clientId && <ResultadosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} nome={item.nome} />}
-        {user && item && item.clientId && <PendenciasDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />}
-        {user && item && item.clientId && <PlanosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />}
-        {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <FotosStagingAtivo userId={user.id} clienteId={item.clientId} tipo={item.tipo} entidadeId={item.id} />}
-        {user && item?.tipo === "componente" && item.clientId && <DocumentosStagingAtivo userId={user.id} clienteId={item.clientId} tipo="componente" entidadeId={item.id} />}
-        {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <HistoricoCadastroLevantamento userId={user.id} clienteId={item.clientId} tipo={item.tipo} entidadeId={item.id} />}
+        {user &&
+          item &&
+          (item.tipo === "componente" || item.tipo === "equipamento") &&
+          item.clientId && (
+            <EdicaoRascunhoCodigo
+              userId={user.id}
+              clienteId={item.clientId}
+              tipo="componente"
+              ativoId={item.id}
+              onAtualizado={() => {
+                void atualizarDetalheCodigo();
+              }}
+            />
+          )}
+        {estado.fase === "pronto" && !estado.detalhe.contexto && (
+          <Conteudo detalhe={estado.detalhe} />
+        )}
+        {user && item && item.clientId && (
+          <ResultadosDoAlvo
+            userId={user.id}
+            clienteId={item.clientId}
+            tipo="componente"
+            id={item.id}
+            nome={item.nome}
+          />
+        )}
+        {user && item && item.clientId && (
+          <PendenciasDoAlvo
+            userId={user.id}
+            clienteId={item.clientId}
+            tipo="componente"
+            id={item.id}
+          />
+        )}
+        {user && item && item.clientId && (
+          <PlanosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />
+        )}
+        {user &&
+          item &&
+          (item.tipo === "componente" || item.tipo === "equipamento") &&
+          item.clientId && (
+            <FotosStagingAtivo
+              userId={user.id}
+              clienteId={item.clientId}
+              tipo={item.tipo}
+              entidadeId={item.id}
+            />
+          )}
+        {user && item?.tipo === "componente" && item.clientId && (
+          <DocumentosStagingAtivo
+            userId={user.id}
+            clienteId={item.clientId}
+            tipo="componente"
+            entidadeId={item.id}
+          />
+        )}
+        {user &&
+          item &&
+          (item.tipo === "componente" || item.tipo === "equipamento") &&
+          item.clientId && (
+            <HistoricoCadastroLevantamento
+              userId={user.id}
+              clienteId={item.clientId}
+              tipo={item.tipo}
+              entidadeId={item.id}
+            />
+          )}
       </div>
 
       {editando && item && opcoes && (
@@ -241,11 +311,22 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
 
       <Secao titulo="Identificação e atributos técnicos">
         <dl className="space-y-1 text-caption text-ink-2">
-          <div><dt className="inline font-semibold">Código: </dt><dd className="inline">{item.identificador || "Não informado"}</dd></div>
-          <div><dt className="inline font-semibold">Categoria: </dt><dd className="inline">{item.categoria || "Não informada"}</dd></div>
-          <div><dt className="inline font-semibold">Observações: </dt><dd className="inline">{item.observacoes || "Não informadas"}</dd></div>
+          <div>
+            <dt className="inline font-semibold">Código: </dt>
+            <dd className="inline">{item.identificador || "Não informado"}</dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold">Categoria: </dt>
+            <dd className="inline">{item.categoria || "Não informada"}</dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold">Observações: </dt>
+            <dd className="inline">{item.observacoes || "Não informadas"}</dd>
+          </div>
         </dl>
-        <p className="mt-2 text-caption text-ink-3">Criticidade e completude não estão disponíveis nesta fonte.</p>
+        <p className="mt-2 text-caption text-ink-3">
+          Criticidade e completude não estão disponíveis nesta fonte.
+        </p>
       </Secao>
 
       <Secao titulo="Sistemas">

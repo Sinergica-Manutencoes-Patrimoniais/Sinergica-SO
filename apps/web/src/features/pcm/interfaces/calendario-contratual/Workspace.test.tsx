@@ -2,6 +2,18 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
+
+vi.mock("../../../../lib/supabase-client", () => ({
+  supabase: new Proxy(
+    {},
+    {
+      get: () => {
+        throw new Error("Acesso inesperado ao Supabase em teste unitário");
+      },
+    },
+  ),
+  supabaseUrl: "http://127.0.0.1:1",
+}));
 const api = vi.hoisted(() => ({
   autorizarAcao: vi.fn(),
   listarContratos: vi.fn(),

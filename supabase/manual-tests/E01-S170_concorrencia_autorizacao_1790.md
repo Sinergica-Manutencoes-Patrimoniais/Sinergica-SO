@@ -60,6 +60,6 @@ set local lock_timeout = '2s';
 update config.usuarios set ativo=false where user_id='17900000-0000-0000-0000-000000000001';
 ```
 
-Esperado: B aguarda a trava da fonte de autorização e falha por `lock_timeout` (`55P03`); essa mensagem difere de `autorizacao_em_alteracao`. Executar `rollback` em B. Confirmar A com `commit`; executar novamente a desativação em B e confirmá-la. Na sessão autenticada, repetir exatamente o request `...0102` e o payload acima: esperado `42501`, sem retornar recibo após revogação. Conferir como owner um único perfil e um único comando para o request, sem imprimir dados de outros usuários.
+Esperado: B falha com `55P03/autorizacao_em_alteracao`: a migration 1099 tornou a trava do escritor não bloqueante. Executar `rollback` em B. Confirmar A com `commit`; executar novamente a desativação em B e confirmá-la. Na sessão autenticada, repetir exatamente o request `...0102` e o payload acima: esperado `42501`, sem retornar recibo após revogação. Conferir como owner um único perfil e um único comando para o request, sem imprimir dados de outros usuários.
 
 Repetir a primeira ordem com `sso_definir_concessao` e `sso_definir_vinculo_perfil` usando fixtures sintéticas próprias antes de alegar cobertura dos três comandos. Testar também payload divergente, Cliente distinto e nível de isolamento não suportado. Descartar o clone inteiro depois; não transportar fixtures, credenciais ou gates para outro ambiente. O roteiro não comprova comportamento HTTP nem a concorrência da movimentação 1799.
