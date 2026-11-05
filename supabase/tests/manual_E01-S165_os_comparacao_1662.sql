@@ -36,7 +36,7 @@ do $$ declare f jsonb;p uuid;begin
  begin
   perform pcm.sso_decidir_impacto_comparado('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-000000000204','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011','16630000-1111-4000-8000-000000000022',p,2,1,'exige_reconciliacao','conferido','calendario',f);
   raise exception 'status_obsoleto_aceito';
- exception when serialization_failure then if sqlerrm<>'comparacao_obsoleta' then raise;end if;end;
+ exception when sqlstate 'P0010' then if sqlerrm<>'comparacao_obsoleta' then raise;end if;end;
  f:=pcm.sso_comparar_rotina_impacto_v3('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,'16630000-1111-4000-8000-000000000022',p,'calendario');
  if f->'osImpacto'->0->>'status' is distinct from 'em_execucao' then raise exception 'status_atual_nao_mostrado';end if;
 end; $$;

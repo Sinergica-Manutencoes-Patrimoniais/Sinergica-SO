@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: edição até geração pela UI
+
+- ADR-1626/migration 1768 tratam revisão obsoleta da edição de Rotina com P0011; formulário preserva tentativa incerta/40001 real. Clone compilou, fixture de edição/aprovação e revisão independente passaram; rollout UI/backend coordenado.
+- `apps/web/e2e/s166-isolado/executar-edicao-rotina.py` passou em rede interna: componentes reais editaram alvo/recorrência, submeteram, reconferiram impacto Visita/PMOC/fuso, aprovaram com 1045 real e geraram nova Rotina. OS/fotografia históricas sintéticas inalteradas; nenhuma OS/outbox adicional. Cliente/Chamado/vínculo sintéticos, parte setup com replica no clone; não comprova navegação integral nem fontes externas.
+- Lote isolado: 18 fixtures SQL e 70 testes UI passaram após atualizar duas expectativas antigas de SQLSTATE; registro `supabase/tests/manual_E01-S165_S166_lote_isolado_1767.md`. Não equivale ao CI completo ou db-tests global.
+- Próximo passo: revisão integral, CI e validação de fontes antes de homologação. Gates default fechados; sem deploy/Auvo real.
+
 ## 2026-11-05 — S165/S166: edição real e concorrência PMOC
 
 - `supabase/tests/manual_E01-S165_edicao_rpc_aprovacao_os_1770.sql`: RPC real editou alvo/intervalo, replay passou, submissão e aprovação 1731 com 1045 real preservaram OS/ocorrência históricas e congelaram novo snapshot. Ponte, OS e datas sintéticas, rollback; UI de edição não foi exercida.

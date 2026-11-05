@@ -181,7 +181,7 @@ export function FormularioRotina({
     const atual = await supabase.auth.getUser();
     if (atual.error || atual.data.user?.id !== userId) throw new Error("Sessão alterada.");
   }
-  async function enviar(comando: EditarRotinaCommand) {
+  async function enviar(comando: EditarRotinaCommand, primeiraTentativa = false) {
     if (!consultaDisponivel || enviando.current) return;
     enviando.current = true;
     setErro("");
@@ -203,10 +203,12 @@ export function FormularioRotina({
       onCancelar();
     } catch (falha) {
       if (
+        primeiraTentativa &&
         typeof falha === "object" &&
         falha !== null &&
         "code" in falha &&
-        ["22023", "23514", "40001"].includes(String(falha.code))
+        (["22023", "23514"].includes(String(falha.code)) ||
+          (falha.code === "P0011" && "message" in falha && falha.message === "revisao_obsoleta"))
       ) {
         try {
           await conferirSessao();
@@ -216,7 +218,7 @@ export function FormularioRotina({
           }
           sessionStorage.removeItem(chave);
           setPendente(null);
-          if (falha.code === "40001") {
+          if (falha.code === "P0011") {
             setErro("O Plano mudou. Feche o formulário e confira os dados atualizados.");
             onAtualizar();
             return;
@@ -284,7 +286,7 @@ export function FormularioRotina({
       const validado = validarRotinaCompleta(comando);
       sessionStorage.setItem(chave, JSON.stringify(validado));
       setPendente(validado);
-      void enviar(validado);
+      void enviar(validado, true);
     } catch {
       setErro("Confira nome, alvo, recorrência, tempo e tolerâncias antes de salvar.");
     }
