@@ -49,6 +49,7 @@ import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-ada
 import { GruposQuantitativos } from "../interfaces/estrutura-tecnica/GruposQuantitativos";
 import { ComposicaoLocal } from "../interfaces/estrutura-tecnica/ComposicaoLocal";
 import { SistemasDistribuidos } from "../interfaces/estrutura-tecnica/SistemasDistribuidos";
+import { ClassificarRetorno } from "../interfaces/retorno-campo/ClassificarRetorno";
 
 type ModalArea = { modo: "novo" } | { modo: "editar"; area: Area } | null;
 type ModalLocal =
@@ -452,6 +453,9 @@ export function EstruturaClientePage({
         onRemover={setTipoParaRemover}
       />
       <SistemasDistribuidos key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
+      {import.meta.env.VITE_SSO_CLASSIFICAR_RETORNO_ENABLED === "true" && (
+        <ClassificarRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
+      )}
       <GruposQuantitativos
         key={`${userId}:${clienteId}`}
         userId={userId}

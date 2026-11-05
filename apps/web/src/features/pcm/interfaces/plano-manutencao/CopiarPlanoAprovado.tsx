@@ -1,6 +1,6 @@
 import { Button } from "@sinergica/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
@@ -46,7 +46,8 @@ const reciboSchema = z
   })
   .strict();
 
-export function CopiarPlanoAprovado({
+export function CopiarPlanoAprovado(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId])} {...props} />; }
+function Conteudo({
   userId,
   clienteId,
   planoId,
@@ -63,6 +64,7 @@ export function CopiarPlanoAprovado({
   versaoId: string;
   versaoNumero: number;
 }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-copia-plano:${userId}:${clienteId}:${planoId}`;
   const [recuperacao] = useState(() => {
     try {
@@ -99,7 +101,7 @@ export function CopiarPlanoAprovado({
     setMensagem("");
     const serializado = JSON.stringify(pedido);
     try {
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado)
         throw new Error("Tentativa local alterada");
       const { data, error } = await supabase.schema("pcm").rpc("sso_copiar_plano_mediado", {
@@ -136,11 +138,11 @@ export function CopiarPlanoAprovado({
         )
       )
         throw new Error("Identidades não renovadas");
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       await queryClient.invalidateQueries({
         queryKey: planoManutencaoKeys.raiz(userId, clienteId),
       });
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado)
         throw new Error("Tentativa local alterada");
       sessionStorage.removeItem(chave);

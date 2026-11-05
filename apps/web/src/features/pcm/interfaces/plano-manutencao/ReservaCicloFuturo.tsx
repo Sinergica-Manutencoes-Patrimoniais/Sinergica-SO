@@ -1,6 +1,6 @@
 import { conflitoReserva } from "./conflito-reserva";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
@@ -64,6 +64,8 @@ function Conteudo({
   revision,
   rascunho = false,
 }: Props) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-reserva-futuro:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId, legadoId])}`;
   const trava = useRef(false);
   const [serie, setSerie] = useState("");
@@ -354,7 +356,7 @@ function Conteudo({
     trava.current = true;
     setEnviando(true);
     try {
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
       const comum = {
         p_ator: userId,
@@ -456,7 +458,7 @@ function Conteudo({
         result.revisao !== p.revisaoReserva + 1
       )
         throw new Error();
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
       sessionStorage.removeItem(chave);
       setPendente(null);
@@ -471,7 +473,7 @@ function Conteudo({
       setConfirmado(null);
       if (nova && conflitoReserva(error)) {
         try {
-          await conferirSessaoDiagnostico(userId);
+          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);

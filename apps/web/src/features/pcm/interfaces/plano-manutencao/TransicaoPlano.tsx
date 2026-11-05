@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { PlanoResumo } from "../../application/plano-manutencao-gateway";
@@ -42,6 +42,8 @@ export function TransicaoPlano(props: Props) {
   );
 }
 function Conteudo({ userId, clienteId, plano, bloqueado, onAbrirRotinas }: Props) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-plano-transicao:${JSON.stringify([userId, clienteId, plano.id])}`;
   const cache = useQueryClient();
   const trava = useRef(false);
@@ -151,6 +153,7 @@ function Conteudo({ userId, clienteId, plano, bloqueado, onAbrirRotinas }: Props
       if (
         antes.error ||
         antes.data.user?.id !== userId ||
+        !montado.current ||
         sessionStorage.getItem(chave) !== JSON.stringify(p)
       )
         throw new Error("Sessão ou tentativa alterada.");
@@ -191,6 +194,7 @@ function Conteudo({ userId, clienteId, plano, bloqueado, onAbrirRotinas }: Props
         if (
           atual.error ||
           atual.data.user?.id !== userId ||
+          !montado.current ||
           sessionStorage.getItem(chave) !== JSON.stringify(p)
         )
           throw new Error("Sessão ou tentativa alterada.");
@@ -213,6 +217,7 @@ function Conteudo({ userId, clienteId, plano, bloqueado, onAbrirRotinas }: Props
           if (
             atual.error ||
             atual.data.user?.id !== userId ||
+            !montado.current ||
             sessionStorage.getItem(chave) !== JSON.stringify(p)
           )
             throw new Error();
