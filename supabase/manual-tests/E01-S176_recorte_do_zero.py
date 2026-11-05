@@ -156,6 +156,12 @@ def monitorar(container_id):
 
 def main(opcoes):
     global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id
+    fixtures = None
+    if opcoes.fixtures_pgtap:
+        if not opcoes.integracao_candidata:
+            raise RuntimeError("Fixtures exigem --integracao-candidata")
+        import s176_runner_pgtap
+        fixtures = s176_runner_pgtap.preparar(ROOT)
     manifest = json.loads(MANIFEST.read_text())
     fotos = json.loads(FOTOS.read_text())
     base, source = manifest["base_main"], manifest["fonte_backup"]
@@ -428,6 +434,8 @@ end; $$;"""
         sql(prefix + data, path)
     print("Migrations candidatas aplicadas:", len(blobs), flush=True)
     if query("select (select count(*) from auth.users)=0 and (select count(*) from pcm.clientes)=0 and (select count(*) from vault.secrets)=0") != "t": raise RuntimeError("Banco contém dados inesperados")
+    if fixtures is not None:
+        s176_runner_pgtap.executar(CONTAINER, fixtures, sql, query, watchdog_triggered)
     if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
     if opcoes.diagnostico_0415:
         print("PASS DIAGNÓSTICO: ações antecipadas; NÃO prova recorte implantável nem testes funcionais.")
@@ -442,6 +450,7 @@ if __name__ == "__main__":
     grupo = parser.add_mutually_exclusive_group()
     grupo.add_argument("--diagnostico-0415", action="store_true", help="Antecipa duas ações somente no clone; resultado não prova recorte implantável.")
     grupo.add_argument("--integracao-candidata", action="store_true", help="Inclui migrations originais candidatas, sem seeds artificiais; não autoriza release.")
+    parser.add_argument("--fixtures-pgtap", action="store_true", help="Executa quatro fixtures sintéticas apenas no candidato de integração descartável.")
     opcoes = parser.parse_args()
     code = 0
     try: main(opcoes)
