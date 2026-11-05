@@ -163,6 +163,24 @@ def main(opcoes):
     global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id
     fixtures = None
     isolamento_1810 = None
+    upload_1811 = None
+    if opcoes.jornada_ac5_http:
+        if not opcoes.upload_1811 or opcoes.concorrencia_1810:
+            raise RuntimeError("Jornada HTTP exige --upload-1811 e clone sem concorrência 1810")
+        for nome, esperado in (
+            ("apps/web/e2e/s168-retorno-isolado/jornada.py", "15cef98886d88ab4208bae5417df7bc65b2429e635ab78b6bd7ffec56ea05f24"),
+            ("supabase/tests/manual_E01-S168_origem_http_sintetica.sql", "429cccd18ec2b47d4b8819550df72223d9a1281cb08db1fa6a32b7dee2f72d40"),
+        ):
+            if hashlib.sha256((ROOT / nome).read_bytes()).hexdigest() != esperado:
+                raise RuntimeError("Jornada HTTP divergente: " + nome)
+    if opcoes.upload_1811:
+        if not opcoes.isolamento_1810:
+            raise RuntimeError("Upload 1811 exige --isolamento-1810 e clone descartável")
+        driver = ROOT / "supabase/manual-tests/s168_upload_1811_isolada.py"
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "2823497625f4f4a8082cec23ee07cd3f4e8d39671016243249b02a4406197d13":
+            raise RuntimeError("Driver de upload 1811 divergente")
+        import s168_upload_1811_isolada
+        upload_1811 = s168_upload_1811_isolada.preparar(ROOT)
     if opcoes.concorrencia_1810:
         if not opcoes.isolamento_1810:
             raise RuntimeError("Concorrência 1810 exige --isolamento-1810 e descarte do clone")
@@ -461,6 +479,12 @@ def main(opcoes):
                 raise RuntimeError("Ordem ou duplicidade de isolamento: " + caminho)
             blobs.append((caminho, dados))
             names.append(caminho)
+    if upload_1811 is not None:
+        caminho = s168_upload_1811_isolada.MIGRATION
+        if any(Path(p).name[:4] == "1811" for p in base_files + names) or names[-1] >= caminho:
+            raise RuntimeError("Ordem ou duplicidade de upload 1811")
+        blobs.append((caminho, upload_1811[0]))
+        names.append(caminho)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -523,6 +547,8 @@ def main(opcoes):
         "GOTRUE_JWT_SECRET": jwt_secret, "GOTRUE_JWT_AUD": "authenticated",
         "GOTRUE_JWT_DEFAULT_GROUP_NAME": "authenticated", "GOTRUE_DISABLE_SIGNUP": "true",
     }
+    if opcoes.jornada_ac5_http:
+        auth_env.update({"GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED": "true", "GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI": "pg-functions://postgres/config/custom_access_token_hook"})
     args = ["create", "--name", AUTH_CONTAINER, "--network", NETWORK, "--label", "sso.recorte=" + IDENT]
     for key, value in auth_env.items(): args += ["--env", key + "=" + value]
     docker(*args, AUTH_IMAGE)
@@ -574,7 +600,7 @@ def main(opcoes):
 
     rest_env = {
         "PGRST_DB_URI": "postgres://authenticator:" + auth_password + "@" + CONTAINER + ":5432/postgres",
-        "PGRST_DB_SCHEMAS": "public", "PGRST_DB_ANON_ROLE": "anon", "PGRST_JWT_SECRET": jwt_secret,
+        "PGRST_DB_SCHEMAS": "public,pcm" if opcoes.jornada_ac5_http else "public", "PGRST_DB_ANON_ROLE": "anon", "PGRST_JWT_SECRET": jwt_secret,
         "PGRST_SERVER_HOST": "0.0.0.0", "PGRST_SERVER_PORT": "3000",
     }
     iniciar_plataforma(REST_CONTAINER, REST_IMAGE, rest_env)
@@ -663,6 +689,29 @@ end; $$;"""
             tabela, coluna = gate["tabela"], gate["coluna"]
             if query(f'select coalesce((select not "{coluna}" from pcm."{tabela}" where id),false)::text').strip() != "true":
                 raise RuntimeError("Gate AC5 alterado após fixtures: " + tabela + "." + coluna)
+    if upload_1811 is not None:
+        s168_upload_1811_isolada.executar(CONTAINER, upload_1811[1], query, watchdog_triggered)
+    if opcoes.jornada_ac5_http:
+        import importlib.util
+        modulo = importlib.util.spec_from_file_location("s168_jornada_http", ROOT / "apps/web/e2e/s168-retorno-isolado/jornada.py")
+        if modulo is None or modulo.loader is None: raise RuntimeError("Driver HTTP indisponível")
+        jornada = importlib.util.module_from_spec(modulo)
+        modulo.loader.exec_module(jornada)
+        def requisitar(url, metodo, headers, corpo):
+            permitidos = ("http://" + AUTH_CONTAINER + ":9999/", "http://" + REST_CONTAINER + ":3000/", "http://" + STORAGE_CONTAINER + ":5000/")
+            if not any(url.startswith(prefixo) for prefixo in permitidos): raise RuntimeError("URL fora da rede do ensaio")
+            cmd = ["rtk", "proxy", "docker", "exec", "-i", CONTAINER, "curl", "--silent", "--show-error", "--max-time", "35", "--request", metodo, "--output", "-", "--write-out", "\n%{http_code}"]
+            for chave_header, valor_header in headers.items(): cmd += ["--header", chave_header + ": " + valor_header]
+            cmd += ["--data-binary", "@-", url]
+            try: resposta = subprocess.run(cmd, input=corpo, capture_output=True, timeout=40)
+            except subprocess.TimeoutExpired: raise RuntimeError("Prazo HTTP do ensaio excedido") from None
+            if resposta.returncode: raise RuntimeError("Transporte HTTP interno falhou")
+            try:
+                conteudo, codigo = resposta.stdout.rsplit(b"\n", 1)
+                return int(codigo), conteudo
+            except (ValueError, TypeError): raise RuntimeError("Resposta HTTP inválida") from None
+        jornada.executar(sql, query, requisitar, "http://" + AUTH_CONTAINER + ":9999", "http://" + REST_CONTAINER + ":3000", "http://" + STORAGE_CONTAINER + ":5000", chave("anon"), watchdog_triggered)
+        print("Jornada HTTP parcial concluída; não comprova Edge, aprovação ou origem real.", flush=True)
     if opcoes.concorrencia_1810:
         import s176_isolamento_concorrencia_1810
         s176_isolamento_concorrencia_1810.executar(CONTAINER, watchdog_triggered)
@@ -704,6 +753,8 @@ if __name__ == "__main__":
     parser.add_argument("--diagnostico-ac5", action="store_true", help="Compila sobreposição AC5 revisada em clone; exige integração, sem fixtures.")
     parser.add_argument("--isolamento-1810", action="store_true", help="Inclui 1804–1810 e suas fixtures; aceita --fixtures-pgtap; exige AC5 e integração.")
     parser.add_argument("--concorrencia-1810", action="store_true", help="Executa quatro disputas sintéticas; exige --isolamento-1810 e descarte integral do clone.")
+    parser.add_argument("--upload-1811", action="store_true", help="Aplica 1811 e executa fixture SQL com rollback; exige isolamento 1810.")
+    parser.add_argument("--jornada-ac5-http", action="store_true", help="Executa jornada HTTP parcial Auth/Storage em clone descartável; exige --upload-1811.")
     parser.add_argument("--concorrencia-1807", action="store_true", help="Cenários concorrentes 1807 com commit sintético e descarte obrigatório do clone.")
     parser.add_argument("--aprovacao-1805-pos-commit", action="store_true", help="Fixture sintética com COMMIT em clone descartável; exige 1804 e 1805.")
     parser.add_argument("--concorrencia-1805", action="store_true", help="Cenários concorrentes 1805 em clone descartável; exige integração, 1804 e 1805.")
