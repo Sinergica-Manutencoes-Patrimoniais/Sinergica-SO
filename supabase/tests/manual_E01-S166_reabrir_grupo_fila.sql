@@ -7,7 +7,7 @@ do $$ declare v jsonb;a jsonb;b jsonb; begin
  a:=pcm.sso_reabrir_fila_grupo('17390000-0000-4000-8000-000000000001','17390000-0000-4000-8000-000000000030','17390000-0000-4000-8000-000000000002','17390000-0000-4000-8000-000000000007','17390000-0000-4000-8000-000000000011','calendario',2,'revisar fonte alterada');
  b:=pcm.sso_reabrir_fila_grupo('17390000-0000-4000-8000-000000000001','17390000-0000-4000-8000-000000000030','17390000-0000-4000-8000-000000000002','17390000-0000-4000-8000-000000000007','17390000-0000-4000-8000-000000000011','calendario',2,'revisar fonte alterada');
  if a is distinct from b or a->>'estado'<>'verificacao' or (a->>'revision')::integer<>3 or a->>'osAlteradas'<>'false' or a->>'ocorrenciaCriada'<>'false' or a->>'tarefaAuvoCriada'<>'false' then raise exception 'reabertura_divergente: %',a;end if;
- begin perform pcm.sso_reabrir_fila_grupo('17390000-0000-4000-8000-000000000001','17390000-0000-4000-8000-000000000031','17390000-0000-4000-8000-000000000002','17390000-0000-4000-8000-000000000007','17390000-0000-4000-8000-000000000011','calendario',2,'outra tentativa');raise exception 'revisao_antiga_aceita';exception when serialization_failure then null;end;
+ begin perform pcm.sso_reabrir_fila_grupo('17390000-0000-4000-8000-000000000001','17390000-0000-4000-8000-000000000031','17390000-0000-4000-8000-000000000002','17390000-0000-4000-8000-000000000007','17390000-0000-4000-8000-000000000011','calendario',2,'outra tentativa');raise exception 'revisao_antiga_aceita';exception when sqlstate 'P0012' then if sqlerrm<>'fila_ou_revisao_indisponivel' then raise;end if;end;
 end; $$;
 reset role;
 do $$ begin

@@ -18,7 +18,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo, revisao }: Pr
     sessionStorage.setItem(chave, JSON.stringify(enviado)); setPendente(enviado);
     const { data, error } = await supabase.schema("pcm").rpc("sso_reabrir_fila_grupo", { p_ator: userId, p_request: p.requestId, p_cliente: p.clienteId, p_plano: p.planoId, p_preparada: p.preparadaId, p_tipo: p.tipo, p_fila_revisao: p.revisao, p_motivo: p.motivo });
     if (error) {
-      if (!jaIncerta && error.code === "40001") {
+      if (!jaIncerta && (error.code === "40001" || (error.code === "P0012" && error.message === "fila_ou_revisao_indisponivel"))) {
         await conferirSessaoDiagnostico(userId);
         if (sessionStorage.getItem(chave) !== JSON.stringify(enviado)) throw new Error("Tentativa alterada.");
         sessionStorage.removeItem(chave); setPendente(null); setConfirmacao(null);

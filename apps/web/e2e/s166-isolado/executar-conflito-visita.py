@@ -52,7 +52,7 @@ try:
     sql("create sequence pcm.fixture_conta_1739; do $$ declare d text:=pg_get_functiondef('pcm.sso_decidir_impacto_comparado(uuid,uuid,uuid,uuid,uuid,uuid,integer,integer,text,text,text,jsonb)'::regprocedure); begin if position(E'\\nbegin\\n' in d)=0 then raise exception 'fixture_funcao_incompativel';end if; execute replace(d,E'\\nbegin\\n',E'\\nbegin\\n perform nextval(''pcm.fixture_conta_1739''::regclass);\\n');end $$;")
     preparada='16610000-0000-0000-0000-000000000161'
     etapa=sys.argv[1] if len(sys.argv)>1 else 'visita-revisao'
-    if etapa not in ('visita-revisao','visita-previa'): raise RuntimeError('Etapa inválida.')
+    if etapa not in ('visita-revisao','visita-previa','visita-escolha'): raise RuntimeError('Etapa inválida.')
     cfg={'email':'origem-s166@test.local','password':password,'etapa':etapa,'preparada':preparada,'data':scalar("select (inicio_em at time zone fuso)::date from pcm.visitas where id='16610000-0000-0000-0000-000000000083'")}
     boot('verificar')
     proc=subprocess.Popen(['docker','exec','-i',browser,'node','/tmp/jornada-driver.cjs'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
@@ -60,7 +60,7 @@ try:
     if proc.stdout.readline().strip()!='pronto':
         proc.terminate();err=proc.stderr.read();proc.wait(timeout=10)
         raise RuntimeError(next((x for x in err.splitlines() if x.startswith('etapa_ui_falhou: ')),'Comparação inicial não ficou pronta.'))
-    if etapa=='visita-revisao':
+    if etapa in ('visita-revisao','visita-escolha'):
         sql("update pcm.planos_manutencao set revisao=revisao+1 where id='16610000-0000-0000-0000-000000000121';")
     else:
         sql("begin; set local session_replication_role=replica; update pcm.rotinas_manutencao set instrucao='alteração sintética de comparação' where versao_id='16610000-0000-0000-0000-000000000181'; commit;")

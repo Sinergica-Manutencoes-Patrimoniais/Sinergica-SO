@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: conflitos de reserva, PMOC e fila
+
+- ADRs 1606–1609/migrations 1748–1751 convertem conflitos explícitos de negócio em reservas, inventário PMOC, fila de Grupo e escolhas de nova data para P0011/P0012/P0013/P0014, preservando erros reais de serialização e replay incerto. UI só libera nova conferência após primeira rejeição definitiva com código/mensagem esperados. Revisões cruzadas não encontraram bypass concreto; frontend/backend devem ser coordenados no rollout.
+- Clone compilou até 1751. HTTP/UI em rede interna cobriram reserva Calendário, escolha de nova Visita e reabertura de Grupo (esta de >6s para 5ms); fixtures SQL cobriram PMOC/fila/replay. Testes focados: reservas 8/8, PMOC 2/2, Grupo 6/6 e escolha 8/8; typecheck passou. HTTP dos demais modos ainda pendente.
+- Próximo passo: auditar outros conflitos 40001 relevantes, revisão integral e CI antes de homologação. Gates default desligados; sem deploy/Auvo real.
+
 ## 2026-11-05 — S165/S166: conflitos HTTP de aprovação e fila
 
 - ADR-1604/migration 1746 convertem apenas revisão obsoleta do núcleo de aprovação para P0011; UI distingue primeira rejeição de replay incerto. HTTP real em clone passou de timeout >7s para resposta P0011; typecheck passou. Harness `apps/web/e2e/s166-isolado/executar-aprovacao-obsoleta.py`.
