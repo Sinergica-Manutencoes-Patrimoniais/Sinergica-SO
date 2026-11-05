@@ -42,7 +42,7 @@ function Conteudo({ userId, clienteId, grupoId }: Props) {
         .abortSignal(signal);
       if (error) throw error;
       const pagina = z.array(item).max(1).parse(data);
-      if (pagina.length && !pagina[0]!.atual) throw new Error("Código atual indisponível.");
+      if (pagina.length && !pagina[0]?.atual) throw new Error("Código atual indisponível.");
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId || signal.aborted)
         throw new Error("Sessão alterada.");

@@ -47,14 +47,14 @@ function Comando(p: Props) {
       return "invalido";
     }
   });
-  const [aberto, setAberto] = useState(false),
-    [motivo, setMotivo] = useState(""),
-    [revisao, setRevisao] = useState(p.revisao),
-    [aviso, setAviso] = useState(""),
-    [ocupado, setOcupado] = useState(false);
-  const trava = useRef(false),
-    montado = useRef(false),
-    client = useQueryClient();
+  const [aberto, setAberto] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [revisao, setRevisao] = useState(p.revisao);
+  const [aviso, setAviso] = useState("");
+  const [ocupado, setOcupado] = useState(false);
+  const trava = useRef(false);
+  const montado = useRef(false);
+  const client = useQueryClient();
   useEffect(() => {
     montado.current = true;
     return () => {

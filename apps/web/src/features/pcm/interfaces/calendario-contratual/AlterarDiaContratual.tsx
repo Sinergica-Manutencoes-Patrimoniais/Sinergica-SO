@@ -3,15 +3,20 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import type { RegraContratualResumo } from "../../application/calendario-contratual-gateway";
 import {
-  alterarDiaContratual,
   type PedidoAlterarDia,
+  alterarDiaContratual,
 } from "../../infrastructure/supabase-calendario-contratual-adapter";
-import { PreviaMudancaDia } from "./PreviaMudancaDia";
 import { AlterarDiaComVisitas } from "./AlterarDiaComVisitas";
+import { PreviaMudancaDia } from "./PreviaMudancaDia";
 
 type Props = { userId: string; clienteId: string; regra: RegraContratualResumo };
 export function AlterarDiaContratual(props: Props) {
-  return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.regra.serieId])} {...props} />;
+  return (
+    <Conteudo
+      key={JSON.stringify([props.userId, props.clienteId, props.regra.serieId])}
+      {...props}
+    />
+  );
 }
 function Conteudo({ userId, clienteId, regra }: Props) {
   const chave = `sso-calendario-alteracao:${JSON.stringify([userId, clienteId, regra.serieId])}`;
@@ -23,7 +28,12 @@ function Conteudo({ userId, clienteId, regra }: Props) {
   const [mostrarPrevia, setMostrarPrevia] = useState(false);
   const trava = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   async function conferirSessao() {
     const { data, error } = await supabase.auth.getUser();
     if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
@@ -52,25 +62,41 @@ function Conteudo({ userId, clienteId, regra }: Props) {
   const operacao = useMutation({
     mutationFn: async (p: PedidoAlterarDia) => {
       await conferirSessao();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p))
+        throw new Error("Tentativa alterada.");
       await alterarDiaContratual(p);
       await conferirSessao();
     },
     onSuccess: async (_resposta, confirmado) => {
       try {
-        await cache.invalidateQueries({ queryKey: ["calendario-contratual", userId, clienteId], refetchType: "none" });
+        await cache.invalidateQueries({
+          queryKey: ["calendario-contratual", userId, clienteId],
+          refetchType: "none",
+        });
         await conferirSessao();
-        if (sessionStorage.getItem(chave) !== JSON.stringify(confirmado)) throw new Error("Tentativa alterada.");
+        if (sessionStorage.getItem(chave) !== JSON.stringify(confirmado))
+          throw new Error("Tentativa alterada.");
         sessionStorage.removeItem(chave);
         setPedido(null);
         setMensagem("Nova regra registrada. Nenhuma Visita ou tarefa foi criada.");
-        void cache.refetchQueries({ queryKey: ["calendario-contratual", userId, clienteId], type: "active" });
+        void cache.refetchQueries({
+          queryKey: ["calendario-contratual", userId, clienteId],
+          type: "active",
+        });
       } catch {
-        if (montado.current) setMensagem("Alteração confirmada, mas tentativa não foi removida. Procure suporte.");
+        if (montado.current)
+          setMensagem("Alteração confirmada, mas tentativa não foi removida. Procure suporte.");
       }
     },
-    onError: () => { if (montado.current) setMensagem("Alteração não confirmada. Repita o mesmo pedido ou procure suporte antes de iniciar outro."); },
-    onSettled: () => { trava.current = false; },
+    onError: () => {
+      if (montado.current)
+        setMensagem(
+          "Alteração não confirmada. Repita o mesmo pedido ou procure suporte antes de iniciar outro.",
+        );
+    },
+    onSettled: () => {
+      trava.current = false;
+    },
   });
   function enviar(novo: PedidoAlterarDia) {
     if (trava.current) return;
