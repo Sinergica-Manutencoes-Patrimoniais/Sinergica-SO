@@ -16,8 +16,8 @@
         "sso_finalizar_os_validada_gate"
       ],
       "authenticated_grants": [],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "0971_E01-S168_mediacao_finalizacao.sql",
@@ -31,8 +31,8 @@
         "pcm.sso_mediar_finalizacao_os(uuid,uuid,uuid,uuid,uuid,integer,text,timestamptz)",
         "pcm.sso_mediar_consulta_finalizacao_os(uuid,uuid,uuid,uuid,integer,text,timestamptz)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "0972_E01-S168_lock_gates_finalizacao.sql",
@@ -47,8 +47,8 @@
         "validacao_os_gate"
       ],
       "authenticated_grants": [],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "0976_E01-S168_serializar_autorizacao_finalizacao.sql",
@@ -63,8 +63,8 @@
         "validacao_os_gate"
       ],
       "authenticated_grants": [],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1023_E01-S173_mediacao_pendencias_retorno.sql",
@@ -76,8 +76,8 @@
       "authenticated_grants": [
         "pcm.sso_preparar_pendencias_retorno_mediado(uuid,uuid,uuid,uuid,integer)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1024_E01-S173_consultas_mediadas_retorno.sql",
@@ -93,8 +93,8 @@
         "pcm.sso_listar_decisoes_retorno_mediado(uuid,uuid,integer,integer)",
         "pcm.sso_listar_pendencias_contexto_mediado(uuid,uuid,integer)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1566_E01-S168_aprovar_finalizar_atomico.sql",
@@ -106,8 +106,8 @@
       "authenticated_grants": [
         "pcm.sso_aprovar_finalizar_os_atomico(uuid,uuid,uuid,uuid,integer,integer,text,uuid,text,timestamptz)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1567_E01-S168_mediar_decisao_retorno.sql",
@@ -119,8 +119,8 @@
       "authenticated_grants": [
         "pcm.sso_decidir_retorno_mediado(uuid,uuid,uuid,integer,text,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1589_E01-S168_listar_retorno_grupo_visita.sql",
@@ -131,8 +131,8 @@
         "validacao_os_gate"
       ],
       "authenticated_grants": [],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1590_E01-S168_classificacao_mediada.sql",
@@ -145,8 +145,8 @@
         "pcm.sso_listar_retornos_classificaveis_mediada(uuid,uuid,integer)",
         "pcm.sso_classificar_retorno_campo_mediada(uuid,uuid,uuid,uuid,uuid,jsonb)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1594_E01-S168_listar_atestacoes_mediada.sql",
@@ -159,8 +159,8 @@
       "authenticated_grants": [
         "pcm.sso_listar_atestacoes_pcm_mediada(uuid,uuid,uuid,integer)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1595_E01-S168_condicao_evidencia_mediada.sql",
@@ -174,8 +174,8 @@
         "pcm.sso_listar_condicoes_evidencia_mediada(uuid,uuid,uuid,integer)",
         "pcm.sso_registrar_condicao_evidencias_mediada(uuid,uuid,uuid,uuid,integer,integer,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1596_E01-S168_condicao_estrutural_mediada.sql",
@@ -187,8 +187,8 @@
         "pcm.sso_prever_perguntas_contrato_mediada(uuid,uuid,integer,integer)",
         "pcm.sso_registrar_condicao_estrutural_mediada(uuid,uuid,uuid,uuid,integer,integer,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1597_E01-S168_conferencia_cobertura_mediada.sql",
@@ -202,8 +202,8 @@
         "pcm.sso_listar_reatestacoes_mediada(uuid,uuid,uuid,uuid,integer)",
         "pcm.sso_reatestar_cobertura_mediada(uuid,uuid,uuid,uuid,integer,integer,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1598_E01-S168_aprovacao_pcm_mediada.sql",
@@ -215,8 +215,8 @@
       "authenticated_grants": [
         "pcm.sso_atestar_aprovar_retorno_mediado(uuid,uuid,uuid,uuid,integer,integer,text)"
       ],
-      "dynamic_sql": true,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": true
     },
     {
       "file": "1599_E01-S168_evidencia_declarada_mediada.sql",
@@ -230,8 +230,8 @@
         "pcm.sso_listar_evidencias_declaradas_mediada(uuid,uuid,integer,integer)",
         "pcm.sso_anotar_evidencia_retorno_mediada(uuid,uuid,uuid,uuid,integer,text,text,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1600_E01-S168_evidencia_resposta_mediada.sql",
@@ -244,8 +244,8 @@
         "pcm.sso_prever_evidencias_resposta_mediada(uuid,uuid,uuid,integer)",
         "pcm.sso_vincular_evidencia_resposta_mediada(uuid,uuid,uuid,uuid,uuid,integer,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1601_E01-S168_validacao_resposta_mediada.sql",
@@ -256,8 +256,8 @@
         "pcm.sso_listar_validacoes_resposta_mediada(uuid,uuid,uuid,integer,integer)",
         "pcm.sso_validar_resposta_evidencia_mediada(uuid,uuid,uuid,uuid,uuid,integer,integer,text,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1602_E01-S168_fotos_retorno_mediadas.sql",
@@ -271,8 +271,8 @@
         "pcm.sso_listar_fotos_resposta_mediada(uuid,uuid,integer,integer)",
         "pcm.sso_associar_foto_resposta_mediada(uuid,uuid,uuid,integer,uuid,uuid,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1603_E01-S168_upload_resposta_mediado.sql",
@@ -284,8 +284,8 @@
         "pcm.sso_resolver_upload_resposta_mediada(uuid,uuid,text)",
         "pcm.sso_registrar_upload_resposta_mediada(uuid,uuid,uuid,integer,uuid,text,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1604_E01-S168_reclassificacao_mediada.sql",
@@ -300,8 +300,8 @@
         "pcm.sso_decidir_reclassificacao_mediada(uuid,uuid,uuid,uuid,integer,integer,text,text)",
         "pcm.sso_reabrir_reclassificacao_mediada(uuid,uuid,uuid,integer,text)"
       ],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     },
     {
       "file": "1698_E01-S168_listar_envelopes_fotografia_os.sql",
@@ -312,8 +312,8 @@
         "validacao_os_gate"
       ],
       "authenticated_grants": [],
-      "dynamic_sql": false,
-      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout."
+      "notes": "Diagnóstico textual; não comprova dependências transitivas nem segurança de rollout.",
+      "sql_dinamico": false
     }
   ],
   "dependencias_adicionais_detectadas": {
@@ -341,5 +341,277 @@
       "0969: finalização e consulta por pedido"
     ]
   },
-  "metodo": "Busca textual de criações de tabelas/views/funções e nomes qualificados, sem execução. Nomes criados na própria migration constam no inventário; definições dinâmicas, triggers, políticas, overloads e ordem real não foram exaustivamente resolvidas."
+  "metodo": "Busca textual de criações de tabelas/views/funções e nomes qualificados, sem execução. Nomes criados na própria migration constam no inventário; definições dinâmicas, triggers, políticas, overloads e ordem real não foram exaustivamente resolvidas.",
+  "fechamento_estatico_preliminar": {
+    "metodo": "Expansão recursiva textual por identificadores schema.objeto e CREATE de function/table/view/type/sequence; inclui todas redefinições CREATE ausentes, não resolve SQL dinâmico, DDL ALTER, sobrecargas, ordem causal nem políticas/triggers.",
+    "status": "candidatos; não aplicar",
+    "migrations_ausentes": [
+      {
+        "file": "0380_E01-S173_contexto_historico.sql",
+        "sha256": "80dc0b4f8833e2500914389731f1294164fd6a14e7d6723b362c36d7a1eae591",
+        "git_blob": "57db60cda50661ff41ed82529ac079b6ef0ef427",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "0533_E01-S168_evidencia_por_resposta.sql",
+        "sha256": "376220b05ab8fe4b315346a995d747270daa024df16187a07383e87973da956f",
+        "git_blob": "d42abdf820220086f4040dfc4273107472460481",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": true
+      },
+      {
+        "file": "0536_E01-S168_previa_evidencia_resposta.sql",
+        "sha256": "cca5e88060f538d0de5cccd3989f2333c48e175da4bd551f46bad3b2f17f1461",
+        "git_blob": "f0440e9582248d53702eabb3e8450b566aef523b",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "0538_E01-S168_referencia_foto_privada_retorno.sql",
+        "sha256": "4665af66805cd6059e14ae85f7a788a1f53b68a4e5a0529f902e3db5a5165dff",
+        "git_blob": "9faa09df6b01bf674ddc10eb86dabffc4b401c9d",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": true
+      },
+      {
+        "file": "0547_E01-S168_foto_por_resposta.sql",
+        "sha256": "e49ce3a7d1b423c0416911e1d1665f2e1d7d43ae10534a1ed9f25c1d74da386e",
+        "git_blob": "2e9b6ef96db8d83ae3b26398c3a3e89c71d6b31c",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": true
+      },
+      {
+        "file": "0550_E01-S168_reconciliacao_cobertura_validacao.sql",
+        "sha256": "f7285844aa970d69a0b943f69da1d9343dc51984151faf8d0b50fbfa3307e2ba",
+        "git_blob": "0709ac59c20d4100ebd29e95d6b5bbd03d10afbf",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "0702_E01-S168_propostas_reclassificacao_resposta.sql",
+        "sha256": "14664b94b4cb8caab85839180aa74abb7e0af9f17eed34f9ac03583dc3ed4845",
+        "git_blob": "eb1d7491503b5a9ce998f2a2c21ea7d1faedf836",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": true
+      },
+      {
+        "file": "0705_E01-S168_decisao_proposta_projecao.sql",
+        "sha256": "367c068b41bca671be644c3b0aeeb7a0372bee81d761ebcfdb6bef4d99f13a47",
+        "git_blob": "9108531476ddeb301e3edb5140896197fd4c8d1f",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": true
+      },
+      {
+        "file": "0709_E01-S168_contexto_historico_reclassificacao.sql",
+        "sha256": "e3f2e6573b1760a4858e79ea7eb260ac54a36054cc9545e1657ef8d9ae2aca96",
+        "git_blob": "3f0d167bda70ec94286958229088cd4d4ff06414",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": false
+      },
+      {
+        "file": "0713_E01-S168_reabertura_trava_reclassificacao.sql",
+        "sha256": "68638babf59c625d53f96520bfb05011ca3b9ef474ccf2e7fe6b5dad061efe03",
+        "git_blob": "3fca1f606def029cada1257193b6ca60349fb018",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": true
+      },
+      {
+        "file": "0969_E01-S168_reconciliar_finalizacao_legada.sql",
+        "sha256": "b6d3c6a8b59bb280735b16ed42ed537fa40c6bff5bdd41794eb18e07143ed77a",
+        "git_blob": "4f45d1a44f4b443f81a529f75822df3f2628f23c",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "0971_E01-S168_mediacao_finalizacao.sql",
+        "sha256": "caf532d9b09b8754e72c8c478a879094ad3419e814d95341521fb7a9550fde57",
+        "git_blob": "b89a67a8dcf7a73e038031c6c75119b6ff37c4ed",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": false
+      },
+      {
+        "file": "0972_E01-S168_lock_gates_finalizacao.sql",
+        "sha256": "d237d44f7b8ff5166840b90008b834c211c822c0ec240d4c541401b6191c6f2f",
+        "git_blob": "55115d9104fc3fd70ca15eea7c3ced4f4572b358",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "0976_E01-S168_serializar_autorizacao_finalizacao.sql",
+        "sha256": "124aa796fe9f53a55f5a97cfade45dfc2b240e00c75f5db8dc80db4bd50f40ee",
+        "git_blob": "31a6e02ffe6ddfc076811b55f89da342a8c22c0b",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1023_E01-S173_mediacao_pendencias_retorno.sql",
+        "sha256": "b9d3149bfd22d2fabfd580478644a548a3439fdaf2410e4aadd92bede21ef88e",
+        "git_blob": "bab4201cdc9145a68c55645434688bf442f0ed2d",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": false
+      },
+      {
+        "file": "1024_E01-S173_consultas_mediadas_retorno.sql",
+        "sha256": "71766646b10c05f76c4abf8614837d22ff32792cbd53366c47377d1450503475",
+        "git_blob": "f7016d1b70beffa2ec19e3473c591cf04577d197",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1566_E01-S168_aprovar_finalizar_atomico.sql",
+        "sha256": "a4cd42445bc7e6beb10bd00c7fc868bf8d408cae6c999b450fc49130cb5024d8",
+        "git_blob": "18a7568c2d52a2d8b3c45f15f83f7a5ce5cd2bbf",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": false
+      },
+      {
+        "file": "1567_E01-S168_mediar_decisao_retorno.sql",
+        "sha256": "9dd26ff1feb51bdb9e5ca4d8e849c4d4bdb5a76595e9d57d46f7eaf1a3d1aa31",
+        "git_blob": "5db70b3c7a48c31df3ea83a1294d09f7700b569b",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": false
+      },
+      {
+        "file": "1589_E01-S168_listar_retorno_grupo_visita.sql",
+        "sha256": "93bdf778de6bffa2d120822fd41f6ffcbf599adcbe732eb78401c7cd6f1c231d",
+        "git_blob": "9912a820cb7cda964134aa4180cefa4041b558f1",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1590_E01-S168_classificacao_mediada.sql",
+        "sha256": "04c04bd7ba043b148009e3d896ca98b4476dccf56c7db06bd0734a661905d362",
+        "git_blob": "f0cb8e7af2cba9b844a846d563c940ec104db55a",
+        "sql_dinamico": false,
+        "ddl_alter": true,
+        "trigger": false
+      },
+      {
+        "file": "1594_E01-S168_listar_atestacoes_mediada.sql",
+        "sha256": "41a11f3b71b9ed0599b05be08c5beeff092abd7a5166568b13a68ccca58fbbcf",
+        "git_blob": "00611a4865ec67cac528772d0bfe202fafd94094",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1595_E01-S168_condicao_evidencia_mediada.sql",
+        "sha256": "db8f91e0968b5b3bb3ae62466336d9faa9fd788d35e83705bb3f4b35eb9c8a2b",
+        "git_blob": "cd9033dbeb08bd1b9725cec86480f015a2eb0c9f",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1596_E01-S168_condicao_estrutural_mediada.sql",
+        "sha256": "b24d29399357ab29fbd09e9adf8e55a18fb4bd9ff0344c2e9525d64243f6c767",
+        "git_blob": "548b2e0c59af05175517eb290a9145e57ffa8d4c",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1597_E01-S168_conferencia_cobertura_mediada.sql",
+        "sha256": "4461d80e133c6582777c9ae17525bf584336ef2fecaef9dfb84d59ace062122e",
+        "git_blob": "058a1dae3740a9ea50faf4dee695382f045b8edc",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1598_E01-S168_aprovacao_pcm_mediada.sql",
+        "sha256": "fba8f0406cf5472dd7ca61e7b28d29d865cc9228c25305dc0fc56131de897fdd",
+        "git_blob": "810c283081d1b13645d0759ac5ba20d5ea99f08d",
+        "sql_dinamico": true,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1599_E01-S168_evidencia_declarada_mediada.sql",
+        "sha256": "102dd71d84f5e7d36867821ce65ee668ba2544b3ac4530817c0f003310b3fc7d",
+        "git_blob": "8c8dd70a0d2c98c3e2282efd1005c5931fce7111",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1600_E01-S168_evidencia_resposta_mediada.sql",
+        "sha256": "9c5fe130a684fb280df79fffcc0293d6d35dad254a0d57d5f7be7631ea9e3973",
+        "git_blob": "dc5ee0957c84a9e0bffb7f1085423813bea83a3b",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1601_E01-S168_validacao_resposta_mediada.sql",
+        "sha256": "712761e1a5497785bc90e8135ccad9478951867318f195c65b06fdf962526eb3",
+        "git_blob": "c0f3513b4c67be371c5ad2172d19dbdc7e1007f8",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1602_E01-S168_fotos_retorno_mediadas.sql",
+        "sha256": "97d43a220a3a0a504305b56daf9d01ffd19a3c0c877dc6a3b0eb89e63600136c",
+        "git_blob": "e14a2c3d440467d3d45e1e8fbb9888d88fd4017d",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1603_E01-S168_upload_resposta_mediado.sql",
+        "sha256": "351b15e92b11cc263803383952886a5760be511b2b9fb3b0c83b122d108876a3",
+        "git_blob": "21adc07e82b25a56e6f9c099e4ed6f15c5a5530a",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1604_E01-S168_reclassificacao_mediada.sql",
+        "sha256": "ba6c292fc25c1acb3c2bd42c0434c1ed10e60b089d7ab34ad4b7091c8d942695",
+        "git_blob": "7823c9d5a4de5bd7d7e2a717776aa892e2678538",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      },
+      {
+        "file": "1698_E01-S168_listar_envelopes_fotografia_os.sql",
+        "sha256": "b8d38417057a88feba7cf392fdb96afb90acfa2dbbb3f30a59f68c1bdf33332c",
+        "git_blob": "3a87b09dcb2550bf5bf4fa26ea63afc1b1097bcd",
+        "sql_dinamico": false,
+        "ddl_alter": false,
+        "trigger": false
+      }
+    ],
+    "simbolos_sem_create_identificado": [
+      "storage.buckets",
+      "storage.objects"
+    ],
+    "limites": [
+      "Leitura recursiva interrompe em objetos criados em migrations já presentes; não avalia redefinições por patches dinâmicos de todas elas.",
+      "storage.buckets e storage.objects são tabelas da plataforma, pressupostos externos ao conjunto de migrations do projeto.",
+      "Triggers de imutabilidade e bloqueio, ALTER e policies exigem análise de ordem e estado; identificação textual não prova segurança.",
+      "Inclusão tardia de migrations históricas no repositório de integração requer reconciliação com histórico de banco e colisões antes de aplicar."
+    ]
+  }
 }
