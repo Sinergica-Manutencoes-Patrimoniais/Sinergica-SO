@@ -576,7 +576,7 @@ export function VisaoClientePage({
       )}
 
       {aba === "estrutura" && user && (
-        <EstruturaClientePage cliente={cliente} temEscrita={temEscrita} userId={user.id} onAbrirOs={abrirDetalheOs} />
+        <EstruturaClientePage key={`${user.id}:${cliente.id}`} cliente={cliente} temEscrita={temEscrita} userId={user.id} onAbrirOs={abrirDetalheOs} />
       )}
 
       {aba === "sistemas" && user && (
