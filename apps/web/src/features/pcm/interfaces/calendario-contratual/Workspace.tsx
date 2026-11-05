@@ -49,7 +49,11 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [simulacaoId, setSimulacaoId] = useState<string | null>(null);
-  const [feriadosSimulados, setFeriadosSimulados] = useState<{contratoId:string|null;datas:string[];periodo:{inicio:string;fim:string}}|null>(null);
+  const [feriadosSimulados, setFeriadosSimulados] = useState<{
+    contratoId: string | null;
+    datas: string[];
+    periodo: { inicio: string; fim: string };
+  } | null>(null);
   const emEnvio = useRef(false);
   const queryClient = useQueryClient();
   const raiz = ["calendario-contratual", userId, clienteId] as const;
@@ -100,7 +104,8 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
   async function enviar(c: CriarRegraContratualCommand) {
     if (emEnvio.current) return;
     try {
-      if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(c))
+        throw new Error("Tentativa alterada.");
     } catch {
       setErro("Tentativa guardada indisponível ou alterada. Consulte o suporte.");
       return;
@@ -109,7 +114,8 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
     setErro("");
     try {
       await salvar.mutateAsync(c);
-      if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada após confirmação.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(c))
+        throw new Error("Tentativa alterada após confirmação.");
       sessionStorage.removeItem(chave);
       setPendente(null);
       setAberto(false);
@@ -129,7 +135,8 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
         typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
       if (["22023", "23514", "23P01", "40001", "42501"].includes(codigo)) {
         try {
-          if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
+          if (sessionStorage.getItem(chave) !== JSON.stringify(c))
+            throw new Error("Tentativa alterada.");
           sessionStorage.removeItem(chave);
           setPendente(null);
           setContrato(c.contratoId);
@@ -200,8 +207,17 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
     >
       <h2 className="text-body font-semibold text-ink">Calendário contratual</h2>
       <p>Regras de {clienteNome}. Cadastrar uma regra não cria Visitas nem tarefas.</p>
-      {import.meta.env.VITE_SSO_FERIADOS_DECLARADOS_ENABLED === "true" && <FeriadosDeclarados
-        userId={userId} clienteId={clienteId} contratos={opcoes} regras={itens} onUsar={(contratoId,datas,periodo) => setFeriadosSimulados(periodo ? {contratoId,datas,periodo} : null)} />}
+      {import.meta.env.VITE_SSO_FERIADOS_DECLARADOS_ENABLED === "true" && (
+        <FeriadosDeclarados
+          userId={userId}
+          clienteId={clienteId}
+          contratos={opcoes}
+          regras={itens}
+          onUsar={(contratoId, datas, periodo) =>
+            setFeriadosSimulados(periodo ? { contratoId, datas, periodo } : null)
+          }
+        />
+      )}
       {recuperacao.falhou && (
         <p role="alert">
           Não foi possível recuperar operação anterior. Consulte o suporte antes de cadastrar outra
@@ -239,9 +255,7 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
           }}
         >
           {contratos.isPending && <output>Carregando contratos…</output>}
-          {contratos.isFetching && !contratos.isPending && (
-            <output>Atualizando contratos…</output>
-          )}
+          {contratos.isFetching && !contratos.isPending && <output>Atualizando contratos…</output>}
           {contratos.isError && (
             <p role="alert">
               Não foi possível carregar contratos.{" "}
@@ -432,9 +446,26 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
             >
               {simulacaoId === r.id ? "Fechar simulação" : "Simular regra"}
             </Button>
-            {simulacaoId === r.id && <SimulacaoRegra key={r.id} regra={r}
-              feriadosDeclarados={feriadosSimulados && (feriadosSimulados.contratoId === null || feriadosSimulados.contratoId === r.contratoId) ? feriadosSimulados.datas : []}
-              periodoDeclaracoes={feriadosSimulados && (feriadosSimulados.contratoId === null || feriadosSimulados.contratoId === r.contratoId) ? feriadosSimulados.periodo : null} />}
+            {simulacaoId === r.id && (
+              <SimulacaoRegra
+                key={r.id}
+                regra={r}
+                feriadosDeclarados={
+                  feriadosSimulados &&
+                  (feriadosSimulados.contratoId === null ||
+                    feriadosSimulados.contratoId === r.contratoId)
+                    ? feriadosSimulados.datas
+                    : []
+                }
+                periodoDeclaracoes={
+                  feriadosSimulados &&
+                  (feriadosSimulados.contratoId === null ||
+                    feriadosSimulados.contratoId === r.contratoId)
+                    ? feriadosSimulados.periodo
+                    : null
+                }
+              />
+            )}
           </li>
         ))}
       </ul>
