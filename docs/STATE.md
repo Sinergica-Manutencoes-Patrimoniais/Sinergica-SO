@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: legado escolhido e concorrência de reserva
+
+- ADR-1581/migration 1725 consideram resolvida apenas ocorrência legada prevista, sem OS ou envio, com escolha explícita atual `somente_legado` e fotografia revalidada. Migrations 1614–1725 compilaram em clone; fixtures de Calendário e Visita passaram para escolha, alteração de fotografia/efeito, OS e substituição. A restauração excluiu cron e exigiu ajuste de ACL; não prova aprovação real nem cobertura integral.
+- Em clone até 1724, disputa autenticada da mesma reserva de Calendário preservou uma escolha, recusou fotografia antiga e aceitou replay. Não cobre Visita, planos distintos, aprovação ou geração concorrentes. Roteiro: `supabase/tests/manual_E01-S165_reserva_rascunho_concorrencia.md`.
+- Interface invalida identidade de consulta de Visita na mudança de rascunho para aprovada; teste focado 4/4 passou. Próximo passo: provar integração completa e concorrência das demais fontes e realizar revisão adversarial; guarda 1045 e homologação permanecem bloqueadas. Sem Auvo real ou deploy.
+
 ## 2026-11-04 — S165/S166: reconciliação por ciclo futuro e rascunho
 
 - ADRs 1570–1576 e migrations 1714–1720 acrescentam reserva explícita PCM por ciclo/índice legado com escolhas SSO/legado/ponte, foto/CAS, auditoria e proteção dos escritores; interface mediada lista preparadas, vinculadas e futuras sem inferir equivalência. Ensaios sintéticos autenticados passaram para calendário/Visita, replay, CAS, isolamento e preparação posterior; concorrência futura integral e cobertura completa das fontes seguem pendentes.
