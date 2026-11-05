@@ -12,7 +12,7 @@ const linha = z.object({ visita_id: uuid, semana_origem: dataCivil, regra_origem
 const pedidoSchema = z.object({ requestId: uuid, atorId: uuid, clienteId: uuid, serieId: uuid, regraNovaId: uuid,
   expectedRevision: z.number().int().positive(), diaSemana: z.number().int().min(1).max(7), vigencia: dataCivil,
   revisoes: z.array(z.object({ visitaId: uuid, revisao: z.number().int().positive(), feriadoEsperado: z.boolean().optional(), ocorrenciaEsperada: z.boolean().optional() }).strict()
-    .refine((x) => (x.feriadoEsperado === undefined) === (x.ocorrenciaEsperada === undefined))).max(500) }).strict();
+    .refine((x) => (x.feriadoEsperado === undefined) === (x.ocorrenciaEsperada === undefined))).max(500), tentativaIncerta: z.boolean().optional() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Cursor = { semana: string; id: string } | null;
 
@@ -63,14 +63,24 @@ export function AlterarDiaComVisitas({ userId, clienteId, serieId, revisao, dia,
   async function enviar(p: Pedido) {
     if (trava.current) return;
     trava.current = true; setOcupado(true); setAviso("");
-    const serializado = JSON.stringify(p);
+    let serializado = JSON.stringify(p);
     try {
       await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
+      const jaIncerta = p.tentativaIncerta !== false; p = pedidoSchema.parse({ ...p, tentativaIncerta: true });
+      serializado = JSON.stringify(p); sessionStorage.setItem(chave, serializado); setPedido(p);
       const { data, error } = await supabase.schema("pcm").rpc("sso_alterar_dia_com_visitas", {
         p_request_id: p.requestId, p_ator_id: p.atorId, p_cliente_id: p.clienteId, p_serie_id: p.serieId, p_regra_nova_id: p.regraNovaId,
         p_expected_revision: p.expectedRevision, p_dia_semana: p.diaSemana, p_vigencia: p.vigencia, p_revisoes: p.revisoes,
       });
-      if (error) throw error;
+      if (error) {
+        if (!jaIncerta && error.code === "40001") {
+          await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
+          sessionStorage.removeItem(chave); setPedido(null); setConfirmacao(null);
+          setAviso("Regra ou Visitas mudaram. Confira novamente todas as páginas; nenhuma alteração foi aplicada nesta tentativa.");
+          void consulta.refetch(); return;
+        }
+        throw error;
+      }
       const recebido = z.object({ requestId: uuid, serieId: uuid, regraId: uuid, revision: z.number().int().positive(),
         visitasMovidas: z.number().int().nonnegative(), visitasSuprimidas: z.number().int().nonnegative().optional(), efeitoRemoto: z.literal(false) }).strict().parse(data);
       if (recebido.requestId !== p.requestId || recebido.serieId !== p.serieId || recebido.regraId !== p.regraNovaId ||
@@ -86,7 +96,7 @@ export function AlterarDiaComVisitas({ userId, clienteId, serieId, revisao, dia,
     if (pedido || bloqueado || trava.current || !completa || confirmacao !== fotografia) return;
     try {
       const p = pedidoSchema.parse({ requestId: crypto.randomUUID(), atorId: userId, clienteId, serieId, regraNovaId: crypto.randomUUID(),
-        expectedRevision: revisao, diaSemana: dia, vigencia, revisoes });
+        expectedRevision: revisao, diaSemana: dia, vigencia, revisoes, tentativaIncerta: false });
       if (sessionStorage.getItem(chave) !== null) throw new Error("Tentativa existente");
       sessionStorage.setItem(chave, JSON.stringify(p)); setPedido(p); void enviar(p);
     } catch { setAviso("Não foi possível guardar o pedido. Nada foi enviado."); }

@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: protocolo de aprovação condicionado
+
+- ADR-1589/migration 1731 substituem corpo incondicional do trigger 1045 por verificação do ator/Cliente, txid, READ COMMITTED, origin, gate mediado e protocolo de validadores existentes. Gate dedicado novo nasce desligado e configurações anteriores são preservadas; não há liberação operacional automática. Revisão independente não identificou bypass estático; não prova cobertura integral.
+- Clone compilou 1731 e executou aprovação mediada para Calendário e Visita com 1045 real: gate dedicado ativado somente na transação revertida, replay passou; Visita recusou gate fechado, permissão revogada e trigger obrigatório desabilitado. Fixtures `supabase/tests/manual_E01-S165_aprovacao_real_calendario_1731.sql` e `supabase/tests/manual_E01-S165_aprovacao_real_visita_1731.sql`. Cadastros e tempo sintéticos, sem prova de fontes externas, UI real ou homologação.
+- Mudança de dia contratual permite reconferência após rejeição definitiva 40001 da primeira tentativa e preserva replay após resultado incerto; teste UI 2/2 passou. Feriado/dia ainda precisam de prova integrada. Travas de aprovação continuam globais para proteger inserts concorrentes e podem afetar outros Clientes; carga não medida.
+- Próximo passo: testar jornada integrada com 1731 sem simular a guarda, fontes/escritores e concorrência; revisão adversarial completa e CI antes de homologação. Gate dedicado permanece desligado; sem deploy/Auvo real.
+
 ## 2026-11-05 — S165/S166: comparação e conciliação de Visita
 
 - Prévia de reserva por Visita apresenta datas do par selecionado, possível conflito em coincidência e limites da informação, sem inferir equivalência. Seis testes focados passaram.
