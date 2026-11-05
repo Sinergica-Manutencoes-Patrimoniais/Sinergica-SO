@@ -26,14 +26,14 @@ const grupo = {
   caracteristicas: {},
   revisao: 1,
 };
-const base = { requestId, userId, clienteId, grupoId, revision: 1, motivo: "Conferido" };
+const base = { requestId, userId, clienteId, grupoId, revision: 1 };
 const casos = [
   {
     nome: "movimentação",
     chave: "sso-mover-grupo",
     flag: "VITE_SSO_MOVER_GRUPO_ENABLED",
     botao: "Repetir movimentação",
-    pedido: { ...base, localDestinoId: id(7) },
+    pedido: { ...base, localDestinoId: id(7), motivo: "Conferido" },
     recibo: { aggregateId: grupoId, requestId, revision: 2, localId: id(7) },
     componente: () => (
       <MoverGrupo userId={userId} clienteId={clienteId} grupo={grupo} locais={[]} disponivel />
@@ -44,7 +44,7 @@ const casos = [
     chave: "sso-reclassificar-grupo",
     flag: "VITE_SSO_RECLASSIFICAR_GRUPO_ENABLED",
     botao: "Repetir reclassificação",
-    pedido: { ...base, categoriaId: id(8), sistemaId: null },
+    pedido: { ...base, categoriaId: id(8), sistemaId: null, motivo: "Conferido" },
     recibo: { aggregateId: grupoId, requestId, revision: 2, categoriaId: id(8), sistemaId: null },
     componente: () => (
       <ReclassificarGrupo
@@ -62,7 +62,7 @@ const casos = [
     chave: "sso-quantidade-grupo",
     flag: "VITE_SSO_QUANTIDADE_MOTIVADA_GRUPO_ENABLED",
     botao: "Repetir alteração",
-    pedido: { ...base, quantidade: 5 },
+    pedido: { ...base, quantidade: 5, motivo: "Conferido" },
     recibo: { aggregateId: grupoId, requestId, revision: 2, quantidade: 5 },
     componente: () => (
       <QuantidadeMotivadaGrupo userId={userId} clienteId={clienteId} grupo={grupo} disponivel />
@@ -107,5 +107,16 @@ describe.each(casos)("$nome: tentativa pendente e sessão", (cenario) => {
     await waitFor(() => expect(screen.getByText(/tentativa local não foi limpa/i)).toBeTruthy());
     expect(mocks.rpc).toHaveBeenCalledTimes(1);
     expect(sessionStorage.getItem(chave)).toBe(salvo);
+  });
+  it("não envia se a tentativa muda durante a autenticação", async () => {
+    const { chave } = montar();
+    mocks.getUser.mockImplementation(async () => {
+      sessionStorage.setItem(chave, "tentativa modificada");
+      return sessao(userId);
+    });
+    fireEvent.click(screen.getByRole("button", { name: cenario.botao }));
+    await waitFor(() => expect(screen.getByText(/Resultado não confirmado/)).toBeTruthy());
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem(chave)).toBe("tentativa modificada");
   });
 });

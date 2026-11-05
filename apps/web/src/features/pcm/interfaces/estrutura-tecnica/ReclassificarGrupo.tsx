@@ -68,6 +68,7 @@ function Conteudo({ userId, clienteId, grupo, categorias, sistemas, disponivel }
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
       await conferirSessao();
+      if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
       const { data, error } = await supabase
         .schema("pcm")
         .rpc("sso_reclassificar_grupo_autorizado", {

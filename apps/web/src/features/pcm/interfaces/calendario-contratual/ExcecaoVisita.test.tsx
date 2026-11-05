@@ -94,7 +94,7 @@ it("preserva tentativa quando o resultado é incerto", async () => {
   expect(screen.getByRole("button", { name: "Repetir mesma aprovação" })).toBeTruthy();
   expect(sessionStorage.length).toBe(1);
 });
-it.each([{ code: "40001" }, { code: "P0011", message: "visita_obsoleta" }])(
+it.each([{ code: "P0011", message: "visita_obsoleta" }])(
   "permite nova conferência após rejeição inicial $code",
   async (erro) => {
     vi.stubEnv("VITE_SSO_EXCECAO_VISITA_ENABLED", "true");

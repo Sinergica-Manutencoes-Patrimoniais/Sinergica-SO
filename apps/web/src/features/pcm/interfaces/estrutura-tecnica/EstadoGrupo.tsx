@@ -69,6 +69,7 @@ function Comando(p: Props) {
     try {
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== p.userId) throw new Error("sessao_alterada");
+      if (sessionStorage.getItem(key) !== JSON.stringify(v)) throw new Error("tentativa_alterada");
       const { data, error } = await supabase.schema("pcm").rpc("sso_alterar_estado_grupo", {
         p_request_id: v.requestId,
         p_grupo_id: v.grupoId,

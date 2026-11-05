@@ -92,6 +92,7 @@ function Conteudo({ userId, clienteId, grupo, disponivel }: Props) {
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
       await conferirSessao();
+      if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_remover_caracteristica_grupo", {
         p_request_id: p.requestId,
         p_grupo_id: p.grupoId,

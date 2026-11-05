@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -63,6 +63,8 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState("");
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient();
   async function conferirAtor() {
     const r = await supabase.auth.getUser();
@@ -136,12 +138,11 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
       if (error) {
         if (
           !jaIncerta &&
-          (error.code === "40001" ||
-            (error.code === "P0011" && error.message === "visita_obsoleta"))
+          (error.code === "P0011" && error.message === "visita_obsoleta")
         ) {
           await conferirAtor();
           if (sessionStorage.getItem(chave) !== serializado) throw new Error("Pedido alterado");
-          sessionStorage.removeItem(chave);
+          if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave);
           setPedido(null);
           setConfirmacao(null);
           setAviso("A Visita mudou. Confira os dados novamente.");
@@ -163,7 +164,7 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
         throw new Error("Recibo divergente");
       await conferirAtor();
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Pedido alterado");
-      sessionStorage.removeItem(chave);
+      if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave);
       setPedido(null);
       setConfirmacao(null);
       setAviso("Exceção aprovada. A Visita será preservada na mudança de dia.");
