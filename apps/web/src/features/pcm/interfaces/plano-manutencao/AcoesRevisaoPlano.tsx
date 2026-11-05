@@ -154,7 +154,7 @@ export function AcoesRevisaoPlano({
     } catch (falha) {
       const codigo =
         typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
-      if (primeiraTentativa && (["22023", "23514", "40001"].includes(codigo) || (pedido.tipo === "aprovacao_revisao" && codigo === "P0011" && typeof falha === "object" && falha !== null && "message" in falha && falha.message === "revisao_obsoleta"))) {
+      if (primeiraTentativa && (["22023", "23514"].includes(codigo) || (pedido.tipo === "aprovacao_revisao" && codigo === "P0011" && typeof falha === "object" && falha !== null && "message" in falha && falha.message === "revisao_obsoleta"))) {
         try {
           await exigirAtor();
           if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
@@ -172,7 +172,7 @@ export function AcoesRevisaoPlano({
               "message" in falha &&
               falha.message === "revisao_sem_vigencia_segura"
               ? "A aprovação de nova versão está bloqueada até concluir a conferência de vigências e impactos. A versão aprovada permanece preservada."
-              : codigo === "40001"
+              : codigo === "P0011"
                 ? "O Plano mudou. Confira os dados atualizados antes de tentar novamente."
                 : "O servidor recusou a operação. Confira os dados do Plano e das Rotinas.",
           );

@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: revogação em Rotinas e fila Grupo
+
+- ADR-1629/migration 1771 serializam revogação com inclusão, edição e retirada de Rotina antes de autorização/replay, exigindo READ COMMITTED. Corrida de edição foi reproduzida antes e bloqueada nas duas ordens depois; caminhos positivos/replays dos três comandos passaram em clone, com revisão independente.
+- ADR-1630/migration 1772 movem trava antes da autorização/replay da fila Grupo. Corrida de replay contra revogação foi reproduzida e corrigida nas duas ordens; clone limpo compilou até 1772 e fixtures passaram. Roteiros `supabase/tests/manual_E01-S165_autorizacao_rotina_concorrencia_1771.md` e `supabase/tests/manual_E01-S166_autorizacao_fila_grupo_1772.md`.
+- Aprovação UI preserva tentativa para 40001 genuíno e só trata P0011/revisão obsoleta como rejeição definitiva inicial; três testes passaram. Próximo passo: revisão das demais bordas de autorização e CI/homologação. Gates default fechados, sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: revogação durante geração
 
 - Auditoria reproduziu criação de ciclo após revogação concorrente de `plano.gerir` quando gate de origem estava desligado. ADR-1628/migration 1770 serializam autorização em fronteiras de geração Calendário/Visita e exigem READ COMMITTED antes de autorização/replay.
