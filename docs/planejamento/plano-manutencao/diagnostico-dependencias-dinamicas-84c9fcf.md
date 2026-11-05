@@ -21,7 +21,8 @@ Encontrar uma migration anterior não prova que seu efeito seja exigido por uma 
 
 As comparações textuais acima foram feitas nos arquivos da fonte. A função real após todas as
 migrations anteriores selecionadas pode diferir; confirmar ordem e conteúdo com `pg_get_functiondef`
-em banco descartável antes de decidir quaisquer inclusões. O ensaio atual não chegou à 1692.
+em banco descartável antes de decidir quaisquer inclusões. O ensaio diagnóstico inicial não chegou
+à 1692; o ensaio integrado posterior está registrado abaixo.
 
 ## Omissões com risco comportamental, sem falha textual comprovada
 
@@ -51,3 +52,14 @@ em banco descartável antes de decidir quaisquer inclusões. O ensaio atual não
 - Os testes Auth/Storage/fotos executados sobre clone mais amplo não provam que esta seleção reduzida
   compila ou preserva RLS, concorrência, integridade e compatibilidade do legado. Não habilitar gates,
   implantar ou disparar Auvo com base neste diagnóstico.
+
+## Ensaio do candidato de integração
+
+O ensaio em banco descartável aplicou as **228 migrations da base e 656 candidatas**, incluindo
+as migrations originais do manifesto de integração, sem antecipar ações por seeds sintéticas.
+Os recursos criados para o ensaio foram removidos. Esse resultado demonstra aplicação das
+migrations naquela composição; não demonstra fechamento de todas as dependências transitivas,
+correção funcional, concorrência, RLS ou compatibilidade com dados e integrações existentes.
+
+O candidato permanece separado do pacote de release. Gates de segurança continuam fechados;
+homologação e deploy dependem de revisão e validações próprias. Não houve acionamento do Auvo.
