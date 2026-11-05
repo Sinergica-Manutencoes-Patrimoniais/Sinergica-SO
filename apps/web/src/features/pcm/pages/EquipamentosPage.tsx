@@ -1,7 +1,7 @@
 import { Button, ConfirmDialog, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, Layers, Link2, Pencil, Plus, RefreshCw, Trash2, Wrench } from "lucide-react";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { supabase } from "../../../lib/supabase-client";
@@ -283,10 +283,11 @@ export function EquipamentosPage() {
         />
       )}
 
-      {itemDetalheId && (
+      {itemDetalheId && user && (
         <ItemDetalheModal
+          key={`${user.id}:${itemDetalheId}`}
           itemId={itemDetalheId}
-          userId={user?.id ?? ""}
+          userId={user.id}
           onFechar={() => setItemDetalheId(null)}
           onAtualizado={() => void carregar()}
         />
@@ -420,13 +421,21 @@ function ItemDetalheModal({
   onFechar,
   onAtualizado,
 }: { itemId: string; userId: string; onFechar: () => void; onAtualizado: () => void }) {
-  const [contexto, setContexto] = useState<ItemContexto | null | "carregando">("carregando");
+  const [contexto, setContexto] = useState<ItemContexto | null | "carregando" | "erro">("carregando");
+  const [versaoConsulta, setVersaoConsulta] = useState(0);
+  const consultaAtual = useRef(0);
   const [historicoAberto, setHistoricoAberto] = useState(false);
 
   useEffect(() => {
+    let ativa = true;
+    const geracao = consultaAtual.current;
     setContexto("carregando");
-    obterContextoItem(supabaseEquipamentosAdapter, itemId).then(setContexto);
-  }, [itemId]);
+    void obterContextoItem(supabaseEquipamentosAdapter, itemId).then(
+      (resultado) => { if (ativa && consultaAtual.current === geracao) setContexto(resultado); },
+      () => { if (ativa && consultaAtual.current === geracao) setContexto("erro"); },
+    );
+    return () => { ativa = false; };
+  }, [itemId, userId, versaoConsulta]);
 
   return (
     <ModalPrimitivo
@@ -439,6 +448,8 @@ function ItemDetalheModal({
       <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto">
         {contexto === "carregando" ? (
           <Skeleton className="h-4 w-40" />
+        ) : contexto === "erro" ? (
+          <p role="alert">Não foi possível carregar o detalhe. <button type="button" onClick={() => { consultaAtual.current++; setVersaoConsulta((v) => v + 1); }}>Tentar novamente</button></p>
         ) : contexto === null ? (
           <p className="text-body text-ink-3">Item não encontrado.</p>
         ) : (
@@ -500,8 +511,9 @@ function ItemDetalheModal({
                   item={contexto.item}
                   onConcluido={() => {
                     onAtualizado();
+                    consultaAtual.current++;
                     setContexto("carregando");
-                    void obterContextoItem(supabaseEquipamentosAdapter, itemId).then(setContexto);
+                    setVersaoConsulta((v) => v + 1);
                   }}
                 />
               </div>
