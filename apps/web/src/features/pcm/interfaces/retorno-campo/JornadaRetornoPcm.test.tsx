@@ -7,7 +7,7 @@ vi.mock("../../../../lib/supabase-client",()=>({supabase:{auth:{getUser:api.getU
 import { EvidenciasDeclaradas } from "./EvidenciasDeclaradas";
 const id=(n:number)=>`18150000-0000-4000-8000-${String(n).padStart(12,"0")}`;
 afterEach(()=>{cleanup();sessionStorage.clear();vi.resetAllMocks();vi.unstubAllEnvs();});
-it("abre retorno, valida evidência e registra devolução seguida de reabertura com motivo",async()=>{
+it.each([{ decisao:"aceita_pcm", motivo:"Foto conferida" }, { decisao:"rejeitada_pcm", motivo:"Foto ilegível" }] as const)("abre retorno, registra $decisao e devolve/reabre com motivo",async({decisao,motivo})=>{
  vi.stubEnv("VITE_SSO_DECISOES_RETORNO_ENABLED","true");vi.stubEnv("VITE_SSO_UPLOAD_EVIDENCIA_RESPOSTA_ENABLED","true");vi.stubEnv("VITE_SSO_VALIDACAO_RESPOSTA_ENABLED","true");
  api.getUser.mockResolvedValue({data:{user:{id:id(1)}},error:null});
  const historico: {revisao:number;decisao:string;motivo:string;ator_id:string;criado_em:string}[]=[];
@@ -26,9 +26,9 @@ it("abre retorno, valida evidência e registra devolução seguida de reabertura
  fireEvent.click(await screen.findByRole("button",{name:"Conferir evidências"}));
  const validacao=await screen.findByRole("region",{name:"Decisão de resposta e evidência"});
  await waitFor(()=>expect(within(validacao).getByRole("button",{name:"Registrar decisão"})).toBeEnabled());
- fireEvent.change(within(validacao).getByLabelText("Decisão"),{target:{value:"aceita_pcm"}});fireEvent.change(within(validacao).getByLabelText("Motivo"),{target:{value:"Foto conferida"}});fireEvent.click(within(validacao).getByRole("button",{name:"Registrar decisão"}));
+ fireEvent.change(within(validacao).getByLabelText("Decisão"),{target:{value:decisao}});fireEvent.change(within(validacao).getByLabelText("Motivo"),{target:{value:motivo}});fireEvent.click(within(validacao).getByRole("button",{name:"Registrar decisão"}));
  await within(validacao).findByText(/Decisão humana registrada/);
- expect(api.rpc).toHaveBeenCalledWith("sso_validar_resposta_evidencia_mediada",expect.objectContaining({p_cliente_id:id(2),p_retorno_id:id(3),p_resposta_id:id(5),p_evidencia_id:id(6),p_expected_uploads:1,p_decisao:"aceita_pcm",p_justificativa:"Foto conferida"}));
+ expect(api.rpc).toHaveBeenCalledWith("sso_validar_resposta_evidencia_mediada",expect.objectContaining({p_cliente_id:id(2),p_retorno_id:id(3),p_resposta_id:id(5),p_evidencia_id:id(6),p_expected_uploads:1,p_decisao:decisao,p_justificativa:motivo}));
  const decisoes=screen.getByRole("region",{name:"Decisões do retorno"});
  for(const [acao,motivo,revisao] of [["devolver","Falta complemento",0],["reabrir","Complemento recebido",1]] as const){
   const botao=within(decisoes).getByRole("button",{name:"Registrar decisão"});await waitFor(()=>expect(botao).toBeEnabled());
