@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: revisão obsoleta e aprovação com avaliação
+
+- Aprovação mediada 1731 em clone, com 1045 intacta e 1742, recusou avaliação tardia (`comparacao_avaliacao_obsoleta`); após remover fontes sintéticas aprovou e repetiu. Ponte/relação/avaliação sintéticas; fixture `supabase/tests/manual_E01-S165_aprovacao_real_avaliacao_tardia_1742.sql`.
+- ADR-1602/migration 1744 tratam `revisao_obsoleta` na decisão e nas duas listas com P0011. Ensaio UI/HTTP Calendário passou de 4.351 execuções em ~2s para uma; reconsulta terminou. UI 16/16 cobre primeira tentativa e replay de ambos modos; HTTP Visita pendente. Consumidores externos devem aceitar P0011.
+- ADR-1603/migration 1745 tratam comparação obsoleta das duas prévias com P0010. HTTP Calendário passou de timeout >6s para resposta em 11–12ms; Visita passou em fixture SQL. Outros 40001 de negócio permanecem para auditoria. Gates default fechados, sem deploy/Auvo.
+- Próximo passo: cobrir conflitos restantes e Visita HTTP, revisão adversarial integral e CI antes de homologação.
+
 ## 2026-11-05 — S165/S166: conflito HTTP e avaliação na aprovação
 
 - ADR-1600/migration 1742 revalidam avaliação legada recebida após decisão no trigger de aprovação. Fixture isolada e concorrência do helper nas duas ordens passaram; ainda não provam jornada completa 1731 com essa avaliação.

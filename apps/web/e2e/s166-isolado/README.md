@@ -82,3 +82,5 @@ Executado com sucesso em 2026-11-05, incluindo verificação do estado aprovado 
 ## Comparação obsoleta por avaliação legada
 
 `python3 apps/web/e2e/s166-isolado/executar-comparacao.py` cria dados sintéticos, exibe a comparação pela interface, insere avaliação no clone e tenta decidir usando a fotografia anterior. A função de decisão recebe instrumentação temporária com sequência não transacional para contar tentativas; essa alteração existe apenas no clone descartável. Em 2026-11-05, com migration 1743, a RPC executou uma vez, rejeitou a comparação e a interface reconsultou e apresentou o alerta. A fixture prepara a relação e decisão anterior por SQL; o ensaio não comprova navegação integral nem homologação.
+
+`executar-revisao-obsoleta.py` usa a mesma instrumentação e altera apenas a revisão do Plano no clone após a conferência. Com 1744, a decisão foi rejeitada em uma execução e a interface pediu nova conferência; as listas mediadas também rejeitam a revisão antiga sem `40001`.
