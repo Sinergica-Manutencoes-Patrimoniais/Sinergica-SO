@@ -108,7 +108,7 @@ function Conteudo({
       {import.meta.env.VITE_SSO_DIAGNOSTICO_VIGENCIAS_ENABLED === "true" && <DiagnosticoVigencias userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
       {import.meta.env.VITE_SSO_DECISAO_IMPACTO_OCORRENCIA_ENABLED === "true" && <DecisaoImpactoOcorrencia userId={userId} clienteId={clienteId} planoId={planoId} revision={revisao} />}
       {import.meta.env.VITE_SSO_DECISAO_IMPACTO_VISITA_ENABLED === "true" && <DecisaoImpactoVisita userId={userId} clienteId={clienteId} planoId={planoId} revision={revisao} />}
-      {consulta.isFetching && <output>Carregando comparação...</output>}
+      {consulta.isFetching && <output>Carregando comparação…</output>}
       {consulta.isError && (
         <p role="alert">
           Não foi possível comparar a revisão.{" "}

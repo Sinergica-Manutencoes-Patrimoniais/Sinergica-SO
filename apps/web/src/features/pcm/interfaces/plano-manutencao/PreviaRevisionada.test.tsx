@@ -136,7 +136,7 @@ it("descarta resposta atrasada de revisão anterior", async () => {
       <PreviaRevisionada userId="u" clienteId="c" planoId="p" revisao={5} />
     </QueryClientProvider>,
   );
-  await screen.findByText("Carregando comparação...");
+  await screen.findByText("Carregando comparação…");
   view.rerender(
     <QueryClientProvider client={client}>
       <PreviaRevisionada userId="u" clienteId="c" planoId="p" revisao={6} />

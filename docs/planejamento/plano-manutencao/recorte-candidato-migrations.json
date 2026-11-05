@@ -1,9 +1,109 @@
 {
   "base_main": "22aca3918224bc45175e80c6ec88b957fdb604aa",
   "fonte_backup": "84c9fcf8fc7ec32bda5399872ad30192c1587ed6",
-  "status": "RASCUNHO INCOMPLETO — dependências não verificadas; não aplicar",
-  "contagem": 622,
+  "status": "RASCUNHO INCOMPLETO — inclui efeitos S181/S183; dependências e ACL não verificadas; não aplicar",
+  "contagem": 640,
   "migrations": [
+    {
+      "caminho": "supabase/migrations/0230_E01-S184_projecao_publica_portal.sql",
+      "git_blob": "d855d68dd52e5c1b5fc8102b83ecfca3a258356e",
+      "sha256": "2b1384157c4161520017dc9c5e63b5bc44350df1a1d4f6b0eb270b38aa36b33a",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "0378_E01-S183_proposta_operacional_publica.sql",
+          "objeto": "comercial.projecao_proposta_publica"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "comercial.projecao_proposta_publica"
+        },
+        {
+          "referenciada_por": "0396_E01-S181_publicacao_orcamento_operacional.sql",
+          "objeto": "comercial.projecao_proposta_publica"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0232_E01-S184_decisao_proposta_publica.sql",
+      "git_blob": "994c47396ea947c856e4f9a631eb81d0bfb58e56",
+      "sha256": "4cb5ce9818ed2e10610892c82ad986d8cd40dc1b8cf731e46678d4afca6f434e",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0378_E01-S183_proposta_operacional_publica.sql",
+          "objeto": "comercial.portal_decidir_proposta"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "comercial.portal_decidir_proposta"
+        },
+        {
+          "referenciada_por": "0445_E01-S181_excecao_preco_operacional.sql",
+          "objeto": "comercial.portal_decidir_proposta"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0234_E01-S184_sessoes_internas_atuais.sql",
+      "git_blob": "d77ccb01f6393ff7c81e26a3facbb51998e7669c",
+      "sha256": "2004a2b5811248e52084434469a3920c19f8dc7d9f6a1c7f71f45e772d3ec86a",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0235_E01-S184_custos_restritos.sql",
+          "objeto": "config.s184_acesso_interno_atual"
+        },
+        {
+          "referenciada_por": "0434_E01-S181_painel_propostas_operacionais.sql",
+          "objeto": "config.s184_acesso_interno_atual"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0235_E01-S184_custos_restritos.sql",
+      "git_blob": "a562ad9ef223f714d7dbc0d2823a76220779580e",
+      "sha256": "7d67e7146ece5a38b7c3e0fc9a3fceb0ea0df7d8ab5881838160d859fee02da5",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0236_E01-S184_forcar_preco_seguro.sql",
+          "objeto": "config.s184_pode_ver_custos"
+        },
+        {
+          "referenciada_por": "0445_E01-S181_excecao_preco_operacional.sql",
+          "objeto": "config.s184_pode_ver_custos"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0236_E01-S184_forcar_preco_seguro.sql",
+      "git_blob": "1f7c95311b73c6bf5a6eec2c0b1f82af5ef1ba69",
+      "sha256": "112b787a8665688e436fb8c217489ccc0a50b84dc9e0bd863f9b6dd7ab181454",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0445_E01-S181_excecao_preco_operacional.sql",
+          "objeto": "comercial.forcar_preco_abaixo_piso_seguro"
+        }
+      ]
+    },
     {
       "caminho": "supabase/migrations/0239_E01-S170_capacidades_sso.sql",
       "git_blob": "a9693b0d993ebacf8ebf0668b9da9b0c343cf408",
@@ -971,6 +1071,30 @@
       ]
     },
     {
+      "caminho": "supabase/migrations/0322_E01-S179_listas_materiais.sql",
+      "git_blob": "64f41d0c988a96abf8515823f8378b348d4944dd",
+      "sha256": "e309cd4e9a02b70e2790f3619dcb4560d2e6d75c5bf64c4fc0bdb0b3242d1b95",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0328_E01-S179_disponibilidade_excecoes.sql",
+          "objeto": "pcm.sso_lista_materiais_comandos"
+        },
+        {
+          "referenciada_por": "0328_E01-S179_disponibilidade_excecoes.sql",
+          "objeto": "pcm.listas_materiais"
+        },
+        {
+          "referenciada_por": "0325_E01-S179_versoes_linhas_materiais.sql",
+          "objeto": "pcm.sso_lista_materiais_comandos"
+        }
+      ]
+    },
+    {
       "caminho": "supabase/migrations/0324_E01-S167_fundacao_revisao_chamado.sql",
       "git_blob": "e5dcdac9fbf6df01002a63d48d85dbf4feafb338",
       "sha256": "287ff8cc95b9703247fd1a4a7634a062430b7910ce6cd0a8a4fc45c3f7ca9930",
@@ -991,6 +1115,22 @@
       ]
     },
     {
+      "caminho": "supabase/migrations/0325_E01-S179_versoes_linhas_materiais.sql",
+      "git_blob": "7cbe1c99aa0475f47b0b794eb4798396943d50c9",
+      "sha256": "f2eb2561b98c1d8ccc3b36b4fa74d6b44365b8c941264b90709e31fd3a2320d0",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "0328_E01-S179_disponibilidade_excecoes.sql",
+          "objeto": "pcm.sso_obter_linhas_materiais"
+        },
+        {
+          "referenciada_por": "0328_E01-S179_disponibilidade_excecoes.sql",
+          "objeto": "pcm.sso_lista_materiais_versoes"
+        }
+      ]
+    },
+    {
       "caminho": "supabase/migrations/0327_E01-S178_conferencia_staging.sql",
       "git_blob": "2e80e6fde8dcde1038ba0780ed9073700a283a51",
       "sha256": "23c98ae292bf773f7a30f2b53e3231ec0a6508196c312f9e80a397264e6345b4",
@@ -1007,6 +1147,30 @@
         {
           "referenciada_por": "0573_E01-S165_revisao_contratos_perguntas.sql",
           "objeto": "pcm.sso_proteger_conferencia_levantamento"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0328_E01-S179_disponibilidade_excecoes.sql",
+      "git_blob": "87af9110b78f32a6ccf55729ea6467f5450b4489",
+      "sha256": "432fbc12df40e77314f411c155ef91f1b295575f6d397aab4a162038cfdb1c58",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "0336_E01-S181_origens_operacionais.sql",
+          "objeto": "pcm.listas_materiais"
+        },
+        {
+          "referenciada_por": "0339_E01-S181_preparar_proposta_operacional.sql",
+          "objeto": "pcm.listas_materiais"
+        },
+        {
+          "referenciada_por": "0389_E01-S181_origem_sem_oportunidade.sql",
+          "objeto": "pcm.listas_materiais"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "pcm.listas_materiais"
         }
       ]
     },
@@ -1099,6 +1263,30 @@
       ]
     },
     {
+      "caminho": "supabase/migrations/0336_E01-S181_origens_operacionais.sql",
+      "git_blob": "3cf651188a0e2f344983b638d5bab51bf2e9578e",
+      "sha256": "e85d453af95cdff88e6df509fdad1950ddc0f0eda1e0289980f0ac7f07e51714",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0339_E01-S181_preparar_proposta_operacional.sql",
+          "objeto": "comercial.proposta_origens_operacionais"
+        },
+        {
+          "referenciada_por": "0378_E01-S183_proposta_operacional_publica.sql",
+          "objeto": "comercial.proposta_origens_operacionais"
+        },
+        {
+          "referenciada_por": "0389_E01-S181_origem_sem_oportunidade.sql",
+          "objeto": "comercial.sso_listar_orcamentos_os"
+        }
+      ]
+    },
+    {
       "caminho": "supabase/migrations/0337_E01-S166_materializacao_calendario_preparada.sql",
       "git_blob": "8938b79bd3dd6848d36dca46a80fada420fdf1df",
       "sha256": "c76a8aeb49d848b9f2f05e7aa8db3ca0ced212511c9b6aaafe18a8963e4e23f5",
@@ -1115,6 +1303,30 @@
         {
           "referenciada_por": "0351_E01-S166_consulta_candidatas_vinculadas.sql",
           "objeto": "pcm.ocorrencias_rotina_preparadas"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0339_E01-S181_preparar_proposta_operacional.sql",
+      "git_blob": "90de41466a1f4c7567a64ded1ba3ce92f10d0c69",
+      "sha256": "a515295fff936c713ae08cc30381d2cd9dcd9eed9c7454ddc7f003e18be4e44f",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0389_E01-S181_origem_sem_oportunidade.sql",
+          "objeto": "comercial.sso_orcamento_operacional_comandos"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "comercial.sso_orcamento_operacional_comandos"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "comercial.sso_preparar_orcamento_operacional"
         }
       ]
     },
@@ -1374,6 +1586,30 @@
       ]
     },
     {
+      "caminho": "supabase/migrations/0378_E01-S183_proposta_operacional_publica.sql",
+      "git_blob": "5fb77dc9b5b60cb9d8b5bfc39516ca486ecc080a",
+      "sha256": "58d56d711c5f7b4ece27c3eac12e39e2a9aa7b789cdb4de713486089db3a18dd",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "comercial.sso_portal_propostas_os"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "comercial.sso_portal_decidir_proposta_versionada"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "comercial.sso_portal_proposta_comandos"
+        }
+      ]
+    },
+    {
       "caminho": "supabase/migrations/0383_E01-S176_vinculos_fotos_grupos.sql",
       "git_blob": "dd349e8714607a4286ff0586fb5af4c311ed22a8",
       "sha256": "ffb7cf21e30ef08d4d05d27af08e347b000de7c3b878af0386fba10fb5a9da5c",
@@ -1424,6 +1660,50 @@
       "razoes": []
     },
     {
+      "caminho": "supabase/migrations/0389_E01-S181_origem_sem_oportunidade.sql",
+      "git_blob": "d3ba8def4ca9c9748e5c4e28f9a9f99776a2561b",
+      "sha256": "230aceb9d24bc6e56d8264a3d610090b71b19a33c6bea679d968b0ba58e9f003",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "comercial.propostas"
+        },
+        {
+          "referenciada_por": "0393_E01-S181_composicao_origem_operacional.sql",
+          "objeto": "comercial.sso_origem_operacional_gate"
+        },
+        {
+          "referenciada_por": "0396_E01-S181_publicacao_orcamento_operacional.sql",
+          "objeto": "comercial.propostas"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0393_E01-S181_composicao_origem_operacional.sql",
+      "git_blob": "b5cb938f62ce7d563f383242021d10543b5824b1",
+      "sha256": "b7c7ddd563c586647fec958228f9184779053d44567f7d49371c76cb684bf2c8",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0396_E01-S181_publicacao_orcamento_operacional.sql",
+          "objeto": "comercial.sso_portal_propostas_os"
+        },
+        {
+          "referenciada_por": "0445_E01-S181_excecao_preco_operacional.sql",
+          "objeto": "comercial.sso_portal_decidir_proposta_versionada"
+        }
+      ]
+    },
+    {
       "caminho": "supabase/migrations/0394_E01-S177_rascunho_codigo_staging.sql",
       "git_blob": "299382b22dab55b2a2e23de01c1bf9a94de2a100",
       "sha256": "c0928ae7e7877588061b1de37b79a6ff3a733595145afc411f014007613659bd",
@@ -1460,6 +1740,26 @@
         {
           "referenciada_por": "1564_E01-S186_preflight_mediado.sql",
           "objeto": "pcm.migracao_preflight_gate"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0396_E01-S181_publicacao_orcamento_operacional.sql",
+      "git_blob": "cbfac2555546e26519c04335dd8cadaad9e060f4",
+      "sha256": "98307fab05985216540b97fb76f09763b6b06c367edc6aa4ba61729cd8b4b582",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        },
+        {
+          "referenciada_por": "0445_E01-S181_excecao_preco_operacional.sql",
+          "objeto": "comercial.sso_transicionar_orcamento_sem_oportunidade"
+        },
+        {
+          "referenciada_por": "0445_E01-S181_excecao_preco_operacional.sql",
+          "objeto": "comercial.sso_orcamento_publicacoes"
         }
       ]
     },
@@ -1658,6 +1958,30 @@
       ]
     },
     {
+      "caminho": "supabase/migrations/0434_E01-S181_painel_propostas_operacionais.sql",
+      "git_blob": "4dcd9ae1ca7b50390e1f6f6b6d14dd9b62653b98",
+      "sha256": "8800fb6c0f44becb795560efd55e487ca181e3dec720fbba138b72cd440869e4",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0437_E01-S181_dispensa_orcamento.sql",
+      "git_blob": "93e13b4316e51224af865a68f2f61d5f9ef1af9b",
+      "sha256": "e1f8ff33b7ce38cccaa8f6cc468c517a6180eab52d190b46d741d0d0f2bab427",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
+        }
+      ]
+    },
+    {
       "caminho": "supabase/migrations/0438_E01-S174_vincular_chamado_existente.sql",
       "git_blob": "c98bb135b785e2a64738c4c914327df64eeecbc5",
       "sha256": "e13d679caee4b0da6ae0f78cad2f15c1c46ba38bcfc3f1aaf40c8d9237812bfa",
@@ -1694,6 +2018,18 @@
         {
           "referenciada_por": "1106_E01-S174_ciclos_vinculo_privados.sql",
           "objeto": "pcm.sso_backlog_parcelas"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0445_E01-S181_excecao_preco_operacional.sql",
+      "git_blob": "07ad2894b2c9535e60008b3614a15a2f02a856ec",
+      "sha256": "8d205b87ba12fb7a4653830d4f9fbd4c5a2af9ee79973b0cb2ba0b7662b8923d",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
         }
       ]
     },
@@ -1830,6 +2166,18 @@
         {
           "referenciada_por": "0468_E01-S166_previa_visitas_rotina.sql",
           "objeto": "pcm.rotina_serie_vigencias"
+        }
+      ]
+    },
+    {
+      "caminho": "supabase/migrations/0465_E01-S183_anexos_publicos_os.sql",
+      "git_blob": "183baffb9b1fb0738fadbb94a0fca25b355d2b6e",
+      "sha256": "1bf0c7b7499bf94ac599cecb357a3b7821d82e8ae60f5f5e5740a7c238709881",
+      "tipo": "sequência original S181/S183 ou candidata transitiva",
+      "razoes": [
+        {
+          "referenciada_por": "1795 ou dependência direta 0434/0437/0445/0465",
+          "objeto": "sequência original / referências de catálogo"
         }
       ]
     },

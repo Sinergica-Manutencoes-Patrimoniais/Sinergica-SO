@@ -158,7 +158,7 @@ export function MovimentarComponente({
       )}
       {!recuperacao.falhou && pendente && (
         <button type="button" disabled={ocupado} onClick={() => void executar(pendente)}>
-          {ocupado ? "Salvando..." : "Tentar movimentação novamente"}
+          {ocupado ? "Salvando…" : "Tentar movimentação novamente"}
         </button>
       )}
       {!recuperacao.falhou && !pendente && (

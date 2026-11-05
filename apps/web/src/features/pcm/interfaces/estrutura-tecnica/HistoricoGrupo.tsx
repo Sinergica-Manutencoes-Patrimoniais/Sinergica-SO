@@ -50,7 +50,7 @@ export function HistoricoGrupo({
     gcTime: 0,
   });
   if (historico.isPending || historico.isFetching)
-    return <output>Carregando histórico...</output>;
+    return <output>Carregando histórico…</output>;
   if (historico.isError)
     return (
       <div role="alert">
@@ -123,7 +123,7 @@ export function HistoricoGrupo({
           disabled={historico.isFetchingNextPage}
           onClick={() => void historico.fetchNextPage()}
         >
-          {historico.isFetchingNextPage ? "Carregando..." : "Carregar mais eventos"}
+          {historico.isFetchingNextPage ? "Carregando…" : "Carregar mais eventos"}
         </button>
       )}
     </div>

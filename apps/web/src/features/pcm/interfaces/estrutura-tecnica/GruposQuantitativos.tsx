@@ -93,7 +93,7 @@ function GruposQuantitativosContexto({
     permissao.data?.leitura === true && !permissao.isFetching && !permissao.isError,
   );
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso aos grupos...</output>;
+    return <output>Verificando acesso aos grupos…</output>;
   if (permissao.isError)
     return (
       <section>
@@ -286,7 +286,7 @@ function GruposQuantitativosContexto({
           </p>
           {erroSalvar && <p role="alert">{erroSalvar}</p>}
           <button type="button" disabled={salvar.isPending} onClick={() => void enviar(pendente)}>
-            {salvar.isPending ? "Salvando..." : "Tentar salvar novamente"}
+            {salvar.isPending ? "Salvando…" : "Tentar salvar novamente"}
           </button>
         </div>
       )}
@@ -450,8 +450,8 @@ function GruposQuantitativosContexto({
           </button>
         </form>
       )}
-      {grupos.isPending && <output>Carregando grupos...</output>}
-      {grupos.isFetching && !grupos.isPending && <output>Atualizando grupos...</output>}
+      {grupos.isPending && <output>Carregando grupos…</output>}
+      {grupos.isFetching && !grupos.isPending && <output>Atualizando grupos…</output>}
       {grupos.isError && (
         <div role="alert">
           Não foi possível carregar os grupos.{" "}
@@ -563,7 +563,7 @@ function GruposQuantitativosContexto({
           disabled={grupos.isFetchingNextPage}
           onClick={() => void grupos.fetchNextPage()}
         >
-          {grupos.isFetchingNextPage ? "Carregando..." : "Carregar mais"}
+          {grupos.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
         </button>
       )}
       {permissao.data.gestao && <GruposInativos userId={userId} clienteId={clienteId} locais={locais}/>}

@@ -67,9 +67,9 @@ it("não oferece movimentação nem consulta destinos sem capacidade", async () 
       />
     </QueryClientProvider>,
   );
-  await screen.findByText("Verificando permissão de movimentação...");
+  await screen.findByText("Verificando permissão de movimentação…");
   await waitForElementToBeRemoved(() =>
-    screen.queryByText("Verificando permissão de movimentação..."),
+    screen.queryByText("Verificando permissão de movimentação…"),
   );
   expect(screen.queryByRole("button", { name: "Movimentar Componente" })).toBeNull();
   expect(api.listarDestinos).not.toHaveBeenCalled();

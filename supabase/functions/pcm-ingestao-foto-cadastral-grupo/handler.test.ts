@@ -47,3 +47,7 @@ Deno.test("conflito de reserva não faz upload", async () => {
   const x = setup(); x.deps.servico = (() => ({ schema: () => ({ rpc: (_: string, args: Record<string, unknown>) => Promise.resolve(args.p_operacao ? { data: null, error: { code: "23505" } } : { data: true, error: null }) }) })) as unknown as Dependencias["servico"];
   equal((await processarFotoCadastral(entrada(), x.deps)).status, 409); equal(x.eventos.length, 0);
 });
+Deno.test("permissão revogada retorna indisponível sem enviar bytes", async () => {
+  const x = setup(); x.deps.servico = (() => ({ schema: () => ({ rpc: (_: string, args: Record<string, unknown>) => Promise.resolve(args.p_operacao ? { data: null, error: { code: "42501" } } : { data: true, error: null }) }) })) as unknown as Dependencias["servico"];
+  equal((await processarFotoCadastral(entrada(), x.deps)).status, 404); equal(x.eventos.length, 0);
+});

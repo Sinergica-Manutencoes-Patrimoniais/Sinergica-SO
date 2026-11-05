@@ -51,7 +51,7 @@ it("oculta histórico antigo enquanto acesso é revalidado e após recusa", asyn
   render(<QueryClientProvider client={client}><HistoricoGrupo userId="u" clienteId="c" grupoId="g" /></QueryClientProvider>);
   expect(await screen.findByText("Grupo criado")).toBeTruthy();
   void client.invalidateQueries({ queryKey: estruturaTecnicaQueryKeys.historico("u", "c", "g") });
-  await screen.findByText("Carregando histórico...");
+  await screen.findByText("Carregando histórico…");
   expect(screen.queryByText("Grupo criado")).toBeNull();
   await act(async () => { recusar(new Error("acesso negado")); });
   expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível carregar o histórico");
@@ -64,7 +64,7 @@ it("oculta páginas anteriores ao verificar acesso para mais eventos", async () 
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><HistoricoGrupo userId="u" clienteId="c" grupoId="g" /></QueryClientProvider>);
   fireEvent.click(await screen.findByRole("button", { name: "Carregar mais eventos" }));
-  await screen.findByText("Carregando histórico...");
+  await screen.findByText("Carregando histórico…");
   expect(screen.queryByText("Grupo criado")).toBeNull();
   await act(async () => { recusar(new Error("acesso negado")); });
   expect(await screen.findByRole("alert")).toBeTruthy();

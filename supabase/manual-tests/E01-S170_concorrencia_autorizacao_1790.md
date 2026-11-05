@@ -1,3 +1,9 @@
+---
+name: E01-S170_concorrencia_autorizacao_1790
+description: Roteiro de concorrência de autorização S170 em ambiente descartável.
+alwaysApply: false
+---
+
 # S170: disputa entre administração e revogação
 
 Roteiro preparado, **não executado**. Usar somente banco descartável isolado, com migrations aplicadas em ordem até pelo menos 1790 e pgTAP disponível. Nenhum gate precisa ser ativado e nenhuma guarda deve ser desabilitada. Não usar banco de desenvolvimento ou produção. Os dois terminais precisam estar conectados ao mesmo clone com READ COMMITTED.

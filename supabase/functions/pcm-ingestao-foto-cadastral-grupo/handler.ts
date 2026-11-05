@@ -34,7 +34,7 @@ export async function processarFotoCadastral(req: Request, deps: Dependencias): 
     if (!jpeg && !png) return falha(415); const tipo = jpeg ? "image/jpeg" : "image/png", digest = await hash(bytes);
     const rpc = async (operacao: string, objeto: string | null = null) => {
       const { data, error } = await servico.schema("pcm").rpc("sso_ingestao_foto_cadastral_grupo_servico", { p_operacao: operacao, p_ator: usuario.userId, p_papel: usuario.papel, p_cliente: clienteId, p_grupo: grupoId, p_request: requestId, p_digest: digest, p_tipo: tipo, p_objeto: objeto });
-      if (error?.code === "23505") throw new Error("conflito"); if (error) throw new Error("indisponivel"); return data;
+      if (error?.code === "23505") throw new Error("conflito"); if (error?.code === "42501") throw new Error("sem_acesso"); if (error) throw new Error("indisponivel"); return data;
     };
     const confirmarSessao = async () => { const atual = await deps.identidade(req); if (atual.userId !== usuario.userId || atual.papel !== usuario.papel) throw new Error("sessao_alterada"); };
     await confirmarSessao(); const reserva = await rpc("reservar");
@@ -56,5 +56,5 @@ export async function processarFotoCadastral(req: Request, deps: Dependencias): 
     await confirmarSessao(); const resultado = await rpc("confirmar", objeto.objetoId); await confirmarSessao();
     if (resultado?.estado !== "concluida" || resultado.requestId !== requestId || typeof resultado.fotoId !== "string" || !uuid.test(resultado.fotoId)) return falha(503);
     return new Response(JSON.stringify({ requestId, fotoId: resultado.fotoId }), { headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "private, no-store" } });
-  } catch (e) { return falha(e instanceof Error && e.message === "conflito" ? 409 : 503); }
+  } catch (e) { return falha(e instanceof Error && e.message === "conflito" ? 409 : e instanceof Error && e.message === "sem_acesso" ? 404 : 503); }
 }

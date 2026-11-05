@@ -159,7 +159,7 @@ describe("consulta de Grupos Quantitativos", () => {
     gateway.autorizarAcao.mockResolvedValue(false);
     montar();
     await waitFor(() => expect(gateway.autorizarAcao).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(screen.queryByText("Verificando acesso aos grupos...")).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Verificando acesso aos grupos…")).toBeNull());
     expect(gateway.listarGrupos).not.toHaveBeenCalled();
   });
   it("isola consultas de dois Clientes na mesma sessão", async () => {
@@ -188,7 +188,7 @@ describe("consulta de Grupos Quantitativos", () => {
     await waitFor(() =>
       expect(gateway.autorizarAcao).toHaveBeenCalledWith("cadastro.ler", "cliente-b"),
     );
-    await waitFor(() => expect(screen.queryByText("Verificando acesso aos grupos...")).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Verificando acesso aos grupos…")).toBeNull());
     expect(screen.queryByText(/Luminárias — 20 unidades/)).toBeNull();
     expect(gateway.listarGrupos).not.toHaveBeenCalledWith(
       "cliente-b",
@@ -340,7 +340,7 @@ describe("consulta de Grupos Quantitativos", () => {
       queryKey: ["estrutura-tecnica", "usuario", "cliente-a", "grupos"],
     });
     await waitFor(() => expect(gateway.listarGrupos).toHaveBeenCalledTimes(2));
-    await screen.findByText("Atualizando grupos...");
+    await screen.findByText("Atualizando grupos…");
     expect(
       (screen.getByRole("button", { name: "Salvar grupo" }) as HTMLButtonElement).disabled,
     ).toBe(true);

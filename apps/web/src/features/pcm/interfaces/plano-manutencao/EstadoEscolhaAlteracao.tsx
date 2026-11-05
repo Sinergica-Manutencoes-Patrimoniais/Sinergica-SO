@@ -35,7 +35,7 @@ function Consulta(props: Props) {
     }
     await conferirSessaoDiagnostico(userId, signal); return { ...r, novaData, novaVisita };
   } });
-  if (q.isFetching) return <p role="status">Consultando decisão da ocorrência...</p>;
+  if (q.isFetching) return <p role="status">Consultando decisão da ocorrência…</p>;
   if (q.isError || !q.data) return <p role="alert">Não foi possível consultar a decisão. <button type="button" onClick={() => void q.refetch()}>Tentar novamente</button></p>;
   if (q.data.registrada && q.data.atual) return <p>Alteração escolhida para esta ocorrência. A nova versão só será aplicada após aprovação e vigência; a OS existente não será alterada.</p>;
   if (q.data.registrada) return <p role="alert">A escolha de alteração está desatualizada. Confira a comparação e registre nova decisão.</p>;

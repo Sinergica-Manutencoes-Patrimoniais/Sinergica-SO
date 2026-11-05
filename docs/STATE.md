@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — fotos de Grupo em serviços isolados (Codex)
+
+- Harness `apps/web/e2e/s176-fotos-isolado/executar.py` passou em rede interna descartável com Auth, PostgREST, Edge Runtime e Storage: usuário/Cliente sintéticos, upload, recibo e replay idênticos, uma reserva/foto/objeto no caso, leitura de bytes, rejeição após adulteração e 404 de envio/leitura após revogação. Schema-only, gates sintéticos e outbox vazia; recursos próprios removidos. Credenciais sintéticas ficam visíveis ao daemon Docker durante o ensaio; não são gravadas no projeto.
+- Este ensaio não comprova duas sessões concorrentes, recuperação após resposta incerta, ACL de produção ou todas as formas de arquivo. As duas funções Edge seguem sem publicação e os gates permanecem fechados; CI geral e recorte ainda estão pendentes.
+
 ## 2026-11-05 — fotos cadastrais de Grupo (Codex)
 
 - S176: ADR-1660/1661 e migrations 1802/1803 preparam leitura e envio de fotos cadastrais em bucket próprio, separados da rota de atestado. Novas fotos registram digest conferido na leitura; fotos antigas sem digest permanecem identificadas como não verificadas. Gates e flags iniciam fechados; Storage e banco não formam transação única.

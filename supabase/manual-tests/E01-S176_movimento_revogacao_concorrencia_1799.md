@@ -1,3 +1,9 @@
+---
+name: E01-S176_movimento_revogacao_concorrencia_1799
+description: Roteiro de concorrência de movimentação e revogação S176 em ambiente descartável.
+alwaysApply: false
+---
+
 # S176: movimentação e revogação concorrentes
 
 Roteiro preparado, **não executado**. Usar exclusivamente clone descartável sem rede externa, com migrations aplicadas em ordem até 1799 ou posterior. Não desabilitar guardas nem copiar dados do clone. O formato das entidades segue `supabase/tests/E01-S176_estrutura_tecnica.test.sql`, mas a preparação abaixo é independente: aquela fixture termina em rollback e não pode ser compartilhada diretamente entre sessões.

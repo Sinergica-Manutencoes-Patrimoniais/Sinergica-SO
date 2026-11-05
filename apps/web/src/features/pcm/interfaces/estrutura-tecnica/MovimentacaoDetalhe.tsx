@@ -84,7 +84,7 @@ function MovimentacaoContexto({ userId, clienteId, item, onConcluido }: Moviment
   const dadosLocais = locais.data ?? anteriores.current.locais;
   const dadosPais = pais.data ?? anteriores.current.pais;
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando permissão de movimentação...</output>;
+    return <output>Verificando permissão de movimentação…</output>;
   if (permissao.isError)
     return (
       <div role="alert">
@@ -100,7 +100,7 @@ function MovimentacaoContexto({ userId, clienteId, item, onConcluido }: Moviment
       <button type="button" onClick={() => setAberto((atual) => !atual)}>
         {aberto ? "Fechar movimentação" : "Movimentar Componente"}
       </button>
-      {aberto && consultas.some((q) => q.isPending) && <output>Carregando destinos...</output>}
+      {aberto && consultas.some((q) => q.isPending) && <output>Carregando destinos…</output>}
       {aberto && consultas.some((q) => q.isError) && (
         <div role="alert">
           Não foi possível carregar destinos.{" "}

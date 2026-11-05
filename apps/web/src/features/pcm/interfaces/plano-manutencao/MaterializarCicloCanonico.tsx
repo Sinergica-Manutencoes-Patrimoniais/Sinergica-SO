@@ -110,7 +110,7 @@ function ComOrigem(props: Props) {
       return r;
     },
   });
-  if (q.isFetching || q.isPending) return <output>Conferindo origem do ciclo...</output>;
+  if (q.isFetching || q.isPending) return <output>Conferindo origem do ciclo…</output>;
   if (q.isError || !q.data)
     return (
       <p role="alert">

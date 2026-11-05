@@ -1,6 +1,8 @@
 # Inventário estático preliminar — base origin/main
 
 **Atenção:** gerado a partir do backup `84c9fcf`; não inclui alterações posteriores, como as migrations 1802 e 1803. Não aplicar ou usar como lista final de entrega. Regerar e revisar o fechamento depois da conclusão do lote.
+
+**Atualização:** o manifesto contém 640 candidatas após identificar 18 migrations adicionais, incluindo 0434/0437/0445/0465 necessárias ao catálogo da 1795. Estas também introduzem funcionalidades e alterações de outras stories. O relatório textual abaixo ainda representa a primeira seleção de 622; a dependência transitiva e os efeitos de ambas as seleções permanecem sem comprovação.
 Migrations novas: 1548 ; raízes de quatro stories: 470 ; candidatas ao fecho: 622 ; adicionais por referência textual: 152
 
 ## Candidatas adicionais por referência (última definição ou ALTER anterior; apenas hipótese)
