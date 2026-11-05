@@ -364,3 +364,7 @@ apps/web/src/lib/supabase-client.ts — importado por apps/web/src/features/pcm/
 ## Imports relativos não resolvidos por este método
 
 Limites: regex não interpreta SQL, versões/sobrecargas, triggers indiretos, DDL dinâmico, dependências inversas, aliases TS, imports dinâmicos não literais, flags, segurança ou dados; última definição não implica fecho suficiente. Conferir base e sequência com compilação em banco descartável.
+
+## Revisão candidata de fotos cadastrais
+
+O [manifesto de fotos cadastrais](recorte-candidato-fotos-c2efe94.json) usa o snapshot `c2efe943a38c5a91f8e04781cf207315b9e1795a` e registra as migrations 1802/1803 e fontes relacionadas como candidatas. A revisão não altera o snapshot original nem comprova o fechamento das dependências; não foi aplicada ao banco ou implantada. Permanecem a revisão transitiva, as dependências de Storage/Auth e as pendências S181/S183 da migration 1795.

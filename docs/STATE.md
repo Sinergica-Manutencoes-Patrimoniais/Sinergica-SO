@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — repetição e concorrência de fotos (Codex)
+
+- No harness de fotos S176, duas solicitações simultâneas com o mesmo requestId convergiram e o replay retornou a mesma foto; no caso sintético, duas solicitações distintas produziram exatamente duas reservas, fotos e objetos. A barreira foi no cliente e não forçou uma ordem interna específica.
+- Em outro ensaio isolado, o cliente enviou o pedido e fechou o socket sem ler a resposta; após confirmar o commit no banco, a repetição retornou a mesma foto, com uma reserva/foto/objeto. Não simula interrupção durante escrita incompleta. Ambos usaram rede interna, dados sintéticos e cleanup dos recursos próprios, sem Auvo.
+- O manifesto candidato de fotos baseado no backup `c2efe94` está preservado separadamente; não demonstra fechamento do recorte. CI, publicação das Edge Functions, revisão de rollout e homologação seguem pendentes.
+
 ## 2026-11-05 — fotos de Grupo em serviços isolados (Codex)
 
 - Harness `apps/web/e2e/s176-fotos-isolado/executar.py` passou em rede interna descartável com Auth, PostgREST, Edge Runtime e Storage: usuário/Cliente sintéticos, upload, recibo e replay idênticos, uma reserva/foto/objeto no caso, leitura de bytes, rejeição após adulteração e 404 de envio/leitura após revogação. Schema-only, gates sintéticos e outbox vazia; recursos próprios removidos. Credenciais sintéticas ficam visíveis ao daemon Docker durante o ensaio; não são gravadas no projeto.

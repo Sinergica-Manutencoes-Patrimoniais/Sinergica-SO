@@ -178,6 +178,9 @@ def main():
         for key, suffix in (("pcm-ingestao-foto-cadastral-grupo", "-upload"), ("pcm-foto-cadastral-grupo-segura", "-read")):
             iniciar(NET + suffix, IMAGES[4], base_env, ["start", "--main-service", "/tmp", "--port", "9000"], bundles[key])
             wait_http("http://" + NET + suffix + ":9000/", {405})
+        if "--desconexao" in sys.argv[1:]:
+            iniciar(NET + "-desconectar", IMAGES[4], {}, ["start", "--main-service", "/tmp", "--port", "9000"], HERE / "desconectar.ts")
+            wait_http("http://" + NET + "-desconectar:9000/", {405})
         executar_fixture(gateway, anon, service)
 
 
@@ -202,6 +205,12 @@ def executar_fixture(gateway, anon, service):
     access = json.loads(response)["access_token"]
     common = {"Authorization": "Bearer " + access, "apikey": anon}
     png = bytes([137,80,78,71,13,10,26,10,0,0,0,0])
+    if "--desconexao" in sys.argv[1:]:
+        executar_desconexao(actor, client, group, request_id, common, png)
+        return
+    if "--novos" in sys.argv[1:]:
+        executar_novos(actor, client, group, common, png)
+        return
     upload = {**common, "Content-Type": "image/png", "x-request-id": request_id, "x-cliente-id": client, "x-grupo-id": group}
     address = "http://" + NET + "-upload:9000/"
     status, result = request(address, "POST", upload, png)
@@ -235,6 +244,91 @@ def executar_fixture(gateway, anon, service):
     if status != 404: raise RuntimeError("Leitura após revogação não confirmou recusa (" + str(status) + ")")
     if sql("select count(*) from pcm.auvo_sync_outbox") != "0": raise RuntimeError("Outbox sintética alterada")
     print("PASS: login, envio, replay, leitura, digest divergente e revogação em ambiente descartável.")
+
+
+def executar_novos(actor, client, group, common, png):
+    """Não repete jornada anterior; resposta descartada não simula timeout de rede."""
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+    import uuid
+
+    address = "http://" + NET + "-upload:9000/"
+    digest = hashlib.sha256(png).hexdigest()
+    ids = [str(uuid.uuid4()), str(uuid.uuid4())]
+
+    def headers(request_id):
+        return {**common, "Content-Type": "image/png", "x-request-id": request_id, "x-cliente-id": client, "x-grupo-id": group}
+
+    def recibo(status, body, request_id):
+        if status != 200: raise RuntimeError("Resposta de confirmação inesperada (" + str(status) + ")")
+        result = json.loads(body)
+        if not isinstance(result, dict) or set(result) != {"fotoId", "requestId"} or result["requestId"] != request_id:
+            raise RuntimeError("Recibo de confirmação divergente")
+        try: foto_id = str(uuid.UUID(result["fotoId"]))
+        except (KeyError, ValueError, TypeError, AttributeError): raise RuntimeError("Identificador inválido")
+        if foto_id != result["fotoId"]: raise RuntimeError("Identificador não canônico")
+        return foto_id
+
+    # A resposta completa chega ao cliente de ensaio e é descartada deliberadamente;
+    # isto verifica recuperação após resultado desconhecido, não perda na rede.
+    status, discarded = request(address, "POST", headers(ids[0]), png)
+    if status != 200: raise RuntimeError("Primeiro envio para resposta descartada falhou")
+    del discarded
+    status, retry_body = request(address, "POST", headers(ids[0]), png)
+    fotos = [recibo(status, retry_body, ids[0])]
+
+    barreira = Barrier(2, timeout=10)
+    def enviar():
+        barreira.wait()
+        return request(address, "POST", headers(ids[1]), png)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        tarefas = [pool.submit(enviar), pool.submit(enviar)]
+        resultados = [t.result(timeout=45) for t in tarefas]
+    vistos = [recibo(status, body, ids[1]) for status, body in resultados if status == 200]
+    if any(status not in (200, 409) for status, _ in resultados): raise RuntimeError("Resposta concorrente inesperada")
+    status, final_body = request(address, "POST", headers(ids[1]), png)
+    final_id = recibo(status, final_body, ids[1])
+    if any(value != final_id for value in vistos): raise RuntimeError("Recibos concorrentes divergentes")
+    fotos.append(final_id)
+    if fotos[0] == fotos[1]: raise RuntimeError("Solicitações distintas compartilharam foto")
+    for request_id, foto_id in zip(ids, fotos):
+        contagens = sql(f"select (select count(*) from pcm.sso_ingestao_foto_cadastral_grupo_reservas where request_id='{request_id}' and foto_id='{foto_id}' and grupo_id='{group}' and cliente_id='{client}' and ator_id='{actor}' and digest='{digest}' and confirmado_em is not null)::text||':'||(select count(*) from pcm.sso_grupo_fotos where id='{foto_id}' and grupo_id='{group}' and cliente_id='{client}')::text")
+        if contagens != "1:1": raise RuntimeError("Reserva ou foto divergente")
+    contagens = sql(f"select (select count(*) from pcm.sso_ingestao_foto_cadastral_grupo_reservas where grupo_id='{group}' and cliente_id='{client}')::text||':'||(select count(*) from pcm.sso_grupo_fotos where grupo_id='{group}' and cliente_id='{client}')::text||':'||(select count(*) from storage.objects where bucket_id='sso-grupos-fotos' and name like '{client}/{group}/%')::text")
+    if contagens != "2:2:2": raise RuntimeError("Duplicação ou objeto ausente")
+    sql(f"update config.sso_concessoes set ativa=false where usuario_id='{actor}' and cliente_id='{client}' and acao='cadastro.gerir'")
+    if sql(f"select count(*) from config.sso_concessoes where usuario_id='{actor}' and cliente_id='{client}' and acao='cadastro.gerir' and ativa") != "0": raise RuntimeError("Revogação não confirmada")
+    for request_id in ids:
+        status, _ = request(address, "POST", headers(request_id), png)
+        if status != 404: raise RuntimeError("Replay após revogação não foi recusado")
+    if sql("select count(*) from pcm.auvo_sync_outbox") != "0": raise RuntimeError("Outbox sintética alterada")
+    print("PASS: resposta descartada e duas requisições concorrentes; duas reservas, duas fotos e dois objetos, sem duplicação; replay revogado recusado.")
+
+
+def executar_desconexao(actor, client, group, request_id, common, png):
+    import uuid
+    corpo = json.dumps({"host": NET + "-upload", "cliente": client, "grupo": group, "request": request_id,
+        "authorization": common["Authorization"], "apikey": common["apikey"], "bytes": base64.b64encode(png).decode()}).encode()
+    status, _ = request("http://" + NET + "-desconectar:9000/", "POST", {"Content-Type": "application/json"}, corpo)
+    if status != 204: raise RuntimeError("Cliente sintético não concluiu escrita antes da desconexão")
+    # Não interpretar ausência de commit como falha do produto nem como sucesso do cenário.
+    foto = ""
+    for _ in range(30):
+        foto = sql(f"select coalesce(foto_id::text,'') from pcm.sso_ingestao_foto_cadastral_grupo_reservas where request_id='{request_id}' and ator_id='{actor}' and cliente_id='{client}' and grupo_id='{group}' and confirmado_em is not null")
+        if foto: break
+        time.sleep(1)
+    if not foto: raise RuntimeError("INCONCLUSIVO: desconexão não produziu confirmação no prazo")
+    try:
+        if str(uuid.UUID(foto)) != foto: raise ValueError()
+    except ValueError: raise RuntimeError("Identificador persistido inválido")
+    upload = {**common, "Content-Type": "image/png", "x-request-id": request_id, "x-cliente-id": client, "x-grupo-id": group}
+    status, body = request("http://" + NET + "-upload:9000/", "POST", upload, png)
+    if status != 200 or json.loads(body) != {"requestId": request_id, "fotoId": foto}: raise RuntimeError("Replay após desconexão divergente")
+    digest = hashlib.sha256(png).hexdigest()
+    contagens = sql(f"select (select count(*) from pcm.sso_ingestao_foto_cadastral_grupo_reservas where request_id='{request_id}' and foto_id='{foto}' and grupo_id='{group}' and cliente_id='{client}' and ator_id='{actor}' and digest='{digest}' and confirmado_em is not null)::text||':'||(select count(*) from pcm.sso_grupo_fotos where grupo_id='{group}' and cliente_id='{client}' and id='{foto}')::text||':'||(select count(*) from pcm.sso_grupo_fotos where grupo_id='{group}' and cliente_id='{client}')::text||':'||(select count(*) from storage.objects where bucket_id='sso-grupos-fotos' and name like '{client}/{group}/%')::text")
+    if contagens != "1:1:1:1": raise RuntimeError("Duplicação ou ausência após desconexão")
+    if sql("select count(*) from pcm.auvo_sync_outbox") != "0": raise RuntimeError("Outbox sintética alterada")
+    print("PASS: cliente fechou socket após escrita sem ler resposta; commit confirmado, replay igual, sem duplicação.")
 
 
 if __name__ == "__main__":
