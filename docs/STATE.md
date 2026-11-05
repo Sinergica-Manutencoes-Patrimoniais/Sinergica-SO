@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: esforço e replay de legado
+
+- `EsforcoGrupo` usa apenas mediador existente quando flag ligada; com ela desligada informa indisponibilidade, sem chamar núcleo privado. Nenhuma flag habilitada.
+- Integração legada e reabertura Grupo preservam pedido diante de 40001 genérico; reabertura libera reconferência apenas em P0012 específico inicial. Inspeção das funções 1735/1643/0718/0340 não localizou 40001 explícito de negócio no vínculo; não converter erro real genericamente. Testes foram alterados, sem execução.
+- **Não executar testes, typecheck, build ou ensaios por solicitação atual.** Alterações de UI, testes e migrations 1780–1785 aguardam validação em lote. Sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: inventário e proposta normativa mediados
 
 - ADR-1642/migration 1784 mediam inventário agregado de geração legada chamado pela UI; ADR-1643/migration 1785 mediam proposta de exigência normativa. Núcleos/gates permanecem privados, mediadores conferem ator/Cliente e permissão sob trava. Revisão estática independente não apontou bypass concreto; UI oculta dados durante recarga/erro também nos diagnósticos 1780.

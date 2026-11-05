@@ -20,7 +20,7 @@ it.each(["calendario", "visita"] as const)("reabre %s apenas após confirmação
   expect(api.rpc).toHaveBeenCalledWith("sso_reabrir_fila_grupo", expect.objectContaining({ p_tipo: tipo, p_fila_revisao: 2, p_motivo: "Fonte mudou" }));
 });
 
-it.each([{ code: "40001" }, { code: "P0012", message: "fila_ou_revisao_indisponivel" }])("permite reconferir quando primeira tentativa recebe conflito definitivo $code", async (erro) => {
+it.each([{ code: "P0012", message: "fila_ou_revisao_indisponivel" }])("permite reconferir quando primeira tentativa recebe conflito definitivo $code", async (erro) => {
   api.rpc.mockResolvedValue({ error: erro, data: null });
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   render(<QueryClientProvider client={client}><ReabrirGrupoFila userId="usuario" clienteId={id(1)} planoId={id(2)} preparadaId={id(3)} tipo="calendario" revisao={2} /></QueryClientProvider>);
@@ -41,6 +41,17 @@ it.each([{ code: "40001" }, { code: "P0012", message: "fila_ou_revisao_indisponi
   await waitFor(() => expect(screen.getByText(/Resultado não confirmado/)).toBeInTheDocument());
   fireEvent.click(screen.getByRole("button", { name: "Repetir mesma reabertura" }));
   await waitFor(() => expect(api.rpc).toHaveBeenCalledTimes(2));
+  expect(sessionStorage.length).toBe(1);
+  expect(screen.getByRole("button", { name: "Repetir mesma reabertura" })).toBeInTheDocument();
+});
+
+it("preserva pedido no primeiro 40001 genérico", async () => {
+  api.rpc.mockResolvedValue({ error: { code: "40001" }, data: null });
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}><ReabrirGrupoFila userId="usuario" clienteId={id(1)} planoId={id(2)} preparadaId={id(3)} tipo="visita" revisao={2} /></QueryClientProvider>);
+  fireEvent.change(screen.getByLabelText("Motivo da reabertura"), { target: { value: "Fonte mudou" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /confirmo devolver/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Reabrir conferência" }));
+  await screen.findByText(/Resultado não confirmado/);
   expect(sessionStorage.length).toBe(1);
   expect(screen.getByRole("button", { name: "Repetir mesma reabertura" })).toBeInTheDocument();
 });

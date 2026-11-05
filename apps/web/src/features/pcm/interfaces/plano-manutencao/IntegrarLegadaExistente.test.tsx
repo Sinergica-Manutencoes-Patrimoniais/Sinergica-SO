@@ -17,3 +17,10 @@ for(const incerto of [false,true])it(incerto?"preserva tentativa idêntica em fa
  if(incerto){await screen.findByText(/Resultado não confirmado/);const repetir=screen.getByRole("button",{name:"Repetir mesmo vínculo"});await waitFor(()=>expect(repetir).toBeEnabled());fireEvent.click(repetir);await waitFor(()=>expect(api.rpc).toHaveBeenCalledTimes(2));expect(api.rpc.mock.calls[0]![1].p_request).toBe(api.rpc.mock.calls[1]![1].p_request);}
  else {expect(await screen.findByText(/Vínculo registrado/)).toBeTruthy();expect(screen.getByText("Fila para conferência")).toBeTruthy();expect(sessionStorage.length).toBe(0);}
 });
+
+it("preserva o pedido quando o primeiro envio retorna 40001 genérico",async()=>{
+ api.rpc.mockResolvedValue({data:null,error:{code:"40001",message:"serialization_failure"}});
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><IntegrarLegadaExistente userId={id(1)} clienteId={id(2)} planoId={id(3)} legadoId={id(4)} relacaoId={id(5)} preparadaId={id(6)} vencimento="2026-11-06" alvo="sistema A"/></QueryClientProvider>);
+ await screen.findByRole("option",{name:/Índice 2/});fireEvent.change(screen.getByLabelText("Ocorrência legada"),{target:{value:id(7)}});fireEvent.change(screen.getByLabelText("Motivo"),{target:{value:"Conferido"}});fireEvent.click(screen.getByRole("checkbox"));fireEvent.click(screen.getByRole("button",{name:"Vincular ocorrência existente"}));
+ await screen.findByText(/Resultado não confirmado/);expect(sessionStorage.length).toBe(1);expect(screen.getByRole("button",{name:"Repetir mesmo vínculo"})).toBeInTheDocument();
+});

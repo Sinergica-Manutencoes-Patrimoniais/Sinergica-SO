@@ -1,14 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../../../lib/supabase-client";
 type Esforco = { estado: "estimativa" | "tempo_a_validar"; motivo?: string; quantidadeAprovada?: string; tempoPorUnidadeMinutos?: string; esforcoMinutos: string | null; capacidadeReservada: false };
-export function EsforcoGrupo({ userId, clienteId, ocorrenciaId }: { userId: string; clienteId: string; ocorrenciaId: string }) {
+export function EsforcoGrupo(props: { userId: string; clienteId: string; ocorrenciaId: string }) {
+  if (import.meta.env.VITE_SSO_ESFORCO_GRUPO_MEDIADO_ENABLED !== "true") return <p>Consulta de esforço mediada indisponível.</p>;
+  return <EsforcoGrupoMediado {...props} />;
+}
+function EsforcoGrupoMediado({ userId, clienteId, ocorrenciaId }: { userId: string; clienteId: string; ocorrenciaId: string }) {
   const consulta = useQuery({ queryKey: ["esforco-grupo", userId, clienteId, ocorrenciaId], gcTime: 0, queryFn: async ({ signal }) => {
     const antes = await supabase.auth.getUser();
     if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
-    const parametros = { p_cliente_id: clienteId, p_ocorrencia_id: ocorrenciaId };
-    const requisicao = import.meta.env.VITE_SSO_ESFORCO_GRUPO_MEDIADO_ENABLED === "true"
-      ? supabase.schema("pcm").rpc("sso_prever_esforco_grupo_mediado", { ...parametros, p_ator_id: userId })
-      : supabase.schema("pcm").rpc("sso_prever_esforco_grupo", parametros);
+    const requisicao = supabase.schema("pcm").rpc("sso_prever_esforco_grupo_mediado", {
+      p_cliente_id: clienteId, p_ocorrencia_id: ocorrenciaId, p_ator_id: userId,
+    });
     const { data, error } = await requisicao.abortSignal(signal);
     if (error) throw error;
     if (!data || data.ocorrenciaId !== ocorrenciaId || !["estimativa", "tempo_a_validar"].includes(data.estado) || data.capacidadeReservada !== false) throw new Error("Estimativa inválida.");
