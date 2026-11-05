@@ -138,7 +138,7 @@ export function CompararCalendarioLegado({
             }}
           />
         </label>
-        <button>Comparar datas</button>
+        <button type="submit">Comparar datas</button>
       </form>
       {consulta.isError && (
         <p role="alert">

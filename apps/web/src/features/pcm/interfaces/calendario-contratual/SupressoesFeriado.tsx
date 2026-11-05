@@ -245,7 +245,7 @@ function Revogar({
               onChange={(e) => setMotivo(e.target.value)}
             />
           </label>
-          <button disabled={envio.isPending}>Revogar supressão</button>
+          <button type="submit" disabled={envio.isPending}>Revogar supressão</button>
         </form>
       )}
       {aviso && <p role="status">{aviso}</p>}

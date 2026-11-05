@@ -293,7 +293,7 @@ function Conteudo({
             />{" "}
             Conferi o ciclo e autorizo somente esta integração
           </label>
-          <button disabled={!confirmacaoAtual}>Processar ciclo</button>
+          <button type="submit" disabled={!confirmacaoAtual}>Processar ciclo</button>
         </fieldset>
       </form>
       {import.meta.env.VITE_SSO_INTEGRAR_LEGADA_EXISTENTE_ENABLED === "true" &&

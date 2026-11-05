@@ -461,7 +461,7 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
               />{" "}
               Conferi a classificação e a evidência
             </label>
-            <button disabled={!selecionadoItem || !classificacao || confirmado !== assinatura}>
+            <button type="submit" disabled={!selecionadoItem || !classificacao || confirmado !== assinatura}>
               Registrar classificação
             </button>
           </fieldset>

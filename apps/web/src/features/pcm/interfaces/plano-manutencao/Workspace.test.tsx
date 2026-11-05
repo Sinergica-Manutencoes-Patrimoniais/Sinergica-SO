@@ -1216,7 +1216,7 @@ it("cria Rotina completa e repete mesmo pedido após falha incerta", async () =>
   api.listarAlvos.mockImplementation(async (_plano: string, tipo: string) =>
     tipo === "sistema" ? [{ id: alvoId, nome: "Extintores" }] : [],
   );
-  api.adicionarRotinaCompleta.mockRejectedValueOnce(new Error("rede")).mockResolvedValueOnce({});
+  api.adicionarRotinaCompleta.mockRejectedValueOnce(new Error("rede")).mockImplementationOnce(async (c: { requestId: string; planoId: string; rotinaId: string; expectedRevision: number }) => ({ requestId: c.requestId, aggregateId: c.planoId, revision: c.expectedRevision + 1, created: true, state: "rascunho", linkedIds: { clienteId, rotinaId: c.rotinaId }, warnings: [] }));
   const tela = montar();
   fireEvent.click(await screen.findByRole("button", { name: "Ver Rotinas de Preventivo" }));
   fireEvent.click(await screen.findByRole("button", { name: "Nova Rotina" }));
@@ -1320,7 +1320,7 @@ it("edita Rotina em rascunho preservando identidade e revisão do Plano", async 
   api.listarAlvos.mockImplementation(async (_plano: string, tipo: string) =>
     tipo === "sistema" ? [{ id: alvoId, nome: "Extintores" }] : [],
   );
-  api.editarRotina.mockResolvedValue({});
+  api.editarRotina.mockImplementation(async (c: { requestId: string; planoId: string; rotinaId: string; expectedRevision: number }) => ({ requestId: c.requestId, aggregateId: c.planoId, revision: c.expectedRevision + 1, created: false, state: "rascunho", linkedIds: { clienteId, rotinaId: c.rotinaId }, warnings: [] }));
   montar();
   fireEvent.click(await screen.findByRole("button", { name: "Ver Rotinas de Preventivo" }));
   expect(await screen.findByText(/Data-base: 01\/11\/2026/)).toBeTruthy();
@@ -1524,7 +1524,12 @@ it("solicita vigência e apresenta avisos após aprovação", async () => {
   api.listarPlanos.mockResolvedValue([
     { id: planoId, clienteId, nome: "Preventivo", estado: "em_revisao", revisao: 3 },
   ]);
-  api.aprovarPlano.mockResolvedValue({ warnings: [{ rotinaId, pendencias: ["tempo_a_validar"] }] });
+  api.aprovarPlano.mockImplementation(async (c: { requestId: string; planoId: string; expectedRevision: number }) => ({
+    requestId: c.requestId, aggregateId: c.planoId, revision: c.expectedRevision + 1,
+    state: "aprovado", created: false,
+    linkedIds: { clienteId, versaoId: "16500000-0000-4000-8000-000000000091" },
+    warnings: [{ rotinaId, pendencias: ["tempo_a_validar"] }],
+  }));
   montar();
   fireEvent.click(await screen.findByRole("button", { name: "Aprovar Preventivo" }));
   fireEvent.change(screen.getByLabelText("Início da vigência"), {

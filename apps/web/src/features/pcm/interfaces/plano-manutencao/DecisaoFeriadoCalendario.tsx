@@ -340,7 +340,7 @@ function Formulario({
                   />{" "}
                   Conferi a fonte declarada e a data
                 </label>
-                <button disabled={!foto || confirmado !== foto}>Registrar tratamento PCM</button>
+                <button type="submit" disabled={!foto || confirmado !== foto}>Registrar tratamento PCM</button>
               </fieldset>
             </form>
           )}

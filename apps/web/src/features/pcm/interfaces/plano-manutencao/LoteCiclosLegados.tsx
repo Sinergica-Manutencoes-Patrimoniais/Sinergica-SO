@@ -308,7 +308,7 @@ function Conteudo({
             />{" "}
             Conferi os ciclos e a atomicidade
           </label>
-          <button disabled={janelaInvalida || !confirmacaoAtual || selecionadas.length === 0}>
+          <button type="submit" disabled={janelaInvalida || !confirmacaoAtual || selecionadas.length === 0}>
             Processar lote
           </button>
         </fieldset>

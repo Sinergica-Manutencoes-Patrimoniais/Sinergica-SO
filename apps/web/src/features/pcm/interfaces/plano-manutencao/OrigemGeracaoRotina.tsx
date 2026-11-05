@@ -308,7 +308,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: 
               />{" "}
               Confirmei a origem desta Rotina e alvo
             </label>
-            <button disabled={confirmacao !== identidade}>Declarar origem</button>
+            <button type="submit" disabled={confirmacao !== identidade}>Declarar origem</button>
           </fieldset>
         </form>
       )}

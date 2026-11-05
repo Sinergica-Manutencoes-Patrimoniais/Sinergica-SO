@@ -409,7 +409,7 @@ function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
               />{" "}
               Conferi vínculo, alvo e decisão
             </label>
-            <button disabled={!item || confirmado !== assinatura}>Registrar decisão</button>
+            <button type="submit" disabled={!item || confirmado !== assinatura}>Registrar decisão</button>
           </fieldset>
         </form>
       )}

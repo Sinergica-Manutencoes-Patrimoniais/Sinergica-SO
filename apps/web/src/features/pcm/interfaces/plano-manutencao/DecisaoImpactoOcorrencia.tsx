@@ -425,7 +425,7 @@ function DecisaoImpactoOcorrenciaAtiva({
             />{" "}
             Conferi a decisão parcial e suas limitações
           </label>
-          <button disabled={!dadosComparacao || confirmado !== assinaturaAtual}>
+          <button type="submit" disabled={!dadosComparacao || confirmado !== assinaturaAtual}>
             Registrar decisão
           </button>
         </fieldset>

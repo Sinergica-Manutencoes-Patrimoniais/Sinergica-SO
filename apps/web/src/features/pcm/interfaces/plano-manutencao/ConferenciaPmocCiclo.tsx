@@ -399,7 +399,7 @@ export function ConferenciaPmocCiclo({
               />{" "}
               Conferi a classificação e o vínculo quando aplicável
             </label>
-            <button disabled={!atual || !classificacao || confirmado !== assinatura}>
+            <button type="submit" disabled={!atual || !classificacao || confirmado !== assinatura}>
               Registrar conferência
             </button>
           </fieldset>

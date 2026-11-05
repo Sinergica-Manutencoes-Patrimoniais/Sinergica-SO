@@ -259,7 +259,7 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
             onChange={(e) => setBusca(e.target.value)}
           />
         </label>
-        <button disabled={!!pendente}>Buscar</button>
+        <button type="submit" disabled={!!pendente}>Buscar</button>
       </form>
       {fusos.isError && (
         <p role="alert">
@@ -363,7 +363,7 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
               />{" "}
               Confirmo a declaração, sem ativar geração
             </label>
-            <button disabled={confirmacao !== foto}>Registrar fuso</button>
+            <button type="submit" disabled={confirmacao !== foto}>Registrar fuso</button>
           </fieldset>
         </form>
       )}

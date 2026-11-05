@@ -222,7 +222,7 @@ export function ProporEncerramentoOcorrencia({
             />{" "}
             Confirmo somente a proposta, sem encerrar
           </label>
-          <button disabled={confirmado !== fotografia}>Registrar proposta</button>
+          <button type="submit" disabled={confirmado !== fotografia}>Registrar proposta</button>
         </fieldset>
       </form>
       {pendente === "invalido" && <p role="alert">Tentativa ilegível; procure suporte.</p>}

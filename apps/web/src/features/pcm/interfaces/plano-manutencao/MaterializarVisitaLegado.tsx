@@ -287,7 +287,7 @@ function Conteudo({
             />{" "}
             Conferi a Visita e autorizo somente o vínculo
           </label>
-          <button disabled={!confirmacaoAtual}>Processar Visita</button>
+          <button type="submit" disabled={!confirmacaoAtual}>Processar Visita</button>
         </fieldset>
       </form>
       {lista.hasNextPage && (

@@ -329,7 +329,7 @@ function Conteudo({
                 />{" "}
                 Confirmo retirar a geração futura desta ocorrência
               </label>
-              <button disabled={confirmacao !== assinatura}>Registrar retirada</button>
+              <button type="submit" disabled={confirmacao !== assinatura}>Registrar retirada</button>
             </fieldset>
           </form>
         )}

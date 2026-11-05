@@ -420,7 +420,7 @@ function DecisaoImpactoVisitaAtiva({
             />{" "}
             Conferi a decisão parcial e suas limitações
           </label>
-          <button
+          <button type="submit"
             disabled={
               !dadosComparacao || confirmado !== assinaturaAtual || !item?.ciclo_canonico_id
             }

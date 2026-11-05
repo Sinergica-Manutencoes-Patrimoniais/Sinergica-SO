@@ -226,7 +226,7 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
           Data de referência declarada{" "}
           <input type="date" required value={data} onChange={(e) => setData(e.target.value)} />
         </label>
-        <button disabled={!!pendente}>Consultar candidatos</button>
+        <button type="submit" disabled={!!pendente}>Consultar candidatos</button>
       </form>
       {candidatos.isError && (
         <p role="alert">
@@ -335,7 +335,7 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
               />{" "}
               Conferi o candidato e a data de referência
             </label>
-            <button disabled={!confirmacaoAtual}>Registrar triagem</button>
+            <button type="submit" disabled={!confirmacaoAtual}>Registrar triagem</button>
           </fieldset>
         </form>
       )}

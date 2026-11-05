@@ -366,7 +366,7 @@ export function ExigenciaLegalRotina({
               />{" "}
               Conferi a Rotina, a revisão e a declaração.
             </label>
-            <button disabled={!fotografia || confirmacao !== fotografia}>
+            <button type="submit" disabled={!fotografia || confirmacao !== fotografia}>
               Registrar declaração
             </button>
           </fieldset>

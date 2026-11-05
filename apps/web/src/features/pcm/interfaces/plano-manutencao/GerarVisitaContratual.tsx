@@ -355,7 +355,7 @@ function GerarVisitaContratualSessao({
             />{" "}
             Confirmei a cobertura declarada e o instante com offset, inclusive horário ambíguo
           </label>
-          <button disabled={!confirmacaoAtual}>Processar semana</button>
+          <button type="submit" disabled={!confirmacaoAtual}>Processar semana</button>
         </fieldset>
       </form>
       {regras.hasNextPage && (
