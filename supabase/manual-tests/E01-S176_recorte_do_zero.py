@@ -247,7 +247,7 @@ def main(opcoes):
     if opcoes.documento_1812:
         if not opcoes.upload_1811: raise RuntimeError("Documento 1812 exige --upload-1811")
         driver_documento = ROOT / "supabase/manual-tests/s178_documento_1812_isolada.py"
-        if hashlib.sha256(driver_documento.read_bytes()).hexdigest() != "8a168d5f4fc8ac94b5b4ca2ca86cf7249573f29b608c74b272bab8019aeca43d":
+        if hashlib.sha256(driver_documento.read_bytes()).hexdigest() != "278e38d646247691f62bceb0cab945ac112e1c314f2ef023547af68728670b81":
             raise RuntimeError("Driver de documento 1812 divergente")
         import s178_documento_1812_isolada
         documento_1812 = s178_documento_1812_isolada.preparar(ROOT)
