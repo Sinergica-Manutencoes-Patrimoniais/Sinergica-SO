@@ -152,7 +152,7 @@ def monitorar(container_id):
         if watchdog_stop.wait(1): return
 
 
-def main():
+def main(opcoes):
     global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id
     manifest = json.loads(MANIFEST.read_text())
     fotos = json.loads(FOTOS.read_text())
@@ -177,6 +177,8 @@ def main():
         blobs.append((item["caminho"], data))
     names = [p for p, _ in blobs]
     if len(names) != len(set(names)) or names != sorted(names): raise RuntimeError("Ordem ou duplicidade no manifesto")
+    if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
+        raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
     if len(numeros) != len(set(numeros)): raise RuntimeError("Número de migration duplicado entre base e candidatas")
     for imagem in (IMAGE, AUTH_IMAGE, REST_IMAGE, STORAGE_IMAGE):
@@ -325,17 +327,36 @@ def main():
         if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
         if min(shutil.disk_usage(ROOT).free, int(docker("exec", source_container, "df", "-Pk", "/").splitlines()[-1].split()[3]) * 1024) < budget:
             raise RuntimeError("Espaço atingiu limite durante aplicação do recorte")
+        if opcoes.diagnostico_0415 and Path(path).name.startswith("0415_"):
+            # Diagnóstico exclusivo em clone: valores iguais às declarações 0323/0334.
+            # A inserção não representa nem substitui as migrations originais.
+            diagnostico = b"""do $$
+begin
+ insert into config.sso_acoes(codigo,modulo,nivel,exige_concessao_individual) values
+ ('despesa_visita.gerir','pcm','escrita',false),('capacidade.gerir','pcm','escrita',false)
+ on conflict(codigo) do nothing;
+ if (select count(*) from config.sso_acoes where codigo in ('despesa_visita.gerir','capacidade.gerir') and modulo='pcm' and nivel='escrita' and exige_concessao_individual=false) <> 2 then
+   raise exception 'atributos_acoes_diagnostico_divergentes' using errcode='23514';
+ end if;
+end; $$;"""
+            sql(prefix + diagnostico, "ações sintéticas 0415")
+            print("DIAGNÓSTICO: ações antecipadas somente no clone; resultado NÃO prova recorte implantável.", flush=True)
         sql(prefix + data, path)
     print("Migrations candidatas aplicadas:", len(blobs), flush=True)
     if query("select (select count(*) from auth.users)=0 and (select count(*) from pcm.clientes)=0 and (select count(*) from vault.secrets)=0") != "t": raise RuntimeError("Banco contém dados inesperados")
     if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
-    print("PASS: compilação das migrations selecionadas em banco descartável; testes funcionais não executados.")
+    if opcoes.diagnostico_0415:
+        print("PASS DIAGNÓSTICO: ações antecipadas; NÃO prova recorte implantável nem testes funcionais.")
+    else:
+        print("PASS: compilação das migrations selecionadas em banco descartável; testes funcionais não executados.")
 
 
 if __name__ == "__main__":
-    argparse.ArgumentParser(description=__doc__).parse_args()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--diagnostico-0415", action="store_true", help="Antecipa duas ações somente no clone; resultado não prova recorte implantável.")
+    opcoes = parser.parse_args()
     code = 0
-    try: main()
+    try: main(opcoes)
     except Exception as exc: print("FALHA:", str(exc)); code = 1
     finally:
         watchdog_stop.set()
