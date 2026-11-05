@@ -189,7 +189,7 @@ def main(opcoes):
         if not opcoes.upload_1811:
             raise RuntimeError("Jornada HTTP exige --upload-1811 e clone descartável")
         for nome, esperado in (
-            ("apps/web/e2e/s168-retorno-isolado/jornada.py", "7b6c236f180cd53253a9db46e7938b3409330c32a3bb83eb0185c44e39a3c467"),
+            ("apps/web/e2e/s168-retorno-isolado/jornada.py", "90439ae590e0e2ff8fd8fca09b082126da4a26320be8c10a063c00b385f0818e"),
             ("supabase/tests/manual_E01-S168_origem_http_sintetica.sql", "429cccd18ec2b47d4b8819550df72223d9a1281cb08db1fa6a32b7dee2f72d40"),
         ):
             if hashlib.sha256((ROOT / nome).read_bytes()).hexdigest() != esperado:
@@ -766,7 +766,7 @@ end; $$;"""
                 return int(codigo), conteudo
             except (ValueError, TypeError): raise RuntimeError("Resposta HTTP inválida") from None
         jornada.executar(sql, query, requisitar, "http://" + AUTH_CONTAINER + ":9999", "http://" + REST_CONTAINER + ":3000", "http://" + STORAGE_CONTAINER + ":5000", chave("anon"), watchdog_triggered)
-        print("Jornada HTTP parcial concluída; não comprova Edge, aprovação ou origem real.", flush=True)
+        print("Jornada HTTP parcial concluída; não comprova Edge nem origem real.", flush=True)
     if concorrencia_1807 is not None:
         s165_concorrencia_1807_isolada.executar(CONTAINER, concorrencia_1807, watchdog_triggered)
     if concorrencia_1805:
