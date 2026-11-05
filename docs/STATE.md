@@ -8,6 +8,7 @@ alwaysApply: true
 
 ## 2026-11-04 — S165/S166: legado escolhido e concorrência de reserva
 
+- Revisão encontrou corrida entre avaliação e mudança de escolha de Visita. ADR-1582/migration 1726 serializam pelo Plano antes de ler a escolha; clone compilou migrations até 1726 e ensaio de duas sessões passou: avaliação concorrente recusada, retry após commit reconheceu escolha antiga como inválida. ACL global e revisão integral permanecem pendentes.
 - ADR-1581/migration 1725 consideram resolvida apenas ocorrência legada prevista, sem OS ou envio, com escolha explícita atual `somente_legado` e fotografia revalidada. Migrations 1614–1725 compilaram em clone; fixtures de Calendário e Visita passaram para escolha, alteração de fotografia/efeito, OS e substituição. A restauração excluiu cron e exigiu ajuste de ACL; não prova aprovação real nem cobertura integral.
 - Em clone até 1724, disputa autenticada da mesma reserva de Calendário preservou uma escolha, recusou fotografia antiga e aceitou replay. Não cobre Visita, planos distintos, aprovação ou geração concorrentes. Roteiro: `supabase/tests/manual_E01-S165_reserva_rascunho_concorrencia.md`.
 - Interface invalida identidade de consulta de Visita na mudança de rascunho para aprovada; teste focado 4/4 passou. Próximo passo: provar integração completa e concorrência das demais fontes e realizar revisão adversarial; guarda 1045 e homologação permanecem bloqueadas. Sem Auvo real ou deploy.
