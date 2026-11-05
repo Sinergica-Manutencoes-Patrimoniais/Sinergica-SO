@@ -7,6 +7,10 @@ vi.mock("../../../../lib/supabase-client", () => ({
   supabase: { auth: { getUser: externo.getUser }, schema: () => ({ rpc: externo.rpc }) },
 }));
 import { IncluirFilaSelecionada } from "./IncluirFilaSelecionada";
+function exigir<T>(valor: T | null | undefined): T {
+  if (valor == null) throw new Error("Valor esperado ausente");
+  return valor;
+}
 const id = (n: number) => `16610000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const itens = [
   { preparada_id: id(1), vencimento_original: "2026-11-10", rotina_id: id(3), alvo_id: id(4) },
@@ -63,12 +67,12 @@ it("inclui Visitas independentemente e retoma somente o item incerto com o mesmo
   expect(screen.getByText(/Confirmações: 1 de 2/)).toHaveTextContent(
     "os já confirmados permanecem incluídos",
   );
-  const interrompido = externo.rpc.mock.calls[1]![1];
-  expect(externo.rpc.mock.calls[0]![0]).toBe("sso_alterar_fila_visita");
+  const interrompido = exigir(externo.rpc.mock.calls[1])[1];
+  expect(exigir(externo.rpc.mock.calls[0])[0]).toBe("sso_alterar_fila_visita");
   expect(sessionStorage.key(0)).toContain("sso-fila-visitas-selecionadas");
   fireEvent.click(screen.getByRole("button", { name: "Retomar mesma sequência" }));
   await waitFor(() => expect(screen.getByText(/Entradas registradas/)).toBeInTheDocument());
-  expect(externo.rpc.mock.calls[2]![1]).toEqual(interrompido);
+  expect(exigir(externo.rpc.mock.calls[2])[1]).toEqual(interrompido);
   expect(screen.getByLabelText("Resultado da inclusão")).toHaveTextContent(
     "verificação necessária",
   );
@@ -83,6 +87,6 @@ it("mantém a RPC de calendário existente", async () => {
   fireEvent.click(screen.getByRole("checkbox", { name: /conferi os ciclos/i }));
   fireEvent.click(screen.getByRole("button", { name: "Incluir selecionadas" }));
   await screen.findByText(/Sequência interrompida/);
-  expect(externo.rpc.mock.calls[0]![0]).toBe("sso_alterar_fila_preventiva_pcm");
+  expect(exigir(externo.rpc.mock.calls[0])[0]).toBe("sso_alterar_fila_preventiva_pcm");
   expect(sessionStorage.key(0)).toContain("sso-fila-selecionada");
 });

@@ -16,6 +16,10 @@ vi.mock("./FilaPreventivaPcm", () => ({
 }));
 import { MaterializarCicloCanonico } from "./MaterializarCicloCanonico";
 import { MaterializarLoteCalendario } from "./MaterializarLoteCalendario";
+function exigir<T>(valor: T | null | undefined): T {
+  if (valor == null) throw new Error("Valor esperado ausente");
+  return valor;
+}
 
 afterEach(() => {
   cleanup();
@@ -64,8 +68,8 @@ it.each(["ciclo", "lote"] as const)(
       screen.getByRole("button", { name: tipo === "ciclo" ? "Preparar ciclo" : "Preparar lote" }),
     );
     await waitFor(() => expect(api.rpc).toHaveBeenCalledTimes(1));
-    const pedido = api.rpc.mock.calls[0]![1];
-    const chave = sessionStorage.key(0)!;
+    const pedido = exigir(api.rpc.mock.calls[0])[1];
+    const chave = exigir(sessionStorage.key(0));
     const substituto = JSON.stringify({ requestId: "outra-tentativa" });
     sessionStorage.setItem(chave, substituto);
     concluir({
@@ -206,7 +210,7 @@ it.each(["ciclo", "lote"] as const)(
     await waitFor(() => expect((repetir as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(repetir);
     await waitFor(() => expect(api.rpc).toHaveBeenCalledTimes(2));
-    expect(api.rpc.mock.calls[1]![1]).toEqual(api.rpc.mock.calls[0]![1]);
+    expect(exigir(api.rpc.mock.calls[1])[1]).toEqual(exigir(api.rpc.mock.calls[0])[1]);
     await waitFor(() => expect(sessionStorage.length).toBe(0));
   },
 );

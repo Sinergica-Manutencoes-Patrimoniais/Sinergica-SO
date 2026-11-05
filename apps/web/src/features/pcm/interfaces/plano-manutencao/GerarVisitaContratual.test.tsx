@@ -10,6 +10,10 @@ vi.mock("../../../../lib/supabase-client", () => ({
   },
 }));
 import { GerarVisitaContratual } from "./GerarVisitaContratual";
+function exigir<T>(valor: T | null | undefined): T {
+  if (valor == null) throw new Error("Valor esperado ausente");
+  return valor;
+}
 beforeEach(() => {
   vi.stubEnv("VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED", "true");
 });
@@ -121,8 +125,8 @@ it("envia semana e origem à fronteira mediada sem tarefa externa", async () => 
   fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: "Processar semana" }));
   expect(await screen.findByText(/Visita regular em rascunho criada/)).toBeTruthy();
-  expect(api.rpc.mock.calls[1]![0]).toBe("sso_gerar_visita_ou_suprimir");
-  expect(api.rpc.mock.calls[1]![1]).toMatchObject({
+  expect(exigir(api.rpc.mock.calls[1])[0]).toBe("sso_gerar_visita_ou_suprimir");
+  expect(exigir(api.rpc.mock.calls[1])[1]).toMatchObject({
     p_cliente_id: "c",
     p_serie_id: "s",
     p_regra_id: "regra",
@@ -181,8 +185,8 @@ it("preserva tentativa substituída enquanto o servidor responde", async () => {
   fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: "Processar semana" }));
   await waitFor(() => expect(api.rpc).toHaveBeenCalledTimes(2));
-  const requestId = api.rpc.mock.calls[1]![1].p_request_id;
-  const chave = sessionStorage.key(0)!;
+  const requestId = exigir(api.rpc.mock.calls[1])[1].p_request_id;
+  const chave = exigir(sessionStorage.key(0));
   sessionStorage.setItem(chave, "outra tentativa");
   concluir({
     data: {
@@ -196,7 +200,7 @@ it("preserva tentativa substituída enquanto o servidor responde", async () => {
         requestId,
         decisao: "criada",
         visitaCriada: true,
-        visitaId: api.rpc.mock.calls[1]![1].p_visita_id,
+        visitaId: exigir(api.rpc.mock.calls[1])[1].p_visita_id,
       },
     },
     error: null,
