@@ -219,6 +219,15 @@ def main(opcoes):
     upload_1811 = None
     documento_1812 = None
     hierarquia_1813 = None
+    policies_1814 = None
+    if opcoes.policies_1814:
+        if not opcoes.hierarquia_1813 or not opcoes.upload_1811:
+            raise RuntimeError("Policies 1814 exigem hierarquia 1813 e upload 1811")
+        driver = ROOT / "supabase/manual-tests/s168_policies_1814_isolada.py"
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "cdd3ba78af44e7bd969be0659f78b3cd30e5cfed8c58f0df4e30388876d6a313":
+            raise RuntimeError("Driver de policies 1814 divergente")
+        import s168_policies_1814_isolada
+        policies_1814 = s168_policies_1814_isolada.preparar(ROOT)
     if opcoes.hierarquia_1813:
         if not opcoes.documento_1812: raise RuntimeError("Hierarquia 1813 exige --documento-1812")
         driver_hierarquia = ROOT / "supabase/manual-tests/s176_hierarquia_1813_isolada.py"
@@ -566,6 +575,12 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade de hierarquia 1813")
         blobs.append((caminho, hierarquia_1813[0]))
         names.append(caminho)
+    if policies_1814 is not None:
+        caminho = s168_policies_1814_isolada.MIGRATION
+        if any(Path(p).name[:4] == "1814" for p in base_files + names) or names[-1] >= caminho:
+            raise RuntimeError("Ordem ou duplicidade de policies 1814")
+        blobs.append((caminho, policies_1814[0]))
+        names.append(caminho)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -777,6 +792,8 @@ end; $$;"""
             tabela, coluna = gate["tabela"], gate["coluna"]
             if query(f'select coalesce((select not "{coluna}" from pcm."{tabela}" where id),false)::text').strip() != "true":
                 raise RuntimeError("Gate AC5 alterado após fixtures: " + tabela + "." + coluna)
+    if policies_1814 is not None:
+        s168_policies_1814_isolada.executar(CONTAINER, policies_1814[1], query, watchdog_triggered)
     if upload_1811 is not None:
         s168_upload_1811_isolada.executar(CONTAINER, upload_1811[1], query, watchdog_triggered)
     if documento_1812 is not None:
@@ -879,6 +896,7 @@ if __name__ == "__main__":
     parser.add_argument("--diagnostico-ac5", action="store_true", help="Compila sobreposição AC5 revisada em clone; exige integração, sem fixtures.")
     parser.add_argument("--isolamento-1810", action="store_true", help="Inclui 1804–1810 e suas fixtures; aceita --fixtures-pgtap; exige AC5 e integração.")
     parser.add_argument("--concorrencia-1810", action="store_true", help="Executa quatro disputas sintéticas; exige --isolamento-1810 e descarte integral do clone.")
+    parser.add_argument("--policies-1814", action="store_true", help="Aplica 1814 e valida policies antes da fixture 1811; exige hierarquia 1813.")
     parser.add_argument("--upload-1811", action="store_true", help="Aplica 1811 e executa fixture SQL com rollback; exige isolamento 1810.")
     parser.add_argument("--documento-1812", action="store_true", help="Aplica 1812 e valida ACL/gates com rollback; exige --upload-1811.")
     parser.add_argument("--hierarquia-1813", action="store_true", help="Aplica 1813 e valida hierarquia com rollback; exige --documento-1812.")
