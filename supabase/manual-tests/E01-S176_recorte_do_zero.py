@@ -162,6 +162,34 @@ def monitorar(container_id):
 def main(opcoes):
     global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id
     fixtures = None
+    isolamento_1810 = None
+    if opcoes.isolamento_1810:
+        if (not opcoes.integracao_candidata or not opcoes.diagnostico_ac5
+            or opcoes.concorrencia_parcial or opcoes.concorrencia_1805 or opcoes.concorrencia_1807
+            or opcoes.aprovacao_1805_pos_commit):
+            raise RuntimeError("Isolamento 1810 exige AC5 e integração, sem outros cenários")
+        # Inclui 1804–1808 e suas fixtures transacionais na mesma execução.
+        opcoes.aprovacao_1804 = opcoes.aprovacao_1805 = opcoes.aprovacao_1806 = True
+        opcoes.revisao_1807 = opcoes.consulta_1808 = True
+        nomes = (
+            ("supabase/migrations/1809_E01-S176_isolamento_leitura_estrutura.sql", "32b4b98a3080c99375c41b4e66cebe6495a32740e07c6591614117bcdc10d5cc"),
+            ("supabase/migrations/1810_E01-S176_composicao_estrutura_mediada.sql", "316c97af549af63690e27b90abefe2b18f7bc971e7632595997940fe4e9e0cfd"),
+        )
+        isolamento_1810 = []
+        for caminho, digest in nomes:
+            dados = (ROOT / caminho).read_bytes()
+            if hashlib.sha256(dados).hexdigest() != digest: raise RuntimeError("Hash divergente: " + caminho)
+            isolamento_1810.append((caminho, dados))
+        nome_fixture = "E01-S176_isolamento_estrutura_1810.test.sql"
+        fixture = (ROOT / "supabase/tests" / nome_fixture).read_bytes()
+        if hashlib.sha256(fixture).hexdigest() != "205a7c20a9665b1357e80505c3b45dc44ffda8dd8a457a1a66d2e80c645c04d4":
+            raise RuntimeError("Hash da fixture 1810 divergente")
+        if (len(re.findall(rb"(?im)^\s*begin\s*;", fixture)) != 1
+            or len(re.findall(rb"(?im)^\s*rollback\s*;", fixture)) != 1
+            or re.search(rb"(?im)^\s*(commit|end transaction)\s*;|session_replication_role|\\", fixture)):
+            raise RuntimeError("Transação ou metacomandos inesperados na fixture 1810")
+        import s176_runner_pgtap
+        fixture_1810 = [(nome_fixture, fixture, 11)]
     aprovacao_1804 = None
     aprovacao_1805 = None
     aprovacao_1806 = None
@@ -247,8 +275,8 @@ def main(opcoes):
             raise RuntimeError("Fixtures exigem --integracao-candidata")
         import s176_runner_pgtap
         fixtures = s176_runner_pgtap.preparar(ROOT)
-    if opcoes.diagnostico_ac5 and (not opcoes.integracao_candidata or opcoes.fixtures_pgtap or opcoes.concorrencia_parcial or opcoes.aprovacao_1804 or opcoes.aprovacao_1805 or opcoes.aprovacao_1806 or opcoes.revisao_1807 or opcoes.consulta_1808 or opcoes.concorrencia_1805 or opcoes.concorrencia_1807 or opcoes.aprovacao_1805_pos_commit):
-        raise RuntimeError("AC5 diagnóstico exige integração candidata sem fixtures ou outros cenários")
+    if opcoes.diagnostico_ac5 and (not opcoes.integracao_candidata or (opcoes.fixtures_pgtap and not opcoes.isolamento_1810) or opcoes.concorrencia_parcial or opcoes.concorrencia_1805 or opcoes.concorrencia_1807 or opcoes.aprovacao_1805_pos_commit or (not opcoes.isolamento_1810 and (opcoes.aprovacao_1804 or opcoes.aprovacao_1805 or opcoes.aprovacao_1806 or opcoes.revisao_1807 or opcoes.consulta_1808))):
+        raise RuntimeError("AC5 diagnóstico exige integração sem cenários não previstos")
     manifest = json.loads(MANIFEST.read_text())
     fotos = json.loads(FOTOS.read_text())
     base, source = manifest["base_main"], manifest["fonte_backup"]
@@ -418,6 +446,12 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade da migration 1808")
         blobs.append((caminho_1808, consulta_1808))
         names.append(caminho_1808)
+    if isolamento_1810 is not None:
+        for caminho, dados in isolamento_1810:
+            if any(Path(p).name[:4] == Path(caminho).name[:4] for p in base_files + names) or names[-1] >= caminho:
+                raise RuntimeError("Ordem ou duplicidade de isolamento: " + caminho)
+            blobs.append((caminho, dados))
+            names.append(caminho)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -596,7 +630,12 @@ end; $$;"""
             if estado.strip() != "true":
                 raise RuntimeError("Gate diagnóstico AC5 ausente ou aberto: " + tabela + "." + coluna)
         print("Gates AC5 listados confirmados fechados; demais gates exigem revisão independente.", flush=True)
-    if fixtures is not None:
+    if isolamento_1810 is not None:
+        if query("select not habilitado from config.sso_estrutura_cliente_leitura_gate where id") != "t":
+            raise RuntimeError("Gate de isolamento inicial aberto ou ausente")
+        # Um runner verifica baseline e rollback para todas as fixtures pgTAP selecionadas.
+        s176_runner_pgtap.executar(CONTAINER, (fixtures or []) + fixture_1810, sql, query, watchdog_triggered)
+    elif fixtures is not None:
         s176_runner_pgtap.executar(CONTAINER, fixtures, sql, query, watchdog_triggered)
     if aprovacao_1804 is not None:
         s165_aprovacao_1804_isolada.executar(CONTAINER, aprovacao_1804[1:], query, watchdog_triggered)
@@ -608,6 +647,13 @@ end; $$;"""
         s165_revisao_1807_isolada.executar(CONTAINER, fixture_1807, query, watchdog_triggered)
     if consulta_1808 is not None:
         s165_consulta_1808_isolada.executar(CONTAINER, fixture_1808, query, watchdog_triggered)
+    if isolamento_1810 is not None:
+        if query("select not habilitado from config.sso_estrutura_cliente_leitura_gate where id") != "t":
+            raise RuntimeError("Gate de isolamento alterado após fixtures")
+        for gate in gates_ac5:
+            tabela, coluna = gate["tabela"], gate["coluna"]
+            if query(f'select coalesce((select not "{coluna}" from pcm."{tabela}" where id),false)::text').strip() != "true":
+                raise RuntimeError("Gate AC5 alterado após fixtures: " + tabela + "." + coluna)
     if concorrencia_1807 is not None:
         s165_concorrencia_1807_isolada.executar(CONTAINER, concorrencia_1807, watchdog_triggered)
     if concorrencia_1805:
@@ -642,6 +688,7 @@ if __name__ == "__main__":
     parser.add_argument("--revisao-1807", action="store_true", help="Aplica 1807 e fixture isolada com rollback; exige integração e 1804–1806.")
     parser.add_argument("--consulta-1808", action="store_true", help="Aplica 1808 e fixture isolada com rollback; exige --revisao-1807.")
     parser.add_argument("--diagnostico-ac5", action="store_true", help="Compila sobreposição AC5 revisada em clone; exige integração, sem fixtures.")
+    parser.add_argument("--isolamento-1810", action="store_true", help="Inclui 1804–1810 e suas fixtures; aceita --fixtures-pgtap; exige AC5 e integração.")
     parser.add_argument("--concorrencia-1807", action="store_true", help="Cenários concorrentes 1807 com commit sintético e descarte obrigatório do clone.")
     parser.add_argument("--aprovacao-1805-pos-commit", action="store_true", help="Fixture sintética com COMMIT em clone descartável; exige 1804 e 1805.")
     parser.add_argument("--concorrencia-1805", action="store_true", help="Cenários concorrentes 1805 em clone descartável; exige integração, 1804 e 1805.")
