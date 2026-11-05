@@ -108,7 +108,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.116.0
       - name: Subir Supabase local (Docker) — aplica migrations do zero
         run: supabase start
       - name: pgTAP — RLS e invariantes (supabase/tests/)

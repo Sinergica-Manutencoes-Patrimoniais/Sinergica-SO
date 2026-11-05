@@ -1,3 +1,9 @@
+---
+name: "adr-1662-aprovacao-versao-esperada"
+description: "Versão esperada na aprovação de Plano"
+alwaysApply: false
+---
+
 # ADR-1662 — Versão esperada na aprovação de Plano
 
 ## Estado

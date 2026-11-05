@@ -38,17 +38,22 @@ export function FusoPlanoDeclarado(props: Props) {
 }
 function Conteudo({ userId, clienteId, planoId }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
-  const cache = useQueryClient(),
-    trava = useRef(false),
-    chave = `sso-fuso-plano:${JSON.stringify([userId, clienteId, planoId])}`;
-  const [busca, setBusca] = useState(""),
-    [termo, setTermo] = useState(""),
-    [fuso, setFuso] = useState(""),
-    [fonte, setFonte] = useState(""),
-    [motivo, setMotivo] = useState("");
-  const [confirmacao, setConfirmacao] = useState<string | null>(null),
-    [aviso, setAviso] = useState("");
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
+  const cache = useQueryClient();
+  const trava = useRef(false);
+  const chave = `sso-fuso-plano:${JSON.stringify([userId, clienteId, planoId])}`;
+  const [busca, setBusca] = useState("");
+  const [termo, setTermo] = useState("");
+  const [fuso, setFuso] = useState("");
+  const [fonte, setFonte] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [confirmacao, setConfirmacao] = useState<string | null>(null);
+  const [aviso, setAviso] = useState("");
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
     try {
       const raw = sessionStorage.getItem(chave);
@@ -122,11 +127,15 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
     },
     getNextPageParam: (p) => (p.length === 20 ? p.at(-1)?.revisao : undefined),
   });
-  const itensFuso = fusos.data?.pages.flat() ?? [],
-    itensHistorico = historico.data?.pages.flat() ?? [];
+  const itensFuso = fusos.data?.pages.flat() ?? [];
+  const itensHistorico = historico.data?.pages.flat() ?? [];
   const divergente =
     new Set(itensFuso.map((x) => x.fuso)).size !== itensFuso.length ||
-    itensHistorico.some((x, i) => i > 0 && x.revisao >= itensHistorico[i - 1]!.revisao) ||
+    itensHistorico.some((x, i) => {
+      if (i === 0) return false;
+      const anterior = itensHistorico[i - 1];
+      return anterior === undefined || x.revisao >= anterior.revisao;
+    }) ||
     new Set(itensHistorico.map((x) => x.request_id.toLowerCase())).size !== itensHistorico.length;
   const disponivel =
     !divergente &&
@@ -146,7 +155,8 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
   ]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_fuso_mediado", {
@@ -181,7 +191,8 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
         r.fusoDeclarado !== p.fuso
       )
         throw new Error("Recibo divergente.");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
     },
@@ -191,7 +202,8 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
           queryKey: ["historico-fuso-plano", userId, clienteId, planoId],
           refetchType: "none",
         });
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
@@ -261,7 +273,9 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
             onChange={(e) => setBusca(e.target.value)}
           />
         </label>
-        <button type="submit" disabled={!!pendente}>Buscar</button>
+        <button type="submit" disabled={!!pendente}>
+          Buscar
+        </button>
       </form>
       {fusos.isError && (
         <p role="alert">
@@ -365,7 +379,9 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
               />{" "}
               Confirmo a declaração, sem ativar geração
             </label>
-            <button type="submit" disabled={confirmacao !== foto}>Registrar fuso</button>
+            <button type="submit" disabled={confirmacao !== foto}>
+              Registrar fuso
+            </button>
           </fieldset>
         </form>
       )}

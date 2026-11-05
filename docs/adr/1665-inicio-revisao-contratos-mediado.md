@@ -1,3 +1,9 @@
+---
+name: "adr-1665-inicio-revisao-contratos-mediado"
+description: "Início mediado de revisão com contratos"
+alwaysApply: false
+---
+
 # ADR-1665 — Início mediado de revisão com contratos
 
 Status: proposta; gate fechado.

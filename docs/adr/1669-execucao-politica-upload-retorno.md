@@ -1,3 +1,9 @@
+---
+name: "adr-1669-execucao-politica-upload-retorno"
+description: "Execução da política de upload de evidência de retorno"
+alwaysApply: false
+---
+
 # ADR-1669 — Execução da política de upload de evidência de retorno
 
 ## Contexto

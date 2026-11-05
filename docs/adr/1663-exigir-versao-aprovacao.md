@@ -1,3 +1,9 @@
+---
+name: "adr-1663-exigir-versao-aprovacao"
+description: "Exigir versão conferida em novas aprovações"
+alwaysApply: false
+---
+
 # ADR-1663 — Exigir versão conferida em novas aprovações
 
 ## Contexto

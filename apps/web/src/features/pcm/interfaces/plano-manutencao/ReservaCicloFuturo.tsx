@@ -1,10 +1,10 @@
-import { conflitoReserva } from "./conflito-reserva";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { CompararVisitaLegado } from "./CompararVisitaLegado";
+import { conflitoReserva } from "./conflito-reserva";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 const fotoSchema = z.record(z.string(), z.unknown());
 const pedidoSchema = z
   .object({
@@ -65,7 +65,12 @@ function Conteudo({
   rascunho = false,
 }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const chave = `sso-reserva-futuro:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId, legadoId])}`;
   const trava = useRef(false);
   const [serie, setSerie] = useState("");
@@ -194,8 +199,8 @@ function Conteudo({
     getNextPageParam: (p) => (p.length === 30 ? p.at(-1)?.visita_id : undefined),
   });
   const visitaSelecionada = visitas.data?.pages.flat().find((v) => v.visita_id === visita);
-  const nSso = indiceSso === "" ? NaN : Number(indiceSso);
-  const n = indice === "" ? NaN : Number(indice);
+  const nSso = indiceSso === "" ? Number.NaN : Number(indiceSso);
+  const n = indice === "" ? Number.NaN : Number(indice);
   const visitaValida =
     !!visitaSelecionada &&
     !visitaSelecionada.feriado_declarado &&
@@ -356,7 +361,8 @@ function Conteudo({
     trava.current = true;
     setEnviando(true);
     try {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
       const comum = {
         p_ator: userId,
@@ -458,7 +464,8 @@ function Conteudo({
         result.revisao !== p.revisaoReserva + 1
       )
         throw new Error();
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
       sessionStorage.removeItem(chave);
       setPendente(null);
@@ -473,7 +480,8 @@ function Conteudo({
       setConfirmado(null);
       if (nova && conflitoReserva(error)) {
         try {
-          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);
