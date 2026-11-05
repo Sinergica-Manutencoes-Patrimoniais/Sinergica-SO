@@ -244,7 +244,9 @@ export function FormularioRotina({
           /* Mantém o pedido se o armazenamento falhar. */
         }
       }
-      setErro("Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados.");
+      const codigo = typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
+      const mensagem = typeof falha === "object" && falha !== null && "message" in falha ? falha.message : "";
+      setErro(codigo === "42501" ? "Permissão indisponível. O pedido permanece pendente para conferência." : codigo === "55P03" && mensagem === "autorizacao_em_alteracao" ? "As permissões estão sendo atualizadas. Aguarde e repita o mesmo pedido." : "Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados.");
     } finally { enviando.current = false; }
   }
   function iniciar() {

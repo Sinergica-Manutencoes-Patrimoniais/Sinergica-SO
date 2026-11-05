@@ -58,7 +58,7 @@ export function RetiradaRotina({ userId, clienteId, plano, rotinas, permitirNova
           setErro(codigo === "P0011" ? "O Plano mudou. Confira os dados antes de tentar novamente." : "A retirada foi recusada. Confira os dados do Plano.");
           await queryClient.invalidateQueries({ queryKey: planoManutencaoKeys.raiz(userId, clienteId) }); onAtualizar();
         } catch { setErro("Não foi possível recuperar o pedido. Consulte o suporte."); }
-      } else setErro(codigo === "42501" ? "Permissão indisponível. O pedido permanece pendente para conferência." : "Não foi possível confirmar a retirada. Tente novamente com os mesmos dados.");
+      } else setErro(codigo === "42501" ? "Permissão indisponível. O pedido permanece pendente para conferência." : codigo === "55P03" && typeof falha === "object" && falha !== null && "message" in falha && falha.message === "autorizacao_em_alteracao" ? "As permissões estão sendo atualizadas. Aguarde e repita o mesmo pedido." : "Não foi possível confirmar a retirada. Tente novamente com os mesmos dados.");
     } finally { setOcupado(false); }
   }
   function confirmar() {

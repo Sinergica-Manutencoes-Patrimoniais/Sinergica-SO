@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: feedback de permissão e auditoria de bordas
+
+- UI de Rotina informa autorização em alteração ou indisponível sem apagar pedido de replay; seis testes focados passaram. Backend/gates não alterados.
+- Revisão estática das bordas examinadas de decisão de impacto, PMOC, transições e fila constatou trava antes da autorização; não foi identificado defeito concreto nesse recorte. Não cobre todos os comandos nem constitui prova concorrente integral.
+- Uma revisão automática bloqueou duas tentativas da frente paralela de teste concorrente por possível risco de segurança. Outra frente realizou revisão estática, mas não repetiu ensaios concorrentes sem hipótese concreta. Gates default fechados; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: revogação na revisão e leitura de fila
 
 - ADR-1631/migration 1773 serializam revogação com início e submissão/devolução de revisão antes de autorização/replay; corrida reproduzida e corrigida nas duas ordens, replay e negação após revogação passaram. Roteiros `supabase/tests/manual_E01-S165_autorizacao_revisao_concorrencia_1773.md` e `...transicoes_revisao_concorrencia_1773.md`.
