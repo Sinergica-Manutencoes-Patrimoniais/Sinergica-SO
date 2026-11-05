@@ -72,6 +72,28 @@ it.each([["calendario", "40001", "revisao_decisao_obsoleta"], ["visita", "40001"
   expect(screen.getByRole("button", { name: "Registrar decisão" })).toBeDisabled();
 });
 
+it.each([["calendario", "40001", "serialization_failure"], ["visita", "40001", "serialization_failure"]] as const)("preserva pedido em serialização genuína em %s (%s)", async (tipo, code, message) => {
+  vi.stubEnv("VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED", "true");
+  const linha = tipo === "calendario" ? { ...comum, ciclo: 1, vencimento_original: "2026-11-04", ultimo_motivo: null } : { ...comum, semana_origem: "2026-11-02", visita_id: visita, ciclo_canonico_id: ciclo };
+  const comparacao = { preparadaId: preparada, rascunhoId: rascunho, revisaoPlano: revision, tipo, rotinaLogicaId: logica, alvoOcorrenciaTipo: "sistema", alvoOcorrenciaId: alvo, vencimentoOriginal: "2026-11-04", ciclo: tipo === "calendario" ? 1 : null, visitaId: tipo === "visita" ? visita : null, semanaOrigem: tipo === "visita" ? "2026-11-02" : null, anterior: rotina, rascunho: { ...rotina, nome: "Rascunho" }, questionarioComparacao: { estado: "sem_questionario", historicoHash: null, atualHash: null }, origemOcorrencia: { versaoId: "16630000-1111-4000-8000-000000000021", numero: 1, estado: "disponivel", rotina, questionarioEstado: "sem_questionario", questionarioHash: null }, osImpacto: [], osOutroCliente: false, fontesCompletas: false, aprovacaoAutorizada: false };
+  externo.rpc.mockImplementation((nome: string) => nome === "sso_decidir_impacto_comparado"
+    ? Promise.resolve({ data: null, error: { code, message } })
+    : { abortSignal: () => Promise.resolve({ data: nome === "sso_comparar_rotina_impacto_v3" ? comparacao : [linha], error: null }) });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const props = { userId: usuario, clienteId: cliente, planoId: plano, revision };
+  render(<QueryClientProvider client={client}>{tipo === "calendario" ? <DecisaoImpactoOcorrencia {...props} /> : <DecisaoImpactoVisita {...props} />}</QueryClientProvider>);
+  await screen.findByRole("option", { name: tipo === "calendario" ? /Ciclo 1/ : /Semana 2026-11-02/ });
+  fireEvent.change(screen.getByLabelText("Ocorrência"), { target: { value: preparada } });
+  await screen.findByText(/Versão anterior: Rotina original/);
+  fireEvent.change(screen.getByLabelText("Motivo"), { target: { value: "Conferido" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /Conferi a decisão parcial/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Registrar decisão" }));
+  await screen.findByText(/Resultado não confirmado/);
+  const chave = `${tipo === "calendario" ? "sso-impacto-revisao" : "sso-impacto-visita"}:${JSON.stringify([usuario, cliente, plano])}`;
+  expect(sessionStorage.getItem(chave)).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Repetir tentativa pendente" })).toBeInTheDocument();
+});
+
 it.each([["calendario", "40001", "revisao_decisao_obsoleta"], ["visita", "40001", "revisao_decisao_obsoleta"], ["calendario", "P0010", "comparacao_obsoleta"], ["visita", "P0010", "comparacao_obsoleta"], ["calendario", "P0011", "revisao_obsoleta"], ["visita", "P0011", "revisao_obsoleta"]] as const)("preserva tentativa anterior quando replay recebe conflito em %s (%s)", async (tipo, code, message) => {
   vi.stubEnv("VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED", "true");
   const chave = `${tipo === "calendario" ? "sso-impacto-revisao" : "sso-impacto-visita"}:${JSON.stringify([usuario, cliente, plano])}`;

@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: revogação na revisão e leitura de fila
+
+- ADR-1631/migration 1773 serializam revogação com início e submissão/devolução de revisão antes de autorização/replay; corrida reproduzida e corrigida nas duas ordens, replay e negação após revogação passaram. Roteiros `supabase/tests/manual_E01-S165_autorizacao_revisao_concorrencia_1773.md` e `...transicoes_revisao_concorrencia_1773.md`.
+- ADR-1632/migration 1774 serializam revogação nas leituras legadas de fila Calendário/Visita; concorrência nas duas ordens, Cliente indevido e isolamento incorreto passaram. Roteiro `supabase/tests/manual_E01-S166_autorizacao_leituras_fila_1774.md`. Revisões independentes sem bypass concreto.
+- Clone limpo compilou 1614–1774 em ordem numérica; fixtures de edição/aprovação, retomada/fila e Visita passaram em rollback. UI preserva pedidos incertos em classificação de legado/decisão de impacto; 19 testes focados passaram. Gates default fechados; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: revogação em Rotinas e fila Grupo
 
 - ADR-1629/migration 1771 serializam revogação com inclusão, edição e retirada de Rotina antes de autorização/replay, exigindo READ COMMITTED. Corrida de edição foi reproduzida antes e bloqueada nas duas ordens depois; caminhos positivos/replays dos três comandos passaram em clone, com revisão independente.
