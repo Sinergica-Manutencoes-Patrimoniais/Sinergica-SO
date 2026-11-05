@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ComposicaoLocal } from "./ComposicaoLocal";
 
@@ -38,8 +38,11 @@ describe("composição do Local", () => {
     m.rows.equipamentos=[{id:itemId,nome:"Bomba",tipo:"componente"}];
     m.rows.sistema_itens=[{item_id:itemId,sistema_id:sistemaId,sistemas:{nome:"Hidráulico",ativo:true}}];
     montar(); fireEvent.click(screen.getByRole("button", { name:"Ver composição do Local" }));
-    expect(await screen.findByText("Componente · Bomba")).toBeTruthy();
-    expect(screen.getByText(`Sistema Hidráulico · ${sistemaId}`)).toBeTruthy();
+    const titulo = await screen.findByRole("heading", { name: `Sistema Hidráulico · ${sistemaId}` });
+    const secao = titulo.closest("section");
+    expect(secao).not.toBeNull();
+    if (!secao) throw new Error("Seção do Sistema ausente");
+    expect(within(secao).getByText(/Componente · Bomba/)).toBeTruthy();
     expect(screen.getByText(/Área › Local/)).toBeTruthy();
     expect(m.from).toHaveBeenCalledTimes(5);
   });
