@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — legado e verificador Edge (Codex)
+
+- Ensaio de vínculo inconsistente anterior às guardas passou em clone somente de schema com seeds originais: vínculo legado preservado, nova inconsistência recusada e remoção possível; banco descartado, sem tarefas Auvo. Não comprova ACL nem concorrência.
+- `check-edge-functions` usa análise sintática TypeScript para reconhecer chamadas com genéricos sem confundi-las com texto; 12 testes focados passaram. Verificação geral apontou 51 problemas e 2 avisos; não foram alteradas declarações, configuração de deploy ou segurança. A workflow de deploy atual publica todas as pastas de Edge Functions, portanto a lista precisa ser revisada antes de qualquer liberação.
+- O backup contém alterações de várias stories e 1.548 migrations além da main; recorte por nomes ou commits não prova fechamento de dependências. Preparar branch de integração por objetos/contratos e validar o conjunto, sem presumir que o backup inteiro esteja pronto.
+
 ## 2026-11-05 — validação complementar do lote (Codex)
 
 - Jornadas isoladas Calendário e Visita até a fila passaram com dados/relógio sintéticos. S170 1790 e S176 1799: cenários preparados de revogação/replay passaram nas duas ordens relevantes; fixtures 1798 e 1796/1797 passaram, bem como disputas de vínculo/Cliente e hierarquia executadas no clone. São amostras, não homologação completa nem prova de fontes externas.
