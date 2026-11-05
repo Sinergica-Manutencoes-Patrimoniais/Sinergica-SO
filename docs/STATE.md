@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: ponte futura e concorrência de Visita
+
+- ADR-1583/migration 1727 eliminam bloqueio circular da avaliação para escolha explícita `integrar_ponte` em ocorrência legada prevista sem OS, revalidando fotografia e unicidade. Compilação e fixtures Calendário/Visita passaram em clone, incluindo escolha ambígua, foto alterada e OS. Revisão adversarial da alteração estreita não encontrou defeito alto/médio reproduzido; custo em bases grandes não medido.
+- Jornadas integradas em clone percorreram escolha, aprovação mediada, selo e vigência simulada. Calendário recusou envio até ponte; Visita recusou OS antes da ponte, gerou ciclo e vinculou ocorrência existente com replay. Outros ensaios `somente_sso` cobriram geração e replay em ambos modos. 1045 e relógio foram simulados em transações revertidas: não demonstram aprovação operacional nem concorrência integral.
+- Duas sessões autenticadas disputaram escolha de Visita: contenção, recusa de escolha obsoleta e replay passaram. Aprovação sintética bloqueou mediador do índice legado concorrente. Roteiros em `supabase/tests/manual_E01-S165_reserva_visita_rascunho_concorrencia.md` e `supabase/tests/manual_E01-S165_aprovacao_indice_legado_concorrencia.md`; não comprovam gerador integral concorrente.
+- Próximo passo: revisar cobertura integral de fontes/escritores, provar geradores e aprovação concorrentes e executar revisão adversarial completa antes de considerar alteração da guarda 1045. Homologação/deploy bloqueados; sem tarefas Auvo reais.
+
 ## 2026-11-04 — S165/S166: legado escolhido e concorrência de reserva
 
 - Revisão encontrou corrida entre avaliação e mudança de escolha de Visita. ADR-1582/migration 1726 serializam pelo Plano antes de ler a escolha; clone compilou migrations até 1726 e ensaio de duas sessões passou: avaliação concorrente recusada, retry após commit reconheceu escolha antiga como inválida. ACL global e revisão integral permanecem pendentes.
