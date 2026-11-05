@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S170/S176/S165/S166: integração em desenvolvimento (Codex)
+
+- S170: ADR-1648/1790 serializam administração de capacidades antes da autorização; tela revalida sessão e oculta dados durante reconsulta. ADR-1653/1795 adicionam quatro vínculos ação/módulo declarados nas migrations de origem, sem criar concessões; podem tornar efetivas concessões existentes e exigem revisão antes de aplicar.
+- S176: ADR-1649/1791 mediam caminho do Grupo; ADR-1650/1792 preparam consulta de Planos por alvo; ADR-1652/1794 preparam leitura por Cliente/Local sob RLS existente. Interfaces integram estrutura, Grupos, Pendências e Planos sob flags/gates fechados. O painel de Local não substitui o detalhe completo; fontes legadas, movimentação concorrente e performance permanecem pendentes.
+- S166: ADR-1651/1793 distinguem conflito de candidata de Visita de `40001` real, preservando pedido em replay incerto. S165/S166 têm jornadas preparadas, mas ainda não comprovadas integralmente.
+- **Próximo passo:** concluir lacunas identificadas de integração das quatro stories e então validar o lote completo, incluindo migrations 1780–1795, ACL/RLS, revogação, concorrência/replay, fontes legadas e jornadas de aprovação/geração/fila. Nenhum teste, build ou typecheck executado nesta rodada; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: recibos anteriores e validação em lote (Codex)
 
 - ADR-1647/migration 1789 e a interface permitem consultar, sem gerar ocorrência, recibo anterior de preparação por Visita. A consulta exige ator, Cliente, permissões e payload correspondentes; ausência permanece indeterminada e preserva o pedido. `VITE_SSO_RECIBO_PREPARACAO_VISITA_ENABLED` inicia desligada.

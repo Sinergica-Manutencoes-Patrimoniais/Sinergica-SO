@@ -19,9 +19,17 @@ export const ACOES_SSO = [
   "orcamento.emitir",
   "faturavel.efetivar",
   "integracao.reconciliar",
+  "orcamento.operacional.ler",
+  "orcamento.dispensar",
+  "orcamento.excecao_preco",
+  "anexo_os.publicar",
+  "backlog.promover",
 ] as const;
 
 export type AcaoSso = (typeof ACOES_SSO)[number];
+export const ACOES_INDIVIDUAIS: readonly AcaoSso[] = [
+  "plano.gerir", "orcamento.dispensar", "orcamento.excecao_preco", "anexo_os.publicar", "backlog.promover",
+];
 export interface ConcessaoEfetiva {
   acao: AcaoSso;
   clienteId: string | null;
@@ -46,7 +54,7 @@ export function permiteAcao(
   if (!ACOES_SSO.includes(acao)) return false;
   if (contexto.papel !== "superadmin") {
     if (
-      acao === "custo.ler" || acao === "cadastro.ler"
+      acao === "custo.ler" || acao === "cadastro.ler" || acao === "orcamento.operacional.ler"
         ? !contexto.moduloNivel
         : contexto.moduloNivel !== "escrita"
     )
@@ -57,6 +65,6 @@ export function permiteAcao(
       c.ativa &&
       c.acao === acao &&
       (c.clienteId === null || c.clienteId === contexto.clienteId) &&
-      (acao !== "plano.gerir" || c.origem === "individual"),
+      (!ACOES_INDIVIDUAIS.includes(acao) || c.origem === "individual"),
   );
 }

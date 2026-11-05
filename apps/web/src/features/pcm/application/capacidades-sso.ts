@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ACOES_SSO } from "../domain/capacidades-sso";
+import { ACOES_INDIVIDUAIS, ACOES_SSO } from "../domain/capacidades-sso";
 import type {
   CapacidadesSsoGateway,
   DefinirConcessaoCommand,
@@ -26,10 +26,10 @@ export const concessaoSchema = z
     if ((valor.usuarioId === null) === (valor.perfilId === null)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Informe usuário ou perfil." });
     }
-    if (valor.acao === "plano.gerir" && valor.perfilId !== null) {
+    if (ACOES_INDIVIDUAIS.includes(valor.acao) && valor.perfilId !== null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Gestão de Plano exige concessão individual.",
+        message: "Esta ação exige concessão individual.",
       });
     }
   });

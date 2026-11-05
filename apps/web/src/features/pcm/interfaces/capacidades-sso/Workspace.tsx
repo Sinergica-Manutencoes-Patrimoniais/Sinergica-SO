@@ -5,7 +5,7 @@ import { concessaoSchema, perfilSchema, vinculoSchema } from "../../application/
 import { useConfiguracaoCapacidades } from "../../application/capacidades-sso-queries";
 import { criarRegistroRequisicoes } from "../../application/requisicoes-capacidades";
 import type { PaginaCapacidade } from "../../application/capacidades-sso-gateway";
-import { ACOES_SSO, type AcaoSso } from "../../domain/capacidades-sso";
+import { ACOES_INDIVIDUAIS, ACOES_SSO, type AcaoSso } from "../../domain/capacidades-sso";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 
 const LABELS: Record<AcaoSso, string> = {
@@ -28,6 +28,11 @@ const LABELS: Record<AcaoSso, string> = {
   "orcamento.emitir": "Emitir orçamento",
   "faturavel.efetivar": "Efetivar faturável",
   "integracao.reconciliar": "Reconciliar integração",
+  "orcamento.operacional.ler": "Consultar propostas operacionais",
+  "orcamento.dispensar": "Dispensar orçamento",
+  "orcamento.excecao_preco": "Autorizar exceção de preço",
+  "anexo_os.publicar": "Publicar anexo de OS",
+  "backlog.promover": "Promover backlog",
 };
 
 type ConsultaPaginada<T> = {
@@ -489,7 +494,7 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
             !motivo.trim() ||
             !escopoConfirmado ||
             (destino === "usuario" ? !usuarioConfirmado : !perfilConfirmado) ||
-            (acao === "plano.gerir" && destino === "perfil")
+            (ACOES_INDIVIDUAIS.includes(acao) && destino === "perfil")
           }
           onClick={() => void conceder()}
         >
