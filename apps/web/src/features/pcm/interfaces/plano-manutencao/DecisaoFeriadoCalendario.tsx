@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -82,6 +82,8 @@ function Formulario({
 }: Props) {
   const chave = `sso-feriado-ciclo:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId, ciclo])}`;
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const [aberto, setAberto] = useState(false);
   const [feriadoId, setFeriadoId] = useState("");
   const [motivo, setMotivo] = useState("");
@@ -100,7 +102,7 @@ function Formulario({
   });
   async function conferirSessao() {
     const atual = await supabase.auth.getUser();
-    if (atual.error || atual.data.user?.id !== userId) throw new Error("Sessão alterada.");
+    if (atual.error || atual.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
   }
   const consulta = useQuery({
     queryKey: ["feriados-ciclo", userId, clienteId, planoId, versaoId, rotinaId, ciclo],

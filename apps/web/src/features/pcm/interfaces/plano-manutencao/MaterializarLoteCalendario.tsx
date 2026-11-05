@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
@@ -185,6 +185,8 @@ function MaterializarLoteSessao({
   const [confirmado, setConfirmado] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const [resultados, setResultados] = useState<
     Array<{ indice: number; vencimentoOriginal: string; preparadaId: string; criada: boolean }>
   >([]);
@@ -219,7 +221,7 @@ function MaterializarLoteSessao({
       const antes = await supabase.auth.getUser();
       if (
         antes.error ||
-        antes.data.user?.id !== userId ||
+        antes.data.user?.id !== userId || !montado.current ||
         sessionStorage.getItem(chave) !== JSON.stringify(p)
       )
         throw new Error("Sessão ou tentativa alterada.");
@@ -270,7 +272,7 @@ function MaterializarLoteSessao({
       const depois = await supabase.auth.getUser();
       if (
         depois.error ||
-        depois.data.user?.id !== userId ||
+        depois.data.user?.id !== userId || !montado.current ||
         r.requestId !== p.requestId ||
         r.inicio !== p.inicio ||
         r.fim !== p.fim ||
@@ -309,7 +311,7 @@ function MaterializarLoteSessao({
         const atual = await supabase.auth.getUser();
         if (
           atual.error ||
-          atual.data.user?.id !== userId ||
+          atual.data.user?.id !== userId || !montado.current ||
           sessionStorage.getItem(chave) !== JSON.stringify(p)
         )
           throw new Error();

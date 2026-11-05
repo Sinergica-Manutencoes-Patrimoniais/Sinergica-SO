@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
@@ -66,6 +66,8 @@ function Conteudo({
   rotinaId: string;
   revision: number;
 }) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient();
   const trava = useRef(false);
   const storageKey = `sso-contrato-pergunta:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId])}`;
@@ -202,7 +204,7 @@ function Conteudo({
       if (sessionStorage.getItem(storageKey) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || !montado.current || sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error("Sessão ou tentativa alterada.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_configurar_pergunta_mediada", {
         p_ator_id: userId,
         p_request_id: p.requestId,
@@ -251,6 +253,7 @@ function Conteudo({
         if (
           sessaoAtual.error ||
           sessaoAtual.data.user?.id !== userId ||
+          !montado.current ||
           sessionStorage.getItem(storageKey) !== JSON.stringify(p)
         )
           throw new Error();

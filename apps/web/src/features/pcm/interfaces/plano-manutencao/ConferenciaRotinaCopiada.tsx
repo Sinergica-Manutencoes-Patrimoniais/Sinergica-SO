@@ -1,6 +1,6 @@
 import { Button } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -73,7 +73,8 @@ const comparacoes = {
     "Cadastro atual diferente da fotografia histórica; a diferença pode incluir metadados.",
 } as const;
 
-export function ConferenciaRotinaCopiada({
+export function ConferenciaRotinaCopiada(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId, props.rotinaId])} {...props} />; }
+function Conteudo({
   userId,
   clienteId,
   planoId,
@@ -88,6 +89,7 @@ export function ConferenciaRotinaCopiada({
   rotinaId: string;
   revisao: number;
 }) {
+  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave = `sso-conferencia-rotina-copiada:${userId}:${clienteId}:${planoId}:${versaoId}:${rotinaId}`;
   const [recuperacao] = useState(() => {
     try {
@@ -131,7 +133,7 @@ export function ConferenciaRotinaCopiada({
     gcTime: 0,
     refetchOnWindowFocus: true,
     queryFn: async ({ signal }) => {
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       const { data, error } = await supabase
         .schema("pcm")
         .rpc("sso_consultar_conferencia_copia", {
@@ -150,7 +152,7 @@ export function ConferenciaRotinaCopiada({
         resultado.rotinaId !== rotinaId
       )
         throw new Error("Contexto divergente");
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       return resultado;
     },
   });
@@ -168,7 +170,7 @@ export function ConferenciaRotinaCopiada({
     setAviso("");
     const serializado = JSON.stringify(pedido);
     try {
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
       const { data, error } = await supabase.schema("pcm").rpc("sso_conferir_rotina_copiada", {
         p_request_id: pedido.requestId,
@@ -193,9 +195,9 @@ export function ConferenciaRotinaCopiada({
         resultado.conteudoSha256 !== pedido.conteudoSha256
       )
         throw new Error("Recibo divergente");
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       await cache.invalidateQueries({ queryKey: chaveConsulta });
-      await conferirAtor();
+      await conferirAtor(); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
       sessionStorage.removeItem(chave);
       setPendente(null);

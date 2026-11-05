@@ -192,6 +192,8 @@ function MaterializarCicloSessao({
   const [confirmado, setConfirmado] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const primeiraTentativa = useRef(false);
   const [preparada, setPreparada] = useState<string | null>(null);
   const identidadeConfirmacao = JSON.stringify([
@@ -228,7 +230,7 @@ function MaterializarCicloSessao({
       const antes = await supabase.auth.getUser();
       if (
         antes.error ||
-        antes.data.user?.id !== userId ||
+        antes.data.user?.id !== userId || !montado.current ||
         sessionStorage.getItem(chave) !== JSON.stringify(p)
       )
         throw new Error("Sessão ou tentativa alterada.");
@@ -257,7 +259,7 @@ function MaterializarCicloSessao({
       const preparadaId = z.string().uuid().parse(data.preparadaId);
       z.string().uuid().parse(data.cicloCanonicoId);
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
       return { criada: data.criada as boolean, preparadaId };
     },
     onSuccess: async (r, p) => {
@@ -282,7 +284,7 @@ function MaterializarCicloSessao({
         const atual = await supabase.auth.getUser();
         if (
           atual.error ||
-          atual.data.user?.id !== userId ||
+          atual.data.user?.id !== userId || !montado.current ||
           sessionStorage.getItem(chave) !== JSON.stringify(p)
         )
           throw new Error();
@@ -314,7 +316,7 @@ function MaterializarCicloSessao({
           const atual = await supabase.auth.getUser();
           if (
             atual.error ||
-            atual.data.user?.id !== userId ||
+            atual.data.user?.id !== userId || !montado.current ||
             sessionStorage.getItem(chave) !== JSON.stringify(p)
           )
             throw new Error();
