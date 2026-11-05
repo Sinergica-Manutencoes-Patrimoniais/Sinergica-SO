@@ -86,4 +86,4 @@ jobs:
           python3 supabase/manual-tests/E01-S176_recorte_do_zero.py \
             --github-hosted --integracao-candidata --diagnostico-ac5 \
             --isolamento-1810 --fixtures-pgtap --upload-1811 --documento-1812 \
-            --hierarquia-1813 --policies-1814 --concorrencia-1810 --jornada-ac5-http
+            --hierarquia-1813 --policies-1814 --dispatch-1815 --concorrencia-1810 --jornada-ac5-http
