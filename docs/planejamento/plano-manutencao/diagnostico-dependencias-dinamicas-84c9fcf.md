@@ -1,0 +1,53 @@
+# Diagnóstico em lote — dependências dinâmicas do recorte
+
+**Somente análise estática; não é manifesto de release.** Base `22aca391`, manifesto candidato
+de 640 migrations com fonte `84c9fcf`. A sobreposição 0803 e as duas ações de catálogo usadas no
+ensaio são diagnósticas; não substituem o fechamento do recorte ou as migrations originais.
+
+Foram inspecionadas 121 migrations selecionadas que contêm `pg_get_functiondef`. A busca combinou
+nomes de função, referências anteriores e trechos literais atribuídos às variáveis de substituição.
+As cadeias abaixo são achados priorizados, não enumeração exaustiva: SQL dinâmico, identificadores
+montados, variáveis, sobrecargas, formatação e substituições sucessivas escapam a esse método.
+Encontrar uma migration anterior não prova que seu efeito seja exigido por uma guarda posterior.
+
+## Dependências de texto evidenciadas
+
+| Consumidora selecionada | Cadeia anterior omitida | Evidência e impacto |
+| --- | --- | --- |
+| `0903_E01-S168_origem_grupo_retorno.sql` | `0803_E01-S168_recebimento_origem_visita.sql` | A 0903 exige trecho inserido pela 0803 no classificador criado em 0402; sem ele lança `classificador_definicao_incompativel` (`55000`). A inclusão diagnóstica da 0803 permitiu avançar além de 0903. Altera classificação de retorno de Visita e ACL da função privada. |
+| `0906_E01-S173_pendencia_origem_grupo.sql` | `0807_E01-S173_pendencia_origem_visita.sql` | A 0906 exige ramo e variável inseridos pela 0807 na função original da 0371; lança `pendencia_definicao_incompativel` (`55000`) quando faltam. O ensaio após 0803 parou em 0906 com 55000; o texto exato da exceção não foi preservado. A 0807 altera origem de pendências por Visita e revoga EXECUTE da função privada. |
+| `1692_E01-S165_cobertura_visita_fotografia_os.sql` | `0805_E01-S168_guarda_cobertura_origem_visita.sql` → `0904_E01-S168_cobertura_retorno_grupo.sql` | A 0805 substitui trecho exato da função 0582; a 0904 transforma o `if` inserido pela 0805 em ramo `elsif`, que a guarda `guarda_fotografia_incompativel` da 1692 exige. As quatro migrations anteriores citadas têm funções de guarda/integração S168; 0582 e 1692 estão na seleção, 0805 e 0904 não. Incluir altera verificação de cobertura por Visita e Grupo, com revogação de EXECUTE. |
+| `1692_E01-S165_cobertura_visita_fotografia_os.sql` | `0811_E01-S168_previa_cobertura_visita.sql` → `0905_E01-S168_perguntas_retorno_grupo.sql` | A 0811 substitui trecho exato da função 0562; a 0905 transforma seu `if` em `elsif`, exigido pela guarda `previa_fotografia_incompativel` da 1692. A 0562 está selecionada; 0811 e 0905 não. Incluir altera a prévia de cobertura por Visita e Grupo, com revogação de EXECUTE. |
+
+As comparações textuais acima foram feitas nos arquivos da fonte. A função real após todas as
+migrations anteriores selecionadas pode diferir; confirmar ordem e conteúdo com `pg_get_functiondef`
+em banco descartável antes de decidir quaisquer inclusões. O ensaio atual não chegou à 1692.
+
+## Omissões com risco comportamental, sem falha textual comprovada
+
+- `1675_E01-S53_serializar_materializacao_legada.sql` está ausente antes da 1714 selecionada.
+  Acrescenta `FOR UPDATE` à leitura do Plano legado em `pcm.materializar_ocorrencias_preventivas`.
+  A 1714 altera outra âncora dessa função para respeitar reservas; a ausência da 1675 **não foi
+  demonstrada como falha da guarda textual da 1714**, mas pode remover serialização de mudanças
+  concorrentes. Revisar compatibilidade com os demais escritores e testar duas sessões.
+- `1587_E01-S168_retorno_grupo_chamado.sql` e `1591_E01-S168_cobertura_grupo_chamado.sql`
+  estão ausentes antes da 1692. Elas ampliam os critérios de classificador/prévia/guarda para
+  Chamado canônico do mesmo ciclo de Grupo, usando `pcm.sso_chamado_ciclo_grupo` da 1586, que
+  está selecionada. Não se demonstrou que os trechos alterados por 1587/1591 sejam exigidos pelas
+  âncoras da 1692; sua ausência pode causar divergência funcional mesmo se a migration compilar.
+  Revisar também `1588` e demais consumidores relacionados, sem inclusão automática em lote.
+- Coincidências genéricas apontaram 1323 antes de 1695 (`declare v_actor ...`) e 1485 antes de
+  1746 (mensagem `revisao_obsoleta`). Elas não demonstram dependência: os trechos não são únicos
+  da função correspondente. Permanecem para inspeção contextual, sem recomendação de inclusão.
+
+## Restrições para evolução do recorte
+
+- A 0415 também depende das ações introduzidas por 0323 e 0334, ambas ausentes. Antecipar apenas
+  seus valores foi um artifício de diagnóstico; as migrations originais incluem tabelas, policies
+  e funções de S180/S172, com impactos de escopo e autorização que precisam de revisão.
+- Não editar migrations históricas nem adicionar todas as ausentes indiscriminadamente. Para cada
+  cadeia, revisar código, ACL, gates e funções/transações anteriores, registrar procedência e
+  testar em ordem num clone descartável. Um teste com seeds artificiais continua não implantável.
+- Os testes Auth/Storage/fotos executados sobre clone mais amplo não provam que esta seleção reduzida
+  compila ou preserva RLS, concorrência, integridade e compatibilidade do legado. Não habilitar gates,
+  implantar ou disparar Auvo com base neste diagnóstico.
