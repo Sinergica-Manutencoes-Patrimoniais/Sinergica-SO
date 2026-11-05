@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: AC5 e AC7 integrados
+
+- S165 AC5: clone com 1045 real aprovou revisão com mudança simultânea de alvo/recorrência e OS aberta conhecida; decisão PCM preservou OS e ocorrência antigas, snapshot novo congelou alvo/intervalo. OS posterior à comparação bloqueou aprovação; alvo incompatível recusou substituição. Ponte/OS/draft sintéticos, rollback. Fixtures `supabase/tests/manual_E01-S165_ac5_*_1768.sql`.
+- S165 AC7: suspensão/retomada/encerramento preservaram OS sintética vinculada por ponte criada via RPC; geração futura bloqueada e retomada não gerou automaticamente. ADR-0190 limita vigência ao dia local; agendamento futuro não está especificado. Fixtures `supabase/tests/manual_E01-S165_ac7_*.sql`.
+- S166 AC5: rotina diária gerou hoje até hoje+30 inclusivos, excluiu +31 e replay preservou 31 ocorrências. Vínculo PMOC positivo via comandos reais recusou geração alternativa; agenda, contrato/imóvel e ausência OS/outbox preservados. Origem PMOC sintética, concorrência vínculo/geração e laudos não comprovados; testes domínio 29/29. Sem deploy/Auvo.
+- Próximo passo: comprovar concorrência PMOC e preservação de laudos, revisão integral e CI. Gates default fechados.
+
 ## 2026-11-05 — S165/S166: conflitos de regras e PMOC; replay
 
 - ADRs 1622–1624/migrations 1764–1766 convertem conflitos explícitos de regras/feriados, proposta/decisão PMOC e vínculo de ciclo PMOC; UI preserva replay incerto e erros genuínos. Revisões cruzadas não encontraram bypass. HTTP de criação de regra passou; SQL cobriu PMOC e vínculo; UI feriado 2/2, proposta 4/4 e vínculo 2/2. Replay positivo SQL do vínculo 1766 ainda sem fixture completa; HTTP dos demais modos não comprovado.
