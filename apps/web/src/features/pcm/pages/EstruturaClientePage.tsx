@@ -46,6 +46,9 @@ import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipame
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
+import { GruposQuantitativos } from "../interfaces/estrutura-tecnica/GruposQuantitativos";
+import { ComposicaoLocal } from "../interfaces/estrutura-tecnica/ComposicaoLocal";
+import { SistemasDistribuidos } from "../interfaces/estrutura-tecnica/SistemasDistribuidos";
 
 type ModalArea = { modo: "novo" } | { modo: "editar"; area: Area } | null;
 type ModalLocal =
@@ -55,6 +58,15 @@ type ModalLocal =
 
 function achatar(nodes: LocalArvoreNode[]): LocalArvoreNode[] {
   return nodes.flatMap((node) => [node, ...achatar(node.filhos)]);
+}
+
+// Caminho completo diferencia Sublocais com nomes iguais.
+function locaisParaGrupo(nodes: LocalArvoreNode[], caminho: string[]): { id: string; nome: string }[] {
+  return nodes.flatMap((node) => {
+    if (!node.ativo) return [];
+    const proximo = [...caminho, node.nome];
+    return [{ id: node.id, nome: proximo.join(" / ") }, ...locaisParaGrupo(node.filhos, proximo)];
+  });
 }
 
 export function EstruturaClientePage({
@@ -439,6 +451,15 @@ export function EstruturaClientePage({
         onAdicionar={adicionarTipoDeLocal}
         onRemover={setTipoParaRemover}
       />
+      <SistemasDistribuidos key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
+      <GruposQuantitativos
+        key={`${userId}:${clienteId}`}
+        userId={userId}
+        clienteId={clienteId}
+        locais={areas.filter((area) => area.ativo).flatMap((area) => locaisParaGrupo(arvores[area.id] ?? [], [area.nome]))}
+        categorias={categorias.map((categoria) => ({ id: categoria.id, nome: categoria.descricao }))}
+        sistemas={sistemas.filter((sistema) => sistema.ativo).map((sistema) => ({ id: sistema.id, nome: sistema.nome }))}
+      />
       {importando && (
         <ImportacaoEstruturaModal
           estado={{
@@ -527,6 +548,9 @@ export function EstruturaClientePage({
                   ) : (
                     <LocalTree
                       nodes={locais}
+                      userId={userId}
+                      clienteId={clienteId}
+                      caminho={[area.nome]}
                       areaId={area.id}
                       nivel={0}
                       temEscrita={temEscrita}
@@ -705,6 +729,9 @@ function TiposDeLocalPainel({
 
 function LocalTree({
   nodes,
+  userId,
+  clienteId,
+  caminho,
   areaId,
   nivel,
   temEscrita,
@@ -713,6 +740,9 @@ function LocalTree({
   onExcluir,
 }: {
   nodes: LocalArvoreNode[];
+  userId: string;
+  clienteId: string;
+  caminho: string[];
   areaId: string;
   nivel: number;
   temEscrita: boolean;
@@ -765,9 +795,13 @@ function LocalTree({
               </div>
             )}
           </div>
+          <ComposicaoLocal userId={userId} clienteId={clienteId} localId={node.id} caminho={[...caminho, node.nome]} />
           {node.filhos.length > 0 && (
             <LocalTree
               nodes={node.filhos}
+              userId={userId}
+              clienteId={clienteId}
+              caminho={[...caminho, node.nome]}
               areaId={areaId}
               nivel={nivel + 1}
               temEscrita={temEscrita}

@@ -2,6 +2,9 @@
 // o SDK do Supabase — ver docs/ARCHITECTURE.md, regra de dependência da camada infrastructure/).
 import { supabase } from "../../../lib/supabase-client";
 import type { AuthGateway, PerfilUsuario, SessaoBasica } from "../application/auth-gateway";
+import { serializarAutenticacao } from "./serializar-autenticacao";
+
+const operacoes = serializarAutenticacao(supabase.auth);
 
 function paraSessao(user: { id: string; email?: string | null }): SessaoBasica {
   return { userId: user.id, email: user.email ?? "" };
@@ -9,15 +12,15 @@ function paraSessao(user: { id: string; email?: string | null }): SessaoBasica {
 
 export const supabaseAuthAdapter: AuthGateway = {
   async signInWithPassword(email, senha) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    const { data, error } = await operacoes.signInWithPassword({ email, password: senha });
     if (error || !data.session) {
       throw error ?? new Error("Falha ao autenticar");
     }
     return paraSessao(data.session.user);
   },
 
-  async signOut() {
-    await supabase.auth.signOut();
+  async signOut(usuarioEsperado) {
+    await operacoes.signOut(usuarioEsperado);
   },
 
   async getSession() {
@@ -33,7 +36,8 @@ export const supabaseAuthAdapter: AuthGateway = {
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error) throw new Error("Não foi possível consultar o perfil. Tente novamente.");
+    if (!data) return null;
     return { papel: data.papel, nome: data.nome };
   },
 

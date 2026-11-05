@@ -91,6 +91,7 @@ import { RentabilidadePage as FinanceiroRentabilidadePage } from "../features/fi
 import type { GuiaView } from "../features/guia/GuiaRouter";
 import { GuiaRouter } from "../features/guia/GuiaRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
+import { CapacidadesWorkspace } from "../features/pcm/interfaces/capacidades-sso/Workspace";
 import { AgendaTecnicoPage } from "../features/pcm/pages/AgendaTecnicoPage";
 import { ApontamentoHorasPage } from "../features/pcm/pages/ApontamentoHorasPage";
 import { AssessmentPage } from "../features/pcm/pages/AssessmentPage";
@@ -244,6 +245,7 @@ const CONFIG_NAV: Array<{
   id:
     | "grupos"
     | "usuarios"
+    | "capacidades"
     | "integracoes"
     | "ia"
     | "gasto-ia"
@@ -254,6 +256,7 @@ const CONFIG_NAV: Array<{
 }> = [
   { id: "grupos", label: "Grupos", icon: Users },
   { id: "usuarios", label: "Usuários", icon: UserCog },
+  { id: "capacidades", label: "Capacidades", icon: UserCog },
   { id: "integracoes", label: "Integrações", icon: KeyRound },
   { id: "ia", label: "IA", icon: Sparkles },
   { id: "gasto-ia", label: "Gasto de IA", icon: DollarSign },
@@ -426,7 +429,7 @@ export function HomePage() {
     new URLSearchParams(window.location.search).get("guia") === "pcm" ? "guia" : "inicio",
   );
   const [configTab, setConfigTab] = useState<
-    "grupos" | "usuarios" | "integracoes" | "ia" | "gasto-ia" | "priorizacao" | "localizacao-auvo"
+    "grupos" | "usuarios" | "capacidades" | "integracoes" | "ia" | "gasto-ia" | "priorizacao" | "localizacao-auvo"
   >("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -655,7 +658,7 @@ export function HomePage() {
                   CONFIGURAÇÕES
                 </p>
               )}
-              {CONFIG_NAV.map((item) => {
+              {CONFIG_NAV.filter((item) => item.id !== "capacidades" || user?.papel === "superadmin").map((item) => {
                 const Icon = item.icon;
                 const isActive = item.id === configTab;
                 return (
@@ -1167,6 +1170,8 @@ export function HomePage() {
               <GruposPage />
             ) : configTab === "usuarios" ? (
               <UsuariosPage />
+            ) : configTab === "capacidades" && user?.papel === "superadmin" ? (
+              <CapacidadesWorkspace userId={user.id} />
             ) : configTab === "ia" ? (
               <ConfigIaPage />
             ) : configTab === "gasto-ia" ? (

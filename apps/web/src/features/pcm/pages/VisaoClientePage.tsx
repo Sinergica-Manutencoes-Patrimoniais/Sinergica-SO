@@ -83,6 +83,8 @@ import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-ada
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
 import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
+import { CalendarioContratualWorkspace } from "../interfaces/calendario-contratual/Workspace";
+import { PlanoManutencaoWorkspace } from "../interfaces/plano-manutencao/Workspace";
 import { EstruturaClientePage } from "./EstruturaClientePage";
 
 type Estado =
@@ -508,16 +510,30 @@ export function VisaoClientePage({
       )}
 
       {aba === "preventivas" && user && (
-        <PreventivasWorkspace
-          key={cliente.id}
-          clienteId={cliente.id}
-          clienteNome={cliente.nome}
-          temEscrita={temEscrita}
-          userId={user.id}
-          compacto
-          abrirNovoToken={abrirPreventivaToken}
-          onAbrirOs={abrirDetalheOs}
-        />
+        <>
+          <CalendarioContratualWorkspace
+            key={`calendario-${user.id}-${cliente.id}`}
+            clienteId={cliente.id}
+            clienteNome={cliente.nome}
+            userId={user.id}
+          />
+          <PlanoManutencaoWorkspace
+            key={`plano-${user.id}-${cliente.id}`}
+            clienteId={cliente.id}
+            clienteNome={cliente.nome}
+            userId={user.id}
+          />
+          <PreventivasWorkspace
+            key={cliente.id}
+            clienteId={cliente.id}
+            clienteNome={cliente.nome}
+            temEscrita={temEscrita}
+            userId={user.id}
+            compacto
+            abrirNovoToken={abrirPreventivaToken}
+            onAbrirOs={abrirDetalheOs}
+          />
+        </>
       )}
 
       {aba === "qualidade" && <PainelQualidade qualidade={qualidade} />}
@@ -546,7 +562,7 @@ export function VisaoClientePage({
       )}
 
       {aba === "estrutura" && user && (
-        <EstruturaClientePage cliente={cliente} temEscrita={temEscrita} userId={user.id} />
+        <EstruturaClientePage key={`${user.id}:${cliente.id}`} cliente={cliente} temEscrita={temEscrita} userId={user.id} />
       )}
 
       {aba === "sistemas" && user && (
