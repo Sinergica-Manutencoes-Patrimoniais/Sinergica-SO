@@ -165,6 +165,31 @@ def main(opcoes):
     aprovacao_1805 = None
     aprovacao_1806 = None
     revisao_1807 = None
+    consulta_1808 = None
+    concorrencia_1807 = None
+    if opcoes.consulta_1808:
+        if not opcoes.revisao_1807:
+            raise RuntimeError("Consulta 1808 exige --revisao-1807")
+        caminho_1808 = "supabase/migrations/1808_E01-S165_consulta_recibo_revisao_contratos.sql"
+        consulta_1808 = (ROOT / caminho_1808).read_bytes()
+        if hashlib.sha256(consulta_1808).hexdigest() != "991d3a56eb15e5a2b23b42f06aa8acfb01ac846efbc0576763c4faa02d51490d":
+            raise RuntimeError("Hash da migration 1808 divergente")
+        import s165_consulta_1808_isolada
+        fixture_1808 = s165_consulta_1808_isolada.preparar(ROOT)
+    if opcoes.concorrencia_1807:
+        if not opcoes.revisao_1807 or opcoes.concorrencia_1805 or opcoes.aprovacao_1805_pos_commit or opcoes.concorrencia_parcial:
+            raise RuntimeError("Concorrência 1807 exige 1807 e clone sem cenários que confirmam dados")
+        driver_1807 = ROOT / "supabase/manual-tests/s165_concorrencia_1807_isolada.py"
+        if hashlib.sha256(driver_1807.read_bytes()).hexdigest() != "ba97c0fd4210067d15952eea164c8bc22d3503a8953d7e7d23a05dec7f57f18a":
+            raise RuntimeError("Hash do driver concorrente 1807 divergente")
+        for nome, digest in (
+            ("s165_concorrencia_1805_isolada.py", "64266880eb6e5077cd058ab32def97659efe7e1dc8ce9cd87bd8bf075dd48314"),
+            ("s176_runner_concorrencia.py", "c5daefc801ca006ddb5aa2815f5bb541b0275d1740027b55cdaeb5a4b642e0c3"),
+        ):
+            if hashlib.sha256((ROOT / "supabase/manual-tests" / nome).read_bytes()).hexdigest() != digest:
+                raise RuntimeError("Dependência do driver concorrente 1807 divergente")
+        import s165_concorrencia_1807_isolada
+        concorrencia_1807 = s165_concorrencia_1807_isolada.preparar(ROOT)
     if opcoes.revisao_1807:
         if not opcoes.aprovacao_1806 or not opcoes.aprovacao_1805 or not opcoes.aprovacao_1804 or not opcoes.integracao_candidata:
             raise RuntimeError("Revisão 1807 exige integração candidata e migrations 1804, 1805 e 1806")
@@ -348,6 +373,11 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade da migration 1807")
         blobs.append((caminho_1807, revisao_1807))
         names.append(caminho_1807)
+    if consulta_1808 is not None:
+        if any(Path(p).name.startswith("1808_") for p in base_files + names) or names[-1] != caminho_1807 or names[-1] >= caminho_1808:
+            raise RuntimeError("Ordem ou duplicidade da migration 1808")
+        blobs.append((caminho_1808, consulta_1808))
+        names.append(caminho_1808)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -529,6 +559,10 @@ end; $$;"""
         s165_aprovacao_1806_isolada.executar(CONTAINER, fixture_1806, query, watchdog_triggered)
     if revisao_1807 is not None:
         s165_revisao_1807_isolada.executar(CONTAINER, fixture_1807, query, watchdog_triggered)
+    if consulta_1808 is not None:
+        s165_consulta_1808_isolada.executar(CONTAINER, fixture_1808, query, watchdog_triggered)
+    if concorrencia_1807 is not None:
+        s165_concorrencia_1807_isolada.executar(CONTAINER, concorrencia_1807, watchdog_triggered)
     if concorrencia_1805:
         import s165_concorrencia_1805_isolada
         s165_concorrencia_1805_isolada.executar(CONTAINER, watchdog_triggered)
@@ -557,6 +591,8 @@ if __name__ == "__main__":
     parser.add_argument("--aprovacao-1805", action="store_true", help="Aplica 1805 fixada após 1804, com gate desligado; exige --aprovacao-1804.")
     parser.add_argument("--aprovacao-1806", action="store_true", help="Aplica 1806 fixada após 1805; exige integração, 1804 e 1805.")
     parser.add_argument("--revisao-1807", action="store_true", help="Aplica 1807 e fixture isolada com rollback; exige integração e 1804–1806.")
+    parser.add_argument("--consulta-1808", action="store_true", help="Aplica 1808 e fixture isolada com rollback; exige --revisao-1807.")
+    parser.add_argument("--concorrencia-1807", action="store_true", help="Cenários concorrentes 1807 com commit sintético e descarte obrigatório do clone.")
     parser.add_argument("--aprovacao-1805-pos-commit", action="store_true", help="Fixture sintética com COMMIT em clone descartável; exige 1804 e 1805.")
     parser.add_argument("--concorrencia-1805", action="store_true", help="Cenários concorrentes 1805 em clone descartável; exige integração, 1804 e 1805.")
     opcoes = parser.parse_args()
