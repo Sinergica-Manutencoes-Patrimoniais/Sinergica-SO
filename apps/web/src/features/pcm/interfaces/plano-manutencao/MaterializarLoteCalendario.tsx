@@ -129,7 +129,7 @@ function ComOrigens(props: Props) {
       return r;
     },
   });
-  if (q.isFetching || q.isPending) return <p role="status">Conferindo origem dos ciclos…</p>;
+  if (q.isFetching || q.isPending) return <output className="block">Conferindo origem dos ciclos…</output>;
   if (q.isError || !q.data)
     return (
       <p role="alert">

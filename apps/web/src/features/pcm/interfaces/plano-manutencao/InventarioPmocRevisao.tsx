@@ -321,7 +321,7 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
         histórico preservado vale somente para vencimentos anteriores à vigência ou cancelados. A
         classificação não altera agendamento ou OS.
       </p>
-      {(lista.isFetching || resumo.isFetching) && <p role="status">Consultando inventário…</p>}
+      {(lista.isFetching || resumo.isFetching) && <output className="block">Consultando inventário…</output>}
       {(lista.isError || resumo.isError || !consistentes) && (
         <p role="alert">
           Inventário indisponível ou divergente.{" "}

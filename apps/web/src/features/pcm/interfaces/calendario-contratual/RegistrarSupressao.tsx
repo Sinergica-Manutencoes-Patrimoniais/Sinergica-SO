@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { RegraContratualResumo } from "../../application/calendario-contratual-gateway";
@@ -58,6 +58,11 @@ function Conteudo({
   const [confirmado, setConfirmado] = useState(false);
   const [aviso, setAviso] = useState("");
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => { montado.current = false; };
+  }, []);
   const cache = useQueryClient();
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
     try {
@@ -83,7 +88,8 @@ function Conteudo({
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
       const { data: r, error } = await supabase
         .schema("pcm")
         .rpc("sso_registrar_supressao_semana", {
@@ -114,16 +120,15 @@ function Conteudo({
       if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
     },
     onSuccess: async (_r, p) => {
-      await cache.invalidateQueries({
-        queryKey: ["supressoes-feriado", userId, clienteId, feriadoId],
-      });
       try {
-        if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
+        const sessao = await supabase.auth.getUser();
+        if (sessao.error || sessao.data.user?.id !== userId || !montado.current || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {
         setAviso("Supressão registrada; tentativa não removida. Consulte suporte.");
         return;
       }
+      void cache.invalidateQueries({ queryKey: ["supressoes-feriado", userId, clienteId, feriadoId] });
       setPendente(null);
       setRegraId("");
       setConfirmado(false);

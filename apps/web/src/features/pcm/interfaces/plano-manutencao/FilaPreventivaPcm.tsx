@@ -348,10 +348,10 @@ function Conteudo({
         </p>
       )}
       {visivel && registro?.estado === "cancelado" && (
-        <p role="status">
+        <output className="block">
           Esta entrada foi cancelada e não pode ser incluída novamente por esta tela. O histórico
           permanece disponível para conferência.
-        </p>
+        </output>
       )}
       {visivel && tipo === "calendario" && registro?.estado === "verificacao" && (
         <p role="alert">
@@ -393,10 +393,10 @@ function Conteudo({
           </section>
         )}
       {visivel && outraOcorrencia && (
-        <p role="status">
+        <output className="block">
           Este ciclo foi registrado pela ocorrência {registro?.preparada_id}. A ação usará a
           ocorrência original e preservará esta versão.
-        </p>
+        </output>
       )}
       {pendente === "invalido" && <p role="alert">Tentativa ilegível; procure suporte.</p>}
       {pendente && pendente !== "invalido" ? (

@@ -443,7 +443,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
         desfaz as anteriores. Retome o pedido pendente para continuar; não cria OS ou tarefa Auvo. A
         fonte de feriados e a exclusividade global ainda não são comprovadas.
       </p>
-      {snapshot.isFetching && <p role="status">Consultando Rotinas…</p>}
+      {snapshot.isFetching && <output className="block">Consultando Rotinas…</output>}
       {snapshot.isError && (
         <p role="alert">
           Rotinas indisponíveis.{" "}
@@ -455,12 +455,12 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
       {pendente === "invalido" && <p role="alert">Sequência local ilegível; procure suporte.</p>}
       {pendente && pendente !== "invalido" ? (
         <>
-          <p role="status">
+          <output className="block">
             Rotinas confirmadas: {pendente.proxima} de {pendente.rotinas.length}.{" "}
             {ocupado
               ? "Preparando a próxima…"
               : "Retome a mesma sequência para repetir o item pendente."}
-          </p>
+          </output>
           <button type="button" disabled={ocupado} onClick={() => void executar(pendente)}>
             Retomar sequência
           </button>

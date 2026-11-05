@@ -264,7 +264,7 @@ function Conteudo({
         A retirada passa a valer somente com aprovação e vigência da revisão. Ocorrências anteriores
         à vigência precisam de outra decisão PCM; OS existentes não são canceladas.
       </p>
-      {consulta.isFetching && <p role="status">Consultando resolução…</p>}
+      {consulta.isFetching && <output className="block">Consultando resolução…</output>}
       {consulta.isError && (
         <p role="alert">
           Resolução indisponível.{" "}
@@ -339,7 +339,7 @@ function Conteudo({
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

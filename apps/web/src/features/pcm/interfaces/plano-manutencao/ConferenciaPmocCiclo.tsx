@@ -283,7 +283,7 @@ export function ConferenciaPmocCiclo({
         Informe se o agendamento pertence ao Plano. Para marcar como relacionado, é necessário um
         vínculo PMOC válido na versão.
       </p>
-      {lista.isFetching && <p role="status">Consultando agendamentos…</p>}
+      {lista.isFetching && <output className="block">Consultando agendamentos…</output>}
       {(lista.isError || !consistentes) && (
         <p role="alert">
           Consulta indisponível ou divergente.{" "}

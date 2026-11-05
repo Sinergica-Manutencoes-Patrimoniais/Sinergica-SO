@@ -207,12 +207,12 @@ function Conteudo({
         homologação.
       </p>
       {preparadaInicial && !lista.isFetching && !lista.isError && !visitaSelecionada && (
-        <p role="status">
+        <output className="block">
           Ocorrência {preparadaInicial} não está nas páginas carregadas.{" "}
           {lista.hasNextPage
             ? "Carregue mais Visitas para localizá-la."
             : "Pode já estar vinculada ou indisponível para esta relação."}
-        </p>
+        </output>
       )}
       {lista.isError && (
         <p role="alert">

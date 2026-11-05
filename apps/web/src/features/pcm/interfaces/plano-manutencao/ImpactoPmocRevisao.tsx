@@ -301,7 +301,7 @@ function Conteudo({ userId, clienteId, planoId, revisao }: Props) {
         Considera vínculos declarados da versão anterior e seus usos. Outros agendamentos e
         equivalência contratual permanecem indeterminados.
       </p>
-      {(lista.isFetching || resumo.isFetching) && <p role="status">Consultando impactos PMOC…</p>}
+      {(lista.isFetching || resumo.isFetching) && <output className="block">Consultando impactos PMOC…</output>}
       {(lista.isError || resumo.isError || !consistentes) && (
         <p role="alert">
           Impactos indisponíveis ou divergentes.{" "}

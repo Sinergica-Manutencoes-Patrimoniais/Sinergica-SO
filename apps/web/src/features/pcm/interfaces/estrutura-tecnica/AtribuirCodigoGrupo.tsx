@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -41,6 +41,11 @@ function Conteudo({
   const chave = `sso-atribuir-codigo-grupo:${JSON.stringify([userId, clienteId, grupoId])}`;
   const client = useQueryClient();
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => { montado.current = false; };
+  }, []);
   const [codigo, setCodigo] = useState("");
   const [confirmacao, setConfirmacao] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
@@ -59,6 +64,7 @@ function Conteudo({
       const antes = await supabase.auth.getUser();
       if (
         antes.error ||
+        !montado.current ||
         antes.data.user?.id !== userId ||
         sessionStorage.getItem(chave) !== JSON.stringify(p)
       )
@@ -82,7 +88,7 @@ function Conteudo({
       )
         throw new Error("Resposta inválida.");
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
     },
     onSuccess: async (_data, p) => {
       try {
@@ -93,6 +99,7 @@ function Conteudo({
         const atual = await supabase.auth.getUser();
         if (
           atual.error ||
+          !montado.current ||
           atual.data.user?.id !== userId ||
           sessionStorage.getItem(chave) !== JSON.stringify(p)
         )
@@ -107,11 +114,12 @@ function Conteudo({
           type: "active",
         });
       } catch {
-        setAviso("Código confirmado, mas tentativa local não pôde ser limpa. Consulte suporte.");
+        if (montado.current) setAviso("Código confirmado, mas tentativa local não pôde ser limpa. Consulte suporte.");
       }
     },
-    onError: () =>
-      setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte."),
+    onError: () => {
+      if (montado.current) setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte.");
+    },
     onSettled: () => {
       trava.current = false;
     },

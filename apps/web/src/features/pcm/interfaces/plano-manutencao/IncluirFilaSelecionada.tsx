@@ -244,12 +244,12 @@ function Conteudo({ userId, clienteId, planoId, itens, carregando, tipo = "calen
       {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
       {pendente && pendente !== "invalido" ? (
         <>
-          <p role="status">
+          <output className="block">
             Confirmações: {pendente.proximo} de {pendente.itens.length}.{" "}
             {ocupado
               ? "Processando a próxima inclusão…"
               : "A sequência pode ser retomada pelo próximo item; os já confirmados permanecem incluídos."}
-          </p>
+          </output>
           {pendente.resultados && (
             <ul>
               {pendente.resultados.map((r) => (

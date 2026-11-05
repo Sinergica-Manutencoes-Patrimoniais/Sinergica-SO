@@ -202,10 +202,10 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
     <section aria-label="Triagem de candidatos a atraso">
       <h5>Triagem de candidatos a atraso</h5>
       {ocorrenciaEmConferencia && (
-        <p role="status">
+        <output className="block">
           Ocorrência encaminhada para conferência: {ocorrenciaEmConferencia}. Informe a data e
           consulte os candidatos.
-        </p>
+        </output>
       )}
       <p>
         Compara a data informada com vencimento e tolerância de ocorrências preparadas. Não prova
@@ -375,7 +375,7 @@ function TriagemSessao({ userId, clienteId, planoId, rotinaId, ocorrenciaEmConfe
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

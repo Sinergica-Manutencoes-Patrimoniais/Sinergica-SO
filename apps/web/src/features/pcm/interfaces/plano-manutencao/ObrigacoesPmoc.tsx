@@ -70,7 +70,7 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
         Mostra somente vínculos declarados neste Plano. Ausência aqui não comprova ausência de
         agendamentos PMOC. A lista não altera OS ou tarefas.
       </p>
-      {consulta.isFetching && <p role="status">Consultando vínculos PMOC…</p>}
+      {consulta.isFetching && <output className="block">Consultando vínculos PMOC…</output>}
       {consulta.isError && (
         <p role="alert">
           Vínculos PMOC indisponíveis.{" "}

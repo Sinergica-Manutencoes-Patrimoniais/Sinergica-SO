@@ -73,7 +73,7 @@ export function ProvenienciaRotinaModelo({
   });
   return (
     <aside aria-label="Procedência da Rotina">
-      {consulta.isFetching && <p role="status">Conferindo procedência…</p>}
+      {consulta.isFetching && <output className="block">Conferindo procedência…</output>}
       {consulta.isError && (
         <p role="alert">
           Procedência indisponível.{" "}

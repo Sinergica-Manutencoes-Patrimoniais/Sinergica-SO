@@ -210,12 +210,12 @@ function Conteudo({
         Concorrência e homologação continuam pendentes. Não usar operacionalmente.
       </p>
       {preparadaInicial && !ciclos.isFetching && !ciclos.isError && !selecionado && (
-        <p role="status">
+        <output className="block">
           Ocorrência {preparadaInicial} não está nas páginas carregadas.{" "}
           {ciclos.hasNextPage
             ? "Carregue mais ciclos para localizá-la."
             : "Pode já estar vinculada ou indisponível para esta relação."}
-        </p>
+        </output>
       )}
       {ciclos.isError && (
         <p role="alert">
