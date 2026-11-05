@@ -23,6 +23,7 @@ MANIFEST = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-migratio
 FOTOS = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-fotos-40e3c9f.json"
 OVERLAY_DINAMICO = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-diagnostico-dinamico.json"
 OVERLAY_INTEGRACAO = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-integracao-84c9fcf.json"
+OVERLAY_AC5 = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-ac5-s170-diagnostico.json"
 IMAGE = "public.ecr.aws/supabase/postgres:17.6.1.141"
 AUTH_IMAGE = "public.ecr.aws/supabase/gotrue:v2.197.0"
 REST_IMAGE = "public.ecr.aws/supabase/postgrest:v14.5"
@@ -246,6 +247,8 @@ def main(opcoes):
             raise RuntimeError("Fixtures exigem --integracao-candidata")
         import s176_runner_pgtap
         fixtures = s176_runner_pgtap.preparar(ROOT)
+    if opcoes.diagnostico_ac5 and (not opcoes.integracao_candidata or opcoes.fixtures_pgtap or opcoes.concorrencia_parcial or opcoes.aprovacao_1804 or opcoes.aprovacao_1805 or opcoes.aprovacao_1806 or opcoes.revisao_1807 or opcoes.consulta_1808 or opcoes.concorrencia_1805 or opcoes.concorrencia_1807 or opcoes.aprovacao_1805_pos_commit):
+        raise RuntimeError("AC5 diagnóstico exige integração candidata sem fixtures ou outros cenários")
     manifest = json.loads(MANIFEST.read_text())
     fotos = json.loads(FOTOS.read_text())
     base, source = manifest["base_main"], manifest["fonte_backup"]
@@ -351,6 +354,43 @@ def main(opcoes):
             if numeros_integracao.count(posterior) != 1 or numeros_integracao.index(anterior) >= numeros_integracao.index(posterior):
                 raise RuntimeError("Consumidor de integração ausente ou fora de ordem: " + posterior)
         print("INTEGRAÇÃO CANDIDATA: migrations originais sem seeds artificiais; resultado NÃO autoriza release.", flush=True)
+    if opcoes.diagnostico_ac5:
+        if not OVERLAY_AC5.is_file():
+            raise RuntimeError("Manifesto diagnóstico AC5 ainda não está disponível")
+        ac5 = json.loads(OVERLAY_AC5.read_text())
+        source_ac5 = "f94282991911ee02d6ed50365ff5f78513ea34f3"
+        if ac5.get("status") != "apto_a_ensaio_diagnostico" or ac5.get("base_main") != base or ac5.get("fonte_backup") != source_ac5:
+            raise RuntimeError("Manifesto AC5 incompleto ou com procedência divergente")
+        if git("rev-parse", "--verify", source_ac5 + "^{commit}").decode().strip() != source_ac5:
+            raise RuntimeError("Commit AC5 ausente ou divergente")
+        adicionais = ac5.get("migrations_adicionais")
+        if not isinstance(adicionais, list) or not adicionais:
+            raise RuntimeError("Sobreposição AC5 vazia ou inválida")
+        for item in adicionais:
+            if not isinstance(item, dict): raise RuntimeError("Entrada AC5 inválida")
+            path = item.get("caminho", "")
+            if not re.fullmatch(r"supabase/migrations/[0-9]{4}_[A-Za-z0-9_-]+\.sql", path):
+                raise RuntimeError("Caminho AC5 inválido")
+            numero = Path(path).name[:4]
+            if path in base_files or path in names or any(Path(p).name[:4] == numero for p in base_files + names):
+                raise RuntimeError("Migration AC5 duplicada: " + numero)
+            data = git("show", source_ac5 + ":" + path)
+            if hashlib.sha256(data).hexdigest() != item.get("sha256") or git("rev-parse", source_ac5 + ":" + path).decode().strip() != item.get("git_blob"):
+                raise RuntimeError("Hash da sobreposição AC5 divergente: " + numero)
+            blobs.append((path, data))
+            names.append(path)
+        blobs.sort(key=lambda item: item[0])
+        names = [p for p, _ in blobs]
+        numeros = [Path(p).name[:4] for p in base_files + names]
+        if len(numeros) != len(set(numeros)) or base_files != sorted(base_files) or base_files[-1] >= names[0]:
+            raise RuntimeError("Ordem ou duplicidade da sobreposição AC5")
+        gates_ac5 = ac5.get("gates_default_fechados")
+        if not isinstance(gates_ac5, list) or not gates_ac5:
+            raise RuntimeError("Manifesto AC5 não lista gates para conferência")
+        for gate in gates_ac5:
+            if not isinstance(gate, dict) or not re.fullmatch(r"[a-z_][a-z0-9_]*", gate.get("tabela", "")) or not re.fullmatch(r"[a-z_][a-z0-9_]*", gate.get("coluna", "")):
+                raise RuntimeError("Gate AC5 inválido")
+        print("DIAGNÓSTICO AC5: sobreposição isolada; resultado NÃO autoriza release.", flush=True)
     if aprovacao_1804 is not None:
         if sum(Path(p).name.startswith("1803_") for p in names) != 1 or any(Path(p).name.startswith("1804_") for p in base_files + names):
             raise RuntimeError("Ordem ou duplicidade da migration 1804")
@@ -549,6 +589,13 @@ end; $$;"""
     if aprovacao_1806 is not None:
         print("Migration 1806 aplicada em clone; fixtures seguintes avaliam cenários selecionados.", flush=True)
     if query("select (select count(*) from auth.users)=0 and (select count(*) from pcm.clientes)=0 and (select count(*) from vault.secrets)=0") != "t": raise RuntimeError("Banco contém dados inesperados")
+    if opcoes.diagnostico_ac5:
+        for gate in gates_ac5:
+            tabela, coluna = gate["tabela"], gate["coluna"]
+            estado = query(f'select coalesce((select not "{coluna}" from pcm."{tabela}" where id),false)::text')
+            if estado.strip() != "true":
+                raise RuntimeError("Gate diagnóstico AC5 ausente ou aberto: " + tabela + "." + coluna)
+        print("Gates AC5 listados confirmados fechados; demais gates exigem revisão independente.", flush=True)
     if fixtures is not None:
         s176_runner_pgtap.executar(CONTAINER, fixtures, sql, query, watchdog_triggered)
     if aprovacao_1804 is not None:
@@ -574,6 +621,8 @@ end; $$;"""
     if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
     if opcoes.diagnostico_0415:
         print("PASS DIAGNÓSTICO: ações antecipadas; NÃO prova recorte implantável nem testes funcionais.")
+    elif opcoes.diagnostico_ac5:
+        print("PASS DIAGNÓSTICO AC5: compilação e gates listados; NÃO prova prontidão nem autoriza release.")
     elif opcoes.integracao_candidata:
         print("PASS INTEGRAÇÃO CANDIDATA: compilação apenas; NÃO autoriza release nem prova testes funcionais.")
     else:
@@ -592,6 +641,7 @@ if __name__ == "__main__":
     parser.add_argument("--aprovacao-1806", action="store_true", help="Aplica 1806 fixada após 1805; exige integração, 1804 e 1805.")
     parser.add_argument("--revisao-1807", action="store_true", help="Aplica 1807 e fixture isolada com rollback; exige integração e 1804–1806.")
     parser.add_argument("--consulta-1808", action="store_true", help="Aplica 1808 e fixture isolada com rollback; exige --revisao-1807.")
+    parser.add_argument("--diagnostico-ac5", action="store_true", help="Compila sobreposição AC5 revisada em clone; exige integração, sem fixtures.")
     parser.add_argument("--concorrencia-1807", action="store_true", help="Cenários concorrentes 1807 com commit sintético e descarte obrigatório do clone.")
     parser.add_argument("--aprovacao-1805-pos-commit", action="store_true", help="Fixture sintética com COMMIT em clone descartável; exige 1804 e 1805.")
     parser.add_argument("--concorrencia-1805", action="store_true", help="Cenários concorrentes 1805 em clone descartável; exige integração, 1804 e 1805.")
