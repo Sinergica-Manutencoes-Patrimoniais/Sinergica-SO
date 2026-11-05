@@ -137,8 +137,12 @@ def monitorar(container_id):
             if min(host, vm) < MINIMO_LIVRE:
                 raise RuntimeError("limite de espaço")
         except Exception:
+            if watchdog_stop.is_set():
+                return
             watchdog_triggered.set()
             with watchdog_lock:
+                if watchdog_stop.is_set():
+                    return
                 alvos = [(container_id, CONTAINER), (auth_container_id, AUTH_CONTAINER), *[(identidade, nome) for nome, identidade in platform_container_ids.items()]]
                 for alvo, nome in alvos:
                     if not alvo: continue
@@ -159,6 +163,23 @@ def main(opcoes):
     fixtures = None
     aprovacao_1804 = None
     aprovacao_1805 = None
+    pos_commit_1805 = None
+    concorrencia_1805 = False
+    if opcoes.concorrencia_1805:
+        if not opcoes.aprovacao_1805 or not opcoes.aprovacao_1804 or not opcoes.integracao_candidata:
+            raise RuntimeError("Concorrência 1805 exige integração candidata, 1804 e 1805")
+        for nome, digest in (
+            ("s165_concorrencia_1805_isolada.py", "3ed61f9ffc6884afbade1baa1578b7470c154bc55d6ca95a181f1530fb2511d8"),
+            ("s176_runner_concorrencia.py", "c5daefc801ca006ddb5aa2815f5bb541b0275d1740027b55cdaeb5a4b642e0c3"),
+        ):
+            if hashlib.sha256((ROOT / "supabase/manual-tests" / nome).read_bytes()).hexdigest() != digest:
+                raise RuntimeError("Hash do controlador de concorrência divergente: " + nome)
+        concorrencia_1805 = True
+    if opcoes.aprovacao_1805_pos_commit:
+        if not opcoes.aprovacao_1805 or not opcoes.aprovacao_1804 or not opcoes.integracao_candidata:
+            raise RuntimeError("Pós-commit exige integração candidata, 1804 e 1805")
+        import s165_aprovacao_1805_pos_commit
+        pos_commit_1805 = s165_aprovacao_1805_pos_commit.preparar(ROOT)
     if opcoes.aprovacao_1805:
         if not opcoes.aprovacao_1804 or not opcoes.integracao_candidata:
             raise RuntimeError("Migration 1805 exige --aprovacao-1804 e --integracao-candidata")
@@ -472,9 +493,14 @@ end; $$;"""
         s165_aprovacao_1804_isolada.executar(CONTAINER, aprovacao_1804[1:], query, watchdog_triggered)
     if aprovacao_1805 is not None:
         s165_aprovacao_1805_isolada.executar(CONTAINER, fixture_1805, query, watchdog_triggered)
+    if concorrencia_1805:
+        import s165_concorrencia_1805_isolada
+        s165_concorrencia_1805_isolada.executar(CONTAINER, watchdog_triggered)
     if opcoes.concorrencia_parcial:
         import s176_runner_concorrencia
         s176_runner_concorrencia.executar(CONTAINER, watchdog_triggered)
+    if pos_commit_1805 is not None:
+        s165_aprovacao_1805_pos_commit.executar(CONTAINER, pos_commit_1805, query, watchdog_triggered)
     if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
     if opcoes.diagnostico_0415:
         print("PASS DIAGNÓSTICO: ações antecipadas; NÃO prova recorte implantável nem testes funcionais.")
@@ -493,6 +519,8 @@ if __name__ == "__main__":
     parser.add_argument("--concorrencia-parcial", action="store_true", help="Executa dois cenários concorrentes parciais apenas no candidato de integração descartável.")
     parser.add_argument("--aprovacao-1804", action="store_true", help="Aplica 1804 fixada e executa fixture sintética com rollback; exige integração candidata.")
     parser.add_argument("--aprovacao-1805", action="store_true", help="Aplica 1805 fixada após 1804, com gate desligado; exige --aprovacao-1804.")
+    parser.add_argument("--aprovacao-1805-pos-commit", action="store_true", help="Fixture sintética com COMMIT em clone descartável; exige 1804 e 1805.")
+    parser.add_argument("--concorrencia-1805", action="store_true", help="Cenários concorrentes 1805 em clone descartável; exige integração, 1804 e 1805.")
     opcoes = parser.parse_args()
     code = 0
     try: main(opcoes)
@@ -502,14 +530,17 @@ if __name__ == "__main__":
         if watchdog_thread is not None:
             watchdog_thread.join(timeout=45)
             if watchdog_thread.is_alive():
-                print("Monitor não encerrou; limpeza bloqueada para evitar corrida.")
-                sys.exit(1)
+                print("Monitor não encerrou; tentando limpeza com exclusão mútua.")
+                code = 1
         if watchdog_triggered.is_set():
             print("Monitor acionado: limite de espaço ou falha de medição.")
             code = 1
         # Varrer por rótulo e nome, inclusive se `docker create` tiver falhado depois
         # de criar o recurso. Nunca remover volume anterior à execução.
+        limpeza_trava = watchdog_lock.acquire(timeout=8)
         try:
+            if not limpeza_trava:
+                raise RuntimeError("Monitor mantém trava de limpeza")
             containers = docker("ps", "-a", "--filter", "label=sso.recorte=" + IDENT, "--format", "{{.ID}}").splitlines()
             for container_id in containers:
                 c = inspect("container", container_id)
@@ -533,7 +564,11 @@ if __name__ == "__main__":
             print("Recursos exclusivos removidos ou inexistentes.")
         except Exception:
             print("Limpeza não comprovada; nenhum recurso sem identidade foi removido.")
+            print("Identidade exclusiva para inspeção:", IDENT, "rede esperada:", NETWORK)
             code = 1
+        finally:
+            if limpeza_trava:
+                watchdog_lock.release()
         if space_before is not None:
             try:
                 host_after = shutil.disk_usage(ROOT).free
