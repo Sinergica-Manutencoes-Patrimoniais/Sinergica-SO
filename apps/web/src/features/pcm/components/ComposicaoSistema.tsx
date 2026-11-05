@@ -47,6 +47,9 @@ function Conteudo({
   const [selecionadosIds, setSelecionadosIds] = useState<Set<string>>(new Set());
   const [salvando, setSalvando] = useState(false);
   const [erroSalvar, setErroSalvar] = useState<string | null>(null);
+  const protecaoLegada = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  const composicaoAtomica = import.meta.env.VITE_SSO_COMPOSICAO_SISTEMA_ATOMICA_ENABLED === "true";
+  const integracaoIncompleta = protecaoLegada && !composicaoAtomica;
   const chave = `sso-composicao-sistema:${JSON.stringify([userId, sistema.clienteId, sistema.id])}`;
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
     try { const salvo = sessionStorage.getItem(chave); if (!salvo) return null; const p = pedidoSchema.parse(JSON.parse(salvo));
@@ -97,20 +100,24 @@ function Conteudo({
 
   async function salvar(repeticao?: Pedido) {
     if (!temEscrita || salvando || trava.current || pendente === "invalido" || (pendente && !repeticao)) return;
+    if (integracaoIncompleta && !repeticao) {
+      setErroSalvar("A proteção de cadastro exige composição atômica. A alteração não foi enviada.");
+      return;
+    }
     trava.current = true;
     const contexto = { userId, sistemaId: sistema.id, clienteId: sistema.clienteId };
     const selecao = [...selecionadosIds];
     setSalvando(true);
     setErroSalvar(null);
     try {
-      if (import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true") {
+      if (protecaoLegada) {
         const antes = await supabase.auth.getUser();
         if (antes.error || antes.data.user?.id !== contexto.userId || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", contexto.clienteId) !== true) throw new Error("Permissão de cadastro indisponível.");
         const depois = await supabase.auth.getUser();
         const atual = contextoAtual.current;
         if (depois.error || depois.data.user?.id !== contexto.userId || !atual.temEscrita || atual.userId !== contexto.userId || atual.clienteId !== contexto.clienteId || atual.sistemaId !== contexto.sistemaId) throw new Error("Sessão ou contexto alterado.");
       }
-      if (import.meta.env.VITE_SSO_COMPOSICAO_SISTEMA_ATOMICA_ENABLED === "true" || repeticao) {
+      if (composicaoAtomica || repeticao) {
         if (!repeticao && estado.fase !== "pronto") throw new Error("Composição indisponível.");
         const p = repeticao ?? pedidoSchema.parse({ requestId: crypto.randomUUID(), atorId: contexto.userId,
           clienteId: contexto.clienteId, sistemaId: contexto.sistemaId,
@@ -179,6 +186,7 @@ function Conteudo({
         disabled={!temEscrita || salvando || !!pendente}
       />
       {erroSalvar && <p className="text-caption text-danger">{erroSalvar}</p>}
+      {integracaoIncompleta && <p role="alert">Composição atômica não habilitada. A proteção de cadastro exige sua ativação antes de salvar novas alterações.</p>}
       {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}
       {pendente && pendente !== "invalido" && <div><p>Uma tentativa anterior pode ter sido aplicada. Repita somente o mesmo pedido.</p>
         <button type="button" disabled={!temEscrita || salvando} onClick={() => void salvar(pendente)}>Repetir tentativa</button></div>}
@@ -186,7 +194,7 @@ function Conteudo({
         <button
           type="button"
           onClick={() => void salvar()}
-          disabled={salvando || !houveMudanca}
+          disabled={salvando || !houveMudanca || integracaoIncompleta}
           className="h-9 self-start rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
         >
           {salvando ? "Salvando…" : "Salvar composição"}
