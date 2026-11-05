@@ -116,3 +116,10 @@ fixture de token com gate desligado e ligado, as disputas de revisão, revogaç�
 gate nas duas ordens, e os cenários de pós-commit e replay. A fila de saída foi suprimida nos
 cenários sintéticos e o clone foi removido. O resultado não comprova os privilégios do proprietário
 no destino nem a integração externa e não constitui homologação ou autorização de release.
+
+No ensaio isolado da migration 1807, foram aplicadas 228 migrations da base e 660 candidatas.
+A fixture sintética passou nos três modos de revisão com contratos, nos replays novos e legados,
+nas verificações de gates, colisões de pedido e ACL. A transação foi revertida e os recursos
+descartáveis foram removidos; a saída para o Auvo foi suprimida no cenário. O ensaio não comprova
+concorrência, integração externa ou permissões do ambiente de destino e não constitui homologação
+ou autorização para release.
