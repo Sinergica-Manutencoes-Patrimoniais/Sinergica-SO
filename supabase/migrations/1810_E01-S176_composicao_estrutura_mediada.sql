@@ -16,6 +16,11 @@ begin
  if config.sso_autorizar_acao('cadastro.ler',p_cliente) is distinct from true
     and config.sso_autorizar_acao('cadastro.gerir',p_cliente) is distinct from true then
   raise exception 'sem_acesso' using errcode='42501';end if;
+ -- Preserva as políticas legadas das cinco fontes que exigem claim PCM assinado.
+ -- Grupos usam a política de capacidade por Cliente e não exigem esse claim adicional.
+ if p_fonte<>'grupos' and (auth.jwt()->>'user_role'='superadmin'
+    or auth.jwt()->'user_modulos'->>'pcm' in ('leitura','escrita')) is not true then
+  raise exception 'sem_acesso' using errcode='42501';end if;
  if p_fonte='sistemas' then
   select coalesce(jsonb_agg(to_jsonb(t) order by t.id),'[]'::jsonb) into v_resultado from (
    select s.id,s.cliente_id,s.nome,s.ativo from pcm.sistemas s where s.cliente_id=p_cliente and s.deleted_at is null
