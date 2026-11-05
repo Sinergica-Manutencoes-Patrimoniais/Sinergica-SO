@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: conflitos de regras e PMOC; replay
+
+- ADRs 1622–1624/migrations 1764–1766 convertem conflitos explícitos de regras/feriados, proposta/decisão PMOC e vínculo de ciclo PMOC; UI preserva replay incerto e erros genuínos. Revisões cruzadas não encontraram bypass. HTTP de criação de regra passou; SQL cobriu PMOC e vínculo; UI feriado 2/2, proposta 4/4 e vínculo 2/2. Replay positivo SQL do vínculo 1766 ainda sem fixture completa; HTTP dos demais modos não comprovado.
+- ADR-1625/migration 1767 corrige replay de decisão PMOC para retornar `deduplicacaoAtiva:false` igual ao recibo original. Fixture de igualdade integral passou e revisão confirmou autorização/ACL; typecheck passou.
+- Clone compilou até 1767. Próximo passo: demais conflitos ativos, revisão integral e CI antes de homologação; gates default fechados, sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: conflitos de calendário, PMOC e legado
 
 - ADRs 1619–1621/migrations 1761–1763 tratam conflitos explícitos de regras/feriados, avaliação e classificação PMOC, relação e lote legado. UI reconhece rejeição específica somente no primeiro envio, preservando replay incerto e 40001 real; ACL/assinaturas mantidas e revisões independentes sem bypass concreto.

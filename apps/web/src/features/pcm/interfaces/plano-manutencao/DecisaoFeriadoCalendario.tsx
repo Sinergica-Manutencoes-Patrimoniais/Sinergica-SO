@@ -92,7 +92,12 @@ function Formulario({ userId, clienteId, planoId, versaoId, rotinaId, ciclo, aoC
       sessionStorage.removeItem(chave);
       setPendente(null); setConfirmado(null); setAviso("Decisão registrada; estado operacional e calendário não foram alterados.");
       void consulta.refetch();
-    } catch { setAviso("Resultado não confirmado. Mantenha a tentativa e procure suporte em caso de conflito."); }
+    } catch (error) {
+      if (!repeticao && typeof error === "object" && error !== null && "code" in error && error.code === "P0018" && "message" in error && (error.message === "revisao_obsoleta" || error.message === "feriado_alterado" || error.message === "fotografia_divergente")) {
+        try { await conferirSessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); setPendente(null); setConfirmado(null); setAviso("Os dados mudaram. Confira novamente antes de decidir."); void consulta.refetch(); return; } catch { setAviso("Tentativa preservada; procure suporte."); return; }
+      }
+      setAviso("Resultado não confirmado. Mantenha a tentativa e procure suporte em caso de conflito.");
+    }
     finally { trava.current = false; }
   }
   return <section aria-label="Decisão de feriado por calendário">

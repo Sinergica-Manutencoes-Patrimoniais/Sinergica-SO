@@ -94,3 +94,5 @@ Executado com sucesso em 2026-11-05, incluindo verificação do estado aprovado 
 `executar-origem-rotina-conflito.py` verifica `P0017` por HTTP na consulta e na declaração com revisão obsoleta. `executar-origem-rotina-replay.py` declara origem, altera a revisão apenas no clone e confirma que a repetição do mesmo pedido devolve o recibo anterior. As fixtures e credenciais são sintéticas.
 
 `executar-regra-conflito.py` verifica `P0018` por HTTP na prévia de mudança de dia com revisão obsoleta; os testes de interface cobrem separadamente primeira rejeição e replay incerto. O ensaio não cobre as decisões de feriado nem todos os caminhos de regra.
+
+`executar-criar-regra-conflito.py` verifica por HTTP que a criação de regra com revisão inicial divergente retorna `P0018`. O clone usa conta e contrato sintéticos; não cobre por HTTP a alteração antiga de dia nem a decisão de feriado.
