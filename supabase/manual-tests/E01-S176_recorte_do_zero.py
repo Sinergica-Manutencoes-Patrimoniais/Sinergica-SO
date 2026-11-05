@@ -159,16 +159,37 @@ def monitorar(container_id):
         if watchdog_stop.wait(1): return
 
 
+def diagnostico_plataforma(nome):
+    """Retorna apenas categorias fixas; nunca replica logs ou credenciais."""
+    try:
+        p = subprocess.run(["rtk", "proxy", "docker", "logs", "--tail", "100", nome], capture_output=True, timeout=4)
+        if p.returncode: return "logs indisponíveis"
+        conteudo = (p.stdout + p.stderr).decode(errors="replace").lower()
+    except Exception:
+        return "logs indisponíveis"
+    categorias = (
+        (r"permission denied|insufficient privilege|42501", "permissão de banco"),
+        (r"password authentication failed|authentication failed for user|28p01", "autenticação no banco"),
+        (r"connection refused|connection reset|no route to host|network is unreachable", "conexão de serviço"),
+        (r"schema cache|pgrst00[0-9]|pgrst10[0-9]", "cache de schema PostgREST"),
+        (r"schema .{0,40} does not exist|3f000", "schema ausente"),
+        (r"migration|migrat", "migração de serviço"),
+        (r"missing|must be set|required|invalid configuration", "configuração"),
+    )
+    rotulos = [rotulo for padrao, rotulo in categorias if re.search(padrao, conteudo)]
+    return ", ".join(rotulos) if rotulos else "causa não classificada"
+
+
 def main(opcoes):
     global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id
     fixtures = None
     isolamento_1810 = None
     upload_1811 = None
     if opcoes.jornada_ac5_http:
-        if not opcoes.upload_1811 or opcoes.concorrencia_1810:
-            raise RuntimeError("Jornada HTTP exige --upload-1811 e clone sem concorrência 1810")
+        if not opcoes.upload_1811:
+            raise RuntimeError("Jornada HTTP exige --upload-1811 e clone descartável")
         for nome, esperado in (
-            ("apps/web/e2e/s168-retorno-isolado/jornada.py", "15cef98886d88ab4208bae5417df7bc65b2429e635ab78b6bd7ffec56ea05f24"),
+            ("apps/web/e2e/s168-retorno-isolado/jornada.py", "7b6c236f180cd53253a9db46e7938b3409330c32a3bb83eb0185c44e39a3c467"),
             ("supabase/tests/manual_E01-S168_origem_http_sintetica.sql", "429cccd18ec2b47d4b8819550df72223d9a1281cb08db1fa6a32b7dee2f72d40"),
         ):
             if hashlib.sha256((ROOT / nome).read_bytes()).hexdigest() != esperado:
@@ -600,7 +621,7 @@ def main(opcoes):
 
     rest_env = {
         "PGRST_DB_URI": "postgres://authenticator:" + auth_password + "@" + CONTAINER + ":5432/postgres",
-        "PGRST_DB_SCHEMAS": "public,pcm" if opcoes.jornada_ac5_http else "public", "PGRST_DB_ANON_ROLE": "anon", "PGRST_JWT_SECRET": jwt_secret,
+        "PGRST_DB_SCHEMAS": "public", "PGRST_DB_ANON_ROLE": "anon", "PGRST_JWT_SECRET": jwt_secret,
         "PGRST_SERVER_HOST": "0.0.0.0", "PGRST_SERVER_PORT": "3000",
     }
     iniciar_plataforma(REST_CONTAINER, REST_IMAGE, rest_env)
@@ -614,15 +635,19 @@ def main(opcoes):
     }
     iniciar_plataforma(STORAGE_CONTAINER, STORAGE_IMAGE, storage_env)
     for nome, porta, caminho in ((REST_CONTAINER, "3000", "/"), (STORAGE_CONTAINER, "5000", "/status")):
+        rotulo = "PostgREST" if nome == REST_CONTAINER else "Storage"
+        status = "sem resposta"
         for _ in range(45):
             if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio")
-            if not inspect("container", nome)["State"]["Running"]: raise RuntimeError("Serviço de plataforma encerrou antes do readiness")
+            if not inspect("container", nome)["State"]["Running"]:
+                raise RuntimeError(rotulo + " encerrou antes de ficar pronto: " + diagnostico_plataforma(nome))
             try:
-                status = docker("exec", CONTAINER, "curl", "--silent", "--max-time", "2", "--output", "/dev/null", "--write-out", "%{http_code}", "http://" + nome + ":" + porta + caminho)
+                recebido = docker("exec", CONTAINER, "curl", "--silent", "--max-time", "2", "--output", "/dev/null", "--write-out", "%{http_code}", "http://" + nome + ":" + porta + caminho)
+                status = recebido if re.fullmatch(r"[0-9]{3}", recebido) else "inválido"
                 if status == "200": break
-            except Exception: pass
+            except Exception: status = "sem resposta"
             time.sleep(1)
-        else: raise RuntimeError("Serviço de plataforma não ficou pronto")
+        else: raise RuntimeError(rotulo + " não ficou pronto; HTTP " + status + "; " + diagnostico_plataforma(nome))
     if query("select to_regclass('storage.buckets') is not null and to_regclass('storage.objects') is not null and to_regclass('storage.migrations') is not null") != "t":
         raise RuntimeError("Migrations oficiais Storage incompletas")
     print("PostgREST e Storage oficiais prontos; relações de Storage presentes.", flush=True)
@@ -691,7 +716,37 @@ end; $$;"""
                 raise RuntimeError("Gate AC5 alterado após fixtures: " + tabela + "." + coluna)
     if upload_1811 is not None:
         s168_upload_1811_isolada.executar(CONTAINER, upload_1811[1], query, watchdog_triggered)
+    if opcoes.concorrencia_1810:
+        import s176_isolamento_concorrencia_1810
+        s176_isolamento_concorrencia_1810.executar(CONTAINER, watchdog_triggered)
+        if query("select not habilitado from config.sso_estrutura_cliente_leitura_gate where id") != "t":
+            raise RuntimeError("Gate de isolamento alterado após concorrência")
     if opcoes.jornada_ac5_http:
+        # pcm só existe após as migrations: recriar apenas o PostgREST próprio,
+        # agora expondo o schema real. Nunca criar schema artificialmente.
+        if query("select to_regnamespace('pcm') is not null") != "t":
+            raise RuntimeError("Schema pcm ausente após migrations")
+        with watchdog_lock:
+            if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio")
+            anterior = inspect("container", REST_CONTAINER)
+            if (anterior["Id"] != platform_container_ids.get(REST_CONTAINER)
+                or anterior["Name"] != "/" + REST_CONTAINER
+                or anterior["Config"].get("Labels", {}).get("sso.recorte") != IDENT):
+                raise RuntimeError("Identidade PostgREST divergente")
+            docker("rm", "-f", anterior["Id"])
+            del platform_container_ids[REST_CONTAINER]
+        rest_env["PGRST_DB_SCHEMAS"] = "public,pcm"
+        iniciar_plataforma(REST_CONTAINER, REST_IMAGE, rest_env)
+        for _ in range(45):
+            if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio")
+            if not inspect("container", REST_CONTAINER)["State"]["Running"]:
+                raise RuntimeError("PostgREST encerrou após migrations: " + diagnostico_plataforma(REST_CONTAINER))
+            try:
+                status = docker("exec", CONTAINER, "curl", "--silent", "--max-time", "2", "--output", "/dev/null", "--write-out", "%{http_code}", "http://" + REST_CONTAINER + ":3000/")
+                if status == "200": break
+            except Exception: pass
+            time.sleep(1)
+        else: raise RuntimeError("PostgREST não ficou pronto após migrations: " + diagnostico_plataforma(REST_CONTAINER))
         import importlib.util
         modulo = importlib.util.spec_from_file_location("s168_jornada_http", ROOT / "apps/web/e2e/s168-retorno-isolado/jornada.py")
         if modulo is None or modulo.loader is None: raise RuntimeError("Driver HTTP indisponível")
@@ -712,11 +767,6 @@ end; $$;"""
             except (ValueError, TypeError): raise RuntimeError("Resposta HTTP inválida") from None
         jornada.executar(sql, query, requisitar, "http://" + AUTH_CONTAINER + ":9999", "http://" + REST_CONTAINER + ":3000", "http://" + STORAGE_CONTAINER + ":5000", chave("anon"), watchdog_triggered)
         print("Jornada HTTP parcial concluída; não comprova Edge, aprovação ou origem real.", flush=True)
-    if opcoes.concorrencia_1810:
-        import s176_isolamento_concorrencia_1810
-        s176_isolamento_concorrencia_1810.executar(CONTAINER, watchdog_triggered)
-        if query("select not habilitado from config.sso_estrutura_cliente_leitura_gate where id") != "t":
-            raise RuntimeError("Gate de isolamento alterado após concorrência")
     if concorrencia_1807 is not None:
         s165_concorrencia_1807_isolada.executar(CONTAINER, concorrencia_1807, watchdog_triggered)
     if concorrencia_1805:

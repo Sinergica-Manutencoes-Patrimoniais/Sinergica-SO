@@ -73,9 +73,16 @@ def executar(sql, query, request, auth_url, rest_url, storage_url, anon, watchdo
     if query("select count(*) from config.sso_concessoes where usuario_id='" + ATOR + "' and cliente_id='" + CLIENTE + "' and acao='execucao.validar' and ativa") != "0": raise RuntimeError("Revogação não confirmada")
     status, _ = rpc("sso_decidir_retorno_mediado", decisao)
     if status != 403: raise RuntimeError("Replay após revogação não recusado: " + str(status))
-    outro = storage_url + "/object/sso-retorno-evidencias/" + CLIENTE + "/" + RETORNO + "/" + str(uuid.uuid4())
-    status, _ = request(outro, "POST", {**headers, "Content-Type":"image/png", "x-upsert":"false"}, png)
-    if status not in (400, 403): raise RuntimeError("Upload após revogação não recusado: " + str(status))
+    nome_negado = CLIENTE + "/" + RETORNO + "/" + str(uuid.uuid4())
+    status, body = rpc("sso_autorizar_upload_evidencia_resposta", {"p_nome": nome_negado})
+    if status != 200 or json.loads(body) is not False: raise RuntimeError("Predicado após revogação não negou acesso")
+    outro = storage_url + "/object/sso-retorno-evidencias/" + nome_negado
+    status, body = request(outro, "POST", {**headers, "Content-Type":"image/png", "x-upsert":"false"}, png)
+    try: erro = json.loads(body)
+    except (ValueError, TypeError): raise RuntimeError("Recusa do Storage inconclusiva") from None
+    if status not in (400, 403) or not isinstance(erro, dict) or "row-level security" not in str(erro.get("message", "")).lower():
+        raise RuntimeError("Recusa do Storage não identifica política RLS")
+    if query("select count(*) from storage.objects where bucket_id='sso-retorno-evidencias' and name='" + nome_negado + "'") != "0": raise RuntimeError("Objeto negado foi gravado")
     if query("select count(*) from pcm.sso_uploads_evidencia_resposta where retorno_id='" + RETORNO + "'") != "1": raise RuntimeError("Evidência ausente ou duplicada")
     if query("select count(*) from pcm.sso_revisoes_validacao_os where retorno_id='" + RETORNO + "'") != "2": raise RuntimeError("Decisões ausentes ou duplicadas")
     if watchdog.is_set(): raise RuntimeError("Monitor interrompeu jornada AC5")
