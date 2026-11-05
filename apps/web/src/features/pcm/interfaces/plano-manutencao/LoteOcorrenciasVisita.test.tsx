@@ -15,12 +15,12 @@ it.each(["visita_candidata_alterada","serialization failure"])("preserva lote e 
  fireEvent.click(screen.getByRole("checkbox",{name:/Visita 1661/}));fireEvent.change(screen.getByLabelText("Fonte consultada para cada dia"),{target:{value:"PCM"}});fireEvent.click(screen.getByRole("checkbox",{name:/Conferi cada Visita/}));fireEvent.click(screen.getByRole("button",{name:"Preparar lote"}));
  const repetir=await screen.findByRole("button",{name:"Repetir mesmo lote"});await waitFor(()=>expect((repetir as HTMLButtonElement).disabled).toBe(false));fireEvent.click(repetir);await waitFor(()=>expect(api.rpc).toHaveBeenCalledTimes(2));expect(api.rpc.mock.calls[1]?.[1]).toEqual(api.rpc.mock.calls[0]?.[1]);expect(sessionStorage.length).toBe(1);
 });
-it.each(["primeira","replay"] as const)("trata conflito de lote na %s tentativa",async cenario=>{
- let chamadas=0;api.rpc.mockImplementation(()=>Promise.resolve({data:null,error:cenario==="replay"&&chamadas++===0?new Error("rede"):{code:"P0016",message:"revisao_ou_plano_indisponivel"}}));
+it.each([["primeira","P0016","revisao_ou_plano_indisponivel"],["replay","P0016","revisao_ou_plano_indisponivel"],["primeira","P0020","visita_candidata_alterada"],["replay","P0020","visita_candidata_alterada"]] as const)("trata conflito de lote na %s tentativa",async (cenario,codigo,mensagem)=>{
+ let chamadas=0;api.rpc.mockImplementation(()=>Promise.resolve({data:null,error:cenario==="replay"&&chamadas++===0?new Error("rede"):{code:codigo,message:mensagem}}));
  const candidatos=[{visita_id:id(1),semana_origem:"2026-11-02",vencimento_original:"2026-11-06",estado_visita:"planejada",feriado_declarado:false,vigencia_declarada:true,ocorrencia_preparada:false}];
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{mutations:{retry:false}}})}><LoteOcorrenciasVisita userId="usuario" clienteId={id(2)} planoId={id(3)} versaoId={id(4)} rotinaId={id(5)} serieId={id(6)} revision={1} candidatos={candidatos} consultando={false}/></QueryClientProvider>);
  fireEvent.click(screen.getByRole("checkbox",{name:/Visita 1661/}));fireEvent.change(screen.getByLabelText("Fonte consultada para cada dia"),{target:{value:"PCM"}});fireEvent.click(screen.getByRole("checkbox",{name:/Conferi cada Visita/}));fireEvent.click(screen.getByRole("button",{name:"Preparar lote"}));
- if(cenario==="primeira"){await screen.findByText(/A revisão mudou/);expect(sessionStorage.length).toBe(0);}else{fireEvent.click(await screen.findByRole("button",{name:"Repetir mesmo lote"}));await screen.findByText(/Resultado não confirmado/);expect(sessionStorage.length).toBe(1);}
+ if(cenario==="primeira"){await screen.findByText(/A revisão ou a Visita selecionada mudou/);expect(sessionStorage.length).toBe(0);}else{fireEvent.click(await screen.findByRole("button",{name:"Repetir mesmo lote"}));await screen.findByText(/Resultado não confirmado/);expect(sessionStorage.length).toBe(1);}
 });
 
 it("invalida reservas do mesmo usuário, Cliente e Plano após preparar lote",async()=>{

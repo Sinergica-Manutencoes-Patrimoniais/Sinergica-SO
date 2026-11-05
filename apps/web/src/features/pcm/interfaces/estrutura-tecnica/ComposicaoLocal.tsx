@@ -11,6 +11,7 @@ import { FotosStagingAtivo } from "./FotosStagingAtivo";
 import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
 import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
 import { BreadcrumbGrupo } from "./BreadcrumbGrupo";
+import { AtivoLocalLeitura } from "./AtivoLocalLeitura";
 
 type Props = { userId: string; clienteId: string; localId: string; caminho: string[] };
 const item = z.object({ id: z.string().uuid(), nome: z.string(), tipo: z.enum(["equipamento", "componente"]),
@@ -80,7 +81,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     {Array.from(secoes.entries()).map(([nome, linhas]) => <section key={nome}><h5>{nome}</h5>{(["componente", "equipamento", "grupo"] as const).map(tipo => {
       const itensDoTipo = linhas.filter(linha => tipo === "grupo" ? !!linha.grupoId : linha.tipoItem === tipo);
       if (!itensDoTipo.length) return null;
-      return <section key={tipo}><h6>{tipo === "grupo" ? "Grupos Quantitativos" : tipo === "componente" ? "Componentes" : "Equipamentos"}</h6><ul>{itensDoTipo.map(linha => <li key={`${tipo}:${linha.id}`}>{linha.descricao}{linha.grupoId && <DetalhesGrupo userId={userId} clienteId={clienteId} grupoId={linha.grupoId} nome={linha.nome}/>} {linha.tipoItem && <DetalhesItem userId={userId} clienteId={clienteId} itemId={linha.id} tipo={linha.tipoItem} nome={linha.nome}/>}</li>)}</ul></section>;
+      return <section key={tipo}><h6>{tipo === "grupo" ? "Grupos Quantitativos" : tipo === "componente" ? "Componentes" : "Equipamentos"}</h6><ul>{itensDoTipo.map(linha => <li key={`${tipo}:${linha.id}`}>{linha.descricao}{linha.grupoId && <DetalhesGrupo userId={userId} clienteId={clienteId} grupoId={linha.grupoId} nome={linha.nome}/>} {linha.tipoItem && <><DetalhesItem userId={userId} clienteId={clienteId} itemId={linha.id} tipo={linha.tipoItem} nome={linha.nome}/><AtivoLocalLeitura userId={userId} clienteId={clienteId} localId={localId} itemId={linha.id}/></>}</li>)}</ul></section>;
     })}</section>)}
     {itens.hasNextPage && <button type="button" disabled={itens.isFetching} onClick={() => void itens.fetchNextPage()}>Mais Componentes e Equipamentos</button>}
     {grupos.hasNextPage && <button type="button" disabled={grupos.isFetching} onClick={() => void grupos.fetchNextPage()}>Mais Grupos</button>}
