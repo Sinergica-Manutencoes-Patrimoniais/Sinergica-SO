@@ -26,4 +26,12 @@ Na ordem inversa, executar aprovação simulada e mantê-la aberta; inserir a OS
 
 Ambas as ordens passaram. Os Clientes eram distintos: a trava global pode aumentar latência em operações não relacionadas. Não houve avaliação de carga, aprovação operacional ou chamada Auvo.
 
+## Protocolo 1731 sem substituir a guarda
+
+Em clone com migrations até 1731 e fixture de aprovação preparada, manter o gate dedicado `sso_protocolo_revisao_1731_gate` fechado e confirmar que aprovação mediada retorna `protocolo_1731_desabilitado`. Habilitar o gate exclusivamente no clone; não substituir a função da guarda 1045. Criar uma ocorrência legada sintética de outro Cliente apenas para o ensaio.
+
+Em uma ordem, executar `pcm.atualizar_resultado_preventiva` como `service_role` e manter transação aberta: aprovação autenticada deve receber contenção. Na outra, iniciar aprovação mediada e mantê-la aberta: a RPC de resultado deve esperar e concluir após rollback da aprovação. Também tentar alterar o gate em outra sessão durante aprovação aberta: a alteração deve esperar e atingir `lock_timeout`. Reverter operações sintéticas e descartar o clone.
+
+Os três cenários passaram com o código real da migration 1731. A aprovação foi revertida e o gate ativado somente no clone; o retorno era sintético. O ensaio não comprova homologação nem elimina a contenção global entre Clientes.
+
 Revisão estática da contenção: `sso_fotografia_os_comparacao_aprovacao` (migration 1678) chama `sso_travar_fontes_impacto_grupo` (1619), cuja trava `SHARE` inclui `pcm.ordens_servico` e tabelas de vínculo. Selos 1722/1723 e mediador 1724 acrescentam outras travas de tabela; triggers da migration 0787 ainda usam protocolo advisory global quando o gate correspondente está habilitado. Trocar apenas o lock de tabela por lock das linhas já encontradas não protege contra inserções futuras de OS ou vínculos. Uma solução granular requer protocolo comum a todos os escritores relevantes, inclusive mudanças de Cliente e dados recebidos, revisão da ordem de travas e ensaios que provem contenção no mesmo Cliente e independência entre Clientes. Não foi implementada substituição nem medida carga.

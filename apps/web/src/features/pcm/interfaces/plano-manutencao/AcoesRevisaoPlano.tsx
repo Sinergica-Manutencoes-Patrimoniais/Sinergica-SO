@@ -133,7 +133,7 @@ export function AcoesRevisaoPlano({
     if (trava.current) return;
     setErro("");
     setDetalhes([]);
-    if (pedido.tipo === "aprovacao_revisao" && import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true") {
+    if (pedido.tipo === "aprovacao_revisao" && (import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true" || import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true")) {
       setErro("A aprovação de revisão está desativada. O pedido permanece guardado para conferência.");
       return;
     }
@@ -196,7 +196,7 @@ export function AcoesRevisaoPlano({
     }
   }
   function confirmar() {
-    if (!escolha || revisaoMudou || bloqueado || operacao.isPending || trava.current) return;
+    if (!escolha || revisaoMudou || bloqueado || operacao.isPending || trava.current || (escolha === "aprovar_revisao" && (import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true" || import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true"))) return;
     const base = {
       requestId: crypto.randomUUID(),
       expectedRevision: plano.revisao,
@@ -343,8 +343,8 @@ export function AcoesRevisaoPlano({
           )}
           {escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_DIAGNOSTICO_FUSO_VIGENCIA_ENABLED === "true" && <DiagnosticoFusoVigencia userId={userId} clienteId={clienteId} planoId={plano.id} revisao={plano.revisao} />}
           {escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED === "true" && <PreflightAprovacaoRevisao userId={userId} clienteId={clienteId} planoId={plano.id} revisao={plano.revisao} vigencia={vigencia} />}
-          {escolha === "aprovar_revisao" && <p role="status">A aprovação permanece bloqueada até comprovar integralmente os impactos.</p>}
-          <Button disabled={operacao.isPending || bloqueado || revisaoMudou || escolha === "aprovar_revisao"} onClick={confirmar}>
+          {escolha === "aprovar_revisao" && <p role="status">{import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED === "true" ? "O servidor verificará as permissões e os impactos antes de aprovar." : "A aprovação permanece bloqueada enquanto o protocolo de revisão estiver desativado."}</p>}
+          <Button disabled={operacao.isPending || bloqueado || revisaoMudou || (escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true")} onClick={confirmar}>
             {escolha === "iniciar"
               ? "Confirmar início da revisão"
               : escolha === "aprovar" || escolha === "aprovar_revisao"

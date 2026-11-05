@@ -13,7 +13,7 @@ export function PreviaRevisao({ userId, clienteId, planoId, revisao }: { userId:
   const desatualizada = itens.some((item) => item.revisao !== revisao);
   const descricoes = { adicionada: "Adicionada", retirada: "Retirada", alterada: "Alterada", inalterada: "Inalterada" };
   return <section aria-label="Comparação da revisão" className="space-y-2">
-    <p>Comparação informativa de conteúdo. Impactos em Ocorrências e OS não foram calculados; a aprovação da nova versão permanece bloqueada.</p>
+    <p>Comparação informativa de conteúdo. Impactos em Ocorrências e OS não foram calculados; o servidor verifica as condições na aprovação.</p>
     {consulta.isFetching && <output>Carregando comparação...</output>}
     {consulta.isError && <p role="alert">Não foi possível comparar a revisão. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {desatualizada && <p role="alert">O Plano mudou. Atualize os dados antes de consultar a comparação.</p>}

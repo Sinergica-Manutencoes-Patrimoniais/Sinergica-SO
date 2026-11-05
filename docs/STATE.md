@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: jornadas integradas com guarda real
+
+- Jornadas integradas de Calendário e Visita passaram em clones com 1045 efetiva e gate 1731 ligado apenas nas transações de teste: decisão, aprovação/replay, selo, retirada/replay e geração/replay. Calendário também protegeu OS legada tardia e preservou ocorrência anterior. Fixtures `supabase/tests/manual_E01-S165_jornada_real_calendario_1731.sql` e `supabase/tests/manual_E01-S165_jornada_real_visita_1731.sql`; dados, relógio e algumas fontes sintéticos, transações revertidas.
+- Concorrência de aprovação 1731 real e RPC de resultado passou nas duas ordens; gate permaneceu estável durante transação. Trava global ainda afeta outro Cliente; carga não medida. Roteiro `supabase/tests/manual_E01-S165_aprovacao_indice_legado_concorrencia.md`.
+- Botão de aprovação e recuperação exigem ambas flags de interface `VITE_SSO_APROVAR_REVISAO_ENABLED` e `VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED`, desligadas por padrão; servidor ainda exige permissão, gate e validadores. Seis testes UI focados passaram. Gate de banco permanece desligado por padrão.
+- Próximo passo: validação de fontes/escritores e revisão adversarial completa, fluxo UI real e CI antes de homologação; dados externos não foram comprovados. Sem deploy/Auvo real.
+
 ## 2026-11-05 — S165/S166: protocolo de aprovação condicionado
 
 - ADR-1589/migration 1731 substituem corpo incondicional do trigger 1045 por verificação do ator/Cliente, txid, READ COMMITTED, origin, gate mediado e protocolo de validadores existentes. Gate dedicado novo nasce desligado e configurações anteriores são preservadas; não há liberação operacional automática. Revisão independente não identificou bypass estático; não prova cobertura integral.

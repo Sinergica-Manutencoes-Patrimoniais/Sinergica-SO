@@ -40,7 +40,7 @@ it("informa que impactos e aprovação continuam pendentes ao consultar a revis�
   montar();
   expect(await screen.findByText(/Nova 1 — Alterada/)).toBeTruthy();
   expect(screen.getByText(/Impactos em Ocorrências e OS não foram calculados/)).toBeTruthy();
-  expect(screen.getByText(/aprovação da nova versão permanece bloqueada/)).toBeTruthy();
+  expect(screen.getByText(/servidor verifica as condições na aprovação/)).toBeTruthy();
 });
 
 it("não mostra comparação de revisão desatualizada", async () => {

@@ -101,7 +101,7 @@ function Conteudo({
     <section aria-label="Comparação da revisão" className="space-y-2">
       <p>
         Comparação informativa de conteúdo. Impactos em Ocorrências e OS não foram calculados; a
-        aprovação da nova versão permanece bloqueada.
+        aprovação exige verificações adicionais no servidor.
       </p>
       {import.meta.env.VITE_SSO_IMPACTO_REVISAO_OS_ENABLED === "true" && <DiagnosticoOsRevisao userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
       {import.meta.env.VITE_SSO_INDICIOS_REVISAO_ROTINA_ENABLED === "true" && <IndiciosRevisaoRotina userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}

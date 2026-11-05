@@ -1469,7 +1469,19 @@ it("não habilita aprovação da revisão com preflight desligado", () => {
   render(<QueryClientProvider client={client}><AcoesRevisaoPlano userId="usuario" clienteId={clienteId} plano={plano} bloqueado={false} /></QueryClientProvider>);
   fireEvent.click(screen.getByRole("button", { name: "Aprovar revisão de versão" }));
   expect(screen.getByRole("button", { name: "Confirmar aprovação" })).toBeDisabled();
-  expect(screen.getByText(/bloqueada até comprovar integralmente os impactos/i)).toBeTruthy();
+  expect(screen.getByText(/protocolo de revisão estiver desativado/i)).toBeTruthy();
+  vi.unstubAllEnvs();
+});
+
+it("habilita confirmação da revisão somente com protocolo 1731 ligado", () => {
+  vi.stubEnv("VITE_SSO_APROVAR_REVISAO_ENABLED", "true");
+  vi.stubEnv("VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED", "true");
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const plano = { id: "16500000-0000-4000-8000-000000000011", clienteId, nome: "Preventivo", estado: "em_revisao" as const, revisao: 3 };
+  render(<QueryClientProvider client={client}><AcoesRevisaoPlano userId="usuario" clienteId={clienteId} plano={plano} bloqueado={false} /></QueryClientProvider>);
+  fireEvent.click(screen.getByRole("button", { name: "Aprovar revisão de versão" }));
+  expect(screen.getByRole("button", { name: "Confirmar aprovação" })).toBeEnabled();
+  expect(screen.getByText(/servidor verificará as permissões e os impactos/i)).toBeTruthy();
   vi.unstubAllEnvs();
 });
 
