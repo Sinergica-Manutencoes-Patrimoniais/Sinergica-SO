@@ -74,3 +74,9 @@ A fixture S165 usa modo `replica` em cenários de adulteração: esses trechos n
 funcionamento das guardas desativadas nesse modo. O resultado também não comprova concorrência,
 interface, permissões em produção ou prontidão para release. Gates e condições de homologação
 permanecem como registrados acima.
+
+Em outro ensaio isolado com 228 migrations da base e 656 candidatas, duas sessões distintas
+validaram a revogação antes do comando de administração na S170 e a contenção genérica entre
+criação de vínculo e alteração de Cliente na S176. O clone foi descartado, sem acionamento do
+Auvo. O resultado não comprova as ordens inversas, replay ou o funcionamento de uma guarda
+específica na contenção da S176.
