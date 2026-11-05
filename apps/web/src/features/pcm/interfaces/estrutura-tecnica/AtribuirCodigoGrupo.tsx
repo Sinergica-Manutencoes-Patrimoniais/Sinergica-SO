@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -15,6 +15,11 @@ function Conteudo({ userId, clienteId, grupoId }: { userId: string; clienteId: s
   const chave = `sso-atribuir-codigo-grupo:${JSON.stringify([userId, clienteId, grupoId])}`;
   const client = useQueryClient();
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => { montado.current = false; };
+  }, []);
   const [codigo, setCodigo] = useState("");
   const [confirmacao, setConfirmacao] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
@@ -29,7 +34,7 @@ function Conteudo({ userId, clienteId, grupoId }: { userId: string; clienteId: s
     const { data, error } = await supabase.schema("pcm").rpc("sso_atribuir_codigo_grupo", { p_request_id: p.requestId, p_cliente_id: clienteId, p_grupo_id: grupoId, p_codigo: p.codigo });
     if (error) throw error;
     if (!data || data.requestId !== p.requestId || data.clienteId !== clienteId || data.grupoId !== grupoId || data.codigo !== p.codigo || !z.string().uuid().safeParse(data.codigoId).success) throw new Error("Resposta inválida.");
-    const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+    const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
   }, onSuccess: async (_data, p) => {
     try {
       await client.invalidateQueries({ queryKey: ["codigos-publicos", userId, clienteId], refetchType: "none" });

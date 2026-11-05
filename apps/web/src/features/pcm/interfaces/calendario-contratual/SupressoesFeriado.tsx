@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -26,14 +26,14 @@ function Lista({userId,clienteId,feriadoId}:Props){
   </section>;
 }
 function Revogar({userId,clienteId,feriadoId,supressaoId,permitirNova}:Props & {supressaoId:string;permitirNova:boolean}){
-  const chave=`sso-revogacao-supressao:${JSON.stringify([userId,clienteId,supressaoId])}`;const [motivo,setMotivo]=useState("");const [aviso,setAviso]=useState("");const trava=useRef(false);const cache=useQueryClient();
+  const chave=`sso-revogacao-supressao:${JSON.stringify([userId,clienteId,supressaoId])}`;const [motivo,setMotivo]=useState("");const [aviso,setAviso]=useState("");const trava=useRef(false);const cache=useQueryClient();const montado=useRef(false);useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
   const [pendente,setPendente]=useState<Pedido|"invalido"|null>(()=>{try{const v=sessionStorage.getItem(chave);if(!v)return null;const p=pedido.parse(JSON.parse(v));return p.supressaoId===supressaoId?p:"invalido";}catch{return "invalido";}});
   const envio=useMutation({mutationFn:async(p:Pedido)=>{
-    if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId)throw new Error("Sessão alterada.");
+    if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||!montado.current)throw new Error("Sessão alterada.");if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");
     const {data,error}=await supabase.schema("pcm").rpc("sso_revogar_supressao_semana",{p_ator_id:userId,p_cliente_id:clienteId,p_request_id:p.requestId,p_supressao_id:p.supressaoId,p_motivo:p.motivo});if(error)throw error;
     if(!data||data.requestId!==p.requestId||data.supressaoId!==p.supressaoId||data.revogada!==true||data.visitaCriada!==false||data.ocorrenciaCriada!==false||data.osCriada!==false||data.tarefaAuvoCriada!==false)throw new Error("Recibo divergente.");
     const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId)throw new Error("Sessão alterada.");
-  },onSuccess:async(_r,p)=>{await cache.invalidateQueries({queryKey:["supressoes-feriado",userId,clienteId,feriadoId]});try{if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(chave);}catch{setAviso("Revogação confirmada; tentativa não removida. Consulte suporte.");return;}setPendente(null);setMotivo("");setAviso("Revogação registrada. Nenhuma Visita foi criada.");},onError:()=>setAviso("Resultado não confirmado. Repita a tentativa ou consulte suporte."),onSettled:()=>{trava.current=false;}});
+  },onSuccess:async(_r,p)=>{try{const sessao=await supabase.auth.getUser();if(sessao.error||sessao.data.user?.id!==userId||!montado.current||sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(chave);}catch{setAviso("Revogação confirmada; tentativa não removida. Consulte suporte.");return;}void cache.invalidateQueries({queryKey:["supressoes-feriado",userId,clienteId,feriadoId]});setPendente(null);setMotivo("");setAviso("Revogação registrada. Nenhuma Visita foi criada.");},onError:()=>setAviso("Resultado não confirmado. Repita a tentativa ou consulte suporte."),onSettled:()=>{trava.current=false;}});
   function enviar(p:Pedido){if(trava.current)return;try{if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();}catch{setAviso("Tentativa indisponível. Consulte suporte.");return;}trava.current=true;envio.mutate(p);}
   function iniciar(){if(!permitirNova||pendente||trava.current)return;try{const p=pedido.parse({requestId:crypto.randomUUID(),supressaoId,motivo});if(sessionStorage.getItem(chave)!==null)throw new Error();sessionStorage.setItem(chave,JSON.stringify(p));setPendente(p);enviar(p);}catch{setAviso("Confira o motivo e a sessão. Nada foi enviado.");}}
   if(!permitirNova&&!pendente&&!aviso)return null;
