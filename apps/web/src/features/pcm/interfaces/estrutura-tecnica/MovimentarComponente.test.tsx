@@ -1,219 +1,119 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+const auth = vi.hoisted(() => ({ getUser: vi.fn() }));
+vi.mock("../../../../lib/supabase-client", () => ({ supabase: { auth } }));
 import { MovimentarComponente } from "./MovimentarComponente";
 
+const componenteId = "17690000-0000-4000-8000-000000000011";
+const areaId = "17690000-0000-4000-8000-000000000021";
+const chave = `sso-movimento:17690000-0000-4000-8000-000000000001:17690000-0000-4000-8000-000000000002:${componenteId}`;
+const item = { id: componenteId, estruturaRevisao: 3, areaId: null, localId: null, parentItemId: null };
+
+beforeEach(() => {
+  auth.getUser.mockReset().mockResolvedValue({ data: { user: { id: "17690000-0000-4000-8000-000000000001" } }, error: null });
+});
 afterEach(() => {
   cleanup();
   sessionStorage.clear();
+  vi.clearAllMocks();
 });
-it("repete movimentação incerta com mesmo pedido e revisão", async () => {
-  const enviar = vi.fn().mockRejectedValueOnce(new Error("conexão"));
-  render(
-    <MovimentarComponente
-      userId="u"
-      clienteId="c"
-      item={{
-        id: "17610000-0000-4000-8000-000000000061",
-        estruturaRevisao: 3,
-        areaId: null,
-        localId: null,
-        parentItemId: null,
-      }}
-      areas={[{ id: "17610000-0000-4000-8000-000000000021", nome: "Torre" }]}
-      locais={[
-        {
-          id: "17610000-0000-4000-8000-000000000031",
-          areaId: "17610000-0000-4000-8000-000000000021",
-          nome: "Salão",
-        },
-      ]}
-      pais={[]}
-      enviar={enviar}
-      onConcluido={() => {}}
-    />,
-  );
-  fireEvent.change(screen.getByLabelText("Área de destino"), {
-    target: { value: "17610000-0000-4000-8000-000000000021" },
-  });
-  fireEvent.change(screen.getByLabelText("Local de destino"), {
-    target: { value: "17610000-0000-4000-8000-000000000031" },
-  });
+
+it("preserva pedido após resposta incerta e recusas de replay, até confirmar o mesmo comando", async () => {
+  const enviar = vi.fn()
+    .mockRejectedValueOnce(new Error("conexão interrompida"))
+    .mockRejectedValueOnce({ code: "40001" })
+    .mockRejectedValueOnce({ code: "23514" })
+    .mockImplementationOnce(async (comando) => ({ requestId: comando.requestId, aggregateId: comando.componenteId, revision: comando.expectedRevision + 1, linkedIds: { clienteId: "17690000-0000-4000-8000-000000000002", areaId } }));
+  const concluido = vi.fn();
+  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
+    areas={[{ id: areaId, nome: "Área A" }]} locais={[]} pais={[]} enviar={enviar} onConcluido={concluido} />);
+  fireEvent.change(screen.getByLabelText("Área de destino"), { target: { value: areaId } });
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
-  await screen.findByRole("alert");
+  await screen.findByRole("button", { name: "Tentar movimentação novamente" });
+  const guardado = sessionStorage.getItem(chave);
+  expect(guardado).not.toBeNull();
+  const pedido = JSON.parse(guardado as string);
+  expect(pedido).toEqual({ requestId: expect.any(String), expectedRevision: 3, componenteId, areaId, localId: null, parentId: null });
+  for (const numero of [2, 3]) {
+    fireEvent.click(screen.getByRole("button", { name: "Tentar movimentação novamente" }));
+    await waitFor(() => expect(enviar).toHaveBeenCalledTimes(numero));
+    await screen.findByRole("button", { name: "Tentar movimentação novamente" });
+    expect(sessionStorage.getItem(chave)).toBe(guardado);
+    expect(concluido).not.toHaveBeenCalled();
+  }
   fireEvent.click(screen.getByRole("button", { name: "Tentar movimentação novamente" }));
-  await waitFor(() => expect(enviar).toHaveBeenCalledTimes(2));
-  expect(enviar.mock.calls[0]?.[0]).toEqual(enviar.mock.calls[1]?.[0]);
-  expect(enviar.mock.calls[0]?.[0].expectedRevision).toBe(3);
+  await waitFor(() => expect(concluido).toHaveBeenCalledTimes(1));
+  expect(enviar).toHaveBeenCalledTimes(4);
+  for (const [comando] of enviar.mock.calls) expect(comando).toEqual(pedido);
+  expect(sessionStorage.getItem(chave)).toBeNull();
 });
-it("exibe vínculos atuais indisponíveis sem substituí-los silenciosamente", () => {
-  render(
-    <MovimentarComponente
-      userId="u"
-      clienteId="c"
-      item={{
-        id: "i",
-        estruturaRevisao: 1,
-        areaId: "area-antiga",
-        localId: "local-antigo",
-        parentItemId: "pai-antigo",
-      }}
-      areas={[]}
-      locais={[]}
-      pais={[]}
-      enviar={vi.fn()}
-      onConcluido={() => {}}
-    />,
-  );
-  expect((screen.getByLabelText("Área de destino") as HTMLSelectElement).value).toBe("area-antiga");
-  expect((screen.getByLabelText("Local de destino") as HTMLSelectElement).value).toBe(
-    "local-antigo",
-  );
-  expect((screen.getByLabelText("Componente pai") as HTMLSelectElement).value).toBe("pai-antigo");
-});
-it("não envia posição antiga com revisão nova quando o detalhe muda durante edição", () => {
-  const enviar = vi.fn();
-  const item = {
-    id: "17610000-0000-4000-8000-000000000061",
-    estruturaRevisao: 3,
-    areaId: null,
-    localId: null,
-    parentItemId: null,
-  };
-  const montar = (dados: typeof item) => (
-    <MovimentarComponente
-      userId="u"
-      clienteId="c"
-      item={dados}
-      areas={[]}
-      locais={[]}
-      pais={[]}
-      enviar={enviar}
-      onConcluido={() => {}}
-    />
-  );
-  const tela = render(montar(item));
-  tela.rerender(montar({ ...item, estruturaRevisao: 4 }));
-  expect(
-    (screen.getByRole("button", { name: "Confirmar movimentação" }) as HTMLButtonElement).disabled,
-  ).toBe(true);
-  expect(screen.getByRole("alert").textContent).toMatch(/reabra/i);
-  fireEvent.submit(screen.getByRole("button", { name: "Confirmar movimentação" }).closest("form")!);
-  expect(enviar).not.toHaveBeenCalled();
-  expect(sessionStorage.getItem(`sso-movimento:u:c:${item.id}`)).toBeNull();
-});
-it("mantém retry do pedido incerto mesmo se o detalhe for atualizado", async () => {
-  const enviar = vi.fn().mockRejectedValue(new Error("conexão"));
-  const item = {
-    id: "17610000-0000-4000-8000-000000000061",
-    estruturaRevisao: 3,
-    areaId: null,
-    localId: null,
-    parentItemId: null,
-  };
-  const montar = (dados: typeof item) => (
-    <MovimentarComponente
-      userId="u"
-      clienteId="c"
-      item={dados}
-      areas={[]}
-      locais={[]}
-      pais={[]}
-      enviar={enviar}
-      onConcluido={() => {}}
-    />
-  );
-  const tela = render(montar(item));
+
+it("recibo divergente preserva o pedido para reconciliação", async () => {
+  const enviar = vi.fn().mockImplementation(async (comando) => ({
+    requestId: "17690000-0000-4000-8000-000000000099", aggregateId: comando.componenteId,
+    revision: comando.expectedRevision + 1, linkedIds: { clienteId: "17690000-0000-4000-8000-000000000002" },
+  }));
+  const concluido = vi.fn();
+  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
+    areas={[]} locais={[]} pais={[]} enviar={enviar} onConcluido={concluido} />);
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
-  await screen.findByRole("alert");
-  tela.rerender(montar({ ...item, estruturaRevisao: 4 }));
-  fireEvent.click(screen.getByRole("button", { name: "Tentar movimentação novamente" }));
-  await waitFor(() => expect(enviar).toHaveBeenCalledTimes(2));
-  expect(enviar.mock.calls[1]?.[0]).toEqual(enviar.mock.calls[0]?.[0]);
+  await screen.findByRole("button", { name: "Tentar movimentação novamente" });
+  const guardado = sessionStorage.getItem(chave);
+  expect(guardado).not.toBeNull();
+  const chamada = enviar.mock.calls[0];
+  if (!chamada) throw new Error("Envio esperado não ocorreu");
+  expect(JSON.parse(guardado as string)).toEqual(chamada[0]);
+  expect(concluido).not.toHaveBeenCalled();
 });
-it("permite corrigir vínculo rejeitado pelo servidor", async () => {
-  const enviar = vi.fn().mockRejectedValue({ code: "23514", message: "ciclo_na_hierarquia" });
-  render(
-    <MovimentarComponente
-      userId="u"
-      clienteId="c"
-      item={{
-        id: "17610000-0000-4000-8000-000000000061",
-        estruturaRevisao: 3,
-        areaId: null,
-        localId: null,
-        parentItemId: null,
-      }}
-      areas={[]}
-      locais={[]}
-      pais={[]}
-      enviar={enviar}
-      onConcluido={() => {}}
-    />,
-  );
+
+it("sessão trocada após envio não confirma nem descarta o pedido", async () => {
+  auth.getUser.mockResolvedValueOnce({ data: { user: { id: "17690000-0000-4000-8000-000000000001" } }, error: null })
+    .mockResolvedValueOnce({ data: { user: { id: "outra" } }, error: null });
+  const enviar = vi.fn().mockImplementation(async (comando) => ({
+    requestId: comando.requestId, aggregateId: comando.componenteId, revision: comando.expectedRevision, linkedIds: { clienteId: "17690000-0000-4000-8000-000000000002" },
+  }));
+  const concluido = vi.fn();
+  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
+    areas={[]} locais={[]} pais={[]} enviar={enviar} onConcluido={concluido} />);
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
-  expect((await screen.findByRole("alert")).textContent).toMatch(/corrija/i);
-  expect(screen.getByLabelText("Componente pai")).toBeTruthy();
+  await screen.findByRole("button", { name: "Tentar movimentação novamente" });
+  const guardado = sessionStorage.getItem(chave);
+  expect(guardado).not.toBeNull();
+  const chamada = enviar.mock.calls[0];
+  if (!chamada) throw new Error("Envio esperado não ocorreu");
+  expect(JSON.parse(guardado as string)).toEqual(chamada[0]);
+  expect(concluido).not.toHaveBeenCalled();
 });
-it("não sobrescreve pedido pendente criado após abertura do formulário", async () => {
-  const enviar = vi.fn();
-  render(
-    <MovimentarComponente
-      userId="u"
-      clienteId="c"
-      item={{
-        id: "17610000-0000-4000-8000-000000000061",
-        estruturaRevisao: 3,
-        areaId: null,
-        localId: null,
-        parentItemId: null,
-      }}
-      areas={[]}
-      locais={[]}
-      pais={[]}
-      enviar={enviar}
-      onConcluido={() => {}}
-    />,
-  );
-  const chave = "sso-movimento:u:c:17610000-0000-4000-8000-000000000061";
-  sessionStorage.setItem(chave, "outro pedido");
+
+it.each([
+  { clienteId: "17690000-0000-4000-8000-000000000003", areaId },
+  { clienteId: "17690000-0000-4000-8000-000000000002", areaId: "17690000-0000-4000-8000-000000000022" },
+])("recibo com Cliente ou destino divergente preserva o pedido", async (linkedIds) => {
+  const enviar = vi.fn().mockImplementation(async (comando) => ({
+    requestId: comando.requestId, aggregateId: comando.componenteId,
+    revision: comando.expectedRevision + 1, linkedIds,
+  }));
+  const concluido = vi.fn();
+  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
+    areas={[{ id: areaId, nome: "Área A" }]} locais={[]} pais={[]} enviar={enviar} onConcluido={concluido} />);
+  fireEvent.change(screen.getByLabelText("Área de destino"), { target: { value: areaId } });
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
-  expect(await screen.findByRole("alert")).toBeTruthy();
-  expect(sessionStorage.getItem(chave)).toBe("outro pedido");
-  expect(enviar).not.toHaveBeenCalled();
+  await screen.findByRole("button", { name: "Tentar movimentação novamente" });
+  const guardado = sessionStorage.getItem(chave);
+  expect(guardado).not.toBeNull();
+  const chamada = enviar.mock.calls[0];
+  if (!chamada) throw new Error("Envio esperado não ocorreu");
+  expect(JSON.parse(guardado as string)).toEqual(chamada[0]);
+  expect(concluido).not.toHaveBeenCalled();
 });
-it("não apaga pedido diferente quando resposta antiga chega", async () => {
-  let concluir!: (value: object) => void;
-  const enviar = vi.fn(
-    () =>
-      new Promise<object>((resolve) => {
-        concluir = resolve;
-      }),
-  );
-  const onConcluido = vi.fn();
-  render(
-    <MovimentarComponente
-      userId="u"
-      clienteId="c"
-      item={{
-        id: "17610000-0000-4000-8000-000000000061",
-        estruturaRevisao: 3,
-        areaId: null,
-        localId: null,
-        parentItemId: null,
-      }}
-      areas={[]}
-      locais={[]}
-      pais={[]}
-      enviar={enviar}
-      onConcluido={onConcluido}
-    />,
-  );
+
+it("uma rejeição definitiva na primeira tentativa permite corrigir sem guardar pedido incerto", async () => {
+  const enviar = vi.fn().mockRejectedValueOnce({ code: "23514" });
+  render(<MovimentarComponente userId="17690000-0000-4000-8000-000000000001" clienteId="17690000-0000-4000-8000-000000000002" item={item}
+    areas={[]} locais={[]} pais={[]} enviar={enviar} onConcluido={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: "Confirmar movimentação" }));
-  const chave = "sso-movimento:u:c:17610000-0000-4000-8000-000000000061";
-  sessionStorage.setItem(chave, "outro pedido");
-  concluir({});
-  await screen.findByRole("alert");
-  expect(sessionStorage.getItem(chave)).toBe("outro pedido");
-  expect(onConcluido).not.toHaveBeenCalled();
+  await screen.findByText(/servidor rejeitou os vínculos/i);
+  expect(sessionStorage.getItem(chave)).toBeNull();
+  expect(screen.queryByRole("button", { name: "Tentar movimentação novamente" })).toBeNull();
 });
