@@ -1,5 +1,5 @@
 import { useInfiniteQuery,useMutation,useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCalendarioContratualAdapter } from "../../infrastructure/supabase-calendario-contratual-adapter";
 import { VigenciaSerieRotina } from "./VigenciaSerieRotina";
@@ -14,6 +14,8 @@ export function VincularSerieRotina(props: Props) {
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId,props.versaoId,props.rotinaId])} {...props} />;
 }
 function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,revision}: Props) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const chave=`sso-rotina-serie:${JSON.stringify([userId,clienteId,planoId,rotinaId])}`;const cache=useQueryClient();const primeira=useRef(false);
   const [serieId,setSerieId]=useState("");const [mensagem,setMensagem]=useState("");
   const [pedido,setPedido]=useState<Pedido|"invalido"|null>(() => {try{const salvo=sessionStorage.getItem(chave);if(!salvo)return null;const p=JSON.parse(salvo) as Pedido;
@@ -26,12 +28,12 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,revision}: Props) 
       p_ator:userId,p_cliente:clienteId,p_plano:planoId,p_rotina:rotinaId,p_apos:pageParam,p_limite:50}).abortSignal(signal);if(error)throw error;
       if(!Array.isArray(data)||data.some((v) => typeof v.serie_id!=="string"||typeof v.criado_em!=="string"))throw new Error("Vínculos inválidos.");
       await conferirSessaoDiagnostico(userId,signal);return data as {serie_id:string;criado_em:string}[];},getNextPageParam:(pagina) => pagina.length===50 ? pagina.at(-1)?.serie_id : undefined});
-  const envio=useMutation({mutationFn:async(p:Pedido) => {await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");const {data,error}=await supabase.schema("pcm").rpc("sso_vincular_serie_rotina_mediado",{
+  const envio=useMutation({mutationFn:async(p:Pedido) => {await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");const {data,error}=await supabase.schema("pcm").rpc("sso_vincular_serie_rotina_mediado",{
     p_ator:userId,p_cliente:p.clienteId,p_request:p.requestId,p_plano:p.planoId,p_versao:p.versaoId,p_rotina:p.rotinaId,p_serie:p.serieId,p_revisao:p.revision});
-    if(error)throw error;if(!data||data.requestId!==p.requestId||data.planoId!==p.planoId||data.serieId!==p.serieId)throw new Error("Resposta inválida.");await conferirSessaoDiagnostico(userId);},
-    onSuccess:async(_r,p) => {try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");sessionStorage.removeItem(chave);}catch{setMensagem("Vínculo registrado, mas tentativa não foi removida. Procure suporte.");return;}
+    if(error)throw error;if(!data||data.requestId!==p.requestId||data.planoId!==p.planoId||data.serieId!==p.serieId)throw new Error("Resposta inválida.");await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");},
+    onSuccess:async(_r,p) => {try{await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");sessionStorage.removeItem(chave);}catch{setMensagem("Vínculo registrado, mas tentativa não foi removida. Procure suporte.");return;}
       setPedido(null);setMensagem("Vínculo registrado. Nenhuma ocorrência, OS ou tarefa foi criada.");await Promise.all([cache.invalidateQueries({queryKey:["rotina-serie-vinculos",userId,clienteId,planoId,rotinaId]}),cache.invalidateQueries({queryKey:["reserva-futuro-series",userId,clienteId,planoId,rotinaId]}),cache.invalidateQueries({queryKey:["reserva-futuro-visitas",userId,clienteId,planoId]}),cache.invalidateQueries({queryKey:["reserva-futuro",userId,clienteId,planoId]})]);},
-    onError:async(error,p) => {const e=error as {code?:string;message?:string};if(primeira.current&&e.code==="P0011"&&e.message==="revisao_obsoleta"){try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");sessionStorage.removeItem(chave);setPedido(null);setMensagem("O Plano mudou. Atualize e confira novamente antes de vincular.");await cache.invalidateQueries({queryKey:["rotina-serie-vinculos",userId,clienteId,planoId,rotinaId]});return;}catch{/* Preserve tentativa em caso de dúvida. */}}setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte.");},onSettled:()=>{primeira.current=false;}});
+    onError:async(error,p) => {const e=error as {code?:string;message?:string};if(primeira.current&&e.code==="P0011"&&e.message==="revisao_obsoleta"){try{await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente.");sessionStorage.removeItem(chave);setPedido(null);setMensagem("O Plano mudou. Atualize e confira novamente antes de vincular.");await cache.invalidateQueries({queryKey:["rotina-serie-vinculos",userId,clienteId,planoId,rotinaId]});return;}catch{/* Preserve tentativa em caso de dúvida. */}}setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte.");},onSettled:()=>{primeira.current=false;}});
   const enviar=(p:Pedido)=>{if(envio.isPending)return;try{const anterior=sessionStorage.getItem(chave);if(anterior!==null&&anterior!==JSON.stringify(p))throw new Error();primeira.current=p.tentativaIncerta===false;const marcado={...p,tentativaIncerta:true};sessionStorage.setItem(chave,JSON.stringify(marcado));setPedido(marcado);envio.mutate(marcado);}catch{setMensagem("Não foi possível guardar tentativa; nada foi enviado.");}};
   const opcoes=[...new Map((regras.data?.pages.flat()??[]).map((r) => [r.serieId,r])).values()];const selecionada=opcoes.find((r) => r.serieId===serieId);
   return <section aria-label="Vínculo de Rotina por Visita"><h4>Vínculo de Rotina com série contratual</h4>

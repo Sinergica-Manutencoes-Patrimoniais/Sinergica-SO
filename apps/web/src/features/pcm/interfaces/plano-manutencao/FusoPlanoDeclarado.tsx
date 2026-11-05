@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
@@ -13,6 +13,8 @@ export function FusoPlanoDeclarado(props: Props) {
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, planoId }: Props) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient(), trava = useRef(false), chave = `sso-fuso-plano:${JSON.stringify([userId, clienteId, planoId])}`;
   const [busca, setBusca] = useState(""), [termo, setTermo] = useState(""), [fuso, setFuso] = useState(""), [fonte, setFonte] = useState(""), [motivo, setMotivo] = useState("");
   const [confirmacao, setConfirmacao] = useState<string | null>(null), [aviso, setAviso] = useState("");
@@ -39,15 +41,15 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
   const disponivel = !divergente && !historico.isFetching && !historico.isError && !fusos.isFetching && !fusos.isError;
   const revisao = itensHistorico[0]?.revisao ?? 0;
   const foto = JSON.stringify([userId, clienteId, planoId, revisao, fuso, fonte.trim(), motivo.trim()]);
-  const envio = useMutation({ mutationFn: async (p: Pedido) => { await conferirSessaoDiagnostico(userId);
+  const envio = useMutation({ mutationFn: async (p: Pedido) => { await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
     if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_fuso_mediado", { p_ator_id: userId, p_request_id: p.requestId, p_cliente_id: p.clienteId, p_plano_id: p.planoId, p_expected_revision: p.revisao, p_fuso: p.fuso, p_contrato_referencia_id: null, p_fonte: p.fonte, p_motivo: p.motivo });
     if (error) throw error;
     const r = z.object({ requestId: z.string().uuid(), planoId: z.string().uuid(), revisao: z.number().int().positive().safe(), fusoDeclarado: z.string(), contratoReferenciaId: z.null(), fonteValidada: z.literal(false), geracaoAlterada: z.literal(false), vinculoContratualComprovado: z.literal(false) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.planoId !== p.planoId || r.revisao !== p.revisao + 1 || r.fusoDeclarado !== p.fuso) throw new Error("Recibo divergente.");
-    await conferirSessaoDiagnostico(userId); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
+    await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada."); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
   }, onSuccess: async (_data, p) => { try { await cache.invalidateQueries({ queryKey: ["historico-fuso-plano", userId, clienteId, planoId], refetchType: "none" });
-    await conferirSessaoDiagnostico(userId); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave);
+    await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada."); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave);
   } catch { setAviso("Declaração confirmada, mas tentativa local não foi removida. Consulte suporte."); return; }
     setPendente(null); setConfirmacao(null); setAviso("Fuso declarado; geração continua inalterada e fonte não validada.");
     void Promise.allSettled([

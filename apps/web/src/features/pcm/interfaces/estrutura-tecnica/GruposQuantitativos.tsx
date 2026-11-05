@@ -158,6 +158,8 @@ function GruposQuantitativosContexto({
         return;
       }
       await conferirSessao();
+      if (sessionStorage.getItem(chavePendente) !== JSON.stringify(comando))
+        throw new Error("Operação local alterada.");
       const recibo = await salvar.mutateAsync(comando);
       if (
         recibo.requestId !== comando.requestId || recibo.aggregateId !== comando.grupoId ||
