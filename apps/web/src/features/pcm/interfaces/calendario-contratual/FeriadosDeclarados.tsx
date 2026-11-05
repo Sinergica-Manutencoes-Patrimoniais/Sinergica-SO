@@ -549,7 +549,7 @@ function ConteudoFeriados({ userId, clienteId, contratos, regras = [], onUsar }:
           Repetir mesmo pedido
         </button>
       )}
-      {mensagem && <p role="status">{mensagem}</p>}
+      {mensagem && <output className="block">{mensagem}</output>}
     </section>
   );
 }

@@ -221,7 +221,7 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
         </>
       ) : (
         <>
-          {estado.isFetching && <p role="status">Consultando exceção…</p>}
+          {estado.isFetching && <output className="block">Consultando exceção…</output>}
           {estado.isError && (
             <p role="alert">
               Não foi possível consultar a exceção.{" "}
@@ -300,7 +300,7 @@ function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {
           )}
         </>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

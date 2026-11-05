@@ -248,7 +248,7 @@ function Revogar({
           <button type="submit" disabled={envio.isPending}>Revogar supressão</button>
         </form>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </div>
   );
 }

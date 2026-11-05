@@ -1,6 +1,6 @@
 import { Button } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { validarPlanoRascunho } from "../../application/plano-manutencao";
 import type { PlanoResumo, SalvarPlanoCommand } from "../../application/plano-manutencao-gateway";
 import { usePlanosManutencao } from "../../application/plano-manutencao-queries";
@@ -51,6 +51,8 @@ function ConteudoPlanoManutencao({
   });
   const [pendente, setPendente] = useState(recuperacao.comando);
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const [aberto, setAberto] = useState(false);
   const [editando, setEditando] = useState<PlanoResumo | null>(null);
   const [planoAbertoId, setPlanoAbertoId] = useState<string | null>(null);
@@ -106,8 +108,12 @@ function ConteudoPlanoManutencao({
       await conferirSessao();
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
         throw new Error("Tentativa divergente.");
-      await salvar.mutateAsync(comando);
+      const recibo = await salvar.mutateAsync(comando);
+      if (recibo.requestId !== comando.requestId || recibo.aggregateId !== comando.planoId ||
+        recibo.revision !== comando.expectedRevision + 1 || recibo.created !== (comando.expectedRevision === 0) ||
+        recibo.linkedIds.clienteId !== clienteId) throw new Error("Recibo de Plano divergente.");
       await conferirSessao();
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) {
         setErro(
           "Plano salvo, mas a tentativa local mudou. Reabra e reconcilie antes de continuar.",

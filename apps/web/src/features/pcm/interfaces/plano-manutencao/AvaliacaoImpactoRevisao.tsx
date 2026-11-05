@@ -142,7 +142,7 @@ export function AvaliacaoImpactoRevisao({
         permanecem indeterminadas; mesmo todas as contagens zeradas não liberam aprovação.
       </p>
       {(consulta.isFetching || visitas.isFetching) && (
-        <p role="status">Verificando acesso e impactos…</p>
+        <output className="block">Verificando acesso e impactos…</output>
       )}
       {consulta.isError && (
         <p role="alert">
@@ -182,7 +182,7 @@ export function AvaliacaoImpactoRevisao({
           legado pertence a este Plano.
         </p>
       )}
-      {grupos.isFetching && <p role="status">Verificando vínculos de Grupo e OS…</p>}
+      {grupos.isFetching && <output className="block">Verificando vínculos de Grupo e OS…</output>}
       {grupos.isError && (
         <p role="alert">
           Avaliação de vínculos indisponível.{" "}

@@ -140,7 +140,7 @@ export function PreflightAprovacaoRevisao({
           anterior aberta pode ser contada antes do fechamento; isso não prova conflito final.
         </p>
       )}
-      {fusoSeries.isFetching && <p role="status">Conferindo fuso das séries…</p>}
+      {fusoSeries.isFetching && <output className="block">Conferindo fuso das séries…</output>}
       {fusoSeries.isError && (
         <p role="alert">
           Conferência de fuso indisponível.{" "}
