@@ -1,7 +1,4 @@
-"""Controle de sessões para ensaios concorrentes no clone exclusivo do harness.
-
-Este módulo ainda não está conectado ao harness: requer revisão antes de uso.
-"""
+"""Controle de sessões para ensaios concorrentes no clone exclusivo do harness."""
 import os
 import re
 import selectors
@@ -58,7 +55,7 @@ class Sessao:
 
 
 def executar(container, watchdog):
-    """Executa dois cenários parciais; chamador deve garantir descarte integral do clone."""
+    """Executa as duas ordens parciais; chamador deve descartar o clone integralmente."""
     a = Sessao(container)
     b = None
     try:
@@ -75,28 +72,74 @@ def executar(container, watchdog):
           ('176a0000-0000-0000-0000-00000000000b','Cliente B',true,'17900000-0000-0000-0000-000000000001');
           insert into pcm.sistemas(id,cliente_id,nome) values ('176a0000-0000-0000-0000-000000000051','176a0000-0000-0000-0000-00000000000a','Sistema A');
           insert into pcm.equipamentos(id,client_id,nome) values ('176a0000-0000-0000-0000-000000000011','176a0000-0000-0000-0000-00000000000a','Item A'); end $$;""")
-        a.comando("begin; set local lock_timeout='2s'; update config.usuarios set ativo=false where user_id='17900000-0000-0000-0000-000000000001';")
-        b.comando("""begin; set local role authenticated;
-          set local request.jwt.claims='{"sub":"17900000-0000-0000-0000-000000000001","role":"authenticated","user_role":"superadmin"}';""")
+        a.comando("begin;")
+        a.comando("set local lock_timeout='2s';")
+        a.comando("update config.usuarios set ativo=false where user_id='17900000-0000-0000-0000-000000000001';")
+        b.comando("begin;")
+        b.comando("set local role authenticated;")
+        b.comando("""set local request.jwt.claims='{"sub":"17900000-0000-0000-0000-000000000001","role":"authenticated","user_role":"superadmin"}';""")
         comando = "select config.sso_definir_perfil('17900000-0000-0000-0000-000000000101',0,'17900000-0000-0000-0000-000000000010','Perfil sintético',true,'Ensaio');"
         b.comando(comando, ("55P03",))
         b.comando("rollback;")
+        a.comando("select 1;")
         a.comando("commit;")
-        b.comando("""begin; set local role authenticated;
-          set local request.jwt.claims='{"sub":"17900000-0000-0000-0000-000000000001","role":"authenticated","user_role":"superadmin"}';""")
+        b.comando("begin;")
+        b.comando("set local role authenticated;")
+        b.comando("""set local request.jwt.claims='{"sub":"17900000-0000-0000-0000-000000000001","role":"authenticated","user_role":"superadmin"}';""")
         b.comando(comando, ("42501",))
         b.comando("rollback;")
-        a.comando("""do $$ begin if exists(select 1 from config.sso_perfis where id='17900000-0000-0000-0000-000000000010') then raise exception 'perfil_indevido'; end if; end $$;""")
+        a.comando("""do $$ begin if exists(select 1 from config.sso_perfis where id='17900000-0000-0000-0000-000000000010') or exists(select 1 from config.sso_comandos where request_id='17900000-0000-0000-0000-000000000101') then raise exception 'perfil_ou_recibo_indevido'; end if; end $$;""")
+        # Ordem inversa: o comando conserva a trava até a confirmação.
+        a.comando("update config.usuarios set ativo=true where user_id='17900000-0000-0000-0000-000000000001';")
+        a.comando("begin;")
+        a.comando("set local role authenticated;")
+        a.comando("""set local request.jwt.claims='{"sub":"17900000-0000-0000-0000-000000000001","role":"authenticated","user_role":"superadmin"}';""")
+        comando_inverso = "select config.sso_definir_perfil('17900000-0000-0000-0000-000000000102',0,'17900000-0000-0000-0000-000000000010','Perfil sintético',true,'Ensaio');"
+        a.comando(comando_inverso)
+        b.comando("begin;")
+        b.comando("set local lock_timeout='2s';")
+        b.comando("update config.usuarios set ativo=false where user_id='17900000-0000-0000-0000-000000000001';", ("55P03",))
+        b.comando("rollback;")
+        a.comando("select 1;")
+        a.comando("commit;")
+        b.comando("update config.usuarios set ativo=false where user_id='17900000-0000-0000-0000-000000000001';")
+        a.comando("begin;")
+        a.comando("set local role authenticated;")
+        a.comando("""set local request.jwt.claims='{"sub":"17900000-0000-0000-0000-000000000001","role":"authenticated","user_role":"superadmin"}';""")
+        a.comando(comando_inverso, ("42501",))
+        a.comando("rollback;")
+        a.comando("""do $$ begin if (select count(*) from config.sso_perfis where id='17900000-0000-0000-0000-000000000010')<>1 or (select count(*) from config.sso_comandos where request_id='17900000-0000-0000-0000-000000000102')<>1 then raise exception 'perfil_ou_recibo_incorreto'; end if; end $$;""")
         if watchdog.is_set():
             raise RuntimeError("Monitor interrompeu o ensaio")
-        a.comando("""begin; set local app.auvo_sync_write='true';
-          insert into pcm.sistema_itens(sistema_id,item_id) values ('176a0000-0000-0000-0000-000000000051','176a0000-0000-0000-0000-000000000011');""")
-        b.comando("begin; set local app.auvo_sync_write='true'; set local lock_timeout='2s';")
+        a.comando("begin;")
+        a.comando("set local app.auvo_sync_write='true';")
+        a.comando("insert into pcm.sistema_itens(sistema_id,item_id) values ('176a0000-0000-0000-0000-000000000051','176a0000-0000-0000-0000-000000000011');")
+        b.comando("begin;")
+        b.comando("set local app.auvo_sync_write='true';")
+        b.comando("set local lock_timeout='2s';")
         b.comando("update pcm.sistemas set cliente_id='176a0000-0000-0000-0000-00000000000b' where id='176a0000-0000-0000-0000-000000000051';", ("40001", "55P03"))
         b.comando("rollback;")
+        a.comando("select 1;")
         a.comando("commit;")
         a.comando("""do $$ begin if not exists(select 1 from pcm.sistema_itens si join pcm.sistemas s on s.id=si.sistema_id join pcm.equipamentos e on e.id=si.item_id where si.sistema_id='176a0000-0000-0000-0000-000000000051' and si.item_id='176a0000-0000-0000-0000-000000000011' and s.cliente_id=e.client_id and e.client_id='176a0000-0000-0000-0000-00000000000a') then raise exception 'vinculo_final_invalido'; end if; end $$;""")
-        print("Concorrência parcial: S170 revogação primeiro e S176 contenção genérica do vínculo aprovados.", flush=True)
+        # Ordem inversa em fixture sem vínculo: mudança de Cliente precede tentativa de vínculo.
+        a.comando("delete from pcm.sistema_itens where sistema_id='176a0000-0000-0000-0000-000000000051' and item_id='176a0000-0000-0000-0000-000000000011';")
+        a.comando("begin;")
+        a.comando("set local app.auvo_sync_write='true';")
+        a.comando("update pcm.sistemas set cliente_id='176a0000-0000-0000-0000-00000000000b' where id='176a0000-0000-0000-0000-000000000051';")
+        b.comando("begin;")
+        b.comando("set local app.auvo_sync_write='true';")
+        b.comando("set local lock_timeout='2s';")
+        b.comando("insert into pcm.sistema_itens(sistema_id,item_id) values ('176a0000-0000-0000-0000-000000000051','176a0000-0000-0000-0000-000000000011');", ("40001", "55P03"))
+        b.comando("rollback;")
+        a.comando("select 1;")
+        a.comando("commit;")
+        b.comando("begin;")
+        b.comando("set local app.auvo_sync_write='true';")
+        b.comando("insert into pcm.sistema_itens(sistema_id,item_id) values ('176a0000-0000-0000-0000-000000000051','176a0000-0000-0000-0000-000000000011');", ("23514",))
+        b.comando("rollback;")
+        a.comando("""do $$ begin if not exists(select 1 from pcm.sistemas where id='176a0000-0000-0000-0000-000000000051' and cliente_id='176a0000-0000-0000-0000-00000000000b') or not exists(select 1 from pcm.equipamentos where id='176a0000-0000-0000-0000-000000000011' and client_id='176a0000-0000-0000-0000-00000000000a') or exists(select 1 from pcm.sistema_itens where sistema_id='176a0000-0000-0000-0000-000000000051' and item_id='176a0000-0000-0000-0000-000000000011') then raise exception 'mudanca_final_invalida'; end if; end $$;""")
+        print("Concorrência parcial: S170 contenção genérica nas duas ordens e replay revogado; S176 contenção genérica nas duas ordens.", flush=True)
     finally:
         try:
             if b is not None:

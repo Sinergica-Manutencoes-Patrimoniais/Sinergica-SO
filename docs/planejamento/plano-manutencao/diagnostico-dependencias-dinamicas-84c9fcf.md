@@ -80,3 +80,9 @@ validaram a revogação antes do comando de administração na S170 e a contenç
 criação de vínculo e alteração de Cliente na S176. O clone foi descartado, sem acionamento do
 Auvo. O resultado não comprova as ordens inversas, replay ou o funcionamento de uma guarda
 específica na contenção da S176.
+
+Em ensaio posterior no mesmo recorte, fixtures sintéticas exercitaram as duas ordens de
+contenção genérica da S170 e da S176. O replay da S170 foi negado após a revogação. O clone
+descartável e os recursos do ensaio foram removidos; não houve acionamento do Auvo. Esses
+cenários não identificam necessariamente a guarda responsável pela contenção nem demonstram
+as demais disputas, interface, ACL de produção ou prontidão para release.
