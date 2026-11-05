@@ -39,6 +39,8 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:
         cache.invalidateQueries({ queryKey: ["previa-ocorrencia-visita", userId, clienteId, planoId, versaoId, rotinaId, serieId] }),
         cache.invalidateQueries({ queryKey: ["ciclos-uniformes", userId, clienteId, planoId] }),
         cache.invalidateQueries({ queryKey: ["obrigacoes-preparadas", userId, clienteId, planoId] }),
+        cache.invalidateQueries({ queryKey: ["reserva-futuro-visitas", userId, clienteId, planoId] }),
+        cache.invalidateQueries({ queryKey: ["reserva-futuro", userId, clienteId, planoId] }),
       ]);},
     onError:async(error,p) => {if(primeira.current&&conflitoPreparacaoVisita(error)){try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(chave);setPedido(null);setConfirmado(null);setMensagem("A revisão mudou. Atualize e confira novamente.");return;}catch{setMensagem("Tentativa preservada; procure suporte.");return;}}setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte.");},onSettled:() => {trava.current=false;primeira.current=false;}});
   const enviar=(p:Pedido,nova=false) => {if(trava.current)return;if(modo!=="canonico"||(p.modo??"anterior")!=="canonico"){setMensagem("Esta tentativa usa um protocolo indisponível ou desativado. O pedido permanece guardado; procure suporte para reconciliação.");return;}trava.current=true;primeira.current=nova;envio.mutate(p);};
@@ -51,7 +53,7 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:
   },onSuccess:async(r,p)=>{if(!r.encontrado){setMensagem("Recibo não encontrado. A situação ainda é indeterminada; o pedido permanece guardado para reconciliação.");return;}
     try{await conferirSessaoDiagnostico(userId);if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(chave);}catch{setMensagem("Recibo encontrado, mas pedido não removido. Procure suporte.");return;}
     setPedido(null);setMensagem(`Recibo anterior confirmado para ocorrência ${r.resultado.ocorrenciaId}. A identidade canônica e a fila ainda precisam de conferência.`);
-    void Promise.allSettled([cache.invalidateQueries({queryKey:["previa-ocorrencia-visita",userId,clienteId,planoId]}),cache.invalidateQueries({queryKey:["obrigacoes-preparadas",userId,clienteId,planoId]})]);
+    void Promise.allSettled([cache.invalidateQueries({queryKey:["previa-ocorrencia-visita",userId,clienteId,planoId]}),cache.invalidateQueries({queryKey:["obrigacoes-preparadas",userId,clienteId,planoId]}),cache.invalidateQueries({queryKey:["ciclos-uniformes",userId,clienteId,planoId]}),cache.invalidateQueries({queryKey:["reserva-futuro-visitas",userId,clienteId,planoId]}),cache.invalidateQueries({queryKey:["reserva-futuro",userId,clienteId,planoId]})]);
   },onError:()=>setMensagem("Não foi possível conferir o recibo. O pedido permanece guardado; procure suporte se necessário."),onSettled:()=>{trava.current=false;}});
   const assinaturaConfirmacao=(c:Candidato) => JSON.stringify([userId,clienteId,planoId,versaoId,rotinaId,serieId,revision,modo,fonte.trim(),c]);
   return <section aria-label="Prévia de ocorrências por Visita"><h5>Prévia por Visita</h5>

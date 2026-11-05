@@ -22,6 +22,8 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, serieId, rev
         cache.invalidateQueries({ queryKey: ["previa-ocorrencia-visita", userId, clienteId, planoId, versaoId, rotinaId, serieId] }),
         cache.invalidateQueries({ queryKey: ["ciclos-uniformes", userId, clienteId, planoId] }),
         cache.invalidateQueries({ queryKey: ["obrigacoes-preparadas", userId, clienteId, planoId] }),
+        cache.invalidateQueries({ queryKey: ["reserva-futuro-visitas", userId, clienteId, planoId] }),
+        cache.invalidateQueries({ queryKey: ["reserva-futuro", userId, clienteId, planoId] }),
       ]); }, onError: async (error, p) => { if (primeira.current && conflitoPreparacaoVisita(error)) { try { await conferirSessaoDiagnostico(userId); if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(storage); setPendente(null); setConfirmado(null); setAviso("A revisão mudou. Atualize e confira novamente."); return; } catch { setAviso("Tentativa preservada; procure suporte."); return; } } setAviso("Resultado não confirmado. Repita a mesma tentativa; se persistir, procure suporte."); }, onSettled: () => { trava.current = false; primeira.current = false; } });
   const enviar = (p: Pedido, nova = false) => { if (trava.current) return; trava.current = true; primeira.current = nova; envio.mutate(p); };
   const selecionados = [...selecionadas].sort().map((id) => candidatos.find((c) => c.visita_id === id));
