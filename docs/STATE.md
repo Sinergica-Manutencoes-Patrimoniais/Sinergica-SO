@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: edição real e concorrência PMOC
+
+- `supabase/tests/manual_E01-S165_edicao_rpc_aprovacao_os_1770.sql`: RPC real editou alvo/intervalo, replay passou, submissão e aprovação 1731 com 1045 real preservaram OS/ocorrência históricas e congelaram novo snapshot. Ponte, OS e datas sintéticas, rollback; UI de edição não foi exercida.
+- Em clone até 1767, vínculo PMOC real anterior bloqueou geração Plano; geração aberta primeiro conteve vínculo, e após commit uma troca sintética de origem levou a recusa de vínculo por ocorrência exigindo reconciliação. Proposta/decisão e troca de origem sintéticas; não prova todos fluxos concorrentes. Replay positivo do vínculo 1766 devolveu recibo idêntico.
+- AC5 PMOC: equipamento, manutenção e laudo microbiológico sintéticos permaneceram idênticos após vínculo e recusa da geração alternativa; sem OS/outbox. Clone descartado, sem deploy/Auvo real.
+- Próximo passo: validar edição pela UI e revisão adversarial/CI antes de homologação. Gates default fechados.
+
 ## 2026-11-05 — S165/S166: AC5 e AC7 integrados
 
 - S165 AC5: clone com 1045 real aprovou revisão com mudança simultânea de alvo/recorrência e OS aberta conhecida; decisão PCM preservou OS e ocorrência antigas, snapshot novo congelou alvo/intervalo. OS posterior à comparação bloqueou aprovação; alvo incompatível recusou substituição. Ponte/OS/draft sintéticos, rollback. Fixtures `supabase/tests/manual_E01-S165_ac5_*_1768.sql`.
