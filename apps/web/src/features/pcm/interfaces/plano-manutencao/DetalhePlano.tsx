@@ -7,6 +7,7 @@ import { consultarVigencia } from "../../domain/vigencia-plano";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
 import { supabase } from "../../../../lib/supabase-client";
 import { FormularioRotina } from "./FormularioRotina";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { NaturezaAlvoRotina } from "./NaturezaAlvoRotina";
 import { NaturezaAlvoAprovada } from "./NaturezaAlvoAprovada";
 import { ExportarVersaoPlano } from "./ExportarVersaoPlano";
@@ -65,8 +66,10 @@ export function DetalhePlano({
     if (!rotinaParaRevisar) return;
     setBuscandoCopia(true); setAvisoCopia("");
     try {
-      const { data, error } = await supabase.schema("pcm").rpc("sso_localizar_rotina_revisada", { p_cliente_id: clienteId, p_plano_id: plano.id, p_versao_origem_id: rotinaParaRevisar.versaoId, p_rotina_origem_id: rotinaParaRevisar.id });
+      await conferirSessaoDiagnostico(userId);
+      const { data, error } = await supabase.schema("pcm").rpc("sso_localizar_rotina_revisada_mediada", { p_ator:userId,p_cliente:clienteId,p_plano:plano.id,p_versao:rotinaParaRevisar.versaoId,p_rotina:rotinaParaRevisar.id });
       if (error) throw error;
+      await conferirSessaoDiagnostico(userId);
       if (!data || data.edicaoIniciada !== false || data.rotinaOrigemId !== rotinaParaRevisar.id || data.versaoOrigemId !== rotinaParaRevisar.versaoId || typeof data.rotinaRascunhoId !== "string" || typeof data.versaoRascunhoId !== "string") throw new Error("Cópia inválida.");
       setCopiaSelecionada({ id: data.rotinaRascunhoId, versaoId: data.versaoRascunhoId, origemNome: rotinaParaRevisar.nome }); setVersaoEscolhida(data.versaoRascunhoId);
     } catch { setAvisoCopia("Cópia indisponível, origem não comprovada ou acesso revogado. Recarregue a revisão; não foi feita alteração."); } finally { setBuscandoCopia(false); }

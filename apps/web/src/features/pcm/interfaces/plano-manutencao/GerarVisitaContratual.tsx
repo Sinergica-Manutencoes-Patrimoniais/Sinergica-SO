@@ -36,7 +36,11 @@ function GerarVisitaContratualSessao({ userId, clienteId, serieId }: { userId: s
     }
     const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
     return { decisao };
-  }, onSuccess: async (r, p) => { if (r.decisao === "criada") await cache.invalidateQueries({ queryKey: ["visitas", userId, clienteId] });
+  }, onSuccess: async (r, p) => { if (r.decisao === "criada") await Promise.all([
+    cache.invalidateQueries({ queryKey: ["visitas", userId, clienteId] }),
+    cache.invalidateQueries({ queryKey: ["previa-ocorrencia-visita", userId, clienteId] }),
+    cache.invalidateQueries({ queryKey: ["ciclos-uniformes", userId, clienteId] }),
+  ]);
     try { const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); }
     catch { setPendente("invalido"); setAviso("Tentativa alterada ou não removida; procure suporte."); return; }
     setPendente(null); setConfirmado(null); setAviso(r.decisao === "criada" ? "Visita regular em rascunho criada com origem contratual; sem OS ou Auvo." : "Semana suprimida por feriado declarado; nenhuma Visita ou reposição criada.");

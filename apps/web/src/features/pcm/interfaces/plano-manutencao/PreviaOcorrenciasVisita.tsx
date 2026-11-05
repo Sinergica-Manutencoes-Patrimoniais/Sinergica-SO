@@ -43,7 +43,9 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,serieId,revision}:
     <OrigemGeracaoRotina userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revision} />
     <p>Visitas regulares identificadas na série. Feriados declarados são incompletos e não oficiais; conferir fonte e vigência antes de preparar. {modo==="canonico"&&"Identidade canônica por série e semana é verificada; registros anteriores podem ser reutilizados."} Nenhuma OS ou tarefa é criada.</p>
     <form onSubmit={(e) => {e.preventDefault();const dias=(Date.parse(`${fim}T00:00:00Z`)-Date.parse(`${inicio}T00:00:00Z`))/86400000;
-      if(!Number.isFinite(dias)||dias<0||dias>366){setMensagem("Informe período válido de até 366 dias.");return;}setPeriodo({inicio,fim});}}>
+      if(!Number.isFinite(dias)||dias<0||dias>366){setMensagem("Informe período válido de até 366 dias.");return;}
+      setMensagem("");setConfirmado(null);setSelecionado("");
+      if(periodo?.inicio===inicio&&periodo.fim===fim)void candidatos.refetch();else setPeriodo({inicio,fim});}}>
       <label>Início <input required type="date" value={inicio} onChange={(e) => {setInicio(e.target.value);setPeriodo(null);}}/></label>
       <label>Fim <input required type="date" value={fim} onChange={(e) => {setFim(e.target.value);setPeriodo(null);}}/></label><button type="submit">Consultar Visitas</button></form>
     {periodo&&candidatos.isFetching&&<output>Carregando Visitas…</output>}{periodo&&candidatos.isError&&<p role="alert">Prévia indisponível. <button type="button" onClick={() => void candidatos.refetch()}>Tentar novamente</button></p>}

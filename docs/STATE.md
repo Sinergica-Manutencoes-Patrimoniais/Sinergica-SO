@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: localização de cópia e cache de Visita
+
+- ADR-1639/migration 1781 mediam localização de cópia de Rotina revisada, antes chamada por UI como RPC privada; núcleo/gates permanecem. Revisão estática independente não identificou bypass concreto.
+- Prévia de Visitas refaz a consulta do mesmo período e limpa confirmação; criação de Visita invalida prévias de ocorrências e ciclos. Teste de prévia foi acrescentado, sem execução.
+- **Não executar testes, typecheck, build ou ensaios por solicitação atual.** 1780–1781, caches e teste novo aguardam validação em lote, inclusive compilação, ACL, sessão, UI e geração sobre série recém-vinculada. Gates default fechados; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: vigência e diagnósticos sem validação executada
 
 - ADR-1637/migration 1779 mediam leitura/histórico/decisão de vigência de série e corrigem ambiguidade de ID; antes da orientação de suspender testes, clone compilou até 1779 e fixture/UI passaram segundo registros dos agentes. Geração sobre série recém-vinculada segue sem comprovação prática; driver foi ajustado.
