@@ -116,7 +116,7 @@ describe("configuração de capacidades", () => {
         aggregateId: usuario,
         revision: campo === "revision" ? 8 : c.expectedRevision + 1,
         state: campo === "state" ? !c.ativa : c.ativa,
-        created: campo === "created" ? false : true,
+        created: campo !== "created",
         linkedIds: {},
         warnings: [],
         requestId: campo === "requestId" ? "17020000-0000-0000-0000-000000000098" : c.requestId,

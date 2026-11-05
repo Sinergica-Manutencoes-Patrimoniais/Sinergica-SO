@@ -1,8 +1,8 @@
-import { conflitoReserva } from "./conflito-reserva";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { conflitoReserva } from "./conflito-reserva";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 const pedidoSchema = z
@@ -53,7 +53,12 @@ export function ReservaCicloLegado(props: Props) {
 }
 function Conteudo({ userId, clienteId, planoId, legadoId, revision, modo, consultando }: Props) {
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const trava = useRef(false);
   const cache = useQueryClient();
   const chave = `sso-reserva-ciclo:${JSON.stringify([userId, clienteId, planoId, legadoId, modo])}`;
@@ -117,7 +122,7 @@ function Conteudo({ userId, clienteId, planoId, legadoId, revision, modo, consul
   });
   const candidatos = lista.data?.pages.flat() ?? [];
   const candidato = candidatos.find((c) => c.preparada_id === preparada);
-  const n = indice === "" ? NaN : Number(indice);
+  const n = indice === "" ? Number.NaN : Number(indice);
   const consulta = useQuery({
     queryKey: [
       "reserva-ciclo-legado",
@@ -220,7 +225,8 @@ function Conteudo({ userId, clienteId, planoId, legadoId, revision, modo, consul
     trava.current = true;
     setEnviando(true);
     try {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente");
       const { data, error } = await supabase.schema("pcm").rpc("sso_decidir_reserva_ciclo_legado", {
@@ -256,7 +262,8 @@ function Conteudo({ userId, clienteId, planoId, legadoId, revision, modo, consul
         r.revisao !== p.revisaoReserva + 1
       )
         throw new Error("Resposta divergente");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa alterada");
       sessionStorage.removeItem(chave);
@@ -270,7 +277,8 @@ function Conteudo({ userId, clienteId, planoId, legadoId, revision, modo, consul
       setConfirmado(null);
       if (nova && conflitoReserva(error)) {
         try {
-          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(chave);
           setPendente(null);

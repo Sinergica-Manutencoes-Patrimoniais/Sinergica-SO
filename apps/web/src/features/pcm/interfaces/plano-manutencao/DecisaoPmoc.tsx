@@ -1,10 +1,10 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { VinculoCicloPmoc } from "./VinculoCicloPmoc";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 type Pedido = {
   requestId: string;
   clienteId: string;
@@ -15,13 +15,23 @@ type Pedido = {
   justificativa: string;
 };
 
-export function DecisaoPmoc(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.propostaId])} {...props} />; }
+export function DecisaoPmoc(props: Parameters<typeof Conteudo>[0]) {
+  return (
+    <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.propostaId])} {...props} />
+  );
+}
 function Conteudo({
   userId,
   clienteId,
   propostaId,
 }: { userId: string; clienteId: string; propostaId: string }) {
-  const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const emEnvio = useRef(false);
   const primeiraTentativa = useRef(false);
   const cache = useQueryClient();
@@ -91,7 +101,7 @@ function Conteudo({
         )
         .max(20)
         .parse(data);
-      let anterior = pageParam ?? Infinity;
+      let anterior = pageParam ?? Number.POSITIVE_INFINITY;
       for (const item of pagina) {
         if (item.revisao >= anterior) throw new Error("Página divergente.");
         anterior = item.revisao;
@@ -103,7 +113,8 @@ function Conteudo({
   });
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(storageKey) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_decidir_pmoc_mediado", {
@@ -125,11 +136,13 @@ function Conteudo({
         typeof data.decisaoId !== "string"
       )
         throw new Error("Resposta inválida.");
-      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+      await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
     },
     onSuccess: async (_r, p) => {
       try {
-        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+        await conferirSessaoDiagnostico(userId);
+        if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(storageKey);
       } catch {
@@ -152,7 +165,8 @@ function Conteudo({
           (e.code === "P0017" && e.message === "plano_alterado"))
       ) {
         try {
-          await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
+          await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error();
           sessionStorage.removeItem(storageKey);
           setPendente(null);
