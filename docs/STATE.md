@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: replay de migrations e lock 0304
+
+- PostgreSQL novo descartável aplicou migrations 0001–1769 em transações e passou 17 pgTAP S165/S166 após atualizar quatro expectativas antigas de SQLSTATE em três arquivos de teste. Bootstrap manual parcial de auth e Storage 0001–0046; um teste usou loopback TCP, sem rede externa. Não equivale a `supabase start && supabase test db`, ACL global ou CI completa. Recursos removidos.
+- Ensaio 0304 com 200 mil linhas sintéticas/56 MB confirmou contenção entre leitura e ALTER nas duas ordens; sem concorrência migration levou 41 ms no ambiente local, número não extrapolável para produção. Sem FKs/triggers/dados reais. Roteiro `supabase/tests/manual_E01-S166_ensaio_lock_0304.md`.
+- Próximo passo: CI completa e ensaio de rollout com volume representativo antes da homologação; gates fechados, sem deploy/Auvo. Disco livre ~9 GiB.
+
 ## 2026-11-05 — S165/S166: riscos de rollout e cancelamento UI
 
 - `apps/web/e2e/s166-isolado/executar-fila-cancelamento.py` passou em navegador/HTTP/clone isolados: UI cancelou Visita, leitura/banco confirmaram `cancelado`, botão de inclusão desabilitado. Preparação e permissões sintéticas; SQL anterior já recusou reinclusão por RPC. Sem navegação integral nem Auvo.
