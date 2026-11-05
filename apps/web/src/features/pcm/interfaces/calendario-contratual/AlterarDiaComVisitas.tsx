@@ -59,8 +59,8 @@ export function AlterarDiaComVisitas({ userId, clienteId, serieId, revisao, dia,
     getNextPageParam: (pagina) => pagina.length === 100 ? { semana: pagina[pagina.length - 1]!.semana_origem, id: pagina[pagina.length - 1]!.visita_id } : undefined,
   });
   const itens = consulta.data?.pages.flat() ?? [];
-  const completa = !!consulta.data && !consulta.hasNextPage && !consulta.isFetching && !consulta.isError && itens.length <= 500;
   const candidatas = itens.filter((v) => v.classificacao === "candidata_revisao");
+  const completa = !!consulta.data && !consulta.hasNextPage && !consulta.isFetching && !consulta.isError && candidatas.length <= 500;
   const revisoes = candidatas.map((v) => ({ visitaId: v.visita_id, revisao: v.revisao,
     ...(conferirImpactos ? { feriadoEsperado: v.feriado_declarado, ocorrenciaEsperada: v.ocorrencia_preparada } : {}) })).sort((a, b) => a.visitaId.localeCompare(b.visitaId));
   const fotografia = JSON.stringify({ userId, clienteId, serieId, revisao, dia, vigencia, itens });
@@ -118,7 +118,7 @@ export function AlterarDiaComVisitas({ userId, clienteId, serieId, revisao, dia,
         <ul>{itens.map((v) => <li key={v.visita_id}>Visita {v.visita_id} · semana {v.semana_origem} · {v.estado} · nova data {v.data_proposta} · {v.classificacao}{v.feriado_declarado && " · feriado: pode ser suprimida"}{v.ocorrencia_preparada && " · ocorrência preparada"}{import.meta.env.VITE_SSO_EXCECAO_VISITA_ENABLED === "true" && <button type="button" disabled={ocupado || bloqueado} onClick={() => setVisitaExcecao(v.visita_id)}>Conferir exceção</button>}</li>)}</ul>
         {visitaExcecao && <ExcecaoVisita userId={userId} clienteId={clienteId} visitaId={visitaExcecao} aoAprovar={() => { setConfirmacao(null); void consulta.refetch(); }} />}
         {consulta.hasNextPage && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Carregar mais Visitas</button>}
-        {itens.length > 500 && <p role="alert">Mais de 500 Visitas: operação em lote ainda não disponível.</p>}
+        {candidatas.length > 500 && <p role="alert">Mais de 500 Visitas candidatas: operação em lote ainda não disponível.</p>}
         <label><input type="checkbox" checked={completa && confirmacao === fotografia} disabled={!completa || ocupado || bloqueado} onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)} /> Conferi todas as Visitas e a regra apresentada.</label>
         <button type="button" disabled={!completa || ocupado || bloqueado || confirmacao !== fotografia} onClick={iniciar}>Alterar regra e Visitas</button>
       </>}
