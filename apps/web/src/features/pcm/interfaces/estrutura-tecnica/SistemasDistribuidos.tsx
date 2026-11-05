@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-import { supabaseEstruturaTecnicaAdapter } from "../../infrastructure/supabase-estrutura-tecnica-adapter";
+import { lerComposicao176 } from "./lerComposicao176";
 import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
 import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
 import { FotosStagingAtivo } from "./FotosStagingAtivo";
@@ -49,19 +49,7 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      let consulta = supabase
-        .schema("pcm")
-        .from("sistemas")
-        .select("id,cliente_id,nome,ativo")
-        .eq("cliente_id", clienteId)
-        .is("deleted_at", null);
-      if (sistemaId) consulta = consulta.eq("id", sistemaId);
-      const { data, error } = await consulta
-        .order("id", { ascending: true })
-        .range(pageParam, pageParam + 49)
-        .abortSignal(signal);
-      await conferirSessao(signal);
-      if (error) throw error;
+      const data = await lerComposicao176(userId, clienteId, "sistemas", pageParam, signal, null, sistemaId ?? null);
       return z
         .array(
           z.object({
@@ -82,17 +70,7 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const { data, error } = await supabase
-        .schema("pcm")
-        .from("locais")
-        .select("id,nome,ativo,areas!inner(cliente_id)")
-        .eq("areas.cliente_id", clienteId)
-        .is("deleted_at", null)
-        .order("id", { ascending: true })
-        .range(pageParam, pageParam + 49)
-        .abortSignal(signal);
-      await conferirSessao(signal);
-      if (error) throw error;
+      const data = await lerComposicao176(userId, clienteId, "locais", pageParam, signal, null, null);
       return z
         .array(z.object({ id: z.string().uuid(), nome: z.string(), ativo: z.boolean() }))
         .max(50)
@@ -106,17 +84,7 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const { data, error } = await supabase
-        .schema("pcm")
-        .from("equipamentos")
-        .select("id,client_id,local_id,ativo,nome,tipo,identificador,parent_item_id")
-        .eq("client_id", clienteId)
-        .is("deleted_at", null)
-        .order("id", { ascending: true })
-        .range(pageParam, pageParam + 49)
-        .abortSignal(signal);
-      await conferirSessao(signal);
-      if (error) throw error;
+      const data = await lerComposicao176(userId, clienteId, "itens", pageParam, signal, null, null);
       return z
         .array(
           z.object({
@@ -147,19 +115,7 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      let consulta = supabase
-        .schema("pcm")
-        .from("sistema_itens")
-        .select("sistema_id,item_id,sistemas!inner(cliente_id)")
-        .eq("sistemas.cliente_id", clienteId);
-      if (sistemaId) consulta = consulta.eq("sistema_id", sistemaId);
-      const { data, error } = await consulta
-        .order("sistema_id", { ascending: true })
-        .order("item_id", { ascending: true })
-        .range(pageParam, pageParam + 49)
-        .abortSignal(signal);
-      await conferirSessao(signal);
-      if (error) throw error;
+      const data = await lerComposicao176(userId, clienteId, "vinculos", pageParam, signal, null, sistemaId ?? null);
       return z
         .array(z.object({ sistema_id: z.string().uuid(), item_id: z.string().uuid() }))
         .max(50)
@@ -179,15 +135,15 @@ function Conteudo({
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const pagina = await supabaseEstruturaTecnicaAdapter.listarGrupos(
-        clienteId,
-        pageParam,
-        50,
-        signal,
-        sistemaId,
-      );
-      await conferirSessao(signal);
-      return pagina;
+      const data = await lerComposicao176(userId, clienteId, "grupos", pageParam, signal, null, sistemaId ?? null);
+      return z.array(z.object({
+        id: z.string().uuid(), cliente_id: z.string().uuid(), local_id: z.string().uuid(),
+        categoria_id: z.string().uuid(), sistema_id: z.string().uuid().nullable(), nome: z.string(),
+        quantidade: z.number().int().positive().safe(), caracteristicas: z.record(z.string()),
+        revisao: z.number().int().positive(),
+      }).transform((g) => ({ id: g.id, clienteId: g.cliente_id, localId: g.local_id,
+        categoriaId: g.categoria_id, sistemaId: g.sistema_id, nome: g.nome, quantidade: g.quantidade,
+        caracteristicas: g.caracteristicas, revisao: g.revisao }))).max(50).parse(data);
     },
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
   });

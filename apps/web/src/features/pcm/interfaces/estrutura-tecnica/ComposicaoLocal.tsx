@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
-import { supabase } from "../../../../lib/supabase-client";
+import { lerComposicao176 } from "./lerComposicao176";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
 import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
@@ -68,18 +68,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const { data, error } = await supabase
-        .schema("pcm")
-        .from("equipamentos")
-        .select("id,nome,tipo,identificador,parent_item_id,categoria")
-        .eq("client_id", clienteId)
-        .eq("local_id", localId)
-        .eq("ativo", true)
-        .is("deleted_at", null)
-        .order("id")
-        .range(pageParam, pageParam + 49)
-        .abortSignal(signal);
-      if (error) throw error;
+      const data = await lerComposicao176(userId, clienteId, "itens", pageParam, signal, localId, null, true);
       return z.array(item).max(50).parse(data);
     },
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
@@ -90,18 +79,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const { data, error } = await supabase
-        .schema("pcm")
-        .from("grupos_quantitativos")
-        .select("id,nome,quantidade,categoria_id,sistema_id")
-        .eq("cliente_id", clienteId)
-        .eq("local_id", localId)
-        .eq("ativo", true)
-        .is("deleted_at", null)
-        .order("id")
-        .range(pageParam, pageParam + 49)
-        .abortSignal(signal);
-      if (error) throw error;
+      const data = await lerComposicao176(userId, clienteId, "grupos", pageParam, signal, localId, null, false);
       return z.array(grupo).max(50).parse(data);
     },
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
@@ -112,20 +90,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const { data, error } = await supabase
-        .schema("pcm")
-        .from("sistema_itens")
-        .select(
-          "item_id,sistema_id,sistemas!inner(nome,ativo,cliente_id),equipamentos!inner(client_id,local_id)",
-        )
-        .eq("sistemas.cliente_id", clienteId)
-        .eq("equipamentos.client_id", clienteId)
-        .eq("equipamentos.local_id", localId)
-        .order("sistema_id")
-        .order("item_id")
-        .range(pageParam, pageParam + 49)
-        .abortSignal(signal);
-      if (error) throw error;
+      const data = await lerComposicao176(userId, clienteId, "vinculos", pageParam, signal, localId, null, false);
       return z.array(vinculo).max(50).parse(data);
     },
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
@@ -136,16 +101,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const { data, error } = await supabase
-        .schema("pcm")
-        .from("sistemas")
-        .select("id,nome,ativo")
-        .eq("cliente_id", clienteId)
-        .is("deleted_at", null)
-        .order("id")
-        .range(pageParam, pageParam + 49)
-        .abortSignal(signal);
-      if (error) throw error;
+      const data = await lerComposicao176(userId, clienteId, "sistemas", pageParam, signal, null, null, false);
       return z
         .array(z.object({ id: z.string().uuid(), nome: z.string(), ativo: z.boolean() }))
         .max(50)
@@ -159,15 +115,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
-      const { data, error } = await supabase
-        .schema("pcm")
-        .from("equipamento_categorias")
-        .select("id,nome")
-        .is("deleted_at", null)
-        .order("id")
-        .range(pageParam, pageParam + 49)
-        .abortSignal(signal);
-      if (error) throw error;
+      const data = await lerComposicao176(userId, clienteId, "categorias", pageParam, signal, null, null, false);
       return z
         .array(z.object({ id: z.string().uuid(), nome: z.string() }))
         .max(50)
