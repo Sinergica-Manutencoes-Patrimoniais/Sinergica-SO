@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: comparação e conciliação de Visita
+
+- Prévia de reserva por Visita apresenta datas do par selecionado, possível conflito em coincidência e limites da informação, sem inferir equivalência. Seis testes focados passaram.
+- Clone exerceu fluxo 1729–1730 de Visita: escolha, aprovação mediada simulada em rollback, selo sem efeito antecipado, geração legada anterior à vigência, conciliação autenticada após vigência e envio legado bloqueado. Fixture `supabase/tests/manual_E01-S165_visita_reconciliacao_inerte_1730.sql`; relógio e 1045 simulados, sem aprovação real.
+- Criação de OS preventiva legada e aprovação sintética concorreram em duas ordens; contenção preservou consistência, mas a trava afetou outro Cliente. Latência sob carga ainda não medida. Roteiro `supabase/tests/manual_E01-S165_aprovacao_indice_legado_concorrencia.md`.
+- Próximo passo: cobertura integral das fontes/escritores e revisão adversarial antes de considerar substituição de 1045; flags e homologação seguem fechadas. Sem deploy ou Auvo real.
+
 ## 2026-11-05 — S165/S166: conflitos candidatos e retorno
 
 - Reconciliação agora distingue rejeição inicial definitiva 40001, permitindo nova conferência, de pedido com resultado incerto após falha de rede, preservando replay. Testes UI 5/5 e typecheck web passaram.

@@ -17,3 +17,11 @@ Para ensaiar concorrência após aprovação, obter previamente a definição or
 Na sessão A autenticada, chamar `pcm.sso_materializar_ciclo_canonico` para a rotina do rascunho `16630000-1111-4000-8000-000000000022` agora aprovado, revisão 4, na data civil simulada; manter a transação aberta. Na sessão B, executar `pcm.materializar_ocorrencias_preventivas` para o legado `17220000-1111-4000-8000-000000000097` até a mesma data. Confirmar A; se B receber contenção, repetir após a confirmação. Conferir uma preparada SSO no ciclo e zero ocorrências legadas no índice 0 reservado a SSO.
 
 Ensaio passou: B recebeu contenção, retry terminou e as contagens esperadas foram observadas. A aprovação e relógios foram simulados; não comprova aprovação operacional, gerador de Visita, integração externa ou todos os escritores.
+
+## Criação de OS de outro Cliente
+
+Em clone novo, preparar a fixture de aprovação até antes da simulação da guarda 1045. Criar Cliente, plano legado e ocorrência sintéticos de outro Cliente exclusivamente no clone; a preparação pode usar `session_replication_role=replica`, mas a escrita de OS sob teste deve usar os triggers normais. Inserir OS preventiva com `client_id`, `ocorrencia_preventiva_id`, `numero`, `titulo`, `categoria` e `created_by` válidos e manter transação aberta. Em outra sessão, simular a exceção da guarda 1045 em transação e tentar a aprovação: deve receber `55P03`. Reverter as duas transações.
+
+Na ordem inversa, executar aprovação simulada e mantê-la aberta; inserir a OS sintética em outra sessão e observar espera por lock. Reverter aprovação e verificar que a inserção prossegue; reverter também a OS e descartar o clone.
+
+Ambas as ordens passaram. Os Clientes eram distintos: a trava global pode aumentar latência em operações não relacionadas. Não houve avaliação de carga, aprovação operacional ou chamada Auvo.
