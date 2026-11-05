@@ -86,3 +86,10 @@ contenção genérica da S170 e da S176. O replay da S170 foi negado após a rev
 descartável e os recursos do ensaio foram removidos; não houve acionamento do Auvo. Esses
 cenários não identificam necessariamente a guarda responsável pela contenção nem demonstram
 as demais disputas, interface, ACL de produção ou prontidão para release.
+
+Em ensaio separado com a migration 1804, foram aplicadas 228 migrations da base e 657
+candidatas. A fixture sintética passou nas verificações de gate, versão esperada, Cliente e
+replay. A transação foi revertida e os recursos descartáveis removidos, sem acionamento do Auvo.
+O setup usa `session_replication_role=replica`: não comprova as guardas desativadas durante essa
+preparação. O ensaio não inclui concorrência real nem aprovação inicial via SQL e não constitui
+homologação ou autorização para release.

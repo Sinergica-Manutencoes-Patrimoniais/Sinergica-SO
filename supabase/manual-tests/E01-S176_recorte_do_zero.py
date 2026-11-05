@@ -157,6 +157,12 @@ def monitorar(container_id):
 def main(opcoes):
     global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id
     fixtures = None
+    aprovacao_1804 = None
+    if opcoes.aprovacao_1804:
+        if not opcoes.integracao_candidata:
+            raise RuntimeError("Fixture 1804 exige --integracao-candidata")
+        import s165_aprovacao_1804_isolada
+        aprovacao_1804 = s165_aprovacao_1804_isolada.preparar(ROOT)
     if opcoes.concorrencia_parcial and not opcoes.integracao_candidata:
         raise RuntimeError("Concorrência parcial exige --integracao-candidata")
     if opcoes.fixtures_pgtap:
@@ -269,6 +275,13 @@ def main(opcoes):
             if numeros_integracao.count(posterior) != 1 or numeros_integracao.index(anterior) >= numeros_integracao.index(posterior):
                 raise RuntimeError("Consumidor de integração ausente ou fora de ordem: " + posterior)
         print("INTEGRAÇÃO CANDIDATA: migrations originais sem seeds artificiais; resultado NÃO autoriza release.", flush=True)
+    if aprovacao_1804 is not None:
+        if sum(Path(p).name.startswith("1803_") for p in names) != 1 or any(Path(p).name.startswith("1804_") for p in base_files + names):
+            raise RuntimeError("Ordem ou duplicidade da migration 1804")
+        if names[-1] >= s165_aprovacao_1804_isolada.MIGRATION:
+            raise RuntimeError("Migration 1804 fora de ordem")
+        blobs.append((s165_aprovacao_1804_isolada.MIGRATION, aprovacao_1804[0]))
+        names.append(s165_aprovacao_1804_isolada.MIGRATION)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -438,6 +451,8 @@ end; $$;"""
     if query("select (select count(*) from auth.users)=0 and (select count(*) from pcm.clientes)=0 and (select count(*) from vault.secrets)=0") != "t": raise RuntimeError("Banco contém dados inesperados")
     if fixtures is not None:
         s176_runner_pgtap.executar(CONTAINER, fixtures, sql, query, watchdog_triggered)
+    if aprovacao_1804 is not None:
+        s165_aprovacao_1804_isolada.executar(CONTAINER, aprovacao_1804[1], query, watchdog_triggered)
     if opcoes.concorrencia_parcial:
         import s176_runner_concorrencia
         s176_runner_concorrencia.executar(CONTAINER, watchdog_triggered)
@@ -457,6 +472,7 @@ if __name__ == "__main__":
     grupo.add_argument("--integracao-candidata", action="store_true", help="Inclui migrations originais candidatas, sem seeds artificiais; não autoriza release.")
     parser.add_argument("--fixtures-pgtap", action="store_true", help="Executa quatro fixtures sintéticas apenas no candidato de integração descartável.")
     parser.add_argument("--concorrencia-parcial", action="store_true", help="Executa dois cenários concorrentes parciais apenas no candidato de integração descartável.")
+    parser.add_argument("--aprovacao-1804", action="store_true", help="Aplica 1804 fixada e executa fixture sintética com rollback; exige integração candidata.")
     opcoes = parser.parse_args()
     code = 0
     try: main(opcoes)
