@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: escopo e lote consolidado
+
+- ADR-1627/migration 1769 tratam revisão obsoleta na inclusão/retirada de Rotina com P0011; UI de retirada conserva pedidos incertos e erro real 40001. Clone testou operações e replay; UI 3/3, typecheck e revisão independente passaram. Gates permanecem fechados.
+- Lote SQL isolado com migrations 1614–1769 passou 21/21 fixtures, todas revertidas; registro `supabase/tests/manual_E01-S165_S166_lote_isolado_1769.md`. Não comprova ACL global, CI remoto ou fontes externas. Sem deploy/Auvo.
+- Próximo passo: concluir revisão/CI do workspace e validar fontes para homologação.
+
 ## 2026-11-05 — S165/S166: arquitetura e verificação de CI
 
 - Quatro violações XLSX foram corrigidas movendo serialização à infraestrutura e injetando extratores nos serviços; `arch:check`, typecheck web e 38 testes focados passaram. Revisão detectou chamadores Deno sem dependência e import sem extensão; corrigidos, `deno check` dos dois caminhos e smoke direto/worker com 59 linhas passaram. Prévia de cronograma ainda faz XML/matriz na thread principal, fora do timeout de extração; risco de desempenho permanece.

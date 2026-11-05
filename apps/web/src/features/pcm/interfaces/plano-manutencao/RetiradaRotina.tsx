@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { retirarRotinaRascunho, validarRetiradaRotina } from "../../application/plano-manutencao";
 import type { PlanoResumo, RetirarRotinaCommand, RotinaDetalhe } from "../../application/plano-manutencao-gateway";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
 
 export function RetiradaRotina({ userId, clienteId, plano, rotinas, permitirNova, onAtivo, onAtualizar }: {
@@ -34,21 +35,27 @@ export function RetiradaRotina({ userId, clienteId, plano, rotinas, permitirNova
     if (ativo !== ativoAnterior.current) { ativoAnterior.current = ativo; onAtivo(ativo); }
   }, [aberto, pendente, recuperacao.falhou, onAtivo]);
 
-  async function enviar(comando: RetirarRotinaCommand) {
+  async function enviar(comando: RetirarRotinaCommand, primeiraTentativa = false) {
     if (ocupado) return;
     setOcupado(true); setErro("");
     try {
+      await conferirSessaoDiagnostico(userId);
+      if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa divergente.");
       await retirarRotinaRascunho(supabasePlanoManutencaoAdapter, comando);
-      if (sessionStorage.getItem(chave) === JSON.stringify(comando)) sessionStorage.removeItem(chave);
+      await conferirSessaoDiagnostico(userId);
+      if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa divergente.");
+      sessionStorage.removeItem(chave);
       setPendente(null); setAberto(false);
       await queryClient.invalidateQueries({ queryKey: planoManutencaoKeys.raiz(userId, clienteId) }); onAtualizar();
     } catch (falha) {
       const codigo = typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
-      if (["22023", "23514", "40001"].includes(codigo)) {
+      if (primeiraTentativa && (["22023", "23514"].includes(codigo) || (codigo === "P0011" && typeof falha === "object" && falha !== null && "message" in falha && falha.message === "revisao_obsoleta"))) {
         try {
-          if (sessionStorage.getItem(chave) === JSON.stringify(comando)) sessionStorage.removeItem(chave);
+          await conferirSessaoDiagnostico(userId);
+          if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa divergente.");
+          sessionStorage.removeItem(chave);
           setPendente(null); setAberto(false);
-          setErro(codigo === "40001" ? "O Plano mudou. Confira os dados antes de tentar novamente." : "A retirada foi recusada. Confira os dados do Plano.");
+          setErro(codigo === "P0011" ? "O Plano mudou. Confira os dados antes de tentar novamente." : "A retirada foi recusada. Confira os dados do Plano.");
           await queryClient.invalidateQueries({ queryKey: planoManutencaoKeys.raiz(userId, clienteId) }); onAtualizar();
         } catch { setErro("Não foi possível recuperar o pedido. Consulte o suporte."); }
       } else setErro(codigo === "42501" ? "Permissão indisponível. O pedido permanece pendente para conferência." : "Não foi possível confirmar a retirada. Tente novamente com os mesmos dados.");
@@ -67,7 +74,7 @@ export function RetiradaRotina({ userId, clienteId, plano, rotinas, permitirNova
       }
       const comando = validarRetiradaRotina({ requestId: crypto.randomUUID(), expectedRevision: revisaoInicial, planoId: plano.id, rotinaId, motivo });
       if (sessionStorage.getItem(chave) !== null) throw new Error("Pedido pendente.");
-      sessionStorage.setItem(chave, JSON.stringify(comando)); setPendente(comando); void enviar(comando);
+      sessionStorage.setItem(chave, JSON.stringify(comando)); setPendente(comando); void enviar(comando, true);
     } catch { setErro("Confira a Rotina, o motivo e o armazenamento antes de confirmar."); }
   }
   return <section aria-label="Retirada de Rotina" className="space-y-2">
