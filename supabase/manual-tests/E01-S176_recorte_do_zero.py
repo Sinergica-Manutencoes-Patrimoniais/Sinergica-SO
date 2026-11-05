@@ -163,6 +163,15 @@ def main(opcoes):
     global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id
     fixtures = None
     isolamento_1810 = None
+    if opcoes.concorrencia_1810:
+        if not opcoes.isolamento_1810:
+            raise RuntimeError("Concorrência 1810 exige --isolamento-1810 e descarte do clone")
+        for nome, digest in (
+            ("s176_isolamento_concorrencia_1810.py", "e96b7b65a2220136b16843b303ede27660033a8d4f1e06201c78c68ca06136c5"),
+            ("s176_runner_concorrencia.py", "c5daefc801ca006ddb5aa2815f5bb541b0275d1740027b55cdaeb5a4b642e0c3"),
+        ):
+            if hashlib.sha256((ROOT / "supabase/manual-tests" / nome).read_bytes()).hexdigest() != digest:
+                raise RuntimeError("Driver de concorrência divergente: " + nome)
     if opcoes.isolamento_1810:
         if (not opcoes.integracao_candidata or not opcoes.diagnostico_ac5
             or opcoes.concorrencia_parcial or opcoes.concorrencia_1805 or opcoes.concorrencia_1807
@@ -654,6 +663,11 @@ end; $$;"""
             tabela, coluna = gate["tabela"], gate["coluna"]
             if query(f'select coalesce((select not "{coluna}" from pcm."{tabela}" where id),false)::text').strip() != "true":
                 raise RuntimeError("Gate AC5 alterado após fixtures: " + tabela + "." + coluna)
+    if opcoes.concorrencia_1810:
+        import s176_isolamento_concorrencia_1810
+        s176_isolamento_concorrencia_1810.executar(CONTAINER, watchdog_triggered)
+        if query("select not habilitado from config.sso_estrutura_cliente_leitura_gate where id") != "t":
+            raise RuntimeError("Gate de isolamento alterado após concorrência")
     if concorrencia_1807 is not None:
         s165_concorrencia_1807_isolada.executar(CONTAINER, concorrencia_1807, watchdog_triggered)
     if concorrencia_1805:
@@ -689,6 +703,7 @@ if __name__ == "__main__":
     parser.add_argument("--consulta-1808", action="store_true", help="Aplica 1808 e fixture isolada com rollback; exige --revisao-1807.")
     parser.add_argument("--diagnostico-ac5", action="store_true", help="Compila sobreposição AC5 revisada em clone; exige integração, sem fixtures.")
     parser.add_argument("--isolamento-1810", action="store_true", help="Inclui 1804–1810 e suas fixtures; aceita --fixtures-pgtap; exige AC5 e integração.")
+    parser.add_argument("--concorrencia-1810", action="store_true", help="Executa quatro disputas sintéticas; exige --isolamento-1810 e descarte integral do clone.")
     parser.add_argument("--concorrencia-1807", action="store_true", help="Cenários concorrentes 1807 com commit sintético e descarte obrigatório do clone.")
     parser.add_argument("--aprovacao-1805-pos-commit", action="store_true", help="Fixture sintética com COMMIT em clone descartável; exige 1804 e 1805.")
     parser.add_argument("--concorrencia-1805", action="store_true", help="Cenários concorrentes 1805 em clone descartável; exige integração, 1804 e 1805.")
