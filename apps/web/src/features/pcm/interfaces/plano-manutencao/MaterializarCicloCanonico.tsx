@@ -372,7 +372,7 @@ function MaterializarCicloSessao({
         Prepara somente este ciclo, sem OS/Auvo. Coincidência de data com regra diferente exige
         continuidade aprovada.{" "}
         {vencido
-          ? "O servidor aceita somente ciclo vencido há até 366 dias e não comprova ausência de execução."
+          ? "O servidor aceita somente ciclo vencido de versão e Rotina elegíveis; a preparação não comprova ausência de execução."
           : "Vencidos não são gerados neste comando."}{" "}
         {import.meta.env.VITE_SSO_GERACAO_FUSO_SNAPSHOT_ENABLED === "true"
           ? "Janela usa fuso explícito congelado na versão; versões antigas sem fuso ficam bloqueadas."

@@ -125,7 +125,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revisaoPlano }: { user
   const linhas = consulta.data?.linhas ?? [];
   const paginaAtual = Math.min(pagina, Math.max(0, Math.ceil(linhas.length / 50) - 1));
   return <section aria-label="Prévia consolidada de vencimentos"><h4>Conferir vencimentos da versão</h4>
-    <p>Projeção por calendário da versão selecionada, limitada ao período informado. Não consulta execução, cancelamento ou feriados e não prova que o item esteja pendente. Rotinas por Visita não são projetadas; não cria ocorrências ou OS. O registro preliminar de decisão depende das regras de retomada do servidor.</p>
+    <p>Projeção por calendário da versão selecionada, limitada ao período informado. Para datas mais antigas, consulte períodos sucessivos de até 366 dias. Não consulta execução, cancelamento ou feriados e não prova que o item esteja pendente. Rotinas por Visita não são projetadas; não cria ocorrências ou OS. O registro preliminar de decisão depende das regras de retomada do servidor.</p>
     <form onSubmit={(e) => { e.preventDefault(); if (!valida) return; setPagina(0); setSelecionada(null); if (atual) void consulta.refetch(); else setJanela({ inicio, referencia }); }}>
       <label>Início da conferência <input type="date" required value={inicio} onChange={(e) => setInicio(e.target.value)} /></label>
       <label>Data de referência <input type="date" required value={referencia} onChange={(e) => setReferencia(e.target.value)} /></label>
