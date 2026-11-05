@@ -11,6 +11,7 @@ ROOT=Path(__file__).resolve().parents[4]
 WEB=ROOT/'apps/web'; HERE=Path(__file__).resolve().parent
 ident=secrets.token_hex(6); db='sso-s166-e2e-'+ident+'-db'; browser='sso-s166-e2e-'+ident+'-browser'; database='sso_s166_'+ident
 password=secrets.token_hex(20); created=False
+incluir_fila='--fila' in sys.argv[1:]
 
 def run(args, data=None, cwd=None, env=None):
     p=subprocess.run(args,input=data,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,cwd=cwd,env=env)
@@ -35,6 +36,7 @@ try:
     clean={'PATH':os.environ.get('PATH','/usr/bin:/bin'),'HOME':str(tmp),'TMPDIR':str(tmp.parent),'S166_ENV_DIR':str(tmp/'env'),'S166_BUILD_DIR':str(tmp/'dist'),
            'VITE_SUPABASE_URL':'http://127.0.0.1:5189','VITE_SUPABASE_ANON_KEY':'chave-sintetica',
            'VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED':'true','VITE_SSO_VINCULAR_ROTINA_SERIE_ENABLED':'true','VITE_SSO_PREVIA_OCORRENCIA_VISITA_ENABLED':'true','VITE_SSO_RESOLUCAO_IMPACTO_ENABLED':'true','VITE_SSO_APROVAR_REVISAO_ENABLED':'true','VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED':'true','VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED':'true'}
+    if incluir_fila: clean['VITE_SSO_FILA_VISITA_ENABLED']='true'
     run(['node',str(WEB/'node_modules/vite/bin/vite.js'),'build','--config','vite.s166-app-isolado.config.ts'],cwd=WEB,env=clean)
     boot('criar');created=True;boot('carregar');boot('servicos');boot('navegador');boot('verificar')
     run(['docker','cp',str(tmp/'dist'),browser+':/tmp/sso-jornada-dist'])
@@ -59,9 +61,10 @@ try:
     cfg.update(etapa='retirar'); driver(cfg)
     if scalar("select estado from pcm.sso_fila_visita where preparada_id='16610000-0000-0000-0000-000000000161'")!='cancelado': raise RuntimeError('Retirada via UI não comprovada.')
     print('Retirada da fila via UI: passou.')
-    cfg.update(etapa='gerar',rotina=scalar("select rotina_id from pcm.sso_escolhas_nova_data_visita where request_id='16610000-0000-0000-0000-000000000231'"),vencimento=scalar("select (inicio_em at time zone fuso)::date from pcm.visitas where id='16610000-0000-0000-0000-000000000083'"))
+    cfg.update(etapa='gerar',fila=incluir_fila,rotina=scalar("select rotina_id from pcm.sso_escolhas_nova_data_visita where request_id='16610000-0000-0000-0000-000000000231'"),vencimento=scalar("select (inicio_em at time zone fuso)::date from pcm.visitas where id='16610000-0000-0000-0000-000000000083'"))
     driver(cfg)
     if scalar("select count(*) from pcm.ocorrencias_visita_preparadas where plano_id='16610000-0000-0000-0000-000000000121'")!='2': raise RuntimeError('Geração ou preservação histórica não comprovada.')
+    if incluir_fila and scalar("select count(*) from pcm.sso_fila_visita f join pcm.ocorrencias_visita_preparadas o on o.id=f.preparada_id join pcm.sso_escolhas_nova_data_visita e on e.rotina_id=o.rotina_id and e.request_id='16610000-0000-0000-0000-000000000231' join pcm.plano_versoes v on v.id=o.versao_id and v.plano_id=o.plano_id and v.estado='aprovado' where o.plano_id='16610000-0000-0000-0000-000000000121' and o.versao_id='16610000-0000-0000-0000-000000000181' and o.visita_id='16610000-0000-0000-0000-000000000083' and f.estado in ('verificacao','aguardando')")!='1': raise RuntimeError('Inclusão da nova Visita na fila não comprovada.')
     if os_antes!=scalar("select to_jsonb(o)::text from pcm.ordens_servico o where id='17680000-0000-4000-8000-000000000002'") or os_total!=scalar('select count(*) from pcm.ordens_servico') or outbox_total!=scalar('select count(*) from pcm.auvo_sync_outbox'):raise RuntimeError('OS histórica ou saídas alteradas.')
     print('Preparação de Visita via UI e preservação da OS independente: passou; relógio sintético no clone.')
 finally:
