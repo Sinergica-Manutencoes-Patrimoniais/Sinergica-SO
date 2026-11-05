@@ -78,3 +78,7 @@ Executado com sucesso em 2026-11-05, incluindo verificação do estado aprovado 
 ## Vínculo legado existente e fila
 
 `python3 apps/web/e2e/s166-isolado/executar-legado.py` prepara relação e ocorrência sintéticas no clone, usa a interface real para escolher a ocorrência legada, vincular e incluir a preparada na fila Aguardando; verifica ponte, estado e ausência de OS. Executado com sucesso em 2026-11-05 com backend 1735, rede interna e conta sintética. A preparação inicial e declaração de relação são feitas por comandos no clone; o ensaio não demonstra a navegação completa do produto nem cobre Auvo.
+
+## Comparação obsoleta por avaliação legada
+
+`python3 apps/web/e2e/s166-isolado/executar-comparacao.py` cria dados sintéticos, exibe a comparação pela interface, insere avaliação no clone e tenta decidir usando a fotografia anterior. A função de decisão recebe instrumentação temporária com sequência não transacional para contar tentativas; essa alteração existe apenas no clone descartável. Em 2026-11-05, com migration 1743, a RPC executou uma vez, rejeitou a comparação e a interface reconsultou e apresentou o alerta. A fixture prepara a relação e decisão anterior por SQL; o ensaio não comprova navegação integral nem homologação.

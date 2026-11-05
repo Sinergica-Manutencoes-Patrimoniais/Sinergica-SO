@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: conflito HTTP e avaliação na aprovação
+
+- ADR-1600/migration 1742 revalidam avaliação legada recebida após decisão no trigger de aprovação. Fixture isolada e concorrência do helper nas duas ordens passaram; ainda não provam jornada completa 1731 com essa avaliação.
+- Causa do HTTP pendente foi comprovada em clone: PostgREST repetiu RPC que retornava 40001, 838 execuções em ~2 s. ADR-1601/migration 1743 usam P0010 para `comparacao_obsoleta`; UI Calendário/Visita trata conflito definitivo somente na primeira tentativa e mantém replay incerto. Navegador isolado + backend passaram em Calendário: um POST/uma execução, reconferência e alerta; teste UI 12/12 cobriu ambos modos e replay. Outros 40001 ainda exigem auditoria própria. Rollout coordenado backend/UI.
+- Próximo passo: auditar conflitos 40001 expostos ao PostgREST, provar aprovação integral com avaliação tardia e CI. Gates default desligados; sem deploy/Auvo real.
+
 ## 2026-11-05 — S165/S166: avaliação tardia e HTTP pendente
 
 - ADR-1599/migration 1741 impedem geração substituta quando avaliação chegou à ponte antiga após retirada. Clone validou Calendário e Visita; Visita cobriu duas ordens de concorrência com aprovação 1731 real, ponte e relógio sintéticos. Gates default fechados; sem Auvo/deploy.

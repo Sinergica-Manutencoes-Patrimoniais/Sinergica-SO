@@ -46,6 +46,7 @@ try:
     fixture=(ROOT/'supabase/tests/manual_E01-S165_comparacao_avaliacao_legada_1739.sql').read_text().split('do $$ declare a jsonb;b jsonb;v_id uuid;v_p uuid;begin')[0]
     fixture+=f"\nreset role; update pcm.sso_decisao_comparada_gate set habilitado=true where id; update auth.users set encrypted_password=crypt('{password}',gen_salt('bf')),email_confirmed_at=now(),confirmation_token='',recovery_token='',email_change='',email_change_token_new='',is_sso_user=false where id='16630000-1111-4000-8000-000000000001'; commit;"
     boot('verificar');sql(fixture)
+    sql("create sequence pcm.fixture_conta_1739; do $$ declare d text:=pg_get_functiondef('pcm.sso_decidir_impacto_comparado(uuid,uuid,uuid,uuid,uuid,uuid,integer,integer,text,text,text,jsonb)'::regprocedure); begin if position(E'\\nbegin\\n' in d)=0 then raise exception 'fixture_funcao_incompativel';end if; execute replace(d,E'\\nbegin\\n',E'\\nbegin\\n perform nextval(''pcm.fixture_conta_1739''::regclass);\\n');end $$;")
     preparada=scalar("select id from pcm.ocorrencias_rotina_preparadas where plano_id='16630000-1111-4000-8000-000000000011'")
     direto=sql("begin; set local request.jwt.claims='{\"sub\":\"16630000-1111-4000-8000-000000000001\",\"role\":\"authenticated\",\"user_role\":\"colaborador\"}'; set local role authenticated; select count(*) from pcm.sso_listar_decisoes_calendario_mediada('16630000-1111-4000-8000-000000000001','16630000-1111-4000-8000-00000000000a','16630000-1111-4000-8000-000000000011',2,null,20); rollback;")
     print('Listagem SQL autenticada:', direto,flush=True)
@@ -62,6 +63,7 @@ try:
     marco=proc.stdout.readline().strip(); print('Marco de clique:',marco,flush=True)
     print('Atividades RPC:',scalar("select coalesce(string_agg(case when application_name ilike '%postgrest%' then 'postgrest' else 'outro' end||':'||coalesce(wait_event_type,'none')||':'||coalesce(wait_event,'none')||':'||state||':seg='||extract(epoch from clock_timestamp()-query_start)::int||':bloqueadores='||cardinality(pg_blocking_pids(pid)),','),'nenhuma') from pg_stat_activity where datname=current_database() and pid<>pg_backend_pid()"),flush=True)
     print('Eventos proxy:',run(['docker','exec',browser,'cat','/tmp/sso-proxy-eventos']),flush=True)
+    print('Chamadas à RPC:',scalar("select case when is_called then last_value else 0 end from pcm.fixture_conta_1739"),flush=True)
     print('Avaliações vinculadas:',scalar("select count(*) from pcm.avaliacoes_preventivas where chave_origem='fixture-ui-1739'"),flush=True)
     print('Decisões registradas:',scalar("select count(*) from pcm.sso_decisoes_impacto_ocorrencia where preparada_id='"+preparada+"'"),flush=True)
     out=proc.stdout.read();err=proc.stderr.read();code=proc.wait(timeout=30)

@@ -49,12 +49,12 @@ it.each(["calendario", "visita"] as const)("exige nova confirmação ao mudar co
   expect(externo.rpc.mock.calls.filter(([nome]) => nome === "sso_decidir_impacto_mediada")).toHaveLength(0);
 });
 
-it.each(["calendario", "visita"] as const)("libera nova conferência após conflito de revisão definitivo em %s", async (tipo) => {
+it.each([["calendario", "40001", "revisao_decisao_obsoleta"], ["visita", "40001", "revisao_decisao_obsoleta"], ["calendario", "P0010", "comparacao_obsoleta"], ["visita", "P0010", "comparacao_obsoleta"]] as const)("libera nova conferência após conflito definitivo em %s (%s)", async (tipo, code, message) => {
   vi.stubEnv("VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED", "true");
   const linha = tipo === "calendario" ? { ...comum, ciclo: 1, vencimento_original: "2026-11-04", ultimo_motivo: null } : { ...comum, semana_origem: "2026-11-02", visita_id: visita, ciclo_canonico_id: ciclo };
   const comparacao = { preparadaId: preparada, rascunhoId: rascunho, revisaoPlano: revision, tipo, rotinaLogicaId: logica, alvoOcorrenciaTipo: "sistema", alvoOcorrenciaId: alvo, vencimentoOriginal: "2026-11-04", ciclo: tipo === "calendario" ? 1 : null, visitaId: tipo === "visita" ? visita : null, semanaOrigem: tipo === "visita" ? "2026-11-02" : null, anterior: rotina, rascunho: { ...rotina, nome: "Rascunho" }, questionarioComparacao: { estado: "sem_questionario", historicoHash: null, atualHash: null }, origemOcorrencia: { versaoId: "16630000-1111-4000-8000-000000000021", numero: 1, estado: "disponivel", rotina, questionarioEstado: "sem_questionario", questionarioHash: null }, osImpacto: [], osOutroCliente: false, fontesCompletas: false, aprovacaoAutorizada: false };
   externo.rpc.mockImplementation((nome: string) => nome === "sso_decidir_impacto_comparado"
-    ? Promise.resolve({ data: null, error: { code: "40001", message: "revisao_decisao_obsoleta" } })
+    ? Promise.resolve({ data: null, error: { code, message } })
     : { abortSignal: () => Promise.resolve({ data: nome === "sso_comparar_rotina_impacto_v3" ? comparacao : [linha], error: null }) });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   const props = { userId: usuario, clienteId: cliente, planoId: plano, revision };
@@ -72,13 +72,14 @@ it.each(["calendario", "visita"] as const)("libera nova conferência após confl
   expect(screen.getByRole("button", { name: "Registrar decisão" })).toBeDisabled();
 });
 
-it.each(["calendario", "visita"] as const)("preserva tentativa anterior quando replay recebe conflito 40001 em %s", async (tipo) => {
+it.each([["calendario", "40001", "revisao_decisao_obsoleta"], ["visita", "40001", "revisao_decisao_obsoleta"], ["calendario", "P0010", "comparacao_obsoleta"], ["visita", "P0010", "comparacao_obsoleta"]] as const)("preserva tentativa anterior quando replay recebe conflito em %s (%s)", async (tipo, code, message) => {
   vi.stubEnv("VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED", "true");
   const chave = `${tipo === "calendario" ? "sso-impacto-revisao" : "sso-impacto-visita"}:${JSON.stringify([usuario, cliente, plano])}`;
-  const pedido = JSON.stringify({ requestId: "16630000-1111-4000-8000-000000000098", clienteId: cliente, planoId: plano, rascunhoId: rascunho, preparadaId: preparada, planoRevision: revision, decisaoRevision: 1, decisao: "exige_reconciliacao", motivo: "Conferido" });
+  const comparacao = { preparadaId: preparada, rascunhoId: rascunho, revisaoPlano: revision, tipo, rotinaLogicaId: logica, alvoOcorrenciaTipo: "sistema", alvoOcorrenciaId: alvo, vencimentoOriginal: "2026-11-04", anterior: rotina, rascunho: rotina, fontesCompletas: false, aprovacaoAutorizada: false };
+  const pedido = JSON.stringify({ ...(code === "P0010" ? { comparacao } : {}), requestId: "16630000-1111-4000-8000-000000000098", clienteId: cliente, planoId: plano, rascunhoId: rascunho, preparadaId: preparada, planoRevision: revision, decisaoRevision: 1, decisao: "exige_reconciliacao", motivo: "Conferido" });
   sessionStorage.setItem(chave, pedido);
-  externo.rpc.mockImplementation((nome: string) => nome === "sso_decidir_impacto_mediada"
-    ? Promise.resolve({ data: null, error: { code: "40001", message: "revisao_decisao_obsoleta" } })
+  externo.rpc.mockImplementation((nome: string) => (nome === "sso_decidir_impacto_mediada" || nome === "sso_decidir_impacto_comparado")
+    ? Promise.resolve({ data: null, error: { code, message } })
     : { abortSignal: () => Promise.resolve({ data: [], error: null }) });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   const props = { userId: usuario, clienteId: cliente, planoId: plano, revision };
