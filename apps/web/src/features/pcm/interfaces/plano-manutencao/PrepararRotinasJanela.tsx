@@ -79,7 +79,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
         sessionStorage.setItem(chave, JSON.stringify(enviado)); atual = enviado; setPendente(atual);
         const { data, error } = await supabase.schema("pcm").rpc("sso_materializar_lote_calendario_origem_conferida", { p_ator_id: userId, p_request_id: r.requestId, p_cliente_id: atual.clienteId, p_plano_id: atual.planoId, p_versao_id: atual.versaoId, p_rotina_id: r.rotinaId, p_expected_revision: atual.revision, p_inicio: atual.inicio, p_fim: atual.fim, p_esperados: r.esperados });
         if (error) {
-          if (!jaIncerta && typeof error === "object" && "code" in error && (error.code === "40001" || (error.code === "P0015" && "message" in error && (error.message === "revisao_obsoleta" || error.message === "previa_divergente")))) {
+          if (!jaIncerta && typeof error === "object" && "code" in error && (error.code === "P0015" && "message" in error && (error.message === "revisao_obsoleta" || error.message === "previa_divergente"))) {
             await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(atual)) throw new Error("Tentativa alterada.");
             sessionStorage.removeItem(chave); setPendente(null); setConcluidos(atual.recibos); setAssinatura(null); setOrigens(null);
             setAviso(`A revisão ou a origem mudou após ${atual.proxima} de ${atual.rotinas.length} Rotinas. Confira novamente as restantes; as anteriores permanecem preparadas.`);

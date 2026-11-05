@@ -60,10 +60,12 @@ it.each([[false,"40001"], [true,"40001"], [false,"P0015"], [true,"P0015"]] as co
   montar(); await screen.findByRole("checkbox", { name: /Rotina A/ }); await selecionar();
   fireEvent.click(await screen.findByRole("checkbox", { name: /autorizo a preparação sequencial/i }));
   fireEvent.click(screen.getByRole("button", { name: "Preparar Rotinas selecionadas" }));
-  if (incerta) {
+  if (incerta || code === "40001") {
     await screen.findByText(/Sequência interrompida após 1 de 2/);
-    fireEvent.click(screen.getByRole("button", { name: "Retomar sequência" }));
-    await waitFor(() => expect(chamadas).toBe(3));
+    if (incerta) {
+      fireEvent.click(screen.getByRole("button", { name: "Retomar sequência" }));
+      await waitFor(() => expect(chamadas).toBe(3));
+    }
     expect(screen.getByRole("button", { name: "Retomar sequência" })).toBeInTheDocument();
   } else {
     await screen.findByText(/A revisão ou a origem mudou após 1 de 2/);

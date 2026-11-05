@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: inventário e proposta normativa mediados
+
+- ADR-1642/migration 1784 mediam inventário agregado de geração legada chamado pela UI; ADR-1643/migration 1785 mediam proposta de exigência normativa. Núcleos/gates permanecem privados, mediadores conferem ator/Cliente e permissão sob trava. Revisão estática independente não apontou bypass concreto; UI oculta dados durante recarga/erro também nos diagnósticos 1780.
+- Lote multirrotina preserva pedido em 40001 genuíno e só libera reconferência após conflito P0015 específico; teste ajustado sem execução. `DetalhePlano` descarta respostas antigas ao trocar/cancelar Rotina/versão.
+- **Nenhum teste, typecheck, build ou ensaio executado por solicitação atual.** Migrations 1780–1785 e alterações UI/cache aguardam validação conjunta, compilação, ACL, replay e jornadas; gates default fechados, sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: encerramento e caches
 
 - ADR-1641/migration 1783 mediam proposta de encerramento que chamava núcleo privado, mantendo `execucao.validar`, Cliente/Plano, gate e replay. UI preserva pedidos incertos, confirmação vinculada aos dados e invalida escopo/diagnóstico em P0010. Revisão estática independente sem bypass concreto.
