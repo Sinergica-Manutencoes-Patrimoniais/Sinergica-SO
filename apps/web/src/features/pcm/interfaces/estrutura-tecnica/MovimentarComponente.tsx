@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
 import { validarMovimentoComponente } from "../../application/estrutura-tecnica";
 import type { MoverComponenteCommand } from "../../application/estrutura-tecnica-gateway";
 
@@ -64,22 +66,50 @@ export function MovimentarComponente({
     }
     sessionStorage.removeItem(chave);
   }
-  async function executar(comando: MoverComponenteCommand) {
+  async function conferirSessao() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+  }
+  async function executar(comando: MoverComponenteCommand, primeiraTentativa = false) {
     setOcupado(true);
     setErro("");
     try {
-      await enviar(comando);
+      await conferirSessao();
+      if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa alterada.");
+      const recibo = z.object({
+        requestId: z.string().uuid(),
+        aggregateId: z.string().uuid(),
+        revision: z.number().int().positive(),
+        linkedIds: z.object({
+          clienteId: z.string().uuid(),
+          areaId: z.string().uuid().optional(),
+          localId: z.string().uuid().optional(),
+          parentId: z.string().uuid().optional(),
+        }),
+      }).passthrough().parse(await enviar(comando));
+      if (
+        recibo.requestId !== comando.requestId ||
+        recibo.aggregateId !== comando.componenteId ||
+        (recibo.revision !== comando.expectedRevision && recibo.revision !== comando.expectedRevision + 1) ||
+        recibo.linkedIds.clienteId !== clienteId ||
+        (recibo.linkedIds.areaId ?? null) !== comando.areaId ||
+        (recibo.linkedIds.localId ?? null) !== comando.localId ||
+        (recibo.linkedIds.parentId ?? null) !== comando.parentId
+      ) throw new Error("Recibo divergente.");
+      await conferirSessao();
       removerPendenteCorrespondente(comando);
       setPendente(null);
       if (montado.current) onConcluido();
     } catch (falha) {
       if (
+        primeiraTentativa &&
         typeof falha === "object" &&
         falha !== null &&
         "code" in falha &&
         (falha.code === "23514" || falha.code === "22023")
       ) {
         try {
+          await conferirSessao();
           removerPendenteCorrespondente(comando);
           setPendente(null);
           setAreaId(comando.areaId ?? "");
@@ -91,22 +121,7 @@ export function MovimentarComponente({
           /* Preserva pedido se o armazenamento falhar. */
         }
       }
-      if (
-        typeof falha === "object" &&
-        falha !== null &&
-        "code" in falha &&
-        falha.code === "40001"
-      ) {
-        try {
-          removerPendenteCorrespondente(comando);
-          setPendente(null);
-          setErro("A revisão mudou. Feche e reabra o detalhe antes de tentar novamente.");
-          return;
-        } catch {
-          /* Não descarta uma operação sem confirmar que saiu da sessão. */
-        }
-      }
-      setErro("Não foi possível confirmar a movimentação. Tente novamente com os mesmos dados.");
+      setErro("Resultado não confirmado. Repita a mesma tentativa ou procure suporte para reconciliação.");
     } finally {
       setOcupado(false);
     }
@@ -139,7 +154,7 @@ export function MovimentarComponente({
       return;
     }
     setPendente(comando);
-    void executar(comando);
+    void executar(comando, true);
   }
   return (
     <section aria-label="Movimentar Componente">
