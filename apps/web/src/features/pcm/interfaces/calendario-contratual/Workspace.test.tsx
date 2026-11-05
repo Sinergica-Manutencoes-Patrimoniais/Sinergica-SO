@@ -1,17 +1,10 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 vi.mock("../../../../lib/supabase-client", () => ({
-  supabase: new Proxy(
-    {},
-    {
-      get: () => {
-        throw new Error("Acesso inesperado ao Supabase em teste unitário");
-      },
-    },
-  ),
+  supabase: { auth: { getUser: api.getUser } },
   supabaseUrl: "http://127.0.0.1:1",
 }));
 const api = vi.hoisted(() => ({
@@ -19,12 +12,15 @@ const api = vi.hoisted(() => ({
   listarContratos: vi.fn(),
   listarRegras: vi.fn(),
   criarRegra: vi.fn(),
+  getUser: vi.fn(),
+  rejeicao: vi.fn(),
 }));
 vi.mock("../../infrastructure/supabase-capacidades-sso-adapter", () => ({
   supabaseCapacidadesSsoAdapter: api,
 }));
 vi.mock("../../infrastructure/supabase-calendario-contratual-adapter", () => ({
   supabaseCalendarioContratualAdapter: api,
+  rejeicaoInicialRegraComprovada: api.rejeicao,
 }));
 vi.mock("./FeriadosDeclarados", () => ({ FeriadosDeclarados: () => null }));
 import { CalendarioContratualWorkspace } from "./Workspace";
@@ -76,6 +72,10 @@ function montar() {
     </QueryClientProvider>,
   );
 }
+beforeEach(() => {
+  api.getUser.mockResolvedValue({data:{user:{id:"usuario"}},error:null});
+  api.rejeicao.mockReturnValue(false);
+});
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
@@ -363,4 +363,58 @@ it("oculta dados anteriores e bloqueia seleção e salvamento durante reconsulta
   expect((screen.getByRole("button", { name: "Salvar regra" }) as HTMLButtonElement).disabled).toBe(
     false,
   );
+});
+
+async function preencherRegraParaTeste() {
+  api.autorizarAcao.mockResolvedValue(true);
+  api.listarContratos.mockResolvedValue([{id:contratoId,tipo:"volante",status:"ativo",vigenciaInicio:"2026-01-01",vigenciaFim:null}]);
+  api.listarRegras.mockResolvedValue([]);
+  const tela=montar();
+  fireEvent.click(await screen.findByRole("button",{name:"Nova regra contratual"}));
+  fireEvent.change(await screen.findByLabelText("Contrato"),{target:{value:contratoId}});
+  fireEvent.change(screen.getByLabelText("Início da vigência"),{target:{value:"2026-10-01"}});
+  fireEvent.change(screen.getByLabelText("Segunda-feira de referência"),{target:{value:"2026-10-05"}});
+  fireEvent.change(screen.getByLabelText("Dia contratual"),{target:{value:"5"}});
+  fireEvent.change(screen.getByLabelText("Horário de início"),{target:{value:"08:00"}});
+  fireEvent.change(screen.getByLabelText("Duração em minutos"),{target:{value:"120"}});
+  return tela;
+}
+it("primeira rejeição marcada libera edição após confirmar sessão e tentativa",async()=>{
+  const erro={code:"22023"};api.rejeicao.mockImplementation((e:unknown)=>e===erro);api.criarRegra.mockRejectedValueOnce(erro);
+  await preencherRegraParaTeste();fireEvent.click(screen.getByRole("button",{name:"Salvar regra"}));
+  await screen.findByText(/regra foi recusada/i);
+  expect(sessionStorage.getItem(`sso-calendario-pendente:usuario:${clienteId}`)).toBeNull();
+  expect(screen.getByLabelText("Contrato")).toBeEnabled();
+});
+it("rejeição marcada após replay preserva tentativa incerta",async()=>{
+  const erro={code:"22023"};api.rejeicao.mockImplementation((e:unknown)=>e===erro);
+  api.criarRegra.mockRejectedValueOnce(new Error("rede")).mockRejectedValueOnce(erro);
+  await preencherRegraParaTeste();fireEvent.click(screen.getByRole("button",{name:"Salvar regra"}));
+  const repetir=await screen.findByRole("button",{name:"Tentar salvar regra novamente"});
+  const chave=`sso-calendario-pendente:usuario:${clienteId}`, salvo=sessionStorage.getItem(chave);
+  await waitFor(()=>expect(repetir).toBeEnabled());fireEvent.click(repetir);
+  await waitFor(()=>expect(api.criarRegra).toHaveBeenCalledTimes(2));
+  expect(sessionStorage.getItem(chave)).toBe(salvo);expect(api.criarRegra.mock.calls[1]).toEqual(api.criarRegra.mock.calls[0]);
+});
+it("erro genérico com mesmo código não é considerado rejeição comprovada",async()=>{
+  api.criarRegra.mockRejectedValueOnce({code:"22023"});
+  await preencherRegraParaTeste();fireEvent.click(screen.getByRole("button",{name:"Salvar regra"}));
+  await screen.findByText(/não foi possível confirmar/i);
+  expect(sessionStorage.getItem(`sso-calendario-pendente:usuario:${clienteId}`)).not.toBeNull();
+});
+it("sessão alterada após rejeição marcada preserva pedido",async()=>{
+  const erro={code:"22023"};api.rejeicao.mockImplementation((e:unknown)=>e===erro);
+  api.criarRegra.mockImplementation(async()=>{api.getUser.mockResolvedValue({data:{user:{id:"outra"}},error:null});throw erro;});
+  await preencherRegraParaTeste();fireEvent.click(screen.getByRole("button",{name:"Salvar regra"}));
+  await screen.findByText(/não foi possível confirmar/i);
+  expect(sessionStorage.getItem(`sso-calendario-pendente:usuario:${clienteId}`)).not.toBeNull();
+});
+it("desmontagem durante envio preserva pedido confirmado",async()=>{
+  let concluir:(v:{revision:number;warnings:string[]})=>void=()=>{throw new Error("envio ausente");};
+  api.criarRegra.mockImplementation(()=>new Promise((resolve)=>{concluir=resolve;}));
+  const tela=await preencherRegraParaTeste();fireEvent.click(screen.getByRole("button",{name:"Salvar regra"}));
+  await waitFor(()=>expect(api.criarRegra).toHaveBeenCalledTimes(1));
+  const chave=`sso-calendario-pendente:usuario:${clienteId}`,salvo=sessionStorage.getItem(chave);tela.unmount();
+  await act(async()=>{concluir({revision:1,warnings:[]});});
+  expect(sessionStorage.getItem(chave)).toBe(salvo);
 });

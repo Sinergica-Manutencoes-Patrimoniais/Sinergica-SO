@@ -38,7 +38,7 @@ it("não apaga tentativa substituída por outra instância durante envio", async
   await waitFor(() => expect(api.rpc).toHaveBeenCalledWith("sso_materializar_legado_mediado", expect.anything()));
   const pedido = api.rpc.mock.calls.find(([nome]) => nome === "sso_materializar_legado_mediado")![1];
   sessionStorage.setItem(chave, "tentativa de outra instância");
-  concluir({ data: { requestId: pedido.p_request_id, preparadaId: pedido.p_preparada_id, osCriada: false, tarefaAuvoCriada: false, equivalenciaGeralComprovada: false, ocorrenciaLegadaCriada: true }, error: null });
+  concluir({ data: { requestId: pedido.p_request_id, preparadaId: pedido.p_preparada_id, cicloId: pedido.p_ciclo_id, osCriada: false, tarefaAuvoCriada: false, equivalenciaGeralComprovada: false, ocorrenciaLegadaCriada: true }, error: null });
   await waitFor(() => expect(screen.getByText(/tentativa.*alterada/i)).toBeTruthy());
   expect(sessionStorage.getItem(chave)).toBe("tentativa de outra instância");
 });
@@ -88,7 +88,7 @@ it("encaminha ciclo integrado para conferência independente da fila", async () 
   fireEvent.click(screen.getByRole("button", { name: "Processar ciclo" }));
   await waitFor(() => expect(api.rpc).toHaveBeenCalledWith("sso_materializar_legado_mediado", expect.anything()));
   const pedido = api.rpc.mock.calls.find(([nome]) => nome === "sso_materializar_legado_mediado")![1];
-  concluir({ data: { requestId: pedido.p_request_id, preparadaId: pedido.p_preparada_id, osCriada: false, tarefaAuvoCriada: false, equivalenciaGeralComprovada: false, ocorrenciaLegadaCriada: true }, error: null });
+  concluir({ data: { requestId: pedido.p_request_id, preparadaId: pedido.p_preparada_id, cicloId: pedido.p_ciclo_id, osCriada: false, tarefaAuvoCriada: false, equivalenciaGeralComprovada: false, ocorrenciaLegadaCriada: true }, error: null });
   expect(await screen.findByText("Fila do ciclo: preparada")).toBeInTheDocument();
 });
 

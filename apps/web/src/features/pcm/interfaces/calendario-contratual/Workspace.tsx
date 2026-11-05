@@ -1,12 +1,13 @@
 import { Button } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "../../../../lib/supabase-client";
 import {
   criarRegraContratual,
   validarCriacaoRegraContratual,
 } from "../../application/calendario-contratual";
 import type { CriarRegraContratualCommand } from "../../application/calendario-contratual-gateway";
-import { supabaseCalendarioContratualAdapter } from "../../infrastructure/supabase-calendario-contratual-adapter";
+import { rejeicaoInicialRegraComprovada, supabaseCalendarioContratualAdapter } from "../../infrastructure/supabase-calendario-contratual-adapter";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { SimulacaoRegra } from "./SimulacaoRegra";
 import { AlterarDiaContratual } from "./AlterarDiaContratual";
@@ -51,6 +52,12 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
   const [simulacaoId, setSimulacaoId] = useState<string | null>(null);
   const [feriadosSimulados, setFeriadosSimulados] = useState<{contratoId:string|null;datas:string[];periodo:{inicio:string;fim:string}}|null>(null);
   const emEnvio = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  async function conferirSessao() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+  }
   const queryClient = useQueryClient();
   const raiz = ["calendario-contratual", userId, clienteId] as const;
   const permissao = useQuery({
@@ -83,7 +90,6 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
       if (c.clienteId !== clienteId) throw new Error("Cliente divergente.");
       return criarRegraContratual(supabaseCalendarioContratualAdapter, c);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [...raiz, "regras"] }),
   });
   if (permissao.isPending || permissao.isFetching)
     return <output>Verificando acesso ao calendário...</output>;
@@ -97,7 +103,7 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
       </p>
     );
   if (!permissao.data) return <p>Você está sem permissão para gerir o calendário deste Cliente.</p>;
-  async function enviar(c: CriarRegraContratualCommand) {
+  async function enviar(c: CriarRegraContratualCommand, primeira = false) {
     if (emEnvio.current) return;
     try {
       if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
@@ -108,7 +114,10 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
     emEnvio.current = true;
     setErro("");
     try {
+      await conferirSessao();
+      if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
       await salvar.mutateAsync(c);
+      await conferirSessao();
       if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada após confirmação.");
       sessionStorage.removeItem(chave);
       setPendente(null);
@@ -124,36 +133,19 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
       setDeslocamento("0");
       setFuso("America/Sao_Paulo");
       setSucesso("Regra contratual cadastrada. Nenhuma Visita foi criada.");
+      void queryClient.invalidateQueries({ queryKey: [...raiz, "regras"] });
     } catch (falha) {
-      const codigo =
-        typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
-      if (["22023", "23514", "23P01", "40001", "42501"].includes(codigo)) {
+      if (primeira && rejeicaoInicialRegraComprovada(falha)) {
         try {
+          await conferirSessao();
           if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
           sessionStorage.removeItem(chave);
           setPendente(null);
-          setContrato(c.contratoId);
-          setInicio(c.vigenciaInicio);
-          setFim(c.vigenciaFim ?? "");
-          setAncora(c.ancoraSemana);
-          setDia(String(c.diaSemana));
-          setIntervalo(String(c.intervaloSemanas));
-          setHora(c.horaInicio);
-          setDuracao(String(c.duracaoMinutos));
-          setDeslocamento(String(c.deslocamentoMinutos));
-          setFuso(c.fuso);
-          setAberto(true);
-          setErro(
-            codigo === "42501"
-              ? "Sem acesso ao contrato. Confira o Cliente e sua permissão."
-              : "A regra foi recusada. Confira datas, fuso e parâmetros antes de salvar novamente.",
-          );
+          setErro("A regra foi recusada. Confira os dados antes de salvar novamente.");
           return;
-        } catch {
-          /* Preserva operação incerta se não puder limpar armazenamento. */
-        }
+        } catch { /* Mantém a tentativa quando sessão ou armazenamento mudaram. */ }
       }
-      setErro("Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados.");
+      if (montado.current) setErro("Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados ou consulte suporte.");
     } finally {
       emEnvio.current = false;
     }
@@ -185,7 +177,7 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
       if (sessionStorage.getItem(chave) !== null) throw new Error("Tentativa existente.");
       sessionStorage.setItem(chave, JSON.stringify(comando));
       setPendente(comando);
-      void enviar(comando);
+      void enviar(comando, true);
     } catch {
       setErro("Confira contrato, datas, dia, horário, duração e armazenamento antes de salvar.");
     }
