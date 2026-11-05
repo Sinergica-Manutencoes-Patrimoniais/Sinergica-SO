@@ -186,6 +186,14 @@ def main(opcoes):
     isolamento_1810 = None
     upload_1811 = None
     documento_1812 = None
+    hierarquia_1813 = None
+    if opcoes.hierarquia_1813:
+        if not opcoes.documento_1812: raise RuntimeError("Hierarquia 1813 exige --documento-1812")
+        driver_hierarquia = ROOT / "supabase/manual-tests/s176_hierarquia_1813_isolada.py"
+        if hashlib.sha256(driver_hierarquia.read_bytes()).hexdigest() != "6e7129a210ed5d5a4767eef4f6190cb4fdf2a812185ae70a1992c589fc03454f":
+            raise RuntimeError("Driver de hierarquia 1813 divergente")
+        import s176_hierarquia_1813_isolada
+        hierarquia_1813 = s176_hierarquia_1813_isolada.preparar(ROOT)
     if opcoes.documento_1812:
         if not opcoes.upload_1811: raise RuntimeError("Documento 1812 exige --upload-1811")
         driver_documento = ROOT / "supabase/manual-tests/s178_documento_1812_isolada.py"
@@ -520,6 +528,12 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade de documento 1812")
         blobs.append((caminho, documento_1812[0]))
         names.append(caminho)
+    if hierarquia_1813 is not None:
+        caminho = s176_hierarquia_1813_isolada.MIGRATION
+        if any(Path(p).name[:4] == "1813" for p in base_files + names) or names[-1] >= caminho:
+            raise RuntimeError("Ordem ou duplicidade de hierarquia 1813")
+        blobs.append((caminho, hierarquia_1813[0]))
+        names.append(caminho)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -736,6 +750,12 @@ end; $$;"""
         s178_documento_1812_isolada.executar(CONTAINER, documento_1812[1], query, watchdog_triggered)
         if query("select not habilitado from pcm.sso_documento_ativo_mediado_gate where id") != "t":
             raise RuntimeError("Gate de documento alterado após fixture")
+    if hierarquia_1813 is not None:
+        if query("select not habilitado from pcm.sso_hierarquia_grupos_mediada_gate where id") != "t":
+            raise RuntimeError("Gate da hierarquia inicial aberto ou ausente")
+        s176_hierarquia_1813_isolada.executar(CONTAINER, hierarquia_1813[1], query, watchdog_triggered)
+        if query("select not habilitado from pcm.sso_hierarquia_grupos_mediada_gate where id") != "t":
+            raise RuntimeError("Gate da hierarquia alterado após fixture")
     if opcoes.concorrencia_1810:
         import s176_isolamento_concorrencia_1810
         s176_isolamento_concorrencia_1810.executar(CONTAINER, watchdog_triggered)
@@ -825,6 +845,7 @@ if __name__ == "__main__":
     parser.add_argument("--concorrencia-1810", action="store_true", help="Executa quatro disputas sintéticas; exige --isolamento-1810 e descarte integral do clone.")
     parser.add_argument("--upload-1811", action="store_true", help="Aplica 1811 e executa fixture SQL com rollback; exige isolamento 1810.")
     parser.add_argument("--documento-1812", action="store_true", help="Aplica 1812 e valida ACL/gates com rollback; exige --upload-1811.")
+    parser.add_argument("--hierarquia-1813", action="store_true", help="Aplica 1813 e valida hierarquia com rollback; exige --documento-1812.")
     parser.add_argument("--jornada-ac5-http", action="store_true", help="Executa jornada HTTP parcial Auth/Storage em clone descartável; exige --upload-1811.")
     parser.add_argument("--concorrencia-1807", action="store_true", help="Cenários concorrentes 1807 com commit sintético e descarte obrigatório do clone.")
     parser.add_argument("--aprovacao-1805-pos-commit", action="store_true", help="Fixture sintética com COMMIT em clone descartável; exige 1804 e 1805.")
