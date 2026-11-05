@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: fallbacks e contexto de vínculo
+
+- Ciclos uniformes, decisão de vencimento e transição de Plano deixam de chamar fallbacks privados inacessíveis; mediadores ainda exigem suas flags e pedidos incertos são preservados. Geração contratual tem protocolos antigos distintos e não foi alterada.
+- Escolha de nova Visita invalida impactos corretos; ambas escolhas invalidam estado persistido e avaliações. `VincularSerieRotina` remonta por ator/Cliente/Plano/versão/Rotina para não exibir pedido de outro contexto.
+- **Nenhum teste, typecheck, build ou ensaio executado por solicitação atual.** Migrations 1780–1785 e alterações UI/cache aguardam validação conjunta, especialmente flags, compatibilidade de pedidos existentes, sessão e replay. Sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: atualização de fuso e uso canônico
 
 - Declaração de fuso agora invalida preflight de aprovação e conferência de séries; lote de Calendário invalida consulta de uso canônico. Objetivo: evitar dados anteriores após mutação; sem mudança de regras ou gates.

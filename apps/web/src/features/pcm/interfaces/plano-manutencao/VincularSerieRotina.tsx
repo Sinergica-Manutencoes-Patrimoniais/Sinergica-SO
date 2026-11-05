@@ -9,7 +9,11 @@ import { GerarVisitaContratual } from "./GerarVisitaContratual";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 type Pedido={requestId:string;clienteId:string;planoId:string;versaoId:string;rotinaId:string;serieId:string;revision:number;tentativaIncerta?:boolean};
-export function VincularSerieRotina({userId,clienteId,planoId,versaoId,rotinaId,revision}:{userId:string;clienteId:string;planoId:string;versaoId:string;rotinaId:string;revision:number}) {
+type Props = {userId:string;clienteId:string;planoId:string;versaoId:string;rotinaId:string;revision:number};
+export function VincularSerieRotina(props: Props) {
+  return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId,props.versaoId,props.rotinaId])} {...props} />;
+}
+function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,revision}: Props) {
   const chave=`sso-rotina-serie:${JSON.stringify([userId,clienteId,planoId,rotinaId])}`;const cache=useQueryClient();const primeira=useRef(false);
   const [serieId,setSerieId]=useState("");const [mensagem,setMensagem]=useState("");
   const [pedido,setPedido]=useState<Pedido|"invalido"|null>(() => {try{const salvo=sessionStorage.getItem(chave);if(!salvo)return null;const p=JSON.parse(salvo) as Pedido;

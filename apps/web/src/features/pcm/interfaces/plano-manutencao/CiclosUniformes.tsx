@@ -21,9 +21,8 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, serieId, rev
     queryFn: async ({ pageParam, signal }) => { if (!periodo) throw new Error("Período ausente.");
       const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || signal.aborted)throw new Error("Sessão alterada.");
       const parametros={p_plano_id:planoId,p_versao_id:versaoId,p_rotina_id:rotinaId,p_serie_id:serieId??null,p_inicio:periodo.inicio,p_fim:periodo.fim,p_apos:pageParam,p_limite:20};
-      const requisicao=mediada
-        ? supabase.schema("pcm").rpc("sso_consultar_ciclos_uniformes_mediada",{...parametros,p_ator_esperado:userId,p_cliente_id:clienteId})
-        : supabase.schema("pcm").rpc("sso_consultar_ciclos_uniformes",parametros);
+      if(!mediada)throw new Error("Consulta mediada indisponível.");
+      const requisicao=supabase.schema("pcm").rpc("sso_consultar_ciclos_uniformes_mediada",{...parametros,p_ator_esperado:userId,p_cliente_id:clienteId});
       const { data, error } = await requisicao.abortSignal(signal);
       if (error) throw error; const pagina=z.array(ciclo).max(20).parse(data);let anterior=pageParam;
       for(const item of pagina){
