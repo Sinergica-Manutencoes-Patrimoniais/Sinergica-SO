@@ -48,8 +48,29 @@ jobs:
             test "$(df -Pk "$raiz" | awk 'NR==2 {print $4}')" -ge 20971520
           }
           espaco
+          umask 077
+          erro="$(mktemp "$RUNNER_TEMP/sso-pull-erro.XXXXXXXX")"
+          trap 'rm -f "$erro"' EXIT
           while read -r imagem digest tag; do
-            docker pull "${imagem}@sha256:${digest}"
+            baixada=false
+            for tentativa in 1 2 3; do
+              espaco
+              if timeout 180 docker pull "${imagem}@sha256:${digest}" > /dev/null 2> "$erro"; then
+                baixada=true
+                break
+              fi
+              if ! grep -Eiq '(^|[^a-z])(too many requests|toomanyrequests)([^a-z]|$)|http(/[0-9.]+)?[[:space:]]+429([^0-9]|$)|status( code)?[ :=]+429([^0-9]|$)' "$erro"; then
+                echo "Falha ao baixar imagem fixada; erro não classificado como limite de requisições." >&2
+                exit 1
+              fi
+              if [ "$tentativa" -eq 3 ]; then
+                echo "Limite de requisições persistiu após três tentativas." >&2
+                exit 1
+              fi
+              echo "Limite de requisições; aguardando antes de repetir a imagem fixada."
+              if [ "$tentativa" -eq 1 ]; then sleep 30; else sleep 45; sleep 45; fi
+            done
+            test "$baixada" = true
             docker tag "${imagem}@sha256:${digest}" "${imagem}:${tag}"
             espaco
           done <<'IMAGENS'
