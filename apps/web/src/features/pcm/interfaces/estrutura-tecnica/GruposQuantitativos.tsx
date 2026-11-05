@@ -25,6 +25,7 @@ import { HistoricoCadastroLevantamento } from "../levantamentos/HistoricoCadastr
 import { RemoverCaracteristicaGrupo } from "./RemoverCaracteristicaGrupo";
 import { EstadoGrupo, GruposInativos } from "./EstadoGrupo";
 import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
+import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
 
 type GruposQuantitativosProps = {
   userId: string;
@@ -508,6 +509,7 @@ function GruposQuantitativosContexto({
                 <HistoricoGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />
               )}
               {correspondeFiltro(grupo) && !grupos.isFetching && <ResultadosDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupo.id} nome={grupo.nome}/>}
+              {correspondeFiltro(grupo) && !grupos.isFetching && <PendenciasDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupo.id}/>}
               <FotosGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} podeEditar={permissao.data.gestao} />
               <FotosStagingGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />
               <FotosVerificadasGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />

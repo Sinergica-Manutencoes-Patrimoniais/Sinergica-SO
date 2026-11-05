@@ -119,7 +119,7 @@ export const supabaseEstruturaTecnicaAdapter: EstruturaTecnicaGateway &
     if (error) throw error;
     return resultadoSchema.parse(data);
   },
-  async listarGrupos(clienteId, inicio, limite, signal) {
+  async listarGrupos(clienteId, inicio, limite, signal, sistemaId) {
     if (
       !Number.isSafeInteger(inicio) ||
       inicio < 0 ||
@@ -140,6 +140,7 @@ export const supabaseEstruturaTecnicaAdapter: EstruturaTecnicaGateway &
       .is("deleted_at", null)
       .order("id", { ascending: true })
       .range(inicio, inicio + limite - 1);
+    if (sistemaId) consulta = consulta.eq("sistema_id", sistemaId);
     if (signal) consulta = consulta.abortSignal(signal);
     const { data, error } = await consulta;
     if (error) throw error;

@@ -9,6 +9,8 @@ import { FotosStagingGrupo } from "./FotosStagingGrupo";
 import { FotosVerificadasGrupo } from "./FotosVerificadasGrupo";
 import { FotosStagingAtivo } from "./FotosStagingAtivo";
 import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
+import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
+import { BreadcrumbGrupo } from "./BreadcrumbGrupo";
 
 type Props = { userId: string; clienteId: string; localId: string; caminho: string[] };
 const item = z.object({ id: z.string().uuid(), nome: z.string(), tipo: z.enum(["equipamento", "componente"]),
@@ -91,7 +93,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
 function DetalhesGrupo({ userId, clienteId, grupoId, nome }: { userId: string; clienteId: string; grupoId: string; nome: string }) {
   const [aberto, setAberto] = useState(false);
   return <section><button type="button" aria-expanded={aberto} aria-label={`${aberto ? "Ocultar" : "Ver"} detalhes do Grupo ${nome}`} onClick={() => setAberto(v => !v)}>{aberto ? "Ocultar detalhes do Grupo" : "Ver detalhes do Grupo"}</button>
-    {aberto && <><HistoricoGrupo userId={userId} clienteId={clienteId} grupoId={grupoId}/><ResultadosDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupoId} nome={nome}/>{import.meta.env.VITE_SSO_FOTOS_GRUPO_ENABLED !== "true" && <p>Fotos do Grupo não habilitadas nesta visão.</p>}<FotosGrupo userId={userId} clienteId={clienteId} grupoId={grupoId} podeEditar={false}/><FotosStagingGrupo userId={userId} clienteId={clienteId} grupoId={grupoId}/><FotosVerificadasGrupo userId={userId} clienteId={clienteId} grupoId={grupoId}/></>}
+    {aberto && <><p>Verificação da localização: {import.meta.env.VITE_SSO_BREADCRUMB_GRUPO_ENABLED === "true" ? <BreadcrumbGrupo userId={userId} clienteId={clienteId} grupoId={grupoId}/> : "consulta de hierarquia não habilitada; confira o caminho acima."}</p><HistoricoGrupo userId={userId} clienteId={clienteId} grupoId={grupoId}/><ResultadosDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupoId} nome={nome}/><PendenciasDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupoId}/>{import.meta.env.VITE_SSO_FOTOS_GRUPO_ENABLED !== "true" && <p>Fotos do Grupo não habilitadas nesta visão.</p>}<FotosGrupo userId={userId} clienteId={clienteId} grupoId={grupoId} podeEditar={false}/><FotosStagingGrupo userId={userId} clienteId={clienteId} grupoId={grupoId}/><FotosVerificadasGrupo userId={userId} clienteId={clienteId} grupoId={grupoId}/></>}
   </section>;
 }
 

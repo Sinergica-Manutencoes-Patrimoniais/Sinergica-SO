@@ -69,6 +69,7 @@ export interface ConsultaGruposGateway {
     inicio: number,
     limite: number,
     signal?: AbortSignal,
+    sistemaId?: string,
   ): Promise<GrupoQuantitativo[]>;
 }
 

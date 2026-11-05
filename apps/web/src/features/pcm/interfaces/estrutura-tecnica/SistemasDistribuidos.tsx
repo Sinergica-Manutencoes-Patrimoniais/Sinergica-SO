@@ -4,33 +4,37 @@ import { z } from "zod";
 import { useState, type ReactNode } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { ResultadosDoAlvo } from "../pendencias-tecnicas/ResultadosAtivo";
+import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
 import { HistoricoGrupo } from "./HistoricoGrupo";
 import { FotosStagingAtivo } from "./FotosStagingAtivo";
 import { FotosStagingGrupo } from "./FotosStagingGrupo";
 import { FotosVerificadasGrupo } from "./FotosVerificadasGrupo";
+import { PlanosDoAlvo } from "./PlanosDoAlvo";
 
 /** Projeção de vínculos presentes: não interpreta ausência de vínculo como ausência física. */
-export function SistemasDistribuidos({ userId, clienteId }: { userId: string; clienteId: string }) {
+export function SistemasDistribuidos({ userId, clienteId, sistemaId }: { userId: string; clienteId: string; sistemaId?: string }) {
   if (import.meta.env.VITE_SSO_SISTEMAS_DISTRIBUIDOS_ENABLED !== "true") return null;
-  return <Conteudo key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />;
+  return <Conteudo key={`${userId}:${clienteId}:${sistemaId ?? "todos"}`} userId={userId} clienteId={clienteId} sistemaId={sistemaId} />;
 }
-function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) {
+function Conteudo({ userId, clienteId, sistemaId }: { userId: string; clienteId: string; sistemaId?: string }) {
   async function conferirSessao(signal: AbortSignal) {
     const r = await supabase.auth.getUser();
     if (r.error || r.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
   }
   const sistemas = useInfiniteQuery({
-    queryKey: ["estrutura-tecnica", userId, clienteId, "sistemas-distribuidos"],
+    queryKey: ["estrutura-tecnica", userId, clienteId, "sistemas-distribuidos", sistemaId ?? "todos"],
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const { data, error } = await supabase
+      let consulta = supabase
         .schema("pcm")
         .from("sistemas")
         .select("id,cliente_id,nome,ativo")
         .eq("cliente_id", clienteId)
-        .is("deleted_at", null)
+        .is("deleted_at", null);
+      if (sistemaId) consulta = consulta.eq("id", sistemaId);
+      const { data, error } = await consulta
         .order("id", { ascending: true })
         .range(pageParam, pageParam + 49)
         .abortSignal(signal);
@@ -110,16 +114,18 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
   });
   const membros = useInfiniteQuery({
-    queryKey: ["estrutura-tecnica", userId, clienteId, "vinculos-distribuidos"],
+    queryKey: ["estrutura-tecnica", userId, clienteId, "vinculos-distribuidos", sistemaId ?? "todos"],
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const { data, error } = await supabase
+      let consulta = supabase
         .schema("pcm")
         .from("sistema_itens")
         .select("sistema_id,item_id,sistemas!inner(cliente_id)")
-        .eq("sistemas.cliente_id", clienteId)
+        .eq("sistemas.cliente_id", clienteId);
+      if (sistemaId) consulta = consulta.eq("sistema_id", sistemaId);
+      const { data, error } = await consulta
         .order("sistema_id", { ascending: true })
         .order("item_id", { ascending: true })
         .range(pageParam, pageParam + 49)
@@ -134,12 +140,12 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
   });
   const grupos = useInfiniteQuery({
-    queryKey: ["estrutura-tecnica", userId, clienteId, "grupos-sistemas-distribuidos"],
+    queryKey: ["estrutura-tecnica", userId, clienteId, "grupos-sistemas-distribuidos", sistemaId ?? "todos"],
     gcTime: 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const pagina = await supabaseEstruturaTecnicaAdapter.listarGrupos(clienteId, pageParam, 50, signal);
+      const pagina = await supabaseEstruturaTecnicaAdapter.listarGrupos(clienteId, pageParam, 50, signal, sistemaId);
       await conferirSessao(signal);
       return pagina;
     },
@@ -153,7 +159,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
   const gruposCarregados = !grupos.isFetching && !grupos.isError ? grupos.data?.pages.flat() ?? [] : [];
   return (
     <section aria-label="Sistemas distribuídos">
-      <h3>Sistemas distribuídos</h3>
+      <h3>{sistemaId ? "Locais e composição do Sistema" : "Sistemas distribuídos"}</h3>
       {consultas.some((q) => q.isPending || q.isFetching) && <output>Carregando fontes de Sistemas…</output>}
       {consultas.some((q) => q.isError) && <p role="alert">Uma ou mais fontes estão indisponíveis. As demais permanecem visíveis, mas a cobertura é incompleta. <button type="button" onClick={() => { for (const q of consultas) if (q.isError) void q.refetch(); }}>Tentar novamente</button></p>}
       <p>
@@ -372,6 +378,8 @@ function DetalheGrupoSistema({ userId, clienteId, grupoId, nome }: { userId: str
   return <section><button type="button" aria-expanded={aberto} aria-label={`${aberto ? "Ocultar" : "Ver"} detalhes do Grupo ${nome}`} onClick={() => setAberto(v => !v)}>{aberto ? "Ocultar detalhes" : "Ver detalhes do Grupo"}</button>
     {aberto && <><HistoricoGrupo userId={userId} clienteId={clienteId} grupoId={grupoId} />
       <ResultadosDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupoId} nome={nome} />
+      <PlanosDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupoId} />
+      <PendenciasDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupoId} />
       <FotosStagingGrupo userId={userId} clienteId={clienteId} grupoId={grupoId} />
       <FotosVerificadasGrupo userId={userId} clienteId={clienteId} grupoId={grupoId} /></>}
   </section>;

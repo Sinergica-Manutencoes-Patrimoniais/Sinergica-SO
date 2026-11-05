@@ -4,6 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { concessaoSchema, perfilSchema, vinculoSchema } from "../../application/capacidades-sso";
 import { useConfiguracaoCapacidades } from "../../application/capacidades-sso-queries";
 import { criarRegistroRequisicoes } from "../../application/requisicoes-capacidades";
+import type { PaginaCapacidade } from "../../application/capacidades-sso-gateway";
 import { ACOES_SSO, type AcaoSso } from "../../domain/capacidades-sso";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 
@@ -32,6 +33,7 @@ const LABELS: Record<AcaoSso, string> = {
 type ConsultaPaginada<T> = {
   data?: { pages: T[][] };
   isPending: boolean;
+  isFetching: boolean;
   isError: boolean;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
@@ -46,17 +48,22 @@ function SecaoDados<T>({
   return (
     <section className="space-y-2">
       <h2 className="text-lg font-semibold">{titulo}</h2>
-      {query.isPending && <output>Carregando…</output>}
+      {(query.isPending || query.isFetching) && <output>Carregando…</output>}
       {query.isError && (
         <div role="alert">
           Não foi possível carregar {titulo.toLowerCase()}.{" "}
           <Button onClick={() => void query.refetch()}>Tentar novamente</Button>
         </div>
       )}
-      {!query.isPending && !query.isError && children(query.data?.pages.flat() ?? [])}
-      {query.hasNextPage && (
-        <Button loading={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
-          Carregar mais
+      {!query.isPending && !query.isFetching && !query.isError && children(query.data?.pages.flat() ?? [])}
+      {(query.hasNextPage || query.isFetchingNextPage || (query.data?.pages.length ?? 0) > 1) && (
+        <Button
+          aria-disabled={query.isFetching || query.isError || !query.hasNextPage}
+          onClick={() => {
+            if (!query.isFetching && !query.isError && query.hasNextPage) void query.fetchNextPage();
+          }}
+        >
+          {!query.hasNextPage && !query.isFetching ? "Todas as páginas carregadas" : "Carregar mais"}
         </Button>
       )}
     </section>
@@ -68,7 +75,27 @@ export function CapacidadesWorkspace({ userId }: { userId: string }) {
 }
 
 function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
-  const api = useConfiguracaoCapacidades(supabaseCapacidadesSsoAdapter, userId);
+  const gateway = useMemo(() => {
+    const conferir = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || data.user?.id !== userId) throw new Error("Sessão alterada.");
+    };
+    const segura = <T,>(listar: (pagina: PaginaCapacidade) => Promise<T[]>) => async (pagina: PaginaCapacidade) => {
+      await conferir();
+      const resultado = await listar(pagina);
+      await conferir();
+      return resultado;
+    };
+    return {
+      ...supabaseCapacidadesSsoAdapter,
+      listarPerfis: segura(supabaseCapacidadesSsoAdapter.listarPerfis),
+      listarVinculos: segura(supabaseCapacidadesSsoAdapter.listarVinculos),
+      listarConcessoes: segura(supabaseCapacidadesSsoAdapter.listarConcessoes),
+      listarUsuarios: segura(supabaseCapacidadesSsoAdapter.listarUsuarios),
+      listarClientes: segura(supabaseCapacidadesSsoAdapter.listarClientes),
+    };
+  }, [userId]);
+  const api = useConfiguracaoCapacidades(gateway, userId);
   const registro = useMemo(
     () =>
       criarRegistroRequisicoes(
@@ -97,9 +124,9 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   const [acao, setAcao] = useState<AcaoSso>("plano.gerir");
   const [escopo, setEscopo] = useState("");
   const [confirmarGlobal, setConfirmarGlobal] = useState(false);
-  const usuarios = api.usuarios.isError ? [] : (api.usuarios.data?.pages.flat() ?? []);
-  const perfis = api.perfis.isError ? [] : (api.perfis.data?.pages.flat() ?? []);
-  const clientes = api.clientes.isError ? [] : (api.clientes.data?.pages.flat() ?? []);
+  const usuarios = api.usuarios.isError || api.usuarios.isFetching ? [] : (api.usuarios.data?.pages.flat() ?? []);
+  const perfis = api.perfis.isError || api.perfis.isFetching ? [] : (api.perfis.data?.pages.flat() ?? []);
+  const clientes = api.clientes.isError || api.clientes.isFetching ? [] : (api.clientes.data?.pages.flat() ?? []);
   const usuarioConfirmado =
     !api.usuarios.isFetching &&
     !api.usuarios.isError &&

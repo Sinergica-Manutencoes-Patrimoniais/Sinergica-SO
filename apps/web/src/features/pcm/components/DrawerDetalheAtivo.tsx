@@ -26,6 +26,8 @@ import { FotosStagingAtivo } from "../interfaces/estrutura-tecnica/FotosStagingA
 import { DocumentosStagingAtivo } from "../interfaces/estrutura-tecnica/DocumentosStagingAtivo";
 import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
 import { ResultadosDoAlvo } from "../interfaces/pendencias-tecnicas/ResultadosAtivo";
+import { PendenciasDoAlvo } from "../interfaces/pendencias-tecnicas/PendenciasDoAlvo";
+import { PlanosDoAlvo } from "../interfaces/estrutura-tecnica/PlanosDoAlvo";
 import { EdicaoRascunhoCodigo } from "../interfaces/codigos-publicos/EdicaoRascunho";
 
 type Estado =
@@ -175,7 +177,9 @@ export function DrawerDetalheAtivo({
         {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <EdicaoRascunhoCodigo userId={user.id} clienteId={item.clientId} tipo="componente" ativoId={item.id} onAtualizado={() => { void atualizarDetalheCodigo(); }} />}
         {estado.fase === "pronto" && !estado.detalhe.contexto && <Conteudo detalhe={estado.detalhe} />}
         {user && item?.tipo === "componente" && item.clientId && <ResultadosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} nome={item.nome} />}
-        {user && item?.tipo === "componente" && item.clientId && <FotosStagingAtivo userId={user.id} clienteId={item.clientId} tipo="componente" entidadeId={item.id} />}
+        {user && item?.tipo === "componente" && item.clientId && <PendenciasDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />}
+        {user && item && item.clientId && <PlanosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />}
+        {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <FotosStagingAtivo userId={user.id} clienteId={item.clientId} tipo={item.tipo} entidadeId={item.id} />}
         {user && item?.tipo === "componente" && item.clientId && <DocumentosStagingAtivo userId={user.id} clienteId={item.clientId} tipo="componente" entidadeId={item.id} />}
         {user && item && (item.tipo === "componente" || item.tipo === "equipamento") && item.clientId && <HistoricoCadastroLevantamento userId={user.id} clienteId={item.clientId} tipo={item.tipo} entidadeId={item.id} />}
       </div>
@@ -221,7 +225,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
         <div className="min-w-0">
           <h4 className="truncate text-body font-semibold text-ink">{item.nome}</h4>
           <p className="text-caption text-ink-3">
-            {item.tipo === "componente" ? "Subcomponente (legado)" : "Principal"}
+            {item.tipo === "componente" ? "Componente" : "Equipamento"}
             {!item.ativo && " · inativo"}
           </p>
         </div>
@@ -233,6 +237,15 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
 
       <Secao titulo="Nome completo (Auvo)">
         <p className="text-body text-ink-2">{item.auvoDescricao ?? "—"}</p>
+      </Secao>
+
+      <Secao titulo="Identificação e atributos técnicos">
+        <dl className="space-y-1 text-caption text-ink-2">
+          <div><dt className="inline font-semibold">Código: </dt><dd className="inline">{item.identificador || "Não informado"}</dd></div>
+          <div><dt className="inline font-semibold">Categoria: </dt><dd className="inline">{item.categoria || "Não informada"}</dd></div>
+          <div><dt className="inline font-semibold">Observações: </dt><dd className="inline">{item.observacoes || "Não informadas"}</dd></div>
+        </dl>
+        <p className="mt-2 text-caption text-ink-3">Criticidade e completude não estão disponíveis nesta fonte.</p>
       </Secao>
 
       <Secao titulo="Sistemas">
@@ -254,7 +267,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
       </Secao>
 
       {componentesFilhos.length > 0 && (
-        <Secao titulo="Subcomponentes (legado)">
+        <Secao titulo="Componentes vinculados">
           <ul className="flex flex-col gap-1">
             {componentesFilhos.map((c) => (
               <li key={c.id} className="flex items-center gap-2 text-caption text-ink-2">
