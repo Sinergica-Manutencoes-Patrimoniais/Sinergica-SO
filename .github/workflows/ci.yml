@@ -85,6 +85,8 @@ jobs:
       - name: Squawk (segurança de migration)
         uses: sbdchd/squawk-action@v2
         with:
+          version: "2.70.0"
+          fail-on-violations: "true"
           pattern: |
             supabase/migrations/*.sql
           config: .squawk.toml

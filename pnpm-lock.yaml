@@ -27,8 +27,8 @@ importers:
         specifier: ^2.1.9
         version: 2.1.9
       squawk-cli:
-        specifier: ^2.59.0
-        version: 2.59.0
+        specifier: 2.70.0
+        version: 2.70.0
       turbo:
         specifier: ^2.1.0
         version: 2.10.0
@@ -1198,28 +1198,38 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@squawk-cli/darwin-arm64@2.59.0':
-    resolution: {integrity: sha512-nmc/6KgNLjeChGv6WlqimmbrU/pszuKsZhEnomxCozXp8OeNvk9WlMXZVpRt7p9/uI5EXunnL390KQ8ueoQFXA==}
+  '@squawk-cli/darwin-arm64@2.70.0':
+    resolution: {integrity: sha512-A8ZdKTxRqtZAsd4P72ZQa3H2XwZU/jL3Nvq+DoK6yg8xbiSrhh0Byy42gOwXVx9xgc+x/+oZL+8nKflJwIntpA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@squawk-cli/darwin-x64@2.59.0':
-    resolution: {integrity: sha512-LAqi4NDW5ziB1gClxnpQCaWT7pxANhVi5YW3amSDdl5Nf9NDd9vJYafdbnhJxu0J8N9hDzhMU28SoTCljWEy1Q==}
+  '@squawk-cli/darwin-x64@2.70.0':
+    resolution: {integrity: sha512-d7pYX/Y+PsKRf/A6NADP4u/4p40n/mFKLyY8MjwjnBGEhDjiT6AGgyDYrcAzF1PLxCGUmOYCKlfndW1CDrNNhA==}
     cpu: [x64]
     os: [darwin]
 
-  '@squawk-cli/linux-arm64@2.59.0':
-    resolution: {integrity: sha512-DZyyXK4FxJYd7yO8Niu8Jdvmu/5NP/Ipa+hL52ydk6Qj+WcN5Q23dluuhi0n/RYombyo937elncqQr2we3X/4A==}
+  '@squawk-cli/linux-arm64-musl@2.70.0':
+    resolution: {integrity: sha512-HSA4k3O+HWTf7XV4uOjX6FrpL2Pvxt5euiQ5CNQgqKLHXwpq8GlQhlOR1WkRZ1CnEnwZ834Chd20Xz9IHTnwiA==}
     cpu: [arm64]
     os: [linux]
 
-  '@squawk-cli/linux-x64@2.59.0':
-    resolution: {integrity: sha512-09CDxHy/dtL5X28sMKlTpb/hxHRkWbVmdvS6U7vyU1cW4ECEpnfmj7Z6g+BV1WlD+vhaJ4TBb86Pkqc/pA+BFw==}
+  '@squawk-cli/linux-arm64@2.70.0':
+    resolution: {integrity: sha512-FE27n0/O4YszESnkmiCPpjRsFg22CK8fUxfgD4AtqAtb3hGFpIAe/ZRKvqZFiVB4GDAQAB42E3Iy2hoEPozZoA==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@squawk-cli/linux-x64-musl@2.70.0':
+    resolution: {integrity: sha512-UFjpC/TcNcFeglXrcPPZi59iD9ynNB8neW9DR55rT4IzAF3asQvOvKjMECUFlBno7a+Ch3V0BsZF2zY1iN+CUQ==}
     cpu: [x64]
     os: [linux]
 
-  '@squawk-cli/win32-x64@2.59.0':
-    resolution: {integrity: sha512-mSAscGq67sK4W9qdph7ALxuInyIBN7EeHs3WSxu/wFV5HsNNMSWlc9rfmsjAlGTtV8fJaRcAkeS38fyrRGWZSg==}
+  '@squawk-cli/linux-x64@2.70.0':
+    resolution: {integrity: sha512-i+yYiUJAFM6LPGlaY81J3oY21i4y+UW3GKyNJZDOeZK9AClIp+FEZQNZ0ohJnFNks5/xktYB9UhO5iU46RuyPA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@squawk-cli/win32-x64@2.70.0':
+    resolution: {integrity: sha512-qs7s4Imajti+75GQDRFlBaM2Gv12HzXyQ6kCtlVR28SA/+pnWmg/mFBIOKz94fifdBGdGNoGw7H4znJOtmdqfQ==}
     cpu: [x64]
     os: [win32]
 
@@ -2654,8 +2664,8 @@ packages:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
     engines: {node: '>= 10.x'}
 
-  squawk-cli@2.59.0:
-    resolution: {integrity: sha512-SzUUI+tyJeXbBtDfkDGxJOn+9k6NO1cdOly4AHpOPopuv2JOEA4oTJi/HimsCLvE2MRQhxRnGKaav58OaFEUXQ==}
+  squawk-cli@2.70.0:
+    resolution: {integrity: sha512-2MIi7E/0xTbG43cOoLGu4oqxAa1EMPgfY1TS2NV7eLaSm1kTrq3u0E1MRQOQii8J/AbyJU32zdodcsXk2/IJ3A==}
     hasBin: true
 
   stackback@0.0.2:
@@ -3888,19 +3898,25 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.62.2':
     optional: true
 
-  '@squawk-cli/darwin-arm64@2.59.0':
+  '@squawk-cli/darwin-arm64@2.70.0':
     optional: true
 
-  '@squawk-cli/darwin-x64@2.59.0':
+  '@squawk-cli/darwin-x64@2.70.0':
     optional: true
 
-  '@squawk-cli/linux-arm64@2.59.0':
+  '@squawk-cli/linux-arm64-musl@2.70.0':
     optional: true
 
-  '@squawk-cli/linux-x64@2.59.0':
+  '@squawk-cli/linux-arm64@2.70.0':
     optional: true
 
-  '@squawk-cli/win32-x64@2.59.0':
+  '@squawk-cli/linux-x64-musl@2.70.0':
+    optional: true
+
+  '@squawk-cli/linux-x64@2.70.0':
+    optional: true
+
+  '@squawk-cli/win32-x64@2.70.0':
     optional: true
 
   '@supabase/auth-js@2.108.2':
@@ -5290,13 +5306,15 @@ snapshots:
 
   split2@4.2.0: {}
 
-  squawk-cli@2.59.0:
+  squawk-cli@2.70.0:
     optionalDependencies:
-      '@squawk-cli/darwin-arm64': 2.59.0
-      '@squawk-cli/darwin-x64': 2.59.0
-      '@squawk-cli/linux-arm64': 2.59.0
-      '@squawk-cli/linux-x64': 2.59.0
-      '@squawk-cli/win32-x64': 2.59.0
+      '@squawk-cli/darwin-arm64': 2.70.0
+      '@squawk-cli/darwin-x64': 2.70.0
+      '@squawk-cli/linux-arm64': 2.70.0
+      '@squawk-cli/linux-arm64-musl': 2.70.0
+      '@squawk-cli/linux-x64': 2.70.0
+      '@squawk-cli/linux-x64-musl': 2.70.0
+      '@squawk-cli/win32-x64': 2.70.0
 
   stackback@0.0.2: {}
 

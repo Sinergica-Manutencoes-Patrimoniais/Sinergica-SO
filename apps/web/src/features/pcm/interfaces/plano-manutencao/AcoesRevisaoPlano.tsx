@@ -18,7 +18,10 @@ import type {
   TransicionarRevisaoCommand,
 } from "../../application/plano-manutencao-gateway";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
-import { aprovarRevisaoPreparada, supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
+import {
+  aprovarRevisaoPreparada,
+  supabasePlanoManutencaoAdapter,
+} from "../../infrastructure/supabase-plano-manutencao-adapter";
 import { DiagnosticoFusoVigencia } from "./DiagnosticoFusoVigencia";
 import { PreflightAprovacaoRevisao } from "./PreflightAprovacaoRevisao";
 
@@ -44,7 +47,10 @@ function validarOperacao(valor: unknown, planoId: string): Operacao {
     ? { tipo: "transicao", comando: comando as TransicionarRevisaoCommand }
     : valor.tipo === "inicio"
       ? { tipo: "inicio", comando: comando as IniciarRevisaoPlanoCommand }
-      : { tipo: valor.tipo === "aprovacao_revisao" ? "aprovacao_revisao" : "aprovacao", comando: comando as AprovarPlanoCommand };
+      : {
+          tipo: valor.tipo === "aprovacao_revisao" ? "aprovacao_revisao" : "aprovacao",
+          comando: comando as AprovarPlanoCommand,
+        };
 }
 
 const descricao: Record<string, string> = {
@@ -122,10 +128,10 @@ export function AcoesRevisaoPlano({
       pedido.tipo === "aprovacao_revisao"
         ? aprovarRevisaoPreparada(validarAprovacaoPlano(pedido.comando), { userId, clienteId })
         : pedido.tipo === "aprovacao"
-        ? aprovarPlano(supabasePlanoManutencaoAdapter, pedido.comando)
-        : pedido.tipo === "inicio"
-          ? iniciarRevisao(supabasePlanoManutencaoAdapter, pedido.comando)
-          : transicionarRevisao(supabasePlanoManutencaoAdapter, pedido.comando),
+          ? aprovarPlano(supabasePlanoManutencaoAdapter, pedido.comando)
+          : pedido.tipo === "inicio"
+            ? iniciarRevisao(supabasePlanoManutencaoAdapter, pedido.comando)
+            : transicionarRevisao(supabasePlanoManutencaoAdapter, pedido.comando),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: planoManutencaoKeys.raiz(userId, clienteId) }),
   });
@@ -133,18 +139,27 @@ export function AcoesRevisaoPlano({
     if (trava.current) return;
     setErro("");
     setDetalhes([]);
-    if (pedido.tipo === "aprovacao_revisao" && (import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true" || import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true")) {
-      setErro("A aprovação de revisão está desativada. O pedido permanece guardado para conferência.");
+    if (
+      pedido.tipo === "aprovacao_revisao" &&
+      (import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true" ||
+        import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true")
+    ) {
+      setErro(
+        "A aprovação de revisão está desativada. O pedido permanece guardado para conferência.",
+      );
       return;
     }
     trava.current = true;
     try {
       await exigirAtor();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) throw new Error("Tentativa alterada.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(pedido))
+        throw new Error("Tentativa alterada.");
       const resultado = await operacao.mutateAsync(pedido);
       await exigirAtor();
       if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
-        setErro("Operação confirmada, mas o pedido local mudou. Reabra e reconcilie antes de continuar.");
+        setErro(
+          "Operação confirmada, mas o pedido local mudou. Reabra e reconcilie antes de continuar.",
+        );
         return;
       }
       sessionStorage.removeItem(chave);
@@ -153,21 +168,42 @@ export function AcoesRevisaoPlano({
       setAvisos(resultado.warnings);
       if (pedido.tipo === "aprovacao_revisao") {
         void Promise.allSettled([
-          queryClient.invalidateQueries({ queryKey: ["obrigacoes-preparadas", userId, clienteId, plano.id] }),
-          queryClient.invalidateQueries({ queryKey: ["fila-preventiva-pcm", userId, clienteId, plano.id] }),
-          queryClient.invalidateQueries({ queryKey: ["origens-lote", userId, clienteId, plano.id] }),
-          queryClient.invalidateQueries({ queryKey: ["ciclos-uniformes", userId, clienteId, plano.id] }),
-          queryClient.invalidateQueries({ queryKey: ["previa-ocorrencia-visita", userId, clienteId, plano.id] }),
+          queryClient.invalidateQueries({
+            queryKey: ["obrigacoes-preparadas", userId, clienteId, plano.id],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["fila-preventiva-pcm", userId, clienteId, plano.id],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["origens-lote", userId, clienteId, plano.id],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["ciclos-uniformes", userId, clienteId, plano.id],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["previa-ocorrencia-visita", userId, clienteId, plano.id],
+          }),
         ]);
       }
     } catch (falha) {
       const codigo =
         typeof falha === "object" && falha !== null && "code" in falha ? String(falha.code) : "";
-      if (primeiraTentativa && (["22023", "23514"].includes(codigo) || (pedido.tipo === "aprovacao_revisao" && codigo === "P0011" && typeof falha === "object" && falha !== null && "message" in falha && falha.message === "revisao_obsoleta"))) {
+      if (
+        primeiraTentativa &&
+        (["22023", "23514"].includes(codigo) ||
+          (pedido.tipo === "aprovacao_revisao" &&
+            codigo === "P0011" &&
+            typeof falha === "object" &&
+            falha !== null &&
+            "message" in falha &&
+            falha.message === "revisao_obsoleta"))
+      ) {
         try {
           await exigirAtor();
           if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) {
-            setErro("O pedido local mudou durante a operação. Reabra e reconcilie antes de continuar.");
+            setErro(
+              "O pedido local mudou durante a operação. Reabra e reconcilie antes de continuar.",
+            );
             return;
           }
           sessionStorage.removeItem(chave);
@@ -196,16 +232,30 @@ export function AcoesRevisaoPlano({
       setErro(
         codigo === "42501"
           ? "Permissão indisponível. O pedido permanece pendente para conferência."
-          : codigo === "55P03" && typeof falha === "object" && falha !== null && "message" in falha && falha.message === "autorizacao_em_alteracao"
-          ? "As permissões estão sendo atualizadas. Aguarde e repita o mesmo pedido."
-          : "Não foi possível confirmar a operação. Tente novamente com os mesmos dados.",
+          : codigo === "55P03" &&
+              typeof falha === "object" &&
+              falha !== null &&
+              "message" in falha &&
+              falha.message === "autorizacao_em_alteracao"
+            ? "As permissões estão sendo atualizadas. Aguarde e repita o mesmo pedido."
+            : "Não foi possível confirmar a operação. Tente novamente com os mesmos dados.",
       );
     } finally {
       trava.current = false;
     }
   }
   function confirmar() {
-    if (!escolha || revisaoMudou || bloqueado || operacao.isPending || trava.current || (escolha === "aprovar_revisao" && (import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true" || import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true"))) return;
+    if (
+      !escolha ||
+      revisaoMudou ||
+      bloqueado ||
+      operacao.isPending ||
+      trava.current ||
+      (escolha === "aprovar_revisao" &&
+        (import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true" ||
+          import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true"))
+    )
+      return;
     const base = {
       requestId: crypto.randomUUID(),
       expectedRevision: plano.revisao,
@@ -228,7 +278,10 @@ export function AcoesRevisaoPlano({
       }
       const pedido: Operacao =
         escolha === "aprovar" || escolha === "aprovar_revisao"
-          ? { tipo: escolha === "aprovar" ? "aprovacao" : "aprovacao_revisao", comando: validarAprovacaoPlano({ ...base, vigencia }) }
+          ? {
+              tipo: escolha === "aprovar" ? "aprovacao" : "aprovacao_revisao",
+              comando: validarAprovacaoPlano({ ...base, vigencia }),
+            }
           : escolha === "iniciar"
             ? {
                 tipo: "inicio",
@@ -320,7 +373,11 @@ export function AcoesRevisaoPlano({
             Aprovar
           </Button>
           {import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED === "true" && (
-            <Button variant="secondary" disabled={bloqueado} onClick={() => setEscolha("aprovar_revisao")}>
+            <Button
+              variant="secondary"
+              disabled={bloqueado}
+              onClick={() => setEscolha("aprovar_revisao")}
+            >
               Aprovar revisão de versão
             </Button>
           )}
@@ -333,11 +390,11 @@ export function AcoesRevisaoPlano({
               ? "A nova versão será um rascunho e não será aprovada até a conferência completa de impactos. A versão aprovada será preservada."
               : escolha === "aprovar_revisao"
                 ? "A nova vigência encerra a versão anterior no dia anterior. Confira impactos antes da aprovação. Nenhuma tarefa é criada."
-              : escolha === "aprovar"
-                ? "A aprovação congela esta versão, sem criar tarefas."
-                : escolha === "submeter"
-                  ? "Enviar este Plano para revisão?"
-                  : "Devolver este Plano para correção?"}
+                : escolha === "aprovar"
+                  ? "A aprovação congela esta versão, sem criar tarefas."
+                  : escolha === "submeter"
+                    ? "Enviar este Plano para revisão?"
+                    : "Devolver este Plano para correção?"}
           </p>
           {(escolha === "aprovar" || escolha === "aprovar_revisao") && (
             <label>
@@ -350,10 +407,43 @@ export function AcoesRevisaoPlano({
               />
             </label>
           )}
-          {escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_DIAGNOSTICO_FUSO_VIGENCIA_ENABLED === "true" && <DiagnosticoFusoVigencia userId={userId} clienteId={clienteId} planoId={plano.id} revisao={plano.revisao} />}
-          {escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED === "true" && <PreflightAprovacaoRevisao userId={userId} clienteId={clienteId} planoId={plano.id} revisao={plano.revisao} vigencia={vigencia} />}
-          {escolha === "aprovar_revisao" && <p role="status">{import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED === "true" ? "O servidor verificará as permissões e os impactos antes de aprovar." : "A aprovação permanece bloqueada enquanto o protocolo de revisão estiver desativado."}</p>}
-          <Button disabled={operacao.isPending || bloqueado || revisaoMudou || ((escolha === "aprovar" || escolha === "aprovar_revisao") && !vigencia) || (escolha === "aprovar_revisao" && import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true")} onClick={confirmar}>
+          {escolha === "aprovar_revisao" &&
+            import.meta.env.VITE_SSO_DIAGNOSTICO_FUSO_VIGENCIA_ENABLED === "true" && (
+              <DiagnosticoFusoVigencia
+                userId={userId}
+                clienteId={clienteId}
+                planoId={plano.id}
+                revisao={plano.revisao}
+              />
+            )}
+          {escolha === "aprovar_revisao" &&
+            import.meta.env.VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED === "true" && (
+              <PreflightAprovacaoRevisao
+                userId={userId}
+                clienteId={clienteId}
+                planoId={plano.id}
+                revisao={plano.revisao}
+                vigencia={vigencia}
+              />
+            )}
+          {escolha === "aprovar_revisao" && (
+            <output>
+              {import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED === "true"
+                ? "O servidor verificará as permissões e os impactos antes de aprovar."
+                : "A aprovação permanece bloqueada enquanto o protocolo de revisão estiver desativado."}
+            </output>
+          )}
+          <Button
+            disabled={
+              operacao.isPending ||
+              bloqueado ||
+              revisaoMudou ||
+              ((escolha === "aprovar" || escolha === "aprovar_revisao") && !vigencia) ||
+              (escolha === "aprovar_revisao" &&
+                import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true")
+            }
+            onClick={confirmar}
+          >
             {escolha === "iniciar"
               ? "Confirmar início da revisão"
               : escolha === "aprovar" || escolha === "aprovar_revisao"
