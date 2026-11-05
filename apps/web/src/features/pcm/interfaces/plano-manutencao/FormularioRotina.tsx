@@ -1,6 +1,6 @@
 import { Button } from "@sinergica/ui";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { validarRotinaCompleta } from "../../application/plano-manutencao";
 import type {
@@ -174,12 +174,14 @@ export function FormularioRotina({
   const [questionario, setQuestionario] = useState(rotina?.questionarioId ?? "");
   const [erro, setErro] = useState("");
   const enviando = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const adicionar = useAdicionarRotinaCompleta(supabasePlanoManutencaoAdapter, userId, clienteId);
   const editar = useEditarRotina(supabasePlanoManutencaoAdapter, userId, clienteId);
   const salvar = rotina ? editar : adicionar;
   async function conferirSessao() {
     const atual = await supabase.auth.getUser();
-    if (atual.error || atual.data.user?.id !== userId) throw new Error("Sessão alterada.");
+    if (atual.error || atual.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
   }
   async function enviar(comando: EditarRotinaCommand, primeiraTentativa = false) {
     if (!consultaDisponivel || enviando.current) return;
@@ -191,7 +193,12 @@ export function FormularioRotina({
         setErro("Tentativa local alterada ou indisponível. Procure suporte antes de reenviar.");
         return;
       }
-      await salvar.mutateAsync(comando);
+      const recibo = await salvar.mutateAsync(comando);
+      if (
+        recibo.requestId !== comando.requestId || recibo.aggregateId !== comando.planoId ||
+        recibo.revision !== comando.expectedRevision + 1 || recibo.created !== (rotina === null) ||
+        recibo.linkedIds.clienteId !== clienteId || recibo.linkedIds.rotinaId !== comando.rotinaId
+      ) throw new Error("Recibo de Rotina divergente.");
       await conferirSessao();
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) {
         setErro("Rotina salva, mas a tentativa local mudou. Procure suporte; o registro foi preservado.");
