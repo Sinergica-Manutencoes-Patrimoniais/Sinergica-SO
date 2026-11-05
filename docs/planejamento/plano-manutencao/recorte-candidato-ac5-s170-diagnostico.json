@@ -34,6 +34,11 @@
       "git_blob": "0709ac59c20d4100ebd29e95d6b5bbd03d10afbf"
     },
     {
+      "caminho": "supabase/migrations/0603_E01-S168_cobertura_sem_evidencia_exigida.sql",
+      "sha256": "92cd6850a3329b9e17a7c4b269fc07221cef1c9cea5d3ead8977372bbb34ae10",
+      "git_blob": "b810fa689e064a454daed33361c67f375b21f3df"
+    },
+    {
       "caminho": "supabase/migrations/0702_E01-S168_propostas_reclassificacao_resposta.sql",
       "sha256": "14664b94b4cb8caab85839180aa74abb7e0af9f17eed34f9ac03583dc3ed4845",
       "git_blob": "eb1d7491503b5a9ce998f2a2c21ea7d1faedf836"
