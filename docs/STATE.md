@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: versão operacional por ciclo e retorno
+
+- Correção de interpretação: fontes aprovadas definem SSO como estrutura oficial e Auvo como executor; não exigem comprovar ausência global de tarefas Auvo para aprovação interna. P01/P02/P03 estão fechadas. Mudança de data exige nova versão/vigência e prévia para PCM, sem correspondência automática presumida; pergunta anterior ao usuário não deve ser tratada como regra funcional reaberta. Contrato externo continua gate para envio real.
+- ADR-1543/migration 1686 deixam Visita nativa sem ponte ser analisada e exigem classificação dos legados oficiais existentes; fixture focada passou em clone, com 1045 e outras guardas desligadas apenas no teste.
+- ADRs 1544–1555 e migrations 1687,1689–1699 preparam escolha explícita de alteração para mesma identidade/alvo/data, versão operacional, selo, fotografia por OS, consumidores de retorno e referência de pendência nativa sem legado fictício. 1045, flags e proteções seguem fechadas. Clone limpo compilou até 1699; testes UI 11/11 e typecheck passaram; fixtures focadas passaram para escolha/replay, selo sintético, criação de OS, legado Visita e retorno nativo.
+- Fixture Visita 1699 executou comandos mediados de listagem, classificação, conferência, aprovação/finalização e replay; OS sintética finalizou. Origem, OS e fotografia foram inseridas artificialmente com triggers suspensos na preparação; não prova aprovação real da revisão, criação real da OS encadeada, calendário completo, concorrência nem fontes externas. 1696 não deve ser liberada antes de revisão adversarial e provas. Sem Auvo/deploy.
+
 ## 2026-11-04 — S166: componente Grupo com backend real isolado
 
 - Em rede Docker interna e clone descartável, com GoTrue (audience e hook reais), PostgREST, Vite e navegador, login, consulta da prévia e declaração PCM do componente `ConferirGrupoFila` retornaram 200. Uma declaração registrada; fila permaneceu em verificação e nenhuma OS foi criada. Evidência sanitizada em `apps/web/e2e/s166-isolado/evidencia-2026-11-04.txt`; roteiro manual no README. A página montou componente isolado, fixture foi SQL, GoTrue migrou somente clone; não prova navegação completa, Visita, concorrência ou fontes externas. Clone/recursos do ensaio removidos.
