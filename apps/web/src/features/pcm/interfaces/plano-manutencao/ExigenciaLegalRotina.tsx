@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { PropostaExigenciaRevisao } from "./PropostaExigenciaRevisao";
@@ -48,6 +48,8 @@ export function ExigenciaLegalRotina({
   modo: string;
 }) {
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const mediado = import.meta.env.VITE_SSO_EXIGENCIA_ROTINA_MEDIADA_ENABLED === "true";
   async function conferirSessao(signal?: AbortSignal) {
     const { data, error } = await supabase.auth.getUser();
@@ -157,7 +159,7 @@ export function ExigenciaLegalRotina({
       if (
         !data ||
         data.requestId !== p.requestId ||
-        data.rotinaId !== p.rotinaId ||
+        data.rotinaId !== p.rotinaId || data.revisao !== p.declaracaoRevision + 1 || data.snapshotAlterado !== false ||
         data.referenciaValidada !== false ||
         data.toleranciaValidada !== false
       )
@@ -171,7 +173,7 @@ export function ExigenciaLegalRotina({
         });
         await conferirSessao();
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
-        sessionStorage.removeItem(chave);
+        if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave);
       } catch {
         setAviso("Declaração registrada, mas tentativa local não foi limpa; procure suporte.");
         return;
@@ -211,7 +213,7 @@ export function ExigenciaLegalRotina({
       if (
         !data ||
         data.requestId !== p.requestId ||
-        data.rotinaId !== p.rotinaId ||
+        data.rotinaId !== p.rotinaId || data.revisao !== p.declaracaoRevision + 1 || data.snapshotAlterado !== false ||
         data.referenciaValidada !== false ||
         data.toleranciaValidada !== false
       )
@@ -229,7 +231,7 @@ export function ExigenciaLegalRotina({
         });
         await conferirSessao();
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
-        sessionStorage.removeItem(chave);
+        if (!montado.current) throw new Error("Tela desmontada."); sessionStorage.removeItem(chave);
       } catch {
         setAviso("Declaração confirmada, mas tentativa local não foi limpa; procure suporte.");
         return;
