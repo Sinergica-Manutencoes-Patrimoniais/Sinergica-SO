@@ -1,0 +1,23 @@
+{
+  "tipo": "sobreposição para diagnóstico; não é pacote de release",
+  "manifesto_base_preservado": "docs/planejamento/plano-manutencao/recorte-candidato-migrations.json",
+  "base_main": "22aca3918224bc45175e80c6ec88b957fdb604aa",
+  "fonte_backup": "84c9fcf8fc7ec32bda5399872ad30192c1587ed6",
+  "status": "INCOMPLETO — adicionar somente em clone descartável, na ordem histórica; não aplicar em destino real",
+  "migrations_adicionais": [
+    {
+      "caminho": "supabase/migrations/0803_E01-S168_recebimento_origem_visita.sql",
+      "git_blob": "8631831a92af5368840187866b4ec464474f0a7b",
+      "sha256": "c338ce1cddb0c5923f0dd43779e55e392b9d9b54d92032e2903dcb134569a24f",
+      "evidencia": "A 0903 exige trecho que a 0803 insere no classificador criado pela 0402; sem ele lança classificador_definicao_incompativel (55000).",
+      "efeitos": "Substitui trecho e declaração local do classificador privado para reconhecer origem Visita; revoga EXECUTE do classificador para public, anon, authenticated e service_role. Não cria tabela, gate, trigger ou concessão.",
+      "pre_requisitos_identificados": ["0402 classificador original", "0726 resolver de origem", "0729 barreira de consumidor; sua preservação é pressuposta"]
+    }
+  ],
+  "limites": [
+    "0402, 0726 e 0729 constam do manifesto base; presença na lista não comprova instalação, ordem dinâmica ou fecho transitivo.",
+    "A 0803 altera comportamento de classificação S168 e ACLs; validar impactos de retorno por Visita antes de qualquer recorte de release.",
+    "As ações sintéticas do modo diagnóstico 0415 não substituem migrations 0323 e 0334 nem autorizam implantação.",
+    "Não se executou ensaio com esta sobreposição; migrar arquivos históricos ou copiar funcionalidades fora do escopo exige revisão."
+  ]
+}
