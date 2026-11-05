@@ -242,8 +242,8 @@ def main():
                  and not (line.startswith('GRANT ') and (' cron.' in line or ' net.' in line or ' ON SCHEMA cron ' in line or ' ON SCHEMA net ' in line))]
         docker('exec', '-i', database, 'psql', '-U', 'supabase_admin', '-d', target, '-v', 'ON_ERROR_STOP=1', '-q', input_text='\n'.join(lines) + '\n')
         root = Path(__file__).resolve().parents[4]
-        migrations = sorted(p for p in (root / 'supabase' / 'migrations').glob('*.sql') if p.name[:4].isdigit() and 1614 <= int(p.name[:4]) <= 1755)
-        if not migrations or not any(p.name.startswith('1755_') for p in migrations):
+        migrations = sorted(p for p in (root / 'supabase' / 'migrations').glob('*.sql') if p.name[:4].isdigit() and 1614 <= int(p.name[:4]) <= 1758)
+        if not migrations or not any(p.name.startswith('1758_') for p in migrations):
             raise RuntimeError('Migrations obrigatórias ausentes.')
         for migration in migrations:
             try:

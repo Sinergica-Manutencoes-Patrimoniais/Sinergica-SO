@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: conflitos de origem e reconciliação
+
+- ADRs 1616–1618/migrations 1758–1760 convertem conflitos explícitos de revisão da origem da Rotina, diagnósticos/pré-condição de impacto e fotografia de reconciliação para P0010/P0011/P0017; UI mantém pedidos incertos e erros reais 40001. Revisões cruzadas preservaram ACL, assinaturas e ordem de replay; rollout frontend/backend coordenado.
+- Clone compilou até 1760. HTTP autenticado validou origem obsoleta e replay após mudança; fixtures SQL de diagnóstico e reconciliação passaram. UI origem 2/2, diagnósticos 5/5 e reconciliação 8/8, incluindo replay e 40001 real. HTTP específico 1759/1760 não executado. Sem deploy/Auvo.
+- Próximo passo: demais 40001 em feriados, regras, legal, escopo e preparação legada, sem converter serializações reais; depois revisão integral e CI. Gates default fechados.
+
 ## 2026-11-05 — S165/S166: conflitos de preparação e retirada
 
 - ADRs 1613–1615/migrations 1755–1757 convertem conflitos explícitos na preparação individual/lote Visita, resolução de retirada e ciclo canônico Calendário em P0011/P0012/P0016. Interfaces distinguem primeira rejeição de replay incerto; erros reais de serialização e ACL permanecem. Revisões independentes sem bypass concreto.

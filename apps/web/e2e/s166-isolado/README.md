@@ -90,3 +90,5 @@ Executado com sucesso em 2026-11-05, incluindo verificação do estado aprovado 
 `executar-conflito-lote.py` consulta prévia e envia comando de lote com revisão obsoleta via HTTP autenticado. Ambos responderam `P0015`; o estado aprovado e os gates necessários foram ajustados somente na fixture do clone. A política de replay multirrotina foi testada separadamente na interface com respostas simuladas.
 
 `executar-preparo-visita-conflito.py` autentica conta sintética e envia preparações individual e em lote com revisão obsoleta, verificando `P0016` por HTTP. Os gates foram ligados no clone; os testes de interface para primeira rejeição e replay incerto usam respostas simuladas.
+
+`executar-origem-rotina-conflito.py` verifica `P0017` por HTTP na consulta e na declaração com revisão obsoleta. `executar-origem-rotina-replay.py` declara origem, altera a revisão apenas no clone e confirma que a repetição do mesmo pedido devolve o recibo anterior. As fixtures e credenciais são sintéticas.
