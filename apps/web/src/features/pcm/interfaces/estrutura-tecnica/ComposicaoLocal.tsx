@@ -13,6 +13,7 @@ import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
 import { BreadcrumbGrupo } from "./BreadcrumbGrupo";
 import { AtivoLocalLeitura } from "./AtivoLocalLeitura";
 import { PlanosDoAlvo } from "./PlanosDoAlvo";
+import { BreadcrumbAtivo } from "./BreadcrumbAtivo";
 
 type Props = { userId: string; clienteId: string; localId: string; caminho: string[] };
 const item = z.object({ id: z.string().uuid(), nome: z.string(), tipo: z.enum(["equipamento", "componente"]),
@@ -82,7 +83,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     {Array.from(secoes.entries()).map(([nome, linhas]) => <section key={nome}><h5>{nome}</h5>{(["componente", "equipamento", "grupo"] as const).map(tipo => {
       const itensDoTipo = linhas.filter(linha => tipo === "grupo" ? !!linha.grupoId : linha.tipoItem === tipo);
       if (!itensDoTipo.length) return null;
-      return <section key={tipo}><h6>{tipo === "grupo" ? "Grupos Quantitativos" : tipo === "componente" ? "Componentes" : "Equipamentos"}</h6><ul>{itensDoTipo.map(linha => <li key={`${tipo}:${linha.id}`}>{linha.descricao}{linha.grupoId && <DetalhesGrupo userId={userId} clienteId={clienteId} grupoId={linha.grupoId} nome={linha.nome}/>} {linha.tipoItem && <><DetalhesItem userId={userId} clienteId={clienteId} itemId={linha.id} tipo={linha.tipoItem} nome={linha.nome}/><AtivoLocalLeitura userId={userId} clienteId={clienteId} localId={localId} itemId={linha.id}/></>}</li>)}</ul></section>;
+      return <section key={tipo}><h6>{tipo === "grupo" ? "Grupos Quantitativos" : tipo === "componente" ? "Componentes" : "Equipamentos"}</h6><ul>{itensDoTipo.map(linha => <li key={`${tipo}:${linha.id}`}>{linha.descricao}{linha.grupoId && <DetalhesGrupo userId={userId} clienteId={clienteId} grupoId={linha.grupoId} nome={linha.nome}/>} {linha.tipoItem && <><DetalhesItem userId={userId} clienteId={clienteId} itemId={linha.id} localId={localId} tipo={linha.tipoItem} nome={linha.nome}/><AtivoLocalLeitura userId={userId} clienteId={clienteId} localId={localId} itemId={linha.id}/></>}</li>)}</ul></section>;
     })}</section>)}
     {itens.hasNextPage && <button type="button" disabled={itens.isFetching} onClick={() => void itens.fetchNextPage()}>Mais Componentes e Equipamentos</button>}
     {grupos.hasNextPage && <button type="button" disabled={grupos.isFetching} onClick={() => void grupos.fetchNextPage()}>Mais Grupos</button>}
@@ -99,9 +100,9 @@ function DetalhesGrupo({ userId, clienteId, grupoId, nome }: { userId: string; c
   </section>;
 }
 
-function DetalhesItem({ userId, clienteId, itemId, tipo, nome }: { userId: string; clienteId: string; itemId: string; tipo: "equipamento" | "componente"; nome: string }) {
+function DetalhesItem({ userId, clienteId, itemId, localId, tipo, nome }: { userId: string; clienteId: string; itemId: string; localId: string; tipo: "equipamento" | "componente"; nome: string }) {
   const [aberto, setAberto] = useState(false);
   return <section><button type="button" aria-expanded={aberto} aria-label={`${aberto ? "Ocultar" : "Ver"} detalhes do ${tipo} ${nome}`} onClick={() => setAberto(v => !v)}>{aberto ? "Ocultar detalhes do item" : "Ver detalhes do item"}</button>
-    {aberto && <><HistoricoGrupo tipo="componente" userId={userId} clienteId={clienteId} grupoId={itemId}/><ResultadosDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId} nome={nome}/><PendenciasDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId}/><PlanosDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId}/><p>Somente fotos de levantamento com vínculo temporário e acesso mediado; outras fontes não são apresentadas aqui.</p>{(import.meta.env.VITE_SSO_FOTOS_STAGING_ATIVO_ENABLED !== "true" || (tipo === "equipamento" && import.meta.env.VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED !== "true")) && <p>Fotos de levantamento não habilitadas nesta visão.</p>}<FotosStagingAtivo userId={userId} clienteId={clienteId} tipo={tipo} entidadeId={itemId}/></>}
+    {aberto && <><BreadcrumbAtivo userId={userId} clienteId={clienteId} ativoId={itemId} localId={localId}/><HistoricoGrupo tipo="componente" userId={userId} clienteId={clienteId} grupoId={itemId}/><ResultadosDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId} nome={nome}/><PendenciasDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId}/><PlanosDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId}/><p>Somente fotos de levantamento com vínculo temporário e acesso mediado; outras fontes não são apresentadas aqui.</p>{(import.meta.env.VITE_SSO_FOTOS_STAGING_ATIVO_ENABLED !== "true" || (tipo === "equipamento" && import.meta.env.VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED !== "true")) && <p>Fotos de levantamento não habilitadas nesta visão.</p>}<FotosStagingAtivo userId={userId} clienteId={clienteId} tipo={tipo} entidadeId={itemId}/></>}
   </section>;
 }
