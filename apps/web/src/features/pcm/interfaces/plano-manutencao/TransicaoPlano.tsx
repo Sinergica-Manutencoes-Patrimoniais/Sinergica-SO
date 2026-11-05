@@ -178,6 +178,8 @@ function Conteudo({ userId, clienteId, plano, bloqueado, onAbrirRotinas }: Props
         data.requestId !== p.requestId ||
         data.aggregateId !== p.planoId ||
         data.revision !== p.revision + 1 ||
+        data.state !== (p.acao === "suspender" ? "suspenso" : "encerrado") ||
+        data.created !== false ||
         data.linkedIds?.clienteId !== p.clienteId
       )
         throw new Error("Resposta inválida ou sessão alterada.");

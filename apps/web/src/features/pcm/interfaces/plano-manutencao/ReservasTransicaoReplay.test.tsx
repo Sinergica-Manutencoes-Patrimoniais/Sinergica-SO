@@ -123,7 +123,7 @@ const casos = [
         bloqueado={false}
       />
     ),
-    recibo: { requestId: id(8), aggregateId: id(3), revision: 2, linkedIds: { clienteId: id(2) } },
+    recibo: { requestId: id(8), aggregateId: id(3), revision: 2, state: "suspenso", created: false, linkedIds: { clienteId: id(2) } },
   },
 ] as const;
 let enviar: () => Promise<unknown>;
@@ -220,3 +220,28 @@ describe.each(casos)("$nome", (c) => {
     expect(sessionStorage.getItem(c.chave)).toBe(salvo);
   });
 });
+
+
+it.each([["state", "encerrado"], ["created", true]])(
+  "preserva a transição com recibo divergente em %s e repete a mesma chamada",
+  async (campo, valor) => {
+    const c = casos.find((item) => item.nome === "transição");
+    if (!c) throw new Error("Caso de transição ausente.");
+    sessionStorage.setItem(c.chave, JSON.stringify(c.pedido));
+    let n = 0;
+    enviar = async () => ({ data: ++n === 1 ? { ...c.recibo, [campo]: valor } : c.recibo, error: null });
+    montar(c.elemento);
+    const botao = await screen.findByRole("button", { name: c.botao });
+    await waitFor(() => expect(botao).toBeEnabled());
+    fireEvent.click(botao);
+    await screen.findByText(/Resultado não confirmado/);
+    const salvo = sessionStorage.getItem(c.chave);
+    expect(salvo).not.toBeNull();
+    await waitFor(() => expect(botao).toBeEnabled());
+    fireEvent.click(botao);
+    await waitFor(() => expect(sessionStorage.getItem(c.chave)).toBeNull());
+    const chamadas = api.rpc.mock.calls.filter(([nome]) => nome === c.rpc);
+    expect(chamadas).toHaveLength(2);
+    expect(chamadas[1]).toEqual(chamadas[0]);
+  },
+);
