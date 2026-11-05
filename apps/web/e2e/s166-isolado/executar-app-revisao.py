@@ -11,6 +11,7 @@ ROOT=Path(__file__).resolve().parents[4]
 WEB=ROOT/'apps/web'; HERE=Path(__file__).resolve().parent
 ident=secrets.token_hex(6); db='sso-s166-e2e-'+ident+'-db'; browser='sso-s166-e2e-'+ident+'-browser'; database='sso_s166_'+ident
 password=secrets.token_hex(20); created=False
+incluir_fila='--fila' in sys.argv[1:]
 
 def run(args, data=None, cwd=None, env=None):
     p=subprocess.run(args,input=data,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,cwd=cwd,env=env)
@@ -38,6 +39,7 @@ try:
     clean={'PATH':os.environ.get('PATH','/usr/bin:/bin'),'HOME':str(tmp),'TMPDIR':str(tmp.parent),'S166_ENV_DIR':str(tmp/'env'),'S166_BUILD_DIR':str(tmp/'dist'),
            'VITE_SUPABASE_URL':'http://127.0.0.1:5189','VITE_SUPABASE_ANON_KEY':'chave-sintetica',
            'VITE_SSO_FUSO_PLANO_DECLARADO_ENABLED':'true','VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED':'true','VITE_SSO_DECISAO_IMPACTO_VISITA_ENABLED':'true','VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED':'true','VITE_SSO_ORIGEM_ROTINA_ENABLED':'true','VITE_SSO_ORIGEM_LOTE_ENABLED':'true','VITE_SSO_LOTE_CALENDARIO_CONFERIDO_ENABLED':'true','VITE_SSO_FUSO_PLANO_MEDIADO_ENABLED':'true','VITE_SSO_INVENTARIO_PMOC_REVISAO_ENABLED':'true','VITE_SSO_NOVA_DATA_VISITA_ENABLED':'true','VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED':'true','VITE_SSO_RESOLUCAO_IMPACTO_ENABLED':'true','VITE_SSO_APROVAR_REVISAO_ENABLED':'true','VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED':'true','VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED':'true'}
+    if incluir_fila: clean['VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED']='true'
     run(['node',str(WEB/'node_modules/vite/bin/vite.js'),'build','--config','vite.s166-app-isolado.config.ts'],cwd=WEB,env=clean)
     boot('criar');created=True;boot('carregar');boot('servicos');boot('navegador');boot('verificar')
     run(['docker','cp',str(tmp/'dist'),browser+':/tmp/sso-jornada-dist'])
@@ -85,13 +87,19 @@ insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,origem,creat
     print('Aprovação mediada real e OS histórica preservada.')
     sql("update pcm.sso_lote_ciclos_calendario_gate set habilitado=true where id; update pcm.sso_lote_calendario_conferido_gate set habilitado=true where id; update pcm.sso_identidade_ciclo_gate set habilitado=true where id; update pcm.sso_materializar_ciclo_canonico_gate set habilitado=true where id; update pcm.sso_guarda_ciclo_canonico_gate set habilitado=true where id;")
     cfg.update(etapa='origem-editada');driver(cfg);print('Origem da Rotina aprovada declarada pela UI.')
-    cfg.update(etapa='gerar-editado');driver(cfg)
+    if incluir_fila:
+        sql("update pcm.sso_fila_preventiva_pcm_gate set habilitado=true where id; update pcm.sso_fila_sem_vinculo_gate set habilitado=true where id; update pcm.sso_estado_ocorrencia_vinculada_gate set habilitado=true where id;")
+    cfg.update(etapa='gerar-editado',fila=incluir_fila);driver(cfg)
     if scalar("select count(*) from pcm.ocorrencias_rotina_preparadas where versao_id='16610000-0000-0000-0000-000000000181' and alvo_id='16610000-0000-0000-0000-000000000998'")!='1':raise RuntimeError('Geração da Rotina editada não comprovada.')
     if os_antes!=scalar("select to_jsonb(o)::text from pcm.ordens_servico o where id='17680000-0000-4000-8000-000000000002'") or origem_antes!=scalar("select to_jsonb(o)::text from pcm.sso_origens_os_preventiva o where os_id='17680000-0000-4000-8000-000000000002'"):raise RuntimeError('OS histórica alterada após geração.')
     tolerancia=scalar("select (o.tolerancia_antes=2 and o.tolerancia_depois=5 and o.vencimento_original=r.data_base and (v.snapshot->'rotinas'->0->>'tolerancia_antes')::int=2 and (v.snapshot->'rotinas'->0->>'tolerancia_depois')::int=5)::text from pcm.ocorrencias_rotina_preparadas o join pcm.rotinas_manutencao r on r.id=o.rotina_id join pcm.plano_versoes v on v.id=o.versao_id where o.versao_id='16610000-0000-0000-0000-000000000181' and o.alvo_id='16610000-0000-0000-0000-000000000998'")
     if tolerancia!='true':raise RuntimeError('Tolerância de ocorrência/versão divergente.')
     print('Tolerâncias 2/5 preservadas na versão aprovada e ocorrência gerada.')
     if os_total!=scalar('select count(*) from pcm.ordens_servico') or outbox_total!=scalar('select count(*) from pcm.auvo_sync_outbox'):raise RuntimeError('Saída operacional inesperada.')
+    if incluir_fila:
+        estado_fila=scalar("select f.estado from pcm.sso_fila_preventiva_pcm f join pcm.ocorrencias_rotina_preparadas o on o.id=f.preparada_id where o.versao_id='16610000-0000-0000-0000-000000000181' and o.alvo_id='16610000-0000-0000-0000-000000000998'")
+        if estado_fila!='verificacao':raise RuntimeError('Fila sem vínculo não permaneceu em verificação.')
+        print('Ocorrência incluída por UI na fila de verificação, sem comprovar ausência externa.')
     print('Rotina aprovada gerou ocorrência pela UI; OS histórica preservada.')
 
 finally:
