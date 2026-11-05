@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
@@ -37,6 +37,8 @@ export function FusoPlanoDeclarado(props: Props) {
   );
 }
 function Conteudo({ userId, clienteId, planoId }: Props) {
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient(),
     trava = useRef(false),
     chave = `sso-fuso-plano:${JSON.stringify([userId, clienteId, planoId])}`;
@@ -144,7 +146,7 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
   ]);
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_fuso_mediado", {
@@ -179,7 +181,7 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
         r.fusoDeclarado !== p.fuso
       )
         throw new Error("Recibo divergente.");
-      await conferirSessaoDiagnostico(userId);
+      await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(p))
         throw new Error("Tentativa divergente.");
     },
@@ -189,7 +191,7 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
           queryKey: ["historico-fuso-plano", userId, clienteId, planoId],
           refetchType: "none",
         });
-        await conferirSessaoDiagnostico(userId);
+        await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(chave);
       } catch {

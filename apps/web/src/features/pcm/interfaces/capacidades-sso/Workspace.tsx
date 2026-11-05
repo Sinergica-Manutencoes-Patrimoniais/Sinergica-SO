@@ -1,5 +1,5 @@
 import { Button, Card } from "@sinergica/ui";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { concessaoSchema, perfilSchema, vinculoSchema } from "../../application/capacidades-sso";
@@ -87,6 +87,11 @@ export function CapacidadesWorkspace({ userId }: { userId: string }) {
 }
 
 function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
+  const montado = useRef(false);
+  useEffect(() => {
+    montado.current = true;
+    return () => { montado.current = false; };
+  }, []);
   const gateway = useMemo(() => {
     const conferir = async () => {
       const { data, error } = await supabase.auth.getUser();
@@ -159,7 +164,7 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   const ocupado = api.perfil.isPending || api.vinculo.isPending || api.concessao.isPending;
   async function conferirSessao() {
     const { data, error } = await supabase.auth.getUser();
-    if (error || data.user?.id !== userId) throw new Error("Sessão alterada.");
+    if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
   }
   let pendente: ReturnType<typeof registro.pendente> = null;
   let armazenamentoIndisponivel = false;
@@ -272,6 +277,9 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     }
     try {
       await conferirSessao();
+      const atual = registro.pendente();
+      if (!atual || atual.chave !== chave || atual.id !== requestId || JSON.stringify(atual.payload) !== JSON.stringify(payload))
+        throw new Error("Tentativa alterada.");
       const resposta = await enviar(requestId);
       validarRecibo(chave, payload, requestId, resposta);
       await conferirSessao();

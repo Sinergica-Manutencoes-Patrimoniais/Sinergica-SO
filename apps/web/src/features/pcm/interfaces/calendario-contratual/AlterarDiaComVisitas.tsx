@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ExcecaoVisita } from "./ExcecaoVisita";
@@ -90,11 +90,13 @@ export function AlterarDiaComVisitas({
   const [aviso, setAviso] = useState("");
   const [visitaExcecao, setVisitaExcecao] = useState<string | null>(null);
   const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const cache = useQueryClient();
   const conferirImpactos = import.meta.env.VITE_SSO_PREVIA_IMPEDIMENTOS_DIA_ENABLED === "true";
   async function conferirAtor() {
     const r = await supabase.auth.getUser();
-    if (r.error || r.data.user?.id !== userId) throw new Error("Sessão alterada");
+    if (r.error || r.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada");
   }
   const consulta = useInfiniteQuery({
     queryKey: ["calendario-mudanca-atomica", userId, clienteId, serieId, revisao, dia, vigencia],
@@ -249,12 +251,12 @@ export function AlterarDiaComVisitas({
         `Regra alterada: ${recebido.visitasMovidas} Visita(s) movida(s), ${recebido.visitasSuprimidas ?? 0} suprimida(s), sem envio externo.`,
       );
     } catch {
-      setAviso(
+      if (montado.current) setAviso(
         "Resultado não confirmado. Preserve e repita o mesmo pedido ou procure suporte; não inicie outra alteração.",
       );
     } finally {
       trava.current = false;
-      setOcupado(false);
+      if (montado.current) setOcupado(false);
     }
   }
   function iniciar() {
