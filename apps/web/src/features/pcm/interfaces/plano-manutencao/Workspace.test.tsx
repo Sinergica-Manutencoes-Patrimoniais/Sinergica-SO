@@ -37,6 +37,15 @@ import { PreviaCiclos } from "./PreviaCiclos";
 import { PreviaRevisao } from "./PreviaRevisao";
 import { PlanoManutencaoWorkspace } from "./Workspace";
 const clienteId = "16500000-0000-4000-8000-00000000000a";
+const reciboPlano = (c: { requestId: string; planoId: string; expectedRevision: number }) => ({
+  requestId: c.requestId, aggregateId: c.planoId, revision: c.expectedRevision + 1,
+  state: "rascunho", created: c.expectedRevision === 0, linkedIds: { clienteId }, warnings: [],
+});
+const reciboRetirada = (c: { requestId: string; planoId: string; rotinaId: string; expectedRevision: number }) => ({
+  requestId: c.requestId, aggregateId: c.planoId, revision: c.expectedRevision + 1,
+  state: "rascunho", created: false, linkedIds: { clienteId, rotinaId: c.rotinaId }, warnings: [],
+});
+
 function montar() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -104,7 +113,9 @@ it("não mostra operação em andamento de outro Cliente e conserva comando orig
   expect(screen.getByRole("alert")).toHaveTextContent(/contexto mudou/i);
   expect(screen.getByText(/salvamento aguardando confirmação/i)).not.toBeVisible();
   expect(api.salvarPlano.mock.calls[0]?.[0]).toMatchObject({ clienteId, nome: "Plano pendente" });
-  await act(async () => resolver({}));
+  const comando = api.salvarPlano.mock.calls[0]?.[0];
+  if (!comando) throw new Error("Comando não enviado.");
+  await act(async () => resolver(reciboPlano(comando)));
   tela.rerender(compor(clienteId));
   expect(await screen.findByRole("button", { name: "Novo Plano de Manutenção" })).toBeTruthy();
 });
@@ -916,7 +927,7 @@ it("retira Rotina de rascunho com motivo e recupera pedido incerto", async () =>
   ]);
   api.retirarRotina
     .mockRejectedValueOnce(new Error("rede"))
-    .mockResolvedValueOnce({ warnings: [] });
+    .mockImplementationOnce(async (c) => reciboRetirada(c));
   const tela = montar();
   fireEvent.click(await screen.findByRole("button", { name: /Rotinas.*Preventivo/i }));
   fireEvent.click(await screen.findByRole("button", { name: "Retirar Rotina" }));
@@ -1079,7 +1090,7 @@ it("não mostra ciclos antigos quando nova consulta perde autorização", async 
 it("cria rascunho e repete o mesmo pedido após falha incerta", async () => {
   api.autorizarAcao.mockResolvedValue(true);
   api.listarPlanos.mockResolvedValue([]);
-  api.salvarPlano.mockRejectedValueOnce(new Error("rede")).mockResolvedValueOnce({});
+  api.salvarPlano.mockRejectedValueOnce(new Error("rede")).mockImplementationOnce(async (c) => reciboPlano(c));
   montar();
   await waitFor(() => expect(screen.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeEnabled());
   fireEvent.click(screen.getByRole("button", { name: "Novo Plano de Manutenção" }));
@@ -1123,7 +1134,7 @@ it("edita o mesmo Plano usando revisão recebida", async () => {
   api.listarPlanos.mockResolvedValue([
     { id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 3 },
   ]);
-  api.salvarPlano.mockResolvedValue({});
+  api.salvarPlano.mockImplementation(async (c) => reciboPlano(c));
   montar();
   fireEvent.click(await screen.findByRole("button", { name: "Editar Preventivo" }));
   fireEvent.change(screen.getByLabelText("Nome do Plano"), {

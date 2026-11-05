@@ -30,6 +30,8 @@ export function RetiradaRotina({ userId, clienteId, plano, rotinas, permitirNova
   const [ocupado, setOcupado] = useState(false);
   const mudou = aberto && revisaoInicial !== plano.revisao;
   const ativoAnterior = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   useEffect(() => {
     const ativo = aberto || Boolean(pendente) || recuperacao.falhou;
     if (ativo !== ativoAnterior.current) { ativoAnterior.current = ativo; onAtivo(ativo); }
@@ -41,8 +43,13 @@ export function RetiradaRotina({ userId, clienteId, plano, rotinas, permitirNova
     try {
       await conferirSessaoDiagnostico(userId);
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa divergente.");
-      await retirarRotinaRascunho(supabasePlanoManutencaoAdapter, comando);
+      const recibo = await retirarRotinaRascunho(supabasePlanoManutencaoAdapter, comando);
+      if (recibo.requestId !== comando.requestId || recibo.aggregateId !== comando.planoId ||
+        recibo.revision !== comando.expectedRevision + 1 || recibo.created !== false ||
+        recibo.linkedIds.clienteId !== clienteId || recibo.linkedIds.rotinaId !== comando.rotinaId)
+        throw new Error("Recibo de retirada divergente.");
       await conferirSessaoDiagnostico(userId);
+      if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa divergente.");
       sessionStorage.removeItem(chave);
       setPendente(null); setAberto(false);
@@ -52,6 +59,7 @@ export function RetiradaRotina({ userId, clienteId, plano, rotinas, permitirNova
       if (primeiraTentativa && (["22023", "23514"].includes(codigo) || (codigo === "P0011" && typeof falha === "object" && falha !== null && "message" in falha && falha.message === "revisao_obsoleta"))) {
         try {
           await conferirSessaoDiagnostico(userId);
+          if (!montado.current) throw new Error("Tela desmontada.");
           if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa divergente.");
           sessionStorage.removeItem(chave);
           setPendente(null); setAberto(false);
