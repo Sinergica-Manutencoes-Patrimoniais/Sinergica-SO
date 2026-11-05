@@ -23,15 +23,31 @@ const resultadoSchema = z
     requestId: z.string().uuid(),
   })
   .strict();
-export type PedidoAlterarDia = { requestId: string; serieId: string; regraNovaId: string; expectedRevision: number; diaSemana: number; vigencia: string };
+export type PedidoAlterarDia = {
+  requestId: string;
+  serieId: string;
+  regraNovaId: string;
+  expectedRevision: number;
+  diaSemana: number;
+  vigencia: string;
+};
 export async function alterarDiaContratual(c: PedidoAlterarDia) {
   const { data, error } = await supabase.schema("pcm").rpc("sso_alterar_dia_contratual", {
-    p_request_id: c.requestId, p_serie_id: c.serieId, p_regra_nova_id: c.regraNovaId,
-    p_expected_revision: c.expectedRevision, p_dia_semana: c.diaSemana, p_vigencia: c.vigencia,
+    p_request_id: c.requestId,
+    p_serie_id: c.serieId,
+    p_regra_nova_id: c.regraNovaId,
+    p_expected_revision: c.expectedRevision,
+    p_dia_semana: c.diaSemana,
+    p_vigencia: c.vigencia,
   });
   if (error) throw error;
-  if (!data || data.requestId !== c.requestId || data.serieId !== c.serieId ||
-    data.regraId !== c.regraNovaId || data.revision !== c.expectedRevision + 1)
+  if (
+    !data ||
+    data.requestId !== c.requestId ||
+    data.serieId !== c.serieId ||
+    data.regraId !== c.regraNovaId ||
+    data.revision !== c.expectedRevision + 1
+  )
     throw new Error("Resposta de alteração inválida.");
 }
 export const supabaseCalendarioContratualAdapter: CriarRegraContratualGateway &
@@ -118,25 +134,28 @@ export const supabaseCalendarioContratualAdapter: CriarRegraContratualGateway &
       .parse(data);
   },
   async criarRegra(c) {
-    const { data, error, status } = await supabase.schema("pcm").rpc("sso_criar_regra_contratual_v2", {
-      p_request_id: c.requestId,
-      p_expected_revision: c.expectedRevision,
-      p_cliente_id: c.clienteId,
-      p_serie_id: c.serieId,
-      p_regra_id: c.regraId,
-      p_contrato_id: c.contratoId,
-      p_ancora_semana: c.ancoraSemana,
-      p_dia_semana: c.diaSemana,
-      p_intervalo_semanas: c.intervaloSemanas,
-      p_hora_inicio: c.horaInicio,
-      p_duracao_minutos: c.duracaoMinutos,
-      p_deslocamento_minutos: c.deslocamentoMinutos,
-      p_fuso: c.fuso,
-      p_vigencia_inicio: c.vigenciaInicio,
-      p_vigencia_fim: c.vigenciaFim,
-    });
+    const { data, error, status } = await supabase
+      .schema("pcm")
+      .rpc("sso_criar_regra_contratual_v2", {
+        p_request_id: c.requestId,
+        p_expected_revision: c.expectedRevision,
+        p_cliente_id: c.clienteId,
+        p_serie_id: c.serieId,
+        p_regra_id: c.regraId,
+        p_contrato_id: c.contratoId,
+        p_ancora_semana: c.ancoraSemana,
+        p_dia_semana: c.diaSemana,
+        p_intervalo_semanas: c.intervaloSemanas,
+        p_hora_inicio: c.horaInicio,
+        p_duracao_minutos: c.duracaoMinutos,
+        p_deslocamento_minutos: c.deslocamentoMinutos,
+        p_fuso: c.fuso,
+        p_vigencia_inicio: c.vigenciaInicio,
+        p_vigencia_fim: c.vigenciaFim,
+      });
     if (error) {
-      if (status === 400 && ["22023", "23514", "P0011"].includes(error.code)) rejeicoesTransacionais.add(error);
+      if (status === 400 && ["22023", "23514", "P0011"].includes(error.code))
+        rejeicoesTransacionais.add(error);
       throw error;
     }
     const resultado = resultadoSchema.parse(data);

@@ -5,16 +5,16 @@ import type {
   AdicionarRotinaGateway,
   ConsultarAlvosPlanoGateway,
   ConsultarCiclosGateway,
-  ConsultarQuestionarioAprovadoGateway,
+  ConsultarPlanosGateway,
   ConsultarPreviaRevisaoGateway,
   ConsultarPreviaRevisionadaGateway,
-  ConsultarPlanosGateway,
+  ConsultarQuestionarioAprovadoGateway,
   ConsultarRotinasGateway,
   ConsultarVersoesGateway,
   EditarRotinaCommand,
   EditarRotinaGateway,
-  RevisarPlanoGateway,
   RetirarRotinaGateway,
+  RevisarPlanoGateway,
   RotinaCommand,
   SalvarPlanoGateway,
 } from "../application/plano-manutencao-gateway";
@@ -35,36 +35,74 @@ const resultadoSchema = z
     requestId: z.string().uuid(),
   })
   .strict();
-async function executar(nome: string, parametros: Record<string, string | number | boolean | null>) {
+async function executar(
+  nome: string,
+  parametros: Record<string, string | number | boolean | null>,
+) {
   const { data, error } = await supabase.schema("pcm").rpc(nome, parametros);
   if (error) throw error;
   return resultadoSchema.parse(data);
 }
 
-export async function prepararAprovacaoVersao(userId: string, clienteId: string, planoId: string, revision: number) {
+export async function prepararAprovacaoVersao(
+  userId: string,
+  clienteId: string,
+  planoId: string,
+  revision: number,
+) {
   const { data, error } = await supabase.schema("pcm").rpc("sso_preparar_aprovacao_versao", {
-    p_ator: userId, p_cliente: clienteId, p_plano: planoId, p_revisao: revision,
+    p_ator: userId,
+    p_cliente: clienteId,
+    p_plano: planoId,
+    p_revisao: revision,
   });
   if (error) throw error;
-  const resultado = z.object({ planoId: z.string().uuid(), clienteId: z.string().uuid(), revision: z.number().int().positive(), versaoId: z.string().uuid() }).strict().parse(data);
-  if (resultado.planoId !== planoId || resultado.clienteId !== clienteId || resultado.revision !== revision) throw new Error("Preparação divergente.");
+  const resultado = z
+    .object({
+      planoId: z.string().uuid(),
+      clienteId: z.string().uuid(),
+      revision: z.number().int().positive(),
+      versaoId: z.string().uuid(),
+    })
+    .strict()
+    .parse(data);
+  if (
+    resultado.planoId !== planoId ||
+    resultado.clienteId !== clienteId ||
+    resultado.revision !== revision
+  )
+    throw new Error("Preparação divergente.");
   return resultado.versaoId;
 }
 
-export function aprovarVersaoEsperada(c: { requestId: string; expectedRevision: number; planoId: string; vigencia: string }, contexto: { userId: string; clienteId: string; versaoId: string; revisaoPreparada: boolean }) {
+export function aprovarVersaoEsperada(
+  c: { requestId: string; expectedRevision: number; planoId: string; vigencia: string },
+  contexto: { userId: string; clienteId: string; versaoId: string; revisaoPreparada: boolean },
+) {
   return executar("sso_aprovar_versao_esperada", {
-    p_ator: contexto.userId, p_cliente: contexto.clienteId, p_request: c.requestId,
-    p_revisao: c.expectedRevision, p_plano: c.planoId, p_versao: contexto.versaoId,
-    p_vigencia: c.vigencia, p_revisao_preparada: contexto.revisaoPreparada,
+    p_ator: contexto.userId,
+    p_cliente: contexto.clienteId,
+    p_request: c.requestId,
+    p_revisao: c.expectedRevision,
+    p_plano: c.planoId,
+    p_versao: contexto.versaoId,
+    p_vigencia: c.vigencia,
+    p_revisao_preparada: contexto.revisaoPreparada,
   });
 }
 
 // A mediação possui gate desligado e a aprovação permanece bloqueada pela guarda de impactos.
-export function aprovarRevisaoPreparada(c: { requestId: string; expectedRevision: number; planoId: string; vigencia: string }, contexto: { userId: string; clienteId: string }) {
+export function aprovarRevisaoPreparada(
+  c: { requestId: string; expectedRevision: number; planoId: string; vigencia: string },
+  contexto: { userId: string; clienteId: string },
+) {
   return executar("sso_aprovar_revisao_mediada", {
-    p_ator_id: contexto.userId, p_cliente_id: contexto.clienteId,
-    p_request_id: c.requestId, p_expected_revision: c.expectedRevision,
-    p_plano_id: c.planoId, p_vigencia: c.vigencia,
+    p_ator_id: contexto.userId,
+    p_cliente_id: contexto.clienteId,
+    p_request_id: c.requestId,
+    p_expected_revision: c.expectedRevision,
+    p_plano_id: c.planoId,
+    p_vigencia: c.vigencia,
   });
 }
 function parametrosRotina(c: RotinaCommand) {
@@ -116,14 +154,12 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
       limite > 100
     )
       throw new Error("Consulta inválida.");
-    let consulta = supabase
-      .schema("pcm")
-      .rpc("sso_previa_revisao_revisionada", {
-        p_plano_id: planoId,
-        p_revisao: revisao,
-        p_limite: limite,
-        p_apos: apos,
-      });
+    let consulta = supabase.schema("pcm").rpc("sso_previa_revisao_revisionada", {
+      p_plano_id: planoId,
+      p_revisao: revisao,
+      p_limite: limite,
+      p_apos: apos,
+    });
     if (signal) consulta = consulta.abortSignal(signal);
     const { data, error } = await consulta;
     if (error) throw error;
@@ -184,10 +220,14 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
     let anterior = apos?.toLowerCase() ?? null;
     for (const item of resultado.items) {
       const atual = item.rotinaLogicaId.toLowerCase();
-      if (anterior !== null && atual <= anterior) throw new Error("Paginação da prévia divergente.");
+      if (anterior !== null && atual <= anterior)
+        throw new Error("Paginação da prévia divergente.");
       anterior = atual;
     }
-    if (resultado.nextCursor !== null && (resultado.items.length !== limite || resultado.nextCursor.toLowerCase() !== anterior))
+    if (
+      resultado.nextCursor !== null &&
+      (resultado.items.length !== limite || resultado.nextCursor.toLowerCase() !== anterior)
+    )
       throw new Error("Cursor da prévia divergente.");
     return resultado;
   },

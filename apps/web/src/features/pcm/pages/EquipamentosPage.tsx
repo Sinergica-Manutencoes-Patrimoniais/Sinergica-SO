@@ -1,7 +1,7 @@
 import { Button, ConfirmDialog, Modal as ModalPrimitivo, Skeleton } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, Layers, Link2, Pencil, Plus, RefreshCw, Trash2, Wrench } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { supabase } from "../../../lib/supabase-client";
@@ -21,9 +21,9 @@ import type {
   ItemContexto,
   ItemTipo,
 } from "../domain/equipamentos";
+import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
-import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
 import { HistoricoGrupo } from "../interfaces/estrutura-tecnica/HistoricoGrupo";
 import { MovimentacaoDetalhe } from "../interfaces/estrutura-tecnica/MovimentacaoDetalhe";
 

@@ -28,7 +28,11 @@ export const ACOES_SSO = [
 
 export type AcaoSso = (typeof ACOES_SSO)[number];
 export const ACOES_INDIVIDUAIS: readonly AcaoSso[] = [
-  "plano.gerir", "orcamento.dispensar", "orcamento.excecao_preco", "anexo_os.publicar", "backlog.promover",
+  "plano.gerir",
+  "orcamento.dispensar",
+  "orcamento.excecao_preco",
+  "anexo_os.publicar",
+  "backlog.promover",
 ];
 export interface ConcessaoEfetiva {
   acao: AcaoSso;

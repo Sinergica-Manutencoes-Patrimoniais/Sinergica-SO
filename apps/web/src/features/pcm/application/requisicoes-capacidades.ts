@@ -51,7 +51,12 @@ export function criarRegistroRequisicoes(
     },
     concluir(chave: string, id: string, payload?: object): boolean {
       const atual = ler();
-      if (atual?.chave !== chave || atual.id !== id || (payload !== undefined && JSON.stringify(atual.payload) !== JSON.stringify(payload))) return false;
+      if (
+        atual?.chave !== chave ||
+        atual.id !== id ||
+        (payload !== undefined && JSON.stringify(atual.payload) !== JSON.stringify(payload))
+      )
+        return false;
       if (armazenamento) armazenamento.removeItem(chaveStorage);
       else memoria = null;
       return true;
