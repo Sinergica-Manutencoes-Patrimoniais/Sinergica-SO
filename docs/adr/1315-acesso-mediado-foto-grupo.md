@@ -23,3 +23,7 @@ Testar permissões e JWT reais, revogação/transferência nas duas ordens,
 decisão alterada, conteúdo e limites, objetos substituídos, timeouts,
 RLS/FORCE, políticas de Storage, vazamento de caminho, rollout coordenado
 e revisão adversarial. Não usar links assinados nem acesso direto do cliente.
+
+## Dependência de rollout da rota existente
+
+Com `SSO_FOTO_GRUPO_MEDIADA_ENABLED` desligada, a Edge chama o núcleo privado sem EXECUTE para usuários autenticados; a foto fica indisponível. A disponibilização depende de implantação coordenada da migration 1462, da Edge, das flags de interface e serviço e dos gates transitivos, seguida dos testes e revisão acima. Não liberar o caminho privado nem tratar a flag desligada como funcional.
