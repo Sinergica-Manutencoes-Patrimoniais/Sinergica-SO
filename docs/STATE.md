@@ -6,6 +6,11 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: ponte e reconciliação por janela
+
+- ADR-1567/migration 1711 serializam criação de OS legada e pontes pela mesma ocorrência e exigem READ COMMITTED nos caminhos aplicáveis; não desativam geradores nem alteram OS. Clone com migrations 1614–1711 compilou; isolamento e contenção de linha passaram em testes sintéticos de duas sessões. Restauração excluiu cron/net e teve aviso de ACL cron; não prova ACL global, corrida completa de comandos ou caminho Visita. Guarda 1045 intacta.
+- Tela de lote legado permite filtrar janela e selecionar ciclos explicitamente usando 0794/0764 existentes; não afirma cobertura de páginas não carregadas ou ciclos não preparados. UI 2/2 e typecheck passaram. Cobertura futura integral e reconciliação positiva de todas as fontes oficiais continuam pendentes; SSO permanece fonte oficial, sem exigir ausência global Auvo. Sem deploy/Auvo.
+
 ## 2026-11-04 — S165/S166: contenção por Chamado e escolha concorrente
 
 - ADR-1565/migration 1709 substituem trava global sobre tabelas de vínculo de Chamado pela trava da linha do Chamado, com verificação das FKs necessárias. Em clone, ensaio reproduziu bloqueio indevido de OS corretiva de outro Cliente antes da correção e sucesso depois; FK do mesmo Chamado bloqueou e fixture de fotografia preventiva passou. Versão final compilou no lote até 1709; FK específica de Visita, carga e revisão adversarial adicionais pendentes.
