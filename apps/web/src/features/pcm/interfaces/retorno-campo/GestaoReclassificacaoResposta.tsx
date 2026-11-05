@@ -36,10 +36,36 @@ function Conteudo({ userId, clienteId, retornoId, respostaId }: Props) {
 const reaberturaSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), retornoId: z.string().uuid(), revision: z.number().int().nonnegative(), motivo: z.string().min(1).max(2000) }).strict();
 type Reabertura = z.infer<typeof reaberturaSchema>;
 function ReaberturaReclassificacao({ userId, clienteId, retornoId, respostaId, revision, reconciliado, consultaAtual, onAtualizar }: Props & { revision: number | null; reconciliado: boolean; consultaAtual: boolean; onAtualizar: () => void }) {
+  const montado=useRef(false);
+  useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
+  async function conferirSessao(){const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId||!montado.current)throw new Error("Sessão alterada.");}
   const key = `sso-reabrir-reclassificacao:${JSON.stringify([userId, clienteId, retornoId, respostaId])}`;
   const [pendente, setPendente] = useState<Reabertura | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(key); if (!raw) return null; const p = reaberturaSchema.parse(JSON.parse(raw)); return p.clienteId === clienteId && p.retornoId === retornoId ? p : "invalido"; } catch { return "invalido"; } });
   const [motivo, setMotivo] = useState(""); const [confirmado, setConfirmado] = useState(false); const [aviso, setAviso] = useState(""); const trava = useRef(false);
-  const envio = useMutation({ mutationFn: async (p: Reabertura) => { if (import.meta.env.VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED !== "true") throw new Error("Reabertura desabilitada"); const { data, error } = await supabase.schema("pcm").rpc("sso_reabrir_reclassificacao_mediada", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_retorno_id: p.retornoId, p_expected_revision: p.revision, p_motivo: p.motivo }); if (error) throw error; const r = z.object({ requestId: z.string().uuid(), retornoId: z.string().uuid(), revision: z.number().int().positive(), respostaEfetivada: z.literal(false), historicoPreservado: z.literal(true) }).strict().parse(data); if (r.requestId !== p.requestId || r.retornoId !== retornoId || r.revision !== p.revision + 1) throw new Error("Resposta divergente"); }, onSuccess: (_r, p) => { try { if (sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(key); } catch { setAviso("Reabertura registrada; tentativa local não foi limpa. Consulte suporte."); return; } setPendente(null); setConfirmado(false); setAviso("Reabertura registrada; histórico preservado e resposta não efetivada."); onAtualizar(); }, onError: () => setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte."), onSettled: () => { trava.current = false; } });
+  const envio = useMutation({
+    mutationFn: async (p: Reabertura) => {
+      if (import.meta.env.VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED !== "true") throw new Error("Reabertura desabilitada");
+      await conferirSessao();
+      if(sessionStorage.getItem(key)!==JSON.stringify(p))throw new Error("Tentativa alterada.");
+      const { data, error } = await supabase.schema("pcm").rpc("sso_reabrir_reclassificacao_mediada", {
+        p_request_id:p.requestId,p_cliente_id:p.clienteId,p_retorno_id:p.retornoId,p_expected_revision:p.revision,p_motivo:p.motivo,
+      });
+      if(error)throw error;
+      const r=z.object({requestId:z.string().uuid(),retornoId:z.string().uuid(),revision:z.number().int().positive(),respostaEfetivada:z.literal(false),historicoPreservado:z.literal(true)}).strict().parse(data);
+      if(r.requestId!==p.requestId||r.retornoId!==p.retornoId||r.revision!==p.revision+1)throw new Error("Resposta divergente");
+      await conferirSessao();
+    },
+    onSuccess: async (_r,p) => {
+      try {
+        await conferirSessao();
+        if(sessionStorage.getItem(key)!==JSON.stringify(p))throw new Error();
+        sessionStorage.removeItem(key);
+      } catch { if(montado.current)setAviso("Reabertura registrada; tentativa local não foi limpa. Consulte suporte."); return; }
+      setPendente(null);setConfirmado(false);setAviso("Reabertura registrada; histórico preservado e resposta não efetivada.");onAtualizar();
+    },
+    onError: () => {if(montado.current)setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte.");},
+    onSettled: () => {trava.current=false;},
+  });
   function enviar(p: Reabertura) { if (trava.current) return; trava.current = true; envio.mutate(p); }
   function iniciar() { if (pendente || trava.current || revision === null || !consultaAtual || !reconciliado || !confirmado || !motivo.trim()) return; try { const p = reaberturaSchema.parse({ requestId: crypto.randomUUID(), clienteId, retornoId, revision, motivo: motivo.trim() }); if (sessionStorage.getItem(key) !== null) throw new Error(); sessionStorage.setItem(key, JSON.stringify(p)); setPendente(p); enviar(p); } catch { setAviso("Confira motivo e revisão. Nada enviado."); } }
   if (import.meta.env.VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED !== "true") return null;
