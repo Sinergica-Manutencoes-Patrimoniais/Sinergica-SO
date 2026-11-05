@@ -56,7 +56,10 @@ export function IniciarRevisaoContratos({
   const envio = useMutation({
     mutationFn: async (p: Pedido) => { await conferirSessao();
       if (sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
-      const { data, error } = await supabase.schema("pcm").rpc("sso_iniciar_revisao_contratos_mediada", {
+      const funcao = p.modo === modo
+        ? "sso_iniciar_revisao_contratos_mediada"
+        : "sso_consultar_recibo_revisao_contratos";
+      const { data, error } = await supabase.schema("pcm").rpc(funcao, {
         p_ator: userId, p_cliente: p.clienteId, p_plano: p.planoId,
         p_request: p.requestId, p_expected_revision: p.revision,
         p_nova_versao: p.versaoId, p_modo: p.modo,
@@ -113,14 +116,8 @@ export function IniciarRevisaoContratos({
     if (trava.current) return;
     if (!permitirNova && !pendente) return;
     if (!mediada) { setAviso("Revisão mediada indisponível; a tentativa permanece guardada."); return; }
-    if (p.modo !== modo) {
-      setAviso(
-        "O fluxo da tentativa foi desativado ou alterado; procure suporte antes de continuar.",
-      );
-      return;
-    }
     try {
-      const anterior = sessionStorage.getItem(storageKey);
+      const anterior = sessionStorage.getItem(storageKey); if (p.modo !== modo && (!pendente || pendente === "invalido" || JSON.stringify(pendente) !== JSON.stringify(p) || anterior !== JSON.stringify(p))) throw new Error("Tentativa anterior indisponível.");
       if (anterior !== null && anterior !== JSON.stringify(p)) throw new Error();
       sessionStorage.setItem(storageKey, JSON.stringify(p));
     } catch {
@@ -136,12 +133,15 @@ export function IniciarRevisaoContratos({
     <section aria-label="Revisão com contratos">
       {!mediada && <p>Revisão mediada indisponível. Tentativas pendentes permanecem guardadas.</p>}
       <h3>Iniciar revisão com contratos de perguntas</h3>
+      {pendente && pendente !== "invalido" && pendente.modo !== modo && (
+        <p>A configuração mudou. Esta tentativa será apenas consultada; se não houver recibo, permanecerá guardada para tratamento.</p>
+      )}
       <p>
         Copia somente contratos com pergunta e questionário iguais à versão aprovada.{" "}
-        {modo !== "contratos"
+        {(pendente && pendente !== "invalido" ? pendente.modo : modo) !== "contratos"
           ? "Inclui contratos de evidência."
           : "Este fluxo não copia contratos de evidência."}{" "}
-        {modo === "exigencias" &&
+        {(pendente && pendente !== "invalido" ? pendente.modo : modo) === "exigencias" &&
           "Exigências normativas serão propostas para reconferência, sem validação automática."}{" "}
         A conferência de todas as perguntas continua necessária; não altera o questionário Auvo nem
         cria OS.
