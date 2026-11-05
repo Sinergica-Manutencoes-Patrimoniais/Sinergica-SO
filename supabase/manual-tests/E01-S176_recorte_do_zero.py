@@ -220,6 +220,15 @@ def main(opcoes):
     documento_1812 = None
     hierarquia_1813 = None
     policies_1814 = None
+    dispatch_1815 = None
+    if opcoes.dispatch_1815:
+        if not opcoes.policies_1814:
+            raise RuntimeError("Dispatch 1815 exige policies 1814")
+        driver = ROOT / "supabase/manual-tests/s168_dispatch_1815_isolada.py"
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "222a387f01c0282c20544701c17f8d44dfd2782fa1bae59569f68ffc98fff5e3":
+            raise RuntimeError("Driver de dispatch 1815 divergente")
+        import s168_dispatch_1815_isolada
+        dispatch_1815 = s168_dispatch_1815_isolada.preparar(ROOT)
     if opcoes.policies_1814:
         if not opcoes.hierarquia_1813 or not opcoes.upload_1811:
             raise RuntimeError("Policies 1814 exigem hierarquia 1813 e upload 1811")
@@ -581,6 +590,12 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade de policies 1814")
         blobs.append((caminho, policies_1814[0]))
         names.append(caminho)
+    if dispatch_1815 is not None:
+        caminho = s168_dispatch_1815_isolada.MIGRATION
+        if any(Path(p).name[:4] == "1815" for p in base_files + names) or names[-1] != s168_policies_1814_isolada.MIGRATION:
+            raise RuntimeError("Ordem ou duplicidade de dispatch 1815")
+        blobs.append((caminho, dispatch_1815[0]))
+        names.append(caminho)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -755,6 +770,8 @@ end; $$;"""
             sql(prefix + diagnostico, "ações sintéticas 0415")
             print("DIAGNÓSTICO: ações antecipadas somente no clone; resultado NÃO prova recorte implantável.", flush=True)
         sql(prefix + data, path)
+        if policies_1814 is not None and path == s168_policies_1814_isolada.MIGRATION:
+            s168_policies_1814_isolada.executar(CONTAINER, policies_1814[1], query, watchdog_triggered)
     print("Migrations candidatas aplicadas:", len(blobs), flush=True)
     if aprovacao_1805 is not None:
         print("Migration 1805 aplicada com gate desligado; isto não comprova sua guarda.", flush=True)
@@ -792,8 +809,8 @@ end; $$;"""
             tabela, coluna = gate["tabela"], gate["coluna"]
             if query(f'select coalesce((select not "{coluna}" from pcm."{tabela}" where id),false)::text').strip() != "true":
                 raise RuntimeError("Gate AC5 alterado após fixtures: " + tabela + "." + coluna)
-    if policies_1814 is not None:
-        s168_policies_1814_isolada.executar(CONTAINER, policies_1814[1], query, watchdog_triggered)
+    if dispatch_1815 is not None:
+        s168_dispatch_1815_isolada.executar(CONTAINER, dispatch_1815[1], query, watchdog_triggered)
     if upload_1811 is not None:
         s168_upload_1811_isolada.executar(CONTAINER, upload_1811[1], query, watchdog_triggered)
     if documento_1812 is not None:
@@ -896,6 +913,7 @@ if __name__ == "__main__":
     parser.add_argument("--diagnostico-ac5", action="store_true", help="Compila sobreposição AC5 revisada em clone; exige integração, sem fixtures.")
     parser.add_argument("--isolamento-1810", action="store_true", help="Inclui 1804–1810 e suas fixtures; aceita --fixtures-pgtap; exige AC5 e integração.")
     parser.add_argument("--concorrencia-1810", action="store_true", help="Executa quatro disputas sintéticas; exige --isolamento-1810 e descarte integral do clone.")
+    parser.add_argument("--dispatch-1815", action="store_true", help="Aplica e valida 1815 após policy 1814; exige --policies-1814.")
     parser.add_argument("--policies-1814", action="store_true", help="Aplica 1814 e valida policies antes da fixture 1811; exige hierarquia 1813.")
     parser.add_argument("--upload-1811", action="store_true", help="Aplica 1811 e executa fixture SQL com rollback; exige isolamento 1810.")
     parser.add_argument("--documento-1812", action="store_true", help="Aplica 1812 e valida ACL/gates com rollback; exige --upload-1811.")
