@@ -37,6 +37,7 @@ interface EquipamentoRow {
   parent_item_id: string | null;
   // E01-S155
   area_id: string | null;
+  estrutura_revisao: number;
 }
 
 interface ClienteRow {
@@ -46,7 +47,7 @@ interface ClienteRow {
 }
 
 const COLS =
-  "id,nome,identificador,auvo_descricao,categoria_id,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id,area_id" as const;
+  "id,nome,identificador,auvo_descricao,categoria_id,categoria,client_id,auvo_customer_id,localizacao,observacoes,ativo,auvo_id,auvo_sync_status,auvo_sync_error,auvo_synced_at,url_imagem,uri_anexos,local_id,tipo,parent_item_id,area_id,estrutura_revisao" as const;
 
 function mapRow(row: EquipamentoRow, clientes: Map<string, string>): EquipamentoItem {
   return {
@@ -72,6 +73,7 @@ function mapRow(row: EquipamentoRow, clientes: Map<string, string>): Equipamento
     tipo: (row.tipo as ItemTipo) ?? "equipamento",
     parentItemId: row.parent_item_id,
     areaId: row.area_id,
+    estruturaRevisao: row.estrutura_revisao,
   };
 }
 

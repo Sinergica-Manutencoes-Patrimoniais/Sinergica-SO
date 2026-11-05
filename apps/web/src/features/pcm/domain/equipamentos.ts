@@ -28,6 +28,8 @@ export interface EquipamentoItem {
   /** E01-S155: posição direta na Área, sem Local. Quando `localId` está presente, `areaId` é
    * sempre a Área desse Local (o banco deriva — ver trigger `fn_equipamentos_normalizar_posicao`). */
   areaId: string | null;
+  /** Revisão do vínculo estrutural para detectar alterações concorrentes. */
+  estruturaRevisao?: number;
 }
 
 /** E01-S76 AC-6: caminho de instalação (Cliente>Área>Local) + Sistemas de que o Item participa —
