@@ -1,10 +1,16 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { supabase } from "../../../../lib/supabase-client";
 import { moverComponente } from "../../application/estrutura-tecnica";
 import type { EquipamentoItem } from "../../domain/equipamentos";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { supabaseEstruturaTecnicaAdapter } from "../../infrastructure/supabase-estrutura-tecnica-adapter";
 import { MovimentarComponente } from "./MovimentarComponente";
+
+async function conferirSessao(userId: string, signal?: AbortSignal) {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || data.user?.id !== userId || signal?.aborted) throw new Error("Sessão alterada.");
+}
 
 function useDestinos(
   userId: string,
@@ -16,15 +22,14 @@ function useDestinos(
   return useInfiniteQuery({
     queryKey: ["estrutura-tecnica", userId, clienteId, "destinos", tipo, busca],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam, signal }) =>
-      supabaseEstruturaTecnicaAdapter.listarDestinos(
-        clienteId,
-        tipo,
-        20,
-        pageParam,
-        busca || null,
-        signal,
-      ),
+    queryFn: async ({ pageParam, signal }) => {
+      await conferirSessao(userId, signal);
+      const destinos = await supabaseEstruturaTecnicaAdapter.listarDestinos(
+        clienteId, tipo, 20, pageParam, busca || null, signal,
+      );
+      await conferirSessao(userId, signal);
+      return destinos;
+    },
     getNextPageParam: (ultima) => (ultima.length === 20 ? ultima.at(-1)?.id : undefined),
     placeholderData: (dados, anterior) =>
       anterior?.queryKey[1] === userId &&
@@ -61,7 +66,12 @@ function MovimentacaoContexto({ userId, clienteId, item, onConcluido }: Moviment
   const queryClient = useQueryClient();
   const permissao = useQuery({
     queryKey: ["estrutura-tecnica", userId, clienteId, "pode-movimentar"],
-    queryFn: () => supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId),
+    queryFn: async ({ signal }) => {
+      await conferirSessao(userId, signal);
+      const permitido = await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId);
+      await conferirSessao(userId, signal);
+      return permitido;
+    },
     gcTime: 0,
   });
   const habilitado =
