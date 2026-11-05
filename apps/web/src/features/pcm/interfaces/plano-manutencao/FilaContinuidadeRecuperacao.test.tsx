@@ -7,7 +7,7 @@ vi.mock("../../../../lib/supabase-client", () => ({ supabase: { schema: () => ({
 import { FilaPreventivaPcm } from "./FilaPreventivaPcm";
 const clienteId = "16630000-1111-4000-8000-00000000000a"; const planoId = "16630000-1111-4000-8000-000000000011";
 const preparadaId = "16630000-1111-4000-8000-000000000061"; const cicloId = "16630000-1111-4000-8000-000000000062";
-const linha = { ciclo_id: cicloId, preparada_id: preparadaId, estado: "verificacao", revisao: 1, vencimento: "2026-11-04", atualizado_em: "2026-11-04T12:00:00.000Z" };
+const linha = { ciclo_id: cicloId, preparada_id: preparadaId, estado: "verificacao", situacao_atual: "conferida", revisao: 1, vencimento: "2026-11-04", atualizado_em: "2026-11-04T12:00:00.000Z" };
 const chave = `sso-fila-preventiva-pcm:${JSON.stringify(["usuario", clienteId, planoId, preparadaId])}`;
 const montar = () => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><FilaPreventivaPcm userId="usuario" clienteId={clienteId} planoId={planoId} preparadaId={preparadaId} /></QueryClientProvider>);
 afterEach(() => { cleanup(); sessionStorage.clear(); vi.unstubAllEnvs(); api.rpc.mockReset(); });
@@ -15,7 +15,7 @@ afterEach(() => { cleanup(); sessionStorage.clear(); vi.unstubAllEnvs(); api.rpc
 it("após primeira rejeição de continuidade permite cancelar a entrada sem alterar OS", async () => {
   vi.stubEnv("VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED", "true");
   api.rpc.mockImplementation((nome: string, args: Record<string, unknown>) => {
-    if (nome === "sso_consultar_entrada_fila_preventiva") return { abortSignal: () => Promise.resolve({ data: [linha], error: null }) };
+    if (nome === "sso_consultar_entrada_fila_preventiva_v2") return { abortSignal: () => Promise.resolve({ data: [linha], error: null }) };
     if (nome === "sso_confirmar_fila_preventiva") return Promise.resolve({ data: null, error: { code: "23514", message: "continuidade_ciclo_nao_aprovada" } });
     return Promise.resolve({ data: { requestId: args.p_request_id, clienteId, planoId, preparadaId, cicloId, estado: "cancelado", revision: 2, osCriada: false, tarefaAuvoCriada: false }, error: null });
   });
@@ -37,7 +37,7 @@ it("após primeira rejeição de continuidade permite cancelar a entrada sem alt
 it("preserva pedido já pendente quando replay recebe rejeição de continuidade", async () => {
   const pedido = JSON.stringify({ requestId: "16630000-1111-4000-8000-000000000063", clienteId, planoId, preparadaId, acao: "confirmar", revisao: 1, motivo: "Conferido" });
   sessionStorage.setItem(chave, pedido);
-  api.rpc.mockImplementation((nome: string) => nome === "sso_consultar_entrada_fila_preventiva"
+  api.rpc.mockImplementation((nome: string) => nome === "sso_consultar_entrada_fila_preventiva_v2"
     ? { abortSignal: () => Promise.resolve({ data: [linha], error: null }) }
     : Promise.resolve({ data: null, error: { code: "23514", message: "continuidade_ciclo_nao_aprovada" } }));
   montar();
@@ -45,4 +45,12 @@ it("preserva pedido já pendente quando replay recebe rejeição de continuidade
   await screen.findByText(/Resultado não confirmado/);
   expect(sessionStorage.getItem(chave)).toBe(pedido);
   expect(screen.getByRole("button", { name: "Repetir mesmo pedido" })).toBeInTheDocument();
+});
+
+it("não oferece confirmação enquanto há avaliação superveniente", async () => {
+  vi.stubEnv("VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED", "true");
+  api.rpc.mockImplementation((nome: string) => nome === "sso_consultar_entrada_fila_preventiva_v2" ? { abortSignal: () => Promise.resolve({ data: [{ ...linha, situacao_atual: "verificacao" }], error: null }) } : Promise.resolve({ data: null, error: null }));
+  montar(); await screen.findByText(/A fonte exige conferência/);
+  expect(screen.queryByRole("option", { name: "Reconferir fonte e marcar aguardando" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Cancelar entrada local" })).toBeInTheDocument();
 });

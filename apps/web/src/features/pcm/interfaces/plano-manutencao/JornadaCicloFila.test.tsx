@@ -14,7 +14,7 @@ it("prepara ciclo e inclui a mesma ocorrência na fila após confirmação indep
   api.rpc.mockImplementation((nome, p) => {
     if (nome === "sso_consultar_origem_efetiva_ciclo") return { abortSignal: async () => ({ error: null, data: { planoId: id(2), versaoId: id(3), rotinaId: id(4), revisao: 1, ciclo: 2, vencimento: "2026-11-20", estado: "plano", agendamentoId: null, fontesCompletas: false, exclusividadeGlobalComprovada: false } }) };
     if (nome === "sso_materializar_ciclo_canonico") return Promise.resolve({ error: null, data: { requestId: p.p_request_id, indice: 2, vencimentoOriginal: "2026-11-20", criada: true, preparadaId: id(6), cicloCanonicoId: id(7), osCriada: false, tarefaAuvoCriada: false } });
-    if (nome === "sso_consultar_entrada_fila_preventiva") return { abortSignal: async () => ({ error: null, data: incluida ? [{ ciclo_id: id(7), preparada_id: id(6), estado: "verificacao", revisao: 1, vencimento: "2026-11-20", atualizado_em: "2026-11-04T12:00:00Z" }] : [] }) };
+    if (nome === "sso_consultar_entrada_fila_preventiva_v2") return { abortSignal: async () => ({ error: null, data: incluida ? [{ ciclo_id: id(7), preparada_id: id(6), estado: "verificacao", situacao_atual: "conferida", revisao: 1, vencimento: "2026-11-20", atualizado_em: "2026-11-04T12:00:00Z" }] : [] }) };
     if (nome === "sso_alterar_fila_preventiva_pcm") { incluida = true; return Promise.resolve({ error: null, data: { requestId: p.p_request_id, clienteId: p.p_cliente_id, planoId: p.p_plano_id, preparadaId: p.p_preparada_id, cicloId: id(7), estado: "verificacao", revision: 1, osCriada: false, tarefaAuvoCriada: false } }); }
     throw new Error(`RPC inesperada: ${nome}`);
   });

@@ -27,12 +27,12 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
   async function sessao(signal?: AbortSignal) { const r = await supabase.auth.getUser(); if (r.error || r.data.user?.id !== userId || signal?.aborted) throw new Error("Sessão alterada."); }
   const lista = useQuery({ queryKey: ["fila-preventiva-pcm", userId, clienteId, planoId, "preparada", preparadaId, tipo], gcTime: 0, retry: false,
     queryFn: async ({ signal }) => {
-      await sessao(signal); const { data, error } = await supabase.schema("pcm").rpc(tipo === "visita" ? "sso_consultar_fila_visita_v2" : "sso_consultar_entrada_fila_preventiva", {
+      await sessao(signal); const { data, error } = await supabase.schema("pcm").rpc(tipo === "visita" ? "sso_consultar_fila_visita_v2" : "sso_consultar_entrada_fila_preventiva_v2", {
         p_cliente_id: clienteId, p_plano_id: planoId, p_preparada_id: preparadaId,
       }).abortSignal(signal);
       if (error) throw error; const itens = z.array(linha).max(2).parse(data); let anterior = "";
       for (const item of itens) {
-        if (tipo === "visita" && !item.situacao_atual) throw new Error("Situação indisponível.");
+        if (!item.situacao_atual) throw new Error("Situação indisponível.");
         if (item.ciclo_id.toLowerCase() <= anterior) throw new Error("Entrada divergente.");
         anterior = item.ciclo_id.toLowerCase();
       }
@@ -42,7 +42,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
   const visivel = !!lista.data && !lista.isFetching && !lista.isError;
   const registro = existentes.length === 1 ? existentes[0] : undefined;
   const outraOcorrencia = !!registro && registro.preparada_id.toLowerCase() !== preparadaId.toLowerCase();
-  const acao = registro && registro.estado !== "cancelado" ? (registro.estado === "verificacao" && import.meta.env.VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED === "true" ? operacao : "cancelar") : "incluir";
+  const acao = registro && registro.estado !== "cancelado" ? (registro.estado === "verificacao" && registro.situacao_atual !== "verificacao" && import.meta.env.VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED === "true" ? operacao : "cancelar") : "incluir";
   const fotografia = JSON.stringify([userId, clienteId, planoId, preparadaId, registro ?? null, acao, motivo.trim()]);
   async function enviar(p: Pedido, primeiraTentativa = false) {
     if (trava.current) return; trava.current = true; setOcupado(true); setAviso("");
@@ -90,13 +90,14 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo = "calendario"
     {lista.isFetching && <output>Consultando fila…</output>}
     {lista.isError && <p role="alert">Fila indisponível. <button type="button" onClick={() => void lista.refetch()}>Tentar novamente</button></p>}
     {visivel && <p>{existentes.length > 1 ? "Identidade ambígua; procure suporte." : registro ? `Entrada ${registro.estado} · revisão ${registro.revisao}.` : "Nenhuma entrada registrada para o ciclo canônico consultado."}</p>}
+    {visivel && tipo === "calendario" && registro?.estado === "verificacao" && <p role="alert">A fonte exige conferência. O estado exibido considera as informações atuais e pode diferir do estado registrado; uma avaliação recebida impede criar novo Chamado.</p>}
     {visivel && tipo === "visita" && registro?.situacao_atual === "verificacao" && <p role="alert">Fonte ou vigência exigem nova conferência. O estado registrado não comprova que o ciclo continua aguardando.</p>}
     {visivel && tipo === "visita" && registro?.situacao_atual === "conferida" && <p>Situação atual parcialmente conferida; fontes externas ainda exigem atenção.</p>}
     {visivel && registro && registro.estado !== "cancelado" && import.meta.env.VITE_SSO_REGISTRAR_OCORRENCIA_GRUPO_ENABLED === "true" && import.meta.env.VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED === "true" && <section><button type="button" aria-expanded={grupoAberto} onClick={() => setGrupoAberto((a) => !a)}>{grupoAberto ? "Ocultar conferência de Grupo" : "Conferir Grupo Quantitativo"}</button>{grupoAberto && <ConferirGrupoFila userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={registro.preparada_id} tipo={tipo} />}</section>}
     {visivel && outraOcorrencia && <p role="status">Este ciclo foi registrado pela ocorrência {registro?.preparada_id}. A ação usará a ocorrência original e preservará esta versão.</p>}
     {pendente === "invalido" && <p role="alert">Tentativa ilegível; procure suporte.</p>}
     {pendente && pendente !== "invalido" ? <button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</button> : !pendente && <>
-      {registro?.estado === "verificacao" && import.meta.env.VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED === "true" && <label>Ação <select value={operacao} disabled={!visivel || ocupado} onChange={(e) => { setOperacao(e.target.value as "cancelar" | "confirmar"); setConfirmacao(null); }}><option value="cancelar">Cancelar entrada</option><option value="confirmar">Reconferir fonte e marcar aguardando</option></select></label>}
+      {registro?.estado === "verificacao" && registro.situacao_atual !== "verificacao" && import.meta.env.VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED === "true" && <label>Ação <select value={operacao} disabled={!visivel || ocupado} onChange={(e) => { setOperacao(e.target.value as "cancelar" | "confirmar"); setConfirmacao(null); }}><option value="cancelar">Cancelar entrada</option><option value="confirmar">Reconferir fonte e marcar aguardando</option></select></label>}
       <label>Motivo <textarea maxLength={2000} value={motivo} onChange={(e) => { setMotivo(e.target.value); setConfirmacao(null); }} /></label>
       <label><input type="checkbox" checked={confirmacao === fotografia} disabled={!visivel || ocupado || existentes.length > 1 || registro?.estado === "cancelado"} onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)} /> Conferi a ocorrência e a ação na fila local.</label>
       <button type="button" disabled={!visivel || ocupado || existentes.length > 1 || registro?.estado === "cancelado" || !motivo.trim() || confirmacao !== fotografia} onClick={iniciar}>{acao === "incluir" ? "Incluir na fila local" : acao === "confirmar" ? "Reconferir e marcar aguardando" : "Cancelar entrada local"}</button>

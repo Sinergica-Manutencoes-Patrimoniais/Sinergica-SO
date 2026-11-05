@@ -67,7 +67,7 @@ Testado em 2026-11-05: criação, restauração de 98 migrations, verificação 
 
 ## Jornada sintética de revisão e Visita
 
-`python3 apps/web/e2e/s166-isolado/executar-jornada.py` constrói uma página de ensaio com os componentes reais, cria clone e serviços na rede interna, autentica conta sintética, aprova revisão pela interface usando a guarda 1045 real e prepara Visita pela interface. Após aprovação, adianta o relógio civil apenas no clone e executa retirada da fila anterior por RPC; não comprova navegação completa do produto nem execução em campo. Os recursos temporários são removidos ao final; imagem local de navegador é preservada. Não usa `.env.local`, servidor existente, credenciais reais ou Auvo.
+`python3 apps/web/e2e/s166-isolado/executar-jornada.py` constrói uma página de ensaio com os componentes reais, cria clone e serviços na rede interna, autentica conta sintética, aprova revisão pela interface usando a guarda 1045 real e prepara Visita pela interface. Após aprovação, adianta o relógio civil apenas no clone e executa retirada da fila anterior pela interface do painel de Preventivas; não comprova navegação completa do produto nem execução em campo. Os recursos temporários são removidos ao final; imagem local de navegador é preservada. Não usa `.env.local`, servidor existente, credenciais reais ou Auvo.
 
 Executado com sucesso em 2026-11-05, incluindo verificação do estado aprovado e duas ocorrências preservadas no clone. Requer imagem Playwright 1.61.1 e dependências locais, além do banco-base sintético identificado no bootstrap. Flags são ligadas somente no build do ensaio.
 

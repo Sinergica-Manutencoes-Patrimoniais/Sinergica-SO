@@ -17,13 +17,16 @@ def run(args, data=None, cwd=None, env=None):
     if p.returncode: raise RuntimeError('Falha em '+str(args[0])+'; nenhum corpo ou credencial será exibido.')
     return p.stdout.strip()
 def boot(step):
-    try: return run([sys.executable,str(HERE/'bootstrap-interno.py'),step,'--id',ident])
-    except RuntimeError as exc: raise RuntimeError('Bootstrap falhou na etapa '+step) from exc
+    p=subprocess.run([sys.executable,str(HERE/'bootstrap-interno.py'),step,'--id',ident],text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    if p.returncode: raise RuntimeError('Bootstrap falhou na etapa '+step+' '+p.stderr.strip())
+    return p.stdout.strip()
 def sql(text): return run(['docker','exec','-i',db,'psql','-U','supabase_admin','-d',database,'-v','ON_ERROR_STOP=1','-q'],text)
 def scalar(text): return run(['docker','exec',db,'psql','-U','supabase_admin','-d',database,'-Atqc',text])
 def driver(config):
     boot('verificar')
-    result=run(['docker','exec','-i',browser,'node','/tmp/jornada-driver.cjs'],json.dumps(config))
+    p=subprocess.run(['docker','exec','-i',browser,'node','/tmp/jornada-driver.cjs'],input=json.dumps(config),text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    if p.returncode: raise RuntimeError(p.stderr.strip() if p.stderr.startswith('etapa_ui_falhou: ') else 'Falha na interface isolada.')
+    result=p.stdout.strip()
     if result!='ok': raise RuntimeError('Recibo da interface inválido.')
 
 try:
@@ -31,7 +34,7 @@ try:
     tmp=Path(temporary); (tmp/'env').mkdir(); (tmp/'dist').mkdir()
     clean={'PATH':os.environ.get('PATH','/usr/bin:/bin'),'HOME':str(tmp),'TMPDIR':str(tmp.parent),'S166_ENV_DIR':str(tmp/'env'),'S166_BUILD_DIR':str(tmp/'dist'),
            'VITE_SUPABASE_URL':'http://127.0.0.1:5189','VITE_SUPABASE_ANON_KEY':'chave-sintetica',
-           'VITE_SSO_APROVAR_REVISAO_ENABLED':'true','VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED':'true','VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED':'true'}
+           'VITE_SSO_RESOLUCAO_IMPACTO_ENABLED':'true','VITE_SSO_APROVAR_REVISAO_ENABLED':'true','VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED':'true','VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED':'true'}
     run(['node',str(WEB/'node_modules/vite/bin/vite.js'),'build','--config','vite.s166-jornada.config.ts'],cwd=WEB,env=clean)
     boot('criar');created=True;boot('carregar');boot('servicos');boot('navegador');boot('verificar')
     run(['docker','cp',str(tmp/'dist'),browser+':/tmp/sso-jornada-dist'])
@@ -49,12 +52,14 @@ try:
     if scalar("select estado||':'||revisao from pcm.planos_manutencao where id='16610000-0000-0000-0000-000000000121'")!='aprovado:4': raise RuntimeError('Aprovação da revisão não comprovada.')
     print('Aprovação mediada via UI e guarda 1045 real: passou.')
     source=(ROOT/'supabase/tests/manual_E01-S165_aprovacao_real_visita_1731.sql').read_text();a=source.index('do $$ declare d text:=pg_catalog.pg_get_functiondef');b=source.index('do $$ declare r jsonb;',a)
-    retire=source[a:b]+"\nbegin; set local request.jwt.claims = '{\"sub\":\"16610000-0000-0000-0000-000000000001\",\"role\":\"authenticated\",\"user_role\":\"superadmin\"}'; set local role authenticated; select pcm.sso_aplicar_retiradas_fila('16610000-0000-0000-0000-000000000001','17310000-0000-0000-0000-000000000262','16610000-0000-0000-0000-00000000000a','16610000-0000-0000-0000-000000000121',50,null,null); commit;"
-    sql(retire)
+    sql(source[a:b])
+    cfg.update(etapa='retirar'); driver(cfg)
+    if scalar("select estado from pcm.sso_fila_visita where preparada_id='16610000-0000-0000-0000-000000000161'")!='cancelado': raise RuntimeError('Retirada via UI não comprovada.')
+    print('Retirada da fila via UI: passou.')
     cfg.update(etapa='gerar',rotina=scalar("select rotina_id from pcm.sso_escolhas_nova_data_visita where request_id='16610000-0000-0000-0000-000000000231'"),vencimento=scalar("select (inicio_em at time zone fuso)::date from pcm.visitas where id='16610000-0000-0000-0000-000000000083'"))
     driver(cfg)
     if scalar("select count(*) from pcm.ocorrencias_visita_preparadas where plano_id='16610000-0000-0000-0000-000000000121'")!='2': raise RuntimeError('Geração ou preservação histórica não comprovada.')
-    print('Preparação de Visita via UI: passou; relógio sintético e retirada via RPC.')
+    print('Preparação de Visita via UI: passou; relógio sintético no clone.')
 finally:
  if created:
     try: boot('remover');print('Recursos descartáveis removidos.')

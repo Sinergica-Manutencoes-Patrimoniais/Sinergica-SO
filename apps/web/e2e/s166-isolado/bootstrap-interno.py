@@ -47,12 +47,14 @@ def attest(network, database):
     for _ in range(20):
         try:
             actual = docker('exec', database, 'psql', '-U', 'postgres', '-d', database_name, '-Atqc',
-                            'select current_database()', '-v', 'ON_ERROR_STOP=1')
-            break
+                            "select current_database() || ':' || (extract(epoch from clock_timestamp()-pg_postmaster_start_time()) >= 5)::text", '-v', 'ON_ERROR_STOP=1')
+            if actual == database_name + ':true': break
+            if not actual.startswith(database_name + ':'): raise RuntimeError('Destino de banco inesperado.')
+            time.sleep(1)
         except subprocess.CalledProcessError:
             time.sleep(1)
     else: raise RuntimeError('Conexão ao banco isolado indisponível.')
-    if actual != database_name:
+    if actual != database_name + ':true':
         raise RuntimeError('Destino de banco inesperado.')
     print('Rede interna, banco dedicado, sem mounts ou portas publicadas: verificados.')
     print('Destino:', database)

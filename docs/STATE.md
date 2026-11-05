@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: vínculo legado e fila após avaliação
+
+- ADR-1593/migration 1735 expõem vínculo mediado de ocorrência legada existente, selecionada explicitamente pelo PCM, sem gerar OS/Auvo. Jornada AC-6 em clone: suspensão/retomada, decisão, preparação vencida, relação declarada, vínculo e fila `aguardando`. Interface de seleção usa flag desligada; testes focados 2/2 e typecheck passaram, ainda sem browser integrado dessa ação.
+- Avaliação recebida bloqueia nova integração e novo Chamado; fila projeta `verificacao` quando avaliação chega após inclusão, mantendo estado histórico e cancelamento. Consulta v2 permite à UI distinguir essa situação e evitar confirmação inválida. Jornada SQL e testes UI 4/4 passaram; concorrência nas duas ordens passou em clone limpo 1614–1735. Roteiro `supabase/tests/manual_E01-S166_avaliacao_fila_concorrencia_1735.md`. Performance das travas não medida.
+- Jornada isolada S165/S166 agora usa painel real para seleção do Plano e retirada pela UI, antes de preparar Visita também pela UI; relógio e dados sintéticos, 1045 efetiva, sem Auvo. Ainda não é navegação integral do produto.
+- Próximo passo: validação em navegador do vínculo 1735, revisão adversarial completa e CI; flags/gates default desligados e homologação pendente. Sem deploy ou envio real.
+
 ## 2026-11-05 — S165/S166: exceção em navegador e vencidos
 
 - `apps/web/e2e/s166-isolado/executar-excecao.py` aprovou exceção e mudou dia pela UI real em rede interna, preservando Visitas excepcionada, confirmada, extra, reprogramada e OS sintética; elegível mudou para terça. Dados sintéticos, sem Auvo, recursos removidos.

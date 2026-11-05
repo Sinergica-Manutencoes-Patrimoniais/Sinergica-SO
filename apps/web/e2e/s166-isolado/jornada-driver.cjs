@@ -1,8 +1,8 @@
 // Playwright executado apenas no contêiner de navegador da rede interna.
 const fs=require('node:fs'),{chromium}=require('/tmp/playwright-core');
-const c=JSON.parse(fs.readFileSync(0,'utf8'));
+const c=JSON.parse(fs.readFileSync(0,'utf8'));let etapa='início';const falhas=[];
 (async()=>{const b=await chromium.launch({headless:true,executablePath:'/ms-playwright/chromium_headless_shell-1228/chrome-linux/headless_shell',args:['--no-sandbox']});try{
- const p=await b.newPage();await p.goto(c.etapa==='excecao'?'http://127.0.0.1:5189/?excecao=1&vigencia='+encodeURIComponent(c.vigencia):'http://127.0.0.1:5189/?rotina='+encodeURIComponent(c.rotina||''));
+ const p=await b.newPage();p.on('response',r=>{if(r.status()>=400){const u=new URL(r.url());falhas.push(u.pathname+':'+r.status());}});await p.goto(c.etapa==='excecao'?'http://127.0.0.1:5189/?excecao=1&vigencia='+encodeURIComponent(c.vigencia):'http://127.0.0.1:5189/?rotina='+encodeURIComponent(c.rotina||''));
  await p.getByLabel('E-mail sintético').fill(c.email);await p.getByLabel('Senha sintética').fill(c.password);await p.getByRole('button',{name:'Entrar'}).click();
  if(c.etapa==='aprovar'){
   await p.getByRole('button',{name:'Aprovar revisão de versão'}).waitFor({timeout:10000});await p.getByRole('button',{name:'Aprovar revisão de versão'}).click();await p.getByLabel('Início da vigência').fill(c.vigencia);await p.getByRole('button',{name:'Confirmar aprovação'}).click();
@@ -12,9 +12,11 @@ const c=JSON.parse(fs.readFileSync(0,'utf8'));
   await p.getByLabel('Origem',{exact:true}).fill('PCM sintético');await p.getByLabel('Natureza',{exact:true}).fill('ajuste');await p.getByLabel('Motivo',{exact:true}).fill('Conferência sintética');await p.getByRole('checkbox',{name:'Conferi a Visita e aprovo a exceção.'}).check();await p.getByRole('button',{name:'Aprovar exceção'}).click();
   await p.getByText('Exceção aprovada. A Visita será preservada na mudança de dia.').waitFor({timeout:10000});await item.filter({hasText:'preservar_e_conferir'}).waitFor({timeout:10000});
   await p.getByRole('checkbox',{name:'Conferi todas as Visitas e a regra apresentada.'}).check();await p.getByRole('button',{name:'Alterar regra e Visitas'}).click();await p.getByText(/Regra alterada:/).waitFor({timeout:10000});
+ }else if(c.etapa==='retirar'){
+  etapa='abrir painel';await p.getByRole('button',{name:'Abrir retirada sintética'}).click();etapa='listar plano';await p.locator('option[value="16610000-0000-0000-0000-000000000121"]').waitFor({state:'attached',timeout:10000});etapa='selecionar plano';const seletor=p.locator('section[aria-label="Fila preventiva local"] select').first();await seletor.selectOption('16610000-0000-0000-0000-000000000121',{timeout:10000});etapa='confirmar retirada';await p.getByRole('checkbox',{name:'Conferi o Plano e autorizo aplicar este lote de retiradas efetivas'}).check();await p.getByRole('button',{name:'Aplicar retiradas à fila'}).click();etapa='resultado retirada';await p.getByText(/1 entrada\(s\) retiradas da fila/).waitFor({timeout:10000});
  }else if(c.etapa==='gerar'){
   await p.getByRole('button',{name:'Abrir geração sintética'}).click();await p.getByLabel('Início',{exact:true}).fill(c.vencimento);await p.getByLabel('Fim',{exact:true}).fill(c.vencimento);await p.getByRole('button',{name:'Consultar Visitas'}).click();
   await p.getByRole('button',{name:'Conferir preparação'}).waitFor({timeout:10000});await p.getByRole('button',{name:'Conferir preparação'}).click();await p.getByLabel('Fonte consultada para declarar dia sem feriado').fill('fonte sintética');await p.getByRole('checkbox',{name:'Confirmei Visita, semana, vigência e fonte declarada'}).check();await p.getByRole('button',{name:'Preparar ocorrência sem envio'}).click();await p.getByText('Ocorrência preparada; ainda não incluída na fila e sem OS ou tarefa.').waitFor({timeout:10000});
  }else throw Error('etapa_invalida');
  process.stdout.write('ok');
-}finally{await b.close()}})().catch(()=>{process.stderr.write('etapa_ui_falhou');process.exit(1)});
+}finally{await b.close()}})().catch(e=>{process.stderr.write('etapa_ui_falhou: '+etapa+' '+falhas.join(',')+' '+String(e.message).split('\n')[0]);process.exit(1)});
