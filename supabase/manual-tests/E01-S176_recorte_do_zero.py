@@ -164,6 +164,16 @@ def main(opcoes):
     aprovacao_1804 = None
     aprovacao_1805 = None
     aprovacao_1806 = None
+    revisao_1807 = None
+    if opcoes.revisao_1807:
+        if not opcoes.aprovacao_1806 or not opcoes.aprovacao_1805 or not opcoes.aprovacao_1804 or not opcoes.integracao_candidata:
+            raise RuntimeError("Revisão 1807 exige integração candidata e migrations 1804, 1805 e 1806")
+        caminho_1807 = "supabase/migrations/1807_E01-S165_inicio_revisao_contratos_mediado.sql"
+        revisao_1807 = (ROOT / caminho_1807).read_bytes()
+        if hashlib.sha256(revisao_1807).hexdigest() != "e6b5641d7cf891fbfd50397c66f634c65f914ad59b99c2d983f5a5446b4f64b6":
+            raise RuntimeError("Hash da migration 1807 divergente")
+        import s165_revisao_1807_isolada
+        fixture_1807 = s165_revisao_1807_isolada.preparar(ROOT)
     if opcoes.aprovacao_1806:
         if not opcoes.aprovacao_1805 or not opcoes.aprovacao_1804 or not opcoes.integracao_candidata:
             raise RuntimeError("Migration 1806 exige integração candidata, 1804 e 1805")
@@ -333,6 +343,11 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade da migration 1806")
         blobs.append((caminho_1806, aprovacao_1806))
         names.append(caminho_1806)
+    if revisao_1807 is not None:
+        if any(Path(p).name.startswith("1807_") for p in base_files + names) or names[-1] != caminho_1806 or names[-1] >= caminho_1807:
+            raise RuntimeError("Ordem ou duplicidade da migration 1807")
+        blobs.append((caminho_1807, revisao_1807))
+        names.append(caminho_1807)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -512,6 +527,8 @@ end; $$;"""
         s165_aprovacao_1805_isolada.executar(CONTAINER, fixture_1805, query, watchdog_triggered)
     if aprovacao_1806 is not None:
         s165_aprovacao_1806_isolada.executar(CONTAINER, fixture_1806, query, watchdog_triggered)
+    if revisao_1807 is not None:
+        s165_revisao_1807_isolada.executar(CONTAINER, fixture_1807, query, watchdog_triggered)
     if concorrencia_1805:
         import s165_concorrencia_1805_isolada
         s165_concorrencia_1805_isolada.executar(CONTAINER, watchdog_triggered)
@@ -539,6 +556,7 @@ if __name__ == "__main__":
     parser.add_argument("--aprovacao-1804", action="store_true", help="Aplica 1804 fixada e executa fixture sintética com rollback; exige integração candidata.")
     parser.add_argument("--aprovacao-1805", action="store_true", help="Aplica 1805 fixada após 1804, com gate desligado; exige --aprovacao-1804.")
     parser.add_argument("--aprovacao-1806", action="store_true", help="Aplica 1806 fixada após 1805; exige integração, 1804 e 1805.")
+    parser.add_argument("--revisao-1807", action="store_true", help="Aplica 1807 e fixture isolada com rollback; exige integração e 1804–1806.")
     parser.add_argument("--aprovacao-1805-pos-commit", action="store_true", help="Fixture sintética com COMMIT em clone descartável; exige 1804 e 1805.")
     parser.add_argument("--concorrencia-1805", action="store_true", help="Cenários concorrentes 1805 em clone descartável; exige integração, 1804 e 1805.")
     opcoes = parser.parse_args()

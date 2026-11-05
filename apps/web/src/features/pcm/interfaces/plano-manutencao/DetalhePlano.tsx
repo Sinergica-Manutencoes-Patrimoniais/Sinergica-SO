@@ -122,7 +122,7 @@ export function DetalhePlano({
       <ObrigacoesPmoc userId={userId} clienteId={clienteId} planoId={plano.id} />
       {import.meta.env.VITE_SSO_FUSO_PLANO_DECLARADO_ENABLED === "true" && <FusoPlanoDeclarado userId={userId} clienteId={clienteId} planoId={plano.id} />}
       {copiaSelecionada && <p role="status">Cópia localizada para {copiaSelecionada.origemNome}: versão rascunho {copiaSelecionada.versaoId}, Rotina {copiaSelecionada.id}. Carregue mais Rotinas se necessário. A seleção não inicia edição nem aprova a revisão.</p>}
-      {import.meta.env.VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED === "true" && plano.estado === "aprovado" && <IniciarRevisaoContratos userId={userId} clienteId={clienteId} planoId={plano.id} revision={plano.revisao} />}
+      {import.meta.env.VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED === "true" && (plano.estado === "aprovado" || plano.estado === "rascunho") && <IniciarRevisaoContratos userId={userId} clienteId={clienteId} planoId={plano.id} revision={plano.revisao} permitirNova={plano.estado === "aprovado"} />}
       {escolhaIndisponivel && (
         <p role="alert">
           A versão escolhida não está disponível na lista carregada. Escolha outra versão ou
