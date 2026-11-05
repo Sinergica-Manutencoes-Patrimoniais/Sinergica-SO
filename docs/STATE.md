@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-04 — S165/S166: reconciliação por ciclo futuro e rascunho
+
+- ADRs 1570–1576 e migrations 1714–1720 acrescentam reserva explícita PCM por ciclo/índice legado com escolhas SSO/legado/ponte, foto/CAS, auditoria e proteção dos escritores; interface mediada lista preparadas, vinculadas e futuras sem inferir equivalência. Ensaios sintéticos autenticados passaram para calendário/Visita, replay, CAS, isolamento e preparação posterior; concorrência futura integral e cobertura completa das fontes seguem pendentes.
+- ADRs 1578–1580 e migrations 1722–1724 permitem escolha em rascunho, selo na aprovação e aplicação após vigência, preservando reserva anterior e histórico. Fixtures calendário e Visita passaram em clone com aprovação/relógio simulados apenas em rollback; teste adicional cobriu preparação e Chamado SSO. Não provam aprovação operacional, fontes externas ou concorrência real. SQL e UI exigem rollout coordenado; 1045 e flags continuam fechadas.
+- Typecheck passou; testes UI focados da escolha futura passaram. Sem Auvo/deploy. Falta concluir prova integral dos escritores/cobertura futura e revisão adversarial antes de alterar a guarda de aprovação.
+
 ## 2026-11-04 — S165/S166: ponte e reconciliação por janela
 
 - ADR-1567/migration 1711 serializam criação de OS legada e pontes pela mesma ocorrência e exigem READ COMMITTED nos caminhos aplicáveis; não desativam geradores nem alteram OS. Clone com migrations 1614–1711 compilou; isolamento e contenção de linha passaram em testes sintéticos de duas sessões. Restauração excluiu cron/net e teve aviso de ACL cron; não prova ACL global, corrida completa de comandos ou caminho Visita. Guarda 1045 intacta.
