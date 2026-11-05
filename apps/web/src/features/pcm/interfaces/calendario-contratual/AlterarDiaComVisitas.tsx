@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { ExcecaoVisita } from "./ExcecaoVisita";
 
 const uuid = z.string().uuid();
 const dataCivil = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -30,6 +31,7 @@ export function AlterarDiaComVisitas({ userId, clienteId, serieId, revisao, dia,
   const [confirmacao, setConfirmacao] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState("");
+  const [visitaExcecao, setVisitaExcecao] = useState<string | null>(null);
   const trava = useRef(false);
   const cache = useQueryClient();
   const conferirImpactos = import.meta.env.VITE_SSO_PREVIA_IMPEDIMENTOS_DIA_ENABLED === "true";
@@ -111,7 +113,8 @@ export function AlterarDiaComVisitas({ userId, clienteId, serieId, revisao, dia,
       {consulta.isFetching && <p role="status">Consultando Visitas…</p>}
       {consulta.isError && <p role="alert">Não foi possível consultar as Visitas. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
       {consulta.data && !consulta.isError && <><p>{itens.length} Visita(s) carregada(s); {candidatas.length} candidata(s), {itens.length - candidatas.length} para preservar ou conferir.</p>
-        <ul>{itens.map((v) => <li key={v.visita_id}>Visita {v.visita_id} · semana {v.semana_origem} · {v.estado} · nova data {v.data_proposta} · {v.classificacao}{v.feriado_declarado && " · feriado: pode ser suprimida"}{v.ocorrencia_preparada && " · ocorrência preparada"}</li>)}</ul>
+        <ul>{itens.map((v) => <li key={v.visita_id}>Visita {v.visita_id} · semana {v.semana_origem} · {v.estado} · nova data {v.data_proposta} · {v.classificacao}{v.feriado_declarado && " · feriado: pode ser suprimida"}{v.ocorrencia_preparada && " · ocorrência preparada"}{import.meta.env.VITE_SSO_EXCECAO_VISITA_ENABLED === "true" && <button type="button" disabled={ocupado || bloqueado} onClick={() => setVisitaExcecao(v.visita_id)}>Conferir exceção</button>}</li>)}</ul>
+        {visitaExcecao && <ExcecaoVisita userId={userId} clienteId={clienteId} visitaId={visitaExcecao} aoAprovar={() => { setConfirmacao(null); void consulta.refetch(); }} />}
         {consulta.hasNextPage && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Carregar mais Visitas</button>}
         {itens.length > 500 && <p role="alert">Mais de 500 Visitas: operação em lote ainda não disponível.</p>}
         <label><input type="checkbox" checked={completa && confirmacao === fotografia} disabled={!completa || ocupado || bloqueado} onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)} /> Conferi todas as Visitas e a regra apresentada.</label>

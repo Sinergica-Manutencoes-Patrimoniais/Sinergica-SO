@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: jornada isolada, exceção e reconciliação
+
+- `apps/web/e2e/s166-isolado/executar-jornada.py` executou recorte reproduzível em rede interna: login sintético, aprovação S165 por componente real com 1045 efetiva e geração Visita S166 por componente real. Banco confirmou aprovação e duas ocorrências históricas. Relógio avançado no clone e retirada anterior por RPC; não cobre navegação integral do produto nem Auvo. Cleanup executado; imagem Playwright foi mantida.
+- ADR-1590/migration 1732 registram exceção aprovada vinculada a Visita com permissões existentes, auditoria e gate desligado. Prévia e alteração contratual preservam Visita; UI usa data/revisão do servidor sob flag desligada. Clone compilou até 1733, fixture, negativas e concorrência nas duas ordens passaram; UI 4/4 e typecheck passaram. Exceções sem Visita não foram modeladas.
+- ADR-1591/migration 1733 e UI distinguem fotografia histórica alterada de integração operacional ainda válida após Chamado SSO. Clone confirmou estado e bloqueio por efeito legado; seis testes UI e typecheck passaram. Banco e interface exigem rollout coordenado.
+- Próximo passo: ampliar jornada real e revisão adversarial, indicadores agregados e CI antes de homologação. Gates/flags default desligados; sem deploy ou acionamento Auvo real.
+
 ## 2026-11-05 — S165/S166: infraestrutura isolada e calendário
 
 - `apps/web/e2e/s166-isolado/bootstrap-interno.py` cria rede interna, clone sintético sem portas/mounts, aplica migrations 1614–1731 e sobe Auth/PostgREST; login sintético e leitura autenticada passaram, recursos foram removidos. Não usa dados reais; navegador/proxy isolados e jornada UI ainda não existem. README registra limites; imagem Playwright não estava local.

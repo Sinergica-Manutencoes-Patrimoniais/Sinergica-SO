@@ -57,8 +57,16 @@ python3 apps/web/e2e/s166-isolado/bootstrap-interno.py criar --id 32bd19ca417e
 python3 apps/web/e2e/s166-isolado/bootstrap-interno.py carregar --id 32bd19ca417e
 python3 apps/web/e2e/s166-isolado/bootstrap-interno.py servicos --id 32bd19ca417e
 python3 apps/web/e2e/s166-isolado/bootstrap-interno.py login --id 32bd19ca417e
+python3 apps/web/e2e/s166-isolado/bootstrap-interno.py navegador --id 32bd19ca417e
+python3 apps/web/e2e/s166-isolado/bootstrap-interno.py login-navegador --id 32bd19ca417e
 python3 apps/web/e2e/s166-isolado/bootstrap-interno.py verificar --id 32bd19ca417e
 python3 apps/web/e2e/s166-isolado/bootstrap-interno.py remover --id 32bd19ca417e
 ```
 
-Testado em 2026-11-05: criação, restauração de 98 migrations, verificação e remoção passaram. Senhas e chave JWT são efêmeras e sintéticas. GoTrue e PostgREST responderam 200 na rede interna, sem portas publicadas. O comando `login` cria conta sintética no clone, autentica pelo GoTrue, confere claim em memória e consulta o próprio usuário via PostgREST; foi executado com sucesso sem expor senha ou token. Este bootstrap **não** inicia navegador, proxy ou teste UI e, por isso, não comprova jornada integrada nem bloqueio de rede dessas partes. Em caso de falha durante `carregar`, remova os recursos e recrie; não reutilize banco parcialmente restaurado.
+Testado em 2026-11-05: criação, restauração de 98 migrations, verificação e remoção passaram. Senhas e chave JWT são efêmeras e sintéticas. GoTrue e PostgREST responderam 200 na rede interna, sem portas publicadas. O comando `login` cria conta sintética no clone, autentica pelo GoTrue, confere claim em memória e consulta o próprio usuário via PostgREST; foi executado com sucesso sem expor senha ou token. A imagem oficial Playwright 1.61.1 local e o pacote `playwright-core` do repositório permitem iniciar Chromium sem portas ou mounts, sob usuário não privilegiado na mesma rede interna. O teste `login-navegador` autenticou conta sintética no navegador e consultou o PostgREST sem exibir token ou senha. Este bootstrap ainda não serve a interface nem executa jornada S165/S166, portanto não comprova a jornada integrada de negócio. Em caso de falha durante `carregar`, remova os recursos e recrie; não reutilize banco parcialmente restaurado.
+
+## Jornada sintética de revisão e Visita
+
+`python3 apps/web/e2e/s166-isolado/executar-jornada.py` constrói uma página de ensaio com os componentes reais, cria clone e serviços na rede interna, autentica conta sintética, aprova revisão pela interface usando a guarda 1045 real e prepara Visita pela interface. Após aprovação, adianta o relógio civil apenas no clone e executa retirada da fila anterior por RPC; não comprova navegação completa do produto nem execução em campo. Os recursos temporários são removidos ao final; imagem local de navegador é preservada. Não usa `.env.local`, servidor existente, credenciais reais ou Auvo.
+
+Executado com sucesso em 2026-11-05, incluindo verificação do estado aprovado e duas ocorrências preservadas no clone. Requer imagem Playwright 1.61.1 e dependências locais, além do banco-base sintético identificado no bootstrap. Flags são ligadas somente no build do ensaio.

@@ -55,7 +55,7 @@ def attest(network, database):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('acao', choices=['criar', 'verificar', 'carregar', 'servicos', 'login', 'remover'])
+    ap.add_argument('acao', choices=['criar', 'verificar', 'carregar', 'servicos', 'login', 'navegador', 'login-navegador', 'remover'])
     ap.add_argument('--id', required=True, help='Identificador hexadecimal de 12 caracteres.')
     args = ap.parse_args()
     if len(args.id) != 12 or any(c not in '0123456789abcdef' for c in args.id):
@@ -67,7 +67,7 @@ def main():
         n = inspect('network', network)
         if c['Config']['Labels'].get('sso.ensaio') != args.id or n['Labels'].get('sso.ensaio') != args.id:
             raise RuntimeError('Rótulo de propriedade divergente; nada removido.')
-        for name in [PREFIX + args.id + '-auth', PREFIX + args.id + '-rest']:
+        for name in [PREFIX + args.id + '-browser', PREFIX + args.id + '-auth', PREFIX + args.id + '-rest']:
             try:
                 service = inspect('container', name)
             except subprocess.CalledProcessError:
@@ -82,6 +82,31 @@ def main():
     if args.acao == 'verificar':
         attest(network, database)
         return
+    if args.acao == 'navegador':
+        attest(network, database)
+        for suffix in ('-auth','-rest'):
+            c=inspect('container', PREFIX + args.id + suffix)
+            if c['Config'].get('Labels', {}).get('sso.ensaio') != args.id or not c['State']['Running'] or set(c['NetworkSettings']['Networks']) != {network} or any(c['NetworkSettings'].get('Ports', {}).values()):
+                raise RuntimeError('Serviços não estão isolados.')
+        image='mcr.microsoft.com/playwright:v1.61.1-noble'
+        docker('image','inspect',image)
+        name=PREFIX + args.id + '-browser'
+        docker('run','-d','--name',name,'--network',network,'--label','sso.ensaio='+args.id,
+               '--user','pwuser','--cap-drop','ALL','--security-opt','no-new-privileges',image,'sleep','infinity')
+        c=inspect('container',name)
+        if set(c['NetworkSettings']['Networks']) != {network} or any(c['NetworkSettings'].get('Ports', {}).values()) or c['Mounts'] or c['HostConfig'].get('Privileged'):
+            raise RuntimeError('Navegador fora do isolamento.')
+        root=Path(__file__).resolve().parents[4]
+        core=root / 'node_modules' / '.pnpm' / 'playwright-core@1.61.1' / 'node_modules' / 'playwright-core'
+        if not core.is_dir() or json.loads((core / 'package.json').read_text()).get('version') != '1.61.1':
+            raise RuntimeError('Dependência local playwright-core 1.61.1 indisponível.')
+        docker('cp',str(core),name+':/tmp/playwright-core')
+        js = """const {chromium}=require('/tmp/playwright-core'); (async()=>{const b=await chromium.launch({headless:true,executablePath:'/ms-playwright/chromium_headless_shell-1228/chrome-linux/headless_shell',args:['--no-sandbox']});const p=await b.newPage();const r=await p.goto(process.argv[1],{timeout:10000});const body=await p.textContent('body');if(r.status()!==200||!body.includes('GoTrue'))throw Error('destino_incorreto');await b.close();process.stdout.write('ok');})().catch(()=>process.exit(1));"""
+        result=docker('exec',name,'node','-e',js,f'http://{PREFIX + args.id}-auth:9999/health')
+        if result != 'ok': raise RuntimeError('Navegador não alcançou Auth sintético esperado.')
+        print('Playwright/Chromium isolado alcançou Auth sintético na rede interna; sem portas ou mounts.')
+        print('Ainda faltam servidor de UI, proxy e jornada autenticada.')
+        return
     if args.acao == 'login':
         attest(network, database)
         for suffix in ('-auth', '-rest'):
@@ -89,7 +114,7 @@ def main():
             if c['Config'].get('Labels', {}).get('sso.ensaio') != args.id or not c['State']['Running'] or set(c['NetworkSettings']['Networks']) != {network} or any(c['NetworkSettings'].get('Ports', {}).values()):
                 raise RuntimeError('Serviço de ensaio não está isolado.')
         user_id = str(uuid.uuid4())
-        email = 'ensaio-' + args.id + '@example.test'
+        email = 'ensaio-' + args.id + '-' + user_id[:8] + '@example.test'
         password = secrets.token_hex(24)
         target = 'sso_s166_' + args.id
         sql = ("insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,confirmation_token,recovery_token,email_change,email_change_token_new,raw_app_meta_data,raw_user_meta_data,is_sso_user,created_at,updated_at) "
@@ -111,6 +136,32 @@ def main():
             raise RuntimeError('Consulta autenticada não retornou somente usuário sintético.')
         print('Login sintético real, claim de papel e consulta autenticada ao PostgREST: verificados.')
         print('Credenciais e token não foram exibidos nem persistidos pelo bootstrap.')
+        return
+    if args.acao == 'login-navegador':
+        attest(network, database)
+        for suffix in ('-auth', '-rest'):
+            c = inspect('container', PREFIX + args.id + suffix)
+            if c['Config'].get('Labels', {}).get('sso.ensaio') != args.id or not c['State']['Running'] or set(c['NetworkSettings']['Networks']) != {network} or any(c['NetworkSettings'].get('Ports', {}).values()):
+                raise RuntimeError('Serviço de ensaio não está isolado.')
+        user_id = str(uuid.uuid4())
+        email = 'ensaio-' + args.id + '-' + user_id[:8] + '@example.test'
+        password = secrets.token_hex(24)
+        target = 'sso_s166_' + args.id
+        sql = ("insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,confirmation_token,recovery_token,email_change,email_change_token_new,raw_app_meta_data,raw_user_meta_data,is_sso_user,created_at,updated_at) "
+               f"values('{user_id}','00000000-0000-0000-0000-000000000000','authenticated','authenticated','{email}',crypt('{password}',gen_salt('bf')),now(),'','','','', '{{}}','{{}}',false,now(),now()); "
+               f"insert into config.usuarios(user_id,papel,nome,ativo) values('{user_id}','colaborador','Ensaio sintético',true); "
+               f"insert into config.usuario_modulos(user_id,modulo,nivel) values('{user_id}','pcm','escrita');")
+        docker('exec','-i',database,'psql','-U','supabase_admin','-d',target,'-v','ON_ERROR_STOP=1','-q',input_text=sql)
+        browser = PREFIX + args.id + '-browser'
+        c = inspect('container', browser)
+        if c['Config'].get('Labels', {}).get('sso.ensaio') != args.id or not c['State']['Running'] or set(c['NetworkSettings']['Networks']) != {network} or any(c['NetworkSettings'].get('Ports', {}).values()) or c['Mounts']:
+            raise RuntimeError('Navegador não está isolado.')
+        js = """const fs=require('fs');const {chromium}=require('/tmp/playwright-core');const c=JSON.parse(fs.readFileSync(0,'utf8'));(async()=>{const b=await chromium.launch({headless:true,executablePath:'/ms-playwright/chromium_headless_shell-1228/chrome-linux/headless_shell',args:['--no-sandbox']});try{const p=await b.newPage();await p.goto(c.auth+'/health',{timeout:10000});const ok=await p.evaluate(async c=>{const login=await fetch(c.auth+'/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:c.email,password:c.password})});if(!login.ok)return false;const t=(await login.json()).access_token;const x=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');const claims=JSON.parse(atob(x));if(claims.sub!==c.id||claims.user_role!=='colaborador')return false;const r=await fetch(c.rest+'/usuarios?select=user_id&user_id=eq.'+c.id,{headers:{Authorization:'Bearer '+t,'Accept-Profile':'config'}});if(!r.ok)return false;const data=await r.json();return data.length===1&&data[0].user_id===c.id},c);if(!ok)throw Error('fluxo_incorreto');process.stdout.write('ok')}finally{await b.close()}})().catch(()=>process.exit(1));"""
+        config={'auth':f'http://{PREFIX + args.id}-auth:9999','rest':f'http://{PREFIX + args.id}-rest:3000','email':email,'password':password,'id':user_id}
+        result=docker('exec','-i',browser,'node','-e',js,input_text=json.dumps(config))
+        if result != 'ok': raise RuntimeError('Login autenticado do navegador falhou.')
+        print('Playwright em navegador isolado autenticou conta sintética e consultou PostgREST.')
+        print('Nenhuma senha, token ou payload foi exibido.')
         return
     if args.acao == 'servicos':
         attest(network, database)
