@@ -36,10 +36,21 @@ def executar(container, fixture, query, watchdog):
       'gate_documentos',(select habilitado from pcm.sso_documentos_levantamento_gate where id))::text"""
     antes = query(snapshot_sql)
     try:
-        p = subprocess.run(["rtk", "proxy", "docker", "exec", "-i", container, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-qAt"], input=fixture + b"\nselect 'SSO_DOCUMENTO_1812_OK';\n", capture_output=True, timeout=180)
+        p = subprocess.run(["rtk", "proxy", "docker", "exec", "-i", container, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-qAt"], input=b"\\set VERBOSITY verbose\n" + fixture + b"\nselect 'SSO_DOCUMENTO_1812_OK';\n", capture_output=True, timeout=180)
     except subprocess.TimeoutExpired: raise RuntimeError("Prazo excedido na fixture 1812") from None
-    if p.returncode or p.stdout.decode(errors="replace").splitlines().count("SSO_DOCUMENTO_1812_OK") != 1:
-        raise RuntimeError("Fixture SQL de documento 1812 falhou")
+    if p.returncode:
+        erro = p.stderr.decode(errors="replace")
+        estado = re.search(r"ERROR:\s+([0-9A-Z]{5}):", erro)
+        linha = re.search(r"(?m)^psql:<stdin>:(\d+):", erro)
+        nomes = ("gate_inicial_invalido", "acl_invalida", "ator_divergente_aceito",
+                 "gate_fechado_aceito", "listagem_gate_fechado_aceita", "autorizacao_divergente",
+                 "listagem_permitida_divergente", "outro_cliente_autorizado", "listagem_outro_cliente_autorizada")
+        classe = next((nome for nome in nomes if re.search(r"ERROR:\s+[0-9A-Z]{5}:\s+" + re.escape(nome) + r"(?:\s|$)", erro)), "não classificada")
+        raise RuntimeError("Fixture SQL de documento 1812 falhou; SQLSTATE "
+            + (estado.group(1) if estado else "não identificado")
+            + "; linha " + (linha.group(1) if linha else "não identificada") + "; classe " + classe)
+    if p.stdout.decode(errors="replace").splitlines().count("SSO_DOCUMENTO_1812_OK") != 1:
+        raise RuntimeError("Fixture SQL de documento 1812 sem confirmação de rollback")
     if query(snapshot_sql) != antes: raise RuntimeError("Rollback da fixture 1812 não preservou snapshot")
     if watchdog.is_set(): raise RuntimeError("Monitor interrompeu fixture 1812")
     print("Fixture SQL 1812 concluída com rollback; não prova Auth/Storage HTTP.", flush=True)
