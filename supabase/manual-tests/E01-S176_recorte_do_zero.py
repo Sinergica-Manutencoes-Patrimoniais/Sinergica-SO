@@ -9,6 +9,8 @@ import base64
 import hashlib
 import hmac
 import json
+import os
+import platform
 import re
 import secrets
 import shutil
@@ -44,6 +46,33 @@ watchdog_lock = threading.Lock()
 auth_container_id = None
 platform_container_ids = {}
 MINIMO_LIVRE = 8 * 1024**3
+MINIMO_GITHUB = 20 * 1024**3
+docker_raiz_github = None
+
+
+def preparar_github_hosted():
+    """Verificações locais; variáveis CI não atestam criptograficamente efemeridade."""
+    if (platform.system() != 'Linux' or os.environ.get('GITHUB_ACTIONS') != 'true'
+        or os.environ.get('RUNNER_ENVIRONMENT') != 'github-hosted'
+        or os.environ.get('DOCKER_HOST') not in (None, '', 'unix:///var/run/docker.sock')
+        or os.environ.get('DOCKER_CONTEXT') not in (None, '', 'default')):
+        raise RuntimeError('Ambiente GitHub-hosted ou daemon local não confirmado')
+    if docker('context', 'show') != 'default':
+        raise RuntimeError('Contexto Docker não é o padrão local')
+    contexto = json.loads(docker('context', 'inspect', 'default'))
+    if len(contexto) != 1 or contexto[0].get('Endpoints', {}).get('docker', {}).get('Host') != 'unix:///var/run/docker.sock':
+        raise RuntimeError('Endpoint Docker local não confirmado')
+    info = json.loads(docker('info', '--format', '{{json .}}'))
+    raiz = info.get('DockerRootDir')
+    if info.get('OSType') != 'linux' or not isinstance(raiz, str) or not os.path.isabs(raiz) or not os.path.isdir(raiz):
+        raise RuntimeError('Armazenamento local Docker não comprovado')
+    return os.path.realpath(raiz)
+
+
+def espaco_docker():
+    if docker_raiz_github is not None:
+        return shutil.disk_usage(docker_raiz_github).free
+    return int(docker('exec', 'sso-validacao-isolada-20261104', 'df', '-Pk', '/').splitlines()[-1].split()[3]) * 1024
 
 
 def run(args, data=None):
@@ -134,8 +163,8 @@ def monitorar(container_id):
     while not watchdog_stop.is_set():
         try:
             host = shutil.disk_usage(ROOT).free
-            vm = int(docker_monitor("exec", "sso-validacao-isolada-20261104", "df", "-Pk", "/").splitlines()[-1].split()[3]) * 1024
-            if min(host, vm) < MINIMO_LIVRE:
+            vm = espaco_docker() if docker_raiz_github is not None else int(docker_monitor("exec", "sso-validacao-isolada-20261104", "df", "-Pk", "/").splitlines()[-1].split()[3]) * 1024
+            if min(host, vm) < (MINIMO_GITHUB if docker_raiz_github is not None else MINIMO_LIVRE):
                 raise RuntimeError("limite de espaço")
         except Exception:
             if watchdog_stop.is_set():
@@ -181,7 +210,10 @@ def diagnostico_plataforma(nome):
 
 
 def main(opcoes):
-    global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id
+    global created_net, created_container, initial_volumes, space_before, watchdog_thread, auth_container_id, docker_raiz_github
+    if opcoes.github_hosted:
+        docker_raiz_github = preparar_github_hosted()
+        print('Modo GitHub opt-in: reserva hipotética de 20 GiB; efemeridade não atestada.', flush=True)
     fixtures = None
     isolamento_1810 = None
     upload_1811 = None
@@ -544,15 +576,18 @@ def main(opcoes):
     initial_volumes = set(docker("volume", "ls", "-q").splitlines())
     # A base só é consultada para dimensionamento. Não são lidos/copied dados dela.
     source_container = "sso-validacao-isolada-20261104"
-    src = inspect("container", source_container)
-    if src["Config"]["Image"] != IMAGE or src["HostConfig"].get("NetworkMode") != "none" or src["Mounts"] or any(src["NetworkSettings"].get("Ports", {}).values()):
-        raise RuntimeError("Referência de espaço não atestada")
-    database_bytes = int(docker("exec", source_container, "psql", "-U", "postgres", "-d", "postgres", "-Atqc", "select pg_database_size(current_database())"))
-    data_dir = docker("exec", source_container, "psql", "-U", "postgres", "-d", "postgres", "-Atqc", "show data_directory")
-    if not data_dir.startswith("/var/lib/postgresql/") or ".." in data_dir: raise RuntimeError("Diretório de WAL não reconhecido")
-    wal_bytes = int(docker("exec", source_container, "du", "-sk", data_dir + "/pg_wal").split()[0]) * 1024
-    vm_bytes = int(docker("exec", source_container, "df", "-Pk", "/").splitlines()[-1].split()[3]) * 1024
-    budget = 2 * database_bytes + 2 * wal_bytes + sum(len(b) for _, b in blobs) * 4
+    if docker_raiz_github is None:
+        src = inspect("container", source_container)
+        if src["Config"]["Image"] != IMAGE or src["HostConfig"].get("NetworkMode") != "none" or src["Mounts"] or any(src["NetworkSettings"].get("Ports", {}).values()):
+            raise RuntimeError("Referência de espaço não atestada")
+        database_bytes = int(docker("exec", source_container, "psql", "-U", "postgres", "-d", "postgres", "-Atqc", "select pg_database_size(current_database())"))
+        data_dir = docker("exec", source_container, "psql", "-U", "postgres", "-d", "postgres", "-Atqc", "show data_directory")
+        if not data_dir.startswith("/var/lib/postgresql/") or ".." in data_dir: raise RuntimeError("Diretório de WAL não reconhecido")
+        wal_bytes = int(docker("exec", source_container, "du", "-sk", data_dir + "/pg_wal").split()[0]) * 1024
+        budget = 2 * database_bytes + 2 * wal_bytes + sum(len(b) for _, b in blobs) * 4
+    else:
+        budget = MINIMO_GITHUB + sum(len(b) for _, b in blobs) * 4
+    vm_bytes = espaco_docker()
     host_bytes = shutil.disk_usage(ROOT).free
     space_before = (host_bytes, vm_bytes)
     print(f"Espaço antes: host={host_bytes} bytes; VM={vm_bytes} bytes; orçamento estimado={budget} bytes.", flush=True)
@@ -682,13 +717,13 @@ def main(opcoes):
     prefix = b"\\set VERBOSITY verbose\n"
     for path in base_files:
         if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
-        if min(shutil.disk_usage(ROOT).free, int(docker("exec", source_container, "df", "-Pk", "/").splitlines()[-1].split()[3]) * 1024) < budget:
+        if min(shutil.disk_usage(ROOT).free, espaco_docker()) < budget:
             raise RuntimeError("Espaço atingiu limite durante aplicação da base")
         sql(prefix + git("show", base + ":" + path), path)
     print("Base Git aplicada:", len(base_files), flush=True)
     for path, data in blobs:
         if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
-        if min(shutil.disk_usage(ROOT).free, int(docker("exec", source_container, "df", "-Pk", "/").splitlines()[-1].split()[3]) * 1024) < budget:
+        if min(shutil.disk_usage(ROOT).free, espaco_docker()) < budget:
             raise RuntimeError("Espaço atingiu limite durante aplicação do recorte")
         if opcoes.diagnostico_0415 and Path(path).name.startswith("0415_"):
             # Diagnóstico exclusivo em clone: valores iguais às declarações 0323/0334.
@@ -830,6 +865,7 @@ end; $$;"""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--github-hosted", action="store_true", help="Modo opt-in Linux/CI; reserva hipotética de 20 GiB, não atesta efemeridade.")
     grupo = parser.add_mutually_exclusive_group()
     grupo.add_argument("--diagnostico-0415", action="store_true", help="Antecipa duas ações somente no clone; resultado não prova recorte implantável.")
     grupo.add_argument("--integracao-candidata", action="store_true", help="Inclui migrations originais candidatas, sem seeds artificiais; não autoriza release.")
@@ -901,7 +937,7 @@ if __name__ == "__main__":
         if space_before is not None:
             try:
                 host_after = shutil.disk_usage(ROOT).free
-                vm_after = int(docker("exec", "sso-validacao-isolada-20261104", "df", "-Pk", "/").splitlines()[-1].split()[3]) * 1024
+                vm_after = espaco_docker()
                 print(f"Espaço depois: host={host_after} bytes; VM={vm_after} bytes.")
             except Exception:
                 print("Espaço após limpeza indisponível.")

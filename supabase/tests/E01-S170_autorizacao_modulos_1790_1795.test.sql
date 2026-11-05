@@ -1,5 +1,7 @@
 -- Exercício focado após as migrations 1790 e 1795. Não substitui ensaio de duas sessões.
 begin;
+-- Os Clientes sintéticos não devem acionar o drain Auvo.
+set local app.auvo_sync_write = 'true';
 select plan(12);
 
 select is((select count(*)::integer from config.sso_acao_modulos m join (values

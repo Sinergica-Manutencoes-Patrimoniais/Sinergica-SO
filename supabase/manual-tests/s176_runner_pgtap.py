@@ -4,7 +4,7 @@ import re
 import subprocess
 
 FIXTURES = (
-    ("E01-S170_autorizacao_modulos_1790_1795.test.sql", "5d8a18272491f15d1e5e00382959c1e9581b9a4a9a171500a6130d38d372b26c", 12),
+    ("E01-S170_autorizacao_modulos_1790_1795.test.sql", "bc2e6d5bbc80ea92ddc8cf00664283772bae00eec75c291f622806cc5abc2ad2", 12),
     ("E01-S176_vinculos_cliente_final.test.sql", "fd36e462437d579c9f79ff2c31eec3858f98c7d50a3151985cf232c636a9abb6", 10),
     ("E01-S165_plano_manutencao.test.sql", "55c9a39e6f87eaaa64e0689df608392df231afc5d0dac6f55925461851ca5235", 180),
     ("E01-S166_versoes_recorrencia_tolerancia.test.sql", "0dfa9949c5cb91e3820808ac9c5b9d1c51b8944590289eeb4fe8512b85ffe4d4", 7),
