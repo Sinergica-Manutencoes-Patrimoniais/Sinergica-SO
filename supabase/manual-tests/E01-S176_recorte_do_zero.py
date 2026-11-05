@@ -4,6 +4,7 @@
 O teste para na primeira falha. Não publica portas, não utiliza credenciais reais e
 não altera serviços existentes. Resultado não substitui Auth/Storage/Edge reais.
 """
+import argparse
 import hashlib
 import json
 import re
@@ -74,6 +75,39 @@ def sql(data, label):
 
 def query(statement):
     return docker("exec", CONTAINER, "psql", "-X", "-U", "postgres", "-d", "postgres", "-Atqc", statement)
+
+
+def definir_senha_auth(password):
+    # Somente este comando precisa do superusuário da imagem. Nunca exibir SQL ou stderr.
+    data = ("\\set VERBOSITY verbose\nalter role supabase_auth_admin password '" + password + "';\n").encode()
+    try:
+        p = subprocess.run(["rtk", "proxy", "docker", "exec", "-i", CONTAINER, "psql", "-X", "-U", "supabase_admin", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "--single-transaction", "-q"], input=data, capture_output=True, timeout=15)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("Prazo excedido ao configurar Auth sintético") from None
+    if p.returncode:
+        m = re.search(r"ERROR:\s+([A-Z0-9]{5}):", p.stderr.decode(errors="replace"))
+        raise RuntimeError("Configuração Auth falhou; SQLSTATE " + (m.group(1) if m else "não identificado"))
+
+
+def diagnostico_auth():
+    """Classifica logs em memória; nunca devolve mensagens, URLs, SQL ou credenciais."""
+    try:
+        p = subprocess.run(["rtk", "proxy", "docker", "logs", "--tail", "100", AUTH_CONTAINER], capture_output=True, timeout=4)
+        if p.returncode: return "logs indisponíveis"
+        log = (p.stdout + p.stderr).decode(errors="replace").lower()
+    except Exception:
+        return "logs indisponíveis"
+    # Somente rótulos fixos e não sensíveis; não ecoar fragmentos do serviço.
+    categorias = (
+        (r"permission denied|insufficient privilege|42501", "permissão do banco"),
+        (r"password authentication failed|authentication failed for user|28p01", "autenticação no banco"),
+        (r"connection refused|connection reset|no route to host|network is unreachable", "conexão ao banco"),
+        (r"already exists|duplicate table|42p07|42710", "objeto de banco já existente"),
+        (r"migration|migrat", "migração do Auth"),
+        (r"missing|must be set|required|invalid configuration", "configuração do Auth"),
+    )
+    encontrados = [nome for padrao, nome in categorias if re.search(padrao, log)]
+    return ", ".join(encontrados) if encontrados else "causa não classificada"
 
 
 def docker_monitor(*args):
@@ -159,7 +193,7 @@ def main():
     net = inspect("network", NETWORK)
     if not net["Internal"] or net["Labels"].get("sso.recorte") != IDENT: raise RuntimeError("Rede não atestada")
     password = secrets.token_hex(32)
-    docker("create", "--name", CONTAINER, "--network", NETWORK, "--label", "sso.recorte=" + IDENT, "--env", "POSTGRES_PASSWORD=" + password, IMAGE, "postgres", "-c", "cron.launch_active_jobs=off"); created_container = True
+    docker("create", "--name", CONTAINER, "--network", NETWORK, "--label", "sso.recorte=" + IDENT, "--env", "POSTGRES_PASSWORD=" + password, IMAGE, "postgres", "-D", "/etc/postgresql", "-c", "cron.launch_active_jobs=off"); created_container = True
     info = inspect("container", CONTAINER)
     if info["Mounts"] or info["HostConfig"].get("Privileged") or info["HostConfig"].get("NetworkMode") != NETWORK or info["HostConfig"].get("PortBindings"):
         raise RuntimeError("Banco fora do isolamento")
@@ -176,13 +210,14 @@ def main():
         except Exception: pass
         time.sleep(1)
     else: raise RuntimeError("Banco não ficou pronto")
+    if query("show listen_addresses") != "*": raise RuntimeError("PostgreSQL não escuta na rede interna esperada")
     if query("select current_setting('cron.launch_active_jobs',true)") != "off": raise RuntimeError("Cron não está desabilitado")
     # Não permitir segredos ou usuários reais no banco recém-criado pela imagem.
     if query("select (select count(*) from auth.users)=0 and (select count(*) from vault.secrets)=0") != "t": raise RuntimeError("Imagem iniciou com dados inesperados")
     # O PostgreSQL inicial contém auth.users, mas não auth.jwt(). Executar as
     # migrations da imagem oficial Auth antes das migrations do projeto; nenhum stub.
     auth_password, jwt_secret = secrets.token_hex(32), secrets.token_hex(32)
-    sql(("alter role supabase_auth_admin password '" + auth_password + "';").encode(), "senha efêmera Auth")
+    definir_senha_auth(auth_password)
     auth_env = {
         "GOTRUE_DB_DRIVER": "postgres", "GOTRUE_DB_NAMESPACE": "auth",
         "GOTRUE_DB_DATABASE_URL": "postgres://supabase_auth_admin:" + auth_password + "@" + CONTAINER + ":5432/postgres",
@@ -207,13 +242,13 @@ def main():
     for _ in range(45):
         if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio")
         auth = inspect("container", AUTH_CONTAINER)
-        if not auth["State"]["Running"]: raise RuntimeError("Auth encerrou antes do readiness")
+        if not auth["State"]["Running"]: raise RuntimeError("Auth encerrou antes do readiness: " + diagnostico_auth())
         try:
             ready = docker("exec", CONTAINER, "curl", "--silent", "--max-time", "2", "--output", "/dev/null", "--write-out", "%{http_code}", "http://" + AUTH_CONTAINER + ":9999/health")
             if ready == "200": break
         except Exception: pass
         time.sleep(1)
-    else: raise RuntimeError("Auth não ficou pronto")
+    else: raise RuntimeError("Auth não ficou pronto: " + diagnostico_auth())
     if query("select to_regprocedure('auth.jwt()') is not null and to_regprocedure('auth.uid()') is not null and to_regprocedure('auth.role()') is not null") != "t":
         raise RuntimeError("Migrations oficiais Auth incompletas")
     print("Auth oficial pronto; funções de claims presentes.", flush=True)
@@ -236,6 +271,7 @@ def main():
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__).parse_args()
     code = 0
     try: main()
     except Exception as exc: print("FALHA:", str(exc)); code = 1
