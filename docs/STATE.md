@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: avaliações legadas na revisão
+
+- Revisão adversarial reproduziu avaliador que tratava legado com avaliação como inerte. ADR-1594/migration 1736 mantêm pendência e serializam chegada da avaliação; Calendário e Visita passaram em clone, concorrência Visita nas duas ordens passou (`supabase/tests/manual_E01-S165_avaliador_impacto_concorrencia_1736.md`).
+- ADR-1595/migration 1737 mostram avaliação como efeito conhecido nas prévias de Calendário e Visita, sem alterar formato da fotografia; texto UI esclarece necessidade de conciliação. Clone limpo compilou 1614–1737 e fixtures dos dois modos passaram; typecheck web passou. Gates permanecem fechados.
+- Lote anterior passou 46 testes TS, 46 assertivas SQL e 9 jornadas SQL em clone sem rede; restauração sem cron/net não prova ACL global ou CI completo. Concorrência de geração em duas sessões passou antes e após versão/selo sintéticos, mas não comprova disputa com aprovação real nem PMOC externo.
+- Próximo passo: continuar revisão adversarial, provas de concorrência e CI seguro antes de homologação. Sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: vínculo e feriado pela borda real
 
 - `apps/web/e2e/s166-isolado/executar-legado.py` passou em rede interna: UI real selecionou e vinculou legada existente pela 1735 e incluiu a preparada em `aguardando`; banco confirmou ponte única e nenhuma OS. Relação/ocorrência são fixtures sintéticas; não cobre navegação integral nem Auvo.
