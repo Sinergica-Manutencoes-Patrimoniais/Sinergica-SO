@@ -120,6 +120,10 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
       if (
         !data ||
         data.requestId !== p.requestId ||
+        data.planoId !== p.planoId ||
+        data.revisao !== p.revisao ||
+        data.vigencia !== p.vigencia ||
+        data.fotografiaRegistrada !== true ||
         data.fontesCompletasComprovadas !== false ||
         data.provaTransacionalIntegral !== false ||
         data.aprovacaoAutorizada !== false ||
