@@ -2,9 +2,11 @@
 const fs=require('node:fs'),{chromium}=require('/tmp/playwright-core');
 const c=JSON.parse(fs.readFileSync(0,'utf8'));let etapa='início';const falhas=[];
 (async()=>{const b=await chromium.launch({headless:true,executablePath:'/ms-playwright/chromium_headless_shell-1228/chrome-linux/headless_shell',args:['--no-sandbox']});try{
- const p=await b.newPage();p.on('response',r=>{if(r.status()>=400){const u=new URL(r.url());falhas.push(u.pathname+':'+r.status());}});await p.goto(c.etapa==='legado'?'http://127.0.0.1:5189/?legado=1&preparada='+encodeURIComponent(c.preparada):c.etapa==='excecao'?'http://127.0.0.1:5189/?excecao=1&vigencia='+encodeURIComponent(c.vigencia):'http://127.0.0.1:5189/?rotina='+encodeURIComponent(c.rotina||''));
+ const p=await b.newPage();p.on('response',r=>{if(r.status()>=400){const u=new URL(r.url());falhas.push(u.pathname+':'+r.status());}});await p.goto(c.etapa==='avaliacao'?'http://127.0.0.1:5189/?avaliacao=1&rotina='+encodeURIComponent(c.rotina):c.etapa==='legado'?'http://127.0.0.1:5189/?legado=1&preparada='+encodeURIComponent(c.preparada):c.etapa==='excecao'?'http://127.0.0.1:5189/?excecao=1&vigencia='+encodeURIComponent(c.vigencia):'http://127.0.0.1:5189/?rotina='+encodeURIComponent(c.rotina||''));
  await p.getByLabel('E-mail sintético').fill(c.email);await p.getByLabel('Senha sintética').fill(c.password);await p.getByRole('button',{name:'Entrar'}).click();
- if(c.etapa==='aprovar'){
+ if(c.etapa==='avaliacao'){
+  await p.getByLabel('Índice do ciclo SSO').fill('1');await p.getByLabel('Índice legado').fill('1');await p.getByRole('alert').filter({hasText:'avaliação recebida'}).waitFor({timeout:10000});if(await p.getByRole('button',{name:'Registrar reserva'}).isEnabled())throw Error('reserva_indevidamente_habilitada');
+ }else if(c.etapa==='aprovar'){
   await p.getByRole('button',{name:'Aprovar revisão de versão'}).waitFor({timeout:10000});await p.getByRole('button',{name:'Aprovar revisão de versão'}).click();await p.getByLabel('Início da vigência').fill(c.vigencia);await p.getByRole('button',{name:'Confirmar aprovação'}).click();
   await p.waitForTimeout(3000);const body=await p.locator('body').innerText();if(body.includes('servidor recusou')||body.includes('Não foi possível confirmar'))throw Error('aprovacao_rejeitada');
  }else if(c.etapa==='legado'){

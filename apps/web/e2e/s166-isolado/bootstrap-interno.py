@@ -242,8 +242,8 @@ def main():
                  and not (line.startswith('GRANT ') and (' cron.' in line or ' net.' in line or ' ON SCHEMA cron ' in line or ' ON SCHEMA net ' in line))]
         docker('exec', '-i', database, 'psql', '-U', 'supabase_admin', '-d', target, '-v', 'ON_ERROR_STOP=1', '-q', input_text='\n'.join(lines) + '\n')
         root = Path(__file__).resolve().parents[4]
-        migrations = sorted(p for p in (root / 'supabase' / 'migrations').glob('*.sql') if p.name[:4].isdigit() and 1614 <= int(p.name[:4]) <= 1737)
-        if not migrations or not any(p.name.startswith('1737_') for p in migrations):
+        migrations = sorted(p for p in (root / 'supabase' / 'migrations').glob('*.sql') if p.name[:4].isdigit() and 1614 <= int(p.name[:4]) <= 1738)
+        if not migrations or not any(p.name.startswith('1738_') for p in migrations):
             raise RuntimeError('Migrations obrigatórias ausentes.')
         for migration in migrations:
             try:
@@ -271,7 +271,16 @@ def main():
                 time.sleep(1)
         else:
             raise RuntimeError('Banco não iniciou no prazo.')
-        docker('exec', database, 'createdb', '-U', 'postgres', 'sso_s166_' + args.id)
+        try:
+            docker('exec', database, 'createdb', '-U', 'postgres', 'sso_s166_' + args.id)
+        except subprocess.CalledProcessError as exc:
+            # Apenas mensagens conhecidas, sem ecoar argumentos, credenciais ou dados.
+            stderr = exc.stderr or ''
+            causas = ('database system is starting up', 'database system is shutting down',
+                      'connection refused', 'No space left on device', 'permission denied',
+                      'already exists', 'connection to server was lost')
+            identificada = next((causa for causa in causas if causa.lower() in stderr.lower()), None)
+            raise RuntimeError('Criação do banco descartável falhou: ' + (identificada or 'causa não classificada')) from exc
         for _ in range(30):
             try:
                 attest(network, database)

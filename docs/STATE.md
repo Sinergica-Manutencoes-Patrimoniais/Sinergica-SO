@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: avaliação na comparação e prévia real
+
+- ADR-1597/migration 1739 incluem avaliação legada vinculada na comparação CAS de impactos e UI, preservando fotografia histórica sem avaliação. Clone testou calendário e concorrência nas duas ordens; CAS recusou foto antiga. Frontend deve ser atualizado antes da migration porque schema anterior é estrito. Typecheck passou.
+- `apps/web/e2e/s166-isolado/executar-avaliacao.py` passou para prévia Calendário com avaliação em navegador isolado e backend até 1738: alerta visível e reserva bloqueada; fixture sintética, não cobre aprovação com avaliação ou 1739 pela UI. Primeira falha de createdb não teve causa recuperável; falhas seguintes do harness foram diagnosticadas e corrigidas, sem repetir cegamente. Recursos descartáveis removidos.
+- Aprovação 1731 e gerador legado de Visita concorreram em clone; geração anterior bloqueou aprovação por impacto pendente. Ordem inversa do preparador canônico não foi exercida pois recusou rascunho ativo. Roteiros `supabase/tests/manual_E01-S165_aprovacao_indice_legado_concorrencia.md` e `supabase/tests/manual_E01-S165_comparacao_avaliacao_legada_concorrencia_1739.md`.
+- Próximo passo: validar 1739 em UI/backend, demais modos/fontes e revisão integral/CI. Gates default desligados; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: avaliação na fila de Visita
 
 - Revisão reproduziu fila de Visita tratando legada com avaliação como candidata inerte. ADR-1596/migration 1738 tornam estado indeterminado sob trava e preservam fila para conferência; leitura 1650 usa mesma função. Clone testou com/sem avaliação, replay e concorrência nas duas ordens. Fixtures `supabase/tests/manual_E01-S165_avaliacao_fila_visita_1738.sql` e roteiro concorrente correspondente.
