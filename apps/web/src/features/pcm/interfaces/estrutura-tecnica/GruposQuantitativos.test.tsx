@@ -112,6 +112,23 @@ describe("consulta de Grupos Quantitativos", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
     expect(await screen.findByRole("button", { name: "Editar Luminárias" })).toBeTruthy();
   });
+  it("oculta formulário durante revalidação e preserva rascunho", async () => {
+    gateway.autorizarAcao.mockResolvedValue(true);
+    const grupo = { id: "grupo", clienteId: "cliente-a", nome: "Luminárias", quantidade: 20,
+      localId: "17610000-0000-4000-8000-000000000031", categoriaId: "17610000-0000-4000-8000-000000000041",
+      sistemaId: null, caracteristicas: {}, revisao: 1 };
+    let concluir!: (valor: (typeof grupo)[]) => void;
+    gateway.listarGrupos.mockResolvedValueOnce([grupo]).mockReturnValueOnce(new Promise(resolve => { concluir = resolve; }));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><GruposQuantitativos userId="usuario" clienteId="cliente-a" locais={[]} /></QueryClientProvider>);
+    fireEvent.click(await screen.findByRole("button", { name: "Editar Luminárias" }));
+    fireEvent.change(screen.getByLabelText("Nome do grupo"), { target: { value: "Rascunho não salvo" } });
+    act(() => { void client.invalidateQueries({ queryKey: ["estrutura-tecnica", "usuario", "cliente-a", "grupos"] }); });
+    await waitFor(() => expect(screen.queryByLabelText("Nome do grupo")).toBeNull());
+    expect(screen.queryByText(/Luminárias — 20 unidades/)).toBeNull();
+    concluir([grupo]);
+    expect(await screen.findByDisplayValue("Rascunho não salvo")).toBeTruthy();
+  });
   it("impede iniciar edição com dados antigos durante atualização da lista", async () => {
     gateway.autorizarAcao.mockResolvedValue(true);
     const grupo = {
@@ -145,6 +162,7 @@ describe("consulta de Grupos Quantitativos", () => {
     await waitFor(() =>
       expect(screen.queryByRole("button", { name: "Editar Luminárias" })).toBeNull(),
     );
+    expect(screen.queryByText(/Luminárias — 20 unidades/)).toBeNull();
     concluir([{ ...grupo, quantidade: 21, revisao: 2 }]);
     expect(await screen.findByText(/Luminárias — 21 unidades/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Editar Luminárias" })).toBeTruthy();
@@ -367,9 +385,9 @@ describe("consulta de Grupos Quantitativos", () => {
     });
     await waitFor(() => expect(gateway.listarGrupos).toHaveBeenCalledTimes(2));
     await screen.findByText("Atualizando grupos…");
-    expect(
-      (screen.getByRole("button", { name: "Salvar grupo" }) as HTMLButtonElement).disabled,
-    ).toBe(true);
+    expect(screen.queryByRole("button", { name: "Salvar grupo" })).toBeNull();
+    expect(screen.queryByLabelText("Quantidade")).toBeNull();
+    expect(gateway.salvarGrupo).not.toHaveBeenCalled();
     concluir([{ ...grupo, quantidade: 21, revisao: 2 }]);
     expect(await screen.findByText(/Luminárias — 21 unidades/)).toBeTruthy();
     expect(
@@ -403,19 +421,22 @@ describe("consulta de Grupos Quantitativos", () => {
       </QueryClientProvider>,
     );
     fireEvent.click(await screen.findByRole("button", { name: "Editar Luminárias" }));
+    fireEvent.change(screen.getByLabelText("Quantidade"), { target: { value: "22" } });
     await client.invalidateQueries({
       queryKey: ["estrutura-tecnica", "usuario", "cliente-a", "grupos"],
     });
     const tentar = await screen.findByRole("button", { name: "Tentar novamente" });
-    expect(
-      (screen.getByRole("button", { name: "Salvar grupo" }) as HTMLButtonElement).disabled,
-    ).toBe(true);
+    expect(screen.queryByRole("button", { name: "Salvar grupo" })).toBeNull();
+    expect(screen.queryByLabelText("Quantidade")).toBeNull();
+    expect(gateway.salvarGrupo).not.toHaveBeenCalled();
     fireEvent.click(tentar);
     await waitFor(() =>
       expect(
         (screen.getByRole("button", { name: "Salvar grupo" }) as HTMLButtonElement).disabled,
       ).toBe(false),
     );
+    expect((screen.getByLabelText("Quantidade") as HTMLInputElement).value).toBe("22");
+    expect(gateway.salvarGrupo).not.toHaveBeenCalled();
   });
   it("erro de serialização preserva pedido para recuperação", async () => {
     gateway.autorizarAcao.mockResolvedValue(true);
