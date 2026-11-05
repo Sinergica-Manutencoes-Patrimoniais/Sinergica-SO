@@ -185,6 +185,14 @@ def main(opcoes):
     fixtures = None
     isolamento_1810 = None
     upload_1811 = None
+    documento_1812 = None
+    if opcoes.documento_1812:
+        if not opcoes.upload_1811: raise RuntimeError("Documento 1812 exige --upload-1811")
+        driver_documento = ROOT / "supabase/manual-tests/s178_documento_1812_isolada.py"
+        if hashlib.sha256(driver_documento.read_bytes()).hexdigest() != "8a168d5f4fc8ac94b5b4ca2ca86cf7249573f29b608c74b272bab8019aeca43d":
+            raise RuntimeError("Driver de documento 1812 divergente")
+        import s178_documento_1812_isolada
+        documento_1812 = s178_documento_1812_isolada.preparar(ROOT)
     if opcoes.jornada_ac5_http:
         if not opcoes.upload_1811:
             raise RuntimeError("Jornada HTTP exige --upload-1811 e clone descartável")
@@ -506,6 +514,12 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade de upload 1811")
         blobs.append((caminho, upload_1811[0]))
         names.append(caminho)
+    if documento_1812 is not None:
+        caminho = s178_documento_1812_isolada.MIGRATION
+        if any(Path(p).name[:4] == "1812" for p in base_files + names) or names[-1] >= caminho:
+            raise RuntimeError("Ordem ou duplicidade de documento 1812")
+        blobs.append((caminho, documento_1812[0]))
+        names.append(caminho)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -716,6 +730,12 @@ end; $$;"""
                 raise RuntimeError("Gate AC5 alterado após fixtures: " + tabela + "." + coluna)
     if upload_1811 is not None:
         s168_upload_1811_isolada.executar(CONTAINER, upload_1811[1], query, watchdog_triggered)
+    if documento_1812 is not None:
+        if query("select not habilitado from pcm.sso_documento_ativo_mediado_gate where id") != "t":
+            raise RuntimeError("Gate de documento inicial aberto ou ausente")
+        s178_documento_1812_isolada.executar(CONTAINER, documento_1812[1], query, watchdog_triggered)
+        if query("select not habilitado from pcm.sso_documento_ativo_mediado_gate where id") != "t":
+            raise RuntimeError("Gate de documento alterado após fixture")
     if opcoes.concorrencia_1810:
         import s176_isolamento_concorrencia_1810
         s176_isolamento_concorrencia_1810.executar(CONTAINER, watchdog_triggered)
@@ -804,6 +824,7 @@ if __name__ == "__main__":
     parser.add_argument("--isolamento-1810", action="store_true", help="Inclui 1804–1810 e suas fixtures; aceita --fixtures-pgtap; exige AC5 e integração.")
     parser.add_argument("--concorrencia-1810", action="store_true", help="Executa quatro disputas sintéticas; exige --isolamento-1810 e descarte integral do clone.")
     parser.add_argument("--upload-1811", action="store_true", help="Aplica 1811 e executa fixture SQL com rollback; exige isolamento 1810.")
+    parser.add_argument("--documento-1812", action="store_true", help="Aplica 1812 e valida ACL/gates com rollback; exige --upload-1811.")
     parser.add_argument("--jornada-ac5-http", action="store_true", help="Executa jornada HTTP parcial Auth/Storage em clone descartável; exige --upload-1811.")
     parser.add_argument("--concorrencia-1807", action="store_true", help="Cenários concorrentes 1807 com commit sintético e descarte obrigatório do clone.")
     parser.add_argument("--aprovacao-1805-pos-commit", action="store_true", help="Fixture sintética com COMMIT em clone descartável; exige 1804 e 1805.")
