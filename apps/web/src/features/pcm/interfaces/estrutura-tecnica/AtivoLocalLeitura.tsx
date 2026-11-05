@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { PreventivasLegadasLocal } from "./PreventivasLegadasLocal";
 
 type Props={userId:string;clienteId:string;localId:string;itemId:string};
 const ativo=z.object({id:z.string().uuid(),nome:z.string(),tipo:z.enum(["equipamento","componente"]),identificador:z.string().nullable(),categoria:z.string().nullable(),observacoes:z.string().nullable()}).strict();
@@ -21,7 +22,7 @@ function Conteudo({userId,clienteId,localId,itemId}:Props){
     {resumo.isFetching&&<output>Carregando cadastro…</output>}{resumo.isError&&<p role="alert">Cadastro indisponível ou sem acesso. <button type="button" onClick={()=>void resumo.refetch()}>Tentar novamente</button></p>}
     {!resumo.isFetching&&!resumo.isError&&resumo.data===null&&<p>Cadastro indisponível neste Local.</p>}
     {!resumo.isFetching&&!resumo.isError&&resumo.data&&<dl><div><dt>Nome</dt><dd>{resumo.data.nome}</dd></div><div><dt>Tipo</dt><dd>{resumo.data.tipo}</dd></div><div><dt>Código</dt><dd>{resumo.data.identificador||"Não informado"}</dd></div><div><dt>Categoria</dt><dd>{resumo.data.categoria||"Não informada"}</dd></div><div><dt>Observações</dt><dd>{resumo.data.observacoes||"Não informadas"}</dd></div></dl>}
-    {!!resumo.data&&!resumo.isFetching&&!resumo.isError&&<>{ordens.isFetching&&<output>Carregando OS…</output>}{(ordens.isError||divergentes)&&<p role="alert">Histórico indisponível ou páginas divergentes. <button type="button" onClick={()=>void ordens.refetch()}>Tentar novamente</button></p>}
+    {!!resumo.data&&!resumo.isFetching&&!resumo.isError&&<><PreventivasLegadasLocal userId={userId} clienteId={clienteId} localId={localId} itemId={itemId}/>{ordens.isFetching&&<output>Carregando OS…</output>}{(ordens.isError||divergentes)&&<p role="alert">Histórico indisponível ou páginas divergentes. <button type="button" onClick={()=>void ordens.refetch()}>Tentar novamente</button></p>}
     {!ordens.isFetching&&!ordens.isError&&!divergentes&&ordens.data&&<>{itens.length===0?<p>Nenhuma OS vinculada visível nesta fonte.</p>:<ul>{itens.map(o=><li key={o.id}>{o.numero} · {o.categoria??"Categoria não informada"} · {o.status??"Estado não informado"} · {o.data_agendada??o.created_at??"Data não informada"} · {[o.direta?"vínculo direto":null,o.auvo?"vínculo Auvo":null].filter(Boolean).join(" e ")}</li>)}</ul>}{ordens.hasNextPage&&<button type="button" onClick={()=>void ordens.fetchNextPage()}>Mais OS</button>}</>}</>}
   </section>;
 }
