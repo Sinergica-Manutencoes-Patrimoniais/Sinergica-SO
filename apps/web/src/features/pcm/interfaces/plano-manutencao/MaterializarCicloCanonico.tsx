@@ -275,6 +275,9 @@ function MaterializarCicloSessao({
       await cache.invalidateQueries({
         queryKey: ["previa-vencimentos-ocorrencia", userId, clienteId, planoId, versaoId],
       });
+      await cache.invalidateQueries({
+        queryKey: ["obrigacoes-preparadas", userId, clienteId, planoId],
+      });
       try {
         const atual = await supabase.auth.getUser();
         if (

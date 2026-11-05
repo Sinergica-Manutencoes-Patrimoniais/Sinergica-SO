@@ -98,7 +98,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, revision }: Props) {
       sessionStorage.removeItem(chave); setPendente(null); setConcluidos(atual.recibos); setAssinatura(null); setOrigens(null);
       setAviso("Preparação concluída. Confira a fila de cada ocorrência; nenhuma OS ou tarefa foi criada.");
     } catch { if (montado.current) setAviso(`Sequência interrompida após ${atual.proxima} de ${atual.rotinas.length} Rotinas. As anteriores permanecem preparadas; retome a mesma tentativa.`); }
-    finally { trava.current = false; if (montado.current) setOcupado(false); void cache.invalidateQueries({ queryKey: ["obrigacoes-preparadas", userId, clienteId, planoId] }); }
+    finally { trava.current = false; if (montado.current) setOcupado(false); void Promise.allSettled([cache.invalidateQueries({ queryKey: ["obrigacoes-preparadas", userId, clienteId, planoId] }), cache.invalidateQueries({ queryKey: ["historico-ciclo-canonico", userId, clienteId, planoId, versaoId] }), cache.invalidateQueries({ queryKey: ["previa-vencimentos-ocorrencia", userId, clienteId, planoId, versaoId] })]); }
   }
   function iniciar() {
     if (trava.current || pendente || !visivel || !origensAtuais || bloqueadas.length > 0 || comCiclos.length === 0 || assinatura !== assinaturaAtual) return;

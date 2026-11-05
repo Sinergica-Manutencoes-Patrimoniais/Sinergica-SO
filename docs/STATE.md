@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: encerramento e caches
+
+- ADR-1641/migration 1783 mediam proposta de encerramento que chamava núcleo privado, mantendo `execucao.validar`, Cliente/Plano, gate e replay. UI preserva pedidos incertos, confirmação vinculada aos dados e invalida escopo/diagnóstico em P0010. Revisão estática independente sem bypass concreto.
+- Geração Calendário invalida obrigações/consulta/histórico inclusive após lote parcial. `DetalhePlano` descarta retorno atrasado da localização de cópia após trocar/cancelar Rotina ou versão.
+- **Nenhum teste, typecheck, build ou ensaio executado por solicitação atual.** Migrations 1780–1783, cache e UI aguardam validação conjunta, inclusive compilação, ACL, replay, concorrência e jornadas. Gates default fechados; sem deploy/Auvo.
+
 ## 2026-11-05 — S165/S166: escopo e atualização de prévias
 
 - `PreviaVencimentosPlano` usa mediador 1533 já existente no lugar de RPC privada; depende também de `sso_obrigacoes_preparadas_mediadas_gate`. ADR-1640/migration 1782 mediam seleção/prévia/diagnóstico/declaração de escopo preservando núcleos privados e `execucao.validar`; conflito de revisão usa P0011 e UI mantém replay incerto. Revisão estática sem bypass concreto.

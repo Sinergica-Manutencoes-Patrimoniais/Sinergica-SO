@@ -1,5 +1,5 @@
 import { Button } from "@sinergica/ui";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { PlanoResumo, RotinaDetalhe } from "../../application/plano-manutencao-gateway";
 import { useRotinasPlano, useVersoesPlano } from "../../application/plano-manutencao-queries";
 import { pendenciasConhecidasRotina } from "../../domain/plano-manutencao";
@@ -61,9 +61,11 @@ export function DetalhePlano({
   const [rotinaParaRevisar, setRotinaParaRevisar] = useState<{ id: string; nome: string; versaoId: string } | null>(null);
   const [copiaSelecionada, setCopiaSelecionada] = useState<{ id: string; versaoId: string; origemNome: string } | null>(null);
   const [buscandoCopia, setBuscandoCopia] = useState(false);
+  const consultaCopiaAtual = useRef(0);
   const [avisoCopia, setAvisoCopia] = useState("");
   async function selecionarCopia() {
     if (!rotinaParaRevisar) return;
+    const consulta = ++consultaCopiaAtual.current;
     setBuscandoCopia(true); setAvisoCopia("");
     try {
       await conferirSessaoDiagnostico(userId);
@@ -71,8 +73,9 @@ export function DetalhePlano({
       if (error) throw error;
       await conferirSessaoDiagnostico(userId);
       if (!data || data.edicaoIniciada !== false || data.rotinaOrigemId !== rotinaParaRevisar.id || data.versaoOrigemId !== rotinaParaRevisar.versaoId || typeof data.rotinaRascunhoId !== "string" || typeof data.versaoRascunhoId !== "string") throw new Error("Cópia inválida.");
+      if (consulta !== consultaCopiaAtual.current) return;
       setCopiaSelecionada({ id: data.rotinaRascunhoId, versaoId: data.versaoRascunhoId, origemNome: rotinaParaRevisar.nome }); setVersaoEscolhida(data.versaoRascunhoId);
-    } catch { setAvisoCopia("Cópia indisponível, origem não comprovada ou acesso revogado. Recarregue a revisão; não foi feita alteração."); } finally { setBuscandoCopia(false); }
+    } catch { if (consulta === consultaCopiaAtual.current) setAvisoCopia("Cópia indisponível, origem não comprovada ou acesso revogado. Recarregue a revisão; não foi feita alteração."); } finally { setBuscandoCopia(false); }
   }
   const versoes = useVersoesPlano(
     supabasePlanoManutencaoAdapter,
@@ -220,6 +223,7 @@ export function DetalhePlano({
             onChange={(e) => {
               setRotinaPrevia(null);
               setRotinaQuestionario(null);
+              consultaCopiaAtual.current++;
               setVersaoEscolhida(e.target.value);
             }}
           >
@@ -273,7 +277,8 @@ export function DetalhePlano({
                 onClick={() => {
                   setRotinaPrevia(null);
                   setRotinaQuestionario(null);
-                  setVersaoEscolhida(vigenteConsultada.id);
+                  consultaCopiaAtual.current++;
+              setVersaoEscolhida(vigenteConsultada.id);
                 }}
               >
                 Ver versão {vigenteConsultada.numero}
@@ -445,7 +450,7 @@ export function DetalhePlano({
             {versao?.estado === "aprovado" && r.alvoTipo === "componente" && <NaturezaAlvoAprovada userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} alvoId={r.alvoId} />}
             {versao?.estado === "aprovado" && import.meta.env.VITE_SSO_DIAGNOSTICO_NORMATIVO_ENABLED === "true" && <DiagnosticoNormativoAprovado userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} />}
             {versao && r.modo === "visita" && import.meta.env.VITE_SSO_DIAGNOSTICO_MODO_VISITA_ENABLED === "true" && <DiagnosticoModoVisita userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} />}
-            {versao?.estado === "aprovado" && import.meta.env.VITE_SSO_REVISAR_ROTINA_APROVADA_ENABLED === "true" && <><Button variant="secondary" onClick={() => setRotinaParaRevisar({ id: r.id, nome: r.nome, versaoId: versao.id })}>Alterar {r.nome} em nova revisão</Button>{rotinaParaRevisar?.id === r.id && rotinaParaRevisar.versaoId === versao.id && <section aria-label="Revisão da Rotina aprovada"><p>Rotina selecionada: {rotinaParaRevisar.nome} · versão {rotinaParaRevisar.versaoId} · ID histórico {rotinaParaRevisar.id}. A versão aprovada permanece preservada; uma revisão cria rascunho, sem salvar mudanças diretamente.</p>{plano.estado === "aprovado" && import.meta.env.VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED === "true" ? <IniciarRevisaoContratos userId={userId} clienteId={clienteId} planoId={plano.id} revision={plano.revisao} /> : <p>Início de revisão indisponível neste estado ou configuração.</p>}{import.meta.env.VITE_SSO_LOCALIZAR_COPIA_ROTINA_ENABLED === "true" && <button type="button" disabled={buscandoCopia} onClick={() => void selecionarCopia()}>Localizar cópia em rascunho</button>}{avisoCopia && <p role="alert">{avisoCopia}</p>}<button type="button" onClick={() => setRotinaParaRevisar(null)}>Cancelar intenção de revisão</button></section>}</>}
+            {versao?.estado === "aprovado" && import.meta.env.VITE_SSO_REVISAR_ROTINA_APROVADA_ENABLED === "true" && <><Button variant="secondary" onClick={() => { consultaCopiaAtual.current++; setRotinaParaRevisar({ id: r.id, nome: r.nome, versaoId: versao.id }); }}>Alterar {r.nome} em nova revisão</Button>{rotinaParaRevisar?.id === r.id && rotinaParaRevisar.versaoId === versao.id && <section aria-label="Revisão da Rotina aprovada"><p>Rotina selecionada: {rotinaParaRevisar.nome} · versão {rotinaParaRevisar.versaoId} · ID histórico {rotinaParaRevisar.id}. A versão aprovada permanece preservada; uma revisão cria rascunho, sem salvar mudanças diretamente.</p>{plano.estado === "aprovado" && import.meta.env.VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED === "true" ? <IniciarRevisaoContratos userId={userId} clienteId={clienteId} planoId={plano.id} revision={plano.revisao} /> : <p>Início de revisão indisponível neste estado ou configuração.</p>}{import.meta.env.VITE_SSO_LOCALIZAR_COPIA_ROTINA_ENABLED === "true" && <button type="button" disabled={buscandoCopia} onClick={() => void selecionarCopia()}>Localizar cópia em rascunho</button>}{avisoCopia && <p role="alert">{avisoCopia}</p>}<button type="button" onClick={() => { consultaCopiaAtual.current++; setRotinaParaRevisar(null); }}>Cancelar intenção de revisão</button></section>}</>}
             {(plano.estado === "rascunho" || (plano.estado === "em_revisao" && import.meta.env.VITE_SSO_EDICAO_ROTINA_REVISAO_ENABLED === "true" && copiaSelecionada?.id === r.id && copiaSelecionada.versaoId === versao?.id)) &&
               versao?.estado === "rascunho" &&
               !novaRotina &&
