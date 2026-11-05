@@ -240,7 +240,7 @@ export function CopiarPlanoAprovado({
           </Button>
         </>
       )}
-      {mensagem && <p role="status">{mensagem}</p>}
+      {mensagem && <output className="block">{mensagem}</output>}
     </div>
   );
 }

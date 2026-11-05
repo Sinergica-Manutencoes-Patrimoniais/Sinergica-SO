@@ -71,7 +71,7 @@ export function ComparacaoQuestionario({
         O histórico aprovado é preservado; a fonte atual pode mudar. Comparação não calcula impacto
         nem autoriza aprovação.
       </p>
-      {consulta.isFetching && <p role="status">Verificando acesso e comparação…</p>}
+      {consulta.isFetching && <output className="block">Verificando acesso e comparação…</output>}
       {consulta.isError && (
         <p role="alert">
           Comparação indisponível.{" "}

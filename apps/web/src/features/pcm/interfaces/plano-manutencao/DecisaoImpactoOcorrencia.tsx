@@ -378,7 +378,7 @@ function DecisaoImpactoOcorrenciaAtiva({
             </select>
           </label>
           {item?.ultimo_motivo && <p>Último motivo: {item.ultimo_motivo}</p>}
-          {item && comparacao.isFetching && <p role="status">Carregando comparação da Rotina…</p>}
+          {item && comparacao.isFetching && <output className="block">Carregando comparação da Rotina…</output>}
           {item && comparacao.isError && (
             <p role="alert">
               Não foi possível comprovar a comparação da Rotina.{" "}
@@ -465,7 +465,7 @@ function DecisaoImpactoOcorrenciaAtiva({
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

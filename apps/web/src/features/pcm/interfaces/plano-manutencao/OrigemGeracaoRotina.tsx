@@ -244,7 +244,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: 
         Escolha por Rotina e alvo. A escolha não comprova exclusividade com PMOC e não altera
         agendas existentes.
       </p>
-      {consulta.isFetching && <p role="status">Consultando origem…</p>}
+      {consulta.isFetching && <output className="block">Consultando origem…</output>}
       {consulta.isError && (
         <p role="alert">
           Origem indisponível.{" "}
@@ -318,7 +318,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: 
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

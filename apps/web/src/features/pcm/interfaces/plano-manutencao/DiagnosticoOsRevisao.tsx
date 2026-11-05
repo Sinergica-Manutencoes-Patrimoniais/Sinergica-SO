@@ -123,7 +123,7 @@ export function DiagnosticoOsRevisao({
         durante a consulta. Não autoriza aprovação.
       </p>
       {(consulta.isFetching || abertas.isFetching) && (
-        <p role="status">Verificando acesso e consultando OS…</p>
+        <output className="block">Verificando acesso e consultando OS…</output>
       )}
       {consulta.isError && (
         <p role="alert">

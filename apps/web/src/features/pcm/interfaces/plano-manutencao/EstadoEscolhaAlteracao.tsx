@@ -164,7 +164,7 @@ function Consulta(props: Props) {
       return { ...r, novaData, novaVisita };
     },
   });
-  if (q.isFetching) return <p role="status">Consultando decisão da ocorrência…</p>;
+  if (q.isFetching) return <output className="block">Consultando decisão da ocorrência…</output>;
   if (q.isError || !q.data)
     return (
       <p role="alert">

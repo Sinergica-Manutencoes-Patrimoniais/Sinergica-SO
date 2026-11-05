@@ -253,7 +253,7 @@ function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

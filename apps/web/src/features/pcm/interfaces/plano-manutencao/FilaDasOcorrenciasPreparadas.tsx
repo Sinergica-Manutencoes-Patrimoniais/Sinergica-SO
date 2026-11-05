@@ -85,7 +85,7 @@ function Conteudo({ userId, clienteId, planoId, preparadas }: Props) {
         </p>
       )}
       {aberta && valida && consulta.isFetching && (
-        <p role="status">Conferindo ocorrências do Plano…</p>
+        <output className="block">Conferindo ocorrências do Plano…</output>
       )}
       {aberta && valida && consulta.isError && (
         <p role="alert">

@@ -247,7 +247,7 @@ export function ConferenciaRotinaCopiada({
       className="mt-2 rounded-md border border-line p-3"
     >
       <h5>Conferência da cópia</h5>
-      {consulta.isFetching && <p role="status">Consultando estado atual…</p>}
+      {consulta.isFetching && <output className="block">Consultando estado atual…</output>}
       {consulta.isError && (
         <p role="alert">
           Consulta indisponível.{" "}
@@ -361,7 +361,7 @@ export function ConferenciaRotinaCopiada({
           </>
         )
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

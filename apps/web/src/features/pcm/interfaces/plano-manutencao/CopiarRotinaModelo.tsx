@@ -579,7 +579,7 @@ export function CopiarRotinaModelo({
           )}
         </>
       )}
-      {mensagem && <p role="status">{mensagem}</p>}
+      {mensagem && <output className="block">{mensagem}</output>}
     </section>
   );
 }

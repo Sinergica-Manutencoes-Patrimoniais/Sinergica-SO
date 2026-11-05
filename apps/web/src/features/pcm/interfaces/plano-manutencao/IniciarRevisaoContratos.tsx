@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
 type Pedido = {
@@ -16,10 +16,18 @@ export function IniciarRevisaoContratos({
   clienteId,
   planoId,
   revision,
-}: { userId: string; clienteId: string; planoId: string; revision: number }) {
+  permitirNova = true,
+}: { userId: string; clienteId: string; planoId: string; revision: number; permitirNova?: boolean }) {
   const cache = useQueryClient();
   const storageKey = `sso-revisao-contratos:${JSON.stringify([userId, clienteId, planoId])}`;
   const trava = useRef(false);
+  const mediada = import.meta.env.VITE_SSO_REVISAO_CONTRATOS_MEDIADA_ENABLED === "true";
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  async function conferirSessao() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+  }
   const modo =
     import.meta.env.VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED === "true"
       ? "exigencias"
@@ -46,27 +54,24 @@ export function IniciarRevisaoContratos({
     }
   });
   const envio = useMutation({
-    mutationFn: async (p: Pedido) => {
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc(
-          p.modo === "exigencias"
-            ? "sso_iniciar_revisao_com_exigencias"
-            : p.modo === "evidencias"
-              ? "sso_iniciar_revisao_plano_com_evidencias"
-              : "sso_iniciar_revisao_plano_com_contratos",
-          {
-            p_request_id: p.requestId,
-            p_cliente_id: p.clienteId,
-            p_plano_id: p.planoId,
-            p_expected_revision: p.revision,
-            p_nova_versao_id: p.versaoId,
-          },
-        );
+    mutationFn: async (p: Pedido) => { await conferirSessao();
+      if (sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
+      const { data, error } = await supabase.schema("pcm").rpc("sso_iniciar_revisao_contratos_mediada", {
+        p_ator: userId, p_cliente: p.clienteId, p_plano: p.planoId,
+        p_request: p.requestId, p_expected_revision: p.revision,
+        p_nova_versao: p.versaoId, p_modo: p.modo,
+      });
       if (error) throw error;
       if (
         !data ||
         data.requestId !== p.requestId ||
+        data.aggregateId !== p.planoId || data.created !== true || data.state !== "rascunho" ||
+        !Number.isSafeInteger(data.revision) || data.revision <= p.revision ||
+        data.linkedIds?.clienteId !== p.clienteId || data.linkedIds?.versaoId !== p.versaoId ||
+        !Number.isSafeInteger(data.contratosCopiados) || data.contratosCopiados < 0 ||
+        !Number.isSafeInteger(data.itensNaoCopiados) || data.itensNaoCopiados < 0 ||
+        (p.modo !== "contratos" && (!Number.isSafeInteger(data.evidenciasCopiadas) || data.evidenciasCopiadas < 0 || !Number.isSafeInteger(data.evidenciasNaoCopiadas) || data.evidenciasNaoCopiadas < 0)) ||
+        (p.modo === "exigencias" && (!Number.isSafeInteger(data.exigenciasPropostas) || data.exigenciasPropostas < 0 || !Number.isSafeInteger(data.exigenciasNaoCopiadas) || data.exigenciasNaoCopiadas < 0)) ||
         data.reconferenciaNecessaria !== true ||
         (p.modo === "exigencias" && data.reconferenciaExigenciasNecessaria !== true)
       )
@@ -80,7 +85,7 @@ export function IniciarRevisaoContratos({
       };
     },
     onSuccess: async (r, p) => {
-      try {
+      try { await conferirSessao();
         if (sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error();
         sessionStorage.removeItem(storageKey);
       } catch {
@@ -106,6 +111,8 @@ export function IniciarRevisaoContratos({
   });
   const enviar = (p: Pedido) => {
     if (trava.current) return;
+    if (!permitirNova && !pendente) return;
+    if (!mediada) { setAviso("Revisão mediada indisponível; a tentativa permanece guardada."); return; }
     if (p.modo !== modo) {
       setAviso(
         "O fluxo da tentativa foi desativado ou alterado; procure suporte antes de continuar.",
@@ -124,8 +131,10 @@ export function IniciarRevisaoContratos({
     setPendente(p);
     envio.mutate(p);
   };
+  if (!permitirNova && !pendente) return null;
   return (
     <section aria-label="Revisão com contratos">
+      {!mediada && <p>Revisão mediada indisponível. Tentativas pendentes permanecem guardadas.</p>}
       <h3>Iniciar revisão com contratos de perguntas</h3>
       <p>
         Copia somente contratos com pergunta e questionário iguais à versão aprovada.{" "}
@@ -148,7 +157,7 @@ export function IniciarRevisaoContratos({
       </label>{" "}
       <button
         type="button"
-        disabled={!confirmado || !!pendente || envio.isPending}
+        disabled={!mediada || !permitirNova || !confirmado || !!pendente || envio.isPending}
         onClick={() =>
           enviar({
             requestId: crypto.randomUUID(),
@@ -164,11 +173,11 @@ export function IniciarRevisaoContratos({
       </button>
       {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
       {pendente && pendente !== "invalido" && (
-        <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>
+        <button type="button" disabled={!mediada || envio.isPending} onClick={() => enviar(pendente)}>
           Repetir tentativa pendente
         </button>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output className="block">{aviso}</output>}
     </section>
   );
 }

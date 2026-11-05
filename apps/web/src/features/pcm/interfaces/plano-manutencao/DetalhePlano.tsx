@@ -170,12 +170,13 @@ export function DetalhePlano({
         </output>
       )}
       {import.meta.env.VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED === "true" &&
-        plano.estado === "aprovado" && (
+        (plano.estado === "aprovado" || plano.estado === "rascunho") && (
           <IniciarRevisaoContratos
             userId={userId}
             clienteId={clienteId}
             planoId={plano.id}
             revision={plano.revisao}
+            permitirNova={plano.estado === "aprovado"}
           />
         )}
       {escolhaIndisponivel && (
