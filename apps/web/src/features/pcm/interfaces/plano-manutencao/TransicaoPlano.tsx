@@ -156,18 +156,16 @@ function Conteudo({ userId, clienteId, plano, bloqueado, onAbrirRotinas }: Props
         throw new Error("Sessão ou tentativa alterada.");
       if (import.meta.env.VITE_SSO_TRANSICAO_PLANO_MEDIADA_ENABLED !== "true")
         throw new Error("Transição mediada indisponível.");
-      const { data, error } = await supabase
-        .schema("pcm")
-        .rpc("sso_transicao_plano_mediada", {
-          p_ator_id: userId,
-          p_cliente_id: p.clienteId,
-          p_request_id: p.requestId,
-          p_plano_id: p.planoId,
-          p_expected_revision: p.revision,
-          p_acao: p.acao,
-          p_vigencia: p.vigencia,
-          p_motivo: p.motivo,
-        });
+      const { data, error } = await supabase.schema("pcm").rpc("sso_transicao_plano_mediada", {
+        p_ator_id: userId,
+        p_cliente_id: p.clienteId,
+        p_request_id: p.requestId,
+        p_plano_id: p.planoId,
+        p_expected_revision: p.revision,
+        p_acao: p.acao,
+        p_vigencia: p.vigencia,
+        p_motivo: p.motivo,
+      });
       if (error) throw error;
       const depois = await supabase.auth.getUser();
       if (
@@ -241,10 +239,10 @@ function Conteudo({ userId, clienteId, plano, bloqueado, onAbrirRotinas }: Props
     try {
       if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error();
       primeira.current = p.tentativaIncerta === false;
-      p = pedidoSchema.parse({ ...p, tentativaIncerta: true });
-      sessionStorage.setItem(chave, JSON.stringify(p));
-      setPedido(p);
-      envio.mutate(p);
+      const tentativa = pedidoSchema.parse({ ...p, tentativaIncerta: true });
+      sessionStorage.setItem(chave, JSON.stringify(tentativa));
+      setPedido(tentativa);
+      envio.mutate(tentativa);
     } catch {
       trava.current = false;
       setMensagem("Não foi possível guardar tentativa; nada foi enviado.");
