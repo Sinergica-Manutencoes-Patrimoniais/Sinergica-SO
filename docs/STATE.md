@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: vínculo Visita e comparação pela UI
+
+- ADR-1598/migration 1740 impedem novo vínculo de Visita com legado já avaliado, serializam avaliação e preservam replay. Clone testou negativa, vínculo positivo e concorrência nas duas ordens; sem Auvo.
+- A comparação 1739 carregou pela UI isolada com backend real, mas teste de decisão após avaliação não concluiu: submit persistiu tentativa e enviou HTTP, sem resposta em 12 s; uma decisão preexistia na fixture e não se provou nova escrita. Sessão PostgreSQL ativa não tinha bloqueadores visíveis; causa indeterminada. Harness registra diagnóstico sem dados sensíveis; não atribuir PASS ou falha ao produto sem investigação adicional.
+- Clone 1739 comprovou CAS obsoleto e concorrência na comparação de Calendário; frontend precisa preceder migration em rollout por schema estrito. 1740 e fixtures preservados, gates default fechados; sem deploy/Auvo. Próximo passo: investigar latência HTTP/RPC em clone e validar jornada UI/backend antes de CI/homologação.
+
 ## 2026-11-05 — S165/S166: avaliação na comparação e prévia real
 
 - ADR-1597/migration 1739 incluem avaliação legada vinculada na comparação CAS de impactos e UI, preservando fotografia histórica sem avaliação. Clone testou calendário e concorrência nas duas ordens; CAS recusou foto antiga. Frontend deve ser atualizado antes da migration porque schema anterior é estrito. Typecheck passou.
