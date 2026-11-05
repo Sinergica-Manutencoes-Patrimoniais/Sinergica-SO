@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — S165/S166: exceção em navegador e vencidos
+
+- `apps/web/e2e/s166-isolado/executar-excecao.py` aprovou exceção e mudou dia pela UI real em rede interna, preservando Visitas excepcionada, confirmada, extra, reprogramada e OS sintética; elegível mudou para terça. Dados sintéticos, sem Auvo, recursos removidos.
+- ADR-1592/migration 1734 serializam consulta de exceção com revogação de permissão, exigindo READ COMMITTED; clone testou duas ordens e revisão independente não encontrou bypass estático. Gate e flag seguem desligados.
+- AC-2 em clone: feriado em 01/01, decisão PCM, retorno sintético em 08/01 e finalização preservaram vencimento 01/01 e próximo ciclo 01/02. AC-6: suspensão/retomada não gerou automaticamente; decisão e preparação individuais entraram na fila em `verificacao`, não prova caso elegível `aguardando`. Fixtures `supabase/tests/manual_E01-S166_feriado_execucao_tardia_integrada.sql` e `supabase/tests/manual_E01-S166_retomada_fila_integrada.sql`.
+- Próximo passo: comprovar fila elegível e indicadores aplicáveis, fontes restantes e revisão adversarial completa/CI antes de homologação; sem deploy ou Auvo real.
+
 ## 2026-11-05 — S165/S166: jornada isolada, exceção e reconciliação
 
 - `apps/web/e2e/s166-isolado/executar-jornada.py` executou recorte reproduzível em rede interna: login sintético, aprovação S165 por componente real com 1045 efetiva e geração Visita S166 por componente real. Banco confirmou aprovação e duas ocorrências históricas. Relógio avançado no clone e retirada anterior por RPC; não cobre navegação integral do produto nem Auvo. Cleanup executado; imagem Playwright foi mantida.

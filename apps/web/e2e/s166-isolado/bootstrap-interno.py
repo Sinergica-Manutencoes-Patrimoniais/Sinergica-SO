@@ -19,8 +19,7 @@ PREFIX = 'sso-s166-e2e-'
 
 
 def docker(*args, input_text=None):
-    return subprocess.run(['docker', *args], input=input_text, text=True,
-                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True).stdout.strip()
+    return subprocess.run(['docker', *args], input=input_text, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True).stdout.strip()
 
 
 def inspect(kind, name):
@@ -45,8 +44,14 @@ def attest(network, database):
     if container['Mounts']:
         raise RuntimeError('Banco descartável não pode montar arquivos do host.')
     database_name = 'sso_s166_' + ident
-    actual = docker('exec', database, 'psql', '-U', 'postgres', '-d', database_name, '-Atqc',
-                    'select current_database()', '-v', 'ON_ERROR_STOP=1')
+    for _ in range(20):
+        try:
+            actual = docker('exec', database, 'psql', '-U', 'postgres', '-d', database_name, '-Atqc',
+                            'select current_database()', '-v', 'ON_ERROR_STOP=1')
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(1)
+    else: raise RuntimeError('Conexão ao banco isolado indisponível.')
     if actual != database_name:
         raise RuntimeError('Destino de banco inesperado.')
     print('Rede interna, banco dedicado, sem mounts ou portas publicadas: verificados.')
@@ -235,11 +240,14 @@ def main():
                  and not (line.startswith('GRANT ') and (' cron.' in line or ' net.' in line or ' ON SCHEMA cron ' in line or ' ON SCHEMA net ' in line))]
         docker('exec', '-i', database, 'psql', '-U', 'supabase_admin', '-d', target, '-v', 'ON_ERROR_STOP=1', '-q', input_text='\n'.join(lines) + '\n')
         root = Path(__file__).resolve().parents[4]
-        migrations = sorted(p for p in (root / 'supabase' / 'migrations').glob('*.sql') if p.name[:4].isdigit() and 1614 <= int(p.name[:4]) <= 1731)
-        if not migrations or not any(p.name.startswith('1731_') for p in migrations):
+        migrations = sorted(p for p in (root / 'supabase' / 'migrations').glob('*.sql') if p.name[:4].isdigit() and 1614 <= int(p.name[:4]) <= 1732)
+        if not migrations or not any(p.name.startswith('1732_') for p in migrations):
             raise RuntimeError('Migrations obrigatórias ausentes.')
         for migration in migrations:
-            docker('exec', '-i', database, 'psql', '-U', 'supabase_admin', '-d', target, '-v', 'ON_ERROR_STOP=1', '-q', input_text=migration.read_text())
+            try:
+                docker('exec', '-i', database, 'psql', '-U', 'supabase_admin', '-d', target, '-v', 'ON_ERROR_STOP=1', '-q', input_text=migration.read_text())
+            except subprocess.CalledProcessError as exc:
+                raise RuntimeError('Migration falhou: ' + migration.name) from exc
         attest(network, database)
         print('Clone sintético restaurado; migrations aplicadas:', len(migrations))
         print('Ainda faltam Auth, PostgREST e navegador isolados.')
@@ -262,7 +270,14 @@ def main():
         else:
             raise RuntimeError('Banco não iniciou no prazo.')
         docker('exec', database, 'createdb', '-U', 'postgres', 'sso_s166_' + args.id)
-        attest(network, database)
+        for _ in range(30):
+            try:
+                attest(network, database)
+                break
+            except subprocess.CalledProcessError:
+                time.sleep(1)
+        else:
+            raise RuntimeError('Banco não estabilizou após inicialização.')
         print('Nenhuma fixture foi carregada; faltam Auth, PostgREST e navegador isolados.')
     except Exception:
         if criado_db:
@@ -277,5 +292,5 @@ if __name__ == '__main__':
         main()
     except (RuntimeError, subprocess.CalledProcessError, KeyError, ValueError) as exc:
         # Nunca imprimir argumentos de docker que possam conter senha sintética.
-        print('Falha no bootstrap isolado:', type(exc).__name__, file=sys.stderr)
+        print('Falha no bootstrap isolado:', str(exc) if isinstance(exc, RuntimeError) else ' '.join(exc.cmd[:4]) if isinstance(exc, subprocess.CalledProcessError) else type(exc).__name__, file=sys.stderr)
         sys.exit(1)
