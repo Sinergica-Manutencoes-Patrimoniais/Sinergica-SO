@@ -36,6 +36,7 @@
 - [X] T014 Escrever teste de adapter e integração entre US em `apps/web/src/features/pcm/infrastructure/supabase-estrutura-tecnica-adapter.test.ts`; rollback e duas sessões concorrentes serão executados em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
 - [X] T015 Preparar jornada crítica e acesso negado com dois Clientes em `apps/web/e2e/estrutura-tecnica.spec.ts`; a negação de UI é simulada, autorização real fica coberta por pgTAP. A validação global/Cliente360 e execução estão em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
 - [ ] T016 Executar `specs/E01-S176-estrutura-tecnica-grupos/quickstart.md`, testes focados, eval:spec com seleção conferida, ci:local e revisão adversarial; registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): suíte SQL local completa passou (225 arquivos/2.892 assertions); revisão adversarial local não encontrou achados reproduzidos. E2E, CI GitHub e homologação permanecem pendentes.
+- [X] T017 Ajustar asserção E2E de criação de Área para conferir texto renderizado e presença no filtro acessível; execução integrada permanece em T016.
 
 ## Dependencies & Execution Order
 

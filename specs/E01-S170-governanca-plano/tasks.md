@@ -42,6 +42,7 @@
 - [X] T014 Escrever teste de adapter e integração entre US em `apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.test.ts`. Executar integração, rollback e concorrência em duas sessões durante T016; mocks não comprovam esses pontos (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
 - [X] T015 Escrever E2E isolado de validação do retorno, concessão/revogação durante sessão aberta e autoaprovação do Plano pelo seu criador após concessão individual; Cliente cruzado continua coberto por pgTAP em `apps/web/e2e/capacidades-sso.spec.ts` (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Os cenários estão escritos e aguardam execução em T016.
 - [ ] T016 Executar `specs/E01-S170-governanca-plano/quickstart.md`, testes focados, eval:spec com seleção conferida, ci:local e revisão adversarial; registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): suíte SQL local completa passou (225 arquivos/2.892 assertions); revisão adversarial local não encontrou achados reproduzidos. E2E, CI GitHub e homologação permanecem pendentes.
+- [X] T017 Corrigir migration aditiva 1825 para qualificar a coluna id e cobrir consulta mediada com regressão pgTAP. Execução fica em T016.
 
 ## Dependencies & Execution Order
 

@@ -107,7 +107,8 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   });
   await page.getByRole("button", { name: "Salvar" }).click();
   try {
-    await expect(page.getByText(nomeArea, { exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("body")).toContainText(nomeArea, { timeout: 10_000 });
+    await expect(page.getByLabel("Filtrar estrutura por área")).toContainText(nomeArea);
   } catch {
     const erroCarregar = await page.getByText("Não foi possível carregar a estrutura do cliente.", { exact: true }).isVisible().catch(() => false);
     const areaNoTexto = (await page.locator("body").innerText().catch(() => "")).includes(nomeArea);

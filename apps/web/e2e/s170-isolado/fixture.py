@@ -31,8 +31,9 @@ def preparar(root: Path, sql, query, watchdog, atestar):
 update auth.users set encrypted_password=crypt('{senha}',gen_salt('bf')),email_confirmed_at=now(),confirmation_token='',recovery_token='',email_change='',email_change_token_new='' where id='{ATOR}';
 update config.usuarios set papel='colaborador' where user_id='{ATOR}';
 insert into config.usuario_modulos(user_id,modulo,nivel) values('{ATOR}','pcm','escrita');
-insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
-values('{ADMIN}','00000000-0000-0000-0000-000000000000','authenticated','authenticated','{EMAIL_ADMIN}',crypt('{senha_admin}',gen_salt('bf')),'{{}}','{{}}',now(),now());
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at,email_confirmed_at)
+values('{ADMIN}','00000000-0000-0000-0000-000000000000','authenticated','authenticated','{EMAIL_ADMIN}',crypt('{senha_admin}',gen_salt('bf')),'{{}}','{{}}',now(),now(),now());
+update auth.users set is_sso_user=false,confirmation_token='',recovery_token='',email_change='',email_change_token_new='' where id='{ADMIN}';
 select config.provisionar_usuario('{ADMIN}','superadmin','Administrador sintético S170');
 insert into pcm.clientes(id,nome,ativo,created_by) values('{CLIENTE_B}','Cliente B sintético',true,'{ATOR}');
 insert into config.usuario_cliente(user_id,cliente_id) values('{ATOR}','{CLIENTE_A}');
@@ -47,6 +48,7 @@ update pcm.sso_atestacao_pcm_gate set habilitado=true where id;
 update pcm.sso_pendencias_gate set habilitado=true where id;
 update pcm.sso_revisao_validacao_os_gate set habilitado=true where id;
 update pcm.sso_mediacao_decisao_retorno_gate set habilitado=true where id;
+update pcm.sso_mediacao_pendencias_retorno_gate set habilitado=true where id;
 update pcm.sso_classificacao_retorno_mediada_gate set leitura=true,escrita=true where id;
 update pcm.sso_aprovacao_versao_esperada_gate set habilitado=true where id;
 update pcm.clientes set auvo_id=168910001 where id='{CLIENTE_A}';
@@ -67,6 +69,11 @@ values('16891000-0000-4000-8000-000000000035','16891000-0000-4000-8000-000000000
     ).strip()
     if perfil != "1":
         raise RuntimeError("Perfil sintético do operador S170 divergente")
+    perfil_admin = query(
+        "select count(*) from config.usuarios where user_id='" + ADMIN + "' and ativo and papel='superadmin'"
+    ).strip()
+    if perfil_admin != "1":
+        raise RuntimeError("Perfil sintético do administrador S170 divergente")
     permissoes = query(
         "select count(*) from config.sso_concessoes where usuario_id='" + ATOR + "' and ativa "
         "and acao='execucao.validar' and cliente_id='" + CLIENTE_A + "'"

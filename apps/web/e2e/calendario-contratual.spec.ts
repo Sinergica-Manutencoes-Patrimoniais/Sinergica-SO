@@ -80,7 +80,7 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
   await expect(regra).toContainText(/versão \d+/);
   await regra.getByLabel("Novo dia").first().selectOption(cfg.diaNovo!);
   await regra.getByLabel("Vigência").first().fill(cfg.vigencia!);
-  const lote = regra.getByRole("region", { name: "Alteração de dia contratual em lote" });
+  const lote = regra.getByRole("region", { name: "Mudança de dia com Visitas" });
   const respostasFotografia: string[] = [];
   page.on("response", async (response) => {
     const endpoint = new URL(response.url()).pathname.split("/").pop() ?? "";

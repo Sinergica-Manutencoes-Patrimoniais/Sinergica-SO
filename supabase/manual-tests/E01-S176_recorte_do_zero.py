@@ -401,7 +401,7 @@ def main(opcoes):
         if hashlib.sha256(driver_s170.read_bytes()).hexdigest() != "9725537d76c5196e8d05bf5aaf8d0333fd85932e24e7655a2386f582902b5b3b":
             raise RuntimeError("Driver S170 divergente")
         import s170_fixture_isolada
-        fixture_s170 = s170_fixture_isolada.preparar(ROOT, "52502cee17b223a79348ca09e7fef8c293613f8ef99a8a272f8145efb8633559")
+        fixture_s170 = s170_fixture_isolada.preparar(ROOT, "ee4d232329253af70c27abd39c97d92bbc89280ef9cb6f85eb86b55be0eaf967")
     if opcoes.ui_s170_e2e and not opcoes.fixture_s170_e2e:
         raise RuntimeError("UI S170 exige fixture S170 isolada")
     if opcoes.ui_s165_e2e or opcoes.ui_s170_e2e or opcoes.ui_s166_e2e or opcoes.ui_s176_e2e:
@@ -430,13 +430,13 @@ def main(opcoes):
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s166_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s166_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "867cc4fd7e4bf1e4534e2404c9221f41e278d324210aa0c191faf517775e6e9b":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "3da48443beb35ed4c342526d1a887b7b970006257d1c532eec4dac5d9c6a915b":
                 raise RuntimeError("Driver UI S166 divergente")
             import s166_ui_isolada
             proxy_s166 = s166_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s176_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s176_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "274f07a85225c865dcb4ecbfdc67109c7d2e260baf77a915cb015abad26fd75a":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "29ed6948f8f48b7d6110064d7da55d5f225188e0c8f9404d85e183eec66affa8":
                 raise RuntimeError("Driver UI S176 divergente")
             import s176_ui_isolada
             proxy_s176 = s176_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
