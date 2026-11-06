@@ -68,8 +68,8 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
   await expect(calendario).toBeVisible();
   const regra = calendario.getByRole("listitem").filter({ hasText: `Contrato ${cfg.contrato}` }).first();
   await expect(regra).toContainText(/versão \d+/);
-  await regra.getByLabel("Novo dia").selectOption(cfg.diaNovo!);
-  await regra.getByLabel("Vigência").fill(cfg.vigencia!);
+  await regra.getByLabel("Novo dia").first().selectOption(cfg.diaNovo!);
+  await regra.getByLabel("Vigência").first().fill(cfg.vigencia!);
   const lote = regra.getByRole("region", { name: "Alteração de dia contratual em lote" });
   await lote.getByRole("button", { name: "Preparar fotografia completa das Visitas" }).click();
   await lote.getByRole("button", { name: /Retomar fotografia/ }).click();

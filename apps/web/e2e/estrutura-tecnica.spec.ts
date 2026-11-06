@@ -63,8 +63,20 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   await page.getByRole("button", { name: "Estrutura", exact: true }).click();
   await page.getByRole("button", { name: "Nova Área" }).click();
   await page.getByLabel("Nome *").fill(nomeArea);
+  let respostaArea = "sem-resposta";
+  page.on("response", async (response) => {
+    const url = new URL(response.url());
+    if (response.request().method() !== "POST" || url.pathname !== "/rest/v1/areas") return;
+    let codigo = "ok";
+    try { codigo = String(JSON.parse(await response.text())?.code ?? "ok").slice(0, 24); } catch { /* só status */ }
+    respostaArea = `${response.status()}:${codigo}`;
+  });
   await page.getByRole("button", { name: "Salvar" }).click();
-  await expect(page.getByText(nomeArea, { exact: true })).toBeVisible({ timeout: 10_000 });
+  try {
+    await expect(page.getByText(nomeArea, { exact: true })).toBeVisible({ timeout: 10_000 });
+  } catch {
+    throw new Error(`POST_AREAS=${respostaArea}`);
+  }
   await page.getByRole("button", { name: "Local", exact: true }).click();
   await page.getByLabel("Nome *").fill(nomeLocal);
   await page.getByRole("button", { name: "Salvar" }).click();

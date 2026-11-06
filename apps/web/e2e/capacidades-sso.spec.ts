@@ -135,8 +135,23 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
   try {
     // Manter a sessão do operador aberta durante as duas alterações administrativas.
     await entrar(operador, cfg.email!, cfg.senha!);
+    const respostasPermissao: string[] = [];
+    operador.on("response", async (response) => {
+      if (!new URL(response.url()).pathname.endsWith("/rpc/sso_autorizar_acao")) return;
+      let resultado = "resposta-indisponivel";
+      try {
+        const corpo = await response.text();
+        if (corpo === "false" || corpo === "true") resultado = corpo;
+        else resultado = String(JSON.parse(corpo)?.code ?? "erro").slice(0, 24);
+      } catch { /* o status HTTP segue útil sem corpo */ }
+      respostasPermissao.push(`${response.status()}:${resultado}`);
+    });
     await abrirCalendario();
-    await expect(operador.getByText("Você está sem permissão para gerir o calendário deste Cliente.")).toBeVisible();
+    try {
+      await expect(operador.getByText("Você está sem permissão para gerir o calendário deste Cliente.")).toBeVisible();
+    } catch {
+      throw new Error(`RPC_AUTORIZAR_ACAO=${respostasPermissao.join(",") || "sem-resposta"}`);
+    }
     await expect(operador.getByText("Você está sem permissão para gerir Planos deste Cliente.")).toBeVisible();
 
     await entrar(administrador, cfg.adminEmail!, cfg.adminSenha!);
