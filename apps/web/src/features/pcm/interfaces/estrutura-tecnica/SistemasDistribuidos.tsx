@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
@@ -309,6 +309,7 @@ function Conteudo({
                   <ArvoreMembros
                     userId={userId}
                     clienteId={clienteId}
+                    sistemaId={s.id}
                     membros={vinculados}
                     itens={itensCarregados}
                     locais={locaisCarregados}
@@ -428,12 +429,14 @@ type ItemDistribuido = {
 function ArvoreMembros({
   userId,
   clienteId,
+  sistemaId,
   membros,
   itens,
   locais,
 }: {
   userId: string;
   clienteId: string;
+  sistemaId: string;
   membros: { item_id: string }[];
   itens: ItemDistribuido[];
   locais: { id: string; nome: string; ativo: boolean }[];
@@ -479,13 +482,17 @@ function ArvoreMembros({
             <DetalheMembro
               userId={userId}
               clienteId={clienteId}
+              sistemaId={sistemaId}
               itemId={item.id}
               nome={item.nome ?? item.id}
               tipo={item.tipo}
             />
           </>
         ) : (
-          <>Item {id} não identificado nas páginas carregadas; confira o vínculo.</>
+          <>
+            Item {id} não identificado nas páginas carregadas.
+            <DetalheMembro userId={userId} clienteId={clienteId} sistemaId={sistemaId} itemId={id} nome={id} />
+          </>
         )}
         {descendentes.length > 0 && <ul>{descendentes.map(renderizar)}</ul>}
       </li>
@@ -510,20 +517,49 @@ function ArvoreMembros({
   );
 }
 
-function DetalheMembro({
+export function DetalheMembro({
   userId,
   clienteId,
+  sistemaId,
   itemId,
   nome,
   tipo,
 }: {
   userId: string;
   clienteId: string;
+  sistemaId: string;
   itemId: string;
   nome: string;
   tipo?: "componente" | "equipamento";
 }) {
   const [aberto, setAberto] = useState(false);
+  const resolucao = useQuery({
+    queryKey: ["estrutura-tecnica", userId, clienteId, sistemaId, itemId, "membro-por-id"],
+    enabled: aberto && !tipo,
+    gcTime: 0,
+    queryFn: async ({ signal }) => {
+      const conferir = async () => {
+        const sessao = await supabase.auth.getUser();
+        if (sessao.error || sessao.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      };
+      await conferir();
+      const { data, error } = await supabase.schema("pcm").rpc("sso_membro_sistema_por_id_176", {
+        p_ator: userId, p_cliente: clienteId, p_sistema: sistemaId, p_item: itemId,
+      }).abortSignal(signal);
+      if (error) throw error;
+      const item = z.object({
+        id: z.string().uuid(), client_id: z.string().uuid(), local_id: z.string().uuid().nullable(),
+        ativo: z.literal(true), nome: z.string(), tipo: z.enum(["componente", "equipamento"]),
+        identificador: z.string().nullable(), parent_item_id: z.string().uuid().nullable(),
+      }).strict().nullable().parse(data);
+      if (item && (item.id !== itemId || item.client_id !== clienteId)) throw new Error("Item divergente.");
+      await conferir();
+      return item;
+    },
+  });
+  const tipoAtual = tipo ?? resolucao.data?.tipo;
+  const nomeAtual = tipo ? nome : resolucao.data?.nome ?? nome;
+  const resolvendo = !tipo && (resolucao.isPending || resolucao.isFetching);
   return (
     <section>
       <button
@@ -534,7 +570,10 @@ function DetalheMembro({
       >
         {aberto ? "Ocultar histórico" : "Ver histórico"}
       </button>
-      {aberto && (
+      {aberto && !tipo && resolvendo && <p>Consultando membro do Sistema…</p>}
+      {aberto && !tipo && resolucao.isError && <p role="alert">Membro indisponível. <button type="button" onClick={() => void resolucao.refetch()}>Tentar novamente</button></p>}
+      {aberto && !tipo && !resolvendo && !resolucao.isError && !resolucao.data && <p>Membro indisponível ou vínculo alterado.</p>}
+      {aberto && tipoAtual && !resolvendo && (tipo || !resolucao.isError) && (
         <>
           <HistoricoGrupo
             tipo="componente"
@@ -542,28 +581,26 @@ function DetalheMembro({
             clienteId={clienteId}
             grupoId={itemId}
           />
-          {tipo && (
+          <PlanosDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId} />
+          {tipoAtual && (
             <ResultadosDoAlvo
               userId={userId}
               clienteId={clienteId}
               tipo="componente"
               id={itemId}
-              nome={nome}
+              nome={nomeAtual}
             />
           )}
-          {tipo && (
+          {tipoAtual && (
             <PendenciasDoAlvo userId={userId} clienteId={clienteId} tipo="componente" id={itemId} />
           )}
-          {tipo && (
+          {tipoAtual && (
             <FotosStagingAtivo
               userId={userId}
               clienteId={clienteId}
-              tipo={tipo}
+              tipo={tipoAtual}
               entidadeId={itemId}
             />
-          )}
-          {!tipo && (
-            <p>Tipo do cadastro não disponível nas páginas carregadas; fotos não consultadas.</p>
           )}
         </>
       )}
