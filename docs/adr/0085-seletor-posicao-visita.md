@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0085-seletor-posicao-visita-md"
+description: "Documento Sinérgica SO: ADR-0085 — Seleção de posição da Visita"
+alwaysApply: false
+---
+
 # ADR-0085 — Seleção de posição da Visita
 
 ## Decisão

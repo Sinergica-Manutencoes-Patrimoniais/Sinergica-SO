@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1141-t24-livro-tentativas-md"
+description: "Documento Sinérgica SO: ADR-1141 — Livro privado de tentativas T−24"
+alwaysApply: false
+---
+
 # ADR-1141 — Livro privado de tentativas T−24
 
 Status: proposta local, gate fechado; não aplicada nem homologada.

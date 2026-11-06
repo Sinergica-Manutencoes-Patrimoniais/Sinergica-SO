@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1373-classificacao-linha-mediada-md"
+description: "Documento Sinérgica SO: ADR-1373 — Classificação mediada de linha comercial"
+alwaysApply: false
+---
+
 # ADR-1373 — Classificação mediada de linha comercial
 
 **Estado:** proposta; não aplicada nem homologada.

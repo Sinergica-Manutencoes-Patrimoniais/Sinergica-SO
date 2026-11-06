@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-ensaio-lock-0304-md"
+description: "Documento Sinérgica SO: Ensaio sintético de lock da migration 0304"
+alwaysApply: false
+---
+
 # Ensaio sintético de lock da migration 0304
 
 Em 2026-11-05, PostgreSQL 17.6 no contêiner local isolado, banco descartável criado com `template0`, sem dados de usuário: tabela sintética com colunas e índices representativos de `pcm.ocorrencias_preventivas`, 200.000 linhas geradas por `generate_series` e 56 MB incluindo índices. A tabela não tinha as FKs, triggers, RLS, volume ou concorrência de produção.

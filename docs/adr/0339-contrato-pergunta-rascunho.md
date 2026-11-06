@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0339-contrato-pergunta-rascunho-md"
+description: "Documento Sinérgica SO: ADR-0339 — Contrato de obrigatoriedade por pergunta em rascunho"
+alwaysApply: false
+---
+
 # ADR-0339 — Contrato de obrigatoriedade por pergunta em rascunho
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1630-serializacao-autorizacao-fila-grupo-md"
+description: "Documento Sinérgica SO: ADR-1630 — Autorização serializada da fila de Grupo"
+alwaysApply: false
+---
+
 # ADR-1630 — Autorização serializada da fila de Grupo
 
 A conferência de acesso da fila de Grupo validava a concessão antes de adquirir a trava compartilhada usada pelo protocolo de revogação. Uma revogação podia confirmar nesse intervalo; em particular, o replay da reabertura retornava o recibo sem uma segunda conferência.

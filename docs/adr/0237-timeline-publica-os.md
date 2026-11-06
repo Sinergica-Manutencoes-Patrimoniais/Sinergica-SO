@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0237-timeline-publica-os-md"
+description: "Documento Sinérgica SO: ADR-0237 — Linha do tempo pública de status da OS"
+alwaysApply: false
+---
+
 # ADR-0237 — Linha do tempo pública de status da OS
 
 **Estado:** proposta preparatória, não homologada nem implantada.

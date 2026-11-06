@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1301-titularidade-recepcao-manual-md"
+description: "Documento Sinérgica SO: ADR-1301 — Titularidade da recepção manual de levantamento"
+alwaysApply: false
+---
+
 # ADR-1301 — Titularidade da recepção manual de levantamento
 
 ## Contexto

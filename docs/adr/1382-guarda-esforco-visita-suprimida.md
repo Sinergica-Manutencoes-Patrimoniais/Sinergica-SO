@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1382-guarda-esforco-visita-suprimida-md"
+description: "Documento Sinérgica SO: ADR-1382 — Guarda de esforço em Visita suprimida"
+alwaysApply: false
+---
+
 # ADR-1382 — Guarda de esforço em Visita suprimida
 
 **Estado:** proposta; não aplicada nem homologada.

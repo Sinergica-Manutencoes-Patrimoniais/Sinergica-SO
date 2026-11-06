@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1351-guarda-escritores-chamado-multiplas-os-md"
+description: "Documento Sinérgica SO: ADR 1351 — Guarda de escritores durante a transição Chamado 1:N OS"
+alwaysApply: false
+---
+
 # ADR 1351 — Guarda de escritores durante a transição Chamado 1:N OS
 
 ## Contexto

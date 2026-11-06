@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0659-aprovacao-parcial-campos-md"
+description: "Documento Sinérgica SO: ADR-0659 — Retrato de campos estruturados na aprovação parcial"
+alwaysApply: false
+---
+
 # ADR-0659 — Retrato de campos estruturados na aprovação parcial
 
 Status: proposta; gates fechados, não homologada.

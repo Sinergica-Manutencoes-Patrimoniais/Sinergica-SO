@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0382-diagnostico-completude-conteudo-os-md"
+description: "Documento Sinérgica SO: ADR-0382 — Completude do conteúdo operacional da OS"
+alwaysApply: false
+---
+
 # ADR-0382 — Completude do conteúdo operacional da OS
 
 Status: proposta; sem testes ou ativação.

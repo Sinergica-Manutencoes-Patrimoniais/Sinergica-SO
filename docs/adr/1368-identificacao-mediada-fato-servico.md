@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1368-identificacao-mediada-fato-servico-md"
+description: "Documento Sinérgica SO: ADR-1368 — Seleção e identificação mediadas de fato de serviço"
+alwaysApply: false
+---
+
 # ADR-1368 — Seleção e identificação mediadas de fato de serviço
 
 **Estado:** proposta; não aplicada nem homologada.

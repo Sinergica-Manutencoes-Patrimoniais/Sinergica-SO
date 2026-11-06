@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1310-recibo-solicitacao-recuperacao-md"
+description: "Documento Sinérgica SO: ADR-1310 — Recibo de solicitação de recuperação"
+alwaysApply: false
+---
+
 # ADR-1310 — Recibo de solicitação de recuperação
 
 ## Decisão

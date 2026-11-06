@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1010-integridade-assessment-proposta-md"
+description: "Documento Sinérgica SO: ADR-1010 — Integridade de Cliente do assessment na proposta"
+alwaysApply: false
+---
+
 # ADR-1010 — Integridade de Cliente do assessment na proposta
 
 Status: preparação fechada, não homologada.

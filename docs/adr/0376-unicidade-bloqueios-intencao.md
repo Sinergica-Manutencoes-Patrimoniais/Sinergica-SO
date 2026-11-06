@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0376-unicidade-bloqueios-intencao-md"
+description: "Documento Sinérgica SO: ADR-0376 — Unicidade e bloqueios da intenção local"
+alwaysApply: false
+---
+
 # ADR-0376 — Unicidade e bloqueios da intenção local
 
 Status: proposta; sem aplicação ou testes.

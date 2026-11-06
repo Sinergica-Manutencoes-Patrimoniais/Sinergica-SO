@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0876-s179-eventos-materiais-mediados-md"
+description: "Documento Sinérgica SO: ADR 0876 — Mediação de disponibilidade e exceções de materiais"
+alwaysApply: false
+---
+
 # ADR 0876 — Mediação de disponibilidade e exceções de materiais
 
 ## Contexto

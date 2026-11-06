@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0771-e01-s168-serializar-autorizacao-finalizacao-md"
+description: "Documento Sinérgica SO: ADR-0771: serializar autorização da finalização"
+alwaysApply: false
+---
+
 # ADR-0771: serializar autorização da finalização
 
 Status: proposta implementada, dependente de revisão adversarial e homologação. Gates permanecem fechados.

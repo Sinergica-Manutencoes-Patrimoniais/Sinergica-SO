@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0867-capacidade-leitura-agenda-tecnico-md"
+description: "Documento Sinérgica SO: ADR 0867 — Contexto de agenda na capacidade"
+alwaysApply: false
+---
+
 # ADR 0867 — Contexto de agenda na capacidade
 
 ## Contexto

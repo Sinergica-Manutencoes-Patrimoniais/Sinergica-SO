@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0213-triagem-intencao-os-enviada-md"
+description: "Documento Sinérgica SO: ADR-0213 — Triagem manual de intenção de OS enviada"
+alwaysApply: false
+---
+
 # ADR-0213 — Triagem manual de intenção de OS enviada
 
 Status: proposta, não homologada.

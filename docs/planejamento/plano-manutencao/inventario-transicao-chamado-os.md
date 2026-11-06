@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-inventario-transicao-chamado-os-md"
+description: "Documento Sinérgica SO: E01-S167 — Inventário inicial da transição Chamado 1:N OS"
+alwaysApply: false
+---
+
 # E01-S167 — Inventário inicial da transição Chamado 1:N OS
 
 Estado: análise local, não exaustiva; não é aprovação, migração ou inventário de produção.

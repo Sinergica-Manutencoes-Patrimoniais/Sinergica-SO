@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0844-leitura-conflitos-webhook-chamado-md"
+description: "Documento Sinérgica SO: ADR-0844 — Leitura de conflitos do webhook na reconciliação"
+alwaysApply: false
+---
+
 # ADR-0844 — Leitura de conflitos do webhook na reconciliação
 
 Estado: proposta local; gates fechados, não homologada. Complementa ADR-0842.

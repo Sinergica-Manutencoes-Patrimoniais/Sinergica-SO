@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1330-autorizacao-aprovacao-plano-md"
+description: "Documento Sinérgica SO: ADR-1330 — Serialização de autorização na aprovação do Plano"
+alwaysApply: false
+---
+
 # ADR-1330 — Serialização de autorização na aprovação do Plano
 
 Status: preparado, gate desligado.

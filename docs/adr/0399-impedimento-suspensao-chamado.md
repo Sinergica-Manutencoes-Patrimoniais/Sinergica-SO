@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0399-impedimento-suspensao-chamado-md"
+description: "Documento Sinérgica SO: ADR-0399 — Impedimento explícito na suspensão"
+alwaysApply: false
+---
+
 # ADR-0399 — Impedimento explícito na suspensão
 
 Prepara-se comando privado que exige impedimento textual explícito além do motivo ao suspender Chamado, preservando revisões e transação do comando administrativo existente. Retomada não recebe impedimento. O impedimento fica vinculado ao evento e auditado; nenhuma conclusão de parada operacional é inferida.

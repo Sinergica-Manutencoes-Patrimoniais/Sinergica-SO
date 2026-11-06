@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1419-eventos-origens-reconciliacao-mediados-md"
+description: "Documento Sinérgica SO: ADR-1419 — Eventos locais mediados de reconciliação"
+alwaysApply: false
+---
+
 # ADR-1419 — Eventos locais mediados de reconciliação
 
 ## Decisão

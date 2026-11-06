@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0958-coordenacao-estrutura-xlsx-abas-md"
+description: "Documento Sinérgica SO: ADR-0958 — Coordenação entre abas no envio de estrutura XLSX"
+alwaysApply: false
+---
+
 # ADR-0958 — Coordenação entre abas no envio de estrutura XLSX
 
 Status: preparação desconectada, sem validação.

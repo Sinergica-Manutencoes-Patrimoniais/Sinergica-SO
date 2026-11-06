@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-impedimentos-desenvolvimento-md"
+description: "Documento Sinérgica SO: Impedimentos e gates de desenvolvimento"
+alwaysApply: false
+---
+
 # Impedimentos e gates de desenvolvimento
 
 - **S175 — OS preexistente:** ADR-1470/migration 1613 preparam vínculo e conferência PCM sem aplicação automática; versão histórica sem fotografia continua pendente. Checagens estáticas passaram; cadeia final, concorrência, ACL/RLS e contrato real seguem sem validação. Gate fechado.

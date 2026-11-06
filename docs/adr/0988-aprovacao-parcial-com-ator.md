@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0988-aprovacao-parcial-com-ator-md"
+description: "Documento Sinérgica SO: ADR-0988 — Identidade e autorização da aprovação parcial"
+alwaysApply: false
+---
+
 # ADR-0988 — Identidade e autorização da aprovação parcial
 
 Status: preparação privada, não homologada.

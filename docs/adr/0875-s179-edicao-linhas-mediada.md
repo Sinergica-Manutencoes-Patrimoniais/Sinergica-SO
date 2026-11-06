@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0875-s179-edicao-linhas-mediada-md"
+description: "Documento Sinérgica SO: ADR 0875 — Mediação da edição de linhas de materiais"
+alwaysApply: false
+---
+
 # ADR 0875 — Mediação da edição de linhas de materiais
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0403-pesos-gutd-auditados-md"
+description: "Documento Sinérgica SO: ADR-0403 — Pesos GUTD auditados e fator ausente"
+alwaysApply: false
+---
+
 # ADR-0403 — Pesos GUTD auditados e fator ausente
 
 O projeto já possui pesos globais `config.priorizacao_gutd` e exige soma 100, com alteração legada restrita a superadmin. Prepara-se comando privado de atualização explícita, com retrato anterior, justificativa, auditoria e idempotência; não cria pesos por Cliente nem altera configuração automaticamente.

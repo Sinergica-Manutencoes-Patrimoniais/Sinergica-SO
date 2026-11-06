@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0890-s169-ocorrencias-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0890 — Fonte parcial de ocorrências para cronograma"
+alwaysApply: false
+---
+
 # ADR-0890 — Fonte parcial de ocorrências para cronograma
 
 Data: 2026-10-30 · Status: preparação, gates fechados; não homologado.

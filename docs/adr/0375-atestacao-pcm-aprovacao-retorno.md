@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0375-atestacao-pcm-aprovacao-retorno-md"
+description: "Documento Sinérgica SO: ADR-0375 — Atestação PCM e decisão preparada do retorno"
+alwaysApply: false
+---
+
 # ADR-0375 — Atestação PCM e decisão preparada do retorno
 
 Status: proposta, não homologada.

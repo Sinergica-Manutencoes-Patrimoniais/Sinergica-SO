@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1182-busca-paginada-identidade-t24-md"
+description: "Documento Sinérgica SO: ADR-1182 — Busca paginada da identidade T−24"
+alwaysApply: false
+---
+
 # ADR-1182 — Busca paginada da identidade T−24
 
 Status: proposta local, não conectada nem homologada.

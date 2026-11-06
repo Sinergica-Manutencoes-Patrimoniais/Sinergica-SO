@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0783-e01-s172-mediacao-escopo-origem-md"
+description: "Documento Sinérgica SO: ADR-0783: mediação de escopo declarado"
+alwaysApply: false
+---
+
 # ADR-0783: mediação de escopo declarado
 
 Status: proposta; gate fechado, homologação pendente.

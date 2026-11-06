@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0135-declaracao-origem-despesa-faturavel-md"
+description: "Documento Sinérgica SO: ADR-0135 — Declaração explícita de repasse de despesa"
+alwaysApply: false
+---
+
 # ADR-0135 — Declaração explícita de repasse de despesa
 
 **Estado:** proposta preparatória, sem homologação ou implantação.

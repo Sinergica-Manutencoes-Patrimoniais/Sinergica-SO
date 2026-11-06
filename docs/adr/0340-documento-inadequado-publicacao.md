@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0340-documento-inadequado-publicacao-md"
+description: "Documento Sinérgica SO: ADR-0340 — Marcação humana de documento inadequado"
+alwaysApply: false
+---
+
 # ADR-0340 — Marcação humana de documento inadequado
 
 Prepara-se marcação humana versionada `inadequado` ou `reavaliado`, com motivo e auditoria imutável. Documento inadequado bloqueia novos vínculos e futuras leituras no destino, sem excluir documento, origem ou histórico. A leitura do levantamento permanece separada para conferência autorizada.

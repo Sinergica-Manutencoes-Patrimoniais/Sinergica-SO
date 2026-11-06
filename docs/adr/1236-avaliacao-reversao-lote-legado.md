@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1236-avaliacao-reversao-lote-legado-md"
+description: "Documento Sinérgica SO: ADR-1236 — Avaliação de reversão do lote de rascunhos"
+alwaysApply: false
+---
+
 # ADR-1236 — Avaliação de reversão do lote de rascunhos
 
 ## Decisão

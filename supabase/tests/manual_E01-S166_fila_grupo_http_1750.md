@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-fila-grupo-http-1750-md"
+description: "Documento Sinérgica SO: Conflito de reabertura de Grupo por HTTP"
+alwaysApply: false
+---
+
 # Conflito de reabertura de Grupo por HTTP
 
 Usar stack isolada com Auth, PostgREST e dados sintéticos. Preparar `manual_E01-S166_grupo_fila_afirmacao.sql`, autenticar o ator sintético e chamar diretamente `sso_reabrir_fila_grupo` com a preparada da fixture e revisão 999.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0914-jornada-xlsx-apenas-desenvolvimento-md"
+description: "Documento Sinérgica SO: ADR-0914 — Composição local da jornada XLSX"
+alwaysApply: false
+---
+
 # ADR-0914 — Composição local da jornada XLSX
 
 Data: 2026-10-30 · Status: preparação, não publicada.

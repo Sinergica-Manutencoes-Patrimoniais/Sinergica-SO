@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0636-recuperacao-lote-antigo-md"
+description: "Documento Sinérgica SO: ADR-0636 — Consulta de tentativa anterior de atualização"
+alwaysApply: false
+---
+
 # ADR-0636 — Consulta de tentativa anterior de atualização
 
 Status: proposta; gate fechado, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0104-preflight-transicao-chamado-os-md"
+description: "Documento Sinérgica SO: ADR-0104 — Diagnóstico agregado para transição Chamado 1:N OS"
+alwaysApply: false
+---
+
 # ADR-0104 — Diagnóstico agregado para transição Chamado 1:N OS
 
 **Estado:** proposta local, não homologada. Complementa ADR-0026 e ADR-0090.

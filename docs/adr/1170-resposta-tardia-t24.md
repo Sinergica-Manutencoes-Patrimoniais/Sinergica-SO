@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1170-resposta-tardia-t24-md"
+description: "Documento Sinérgica SO: ADR-1170 — Observação de resposta tardia T−24"
+alwaysApply: false
+---
+
 # ADR-1170 — Observação de resposta tardia T−24
 
 Status: proposta local, não aplicada nem homologada.

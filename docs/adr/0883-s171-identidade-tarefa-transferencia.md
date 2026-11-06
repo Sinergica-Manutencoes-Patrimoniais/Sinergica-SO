@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0883-s171-identidade-tarefa-transferencia-md"
+description: "Documento Sinérgica SO: ADR-0883 — Conferência da identidade da tarefa antes da transferência"
+alwaysApply: false
+---
+
 # ADR-0883 — Conferência da identidade da tarefa antes da transferência
 
 Data: 2026-10-30 · Status: proposta, não implantada · complementa ADR-0882

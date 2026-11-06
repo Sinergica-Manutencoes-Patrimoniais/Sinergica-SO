@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1634-conflito-revisao-transicao-plano-md"
+description: "Documento Sinérgica SO: ADR-1634: conflito de revisão na transição de Plano"
+alwaysApply: false
+---
+
 # ADR-1634: conflito de revisão na transição de Plano
 
 ## Contexto

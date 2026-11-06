@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1018-historico-fontes-orcamento-md"
+description: "Documento Sinérgica SO: ADR-1018 — Histórico privado das fontes do orçamento"
+alwaysApply: false
+---
+
 # ADR-1018 — Histórico privado das fontes do orçamento
 
 Status: preparação privada, não homologada.

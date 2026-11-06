@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-avaliacao-fila-concorrencia-1735-md"
+description: "Documento Sinérgica SO: Avaliação legada concorrente com fila e Chamado"
+alwaysApply: false
+---
+
 # Avaliação legada concorrente com fila e Chamado
 
 Usar somente clone descartável isolado com migrations até 1735. Preparar `manual_E01-S166_retomada_fila_aguardando.sql` até imediatamente antes da inserção `fixture-1735-depois-fila`, incluindo recursivamente os arquivos `\ir`; confirmar a preparação sintética para usar duas sessões. A ocorrência preparada tem ponte legada e entrada `aguardando` sem avaliação.

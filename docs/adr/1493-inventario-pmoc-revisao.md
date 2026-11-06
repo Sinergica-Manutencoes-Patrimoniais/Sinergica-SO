@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1493-inventario-pmoc-revisao-md"
+description: "Documento Sinérgica SO: ADR-1493 — Inventário explícito de agendamentos PMOC na revisão"
+alwaysApply: false
+---
+
 # ADR-1493 — Inventário explícito de agendamentos PMOC na revisão
 
 ## Contexto

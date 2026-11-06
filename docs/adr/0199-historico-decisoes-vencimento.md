@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0199-historico-decisoes-vencimento-md"
+description: "Documento Sinérgica SO: ADR-0199 — Histórico das decisões preliminares de vencimento"
+alwaysApply: false
+---
+
 # ADR-0199 — Histórico das decisões preliminares de vencimento
 
 Status: proposta, não homologada.

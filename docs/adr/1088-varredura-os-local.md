@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1088-varredura-os-local-md"
+description: "Documento Sinérgica SO: ADR-1088 — Varredura local de OS para reconciliação"
+alwaysApply: false
+---
+
 # ADR-1088 — Varredura local de OS para reconciliação
 
 Status: proposta local, não aplicada nem homologada.

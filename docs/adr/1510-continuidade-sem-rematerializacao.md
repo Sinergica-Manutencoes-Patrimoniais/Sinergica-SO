@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1510-continuidade-sem-rematerializacao-md"
+description: "Documento Sinérgica SO: ADR-1510 — Continuidade entre revisões sem rematerialização"
+alwaysApply: false
+---
+
 # ADR-1510 — Continuidade entre revisões sem rematerialização
 
 ## Contexto

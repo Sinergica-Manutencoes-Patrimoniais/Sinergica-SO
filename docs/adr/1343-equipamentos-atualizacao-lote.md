@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1343-equipamentos-atualizacao-lote-md"
+description: "Documento Sinérgica SO: ADR-1343 — Equipamentos na atualização selecionada em lote"
+alwaysApply: false
+---
+
 # ADR-1343 — Equipamentos na atualização selecionada em lote
 
 **Estado:** proposta; não aplicada nem homologada.

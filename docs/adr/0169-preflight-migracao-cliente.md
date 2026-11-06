@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0169-preflight-migracao-cliente-md"
+description: "Documento Sinérgica SO: ADR-0169 — Diagnóstico agregado de migração por Cliente"
+alwaysApply: false
+---
+
 # ADR-0169 — Diagnóstico agregado de migração por Cliente
 
 Status: proposta, não homologada.

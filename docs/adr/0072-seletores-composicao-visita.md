@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0072-seletores-composicao-visita-md"
+description: "Documento Sinérgica SO: ADR-0072 — Seletores de OS e funcionários para Visita"
+alwaysApply: false
+---
+
 # ADR-0072 — Seletores de OS e funcionários para Visita
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

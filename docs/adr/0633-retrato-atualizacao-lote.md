@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0633-retrato-atualizacao-lote-md"
+description: "Documento Sinérgica SO: ADR-0633 — Retrato da seleção para atualização em lote"
+alwaysApply: false
+---
+
 # ADR-0633 — Retrato da seleção para atualização em lote
 
 Status: proposta; gates fechados, não homologada.

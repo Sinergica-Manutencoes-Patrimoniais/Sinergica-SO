@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1314-consulta-fotos-grupo-mediada-md"
+description: "Documento Sinérgica SO: ADR-1314 — Consulta mediada das fotos aceitas de Grupo"
+alwaysApply: false
+---
+
 # ADR-1314 — Consulta mediada das fotos aceitas de Grupo
 
 ## Decisão

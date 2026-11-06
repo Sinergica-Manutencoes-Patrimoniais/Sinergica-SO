@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1228-disponibilidade-materiais-portal-mediada-md"
+description: "Documento Sinérgica SO: ADR-1228 — Informação de disponibilidade mediada no Portal"
+alwaysApply: false
+---
+
 # ADR-1228 — Informação de disponibilidade mediada no Portal
 
 ## Decisão

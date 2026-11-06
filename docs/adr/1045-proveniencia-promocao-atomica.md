@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1045-proveniencia-promocao-atomica-md"
+description: "Documento Sinérgica SO: ADR-1045 — Proveniência do pedido de promoção atômica"
+alwaysApply: false
+---
+
 # ADR-1045 — Proveniência do pedido de promoção atômica
 
 **Status:** preparação privada, não homologada. Complementa ADR-1044.

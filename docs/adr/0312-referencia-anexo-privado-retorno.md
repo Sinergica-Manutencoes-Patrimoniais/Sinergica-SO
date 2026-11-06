@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0312-referencia-anexo-privado-retorno-md"
+description: "Documento Sinérgica SO: ADR-0312 — Referência privada de foto em retorno"
+alwaysApply: false
+---
+
 # ADR-0312 — Referência privada de foto em retorno
 
 Status: proposta, não homologada.

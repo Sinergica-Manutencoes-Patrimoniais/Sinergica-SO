@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0115-orcamento-operacional-expansao-segura-md"
+description: "Documento Sinérgica SO: ADR-0115 — Expansão sem emissão para vínculo operacional"
+alwaysApply: false
+---
+
 # ADR-0115 — Expansão sem emissão para vínculo operacional
 
 ## Estado

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1271-resolucao-idempotente-origem-campo-md"
+description: "Documento Sinérgica SO: ADR-1271 — Resolução idempotente da origem capturada"
+alwaysApply: false
+---
+
 # ADR-1271 — Resolução idempotente da origem capturada
 
 Status: proposta local; não aplicada nem homologada.

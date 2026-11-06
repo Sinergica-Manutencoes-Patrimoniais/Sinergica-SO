@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1660-fotos-cadastrais-grupo-md"
+description: "Documento Sinérgica SO: ADR-1660 — Leitura segura de fotos cadastrais de Grupo"
+alwaysApply: false
+---
+
 # ADR-1660 — Leitura segura de fotos cadastrais de Grupo
 
 ## Estado

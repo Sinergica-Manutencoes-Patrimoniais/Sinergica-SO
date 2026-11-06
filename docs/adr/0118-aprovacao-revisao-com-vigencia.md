@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0118-aprovacao-revisao-com-vigencia-md"
+description: "Documento Sinérgica SO: ADR-0118 — Preparação da segunda aprovação com vigência"
+alwaysApply: false
+---
+
 # ADR-0118 — Preparação da segunda aprovação com vigência
 
 **Estado:** proposta não aplicada, não testada e não habilitada. Complementa ADR-0089.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0051-previa-revisao-sem-execucao-md"
+description: "Documento Sinérgica SO: ADR-0051 — Comparação preliminar de versões"
+alwaysApply: false
+---
+
 # ADR-0051 — Comparação preliminar de versões
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

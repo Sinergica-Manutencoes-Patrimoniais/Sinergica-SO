@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0960-devolucao-ciclo-backlog-md"
+description: "Documento Sinérgica SO: ADR-0960 — Transição privada de devolução por ciclo"
+alwaysApply: false
+---
+
 # ADR-0960 — Transição privada de devolução por ciclo
 
 Status: preparação isolada; não autoriza operação.

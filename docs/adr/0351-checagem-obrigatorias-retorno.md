@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0351-checagem-obrigatorias-retorno-md"
+description: "Documento Sinérgica SO: ADR-0351 — Checagem das respostas obrigatórias congeladas"
+alwaysApply: false
+---
+
 # ADR-0351 — Checagem das respostas obrigatórias congeladas
 
 Status: proposta, não homologada.

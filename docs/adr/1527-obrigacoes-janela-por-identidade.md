@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1527-obrigacoes-janela-por-identidade-md"
+description: "Documento Sinérgica SO: ADR-1527 — Conferência direta das ocorrências de uma janela"
+alwaysApply: false
+---
+
 # ADR-1527 — Conferência direta das ocorrências de uma janela
 
 ## Contexto

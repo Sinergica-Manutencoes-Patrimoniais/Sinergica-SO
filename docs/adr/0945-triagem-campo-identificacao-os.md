@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0945-triagem-campo-identificacao-os-md"
+description: "Documento Sinérgica SO: ADR-0945 — Identificação legível de OS na triagem de campo"
+alwaysApply: false
+---
+
 # ADR-0945 — Identificação legível de OS na triagem de campo
 
 Status: preparação local, não homologada.

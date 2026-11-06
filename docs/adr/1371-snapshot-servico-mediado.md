@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1371-snapshot-servico-mediado-md"
+description: "Documento Sinérgica SO: ADR-1371 — Fotografia mediada de serviço extra"
+alwaysApply: false
+---
+
 # ADR-1371 — Fotografia mediada de serviço extra
 
 **Estado:** proposta; não aplicada nem homologada.

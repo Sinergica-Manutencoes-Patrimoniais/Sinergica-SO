@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1655-guardas-cliente-final-hierarquia-md"
+description: "Documento Sinérgica SO: ADR-1655 — Guardas sobre Cliente final após normalização"
+alwaysApply: false
+---
+
 # ADR-1655 — Guardas sobre Cliente final após normalização
 
 ## Estado

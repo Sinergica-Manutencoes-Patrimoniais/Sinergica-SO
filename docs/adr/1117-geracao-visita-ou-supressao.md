@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1117-geracao-visita-ou-supressao-md"
+description: "Documento Sinérgica SO: ADR-1117 — Geração ou supressão de semana contratual"
+alwaysApply: false
+---
+
 # ADR-1117 — Geração ou supressão de semana contratual
 
 Status: proposta local, não aplicada nem homologada.

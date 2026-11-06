@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0337-revogar-documento-cobranca-md"
+description: "Documento Sinérgica SO: ADR-0337 — Retirada de documento da cobrança"
+alwaysApply: false
+---
+
 # ADR-0337 — Retirada de documento da cobrança
 
 Status: proposta; gates fechados, sem testes.

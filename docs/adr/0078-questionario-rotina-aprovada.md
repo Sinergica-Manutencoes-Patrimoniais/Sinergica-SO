@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0078-questionario-rotina-aprovada-md"
+description: "Documento Sinérgica SO: ADR-0078 — Leitura mínima de questionário aprovado"
+alwaysApply: false
+---
+
 # ADR-0078 — Leitura mínima de questionário aprovado
 
 ## Decisão

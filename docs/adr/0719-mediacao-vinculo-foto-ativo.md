@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0719-mediacao-vinculo-foto-ativo-md"
+description: "Documento Sinérgica SO: ADR 0719 — Mediação de vínculo de foto a ativo"
+alwaysApply: false
+---
+
 # ADR 0719 — Mediação de vínculo de foto a ativo
 
 ## Decisão

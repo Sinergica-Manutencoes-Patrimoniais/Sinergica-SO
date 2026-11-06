@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1112-acesso-correlacao-gasto-md"
+description: "Documento Sinérgica SO: ADR-1112 — Acesso à correlação declarada de gasto"
+alwaysApply: false
+---
+
 # ADR-1112 — Acesso à correlação declarada de gasto
 
 Status: proposta local, não aplicada nem homologada.

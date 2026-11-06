@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0175-alocacao-faturavel-documento-existente-md"
+description: "Documento Sinérgica SO: ADR-0175 — Alocação de faturável a documento financeiro existente"
+alwaysApply: false
+---
+
 # ADR-0175 — Alocação de faturável a documento financeiro existente
 
 **Estado:** preparação bloqueada, não homologada nem implantada.

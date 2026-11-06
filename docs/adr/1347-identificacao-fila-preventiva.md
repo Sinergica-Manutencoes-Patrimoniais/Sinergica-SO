@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1347-identificacao-fila-preventiva-md"
+description: "Documento Sinérgica SO: ADR 1347 — Identificação da fila preventiva local"
+alwaysApply: false
+---
+
 # ADR 1347 — Identificação da fila preventiva local
 
 ## Contexto

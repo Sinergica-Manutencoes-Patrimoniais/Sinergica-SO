@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0950-decisao-homologacao-ondas-md"
+description: "Documento Sinérgica SO: ADR-0950 — Decisão explícita de onda sobre fotografia de evidências"
+alwaysApply: false
+---
+
 # ADR-0950 — Decisão explícita de onda sobre fotografia de evidências
 
 Status: preparação local; não homologada nem autorizada para produção.

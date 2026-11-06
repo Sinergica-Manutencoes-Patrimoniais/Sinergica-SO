@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1085-observacao-os-reconciliacao-md"
+description: "Documento Sinérgica SO: ADR-1085 — Observação local persistente de OS"
+alwaysApply: false
+---
+
 # ADR-1085 — Observação local persistente de OS
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1148-t24-outbox-unica-md"
+description: "Documento Sinérgica SO: ADR-1148 — Outbox única para candidatas T−24"
+alwaysApply: false
+---
+
 # ADR-1148 — Outbox única para candidatas T−24
 
 Status: proposta local; migrations e consumidores não homologados, gates fechados.

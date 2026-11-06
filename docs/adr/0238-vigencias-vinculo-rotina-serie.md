@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0238-vigencias-vinculo-rotina-serie-md"
+description: "Documento Sinérgica SO: ADR-0238 — Vigência auditada do vínculo Rotina–série"
+alwaysApply: false
+---
+
 # ADR-0238 — Vigência auditada do vínculo Rotina–série
 
 Status: proposta, não homologada.

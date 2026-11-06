@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0058-visita-os-historico-md"
+description: "Documento Sinérgica SO: ADR-0058 — Fundação aditiva de Visita e associação de OS"
+alwaysApply: false
+---
+
 # ADR-0058 — Fundação aditiva de Visita e associação de OS
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

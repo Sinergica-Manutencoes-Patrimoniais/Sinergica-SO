@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0842-conflito-webhook-chamado-encerrado-md"
+description: "Documento Sinérgica SO: ADR-0842 — Conflito de webhook em Chamado encerrado"
+alwaysApply: false
+---
+
 # ADR-0842 — Conflito de webhook em Chamado encerrado
 
 Estado: proposta local; não homologada, gate privado fechado. Complementa ADR-0840 e ADR-0162.

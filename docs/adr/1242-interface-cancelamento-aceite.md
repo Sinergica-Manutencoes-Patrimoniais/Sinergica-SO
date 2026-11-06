@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1242-interface-cancelamento-aceite-md"
+description: "Documento Sinérgica SO: ADR-1242 — Interface do cancelamento de aceite"
+alwaysApply: false
+---
+
 # ADR-1242 — Interface do cancelamento de aceite
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0074-desvinculacao-os-visita-md"
+description: "Documento Sinérgica SO: ADR-0074 — Desvinculação auditada de OS da Visita"
+alwaysApply: false
+---
+
 # ADR-0074 — Desvinculação auditada de OS da Visita
 
 ## Decisão

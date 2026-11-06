@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-continuar-md"
+description: "Documento Sinérgica SO: Continuação do programa SSO"
+alwaysApply: false
+---
+
 # Continuação do programa SSO
 
 Usar [guia de execução Terra](guia-execucao-terra.md) e [programa vigente](programa-sso-terra.md).

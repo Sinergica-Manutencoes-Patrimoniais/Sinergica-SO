@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0592-fila-obrigacoes-preparadas-md"
+description: "Documento Sinérgica SO: ADR-0592 — Consulta de obrigações preparadas"
+alwaysApply: false
+---
+
 # ADR-0592 — Consulta de obrigações preparadas
 
 Consulta paginada por Plano reúne ocorrências preparadas de calendário e de Visita e sinaliza registros aditivos de Grupo sem duplicar a mesma origem. O cursor usa tipo e identidade da ocorrência; a autorização é conferida por Cliente e Plano. O gate inicia desligado e nenhuma permissão é concedida.

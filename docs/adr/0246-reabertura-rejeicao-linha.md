@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0246-reabertura-rejeicao-linha-md"
+description: "Documento Sinérgica SO: ADR-0246 — Reabertura auditada de rejeição de linha"
+alwaysApply: false
+---
+
 # ADR-0246 — Reabertura auditada de rejeição de linha
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0480-localizar-rotina-revisada-md"
+description: "Documento Sinérgica SO: ADR-0480 — Localização da cópia de Rotina"
+alwaysApply: false
+---
+
 # ADR-0480 — Localização da cópia de Rotina
 
 Status: preparada, gate fechado, não aplicada nem homologada. A consulta autorizada identifica a Rotina original no snapshot aprovado e localiza exatamente uma Rotina com a mesma identidade lógica no rascunho do mesmo Plano. Nunca usa nome para inferência nem altera dados; ausência ou ambiguidade bloqueia seleção.

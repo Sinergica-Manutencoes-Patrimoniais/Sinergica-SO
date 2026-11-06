@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0033-historico-movimentacao-componentes-md"
+description: "Documento Sinérgica SO: ADR-0033 — Histórico futuro da estrutura de Componentes"
+alwaysApply: false
+---
+
 # ADR-0033 — Histórico futuro da estrutura de Componentes
 
 **Status:** decisão para implementação local E01-S176. **Data:** 2026-10-27.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1139-classificacao-lote-por-revisao-md"
+description: "Documento Sinérgica SO: ADR-1139 — Classificação do levantamento por revisão"
+alwaysApply: false
+---
+
 # ADR-1139 — Classificação do levantamento por revisão
 
 Status: proposta local, gate fechado; não aplicada nem homologada.

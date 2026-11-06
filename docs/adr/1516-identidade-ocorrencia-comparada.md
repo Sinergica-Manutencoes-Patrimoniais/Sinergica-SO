@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1516-identidade-ocorrencia-comparada-md"
+description: "Documento Sinérgica SO: ADR-1516 — Comparar identidade operacional ao decidir impacto"
+alwaysApply: false
+---
+
 # ADR-1516 — Comparar identidade operacional ao decidir impacto
 
 ## Contexto

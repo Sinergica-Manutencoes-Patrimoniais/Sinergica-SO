@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1484-fila-preventiva-revisao-md"
+description: "Documento Sinérgica SO: ADR-1484 — Vigência na entrada da fila preventiva"
+alwaysApply: false
+---
+
 # ADR-1484 — Vigência na entrada da fila preventiva
 
 ## Contexto

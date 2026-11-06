@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1276-ordem-eventos-origem-campo-md"
+description: "Documento Sinérgica SO: ADR-1276 — Ordem de eventos de origem de campo"
+alwaysApply: false
+---
+
 # ADR-1276 — Ordem de eventos de origem de campo
 
 Status: proposta local; não aplicada nem homologada.

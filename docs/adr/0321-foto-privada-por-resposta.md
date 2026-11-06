@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0321-foto-privada-por-resposta-md"
+description: "Documento Sinérgica SO: ADR-0321 — Foto privada associada a resposta"
+alwaysApply: false
+---
+
 # ADR-0321 — Foto privada associada a resposta
 
 Status: proposta, não homologada.

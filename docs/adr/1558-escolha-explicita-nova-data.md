@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1558-escolha-explicita-nova-data-md"
+description: "Documento Sinérgica SO: ADR-1558 — Reconciliação explícita de data alterada"
+alwaysApply: false
+---
+
 # ADR-1558 — Reconciliação explícita de data alterada
 
 Status: em desenvolvimento, sem liberação operacional. A guarda 1045 permanece ativa.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1278-entregas-e-fila-origem-md"
+description: "Documento Sinérgica SO: ADR-1278 — Acompanhamento de entregas da inbox"
+alwaysApply: false
+---
+
 # ADR-1278 — Acompanhamento de entregas da inbox
 
 Status: proposta local; não aplicada nem homologada.

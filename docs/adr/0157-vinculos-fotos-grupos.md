@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0157-vinculos-fotos-grupos-md"
+description: "Documento Sinérgica SO: ADR-0157 — Vínculo privado de fotos de Grupos Quantitativos"
+alwaysApply: false
+---
+
 # ADR-0157 — Vínculo privado de fotos de Grupos Quantitativos
 
 ## Contexto

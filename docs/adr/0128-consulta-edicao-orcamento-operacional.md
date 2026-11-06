@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0128-consulta-edicao-orcamento-operacional-md"
+description: "Documento Sinérgica SO: ADR-0128 — Edição contextual de orçamento operacional"
+alwaysApply: false
+---
+
 # ADR-0128 — Edição contextual de orçamento operacional
 
 ## Estado

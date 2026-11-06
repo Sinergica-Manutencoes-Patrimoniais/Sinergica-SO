@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-visita-concorrencia-md"
+description: "Documento Sinérgica SO: Concorrência de Visita/PMOC (banco descartável)"
+alwaysApply: false
+---
+
 # Concorrência de Visita/PMOC (banco descartável)
 
 Em banco isolado descartável, aplique migrations até 1645 e execute `setup` numa transação confirmada. Sessões A mantêm a transação aberta por 20 s.

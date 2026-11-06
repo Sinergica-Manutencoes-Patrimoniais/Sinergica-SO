@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1201-impedimento-material-t24-md"
+description: "Documento Sinérgica SO: ADR-1201 — Impedimento por material no início T−24"
+alwaysApply: false
+---
+
 # ADR-1201 — Impedimento por material no início T−24
 
 ## Contexto

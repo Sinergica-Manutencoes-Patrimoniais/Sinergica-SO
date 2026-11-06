@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0379-condicao-alterada-pendencia-resolvida-md"
+description: "Documento Sinérgica SO: ADR-0379 — Condição alterada após resolução"
+alwaysApply: false
+---
+
 # ADR-0379 — Condição alterada após resolução
 
 Consulta privada compara a condição técnica da última resolução humana com o último contexto declarado quando a Pendência permanece resolvida. Alteração é sinalizada ao PCM e requer decisão explícita de reabertura pelo comando existente; não se muda estado automaticamente. Mudança apenas de norma, mantendo a mesma condição, não é tratada como alteração da condição.

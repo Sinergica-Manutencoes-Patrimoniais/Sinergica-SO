@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0149-composicao-backlog-pendencias-md"
+description: "Documento Sinérgica SO: ADR-0149 — Composição privada de Backlog por Pendências"
+alwaysApply: false
+---
+
 # ADR-0149 — Composição privada de Backlog por Pendências
 
 ## Contexto

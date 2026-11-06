@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1288-consulta-conflitos-origem-campo-md"
+description: "Documento Sinérgica SO: ADR 1288 — Consulta de conflitos da origem de campo"
+alwaysApply: false
+---
+
 # ADR 1288 — Consulta de conflitos da origem de campo
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0996-declaracao-etiquetagem-md"
+description: "Documento Sinérgica SO: ADR-0996 — Declaração de etiquetagem"
+alwaysApply: false
+---
+
 # ADR-0996 — Declaração de etiquetagem
 
 Status: preparação privada, não homologada.

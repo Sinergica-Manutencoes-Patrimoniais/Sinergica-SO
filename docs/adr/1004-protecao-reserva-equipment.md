@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1004-protecao-reserva-equipment-md"
+description: "Documento Sinérgica SO: ADR-1004 — Escritores adicionais durante reserva Equipment"
+alwaysApply: false
+---
+
 # ADR-1004 — Escritores adicionais durante reserva Equipment
 
 Status: preparação privada, não homologada.

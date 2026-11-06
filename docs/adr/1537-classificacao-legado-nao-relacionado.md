@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1537-classificacao-legado-nao-relacionado-md"
+description: "Documento Sinérgica SO: ADR-1537 — Classificar Plano legado não relacionado"
+alwaysApply: false
+---
+
 # ADR-1537 — Classificar Plano legado não relacionado
 
 A avaliação de revisão contava como indeterminado todo Plano legado sem relação declarada, mesmo quando o PCM constatava que não pertencia ao escopo. A declaração positiva não prova equivalência.

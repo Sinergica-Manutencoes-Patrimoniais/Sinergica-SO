@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0265-historico-publicacao-pendencia-md"
+description: "Documento Sinérgica SO: ADR-0265 — Histórico interno de comunicação de pendência"
+alwaysApply: false
+---
+
 # ADR-0265 — Histórico interno de comunicação de pendência
 
 Status: proposta; não ativar antes de testes e revisão de segurança.

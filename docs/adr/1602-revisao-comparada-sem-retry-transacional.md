@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1602-revisao-comparada-sem-retry-transacional-md"
+description: "Documento Sinérgica SO: ADR 1602 — Conflito de revisão da decisão comparada"
+alwaysApply: false
+---
+
 # ADR 1602 — Conflito de revisão da decisão comparada
 
 Status: aceito para implementação; homologação pendente.

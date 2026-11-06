@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0778-e01-s172-projecao-esforco-visitas-md"
+description: "Documento Sinérgica SO: ADR-0778: projeção parcial de esforço de OS em Visitas"
+alwaysApply: false
+---
+
 # ADR-0778: projeção parcial de esforço de OS em Visitas
 
 Status: proposta, gates fechados e homologação pendente.

@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-avaliacao-aprovacao-concorrencia-1742-md"
+description: "Documento Sinérgica SO: Avaliação concorrente à fotografia da aprovação"
+alwaysApply: false
+---
+
 # Avaliação concorrente à fotografia da aprovação
 
 Usar clone descartável com migrations até 1742. Preparar `manual_E01-S165_avaliacao_aprovacao_obsoleta_1742.sql` até antes do trecho que desabilita gatilhos; confirmar a preparação sintética, sem desabilitar gatilhos nem modificar a guarda 1045. Obter a preparada e a legada vinculada da fixture.

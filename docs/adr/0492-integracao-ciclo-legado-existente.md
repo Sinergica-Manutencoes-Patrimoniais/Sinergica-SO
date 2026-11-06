@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0492-integracao-ciclo-legado-existente-md"
+description: "Documento Sinérgica SO: ADR-0492 — Integração controlada de ciclo existente"
+alwaysApply: false
+---
+
 # ADR-0492 — Integração controlada de ciclo existente
 
 Status: preparado, gate fechado, não aplicado nem homologado. Um comando autorizado vincula uma ocorrência preparada por calendário a uma ocorrência preventiva legada já existente, usando a ponte canônica 0340, após verificar a relação humana atual entre Planos, mesmo Cliente/alvo/data e ocorrência legada pendente sem OS ou tarefa. É idempotente, auditado e não cria Plano/ocorrência legada, OS ou tarefa Auvo.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1129-proveniencia-simulacao-visita-md"
+description: "Documento Sinérgica SO: ADR-1129 — Proveniência declarada da simulação de Visita"
+alwaysApply: false
+---
+
 # ADR-1129 — Proveniência declarada da simulação de Visita
 
 Status: proposta local, não aplicada nem homologada.

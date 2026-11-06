@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0094-revalidacao-capacidade-confirmacao-visita-md"
+description: "Documento Sinérgica SO: ADR-0094 — Revalidação de capacidade na confirmação da Visita"
+alwaysApply: false
+---
+
 # ADR-0094 — Revalidação de capacidade na confirmação da Visita
 
 ## Estado

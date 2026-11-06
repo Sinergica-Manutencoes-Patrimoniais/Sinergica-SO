@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1163-produtora-corretiva-t24-md"
+description: "Documento Sinérgica SO: ADR-1163 — Candidata corretiva T−24"
+alwaysApply: false
+---
+
 # ADR-1163 — Candidata corretiva T−24
 
 Status: proposta local, não aplicada nem homologada.

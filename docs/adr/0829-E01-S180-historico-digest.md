@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0829-e01-s180-historico-digest-md"
+description: "Documento Sinérgica SO: ADR-0829 — Leitura histórica de comprovante mediado"
+alwaysApply: false
+---
+
 # ADR-0829 — Leitura histórica de comprovante mediado
 
 Status: preparado sob gate fechado; não homologado.

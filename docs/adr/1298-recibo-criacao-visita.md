@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1298-recibo-criacao-visita-md"
+description: "Documento Sinérgica SO: ADR-1298 — Recibo da criação de Visita"
+alwaysApply: false
+---
+
 # ADR-1298 — Recibo da criação de Visita
 
 ## Contexto

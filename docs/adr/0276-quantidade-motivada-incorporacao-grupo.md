@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0276-quantidade-motivada-incorporacao-grupo-md"
+description: "Documento Sinérgica SO: ADR-0276 — Quantidade motivada na incorporação de Grupo"
+alwaysApply: false
+---
+
 # ADR-0276 — Quantidade motivada na incorporação de Grupo
 
 O comando de incorporação de Grupo existente não fornece motivo e é corretamente bloqueado quando a proteção transversal de quantidade está ativa. Prepara-se um wrapper privado com motivo obrigatório e idempotência própria que concede autorização transacional somente à chamada interna e preserva as revisões, validação de lote, campos e transação originais. Mudança de quantidade produz evento adicional auditável com motivo; retries não duplicam o evento.

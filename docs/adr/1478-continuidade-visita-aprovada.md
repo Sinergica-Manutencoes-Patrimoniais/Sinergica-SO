@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1478-continuidade-visita-aprovada-md"
+description: "Documento Sinérgica SO: ADR-1478 — Continuidade de ocorrência por Visita após revisão"
+alwaysApply: false
+---
+
 # ADR-1478 — Continuidade de ocorrência por Visita após revisão
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1354-fila-ciclos-sem-vinculo-md"
+description: "Documento Sinérgica SO: ADR 1354 — Ciclos sem vínculo na fila de conferência PCM"
+alwaysApply: false
+---
+
 # ADR 1354 — Ciclos sem vínculo na fila de conferência PCM
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0791-e01-s172-snapshot-capacidade-parcial-md"
+description: "Documento Sinérgica SO: ADR-0791: snapshot combinado parcial para capacidade semanal"
+alwaysApply: false
+---
+
 # ADR-0791: snapshot combinado parcial para capacidade semanal
 
 Status: proposta em gates fechados; homologação pendente.

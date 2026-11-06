@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0059-criar-visita-rascunho-md"
+description: "Documento Sinérgica SO: ADR-0059 — Criação de Visita em rascunho"
+alwaysApply: false
+---
+
 # ADR-0059 — Criação de Visita em rascunho
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

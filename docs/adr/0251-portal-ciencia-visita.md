@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0251-portal-ciencia-visita-md"
+description: "Documento Sinérgica SO: ADR-0251 — Comunicação de visita publicada ao Portal"
+alwaysApply: false
+---
+
 # ADR-0251 — Comunicação de visita publicada ao Portal
 
 Status: proposta; não ativar antes de revisão e testes de isolamento e concorrência.

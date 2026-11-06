@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1091-coordenacao-periodica-os-md"
+description: "Documento Sinérgica SO: ADR-1091 — Coordenação periódica da varredura local de OS"
+alwaysApply: false
+---
+
 # ADR-1091 — Coordenação periódica da varredura local de OS
 
 Status: proposta local, não aplicada nem homologada.

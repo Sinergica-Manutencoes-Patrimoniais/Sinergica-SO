@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0929-validacao-incremental-sheetdata-edge-md"
+description: "Documento Sinérgica SO: ADR-0929 — Validação incremental de linhas XLSX no Edge experimental"
+alwaysApply: false
+---
+
 # ADR-0929 — Validação incremental de linhas XLSX no Edge experimental
 
 ## Contexto

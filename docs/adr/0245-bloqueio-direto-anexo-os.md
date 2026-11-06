@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0245-bloqueio-direto-anexo-os-md"
+description: "Documento Sinérgica SO: ADR-0245 — Bloqueio coordenado do acesso direto a anexos de OS"
+alwaysApply: false
+---
+
 # ADR-0245 — Bloqueio coordenado do acesso direto a anexos de OS
 
 **Estado:** preparação, gate fechado; não homologada nem implantada.

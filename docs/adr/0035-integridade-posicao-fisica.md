@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0035-integridade-posicao-fisica-md"
+description: "Documento Sinérgica SO: ADR-0035 — Integridade da posição física"
+alwaysApply: false
+---
+
 # ADR-0035 — Integridade da posição física
 
 **Status:** decisão para implementação local E01-S176. **Data:** 2026-10-27.

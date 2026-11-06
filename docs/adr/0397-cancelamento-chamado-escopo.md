@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0397-cancelamento-chamado-escopo-md"
+description: "Documento Sinérgica SO: ADR-0397 — Cancelamento conservador de Chamado"
+alwaysApply: false
+---
+
 # ADR-0397 — Cancelamento conservador de Chamado
 
 Status: proposta, não homologada.

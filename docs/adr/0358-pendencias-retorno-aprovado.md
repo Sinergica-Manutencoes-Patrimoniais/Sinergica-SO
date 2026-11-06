@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0358-pendencias-retorno-aprovado-md"
+description: "Documento Sinérgica SO: ADR-0358 — Pendências de respostas não OK em retorno aprovado"
+alwaysApply: false
+---
+
 # ADR-0358 — Pendências de respostas não OK em retorno aprovado
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1037-bloqueio-encerramento-continuidade-devolvida-md"
+description: "Documento Sinérgica SO: ADR-1037 — Bloqueio conservador de encerramento"
+alwaysApply: false
+---
+
 # ADR-1037 — Bloqueio conservador de encerramento
 
 Status: preparação local; não aplicada nem testada.

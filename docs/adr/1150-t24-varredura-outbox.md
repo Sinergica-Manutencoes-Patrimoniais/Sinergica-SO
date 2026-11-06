@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1150-t24-varredura-outbox-md"
+description: "Documento Sinérgica SO: ADR-1150 — Varredura T−24 e outbox"
+alwaysApply: false
+---
+
 # ADR-1150 — Varredura T−24 e outbox
 
 Status: proposta local, não aplicada nem homologada.

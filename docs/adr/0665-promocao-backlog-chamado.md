@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0665-promocao-backlog-chamado-md"
+description: "Documento Sinérgica SO: ADR-0665 — Promoção integral de composição a Chamado"
+alwaysApply: false
+---
+
 # ADR-0665 — Promoção integral de composição a Chamado
 
 Comando atômico, fechado por gate, promove a composição inteira previamente selecionada; não permite promover subconjunto nem cria OS. Revalida Cliente, revisão e Pendências, cria Chamado com numeração canônica, usa comandos de parcelas e vínculos existentes, registra auditoria e preserva fontes. Repetição da requisição retorna o mesmo resultado. Uma composição já vinculada ou com origem obsoleta é recusada.

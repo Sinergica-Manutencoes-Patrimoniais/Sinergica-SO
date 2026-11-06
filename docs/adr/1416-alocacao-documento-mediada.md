@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1416-alocacao-documento-mediada-md"
+description: "Documento Sinérgica SO: ADR-1416 — Alocação mediada a documento existente"
+alwaysApply: false
+---
+
 # ADR-1416 — Alocação mediada a documento existente
 
 ## Decisão

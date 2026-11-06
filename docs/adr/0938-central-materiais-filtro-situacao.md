@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0938-central-materiais-filtro-situacao-md"
+description: "Documento Sinérgica SO: ADR-0938 — Filtro paginado por situação na Central de Materiais"
+alwaysApply: false
+---
+
 # ADR-0938 — Filtro paginado por situação na Central de Materiais
 
 **Status:** proposto, não homologado.

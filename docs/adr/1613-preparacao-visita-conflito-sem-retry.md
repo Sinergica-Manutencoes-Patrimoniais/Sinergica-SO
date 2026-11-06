@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1613-preparacao-visita-conflito-sem-retry-md"
+description: "Documento Sinérgica SO: ADR 1613 — Revisão obsoleta na preparação de Visita"
+alwaysApply: false
+---
+
 # ADR 1613 — Revisão obsoleta na preparação de Visita
 
 Status: aceito para implementação; homologação pendente.

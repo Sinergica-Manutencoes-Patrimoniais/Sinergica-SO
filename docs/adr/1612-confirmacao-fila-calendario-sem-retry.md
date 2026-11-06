@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1612-confirmacao-fila-calendario-sem-retry-md"
+description: "Documento Sinérgica SO: ADR-1612: conflito definitivo na confirmação da fila de Calendário"
+alwaysApply: false
+---
+
 # ADR-1612: conflito definitivo na confirmação da fila de Calendário
 
 A confirmação com estado ou revisão de fila divergente é uma rejeição definitiva, não uma falha de serialização transitória. O PostgREST de ensaio repete `40001` e pode manter a chamada pendente.

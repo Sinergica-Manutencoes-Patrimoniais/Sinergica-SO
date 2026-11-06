@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0075-ocorrencia-canonica-compatibilidade-md"
+description: "Documento Sinérgica SO: ADR-0075 — Evolução compatível das Ocorrências preventivas"
+alwaysApply: false
+---
+
 # ADR-0075 — Evolução compatível das Ocorrências preventivas
 
 **Status:** decisão técnica para implementação faseada; sem migration ou geração nesta etapa.

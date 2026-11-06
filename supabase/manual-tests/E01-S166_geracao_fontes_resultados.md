@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s166-geracao-fontes-resultados-md"
+description: "Documento Sinérgica SO: S166 — geração contratual e fontes concorrentes"
+alwaysApply: false
+---
+
 # S166 — geração contratual e fontes concorrentes
 
 Em 30/10/2026 foram criados clones sintéticos em rede interna, sem portas ou

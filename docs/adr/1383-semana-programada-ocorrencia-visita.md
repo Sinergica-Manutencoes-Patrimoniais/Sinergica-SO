@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1383-semana-programada-ocorrencia-visita-md"
+description: "Documento Sinérgica SO: ADR-1383 — Semana de referência da ocorrência por Visita"
+alwaysApply: false
+---
+
 # ADR-1383 — Semana de referência da ocorrência por Visita
 
 **Estado:** proposta; não aplicada nem homologada.

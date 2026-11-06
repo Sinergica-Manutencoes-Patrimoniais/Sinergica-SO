@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-reconciliacao-legada-inerte-concorrencia-md"
+description: "Documento Sinérgica SO: Concorrência da declaração de legado inerte"
+alwaysApply: false
+---
+
 # Concorrência da declaração de legado inerte
 
 Executar apenas em clone isolado descartável com migrations até 1730. Preparar `manual_E01-S165_reconciliacao_legada_inerte_1730.sql` até a linha anterior ao bloco `do $$ declare l uuid;f jsonb;r jsonb;r2 jsonb;est text`, incluindo recursivamente os arquivos indicados por `\ir`, e confirmar a preparação sintética. O selo e relógio são simulados no clone; guarda 1045 permanece intacta. Identificar a ocorrência legada de Plano `16630000-1111-4000-8000-000000000097`, índice 1, e obter fotografia autenticada com `pcm.sso_prever_reconciliacao_legada_sso`, Plano SSO `16630000-1111-4000-8000-000000000011` e escolha `17240000-1111-4000-8000-000000000031`.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1042-consulta-confirmacao-realizacao-despesa-md"
+description: "Documento Sinérgica SO: ADR-1042 — Consulta de confirmação da realização de despesa"
+alwaysApply: false
+---
+
 # ADR-1042 — Consulta de confirmação da realização de despesa
 
 Status: preparado, não aplicado ou testado; gate fechado.

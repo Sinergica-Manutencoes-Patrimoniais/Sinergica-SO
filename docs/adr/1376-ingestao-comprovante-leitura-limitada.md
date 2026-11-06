@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1376-ingestao-comprovante-leitura-limitada-md"
+description: "Documento Sinérgica SO: ADR-1376 — Leitura limitada na confirmação de comprovante"
+alwaysApply: false
+---
+
 # ADR-1376 — Leitura limitada na confirmação de comprovante
 
 **Estado:** proposta; não implantada nem homologada.

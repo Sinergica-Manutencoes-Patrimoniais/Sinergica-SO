@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0269-retirada-comunicacao-visita-md"
+description: "Documento Sinérgica SO: ADR-0269 — Retirada de comunicação da visita"
+alwaysApply: false
+---
+
 # ADR-0269 — Retirada de comunicação da visita
 
 Status: proposta; migrations ainda não aplicadas, gates fechados.

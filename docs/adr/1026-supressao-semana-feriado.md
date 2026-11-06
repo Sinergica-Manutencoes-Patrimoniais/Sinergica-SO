@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1026-supressao-semana-feriado-md"
+description: "Documento Sinérgica SO: ADR-1026 — Registro da semana suprimida por feriado"
+alwaysApply: false
+---
+
 # ADR-1026 — Registro da semana suprimida por feriado
 
 Status: preparação fechada, não homologada.

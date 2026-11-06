@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1268-levantamento-estruturado-recepcao-md"
+description: "Documento Sinérgica SO: ADR-1268 — Preparação estruturada para recepção de levantamento"
+alwaysApply: false
+---
+
 # ADR-1268 — Preparação estruturada para recepção de levantamento
 
 Status: proposta local; não homologada nem ativada.

@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s167-cancelado-corrida-instrucoes-md"
+description: "Documento Sinérgica SO: Ensaio de concorrência S167 — somente cluster descartável"
+alwaysApply: false
+---
+
 # Ensaio de concorrência S167 — somente cluster descartável
 
 Restaurar schema sem dados, sem serviços externos e sem cron. Aplicar migrations 1026, 1028, 1040 e 1043; executar `E01-S167_guardar_cancelado_corrida_setup.sql`. Os gates são habilitados apenas nesse clone. Nunca executar este setup em ambiente compartilhado.

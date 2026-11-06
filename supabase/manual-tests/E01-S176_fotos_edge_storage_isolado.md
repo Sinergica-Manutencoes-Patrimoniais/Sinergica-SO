@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s176-fotos-edge-storage-isolado-md"
+description: "Documento Sinérgica SO: E01-S176 — ensaio descartável de fotos cadastrais com Edge e Storage"
+alwaysApply: false
+---
+
 # E01-S176 — ensaio descartável de fotos cadastrais com Edge e Storage
 
 **Especificação de ensaio; infraestrutura ainda não implementada. Não executado.** Este roteiro

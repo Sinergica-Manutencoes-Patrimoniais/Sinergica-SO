@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1232-prazo-corpo-varredura-fila-md"
+description: "Documento Sinérgica SO: ADR-1232 — Prazo de leitura da entrada periódica da fila"
+alwaysApply: false
+---
+
 # ADR-1232 — Prazo de leitura da entrada periódica da fila
 
 ## Decisão

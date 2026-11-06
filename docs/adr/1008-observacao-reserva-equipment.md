@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1008-observacao-reserva-equipment-md"
+description: "Documento Sinérgica SO: ADR-1008 — Observações de reconciliação Equipment"
+alwaysApply: false
+---
+
 # ADR-1008 — Observações de reconciliação Equipment
 
 Status: preparação privada, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0263-tolerancia-identidade-importacao-md"
+description: "Documento Sinérgica SO: ADR-0263 — Tolerância e identidade da Rotina importada"
+alwaysApply: false
+---
+
 # ADR-0263 — Tolerância e identidade da Rotina importada
 
 Status: proposta, não homologada.

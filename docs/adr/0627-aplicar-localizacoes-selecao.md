@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0627-aplicar-localizacoes-selecao-md"
+description: "Documento Sinérgica SO: ADR-0627 — Aplicação selecionada de campos de localização"
+alwaysApply: false
+---
+
 # ADR-0627 — Aplicação selecionada de campos de localização
 
 Status: proposta; gate fechado, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0998-politica-equipment-categoria-md"
+description: "Documento Sinérgica SO: ADR-0998 — Política de Equipment por categoria"
+alwaysApply: false
+---
+
 # ADR-0998 — Política de Equipment por categoria
 
 Status: preparação privada, não homologada.

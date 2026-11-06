@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0203-protecao-lancamentos-vinculados-md"
+description: "Documento Sinérgica SO: ADR-0203 — Proteção de lançamento com origem faturável"
+alwaysApply: false
+---
+
 # ADR-0203 — Proteção de lançamento com origem faturável
 
 **Estado:** preparação bloqueada, não homologada nem implantada.

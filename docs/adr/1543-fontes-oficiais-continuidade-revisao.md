@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1543-fontes-oficiais-continuidade-revisao-md"
+description: "Documento Sinérgica SO: ADR-1543 — Fontes oficiais na continuidade da revisão"
+alwaysApply: false
+---
+
 # ADR-1543 — Fontes oficiais na continuidade da revisão
 
 O SSO mantém a estrutura oficial e o Auvo executa OS. Uma Visita criada no SSO pode não ter antecessor legado; exigir uma ponte para toda Visita impede revisar Planos nativos. Por outro lado, ignorar Planos preventivos legados do Cliente sem relação ou classificação vigente deixa uma fonte local sem tratamento.

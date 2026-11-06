@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0884-s172-snapshot-autorizacao-concorrente-md"
+description: "Documento Sinérgica SO: ADR-0884 — Autorização concorrente do snapshot de capacidade"
+alwaysApply: false
+---
+
 # ADR-0884 — Autorização concorrente do snapshot de capacidade
 
 Data: 2026-10-30 · Status: proposta para implementação, gates fechados.

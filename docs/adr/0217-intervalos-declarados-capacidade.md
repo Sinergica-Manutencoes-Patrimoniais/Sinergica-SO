@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0217-intervalos-declarados-capacidade-md"
+description: "Documento Sinérgica SO: ADR-0217 — Intervalos declarados para conferência de capacidade"
+alwaysApply: false
+---
+
 # ADR-0217 — Intervalos declarados para conferência de capacidade
 
 Status: proposta, não homologada.

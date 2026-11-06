@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0254-atualizacao-observacoes-ativo-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0254 — Atualização conservadora de observações de ativos"
+alwaysApply: false
+---
+
 # ADR-0254 — Atualização conservadora de observações de ativos
 
 ## Decisão

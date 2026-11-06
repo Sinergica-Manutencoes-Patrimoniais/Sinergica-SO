@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0048-aprovacao-snapshot-plano-md"
+description: "Documento Sinérgica SO: ADR-0048 — Aprovação transacional com snapshot"
+alwaysApply: false
+---
+
 # ADR-0048 — Aprovação transacional com snapshot
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0414-lock-ciclo-visita-md"
+description: "Documento Sinérgica SO: ADR-0414 — locks do ciclo da Visita"
+alwaysApply: false
+---
+
 # ADR-0414 — locks do ciclo da Visita
 
 Status: proposto; não aplicado nem homologado.

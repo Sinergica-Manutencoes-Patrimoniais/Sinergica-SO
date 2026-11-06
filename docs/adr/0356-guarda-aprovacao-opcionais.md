@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0356-guarda-aprovacao-opcionais-md"
+description: "Documento Sinérgica SO: ADR-0356 — Guarda de cobertura e perguntas opcionais"
+alwaysApply: false
+---
+
 # ADR-0356 — Guarda de cobertura e perguntas opcionais
 
 Status: proposta, não homologada.

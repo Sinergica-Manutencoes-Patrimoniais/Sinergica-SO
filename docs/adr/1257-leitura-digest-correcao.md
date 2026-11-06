@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1257-leitura-digest-correcao-md"
+description: "Documento Sinérgica SO: ADR-1257 — Leitura de comprovante corrigido com digest"
+alwaysApply: false
+---
+
 # ADR-1257 — Leitura de comprovante corrigido com digest
 
 **Status:** proposta local, não homologada. Complementa ADR-1256.

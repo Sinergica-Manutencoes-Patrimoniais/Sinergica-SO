@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1318-leitura-foto-verificada-grupo-md"
+description: "Documento Sinérgica SO: ADR-1318 — Leitura da foto verificada vinculada ao Grupo"
+alwaysApply: false
+---
+
 # ADR-1318 — Leitura da foto verificada vinculada ao Grupo
 
 ## Decisão

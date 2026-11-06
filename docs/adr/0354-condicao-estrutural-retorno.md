@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0354-condicao-estrutural-retorno-md"
+description: "Documento Sinérgica SO: ADR-0354 — Condição estrutural transacional do retorno"
+alwaysApply: false
+---
+
 # ADR-0354 — Condição estrutural transacional do retorno
 
 Status: proposta, não homologada.

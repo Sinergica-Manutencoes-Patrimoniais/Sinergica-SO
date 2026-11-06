@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0275-aplicacao-proposta-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0275 — Aplicação de proposta de reprocessamento"
+alwaysApply: false
+---
+
 # ADR-0275 — Aplicação de proposta de reprocessamento
 
 Status: proposta, não homologada.

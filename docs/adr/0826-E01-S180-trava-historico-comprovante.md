@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0826-e01-s180-trava-historico-comprovante-md"
+description: "Documento Sinérgica SO: ADR-0826 — Trava conservadora da leitura histórica legada"
+alwaysApply: false
+---
+
 # ADR-0826 — Trava conservadora da leitura histórica legada
 
 Status: preparado, não homologado.

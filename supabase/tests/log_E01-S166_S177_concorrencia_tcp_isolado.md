@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-log-e01-s166-s177-concorrencia-tcp-isolado-md"
+description: "Documento Sinérgica SO: S166/S177 — concorrência por TCP interno"
+alwaysApply: false
+---
+
 # S166/S177 — concorrência por TCP interno
 
 Clone sintético isolado, rede interna, sem portas publicadas. Credencial sintética efêmera alterada apenas no clone e omitida desta evidência. Fixture adaptada somente em memória para loopback; não comprova Auth ou integração oficiais.

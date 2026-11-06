@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1040-confirmacao-alertas-capacidade-md"
+description: "Documento Sinérgica SO: ADR-1040 — Confirmação declarada de alertas ao reprogramar"
+alwaysApply: false
+---
+
 # ADR-1040 — Confirmação declarada de alertas ao reprogramar
 
 Status: preparação local, sem aplicação ou testes; gate e execução fechados.

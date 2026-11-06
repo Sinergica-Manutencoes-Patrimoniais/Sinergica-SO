@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0995-ciclo-codigo-marcos-observados-md"
+description: "Documento Sinérgica SO: ADR-0995 — Inicialização do ciclo em marco observado"
+alwaysApply: false
+---
+
 # ADR-0995 — Inicialização do ciclo em marco observado
 
 Status: preparação privada, não homologada.

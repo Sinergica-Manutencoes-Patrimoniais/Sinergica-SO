@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0316-correcao-modo-proposta-md"
+description: "Documento Sinérgica SO: ADR-0316 — Correção auditada do modo de faturamento"
+alwaysApply: false
+---
+
 # ADR-0316 — Correção auditada do modo de faturamento
 
 Status: proposta; gate fechado, revisão e testes pendentes.

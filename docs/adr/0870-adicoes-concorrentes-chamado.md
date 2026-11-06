@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0870-adicoes-concorrentes-chamado-md"
+description: "Documento Sinérgica SO: ADR 0870 — Criações concorrentes de OS e revisão do Chamado"
+alwaysApply: false
+---
+
 # ADR 0870 — Criações concorrentes de OS e revisão do Chamado
 
 S167 exige três comandos distintos concorrentes, mas o contrato genérico afirma que toda revisão obsoleta retorna conflito. O ensaio `E01-S167_tripla_os_resultados.md` demonstrou que as duas exigências entram em conflito quando três operadores partem da mesma revisão: apenas uma criação é aceita.

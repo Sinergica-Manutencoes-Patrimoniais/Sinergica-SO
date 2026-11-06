@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1274-conferir-projecao-no-banco-md"
+description: "Documento Sinérgica SO: ADR-1274 — Conferência transacional da projeção de campo"
+alwaysApply: false
+---
+
 # ADR-1274 — Conferência transacional da projeção de campo
 
 Status: proposta local; não aplicada nem homologada.

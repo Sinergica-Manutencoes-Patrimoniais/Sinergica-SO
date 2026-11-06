@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0032-grupo-quantitativo-no-pcm-md"
+description: "Documento Sinérgica SO: ADR-0032 — Grupo Quantitativo em Local existente"
+alwaysApply: false
+---
+
 # ADR-0032 — Grupo Quantitativo em Local existente
 
 **Status:** Decisão para implementação local da E01-S176. **Data:** 2026-10-26.

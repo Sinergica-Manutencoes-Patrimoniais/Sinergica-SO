@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1229-recibo-disponibilidade-materiais-portal-md"
+description: "Documento Sinérgica SO: ADR-1229 — Recibo de disponibilidade de materiais"
+alwaysApply: false
+---
+
 # ADR-1229 — Recibo de disponibilidade de materiais
 
 ## Decisão

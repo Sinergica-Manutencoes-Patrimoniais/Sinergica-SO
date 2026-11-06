@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0333-documento-publico-cobranca-md"
+description: "Documento Sinérgica SO: ADR-0333 — Documento público associado à cobrança"
+alwaysApply: false
+---
+
 # ADR-0333 — Documento público associado à cobrança
 
 Status: proposta; gate fechado, sem testes.

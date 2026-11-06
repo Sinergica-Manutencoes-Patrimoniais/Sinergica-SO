@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1437-criacao-atomica-os-grupo-md"
+description: "Documento Sinérgica SO: ADR 1437 — Criação de OS para Grupo Quantitativo"
+alwaysApply: false
+---
+
 # ADR 1437 — Criação de OS para Grupo Quantitativo
 
 Uma intenção existente pode originar uma OS preventiva local, decisão e vínculo em transação única, preservando fotografia da rotina e quantidade histórica. A chave de pedido permite repetição da mesma operação e a ocorrência serializa criações concorrentes. A operação depende de permissões e gates existentes; o gate de criação permanece desligado.

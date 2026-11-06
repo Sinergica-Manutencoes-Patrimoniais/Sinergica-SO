@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0979-seletor-os-ciclo-posterior-md"
+description: "Documento Sinérgica SO: ADR-0979 — Seleção de OS para ciclo posterior"
+alwaysApply: false
+---
+
 # ADR-0979 — Seleção de OS para ciclo posterior
 
 Status: preparação privada, não homologada.

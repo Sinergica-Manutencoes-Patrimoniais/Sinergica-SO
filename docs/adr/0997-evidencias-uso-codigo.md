@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0997-evidencias-uso-codigo-md"
+description: "Documento Sinérgica SO: ADR-0997 — Evidências observáveis de uso do código"
+alwaysApply: false
+---
+
 # ADR-0997 — Evidências observáveis de uso do código
 
 Status: preparação privada, não homologada.

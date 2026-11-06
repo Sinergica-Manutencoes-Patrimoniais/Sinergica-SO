@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0373-recuperacao-intencao-local-md"
+description: "Documento Sinérgica SO: ADR-0373 — Consulta e recuperação de intenção local"
+alwaysApply: false
+---
+
 # ADR-0373 — Consulta e recuperação de intenção local
 
 Status: proposta; sem aplicação, testes ou despacho.

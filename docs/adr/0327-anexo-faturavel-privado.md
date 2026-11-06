@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0327-anexo-faturavel-privado-md"
+description: "Documento Sinérgica SO: ADR-0327 — Anexo privado de item faturável"
+alwaysApply: false
+---
+
 # ADR-0327 — Anexo privado de item faturável
 
 Status: proposta; gate e funções fechados, sem testes.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0668-ciclo-reservas-md"
+description: "Documento Sinérgica SO: ADR-0668 — Ciclo de reservas e aprovação integral"
+alwaysApply: false
+---
+
 # ADR-0668 — Ciclo de reservas e aprovação integral
 
 Status: proposta; gates fechados, não homologada.

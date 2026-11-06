@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1068-os-parcela-direta-md"
+description: "Documento Sinérgica SO: ADR-1068 — Criação de OS com parcela direta do Chamado"
+alwaysApply: false
+---
+
 # ADR-1068 — Criação de OS com parcela direta do Chamado
 
 **Status:** preparação privada, não homologada. Complementa ADR-1046 e ADR-0968.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0928-prazo-transporte-comprovante-financeiro-md"
+description: "Documento Sinérgica SO: ADR-0928 — Prazo do download de comprovante"
+alwaysApply: false
+---
+
 # ADR-0928 — Prazo do download de comprovante
 
 ## Contexto

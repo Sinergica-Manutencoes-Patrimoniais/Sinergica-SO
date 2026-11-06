@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1501-mediacao-ponte-visita-md"
+description: "Documento Sinérgica SO: ADR-1501 — Mediação da ponte legada de Visita"
+alwaysApply: false
+---
+
 # ADR-1501 — Mediação da ponte legada de Visita
 
 A ponte de Visita e a conferência informativa compartilham o escopo da revisão e precisam das mesmas garantias de sessão. Expor mediadores sob o gate da ADR-1500; Visita exige também `visita.confirmar`, antes e depois da operação. As escritas preservam protocolo de concorrência, replay e guardas de origem e vigência. Não criar OS ou tarefa.

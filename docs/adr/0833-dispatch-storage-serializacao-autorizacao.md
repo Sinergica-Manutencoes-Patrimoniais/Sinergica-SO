@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0833-dispatch-storage-serializacao-autorizacao-md"
+description: "Documento Sinérgica SO: ADR-0833 — Dispatcher privado com serialização de autorização"
+alwaysApply: false
+---
+
 # ADR-0833 — Dispatcher privado com serialização de autorização
 
 Status: preparação desconectada, não autoriza alteração de policies ou rollout.

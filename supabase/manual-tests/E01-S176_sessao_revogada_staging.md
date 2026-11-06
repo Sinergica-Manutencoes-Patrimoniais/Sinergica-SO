@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s176-sessao-revogada-staging-md"
+description: "Documento Sinérgica SO: Ensaio pendente — sessão revogada durante leitura de anexos staging"
+alwaysApply: false
+---
+
 # Ensaio pendente — sessão revogada durante leitura de anexos staging
 
 Ainda não executado. As três funções chamam `serve` no carregamento e usam Auth e Storage reais; não há factory de handler com dependências injetáveis. Os testes abaixo exigem harness real específico e não são cobertos pelo ensaio de fotos cadastrais de Grupo.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0198-despesas-periodo-tecnico-md"
+description: "Documento Sinérgica SO: ADR-0198 — Despesas por Cliente, período e técnico"
+alwaysApply: false
+---
+
 # ADR-0198 — Despesas por Cliente, período e técnico
 
 **Estado:** proposta preparatória, sem homologação nem implantação.

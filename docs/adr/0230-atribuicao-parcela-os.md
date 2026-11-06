@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0230-atribuicao-parcela-os-md"
+description: "Documento Sinérgica SO: ADR-0230 — Atribuição explícita de parcela a OS"
+alwaysApply: false
+---
+
 # ADR-0230 — Atribuição explícita de parcela a OS
 
 ## Decisão

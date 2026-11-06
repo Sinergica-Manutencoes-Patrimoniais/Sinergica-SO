@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1284-recibos-acoes-chamado-campo-md"
+description: "Documento Sinérgica SO: ADR-1284 — Consulta de recibos das ações de Chamado de campo"
+alwaysApply: false
+---
+
 # ADR-1284 — Consulta de recibos das ações de Chamado de campo
 
 Status: proposta local; não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1462-executor-origem-campo-md"
+description: "Documento Sinérgica SO: ADR 1462 — Entrada de processamento da origem de campo"
+alwaysApply: false
+---
+
 # ADR 1462 — Entrada de processamento da origem de campo
 
 A composição existente recebe uma entrada HTTP interna desativada por padrão. Ela exige a credencial de serviço pela composição e uma impressão digital configurada para a definição exata do contrato. A impressão digital limita o contrato usado; sua configuração não substitui a revisão independente da integração. Não há agendamento automático nesta mudança.

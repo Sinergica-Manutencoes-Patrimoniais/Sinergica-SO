@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0762-isolamento-fotos-com-digest-md"
+description: "Documento Sinérgica SO: ADR 0762 — Isolamento de fotos com digest dos caminhos legados"
+alwaysApply: false
+---
+
 # ADR 0762 — Isolamento de fotos com digest dos caminhos legados
 
 ## Decisão

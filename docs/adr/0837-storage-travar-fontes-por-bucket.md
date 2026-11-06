@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0837-storage-travar-fontes-por-bucket-md"
+description: "Documento Sinérgica SO: ADR-0837 — Preparar travas das fontes de upload"
+alwaysApply: false
+---
+
 # ADR-0837 — Preparar travas das fontes de upload
 
 Status: experimental e desconectado; não altera policies nem autoriza rollout.

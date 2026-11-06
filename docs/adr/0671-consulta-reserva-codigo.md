@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0671-consulta-reserva-codigo-md"
+description: "Documento Sinérgica SO: ADR-0671 — Consulta autorizada de reserva"
+alwaysApply: false
+---
+
 # ADR-0671 — Consulta autorizada de reserva
 
 Status: proposta; gates fechados, não homologada.

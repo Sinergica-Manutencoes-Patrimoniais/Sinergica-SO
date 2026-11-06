@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0153-revisao-proposta-continuidade-md"
+description: "Documento Sinérgica SO: ADR-0153 — Revisão PCM de proposta de continuidade"
+alwaysApply: false
+---
+
 # ADR-0153 — Revisão PCM de proposta de continuidade
 
 Status: proposta, não homologada.

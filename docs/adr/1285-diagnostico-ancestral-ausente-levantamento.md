@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1285-diagnostico-ancestral-ausente-levantamento-md"
+description: "Documento Sinérgica SO: ADR 1285 — Diagnóstico de ancestral ausente no levantamento"
+alwaysApply: false
+---
+
 # ADR 1285 — Diagnóstico de ancestral ausente no levantamento
 
 ## Contexto

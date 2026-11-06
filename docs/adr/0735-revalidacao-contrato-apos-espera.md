@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0735-revalidacao-contrato-apos-espera-md"
+description: "Documento Sinérgica SO: ADR-0735 — Revalidar autorização após espera em ativação"
+alwaysApply: false
+---
+
 # ADR-0735 — Revalidar autorização após espera em ativação
 
 **Status:** incremento preparado para diagnóstico; não homologado nem implantado.

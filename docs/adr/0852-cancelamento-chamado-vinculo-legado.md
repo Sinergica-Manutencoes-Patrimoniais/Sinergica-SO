@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0852-cancelamento-chamado-vinculo-legado-md"
+description: "Documento Sinérgica SO: ADR 0852 — Cancelamento conservador e vínculo legado"
+alwaysApply: false
+---
+
 # ADR 0852 — Cancelamento conservador e vínculo legado
 
 O cancelamento conservador consultava apenas OS com `chamado_id`, ignorando uma OS apontada exclusivamente por `chamados.ordem_servico_id`. Isso poderia ocultar uma OS pendente ou inconsistência na decisão de cancelar.

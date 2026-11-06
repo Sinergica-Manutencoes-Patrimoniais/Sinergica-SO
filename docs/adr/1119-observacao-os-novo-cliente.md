@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1119-observacao-os-novo-cliente-md"
+description: "Documento Sinérgica SO: ADR-1119 — Iniciar observação da OS no Cliente atual"
+alwaysApply: false
+---
+
 # ADR-1119 — Iniciar observação da OS no Cliente atual
 
 Status: proposta local, não aplicada nem homologada.

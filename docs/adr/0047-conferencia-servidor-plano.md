@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0047-conferencia-servidor-plano-md"
+description: "Documento Sinérgica SO: ADR-0047 — Conferência de Rotinas no servidor"
+alwaysApply: false
+---
+
 # ADR-0047 — Conferência de Rotinas no servidor
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

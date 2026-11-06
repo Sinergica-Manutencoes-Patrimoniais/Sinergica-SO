@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1362-projecao-operacao-vinculos-ambiguos-md"
+description: "Documento Sinérgica SO: ADR-1362 — Salvaguardas da projeção operacional de Chamados"
+alwaysApply: false
+---
+
 # ADR-1362 — Salvaguardas da projeção operacional de Chamados
 
 **Estado:** proposta; não aplicada nem homologada.

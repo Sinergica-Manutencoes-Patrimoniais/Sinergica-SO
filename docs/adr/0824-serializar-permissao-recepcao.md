@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0824-serializar-permissao-recepcao-md"
+description: "Documento Sinérgica SO: ADR 0824 — Serializar autorização de recepção até commit"
+alwaysApply: false
+---
+
 # ADR 0824 — Serializar autorização de recepção até commit
 
 Reutilizar a trava compartilhada transacional `sso-autorizacao-confirmacao-visita`, cujo lado exclusivo protege as fontes de permissão em 0319. A recepção a obtém com `pg_try_advisory_xact_lock_shared` antes da primeira consulta de autorização e antes das travas de request e origem; se indisponível, retorna conflito explícito para repetição. A trava permanece até o commit ou rollback, inclusive no replay.

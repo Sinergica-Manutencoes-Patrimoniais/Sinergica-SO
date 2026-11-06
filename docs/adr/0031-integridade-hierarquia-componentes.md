@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0031-integridade-hierarquia-componentes-md"
+description: "Documento Sinérgica SO: ADR-0031 — Integridade concorrente da hierarquia de Componentes"
+alwaysApply: false
+---
+
 # ADR-0031 — Integridade concorrente da hierarquia de Componentes
 
 **Status:** Decisão para implementação local da E01-S176. **Data:** 2026-10-26.

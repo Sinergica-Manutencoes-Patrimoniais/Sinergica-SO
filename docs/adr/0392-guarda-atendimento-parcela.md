@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0392-guarda-atendimento-parcela-md"
+description: "Documento Sinérgica SO: ADR-0392 — Guarda transversal de atendimento de parcela"
+alwaysApply: false
+---
+
 # ADR-0392 — Guarda transversal de atendimento de parcela
 
 Prepara-se proteção opcional na transição de parcela para `atendida`: a revisão humana mais recente deve declarar condição atendida, referenciar a mesma OS atribuída e manter Cliente/Chamado compatíveis; a OS deve estar finalizada. A guarda protege também o comando legado, sem alterar outras operações ou histórico e sem transformar status da OS em prova suficiente.

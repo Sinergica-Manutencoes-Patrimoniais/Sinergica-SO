@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0362-confirmacao-cliente-visita-md"
+description: "Documento Sinérgica SO: ADR-0362 — Confirmação explícita do Cliente na Visita"
+alwaysApply: false
+---
+
 # ADR-0362 — Confirmação explícita do Cliente na Visita
 
 Status: proposta; sem ativação, testes ou envio ao Auvo.

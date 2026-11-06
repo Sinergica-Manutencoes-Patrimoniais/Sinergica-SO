@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1469-avanco-execucao-origem-md"
+description: "Documento Sinérgica SO: ADR-1469 — Avanço limitado de execução pela origem"
+alwaysApply: false
+---
+
 # ADR-1469 — Avanço limitado de execução pela origem
 
 Status: preparação local, gate fechado; complementa ADR-1467 e ADR-1468.

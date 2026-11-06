@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1366-leitura-mediada-fato-servico-md"
+description: "Documento Sinérgica SO: ADR-1366 — Leitura mediada da identidade de serviço"
+alwaysApply: false
+---
+
 # ADR-1366 — Leitura mediada da identidade de serviço
 
 **Estado:** proposta; não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1337-confirmar-chamado-os-atomico-md"
+description: "Documento Sinérgica SO: ADR-1337 — Confirmar Chamado de OS avulsa atomicamente"
+alwaysApply: false
+---
+
 # ADR-1337 — Confirmar Chamado de OS avulsa atomicamente
 
 **Estado:** proposta; não aplicada nem homologada.

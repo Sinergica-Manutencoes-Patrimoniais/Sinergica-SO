@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1321-recuperacao-upload-comprovante-md"
+description: "Documento Sinérgica SO: ADR-1321 — Recuperação de upload mediado de comprovante"
+alwaysApply: false
+---
+
 # ADR-1321 — Recuperação de upload mediado de comprovante
 
 Estado: preparação local, desabilitada; não autoriza implantação ou abertura de gates.

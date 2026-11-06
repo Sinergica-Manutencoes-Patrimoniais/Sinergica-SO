@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0431-revalidacao-incerteza-os-md"
+description: "Documento Sinérgica SO: ADR-0431 — revalidação local da incerteza de OS"
+alwaysApply: false
+---
+
 # ADR-0431 — revalidação local da incerteza de OS
 
 Status: proposto; não aplicado nem homologado.

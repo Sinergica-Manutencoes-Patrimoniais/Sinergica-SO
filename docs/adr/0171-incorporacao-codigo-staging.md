@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0171-incorporacao-codigo-staging-md"
+description: "Documento Sinérgica SO: ADR-0171 — Código provisório na incorporação de ativo"
+alwaysApply: false
+---
+
 # ADR-0171 — Código provisório na incorporação de ativo
 
 ## Decisão

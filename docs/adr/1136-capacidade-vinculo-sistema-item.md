@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1136-capacidade-vinculo-sistema-item-md"
+description: "Documento Sinérgica SO: ADR-1136 — Capacidade no vínculo Sistema–Componente"
+alwaysApply: false
+---
+
 # ADR-1136 — Capacidade no vínculo Sistema–Componente
 
 Status: proposta local, dependente da ADR-1135, não aplicada nem homologada.

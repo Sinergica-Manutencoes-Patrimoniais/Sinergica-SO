@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0259-aprovacao-lote-cronograma-staging-md"
+description: "Documento Sinérgica SO: ADR-0259 — Aprovação isolada de lote em staging"
+alwaysApply: false
+---
+
 # ADR-0259 — Aprovação isolada de lote em staging
 
 Status: proposta, não homologada.

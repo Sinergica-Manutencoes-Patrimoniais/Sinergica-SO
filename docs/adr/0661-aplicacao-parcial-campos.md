@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0661-aplicacao-parcial-campos-md"
+description: "Documento Sinérgica SO: ADR-0661 — Aplicação oficial de campos com aprovação parcial"
+alwaysApply: false
+---
+
 # ADR-0661 — Aplicação oficial de campos com aprovação parcial
 
 Status: proposta; gates fechados, não homologada.

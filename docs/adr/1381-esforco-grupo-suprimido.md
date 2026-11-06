@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1381-esforco-grupo-suprimido-md"
+description: "Documento Sinérgica SO: ADR-1381 — Esforço de Grupo em Visita suprimida"
+alwaysApply: false
+---
+
 # ADR-1381 — Esforço de Grupo em Visita suprimida
 
 **Estado:** proposta; não aplicada nem homologada.

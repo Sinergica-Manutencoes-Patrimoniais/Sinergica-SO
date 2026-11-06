@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0286-faturavel-proposta-aceita-md"
+description: "Documento Sinérgica SO: ADR-0286 — Candidato faturável de proposta operacional aceita"
+alwaysApply: false
+---
+
 # ADR-0286 — Candidato faturável de proposta operacional aceita
 
 Status: proposta; gate fechado e revisão pendente.

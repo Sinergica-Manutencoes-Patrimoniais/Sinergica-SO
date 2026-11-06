@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1094-consulta-inicio-processamento-md"
+description: "Documento Sinérgica SO: ADR-1094 — Consulta do início observado de processamento"
+alwaysApply: false
+---
+
 # ADR-1094 — Consulta do início observado de processamento
 
 Status: proposta local, não aplicada nem homologada.

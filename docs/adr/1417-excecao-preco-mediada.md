@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1417-excecao-preco-mediada-md"
+description: "Documento Sinérgica SO: ADR-1417 — Exceção de preço mediada"
+alwaysApply: false
+---
+
 # ADR-1417 — Exceção de preço mediada
 
 ## Decisão

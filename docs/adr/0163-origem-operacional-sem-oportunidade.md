@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0163-origem-operacional-sem-oportunidade-md"
+description: "Documento Sinérgica SO: ADR-0163 — Origem operacional sem oportunidade fictícia"
+alwaysApply: false
+---
+
 # ADR-0163 — Origem operacional sem oportunidade fictícia
 
 **Estado:** preparação bloqueada, não homologada nem implantada.

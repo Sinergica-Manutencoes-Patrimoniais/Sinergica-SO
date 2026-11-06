@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0708-validacao-localizacao-fail-closed-md"
+description: "Documento Sinérgica SO: ADR-0708 — Validação obrigatória ao incorporar Localização"
+alwaysApply: false
+---
+
 # ADR-0708 — Validação obrigatória ao incorporar Localização
 
 A validação da ADR-0604 torna-se obrigatória para novas incorporações ou atualizações de Área, Local e Sublocal originadas em levantamento. Se o gate de validação estiver desligado, a inserção do fato de incorporação/atualização falha e a transação reverte integralmente. Os atributos em staging e o histórico permanecem intactos; a operação não é silenciosamente parcial.

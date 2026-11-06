@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1345-interface-importacao-cronograma-xlsx-md"
+description: "Documento Sinérgica SO: ADR-1345 — Interface controlada da recepção XLSX de cronograma"
+alwaysApply: false
+---
+
 # ADR-1345 — Interface controlada da recepção XLSX de cronograma
 
 **Estado:** proposta; não implantada nem homologada.

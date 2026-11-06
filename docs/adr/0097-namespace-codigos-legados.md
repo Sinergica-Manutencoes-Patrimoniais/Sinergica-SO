@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0097-namespace-codigos-legados-md"
+description: "Documento Sinérgica SO: ADR-0097 — Proposta de transição do namespace de códigos"
+alwaysApply: false
+---
+
 # ADR-0097 — Proposta de transição do namespace de códigos
 
 ## Estado

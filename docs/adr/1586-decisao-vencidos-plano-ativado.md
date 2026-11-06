@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1586-decisao-vencidos-plano-ativado-md"
+description: "Documento Sinérgica SO: ADR 1586 — Decisão preliminar de vencidos após ativação"
+alwaysApply: false
+---
+
 # ADR 1586 — Decisão preliminar de vencidos após ativação
 
 ## Contexto

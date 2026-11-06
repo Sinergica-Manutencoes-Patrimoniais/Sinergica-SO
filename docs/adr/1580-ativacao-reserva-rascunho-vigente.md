@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1580-ativacao-reserva-rascunho-vigente-md"
+description: "Documento Sinérgica SO: ADR 1580 — Aplicação de escolha de rascunho após vigência"
+alwaysApply: false
+---
+
 # ADR 1580 — Aplicação de escolha de rascunho após vigência
 
 ## Contexto

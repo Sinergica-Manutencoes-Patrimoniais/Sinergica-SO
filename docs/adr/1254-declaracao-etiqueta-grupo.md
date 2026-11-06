@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1254-declaracao-etiqueta-grupo-md"
+description: "Documento Sinérgica SO: ADR-1254 — Declaração de etiqueta de Grupo"
+alwaysApply: false
+---
+
 # ADR-1254 — Declaração de etiqueta de Grupo
 
 **Status:** proposta local, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-inventario-recorte-candidato-md"
+description: "Documento Sinérgica SO: Inventário estático preliminar — base origin/main"
+alwaysApply: false
+---
+
 # Inventário estático preliminar — base origin/main
 
 **Atenção:** gerado a partir do backup `84c9fcf`; não inclui alterações posteriores, como as migrations 1802 e 1803. Não aplicar ou usar como lista final de entrega. Regerar e revisar o fechamento depois da conclusão do lote.

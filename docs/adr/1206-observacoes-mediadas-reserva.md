@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1206-observacoes-mediadas-reserva-md"
+description: "Documento Sinérgica SO: ADR-1206 — Observações mediadas de reserva Equipment"
+alwaysApply: false
+---
+
 # ADR-1206 — Observações mediadas de reserva Equipment
 
 ## Decisão

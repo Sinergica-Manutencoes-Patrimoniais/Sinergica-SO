@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-s168-gate-concorrencia-resultado-md"
+description: "Documento Sinérgica SO: E01-S168 — concorrência do gate de finalização"
+alwaysApply: false
+---
+
 # E01-S168 — concorrência do gate de finalização
 
 Verificação manual no PostgreSQL descartável local, porta 55522, com migrações 0969, 0971 e 0972 aplicadas somente nessa base e fixtures sintéticas com FKs e triggers normais. Não houve acesso ao Auvo.

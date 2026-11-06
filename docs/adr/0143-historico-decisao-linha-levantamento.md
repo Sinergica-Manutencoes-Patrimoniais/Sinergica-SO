@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0143-historico-decisao-linha-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0143 — Consulta de decisão da linha de levantamento"
+alwaysApply: false
+---
+
 # ADR-0143 — Consulta de decisão da linha de levantamento
 
 ## Contexto

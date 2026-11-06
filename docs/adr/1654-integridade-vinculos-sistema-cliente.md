@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1654-integridade-vinculos-sistema-cliente-md"
+description: "Documento Sinérgica SO: ADR-1654 — Integridade de Cliente em vínculos de Sistema"
+alwaysApply: false
+---
+
 # ADR-1654 — Integridade de Cliente em vínculos de Sistema
 
 ## Estado

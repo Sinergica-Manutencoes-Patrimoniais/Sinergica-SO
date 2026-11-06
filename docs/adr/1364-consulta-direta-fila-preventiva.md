@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1364-consulta-direta-fila-preventiva-md"
+description: "Documento Sinérgica SO: ADR-1364 — Consulta direta da entrada preventiva"
+alwaysApply: false
+---
+
 # ADR-1364 — Consulta direta da entrada preventiva
 
 **Estado:** proposta; não aplicada nem homologada.

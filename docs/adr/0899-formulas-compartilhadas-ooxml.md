@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0899-formulas-compartilhadas-ooxml-md"
+description: "Documento Sinérgica SO: ADR-0899 — Preservação de fórmulas compartilhadas"
+alwaysApply: false
+---
+
 # ADR-0899 — Preservação de fórmulas compartilhadas
 
 Data: 2026-10-30 · Status: preparação; importação XLSX permanece bloqueada.

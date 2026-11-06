@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0856-concorrencia-ocorrencia-retorno-md"
+description: "Documento Sinérgica SO: ADR-0856 — Serialização da ocorrência de calendário com retorno"
+alwaysApply: false
+---
+
 # ADR-0856 — Serialização da ocorrência de calendário com retorno
 
 Status: proposta implementada, gate fechado; homologação pendente.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1089-progresso-varredura-os-md"
+description: "Documento Sinérgica SO: ADR-1089 — Progresso recuperável da varredura de OS"
+alwaysApply: false
+---
+
 # ADR-1089 — Progresso recuperável da varredura de OS
 
 Status: proposta local, não aplicada nem homologada.

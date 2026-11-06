@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1226-itens-atuais-portal-mediados-md"
+description: "Documento Sinérgica SO: ADR-1226 — Itens públicos atuais mediados"
+alwaysApply: false
+---
+
 # ADR-1226 — Itens públicos atuais mediados
 
 ## Decisão

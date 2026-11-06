@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1000-mapeamento-categoria-componente-md"
+description: "Documento Sinérgica SO: ADR-1000 — Categoria explícita de Componente"
+alwaysApply: false
+---
+
 # ADR-1000 — Categoria explícita de Componente
 
 Status: preparação privada, não homologada.

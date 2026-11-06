@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0868-seletor-componentes-conversao-autorizado-md"
+description: "Documento Sinérgica SO: ADR 0868 — Seleção de Componentes na conversão de Chamado"
+alwaysApply: false
+---
+
 # ADR 0868 — Seleção de Componentes na conversão de Chamado
 
 O seletor experimental de S167 não deve consultar diretamente `pcm.equipamentos`: a RLS legada permite leitura pelo módulo PCM, independentemente da concessão por Cliente. O ensaio `E01-S167_componentes_leitura_escopo.sql` demonstrou a exposição em banco diagnóstico com usuário autenticado e concessão apenas para outro Cliente.

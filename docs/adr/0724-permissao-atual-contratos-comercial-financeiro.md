@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0724-permissao-atual-contratos-comercial-financeiro-md"
+description: "Documento Sinérgica SO: ADR-0724 — Permissão atual no fluxo de contratos Comercial e Financeiro"
+alwaysApply: false
+---
+
 # ADR-0724 — Permissão atual no fluxo de contratos Comercial e Financeiro
 
 **Status:** decisão preparada para implementação aditiva; rollout e homologação bloqueados até testes e revisão adversarial.

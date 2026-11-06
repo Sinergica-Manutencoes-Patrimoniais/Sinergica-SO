@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0258-situacao-os-portal-md"
+description: "Documento Sinérgica SO: ADR-0258 — Situação pública da OS e validação"
+alwaysApply: false
+---
+
 # ADR-0258 — Situação pública da OS e validação
 
 Status: proposta; gate e funções sem liberação.

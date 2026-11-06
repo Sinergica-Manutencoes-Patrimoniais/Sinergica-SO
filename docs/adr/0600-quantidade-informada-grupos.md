@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0600-quantidade-informada-grupos-md"
+description: "Documento Sinérgica SO: ADR-0600 — Preservar quantidade informada para Grupo"
+alwaysApply: false
+---
+
 # ADR-0600 — Preservar quantidade informada para Grupo
 
 Status: proposta, não homologada.

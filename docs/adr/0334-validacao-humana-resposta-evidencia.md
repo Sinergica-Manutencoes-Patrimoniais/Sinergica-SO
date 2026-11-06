@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0334-validacao-humana-resposta-evidencia-md"
+description: "Documento Sinérgica SO: ADR-0334 — Decisão PCM por resposta e evidência"
+alwaysApply: false
+---
+
 # ADR-0334 — Decisão PCM por resposta e evidência
 
 Status: proposta, não homologada.

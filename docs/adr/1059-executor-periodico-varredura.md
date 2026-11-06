@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1059-executor-periodico-varredura-md"
+description: "Documento Sinérgica SO: ADR-1059 — Executor periódico da varredura local"
+alwaysApply: false
+---
+
 # ADR-1059 — Executor periódico da varredura local
 
 **Status:** preparado, desligado e não homologado. Complementa ADR-1056.

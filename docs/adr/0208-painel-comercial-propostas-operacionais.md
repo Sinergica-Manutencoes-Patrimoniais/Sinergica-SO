@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0208-painel-comercial-propostas-operacionais-md"
+description: "Documento Sinérgica SO: ADR-0208 — Painel Comercial de propostas operacionais"
+alwaysApply: false
+---
+
 # ADR-0208 — Painel Comercial de propostas operacionais
 
 **Estado:** preparação fechada, sem homologação nem implantação.

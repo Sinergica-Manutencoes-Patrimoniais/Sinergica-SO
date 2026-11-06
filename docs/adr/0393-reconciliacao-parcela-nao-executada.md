@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0393-reconciliacao-parcela-nao-executada-md"
+description: "Documento Sinérgica SO: ADR-0393 — Reconciliação humana de parcela não executada"
+alwaysApply: false
+---
+
 # ADR-0393 — Reconciliação humana de parcela não executada
 
 Prepara-se registro humano versionado de análise `nao_executada_declarada` ou `incerta` para parcela de Chamado com suspensão, OS atribuída e interrupção declarada, referenciando evidência declarada do retorno dessa OS. A decisão exige confirmação, justificativa e revisões de suspensão/interrupção; preserva histórico e não move Backlog, altera parcela ou encerra OS.

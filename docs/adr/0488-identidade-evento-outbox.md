@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0488-identidade-evento-outbox-md"
+description: "Documento Sinérgica SO: ADR-0488 — identidade de evento e duplicação de fila"
+alwaysApply: false
+---
+
 # ADR-0488 — identidade de evento e duplicação de fila
 
 Status: bloqueado para implementação segura; diagnóstico estático, não aplicado nem homologado.

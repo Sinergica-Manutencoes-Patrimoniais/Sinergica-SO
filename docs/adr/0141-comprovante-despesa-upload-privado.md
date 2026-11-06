@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0141-comprovante-despesa-upload-privado-md"
+description: "Documento Sinérgica SO: ADR-0141 — Upload privado de comprovantes de despesa"
+alwaysApply: false
+---
+
 # ADR-0141 — Upload privado de comprovantes de despesa
 
 **Estado:** proposta preparatória, não homologada; não habilitar grants, bucket ou interface em produção sem revisão e testes.

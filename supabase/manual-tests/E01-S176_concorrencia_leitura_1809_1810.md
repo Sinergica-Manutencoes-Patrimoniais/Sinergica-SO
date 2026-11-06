@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s176-concorrencia-leitura-1809-1810-md"
+description: "Documento Sinérgica SO: S176 — disputa de leitura, gate e revogação (1809/1810)"
+alwaysApply: false
+---
+
 # S176 — disputa de leitura, gate e revogação (1809/1810)
 
 Roteiro preparado, **não executado**. Usar somente clone sintético descartável, sem rede externa, com migrations até 1810 e duas conexões READ COMMITTED. Não usar ambiente real; descartar o clone ao final. Os COMMITs servem apenas para tornar dados sintéticos visíveis entre sessões. Não desativar triggers nem alterar funções. Parar na primeira divergência.

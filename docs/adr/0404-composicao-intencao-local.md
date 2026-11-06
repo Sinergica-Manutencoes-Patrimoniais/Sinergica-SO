@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0404-composicao-intencao-local-md"
+description: "Documento Sinérgica SO: ADR-0404 — composição conferida na intenção local"
+alwaysApply: false
+---
+
 # ADR-0404 — composição conferida na intenção local
 
 Status: proposto; não aplicado nem homologado.

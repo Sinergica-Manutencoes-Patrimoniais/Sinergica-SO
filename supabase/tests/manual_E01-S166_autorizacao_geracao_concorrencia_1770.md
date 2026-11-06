@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-autorizacao-geracao-concorrencia-1770-md"
+description: "Documento Sinérgica SO: Autorização e geração concorrentes — 1770"
+alwaysApply: false
+---
+
 # Autorização e geração concorrentes — 1770
 
 Ensaio em banco descartável com migrations 1614–1770, dados sintéticos e gates habilitados somente no clone. As fixtures de aprovação real 1731 de Calendário e Visita foram preparadas até antes da aprovação; também foram habilitados geração da versão anterior e gates dos lotes. O gate de origem do lote permaneceu desligado para exercitar o caminho que revelou a corrida. A guarda 1045 não foi modificada.

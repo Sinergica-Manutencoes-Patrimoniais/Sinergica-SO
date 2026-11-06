@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0307-evidencia-declarada-por-resposta-md"
+description: "Documento Sinérgica SO: ADR-0307 — Associação declarada de evidência por resposta"
+alwaysApply: false
+---
+
 # ADR-0307 — Associação declarada de evidência por resposta
 
 Status: proposta, não homologada.

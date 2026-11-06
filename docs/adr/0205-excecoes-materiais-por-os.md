@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0205-excecoes-materiais-por-os-md"
+description: "Documento Sinérgica SO: ADR-0205 — Consulta de exceções por OS"
+alwaysApply: false
+---
+
 # ADR-0205 — Consulta de exceções por OS
 
 ## Decisão

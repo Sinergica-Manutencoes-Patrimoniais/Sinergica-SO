@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0976-ciclos-posteriores-backlog-md"
+description: "Documento Sinérgica SO: ADR-0976 — Diagnóstico de ciclos posteriores"
+alwaysApply: false
+---
+
 # ADR-0976 — Diagnóstico de ciclos posteriores
 
 Status: preparação privada, não homologada.

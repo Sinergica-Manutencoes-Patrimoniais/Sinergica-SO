@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0408-protocolo-parcial-composicao-md"
+description: "Documento Sinérgica SO: ADR-0408 — protocolo parcial dos escritores de composição"
+alwaysApply: false
+---
+
 # ADR-0408 — protocolo parcial dos escritores de composição
 
 Status: proposto; não aplicado nem homologado.

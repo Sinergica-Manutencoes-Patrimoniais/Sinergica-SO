@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0839-encerramento-chamado-vinculos-legados-md"
+description: "Documento Sinérgica SO: ADR-0839 — Encerramento explícito com vínculos legados"
+alwaysApply: false
+---
+
 # ADR-0839 — Encerramento explícito com vínculos legados
 
 Estado: proposta local, não homologada; gates e ACLs permanecem fechados. Complementa ADR-0834 e ADR-0838.

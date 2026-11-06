@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0893-reconciliacao-staging-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0893 — Transporte controlado do staging legado de cronogramas"
+alwaysApply: false
+---
+
 # ADR-0893 — Transporte controlado do staging legado de cronogramas
 
 Data: 2026-10-30 · Status: preparação, gate fechado, não homologado.

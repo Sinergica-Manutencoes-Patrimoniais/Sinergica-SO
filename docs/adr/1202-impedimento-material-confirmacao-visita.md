@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1202-impedimento-material-confirmacao-visita-md"
+description: "Documento Sinérgica SO: ADR-1202 — Impedimento de material na confirmação da Visita"
+alwaysApply: false
+---
+
 # ADR-1202 — Impedimento de material na confirmação da Visita
 
 ## Contexto

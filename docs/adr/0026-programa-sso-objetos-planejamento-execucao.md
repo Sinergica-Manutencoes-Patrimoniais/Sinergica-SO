@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0026-programa-sso-objetos-planejamento-execucao-md"
+description: "Documento Sinérgica SO: ADR-0026 — Objetos canônicos do programa SSO"
+alwaysApply: false
+---
+
 # ADR-0026 — Objetos canônicos do programa SSO
 
 **Status:** Proposta técnica especificada; adoção antes da primeira migration, sem implantação nesta entrega.

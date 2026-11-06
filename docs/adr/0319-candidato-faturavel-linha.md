@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0319-candidato-faturavel-linha-md"
+description: "Documento Sinérgica SO: ADR-0319 — Candidato faturável de linha aprovada"
+alwaysApply: false
+---
+
 # ADR-0319 — Candidato faturável de linha aprovada
 
 Status: proposta; gates fechados e testes pendentes.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0685-decisao-origem-versionada-md"
+description: "Documento Sinérgica SO: ADR-0685 — Decisão interna versionada por origem"
+alwaysApply: false
+---
+
 # ADR-0685 — Decisão interna versionada por origem
 
 Decisões PCM são registradas em agregado aditivo por proposta, versão e origem, separado de `proposta_decisoes` (única por proposta). Uma decisão PCM não altera `propostas.status`, não ocupa a decisão legada do Cliente, não cria OS e não registra aceite do Portal. A referência é declaração humana não autenticada. A versão deve estar publicada, enviada e vigente na OS/Cliente; permissões, prazo e revisão são verificados server-side.

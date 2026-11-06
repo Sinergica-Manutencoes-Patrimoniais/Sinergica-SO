@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0846-mediacao-leitura-conflitos-webhook-md"
+description: "Documento Sinérgica SO: ADR-0846 — Mediação de leitura de conflitos"
+alwaysApply: false
+---
+
 # ADR-0846 — Mediação de leitura de conflitos
 
 Estado: proposta local; gates fechados, não homologada. Complementa ADR-0844.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1015-insercao-proposta-assessment-md"
+description: "Documento Sinérgica SO: ADR-1015 — Autorização de assessment na inserção de proposta"
+alwaysApply: false
+---
+
 # ADR-1015 — Autorização de assessment na inserção de proposta
 
 Status: preparação fechada, não homologada. Complementa ADR-1014.

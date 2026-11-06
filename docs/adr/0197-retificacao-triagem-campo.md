@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0197-retificacao-triagem-campo-md"
+description: "Documento Sinérgica SO: ADR-0197 — Retificação e recuperação de triagem manual"
+alwaysApply: false
+---
+
 # ADR-0197 — Retificação e recuperação de triagem manual
 
 ## Decisão

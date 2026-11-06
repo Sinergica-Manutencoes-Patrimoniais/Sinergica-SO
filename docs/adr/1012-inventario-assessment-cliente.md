@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1012-inventario-assessment-cliente-md"
+description: "Documento Sinérgica SO: ADR-1012 — Inventário agregado de vínculos de assessment"
+alwaysApply: false
+---
+
 # ADR-1012 — Inventário agregado de vínculos de assessment
 
 Status: preparação privada, não homologada.

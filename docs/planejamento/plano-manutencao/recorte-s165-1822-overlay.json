@@ -18,8 +18,8 @@
     },
     {
       "caminho": "supabase/migrations/1823_E01-S165_recibo_reconciliacao_revisionada.sql",
-      "sha256": "a6e3c5c610e68626f2b2f97ef4bf3a0a4872323ed5ca930eb0d2df29f434fa76",
-      "git_blob": "f09c00d3882353625add3690840face53673a63e",
+      "sha256": "dcefdbe51b1c6dbe6c66b8f54572743731e49053c1c647fe073e29750f947326",
+      "git_blob": "ce11e2de3cee4b4b74ad9adb33e015c1e78fe389",
       "depende_de": [
         "supabase/migrations/0314_E01-S165_previa_revisionada.sql",
         "supabase/migrations/0638_E01-S165_diagnostico_os_revisao.sql",
@@ -45,11 +45,11 @@
   "pins": [
     {
       "caminho": "supabase/tests/E01-S165_revisao_os.test.sql",
-      "sha256": "6c74eecb45429134f50ed52516f8a64ed6880c78a290a03c1a34e6fb28d4e7c9"
+      "sha256": "97222323c37ff95cbc3741efc1e87a1a27df45f2915c9fff721190177049e02c"
     },
     {
       "caminho": "supabase/tests/E01-S165_gerador_legado_suspensao.test.sql",
-      "sha256": "914506057c2739308ae2afb108e76acf236d3233fe8bd06a6ccfb0915187e86b"
+      "sha256": "94c8edf17ee008372b7f4be9886ed45f09945899f1ea911781026bbfadbf3a47"
     },
     {
       "caminho": "apps/web/src/features/pcm/interfaces/plano-manutencao/ReciboReconciliacaoRevisao.tsx",

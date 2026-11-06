@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-avaliacao-fila-visita-concorrencia-1738-md"
+description: "Documento Sinérgica SO: Retorno de avaliação e estado da fila de Visita"
+alwaysApply: false
+---
+
 # Retorno de avaliação e estado da fila de Visita
 
 Usar somente clone isolado descartável com migrations até 1738. Preparar `manual_E01-S165_S166_ponte_visita_mediada.sql` até a revogação final da concessão, mantendo a ponte e o ciclo da preparada `16610000-0000-0000-0000-000000000161`. Confirmar a preparação sintética e identificar `ciclo_id` e `ocorrencia_legada_id` pelas tabelas de vínculo.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0546-conflito-pedido-parcela-md"
+description: "Documento Sinérgica SO: ADR-0546 — conflitos de pedido de parcela"
+alwaysApply: false
+---
+
 # ADR-0546 — conflitos de pedido de parcela
 
 Status: proposto; não homologado. A interface distingue códigos estruturados de conflito de revisão, unicidade, validação, acesso e indisponibilidade da última tentativa, sem mostrar texto bruto. Uma rejeição desta tentativa não prova que uma tentativa anterior não tenha sido confirmada; o pedido permanece guardado e deve ser consultado no servidor antes de qualquer nova ação. Falhas de rede ou respostas desconhecidas seguem incertas. Não há limpeza automática, reenvio ao Auvo ou cobrança externa. Testes de erro, troca de sessão e transações concorrentes são obrigatórios.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0306-historico-pdf-itens-publicos-md"
+description: "Documento Sinérgica SO: ADR-0306 — Itens estruturados no histórico e PDF"
+alwaysApply: false
+---
+
 # ADR-0306 — Itens estruturados no histórico e PDF
 
 Status: proposta; gate e concessões fechados, testes pendentes.

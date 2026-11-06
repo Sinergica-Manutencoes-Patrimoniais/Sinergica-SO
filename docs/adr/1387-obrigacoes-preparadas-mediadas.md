@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1387-obrigacoes-preparadas-mediadas-md"
+description: "Documento Sinérgica SO: ADR-1387 — Leitura mediada de obrigações preparadas"
+alwaysApply: false
+---
+
 # ADR-1387 — Leitura mediada de obrigações preparadas
 
 **Estado:** proposta; não aplicada nem homologada.

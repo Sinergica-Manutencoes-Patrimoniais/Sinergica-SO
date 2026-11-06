@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0921-serializar-reserva-autorizacao-md"
+description: "Documento Sinérgica SO: ADR-0921 — Serialização da autorização na reserva interna"
+alwaysApply: false
+---
+
 # ADR-0921 — Serialização da autorização na reserva interna
 
 Data: 2026-10-30 · Status: preparado, não aplicado ou homologado.

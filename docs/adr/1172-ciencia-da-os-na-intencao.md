@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1172-ciencia-da-os-na-intencao-md"
+description: "Documento Sinérgica SO: ADR-1172 — Ciência da OS na intenção local"
+alwaysApply: false
+---
+
 # ADR-1172 — Ciência da OS na intenção local
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0853-integridade-origem-calendario-retorno-md"
+description: "Documento Sinérgica SO: ADR-0853 — Conferência da origem calendário no retorno"
+alwaysApply: false
+---
+
 # ADR-0853 — Conferência da origem calendário no retorno
 
 ## Contexto

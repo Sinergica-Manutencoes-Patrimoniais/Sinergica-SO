@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1003-reserva-equipment-outbound-md"
+description: "Documento Sinérgica SO: ADR-1003 — Reserva durável para Equipment outbound"
+alwaysApply: false
+---
+
 # ADR-1003 — Reserva durável para Equipment outbound
 
 Status: preparação privada, não homologada.

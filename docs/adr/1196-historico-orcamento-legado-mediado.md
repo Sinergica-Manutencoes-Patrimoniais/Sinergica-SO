@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1196-historico-orcamento-legado-mediado-md"
+description: "Documento Sinérgica SO: ADR-1196 — Histórico legado mediado por Cliente"
+alwaysApply: false
+---
+
 # ADR-1196 — Histórico legado mediado por Cliente
 
 ## Contexto

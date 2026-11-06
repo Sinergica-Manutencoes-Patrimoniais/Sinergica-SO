@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0365-snapshot-evidencias-pergunta-md"
+description: "Documento Sinérgica SO: ADR-0365 — Congelamento e avaliação do requisito de evidência"
+alwaysApply: false
+---
+
 # ADR-0365 — Congelamento e avaliação do requisito de evidência
 
 Status: proposta, não homologada.

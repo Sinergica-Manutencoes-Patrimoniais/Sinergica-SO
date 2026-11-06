@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1335-canonicalizar-vinculo-legado-chamado-md"
+description: "Documento Sinérgica SO: ADR-1335 — Canonicalização explícita do vínculo legado de Chamado"
+alwaysApply: false
+---
+
 # ADR-1335 — Canonicalização explícita do vínculo legado de Chamado
 
 **Estado:** proposta; não aplicada nem homologada.

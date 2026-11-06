@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1209-diagnostico-codigos-grupo-revisionado-md"
+description: "Documento Sinérgica SO: ADR-1209 — Diagnóstico revisionado de códigos de Grupos"
+alwaysApply: false
+---
+
 # ADR-1209 — Diagnóstico revisionado de códigos de Grupos
 
 ## Decisão

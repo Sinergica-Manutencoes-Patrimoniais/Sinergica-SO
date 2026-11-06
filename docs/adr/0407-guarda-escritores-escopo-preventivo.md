@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0407-guarda-escritores-escopo-preventivo-md"
+description: "Documento Sinérgica SO: ADR-0407 — Guarda opt-in de escritores de OS"
+alwaysApply: false
+---
+
 # ADR-0407 — Guarda opt-in de escritores de OS
 
 Status: preparado, gate desligado, sem aplicação ou homologação. Ao habilitar, o trigger serializa alterações de vínculo, Cliente, exclusão e inserção de OS usando o mesmo lock da ocorrência preparada da declaração 0626. Após qualquer declaração registrada, essas alterações são bloqueadas para a ocorrência vinculada; transições de status permanecem permitidas. Desligado, o legado segue inalterado.

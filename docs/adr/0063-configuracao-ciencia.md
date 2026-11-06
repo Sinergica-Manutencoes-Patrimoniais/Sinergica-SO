@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0063-configuracao-ciencia-md"
+description: "Documento Sinérgica SO: ADR-0063 — Configuração auditada de ciência"
+alwaysApply: false
+---
+
 # ADR-0063 — Configuração auditada de ciência
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

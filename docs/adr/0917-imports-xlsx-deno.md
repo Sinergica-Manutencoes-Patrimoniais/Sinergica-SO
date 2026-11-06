@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0917-imports-xlsx-deno-md"
+description: "Documento Sinérgica SO: ADR-0917 — Imports explícitos no parser XLSX compartilhado"
+alwaysApply: false
+---
+
 # ADR-0917 — Imports explícitos no parser XLSX compartilhado
 
 Data: 2026-10-30 · Status: preparação, não publicada.

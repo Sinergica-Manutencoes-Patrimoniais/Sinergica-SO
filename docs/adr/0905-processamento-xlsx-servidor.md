@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0905-processamento-xlsx-servidor-md"
+description: "Documento Sinérgica SO: ADR-0905 — Preparação do processamento XLSX no servidor"
+alwaysApply: false
+---
+
 # ADR-0905 — Preparação do processamento XLSX no servidor
 
 Data: 2026-10-30 · Status: preparação; sem endpoint ou rollout.

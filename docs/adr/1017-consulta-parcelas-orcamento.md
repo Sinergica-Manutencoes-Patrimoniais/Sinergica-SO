@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1017-consulta-parcelas-orcamento-md"
+description: "Documento Sinérgica SO: ADR-1017 — Consulta de parcelas para orçamento"
+alwaysApply: false
+---
+
 # ADR-1017 — Consulta de parcelas para orçamento
 
 Status: preparação privada, não homologada.

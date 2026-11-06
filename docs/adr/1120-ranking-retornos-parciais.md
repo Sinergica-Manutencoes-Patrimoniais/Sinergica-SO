@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1120-ranking-retornos-parciais-md"
+description: "Documento Sinérgica SO: ADR-1120 — Retorno parcial no ranking de Backlog"
+alwaysApply: false
+---
+
 # ADR-1120 — Retorno parcial no ranking de Backlog
 
 Status: proposta local, não aplicada nem homologada.

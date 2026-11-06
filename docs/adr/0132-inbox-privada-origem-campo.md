@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0132-inbox-privada-origem-campo-md"
+description: "Documento Sinérgica SO: ADR-0132 — Inbox privada para origem de campo"
+alwaysApply: false
+---
+
 # ADR-0132 — Inbox privada para origem de campo
 
 **Estado:** proposta não aplicada nem homologada. Complementa ADR-0026.

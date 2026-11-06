@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0459-origem-snapshot-auvo-md"
+description: "Documento Sinérgica SO: ADR-0459 — diagnóstico da origem de snapshot Auvo"
+alwaysApply: false
+---
+
 # ADR-0459 — diagnóstico da origem de snapshot Auvo
 
 Status: proposto; não aplicado nem homologado. O webhook possui verificação HMAC em código, mas a própria implementação registra pendências de validação com entrega real. A tabela `pcm.auvo_task_snapshots` guarda payload bruto e metadados, sem prova persistida por evento de assinatura validada, unicidade de recepção, vínculo de reconciliação ou integridade da cadeia. Assim, não é fonte comprovadamente autenticada para resolver ocorrência ou autorizar retry.

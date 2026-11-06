@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0039-plano-rascunho-aditivo-md"
+description: "Documento Sinérgica SO: ADR-0039 — Fundação aditiva do Plano de Manutenção"
+alwaysApply: false
+---
+
 # ADR-0039 — Fundação aditiva do Plano de Manutenção
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

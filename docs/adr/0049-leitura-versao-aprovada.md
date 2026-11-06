@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0049-leitura-versao-aprovada-md"
+description: "Documento Sinérgica SO: ADR-0049 — Leitura histórica de Rotinas aprovadas"
+alwaysApply: false
+---
+
 # ADR-0049 — Leitura histórica de Rotinas aprovadas
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

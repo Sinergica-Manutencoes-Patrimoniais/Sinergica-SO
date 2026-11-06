@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0176-classificacao-manual-retorno-campo-md"
+description: "Documento Sinérgica SO: ADR-0176 — Classificação manual de retorno identificado"
+alwaysApply: false
+---
+
 # ADR-0176 — Classificação manual de retorno identificado
 
 Status: proposta, não homologada.

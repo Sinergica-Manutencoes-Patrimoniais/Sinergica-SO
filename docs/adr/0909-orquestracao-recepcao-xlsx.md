@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0909-orquestracao-recepcao-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0909 — Orquestração da recepção XLSX atestada"
+alwaysApply: false
+---
+
 # ADR-0909 — Orquestração da recepção XLSX atestada
 
 Data: 2026-10-30 · Status: preparação; rota e gates fechados.

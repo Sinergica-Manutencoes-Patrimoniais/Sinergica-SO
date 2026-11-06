@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0941-processamento-xlsx-incremental-experimental-md"
+description: "Documento Sinérgica SO: ADR-0941 — Composição experimental do leitor incremental XLSX"
+alwaysApply: false
+---
+
 # ADR-0941 — Composição experimental do leitor incremental XLSX
 
 **Status:** preparação isolada, sem conexão operacional.

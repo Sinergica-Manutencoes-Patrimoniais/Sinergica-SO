@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0744-coordenacao-experimental-vinculo-retorno-md"
+description: "Documento Sinérgica SO: ADR-0744 — Coordenação experimental do vínculo Grupo e retorno"
+alwaysApply: false
+---
+
 # ADR-0744 — Coordenação experimental do vínculo Grupo e retorno
 
 ## Status

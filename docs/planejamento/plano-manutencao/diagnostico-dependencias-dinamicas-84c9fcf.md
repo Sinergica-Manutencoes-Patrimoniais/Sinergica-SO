@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-diagnostico-dependencias-dinamicas-84c9fcf-md"
+description: "Documento Sinérgica SO: Diagnóstico em lote — dependências dinâmicas do recorte"
+alwaysApply: false
+---
+
 # Diagnóstico em lote — dependências dinâmicas do recorte
 
 **Somente análise estática; não é manifesto de release.** Base `22aca391`, manifesto candidato

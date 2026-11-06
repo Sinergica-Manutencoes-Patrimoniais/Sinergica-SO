@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0381-encerramento-individual-os-md"
+description: "Documento Sinérgica SO: ADR-0381 — Encerramento individual preparado de OS"
+alwaysApply: false
+---
+
 # ADR-0381 — Encerramento individual preparado de OS
 
 Status: proposta, não homologada.

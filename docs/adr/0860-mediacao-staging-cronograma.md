@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0860-mediacao-staging-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0860 — Mediação de recepção e conferência do cronograma"
+alwaysApply: false
+---
+
 # ADR-0860 — Mediação de recepção e conferência do cronograma
 
 Status: implementação preparada; gates desligados e homologação pendente.

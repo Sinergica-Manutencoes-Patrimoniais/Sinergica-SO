@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0953-processamento-servidor-xlsx-estrutura-md"
+description: "Documento Sinérgica SO: ADR-0953 — Processamento de estrutura XLSX no servidor"
+alwaysApply: false
+---
+
 # ADR-0953 — Processamento de estrutura XLSX no servidor
 
 Status: preparação isolada; sem endpoint, persistência ou autorização operacional.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0583-aceite-cliente-complemento-md"
+description: "Documento Sinérgica SO: ADR-0583 — aceite do Cliente para valor adicional"
+alwaysApply: false
+---
+
 # ADR-0583 — aceite do Cliente para valor adicional
 
 Status: bloqueado para efetivação; gates fechados, não aplicado nem homologado. A decisão 0795 é expressamente autorização comercial interna, não aceite do Cliente. O aceite versionado da proposta original registra o valor daquela proposta, mas não comprova aprovação do valor adicional do complemento. As fontes examinadas não estabelecem se cada contrato exige novo aceite nem registram um aceite específico desse valor.

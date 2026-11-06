@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1053-impacto-alteracao-dia-contratual-md"
+description: "Documento Sinérgica SO: ADR-1053 — Prévia de Visitas vinculadas à alteração de dia"
+alwaysApply: false
+---
+
 # ADR-1053 — Prévia de Visitas vinculadas à alteração de dia
 
 **Status:** preparação privada, não homologada.

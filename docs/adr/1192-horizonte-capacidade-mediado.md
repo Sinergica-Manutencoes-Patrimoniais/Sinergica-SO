@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1192-horizonte-capacidade-mediado-md"
+description: "Documento Sinérgica SO: ADR-1192 — Horizonte parcial de capacidade mediado"
+alwaysApply: false
+---
+
 # ADR-1192 — Horizonte parcial de capacidade mediado
 
 ## Contexto

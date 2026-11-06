@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1261-correcao-codigo-grupo-staging-md"
+description: "Documento Sinérgica SO: ADR-1261 — Correção de código de Grupo em staging"
+alwaysApply: false
+---
+
 # ADR-1261 — Correção de código de Grupo em staging
 
 **Status:** proposta local, não homologada. Complementa ADR-1252/1253.

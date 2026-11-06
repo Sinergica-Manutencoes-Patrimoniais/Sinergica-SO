@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-leitura-excecao-autorizacao-1734-md"
+description: "Documento Sinérgica SO: Leitura de exceção e revogação concorrentes"
+alwaysApply: false
+---
+
 # Leitura de exceção e revogação concorrentes
 
 Usar clone descartável isolado com migrations até 1734. Preparar os dados de `manual_E01-S166_excecao_aprovada_1732.sql`, habilitar o gate apenas no clone e confirmar uma exceção sintética. As duas permissões `plano.gerir` e `visita.confirmar` devem estar ativas para o ator da fixture.

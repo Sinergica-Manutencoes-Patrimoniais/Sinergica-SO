@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0981-vinculo-continuacao-parcela-md"
+description: "Documento Sinérgica SO: ADR-0981 — Vínculo declarado entre continuidade e parcela"
+alwaysApply: false
+---
+
 # ADR-0981 — Vínculo declarado entre continuidade e parcela
 
 Status: preparação privada, não homologada.

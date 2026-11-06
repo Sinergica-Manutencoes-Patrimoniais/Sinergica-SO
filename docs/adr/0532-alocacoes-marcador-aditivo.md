@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0532-alocacoes-marcador-aditivo-md"
+description: "Documento Sinérgica SO: ADR-0532 — parcelas adicionais na tabela canônica"
+alwaysApply: false
+---
+
 # ADR-0532 — parcelas adicionais na tabela canônica
 
 Status: proposto; não aplicado nem homologado. Um marcador distingue a primeira alocação do par item/documento das adicionais. A restrição original é substituída por índice único parcial para a primeira; com gate desligado o gatilho força novas linhas a serem primeiras, preservando a proibição legada sem lock adicional de item. Com gate ligado, o gatilho bloqueia o item e marca como adicional somente uma inserção posterior à primeira. `id` e `request_id` permanecem únicos; os comandos canônicos existentes continuam responsáveis por saldos, autorização e auditoria.

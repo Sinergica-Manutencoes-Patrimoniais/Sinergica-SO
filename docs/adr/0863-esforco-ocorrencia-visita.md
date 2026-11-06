@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0863-esforco-ocorrencia-visita-md"
+description: "Documento Sinérgica SO: ADR 0863 — Esforço declarado para ocorrência por Visita"
+alwaysApply: false
+---
+
 # ADR 0863 — Esforço declarado para ocorrência por Visita
 
 ## Contexto

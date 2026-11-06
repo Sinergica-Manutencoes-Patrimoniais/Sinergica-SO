@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0261-pendencias-publicadas-portal-md"
+description: "Documento Sinérgica SO: ADR-0261 — Pendências publicadas no Portal"
+alwaysApply: false
+---
+
 # ADR-0261 — Pendências publicadas no Portal
 
 Status: proposta, gates fechados; revisão e testes necessários.

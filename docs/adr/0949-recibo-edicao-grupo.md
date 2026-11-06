@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0949-recibo-edicao-grupo-md"
+description: "Documento Sinérgica SO: ADR-0949 — Recibo transacional para edição de grupo"
+alwaysApply: false
+---
+
 # ADR-0949 — Recibo transacional para edição de grupo
 
 Status: preparação local, não homologada. Complementa ADR-0947 e ADR-0948.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1644-recibo-geracao-visita-legada-md"
+description: "Documento Sinérgica SO: ADR-1644: recuperação de recibo da geração contratual legada"
+alwaysApply: false
+---
+
 # ADR-1644: recuperação de recibo da geração contratual legada
 
 ## Contexto

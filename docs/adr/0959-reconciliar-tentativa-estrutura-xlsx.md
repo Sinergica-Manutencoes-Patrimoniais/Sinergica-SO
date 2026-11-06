@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0959-reconciliar-tentativa-estrutura-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0959 — Reconciliação explícita de tentativa XLSX de estrutura"
+alwaysApply: false
+---
+
 # ADR-0959 — Reconciliação explícita de tentativa XLSX de estrutura
 
 Status: preparação desconectada; não homologada.

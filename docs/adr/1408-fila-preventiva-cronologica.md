@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1408-fila-preventiva-cronologica-md"
+description: "Documento Sinérgica SO: ADR-1408 — Consulta cronológica da fila preventiva"
+alwaysApply: false
+---
+
 # ADR-1408 — Consulta cronológica da fila preventiva
 
 ## Decisão

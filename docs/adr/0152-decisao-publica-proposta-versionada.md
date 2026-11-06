@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0152-decisao-publica-proposta-versionada-md"
+description: "Documento Sinérgica SO: ADR-0152 — Decisão pública de proposta operacional versionada"
+alwaysApply: false
+---
+
 # ADR-0152 — Decisão pública de proposta operacional versionada
 
 **Estado:** proposta preparatória, RPCs revogadas e interface desligada.

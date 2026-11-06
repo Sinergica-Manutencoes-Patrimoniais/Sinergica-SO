@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0747-inventario-concorrencia-calendario-md"
+description: "Documento Sinérgica SO: ADR-0747 — Fronteiras de concorrência para calendário vencido"
+alwaysApply: false
+---
+
 # ADR-0747 — Fronteiras de concorrência para calendário vencido
 
 ## Status

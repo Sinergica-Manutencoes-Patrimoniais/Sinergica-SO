@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-reserva-visita-rascunho-concorrencia-md"
+description: "Documento Sinérgica SO: Concorrência de escolhas futuras de Visita"
+alwaysApply: false
+---
+
 # Concorrência de escolhas futuras de Visita
 
 Usar apenas banco descartável isolado com migrations até 1724. Em transação, executar a preparação de `manual_E01-S165_visita_rascunho_1723.sql` até a linha anterior ao primeiro `do $$ declare f jsonb;a jsonb;b jsonb;v_rot uuid;begin`, incluindo recursivamente os arquivos `\ir`. Confirmar a preparação para permitir duas sessões. Não executar o restante da fixture. Não executar em banco compartilhado ou produtivo; nenhuma OS ou tarefa Auvo deve ser criada.

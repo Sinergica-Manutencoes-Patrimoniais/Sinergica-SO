@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0741-coordenacao-retorno-vinculo-grupo-md"
+description: "Documento Sinérgica SO: ADR-0741 — Coordenação entre retorno e vínculo de OS a Grupo"
+alwaysApply: false
+---
+
 # ADR-0741 — Coordenação entre retorno e vínculo de OS a Grupo
 
 ## Status

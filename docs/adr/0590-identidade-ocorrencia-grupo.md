@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0590-identidade-ocorrencia-grupo-md"
+description: "Documento Sinérgica SO: ADR-0590 — Identidade aditiva para ocorrência de Grupo"
+alwaysApply: false
+---
+
 # ADR-0590 — Identidade aditiva para ocorrência de Grupo
 
 Introduz identidade própria e imutável de ocorrência para Grupo Quantitativo, vinculada exatamente a uma ocorrência preparada de calendário ou Visita, ao Grupo real e à versão aprovada. A quantidade e revisão do Grupo são fotografia declarada no registro; nenhum ativo individual ou Plano legado é criado. O comando é autorizado, idempotente por requisição e fechado por gate.

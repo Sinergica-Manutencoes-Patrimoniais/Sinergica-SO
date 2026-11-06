@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1370-decisao-mediada-servico-extra-md"
+description: "Documento Sinérgica SO: ADR-1370 — Declaração e decisão mediadas de serviço extra"
+alwaysApply: false
+---
+
 # ADR-1370 — Declaração e decisão mediadas de serviço extra
 
 **Estado:** proposta; não aplicada nem homologada.

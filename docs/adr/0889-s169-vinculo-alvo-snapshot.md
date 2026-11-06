@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0889-s169-vinculo-alvo-snapshot-md"
+description: "Documento Sinérgica SO: ADR-0889 — Vínculo do alvo na fotografia exportável"
+alwaysApply: false
+---
+
 # ADR-0889 — Vínculo do alvo na fotografia exportável
 
 Data: 2026-10-30 · Status: preparação; gates fechados, não homologado.

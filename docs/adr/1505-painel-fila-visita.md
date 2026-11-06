@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1505-painel-fila-visita-md"
+description: "Documento Sinérgica SO: ADR-1505 — Consulta de Visitas na fila preventiva"
+alwaysApply: false
+---
+
 # ADR-1505 — Consulta de Visitas na fila preventiva
 
 ## Contexto

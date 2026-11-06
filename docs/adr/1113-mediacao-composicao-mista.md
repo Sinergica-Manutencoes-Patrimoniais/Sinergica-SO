@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1113-mediacao-composicao-mista-md"
+description: "Documento Sinérgica SO: ADR-1113 — Mediação do comando legado de orçamento"
+alwaysApply: false
+---
+
 # ADR-1113 — Mediação do comando legado de orçamento
 
 Status: proposta local, não aplicada nem homologada.

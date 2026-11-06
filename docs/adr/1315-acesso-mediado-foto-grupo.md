@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1315-acesso-mediado-foto-grupo-md"
+description: "Documento Sinérgica SO: ADR-1315 — Acesso mediado à foto aceita de Grupo"
+alwaysApply: false
+---
+
 # ADR-1315 — Acesso mediado à foto aceita de Grupo
 
 ## Decisão

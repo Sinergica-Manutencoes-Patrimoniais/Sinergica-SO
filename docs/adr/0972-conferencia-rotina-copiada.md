@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0972-conferencia-rotina-copiada-md"
+description: "Documento Sinérgica SO: ADR-0972 — Conferência de Rotina copiada antes da aprovação"
+alwaysApply: false
+---
+
 # ADR-0972 — Conferência de Rotina copiada antes da aprovação
 
 Status: preparação privada; não homologada.

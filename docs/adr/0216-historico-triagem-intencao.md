@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0216-historico-triagem-intencao-md"
+description: "Documento Sinérgica SO: ADR-0216 — Histórico minimizado da triagem de intenção"
+alwaysApply: false
+---
+
 # ADR-0216 — Histórico minimizado da triagem de intenção
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0330-upload-evidencia-resposta-md"
+description: "Documento Sinérgica SO: ADR-0330 — Upload privado de evidência por resposta"
+alwaysApply: false
+---
+
 # ADR-0330 — Upload privado de evidência por resposta
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0872-s167-minimizacao-fotografia-os-md"
+description: "Documento Sinérgica SO: ADR 0872 — Minimização da fotografia privada de OS"
+alwaysApply: false
+---
+
 # ADR 0872 — Minimização da fotografia privada de OS
 
 ## Contexto

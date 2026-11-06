@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1161-fotografia-basica-os-identidades-md"
+description: "Documento Sinérgica SO: ADR-1161 — Identidades adicionais na conferência básica da OS"
+alwaysApply: false
+---
+
 # ADR-1161 — Identidades adicionais na conferência básica da OS
 
 Status: proposta local, não aplicada nem homologada.

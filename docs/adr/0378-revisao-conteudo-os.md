@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0378-revisao-conteudo-os-md"
+description: "Documento Sinérgica SO: ADR-0378 — Revisão explícita do conteúdo básico da OS"
+alwaysApply: false
+---
+
 # ADR-0378 — Revisão explícita do conteúdo básico da OS
 
 Status: proposta; gate fechado, incompleta para despacho, sem testes.

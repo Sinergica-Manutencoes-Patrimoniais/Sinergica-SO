@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0911-retomada-xlsx-entre-abas-md"
+description: "Documento Sinérgica SO: ADR-0911 — Retomada XLSX entre abas do mesmo navegador"
+alwaysApply: false
+---
+
 # ADR-0911 — Retomada XLSX entre abas do mesmo navegador
 
 Data: 2026-10-30 · Status: preparação, não publicada.

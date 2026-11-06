@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0096-consulta-levantamentos-pendentes-md"
+description: "Documento Sinérgica SO: ADR-0096 — Consulta isolada de levantamentos pendentes"
+alwaysApply: false
+---
+
 # ADR-0096 — Consulta isolada de levantamentos pendentes
 
 ## Estado

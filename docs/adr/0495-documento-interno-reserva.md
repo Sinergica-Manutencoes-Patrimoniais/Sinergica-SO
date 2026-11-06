@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0495-documento-interno-reserva-md"
+description: "Documento Sinérgica SO: ADR-0495 — documento interno e reserva de saldo"
+alwaysApply: false
+---
+
 # ADR-0495 — documento interno e reserva de saldo
 
 Status: proposto; gates fechados, não aplicado nem homologado. Um comando autorizado transforma seleção local 0716 em documento interno não fiscal e reserva integral do saldo observado. Revalida revisão do item, competência e saldo oficial sob locks e registra documento/reserva imutáveis, com idempotência e unicidade por item. Não emite nota fiscal, não cria lançamento, não aloca documento financeiro, não envia cobrança nem realiza efeito externo.

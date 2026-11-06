@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0194-resumo-despesas-visita-os-md"
+description: "Documento Sinérgica SO: ADR-0194 — Resumo de despesas da Visita e rateios por OS"
+alwaysApply: false
+---
+
 # ADR-0194 — Resumo de despesas da Visita e rateios por OS
 
 **Estado:** preparação bloqueada, não homologada nem implantada.

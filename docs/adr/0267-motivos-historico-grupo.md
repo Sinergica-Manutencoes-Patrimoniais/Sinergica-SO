@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0267-motivos-historico-grupo-md"
+description: "Documento Sinérgica SO: ADR-0267 — Projeção dos motivos no histórico de Grupo"
+alwaysApply: false
+---
+
 # ADR-0267 — Projeção dos motivos no histórico de Grupo
 
 A consulta histórica atual projeta apenas antes/depois. Prepara-se consulta complementar, paginada pelo conjunto de eventos já exibidos, limitada a Grupo e às operações explícitas de movimentação e reclassificação. A autorização atual de leitura ou gestão é reavaliada no servidor; o payload completo de auditoria não é exposto. Eventos anteriores ou sem motivo permanecem sem informação inferida.

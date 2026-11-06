@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0877-s179-listagem-os-mediada-md"
+description: "Documento Sinérgica SO: ADR 0877 — Mediação da listagem de materiais por OS"
+alwaysApply: false
+---
+
 # ADR 0877 — Mediação da listagem de materiais por OS
 
 ## Contexto

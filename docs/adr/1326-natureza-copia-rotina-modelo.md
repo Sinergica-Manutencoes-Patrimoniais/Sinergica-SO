@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1326-natureza-copia-rotina-modelo-md"
+description: "Documento Sinérgica SO: ADR-1326 — Natureza na cópia de Rotina modelo"
+alwaysApply: false
+---
+
 # ADR-1326 — Natureza na cópia de Rotina modelo
 
 Status: preparado; gate existente permanece desligado.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0257-validade-atual-alvos-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0257 — Verificação atual dos alvos em staging"
+alwaysApply: false
+---
+
 # ADR-0257 — Verificação atual dos alvos em staging
 
 Status: proposta, não homologada.

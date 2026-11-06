@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0781-e01-s172-escopo-declarado-origem-comprovada-md"
+description: "Documento Sinérgica SO: ADR-0781: declaração versionada de escopo com origem comprovada"
+alwaysApply: false
+---
+
 # ADR-0781: declaração versionada de escopo com origem comprovada
 
 Status: preparação interna, gates fechados, sem homologação.

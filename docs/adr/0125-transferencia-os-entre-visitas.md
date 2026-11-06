@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0125-transferencia-os-entre-visitas-md"
+description: "Documento Sinérgica SO: ADR-0125 — Transferência transacional de OS entre Visitas"
+alwaysApply: false
+---
+
 # ADR-0125 — Transferência transacional de OS entre Visitas
 
 **Estado:** proposta não aplicada, não testada e não habilitada. Complementa ADR-0060 e ADR-0074.

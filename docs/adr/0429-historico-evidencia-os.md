@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0429-historico-evidencia-os-md"
+description: "Documento Sinérgica SO: ADR-0429 — histórico de evidências declaradas de OS"
+alwaysApply: false
+---
+
 # ADR-0429 — histórico de evidências declaradas de OS
 
 Status: proposto; gates fechados, não aplicado nem homologado.

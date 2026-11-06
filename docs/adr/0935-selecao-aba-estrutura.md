@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0935-selecao-aba-estrutura-md"
+description: "Documento Sinérgica SO: ADR-0935 — Seleção explícita de aba de levantamento"
+alwaysApply: false
+---
+
 # ADR-0935 — Seleção explícita de aba de levantamento
 
 Status: preparação local, não integrada ou homologada. Complementa ADR-0934.

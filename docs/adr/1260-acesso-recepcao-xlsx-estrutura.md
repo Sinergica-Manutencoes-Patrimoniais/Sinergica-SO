@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1260-acesso-recepcao-xlsx-estrutura-md"
+description: "Documento Sinérgica SO: ADR-1260 — Acesso condicionado à recepção XLSX"
+alwaysApply: false
+---
+
 # ADR-1260 — Acesso condicionado à recepção XLSX
 
 **Status:** proposta local, não homologada. Complementa ADR-0954, ADR-0957 e ADR-1259.

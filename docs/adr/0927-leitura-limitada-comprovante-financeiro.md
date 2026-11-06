@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0927-leitura-limitada-comprovante-financeiro-md"
+description: "Documento Sinérgica SO: ADR-0927 — Leitura limitada de comprovante financeiro"
+alwaysApply: false
+---
+
 # ADR-0927 — Leitura limitada de comprovante financeiro
 
 ## Contexto

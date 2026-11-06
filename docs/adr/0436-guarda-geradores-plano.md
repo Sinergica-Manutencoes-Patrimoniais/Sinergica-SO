@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0436-guarda-geradores-plano-md"
+description: "Documento Sinérgica SO: ADR-0436 — Guarda opt-in de geração por estado do Plano"
+alwaysApply: false
+---
+
 # ADR-0436 — Guarda opt-in de geração por estado do Plano
 
 Status: preparado, gate desligado, não aplicado nem homologado. Os comandos preparados de calendário 0337 e Visita 0455 já bloqueiam Plano fora de aprovado/ativo e bloqueiam o Plano durante a operação. Esta defesa adicional aplica a mesma condição a inserções diretas nas duas tabelas preparadas, com lock compartilhado do Plano para serializar suspensão/encerramento.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0841-geracao-visita-fontes-ate-commit-md"
+description: "Documento Sinérgica SO: ADR-0841 — Fontes de geração contratual até commit"
+alwaysApply: false
+---
+
 # ADR-0841 — Fontes de geração contratual até commit
 
 Status: preparação, gates permanecem fechados; requer revisão e homologação.

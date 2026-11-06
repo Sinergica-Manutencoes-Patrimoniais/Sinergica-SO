@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1203-declaracao-deslocamento-equipe-md"
+description: "Documento Sinérgica SO: ADR-1203 — Declaração de deslocamento da equipe própria"
+alwaysApply: false
+---
+
 # ADR-1203 — Declaração de deslocamento da equipe própria
 
 ## Contexto

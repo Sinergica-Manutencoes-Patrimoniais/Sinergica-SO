@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0087-rota-comprovante-intermediada-md"
+description: "Documento Sinérgica SO: ADR-0087 — Rota intermediada de comprovantes"
+alwaysApply: false
+---
+
 # ADR-0087 — Rota intermediada de comprovantes
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0506-identidade-ciclo-versoes-md"
+description: "Documento Sinérgica SO: ADR-0506 — Identidade de ciclo entre versões"
+alwaysApply: false
+---
+
 # ADR-0506 — Identidade de ciclo entre versões
 
 Status: preparado, gate fechado, não aplicado nem homologado. Uma série canônica por Plano, identidade lógica da Rotina, alvo, âncora e regra congelada agrupa o índice de ciclo; versões com esses elementos idênticos e mesmo índice compartilham identidade, sem deduplicar somente por data. A verificação usa snapshot aprovado e cálculo canônico, com chaves únicas e idempotência.

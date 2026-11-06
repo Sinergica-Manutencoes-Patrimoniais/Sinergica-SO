@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1155-protecao-evento-material-vinculado-md"
+description: "Documento Sinérgica SO: ADR-1155 — Proteção de evento de material vinculado"
+alwaysApply: false
+---
+
 # ADR-1155 — Proteção de evento de material vinculado
 
 Status: proposta local, não aplicada nem homologada.

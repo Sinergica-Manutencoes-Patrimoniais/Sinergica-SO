@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s168-concorrencia-ocorrencia-resultado-md"
+description: "Documento Sinérgica SO: Concorrência da ocorrência de calendário — S168"
+alwaysApply: false
+---
+
 # Concorrência da ocorrência de calendário — S168
 
 Teste manual em clone isolado descartável `sso_s168_fonte_race`, schema do banco local reconstruído sem extensões cron/net e sem serviços externos; somente fixtures sintéticas. Clone removido após o teste. Os gates de origem foram ligados somente no clone.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0754-listagem-aliases-ativo-md"
+description: "Documento Sinérgica SO: ADR 0754 — Listagem de aliases no cadastro"
+alwaysApply: false
+---
+
 # ADR 0754 — Listagem de aliases no cadastro
 
 ## Decisão

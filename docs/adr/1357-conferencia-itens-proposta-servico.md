@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1357-conferencia-itens-proposta-servico-md"
+description: "Documento Sinérgica SO: ADR 1357 — Conferência de itens financeiros relacionados ao serviço"
+alwaysApply: false
+---
+
 # ADR 1357 — Conferência de itens financeiros relacionados ao serviço
 
 ## Contexto

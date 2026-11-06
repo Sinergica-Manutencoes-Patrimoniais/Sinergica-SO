@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0168-rascunho-codigo-staging-md"
+description: "Documento Sinérgica SO: ADR-0168 — Código provisório isolado no levantamento"
+alwaysApply: false
+---
+
 # ADR-0168 — Código provisório isolado no levantamento
 
 ## Contexto

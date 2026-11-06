@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1342-atualizacao-grupos-lote-md"
+description: "Documento Sinérgica SO: ADR-1342 — Atualização selecionada de Grupos em lote"
+alwaysApply: false
+---
+
 # ADR-1342 — Atualização selecionada de Grupos em lote
 
 **Estado:** proposta; não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0604-validacao-localizacoes-importadas-md"
+description: "Documento Sinérgica SO: ADR-0604 — Campos de localização recebida"
+alwaysApply: false
+---
+
 # ADR-0604 — Campos de localização recebida
 
 Status: proposta; gate fechado, não homologada.

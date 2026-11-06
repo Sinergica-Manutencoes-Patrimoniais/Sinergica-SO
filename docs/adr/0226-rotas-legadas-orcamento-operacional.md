@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0226-rotas-legadas-orcamento-operacional-md"
+description: "Documento Sinérgica SO: ADR-0226 — Guardas das rotas legadas de proposta"
+alwaysApply: false
+---
+
 # ADR-0226 — Guardas das rotas legadas de proposta
 
 **Estado:** preparação fechada, não homologada nem implantada.

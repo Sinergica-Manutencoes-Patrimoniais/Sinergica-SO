@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0052-previa-visitas-contratuais-md"
+description: "Documento Sinérgica SO: ADR-0052 — Prévia contratual sem materialização"
+alwaysApply: false
+---
+
 # ADR-0052 — Prévia contratual sem materialização
 
 **Status:** decisão para implementação local E01-S166. **Data:** 2026-10-27.

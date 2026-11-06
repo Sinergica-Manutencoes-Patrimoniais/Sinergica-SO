@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0066-planejamento-visita-md"
+description: "Documento Sinérgica SO: ADR-0066 — Transição de rascunho para Visita planejada"
+alwaysApply: false
+---
+
 # ADR-0066 — Transição de rascunho para Visita planejada
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

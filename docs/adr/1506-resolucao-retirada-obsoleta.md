@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1506-resolucao-retirada-obsoleta-md"
+description: "Documento Sinérgica SO: ADR-1506 — Mostrar retirada obsoleta na revisão"
+alwaysApply: false
+---
+
 # ADR-1506 — Mostrar retirada obsoleta na revisão
 
 ## Contexto

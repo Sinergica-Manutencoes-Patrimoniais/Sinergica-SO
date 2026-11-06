@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0855-guarda-vinculos-chamado-cancelado-md"
+description: "Documento Sinérgica SO: ADR 0855 — Guarda opt-in de vínculos após cancelamento"
+alwaysApply: false
+---
+
 # ADR 0855 — Guarda opt-in de vínculos após cancelamento
 
 O cancelamento conservador bloqueia Chamado e suas OS ao decidir, mas os triggers legados 1028 verificam somente `sso_encerrado_em`: um escritor posterior pode adicionar ou alterar vínculo de Chamado cancelado. A proteção complementar fica desligada por padrão e não substitui a 1028.

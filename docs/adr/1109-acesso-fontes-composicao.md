@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1109-acesso-fontes-composicao-md"
+description: "Documento Sinérgica SO: ADR-1109 — Acesso às funções de fontes de aquisição"
+alwaysApply: false
+---
+
 # ADR-1109 — Acesso às funções de fontes de aquisição
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0524-parcelas-aditivas-e-saldo-legado-md"
+description: "Documento Sinérgica SO: ADR-0524 — parcelas aditivas e saldo legado"
+alwaysApply: false
+---
+
 # ADR-0524 — parcelas aditivas e saldo legado
 
 Status: inviável sem evolução coordenada; diagnóstico, não aplicado nem homologado. Uma tabela separada de alocações adicionais preservaria o índice legado, mas as consultas e comandos de `0404` somam somente `financeiro.sso_faturavel_alocacoes`, incluindo os saldos do item e documento, e `0429` protege lançamentos usando essa mesma tabela. Portanto, uma parcela efetiva apenas na tabela nova seria invisível a esses caminhos e poderia permitir saldo excedido ou alterações indevidas no lançamento.

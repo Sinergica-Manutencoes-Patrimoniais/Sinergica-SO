@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0235-consulta-vinculo-rotina-serie-md"
+description: "Documento Sinérgica SO: ADR-0235 — Consulta de vínculo explícito de Rotina por Visita"
+alwaysApply: false
+---
+
 # ADR-0235 — Consulta de vínculo explícito de Rotina por Visita
 
 Status: proposta, não homologada.

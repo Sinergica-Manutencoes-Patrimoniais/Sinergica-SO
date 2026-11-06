@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0955-borda-http-estrutura-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0955 — Borda experimental XLSX de estrutura"
+alwaysApply: false
+---
+
 # ADR-0955 — Borda experimental XLSX de estrutura
 
 Status: código de borda não registrado, não homologado.

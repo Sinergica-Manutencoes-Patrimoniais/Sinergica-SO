@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1476-fotografia-impacto-grupo-revisao-md"
+description: "Documento Sinérgica SO: ADR-1476 — Fotografia de efeitos de Grupo nas decisões de revisão"
+alwaysApply: false
+---
+
 # ADR-1476 — Fotografia de efeitos de Grupo nas decisões de revisão
 
 ## Contexto

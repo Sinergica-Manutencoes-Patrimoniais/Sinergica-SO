@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0318-resolver-foto-retorno-servico-md"
+description: "Documento Sinérgica SO: ADR-0318 — Resolver de foto somente no serviço"
+alwaysApply: false
+---
+
 # ADR-0318 — Resolver de foto somente no serviço
 
 Status: proposta, não homologada.

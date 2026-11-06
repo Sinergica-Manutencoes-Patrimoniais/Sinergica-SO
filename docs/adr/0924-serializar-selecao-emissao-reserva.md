@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0924-serializar-selecao-emissao-reserva-md"
+description: "Documento Sinérgica SO: ADR-0924 — Autorização transacional de seleção e emissão de reserva"
+alwaysApply: false
+---
+
 # ADR-0924 — Autorização transacional de seleção e emissão de reserva
 
 Data: 2026-10-30 · Status: preparação, não aplicado ou homologado.

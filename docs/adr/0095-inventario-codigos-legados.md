@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0095-inventario-codigos-legados-md"
+description: "Documento Sinérgica SO: ADR-0095 — Inventário agregado dos códigos legados"
+alwaysApply: false
+---
+
 # ADR-0095 — Inventário agregado dos códigos legados
 
 ## Estado

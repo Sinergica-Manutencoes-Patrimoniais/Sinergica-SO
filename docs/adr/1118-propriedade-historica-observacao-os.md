@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1118-propriedade-historica-observacao-os-md"
+description: "Documento Sinérgica SO: ADR-1118 — Propriedade histórica de eventos de observação de OS"
+alwaysApply: false
+---
+
 # ADR-1118 — Propriedade histórica de eventos de observação de OS
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1336-preservacao-historico-codigo-grupo-md"
+description: "Documento Sinérgica SO: ADR-1336 — Preservação do histórico de código de Grupo"
+alwaysApply: false
+---
+
 # ADR-1336 — Preservação do histórico de código de Grupo
 
 **Estado:** proposta; não aplicada nem homologada.

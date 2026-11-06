@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1248-busca-unificada-codigo-grupo-md"
+description: "Documento Sinérgica SO: ADR-1248 — Busca conjunta de códigos públicos"
+alwaysApply: false
+---
+
 # ADR-1248 — Busca conjunta de códigos públicos
 
 **Status:** proposta local, não homologada. Complementa ADR-1247.

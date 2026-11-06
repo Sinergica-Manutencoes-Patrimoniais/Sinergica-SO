@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1028-consulta-supressoes-semana-md"
+description: "Documento Sinérgica SO: ADR-1028 — Consulta das supressões por feriado"
+alwaysApply: false
+---
+
 # ADR-1028 — Consulta das supressões por feriado
 
 Status: preparação privada, não homologada.

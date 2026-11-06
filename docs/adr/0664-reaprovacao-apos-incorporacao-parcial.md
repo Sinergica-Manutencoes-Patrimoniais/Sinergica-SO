@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0664-reaprovacao-apos-incorporacao-parcial-md"
+description: "Documento Sinérgica SO: ADR-0664 — Reaprovação após correção parcial"
+alwaysApply: false
+---
+
 # ADR-0664 — Reaprovação após correção parcial
 
 Status: proposta; gates fechados, não homologada.

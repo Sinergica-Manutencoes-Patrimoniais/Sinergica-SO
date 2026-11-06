@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1375-rastreio-candidato-servico-md"
+description: "Documento Sinérgica SO: ADR-1375 — Rastreio do candidato de serviço"
+alwaysApply: false
+---
+
 # ADR-1375 — Rastreio do candidato de serviço
 
 **Estado:** proposta; não aplicada nem homologada.

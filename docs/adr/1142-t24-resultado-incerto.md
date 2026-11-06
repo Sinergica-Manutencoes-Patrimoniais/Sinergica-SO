@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1142-t24-resultado-incerto-md"
+description: "Documento Sinérgica SO: ADR-1142 — Resultado conservador de tentativa T−24"
+alwaysApply: false
+---
+
 # ADR-1142 — Resultado conservador de tentativa T−24
 
 Status: proposta local, gate fechado; não aplicada nem homologada.

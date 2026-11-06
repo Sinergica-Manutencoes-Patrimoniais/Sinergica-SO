@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1535-revalidar-os-conhecidas-aprovacao-md"
+description: "Documento Sinérgica SO: ADR-1535 — Revalidar OS conferidas ao aprovar revisão"
+alwaysApply: false
+---
+
 # ADR-1535 — Revalidar OS conferidas ao aprovar revisão
 
 A decisão de impacto já compara as OS conhecidas, mas a aprovação só revalidava o questionário. Uma OS podia mudar entre a confirmação do PCM e a aprovação, tornando a decisão anterior desatualizada.

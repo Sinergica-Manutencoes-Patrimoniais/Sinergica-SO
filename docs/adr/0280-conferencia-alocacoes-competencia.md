@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0280-conferencia-alocacoes-competencia-md"
+description: "Documento Sinérgica SO: ADR-0280 — Conferência de documentos por competência"
+alwaysApply: false
+---
+
 # ADR-0280 — Conferência de documentos por competência
 
 Status: proposta; gate fechado e validação pendente.

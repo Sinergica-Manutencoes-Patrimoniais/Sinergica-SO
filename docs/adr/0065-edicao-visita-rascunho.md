@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0065-edicao-visita-rascunho-md"
+description: "Documento Sinérgica SO: ADR-0065 — Edição de dados operacionais de Visita não confirmada"
+alwaysApply: false
+---
+
 # ADR-0065 — Edição de dados operacionais de Visita não confirmada
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

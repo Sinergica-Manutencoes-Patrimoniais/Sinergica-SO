@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0734-integridade-cliente-assessment-proposta-md"
+description: "Documento Sinérgica SO: ADR 0734 — Cliente do levantamento na proposta"
+alwaysApply: false
+---
+
 # ADR 0734 — Cliente do levantamento na proposta
 
 Status: proposta técnica; homologação pendente.

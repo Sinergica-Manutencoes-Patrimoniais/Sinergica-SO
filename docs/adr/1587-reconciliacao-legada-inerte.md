@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1587-reconciliacao-legada-inerte-md"
+description: "Documento Sinérgica SO: ADR 1587 — Declaração PCM sobre ocorrência legada inerte"
+alwaysApply: false
+---
+
 # ADR 1587 — Declaração PCM sobre ocorrência legada inerte
 
 ## Contexto

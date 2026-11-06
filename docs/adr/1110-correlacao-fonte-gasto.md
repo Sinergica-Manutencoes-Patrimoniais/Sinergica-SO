@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1110-correlacao-fonte-gasto-md"
+description: "Documento Sinérgica SO: ADR-1110 — Correlação declarada de fonte de aquisição e parcela"
+alwaysApply: false
+---
+
 # ADR-1110 — Correlação declarada de fonte de aquisição e parcela
 
 Status: proposta local, não aplicada nem homologada.

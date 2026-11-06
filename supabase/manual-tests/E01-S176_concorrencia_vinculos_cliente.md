@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s176-concorrencia-vinculos-cliente-md"
+description: "Documento Sinérgica SO: E01-S176 — roteiro manual de concorrência de vínculos e hierarquia"
+alwaysApply: false
+---
+
 # E01-S176 — roteiro manual de concorrência de vínculos e hierarquia
 
 **Preparado, não executado.** Exclusivamente banco descartável e isolado, sem credenciais reais,

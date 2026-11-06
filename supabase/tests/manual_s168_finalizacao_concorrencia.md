@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-s168-finalizacao-concorrencia-md"
+description: "Documento Sinérgica SO: S168 — concorrência da finalização individual"
+alwaysApply: false
+---
+
 # S168 — concorrência da finalização individual
 
 Em 30/10/2026, no banco diagnóstico isolado 55522, a migration 0969 foi aplicada diretamente, sem atualizar histórico de migrations. A 0968 ainda não estava aplicada; a 0969 não depende dela. Sem rede externa e com `app.auvo_sync_write=true`.

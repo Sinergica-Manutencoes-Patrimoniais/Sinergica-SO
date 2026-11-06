@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s165-preflight-owner-1804-1805-md"
+description: "Documento Sinérgica SO: Preflight de proprietário e ACL — aprovação 1804/1805/1806"
+alwaysApply: false
+---
+
 # Preflight de proprietário e ACL — aprovação 1804/1805/1806
 
 O SQL de mesmo nome é somente de leitura e termina em `ROLLBACK`. Use `psql -X -v

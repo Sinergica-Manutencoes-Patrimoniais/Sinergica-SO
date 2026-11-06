@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1259-entrada-xlsx-estrutura-md"
+description: "Documento Sinérgica SO: ADR-1259 — Entrada local da recepção XLSX de estrutura"
+alwaysApply: false
+---
+
 # ADR-1259 — Entrada local da recepção XLSX de estrutura
 
 **Status:** proposta local, não homologada. Complementa ADR-0955.

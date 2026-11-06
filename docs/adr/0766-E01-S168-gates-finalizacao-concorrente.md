@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0766-e01-s168-gates-finalizacao-concorrente-md"
+description: "Documento Sinérgica SO: ADR-0766 — Serialização dos gates de finalização"
+alwaysApply: false
+---
+
 # ADR-0766 — Serialização dos gates de finalização
 
 **Status:** preparada, sem homologação. **Data:** 2026-10-30.

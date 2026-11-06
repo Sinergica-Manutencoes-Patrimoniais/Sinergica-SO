@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1143-t24-tentativa-sem-resposta-md"
+description: "Documento Sinérgica SO: ADR-1143 — Tentativas T−24 sem resposta"
+alwaysApply: false
+---
+
 # ADR-1143 — Tentativas T−24 sem resposta
 
 Status: proposta local, gate fechado; não aplicada nem homologada.

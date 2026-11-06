@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1435-copia-tipo-tarefa-rotina-md"
+description: "Documento Sinérgica SO: ADR-1435 — Preservar tipo de tarefa nas cópias"
+alwaysApply: false
+---
+
 # ADR-1435 — Preservar tipo de tarefa nas cópias
 
 Ao revisar a mesma Rotina lógica ou copiar um Plano/modelo no mesmo Cliente e alvo, preservar o tipo de tarefa explicitamente presente na fotografia aprovada. Ausência permanece desconhecida. Se existir referência e o gate estiver fechado, a operação é recusada para evitar perda silenciosa; Cliente ou alvo diferente não herda a referência.

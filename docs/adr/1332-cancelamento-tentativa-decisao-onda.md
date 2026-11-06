@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1332-cancelamento-tentativa-decisao-onda-md"
+description: "Documento Sinérgica SO: ADR-1332 — Cancelamento de tentativa de decisão de onda"
+alwaysApply: false
+---
+
 # ADR-1332 — Cancelamento de tentativa de decisão de onda
 
 Status: preparado, gate e interface desligados.

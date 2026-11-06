@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1124-diagnostico-fonte-retificada-md"
+description: "Documento Sinérgica SO: ADR-1124 — Diagnóstico de fonte retificada na proposta"
+alwaysApply: false
+---
+
 # ADR-1124 — Diagnóstico de fonte retificada na proposta
 
 Status: proposta local, não aplicada nem homologada.

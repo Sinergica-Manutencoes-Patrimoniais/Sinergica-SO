@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0770-reconciliacao-ingestao-foto-pendente-md"
+description: "Documento Sinérgica SO: ADR 0770 — Reconciliação de ingestão de foto pendente"
+alwaysApply: false
+---
+
 # ADR 0770 — Reconciliação de ingestão de foto pendente
 
 ## Decisão

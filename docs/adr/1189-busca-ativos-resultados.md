@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1189-busca-ativos-resultados-md"
+description: "Documento Sinérgica SO: ADR-1189 — Busca de ativos para resultados de campo"
+alwaysApply: false
+---
+
 # ADR-1189 — Busca de ativos para resultados de campo
 
 **Status:** proposta local; não homologada.

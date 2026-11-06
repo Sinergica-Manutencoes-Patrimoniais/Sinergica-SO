@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1293-recibo-vinculo-localizacao-md"
+description: "Documento Sinérgica SO: ADR 1293 — Recibo do vínculo de localização"
+alwaysApply: false
+---
+
 # ADR 1293 — Recibo do vínculo de localização
 
 ## Contexto

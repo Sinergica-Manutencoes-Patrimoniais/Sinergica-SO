@@ -1,3 +1,9 @@
+---
+name: "docs-entregas-2026-10-14-levantamento-funcional-md"
+description: "Documento Sinérgica SO: Sinérgica SO — funcionalidades entregues e guia de validação"
+alwaysApply: false
+---
+
 # Sinérgica SO — funcionalidades entregues e guia de validação
 
 Versão de referência: main, commit `22aca3918224bc45175e80c6ec88b957fdb604aa`, de 14/10/2026. Público: Fabrício, Aline e equipe. Levantamento: 14/10/2026, horário de Brasília.

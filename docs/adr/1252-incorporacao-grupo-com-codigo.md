@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1252-incorporacao-grupo-com-codigo-md"
+description: "Documento Sinérgica SO: ADR-1252 — Incorporação individual de Grupo com código"
+alwaysApply: false
+---
+
 # ADR-1252 — Incorporação individual de Grupo com código
 
 **Status:** proposta local, não homologada. Complementa ADR-1244/1251.

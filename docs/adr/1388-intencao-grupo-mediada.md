@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1388-intencao-grupo-mediada-md"
+description: "Documento Sinérgica SO: ADR-1388 — Intenção de OS para Grupo mediada"
+alwaysApply: false
+---
+
 # ADR-1388 — Intenção de OS para Grupo mediada
 
 **Estado:** proposta; não aplicada nem homologada.

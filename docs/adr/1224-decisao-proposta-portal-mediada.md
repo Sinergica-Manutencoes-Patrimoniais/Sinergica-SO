@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1224-decisao-proposta-portal-mediada-md"
+description: "Documento Sinérgica SO: ADR-1224 — Decisão mediada de proposta no Portal"
+alwaysApply: false
+---
+
 # ADR-1224 — Decisão mediada de proposta no Portal
 
 ## Decisão

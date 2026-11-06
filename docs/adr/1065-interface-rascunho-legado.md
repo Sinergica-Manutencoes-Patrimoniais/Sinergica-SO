@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1065-interface-rascunho-legado-md"
+description: "Documento Sinérgica SO: ADR-1065 — Interface de rascunho a partir de Plano legado"
+alwaysApply: false
+---
+
 # ADR-1065 — Interface de rascunho a partir de Plano legado
 
 **Status:** preparação não homologada. Complementa ADR-1064.

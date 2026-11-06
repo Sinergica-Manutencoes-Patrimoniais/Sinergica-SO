@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0255-calendario-portal-visitas-publicadas-md"
+description: "Documento Sinérgica SO: ADR-0255 — Calendário de visitas comunicadas"
+alwaysApply: false
+---
+
 # ADR-0255 — Calendário de visitas comunicadas
 
 Status: proposta; gate e funções sem liberação.

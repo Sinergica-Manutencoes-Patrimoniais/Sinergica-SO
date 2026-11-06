@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1514-decisao-impacto-comparacao-atomica-md"
+description: "Documento Sinérgica SO: ADR-1514 — Vincular decisão de impacto à comparação conferida"
+alwaysApply: false
+---
+
 # ADR-1514 — Vincular decisão de impacto à comparação conferida
 
 ## Contexto

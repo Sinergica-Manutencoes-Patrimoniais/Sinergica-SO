@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1475-decisoes-impacto-revisao-mediadas-md"
+description: "Documento Sinérgica SO: ADR-1475 — Decisões de impacto de revisão mediadas"
+alwaysApply: false
+---
+
 # ADR-1475 — Decisões de impacto de revisão mediadas
 
 ## Contexto

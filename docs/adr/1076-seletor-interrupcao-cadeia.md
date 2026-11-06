@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1076-seletor-interrupcao-cadeia-md"
+description: "Documento Sinérgica SO: ADR-1076 — Seletor de OS para interrupção em cadeia"
+alwaysApply: false
+---
+
 # ADR-1076 — Seletor de OS para interrupção em cadeia
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0233-historico-publico-orcamento-operacional-md"
+description: "Documento Sinérgica SO: ADR-0233 — Histórico de versões públicas operacionais"
+alwaysApply: false
+---
+
 # ADR-0233 — Histórico de versões públicas operacionais
 
 **Estado:** proposta preparatória, sem homologação nem implantação.

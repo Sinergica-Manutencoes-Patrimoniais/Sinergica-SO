@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1531-aplicar-retiradas-efetivas-fila-md"
+description: "Documento Sinérgica SO: ADR-1531 — Aplicação explícita de retiradas efetivas à fila"
+alwaysApply: false
+---
+
 # ADR-1531 — Aplicação explícita de retiradas efetivas à fila
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0303-itens-publicos-aceite-md"
+description: "Documento Sinérgica SO: ADR-0303 — Apresentação e aceite de itens estruturados"
+alwaysApply: false
+---
+
 # ADR-0303 — Apresentação e aceite de itens estruturados
 
 Status: proposta; gate fechado, revisão e testes pendentes.

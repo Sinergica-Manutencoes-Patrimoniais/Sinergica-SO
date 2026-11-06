@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1504-fila-preventiva-visita-md"
+description: "Documento Sinérgica SO: ADR-1504 — Fila preventiva por ciclo de Visita"
+alwaysApply: false
+---
+
 # ADR-1504 — Fila preventiva por ciclo de Visita
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0284-diagnostico-documentos-nao-alocados-md"
+description: "Documento Sinérgica SO: ADR-0284 — Diagnóstico de lançamentos não alocados"
+alwaysApply: false
+---
+
 # ADR-0284 — Diagnóstico de lançamentos não alocados
 
 Status: proposta; sem ativação nem testes.

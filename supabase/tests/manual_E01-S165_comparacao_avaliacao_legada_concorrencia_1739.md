@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-comparacao-avaliacao-legada-concorrencia-1739-md"
+description: "Documento Sinérgica SO: Comparação de impacto e avaliação legada concorrentes"
+alwaysApply: false
+---
+
 # Comparação de impacto e avaliação legada concorrentes
 
 Usar exclusivamente clone descartável com migrations até 1739. Preparar `manual_E01-S165_comparacao_avaliacao_legada_1739.sql` até o último bloco de teste, antes do `rollback`, e confirmar a transação sintética. Habilitar `pcm.sso_decisao_comparada_gate` somente no clone. Usar os identificadores da fixture e claims do ator sintético.

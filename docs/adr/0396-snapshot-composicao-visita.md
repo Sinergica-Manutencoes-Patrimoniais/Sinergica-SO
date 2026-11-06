@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0396-snapshot-composicao-visita-md"
+description: "Documento Sinérgica SO: ADR-0396 — Snapshot revisado da composição de Visita"
+alwaysApply: false
+---
+
 # ADR-0396 — Snapshot revisado da composição de Visita
 
 Status: proposta; gates fechados, sem testes ou despacho.

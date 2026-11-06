@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0044-selecao-alvos-plano-md"
+description: "Documento Sinérgica SO: ADR-0044 — Seleção de alvos do Plano"
+alwaysApply: false
+---
+
 # ADR-0044 — Seleção de alvos do Plano
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

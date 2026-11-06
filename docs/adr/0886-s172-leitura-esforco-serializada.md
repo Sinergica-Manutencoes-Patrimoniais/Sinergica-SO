@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0886-s172-leitura-esforco-serializada-md"
+description: "Documento Sinérgica SO: ADR-0886 — Leitura individual de esforço serializada"
+alwaysApply: false
+---
+
 # ADR-0886 — Leitura individual de esforço serializada
 
 Data: 2026-10-30 · Status: proposta para implementação, gate fechado.

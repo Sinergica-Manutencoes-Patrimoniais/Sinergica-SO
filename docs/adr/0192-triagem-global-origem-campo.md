@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0192-triagem-global-origem-campo-md"
+description: "Documento Sinérgica SO: ADR-0192 — Triagem global de origem de campo desconhecida"
+alwaysApply: false
+---
+
 # ADR-0192 — Triagem global de origem de campo desconhecida
 
 ## Contexto

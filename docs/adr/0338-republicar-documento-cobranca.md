@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0338-republicar-documento-cobranca-md"
+description: "Documento Sinérgica SO: ADR-0338 — Republicação de vínculo de documento"
+alwaysApply: false
+---
+
 # ADR-0338 — Republicação de vínculo de documento
 
 Status: proposta; gates fechados, sem testes.

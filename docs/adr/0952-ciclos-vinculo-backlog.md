@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0952-ciclos-vinculo-backlog-md"
+description: "Documento Sinérgica SO: ADR-0952 — Ciclos históricos para escopo do Backlog"
+alwaysApply: false
+---
+
 # ADR-0952 — Ciclos históricos para escopo do Backlog
 
 Status: fundação isolada, não homologada.

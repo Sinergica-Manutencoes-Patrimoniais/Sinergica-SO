@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0158-reconciliacao-outbox-leitura-segura-md"
+description: "Documento Sinérgica SO: ADR-0158 — Reconciliação preparada da outbox Auvo"
+alwaysApply: false
+---
+
 # ADR-0158 — Reconciliação preparada da outbox Auvo
 
 Status: proposta, não homologada.

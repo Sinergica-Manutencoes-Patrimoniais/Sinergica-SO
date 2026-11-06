@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1057-triagem-intencoes-reprogramacao-md"
+description: "Documento Sinérgica SO: ADR-1057 — Triagem de intenções de reprogramação"
+alwaysApply: false
+---
+
 # ADR-1057 — Triagem de intenções de reprogramação
 
 **Status:** preparação não homologada. Complementa ADR-0209 e E01-S185.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0131-demanda-capacidade-fontes-oficiais-md"
+description: "Documento Sinérgica SO: ADR-0131 — Projeção de demanda de capacidade pelas fontes oficiais"
+alwaysApply: false
+---
+
 # ADR-0131 — Projeção de demanda de capacidade pelas fontes oficiais
 
 **Estado:** proposta não aplicada nem homologada. Complementa ADR-0113.

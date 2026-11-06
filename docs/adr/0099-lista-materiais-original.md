@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0099-lista-materiais-original-md"
+description: "Documento Sinérgica SO: ADR-0099 — Lista de materiais com evidência original imutável"
+alwaysApply: false
+---
+
 # ADR-0099 — Lista de materiais com evidência original imutável
 
 ## Estado

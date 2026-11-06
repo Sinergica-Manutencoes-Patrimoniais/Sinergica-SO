@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1193-horizonte-grupo-mediado-md"
+description: "Documento Sinérgica SO: ADR-1193 — Grupos no horizonte parcial"
+alwaysApply: false
+---
+
 # ADR-1193 — Grupos no horizonte parcial
 
 ## Contexto

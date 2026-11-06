@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1079-previa-dia-origem-e-excecoes-md"
+description: "Documento Sinérgica SO: ADR-1079 — Prévia da mudança de dia pela semana de origem"
+alwaysApply: false
+---
+
 # ADR-1079 — Prévia da mudança de dia pela semana de origem
 
 Status: proposta local, não aplicada nem homologada.

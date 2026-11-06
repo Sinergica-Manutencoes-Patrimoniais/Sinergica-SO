@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0331-auditoria-download-faturavel-md"
+description: "Documento Sinérgica SO: ADR-0331 — Auditoria de download de comprovante faturável"
+alwaysApply: false
+---
+
 # ADR-0331 — Auditoria de download de comprovante faturável
 
 Status: proposta; gate e concessões fechados, sem testes.

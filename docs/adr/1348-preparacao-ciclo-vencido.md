@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1348-preparacao-ciclo-vencido-md"
+description: "Documento Sinérgica SO: ADR 1348 — Preparação explícita de ciclo vencido"
+alwaysApply: false
+---
+
 # ADR 1348 — Preparação explícita de ciclo vencido
 
 ## Contexto

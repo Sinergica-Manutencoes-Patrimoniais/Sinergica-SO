@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1121-detalhe-retorno-parcial-md"
+description: "Documento Sinérgica SO: ADR-1121 — Consulta direta de retorno parcial"
+alwaysApply: false
+---
+
 # ADR-1121 — Consulta direta de retorno parcial
 
 Status: proposta local, não aplicada nem homologada.

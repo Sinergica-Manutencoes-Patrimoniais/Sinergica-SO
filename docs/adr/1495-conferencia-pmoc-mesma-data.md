@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1495-conferencia-pmoc-mesma-data-md"
+description: "Documento Sinérgica SO: ADR-1495 — PMOC sem vínculo na data do ciclo"
+alwaysApply: false
+---
+
 # ADR-1495 — PMOC sem vínculo na data do ciclo
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1275-consulta-contratos-origem-campo-md"
+description: "Documento Sinérgica SO: ADR-1275 — Consulta administrativa de contratos de origem"
+alwaysApply: false
+---
+
 # ADR-1275 — Consulta administrativa de contratos de origem
 
 Status: proposta local; não aplicada nem homologada.

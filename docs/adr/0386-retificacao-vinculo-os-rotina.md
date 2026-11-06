@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0386-retificacao-vinculo-os-rotina-md"
+description: "Documento Sinérgica SO: ADR-0386 — Invalidação e retificação do vínculo OS–Rotina"
+alwaysApply: false
+---
+
 # ADR-0386 — Invalidação e retificação do vínculo OS–Rotina
 
 Status: proposta; gate fechado, sem testes.

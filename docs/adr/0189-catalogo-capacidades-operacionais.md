@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0189-catalogo-capacidades-operacionais-md"
+description: "Documento Sinérgica SO: ADR-0189 — Capacidades operacionais sem concessão automática"
+alwaysApply: false
+---
+
 # ADR-0189 — Capacidades operacionais sem concessão automática
 
 Status: proposta, não homologada.

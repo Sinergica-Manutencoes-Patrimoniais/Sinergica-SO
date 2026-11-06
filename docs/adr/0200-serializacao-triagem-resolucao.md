@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0200-serializacao-triagem-resolucao-md"
+description: "Documento Sinérgica SO: ADR-0200 — Serialização entre triagem e resolução automática"
+alwaysApply: false
+---
+
 # ADR-0200 — Serialização entre triagem e resolução automática
 
 ## Decisão

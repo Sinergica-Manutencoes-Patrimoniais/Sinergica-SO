@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0139-interface-cronograma-staging-unificado-md"
+description: "Documento Sinérgica SO: ADR-0139 — Interface de cronograma sobre staging unificado"
+alwaysApply: false
+---
+
 # ADR-0139 — Interface de cronograma sobre staging unificado
 
 **Status:** proposta, não aplicada nem homologada.

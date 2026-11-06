@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0614-fronteira-criacao-os-grupo-md"
+description: "Documento Sinérgica SO: ADR-0614 — Fronteira bloqueada de criação de OS para Grupo"
+alwaysApply: false
+---
+
 # ADR-0614 — Fronteira bloqueada de criação de OS para Grupo
 
 A prévia autorizada identifica intenção, ocorrência, versão, Rotina e Grupo históricos e sinaliza decisão ou vínculo declarado. O comando de criação é deliberadamente fail-closed e sempre falha, mesmo com gate habilitado; não possui INSERT ou chamada externa. Nenhum gate ou permissão é ativado.

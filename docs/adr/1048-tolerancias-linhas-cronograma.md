@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1048-tolerancias-linhas-cronograma-md"
+description: "Documento Sinérgica SO: ADR-1048 — Consulta conjunta de tolerâncias do cronograma"
+alwaysApply: false
+---
+
 # ADR-1048 — Consulta conjunta de tolerâncias do cronograma
 
 **Status:** preparação privada, não homologada.

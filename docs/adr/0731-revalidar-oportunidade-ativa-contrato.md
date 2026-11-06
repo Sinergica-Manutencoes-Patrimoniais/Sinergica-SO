@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0731-revalidar-oportunidade-ativa-contrato-md"
+description: "Documento Sinérgica SO: ADR-0731 — Revalidar oportunidade na ativação de contrato"
+alwaysApply: false
+---
+
 # ADR-0731 — Revalidar oportunidade na ativação de contrato
 
 **Status:** preparado para diagnóstico; sem homologação ou deploy.

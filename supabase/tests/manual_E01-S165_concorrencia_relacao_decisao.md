@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-concorrencia-relacao-decisao-md"
+description: "Documento Sinérgica SO: Relação legada e decisão de impacto concorrentes"
+alwaysApply: false
+---
+
 # Relação legada e decisão de impacto concorrentes
 
 Executar exclusivamente em clone descartável com migrations 1614–1683 aplicadas, nunca em banco compartilhado ou produtivo. A fixture usa dados sintéticos e não substitui aprovação nem libera a guarda 1045. O banco deve ter as migrations anteriores e extensões necessárias já instaladas. Não cria OS nem tarefa Auvo.

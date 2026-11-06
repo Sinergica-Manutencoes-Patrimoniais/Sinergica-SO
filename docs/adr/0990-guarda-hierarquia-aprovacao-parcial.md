@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0990-guarda-hierarquia-aprovacao-parcial-md"
+description: "Documento Sinérgica SO: ADR-0990 — Guarda comum da hierarquia na aprovação parcial"
+alwaysApply: false
+---
+
 # ADR-0990 — Guarda comum da hierarquia na aprovação parcial
 
 Status: preparação privada, não homologada.

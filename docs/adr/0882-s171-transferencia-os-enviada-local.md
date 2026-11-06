@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0882-s171-transferencia-os-enviada-local-md"
+description: "Documento Sinérgica SO: ADR-0882 — Transferência local de OS enviada com intenção"
+alwaysApply: false
+---
+
 # ADR-0882 — Transferência local de OS enviada com intenção
 
 Data: 2026-10-30 · Status: proposta, não implantada

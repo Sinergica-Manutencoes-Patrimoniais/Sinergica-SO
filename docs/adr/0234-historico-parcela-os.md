@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0234-historico-parcela-os-md"
+description: "Documento Sinérgica SO: ADR-0234 — Histórico de atribuição e declaração por parcela"
+alwaysApply: false
+---
+
 # ADR-0234 — Histórico de atribuição e declaração por parcela
 
 ## Decisão

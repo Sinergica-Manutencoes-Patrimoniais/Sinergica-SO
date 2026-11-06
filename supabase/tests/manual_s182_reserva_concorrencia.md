@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-s182-reserva-concorrencia-md"
+description: "Documento Sinérgica SO: Experimento S182 — reserva e alocação"
+alwaysApply: false
+---
+
 # Experimento S182 — reserva e alocação
 
 Somente em banco descartável isolado. A fixture `manual_s182_reserva_concorrencia_fixture.sql` grava dados sintéticos com prefixo `18290000`, habilita quatro gates e concede temporariamente quatro RPCs. Os registros imutáveis não devem ser removidos individualmente. Ao terminar, desligar os quatro gates e revogar os grants; descartar a base quando não for mais necessária.

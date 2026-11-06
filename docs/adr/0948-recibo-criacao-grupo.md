@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0948-recibo-criacao-grupo-md"
+description: "Documento Sinérgica SO: ADR-0948 — Recibo transacional para criação de grupo"
+alwaysApply: false
+---
+
 # ADR-0948 — Recibo transacional para criação de grupo
 
 Status: preparação local, não homologada; complementa ADR-0947.

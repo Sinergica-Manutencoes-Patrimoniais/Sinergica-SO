@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0610-consulta-campos-localizacao-staging-md"
+description: "Documento Sinérgica SO: ADR-0610 — Consulta de campos explícitos de localização"
+alwaysApply: false
+---
+
 # ADR-0610 — Consulta de campos explícitos de localização
 
 Status: proposta; gate fechado, não homologada.

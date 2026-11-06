@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1230-entrada-periodica-varredura-fila-md"
+description: "Documento Sinérgica SO: ADR-1230 — Entrada periódica da varredura da fila"
+alwaysApply: false
+---
+
 # ADR-1230 — Entrada periódica da varredura da fila
 
 ## Decisão

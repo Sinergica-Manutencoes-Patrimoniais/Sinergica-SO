@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1044-promocao-continuidade-atomica-md"
+description: "Documento Sinérgica SO: ADR-1044 — Promoção e registro de continuidade na mesma transação"
+alwaysApply: false
+---
+
 # ADR-1044 — Promoção e registro de continuidade na mesma transação
 
 **Status:** preparação privada, não homologada.

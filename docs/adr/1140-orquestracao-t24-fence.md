@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1140-orquestracao-t24-fence-md"
+description: "Documento Sinérgica SO: ADR-1140 — Orquestração isolada de envio T−24"
+alwaysApply: false
+---
+
 # ADR-1140 — Orquestração isolada de envio T−24
 
 Status: proposta local; não integrada, não executada e não homologada.

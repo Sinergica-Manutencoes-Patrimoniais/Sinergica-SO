@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1181-fornecedor-t24-injetado-md"
+description: "Documento Sinérgica SO: ADR-1181 — Adaptador de fornecedor T−24 com transporte injetado"
+alwaysApply: false
+---
+
 # ADR-1181 — Adaptador de fornecedor T−24 com transporte injetado
 
 Status: proposta local, não conectada nem homologada.

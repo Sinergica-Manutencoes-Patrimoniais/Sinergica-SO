@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1211-relatorio-despesas-cliente-mediado-md"
+description: "Documento Sinérgica SO: ADR-1211 — Relatório interno de despesas por Cliente"
+alwaysApply: false
+---
+
 # ADR-1211 — Relatório interno de despesas por Cliente
 
 ## Decisão

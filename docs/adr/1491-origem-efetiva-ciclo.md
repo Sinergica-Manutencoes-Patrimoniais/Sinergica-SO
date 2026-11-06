@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1491-origem-efetiva-ciclo-md"
+description: "Documento Sinérgica SO: ADR-1491 — Consulta da origem efetiva antes de preparar ciclo"
+alwaysApply: false
+---
+
 # ADR-1491 — Consulta da origem efetiva antes de preparar ciclo
 
 ## Contexto

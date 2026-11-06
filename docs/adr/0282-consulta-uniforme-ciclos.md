@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0282-consulta-uniforme-ciclos-md"
+description: "Documento Sinérgica SO: ADR-0282 — Consulta uniforme de ciclos por Rotina"
+alwaysApply: false
+---
+
 # ADR-0282 — Consulta uniforme de ciclos por Rotina
 
 Status: proposta, não homologada.

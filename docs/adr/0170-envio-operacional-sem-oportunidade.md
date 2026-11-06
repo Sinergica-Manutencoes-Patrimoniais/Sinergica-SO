@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0170-envio-operacional-sem-oportunidade-md"
+description: "Documento Sinérgica SO: ADR-0170 — Revisão e publicação de proposta sem oportunidade"
+alwaysApply: false
+---
+
 # ADR-0170 — Revisão e publicação de proposta sem oportunidade
 
 **Estado:** preparação fechada; sem implantação, envio ou comunicação real.

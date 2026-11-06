@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1116-previa-impedimentos-mudanca-dia-md"
+description: "Documento Sinérgica SO: ADR-1116 — Impedimentos da mudança do dia na prévia"
+alwaysApply: false
+---
+
 # ADR-1116 — Impedimentos da mudança do dia na prévia
 
 Status: proposta local, não aplicada nem homologada.

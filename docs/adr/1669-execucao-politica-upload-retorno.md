@@ -1,3 +1,9 @@
+---
+name: adr-1669-execucao-politica-upload-retorno
+description: Define a permissão mínima para avaliar políticas de upload de evidência.
+alwaysApply: false
+---
+
 # ADR-1669 — Execução da política de upload de evidência de retorno
 
 ## Contexto

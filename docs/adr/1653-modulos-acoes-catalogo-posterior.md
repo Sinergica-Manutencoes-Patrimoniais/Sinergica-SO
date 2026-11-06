@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1653-modulos-acoes-catalogo-posterior-md"
+description: "Documento Sinérgica SO: ADR 1653: elegibilidade das ações adicionadas ao catálogo"
+alwaysApply: false
+---
+
 # ADR 1653: elegibilidade das ações adicionadas ao catálogo
 
 O ADR 0030 exige elegibilidade explícita por módulo e concessão atual para o Cliente. Quatro ações criadas depois da migração 0246 declaram módulo e nível em `sso_acoes`, mas não foram incluídas em `sso_acao_modulos`. Assim, usuários comuns com concessão legítima são recusados; superadministrador permanece sujeito à concessão.

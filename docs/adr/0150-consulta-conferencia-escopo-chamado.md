@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0150-consulta-conferencia-escopo-chamado-md"
+description: "Documento Sinérgica SO: ADR-0150 — Conferência preparada de escopo e continuidade"
+alwaysApply: false
+---
+
 # ADR-0150 — Conferência preparada de escopo e continuidade
 
 Status: proposta, não homologada.

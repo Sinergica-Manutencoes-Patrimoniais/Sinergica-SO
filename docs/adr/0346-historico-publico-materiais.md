@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0346-historico-publico-materiais-md"
+description: "Documento Sinérgica SO: ADR-0346 — Histórico público de materiais"
+alwaysApply: false
+---
+
 # ADR-0346 — Histórico público de materiais
 
 Status: proposta; gate fechado, sem testes.

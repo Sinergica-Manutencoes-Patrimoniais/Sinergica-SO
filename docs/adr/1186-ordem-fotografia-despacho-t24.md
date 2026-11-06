@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1186-ordem-fotografia-despacho-t24-md"
+description: "Documento Sinérgica SO: ADR-1186 — Ordem de criação da fotografia de despacho T−24"
+alwaysApply: false
+---
+
 # ADR-1186 — Ordem de criação da fotografia de despacho T−24
 
 Status: preparação local; não homologada.

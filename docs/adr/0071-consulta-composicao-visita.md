@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0071-consulta-composicao-visita-md"
+description: "Documento Sinérgica SO: ADR-0071 — Consultas paginadas de composição da Visita"
+alwaysApply: false
+---
+
 # ADR-0071 — Consultas paginadas de composição da Visita
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

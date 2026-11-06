@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0658-aprovacao-parcial-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0658 — Aprovação parcial por linha"
+alwaysApply: false
+---
+
 # ADR-0658 — Aprovação parcial por linha
 
 Status: proposta; gate fechado, não homologada.

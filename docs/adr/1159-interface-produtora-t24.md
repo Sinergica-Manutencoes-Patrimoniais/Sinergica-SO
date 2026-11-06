@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1159-interface-produtora-t24-md"
+description: "Documento Sinérgica SO: ADR-1159 — Acesso à preparação T−24 preventiva"
+alwaysApply: false
+---
+
 # ADR-1159 — Acesso à preparação T−24 preventiva
 
 Status: proposta local, não aplicada nem homologada.

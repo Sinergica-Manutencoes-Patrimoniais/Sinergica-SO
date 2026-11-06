@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0384-vinculo-os-ocorrencia-rotina-md"
+description: "Documento Sinérgica SO: ADR-0384 — Vínculo explícito da OS à Rotina versionada"
+alwaysApply: false
+---
+
 # ADR-0384 — Vínculo explícito da OS à Rotina versionada
 
 Status: proposta; gate fechado, testes e revisão pendentes.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1470-origem-campo-os-preexistente-md"
+description: "Documento Sinérgica SO: ADR-1470 — Conferência de origem em OS preexistente"
+alwaysApply: false
+---
+
 # ADR-1470 — Conferência de origem em OS preexistente
 
 Status: preparação local, gates fechados; complementa ADR-1467/1468.

@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-especificacoes-executaveis-md"
+description: "Documento Sinérgica SO: Especificações executáveis — índice de compatibilidade"
+alwaysApply: false
+---
+
 # Especificações executáveis — índice de compatibilidade
 
 O pacote vigente está em [Programa SSO para Terra](programa-sso-terra.md), com22stories E01-S165–S186 e cobertura completa do Caderno Técnico.

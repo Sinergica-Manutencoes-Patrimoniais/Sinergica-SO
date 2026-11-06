@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1090-executor-varredura-os-md"
+description: "Documento Sinérgica SO: ADR-1090 — Executor privado da varredura de OS"
+alwaysApply: false
+---
+
 # ADR-1090 — Executor privado da varredura de OS
 
 Status: proposta local, não aplicada nem homologada.

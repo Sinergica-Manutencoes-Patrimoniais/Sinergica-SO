@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0797-codigo-rascunho-isolamento-md"
+description: "Documento Sinérgica SO: ADR 0797 — Isolamento da edição de código de rascunho"
+alwaysApply: false
+---
+
 # ADR 0797 — Isolamento da edição de código de rascunho
 
 A verificação de OS do núcleo 0363 usa a visão transacional. Em teste sintético de duas sessões com gate de marcos desligado, uma transação REPEATABLE READ iniciada antes de uma OS confirmada não enxergou a referência e aceitou editar o código. A chamada testada era privada e foi revertida; não foi demonstrado acesso público ao núcleo.

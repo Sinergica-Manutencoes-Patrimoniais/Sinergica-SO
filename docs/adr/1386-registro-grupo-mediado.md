@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1386-registro-grupo-mediado-md"
+description: "Documento Sinérgica SO: ADR-1386 — Registro mediado de ocorrência de Grupo"
+alwaysApply: false
+---
+
 # ADR-1386 — Registro mediado de ocorrência de Grupo
 
 **Estado:** proposta; não aplicada nem homologada.

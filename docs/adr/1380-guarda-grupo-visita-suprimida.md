@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1380-guarda-grupo-visita-suprimida-md"
+description: "Documento Sinérgica SO: ADR-1380 — Guarda de vínculos de Grupo em Visita suprimida"
+alwaysApply: false
+---
+
 # ADR-1380 — Guarda de vínculos de Grupo em Visita suprimida
 
 **Estado:** proposta; não aplicada nem homologada.

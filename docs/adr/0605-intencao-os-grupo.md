@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0605-intencao-os-grupo-md"
+description: "Documento Sinérgica SO: ADR-0605 — Intenção de OS para Grupo em staging"
+alwaysApply: false
+---
+
 # ADR-0605 — Intenção de OS para Grupo em staging
 
 Comando autorizado e fechado por gate registra intenção imutável por ocorrência de Grupo, preservando Rotina aprovada, quantidade e revisão fotografadas anteriormente, título, motivo e auditoria. Repetição da mesma requisição é idempotente; ocorrência já associada a OS declarada é recusada.

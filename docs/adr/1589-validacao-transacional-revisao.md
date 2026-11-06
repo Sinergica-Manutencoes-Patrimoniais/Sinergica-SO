@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1589-validacao-transacional-revisao-md"
+description: "Documento Sinérgica SO: ADR 1589 — Validação transacional da revisão"
+alwaysApply: false
+---
+
 # ADR 1589 — Validação transacional da revisão
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0467-geracao-visita-contratual-md"
+description: "Documento Sinérgica SO: ADR-0467 — Geração contratual preparada com declaração de feriados"
+alwaysApply: false
+---
+
 # ADR-0467 — Geração contratual preparada com declaração de feriados
 
 Status: preparado, gate desligado, não aplicado nem homologado. Sob dupla autorização, o comando verifica série, regra, semana, vigência e horário civil, exige declaração humana de cobertura de feriados e serializa processamento pela série. Feriado declarado do Cliente/contrato registra supressão auditada sem Visita nem reposição; caso contrário cria Visita regular rascunho pelo comando 0283 e registra origem 0313 na mesma transação, sem OS ou Auvo.

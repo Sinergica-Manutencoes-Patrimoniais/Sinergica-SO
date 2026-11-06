@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1238-vinculo-aceite-lote-legado-md"
+description: "Documento Sinérgica SO: ADR-1238 — Vínculo exclusivo entre aceite e lote de rascunhos"
+alwaysApply: false
+---
+
 # ADR-1238 — Vínculo exclusivo entre aceite e lote de rascunhos
 
 ## Decisão

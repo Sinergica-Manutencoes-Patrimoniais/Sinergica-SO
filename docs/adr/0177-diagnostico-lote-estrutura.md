@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0177-diagnostico-lote-estrutura-md"
+description: "Documento Sinérgica SO: ADR-0177 — Diagnóstico de lote de estrutura em staging"
+alwaysApply: false
+---
+
 # ADR-0177 — Diagnóstico de lote de estrutura em staging
 
 ## Decisão

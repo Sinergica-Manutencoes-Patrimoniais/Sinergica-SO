@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0154-contexto-historico-pendencias-md"
+description: "Documento Sinérgica SO: ADR-0154 — Contexto e histórico de Pendências"
+alwaysApply: false
+---
+
 # ADR-0154 — Contexto e histórico de Pendências
 
 ## Decisão

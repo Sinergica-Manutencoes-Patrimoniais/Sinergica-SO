@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0942-metadados-xlsx-incrementais-md"
+description: "Documento Sinérgica SO: ADR-0942 — Metadados XLSX incrementais no experimento"
+alwaysApply: false
+---
+
 # ADR-0942 — Metadados XLSX incrementais no experimento
 
 **Status:** preparação isolada, sem implantação.

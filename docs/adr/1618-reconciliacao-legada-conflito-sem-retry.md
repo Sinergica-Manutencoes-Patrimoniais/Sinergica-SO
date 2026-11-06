@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1618-reconciliacao-legada-conflito-sem-retry-md"
+description: "Documento Sinérgica SO: ADR-1618: fotografia divergente na reconciliação legada"
+alwaysApply: false
+---
+
 # ADR-1618: fotografia divergente na reconciliação legada
 
 Fotografia obsoleta na declaração de reconciliação é rejeição definitiva, não serialização transitória. O PostgREST de ensaio repete `40001`, atrasando a resposta.

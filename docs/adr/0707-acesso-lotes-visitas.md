@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0707-acesso-lotes-visitas-md"
+description: "Documento Sinérgica SO: ADR-0707 — Acesso aos comandos de lote de Visitas"
+alwaysApply: false
+---
+
 # ADR-0707 — Acesso aos comandos de lote de Visitas
 
 Status: preparada; não aplicada nem homologada.

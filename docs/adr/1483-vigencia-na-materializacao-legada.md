@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1483-vigencia-na-materializacao-legada-md"
+description: "Documento Sinérgica SO: ADR-1483 — Vigência e continuidade na integração legada"
+alwaysApply: false
+---
+
 # ADR-1483 — Vigência e continuidade na integração legada
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-avaliacao-concorrencia-1726-md"
+description: "Documento Sinérgica SO: Concorrencia da avaliacao legada 1726"
+alwaysApply: false
+---
+
 # Concorrencia da avaliacao legada 1726
 
 Use somente clone descartavel com migrations ate 1726. Nao executa Auvo nem altera 1045. A preparacao confirma dados sinteticos; descarte o clone ao final.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0723-desambiguacao-listagem-fotos-ativo-md"
+description: "Documento Sinérgica SO: ADR 0723 — Desambiguação da listagem de fotos de ativo"
+alwaysApply: false
+---
+
 # ADR 0723 — Desambiguação da listagem de fotos de ativo
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1266-acesso-servico-t24-md"
+description: "Documento Sinérgica SO: ADR-1266 — Acesso de serviço ao despacho T−24"
+alwaysApply: false
+---
+
 # ADR-1266 — Acesso de serviço ao despacho T−24
 
 **Status:** proposta local, não homologada.

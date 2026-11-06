@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1508-aprovacao-revisao-mediada-md"
+description: "Documento Sinérgica SO: ADR-1508 — Mediação de aprovação de revisão"
+alwaysApply: false
+---
+
 # ADR-1508 — Mediação de aprovação de revisão
 
 ## Contexto

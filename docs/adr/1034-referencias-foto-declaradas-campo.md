@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1034-referencias-foto-declaradas-campo-md"
+description: "Documento Sinérgica SO: ADR-1034 — Referências declaradas de fotos na conferência"
+alwaysApply: false
+---
+
 # ADR-1034 — Referências declaradas de fotos na conferência
 
 Status: preparação local, não testada, gate fechado e sem concessão.

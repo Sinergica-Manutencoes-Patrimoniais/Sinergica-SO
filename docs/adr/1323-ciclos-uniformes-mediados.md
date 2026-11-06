@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1323-ciclos-uniformes-mediados-md"
+description: "Documento Sinérgica SO: ADR-1323 — Consulta mediada de ciclos por usuário e Cliente"
+alwaysApply: false
+---
+
 # ADR-1323 — Consulta mediada de ciclos por usuário e Cliente
 
 Estado: preparação local; gate fechado, sem autorização de implantação.

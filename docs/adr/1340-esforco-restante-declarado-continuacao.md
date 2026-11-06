@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1340-esforco-restante-declarado-continuacao-md"
+description: "Documento Sinérgica SO: ADR-1340 — Esforço restante explicitamente declarado para continuidade"
+alwaysApply: false
+---
+
 # ADR-1340 — Esforço restante explicitamente declarado para continuidade
 
 **Estado:** proposta; não aplicada nem homologada.

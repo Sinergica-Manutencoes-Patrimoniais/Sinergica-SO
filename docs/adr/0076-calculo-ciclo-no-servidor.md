@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0076-calculo-ciclo-no-servidor-md"
+description: "Documento Sinérgica SO: ADR-0076 — Cálculo civil de ciclo no servidor"
+alwaysApply: false
+---
+
 # ADR-0076 — Cálculo civil de ciclo no servidor
 
 ## Decisão

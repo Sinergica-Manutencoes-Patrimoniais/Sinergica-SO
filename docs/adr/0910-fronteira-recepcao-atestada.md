@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0910-fronteira-recepcao-atestada-md"
+description: "Documento Sinérgica SO: ADR-0910 — Fronteira HTTP da recepção atestada"
+alwaysApply: false
+---
+
 # ADR-0910 — Fronteira HTTP da recepção atestada
 
 Data: 2026-10-30 · Status: preparação, não publicada.

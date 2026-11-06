@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1216-historico-atribuicao-tecnico-despesa-md"
+description: "Documento Sinérgica SO: ADR-1216 — Histórico de atribuição de técnico à despesa"
+alwaysApply: false
+---
+
 # ADR-1216 — Histórico de atribuição de técnico à despesa
 
 ## Decisão

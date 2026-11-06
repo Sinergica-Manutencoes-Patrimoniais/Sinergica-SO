@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0151-priorizacao-composicoes-backlog-md"
+description: "Documento Sinérgica SO: ADR-0151 — Priorização e consulta das composições"
+alwaysApply: false
+---
+
 # ADR-0151 — Priorização e consulta das composições
 
 ## Decisão

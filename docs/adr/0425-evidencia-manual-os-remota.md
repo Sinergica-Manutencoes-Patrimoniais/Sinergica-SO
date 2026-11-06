@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0425-evidencia-manual-os-remota-md"
+description: "Documento Sinérgica SO: ADR-0425 — evidência manual de OS remota"
+alwaysApply: false
+---
+
 # ADR-0425 — evidência manual de OS remota
 
 Status: proposto; gate fechado, não aplicado nem homologado.

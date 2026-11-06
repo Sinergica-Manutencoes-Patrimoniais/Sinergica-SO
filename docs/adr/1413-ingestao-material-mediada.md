@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1413-ingestao-material-mediada-md"
+description: "Documento Sinérgica SO: ADR-1413 — Recepção mediada de evidências de material"
+alwaysApply: false
+---
+
 # ADR-1413 — Recepção mediada de evidências de material
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1222-itens-historicos-portal-mediados-md"
+description: "Documento Sinérgica SO: ADR-1222 — Itens públicos históricos mediados"
+alwaysApply: false
+---
+
 # ADR-1222 — Itens públicos históricos mediados
 
 ## Decisão

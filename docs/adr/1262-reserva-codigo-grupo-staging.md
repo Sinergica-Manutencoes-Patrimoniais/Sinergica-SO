@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1262-reserva-codigo-grupo-staging-md"
+description: "Documento Sinérgica SO: ADR-1262 — Reserva de código de Grupo aprovado"
+alwaysApply: false
+---
+
 # ADR-1262 — Reserva de código de Grupo aprovado
 
 **Status:** proposta local, não homologada. Complementa ADR-1252, ADR-1253 e ADR-1261.

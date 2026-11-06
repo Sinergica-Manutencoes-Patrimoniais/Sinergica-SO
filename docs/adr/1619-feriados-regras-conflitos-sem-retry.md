@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1619-feriados-regras-conflitos-sem-retry-md"
+description: "Documento Sinérgica SO: ADR 1619 — Conflitos de feriados e mudança de dia"
+alwaysApply: false
+---
+
 # ADR 1619 — Conflitos de feriados e mudança de dia
 
 Status: aceito para implementação; homologação pendente.

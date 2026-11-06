@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-geradores-visita-concorrencia-md"
+description: "Documento Sinérgica SO: Geradores de Visita e legado concorrentes após revisão"
+alwaysApply: false
+---
+
 # Geradores de Visita e legado concorrentes após revisão
 
 Usar exclusivamente clone descartável isolado com migrations até 1728. Preparar `manual_E01-S165_visita_rascunho_aprovacao_1723.sql` até a linha anterior à substituição da função 1045, incluindo recursivamente os arquivos `\ir`. Confirmar apenas os dados sintéticos para permitir duas sessões.

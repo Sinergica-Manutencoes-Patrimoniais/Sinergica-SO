@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0848-origem-os-apos-retorno-md"
+description: "Documento Sinérgica SO: ADR-0848 — Proteção da origem legada da OS após retorno"
+alwaysApply: false
+---
+
 # ADR-0848 — Proteção da origem legada da OS após retorno
 
 ## Contexto

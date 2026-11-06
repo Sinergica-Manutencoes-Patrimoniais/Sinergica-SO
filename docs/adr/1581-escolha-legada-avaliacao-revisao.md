@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1581-escolha-legada-avaliacao-revisao-md"
+description: "Documento Sinérgica SO: ADR 1581 — Escolha legada explícita na avaliação de revisão"
+alwaysApply: false
+---
+
 # ADR 1581 — Escolha legada explícita na avaliação de revisão
 
 ## Contexto

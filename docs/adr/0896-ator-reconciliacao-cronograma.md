@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0896-ator-reconciliacao-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0896 — Vincular pedido de reconciliação ao ator"
+alwaysApply: false
+---
+
 # ADR-0896 — Vincular pedido de reconciliação ao ator
 
 Data: 2026-10-30 · Status: preparação, gate fechado, não homologado.

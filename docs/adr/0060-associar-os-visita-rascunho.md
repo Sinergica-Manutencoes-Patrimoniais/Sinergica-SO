@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0060-associar-os-visita-rascunho-md"
+description: "Documento Sinérgica SO: ADR-0060 — Associação auditada de OS à Visita"
+alwaysApply: false
+---
+
 # ADR-0060 — Associação auditada de OS à Visita
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

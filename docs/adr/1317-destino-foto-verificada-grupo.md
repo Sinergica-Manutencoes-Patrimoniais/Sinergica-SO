@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1317-destino-foto-verificada-grupo-md"
+description: "Documento Sinérgica SO: ADR-1317 — Consulta de destino de foto verificada para Grupo"
+alwaysApply: false
+---
+
 # ADR-1317 — Consulta de destino de foto verificada para Grupo
 
 ## Decisão

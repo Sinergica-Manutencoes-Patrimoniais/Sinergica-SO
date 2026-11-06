@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1174-fontes-preventivas-t24-md"
+description: "Documento Sinérgica SO: ADR-1174 — Revalidação de fontes preventivas T−24"
+alwaysApply: false
+---
+
 # ADR-1174 — Revalidação de fontes preventivas T−24
 
 Status: proposta local, não aplicada nem homologada.

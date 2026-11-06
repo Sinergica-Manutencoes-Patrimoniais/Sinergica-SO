@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0080-identificacao-origem-ocorrencia-legada-md"
+description: "Documento Sinérgica SO: ADR-0080 — Identificação inicial de Ocorrências legadas"
+alwaysApply: false
+---
+
 # ADR-0080 — Identificação inicial de Ocorrências legadas
 
 ## Decisão

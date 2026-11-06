@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1553-consulta-escolha-alteracao-md"
+description: "Documento Sinérgica SO: ADR-1553 — Consulta da escolha de alteração por ocorrência"
+alwaysApply: false
+---
+
 # ADR-1553 — Consulta da escolha de alteração por ocorrência
 
 Status: em desenvolvimento; não altera a guarda 1045 nem autoriza aprovação.

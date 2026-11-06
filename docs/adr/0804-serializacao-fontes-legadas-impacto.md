@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0804-serializacao-fontes-legadas-impacto-md"
+description: "Documento Sinérgica SO: ADR-0804 — Serialização das fontes legadas da pré-condição de impacto"
+alwaysApply: false
+---
+
 # ADR-0804 — Serialização das fontes legadas da pré-condição de impacto
 
 Status: preparada, não homologada. A pré-condição 0785 consulta a avaliação 0778, que lê `pcm.planos_preventivos` e `pcm.sso_declaracoes_planos_legados`. A trava de 0787 não cobria escritas nessas duas tabelas. Em duas sessões na base diagnóstica, com a trava global ocupada e gate de concorrência habilitado na transação de teste, UPDATE sem linhas das duas fontes prosseguiu; o mesmo comando sobre OS foi recusado. Assim uma avaliação pode observar fonte desatualizada sob concorrência.

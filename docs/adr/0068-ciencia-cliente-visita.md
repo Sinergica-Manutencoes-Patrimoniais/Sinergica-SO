@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0068-ciencia-cliente-visita-md"
+description: "Documento Sinérgica SO: ADR-0068 — Evidência de ciência do Cliente"
+alwaysApply: false
+---
+
 # ADR-0068 — Evidência de ciência do Cliente
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

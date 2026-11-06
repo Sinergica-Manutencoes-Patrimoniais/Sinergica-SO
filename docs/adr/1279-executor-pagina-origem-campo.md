@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1279-executor-pagina-origem-campo-md"
+description: "Documento Sinérgica SO: ADR-1279 — Fronteira interna do processamento de origem"
+alwaysApply: false
+---
+
 # ADR-1279 — Fronteira interna do processamento de origem
 
 Status: proposta local; não registrada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1171-consulta-resposta-tardia-t24-md"
+description: "Documento Sinérgica SO: ADR-1171 — Consulta de respostas tardias T−24"
+alwaysApply: false
+---
+
 # ADR-1171 — Consulta de respostas tardias T−24
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1487-propostas-pmoc-mediadas-md"
+description: "Documento Sinérgica SO: ADR-1487 — Conferência PMOC mediada"
+alwaysApply: false
+---
+
 # ADR-1487 — Conferência PMOC mediada
 
 ## Contexto

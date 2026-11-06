@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0137-realizacao-despesa-com-comprovante-md"
+description: "Documento Sinérgica SO: ADR-0137 — Realização de despesa e comprovante privado"
+alwaysApply: false
+---
+
 # ADR-0137 — Realização de despesa e comprovante privado
 
 **Estado:** proposta preparatória, sem homologação nem implantação.

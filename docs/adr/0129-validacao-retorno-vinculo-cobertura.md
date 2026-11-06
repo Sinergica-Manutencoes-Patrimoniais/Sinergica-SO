@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0129-validacao-retorno-vinculo-cobertura-md"
+description: "Documento Sinérgica SO: ADR-0129 — Vínculo e cobertura para validação de retorno"
+alwaysApply: false
+---
+
 # ADR-0129 — Vínculo e cobertura para validação de retorno
 
 **Estado:** proposta não aplicada nem homologada. Complementa ADR-0123.

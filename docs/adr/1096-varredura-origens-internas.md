@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1096-varredura-origens-internas-md"
+description: "Documento Sinérgica SO: ADR-1096 — Varredura local de origens Comercial e Financeiro"
+alwaysApply: false
+---
+
 # ADR-1096 — Varredura local de origens Comercial e Financeiro
 
 Status: proposta local, não aplicada nem homologada.

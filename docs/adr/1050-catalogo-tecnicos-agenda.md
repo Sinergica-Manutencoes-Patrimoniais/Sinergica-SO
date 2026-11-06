@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1050-catalogo-tecnicos-agenda-md"
+description: "Documento Sinérgica SO: ADR-1050 — Catálogo paginado para filtro de agenda"
+alwaysApply: false
+---
+
 # ADR-1050 — Catálogo paginado para filtro de agenda
 
 **Status:** preparação não homologada.

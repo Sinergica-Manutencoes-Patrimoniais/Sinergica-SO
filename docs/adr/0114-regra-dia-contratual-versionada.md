@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0114-regra-dia-contratual-versionada-md"
+description: "Documento Sinérgica SO: ADR-0114 — Mudança versionada do dia contratual"
+alwaysApply: false
+---
+
 # ADR-0114 — Mudança versionada do dia contratual
 
 **Estado:** proposta fechada, não aplicada nem homologada. Complementa ADR-0053 e ADR-0091.

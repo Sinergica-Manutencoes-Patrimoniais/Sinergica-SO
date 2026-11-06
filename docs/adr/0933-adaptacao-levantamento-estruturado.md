@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0933-adaptacao-levantamento-estruturado-md"
+description: "Documento Sinérgica SO: ADR-0933 — Preparação estruturada de levantamento de campo"
+alwaysApply: false
+---
+
 # ADR-0933 — Preparação estruturada de levantamento de campo
 
 Status: preparação local; não conectada a Auvo, staging ou rede.

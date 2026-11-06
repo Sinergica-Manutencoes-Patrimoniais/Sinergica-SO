@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1066-reversao-rascunho-migrado-md"
+description: "Documento Sinérgica SO: ADR-1066 — Reversão lógica do rascunho de Plano legado"
+alwaysApply: false
+---
+
 # ADR-1066 — Reversão lógica do rascunho de Plano legado
 
 **Status:** preparação privada, não homologada. Complementa ADR-1064.

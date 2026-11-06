@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0737-serializar-autorizacao-ativacao-contrato-md"
+description: "Documento Sinérgica SO: ADR-0737 — Serializar autorização na ativação de contrato"
+alwaysApply: false
+---
+
 # ADR-0737 — Serializar autorização na ativação de contrato
 
 **Status:** incremento preparado para diagnóstico; não homologado nem implantado.

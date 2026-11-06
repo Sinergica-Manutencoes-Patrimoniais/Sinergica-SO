@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0946-autorizacao-evitar-espera-circular-md"
+description: "Documento Sinérgica SO: ADR-0946 — Falha explícita quando autorização está em alteração"
+alwaysApply: false
+---
+
 # ADR-0946 — Falha explícita quando autorização está em alteração
 
 Status: preparação local; não homologada.

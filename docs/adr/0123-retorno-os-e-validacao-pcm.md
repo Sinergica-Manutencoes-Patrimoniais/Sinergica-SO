@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0123-retorno-os-e-validacao-pcm-md"
+description: "Documento Sinérgica SO: ADR-0123 — Retorno de campo e validação humana da OS"
+alwaysApply: false
+---
+
 # ADR-0123 — Retorno de campo e validação humana da OS
 
 **Estado:** proposta não aplicada e não homologada. Complementa ADR-0026 e ADR-0100.

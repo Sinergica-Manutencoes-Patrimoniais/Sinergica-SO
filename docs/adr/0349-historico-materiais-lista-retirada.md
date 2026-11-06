@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0349-historico-materiais-lista-retirada-md"
+description: "Documento Sinérgica SO: ADR-0349 — Histórico de materiais quando a versão atual foi retirada"
+alwaysApply: false
+---
+
 # ADR-0349 — Histórico de materiais quando a versão atual foi retirada
 
 Status: proposta; gate fechado e validação pendente.

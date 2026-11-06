@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0292-proposta-mapeamento-pmoc-md"
+description: "Documento Sinérgica SO: ADR-0292 — Proposta humana de mapeamento PMOC"
+alwaysApply: false
+---
+
 # ADR-0292 — Proposta humana de mapeamento PMOC
 
 Status: proposta, não homologada.

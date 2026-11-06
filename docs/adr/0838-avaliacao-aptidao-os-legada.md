@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0838-avaliacao-aptidao-os-legada-md"
+description: "Documento Sinérgica SO: ADR-0838 — Avaliação de Chamado com OS de vínculo legado"
+alwaysApply: false
+---
+
 # ADR-0838 — Avaliação de Chamado com OS de vínculo legado
 
 Estado: proposta local, gates fechados, não homologada. Complementa ADR-0111, ADR-0395 e ADR-0834.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1308-mediacao-exigencia-legal-rotina-md"
+description: "Documento Sinérgica SO: ADR-1308 — Mediação da exigência legal da Rotina"
+alwaysApply: false
+---
+
 # ADR-1308 — Mediação da exigência legal da Rotina
 
 ## Decisão

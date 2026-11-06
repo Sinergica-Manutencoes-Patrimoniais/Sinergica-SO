@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1255-motivo-historico-codigo-grupo-md"
+description: "Documento Sinérgica SO: ADR-1255 — Motivo de correção de código de Grupo"
+alwaysApply: false
+---
+
 # ADR-1255 — Motivo de correção de código de Grupo
 
 **Status:** proposta local, não homologada. Complementa ADR-1250.

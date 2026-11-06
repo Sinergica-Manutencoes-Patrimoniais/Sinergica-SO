@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s53-concorrencia-1675-md"
+description: "Documento Sinérgica SO: Concorrência de edição e geração legada — 1675"
+alwaysApply: false
+---
+
 # Concorrência de edição e geração legada — 1675
 
 Executar apenas em clone descartável com migrations até 1675, nunca em base real. Carregar `manual_E01-S53_concorrencia_1675_setup.sql` e abrir sessões A e B em READ COMMITTED. Em A e B usar `select set_config('request.jwt.claims','{"role":"service_role"}',false);`.

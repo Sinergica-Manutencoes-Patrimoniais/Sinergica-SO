@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1263-diagnostico-executor-admin-md"
+description: "Documento Sinérgica SO: ADR-1263 — Diagnóstico administrativo do executor de fila"
+alwaysApply: false
+---
+
 # ADR-1263 — Diagnóstico administrativo do executor de fila
 
 **Status:** proposta local, não homologada.

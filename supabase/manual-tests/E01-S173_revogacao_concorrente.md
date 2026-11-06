@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s173-revogacao-concorrente-md"
+description: "Documento Sinérgica SO: S173 — revogação concorrente da preparação mediada"
+alwaysApply: false
+---
+
 # S173 — revogação concorrente da preparação mediada
 
 Experimento em banco descartável `sso_s173_concorrencia_20261030`, no container isolado `sso_diagnostico_reconstrucao`, sem schema/extension cron ou net e sem dados reais. O schema foi clonado do diagnóstico com `pg_dump -s -N cron -N net`, sem as extensões cron e net; ACLs restantes foram copiadas. As migrations 1023/1024 e `E01-S173_fixture_revogacao.sql` foram aplicadas apenas no clone. A fixture insere decisão sintética depois de resposta Não OK; não prova execução real de S168 nem recepção Auvo.

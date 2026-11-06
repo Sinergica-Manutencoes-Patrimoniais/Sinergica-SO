@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0522-triagem-ciclos-atrasados-md"
+description: "Documento Sinérgica SO: ADR-0522 — Triagem de candidatos a atraso"
+alwaysApply: false
+---
+
 # ADR-0522 — Triagem de candidatos a atraso
 
 Status: preparada, gate fechado, não aplicada nem homologada. A lista paginada usa data de referência explicitamente fornecida e vencimento/tolerância congelados das ocorrências de calendário já preparadas. Informa existência de ponte e OS, sem presumir que a execução está pendente; é fotografia parcial, não fila oficial.

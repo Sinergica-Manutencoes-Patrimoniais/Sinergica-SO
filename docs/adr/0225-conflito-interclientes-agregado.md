@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0225-conflito-interclientes-agregado-md"
+description: "Documento Sinérgica SO: ADR-0225 — Alerta agregado de conflito entre Clientes"
+alwaysApply: false
+---
+
 # ADR-0225 — Alerta agregado de conflito entre Clientes
 
 Status: proposta, não homologada.

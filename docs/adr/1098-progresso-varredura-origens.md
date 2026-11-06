@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1098-progresso-varredura-origens-md"
+description: "Documento Sinérgica SO: ADR-1098 — Progresso da varredura de origens internas"
+alwaysApply: false
+---
+
 # ADR-1098 — Progresso da varredura de origens internas
 
 Status: proposta local, não aplicada nem homologada.

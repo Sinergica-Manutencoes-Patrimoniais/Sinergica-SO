@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1436-tipo-tarefa-os-preventiva-md"
+description: "Documento Sinérgica SO: ADR 1436 — Tipo de tarefa de OS preventiva vinculada"
+alwaysApply: false
+---
+
 # ADR 1436 — Tipo de tarefa de OS preventiva vinculada
 
 Uma rotina aprovada pode guardar o tipo de tarefa legado na sua fotografia. Quando uma nova OS referencia uma ocorrência legada vinculada a uma ocorrência preparada, o banco confere cliente, rotina lógica e alvo na fotografia aprovada e recusa um tipo de tarefa diferente do registrado. Fotografias anteriores sem esse campo continuam sem inferência de tipo. OS já existentes não são alteradas.

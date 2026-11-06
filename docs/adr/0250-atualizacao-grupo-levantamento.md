@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0250-atualizacao-grupo-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0250 — Atualização conferida de Grupo por levantamento"
+alwaysApply: false
+---
+
 # ADR-0250 — Atualização conferida de Grupo por levantamento
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0843-obrigatoriedade-resposta-classificada-md"
+description: "Documento Sinérgica SO: ADR-0843 — Obrigatoriedade histórica na classificação de retorno"
+alwaysApply: false
+---
+
 # ADR-0843 — Obrigatoriedade histórica na classificação de retorno
 
 ## Contexto

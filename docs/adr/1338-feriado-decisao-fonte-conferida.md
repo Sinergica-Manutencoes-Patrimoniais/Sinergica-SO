@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1338-feriado-decisao-fonte-conferida-md"
+description: "Documento Sinérgica SO: ADR-1338 — Decisão de feriado com revisão conferida"
+alwaysApply: false
+---
+
 # ADR-1338 — Decisão de feriado com revisão conferida
 
 **Estado:** proposta; não aplicada nem homologada.

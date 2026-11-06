@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1023-impacto-feriado-ocorrencias-md"
+description: "Documento Sinérgica SO: ADR-1023 — Ocorrências potencialmente afetadas por feriado"
+alwaysApply: false
+---
+
 # ADR-1023 — Ocorrências potencialmente afetadas por feriado
 
 Status: preparação privada, não homologada.

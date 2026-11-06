@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1208-diagnostico-hierarquia-mediado-md"
+description: "Documento Sinérgica SO: ADR-1208 — Consulta mediada da hierarquia de levantamento"
+alwaysApply: false
+---
+
 # ADR-1208 — Consulta mediada da hierarquia de levantamento
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-s166-lote-isolado-1776-md"
+description: "Documento Sinérgica SO: Lote S165/S166 até 1776"
+alwaysApply: false
+---
+
 # Lote S165/S166 até 1776
 
 Em 2026-11-05, migrations 1614–1776 compilaram em ordem numérica em banco descartável, restaurado a partir da base histórica local até 1613 no contêiner isolado, sem cron/net. Grants de schema necessários às fixtures foram restaurados; o ensaio não comprova ACL global em produção.

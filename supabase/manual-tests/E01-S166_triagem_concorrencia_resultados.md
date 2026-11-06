@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s166-triagem-concorrencia-resultados-md"
+description: "Documento Sinérgica SO: S166 — autorização da triagem de atraso"
+alwaysApply: false
+---
+
 # S166 — autorização da triagem de atraso
 
 Em banco sintético `sso_s166_triagem_prova`, restaurado do diagnóstico

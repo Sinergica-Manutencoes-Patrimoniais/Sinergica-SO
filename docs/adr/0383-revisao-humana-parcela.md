@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0383-revisao-humana-parcela-md"
+description: "Documento Sinérgica SO: ADR-0383 — Revisão humana de condição da parcela"
+alwaysApply: false
+---
+
 # ADR-0383 — Revisão humana de condição da parcela
 
 Prepara-se revisão versionada de parcela associada a OS, com evidência declarada do respectivo retorno, texto de condição, conclusão humana explícita e justificativa. O vínculo parcela/OS/Chamado/Cliente e a evidência são validados no servidor. A revisão registra atestação do PCM, não prova automaticamente autenticidade do conteúdo nem altera situação da parcela, OS ou Pendência.

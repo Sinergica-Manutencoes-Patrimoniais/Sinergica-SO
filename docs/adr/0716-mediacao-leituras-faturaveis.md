@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0716-mediacao-leituras-faturaveis-md"
+description: "Documento Sinérgica SO: ADR-0716 — Mediação de leituras financeiras"
+alwaysApply: false
+---
+
 # ADR-0716 — Mediação de leituras financeiras
 
 Status: preparado, não aplicado nem homologado.

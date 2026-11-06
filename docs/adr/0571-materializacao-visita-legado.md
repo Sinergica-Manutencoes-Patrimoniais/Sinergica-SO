@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0571-materializacao-visita-legado-md"
+description: "Documento Sinérgica SO: ADR-0571 — Materialização de Visita em Plano legado existente"
+alwaysApply: false
+---
+
 # ADR-0571 — Materialização de Visita em Plano legado existente
 
 Status: preparada, gates desligados, não aplicada nem homologada. Para ocorrência preparada por Visita, o comando exige Plano legado existente relacionado pelo PCM, mesmo Cliente/alvo, origem contratual, ciclo/data compatíveis, data civil do snapshot e ausência de feriado declarado aplicável. Cria ou reutiliza somente o ciclo legado e vincula por 0723 na mesma transação, que também confere questionário e ausência de OS/tarefa. Não cria Plano fictício, OS ou Auvo.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0982-retorno-parcial-continuacao-md"
+description: "Documento Sinérgica SO: ADR-0982 — Retorno parcial por continuidade vinculada"
+alwaysApply: false
+---
+
 # ADR-0982 — Retorno parcial por continuidade vinculada
 
 Status: preparação privada, não homologada.

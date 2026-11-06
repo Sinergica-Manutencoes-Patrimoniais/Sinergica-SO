@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0045-projecao-rotinas-alvos-md"
+description: "Documento Sinérgica SO: ADR-0045 — Projeção legível de Rotinas"
+alwaysApply: false
+---
+
 # ADR-0045 — Projeção legível de Rotinas
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

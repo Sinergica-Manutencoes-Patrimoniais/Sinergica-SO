@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0919-preparacao-processador-edge-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0919 — Preparação de processador XLSX para Edge"
+alwaysApply: false
+---
+
 # ADR-0919 — Preparação de processador XLSX para Edge
 
 Data: 2026-10-30 · Status: preparação, sem integração à rota ou autorização de rollout.

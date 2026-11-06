@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1636-vinculo-serie-rotina-mediado-md"
+description: "Documento Sinérgica SO: ADR 1636: vínculo mediado de série e Rotina"
+alwaysApply: false
+---
+
 # ADR 1636: vínculo mediado de série e Rotina
 
 O comando de vínculo expõe apenas uma entrada autenticada que verifica ator, Cliente e concessões sob a trava de autorização e bloqueia o Plano. O núcleo privado preserva revisão, gate e recibo idempotente; o comando não gera ocorrência nem aciona Auvo.

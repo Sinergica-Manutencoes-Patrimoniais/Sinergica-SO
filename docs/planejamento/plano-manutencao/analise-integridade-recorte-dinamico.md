@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-analise-integridade-recorte-dinamico-md"
+description: "Documento Sinérgica SO: Recorte candidato — comportamento e concorrência além da compilação"
+alwaysApply: false
+---
+
 # Recorte candidato — comportamento e concorrência além da compilação
 
 **Análise estática; não é manifesto de release.** O ensaio de diagnóstico percorreu 648

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1307-consulta-solicitacoes-recuperacao-md"
+description: "Documento Sinérgica SO: ADR-1307 — Consulta de solicitações de recuperação"
+alwaysApply: false
+---
+
 # ADR-1307 — Consulta de solicitações de recuperação
 
 ## Decisão

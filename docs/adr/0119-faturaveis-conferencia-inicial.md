@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0119-faturaveis-conferencia-inicial-md"
+description: "Documento Sinérgica SO: ADR-0119 — Fila A Faturar com conferência separada de cobrança"
+alwaysApply: false
+---
+
 # ADR-0119 — Fila A Faturar com conferência separada de cobrança
 
 ## Estado

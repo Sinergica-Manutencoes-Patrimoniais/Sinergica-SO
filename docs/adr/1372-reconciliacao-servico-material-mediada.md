@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1372-reconciliacao-servico-material-mediada-md"
+description: "Documento Sinérgica SO: ADR-1372 — Reconciliação mediada de serviço e material"
+alwaysApply: false
+---
+
 # ADR-1372 — Reconciliação mediada de serviço e material
 
 **Estado:** proposta; não aplicada nem homologada.

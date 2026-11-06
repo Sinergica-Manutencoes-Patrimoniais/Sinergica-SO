@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1147-projecao-campos-t24-md"
+description: "Documento Sinérgica SO: ADR-1147 — Projeção explícita de campos T−24"
+alwaysApply: false
+---
+
 # ADR-1147 — Projeção explícita de campos T−24
 
 Status: preparação local, não conectada nem homologada.

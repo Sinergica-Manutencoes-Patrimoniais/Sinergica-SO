@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1291-recibo-copia-rotina-md"
+description: "Documento Sinérgica SO: ADR 1291 — Consulta de recibo de cópia de Rotina"
+alwaysApply: false
+---
+
 # ADR 1291 — Consulta de recibo de cópia de Rotina
 
 ## Contexto

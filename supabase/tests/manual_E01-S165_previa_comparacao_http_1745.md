@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-previa-comparacao-http-1745-md"
+description: "Documento Sinérgica SO: Prévia de Calendário com comparação obsoleta"
+alwaysApply: false
+---
+
 # Prévia de Calendário com comparação obsoleta
 
 Usar stack descartável em rede interna, com Auth e PostgREST sintéticos, e migrations até 1745. Preparar a fixture de comparação de Calendário até antes do bloco final, criar a senha sintética e autenticar normalmente. Chamar diretamente o PostgREST, sem proxy de UI, com `sso_prever_novas_datas_calendario`, Cliente, Plano, revisão e preparada da fixture, janela válida de 30 dias e `p_comparacao={}`.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0253-classificacao-conferencia-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0253 — Classificação e conclusão da conferência por linha"
+alwaysApply: false
+---
+
 # ADR-0253 — Classificação e conclusão da conferência por linha
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1138-conferencia-codigos-por-revisao-md"
+description: "Documento Sinérgica SO: ADR-1138 — Conferência de códigos por revisão do lote"
+alwaysApply: false
+---
+
 # ADR-1138 — Conferência de códigos por revisão do lote
 
 Status: proposta local, gate fechado; não aplicada nem homologada.

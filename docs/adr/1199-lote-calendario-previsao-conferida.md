@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1199-lote-calendario-previsao-conferida-md"
+description: "Documento Sinérgica SO: ADR-1199 — Conferência do conjunto do lote de calendário"
+alwaysApply: false
+---
+
 # ADR-1199 — Conferência do conjunto do lote de calendário
 
 ## Contexto

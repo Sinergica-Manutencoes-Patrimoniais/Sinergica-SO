@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1101-preservar-reprogramacao-visita-md"
+description: "Documento Sinérgica SO: ADR-1101 — Preservação de Visita com reprogramação anterior"
+alwaysApply: false
+---
+
 # ADR-1101 — Preservação de Visita com reprogramação anterior
 
 Status: proposta local, não aplicada nem homologada.

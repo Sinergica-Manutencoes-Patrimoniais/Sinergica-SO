@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0503-reserva-interna-parcial-md"
+description: "Documento Sinérgica SO: ADR-0503 — reserva interna parcial de faturável"
+alwaysApply: false
+---
+
 # ADR-0503 — reserva interna parcial de faturável
 
 Status: proposto; gates fechados, não aplicado nem homologado. O AC-4 exige faturamento parcial e parcelas identificáveis, mas não determina obrigatoriedade de vários candidatos em um único documento. Esta fatia prepara documento interno com valor parcial positivo escolhido pelo operador, limitado pelo saldo oficial revalidado, preservando origem, revisão, idempotência e proibição de cobrança externa. Conversão mantém o comando canônico existente.

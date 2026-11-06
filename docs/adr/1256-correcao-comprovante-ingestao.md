@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1256-correcao-comprovante-ingestao-md"
+description: "Documento Sinérgica SO: ADR-1256 — Correção de despesa com comprovante mediado"
+alwaysApply: false
+---
+
 # ADR-1256 — Correção de despesa com comprovante mediado
 
 **Status:** proposta local, não homologada.

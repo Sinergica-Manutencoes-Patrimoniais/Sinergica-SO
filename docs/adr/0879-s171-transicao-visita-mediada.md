@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0879-s171-transicao-visita-mediada-md"
+description: "Documento Sinérgica SO: ADR-0879 — Mediação da transição local de Visita"
+alwaysApply: false
+---
+
 # ADR-0879 — Mediação da transição local de Visita
 
 Data: 2026-10-30 · Status: proposta, não implantada

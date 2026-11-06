@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1041-historico-alertas-reprogramacao-md"
+description: "Documento Sinérgica SO: ADR-1041 — Histórico de alertas declarados na Visita"
+alwaysApply: false
+---
+
 # ADR-1041 — Histórico de alertas declarados na Visita
 
 Status: preparado, sem aplicação, concessão ou testes.

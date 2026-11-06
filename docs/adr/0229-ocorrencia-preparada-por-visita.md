@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0229-ocorrencia-preparada-por-visita-md"
+description: "Documento Sinérgica SO: ADR-0229 — Ocorrência preparada por Visita contratual identificada"
+alwaysApply: false
+---
+
 # ADR-0229 — Ocorrência preparada por Visita contratual identificada
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1503-conferir-retirada-impacto-md"
+description: "Documento Sinérgica SO: ADR-1503 — Confirmar retirada efetiva ao resolver impacto"
+alwaysApply: false
+---
+
 # ADR-1503 — Confirmar retirada efetiva ao resolver impacto
 
 ## Contexto

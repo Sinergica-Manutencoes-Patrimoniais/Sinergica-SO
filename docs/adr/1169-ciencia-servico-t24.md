@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1169-ciencia-servico-t24-md"
+description: "Documento Sinérgica SO: ADR-1169 — Confirmação e ciência na revalidação T−24"
+alwaysApply: false
+---
+
 # ADR-1169 — Confirmação e ciência na revalidação T−24
 
 Status: proposta local, não aplicada nem homologada.

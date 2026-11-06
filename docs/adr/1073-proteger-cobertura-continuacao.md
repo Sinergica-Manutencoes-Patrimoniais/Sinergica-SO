@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1073-proteger-cobertura-continuacao-md"
+description: "Documento Sinérgica SO: ADR-1073 — Proteção da cobertura com continuidade"
+alwaysApply: false
+---
+
 # ADR-1073 — Proteção da cobertura com continuidade
 
 **Status:** preparação não homologada. Complementa ADR-1071.

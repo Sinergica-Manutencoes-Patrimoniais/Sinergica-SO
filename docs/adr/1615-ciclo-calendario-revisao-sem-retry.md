@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1615-ciclo-calendario-revisao-sem-retry-md"
+description: "Documento Sinérgica SO: ADR-1615: revisão divergente na geração de Calendário"
+alwaysApply: false
+---
+
 # ADR-1615: revisão divergente na geração de Calendário
 
 Uma revisão de Plano divergente na preparação de ciclo é conflito definitivo. `40001` causa repetição automática no PostgREST de ensaio e pode deixar a chamada pendente.

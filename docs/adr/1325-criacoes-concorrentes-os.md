@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1325-criacoes-concorrentes-os-md"
+description: "Documento Sinérgica SO: ADR-1325 — Reconciliação restrita de criações concorrentes de OS"
+alwaysApply: false
+---
+
 # ADR-1325 — Reconciliação restrita de criações concorrentes de OS
 
 Estado: preparação local; não habilita criação 1:N nem resolve a divergência contratual pendente da ADR-0870.

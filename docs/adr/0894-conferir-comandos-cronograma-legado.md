@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0894-conferir-comandos-cronograma-legado-md"
+description: "Documento Sinérgica SO: ADR-0894 — Conferência semântica dos comandos legados"
+alwaysApply: false
+---
+
 # ADR-0894 — Conferência semântica dos comandos legados
 
 Data: 2026-10-30 · Status: preparação, gate fechado, não homologado.

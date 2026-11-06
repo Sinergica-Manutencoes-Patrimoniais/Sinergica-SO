@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1492-origem-lote-calendario-md"
+description: "Documento Sinérgica SO: ADR-1492 — Conferência de origem na geração em lote"
+alwaysApply: false
+---
+
 # ADR-1492 — Conferência de origem na geração em lote
 
 ## Contexto

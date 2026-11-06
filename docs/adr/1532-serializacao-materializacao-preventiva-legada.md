@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1532-serializacao-materializacao-preventiva-legada-md"
+description: "Documento Sinérgica SO: ADR-1532 — Serializar geração e edição de preventivas legadas"
+alwaysApply: false
+---
+
 # ADR-1532 — Serializar geração e edição de preventivas legadas
 
 A geração de ocorrências lia a regra do Plano sem travar a linha. Uma edição concorrente poderia validar ausência de ocorrências e alterar a regra enquanto a geração inseria ciclos calculados pela regra anterior.

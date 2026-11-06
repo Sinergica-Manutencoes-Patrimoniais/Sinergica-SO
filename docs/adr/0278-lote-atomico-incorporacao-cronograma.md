@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0278-lote-atomico-incorporacao-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0278 — Incorporação atômica de linhas de cronograma"
+alwaysApply: false
+---
+
 # ADR-0278 — Incorporação atômica de linhas de cronograma
 
 Status: proposta, não homologada.

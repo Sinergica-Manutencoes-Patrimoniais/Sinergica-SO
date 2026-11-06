@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0961-consulta-retornos-backlog-md"
+description: "Documento Sinérgica SO: ADR-0961 — Consulta privada de retornos por ciclo"
+alwaysApply: false
+---
+
 # ADR-0961 — Consulta privada de retornos por ciclo
 
 Status: preparação isolada, não homologada.

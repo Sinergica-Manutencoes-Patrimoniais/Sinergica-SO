@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0184-correcao-cancelamento-despesa-realizada-md"
+description: "Documento Sinérgica SO: ADR-0184 — Correção e cancelamento de despesa realizada"
+alwaysApply: false
+---
+
 # ADR-0184 — Correção e cancelamento de despesa realizada
 
 **Estado:** preparação fechada, sem homologação nem implantação.

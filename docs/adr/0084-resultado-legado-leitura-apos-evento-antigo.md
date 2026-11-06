@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0084-resultado-legado-leitura-apos-evento-antigo-md"
+description: "Documento Sinérgica SO: ADR-0084 — Verificação de origem antes do resultado legado"
+alwaysApply: false
+---
+
 # ADR-0084 — Verificação de origem antes do resultado legado
 
 ## Decisão

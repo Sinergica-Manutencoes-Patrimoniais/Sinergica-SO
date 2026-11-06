@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0743-ingestao-foto-servidor-imutavel-md"
+description: "Documento Sinérgica SO: ADR 0743 — Ingestão de foto com versão imutável verificável"
+alwaysApply: false
+---
+
 # ADR 0743 — Ingestão de foto com versão imutável verificável
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0926-serializar-gates-selecao-emissao-md"
+description: "Documento Sinérgica SO: ADR-0926 — Serializar gates de seleção e emissão"
+alwaysApply: false
+---
+
 # ADR-0926 — Serializar gates de seleção e emissão
 
 ## Contexto

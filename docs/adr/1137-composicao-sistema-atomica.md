@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1137-composicao-sistema-atomica-md"
+description: "Documento Sinérgica SO: ADR-1137 — Composição atômica de Sistema"
+alwaysApply: false
+---
+
 # ADR-1137 — Composição atômica de Sistema
 
 Status: proposta local, gates fechados; não aplicada nem homologada.

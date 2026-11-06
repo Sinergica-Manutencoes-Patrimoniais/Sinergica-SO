@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0869-escopo-proprio-os-chamado-md"
+description: "Documento Sinérgica SO: ADR 0869 — Escopo próprio por OS de um Chamado"
+alwaysApply: false
+---
+
 # ADR 0869 — Escopo próprio por OS de um Chamado
 
 E01-S167 AC-1 exige várias OS com escopos diferentes no mesmo Chamado. O núcleo 1047, preparado antes da interface, exige igualdade do título e da descrição com o Chamado; isso impede representar parcelas distintas. Teste em banco diagnóstico reproduziu `campos_inconsistentes` ao tentar criar a terceira OS com título e descrição próprios.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0849-mediacao-criacao-os-chamado-md"
+description: "Documento Sinérgica SO: ADR-0849 — Mediação de criação de OS do Chamado"
+alwaysApply: false
+---
+
 # ADR-0849 — Mediação de criação de OS do Chamado
 
 Estado: proposta local, gates fechados, não homologada. Complementa ADR-0107 e ADR-0832.

@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-triagem-squawk-270-integracao-md"
+description: "Documento Sinérgica SO: Squawk 2.70 — triagem do recorte de integração"
+alwaysApply: false
+---
+
 # Squawk 2.70 — triagem do recorte de integração
 
 Análise estática do log `/tmp/sso-squawk-audit-782CFLI3/tmp/lint-final.log`: 884 migrations, 114 alertas em 64 arquivos; nenhuma regra suprimida e nenhum erro de parser. As convenções locais passaram; o Squawk retornou falha. A base `22aca391` termina em 0229: 19 alertas em 16 arquivos da base e 95 em 48 arquivos incorporados depois. Isso não prova quais migrations estão aplicadas no banco remoto.

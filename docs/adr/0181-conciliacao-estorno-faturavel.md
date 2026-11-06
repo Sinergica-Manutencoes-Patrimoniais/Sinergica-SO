@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0181-conciliacao-estorno-faturavel-md"
+description: "Documento Sinérgica SO: ADR-0181 — Conferência de contrapartida financeira do estorno"
+alwaysApply: false
+---
+
 # ADR-0181 — Conferência de contrapartida financeira do estorno
 
 **Estado:** preparação bloqueada; não homologada nem implantada.

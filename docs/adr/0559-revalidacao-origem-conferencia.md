@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0559-revalidacao-origem-conferencia-md"
+description: "Documento Sinérgica SO: ADR-0559 — origem na conferência de faturável"
+alwaysApply: false
+---
+
 # ADR-0559 — origem na conferência de faturável
 
 Status: proposto; gate fechado, não aplicado nem homologado. A primeira fatia protege conferência de item base de despesa de Visita: bloqueia a despesa antes do item, verifica Cliente, revisão registrada na declaração, valor realizado e identidade. Pedido já concluído segue recuperação idempotente pelo comando existente. Com gate fechado, comportamento legado é preservado. Para outras origens e complementos, gate ligado rejeita a conferência até haver adaptadores de origem comprovados, em vez de inferir valores.

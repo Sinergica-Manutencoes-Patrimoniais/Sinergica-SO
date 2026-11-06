@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1334-projecao-operacao-vinculo-legado-md"
+description: "Documento Sinérgica SO: ADR-1334 — Vínculo legado na projeção operacional"
+alwaysApply: false
+---
+
 # ADR-1334 — Vínculo legado na projeção operacional
 
 **Estado:** proposta; não aplicada nem homologada.

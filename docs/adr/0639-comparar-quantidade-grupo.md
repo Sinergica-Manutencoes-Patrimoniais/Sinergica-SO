@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0639-comparar-quantidade-grupo-md"
+description: "Documento Sinérgica SO: ADR-0639 — Comparação de quantidade histórica do Grupo"
+alwaysApply: false
+---
+
 # ADR-0639 — Comparação de quantidade histórica do Grupo
 
 Consulta autorizada compara a quantidade e revisão fotografadas no registro da ocorrência 0815 com o cadastro atual, e apresenta vigência da versão e posição do vencimento no intervalo. Quantidades são texto e cadastro ausente permanece indeterminado. A consulta não recalcula nem modifica ocorrência.

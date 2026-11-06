@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1523-fuso-transicao-e-vencidos-md"
+description: "Documento Sinérgica SO: ADR-1523 — Data civil de transição e vencidos"
+alwaysApply: false
+---
+
 # ADR-1523 — Data civil de transição e vencidos
 
 ## Contexto

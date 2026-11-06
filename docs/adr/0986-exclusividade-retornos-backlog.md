@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0986-exclusividade-retornos-backlog-md"
+description: "Documento Sinérgica SO: ADR-0986 — Exclusividade entre retornos integral e parcial"
+alwaysApply: false
+---
+
 # ADR-0986 — Exclusividade entre retornos integral e parcial
 
 Status: preparação privada, não homologada.

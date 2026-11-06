@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0248-edicao-staging-observacao-quantidade-md"
+description: "Documento Sinérgica SO: ADR-0248 — Edição auditada de observação e quantidade no staging"
+alwaysApply: false
+---
+
 # ADR-0248 — Edição auditada de observação e quantidade no staging
 
 ## Decisão

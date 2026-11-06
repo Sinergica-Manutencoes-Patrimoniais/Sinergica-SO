@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1637-vigencias-serie-mediadas-md"
+description: "Documento Sinérgica SO: ADR-1637: mediação de vigências de Rotina por Visita"
+alwaysApply: false
+---
+
 # ADR-1637: mediação de vigências de Rotina por Visita
 
 ## Contexto

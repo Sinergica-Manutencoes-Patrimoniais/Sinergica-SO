@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0055-contratos-para-calendario-md"
+description: "Documento Sinérgica SO: ADR-0055 — Seleção mínima de contratos para calendário"
+alwaysApply: false
+---
+
 # ADR-0055 — Seleção mínima de contratos para calendário
 
 **Status:** decisão para implementação local E01-S166. **Data:** 2026-10-27.

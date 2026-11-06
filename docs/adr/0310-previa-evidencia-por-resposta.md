@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0310-previa-evidencia-por-resposta-md"
+description: "Documento Sinérgica SO: ADR-0310 — Prévia de evidências declaradas por resposta"
+alwaysApply: false
+---
+
 # ADR-0310 — Prévia de evidências declaradas por resposta
 
 Status: proposta, não homologada.

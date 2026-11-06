@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0053-series-regras-visita-md"
+description: "Documento Sinérgica SO: ADR-0053 — Série e versões de regra contratual"
+alwaysApply: false
+---
+
 # ADR-0053 — Série e versões de regra contratual
 
 **Status:** decisão para implementação local E01-S166. **Data:** 2026-10-27.

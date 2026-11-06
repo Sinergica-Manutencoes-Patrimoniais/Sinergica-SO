@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0069-conferencia-ciencia-visita-md"
+description: "Documento Sinérgica SO: ADR-0069 — Conferência informativa da ciência da Visita"
+alwaysApply: false
+---
+
 # ADR-0069 — Conferência informativa da ciência da Visita
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

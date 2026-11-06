@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1195-prazo-inicio-t24-md"
+description: "Documento Sinérgica SO: ADR-1195 — Prazo de início de efeito T−24"
+alwaysApply: false
+---
+
 # ADR-1195 — Prazo de início de efeito T−24
 
 ## Contexto

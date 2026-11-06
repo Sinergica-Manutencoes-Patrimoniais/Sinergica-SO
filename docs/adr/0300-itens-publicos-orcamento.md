@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0300-itens-publicos-orcamento-md"
+description: "Documento Sinérgica SO: ADR-0300 — Snapshot estruturado público do orçamento"
+alwaysApply: false
+---
+
 # ADR-0300 — Snapshot estruturado público do orçamento
 
 Status: proposta; não ativar sem integração de publicação, decisão e exportação e revisão adversarial.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1114-guarda-itens-operacionais-md"
+description: "Documento Sinérgica SO: ADR-1114 — Guarda da composição de proposta operacional"
+alwaysApply: false
+---
+
 # ADR-1114 — Guarda da composição de proposta operacional
 
 Status: proposta local, não aplicada nem homologada.

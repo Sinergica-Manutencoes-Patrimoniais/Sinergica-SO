@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0062-ciencia-e-confirmacao-pcm-md"
+description: "Documento Sinérgica SO: ADR-0062 — Ciência do Cliente e confirmação PCM"
+alwaysApply: false
+---
+
 # ADR-0062 — Ciência do Cliente e confirmação PCM
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

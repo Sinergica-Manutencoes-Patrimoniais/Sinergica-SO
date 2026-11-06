@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0834-escopo-chamado-vinculo-legado-md"
+description: "Documento Sinérgica SO: ADR-0834 — Leitura de escopo compatível com vínculo legado"
+alwaysApply: false
+---
+
 # ADR-0834 — Leitura de escopo compatível com vínculo legado
 
 Estado: proposta local, não homologada. Complementa ADR-0150 e ADR-0830; não habilita escrita 1:N.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1283-cancelamento-provisorio-com-os-md"
+description: "Documento Sinérgica SO: ADR-1283 — Cancelamento de contêiner provisório com OS preservada"
+alwaysApply: false
+---
+
 # ADR-1283 — Cancelamento de contêiner provisório com OS preservada
 
 Status: proposta local; não aplicada nem homologada.

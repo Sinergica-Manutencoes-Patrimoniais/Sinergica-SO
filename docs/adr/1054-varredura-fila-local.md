@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1054-varredura-fila-local-md"
+description: "Documento Sinérgica SO: ADR-1054 — Varredura local e auditada da fila"
+alwaysApply: false
+---
+
 # ADR-1054 — Varredura local e auditada da fila
 
 **Status:** preparação privada, não homologada. Complementa ADR-1051/1052.

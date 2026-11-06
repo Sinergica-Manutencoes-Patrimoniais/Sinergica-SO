@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0377-cobertura-sem-evidencia-exigida-md"
+description: "Documento Sinérgica SO: ADR-0377 — Conferência quando nenhuma evidência é exigida"
+alwaysApply: false
+---
+
 # ADR-0377 — Conferência quando nenhuma evidência é exigida
 
 Status: proposta, não homologada.

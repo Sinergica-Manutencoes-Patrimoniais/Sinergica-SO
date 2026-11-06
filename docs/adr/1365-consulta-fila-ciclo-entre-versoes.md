@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1365-consulta-fila-ciclo-entre-versoes-md"
+description: "Documento Sinérgica SO: ADR-1365 — Entrada preventiva pela identidade canônica"
+alwaysApply: false
+---
+
 # ADR-1365 — Entrada preventiva pela identidade canônica
 
 **Estado:** proposta; não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1407-reserva-visita-reexecutavel-md"
+description: "Documento Sinérgica SO: ADR-1407 — Recuperação da reserva de criação de Visita"
+alwaysApply: false
+---
+
 # ADR-1407 — Recuperação da reserva de criação de Visita
 
 ## Contexto e decisão

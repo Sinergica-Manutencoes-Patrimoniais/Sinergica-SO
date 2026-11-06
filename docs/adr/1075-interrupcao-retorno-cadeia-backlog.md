@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1075-interrupcao-retorno-cadeia-backlog-md"
+description: "Documento Sinérgica SO: ADR-1075 — Interrupção e consulta de retorno em cadeia de OS"
+alwaysApply: false
+---
+
 # ADR-1075 — Interrupção e consulta de retorno em cadeia de OS
 
 Status: proposta local, não aplicada nem homologada.

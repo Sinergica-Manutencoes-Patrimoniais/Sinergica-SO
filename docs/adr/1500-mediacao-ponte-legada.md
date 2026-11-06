@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1500-mediacao-ponte-legada-md"
+description: "Documento Sinérgica SO: ADR-1500 — Mediação da ponte legada"
+alwaysApply: false
+---
+
 # ADR-1500 — Mediação da ponte legada
 
 As telas de relação e materialização de ciclos legados chamavam funções privadas sem concessão a `authenticated`, impedindo sua execução. A integração precisa permanecer isolada por Cliente e respeitar os controles existentes.

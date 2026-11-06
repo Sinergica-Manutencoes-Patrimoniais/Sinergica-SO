@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1152-intencao-os-excecao-material-md"
+description: "Documento Sinérgica SO: ADR-1152 — Origem de material na intenção de reprogramação"
+alwaysApply: false
+---
+
 # ADR-1152 — Origem de material na intenção de reprogramação
 
 Status: proposta local, não aplicada nem homologada.

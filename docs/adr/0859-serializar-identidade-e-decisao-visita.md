@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0859-serializar-identidade-e-decisao-visita-md"
+description: "Documento Sinérgica SO: ADR 0859 — Serialização parcial das fontes de impacto de Visita"
+alwaysApply: false
+---
+
 # ADR 0859 — Serialização parcial das fontes de impacto de Visita
 
 ## Contexto

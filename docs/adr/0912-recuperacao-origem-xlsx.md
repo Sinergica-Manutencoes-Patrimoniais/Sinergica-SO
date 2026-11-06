@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0912-recuperacao-origem-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0912 — Recuperação de origem XLSX após perda de IDs locais"
+alwaysApply: false
+---
+
 # ADR-0912 — Recuperação de origem XLSX após perda de IDs locais
 
 Data: 2026-10-30 · Status: preparação, gate fechado.

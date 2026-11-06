@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1243-recibo-cancelamento-aceite-md"
+description: "Documento Sinérgica SO: ADR-1243 — Recibo do cancelamento de aceite"
+alwaysApply: false
+---
+
 # ADR-1243 — Recibo do cancelamento de aceite
 
 ## Decisão

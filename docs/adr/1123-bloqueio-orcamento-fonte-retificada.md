@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1123-bloqueio-orcamento-fonte-retificada-md"
+description: "Documento Sinérgica SO: ADR-1123 — Revisão antes de publicar fonte retificada"
+alwaysApply: false
+---
+
 # ADR-1123 — Revisão antes de publicar fonte retificada
 
 Status: proposta local, não aplicada nem homologada.

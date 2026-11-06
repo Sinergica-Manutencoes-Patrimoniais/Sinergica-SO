@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0218-seletores-vinculo-backlog-md"
+description: "Documento Sinérgica SO: ADR-0218 — Seletores de vínculo Backlog/Chamado"
+alwaysApply: false
+---
+
 # ADR-0218 — Seletores de vínculo Backlog/Chamado
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1095-triagem-processamento-demorado-md"
+description: "Documento Sinérgica SO: ADR-1095 — Triagem de processamento demorado"
+alwaysApply: false
+---
+
 # ADR-1095 — Triagem de processamento demorado
 
 Status: proposta local, não aplicada nem homologada.

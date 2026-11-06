@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1175-inicio-efeito-t24-md"
+description: "Documento Sinérgica SO: ADR-1175 — Início único do efeito T−24"
+alwaysApply: false
+---
+
 # ADR-1175 — Início único do efeito T−24
 
 Status: proposta local, não aplicada nem homologada.

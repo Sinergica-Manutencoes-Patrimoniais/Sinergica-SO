@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1550-pendencia-preparada-nativa-md"
+description: "Documento Sinérgica SO: ADR-1550 — Pendência de ocorrência preparada nativa"
+alwaysApply: false
+---
+
 # ADR-1550 — Pendência de ocorrência preparada nativa
 
 Uma OS de Chamado preventivo nativo pode ter origem em ocorrência preparada sem possuir ocorrência legada. A pendência deve referenciar a identidade existente, sem criar uma entidade legada fictícia.

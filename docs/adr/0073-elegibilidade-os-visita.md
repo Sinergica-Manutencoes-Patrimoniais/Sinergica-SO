@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0073-elegibilidade-os-visita-md"
+description: "Documento Sinérgica SO: ADR-0073 — Proteção de OS encerrada na composição"
+alwaysApply: false
+---
+
 # ADR-0073 — Proteção de OS encerrada na composição
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0315-vinculo-temporario-foto-ativo-md"
+description: "Documento Sinérgica SO: ADR-0315 — Vínculo temporário de foto de levantamento a ativo"
+alwaysApply: false
+---
+
 # ADR-0315 — Vínculo temporário de foto de levantamento a ativo
 
 Prepara-se associação privada de proveniência para foto aceita por humano e linha já incorporada em Sistema ou Componente do mesmo Cliente. A associação não copia o objeto, não modifica `url_imagem`/`uri_anexos`, não altera o cadastro legado e não publica automaticamente. Exige capacidades de aprovação e gestão, revisão da decisão e request id idempotente.

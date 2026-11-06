@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1267-transporte-auvo-t24-sem-repeticao-md"
+description: "Documento Sinérgica SO: ADR-1267 — Transporte Auvo T−24 sem repetição automática de escrita"
+alwaysApply: false
+---
+
 # ADR-1267 — Transporte Auvo T−24 sem repetição automática de escrita
 
 Status: proposta local; não homologada nem ativada.

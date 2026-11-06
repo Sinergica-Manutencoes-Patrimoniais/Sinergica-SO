@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0355-opcionais-cobertura-estrutural-md"
+description: "Documento Sinérgica SO: ADR-0355 — Perguntas opcionais na conferência estrutural"
+alwaysApply: false
+---
+
 # ADR-0355 — Perguntas opcionais na conferência estrutural
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0211-dispensa-orcamento-operacional-md"
+description: "Documento Sinérgica SO: ADR-0211 — Dispensa de documento de orçamento"
+alwaysApply: false
+---
+
 # ADR-0211 — Dispensa de documento de orçamento
 
 **Estado:** proposta preparatória, não homologada nem implantada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0193-retomada-plano-suspenso-md"
+description: "Documento Sinérgica SO: ADR-0193 — Retomada local sem geração retroativa"
+alwaysApply: false
+---
+
 # ADR-0193 — Retomada local sem geração retroativa
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0243-reabertura-conferencia-lote-md"
+description: "Documento Sinérgica SO: ADR-0243 — Reabertura auditada da conferência de lote"
+alwaysApply: false
+---
+
 # ADR-0243 — Reabertura auditada da conferência de lote
 
 ## Decisão

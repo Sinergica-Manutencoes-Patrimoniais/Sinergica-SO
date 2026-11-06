@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0798-e01-s172-vinculo-declarado-intervalo-md"
+description: "Documento Sinérgica SO: ADR 0798 — Vínculo declarado de intervalo a total semanal"
+alwaysApply: false
+---
+
 # ADR 0798 — Vínculo declarado de intervalo a total semanal
 
 Status: proposta; não homologada.

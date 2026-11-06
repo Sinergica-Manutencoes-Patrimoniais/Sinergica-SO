@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1360-candidata-t24-emergencial-md"
+description: "Documento Sinérgica SO: ADR 1360 — Candidata T−24 para OS emergencial"
+alwaysApply: false
+---
+
 # ADR 1360 — Candidata T−24 para OS emergencial
 
 ## Contexto

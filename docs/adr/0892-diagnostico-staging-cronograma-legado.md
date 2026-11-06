@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0892-diagnostico-staging-cronograma-legado-md"
+description: "Documento Sinérgica SO: ADR-0892 — Diagnóstico anterior à reconciliação do staging de cronogramas"
+alwaysApply: false
+---
+
 # ADR-0892 — Diagnóstico anterior à reconciliação do staging de cronogramas
 
 Data: 2026-10-30 · Status: preparação; sem autorização de migração ou habilitação.

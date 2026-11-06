@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0323-historico-revisao-faturavel-md"
+description: "Documento Sinérgica SO: ADR-0323 — Histórico da revisão do candidato"
+alwaysApply: false
+---
+
 # ADR-0323 — Histórico da revisão do candidato
 
 Status: proposta; sem testes ou ativação.

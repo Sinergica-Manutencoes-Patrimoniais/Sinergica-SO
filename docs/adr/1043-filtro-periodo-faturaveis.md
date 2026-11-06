@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1043-filtro-periodo-faturaveis-md"
+description: "Documento Sinérgica SO: ADR-1043 — Filtro por competência de faturáveis"
+alwaysApply: false
+---
+
 # ADR-1043 — Filtro por competência de faturáveis
 
 **Status:** preparação, não homologada.

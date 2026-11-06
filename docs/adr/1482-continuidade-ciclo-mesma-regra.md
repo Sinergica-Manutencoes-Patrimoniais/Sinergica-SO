@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1482-continuidade-ciclo-mesma-regra-md"
+description: "Documento Sinérgica SO: ADR-1482 — Decisão de revisão também para ciclos com regra igual"
+alwaysApply: false
+---
+
 # ADR-1482 — Decisão de revisão também para ciclos com regra igual
 
 ## Contexto

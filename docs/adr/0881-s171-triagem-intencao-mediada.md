@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0881-s171-triagem-intencao-mediada-md"
+description: "Documento Sinérgica SO: ADR-0881 — Triagem e histórico mediados de intenção de OS"
+alwaysApply: false
+---
+
 # ADR-0881 — Triagem e histórico mediados de intenção de OS
 
 Data: 2026-10-30 · Status: proposta, não implantada

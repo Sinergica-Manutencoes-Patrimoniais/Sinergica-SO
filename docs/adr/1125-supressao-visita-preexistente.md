@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1125-supressao-visita-preexistente-md"
+description: "Documento Sinérgica SO: ADR-1125 — Supressão de Visita futura sem vínculos ao mudar dia"
+alwaysApply: false
+---
+
 # ADR-1125 — Supressão de Visita futura sem vínculos ao mudar dia
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1082-alteracao-dia-atomica-base-md"
+description: "Documento Sinérgica SO: ADR-1082 — Base transacional da mudança do dia contratual"
+alwaysApply: false
+---
+
 # ADR-1082 — Base transacional da mudança do dia contratual
 
 Status: proposta local, não aplicada nem homologada.

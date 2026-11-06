@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1549-fotografia-retorno-calendario-md"
+description: "Documento Sinérgica SO: ADR-1549 — Fotografia da OS para retorno de calendário"
+alwaysApply: false
+---
+
 # ADR-1549 — Fotografia da OS para retorno de calendário
 
 Os consumidores de classificação e cobertura preparados para fotografia de OS por Visita também devem utilizar a fotografia de OS por calendário. A versão operacional posterior da ocorrência não altera a versão e as perguntas já usadas pela OS anterior. Sem fotografia, preservar a leitura histórica preexistente; dados ausentes não são reconstruídos.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0341-snapshot-contrato-perguntas-md"
+description: "Documento Sinérgica SO: ADR-0341 — Congelamento de contratos de perguntas na aprovação"
+alwaysApply: false
+---
+
 # ADR-0341 — Congelamento de contratos de perguntas na aprovação
 
 Status: proposta, não homologada.

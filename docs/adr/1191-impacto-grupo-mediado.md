@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1191-impacto-grupo-mediado-md"
+description: "Documento Sinérgica SO: ADR-1191 — Consulta mediada do impacto de movimentar Grupo"
+alwaysApply: false
+---
+
 # ADR-1191 — Consulta mediada do impacto de movimentar Grupo
 
 ## Contexto

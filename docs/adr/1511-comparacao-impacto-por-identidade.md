@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1511-comparacao-impacto-por-identidade-md"
+description: "Documento Sinérgica SO: ADR-1511 — Comparação da Rotina ao decidir impacto"
+alwaysApply: false
+---
+
 # ADR-1511 — Comparação da Rotina ao decidir impacto
 
 ## Contexto

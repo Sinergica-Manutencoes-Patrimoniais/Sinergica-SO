@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1027-revogacao-supressao-semana-md"
+description: "Documento Sinérgica SO: ADR-1027 — Revogação auditada de supressão"
+alwaysApply: false
+---
+
 # ADR-1027 — Revogação auditada de supressão
 
 Status: preparação privada, não homologada.

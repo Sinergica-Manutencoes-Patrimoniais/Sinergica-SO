@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1046-atribuicao-escopo-direto-chamado-md"
+description: "Documento Sinérgica SO: ADR-1046 — Atribuição de parcela direta do Chamado"
+alwaysApply: false
+---
+
 # ADR-1046 — Atribuição de parcela direta do Chamado
 
 **Status:** preparação privada, não homologada.

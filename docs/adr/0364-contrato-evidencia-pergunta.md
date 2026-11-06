@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0364-contrato-evidencia-pergunta-md"
+description: "Documento Sinérgica SO: ADR-0364 — Requisito de evidência por pergunta em rascunho"
+alwaysApply: false
+---
+
 # ADR-0364 — Requisito de evidência por pergunta em rascunho
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0823-revalidacao-recepcao-levantamento-md"
+description: "Documento Sinérgica SO: ADR 0823 — Revalidar autorização na recepção de levantamento"
+alwaysApply: false
+---
+
 # ADR 0823 — Revalidar autorização na recepção de levantamento
 
 Em duas sessões na base sintética isolada, a função 0320 autorizou antes de aguardar o advisory de request; a concessão foi revogada e confirmada durante a espera, mas a recepção ainda retornou sucesso. A tentativa de teste foi revertida.

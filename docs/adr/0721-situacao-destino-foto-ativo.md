@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0721-situacao-destino-foto-ativo-md"
+description: "Documento Sinérgica SO: ADR 0721 — Situação atual do vínculo de foto"
+alwaysApply: false
+---
+
 # ADR 0721 — Situação atual do vínculo de foto
 
 ## Decisão

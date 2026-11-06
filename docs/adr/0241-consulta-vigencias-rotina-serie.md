@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0241-consulta-vigencias-rotina-serie-md"
+description: "Documento Sinérgica SO: ADR-0241 — Consulta de vigências e histórico Rotina–série"
+alwaysApply: false
+---
+
 # ADR-0241 — Consulta de vigências e histórico Rotina–série
 
 Status: proposta, não homologada.

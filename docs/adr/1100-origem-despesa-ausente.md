@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1100-origem-despesa-ausente-md"
+description: "Documento Sinérgica SO: ADR-1100 — Triagem de origem de despesa ausente"
+alwaysApply: false
+---
+
 # ADR-1100 — Triagem de origem de despesa ausente
 
 Status: proposta local, não aplicada nem homologada.

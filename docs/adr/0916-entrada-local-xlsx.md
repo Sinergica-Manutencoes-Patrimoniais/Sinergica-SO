@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0916-entrada-local-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0916 — Entrada local da função XLSX, fechada por padrão"
+alwaysApply: false
+---
+
 # ADR-0916 — Entrada local da função XLSX, fechada por padrão
 
 Data: 2026-10-30 · Status: preparação, não publicada. Substitui apenas a restrição de não criar o ponto de entrada em código do ADR-0910; não altera seus gates operacionais.

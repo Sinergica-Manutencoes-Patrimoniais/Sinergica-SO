@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0861-mediacao-conversao-integral-chamado-md"
+description: "Documento Sinérgica SO: ADR 0861 — Fronteira da conversão integral"
+alwaysApply: false
+---
+
 # ADR 0861 — Fronteira da conversão integral
 
 A interface não deve acessar o núcleo privado 1047. Uma RPC de mediação possui gate privado independente, inicialmente fechado, verifica sessão, permissão por Cliente, isolamento e lock de autorização, e delega a ele sem conceder EXECUTE no núcleo. O gate principal e as barreiras legadas continuam obrigatórios. Não há fallback automático para o caminho antigo depois de erro incerto.

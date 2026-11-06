@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-inventario-flags-s165-s166-md"
+description: "Documento Sinérgica SO: Inventário de liberação S165/S166"
+alwaysApply: false
+---
+
 # Inventário de liberação S165/S166
 
 Levantamento estático em 2026-11-05, com código até migration 1775. As flags Vite são avaliadas no build; quando ausentes ou diferentes da string `true`, os controles identificados por comparação estrita ficam desabilitados ou ocultos. Valores no `.env.example` são exemplos, não configuram um ambiente existente. Os gates de banco citados iniciam fechados nas respectivas migrations; seu estado real em qualquer ambiente deve ser verificado separadamente. Nenhuma flag ou gate foi ativado neste levantamento.

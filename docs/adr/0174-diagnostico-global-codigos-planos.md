@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0174-diagnostico-global-codigos-planos-md"
+description: "Documento Sinérgica SO: ADR-0174 — Agregados cruzados e prévia de planos legados"
+alwaysApply: false
+---
+
 # ADR-0174 — Agregados cruzados e prévia de planos legados
 
 Status: proposta, não homologada.

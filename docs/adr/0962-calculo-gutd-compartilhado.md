@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0962-calculo-gutd-compartilhado-md"
+description: "Documento Sinérgica SO: ADR-0962 — Cálculo GUTD para ranking e retornos"
+alwaysApply: false
+---
+
 # ADR-0962 — Cálculo GUTD para ranking e retornos
 
 Status: preparação local; não homologada.

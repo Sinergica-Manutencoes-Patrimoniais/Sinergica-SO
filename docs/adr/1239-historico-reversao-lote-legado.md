@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1239-historico-reversao-lote-legado-md"
+description: "Documento Sinérgica SO: ADR-1239 — Histórico das avaliações de reversão"
+alwaysApply: false
+---
+
 # ADR-1239 — Histórico das avaliações de reversão
 
 ## Decisão

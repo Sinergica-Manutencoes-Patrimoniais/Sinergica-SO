@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0733-bloqueio-proposta-ativacao-contrato-md"
+description: "Documento Sinérgica SO: ADR-0733 — Bloqueio da proposta na ativação de contrato"
+alwaysApply: false
+---
+
 # ADR-0733 — Bloqueio da proposta na ativação de contrato
 
 **Status:** incremento em diagnóstico; não homologado nem implantado.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0720-filtro-adequacao-fotos-ativo-md"
+description: "Documento Sinérgica SO: ADR 0720 — Adequação antes da paginação de fotos"
+alwaysApply: false
+---
+
 # ADR 0720 — Adequação antes da paginação de fotos
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-escolha-visita-1707-concorrencia-md"
+description: "Documento Sinérgica SO: Concorrência de escolha da mesma Visita — S165, migration 1707"
+alwaysApply: false
+---
+
 # Concorrência de escolha da mesma Visita — S165, migration 1707
 
 Este roteiro escreve dados e faz commit: use **somente banco descartável**. Não aponte para desenvolvimento compartilhado ou produção. Crie um clone isolado da base anterior a 1614, aplique em ordem as migrations 1614 a 1709 e execute:

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1176-confirmacao-efeito-t24-md"
+description: "Documento Sinérgica SO: ADR-1176 — Confirmação da tarefa T−24 por leitura posterior"
+alwaysApply: false
+---
+
 # ADR-1176 — Confirmação da tarefa T−24 por leitura posterior
 
 Status: proposta local, não aplicada nem homologada.

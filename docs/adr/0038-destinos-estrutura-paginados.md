@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0038-destinos-estrutura-paginados-md"
+description: "Documento Sinérgica SO: ADR-0038 — Seleção paginada de destinos técnicos"
+alwaysApply: false
+---
+
 # ADR-0038 — Seleção paginada de destinos técnicos
 
 **Status:** decisão para implementação local E01-S176. **Data:** 2026-10-27.

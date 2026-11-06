@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0850-triagem-atraso-autorizacao-ate-commit-md"
+description: "Documento Sinérgica SO: ADR-0850 — Serialização da autorização na triagem de atraso"
+alwaysApply: false
+---
+
 # ADR-0850 — Serialização da autorização na triagem de atraso
 
 Status: preparação; gate permanece fechado e revisão adversarial pendente.

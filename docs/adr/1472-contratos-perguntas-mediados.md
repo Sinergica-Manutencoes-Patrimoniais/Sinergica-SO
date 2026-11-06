@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1472-contratos-perguntas-mediados-md"
+description: "Documento Sinérgica SO: ADR-1472 — Contratos de perguntas mediados no Plano"
+alwaysApply: false
+---
+
 # ADR-1472 — Contratos de perguntas mediados no Plano
 
 Status: preparação local, gates fechados e sem homologação.

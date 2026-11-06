@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1031-recepcao-manual-envelope-campo-md"
+description: "Documento Sinérgica SO: ADR-1031 — Recepção manual de linhas associadas a envelope de campo"
+alwaysApply: false
+---
+
 # ADR-1031 — Recepção manual de linhas associadas a envelope de campo
 
 Status: preparação local, gate fechado; requer testes e revisão adversarial.

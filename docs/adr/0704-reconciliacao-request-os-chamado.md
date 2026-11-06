@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0704-reconciliacao-request-os-chamado-md"
+description: "Documento Sinérgica SO: ADR-0704 — Reconciliação de pedido de OS por identidade"
+alwaysApply: false
+---
+
 # ADR-0704 — Reconciliação de pedido de OS por identidade
 
 Status: preparada; não aplicada nem homologada.

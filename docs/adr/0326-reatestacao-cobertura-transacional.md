@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0326-reatestacao-cobertura-transacional-md"
+description: "Documento Sinérgica SO: ADR-0326 — Reatestar cobertura estrutural sob bloqueio"
+alwaysApply: false
+---
+
 # ADR-0326 — Reatestar cobertura estrutural sob bloqueio
 
 Status: proposta, não homologada.

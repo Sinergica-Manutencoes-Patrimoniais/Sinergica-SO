@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1234-aceite-previa-lote-legado-md"
+description: "Documento Sinérgica SO: ADR-1234 — Aceite da prévia do lote de rascunhos"
+alwaysApply: false
+---
+
 # ADR-1234 — Aceite da prévia do lote de rascunhos
 
 ## Decisão

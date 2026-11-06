@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1029-geracao-visita-supressao-md"
+description: "Documento Sinérgica SO: ADR-1029 — Geração contratual com supressão registrada"
+alwaysApply: false
+---
+
 # ADR-1029 — Geração contratual com supressão registrada
 
 Status: preparação privada, não homologada.

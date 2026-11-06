@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0862-mediacao-mapeamento-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0862 — Mediação de classificação e mapeamento do cronograma"
+alwaysApply: false
+---
+
 # ADR-0862 — Mediação de classificação e mapeamento do cronograma
 
 Status: preparado, gates fechados; homologação pendente.

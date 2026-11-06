@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1324-relatorio-despesas-faturaveis-mediado-md"
+description: "Documento Sinérgica SO: ADR-1324 — Mediação do relatório de despesas e faturáveis"
+alwaysApply: false
+---
+
 # ADR-1324 — Mediação do relatório de despesas e faturáveis
 
 Estado: preparação local; gate fechado, sem autorização de implantação.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0162-triagem-os-auvo-md"
+description: "Documento Sinérgica SO: ADR-0162 — Triagem interna de integração de OS"
+alwaysApply: false
+---
+
 # ADR-0162 — Triagem interna de integração de OS
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s172-esforco-visita-concorrencia-md"
+description: "Documento Sinérgica SO: Concorrência de declaração por Visita — S172"
+alwaysApply: false
+---
+
 # Concorrência de declaração por Visita — S172
 
 Executar apenas em clone isolado com migration 1051. O teste `E01-S172_esforco_visita_fks_reais.sql` carrega dados reais com rollback. Para esta prova específica, executar seu conteúdo no clone trocando somente o último `rollback` por `commit`; isso persiste dados e gates sintéticos exclusivamente no clone, que deve ser apagado ao final. Nunca fazer isso em banco compartilhado ou real.

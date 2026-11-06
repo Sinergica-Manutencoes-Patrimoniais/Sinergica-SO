@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0830-estudo-ponte-secundaria-chamado-os-md"
+description: "Documento Sinérgica SO: ADR-0830 — Estudo de ponte secundária Chamado–OS"
+alwaysApply: false
+---
+
 # ADR-0830 — Estudo de ponte secundária Chamado–OS
 
 Status: hipótese em avaliação; **não aprovada para criação operacional**. Não introduz schema, liberação de gate nem alteração dos vínculos existentes. Complementa ADR-0107 e ADR-0815.

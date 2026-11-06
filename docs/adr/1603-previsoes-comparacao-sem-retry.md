@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1603-previsoes-comparacao-sem-retry-md"
+description: "Documento Sinérgica SO: ADR-1603: conflito definitivo nas prévias de substituição"
+alwaysApply: false
+---
+
 # ADR-1603: conflito definitivo nas prévias de substituição
 
 As prévias de nova data de Calendário e de nova Visita conferem a comparação apresentada pelo PCM. Comparação obsoleta é rejeição definitiva, não falha transitória de serialização. O SQLSTATE `40001` provoca repetição automática no PostgREST e pode deixar a interface aguardando.

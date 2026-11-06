@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-definicoes-fabricio-caderno-v1-md"
+description: "Documento Sinérgica SO: Definições do Fabrício após o Caderno Técnico v1"
+alwaysApply: false
+---
+
 # Definições do Fabrício após o Caderno Técnico v1
 
 Fonte: respostas do Fabrício encaminhadas por Lucas nesta conversa em 26/10/2026.

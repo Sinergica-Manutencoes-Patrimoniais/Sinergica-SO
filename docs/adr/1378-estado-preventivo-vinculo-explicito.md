@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1378-estado-preventivo-vinculo-explicito-md"
+description: "Documento Sinérgica SO: ADR-1378 — Vínculo explícito na verificação preventiva"
+alwaysApply: false
+---
+
 # ADR-1378 — Vínculo explícito na verificação preventiva
 
 **Estado:** proposta; não aplicada nem homologada.

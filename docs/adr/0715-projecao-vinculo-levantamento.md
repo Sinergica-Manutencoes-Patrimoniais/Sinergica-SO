@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0715-projecao-vinculo-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0715 — Distinguir vínculo de incorporação"
+alwaysApply: false
+---
+
 # ADR-0715 — Distinguir vínculo de incorporação
 
 A decisão de vínculo da ADR-0173 não altera nome ou outros dados do cadastro existente e não exige nome igual. A projeção mediada distingue vínculo de criação somente quando o fato de incorporação referencia comando auditado `vincular_ativo`; preserva decisões e dados anteriores. Se não houver prova desse comando, não infere vínculo.

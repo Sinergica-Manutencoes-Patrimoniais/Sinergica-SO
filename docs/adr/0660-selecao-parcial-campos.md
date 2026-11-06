@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0660-selecao-parcial-campos-md"
+description: "Documento Sinérgica SO: ADR-0660 — Seleção parcial de campos estruturados"
+alwaysApply: false
+---
+
 # ADR-0660 — Seleção parcial de campos estruturados
 
 Status: proposta; gates fechados, não homologada.

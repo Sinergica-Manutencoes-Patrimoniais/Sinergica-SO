@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1069-interface-os-parcela-direta-md"
+description: "Documento Sinérgica SO: ADR-1069 — Seleção de parcela para nova OS"
+alwaysApply: false
+---
+
 # ADR-1069 — Seleção de parcela para nova OS
 
 **Status:** preparação não homologada. Complementa ADR-1068.

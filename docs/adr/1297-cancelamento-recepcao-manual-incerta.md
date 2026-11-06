@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1297-cancelamento-recepcao-manual-incerta-md"
+description: "Documento Sinérgica SO: ADR-1297 — Cancelamento de recepção manual incerta"
+alwaysApply: false
+---
+
 # ADR-1297 — Cancelamento de recepção manual incerta
 
 ## Contexto

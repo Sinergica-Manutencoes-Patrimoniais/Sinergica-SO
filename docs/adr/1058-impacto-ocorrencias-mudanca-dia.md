@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1058-impacto-ocorrencias-mudanca-dia-md"
+description: "Documento Sinérgica SO: ADR-1058 — Ocorrências associadas à mudança de dia"
+alwaysApply: false
+---
+
 # ADR-1058 — Ocorrências associadas à mudança de dia
 
 **Status:** preparação privada, não homologada. Complementa ADR-1053.

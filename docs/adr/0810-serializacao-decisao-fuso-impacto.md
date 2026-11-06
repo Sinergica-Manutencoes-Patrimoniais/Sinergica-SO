@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0810-serializacao-decisao-fuso-impacto-md"
+description: "Documento Sinérgica SO: ADR-0810 — Serialização das fontes de decisão e fuso"
+alwaysApply: false
+---
+
 # ADR-0810 — Serialização das fontes de decisão e fuso
 
 Status: proposta, sem homologação. A avaliação 0775 lê a decisão mais recente em `pcm.sso_decisoes_impacto_ocorrencia`; o preflight 0770 lê o fuso mais recente em `pcm.sso_fusos_plano_declarados`. Seus comandos canônicos 0773 e 0760 bloqueiam o Plano antes de inserir, e as tabelas não concedem escrita direta aos papéis da aplicação. A pré-condição 0785 bloqueia o Plano. Portanto não se demonstrou corrida pelos comandos canônicos.

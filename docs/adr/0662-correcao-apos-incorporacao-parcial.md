@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0662-correcao-apos-incorporacao-parcial-md"
+description: "Documento Sinérgica SO: ADR-0662 — Correção de linha não incorporada após aprovação parcial"
+alwaysApply: false
+---
+
 # ADR-0662 — Correção de linha não incorporada após aprovação parcial
 
 Status: proposta; gate fechado, não homologada.

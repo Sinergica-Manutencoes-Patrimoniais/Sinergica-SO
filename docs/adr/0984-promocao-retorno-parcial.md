@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0984-promocao-retorno-parcial-md"
+description: "Documento Sinérgica SO: ADR-0984 — Promoção do restante declarado"
+alwaysApply: false
+---
+
 # ADR-0984 — Promoção do restante declarado
 
 Status: preparação privada, não homologada.

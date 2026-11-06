@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0409-diagnostico-fechamento-preventivo-md"
+description: "Documento Sinérgica SO: ADR-0409 — Diagnóstico conservador do fechamento preventivo"
+alwaysApply: false
+---
+
 # ADR-0409 — Diagnóstico conservador do fechamento preventivo
 
 Status: preparado, gate desligado, não aplicado nem homologado. O diagnóstico compara a última declaração humana com OS atuais do vínculo legado e conta OS ausentes, adicionais, não finalizadas e sem registro de finalização validada. Não expõe outros Clientes nem altera qualquer dado. É uma fotografia sem locks: contagens zeradas não autorizam encerramento ou comprovam integralidade; o resultado sempre informa bloqueio.

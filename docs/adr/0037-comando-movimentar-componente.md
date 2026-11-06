@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0037-comando-movimentar-componente-md"
+description: "Documento Sinérgica SO: ADR-0037 — Comando de movimentação de Componente"
+alwaysApply: false
+---
+
 # ADR-0037 — Comando de movimentação de Componente
 
 **Status:** decisão para implementação local E01-S176. **Data:** 2026-10-27.

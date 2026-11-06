@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1183-processamento-lote-t24-md"
+description: "Documento Sinérgica SO: ADR-1183 — Processamento limitado T−24"
+alwaysApply: false
+---
+
 # ADR-1183 — Processamento limitado T−24
 
 Status: proposta local, não conectada nem homologada.

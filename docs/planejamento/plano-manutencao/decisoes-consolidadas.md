@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-decisoes-consolidadas-md"
+description: "Documento Sinérgica SO: Decisões do Plano de Manutenção"
+alwaysApply: false
+---
+
 # Decisões do Plano de Manutenção
 
 > Atualização de 26/10/2026: [definições após o Caderno Técnico](definicoes-fabricio-caderno-v1.md)

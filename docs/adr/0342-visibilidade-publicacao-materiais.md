@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0342-visibilidade-publicacao-materiais-md"
+description: "Documento Sinérgica SO: ADR-0342 — Retirada e republicação da lista pública"
+alwaysApply: false
+---
+
 # ADR-0342 — Retirada e republicação da lista pública
 
 Status: proposta; gate fechado, sem testes.

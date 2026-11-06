@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0994-codigo-atual-mediado-md"
+description: "Documento Sinérgica SO: ADR-0994 — Código atual para correção administrativa"
+alwaysApply: false
+---
+
 # ADR-0994 — Código atual para correção administrativa
 
 Status: preparação privada, não homologada.

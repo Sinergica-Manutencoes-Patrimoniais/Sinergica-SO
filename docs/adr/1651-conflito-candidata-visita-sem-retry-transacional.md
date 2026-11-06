@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1651-conflito-candidata-visita-sem-retry-transacional-md"
+description: "Documento Sinérgica SO: ADR-1651 — Conflito de candidata de Visita após revisão"
+alwaysApply: false
+---
+
 # ADR-1651 — Conflito de candidata de Visita após revisão
 
 ## Decisão

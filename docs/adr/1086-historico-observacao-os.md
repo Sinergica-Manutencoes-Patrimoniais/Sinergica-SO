@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1086-historico-observacao-os-md"
+description: "Documento Sinérgica SO: ADR-1086 — Consulta do histórico de observação de OS"
+alwaysApply: false
+---
+
 # ADR-1086 — Consulta do histórico de observação de OS
 
 Status: proposta local, não aplicada nem homologada.

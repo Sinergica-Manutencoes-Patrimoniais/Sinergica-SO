@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0674-historico-interno-orcamento-legado-md"
+description: "Documento Sinérgica SO: ADR-0674 — Histórico interno de orçamento legado por OS"
+alwaysApply: false
+---
+
 # ADR-0674 — Histórico interno de orçamento legado por OS
 
 Consulta limitada por Cliente e OS reutiliza os registros e decisões legados, sem reemitir ou migrar propostas. A projeção retorna identidade, estado, datas e decisão; não retorna itens, preços, descrição livre, notas, custos ou margem, pois sua natureza comercial e segurança não são comprovadas. Registros pré-OS ou sem vínculo verificável não são incluídos; ausência da lista não prova ausência de histórico.

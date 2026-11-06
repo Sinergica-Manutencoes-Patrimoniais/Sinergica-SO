@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1447-classificacao-retorno-mediada-md"
+description: "Documento Sinérgica SO: ADR 1447 — Mediação da classificação de retorno"
+alwaysApply: false
+---
+
 # ADR 1447 — Mediação da classificação de retorno
 
 As operações autenticadas de listagem e classificação usam entradas próprias, com gates independentes desligados, autorização de execução para o Cliente e coordenação de autorização. Os núcleos permanecem privados. A classificação continua declaração manual e não comprova cobertura nem execução.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1126-visita-suprimida-fora-da-agenda-md"
+description: "Documento Sinérgica SO: ADR-1126 — Visita suprimida fora da agenda operacional"
+alwaysApply: false
+---
+
 # ADR-1126 — Visita suprimida fora da agenda operacional
 
 Status: proposta local, não aplicada nem homologada.

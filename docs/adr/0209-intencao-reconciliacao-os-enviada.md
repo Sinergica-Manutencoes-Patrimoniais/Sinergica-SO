@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0209-intencao-reconciliacao-os-enviada-md"
+description: "Documento Sinérgica SO: ADR-0209 — Intenção de reconciliação para OS enviada"
+alwaysApply: false
+---
+
 # ADR-0209 — Intenção de reconciliação para OS enviada
 
 Status: proposta, não homologada.

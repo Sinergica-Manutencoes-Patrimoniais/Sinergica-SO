@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0854-decisao-feriado-calendario-autorizacao-md"
+description: "Documento Sinérgica SO: ADR-0854 — Autorização e gates da decisão de feriado"
+alwaysApply: false
+---
+
 # ADR-0854 — Autorização e gates da decisão de feriado
 
 Status: preparação; não autoriza habilitar gates nem homologar.

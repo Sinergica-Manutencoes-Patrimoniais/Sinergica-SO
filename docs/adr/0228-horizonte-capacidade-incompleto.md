@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0228-horizonte-capacidade-incompleto-md"
+description: "Documento Sinérgica SO: ADR-0228 — Horizonte de capacidade com completude explícita"
+alwaysApply: false
+---
+
 # ADR-0228 — Horizonte de capacidade com completude explícita
 
 Status: proposta, não homologada.

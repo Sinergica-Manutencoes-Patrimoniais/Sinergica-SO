@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0857-bloqueio-aprovacao-revisao-sem-prova-md"
+description: "Documento Sinérgica SO: ADR 0857 — Aprovação de revisão sem prova de impactos"
+alwaysApply: false
+---
+
 # ADR 0857 — Aprovação de revisão sem prova de impactos
 
 ## Contexto

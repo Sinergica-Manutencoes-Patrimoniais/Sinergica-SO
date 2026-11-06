@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1567-serializar-os-e-ponte-legada-md"
+description: "Documento Sinérgica SO: ADR 1567 — Serializar OS e ponte de ciclo legado"
+alwaysApply: false
+---
+
 # ADR 1567 — Serializar OS e ponte de ciclo legado
 
 ## Contexto

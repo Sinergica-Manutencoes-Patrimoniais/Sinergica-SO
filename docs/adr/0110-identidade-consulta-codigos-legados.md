@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0110-identidade-consulta-codigos-legados-md"
+description: "Documento Sinérgica SO: ADR-0110 — Consulta segura de códigos e transição para aliases"
+alwaysApply: false
+---
+
 # ADR-0110 — Consulta segura de códigos e transição para aliases
 
 ## Estado

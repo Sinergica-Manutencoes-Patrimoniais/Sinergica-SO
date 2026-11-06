@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0581-criacao-ativos-selecao-md"
+description: "Documento Sinérgica SO: ADR-0581 — Criação selecionada de ativos"
+alwaysApply: false
+---
+
 # ADR-0581 — Criação selecionada de ativos
 
 Status: proposta; gate fechado, não homologada.

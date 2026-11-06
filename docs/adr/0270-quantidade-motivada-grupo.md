@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0270-quantidade-motivada-grupo-md"
+description: "Documento Sinérgica SO: ADR-0270 — Alteração motivada de quantidade de Grupo"
+alwaysApply: false
+---
+
 # ADR-0270 — Alteração motivada de quantidade de Grupo
 
 A edição integral já registra antes/depois da quantidade, mas não exige motivo. Prepara-se comando restrito que altera apenas quantidade, preserva identidade, Local, Sistema e características, exige motivo e revisão e registra auditoria com request id idempotente. A projeção de motivos do histórico reconhece também essa operação.

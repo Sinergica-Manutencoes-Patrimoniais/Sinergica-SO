@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1349-consulta-ciclo-entre-versoes-md"
+description: "Documento Sinérgica SO: ADR 1349 — Consulta de ciclo reutilizado entre versões"
+alwaysApply: false
+---
+
 # ADR 1349 — Consulta de ciclo reutilizado entre versões
 
 ## Contexto

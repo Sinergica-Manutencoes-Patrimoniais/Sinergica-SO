@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0878-s172-agenda-revogacao-concorrente-md"
+description: "Documento Sinérgica SO: ADR 0878 — Serialização da leitura de agenda com revogação"
+alwaysApply: false
+---
+
 # ADR 0878 — Serialização da leitura de agenda com revogação
 
 ## Contexto

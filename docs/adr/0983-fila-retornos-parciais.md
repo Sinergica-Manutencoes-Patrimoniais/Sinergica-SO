@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0983-fila-retornos-parciais-md"
+description: "Documento Sinérgica SO: ADR-0983 — Consulta de retornos parciais"
+alwaysApply: false
+---
+
 # ADR-0983 — Consulta de retornos parciais
 
 Status: preparação privada, não homologada.

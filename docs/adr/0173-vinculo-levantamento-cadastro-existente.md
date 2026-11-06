@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0173-vinculo-levantamento-cadastro-existente-md"
+description: "Documento Sinérgica SO: ADR-0173 — Vínculo conservador de levantamento a cadastro existente"
+alwaysApply: false
+---
+
 # ADR-0173 — Vínculo conservador de levantamento a cadastro existente
 
 ## Decisão

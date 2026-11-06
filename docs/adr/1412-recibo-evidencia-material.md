@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1412-recibo-evidencia-material-md"
+description: "Documento Sinérgica SO: ADR-1412 — Recuperação do recibo de evidência de material"
+alwaysApply: false
+---
+
 # ADR-1412 — Recuperação do recibo de evidência de material
 
 ## Decisão

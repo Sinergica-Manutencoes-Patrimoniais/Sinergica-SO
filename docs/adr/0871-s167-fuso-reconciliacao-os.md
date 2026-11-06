@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0871-s167-fuso-reconciliacao-os-md"
+description: "Documento Sinérgica SO: ADR 0871 — Fuso da fotografia de OS na conciliação"
+alwaysApply: false
+---
+
 # ADR 0871 — Fuso da fotografia de OS na conciliação
 
 ## Contexto

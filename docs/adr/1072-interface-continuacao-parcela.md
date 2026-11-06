@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1072-interface-continuacao-parcela-md"
+description: "Documento Sinérgica SO: ADR-1072 — Conferência da continuidade de parcela"
+alwaysApply: false
+---
+
 # ADR-1072 — Conferência da continuidade de parcela
 
 **Status:** preparação não homologada. Complementa ADR-1071.

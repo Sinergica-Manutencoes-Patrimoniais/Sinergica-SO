@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0740-mediacao-recepcao-foto-md"
+description: "Documento Sinérgica SO: ADR 0740 — Mediação e recuperação de vínculo já confirmado de foto"
+alwaysApply: false
+---
+
 # ADR 0740 — Mediação e recuperação de vínculo já confirmado de foto
 
 ## Decisão

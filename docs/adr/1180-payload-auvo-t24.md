@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1180-payload-auvo-t24-md"
+description: "Documento Sinérgica SO: ADR-1180 — Montagem explícita do payload Auvo T−24"
+alwaysApply: false
+---
+
 # ADR-1180 — Montagem explícita do payload Auvo T−24
 
 Status: proposta local, não conectada nem homologada.

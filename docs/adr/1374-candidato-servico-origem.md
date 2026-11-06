@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1374-candidato-servico-origem-md"
+description: "Documento Sinérgica SO: ADR-1374 — Candidato de serviço por fato e exclusão de origens conhecidas"
+alwaysApply: false
+---
+
 # ADR-1374 — Candidato de serviço por fato e exclusão de origens conhecidas
 
 **Estado:** proposta; não aplicada nem homologada.

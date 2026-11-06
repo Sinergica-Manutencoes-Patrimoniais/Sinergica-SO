@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1251-atribuicao-codigo-grupo-existente-md"
+description: "Documento Sinérgica SO: ADR-1251 — Atribuição inicial a Grupo existente"
+alwaysApply: false
+---
+
 # ADR-1251 — Atribuição inicial a Grupo existente
 
 **Status:** proposta local, não homologada. Complementa ADR-1244.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1540-vinculo-legado-contradiz-exclusao-md"
+description: "Documento Sinérgica SO: ADR-1540 — Vínculo legado contradiz classificação não relacionada"
+alwaysApply: false
+---
+
 # ADR-1540 — Vínculo legado contradiz classificação não relacionada
 
 Uma relação declarada pode ser retirada sem que pontes de ocorrências já existentes sejam apagadas. Essas pontes são evidência direta de relação entre o Plano legado e o Plano revisado; uma classificação humana negativa não pode descartá-las.

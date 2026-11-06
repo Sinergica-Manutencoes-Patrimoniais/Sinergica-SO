@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0767-preparacao-ingestao-comprovantes-md"
+description: "Documento Sinérgica SO: ADR-0767 — Preparação isolada de ingestão de comprovantes"
+alwaysApply: false
+---
+
 # ADR-0767 — Preparação isolada de ingestão de comprovantes
 
 Status: protótipo isolado, não integrado e não homologado. Nenhuma permissão, migration ou gate foi alterado.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0422-diagnostico-rollout-auvo-composicao-md"
+description: "Documento Sinérgica SO: ADR-0422 — diagnóstico de rollout de composição e Auvo"
+alwaysApply: false
+---
+
 # ADR-0422 — diagnóstico de rollout de composição e Auvo
 
 Status: diagnóstico estático, não aplicado nem homologado. Não altera outbox, cron, gatilhos nem funções externas.

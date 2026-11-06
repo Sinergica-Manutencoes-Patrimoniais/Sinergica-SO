@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1300-titularidade-criacao-visita-md"
+description: "Documento Sinérgica SO: ADR-1300 — Titularidade da tentativa de criação de Visita"
+alwaysApply: false
+---
+
 # ADR-1300 — Titularidade da tentativa de criação de Visita
 
 ## Contexto

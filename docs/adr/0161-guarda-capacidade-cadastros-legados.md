@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0161-guarda-capacidade-cadastros-legados-md"
+description: "Documento Sinérgica SO: ADR-0161 — Guarda opcional para escritores de cadastro legados"
+alwaysApply: false
+---
+
 # ADR-0161 — Guarda opcional para escritores de cadastro legados
 
 ## Contexto

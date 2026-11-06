@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1033-consulta-recibo-recepcao-campo-md"
+description: "Documento Sinérgica SO: ADR-1033 — Consulta de recibo de recepção de campo"
+alwaysApply: false
+---
+
 # ADR-1033 — Consulta de recibo de recepção de campo
 
 Status: preparação local, sem teste ou concessão.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1151-trava-envio-legado-auvo-md"
+description: "Documento Sinérgica SO: ADR-1151 — Trava de transição para envio legado Auvo"
+alwaysApply: false
+---
+
 # ADR-1151 — Trava de transição para envio legado Auvo
 
 Status: proposta local, não implantada nem homologada.

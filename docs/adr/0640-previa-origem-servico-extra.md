@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0640-previa-origem-servico-extra-md"
+description: "Documento Sinérgica SO: ADR-0640 — Prévia de origem de serviço extra"
+alwaysApply: false
+---
+
 # ADR-0640 — Prévia de origem de serviço extra
 
 Status: preparado, gate fechado, sem aplicação nem homologação.

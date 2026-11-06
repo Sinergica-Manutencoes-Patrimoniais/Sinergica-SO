@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0820-e01-s180-trava-leitura-legada-md"
+description: "Documento Sinérgica SO: ADR-0820 — Trava de acesso legado a comprovante mediado"
+alwaysApply: false
+---
+
 # ADR-0820 — Trava de acesso legado a comprovante mediado
 
 Status: preparado; exige testes de concorrência, revisão e rollout coordenado.

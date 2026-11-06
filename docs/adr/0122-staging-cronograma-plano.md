@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0122-staging-cronograma-plano-md"
+description: "Documento Sinérgica SO: ADR-0122 — Staging de matrizes de cronograma"
+alwaysApply: false
+---
+
 # ADR-0122 — Staging de matrizes de cronograma
 
 ## Estado

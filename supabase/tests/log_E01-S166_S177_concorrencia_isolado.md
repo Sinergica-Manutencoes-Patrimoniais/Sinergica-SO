@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-log-e01-s166-s177-concorrencia-isolado-md"
+description: "Documento Sinérgica SO: Validação isolada S166/S177 — log da primeira falha"
+alwaysApply: false
+---
+
 # Validação isolada S166/S177 — log da primeira falha
 
 Clone sintético descartável; banco e rede removidos após a sessão. `ON_ERROR_STOP=1`; fixture executada via socket local, sem portas externas. Falha de conexão `dblink` antes das três asserções. Não demonstra falha de regra de negócio.

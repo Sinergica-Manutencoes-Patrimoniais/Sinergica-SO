@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1601-conflito-comparacao-sem-retry-transacional-md"
+description: "Documento Sinérgica SO: ADR 1601 — Conflito de comparação sem retry transacional"
+alwaysApply: false
+---
+
 # ADR 1601 — Conflito de comparação sem retry transacional
 
 Status: aceito para implementação; homologação pendente.

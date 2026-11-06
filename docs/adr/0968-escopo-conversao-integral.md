@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0968-escopo-conversao-integral-md"
+description: "Documento Sinérgica SO: ADR-0968 — Comparação do escopo na conversão integral"
+alwaysApply: false
+---
+
 # ADR-0968 — Comparação do escopo na conversão integral
 
 Status: preparação privada; não homologada. Complementa ADR-0870/0872.

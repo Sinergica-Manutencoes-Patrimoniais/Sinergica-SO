@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0969-ator-conversao-legada-md"
+description: "Documento Sinérgica SO: ADR-0969 — Ator esperado em pedidos anteriores de conversão integral"
+alwaysApply: false
+---
+
 # ADR-0969 — Ator esperado em pedidos anteriores de conversão integral
 
 Status: preparação privada, não homologada.

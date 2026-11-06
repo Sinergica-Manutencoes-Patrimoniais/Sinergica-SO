@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0593-diagnostico-colisoes-legadas-md"
+description: "Documento Sinérgica SO: ADR-0593 — Diagnóstico agregado de códigos legados"
+alwaysApply: false
+---
+
 # ADR-0593 — Diagnóstico agregado de códigos legados
 
 Status: proposta; gate fechado, não homologada.

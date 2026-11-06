@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0812-acesso-mediado-geracao-visita-md"
+description: "Documento Sinérgica SO: ADR 0812 — Acesso mediado à geração contratual de Visita"
+alwaysApply: false
+---
+
 # ADR 0812 — Acesso mediado à geração contratual de Visita
 
 Status: preparado, sem homologação ou ativação.

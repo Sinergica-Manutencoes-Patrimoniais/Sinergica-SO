@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1287-detalhe-ultimo-evento-campo-md"
+description: "Documento Sinérgica SO: ADR 1287 — Detalhe do último evento aceito de campo"
+alwaysApply: false
+---
+
 # ADR 1287 — Detalhe do último evento aceito de campo
 
 ## Contexto

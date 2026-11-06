@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0732-tratamento-individual-ciclo-vencido-md"
+description: "Documento Sinérgica SO: ADR-0732 — Tratamento individual de ciclo vencido por calendário"
+alwaysApply: false
+---
+
 # ADR-0732 — Tratamento individual de ciclo vencido por calendário
 
 ## Status

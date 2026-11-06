@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s177-concorrencia-codigos-md"
+description: "Documento Sinérgica SO: S177 — concorrência de código de rascunho"
+alwaysApply: false
+---
+
 # S177 — concorrência de código de rascunho
 
 Somente banco descartável em rede interna, cron desativado, sem integração externa. Execute como administrador do banco usando duas conexões; não habilite gates fora das transações indicadas. Dados sintéticos `17799500-*` são criados por `E01-S177_snapshot_fixture.sql`; os casos abaixo usam também Componente `...0014`, Cliente `...000a`, usuário `...0001`, código `S177-COMP-OLD-0995` e ciclo de revisão 1 criados exclusivamente no diagnóstico. O caso inverso confirma identificador Auvo **fictício** no Componente sintético; não executar em dados reais.

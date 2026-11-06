@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1200-impedimento-material-os-md"
+description: "Documento Sinérgica SO: ADR-1200 — Impedimento de material na mesma OS"
+alwaysApply: false
+---
+
 # ADR-1200 — Impedimento de material na mesma OS
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0847-resolucao-manual-conflito-webhook-md"
+description: "Documento Sinérgica SO: ADR-0847 — Resolução manual de conflito do webhook"
+alwaysApply: false
+---
+
 # ADR-0847 — Resolução manual de conflito do webhook
 
 Estado: proposta local, não homologada; gate fechado. Complementa ADR-0842 e ADR-0846.

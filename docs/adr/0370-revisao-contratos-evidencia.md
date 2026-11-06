@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0370-revisao-contratos-evidencia-md"
+description: "Documento Sinérgica SO: ADR-0370 — Cópia conservadora de contratos de evidência"
+alwaysApply: false
+---
+
 # ADR-0370 — Cópia conservadora de contratos de evidência
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1406-ciclo-snapshot-capacidade-md"
+description: "Documento Sinérgica SO: ADR-1406 — Identidade canônica no resumo de capacidade"
+alwaysApply: false
+---
+
 # ADR-1406 — Identidade canônica no resumo de capacidade
 
 O snapshot por semana programada pode acrescentar o ciclo canônico às ocorrências de calendário presentes em cada fonte. O vínculo é consultado no servidor para o mesmo Cliente; ausência fica nula e mais de um ciclo distinto interrompe a consulta. A interface considera o ciclo entre identidades para detectar duas OS ou uma OS e ocorrência que representam a mesma obrigação.

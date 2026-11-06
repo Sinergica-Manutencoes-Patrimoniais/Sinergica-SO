@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1225-recibo-decisao-proposta-portal-md"
+description: "Documento Sinérgica SO: ADR-1225 — Recibo de decisão de proposta no Portal"
+alwaysApply: false
+---
+
 # ADR-1225 — Recibo de decisão de proposta no Portal
 
 ## Decisão

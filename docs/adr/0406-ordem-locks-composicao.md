@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0406-ordem-locks-composicao-md"
+description: "Documento Sinérgica SO: ADR-0406 — guarda da concorrência de composição"
+alwaysApply: false
+---
+
 # ADR-0406 — guarda da concorrência de composição
 
 Status: proposto; não aplicado nem homologado.

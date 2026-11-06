@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s180-diagnostico-policies-upload-md"
+description: "Documento Sinérgica SO: E01-S180 — Diagnóstico de policies de upload"
+alwaysApply: false
+---
+
 # E01-S180 — Diagnóstico de policies de upload
 
 Em 30/10/2026, banco sintético reconstruído em rede Docker interna, sem portas

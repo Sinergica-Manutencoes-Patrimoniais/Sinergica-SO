@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0180-classificacao-preliminar-lote-md"
+description: "Documento Sinérgica SO: ADR-0180 — Classificação preliminar de linhas de estrutura"
+alwaysApply: false
+---
+
 # ADR-0180 — Classificação preliminar de linhas de estrutura
 
 ## Decisão

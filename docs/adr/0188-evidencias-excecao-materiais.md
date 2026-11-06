@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0188-evidencias-excecao-materiais-md"
+description: "Documento Sinérgica SO: ADR-0188 — Evidência privada vinculada à exceção de materiais"
+alwaysApply: false
+---
+
 # ADR-0188 — Evidência privada vinculada à exceção de materiais
 
 ## Decisão

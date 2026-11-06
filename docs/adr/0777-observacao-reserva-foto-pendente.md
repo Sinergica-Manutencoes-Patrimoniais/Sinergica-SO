@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0777-observacao-reserva-foto-pendente-md"
+description: "Documento Sinérgica SO: ADR 0777 — Observação auditada de ingestão pendente"
+alwaysApply: false
+---
+
 # ADR 0777 — Observação auditada de ingestão pendente
 
 Quando a localização do objeto reservado não retorna objeto, o serviço registra uma observação idempotente por request, com ator, Cliente, instante e se havia objeto catalogado ou confirmação no momento da observação. Essa é uma fotografia histórica da conferência, não prova de término de upload nem de existência ou integridade dos bytes no Storage. O resultado HTTP continua não confirmado; não se reenvia, exclui, substitui ou confirma objeto nessa etapa.

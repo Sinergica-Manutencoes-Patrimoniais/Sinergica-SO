@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1190-acesso-resultados-por-ativo-md"
+description: "Documento Sinérgica SO: ADR-1190 — Acesso mediado aos resultados por ativo"
+alwaysApply: false
+---
+
 # ADR-1190 — Acesso mediado aos resultados por ativo
 
 **Status:** proposta local; não homologada.

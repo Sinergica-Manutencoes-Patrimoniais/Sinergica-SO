@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0989-impedir-ciclo-hierarquia-aprovacao-md"
+description: "Documento Sinérgica SO: ADR-0989 — Recusa de ciclo na aprovação parcial"
+alwaysApply: false
+---
+
 # ADR-0989 — Recusa de ciclo na aprovação parcial
 
 Status: preparação privada, não homologada.

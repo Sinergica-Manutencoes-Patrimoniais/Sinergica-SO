@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1032-coordenacao-triagem-recepcao-md"
+description: "Documento Sinérgica SO: ADR-1032 — Coordenação da triagem e recepção do envelope"
+alwaysApply: false
+---
+
 # ADR-1032 — Coordenação da triagem e recepção do envelope
 
 Status: preparação local; sem testes, revisão ou liberação.

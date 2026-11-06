@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0965-cursor-gutd-exato-md"
+description: "Documento Sinérgica SO: ADR-0965 — Cursor decimal exato do ranking"
+alwaysApply: false
+---
+
 # ADR-0965 — Cursor decimal exato do ranking
 
 Status: preparação privada, não homologada.

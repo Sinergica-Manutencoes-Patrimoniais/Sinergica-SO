@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0726-permissao-atual-financeiro-direto-md"
+description: "Documento Sinérgica SO: ADR 0726 — Permissão atual em contratos financeiros diretos"
+alwaysApply: false
+---
+
 # ADR 0726 — Permissão atual em contratos financeiros diretos
 
 ## Decisão

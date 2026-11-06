@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1213-historico-despesa-mediado-md"
+description: "Documento Sinérgica SO: ADR-1213 — Histórico mediado de comprovantes de despesa"
+alwaysApply: false
+---
+
 # ADR-1213 — Histórico mediado de comprovantes de despesa
 
 ## Decisão

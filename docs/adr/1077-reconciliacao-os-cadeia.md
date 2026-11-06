@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1077-reconciliacao-os-cadeia-md"
+description: "Documento Sinérgica SO: ADR-1077 — Reconciliação de OS de continuidade"
+alwaysApply: false
+---
+
 # ADR-1077 — Reconciliação de OS de continuidade
 
 Status: proposta local, não aplicada nem homologada.

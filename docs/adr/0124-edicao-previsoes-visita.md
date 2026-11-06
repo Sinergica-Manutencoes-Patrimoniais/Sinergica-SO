@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0124-edicao-previsoes-visita-md"
+description: "Documento Sinérgica SO: ADR-0124 — Alteração e cancelamento de previsão de despesa"
+alwaysApply: false
+---
+
 # ADR-0124 — Alteração e cancelamento de previsão de despesa
 
 ## Estado

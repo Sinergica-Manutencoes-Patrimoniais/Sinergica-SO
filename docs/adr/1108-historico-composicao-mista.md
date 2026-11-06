@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1108-historico-composicao-mista-md"
+description: "Documento Sinérgica SO: ADR-1108 — Histórico de fontes da composição mista"
+alwaysApply: false
+---
+
 # ADR-1108 — Histórico de fontes da composição mista
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1556-validadores-obrigatorios-aprovacao-md"
+description: "Documento Sinérgica SO: ADR-1556 — Validadores oficiais obrigatórios na aprovação mediada"
+alwaysApply: false
+---
+
 # ADR-1556 — Validadores oficiais obrigatórios na aprovação mediada
 
 A proteção 1045 bloqueia toda revisão. Os validadores de continuidade, comparação e fuso já existem, mas alguns retornam sem validar quando sua configuração está desligada. Simplesmente retirar 1045 permitiria aprovação com proteção parcial.

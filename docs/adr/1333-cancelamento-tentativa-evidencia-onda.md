@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1333-cancelamento-tentativa-evidencia-onda-md"
+description: "Documento Sinérgica SO: ADR-1333 — Cancelamento de tentativa de evidência de onda"
+alwaysApply: false
+---
+
 # ADR-1333 — Cancelamento de tentativa de evidência de onda
 
 Status: preparado, gate e interface desligados.

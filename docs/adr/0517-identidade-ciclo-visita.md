@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0517-identidade-ciclo-visita-md"
+description: "Documento Sinérgica SO: ADR-0517 — Identidade canônica de ciclo por Visita"
+alwaysApply: false
+---
+
 # ADR-0517 — Identidade canônica de ciclo por Visita
 
 Status: preparado, gate desligado, não aplicado nem homologado. A identidade usa Plano, Rotina lógica, alvo, série contratual e semana original; o snapshot aprovado e a origem contratual existente são verificados. Versões com a mesma identidade compartilham ciclo sem confundir com o namespace separado de calendário. Datas e reprogramações não são usadas como identidade.

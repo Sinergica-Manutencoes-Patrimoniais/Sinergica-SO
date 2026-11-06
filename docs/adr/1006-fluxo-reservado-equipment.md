@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1006-fluxo-reservado-equipment-md"
+description: "Documento Sinérgica SO: ADR-1006 — Fluxo reservado de Equipment no worker"
+alwaysApply: false
+---
+
 # ADR-1006 — Fluxo reservado de Equipment no worker
 
 Status: preparação fechada, não homologada. Complementa ADR-1002 e ADR-1005.

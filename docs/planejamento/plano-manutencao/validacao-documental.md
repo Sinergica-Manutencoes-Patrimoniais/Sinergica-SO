@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-validacao-documental-md"
+description: "Documento Sinérgica SO: Validação documental — programa SSO"
+alwaysApply: false
+---
+
 # Validação documental — programa SSO
 
 **Data:** 2026-10-26 · **Branch:** `codex/handoff-plano-manutencao`.

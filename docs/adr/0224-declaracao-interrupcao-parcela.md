@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0224-declaracao-interrupcao-parcela-md"
+description: "Documento Sinérgica SO: ADR-0224 — Declaração rastreável de interrupção por parcela e OS"
+alwaysApply: false
+---
+
 # ADR-0224 — Declaração rastreável de interrupção por parcela e OS
 
 ## Decisão

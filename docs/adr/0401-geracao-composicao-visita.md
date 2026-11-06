@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0401-geracao-composicao-visita-md"
+description: "Documento Sinérgica SO: ADR-0401 — geração monotônica da composição da Visita"
+alwaysApply: false
+---
+
 # ADR-0401 — geração monotônica da composição da Visita
 
 Status: proposto; gate fechado, sem aplicação ou homologação.

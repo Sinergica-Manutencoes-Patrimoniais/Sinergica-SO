@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0142-mapeamento-cronograma-staging-md"
+description: "Documento Sinérgica SO: ADR-0142 — Mapeamento explícito em staging de cronogramas"
+alwaysApply: false
+---
+
 # ADR-0142 — Mapeamento explícito em staging de cronogramas
 
 Status: proposta; não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1130-observacao-processamento-demorado-md"
+description: "Documento Sinérgica SO: ADR-1130 — Observação persistente de processamento demorado"
+alwaysApply: false
+---
+
 # ADR-1130 — Observação persistente de processamento demorado
 
 Status: proposta local, não aplicada nem homologada.

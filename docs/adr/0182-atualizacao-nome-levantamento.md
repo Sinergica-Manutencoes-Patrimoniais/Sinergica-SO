@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0182-atualizacao-nome-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0182 — Atualização restrita de nome por levantamento"
+alwaysApply: false
+---
+
 # ADR-0182 — Atualização restrita de nome por levantamento
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0977-atribuicao-ciclo-posterior-md"
+description: "Documento Sinérgica SO: ADR-0977 — Atribuição de parcela de ciclo posterior"
+alwaysApply: false
+---
+
 # ADR-0977 — Atribuição de parcela de ciclo posterior
 
 Status: preparação privada, não homologada.

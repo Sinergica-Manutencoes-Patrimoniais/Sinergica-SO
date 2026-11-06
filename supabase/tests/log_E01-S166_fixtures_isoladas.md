@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-log-e01-s166-fixtures-isoladas-md"
+description: "Documento Sinérgica SO: Logs das fixtures SQL verificadas em clone sintético"
+alwaysApply: false
+---
+
 # Logs das fixtures SQL verificadas em clone sintético
 
 Execução isolada; saídas preservadas sem credenciais de conexão.

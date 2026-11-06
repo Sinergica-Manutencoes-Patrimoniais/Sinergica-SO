@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0607-vinculo-declarado-execucao-linha-md"
+description: "Documento Sinérgica SO: ADR-0607 — Vínculo declarado entre resposta e linha aceita"
+alwaysApply: false
+---
+
 # ADR-0607 — Vínculo declarado entre resposta e linha aceita
 
 Status: preparado, não aplicado nem validado. Gate fechado.

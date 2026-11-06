@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0751-mediacao-upload-comprovantes-md"
+description: "Documento Sinérgica SO: ADR-0751 — Mediação de upload de comprovantes de despesa"
+alwaysApply: false
+---
+
 # ADR-0751 — Mediação de upload de comprovantes de despesa
 
 Status: experimental, gate fechado; não homologado.

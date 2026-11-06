@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0441-relacao-plano-legado-declarada-md"
+description: "Documento Sinérgica SO: ADR-0441 — Relação declarada entre Planos"
+alwaysApply: false
+---
+
 # ADR-0441 — Relação declarada entre Planos
 
 Status: preparado, gate fechado, não aplicado nem homologado. PCM autorizado declara ou retira relação entre Plano SSO e Plano Preventivo legado do mesmo Cliente, com motivo, revisão por par, idempotência e histórico imutável. Relações múltiplas não são proibidas nem consolidadas automaticamente.

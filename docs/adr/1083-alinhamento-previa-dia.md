@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1083-alinhamento-previa-dia-md"
+description: "Documento Sinérgica SO: ADR-1083 — Alinhamento da prévia de mudança de dia"
+alwaysApply: false
+---
+
 # ADR-1083 — Alinhamento da prévia de mudança de dia
 
 Status: proposta local, não aplicada nem homologada.

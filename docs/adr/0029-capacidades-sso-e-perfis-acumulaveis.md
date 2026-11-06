@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0029-capacidades-sso-e-perfis-acumulaveis-md"
+description: "Documento Sinérgica SO: ADR-0029 — Capacidades por ação e perfis acumuláveis"
+alwaysApply: false
+---
+
 # ADR-0029 — Capacidades por ação e perfis acumuláveis
 
 **Status:** Decisão para implementação local da E01-S170. **Data:** 2026-10-26.

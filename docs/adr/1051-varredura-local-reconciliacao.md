@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1051-varredura-local-reconciliacao-md"
+description: "Documento Sinérgica SO: ADR-1051 — Registro de observações da fila para reconciliação"
+alwaysApply: false
+---
+
 # ADR-1051 — Registro de observações da fila para reconciliação
 
 **Status:** preparação privada, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0294-declaracao-fornecimento-material-md"
+description: "Documento Sinérgica SO: ADR-0294 — Declaração revisável de fornecimento de material"
+alwaysApply: false
+---
+
 # ADR-0294 — Declaração revisável de fornecimento de material
 
 Status: proposta; gates fechados, sem testes.

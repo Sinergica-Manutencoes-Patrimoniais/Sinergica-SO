@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1590-excecao-visita-protegida-md"
+description: "Documento Sinérgica SO: ADR 1590 — Exceção aprovada de Visita protegida"
+alwaysApply: false
+---
+
 # ADR 1590 — Exceção aprovada de Visita protegida
 
 ## Contexto

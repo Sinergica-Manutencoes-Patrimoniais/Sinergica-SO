@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1377-confirmar-fila-preventiva-md"
+description: "Documento Sinérgica SO: ADR-1377 — Confirmação de entrada preventiva em verificação"
+alwaysApply: false
+---
+
 # ADR-1377 — Confirmação de entrada preventiva em verificação
 
 **Estado:** proposta; não aplicada nem homologada.

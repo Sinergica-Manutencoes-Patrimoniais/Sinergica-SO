@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0359-fila-comunicacoes-portal-md"
+description: "Documento Sinérgica SO: ADR-0359 — Fila de comunicações públicas"
+alwaysApply: false
+---
+
 # ADR-0359 — Fila de comunicações públicas
 
 Status: proposta; gates fechados, sem testes.

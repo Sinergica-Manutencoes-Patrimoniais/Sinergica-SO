@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0046-revisao-plano-sem-efeito-operacional-md"
+description: "Documento Sinérgica SO: ADR-0046 — Submissão e devolução de Plano para revisão"
+alwaysApply: false
+---
+
 # ADR-0046 — Submissão e devolução de Plano para revisão
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

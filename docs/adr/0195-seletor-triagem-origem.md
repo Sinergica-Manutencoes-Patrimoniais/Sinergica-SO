@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0195-seletor-triagem-origem-md"
+description: "Documento Sinérgica SO: ADR-0195 — Seleção mínima de Cliente para triagem"
+alwaysApply: false
+---
+
 # ADR-0195 — Seleção mínima de Cliente para triagem
 
 ## Decisão

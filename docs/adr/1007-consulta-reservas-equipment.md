@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1007-consulta-reservas-equipment-md"
+description: "Documento Sinérgica SO: ADR-1007 — Consulta de reservas Equipment pendentes"
+alwaysApply: false
+---
+
 # ADR-1007 — Consulta de reservas Equipment pendentes
 
 Status: preparação privada, não homologada.

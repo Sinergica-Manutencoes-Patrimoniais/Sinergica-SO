@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1384-snapshot-capacidade-semana-programada-md"
+description: "Documento Sinérgica SO: ADR-1384 — Snapshot de capacidade com semana programada"
+alwaysApply: false
+---
+
 # ADR-1384 — Snapshot de capacidade com semana programada
 
 **Estado:** proposta; não aplicada nem homologada.

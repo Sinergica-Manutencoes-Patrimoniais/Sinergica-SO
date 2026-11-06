@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0635-revisao-origens-reconciliacao-md"
+description: "Documento Sinérgica SO: ADR-0635 — Revisão de origens na reconciliação"
+alwaysApply: false
+---
+
 # ADR-0635 — Revisão de origens na reconciliação
 
 Com gate fechado não há mudança no comando legado. Quando habilitado, registra-se ao lado de cada nova decisão a revisão e o estado da declaração de material e a identidade imutável da declaração de serviço. A ordem é request, par, linha de material; o bloqueio da linha serializa alterações normais de material. Retry de decisão anterior sem metadado não inventa uma revisão histórica.

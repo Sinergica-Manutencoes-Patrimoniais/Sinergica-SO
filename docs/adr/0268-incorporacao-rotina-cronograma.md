@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0268-incorporacao-rotina-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0268 — Incorporação de linha aprovada ao Plano rascunho"
+alwaysApply: false
+---
+
 # ADR-0268 — Incorporação de linha aprovada ao Plano rascunho
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1622-regras-feriado-conflito-sem-retry-md"
+description: "Documento Sinérgica SO: ADR 1622 — Revisão de regra e decisão de feriado"
+alwaysApply: false
+---
+
 # ADR 1622 — Revisão de regra e decisão de feriado
 
 Status: aceito para implementação; homologação pendente.

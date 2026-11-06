@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s176-legado-pre-guarda-md"
+description: "Documento Sinérgica SO: E01-S176 — fixture legada anterior às guards"
+alwaysApply: false
+---
+
 # E01-S176 — fixture legada anterior às guards
 
 **Roteiro preparado, não executado.** Usar clone **somente de schema**, descartável e isolado,

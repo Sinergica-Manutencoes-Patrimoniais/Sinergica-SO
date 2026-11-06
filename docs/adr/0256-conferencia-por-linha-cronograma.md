@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0256-conferencia-por-linha-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0256 — Conferência conjunta de linha de cronograma"
+alwaysApply: false
+---
+
 # ADR-0256 — Conferência conjunta de linha de cronograma
 
 Status: proposta, não homologada.

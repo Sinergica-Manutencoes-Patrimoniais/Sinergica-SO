@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0769-autorizacao-atual-ingestao-fotos-md"
+description: "Documento Sinérgica SO: ADR-0769 — Autorização atual na ingestão e leitura de fotos"
+alwaysApply: false
+---
+
 # ADR-0769 — Autorização atual na ingestão e leitura de fotos
 
 ## Problema

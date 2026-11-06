@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1389-copia-plano-mediada-md"
+description: "Documento Sinérgica SO: ADR-1389 — Cópia de Plano por entrada mediada"
+alwaysApply: false
+---
+
 # ADR-1389 — Cópia de Plano por entrada mediada
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1605-fila-visita-conflito-sem-retry-md"
+description: "Documento Sinérgica SO: ADR-1605: conflito definitivo da fila de Visita"
+alwaysApply: false
+---
+
 # ADR-1605: conflito definitivo da fila de Visita
 
 Cancelamento ou confirmação da fila de Visita com revisão ou estado divergente é rejeição definitiva do pedido. O SQLSTATE `40001` leva o PostgREST de ensaio a repetir a transação, mantendo a chamada pendente.

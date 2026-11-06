@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0291-fechamento-origem-proposta-md"
+description: "Documento Sinérgica SO: ADR-0291 — Serialização de origem e fechamento"
+alwaysApply: false
+---
+
 # ADR-0291 — Serialização de origem e fechamento
 
 Status: proposta; gates e funções fechados, validação pendente.

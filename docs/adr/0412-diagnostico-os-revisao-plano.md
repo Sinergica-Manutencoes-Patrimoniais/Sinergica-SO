@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0412-diagnostico-os-revisao-plano-md"
+description: "Documento Sinérgica SO: ADR-0412 — Fotografia das OS na revisão de Plano"
+alwaysApply: false
+---
+
 # ADR-0412 — Fotografia das OS na revisão de Plano
 
 Status: preparado, gate desligado, não aplicado nem homologado. Consulta autorizada conta ocorrências preparadas por calendário e OS vinculadas por ponte legada, incluindo contagem agregada de divergências de Cliente sem expor identificadores. Revisão do Plano é conferida, mas a consulta não bloqueia escritores e é apenas fotografia.

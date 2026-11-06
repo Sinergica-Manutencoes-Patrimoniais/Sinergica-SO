@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1092-entrada-periodica-os-md"
+description: "Documento Sinérgica SO: ADR-1092 — Entrada de serviço para tick periódico de OS"
+alwaysApply: false
+---
+
 # ADR-1092 — Entrada de serviço para tick periódico de OS
 
 Status: proposta local, não aplicada nem homologada.

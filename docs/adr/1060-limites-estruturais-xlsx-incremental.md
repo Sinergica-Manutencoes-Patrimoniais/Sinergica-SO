@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1060-limites-estruturais-xlsx-incremental-md"
+description: "Documento Sinérgica SO: ADR-1060 — Limites estruturais do leitor incremental XLSX"
+alwaysApply: false
+---
+
 # ADR-1060 — Limites estruturais do leitor incremental XLSX
 
 **Status:** preparação isolada, não homologada. Complementa ADR-0940/0941.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1022-feriado-ocorrencia-visita-md"
+description: "Documento Sinérgica SO: ADR-1022 — Conferência de feriado na ocorrência por Visita"
+alwaysApply: false
+---
+
 # ADR-1022 — Conferência de feriado na ocorrência por Visita
 
 Status: preparação fechada, não homologada.

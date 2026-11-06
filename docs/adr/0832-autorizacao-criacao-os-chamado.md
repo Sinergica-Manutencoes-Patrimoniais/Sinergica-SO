@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0832-autorizacao-criacao-os-chamado-md"
+description: "Documento Sinérgica SO: ADR-0832 — Serialização da autorização de criação de OS do Chamado"
+alwaysApply: false
+---
+
 # ADR-0832 — Serialização da autorização de criação de OS do Chamado
 
 Estado: proposta local, não homologada. Complementa ADR-0107; não habilita criação múltipla.

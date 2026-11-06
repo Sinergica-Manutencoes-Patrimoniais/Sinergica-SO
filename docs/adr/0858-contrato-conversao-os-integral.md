@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0858-contrato-conversao-os-integral-md"
+description: "Documento Sinérgica SO: ADR 0858 — Contrato integral da conversão de Chamado em OS"
+alwaysApply: false
+---
+
 # ADR 0858 — Contrato integral da conversão de Chamado em OS
 
 O comando preparado 0324 não substitui a conversão legada: recebe subconjunto dos campos, força destino `convertido_os`, suprime a sincronização e não incorpora o movimento posterior no Hub. Adaptá-lo silenciosamente descartaria dados ou efeitos. O retry legado também não prova que OS encontrada corresponde ao comando que falhou.

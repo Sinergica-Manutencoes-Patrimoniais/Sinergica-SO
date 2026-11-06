@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0807-origem-revisao-existencia-evento-md"
+description: "Documento Sinérgica SO: ADR-0807 — Comando único e existência do evento de revisão"
+alwaysApply: false
+---
+
 # ADR-0807 — Comando único e existência do evento de revisão
 
 Status: preparado; não homologado. A prévia 0314 conta linhas de um JOIN entre comando e eventos de auditoria. Um segundo evento que repete todos os campos correlacionados multiplica o mesmo comando e bloqueia a prévia. Isso foi reproduzido com INSERT de `service_role`, que tem BYPASSRLS e INSERT em `audit.events`; o papel não possui acesso direto a `pcm.plano_comandos`. Não foi demonstrada falsificação de comando ou alteração de origem.

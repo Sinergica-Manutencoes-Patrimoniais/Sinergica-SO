@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0027-orcamento-canonico-e-faturamento-operacional-md"
+description: "Documento Sinérgica SO: ADR-0027 — Orçamento canônico, despesas e faturáveis"
+alwaysApply: false
+---
+
 # ADR-0027 — Orçamento canônico, despesas e faturáveis
 
 **Status:** Proposta técnica especificada. **Data:** 2026-10-26.

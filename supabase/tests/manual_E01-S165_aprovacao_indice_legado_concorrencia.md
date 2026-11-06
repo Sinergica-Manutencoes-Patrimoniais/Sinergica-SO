@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-aprovacao-indice-legado-concorrencia-md"
+description: "Documento Sinérgica SO: Aprovação e mediador do índice legado concorrentes"
+alwaysApply: false
+---
+
 # Aprovação e mediador do índice legado concorrentes
 
 Usar exclusivamente clone descartável isolado com migrations até 1724. Preparar `manual_E01-S165_aprovacao_reserva_rascunho_1722.sql` até a linha anterior a `create or replace function pcm.sso_bloquear_aprovacao_impacto_indeterminado()`, incluindo os arquivos `\ir` recursivamente. Confirmar somente os dados sintéticos para permitir duas sessões. No clone, o mediador `pcm.sso_indice_legado_reservado_sso('17220000-1111-4000-8000-000000000097',0)` deve retornar `false`.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1593-integracao-legada-existente-mediada-md"
+description: "Documento Sinérgica SO: ADR 1593 — Integração mediada de ocorrência legada existente"
+alwaysApply: false
+---
+
 # ADR 1593 — Integração mediada de ocorrência legada existente
 
 O núcleo 0718 já permite vincular, por escolha humana, uma ocorrência legada existente e inerte ao ciclo SSO; não possui entrada autenticada. A materialização 0764 recusa vencidos, inclusive após decisão preliminar PCM. Expor o núcleo por mediador permite tratar vínculo já existente sem criar obrigação retroativa automática.

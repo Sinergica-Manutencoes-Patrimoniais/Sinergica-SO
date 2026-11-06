@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1247-consulta-codigo-grupo-md"
+description: "Documento Sinérgica SO: ADR-1247 — Consulta de código atual ou histórico de Grupo"
+alwaysApply: false
+---
+
 # ADR-1247 — Consulta de código atual ou histórico de Grupo
 
 **Status:** proposta local, não homologada. Complementa ADR-1244 a 1246.

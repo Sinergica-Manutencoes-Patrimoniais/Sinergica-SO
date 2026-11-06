@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1115-decisao-correlacao-gasto-md"
+description: "Documento Sinérgica SO: ADR-1115 — Revisão de correlação declarada de gasto"
+alwaysApply: false
+---
+
 # ADR-1115 — Revisão de correlação declarada de gasto
 
 Status: proposta local, não aplicada nem homologada.

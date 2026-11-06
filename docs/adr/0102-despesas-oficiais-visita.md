@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0102-despesas-oficiais-visita-md"
+description: "Documento Sinérgica SO: ADR-0102 — Despesa oficial por Visita e vínculos protegidos"
+alwaysApply: false
+---
+
 # ADR-0102 — Despesa oficial por Visita e vínculos protegidos
 
 ## Estado

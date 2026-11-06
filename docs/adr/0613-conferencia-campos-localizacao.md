@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0613-conferencia-campos-localizacao-md"
+description: "Documento Sinérgica SO: ADR-0613 — Conferência versionada de campos de localização"
+alwaysApply: false
+---
+
 # ADR-0613 — Conferência versionada de campos de localização
 
 Status: proposta; gate fechado, não homologada.

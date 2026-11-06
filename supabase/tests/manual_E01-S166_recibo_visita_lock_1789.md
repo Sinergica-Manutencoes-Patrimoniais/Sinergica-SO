@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-recibo-visita-lock-1789-md"
+description: "Documento Sinérgica SO: Recibo anterior: disputa por request"
+alwaysApply: false
+---
+
 # Recibo anterior: disputa por request
 
 Executar somente em clone descartável com migrations até 1789. Preparar os dados sintéticos de `manual_E01-S166_fila_visita_fixture.sql` em transação confirmada no clone e localizar, como administrador, o único registro de `pcm.calendario_contratual_comandos` cujo payload tem `tipo = 'prepararOcorrenciaVisita'` para o Cliente da fixture. Usar exclusivamente seus valores sintéticos nesta sequência; não usar dados reais. Antes do ensaio anotar contagens de ocorrências preparadas, comandos, OS, outbox e auditoria.

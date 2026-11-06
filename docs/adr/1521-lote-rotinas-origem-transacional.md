@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1521-lote-rotinas-origem-transacional-md"
+description: "Documento Sinérgica SO: ADR-1521 — Janela multirrotina com origem conferida"
+alwaysApply: false
+---
+
 # ADR-1521 — Janela multirrotina com origem conferida
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0336-previa-cobertura-por-pergunta-md"
+description: "Documento Sinérgica SO: ADR-0336 — Prévia de cobertura por pergunta histórica"
+alwaysApply: false
+---
+
 # ADR-0336 — Prévia de cobertura por pergunta histórica
 
 Status: proposta, não homologada.

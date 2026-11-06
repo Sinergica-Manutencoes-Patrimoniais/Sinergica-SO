@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0134-incorporacao-ativos-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0134 — Incorporação de ativos do levantamento"
+alwaysApply: false
+---
+
 # ADR-0134 — Incorporação de ativos do levantamento
 
 ## Estado

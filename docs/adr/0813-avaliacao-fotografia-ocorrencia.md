@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0813-avaliacao-fotografia-ocorrencia-md"
+description: "Documento Sinérgica SO: ADR-0813 — Avaliação de decisão comparada à ocorrência fotografada"
+alwaysApply: false
+---
+
 # ADR-0813 — Avaliação de decisão comparada à ocorrência fotografada
 
 Status: preparado, não homologado. A decisão 0773 guarda fotografia integral da ocorrência preparada; a avaliação 0775 verificava revisão, ponte e OS, mas não comparava a ocorrência atual com a fotografia. Em teste sintético, mudar tolerância por escrita privilegiada preservou equivocadamente `decisoesObsoletas=0`.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0964-ranking-unificado-backlog-md"
+description: "Documento Sinérgica SO: ADR-0964 — Consulta unificada experimental de Backlog"
+alwaysApply: false
+---
+
 # ADR-0964 — Consulta unificada experimental de Backlog
 
 Status: preparação privada, não homologada.

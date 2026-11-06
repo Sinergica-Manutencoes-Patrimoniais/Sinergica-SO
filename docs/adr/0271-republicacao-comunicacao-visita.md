@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0271-republicacao-comunicacao-visita-md"
+description: "Documento Sinérgica SO: ADR-0271 — Republicação da comunicação de visita"
+alwaysApply: false
+---
+
 # ADR-0271 — Republicação da comunicação de visita
 
 Status: proposta; não ativar sem revisão e testes.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1264-configuracao-executor-fila-md"
+description: "Documento Sinérgica SO: ADR-1264 — Configuração auditada do executor de fila"
+alwaysApply: false
+---
+
 # ADR-1264 — Configuração auditada do executor de fila
 
 **Status:** proposta local, não homologada.

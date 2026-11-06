@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1205-leitura-mediada-reservas-equipment-md"
+description: "Documento Sinérgica SO: ADR-1205 — Leitura mediada das reservas Equipment"
+alwaysApply: false
+---
+
 # ADR-1205 — Leitura mediada das reservas Equipment
 
 ## Decisão

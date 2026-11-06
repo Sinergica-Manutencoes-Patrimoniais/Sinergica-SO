@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0215-vinculo-pendencia-parcela-md"
+description: "Documento Sinérgica SO: ADR-0215 — Vínculo de Pendência a parcela existente"
+alwaysApply: false
+---
+
 # ADR-0215 — Vínculo de Pendência a parcela existente
 
 ## Decisão

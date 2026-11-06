@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s168-inventario-fontes-origem-md"
+description: "Documento Sinérgica SO: Inventário de fontes da origem S168/S173"
+alwaysApply: false
+---
+
 # Inventário de fontes da origem S168/S173
 
 Análise e ensaios em clone sintético de schema `sso_s168_plano_race`, sem dados reais, cron ou rede externa. Gates abertos apenas nesse clone; clone removido depois.

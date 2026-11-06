@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1507-fila-visita-revalidacao-md"
+description: "Documento Sinérgica SO: ADR-1507 — Revalidação da fonte da fila de Visita"
+alwaysApply: false
+---
+
 # ADR-1507 — Revalidação da fonte da fila de Visita
 
 ## Contexto

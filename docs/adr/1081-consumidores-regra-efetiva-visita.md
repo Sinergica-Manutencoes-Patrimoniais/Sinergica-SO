@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1081-consumidores-regra-efetiva-visita-md"
+description: "Documento Sinérgica SO: ADR-1081 — Regra efetiva nos consumidores de ocorrência"
+alwaysApply: false
+---
+
 # ADR-1081 — Regra efetiva nos consumidores de ocorrência
 
 Status: proposta local, não aplicada nem homologada.

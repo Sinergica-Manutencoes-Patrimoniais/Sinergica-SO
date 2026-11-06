@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0509-materializacao-ciclo-canonico-md"
+description: "Documento Sinérgica SO: ADR-0509 — Materialização conservadora por identidade canônica"
+alwaysApply: false
+---
+
 # ADR-0509 — Materialização conservadora por identidade canônica
 
 Status: preparado, gates desligados, não aplicado nem homologado. O comando processa um ciclo na janela da implementação 0337, calcula a identidade 0731 e registra uso por versão. Ocorrência anterior só é reutilizada se sua série/índice/regra/âncora/identidade coincidirem; coincidência apenas de data com outra regra é bloqueada para reconciliação. Quando não existe, usa 0337 e identifica o ciclo na mesma transação; não cria OS ou tarefa.

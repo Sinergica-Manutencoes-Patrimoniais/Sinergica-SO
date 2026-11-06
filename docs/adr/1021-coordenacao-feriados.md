@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1021-coordenacao-feriados-md"
+description: "Documento Sinérgica SO: ADR-1021 — Coordenação de declarações de feriado"
+alwaysApply: false
+---
+
 # ADR-1021 — Coordenação de declarações de feriado
 
 Status: preparação privada, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1038-diagnostico-continuidade-devolvida-md"
+description: "Documento Sinérgica SO: ADR-1038 — Diagnóstico conservador de continuidade devolvida"
+alwaysApply: false
+---
+
 # ADR-1038 — Diagnóstico conservador de continuidade devolvida
 
 Status: preparado, sem aplicação, concessão ou testes.

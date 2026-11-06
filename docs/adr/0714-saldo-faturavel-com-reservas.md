@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0714-saldo-faturavel-com-reservas-md"
+description: "Documento Sinérgica SO: ADR-0714 — Saldo de faturável com reservas"
+alwaysApply: false
+---
+
 # ADR-0714 — Saldo de faturável com reservas
 
 Status: preparado, não aplicado nem homologado.

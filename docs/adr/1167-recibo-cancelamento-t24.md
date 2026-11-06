@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1167-recibo-cancelamento-t24-md"
+description: "Documento Sinérgica SO: ADR-1167 — Recuperação de cancelamento T−24"
+alwaysApply: false
+---
+
 # ADR-1167 — Recuperação de cancelamento T−24
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1217-recibo-atribuicao-tecnico-despesa-md"
+description: "Documento Sinérgica SO: ADR-1217 — Recibo de atribuição de técnico à despesa"
+alwaysApply: false
+---
+
 # ADR-1217 — Recibo de atribuição de técnico à despesa
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1609-escolhas-data-conflitos-sem-retry-md"
+description: "Documento Sinérgica SO: ADR 1609 — Conflitos nas escolhas de nova data"
+alwaysApply: false
+---
+
 # ADR 1609 — Conflitos nas escolhas de nova data
 
 Status: aceito para implementação; homologação pendente.

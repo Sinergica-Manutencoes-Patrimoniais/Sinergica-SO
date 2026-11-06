@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1385-vinculo-os-grupo-mediado-md"
+description: "Documento Sinérgica SO: ADR-1385 — Vínculo de OS ao Grupo mediado"
+alwaysApply: false
+---
+
 # ADR-1385 — Vínculo de OS ao Grupo mediado
 
 **Estado:** proposta; não aplicada nem homologada.

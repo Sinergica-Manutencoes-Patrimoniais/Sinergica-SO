@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0864-numeracao-escritor-auvo-md"
+description: "Documento Sinérgica SO: ADR 0864 — Número explícito no escritor Auvo"
+alwaysApply: false
+---
+
 # ADR 0864 — Número explícito no escritor Auvo
 
 Os escritores Auvo criam um Chamado novo por tarefa e inserem OS sem número, dependendo do trigger legado. Como a transição 1:N exige substituí-lo, passarão a enviar explicitamente o número já atribuído ao próprio Chamado recém-criado. Enquanto o trigger existir ele reescreve o mesmo valor; quando não existir, o INSERT continuará tendo número válido. Nenhum código histórico é alterado e esse caminho não cria múltiplas OS para um Chamado existente.

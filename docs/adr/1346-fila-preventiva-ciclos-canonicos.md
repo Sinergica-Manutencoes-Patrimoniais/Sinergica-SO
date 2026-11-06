@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1346-fila-preventiva-ciclos-canonicos-md"
+description: "Documento Sinérgica SO: ADR-1346 — Entrada explícita de ciclo canônico na fila preventiva"
+alwaysApply: false
+---
+
 # ADR-1346 — Entrada explícita de ciclo canônico na fila preventiva
 
 Status: preparado, gate desligado; não homologado.

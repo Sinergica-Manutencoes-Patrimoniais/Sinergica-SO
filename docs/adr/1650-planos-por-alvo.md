@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1650-planos-por-alvo-md"
+description: "Documento Sinérgica SO: ADR-1650 — Consulta inversa de Planos por alvo"
+alwaysApply: false
+---
+
 # ADR-1650 — Consulta inversa de Planos por alvo
 
 ## Estado

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0227-seletor-interrupcao-parcela-md"
+description: "Documento Sinérgica SO: ADR-0227 — Seleção de OS para declaração de interrupção"
+alwaysApply: false
+---
+
 # ADR-0227 — Seleção de OS para declaração de interrupção
 
 ## Decisão

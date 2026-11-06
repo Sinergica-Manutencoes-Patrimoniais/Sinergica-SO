@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0156-esforco-continuidade-os-md"
+description: "Documento Sinérgica SO: ADR-0156 — Esforço restante da OS de continuidade"
+alwaysApply: false
+---
+
 # ADR-0156 — Esforço restante da OS de continuidade
 
 Status: proposta, não homologada.

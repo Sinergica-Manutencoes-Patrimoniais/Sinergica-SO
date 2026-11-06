@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0874-s179-criacao-lista-mediada-md"
+description: "Documento Sinérgica SO: ADR 0874 — Mediação da criação de lista de materiais"
+alwaysApply: false
+---
+
 # ADR 0874 — Mediação da criação de lista de materiais
 
 ## Contexto

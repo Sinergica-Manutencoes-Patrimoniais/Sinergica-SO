@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1544-versao-operacional-efetiva-ciclo-md"
+description: "Documento Sinérgica SO: ADR-1544 — Versão operacional efetiva de ocorrência revisada"
+alwaysApply: false
+---
+
 # ADR-1544 — Versão operacional efetiva de ocorrência revisada
 
 Status: proposta em desenvolvimento; não habilita aprovação, geração ou integração Auvo. A guarda 1045 permanece incondicional.

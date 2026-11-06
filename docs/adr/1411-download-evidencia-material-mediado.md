@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1411-download-evidencia-material-mediado-md"
+description: "Documento Sinérgica SO: ADR-1411 — Download mediado de evidência de materiais"
+alwaysApply: false
+---
+
 # ADR-1411 — Download mediado de evidência de materiais
 
 ## Decisão

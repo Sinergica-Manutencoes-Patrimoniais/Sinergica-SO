@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0043-criacao-rotina-completa-md"
+description: "Documento Sinérgica SO: ADR-0043 — Criação completa de Rotina em rascunho"
+alwaysApply: false
+---
+
 # ADR-0043 — Criação completa de Rotina em rascunho
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s167-componentes-concorrencia-md"
+description: "Documento Sinérgica SO: S167 — concorrência da leitura de Componentes"
+alwaysApply: false
+---
+
 # S167 — concorrência da leitura de Componentes
 
 Somente clone descartável, em rede interna e sem `cron`/`net`. Aplicar 1055 e executar `E01-S167_componentes_corrida_setup.sql` no clone; manter a base diagnóstica principal e seu gate inalterados. A fixture usa UUIDs `16798111-*`, usuário superadmin sintético e uma concessão por Cliente.

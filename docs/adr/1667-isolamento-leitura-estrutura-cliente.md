@@ -1,3 +1,9 @@
+---
+name: adr-1667-isolamento-leitura-estrutura-cliente
+description: Define isolamento por Cliente nas consultas diretas da estrutura técnica.
+alwaysApply: false
+---
+
 # ADR-1667 — Isolamento de leitura da estrutura por Cliente
 
 Status: proposta. O gate nasce desligado. Com gate desligado permanecem efetivas as políticas legadas por módulo PCM e existe vazamento por consulta direta entre Clientes; isso bloqueia release. As novas superfícies de composição permanecem bloqueadas para release enquanto o gate estiver desligado; seu uso seguro exige mediadores transacionais que leiam sob a mesma trava do gate. Uma consulta de preflight separada não é garantia de segurança.

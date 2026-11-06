@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0222-suspensao-canonica-chamado-md"
+description: "Documento Sinérgica SO: ADR-0222 — Declaração canônica de suspensão de Chamado"
+alwaysApply: false
+---
+
 # ADR-0222 — Declaração canônica de suspensão de Chamado
 
 ## Decisão

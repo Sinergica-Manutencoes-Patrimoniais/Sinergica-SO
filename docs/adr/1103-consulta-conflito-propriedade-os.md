@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1103-consulta-conflito-propriedade-os-md"
+description: "Documento Sinérgica SO: ADR-1103 — Consulta de conflito de propriedade de OS"
+alwaysApply: false
+---
+
 # ADR-1103 — Consulta de conflito de propriedade de OS
 
 Status: proposta local, não aplicada nem homologada.

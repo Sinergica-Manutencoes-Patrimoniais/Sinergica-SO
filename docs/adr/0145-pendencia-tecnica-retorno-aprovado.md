@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0145-pendencia-tecnica-retorno-aprovado-md"
+description: "Documento Sinérgica SO: ADR-0145 — Fundação de pendência a partir de retorno aprovado"
+alwaysApply: false
+---
+
 # ADR-0145 — Fundação de pendência a partir de retorno aprovado
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0932-consulta-evidencias-ondas-md"
+description: "Documento Sinérgica SO: ADR-0932 — Consulta privada de evidências por onda"
+alwaysApply: false
+---
+
 # ADR-0932 — Consulta privada de evidências por onda
 
 Status: preparação local, não aplicada nem homologada. Complementa ADR-0931.

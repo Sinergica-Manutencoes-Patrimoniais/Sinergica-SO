@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1245-reserva-global-codigo-grupo-md"
+description: "Documento Sinérgica SO: ADR-1245 — Verificação de colisão com código de Grupo"
+alwaysApply: false
+---
+
 # ADR-1245 — Verificação de colisão com código de Grupo
 
 **Status:** proposta local, não homologada. Complementa ADR-1244.

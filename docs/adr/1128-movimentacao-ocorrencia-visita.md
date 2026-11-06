@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1128-movimentacao-ocorrencia-visita-md"
+description: "Documento Sinérgica SO: ADR-1128 — Movimentação de Visita com ocorrência preparada"
+alwaysApply: false
+---
+
 # ADR-1128 — Movimentação de Visita com ocorrência preparada
 
 Status: proposta local, não aplicada nem homologada.

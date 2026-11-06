@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1327-reserva-envio-legado-material-md"
+description: "Documento Sinérgica SO: ADR-1327 — Reserva para envio legado e impedimento de material"
+alwaysApply: false
+---
+
 # ADR-1327 — Reserva para envio legado e impedimento de material
 
 Status: preparado; não habilitar sem transição coordenada e validação.

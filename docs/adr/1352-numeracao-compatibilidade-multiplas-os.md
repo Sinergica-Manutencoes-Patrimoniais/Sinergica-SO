@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1352-numeracao-compatibilidade-multiplas-os-md"
+description: "Documento Sinérgica SO: ADR 1352 — Numeração compatível na transição de Chamado para múltiplas OS"
+alwaysApply: false
+---
+
 # ADR 1352 — Numeração compatível na transição de Chamado para múltiplas OS
 
 ## Contexto

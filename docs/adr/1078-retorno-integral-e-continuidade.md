@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1078-retorno-integral-e-continuidade-md"
+description: "Documento Sinérgica SO: ADR-1078 — Retorno integral diante de continuidade da parcela"
+alwaysApply: false
+---
+
 # ADR-1078 — Retorno integral diante de continuidade da parcela
 
 Status: proposta local, não aplicada nem homologada.

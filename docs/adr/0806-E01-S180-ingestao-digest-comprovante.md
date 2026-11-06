@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0806-e01-s180-ingestao-digest-comprovante-md"
+description: "Documento Sinérgica SO: ADR-0806 — Ingestão de comprovante com digest calculado no servidor"
+alwaysApply: false
+---
+
 # ADR-0806 — Ingestão de comprovante com digest calculado no servidor
 
 Status: preparação isolada; sem rollout, endpoint conectado ou homologação.

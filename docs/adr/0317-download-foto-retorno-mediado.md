@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0317-download-foto-retorno-mediado-md"
+description: "Documento Sinérgica SO: ADR-0317 — Download mediado de foto de retorno"
+alwaysApply: false
+---
+
 # ADR-0317 — Download mediado de foto de retorno
 
 Status: proposta, não homologada.

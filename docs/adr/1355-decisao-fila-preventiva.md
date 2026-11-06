@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1355-decisao-fila-preventiva-md"
+description: "Documento Sinérgica SO: ADR 1355 — Decisão preliminar a partir da fila preventiva"
+alwaysApply: false
+---
+
 # ADR 1355 — Decisão preliminar a partir da fila preventiva
 
 ## Contexto

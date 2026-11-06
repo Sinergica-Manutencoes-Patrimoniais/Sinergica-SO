@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0201-feriados-declarados-cliente-md"
+description: "Documento Sinérgica SO: ADR-0201 — Feriados declarados com fonte por Cliente/contrato"
+alwaysApply: false
+---
+
 # ADR-0201 — Feriados declarados com fonte por Cliente/contrato
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1621-conflito-integracao-legada-sem-retry-md"
+description: "Documento Sinérgica SO: ADR-1621: conflitos de revisão na integração legada"
+alwaysApply: false
+---
+
 # ADR-1621: conflitos de revisão na integração legada
 
 A revisão divergente na relação com Plano legado e no lote legado representa rejeição definitiva. O SQLSTATE `40001` pode provocar repetição automática no PostgREST de ensaio.

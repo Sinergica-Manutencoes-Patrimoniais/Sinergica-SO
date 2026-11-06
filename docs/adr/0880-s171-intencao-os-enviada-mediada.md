@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0880-s171-intencao-os-enviada-mediada-md"
+description: "Documento Sinérgica SO: ADR-0880 — Mediação de intenção de OS enviada"
+alwaysApply: false
+---
+
 # ADR-0880 — Mediação de intenção de OS enviada
 
 Data: 2026-10-30 · Status: proposta, não implantada

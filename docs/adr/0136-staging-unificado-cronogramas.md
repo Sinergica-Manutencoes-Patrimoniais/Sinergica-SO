@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0136-staging-unificado-cronogramas-md"
+description: "Documento Sinérgica SO: ADR-0136 — Cronogramas no staging de levantamentos"
+alwaysApply: false
+---
+
 # ADR-0136 — Cronogramas no staging de levantamentos
 
 **Status:** proposta, não aplicada nem homologada.

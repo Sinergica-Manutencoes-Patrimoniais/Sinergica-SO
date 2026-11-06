@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0103-vinculo-operacional-proposta-comercial-md"
+description: "Documento Sinérgica SO: ADR-0103 — Vínculo operacional na proposta Comercial existente"
+alwaysApply: false
+---
+
 # ADR-0103 — Vínculo operacional na proposta Comercial existente
 
 ## Estado

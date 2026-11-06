@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0452-avaliacao-evidencia-manual-os-md"
+description: "Documento Sinérgica SO: ADR-0452 — avaliação interna de evidência manual de OS"
+alwaysApply: false
+---
+
 # ADR-0452 — avaliação interna de evidência manual de OS
 
 Status: proposto; não aplicado nem homologado. Superadmin com `integracao.reconciliar` no Cliente pode avaliar declaração de outra pessoa como insuficiente, inconclusiva ou passível de investigação; a avaliação exige motivo, versão local observada, revisão otimista e é imutável. Essa separação conservadora é uma proteção técnica, não definição de alçada de negócio. A avaliação não verifica Auvo, comprova ausência/presença, resolve ocorrência, associa tarefa ou autoriza retry. Revisar alçada, segregação de funções, escopo, concorrência e consistência antes de ativar.

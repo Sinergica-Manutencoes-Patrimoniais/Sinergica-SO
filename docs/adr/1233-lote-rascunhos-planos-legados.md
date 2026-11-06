@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1233-lote-rascunhos-planos-legados-md"
+description: "Documento Sinérgica SO: ADR-1233 — Lote transacional de rascunhos legados"
+alwaysApply: false
+---
+
 # ADR-1233 — Lote transacional de rascunhos legados
 
 ## Decisão

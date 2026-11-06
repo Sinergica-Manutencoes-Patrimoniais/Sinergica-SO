@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0350-visibilidade-versoes-orcamento-md"
+description: "Documento Sinérgica SO: ADR-0350 — Retirada e republicação de orçamento público"
+alwaysApply: false
+---
+
 # ADR-0350 — Retirada e republicação de orçamento público
 
 Status: proposta; gate fechado, revisão e testes pendentes.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0947-atualizacao-atomica-grupos-md"
+description: "Documento Sinérgica SO: ADR-0947 — Atualização atômica de grupos e módulos"
+alwaysApply: false
+---
+
 # ADR-0947 — Atualização atômica de grupos e módulos
 
 Status: preparação local, não homologada; pré-requisito para avaliar ADR-0946.

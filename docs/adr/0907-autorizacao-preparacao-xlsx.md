@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0907-autorizacao-preparacao-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0907 — Autorização da preparação XLSX"
+alwaysApply: false
+---
+
 # ADR-0907 — Autorização da preparação XLSX
 
 Data: 2026-10-30 · Status: preparação, não implantada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0252-preflight-lote-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0252 — Diagnóstico de lote de cronograma"
+alwaysApply: false
+---
+
 # ADR-0252 — Diagnóstico de lote de cronograma
 
 Status: proposta, não homologada.

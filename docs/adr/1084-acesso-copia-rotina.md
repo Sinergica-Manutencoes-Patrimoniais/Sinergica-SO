@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1084-acesso-copia-rotina-md"
+description: "Documento Sinérgica SO: ADR-1084 — Acesso às interfaces de cópia de Rotina"
+alwaysApply: false
+---
+
 # ADR-1084 — Acesso às interfaces de cópia de Rotina
 
 Status: proposta local, não aplicada nem homologada.

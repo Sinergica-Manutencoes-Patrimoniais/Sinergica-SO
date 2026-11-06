@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1107-retificacao-fonte-aquisicao-md"
+description: "Documento Sinérgica SO: ADR-1107 — Retificação de fonte de aquisição não utilizada"
+alwaysApply: false
+---
+
 # ADR-1107 — Retificação de fonte de aquisição não utilizada
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1273-contratos-origem-campo-versionados-md"
+description: "Documento Sinérgica SO: ADR-1273 — Contratos versionados de origem de campo"
+alwaysApply: false
+---
+
 # ADR-1273 — Contratos versionados de origem de campo
 
 Status: proposta local; não aplicada nem homologada.

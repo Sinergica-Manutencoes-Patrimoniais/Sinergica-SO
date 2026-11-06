@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0301-revisao-monotonica-validacao-retorno-md"
+description: "Documento Sinérgica SO: ADR-0301 — Revisão monotônica de decisões de retorno"
+alwaysApply: false
+---
+
 # ADR-0301 — Revisão monotônica de decisões de retorno
 
 Status: proposta, não homologada.

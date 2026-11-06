@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0683-decisao-pcm-orcamento-operacional-md"
+description: "Documento Sinérgica SO: ADR-0683 — Decisão versionada de orçamento por PCM"
+alwaysApply: false
+---
+
 # ADR-0683 — Decisão versionada de orçamento por PCM
 
 Status: preparado, gate fechado, não aplicado nem homologado.

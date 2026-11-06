@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0923-serializar-replay-reserva-md"
+description: "Documento Sinérgica SO: ADR-0923 — Autorização transacional do replay de reserva"
+alwaysApply: false
+---
+
 # ADR-0923 — Autorização transacional do replay de reserva
 
 Data: 2026-10-30 · Status: preparado, não aplicado ou homologado.

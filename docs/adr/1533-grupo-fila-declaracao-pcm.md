@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1533-grupo-fila-declaracao-pcm-md"
+description: "Documento Sinérgica SO: ADR-1533 — Conferência PCM de Grupo Quantitativo na fila"
+alwaysApply: false
+---
+
 # ADR-1533 — Conferência PCM de Grupo Quantitativo na fila
 
 ## Contexto

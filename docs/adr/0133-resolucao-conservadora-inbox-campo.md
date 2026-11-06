@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0133-resolucao-conservadora-inbox-campo-md"
+description: "Documento Sinérgica SO: ADR-0133 — Resolução conservadora de envelopes de campo"
+alwaysApply: false
+---
+
 # ADR-0133 — Resolução conservadora de envelopes de campo
 
 **Status:** proposta, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0900-extracao-limitada-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0900 — Extração experimental e limitada de XLSX"
+alwaysApply: false
+---
+
 # ADR-0900 — Extração experimental e limitada de XLSX
 
 Data: 2026-10-30 · Status: preparação; não ativar importação.

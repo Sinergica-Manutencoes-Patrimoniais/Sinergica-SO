@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0939-strings-xlsx-incrementais-md"
+description: "Documento Sinérgica SO: ADR-0939 — Leitura incremental experimental de strings XLSX"
+alwaysApply: false
+---
+
 # ADR-0939 — Leitura incremental experimental de strings XLSX
 
 **Status:** preparação isolada, sem ativação.

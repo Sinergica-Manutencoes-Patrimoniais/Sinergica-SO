@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-autorizacao-leituras-fila-1774-md"
+description: "Documento Sinérgica SO: Leituras da fila e revogação — 1774"
+alwaysApply: false
+---
+
 # Leituras da fila e revogação — 1774
 
 Em clone descartável com migrations até 1772, fixtures sintéticas de Grupo/Calendário e Visita forneceram uma linha por fila. As funções autenticadas `sso_listar_fila_preventiva_pcm` e `sso_consultar_fila_visita` foram temporariamente instrumentadas no clone com uma pausa de quatro segundos após a autorização e antes da leitura. Nas duas, uma sessão revogou `plano.gerir` e confirmou durante essa pausa; a leitura então retornou uma linha. A pausa só força uma intercalação possível e não faz parte da migration.

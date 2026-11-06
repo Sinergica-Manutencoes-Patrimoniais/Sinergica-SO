@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0887-s172-leitura-escopo-serializada-md"
+description: "Documento Sinérgica SO: ADR-0887 — Consulta de escopo serializada"
+alwaysApply: false
+---
+
 # ADR-0887 — Consulta de escopo serializada
 
 Data: 2026-10-30 · Status: proposta para implementação, gates fechados.

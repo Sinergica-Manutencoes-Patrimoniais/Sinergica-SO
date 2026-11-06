@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-avaliador-impacto-concorrencia-1736-md"
+description: "Documento Sinérgica SO: Avaliador de impacto e retorno legado concorrentes"
+alwaysApply: false
+---
+
 # Avaliador de impacto e retorno legado concorrentes
 
 Usar clone descartável isolado com migrations até 1736. Preparar `manual_E01-S165_avaliacao_legada_revisao_1736.sql` até o comentário `Avaliador real`, incluindo recursivamente os arquivos `\ir`, e confirmar apenas os dados sintéticos. A escolha PCM `somente_legado` deve inicialmente resultar em `legadasSemPonteObservada=0` no avaliador de Visita.

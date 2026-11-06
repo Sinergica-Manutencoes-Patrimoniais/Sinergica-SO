@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1165-cancelamento-candidata-t24-md"
+description: "Documento Sinérgica SO: ADR-1165 — Cancelamento local da candidata T−24"
+alwaysApply: false
+---
+
 # ADR-1165 — Cancelamento local da candidata T−24
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0107-transicao-chamado-multiplas-os-md"
+description: "Documento Sinérgica SO: ADR-0107 — Fundação revisionada para Chamado com múltiplas OS"
+alwaysApply: false
+---
+
 # ADR-0107 — Fundação revisionada para Chamado com múltiplas OS
 
 **Estado:** proposta local; não aplicada nem homologada. Complementa ADR-0026, ADR-0090 e ADR-0104.

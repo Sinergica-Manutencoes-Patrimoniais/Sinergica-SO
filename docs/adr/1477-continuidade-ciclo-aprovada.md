@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1477-continuidade-ciclo-aprovada-md"
+description: "Documento Sinérgica SO: ADR-1477 — Continuidade de ciclo vinculada à aprovação da revisão"
+alwaysApply: false
+---
+
 # ADR-1477 — Continuidade de ciclo vinculada à aprovação da revisão
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0363-aprovacao-retorno-estrutural-md"
+description: "Documento Sinérgica SO: ADR-0363 — Aprovação preparada com condição estrutural atual"
+alwaysApply: false
+---
+
 # ADR-0363 — Aprovação preparada com condição estrutural atual
 
 Status: proposta, não homologada.

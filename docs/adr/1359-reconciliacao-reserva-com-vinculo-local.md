@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1359-reconciliacao-reserva-com-vinculo-local-md"
+description: "Documento Sinérgica SO: ADR 1359 — Reconciliação de reserva com tarefa já vinculada à OS"
+alwaysApply: false
+---
+
 # ADR 1359 — Reconciliação de reserva com tarefa já vinculada à OS
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0041-edicao-rotina-rascunho-md"
+description: "Documento Sinérgica SO: ADR-0041 — Edição de Rotina em rascunho"
+alwaysApply: false
+---
+
 # ADR-0041 — Edição de Rotina em rascunho
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

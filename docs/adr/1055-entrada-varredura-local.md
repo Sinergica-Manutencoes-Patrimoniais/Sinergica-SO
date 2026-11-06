@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1055-entrada-varredura-local-md"
+description: "Documento Sinérgica SO: ADR-1055 — Entrada interna da varredura local"
+alwaysApply: false
+---
+
 # ADR-1055 — Entrada interna da varredura local
 
 **Status:** preparada, desligada e não homologada. Complementa ADR-1054.

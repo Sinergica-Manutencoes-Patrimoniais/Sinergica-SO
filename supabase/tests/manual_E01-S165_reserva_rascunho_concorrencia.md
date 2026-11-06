@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-reserva-rascunho-concorrencia-md"
+description: "Documento Sinérgica SO: Concorrência de escolhas futuras de Calendário"
+alwaysApply: false
+---
+
 # Concorrência de escolhas futuras de Calendário
 
 Usar exclusivamente banco descartável isolado, com migrations até 1724. Preparar a fixture em `manual_E01-S165_calendario_rascunho_1722.sql` até a linha anterior ao primeiro `do $$ declare v_rotina`, incluindo o arquivo indicado por `\ir`, e confirmar os dados sintéticos. Não executar o restante da fixture. O nome do banco deve começar com `sso_`; nunca usar banco compartilhado ou produtivo. Não alterar a guarda 1045, criar OS ou acionar Auvo.

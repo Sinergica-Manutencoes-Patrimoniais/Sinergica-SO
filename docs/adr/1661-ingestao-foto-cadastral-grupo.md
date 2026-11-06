@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1661-ingestao-foto-cadastral-grupo-md"
+description: "Documento Sinérgica SO: ADR-1661 — Ingestão verificável de foto cadastral de Grupo"
+alwaysApply: false
+---
+
 # ADR-1661 — Ingestão verificável de foto cadastral de Grupo
 
 ## Estado

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0105-listas-materiais-versoes-linhas-md"
+description: "Documento Sinérgica SO: ADR-0105 — Versões imutáveis da organização de materiais"
+alwaysApply: false
+---
+
 # ADR-0105 — Versões imutáveis da organização de materiais
 
 ## Estado

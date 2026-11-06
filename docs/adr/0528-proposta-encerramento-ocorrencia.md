@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0528-proposta-encerramento-ocorrencia-md"
+description: "Documento Sinérgica SO: ADR-0528 — Proposta de encerramento de ocorrência"
+alwaysApply: false
+---
+
 # ADR-0528 — Proposta de encerramento de ocorrência
 
 Status: preparada, gate fechado, não aplicada nem homologada. Registra proposta humana auditada apenas quando a declaração mais recente contém exatamente as OS atuais do Cliente e cada OS está finalizada com registro de finalização validada. A proposta não altera ocorrência, OS ou Chamado e não autoriza encerramento.

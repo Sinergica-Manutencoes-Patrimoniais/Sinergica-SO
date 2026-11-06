@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0930-validacao-antecipada-referencias-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0930 — Referências da aba XLSX antes do DOM experimental"
+alwaysApply: false
+---
+
 # ADR-0930 — Referências da aba XLSX antes do DOM experimental
 
 ## Contexto

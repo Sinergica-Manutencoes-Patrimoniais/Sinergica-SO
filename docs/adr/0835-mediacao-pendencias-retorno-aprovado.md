@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0835-mediacao-pendencias-retorno-aprovado-md"
+description: "Documento Sinérgica SO: ADR-0835 — Mediação fechada da preparação de Pendências"
+alwaysApply: false
+---
+
 # ADR-0835 — Mediação fechada da preparação de Pendências
 
 ## Contexto

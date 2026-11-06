@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0345-consulta-contratos-perguntas-md"
+description: "Documento Sinérgica SO: ADR-0345 — Consulta de contrato de perguntas em rascunho"
+alwaysApply: false
+---
+
 # ADR-0345 — Consulta de contrato de perguntas em rascunho
 
 Status: proposta, não homologada.

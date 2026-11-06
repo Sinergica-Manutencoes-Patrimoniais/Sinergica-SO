@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-fila-visita-http-1747-md"
+description: "Documento Sinérgica SO: Conflito de revisão da fila por HTTP"
+alwaysApply: false
+---
+
 # Conflito de revisão da fila por HTTP
 
 Em stack descartável e rede isolada, preparar `manual_E01-S166_fila_visita_fixture.sql`, habilitar o gate da fila no clone e autenticar o ator sintético no Auth de ensaio. Chamar diretamente o PostgREST, sem proxy, em `sso_alterar_fila_visita` com ação `cancelar`, preparada da fixture e revisão 999, sem linha de fila correspondente.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1528-manter-ocorrencia-apos-retirada-md"
+description: "Documento Sinérgica SO: ADR-1528 — Preservar ocorrência explicitamente mantida após retirada de escopo"
+alwaysApply: false
+---
+
 # ADR-1528 — Preservar ocorrência explicitamente mantida após retirada de escopo
 
 ## Contexto

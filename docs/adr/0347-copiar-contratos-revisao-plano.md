@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0347-copiar-contratos-revisao-plano-md"
+description: "Documento Sinérgica SO: ADR-0347 — Cópia conservadora dos contratos em revisão"
+alwaysApply: false
+---
+
 # ADR-0347 — Cópia conservadora dos contratos em revisão
 
 Status: proposta, não homologada.

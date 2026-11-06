@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0367-conferencia-confirmacao-envio-md"
+description: "Documento Sinérgica SO: ADR-0367 — Conferência separada de confirmação para futuro envio"
+alwaysApply: false
+---
+
 # ADR-0367 — Conferência separada de confirmação para futuro envio
 
 Status: proposta; gates fechados, sem testes nem envio.

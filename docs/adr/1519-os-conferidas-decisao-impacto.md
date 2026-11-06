@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1519-os-conferidas-decisao-impacto-md"
+description: "Documento Sinérgica SO: ADR-1519 — Mostrar OS conhecidas na decisão de impacto"
+alwaysApply: false
+---
+
 # ADR-1519 — Mostrar OS conhecidas na decisão de impacto
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0372-condicao-estrutural-evidencias-md"
+description: "Documento Sinérgica SO: ADR-0372 — Condição estrutural com requisitos de evidência"
+alwaysApply: false
+---
+
 # ADR-0372 — Condição estrutural com requisitos de evidência
 
 Status: proposta, não homologada.

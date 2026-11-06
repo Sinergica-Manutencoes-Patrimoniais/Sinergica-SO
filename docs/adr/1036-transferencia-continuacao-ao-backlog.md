@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1036-transferencia-continuacao-ao-backlog-md"
+description: "Documento Sinérgica SO: ADR-1036 — Estado explícito da continuidade devolvida"
+alwaysApply: false
+---
+
 # ADR-1036 — Estado explícito da continuidade devolvida
 
 Status: preparação local, não aplicada nem testada.

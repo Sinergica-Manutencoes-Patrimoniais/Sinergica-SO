@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0992-leitura-autorizada-aliases-md"
+description: "Documento Sinérgica SO: ADR-0992 — Leitura mediada de aliases"
+alwaysApply: false
+---
+
 # ADR-0992 — Leitura mediada de aliases
 
 Status: preparação privada, não homologada.

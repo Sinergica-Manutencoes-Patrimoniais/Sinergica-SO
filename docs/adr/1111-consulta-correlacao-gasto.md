@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1111-consulta-correlacao-gasto-md"
+description: "Documento Sinérgica SO: ADR-1111 — Consulta de correlações declaradas de gasto"
+alwaysApply: false
+---
+
 # ADR-1111 — Consulta de correlações declaradas de gasto
 
 Status: proposta local, não aplicada nem homologada.

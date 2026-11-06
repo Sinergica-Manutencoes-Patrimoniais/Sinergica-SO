@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0247-anexos-proprios-portal-md"
+description: "Documento Sinérgica SO: ADR-0247 — Leitura mediada de anexos próprios de OS"
+alwaysApply: false
+---
+
 # ADR-0247 — Leitura mediada de anexos próprios de OS
 
 **Estado:** preparação fechada, sem homologação nem implantação.

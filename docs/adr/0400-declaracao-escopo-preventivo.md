@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0400-declaracao-escopo-preventivo-md"
+description: "Documento Sinérgica SO: ADR-0400 — Declaração versionada do escopo preventivo"
+alwaysApply: false
+---
+
 # ADR-0400 — Declaração versionada do escopo preventivo
 
 Status: proposta preparada; gate desligado, sem aplicação ou homologação.

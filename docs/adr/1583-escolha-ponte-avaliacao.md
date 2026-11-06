@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1583-escolha-ponte-avaliacao-md"
+description: "Documento Sinérgica SO: ADR 1583 — Ponte futura na avaliação da revisão"
+alwaysApply: false
+---
+
 # ADR 1583 — Ponte futura na avaliação da revisão
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0083-protecao-achados-preventivos-md"
+description: "Documento Sinérgica SO: ADR-0083 — Proteção faseada dos achados preventivos"
+alwaysApply: false
+---
+
 # ADR-0083 — Proteção faseada dos achados preventivos
 
 ## Decisão

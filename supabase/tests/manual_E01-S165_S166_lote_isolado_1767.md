@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-s166-lote-isolado-1767-md"
+description: "Documento Sinérgica SO: Lote isolado S165/S166 até migration 1767"
+alwaysApply: false
+---
+
 # Lote isolado S165/S166 até migration 1767
 
 Clone descartável em contêiner PostgreSQL sem rede externa; dump da base local histórica com exclusão de cron/net, grants de schemas necessários restaurados no clone e migrations 1614–1767 aplicadas em ordem. O ensaio não comprova ACL global ou equivalência a ambiente de produção.

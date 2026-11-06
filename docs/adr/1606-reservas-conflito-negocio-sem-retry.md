@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1606-reservas-conflito-negocio-sem-retry-md"
+description: "Documento Sinérgica SO: ADR 1606 — Conflitos de reservas sem retry transacional"
+alwaysApply: false
+---
+
 # ADR 1606 — Conflitos de reservas sem retry transacional
 
 Status: aceito para implementação; homologação pendente.

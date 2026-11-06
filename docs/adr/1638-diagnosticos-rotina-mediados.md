@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1638-diagnosticos-rotina-mediados-md"
+description: "Documento Sinérgica SO: ADR-1638: diagnósticos de Rotina mediados"
+alwaysApply: false
+---
+
 # ADR-1638: diagnósticos de Rotina mediados
 
 ## Contexto

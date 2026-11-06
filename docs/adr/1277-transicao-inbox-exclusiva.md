@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1277-transicao-inbox-exclusiva-md"
+description: "Documento Sinérgica SO: ADR-1277 — Transição exclusiva de entrada de campo"
+alwaysApply: false
+---
+
 # ADR-1277 — Transição exclusiva de entrada de campo
 
 Status: proposta local; não habilitada nem homologada.

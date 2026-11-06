@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0904-consulta-origem-xlsx-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0904 — Consulta mediada da origem XLSX"
+alwaysApply: false
+---
+
 # ADR-0904 — Consulta mediada da origem XLSX
 
 Data: 2026-10-30 · Status: preparação, gates fechados; não homologado.

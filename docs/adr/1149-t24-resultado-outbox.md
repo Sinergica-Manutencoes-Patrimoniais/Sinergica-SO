@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1149-t24-resultado-outbox-md"
+description: "Documento Sinérgica SO: ADR-1149 — Resultado conservador T−24 na outbox"
+alwaysApply: false
+---
+
 # ADR-1149 — Resultado conservador T−24 na outbox
 
 Status: proposta local; não aplicada nem homologada.

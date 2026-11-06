@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0796-e01-s172-disponibilidade-snapshot-md"
+description: "Documento Sinérgica SO: ADR-0796: disponibilidade declarada no snapshot de demanda"
+alwaysApply: false
+---
+
 # ADR-0796: disponibilidade declarada no snapshot de demanda
 
 Status: proposta, sob gates fechados, sem homologação.

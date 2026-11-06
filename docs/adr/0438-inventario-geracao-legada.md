@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0438-inventario-geracao-legada-md"
+description: "Documento Sinérgica SO: ADR-0438 — Inventário de geração preventiva legada"
+alwaysApply: false
+---
+
 # ADR-0438 — Inventário de geração preventiva legada
 
 Status: preparado, gate fechado, não aplicado nem homologado. O gerador `materializar_ocorrencias_preventivas` (0224) opera por `planos_preventivos`, independentemente dos Planos de Manutenção. A ponte 0340 vincula apenas ocorrências específicas; não comprova equivalência entre Planos nem autoriza inferir que todas as futuras ocorrências pertencem ao mesmo Plano novo.

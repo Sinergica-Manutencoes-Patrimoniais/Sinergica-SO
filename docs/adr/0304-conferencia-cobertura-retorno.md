@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0304-conferencia-cobertura-retorno-md"
+description: "Documento Sinérgica SO: ADR-0304 — Conferência estruturada de cobertura de retorno"
+alwaysApply: false
+---
+
 # ADR-0304 — Conferência estruturada de cobertura de retorno
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1005-confirmacao-equipment-outbound-md"
+description: "Documento Sinérgica SO: ADR-1005 — Confirmação transacional de Equipment outbound"
+alwaysApply: false
+---
+
 # ADR-1005 — Confirmação transacional de Equipment outbound
 
 Status: preparação privada, não homologada.

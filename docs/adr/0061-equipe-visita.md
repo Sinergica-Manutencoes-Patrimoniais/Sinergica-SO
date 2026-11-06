@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0061-equipe-visita-md"
+description: "Documento Sinérgica SO: ADR-0061 — Equipe da Visita"
+alwaysApply: false
+---
+
 # ADR-0061 — Equipe da Visita
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

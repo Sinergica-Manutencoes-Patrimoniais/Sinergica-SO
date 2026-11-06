@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1311-mediacao-correlacao-gasto-md"
+description: "Documento Sinérgica SO: ADR-1311 — Mediação da correlação de gastos"
+alwaysApply: false
+---
+
 # ADR-1311 — Mediação da correlação de gastos
 
 ## Decisão

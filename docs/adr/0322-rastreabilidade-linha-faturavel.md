@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0322-rastreabilidade-linha-faturavel-md"
+description: "Documento Sinérgica SO: ADR-0322 — Rastreabilidade financeira de linha de material"
+alwaysApply: false
+---
+
 # ADR-0322 — Rastreabilidade financeira de linha de material
 
 Status: proposta; gate fechado, revisão e testes pendentes.

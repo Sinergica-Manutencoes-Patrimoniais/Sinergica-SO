@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1659-preventivas-legadas-item-local-md"
+description: "Documento Sinérgica SO: ADR-1659 — Preventivas legadas por item no Local"
+alwaysApply: false
+---
+
 # ADR-1659 — Preventivas legadas por item no Local
 
 ## Estado

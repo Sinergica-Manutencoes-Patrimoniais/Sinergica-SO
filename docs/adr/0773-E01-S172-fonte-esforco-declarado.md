@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0773-e01-s172-fonte-esforco-declarado-md"
+description: "Documento Sinérgica SO: ADR-0773: fonte declarada de esforço restante"
+alwaysApply: false
+---
+
 # ADR-0773: fonte declarada de esforço restante
 
 Status: proposta experimental, gate fechado, sem homologação ou consumo consolidado.

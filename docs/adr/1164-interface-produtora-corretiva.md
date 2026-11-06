@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1164-interface-produtora-corretiva-md"
+description: "Documento Sinérgica SO: ADR-1164 — Preparação corretiva na Visita"
+alwaysApply: false
+---
+
 # ADR-1164 — Preparação corretiva na Visita
 
 Status: proposta local, não aplicada nem homologada.

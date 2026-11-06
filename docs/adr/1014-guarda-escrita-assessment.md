@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1014-guarda-escrita-assessment-md"
+description: "Documento Sinérgica SO: ADR-1014 — Escrita mediada do vínculo de assessment"
+alwaysApply: false
+---
+
 # ADR-1014 — Escrita mediada do vínculo de assessment
 
 Status: preparação privada, não homologada. Complementa ADR-1013.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0155-cobranca-publica-por-os-md"
+description: "Documento Sinérgica SO: ADR-0155 — Cobrança publicada vinculada à OS"
+alwaysApply: false
+---
+
 # ADR-0155 — Cobrança publicada vinculada à OS
 
 **Estado:** proposta preparatória, não homologada nem implantada.

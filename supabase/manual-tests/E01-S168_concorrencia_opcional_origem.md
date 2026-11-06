@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s168-concorrencia-opcional-origem-md"
+description: "Documento Sinérgica SO: S168 — Aprovação e origem concorrentes"
+alwaysApply: false
+---
+
 # S168 — Aprovação e origem concorrentes
 
 Experimento em clone de schema descartável `sso_s168_opcional_concorrencia`, sem dados reais nem schemas/serviços cron e net. Fixture `E01-S168_opcional_concorrencia_fixture.sql` classificou retorno com pergunta opcional não inspecionada e obrigatória Não OK, e registrou conferência sintética. Migrations 1031/1033 foram usadas apenas no clone.

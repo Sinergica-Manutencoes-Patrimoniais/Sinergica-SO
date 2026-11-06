@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0166-consulta-ciclo-codigo-rascunho-md"
+description: "Documento Sinérgica SO: ADR-0166 — Consulta de ciclo explícito de rascunho"
+alwaysApply: false
+---
+
 # ADR-0166 — Consulta de ciclo explícito de rascunho
 
 ## Contexto

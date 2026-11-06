@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0585-criacao-grupos-selecao-md"
+description: "Documento Sinérgica SO: ADR-0585 — Criação selecionada de Grupos Quantitativos"
+alwaysApply: false
+---
+
 # ADR-0585 — Criação selecionada de Grupos Quantitativos
 
 Status: proposta; gate fechado, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-s166-lote-isolado-1769-md"
+description: "Documento Sinérgica SO: Lote isolado S165/S166 até migration 1769"
+alwaysApply: false
+---
+
 # Lote isolado S165/S166 até migration 1769
 
 Em 2026-11-05, migrations 1614–1769 compilaram em clone PostgreSQL descartável, criado a partir de dump da base histórica local no contêiner isolado, sem cron/net. Foram restaurados os grants de schemas necessários; isso não verifica ACL global nem equivale à produção.

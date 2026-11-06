@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1153-consulta-excecao-intencao-md"
+description: "Documento Sinérgica SO: ADR-1153 — Consulta de exceções para intenção de Visita"
+alwaysApply: false
+---
+
 # ADR-1153 — Consulta de exceções para intenção de Visita
 
 Status: proposta local, não aplicada nem homologada.

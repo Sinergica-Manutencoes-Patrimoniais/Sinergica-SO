@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1265-resposta-tardia-efeito-t24-md"
+description: "Documento Sinérgica SO: ADR-1265 — Observação tardia de efeito T−24"
+alwaysApply: false
+---
+
 # ADR-1265 — Observação tardia de efeito T−24
 
 **Status:** proposta local, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1168-autorizacao-ator-servico-t24-md"
+description: "Documento Sinérgica SO: ADR-1168 — Autorização atual do ator para executor T−24"
+alwaysApply: false
+---
+
 # ADR-1168 — Autorização atual do ator para executor T−24
 
 Status: proposta local, não aplicada nem homologada.

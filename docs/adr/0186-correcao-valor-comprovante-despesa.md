@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0186-correcao-valor-comprovante-despesa-md"
+description: "Documento Sinérgica SO: ADR-0186 — Correção de valor e comprovante da despesa realizada"
+alwaysApply: false
+---
+
 # ADR-0186 — Correção de valor e comprovante da despesa realizada
 
 **Estado:** preparação bloqueada, não homologada nem implantada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0111-escopo-continuidade-chamado-md"
+description: "Documento Sinérgica SO: ADR-0111 — Escopo integral e continuidade do Chamado"
+alwaysApply: false
+---
+
 # ADR-0111 — Escopo integral e continuidade do Chamado
 
 **Estado:** proposta não aplicada e não homologada; complementa ADR-0026 e ADR-0107.

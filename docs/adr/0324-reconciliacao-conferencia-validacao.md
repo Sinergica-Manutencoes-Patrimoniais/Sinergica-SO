@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0324-reconciliacao-conferencia-validacao-md"
+description: "Documento Sinérgica SO: ADR-0324 — Reconciliação de conferência e validação do retorno"
+alwaysApply: false
+---
+
 # ADR-0324 — Reconciliação de conferência e validação do retorno
 
 Status: proposta, não homologada.

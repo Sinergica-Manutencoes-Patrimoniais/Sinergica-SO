@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0202-resolucao-manual-origem-campo-md"
+description: "Documento Sinérgica SO: ADR-0202 — Resolução manual conservadora para OS existente"
+alwaysApply: false
+---
+
 # ADR-0202 — Resolução manual conservadora para OS existente
 
 ## Decisão

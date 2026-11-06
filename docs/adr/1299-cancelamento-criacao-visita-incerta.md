@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1299-cancelamento-criacao-visita-incerta-md"
+description: "Documento Sinérgica SO: ADR-1299 — Cancelamento de criação de Visita incerta"
+alwaysApply: false
+---
+
 # ADR-1299 — Cancelamento de criação de Visita incerta
 
 ## Contexto

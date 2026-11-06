@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1198-transicao-plano-mediada-md"
+description: "Documento Sinérgica SO: ADR-1198 — Transição de Plano mediada"
+alwaysApply: false
+---
+
 # ADR-1198 — Transição de Plano mediada
 
 ## Contexto

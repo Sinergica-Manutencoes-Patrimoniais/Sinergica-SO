@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1013-vinculo-assessment-mediado-md"
+description: "Documento Sinérgica SO: ADR-1013 — Vínculo mediado de assessment"
+alwaysApply: false
+---
+
 # ADR-1013 — Vínculo mediado de assessment
 
 Status: preparação privada, não homologada.

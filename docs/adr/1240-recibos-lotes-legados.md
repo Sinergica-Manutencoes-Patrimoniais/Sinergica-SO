@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1240-recibos-lotes-legados-md"
+description: "Documento Sinérgica SO: ADR-1240 — Recibos dos lotes de rascunhos"
+alwaysApply: false
+---
+
 # ADR-1240 — Recibos dos lotes de rascunhos
 
 ## Decisão

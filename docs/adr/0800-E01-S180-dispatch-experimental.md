@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0800-e01-s180-dispatch-experimental-md"
+description: "Documento Sinérgica SO: ADR-0800 — Dispatcher experimental para políticas de upload S180"
+alwaysApply: false
+---
+
 # ADR-0800 — Dispatcher experimental para políticas de upload S180
 
 Status: experimental; não autorizado para rollout ou homologação.

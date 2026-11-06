@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0178-estorno-complemento-faturavel-md"
+description: "Documento Sinérgica SO: ADR-0178 — Estorno lógico e complemento de faturável"
+alwaysApply: false
+---
+
 # ADR-0178 — Estorno lógico e complemento de faturável
 
 **Estado:** preparação fechada, sem homologação nem implantação.

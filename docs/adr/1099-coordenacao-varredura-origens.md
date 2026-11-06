@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1099-coordenacao-varredura-origens-md"
+description: "Documento Sinérgica SO: ADR-1099 — Coordenação da varredura de origens internas"
+alwaysApply: false
+---
+
 # ADR-1099 — Coordenação da varredura de origens internas
 
 Status: proposta local, não aplicada nem homologada.

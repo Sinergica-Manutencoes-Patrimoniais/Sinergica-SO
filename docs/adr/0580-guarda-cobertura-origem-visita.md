@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0580-guarda-cobertura-origem-visita-md"
+description: "Documento Sinérgica SO: ADR-0580 — Preparação da guarda de cobertura por Visita"
+alwaysApply: false
+---
+
 # ADR-0580 — Preparação da guarda de cobertura por Visita
 
 A guarda de cobertura usa o resolvedor privado da ADR-0501 para identificar origem Visita e conferir versão e Rotina do retorno contra snapshot aprovado. A verificação de perguntas e opcionais existente permanece; o caminho de calendário não muda. Divergência na definição anterior bloqueia a migration.

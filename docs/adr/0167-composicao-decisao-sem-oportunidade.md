@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0167-composicao-decisao-sem-oportunidade-md"
+description: "Documento Sinérgica SO: ADR-0167 — Composição e decisão de origem operacional"
+alwaysApply: false
+---
+
 # ADR-0167 — Composição e decisão de origem operacional
 
 **Estado:** proposta preparatória; comandos revogados e gate de origem desligado.

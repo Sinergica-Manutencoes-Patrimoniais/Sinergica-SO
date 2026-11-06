@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0940-aba-xlsx-incremental-md"
+description: "Documento Sinérgica SO: ADR-0940 — Leitura incremental experimental de aba XLSX"
+alwaysApply: false
+---
+
 # ADR-0940 — Leitura incremental experimental de aba XLSX
 
 **Status:** preparação isolada, sem habilitação.

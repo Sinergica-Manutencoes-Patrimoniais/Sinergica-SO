@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1258-recibo-correcao-mediada-md"
+description: "Documento Sinérgica SO: ADR-1258 — Recibo de correção mediada de despesa"
+alwaysApply: false
+---
+
 # ADR-1258 — Recibo de correção mediada de despesa
 
 **Status:** proposta local, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1289-recibo-comando-capacidades-md"
+description: "Documento Sinérgica SO: ADR 1289 — Consulta de recibo de capacidade"
+alwaysApply: false
+---
+
 # ADR 1289 — Consulta de recibo de capacidade
 
 ## Contexto

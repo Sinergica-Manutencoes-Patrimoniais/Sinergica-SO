@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0130-central-consulta-materiais-md"
+description: "Documento Sinérgica SO: ADR-0130 — Consulta central de listas de materiais por Cliente"
+alwaysApply: false
+---
+
 # ADR-0130 — Consulta central de listas de materiais por Cliente
 
 ## Estado

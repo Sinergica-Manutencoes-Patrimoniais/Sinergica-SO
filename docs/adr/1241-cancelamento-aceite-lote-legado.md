@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1241-cancelamento-aceite-lote-legado-md"
+description: "Documento Sinérgica SO: ADR-1241 — Cancelamento de aceite de lote de rascunhos"
+alwaysApply: false
+---
+
 # ADR-1241 — Cancelamento de aceite de lote de rascunhos
 
 ## Decisão

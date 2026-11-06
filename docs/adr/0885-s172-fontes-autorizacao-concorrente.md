@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0885-s172-fontes-autorizacao-concorrente-md"
+description: "Documento Sinérgica SO: ADR-0885 — Entradas serializadas das fontes de capacidade"
+alwaysApply: false
+---
+
 # ADR-0885 — Entradas serializadas das fontes de capacidade
 
 Data: 2026-10-30 · Status: proposta para implementação, gates fechados.

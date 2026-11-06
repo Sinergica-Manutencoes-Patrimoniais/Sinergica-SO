@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1489-obrigacoes-pmoc-plano-md"
+description: "Documento Sinérgica SO: ADR-1489 — Visibilidade e exclusividade local de ciclo vinculado ao PMOC"
+alwaysApply: false
+---
+
 # ADR-1489 — Visibilidade e exclusividade local de ciclo vinculado ao PMOC
 
 ## Contexto

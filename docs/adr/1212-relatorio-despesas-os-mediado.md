@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1212-relatorio-despesas-os-mediado-md"
+description: "Documento Sinérgica SO: ADR-1212 — Relatório interno de despesas por OS"
+alwaysApply: false
+---
+
 # ADR-1212 — Relatório interno de despesas por OS
 
 ## Decisão

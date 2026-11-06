@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-autorizacao-fila-grupo-1772-md"
+description: "Documento Sinérgica SO: Revogação e replay da fila de Grupo — 1772"
+alwaysApply: false
+---
+
 # Revogação e replay da fila de Grupo — 1772
 
 Em clone isolado com migrations até 1771 e dados sintéticos da fixture `manual_E01-S166_grupo_fila_afirmacao.sql`, foi semeado recibo sintético de reabertura com o payload esperado. Apenas no clone, `sso_conferir_acesso_fila_grupo` recebeu pausa de quatro segundos entre a conferência de autorização e a trava. A sessão autenticada iniciou o replay de `sso_reabrir_fila_grupo`; durante a pausa, outra revogou `plano.gerir` e confirmou. O replay ainda retornou o recibo. A prévia testada no mesmo arranjo recusou o acesso pela segunda conferência. A pausa evidencia uma intercalação possível, não é código de produção.

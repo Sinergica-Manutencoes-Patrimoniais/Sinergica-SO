@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1162-sistema-questionario-na-fotografia-os-md"
+description: "Documento Sinérgica SO: ADR-1162 — Sistema e questionário da OS conferidos"
+alwaysApply: false
+---
+
 # ADR-1162 — Sistema e questionário da OS conferidos
 
 Status: proposta local, não aplicada nem homologada; complementa ADR-1161.

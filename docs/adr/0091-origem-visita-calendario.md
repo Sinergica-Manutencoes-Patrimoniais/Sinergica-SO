@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0091-origem-visita-calendario-md"
+description: "Documento Sinérgica SO: ADR-0091 — Origem contratual explícita para Visitas"
+alwaysApply: false
+---
+
 # ADR-0091 — Origem contratual explícita para Visitas
 
 ## Estado

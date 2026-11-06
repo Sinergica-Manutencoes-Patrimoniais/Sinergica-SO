@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0190-suspensao-encerramento-plano-md"
+description: "Documento Sinérgica SO: ADR-0190 — Suspensão e encerramento protegidos do Plano"
+alwaysApply: false
+---
+
 # ADR-0190 — Suspensão e encerramento protegidos do Plano
 
 Status: proposta, não homologada.

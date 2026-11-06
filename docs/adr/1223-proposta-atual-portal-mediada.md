@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1223-proposta-atual-portal-mediada-md"
+description: "Documento Sinérgica SO: ADR-1223 — Consulta mediada da proposta atual no Portal"
+alwaysApply: false
+---
+
 # ADR-1223 — Consulta mediada da proposta atual no Portal
 
 ## Decisão

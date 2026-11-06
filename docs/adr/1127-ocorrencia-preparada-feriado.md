@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1127-ocorrencia-preparada-feriado-md"
+description: "Documento Sinérgica SO: ADR-1127 — Ocorrência preparada em Visita suprimida"
+alwaysApply: false
+---
+
 # ADR-1127 — Ocorrência preparada em Visita suprimida
 
 Status: proposta local, não aplicada nem homologada.

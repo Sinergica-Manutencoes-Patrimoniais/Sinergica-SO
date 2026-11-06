@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1488-vinculo-pmoc-por-decisao-md"
+description: "Documento Sinérgica SO: ADR-1488 — Vínculo de ciclo PMOC por conferência explícita"
+alwaysApply: false
+---
+
 # ADR-1488 — Vínculo de ciclo PMOC por conferência explícita
 
 ## Contexto

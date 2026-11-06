@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-vinculo-visita-avaliacao-concorrencia-1740-md"
+description: "Documento Sinérgica SO: Avaliação concorrente ao vínculo de Visita"
+alwaysApply: false
+---
+
 # Avaliação concorrente ao vínculo de Visita
 
 Usar clone isolado com migrations até 1740. Preparar `manual_E01-S166_vinculo_visita_avaliacao_1740.sql` até imediatamente antes da inserção da avaliação, mantendo e confirmando apenas a preparação sintética. Usar claims do ator da fixture e chamar a RPC autenticada `pcm.sso_materializar_visita_legada_mediada` com request terminado em 147, preparada 161, plano legado 145 e relação 146.

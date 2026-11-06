@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0266-republicacao-pendencia-portal-md"
+description: "Documento Sinérgica SO: ADR-0266 — Nova publicação após revogação"
+alwaysApply: false
+---
+
 # ADR-0266 — Nova publicação após revogação
 
 Status: proposta; gates fechados, testes e revisão pendentes.

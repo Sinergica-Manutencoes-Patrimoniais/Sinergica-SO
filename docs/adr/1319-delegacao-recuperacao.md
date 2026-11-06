@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1319-delegacao-recuperacao-md"
+description: "Documento Sinérgica SO: ADR-1319 — Delegação da recuperação ao fluxo proprietário"
+alwaysApply: false
+---
+
 # ADR-1319 — Delegação da recuperação ao fluxo proprietário
 
 ## Decisão

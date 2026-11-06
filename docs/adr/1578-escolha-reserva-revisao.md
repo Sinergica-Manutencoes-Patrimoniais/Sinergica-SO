@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1578-escolha-reserva-revisao-md"
+description: "Documento Sinérgica SO: ADR 1578 — Escolha de ciclo futuro em revisão"
+alwaysApply: false
+---
+
 # ADR 1578 — Escolha de ciclo futuro em revisão
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1157-detalhe-origem-material-md"
+description: "Documento Sinérgica SO: ADR-1157 — Detalhe da exceção na reconciliação"
+alwaysApply: false
+---
+
 # ADR-1157 — Detalhe da exceção na reconciliação
 
 Status: proposta local, não aplicada nem homologada.

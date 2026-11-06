@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1221-historico-proposta-portal-mediado-md"
+description: "Documento Sinérgica SO: ADR-1221 — Histórico de proposta operacional no Portal"
+alwaysApply: false
+---
+
 # ADR-1221 — Histórico de proposta operacional no Portal
 
 ## Decisão

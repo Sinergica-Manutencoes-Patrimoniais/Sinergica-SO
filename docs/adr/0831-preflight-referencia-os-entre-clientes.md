@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0831-preflight-referencia-os-entre-clientes-md"
+description: "Documento Sinérgica SO: ADR-0831 — Referência de OS compartilhada entre Clientes no preflight"
+alwaysApply: false
+---
+
 # ADR-0831 — Referência de OS compartilhada entre Clientes no preflight
 
 Estado: proposta local; não aplicada nem homologada. Complementa ADR-0172 e ADR-0830.

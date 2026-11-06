@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0077-previa-ciclos-rotina-md"
+description: "Documento Sinérgica SO: ADR-0077 — Prévia de ciclos de Rotina aprovada"
+alwaysApply: false
+---
+
 # ADR-0077 — Prévia de ciclos de Rotina aprovada
 
 ## Decisão

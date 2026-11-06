@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1272-processamento-atomico-origem-campo-md"
+description: "Documento Sinérgica SO: ADR-1272 — Criação transacional a partir de tarefa de campo"
+alwaysApply: false
+---
+
 # ADR-1272 — Criação transacional a partir de tarefa de campo
 
 Status: proposta local; não aplicada nem homologada.

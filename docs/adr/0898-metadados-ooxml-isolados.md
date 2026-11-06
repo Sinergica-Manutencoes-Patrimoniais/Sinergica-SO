@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0898-metadados-ooxml-isolados-md"
+description: "Documento Sinérgica SO: ADR-0898 — Metadados e strings OOXML isolados"
+alwaysApply: false
+---
+
 # ADR-0898 — Metadados e strings OOXML isolados
 
 Data: 2026-10-30 · Status: preparação; XLSX bloqueado.

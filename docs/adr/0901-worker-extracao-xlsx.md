@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0901-worker-extracao-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0901 — Worker terminável para extração XLSX"
+alwaysApply: false
+---
+
 # ADR-0901 — Worker terminável para extração XLSX
 
 Data: 2026-10-30 · Status: preparação, recurso desligado.

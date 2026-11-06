@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0920-injecao-processador-recepcao-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0920 — Teste isolado da recepção atestada com processador Edge"
+alwaysApply: false
+---
+
 # ADR-0920 — Teste isolado da recepção atestada com processador Edge
 
 Data: 2026-10-30 · Status: preparação, sem rollout.

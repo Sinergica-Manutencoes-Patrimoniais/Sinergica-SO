@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0297-vinculo-material-orcamento-md"
+description: "Documento Sinérgica SO: ADR-0297 — Vínculo preliminar de declaração a orçamento aceito"
+alwaysApply: false
+---
+
 # ADR-0297 — Vínculo preliminar de declaração a orçamento aceito
 
 Status: proposta; gates fechados, validação pendente.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0943-filtro-servidor-faturaveis-md"
+description: "Documento Sinérgica SO: ADR-0943 — Consulta filtrada e paginada de faturáveis"
+alwaysApply: false
+---
+
 # ADR-0943 — Consulta filtrada e paginada de faturáveis
 
 **Status:** preparação, não homologada.

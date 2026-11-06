@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0101-proveniencia-levantamento-declarada-verificada-md"
+description: "Documento Sinérgica SO: ADR-0101 — Proveniência declarada e verificada de levantamentos"
+alwaysApply: false
+---
+
 # ADR-0101 — Proveniência declarada e verificada de levantamentos
 
 ## Estado

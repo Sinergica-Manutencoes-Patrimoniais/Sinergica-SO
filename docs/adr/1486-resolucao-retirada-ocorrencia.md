@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1486-resolucao-retirada-ocorrencia-md"
+description: "Documento Sinérgica SO: ADR-1486 — Resolver impacto pela retirada futura da ocorrência"
+alwaysApply: false
+---
+
 # ADR-1486 — Resolver impacto pela retirada futura da ocorrência
 
 ## Contexto

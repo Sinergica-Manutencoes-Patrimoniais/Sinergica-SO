@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1400-xlsx-local-declarado-md"
+description: "Documento Sinérgica SO: ADR-1400 — XLSX extraído localmente como dados declarados"
+alwaysApply: false
+---
+
 # ADR-1400 — XLSX extraído localmente como dados declarados
 
 Além da recepção atestada, a interface pode preparar lote manual a partir das linhas extraídas em Worker no navegador. O usuário confirma arquivo, aba, Cliente e origem; erros estruturais bloqueiam o envio. A mesma tentativa usa identificador persistido e o comando existente valida autorização, conteúdo e unicidade no servidor.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1215-atribuicao-tecnico-despesa-mediada-md"
+description: "Documento Sinérgica SO: ADR-1215 — Atribuição mediada de técnico à despesa"
+alwaysApply: false
+---
+
 # ADR-1215 — Atribuição mediada de técnico à despesa
 
 ## Decisão

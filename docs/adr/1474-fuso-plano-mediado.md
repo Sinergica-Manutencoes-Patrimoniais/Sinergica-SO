@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1474-fuso-plano-mediado-md"
+description: "Documento Sinérgica SO: ADR-1474 — Declaração de fuso mediada"
+alwaysApply: false
+---
+
 # ADR-1474 — Declaração de fuso mediada
 
 Status: preparação local, gate fechado e sem homologação.

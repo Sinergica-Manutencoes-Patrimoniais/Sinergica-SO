@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1498-pmoc-consumidores-legados-md"
+description: "Documento Sinérgica SO: ADR-1498 — Conferência PMOC nos consumidores de ocorrências"
+alwaysApply: false
+---
+
 # ADR-1498 — Conferência PMOC nos consumidores de ocorrências
 
 A ocorrência preparada pode anteceder um novo agendamento PMOC da mesma data. Conferir apenas no momento da preparação não protege a criação posterior de vínculo legado, entrada em fila ou Chamado.

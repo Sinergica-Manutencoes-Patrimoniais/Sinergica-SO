@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0343-leitura-contrato-pergunta-retorno-md"
+description: "Documento Sinérgica SO: ADR-0343 — Leitura do contrato congelado no retorno"
+alwaysApply: false
+---
+
 # ADR-0343 — Leitura do contrato congelado no retorno
 
 Status: proposta, não homologada.

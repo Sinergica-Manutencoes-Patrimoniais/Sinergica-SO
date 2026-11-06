@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0244-identidade-manual-linhas-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0244 — Identidade manual de linhas de cronograma"
+alwaysApply: false
+---
+
 # ADR-0244 — Identidade manual de linhas de cronograma
 
 Status: proposta, não homologada.

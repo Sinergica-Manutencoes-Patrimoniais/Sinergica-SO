@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1144-diagnostico-candidata-t24-md"
+description: "Documento Sinérgica SO: ADR-1144 — Diagnóstico de candidata T−24"
+alwaysApply: false
+---
+
 # ADR-1144 — Diagnóstico de candidata T−24
 
 Status: proposta local, gate fechado; não aplicada nem homologada.

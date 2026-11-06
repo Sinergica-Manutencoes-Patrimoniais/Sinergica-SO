@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0865-mediacao-conferencia-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0865 — Conferência e decisão de cronograma no staging canônico"
+alwaysApply: false
+---
+
 # ADR-0865 — Conferência e decisão de cronograma no staging canônico
 
 Status: preparado; gates permanecem fechados e homologação pendente.

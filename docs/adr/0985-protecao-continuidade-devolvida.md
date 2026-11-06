@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0985-protecao-continuidade-devolvida-md"
+description: "Documento Sinérgica SO: ADR-0985 — Proteção da continuidade já devolvida"
+alwaysApply: false
+---
+
 # ADR-0985 — Proteção da continuidade já devolvida
 
 Status: preparação privada, não homologada.

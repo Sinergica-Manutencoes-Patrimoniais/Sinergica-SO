@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0520-alocacoes-parciais-mesmo-documento-md"
+description: "Documento Sinérgica SO: ADR-0520 — parcelas distintas no mesmo documento"
+alwaysApply: false
+---
+
 # ADR-0520 — parcelas distintas no mesmo documento
 
 Status: alternativa proposta, não implementada nem homologada. A identidade da parcela permanece `sso_faturavel_alocacoes.id` e `request_id` únicos; repetir um pedido usa o contrato idempotente do comando proprietário. A unicidade histórica de item/documento continua vigente. Permitir parcelas distintas no mesmo documento depende de uma transição segura, ainda não implementada.

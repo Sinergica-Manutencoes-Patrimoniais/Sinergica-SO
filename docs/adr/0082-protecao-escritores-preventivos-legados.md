@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0082-protecao-escritores-preventivos-legados-md"
+description: "Documento Sinérgica SO: ADR-0082 — Proteção faseada dos resultados preventivos legados"
+alwaysApply: false
+---
+
 # ADR-0082 — Proteção faseada dos resultados preventivos legados
 
 ## Decisão

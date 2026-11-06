@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0573-atualizacao-explicita-lote-md"
+description: "Documento Sinérgica SO: ADR-0573 — Atualização explícita de cadastros em lote"
+alwaysApply: false
+---
+
 # ADR-0573 — Atualização explícita de cadastros em lote
 
 Status: proposta; gate fechado, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1565-trava-chamado-ao-fotografar-os-md"
+description: "Documento Sinérgica SO: ADR-1565 — Serializar fotografia por Chamado"
+alwaysApply: false
+---
+
 # ADR-1565 — Serializar fotografia por Chamado
 
 A migration 1689 travava globalmente as duas tabelas de mapeamento preventivo antes de saber se a OS era preventiva. Uma inserção concorrente em qualquer Cliente podia impedir a criação de OS corretiva com Chamado.

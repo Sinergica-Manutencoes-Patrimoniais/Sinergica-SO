@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1016-composicao-parcelas-despesa-md"
+description: "Documento Sinérgica SO: ADR-1016 — Composição de orçamento por parcelas de despesa"
+alwaysApply: false
+---
+
 # ADR-1016 — Composição de orçamento por parcelas de despesa
 
 Status: preparação privada, não homologada.

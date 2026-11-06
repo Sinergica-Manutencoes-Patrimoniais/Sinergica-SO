@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0742-autorizacao-atual-recibo-foto-md"
+description: "Documento Sinérgica SO: ADR 0742 — autorização atual no vínculo e recibo de foto"
+alwaysApply: false
+---
+
 # ADR 0742 — autorização atual no vínculo e recibo de foto
 
 ## Problema

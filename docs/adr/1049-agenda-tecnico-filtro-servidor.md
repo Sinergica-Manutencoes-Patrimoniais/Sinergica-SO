@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1049-agenda-tecnico-filtro-servidor-md"
+description: "Documento Sinérgica SO: ADR-1049 — Consulta de agenda por técnico no servidor"
+alwaysApply: false
+---
+
 # ADR-1049 — Consulta de agenda por técnico no servidor
 
 **Status:** preparação não homologada.

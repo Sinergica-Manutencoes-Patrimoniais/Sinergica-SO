@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0220-previa-devolucao-backlog-md"
+description: "Documento Sinérgica SO: ADR-0220 — Prévia conservadora de devolução de escopo"
+alwaysApply: false
+---
+
 # ADR-0220 — Prévia conservadora de devolução de escopo
 
 ## Decisão

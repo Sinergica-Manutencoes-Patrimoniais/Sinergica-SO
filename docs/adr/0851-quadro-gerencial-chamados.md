@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0851-quadro-gerencial-chamados-md"
+description: "Documento Sinérgica SO: ADR-0851 — Quadro gerencial paginado por Chamado"
+alwaysApply: false
+---
+
 # ADR-0851 — Quadro gerencial paginado por Chamado
 
 Estado: proposta local, gates fechados, não homologada. Complementa ADR-0815 e ADR-0834.

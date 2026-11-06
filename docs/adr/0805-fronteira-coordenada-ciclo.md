@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0805-fronteira-coordenada-ciclo-md"
+description: "Documento Sinérgica SO: ADR-0805 — Fronteira coordenada para ciclo de calendário"
+alwaysApply: false
+---
+
 # ADR-0805 — Fronteira coordenada para ciclo de calendário
 
 ## Estado

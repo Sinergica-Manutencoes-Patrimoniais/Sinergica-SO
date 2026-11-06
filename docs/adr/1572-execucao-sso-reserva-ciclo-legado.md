@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1572-execucao-sso-reserva-ciclo-legado-md"
+description: "Documento Sinérgica SO: ADR 1572 — Respeitar reserva de ciclo na execução SSO"
+alwaysApply: false
+---
+
 # ADR 1572 — Respeitar reserva de ciclo na execução SSO
 
 ## Contexto

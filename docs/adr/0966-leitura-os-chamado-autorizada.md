@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0966-leitura-os-chamado-autorizada-md"
+description: "Documento Sinérgica SO: ADR-0966 — Fronteira de leitura de OS por Chamado"
+alwaysApply: false
+---
+
 # ADR-0966 — Fronteira de leitura de OS por Chamado
 
 Status: preparação local, não homologada.

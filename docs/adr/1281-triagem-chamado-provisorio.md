@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1281-triagem-chamado-provisorio-md"
+description: "Documento Sinérgica SO: ADR-1281 — Confirmação e correção de Chamado provisório"
+alwaysApply: false
+---
+
 # ADR-1281 — Confirmação e correção de Chamado provisório
 
 Status: proposta local; não aplicada nem homologada.

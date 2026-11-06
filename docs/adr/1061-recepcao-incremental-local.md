@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1061-recepcao-incremental-local-md"
+description: "Documento Sinérgica SO: ADR-1061 — Composição local do leitor incremental XLSX"
+alwaysApply: false
+---
+
 # ADR-1061 — Composição local do leitor incremental XLSX
 
 **Status:** experimental, desligada e não homologada. Complementa ADR-1060.

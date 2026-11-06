@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0815-resumo-lote-chamados-md"
+description: "Documento Sinérgica SO: ADR-0815 — Resumo de OS do Chamado em lote"
+alwaysApply: false
+---
+
 # ADR-0815 — Resumo de OS do Chamado em lote
 
 Status: proposta, gate desligado, não homologada. O feed gerencial contém páginas e filtros de OS; somar as linhas visíveis produz contagem incompleta. Para até 100 IDs de Chamado, consulta única e set-based agrega todas as OS não excluídas por Chamado, considerando vínculo direto e ponte singular legada, sem duplicar a mesma OS.

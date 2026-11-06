@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0242-previa-ocorrencias-visita-md"
+description: "Documento Sinérgica SO: ADR-0242 — Prévia de geração preparada por Visita"
+alwaysApply: false
+---
+
 # ADR-0242 — Prévia de geração preparada por Visita
 
 Status: proposta, não homologada.

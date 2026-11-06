@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0289-vinculo-ciclo-pmoc-indeterminado-md"
+description: "Documento Sinérgica SO: ADR-0289 — Pré-condições de vínculo de ciclo com PMOC"
+alwaysApply: false
+---
+
 # ADR-0289 — Pré-condições de vínculo de ciclo com PMOC
 
 Status: proposta, não homologada.

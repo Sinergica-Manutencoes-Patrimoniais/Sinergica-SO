@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0729-proteger-planos-vinculados-e-autoria-md"
+description: "Documento Sinérgica SO: ADR-0729 — Proteger vínculos financeiros e autoria"
+alwaysApply: false
+---
+
 # ADR-0729 — Proteger vínculos financeiros e autoria
 
 **Status:** incremento em diagnóstico; não homologado nem implantado.

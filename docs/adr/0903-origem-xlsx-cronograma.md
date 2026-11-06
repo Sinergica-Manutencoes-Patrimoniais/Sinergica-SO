@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0903-origem-xlsx-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0903 — Custódia transacional da origem XLSX"
+alwaysApply: false
+---
+
 # ADR-0903 — Custódia transacional da origem XLSX
 
 Data: 2026-10-30 · Status: preparação, gate fechado; não homologado.

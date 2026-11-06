@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0888-s169-leitura-snapshot-exportacao-md"
+description: "Documento Sinérgica SO: ADR-0888 — Leitura paginada do snapshot para exportação"
+alwaysApply: false
+---
+
 # ADR-0888 — Leitura paginada do snapshot para exportação
 
 Data: 2026-10-30 · Status: preparação; gate fechado, sem homologação.

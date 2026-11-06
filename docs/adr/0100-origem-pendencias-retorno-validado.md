@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0100-origem-pendencias-retorno-validado-md"
+description: "Documento Sinérgica SO: ADR-0100 — Origem comprovada de Pendências técnicas"
+alwaysApply: false
+---
+
 # ADR-0100 — Origem comprovada de Pendências técnicas
 
 ## Estado

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0390-revalidacao-vinculo-conteudo-md"
+description: "Documento Sinérgica SO: ADR-0390 — Revalidação do vínculo ao conferir OS"
+alwaysApply: false
+---
+
 # ADR-0390 — Revalidação do vínculo ao conferir OS
 
 Status: proposta; gates fechados, sem testes.

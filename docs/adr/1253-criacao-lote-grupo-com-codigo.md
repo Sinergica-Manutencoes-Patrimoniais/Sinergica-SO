@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1253-criacao-lote-grupo-com-codigo-md"
+description: "Documento Sinérgica SO: ADR-1253 — Grupos com código em lote"
+alwaysApply: false
+---
+
 # ADR-1253 — Grupos com código em lote
 
 **Status:** proposta local, não homologada. Complementa ADR-1252.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0344-retirada-logica-anexo-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0344 — Retirada lógica de anexo de levantamento"
+alwaysApply: false
+---
+
 # ADR-0344 — Retirada lógica de anexo de levantamento
 
 Prepara-se retirada explícita e auditada de foto ou documento ainda não incorporado por sua linha e sem vínculo a destino de ativo. Registro é imutável, exige motivo e capacidade de aprovação; arquivo e histórico não são apagados. A retirada bloqueia novas vinculações e resolução de leitura no staging. A sinalização e os comandos da interface dependem de flag própria.

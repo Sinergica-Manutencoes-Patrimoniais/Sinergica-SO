@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1244-identidade-codigo-grupo-quantitativo-md"
+description: "Documento Sinérgica SO: ADR-1244 — Fundação da identidade de código de Grupo Quantitativo"
+alwaysApply: false
+---
+
 # ADR-1244 — Fundação da identidade de código de Grupo Quantitativo
 
 **Status:** proposta local, não homologada.

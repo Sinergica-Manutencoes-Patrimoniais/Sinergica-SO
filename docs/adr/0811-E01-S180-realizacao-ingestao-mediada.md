@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0811-e01-s180-realizacao-ingestao-mediada-md"
+description: "Documento Sinérgica SO: ADR-0811 — Realização com comprovante de ingestão mediada"
+alwaysApply: false
+---
+
 # ADR-0811 — Realização com comprovante de ingestão mediada
 
 Status: preparado sob gates fechados; não homologado.

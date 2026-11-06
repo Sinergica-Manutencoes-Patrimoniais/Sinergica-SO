@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1280-consulta-estado-campo-md"
+description: "Documento Sinérgica SO: ADR-1280 — Consulta PCM do estado de campo"
+alwaysApply: false
+---
+
 # ADR-1280 — Consulta PCM do estado de campo
 
 Status: proposta local; não aplicada nem homologada.

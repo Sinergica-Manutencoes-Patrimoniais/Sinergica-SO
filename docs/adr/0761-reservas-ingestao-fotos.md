@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0761-reservas-ingestao-fotos-md"
+description: "Documento Sinérgica SO: ADR 0761 — Reserva e confirmação internas de ingestão de fotos"
+alwaysApply: false
+---
+
 # ADR 0761 — Reserva e confirmação internas de ingestão de fotos
 
 ## Decisão

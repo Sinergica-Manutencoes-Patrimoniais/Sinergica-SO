@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0728-fotos-privadas-equipamentos-md"
+description: "Documento Sinérgica SO: ADR 0728 — Fotos privadas de Equipamentos no levantamento"
+alwaysApply: false
+---
+
 # ADR 0728 — Fotos privadas de Equipamentos no levantamento
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0736-impedir-origem-grupo-apos-retorno-md"
+description: "Documento Sinérgica SO: ADR-0736 — Bloquear associação Grupo após retorno já registrado"
+alwaysApply: false
+---
+
 # ADR-0736 — Bloquear associação Grupo após retorno já registrado
 
 ## Status

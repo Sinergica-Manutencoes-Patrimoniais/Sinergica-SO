@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1146-consulta-promocao-retorno-integral-md"
+description: "Documento Sinérgica SO: ADR-1146 — Consulta da promoção de retorno integral"
+alwaysApply: false
+---
+
 # ADR-1146 — Consulta da promoção de retorno integral
 
 Status: proposta local, gate fechado; não aplicada nem homologada.

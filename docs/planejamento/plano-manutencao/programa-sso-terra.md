@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-programa-sso-terra-md"
+description: "Documento Sinérgica SO: Programa SSO — pacote executável para Terra"
+alwaysApply: false
+---
+
 # Programa SSO — pacote executável para Terra
 
 **Data:** 2026-10-26 · **Estado:** especificação revisada; implementação não iniciada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1250-historico-codigo-grupo-md"
+description: "Documento Sinérgica SO: ADR-1250 — Histórico autorizado de códigos de Grupo"
+alwaysApply: false
+---
+
 # ADR-1250 — Histórico autorizado de códigos de Grupo
 
 **Status:** proposta local, não homologada. Complementa ADR-1246.

@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-avaliacao-tardia-visita-concorrencia-1741-md"
+description: "Documento Sinérgica SO: Avaliação tardia e geração substituta de Visita"
+alwaysApply: false
+---
+
 # Avaliação tardia e geração substituta de Visita
 
 Usar somente clone descartável com migrations até 1741. Preparar `manual_E01-S165_fluxo_nova_visita_1705.sql` até antes da geração, usando `manual_E01-S165_aprovacao_nova_visita_1703.sql` com gate `sso_protocolo_revisao_1731_gate` habilitado exclusivamente no clone em lugar da substituição da guarda 1045. Avanço de data civil é simulado apenas no clone. Executar retirada da fila anterior e confirmar a preparação sintética.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0617-consulta-conferencia-localizacao-md"
+description: "Documento Sinérgica SO: ADR-0617 — Consulta das conferências de localização"
+alwaysApply: false
+---
+
 # ADR-0617 — Consulta das conferências de localização
 
 Status: proposta; gates fechados, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0819-e01-s180-leitura-unificada-comprovante-md"
+description: "Documento Sinérgica SO: ADR-0819 — Seleção única da leitura de comprovantes"
+alwaysApply: false
+---
+
 # ADR-0819 — Seleção única da leitura de comprovantes
 
 Status: preparado, gate fechado, não homologado.

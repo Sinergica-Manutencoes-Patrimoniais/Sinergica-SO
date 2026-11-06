@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1648-serializacao-administracao-capacidades-md"
+description: "Documento Sinérgica SO: ADR 1648: serialização da administração de capacidades"
+alwaysApply: false
+---
+
 # ADR 1648: serialização da administração de capacidades
 
 Os comandos de concessão, perfil e vínculo verificam o papel atual do administrador antes de gravar. As fontes de autorização já são serializadas pela chave transacional de 0319, mas a trava obtida pelo gatilho de escrita chega depois dessa verificação. Uma mudança concorrente do usuário poderia confirmar nesse intervalo.

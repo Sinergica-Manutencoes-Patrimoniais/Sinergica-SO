@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1672-hierarquia-grupos-mediada-md"
+description: "Documento Sinérgica SO: ADR-1672 — Listagem mediada da hierarquia de Grupos"
+alwaysApply: false
+---
+
 # ADR-1672 — Listagem mediada da hierarquia de Grupos
 
 ## Contexto

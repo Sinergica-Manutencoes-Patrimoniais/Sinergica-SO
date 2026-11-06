@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0922-serializar-liberacao-reserva-md"
+description: "Documento Sinérgica SO: ADR-0922 — Autorização transacional da liberação de reserva"
+alwaysApply: false
+---
+
 # ADR-0922 — Autorização transacional da liberação de reserva
 
 Data: 2026-10-30 · Status: preparado, não aplicado nem homologado.

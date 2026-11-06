@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0722-contrato-versionado-destino-foto-md"
+description: "Documento Sinérgica SO: ADR 0722 — Contrato versionado para destino de foto"
+alwaysApply: false
+---
+
 # ADR 0722 — Contrato versionado para destino de foto
 
 ## Decisão

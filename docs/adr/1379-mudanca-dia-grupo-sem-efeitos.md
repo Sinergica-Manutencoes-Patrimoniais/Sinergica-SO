@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1379-mudanca-dia-grupo-sem-efeitos-md"
+description: "Documento Sinérgica SO: ADR-1379 — Mudança de dia com ocorrência de Grupo sem efeitos"
+alwaysApply: false
+---
+
 # ADR-1379 — Mudança de dia com ocorrência de Grupo sem efeitos
 
 **Estado:** proposta; não aplicada nem homologada.

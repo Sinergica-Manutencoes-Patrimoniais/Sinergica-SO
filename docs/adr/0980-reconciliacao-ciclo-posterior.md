@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0980-reconciliacao-ciclo-posterior-md"
+description: "Documento Sinérgica SO: ADR-0980 — Reconciliação de parcela em ciclo posterior"
+alwaysApply: false
+---
+
 # ADR-0980 — Reconciliação de parcela em ciclo posterior
 
 Status: preparação privada, não homologada.

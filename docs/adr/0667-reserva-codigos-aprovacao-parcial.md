@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0667-reserva-codigos-aprovacao-parcial-md"
+description: "Documento Sinérgica SO: ADR-0667 — Reserva de códigos na aprovação parcial"
+alwaysApply: false
+---
+
 # ADR-0667 — Reserva de códigos na aprovação parcial
 
 Status: proposta; gates fechados, não homologada.

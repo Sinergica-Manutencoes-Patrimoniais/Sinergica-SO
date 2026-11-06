@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1064-rascunho-plano-legado-md"
+description: "Documento Sinérgica SO: ADR-1064 — Rascunho rastreável de Plano legado"
+alwaysApply: false
+---
+
 # ADR-1064 — Rascunho rastreável de Plano legado
 
 **Status:** preparação privada, não homologada. Complementa E01-S186 e a fundação E01-S165.

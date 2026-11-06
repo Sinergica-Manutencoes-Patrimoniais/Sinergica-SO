@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0196-revisao-vencimentos-retomada-md"
+description: "Documento Sinérgica SO: ADR-0196 — Decisões preliminares sobre vencimentos na retomada"
+alwaysApply: false
+---
+
 # ADR-0196 — Decisões preliminares sobre vencimentos na retomada
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1102-quarentena-transferencia-os-md"
+description: "Documento Sinérgica SO: ADR-1102 — Quarentena de observação de OS transferida"
+alwaysApply: false
+---
+
 # ADR-1102 — Quarentena de observação de OS transferida
 
 Status: proposta local, não aplicada nem homologada.

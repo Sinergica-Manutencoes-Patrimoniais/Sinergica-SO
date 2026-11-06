@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1520-origem-historica-impacto-md"
+description: "Documento Sinérgica SO: ADR-1520 — Origem histórica da ocorrência na comparação de revisão"
+alwaysApply: false
+---
+
 # ADR-1520 — Origem histórica da ocorrência na comparação de revisão
 
 ## Contexto

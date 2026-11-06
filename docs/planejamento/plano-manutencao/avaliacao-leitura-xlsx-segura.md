@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-avaliacao-leitura-xlsx-segura-md"
+description: "Documento Sinérgica SO: E01-S169 — avaliação de leitura XLSX no navegador"
+alwaysApply: false
+---
+
 # E01-S169 — avaliação de leitura XLSX no navegador
 
 Avaliação em 30/10/2026. A entrada CSV existente continua disponível para conferência local; XLSX ainda não está liberado. Não foi adicionada dependência nem alterado o fluxo de aprovação.

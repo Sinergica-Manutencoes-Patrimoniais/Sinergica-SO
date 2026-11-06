@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0712-preservar-atributos-ativos-importados-md"
+description: "Documento Sinérgica SO: ADR-0712 — Preservação de atributos de ativos incorporados"
+alwaysApply: false
+---
+
 # ADR-0712 — Preservação de atributos de ativos incorporados
 
 Uma guarda aditiva, desligada por padrão, bloqueia novos fatos de incorporação de Sistema, Equipamento e Componente enquanto a validação de atributos não estiver habilitada. Quando habilitada, rejeita atributos preenchidos de staging além dos que a criação individual valida ou transporta: nome, referência de pai e código informado. O staging permanece intacto para correção e reconferência.

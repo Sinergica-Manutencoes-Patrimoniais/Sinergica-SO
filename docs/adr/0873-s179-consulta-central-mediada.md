@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0873-s179-consulta-central-mediada-md"
+description: "Documento Sinérgica SO: ADR 0873 — Mediação da consulta à Central de Materiais"
+alwaysApply: false
+---
+
 # ADR 0873 — Mediação da consulta à Central de Materiais
 
 ## Contexto

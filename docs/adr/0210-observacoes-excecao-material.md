@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0210-observacoes-excecao-material-md"
+description: "Documento Sinérgica SO: ADR-0210 — Observações imutáveis de exceção de materiais"
+alwaysApply: false
+---
+
 # ADR-0210 — Observações imutáveis de exceção de materiais
 
 ## Decisão

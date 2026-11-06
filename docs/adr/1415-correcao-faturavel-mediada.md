@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1415-correcao-faturavel-mediada-md"
+description: "Documento Sinérgica SO: ADR-1415 — Correção mediada de faturável"
+alwaysApply: false
+---
+
 # ADR-1415 — Correção mediada de faturável
 
 ## Decisão

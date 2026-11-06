@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0086-consulta-comprovante-vinculado-md"
+description: "Documento Sinérgica SO: ADR-0086 — Referência autorizada de comprovante por lançamento"
+alwaysApply: false
+---
+
 # ADR-0086 — Referência autorizada de comprovante por lançamento
 
 ## Decisão

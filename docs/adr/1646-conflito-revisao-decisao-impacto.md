@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1646-conflito-revisao-decisao-impacto-md"
+description: "Documento Sinérgica SO: ADR-1646: conflito de revisão da decisão de impacto"
+alwaysApply: false
+---
+
 # ADR-1646: conflito de revisão da decisão de impacto
 
 ## Contexto

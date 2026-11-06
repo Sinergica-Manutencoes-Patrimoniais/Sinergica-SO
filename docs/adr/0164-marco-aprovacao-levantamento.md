@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0164-marco-aprovacao-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0164 — Marco de aprovação de código por incorporação"
+alwaysApply: false
+---
+
 # ADR-0164 — Marco de aprovação de código por incorporação
 
 ## Contexto

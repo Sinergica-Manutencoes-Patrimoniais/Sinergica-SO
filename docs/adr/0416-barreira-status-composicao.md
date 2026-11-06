@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0416-barreira-status-composicao-md"
+description: "Documento Sinérgica SO: ADR-0416 — barreira provisória para fontes compartilhadas"
+alwaysApply: false
+---
+
 # ADR-0416 — barreira provisória para fontes compartilhadas
 
 Status: proposto; não aplicado nem homologado.

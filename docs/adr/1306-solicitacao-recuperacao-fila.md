@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1306-solicitacao-recuperacao-fila-md"
+description: "Documento Sinérgica SO: ADR-1306 — Solicitação de recuperação de integração"
+alwaysApply: false
+---
+
 # ADR-1306 — Solicitação de recuperação de integração
 
 ## Decisão

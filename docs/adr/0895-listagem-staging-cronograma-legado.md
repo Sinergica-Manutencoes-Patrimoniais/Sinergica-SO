@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0895-listagem-staging-cronograma-legado-md"
+description: "Documento Sinérgica SO: ADR-0895 — Listagem controlada de lotes legados"
+alwaysApply: false
+---
+
 # ADR-0895 — Listagem controlada de lotes legados
 
 Data: 2026-10-30 · Status: preparação; gates fechados, não homologado.

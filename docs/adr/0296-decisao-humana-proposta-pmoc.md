@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0296-decisao-humana-proposta-pmoc-md"
+description: "Documento Sinérgica SO: ADR-0296 — Decisão humana sobre proposta PMOC"
+alwaysApply: false
+---
+
 # ADR-0296 — Decisão humana sobre proposta PMOC
 
 Status: proposta, não homologada.

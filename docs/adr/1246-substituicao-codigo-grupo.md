@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1246-substituicao-codigo-grupo-md"
+description: "Documento Sinérgica SO: ADR-1246 — Substituição privada de código de Grupo"
+alwaysApply: false
+---
+
 # ADR-1246 — Substituição privada de código de Grupo
 
 **Status:** proposta local, não homologada. Complementa ADR-1244/1245.

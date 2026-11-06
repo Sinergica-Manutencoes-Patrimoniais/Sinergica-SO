@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1641-proposta-encerramento-mediada-md"
+description: "Documento Sinérgica SO: ADR-1641: proposta mediada de encerramento preventivo"
+alwaysApply: false
+---
+
 # ADR-1641: proposta mediada de encerramento preventivo
 
 ## Contexto

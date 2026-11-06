@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1649-breadcrumb-grupo-mediado-md"
+description: "Documento Sinérgica SO: ADR-1649 — Leitura mediada do breadcrumb de Grupo"
+alwaysApply: false
+---
+
 # ADR-1649 — Leitura mediada do breadcrumb de Grupo
 
 ## Estado

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0936-worker-xlsx-estrutura-md"
+description: "Documento Sinérgica SO: ADR-0936 — Preparação isolada de leitura XLSX para estrutura"
+alwaysApply: false
+---
+
 # ADR-0936 — Preparação isolada de leitura XLSX para estrutura
 
 Status: proposta, não homologada nem conectada à interface. Complementa ADR-0935.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1490-impacto-revisao-pmoc-md"
+description: "Documento Sinérgica SO: ADR-1490 — Decisões de revisão para ciclos PMOC vinculados"
+alwaysApply: false
+---
+
 # ADR-1490 — Decisões de revisão para ciclos PMOC vinculados
 
 ## Contexto

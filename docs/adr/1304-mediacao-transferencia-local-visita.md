@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1304-mediacao-transferencia-local-visita-md"
+description: "Documento Sinérgica SO: ADR-1304 — Mediação da transferência local entre Visitas"
+alwaysApply: false
+---
+
 # ADR-1304 — Mediação da transferência local entre Visitas
 
 ## Decisão

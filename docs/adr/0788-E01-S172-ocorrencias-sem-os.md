@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0788-e01-s172-ocorrencias-sem-os-md"
+description: "Documento Sinérgica SO: ADR-0788: projeção semanal parcial de ocorrências sem OS"
+alwaysApply: false
+---
+
 # ADR-0788: projeção semanal parcial de ocorrências sem OS
 
 Status: proposta sob gates fechados, não homologada.

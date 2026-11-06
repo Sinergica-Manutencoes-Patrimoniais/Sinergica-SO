@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-rollout-transicao-1776-md"
+description: "Documento Sinérgica SO: Compatibilidade de rollout da transição de Plano 1776"
+alwaysApply: false
+---
+
 # Compatibilidade de rollout da transição de Plano 1776
 
 Escopo: mudança de conflito `revisao_obsoleta` de SQLSTATE `40001` para `P0011` em suspensão/encerramento/retomada. Comparação estática entre interface anterior do snapshot `1770c57` e interface atual; 1776 foi compilada e ensaiada em clone separado pela fixture `manual_E01-S165_transicao_conflito_1776.sql`.

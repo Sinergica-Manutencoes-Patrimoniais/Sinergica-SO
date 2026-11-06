@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1420-preflight-migracao-mediado-md"
+description: "Documento Sinérgica SO: ADR-1420 — Pré-conferência mediada de migração"
+alwaysApply: false
+---
+
 # ADR-1420 — Pré-conferência mediada de migração
 
 ## Decisão

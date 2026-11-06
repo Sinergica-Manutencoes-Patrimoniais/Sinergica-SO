@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0419-scopes-fontes-compartilhadas-md"
+description: "Documento Sinérgica SO: ADR-0419 — aquisição ordenada para fontes compartilhadas"
+alwaysApply: false
+---
+
 # ADR-0419 — aquisição ordenada para fontes compartilhadas
 
 Status: proposto; não aplicado nem homologado.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1356-atestacao-servico-executado-md"
+description: "Documento Sinérgica SO: ADR 1356 — Atestação PCM de execução de serviço"
+alwaysApply: false
+---
+
 # ADR 1356 — Atestação PCM de execução de serviço
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1024-coincidencia-calendario-feriado-md"
+description: "Documento Sinérgica SO: ADR-1024 — Vencimentos por calendário em data declarada"
+alwaysApply: false
+---
+
 # ADR-1024 — Vencimentos por calendário em data declarada
 
 Status: preparação privada, não homologada.

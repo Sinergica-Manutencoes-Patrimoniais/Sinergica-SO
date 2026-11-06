@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0577-criacao-localizacoes-selecao-md"
+description: "Documento Sinérgica SO: ADR-0577 — Criação selecionada de localizações"
+alwaysApply: false
+---
+
 # ADR-0577 — Criação selecionada de localizações
 
 Status: proposta; gate fechado, não homologada.

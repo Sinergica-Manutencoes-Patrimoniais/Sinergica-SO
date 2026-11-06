@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0987-ranking-com-retorno-parcial-md"
+description: "Documento Sinérgica SO: ADR-0987 — Ranking experimental com retorno parcial"
+alwaysApply: false
+---
+
 # ADR-0987 — Ranking experimental com retorno parcial
 
 Status: preparação privada, não homologada.

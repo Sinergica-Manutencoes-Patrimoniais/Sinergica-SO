@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0236-conferencia-consolidada-lote-md"
+description: "Documento Sinérgica SO: ADR-0236 — Conferência consolidada de lote de levantamento"
+alwaysApply: false
+---
+
 # ADR-0236 — Conferência consolidada de lote de levantamento
 
 ## Decisão

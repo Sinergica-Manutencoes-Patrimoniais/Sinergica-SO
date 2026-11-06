@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0064-encerramento-equipe-visita-md"
+description: "Documento Sinérgica SO: ADR-0064 — Encerramento de participação na equipe da Visita"
+alwaysApply: false
+---
+
 # ADR-0064 — Encerramento de participação na equipe da Visita
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

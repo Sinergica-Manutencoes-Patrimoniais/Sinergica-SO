@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1197-decisao-vencimento-mediada-md"
+description: "Documento Sinérgica SO: ADR-1197 — Decisão preliminar de vencimento mediada"
+alwaysApply: false
+---
+
 # ADR-1197 — Decisão preliminar de vencimento mediada
 
 ## Contexto

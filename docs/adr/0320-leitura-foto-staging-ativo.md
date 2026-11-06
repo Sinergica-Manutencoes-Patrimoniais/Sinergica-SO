@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0320-leitura-foto-staging-ativo-md"
+description: "Documento Sinérgica SO: ADR-0320 — Leitura temporária mediada de fotos de ativo"
+alwaysApply: false
+---
+
 # ADR-0320 — Leitura temporária mediada de fotos de ativo
 
 Consulta e resolução privadas apresentam somente associações temporárias de Sistema/Componente cuja última decisão permaneça aceita, com autorização de leitura vigente e verificação de Cliente. Rejeição posterior bloqueia futuras leituras sem apagar histórico. Endpoint deve revalidar acesso após download e não fornecer URL pública.

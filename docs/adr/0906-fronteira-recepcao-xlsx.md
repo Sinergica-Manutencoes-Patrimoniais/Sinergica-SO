@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0906-fronteira-recepcao-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0906 — Fronteira de preparação XLSX"
+alwaysApply: false
+---
+
 # ADR-0906 — Fronteira de preparação XLSX
 
 Data: 2026-10-30 · Status: preparação, não conectada nem publicada.

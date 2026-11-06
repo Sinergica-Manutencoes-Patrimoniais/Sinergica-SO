@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1231-diagnostico-executor-varredura-fila-md"
+description: "Documento Sinérgica SO: ADR-1231 — Diagnóstico interno do executor de varredura"
+alwaysApply: false
+---
+
 # ADR-1231 — Diagnóstico interno do executor de varredura
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1132-quarentena-propriedade-fila-md"
+description: "Documento Sinérgica SO: ADR-1132 — Quarentena de propriedade da fila de integração"
+alwaysApply: false
+---
+
 # ADR-1132 — Quarentena de propriedade da fila de integração
 
 Status: proposta local, não aplicada nem homologada.

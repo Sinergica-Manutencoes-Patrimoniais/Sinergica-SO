@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1235-interface-lote-rascunhos-md"
+description: "Documento Sinérgica SO: ADR-1235 — Interface de lote de rascunhos legados"
+alwaysApply: false
+---
+
 # ADR-1235 — Interface de lote de rascunhos legados
 
 ## Decisão

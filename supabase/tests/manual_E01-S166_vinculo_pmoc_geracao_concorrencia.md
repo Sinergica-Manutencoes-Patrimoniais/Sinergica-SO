@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-vinculo-pmoc-geracao-concorrencia-md"
+description: "Documento Sinérgica SO: Vínculo PMOC e geração pelo Plano"
+alwaysApply: false
+---
+
 # Vínculo PMOC e geração pelo Plano
 
 Usar clone descartável com migrations até 1767. Preparar a fixture de comparação de Calendário até antes da primeira geração; no clone, inserir proposta PMOC e decisão validada sintéticas, com mesmo Cliente, Plano, Rotina, alvo e data do agendamento. A proposta e decisão são dados de preparação sintéticos, não provam sua criação pelas RPCs. Habilitar o gate do vínculo somente no clone.

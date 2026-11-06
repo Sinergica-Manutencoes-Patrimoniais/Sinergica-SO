@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-validacao-lote-s165-s166-s170-s176-md"
+description: "Documento Sinérgica SO: Validação integrada — lote E01-S165, S166, S170 e S176"
+alwaysApply: false
+---
+
 # Validação integrada — lote E01-S165, S166, S170 e S176
 
 **Data:** 2026-11-06  
@@ -11,6 +17,9 @@
 - Cinco scripts S182 com guarda de banco descartável foram movidos de `supabase/tests/` para `supabase/manual-tests/`; são ensaios manuais, não testes pgTAP automatizados. O job oficial agora seleciona todos os `*.test.sql`, sem os incluir por engano. O workflow fixa temporariamente Supabase CLI 2.114.0, que aplicou a cadeia local completa; a atualização deve ocorrer após a regressão do `LOCK TABLE` ser corrigida upstream ([Supabase CLI issue #6347](https://github.com/supabase/cli/issues/6347)).
 - Este PASS cobre a suíte SQL automatizada em banco local descartável; não substitui a execução do workflow GitHub, E2E visual, medição de capacidade, aprovação formal dos ADRs ou homologação.
 - Revisão adversarial read-only independente das quatro stories concluída nesta data: nenhum achado reproduzido de severidade alta ou média. A aprovação formal dos ADRs e a homologação continuam pendentes; T016 permanece aberto nas quatro stories.
+- Auditoria remota anterior da PR #71 parou no `audit:esteira` por oito ADRs 1662–1669 sem frontmatter; os documentos novos da branch tinham o mesmo problema. Frontmatter SDD foi acrescentado mecanicamente, preservando o conteúdo, e `pnpm run audit:esteira` agora passa com **2.596 documentos**.
+- O `db-tests` da PR #71 usava CLI `latest` e parou no `supabase start`; aquela execução é anterior à pinagem 2.114.0 desta branch. A validação local limpa com 2.114.0 passou a seleção SQL completa. A execução GitHub do candidato atual ainda não ocorreu.
+- Os hashes do overlay S165 foram atualizados após a correção da migration 1823 e dos testes de reconciliação; isso remove a divergência que bloquearia o runner isolado antes do ensaio.
 
 ## Evidência executada
 

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1105-fonte-custo-aquisicao-md"
+description: "Documento Sinérgica SO: ADR-1105 — Fonte explícita de custo de aquisição"
+alwaysApply: false
+---
+
 # ADR-1105 — Fonte explícita de custo de aquisição
 
 Status: proposta local, não aplicada nem homologada.

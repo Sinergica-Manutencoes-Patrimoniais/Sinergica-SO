@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0147-rateio-despesa-visita-md"
+description: "Documento Sinérgica SO: ADR-0147 — Rateio de despesa por OS da Visita"
+alwaysApply: false
+---
+
 # ADR-0147 — Rateio de despesa por OS da Visita
 
 **Estado:** proposta, comandos revogados; não homologada nem implantada.

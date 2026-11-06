@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0090-leitura-ordens-chamado-md"
+description: "Documento Sinérgica SO: ADR-0090 — Leitura protegida das OS por Chamado"
+alwaysApply: false
+---
+
 # ADR-0090 — Leitura protegida das OS por Chamado
 
 ## Estado

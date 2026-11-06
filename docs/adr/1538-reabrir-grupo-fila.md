@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1538-reabrir-grupo-fila-md"
+description: "Documento Sinérgica SO: ADR-1538 — Reabrir conferência de Grupo na fila"
+alwaysApply: false
+---
+
 # ADR-1538 — Reabrir conferência de Grupo na fila
 
 ## Contexto

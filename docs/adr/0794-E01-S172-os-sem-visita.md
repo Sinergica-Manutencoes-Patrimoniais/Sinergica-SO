@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0794-e01-s172-os-sem-visita-md"
+description: "Documento Sinérgica SO: ADR-0794: OS sem Visita em snapshot parcial"
+alwaysApply: false
+---
+
 # ADR-0794: OS sem Visita em snapshot parcial
 
 Status: proposta; gates fechados, homologação pendente.

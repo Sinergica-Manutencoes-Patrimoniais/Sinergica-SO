@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0116-materializacao-rotina-calendario-md"
+description: "Documento Sinérgica SO: ADR-0116 — Preparação da materialização por Rotina e alvo"
+alwaysApply: false
+---
+
 # ADR-0116 — Preparação da materialização por Rotina e alvo
 
 **Estado:** proposta não aplicada nem homologada. Complementa ADR-0076, ADR-0077 e ADR-0114.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0221-diagnostico-conflitos-capacidade-md"
+description: "Documento Sinérgica SO: ADR-0221 — Diagnóstico limitado de conflitos de capacidade"
+alwaysApply: false
+---
+
 # ADR-0221 — Diagnóstico limitado de conflitos de capacidade
 
 Status: proposta, não homologada.

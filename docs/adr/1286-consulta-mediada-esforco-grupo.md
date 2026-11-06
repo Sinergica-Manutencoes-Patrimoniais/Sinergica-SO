@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1286-consulta-mediada-esforco-grupo-md"
+description: "Documento Sinérgica SO: ADR 1286 — Consulta mediada de esforço por Grupo"
+alwaysApply: false
+---
+
 # ADR 1286 — Consulta mediada de esforço por Grupo
 
 ## Contexto

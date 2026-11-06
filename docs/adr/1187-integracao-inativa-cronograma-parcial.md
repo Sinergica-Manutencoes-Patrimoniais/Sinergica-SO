@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1187-integracao-inativa-cronograma-parcial-md"
+description: "Documento Sinérgica SO: ADR-1187 — Integração inativa do cronograma parcial"
+alwaysApply: false
+---
+
 # ADR-1187 — Integração inativa do cronograma parcial
 
 Status: proposta local; não homologada.

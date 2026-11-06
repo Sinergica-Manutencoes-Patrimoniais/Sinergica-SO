@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1339-estado-ocorrencia-calendario-vinculada-md"
+description: "Documento Sinérgica SO: ADR-1339 — Estado de ocorrência de calendário vinculada"
+alwaysApply: false
+---
+
 # ADR-1339 — Estado de ocorrência de calendário vinculada
 
 **Estado:** proposta; não aplicada nem homologada.

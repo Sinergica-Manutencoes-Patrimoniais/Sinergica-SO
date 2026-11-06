@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0127-incorporacao-localizacao-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0127 — Incorporação parcial de localização de levantamento"
+alwaysApply: false
+---
+
 # ADR-0127 — Incorporação parcial de localização de levantamento
 
 ## Estado

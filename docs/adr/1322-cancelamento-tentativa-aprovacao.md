@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1322-cancelamento-tentativa-aprovacao-md"
+description: "Documento Sinérgica SO: ADR-1322 — Encerrar tentativa de aprovação parcial sem apagar histórico"
+alwaysApply: false
+---
+
 # ADR-1322 — Encerrar tentativa de aprovação parcial sem apagar histórico
 
 Estado: preparação local; gate fechado, sem autorização para implantação.

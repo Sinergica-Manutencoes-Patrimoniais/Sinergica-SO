@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0975-comandos-devolucao-com-ator-md"
+description: "Documento Sinérgica SO: ADR-0975 — Identidade explícita nos comandos de ciclo"
+alwaysApply: false
+---
+
 # ADR-0975 — Identidade explícita nos comandos de ciclo
 
 Status: preparação privada; não homologada.

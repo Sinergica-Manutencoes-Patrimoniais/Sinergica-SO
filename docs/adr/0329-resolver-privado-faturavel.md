@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0329-resolver-privado-faturavel-md"
+description: "Documento Sinérgica SO: ADR-0329 — Resolução mediada do comprovante faturável"
+alwaysApply: false
+---
+
 # ADR-0329 — Resolução mediada do comprovante faturável
 
 Status: proposta; nenhuma concessão ou deploy nesta etapa.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1080-regra-efetiva-visita-md"
+description: "Documento Sinérgica SO: ADR-1080 — Regra efetiva da Visita contratual"
+alwaysApply: false
+---
+
 # ADR-1080 — Regra efetiva da Visita contratual
 
 Status: proposta local, não aplicada nem homologada.

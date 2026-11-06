@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0380-diagnostico-devolucao-parcial-md"
+description: "Documento Sinérgica SO: ADR-0380 — Diagnóstico conservador de devolução parcial"
+alwaysApply: false
+---
+
 # ADR-0380 — Diagnóstico conservador de devolução parcial
 
 A suspensão administrativa, atribuição de parcela a OS e declaração de interrupção são fatos separados; nenhum comprova, isoladamente, parada efetiva ou estado de execução. A especificação exige devolver apenas escopo não resolvido e não duplicar trabalho em curso. Prepara-se consulta privada paginada desses sinais, explicitamente sem elegibilidade nem devolução.

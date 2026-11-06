@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0369-intencao-local-sem-dispatch-md"
+description: "Documento Sinérgica SO: ADR-0369 — Registro local bloqueado de intenção de envio"
+alwaysApply: false
+---
+
 # ADR-0369 — Registro local bloqueado de intenção de envio
 
 Status: proposta; sem testes ou ativação.

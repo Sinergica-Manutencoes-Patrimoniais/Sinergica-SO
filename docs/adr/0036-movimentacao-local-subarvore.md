@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0036-movimentacao-local-subarvore-md"
+description: "Documento Sinérgica SO: ADR-0036 — Movimentação de Local e subárvore"
+alwaysApply: false
+---
+
 # ADR-0036 — Movimentação de Local e subárvore
 
 **Status:** decisão para implementação local E01-S176. **Data:** 2026-10-27.

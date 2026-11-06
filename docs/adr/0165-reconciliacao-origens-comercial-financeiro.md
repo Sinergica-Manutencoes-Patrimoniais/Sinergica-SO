@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0165-reconciliacao-origens-comercial-financeiro-md"
+description: "Documento Sinérgica SO: ADR-0165 — Consulta de vínculos reais Comercial e Financeiro"
+alwaysApply: false
+---
+
 # ADR-0165 — Consulta de vínculos reais Comercial e Financeiro
 
 Status: proposta, não homologada.

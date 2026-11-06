@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1002-avaliacao-equipment-no-outbox-md"
+description: "Documento Sinérgica SO: ADR-1002 — Avaliação de Equipment no outbox"
+alwaysApply: false
+---
+
 # ADR-1002 — Avaliação de Equipment no outbox
 
 Status: preparação fechada, não homologada.

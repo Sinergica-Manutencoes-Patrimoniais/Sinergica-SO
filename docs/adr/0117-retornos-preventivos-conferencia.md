@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0117-retornos-preventivos-conferencia-md"
+description: "Documento Sinérgica SO: ADR-0117 — Referências de retorno preventivo para conferência"
+alwaysApply: false
+---
+
 # ADR-0117 — Referências de retorno preventivo para conferência
 
 ## Estado

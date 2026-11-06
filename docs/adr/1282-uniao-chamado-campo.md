@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1282-uniao-chamado-campo-md"
+description: "Documento Sinérgica SO: ADR-1282 — União e duplicidade de Chamado de campo"
+alwaysApply: false
+---
+
 # ADR-1282 — União e duplicidade de Chamado de campo
 
 Status: proposta local; não aplicada nem homologada.

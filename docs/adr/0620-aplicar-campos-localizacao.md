@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0620-aplicar-campos-localizacao-md"
+description: "Documento Sinérgica SO: ADR-0620 — Integração de campos conferidos de localização"
+alwaysApply: false
+---
+
 # ADR-0620 — Integração de campos conferidos de localização
 
 Status: proposta; gate fechado, não homologada.

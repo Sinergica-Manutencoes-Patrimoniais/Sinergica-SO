@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1409-evidencia-origem-pendencia-mediada-md"
+description: "Documento Sinérgica SO: ADR-1409 — Leitura mediada de evidências de Pendência"
+alwaysApply: false
+---
+
 # ADR-1409 — Leitura mediada de evidências de Pendência
 
 ## Decisão

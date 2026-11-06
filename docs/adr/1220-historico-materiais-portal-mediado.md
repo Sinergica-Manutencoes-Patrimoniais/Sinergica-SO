@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1220-historico-materiais-portal-mediado-md"
+description: "Documento Sinérgica SO: ADR-1220 — Histórico público de materiais mediado"
+alwaysApply: false
+---
+
 # ADR-1220 — Histórico público de materiais mediado
 
 ## Decisão

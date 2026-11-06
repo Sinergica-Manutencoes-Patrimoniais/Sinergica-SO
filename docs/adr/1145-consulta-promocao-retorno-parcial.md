@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1145-consulta-promocao-retorno-parcial-md"
+description: "Documento Sinérgica SO: ADR-1145 — Consulta da promoção de retorno parcial"
+alwaysApply: false
+---
+
 # ADR-1145 — Consulta da promoção de retorno parcial
 
 Status: proposta local, gate fechado; não aplicada nem homologada.

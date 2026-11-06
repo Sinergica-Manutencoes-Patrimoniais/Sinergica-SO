@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1134-selecao-aba-cronograma-md"
+description: "Documento Sinérgica SO: ADR-1134 — Seleção da aba na leitura incremental do cronograma"
+alwaysApply: false
+---
+
 # ADR-1134 — Seleção da aba na leitura incremental do cronograma
 
 Status: proposta local, não homologada.

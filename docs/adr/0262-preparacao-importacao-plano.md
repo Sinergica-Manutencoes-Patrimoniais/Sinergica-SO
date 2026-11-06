@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0262-preparacao-importacao-plano-md"
+description: "Documento Sinérgica SO: ADR-0262 — Preparação de incorporação de cronograma"
+alwaysApply: false
+---
+
 # ADR-0262 — Preparação de incorporação de cronograma
 
 Status: proposta, não homologada.

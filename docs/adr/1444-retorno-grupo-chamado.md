@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1444-retorno-grupo-chamado-md"
+description: "Documento Sinérgica SO: ADR 1444 — Perguntas e classificação de Grupo com Chamado"
+alwaysApply: false
+---
+
 # ADR 1444 — Perguntas e classificação de Grupo com Chamado
 
 As consultas existentes de classificação e cobertura de retorno reconhecem a OS de Grupo com Chamado somente quando ele coincide com o ciclo da ocorrência. A associação sem Chamado continua disponível. A fotografia aprovada e a identificação da OS seguem obrigatórias.

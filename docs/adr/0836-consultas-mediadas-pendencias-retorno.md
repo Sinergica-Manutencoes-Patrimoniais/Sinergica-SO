@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0836-consultas-mediadas-pendencias-retorno-md"
+description: "Documento Sinérgica SO: ADR-0836 — Consultas mediadas para preparação de Pendências"
+alwaysApply: false
+---
+
 # ADR-0836 — Consultas mediadas para preparação de Pendências
 
 ## Contexto

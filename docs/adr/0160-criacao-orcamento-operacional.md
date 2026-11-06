@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0160-criacao-orcamento-operacional-md"
+description: "Documento Sinérgica SO: ADR-0160 — Criação de proposta operacional em oportunidade existente"
+alwaysApply: false
+---
+
 # ADR-0160 — Criação de proposta operacional em oportunidade existente
 
 **Estado:** proposta preparatória, revogada e não homologada.

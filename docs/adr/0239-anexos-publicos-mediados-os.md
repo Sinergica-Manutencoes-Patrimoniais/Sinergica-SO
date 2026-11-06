@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0239-anexos-publicos-mediados-os-md"
+description: "Documento Sinérgica SO: ADR-0239 — Publicação e leitura mediada de anexo da OS"
+alwaysApply: false
+---
+
 # ADR-0239 — Publicação e leitura mediada de anexo da OS
 
 **Estado:** preparação fechada, sem homologação nem implantação.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0274-conferencia-despesa-visita-md"
+description: "Documento Sinérgica SO: ADR-0274 — Conferência operacional da despesa"
+alwaysApply: false
+---
+
 # ADR-0274 — Conferência operacional da despesa
 
 Status: proposta; gate e funções fechados, testes pendentes.

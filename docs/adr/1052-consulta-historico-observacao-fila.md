@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1052-consulta-historico-observacao-fila-md"
+description: "Documento Sinérgica SO: ADR-1052 — Consulta do histórico de observações da fila"
+alwaysApply: false
+---
+
 # ADR-1052 — Consulta do histórico de observações da fila
 
 **Status:** preparação privada, não homologada. Complementa ADR-1051.

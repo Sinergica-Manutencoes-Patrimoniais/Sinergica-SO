@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1156-transferencia-os-origem-material-md"
+description: "Documento Sinérgica SO: ADR-1156 — Origem de material na transferência de OS enviada"
+alwaysApply: false
+---
+
 # ADR-1156 — Origem de material na transferência de OS enviada
 
 Status: proposta local, não aplicada nem homologada.

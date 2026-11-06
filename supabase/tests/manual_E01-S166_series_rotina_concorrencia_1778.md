@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-series-rotina-concorrencia-1778-md"
+description: "Documento Sinérgica SO: Série por Rotina: revogação e mudança de Cliente"
+alwaysApply: false
+---
+
 # Série por Rotina: revogação e mudança de Cliente
 
 Em 2026-11-05, migrations 1614–1778 foram aplicadas em ordem em clone descartável, com dados sintéticos de `manual_E01-S166_fila_visita_fixture.sql` confirmados apenas no clone. Exercitaram-se as RPCs autenticadas `sso_listar_series_rotina_mediado` (1777) e `sso_vincular_serie_rotina_mediado` (1778), com request e parâmetros da fixture `manual_E01-S166_vincular_serie_1778.sql`.

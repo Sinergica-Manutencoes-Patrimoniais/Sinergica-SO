@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1367-mediacao-diagnosticos-servico-md"
+description: "Documento Sinérgica SO: ADR-1367 — Diagnóstico e prévia mediados de serviço"
+alwaysApply: false
+---
+
 # ADR-1367 — Diagnóstico e prévia mediados de serviço
 
 **Estado:** proposta; não aplicada nem homologada.

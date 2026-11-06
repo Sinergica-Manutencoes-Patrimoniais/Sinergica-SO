@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1316-foto-verificada-grupo-md"
+description: "Documento Sinérgica SO: ADR-1316 — Vínculo de foto verificada ao Grupo"
+alwaysApply: false
+---
+
 # ADR-1316 — Vínculo de foto verificada ao Grupo
 
 ## Contexto

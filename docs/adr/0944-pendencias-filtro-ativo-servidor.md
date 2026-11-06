@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0944-pendencias-filtro-ativo-servidor-md"
+description: "Documento Sinérgica SO: ADR-0944 — Filtro de Pendências por ativo antes da paginação"
+alwaysApply: false
+---
+
 # ADR-0944 — Filtro de Pendências por ativo antes da paginação
 
 Status: preparação local, não homologada.

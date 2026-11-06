@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1210-recibo-continuidade-parcela-md"
+description: "Documento Sinérgica SO: ADR-1210 — Consulta de recibo de continuidade de parcela"
+alwaysApply: false
+---
+
 # ADR-1210 — Consulta de recibo de continuidade de parcela
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1303-recibo-transferencia-local-visita-md"
+description: "Documento Sinérgica SO: ADR-1303 — Recibo de transferência local entre Visitas"
+alwaysApply: false
+---
+
 # ADR-1303 — Recibo de transferência local entre Visitas
 
 ## Decisão

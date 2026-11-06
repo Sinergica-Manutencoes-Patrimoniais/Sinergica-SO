@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1087-acesso-telas-calendario-reconciliacao-md"
+description: "Documento Sinérgica SO: ADR-1087 — Acesso às novas telas de calendário e reconciliação"
+alwaysApply: false
+---
+
 # ADR-1087 — Acesso às novas telas de calendário e reconciliação
 
 Status: proposta local, não aplicada nem homologada.

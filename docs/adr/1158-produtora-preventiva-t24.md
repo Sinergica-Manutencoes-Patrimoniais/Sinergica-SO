@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1158-produtora-preventiva-t24-md"
+description: "Documento Sinérgica SO: ADR-1158 — Candidata preventiva T−24 a partir de fontes oficiais"
+alwaysApply: false
+---
+
 # ADR-1158 — Candidata preventiva T−24 a partir de fontes oficiais
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0042-referencia-tempo-rotina-md"
+description: "Documento Sinérgica SO: ADR-0042 — Referência do tempo da Rotina"
+alwaysApply: false
+---
+
 # ADR-0042 — Referência do tempo da Rotina
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

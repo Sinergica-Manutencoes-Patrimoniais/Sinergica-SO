@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1071-aprovacao-continuacao-parcela-md"
+description: "Documento Sinérgica SO: ADR-1071 — Aprovação de continuidade vinculada à parcela"
+alwaysApply: false
+---
+
 # ADR-1071 — Aprovação de continuidade vinculada à parcela
 
 **Status:** preparação privada, não homologada. Complementa ADR-0981 e E01-S167.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1643-proposta-exigencia-mediada-md"
+description: "Documento Sinérgica SO: ADR-1643 — Consulta mediada da proposta de exigência"
+alwaysApply: false
+---
+
 # ADR-1643 — Consulta mediada da proposta de exigência
 
 A tela de revisão chamava uma função privada de proposta normativa, sem EXECUTE para authenticated, tornando a leitura indisponível mesmo com o gate habilitado.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0891-s169-validar-origem-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0891 — Conferência da origem das ocorrências no servidor"
+alwaysApply: false
+---
+
 # ADR-0891 — Conferência da origem das ocorrências no servidor
 
 Data: 2026-10-30 · Status: preparação; gates fechados, não homologado.

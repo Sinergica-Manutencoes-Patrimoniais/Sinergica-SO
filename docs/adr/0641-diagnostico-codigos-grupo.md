@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0641-diagnostico-codigos-grupo-md"
+description: "Documento Sinérgica SO: ADR-0641 — Diagnóstico de códigos informados para Grupos"
+alwaysApply: false
+---
+
 # ADR-0641 — Diagnóstico de códigos informados para Grupos
 
 Status: proposta; gate fechado, não homologada.

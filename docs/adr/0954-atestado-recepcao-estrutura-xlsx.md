@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0954-atestado-recepcao-estrutura-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0954 — Atestado para recepção de estrutura XLSX"
+alwaysApply: false
+---
+
 # ADR-0954 — Atestado para recepção de estrutura XLSX
 
 Status: preparação privada, sem operação habilitada.

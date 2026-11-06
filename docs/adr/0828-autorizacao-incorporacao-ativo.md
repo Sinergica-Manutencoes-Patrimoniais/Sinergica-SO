@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0828-autorizacao-incorporacao-ativo-md"
+description: "Documento Sinérgica SO: ADR 0828 — Serializar autorização na incorporação de ativo"
+alwaysApply: false
+---
+
 # ADR 0828 — Serializar autorização na incorporação de ativo
 
 A mediação de incorporação 0919 chama o núcleo 0397, que verifica `cadastro.aprovar` após travas, mas uma revogação posterior a essa verificação poderia ocorrer antes do commit. Reusar a trava compartilhada transacional do protocolo 0319/0976, em READ COMMITTED, antes de consultar autorização e adquirir as travas do núcleo. O lado exclusivo dos triggers 0319 coordena alterações nas fontes atuais de permissão.

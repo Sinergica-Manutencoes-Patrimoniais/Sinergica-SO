@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0206-relatorios-internos-despesas-md"
+description: "Documento Sinérgica SO: ADR-0206 — Relatórios internos de despesas nas telas existentes"
+alwaysApply: false
+---
+
 # ADR-0206 — Relatórios internos de despesas nas telas existentes
 
 **Estado:** preparação bloqueada; sem homologação ou implantação.

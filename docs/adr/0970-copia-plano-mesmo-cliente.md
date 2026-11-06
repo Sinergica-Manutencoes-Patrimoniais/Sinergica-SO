@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0970-copia-plano-mesmo-cliente-md"
+description: "Documento Sinérgica SO: ADR-0970 — Cópia transacional de Plano aprovado"
+alwaysApply: false
+---
+
 # ADR-0970 — Cópia transacional de Plano aprovado
 
 Status: preparação privada; não homologada.

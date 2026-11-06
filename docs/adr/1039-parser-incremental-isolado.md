@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1039-parser-incremental-isolado-md"
+description: "Documento Sinérgica SO: ADR-1039 — Parser incremental em worker dedicado"
+alwaysApply: false
+---
+
 # ADR-1039 — Parser incremental em worker dedicado
 
 Status: preparação experimental, sem integração operacional ou testes desta alteração.

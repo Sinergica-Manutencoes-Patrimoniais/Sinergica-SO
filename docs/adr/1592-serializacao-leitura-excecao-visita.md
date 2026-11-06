@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1592-serializacao-leitura-excecao-visita-md"
+description: "Documento Sinérgica SO: ADR-1592 — Serializar leitura de exceção com revogação"
+alwaysApply: false
+---
+
 # ADR-1592 — Serializar leitura de exceção com revogação
 
 A consulta de exceção validava permissões no início e no fim, mas podia retornar histórico durante uma revogação ainda não confirmada. Em clone, a leitura conseguiu acessar o histórico enquanto outra transação mantinha a revogação aberta.

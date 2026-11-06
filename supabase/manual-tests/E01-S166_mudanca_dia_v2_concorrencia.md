@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s166-mudanca-dia-v2-concorrencia-md"
+description: "Documento Sinérgica SO: Ensaio manual preparado — E01-S166 fotografia V2"
+alwaysApply: false
+---
+
 # Ensaio manual preparado — E01-S166 fotografia V2
 
 Não executar até a equipe de dados confirmar um clone descartável, identidade PCM sintética e gate de ensaio. O gate de produção continua fechado.

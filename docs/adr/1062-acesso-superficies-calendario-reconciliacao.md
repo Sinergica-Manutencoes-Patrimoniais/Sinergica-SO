@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1062-acesso-superficies-calendario-reconciliacao-md"
+description: "Documento Sinérgica SO: ADR-1062 — Acesso às superfícies preparadas"
+alwaysApply: false
+---
+
 # ADR-1062 — Acesso às superfícies preparadas
 
 **Status:** preparado, não homologado. Complementa ADR-1051, 1052, 1053 e 1058.

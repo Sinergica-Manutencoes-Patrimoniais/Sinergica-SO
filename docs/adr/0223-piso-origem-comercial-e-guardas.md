@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0223-piso-origem-comercial-e-guardas-md"
+description: "Documento Sinérgica SO: ADR-0223 — Exceção de piso para origem com oportunidade"
+alwaysApply: false
+---
+
 # ADR-0223 — Exceção de piso para origem com oportunidade
 
 **Estado:** preparação fechada, sem homologação nem implantação.

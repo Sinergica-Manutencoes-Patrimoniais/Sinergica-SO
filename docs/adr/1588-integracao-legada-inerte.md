@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1588-integracao-legada-inerte-md"
+description: "Documento Sinérgica SO: ADR 1588 — Integração da declaração legada inerte"
+alwaysApply: false
+---
+
 # ADR 1588 — Integração da declaração legada inerte
 
 ## Contexto

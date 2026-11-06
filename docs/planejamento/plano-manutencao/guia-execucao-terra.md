@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-guia-execucao-terra-md"
+description: "Documento Sinérgica SO: Guia de execução — Terra"
+alwaysApply: false
+---
+
 # Guia de execução — Terra
 
 **Só especificação nesta entrega.** Este guia orienta futura sessão de implementação; não concede deploy, push ou tarefas reais.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0845-conferencia-opcional-nao-inspecionada-md"
+description: "Documento Sinérgica SO: ADR-0845 — Conferência de pergunta opcional não inspecionada"
+alwaysApply: false
+---
+
 # ADR-0845 — Conferência de pergunta opcional não inspecionada
 
 ## Contexto

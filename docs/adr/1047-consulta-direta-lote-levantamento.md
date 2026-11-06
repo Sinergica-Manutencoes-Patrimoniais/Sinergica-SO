@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1047-consulta-direta-lote-levantamento-md"
+description: "Documento Sinérgica SO: ADR-1047 — Abertura do lote recebido por identidade"
+alwaysApply: false
+---
+
 # ADR-1047 — Abertura do lote recebido por identidade
 
 **Status:** preparação privada, não homologada.

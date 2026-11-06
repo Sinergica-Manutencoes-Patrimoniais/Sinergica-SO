@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-matriz-rastreabilidade-md"
+description: "Documento Sinérgica SO: Matriz de rastreabilidade — Caderno SSO"
+alwaysApply: false
+---
+
 # Matriz de rastreabilidade — Caderno SSO
 
 Todos os vínculos abaixo são **planejamento de cobertura**, não testes já aprovados. Cada story liga AC a tasks de teste e regra. S186 apenas coordena homologação; não substitui testes de domínio das proprietárias.

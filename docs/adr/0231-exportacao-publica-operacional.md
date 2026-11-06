@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0231-exportacao-publica-operacional-md"
+description: "Documento Sinérgica SO: ADR-0231 — Leitura e exportação pública operacional"
+alwaysApply: false
+---
+
 # ADR-0231 — Leitura e exportação pública operacional
 
 **Estado:** preparação fechada, não homologada nem implantada.

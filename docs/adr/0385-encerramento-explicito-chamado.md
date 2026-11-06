@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0385-encerramento-explicito-chamado-md"
+description: "Documento Sinérgica SO: ADR-0385 — Encerramento explícito e conferido de Chamado"
+alwaysApply: false
+---
+
 # ADR-0385 — Encerramento explícito e conferido de Chamado
 
 Status: proposta, não homologada.

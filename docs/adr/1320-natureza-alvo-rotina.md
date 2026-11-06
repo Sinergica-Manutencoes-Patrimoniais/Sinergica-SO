@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1320-natureza-alvo-rotina-md"
+description: "Documento Sinérgica SO: ADR-1320 — Natureza explícita de alvo em cadastro compartilhado"
+alwaysApply: false
+---
+
 # ADR-1320 — Natureza explícita de alvo em cadastro compartilhado
 
 ## Decisão

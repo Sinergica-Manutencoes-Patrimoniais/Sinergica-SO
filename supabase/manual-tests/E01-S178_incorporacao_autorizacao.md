@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s178-incorporacao-autorizacao-md"
+description: "Documento Sinérgica SO: S178 — autorização concorrente durante incorporação real"
+alwaysApply: false
+---
+
 # S178 — autorização concorrente durante incorporação real
 
 Somente banco descartável em rede interna e cron desligado. Usar duas sessões psql. A fixture `E01-S177_snapshot_fixture.sql` deve ter sido criada; também é necessária concessão **sintética e previamente confirmada** `cadastro.aprovar` ao usuário `17799500-0000-0000-0000-000000000001` para o Cliente `...000a`. Não inserir concessão dentro da sessão A: seu trigger tomaria a trava exclusiva e falsearia a prova. Aplicar 1017 apenas transacionalmente antes de iniciar a operação.

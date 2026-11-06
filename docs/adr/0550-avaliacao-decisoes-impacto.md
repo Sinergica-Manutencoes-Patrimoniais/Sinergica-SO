@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0550-avaliacao-decisoes-impacto-md"
+description: "Documento Sinérgica SO: ADR-0550 — Avaliação parcial das decisões de impacto"
+alwaysApply: false
+---
+
 # ADR-0550 — Avaliação parcial das decisões de impacto
 
 Status: preparada, gate fechado, não aplicada nem homologada. Compara a última decisão por ocorrência preparada de calendário da versão anterior, revisão do Plano e fotografia das OS atuais do Cliente; conta ausências, decisões obsoletas, reconciliações, fontes individuais incompletas e divergências de Cliente sem expor IDs externos.

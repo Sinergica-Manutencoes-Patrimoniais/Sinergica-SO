@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0187-capacidade-cancelar-visita-md"
+description: "Documento Sinérgica SO: ADR-0187 — Capacidade explícita de cancelar Visita"
+alwaysApply: false
+---
+
 # ADR-0187 — Capacidade explícita de cancelar Visita
 
 Status: proposta, não homologada.

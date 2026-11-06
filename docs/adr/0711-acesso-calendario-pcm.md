@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0711-acesso-calendario-pcm-md"
+description: "Documento Sinérgica SO: ADR-0711 — Acesso às operações preparadas de calendário"
+alwaysApply: false
+---
+
 # ADR-0711 — Acesso às operações preparadas de calendário
 
 Status: preparada; não aplicada nem homologada.

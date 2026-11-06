@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1363-quadro-chamados-inconsistencias-por-item-md"
+description: "Documento Sinérgica SO: ADR-1363 — Inconsistência por item no quadro gerencial"
+alwaysApply: false
+---
+
 # ADR-1363 — Inconsistência por item no quadro gerencial
 
 **Estado:** proposta; não aplicada nem homologada.

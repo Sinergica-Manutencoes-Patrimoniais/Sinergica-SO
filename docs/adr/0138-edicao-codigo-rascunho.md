@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0138-edicao-codigo-rascunho-md"
+description: "Documento Sinérgica SO: ADR-0138 — Código de rascunho comprovado"
+alwaysApply: false
+---
+
 # ADR-0138 — Código de rascunho comprovado
 
 ## Estado

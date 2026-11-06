@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0727-mediacao-atomica-contrato-financeiro-md"
+description: "Documento Sinérgica SO: ADR-0727 — Mediação atômica do vínculo Comercial–Financeiro"
+alwaysApply: false
+---
+
 # ADR-0727 — Mediação atômica do vínculo Comercial–Financeiro
 
 **Status:** proposta de arquitetura, não implementada nem homologada. Não altera o escopo global legado por módulo.

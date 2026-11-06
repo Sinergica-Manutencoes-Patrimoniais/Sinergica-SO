@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1670-leitura-documento-staging-mediada-md"
+description: "Documento Sinérgica SO: ADR-1670 — Leitura mediada de documento aceito de levantamento"
+alwaysApply: false
+---
+
 # ADR-1670 — Leitura mediada de documento aceito de levantamento
 
 ## Contexto

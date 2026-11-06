@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0730-validar-origem-contrato-no-insert-md"
+description: "Documento Sinérgica SO: ADR-0730 — Validar origem do rascunho de contrato"
+alwaysApply: false
+---
+
 # ADR-0730 — Validar origem do rascunho de contrato
 
 **Status:** preparado para diagnóstico; não homologado nem implantado.

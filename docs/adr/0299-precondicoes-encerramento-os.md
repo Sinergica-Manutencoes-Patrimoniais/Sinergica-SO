@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0299-precondicoes-encerramento-os-md"
+description: "Documento Sinérgica SO: ADR-0299 — Pré-condições de encerramento individual de OS"
+alwaysApply: false
+---
+
 # ADR-0299 — Pré-condições de encerramento individual de OS
 
 Status: proposta, não homologada.

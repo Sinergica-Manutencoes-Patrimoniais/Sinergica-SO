@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0485-bloqueio-retry-incerto-md"
+description: "Documento Sinérgica SO: ADR-0485 — guarda de retorno incerto da fila"
+alwaysApply: false
+---
+
 # ADR-0485 — guarda de retorno incerto da fila
 
 Status: proposto; não aplicado nem homologado. A migration 0024 reivindica apenas `pending` e `pcm-auvo-push` registra falhas como `error`; 0051 descreve drenagem automática, enquanto 0210 contém manutenção histórica de estados. É preciso verificar o estado real do ambiente e outros escritores antes de afirmar a existência ou ausência de retry ativo.

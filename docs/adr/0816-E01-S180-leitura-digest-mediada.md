@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0816-e01-s180-leitura-digest-mediada-md"
+description: "Documento Sinérgica SO: ADR-0816 — Leitura mediada de comprovante com digest"
+alwaysApply: false
+---
+
 # ADR-0816 — Leitura mediada de comprovante com digest
 
 Status: preparado sob gates fechados; não homologado.

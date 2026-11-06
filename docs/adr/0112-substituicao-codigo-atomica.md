@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0112-substituicao-codigo-atomica-md"
+description: "Documento Sinérgica SO: ADR-0112 — Substituição administrativa e proteção transitória de código"
+alwaysApply: false
+---
+
 # ADR-0112 — Substituição administrativa e proteção transitória de código
 
 ## Estado

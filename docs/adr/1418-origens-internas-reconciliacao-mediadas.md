@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1418-origens-internas-reconciliacao-mediadas-md"
+description: "Documento Sinérgica SO: ADR-1418 — Consulta mediada de origens internas"
+alwaysApply: false
+---
+
 # ADR-1418 — Consulta mediada de origens internas
 
 ## Decisão

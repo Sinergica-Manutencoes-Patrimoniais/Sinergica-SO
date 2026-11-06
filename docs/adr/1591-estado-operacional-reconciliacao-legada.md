@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1591-estado-operacional-reconciliacao-legada-md"
+description: "Documento Sinérgica SO: ADR-1591 — Estado operacional da reconciliação legada"
+alwaysApply: false
+---
+
 # ADR-1591 — Estado operacional da reconciliação legada
 
 Uma declaração pode continuar válida após a criação legítima de Chamado SSO ou mudança da revisão do Plano. Esses eventos alteram a fotografia histórica, mas não necessariamente invalidam a reserva; orientar o PCM a declarar novamente nesse caso é incorreto.

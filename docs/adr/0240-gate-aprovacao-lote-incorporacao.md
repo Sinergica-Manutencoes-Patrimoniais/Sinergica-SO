@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0240-gate-aprovacao-lote-incorporacao-md"
+description: "Documento Sinérgica SO: ADR-0240 — Aprovação do lote antes de incorporar"
+alwaysApply: false
+---
+
 # ADR-0240 — Aprovação do lote antes de incorporar
 
 ## Decisão

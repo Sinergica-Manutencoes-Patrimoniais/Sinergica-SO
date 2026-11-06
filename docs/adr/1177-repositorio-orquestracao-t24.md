@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1177-repositorio-orquestracao-t24-md"
+description: "Documento Sinérgica SO: ADR-1177 — Adaptador privado da orquestração T−24"
+alwaysApply: false
+---
+
 # ADR-1177 — Adaptador privado da orquestração T−24
 
 Status: proposta local, não conectada nem homologada.

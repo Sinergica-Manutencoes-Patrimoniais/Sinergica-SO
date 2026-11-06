@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1218-historico-legado-decisoes-paginadas-md"
+description: "Documento Sinérgica SO: ADR-1218 — Paginação separada de orçamentos legados e decisões"
+alwaysApply: false
+---
+
 # ADR-1218 — Paginação separada de orçamentos legados e decisões
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0057-regra-cliente-contexto-md"
+description: "Documento Sinérgica SO: ADR-0057 — Cliente esperado na criação de regra"
+alwaysApply: false
+---
+
 # ADR-0057 — Cliente esperado na criação de regra
 
 **Status:** decisão para implementação local E01-S166. **Data:** 2026-10-27.

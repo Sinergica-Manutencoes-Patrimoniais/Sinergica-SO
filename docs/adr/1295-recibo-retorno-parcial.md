@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1295-recibo-retorno-parcial-md"
+description: "Documento Sinérgica SO: ADR 1295 — Recibo de devolução parcial"
+alwaysApply: false
+---
+
 # ADR 1295 — Recibo de devolução parcial
 
 ## Contexto

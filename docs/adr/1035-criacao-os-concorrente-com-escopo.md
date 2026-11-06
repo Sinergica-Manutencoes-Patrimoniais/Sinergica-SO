@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1035-criacao-os-concorrente-com-escopo-md"
+description: "Documento Sinérgica SO: ADR-1035 — Criação concorrente de OS com escopo conferido"
+alwaysApply: false
+---
+
 # ADR-1035 — Criação concorrente de OS com escopo conferido
 
 Status: preparação local, não aplicada nem testada.

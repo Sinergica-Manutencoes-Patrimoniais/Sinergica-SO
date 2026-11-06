@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0739-isolamento-ativacao-contrato-md"
+description: "Documento Sinérgica SO: ADR-0739 — Isolamento explícito na ativação de contrato"
+alwaysApply: false
+---
+
 # ADR-0739 — Isolamento explícito na ativação de contrato
 
 **Status:** diagnóstico; sem homologação ou deploy.

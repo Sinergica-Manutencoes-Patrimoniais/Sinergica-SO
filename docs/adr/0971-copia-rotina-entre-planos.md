@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0971-copia-rotina-entre-planos-md"
+description: "Documento Sinérgica SO: ADR-0971 — Cópia identificada de Rotina entre Planos"
+alwaysApply: false
+---
+
 # ADR-0971 — Cópia identificada de Rotina entre Planos
 
 Status: preparação privada; não homologada.

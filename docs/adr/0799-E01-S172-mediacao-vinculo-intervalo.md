@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0799-e01-s172-mediacao-vinculo-intervalo-md"
+description: "Documento Sinérgica SO: ADR 0799 — Mediação do vínculo de intervalo"
+alwaysApply: false
+---
+
 # ADR 0799 — Mediação do vínculo de intervalo
 
 Status: proposta; não homologada.

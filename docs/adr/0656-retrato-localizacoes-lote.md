@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0656-retrato-localizacoes-lote-md"
+description: "Documento Sinérgica SO: ADR-0656 — Retrato selecionado na aplicação de localizações"
+alwaysApply: false
+---
+
 # ADR-0656 — Retrato selecionado na aplicação de localizações
 
 Status: proposta; gate fechado, não homologada.

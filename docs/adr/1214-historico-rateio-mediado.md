@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1214-historico-rateio-mediado-md"
+description: "Documento Sinérgica SO: ADR-1214 — Histórico mediado de rateios"
+alwaysApply: false
+---
+
 # ADR-1214 — Histórico mediado de rateios
 
 ## Decisão

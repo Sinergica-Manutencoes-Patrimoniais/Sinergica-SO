@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0081-politicas-preventivas-restritas-origem-md"
+description: "Documento Sinérgica SO: ADR-0081 — Políticas preventivas legadas limitadas à origem"
+alwaysApply: false
+---
+
 # ADR-0081 — Políticas preventivas legadas limitadas à origem
 
 ## Decisão

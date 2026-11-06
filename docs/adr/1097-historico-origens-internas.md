@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1097-historico-origens-internas-md"
+description: "Documento Sinérgica SO: ADR-1097 — Histórico das observações internas"
+alwaysApply: false
+---
+
 # ADR-1097 — Histórico das observações internas
 
 Status: proposta local, não aplicada nem homologada.

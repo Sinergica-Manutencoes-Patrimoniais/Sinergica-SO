@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0140-marcos-observados-codigo-md"
+description: "Documento Sinérgica SO: ADR-0140 — Marcos observados do código público"
+alwaysApply: false
+---
+
 # ADR-0140 — Marcos observados do código público
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1185-composicao-interna-t24-md"
+description: "Documento Sinérgica SO: ADR-1185 — Composição interna do executor T−24"
+alwaysApply: false
+---
+
 # ADR-1185 — Composição interna do executor T−24
 
 Status: proposta local, não homologada.

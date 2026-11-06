@@ -1,3 +1,9 @@
+---
+name: adr-1668-mediacao-composicao-estrutura
+description: Define leitura transacional mediada das composições técnicas.
+alwaysApply: false
+---
+
 # ADR-1668 — Leitura transacional das novas composições
 
 Status: proposta; depende do gate fechado da 1809. Um mediador consulta as fontes necessárias às visões de Local e Sistemas na mesma transação que trava o gate e verifica ator/Cliente e ação atual. Com gate desligado ou indisponível, nenhuma fonte é entregue. A consulta preserva paginação de 50 linhas, ordenação e campos necessários; cada fonte recebe filtro explícito de Cliente. Vínculos só são retornados se Sistema e Equipamento pertencerem ao Cliente autorizado. Categorias são compartilhadas e retornam apenas identificador e nome.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1361-diagnostico-categoria-candidata-md"
+description: "Documento Sinérgica SO: ADR 1361 — Categoria de negócio da candidata T−24"
+alwaysApply: false
+---
+
 # ADR 1361 — Categoria de negócio da candidata T−24
 
 ## Contexto

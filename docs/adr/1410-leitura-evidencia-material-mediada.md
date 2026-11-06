@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1410-leitura-evidencia-material-mediada-md"
+description: "Documento Sinérgica SO: ADR-1410 — Consulta mediada de evidências de materiais"
+alwaysApply: false
+---
+
 # ADR-1410 — Consulta mediada de evidências de materiais
 
 ## Decisão

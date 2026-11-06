@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1227-lista-atual-materiais-portal-mediada-md"
+description: "Documento Sinérgica SO: ADR-1227 — Lista atual de materiais mediada no Portal"
+alwaysApply: false
+---
+
 # ADR-1227 — Lista atual de materiais mediada no Portal
 
 ## Decisão

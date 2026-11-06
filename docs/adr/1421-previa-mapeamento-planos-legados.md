@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1421-previa-mapeamento-planos-legados-md"
+description: "Documento Sinérgica SO: ADR-1421 — Prévia do mapeamento de Planos legados"
+alwaysApply: false
+---
+
 # ADR-1421 — Prévia do mapeamento de Planos legados
 
 ## Decisão

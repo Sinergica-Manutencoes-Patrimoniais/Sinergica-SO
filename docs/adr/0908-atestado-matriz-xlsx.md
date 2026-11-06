@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0908-atestado-matriz-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0908 — Atestado da matriz derivada do XLSX"
+alwaysApply: false
+---
+
 # ADR-0908 — Atestado da matriz derivada do XLSX
 
 Data: 2026-10-30 · Status: preparação, não implantado.

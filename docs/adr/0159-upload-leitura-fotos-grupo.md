@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0159-upload-leitura-fotos-grupo-md"
+description: "Documento Sinérgica SO: ADR-0159 — Upload e leitura intermediada de fotos de Grupo"
+alwaysApply: false
+---
+
 # ADR-0159 — Upload e leitura intermediada de fotos de Grupo
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0498-vinculo-visita-legado-existente-md"
+description: "Documento Sinérgica SO: ADR-0498 — Vínculo de ocorrência por Visita a legado existente"
+alwaysApply: false
+---
+
 # ADR-0498 — Vínculo de ocorrência por Visita a legado existente
 
 Status: preparado, gate fechado, não aplicado nem homologado. A associação exige ocorrência preparada por Visita, origem contratual, Plano SSO ativo, relação humana atual, mesmo Cliente/alvo/data/questionário e ocorrência legada existente sem OS ou tarefa. Não inventa Plano legado, não cria ocorrência, OS ou tarefa. O vínculo é idempotente, único e auditado.

@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s166-decisao-feriado-resultados-md"
+description: "Documento Sinérgica SO: S166 — decisão de feriado em rotina por calendário"
+alwaysApply: false
+---
+
 # S166 — decisão de feriado em rotina por calendário
 
 O teste `E01-S166_decisao_feriado_calendario.test.sql` passou 9/9 com fixture

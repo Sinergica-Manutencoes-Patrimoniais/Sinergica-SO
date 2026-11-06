@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0606-campos-localizacao-staging-md"
+description: "Documento Sinérgica SO: ADR-0606 — Campos explícitos de localização em staging"
+alwaysApply: false
+---
+
 # ADR-0606 — Campos explícitos de localização em staging
 
 Status: proposta; gate fechado, não homologada.

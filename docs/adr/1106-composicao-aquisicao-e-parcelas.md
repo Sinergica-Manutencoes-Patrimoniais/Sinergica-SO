@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1106-composicao-aquisicao-e-parcelas-md"
+description: "Documento Sinérgica SO: ADR-1106 — Composição com fontes de aquisição e despesas"
+alwaysApply: false
+---
+
 # ADR-1106 — Composição com fontes de aquisição e despesas
 
 Status: proposta local, não aplicada nem homologada.

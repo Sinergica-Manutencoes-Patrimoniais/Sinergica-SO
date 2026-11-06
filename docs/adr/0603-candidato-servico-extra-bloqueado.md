@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0603-candidato-servico-extra-bloqueado-md"
+description: "Documento Sinérgica SO: ADR-0603 — Candidato de serviço extra bloqueado por identidade"
+alwaysApply: false
+---
+
 # ADR-0603 — Candidato de serviço extra bloqueado por identidade
 
 Status: pendente de implementação e validação.

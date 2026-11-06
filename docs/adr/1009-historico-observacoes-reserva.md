@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1009-historico-observacoes-reserva-md"
+description: "Documento Sinérgica SO: ADR-1009 — Histórico de observações de reserva"
+alwaysApply: false
+---
+
 # ADR-1009 — Histórico de observações de reserva
 
 Status: preparação privada, não homologada.

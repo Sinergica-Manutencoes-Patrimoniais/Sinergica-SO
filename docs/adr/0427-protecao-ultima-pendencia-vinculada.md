@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0427-protecao-ultima-pendencia-vinculada-md"
+description: "Documento Sinérgica SO: ADR-0427 — Última pendência de composição vinculada"
+alwaysApply: false
+---
+
 # ADR-0427 — Última pendência de composição vinculada
 
 Com gate desligado, comportamento existente permanece. Com gate ligado, remoção da última pendência de composição vinculada a Chamado exige decisão explícita, justificada e auditada no mesmo comando, sem parcelas vinculadas à composição. A verificação de parcelas é conservadora: qualquer vínculo impede a exceção, inclusive histórico; não se presume que uma parcela deixou de estar ativa. A composição é bloqueada durante a decisão e a retirada. Não altera Chamado ou dados históricos. A exceção usa o comando auditado de retirada existente e só tem validade na transação da decisão. Revisão de concorrência, permissões e testes são obrigatórios antes de ativação.

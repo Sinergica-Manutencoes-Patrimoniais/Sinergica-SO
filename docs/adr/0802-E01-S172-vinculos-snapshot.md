@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0802-e01-s172-vinculos-snapshot-md"
+description: "Documento Sinérgica SO: ADR 0802 — Vínculos declarados no snapshot parcial"
+alwaysApply: false
+---
+
 # ADR 0802 — Vínculos declarados no snapshot parcial
 
 Status: proposta; não homologada.

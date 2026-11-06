@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0526-consumidores-saldo-canonico-md"
+description: "Documento Sinérgica SO: ADR-0526 — consumidores de saldo canônico"
+alwaysApply: false
+---
+
 # ADR-0526 — consumidores de saldo canônico
 
 Status: proposto; não aplicado nem homologado. Seleção e emissão interna integral/parcial, consulta de saldo, alocação e estorno passam a usar o controlador 0749 para somas de alocações canônicas ativas. O controlador passa a `VOLATILE` para que uma chamada posterior a uma escrita na mesma transação possa observar seus efeitos, particularmente após inserir estorno. Não muda a unicidade legada nem introduz tabela paralela de parcelas.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0913-reconciliar-tentativa-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0913 — Reconciliação explícita de tentativa XLSX concorrente"
+alwaysApply: false
+---
+
 # ADR-0913 — Reconciliação explícita de tentativa XLSX concorrente
 
 Data: 2026-10-30 · Status: preparação, gate fechado.

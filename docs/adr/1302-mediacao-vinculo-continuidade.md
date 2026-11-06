@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1302-mediacao-vinculo-continuidade-md"
+description: "Documento Sinérgica SO: ADR-1302 — Mediação do vínculo de continuidade do Backlog"
+alwaysApply: false
+---
+
 # ADR-1302 — Mediação do vínculo de continuidade do Backlog
 
 ## Contexto

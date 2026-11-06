@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1312-recibo-decisao-correlacao-md"
+description: "Documento Sinérgica SO: ADR-1312 — Recibo de decisão sobre correlação de gasto"
+alwaysApply: false
+---
+
 # ADR-1312 — Recibo de decisão sobre correlação de gasto
 
 ## Decisão

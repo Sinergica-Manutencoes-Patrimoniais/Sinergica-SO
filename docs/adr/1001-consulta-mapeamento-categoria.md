@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1001-consulta-mapeamento-categoria-md"
+description: "Documento Sinérgica SO: ADR-1001 — Conferência do mapeamento de categoria"
+alwaysApply: false
+---
+
 # ADR-1001 — Conferência do mapeamento de categoria
 
 Status: preparação privada, não homologada.

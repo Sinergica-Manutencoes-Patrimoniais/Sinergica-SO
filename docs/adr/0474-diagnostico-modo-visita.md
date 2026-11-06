@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0474-diagnostico-modo-visita-md"
+description: "Documento Sinérgica SO: ADR-0474 — Diagnóstico de suporte do modo Visita"
+alwaysApply: false
+---
+
 # ADR-0474 — Diagnóstico de suporte do modo Visita
 
 Status: preparado, gate fechado, não aplicado nem homologado. A consulta informa parâmetros da Rotina do snapshot aprovado ou do rascunho mutável e identifica se correspondem à única combinação atualmente suportada pelo gerador preparado 0455: modo Visita, intervalo de uma semana. Ausência é indeterminada.

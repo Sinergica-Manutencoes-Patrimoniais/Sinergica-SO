@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0191-historico-comprovantes-despesa-md"
+description: "Documento Sinérgica SO: ADR-0191 — Histórico privado de comprovantes de despesa"
+alwaysApply: false
+---
+
 # ADR-0191 — Histórico privado de comprovantes de despesa
 
 **Estado:** proposta preparatória, não homologada nem implantada.

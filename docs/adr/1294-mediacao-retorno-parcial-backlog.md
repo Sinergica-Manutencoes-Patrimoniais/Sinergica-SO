@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1294-mediacao-retorno-parcial-backlog-md"
+description: "Documento Sinérgica SO: ADR 1294 — Mediação do retorno parcial ao Backlog"
+alwaysApply: false
+---
+
 # ADR 1294 — Mediação do retorno parcial ao Backlog
 
 ## Contexto

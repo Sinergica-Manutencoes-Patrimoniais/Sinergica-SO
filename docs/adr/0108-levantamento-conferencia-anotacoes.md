@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0108-levantamento-conferencia-anotacoes-md"
+description: "Documento Sinérgica SO: ADR-0108 — Anotações de conferência em staging de levantamento"
+alwaysApply: false
+---
+
 # ADR-0108 — Anotações de conferência em staging de levantamento
 
 ## Estado

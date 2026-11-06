@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0760-e01-s168-reconciliar-finalizacao-legada-md"
+description: "Documento Sinérgica SO: ADR-0760 — Reconciliação somente leitura de finalização anterior"
+alwaysApply: false
+---
+
 # ADR-0760 — Reconciliação somente leitura de finalização anterior
 
 **Status:** preparada, sem aplicação nem homologação. **Data:** 2026-10-30.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1122-retificacao-fonte-utilizada-md"
+description: "Documento Sinérgica SO: ADR-1122 — Retificação de fonte já utilizada"
+alwaysApply: false
+---
+
 # ADR-1122 — Retificação de fonte já utilizada
 
 Status: proposta local, não aplicada nem homologada.

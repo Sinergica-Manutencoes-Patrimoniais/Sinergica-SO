@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0589-conferencia-codigos-lote-md"
+description: "Documento Sinérgica SO: ADR-0589 — Conferência de códigos na recepção"
+alwaysApply: false
+---
+
 # ADR-0589 — Conferência de códigos na recepção
 
 Status: proposta; gate fechado, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0597-busca-codigo-falha-fechada-md"
+description: "Documento Sinérgica SO: ADR-0597 — Busca de código com autorização fechada"
+alwaysApply: false
+---
+
 # ADR-0597 — Busca de código com autorização fechada
 
 Status: proposta, não homologada.

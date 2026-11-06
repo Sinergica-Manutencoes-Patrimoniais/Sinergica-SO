@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1517-questionario-na-decisao-impacto-md"
+description: "Documento Sinérgica SO: ADR-1517 — Conteúdo do questionário na decisão de impacto"
+alwaysApply: false
+---
+
 # ADR-1517 — Conteúdo do questionário na decisão de impacto
 
 ## Contexto

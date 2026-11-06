@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0089-vigencia-versoes-plano-md"
+description: "Documento Sinérgica SO: ADR-0089 — Vigência não sobreposta para versões do Plano"
+alwaysApply: false
+---
+
 # ADR-0089 — Vigência não sobreposta para versões do Plano
 
 ## Estado

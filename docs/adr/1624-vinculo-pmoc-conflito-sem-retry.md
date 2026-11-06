@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1624-vinculo-pmoc-conflito-sem-retry-md"
+description: "Documento Sinérgica SO: ADR-1624: divergência definitiva no vínculo PMOC"
+alwaysApply: false
+---
+
 # ADR-1624: divergência definitiva no vínculo PMOC
 
 Plano ou decisão divergente no vínculo de ciclo ao PMOC é rejeição de negócio, não serialização transitória. O SQLSTATE `40001` pode provocar repetição automática no PostgREST de ensaio.

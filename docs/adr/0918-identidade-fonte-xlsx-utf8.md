@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0918-identidade-fonte-xlsx-utf8-md"
+description: "Documento Sinérgica SO: ADR-0918 — Identidade de fonte XLSX em UTF-8 no transporte"
+alwaysApply: false
+---
+
 # ADR-0918 — Identidade de fonte XLSX em UTF-8 no transporte
 
 Data: 2026-10-30 · Status: preparação, não publicada.

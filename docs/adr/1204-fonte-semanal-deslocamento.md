@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1204-fonte-semanal-deslocamento-md"
+description: "Documento Sinérgica SO: ADR-1204 — Fonte semanal de deslocamento declarado"
+alwaysApply: false
+---
+
 # ADR-1204 — Fonte semanal de deslocamento declarado
 
 ## Decisão

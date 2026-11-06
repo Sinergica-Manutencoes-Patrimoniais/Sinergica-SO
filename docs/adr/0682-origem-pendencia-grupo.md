@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0682-origem-pendencia-grupo-md"
+description: "Documento Sinérgica SO: ADR-0682 — Rastreabilidade e descrição histórica de Pendência Grupo"
+alwaysApply: false
+---
+
 # ADR-0682 — Rastreabilidade e descrição histórica de Pendência Grupo
 
 Consulta aditiva de rastreabilidade distingue ocorrência legada de ocorrência de Grupo; o contrato anterior permanece disponível. O resolvedor de texto histórico da promoção usa a associação declarada OS–Grupo e snapshot aprovado, exige Cliente, versão, Rotina e alvo coincidentes e não recorre ao questionário atual. Ausência ou ambiguidade bloqueia promoção.

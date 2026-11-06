@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0092-previa-revisao-plano-consistente-md"
+description: "Documento Sinérgica SO: ADR-0092 — Prévia revisionada de conteúdo do Plano"
+alwaysApply: false
+---
+
 # ADR-0092 — Prévia revisionada de conteúdo do Plano
 
 ## Estado

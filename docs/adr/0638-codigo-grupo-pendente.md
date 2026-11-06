@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0638-codigo-grupo-pendente-md"
+description: "Documento Sinérgica SO: ADR-0638 — Código informado de Grupo permanece pendente"
+alwaysApply: false
+---
+
 # ADR-0638 — Código informado de Grupo permanece pendente
 
 Status: proposta; gate fechado, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1019-fotografia-feriados-declarados-md"
+description: "Documento Sinérgica SO: ADR-1019 — Fotografia das declarações de feriado"
+alwaysApply: false
+---
+
 # ADR-1019 — Fotografia das declarações de feriado
 
 Status: preparação privada, não homologada.

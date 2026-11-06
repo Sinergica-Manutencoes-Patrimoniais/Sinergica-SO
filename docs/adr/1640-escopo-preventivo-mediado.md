@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1640-escopo-preventivo-mediado-md"
+description: "Documento Sinérgica SO: ADR-1640: declaração de escopo preventivo mediada"
+alwaysApply: false
+---
+
 # ADR-1640: declaração de escopo preventivo mediada
 
 ## Contexto

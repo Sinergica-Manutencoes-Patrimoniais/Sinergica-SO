@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1296-recibo-recepcao-manual-levantamento-md"
+description: "Documento Sinérgica SO: ADR-1296 — Recibo da recepção manual de levantamento"
+alwaysApply: false
+---
+
 # ADR-1296 — Recibo da recepção manual de levantamento
 
 ## Contexto

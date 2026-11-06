@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1350-recuperacao-ingestao-comprovante-md"
+description: "Documento Sinérgica SO: ADR 1350 — Recuperar confirmação de ingestão do comprovante"
+alwaysApply: false
+---
+
 # ADR 1350 — Recuperar confirmação de ingestão do comprovante
 
 ## Contexto

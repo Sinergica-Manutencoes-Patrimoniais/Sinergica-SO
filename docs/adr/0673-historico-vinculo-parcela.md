@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0673-historico-vinculo-parcela-md"
+description: "Documento Sinérgica SO: ADR-0673 — Histórico preparatório de vínculo de parcela"
+alwaysApply: false
+---
+
 # ADR-0673 — Histórico preparatório de vínculo de parcela
 
 Eventos imutáveis e revisionados registram origem, encerramento declarado e reentrada declarada para o vínculo existente Pendência–parcela, mantendo o ID e a PK do legado. O registro é autorizado, auditado e idempotente; não remove nem recria vínculos, não disponibiliza escopo para execução e não comprova ausência de trabalho em andamento.

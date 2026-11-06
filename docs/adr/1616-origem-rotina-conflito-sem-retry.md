@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1616-origem-rotina-conflito-sem-retry-md"
+description: "Documento Sinérgica SO: ADR 1616 — Conflito de revisão na origem da Rotina"
+alwaysApply: false
+---
+
 # ADR 1616 — Conflito de revisão na origem da Rotina
 
 Status: aceito para implementação; homologação pendente.

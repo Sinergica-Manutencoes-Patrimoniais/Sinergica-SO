@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1219-historico-pre-os-decisoes-paginadas-md"
+description: "Documento Sinérgica SO: ADR-1219 — Paginação separada do histórico pré-OS"
+alwaysApply: false
+---
+
 # ADR-1219 — Paginação separada do histórico pré-OS
 
 ## Decisão

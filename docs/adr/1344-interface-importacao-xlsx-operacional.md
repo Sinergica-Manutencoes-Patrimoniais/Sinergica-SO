@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1344-interface-importacao-xlsx-operacional-md"
+description: "Documento Sinérgica SO: ADR-1344 — Disponibilidade controlada da importação XLSX de estrutura"
+alwaysApply: false
+---
+
 # ADR-1344 — Disponibilidade controlada da importação XLSX de estrutura
 
 **Estado:** proposta; não implantada nem homologada.

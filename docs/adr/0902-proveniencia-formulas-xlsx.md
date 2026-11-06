@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0902-proveniencia-formulas-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0902 — Evidência de fórmulas na prévia XLSX"
+alwaysApply: false
+---
+
 # ADR-0902 — Evidência de fórmulas na prévia XLSX
 
 Data: 2026-10-30 · Status: preparação local; não ativa importação.

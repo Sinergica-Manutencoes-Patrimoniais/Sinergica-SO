@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0249-revisao-linha-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0249 — Revisão de linha de cronograma no staging"
+alwaysApply: false
+---
+
 # ADR-0249 — Revisão de linha de cronograma no staging
 
 Status: proposta, não homologada.

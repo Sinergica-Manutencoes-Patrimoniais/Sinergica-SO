@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0562-protocolo-concorrencia-impactos-md"
+description: "Documento Sinérgica SO: ADR-0562 — Protocolo opt-in e não bloqueante de concorrência"
+alwaysApply: false
+---
+
 # ADR-0562 — Protocolo opt-in e não bloqueante de concorrência
 
 Status: preparado, gate desligado, não aplicado nem homologado. Sob gate, triggers de statement dos escritores conhecidos de OS, ocorrências preparadas/legadas e pontes tentam a mesma trava transacional global sem esperar; conflito falha imediatamente e requer retry. 0785 exige esse gate/trava antes dos locks de linhas e usa NOWAIT. Com gate desligado os triggers não tomam trava e comportamento anterior é preservado.

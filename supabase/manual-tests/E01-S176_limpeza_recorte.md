@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s176-limpeza-recorte-md"
+description: "Documento Sinérgica SO: Limpeza excepcional do clone de recorte"
+alwaysApply: false
+---
+
 # Limpeza excepcional do clone de recorte
 
 Use somente se o harness informar que a limpeza não foi comprovada. Espere o processo do ensaio

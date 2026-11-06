@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0204-recuperar-resolucao-campo-md"
+description: "Documento Sinérgica SO: ADR-0204 — Recuperação de resolução de origem incerta"
+alwaysApply: false
+---
+
 # ADR-0204 — Recuperação de resolução de origem incerta
 
 ## Decisão

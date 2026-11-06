@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0272-proposta-reprocessamento-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0272 — Proposta de reprocessamento de Rotina importada"
+alwaysApply: false
+---
+
 # ADR-0272 — Proposta de reprocessamento de Rotina importada
 
 Status: proposta, não homologada.

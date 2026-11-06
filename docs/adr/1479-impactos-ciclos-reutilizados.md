@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1479-impactos-ciclos-reutilizados-md"
+description: "Documento Sinérgica SO: ADR-1479 — Impactos incluem ciclos reutilizados por versão"
+alwaysApply: false
+---
+
 # ADR-1479 — Impactos incluem ciclos reutilizados por versão
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1063-roteiro-coordenado-storage-md"
+description: "Documento Sinérgica SO: ADR-1063 — Roteiro coordenado para políticas de upload"
+alwaysApply: false
+---
+
 # ADR-1063 — Roteiro coordenado para políticas de upload
 
 **Status:** implementação candidata, não homologada e não autorizada para execução. Complementa ADR-0800 e ADR-0837.

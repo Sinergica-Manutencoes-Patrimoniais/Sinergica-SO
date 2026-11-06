@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0925-replay-integral-reserva-parcial-md"
+description: "Documento Sinérgica SO: ADR-0925 — Conflito entre replay integral e reserva parcial"
+alwaysApply: false
+---
+
 # ADR-0925 — Conflito entre replay integral e reserva parcial
 
 ## Contexto

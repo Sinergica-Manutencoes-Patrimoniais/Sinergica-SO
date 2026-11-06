@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1467-atualizacao-eventos-origem-campo-md"
+description: "Documento Sinérgica SO: ADR-1467 — Aplicação versionada de eventos de origem de campo"
+alwaysApply: false
+---
+
 # ADR-1467 — Aplicação versionada de eventos de origem de campo
 
 Status: preparação local, gate fechado; sem homologação ou deploy. Complementa ADR-1276.

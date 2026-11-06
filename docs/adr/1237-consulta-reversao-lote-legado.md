@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1237-consulta-reversao-lote-legado-md"
+description: "Documento Sinérgica SO: ADR-1237 — Consulta dos lotes para reversão"
+alwaysApply: false
+---
+
 # ADR-1237 — Consulta dos lotes para reversão
 
 ## Decisão

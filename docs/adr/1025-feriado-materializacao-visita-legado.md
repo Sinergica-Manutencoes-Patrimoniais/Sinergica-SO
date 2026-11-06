@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1025-feriado-materializacao-visita-legado-md"
+description: "Documento Sinérgica SO: ADR-1025 — Feriado na materialização de Visita legada"
+alwaysApply: false
+---
+
 # ADR-1025 — Feriado na materialização de Visita legada
 
 Status: preparação fechada, não homologada.

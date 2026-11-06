@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0705-acesso-reconciliacao-os-md"
+description: "Documento Sinérgica SO: ADR-0705 — Acesso à reconciliação do próprio pedido de OS"
+alwaysApply: false
+---
+
 # ADR-0705 — Acesso à reconciliação do próprio pedido de OS
 
 Status: preparada; não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0067-confirmacao-pcm-visita-md"
+description: "Documento Sinérgica SO: ADR-0067 — Confirmação PCM e snapshot de política"
+alwaysApply: false
+---
+
 # ADR-0067 — Confirmação PCM e snapshot de política
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

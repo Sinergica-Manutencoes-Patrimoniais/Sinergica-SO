@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1173-fontes-corretivas-t24-md"
+description: "Documento Sinérgica SO: ADR-1173 — Revalidação de fontes corretivas T−24"
+alwaysApply: false
+---
+
 # ADR-1173 — Revalidação de fontes corretivas T−24
 
 Status: proposta local, não aplicada nem homologada.

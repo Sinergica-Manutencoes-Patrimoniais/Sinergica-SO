@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-excecao-concorrencia-1732-md"
+description: "Documento Sinérgica SO: Exceção aprovada e mudança de dia concorrentes"
+alwaysApply: false
+---
+
 # Exceção aprovada e mudança de dia concorrentes
 
 Usar clone descartável isolado com migrations até 1732. Executar a preparação de `manual_E01-S166_excecao_aprovada_1732.sql` até a linha anterior ao comentário `GRANT apenas na transação de teste`. Conceder execute da RPC de exceção e habilitar seu gate **somente no clone**; confirmar a preparação sintética. A Visita regular `17320000-0000-0000-0000-000000000010` será a candidata à exceção; a Visita `...0001` permanece móvel.

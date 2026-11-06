@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0172-previa-referencias-chamado-os-md"
+description: "Documento Sinérgica SO: ADR-0172 — Prévia de referências Chamado/OS por Cliente"
+alwaysApply: false
+---
+
 # ADR-0172 — Prévia de referências Chamado/OS por Cliente
 
 Status: proposta, não homologada.

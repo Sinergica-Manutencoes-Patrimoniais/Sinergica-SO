@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0287-diagnostico-concomitancia-pmoc-md"
+description: "Documento Sinérgica SO: ADR-0287 — Diagnóstico conservador de concomitância PMOC"
+alwaysApply: false
+---
+
 # ADR-0287 — Diagnóstico conservador de concomitância PMOC
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0098-serializacao-permissao-confirmacao-visita-md"
+description: "Documento Sinérgica SO: ADR-0098 — Serialização da autorização na confirmação da Visita"
+alwaysApply: false
+---
+
 # ADR-0098 — Serialização da autorização na confirmação da Visita
 
 ## Estado

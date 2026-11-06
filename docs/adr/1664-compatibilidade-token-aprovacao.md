@@ -1,3 +1,9 @@
+---
+name: adr-1664-compatibilidade-token-aprovacao
+description: Preserva a compatibilidade do token de aprovação com o gate fechado.
+alwaysApply: false
+---
+
 # ADR-1664 — Compatibilidade do token de aprovação com gate fechado
 
 ## Contexto

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0361-leitura-comunicacao-publica-md"
+description: "Documento Sinérgica SO: ADR-0361 — Consulta individual de comunicação pública"
+alwaysApply: false
+---
+
 # ADR-0361 — Consulta individual de comunicação pública
 
 Status: proposta; gate fechado e sem testes.

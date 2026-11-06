@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0185-historico-versoes-materiais-md"
+description: "Documento Sinérgica SO: ADR-0185 — Leitura temporal das versões de linhas de materiais"
+alwaysApply: false
+---
+
 # ADR-0185 — Leitura temporal das versões de linhas de materiais
 
 ## Contexto

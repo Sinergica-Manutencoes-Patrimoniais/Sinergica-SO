@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0782-cancelamento-reserva-foto-md"
+description: "Documento Sinérgica SO: ADR 0782 — Cancelamento de tentativa de ingestão de foto"
+alwaysApply: false
+---
+
 # ADR 0782 — Cancelamento de tentativa de ingestão de foto
 
 PCM autorizado pode cancelar explicitamente uma reserva ainda não confirmada, informando motivo. O cancelamento atualiza a própria linha da reserva sob lock e registra ator, momento e evento auditável. A confirmação bloqueia a linha e um trigger impede transição para foto confirmada depois do cancelamento; se confirmação vencer a corrida, o cancelamento é recusado. Alterações concorrentes são serializadas pelo banco e qualquer conflito deve falhar fechado.

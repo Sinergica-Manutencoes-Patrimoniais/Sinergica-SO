@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1499-conferencia-os-pmoc-md"
+description: "Documento Sinérgica SO: ADR-1499 — Conferência ao abrir OS pelo PMOC"
+alwaysApply: false
+---
+
 # ADR-1499 — Conferência ao abrir OS pelo PMOC
 
 Uma ocorrência do Plano pode ser preparada antes da abertura de OS no fluxo PMOC. A conferência exclusiva no gerador do Plano não protege a criação posterior pelo PMOC.

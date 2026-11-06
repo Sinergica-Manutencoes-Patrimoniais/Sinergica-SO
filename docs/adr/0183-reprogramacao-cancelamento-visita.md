@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0183-reprogramacao-cancelamento-visita-md"
+description: "Documento Sinérgica SO: ADR-0183 — Transições locais protegidas de Visita"
+alwaysApply: false
+---
+
 # ADR-0183 — Transições locais protegidas de Visita
 
 Status: proposta, não homologada.

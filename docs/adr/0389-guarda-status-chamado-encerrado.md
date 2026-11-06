@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0389-guarda-status-chamado-encerrado-md"
+description: "Documento Sinérgica SO: ADR-0389 — Guarda de status legado após encerramento conferido"
+alwaysApply: false
+---
+
 # ADR-0389 — Guarda de status legado após encerramento conferido
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0093-recepcao-isolada-levantamentos-md"
+description: "Documento Sinérgica SO: ADR-0093 — Recepção isolada de levantamentos"
+alwaysApply: false
+---
+
 # ADR-0093 — Recepção isolada de levantamentos
 
 ## Estado

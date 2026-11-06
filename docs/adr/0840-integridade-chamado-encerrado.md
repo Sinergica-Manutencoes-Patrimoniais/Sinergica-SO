@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0840-integridade-chamado-encerrado-md"
+description: "Documento Sinérgica SO: ADR-0840 — Serialização de escritores de OS com encerramento"
+alwaysApply: false
+---
+
 # ADR-0840 — Serialização de escritores de OS com encerramento
 
 Estado: proposta local, não homologada. Complementa ADR-0839. Gate continua fechado.

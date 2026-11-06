@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0056-leitura-regras-contratuais-md"
+description: "Documento Sinérgica SO: ADR-0056 — Leitura mínima de regras contratuais"
+alwaysApply: false
+---
+
 # ADR-0056 — Leitura mínima de regras contratuais
 
 **Status:** decisão para implementação local E01-S166. **Data:** 2026-10-27.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1020-decisao-feriado-mediada-md"
+description: "Documento Sinérgica SO: ADR-1020 — Decisão mediada de feriado declarado"
+alwaysApply: false
+---
+
 # ADR-1020 — Decisão mediada de feriado declarado
 
 Status: preparação privada, não homologada.

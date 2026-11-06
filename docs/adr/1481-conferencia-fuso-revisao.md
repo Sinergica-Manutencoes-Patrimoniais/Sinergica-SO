@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1481-conferencia-fuso-revisao-md"
+description: "Documento Sinérgica SO: ADR-1481 — Conferência de fuso das séries na revisão"
+alwaysApply: false
+---
+
 # ADR-1481 — Conferência de fuso das séries na revisão
 
 ## Contexto

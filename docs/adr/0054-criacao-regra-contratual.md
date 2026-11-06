@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0054-criacao-regra-contratual-md"
+description: "Documento Sinérgica SO: ADR-0054 — Criação auditada de regra contratual"
+alwaysApply: false
+---
+
 # ADR-0054 — Criação auditada de regra contratual
 
 **Status:** decisão para implementação local E01-S166. **Data:** 2026-10-27.

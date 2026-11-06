@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0784-cancelamento-antes-reserva-foto-md"
+description: "Documento Sinérgica SO: ADR 0784 — Cancelamento anterior à reserva de foto"
+alwaysApply: false
+---
+
 # ADR 0784 — Cancelamento anterior à reserva de foto
 
 O cancelamento usa o mesmo advisory lock transacional por requestId já usado pela reserva. Se a reserva ainda não existe, PCM autorizado no Cliente/lote/linha registra um tombstone imutável, com ator e motivo, antes de responder. Um trigger de inserção da reserva adquire o mesmo lock e recusa requestId tombstonado. Assim, chegada posterior da tentativa original não pode criar reserva; se a reserva vencer a corrida, a operação existente cancela a linha sob lock ou recusa se já confirmada. Repetição idêntica do cancelamento é idempotente e conflito é recusado.

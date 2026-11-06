@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1570-reserva-ciclo-legado-md"
+description: "Documento Sinérgica SO: ADR 1570 — Decisão explícita por ciclo legado"
+alwaysApply: false
+---
+
 # ADR 1570 — Decisão explícita por ciclo legado
 
 ## Contexto

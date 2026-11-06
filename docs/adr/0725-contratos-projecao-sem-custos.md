@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0725-contratos-projecao-sem-custos-md"
+description: "Documento Sinérgica SO: ADR-0725 — Contratos pela projeção sem custos"
+alwaysApply: false
+---
+
 # ADR-0725 — Contratos pela projeção sem custos
 
 **Status:** proposta implementável para diagnóstico; homologação e rollout bloqueados.

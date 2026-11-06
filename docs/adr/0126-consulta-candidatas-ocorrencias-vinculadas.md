@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0126-consulta-candidatas-ocorrencias-vinculadas-md"
+description: "Documento Sinérgica SO: ADR-0126 — Consulta de candidatas vinculadas a ocorrências legadas"
+alwaysApply: false
+---
+
 # ADR-0126 — Consulta de candidatas vinculadas a ocorrências legadas
 
 **Estado:** proposta não aplicada nem homologada. Complementa ADR-0116.

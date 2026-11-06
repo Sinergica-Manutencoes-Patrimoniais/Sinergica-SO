@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1104-confirmar-retorno-propriedade-os-md"
+description: "Documento Sinérgica SO: ADR-1104 — Confirmação de retorno da propriedade de OS"
+alwaysApply: false
+---
+
 # ADR-1104 — Confirmação de retorno da propriedade de OS
 
 Status: proposta local, não aplicada nem homologada.

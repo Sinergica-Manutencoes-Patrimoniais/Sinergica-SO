@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1471-diagnosticos-revisao-mediados-md"
+description: "Documento Sinérgica SO: ADR-1471 — Consultas mediadas para revisão de Plano"
+alwaysApply: false
+---
+
 # ADR-1471 — Consultas mediadas para revisão de Plano
 
 Status: preparação local, gates fechados e não homologada.

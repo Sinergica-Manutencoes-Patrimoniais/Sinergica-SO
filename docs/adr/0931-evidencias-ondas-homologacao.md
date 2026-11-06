@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0931-evidencias-ondas-homologacao-md"
+description: "Documento Sinérgica SO: ADR-0931 — Registro privado de evidências das ondas"
+alwaysApply: false
+---
+
 # ADR-0931 — Registro privado de evidências das ondas
 
 Status: preparação local, não aplicada nem homologada.

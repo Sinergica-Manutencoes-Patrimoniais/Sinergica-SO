@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1645-consulta-ocorrencias-escopo-qualificada-md"
+description: "Documento Sinérgica SO: ADR-1645 — Consulta de ocorrências de escopo qualificada"
+alwaysApply: false
+---
+
 # ADR-1645 — Consulta de ocorrências de escopo qualificada
 
 A consulta privada de ocorrências para declaração de escopo retorna uma coluna chamada `id`. A condição do gate também referenciava `id` sem qualificar a tabela, o que pode causar ambiguidade PL/pgSQL ao executar a leitura mediada.

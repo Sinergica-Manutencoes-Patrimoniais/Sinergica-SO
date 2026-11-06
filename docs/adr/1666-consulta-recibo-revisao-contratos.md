@@ -1,3 +1,9 @@
+---
+name: adr-1666-consulta-recibo-revisao-contratos
+description: Define consulta somente leitura do recibo de revisão em modo alterado.
+alwaysApply: false
+---
+
 # ADR-1666 — Consulta de recibo para modo de revisão alterado
 
 Status: proposta; depende da borda 1807 fechada por padrão.

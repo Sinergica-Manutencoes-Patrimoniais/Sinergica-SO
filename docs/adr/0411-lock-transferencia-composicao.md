@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0411-lock-transferencia-composicao-md"
+description: "Documento Sinérgica SO: ADR-0411 — locks de transferência e encerramento"
+alwaysApply: false
+---
+
 # ADR-0411 — locks de transferência e encerramento
 
 Status: proposto; não aplicado nem homologado.

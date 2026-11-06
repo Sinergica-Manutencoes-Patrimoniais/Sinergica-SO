@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1485-chamado-preventivo-revisao-md"
+description: "Documento Sinérgica SO: ADR-1485 — Vigência antes de criar Chamado preventivo"
+alwaysApply: false
+---
+
 # ADR-1485 — Vigência antes de criar Chamado preventivo
 
 ## Contexto

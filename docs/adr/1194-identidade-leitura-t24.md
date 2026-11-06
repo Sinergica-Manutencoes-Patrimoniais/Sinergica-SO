@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1194-identidade-leitura-t24-md"
+description: "Documento Sinérgica SO: ADR-1194 — Identidade da OS na leitura de tarefa T−24"
+alwaysApply: false
+---
+
 # ADR-1194 — Identidade da OS na leitura de tarefa T−24
 
 ## Contexto

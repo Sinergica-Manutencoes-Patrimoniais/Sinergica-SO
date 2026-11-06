@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0631-reconferencia-localizacao-md"
+description: "Documento Sinérgica SO: ADR-0631 — Reconferência após rejeição e reabertura"
+alwaysApply: false
+---
+
 # ADR-0631 — Reconferência após rejeição e reabertura
 
 Status: proposta; não homologada.

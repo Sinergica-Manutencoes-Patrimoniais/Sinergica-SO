@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0121-decisao-rejeicao-levantamento-md"
+description: "Documento Sinérgica SO: ADR-0121 — Rejeição auditável de linha em staging"
+alwaysApply: false
+---
+
 # ADR-0121 — Rejeição auditável de linha em staging
 
 ## Estado

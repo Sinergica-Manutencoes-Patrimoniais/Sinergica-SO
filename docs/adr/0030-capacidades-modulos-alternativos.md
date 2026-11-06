@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0030-capacidades-modulos-alternativos-md"
+description: "Documento Sinérgica SO: ADR-0030 — Módulos elegíveis por capacidade"
+alwaysApply: false
+---
+
 # ADR-0030 — Módulos elegíveis por capacidade
 
 **Status:** Decisão para implementação local da E01-S170. **Data:** 2026-10-26.

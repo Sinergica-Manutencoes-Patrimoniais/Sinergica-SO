@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0789-conferencia-objetos-foto-cancelada-md"
+description: "Documento Sinérgica SO: ADR 0789 — Conferência de objeto associado a tentativa cancelada"
+alwaysApply: false
+---
+
 # ADR 0789 — Conferência de objeto associado a tentativa cancelada
 
 PCM com capacidade atual `cadastro.aprovar` no Cliente pode listar tentativas canceladas de um lote/linha e registrar conferência auditada e idempotente da presença do nome reservado no catálogo de objetos de bucket privado. A projeção não retorna caminho nem digest. Cada conferência registra ator e instante; a anotação indica apenas se havia metadado catalogado, não comprova existência física, integridade, ausência posterior ou que objeto seja seguro para descarte. Nenhum objeto é baixado, removido, sobrescrito ou tornado público.

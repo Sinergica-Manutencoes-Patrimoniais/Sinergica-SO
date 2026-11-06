@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0795-e01-s172-prova-finalizacao-os-md"
+description: "Documento Sinérgica SO: ADR-0795: prova limitada de finalização de OS no snapshot"
+alwaysApply: false
+---
+
 # ADR-0795: prova limitada de finalização de OS no snapshot
 
 Status: proposta em gates fechados, sem homologação.

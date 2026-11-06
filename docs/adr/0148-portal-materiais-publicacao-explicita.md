@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0148-portal-materiais-publicacao-explicita-md"
+description: "Documento Sinérgica SO: ADR-0148 — Publicação explícita de materiais no Portal"
+alwaysApply: false
+---
+
 # ADR-0148 — Publicação explícita de materiais no Portal
 
 **Estado:** proposta preparatória, sem homologação nem deploy.

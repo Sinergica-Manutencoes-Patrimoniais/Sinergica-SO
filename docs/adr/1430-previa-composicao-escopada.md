@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1430-previa-composicao-escopada-md"
+description: "Documento Sinérgica SO: ADR-1430 — Prévia completa para edição de composição"
+alwaysApply: false
+---
+
 # ADR-1430 — Prévia completa para edição de composição
 
 A tela de edição recebe uma fotografia limitada da proposta e dos itens atuais, incluindo os identificadores de materiais e níveis, para não perdê-los ao salvar. O servidor confirma Cliente, concessões e gate do ADR-1429; mais de 100 itens bloqueia edição em vez de truncar. A versão serve à concorrência do comando. A consulta não envia proposta nem autoriza desconto abaixo do piso.

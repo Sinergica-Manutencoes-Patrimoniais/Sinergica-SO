@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0999-consulta-politica-equipment-md"
+description: "Documento Sinérgica SO: ADR-0999 — Consulta de política Equipment"
+alwaysApply: false
+---
+
 # ADR-0999 — Consulta de política Equipment
 
 Status: preparação privada, não homologada.

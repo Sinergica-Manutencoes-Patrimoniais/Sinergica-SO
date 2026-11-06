@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-s166-auditoria-squawk-1769-md"
+description: "Documento Sinérgica SO: Auditoria Squawk das migrations até 1769"
+alwaysApply: false
+---
+
 # Auditoria Squawk das migrations até 1769
 
 Execução local de `pnpm exec squawk --assume-in-transaction --reporter json supabase/migrations/*.sql`: 474 alertas em 42 arquivos. Todos os 42 arquivos constam no snapshot remoto `origin/backup/sso-wip-20261104`; nenhum consta no HEAD local. Portanto são anteriores ao trabalho posterior ao snapshot, mas não se pode chamá-los de baseline da branch principal ou de migrations já aplicadas em produção sem verificar o ambiente.

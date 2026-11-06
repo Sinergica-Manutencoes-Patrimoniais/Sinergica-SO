@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1610-lote-calendario-conflito-sem-retry-md"
+description: "Documento Sinérgica SO: ADR 1610 — Conflitos de negócio do lote de calendário"
+alwaysApply: false
+---
+
 # ADR 1610 — Conflitos de negócio do lote de calendário
 
 Status: aceito para implementação; homologação pendente.

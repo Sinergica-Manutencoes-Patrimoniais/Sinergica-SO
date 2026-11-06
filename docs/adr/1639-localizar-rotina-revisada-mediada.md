@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1639-localizar-rotina-revisada-mediada-md"
+description: "Documento Sinérgica SO: ADR-1639: localização mediada da Rotina revisada"
+alwaysApply: false
+---
+
 # ADR-1639: localização mediada da Rotina revisada
 
 ## Contexto

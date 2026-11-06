@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0694-mediacao-vinculo-incorporacao-md"
+description: "Documento Sinérgica SO: ADR-0694 — Mediação de vínculo e incorporação"
+alwaysApply: false
+---
+
 # ADR-0694 — Mediação de vínculo e incorporação
 
 Os comandos de vínculo a ativo, incorporação com código de staging, atualização de Localização e aplicação de seleções usam mediadores autenticados, sujeitos ao gate da ADR-0687 e à autorização `cadastro.aprovar` para o Cliente do lote. Os núcleos permanecem revogados e mantêm suas travas, gates, revisão, idempotência e auditoria; nenhum mediador envia dados ao Auvo.

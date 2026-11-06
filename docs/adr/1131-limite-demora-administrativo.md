@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1131-limite-demora-administrativo-md"
+description: "Documento Sinérgica SO: ADR-1131 — Configuração administrativa do limite de demora"
+alwaysApply: false
+---
+
 # ADR-1131 — Configuração administrativa do limite de demora
 
 Status: proposta local, não aplicada nem homologada.

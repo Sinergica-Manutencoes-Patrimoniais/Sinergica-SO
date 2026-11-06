@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0647-correcao-codigo-staging-md"
+description: "Documento Sinérgica SO: ADR-0647 — Correção atômica de código informado em staging"
+alwaysApply: false
+---
+
 # ADR-0647 — Correção atômica de código informado em staging
 
 Status: proposta; gate fechado, não homologada.

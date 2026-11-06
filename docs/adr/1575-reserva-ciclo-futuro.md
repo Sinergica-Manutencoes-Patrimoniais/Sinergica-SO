@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1575-reserva-ciclo-futuro-md"
+description: "Documento Sinérgica SO: ADR 1575 — Reserva explícita de ciclo futuro"
+alwaysApply: false
+---
+
 # ADR 1575 — Reserva explícita de ciclo futuro
 
 ## Contexto

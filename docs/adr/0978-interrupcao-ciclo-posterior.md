@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0978-interrupcao-ciclo-posterior-md"
+description: "Documento Sinérgica SO: ADR-0978 — Declaração de interrupção de ciclo posterior"
+alwaysApply: false
+---
+
 # ADR-0978 — Declaração de interrupção de ciclo posterior
 
 Status: preparação privada, não homologada.

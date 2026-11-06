@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1353-transicao-manual-chamado-os-md"
+description: "Documento Sinérgica SO: ADR 1353 — Transição coordenada das restrições Chamado/OS"
+alwaysApply: false
+---
+
 # ADR 1353 — Transição coordenada das restrições Chamado/OS
 
 ## Contexto

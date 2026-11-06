@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0088-bloqueio-leitura-direta-comprovantes-md"
+description: "Documento Sinérgica SO: ADR-0088 — Bloqueio faseado de leitura direta de comprovantes"
+alwaysApply: false
+---
+
 # ADR-0088 — Bloqueio faseado de leitura direta de comprovantes
 
 ## Decisão

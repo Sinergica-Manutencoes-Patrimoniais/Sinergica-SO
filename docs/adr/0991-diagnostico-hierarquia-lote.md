@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0991-diagnostico-hierarquia-lote-md"
+description: "Documento Sinérgica SO: ADR-0991 — Diagnóstico de hierarquia do lote"
+alwaysApply: false
+---
+
 # ADR-0991 — Diagnóstico de hierarquia do lote
 
 Status: preparação privada, não homologada.

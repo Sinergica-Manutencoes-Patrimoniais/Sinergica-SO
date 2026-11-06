@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0394-vinculo-conteudo-intencao-md"
+description: "Documento Sinérgica SO: ADR-0394 — Vínculo e conteúdo antes da intenção local"
+alwaysApply: false
+---
+
 # ADR-0394 — Vínculo e conteúdo antes da intenção local
 
 Status: proposta; gates fechados, sem testes e sem despacho.

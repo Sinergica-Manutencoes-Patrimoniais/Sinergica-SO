@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1331-conferencia-temporal-evidencias-onda-md"
+description: "Documento Sinérgica SO: ADR-1331 — Conferência temporal de evidências da onda"
+alwaysApply: false
+---
+
 # ADR-1331 — Conferência temporal de evidências da onda
 
 Status: preparado, gate desligado.

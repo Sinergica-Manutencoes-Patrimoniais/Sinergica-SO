@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1468-conferencia-pcm-evento-origem-md"
+description: "Documento Sinérgica SO: ADR-1468 — Conferência PCM de evento de origem"
+alwaysApply: false
+---
+
 # ADR-1468 — Conferência PCM de evento de origem
 
 Status: preparação local; gates fechados, não homologada. Complementa ADR-1467.

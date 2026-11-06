@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-mapa-compatibilidade-ocorrencias-md"
+description: "Documento Sinérgica SO: E01-S166 — Inventário inicial de compatibilidade de Ocorrências"
+alwaysApply: false
+---
+
 # E01-S166 — Inventário inicial de compatibilidade de Ocorrências
 
 Estado em 2026-10-27: **parcial; não autoriza gerar Ocorrências de origem nova**. Complementa ADR-0075. Referências abaixo foram verificadas no código local; políticas também foram conferidas no banco local. Falta levantamento exaustivo de funções, permissões, integrações e dados de produção.

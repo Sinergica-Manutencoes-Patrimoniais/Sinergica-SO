@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0079-retirada-rotina-rascunho-md"
+description: "Documento Sinérgica SO: ADR-0079 — Retirada de Rotina da revisão em rascunho"
+alwaysApply: false
+---
+
 # ADR-0079 — Retirada de Rotina da revisão em rascunho
 
 ## Decisão

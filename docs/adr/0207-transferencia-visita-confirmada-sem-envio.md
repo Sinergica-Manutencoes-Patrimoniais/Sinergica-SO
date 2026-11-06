@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0207-transferencia-visita-confirmada-sem-envio-md"
+description: "Documento Sinérgica SO: ADR-0207 — Transferência protegida antes de efeito remoto"
+alwaysApply: false
+---
+
 # ADR-0207 — Transferência protegida antes de efeito remoto
 
 Status: proposta, não homologada.

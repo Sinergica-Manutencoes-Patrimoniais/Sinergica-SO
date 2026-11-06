@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0643-snapshot-quantidade-grupo-md"
+description: "Documento Sinérgica SO: ADR-0643 — Quantidade de Grupo congelada na aprovação"
+alwaysApply: false
+---
+
 # ADR-0643 — Quantidade de Grupo congelada na aprovação
 
 Sob gate desligado, nova aprovação captura quantidade e revisão dos Grupos ativos do mesmo Cliente por Rotina, em texto dentro do snapshot da versão. Planos sem alvo Grupo recebem lista vazia; versões já aprovadas não são alteradas. Os Grupos são lidos com bloqueio compartilhado em ordem determinística durante a aprovação.

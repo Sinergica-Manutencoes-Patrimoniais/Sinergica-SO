@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0050-revisao-de-plano-aprovado-md"
+description: "Documento Sinérgica SO: ADR-0050 — Preparação de nova versão após aprovação"
+alwaysApply: false
+---
+
 # ADR-0050 — Preparação de nova versão após aprovação
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.

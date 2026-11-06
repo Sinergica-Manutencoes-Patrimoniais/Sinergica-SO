@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1074-esforco-continuacao-agenda-md"
+description: "Documento Sinérgica SO: ADR-1074 — Esforço remanescente na agenda"
+alwaysApply: false
+---
+
 # ADR-1074 — Esforço remanescente na agenda
 
 **Status:** preparação não homologada. Complementa ADR-1071 e E01-S172.

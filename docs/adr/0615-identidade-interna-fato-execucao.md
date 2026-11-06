@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0615-identidade-interna-fato-execucao-md"
+description: "Documento Sinérgica SO: ADR-0615 — Identidade interna revisada de fato declarado"
+alwaysApply: false
+---
+
 # ADR-0615 — Identidade interna revisada de fato declarado
 
 Status: preparado, gate fechado, sem aplicação ou homologação.

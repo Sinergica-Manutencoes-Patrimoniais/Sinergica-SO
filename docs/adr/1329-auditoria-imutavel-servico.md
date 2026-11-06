@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1329-auditoria-imutavel-servico-md"
+description: "Documento Sinérgica SO: ADR-1329 — Imutabilidade explícita de auditoria"
+alwaysApply: false
+---
+
 # ADR-1329 — Imutabilidade explícita de auditoria
 
 Status: preparado; não aplicado ou homologado.

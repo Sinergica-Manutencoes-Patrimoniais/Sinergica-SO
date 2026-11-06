@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1341-grupo-existente-codigo-levantamento-md"
+description: "Documento Sinérgica SO: ADR-1341 — Código de Grupo existente no levantamento"
+alwaysApply: false
+---
+
 # ADR-1341 — Código de Grupo existente no levantamento
 
 **Estado:** proposta; não aplicada nem homologada.

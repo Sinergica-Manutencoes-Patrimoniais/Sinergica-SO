@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0535-fuso-plano-declarado-md"
+description: "Documento Sinérgica SO: ADR-0535 — Fuso declarado para o Plano"
+alwaysApply: false
+---
+
 
 # ADR-0535 — Fuso declarado para o Plano
 

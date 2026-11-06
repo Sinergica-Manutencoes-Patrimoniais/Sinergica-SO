@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1480-origem-geracao-rotina-md"
+description: "Documento Sinérgica SO: ADR-1480 — Escolha auditada de origem por Rotina e alvo"
+alwaysApply: false
+---
+
 # ADR-1480 — Escolha auditada de origem por Rotina e alvo
 
 ## Contexto

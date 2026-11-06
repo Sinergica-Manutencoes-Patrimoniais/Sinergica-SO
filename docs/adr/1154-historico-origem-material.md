@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1154-historico-origem-material-md"
+description: "Documento Sinérgica SO: ADR-1154 — Histórico da origem de material na intenção"
+alwaysApply: false
+---
+
 # ADR-1154 — Histórico da origem de material na intenção
 
 Status: proposta local, não aplicada nem homologada.

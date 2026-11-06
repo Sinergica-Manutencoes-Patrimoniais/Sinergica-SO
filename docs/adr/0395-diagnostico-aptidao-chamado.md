@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0395-diagnostico-aptidao-chamado-md"
+description: "Documento Sinérgica SO: ADR-0395 — Diagnóstico paginado de aptidão do Chamado"
+alwaysApply: false
+---
+
 # ADR-0395 — Diagnóstico paginado de aptidão do Chamado
 
 Status: proposta, não homologada.

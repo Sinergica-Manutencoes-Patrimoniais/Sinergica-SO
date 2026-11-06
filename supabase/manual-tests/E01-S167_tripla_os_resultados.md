@@ -1,3 +1,9 @@
+---
+name: "supabase-manual-tests-e01-s167-tripla-os-resultados-md"
+description: "Documento Sinérgica SO: S167 — três comandos de OS concorrentes"
+alwaysApply: false
+---
+
 # S167 — três comandos de OS concorrentes
 
 Em clone descartável de schema sem cron/net, com gates da criação e da mediação ligados apenas no clone, índice singular e trigger de número removidos apenas no clone e 1056 aplicada, a fixture `E01-S167_tripla_os_setup.sql` criou um Chamado sintético na revisão 1. O dump foi restaurado com `--no-acl`; grants de fixture foram concedidos explicitamente. Os testes não comprovam ACL de produção.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0764-e01-s168-mediacao-finalizacao-md"
+description: "Documento Sinérgica SO: ADR-0764 — Mediação de finalização validada"
+alwaysApply: false
+---
+
 # ADR-0764 — Mediação de finalização validada
 
 **Status:** preparada, sem homologação. **Data:** 2026-10-30.

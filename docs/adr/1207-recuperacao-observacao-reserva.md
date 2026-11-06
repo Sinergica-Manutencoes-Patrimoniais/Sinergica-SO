@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1207-recuperacao-observacao-reserva-md"
+description: "Documento Sinérgica SO: ADR-1207 — Recuperação do recibo de observação de reserva"
+alwaysApply: false
+---
+
 # ADR-1207 — Recuperação do recibo de observação de reserva
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1494-origem-servidor-ciclo-individual-md"
+description: "Documento Sinérgica SO: ADR-1494 — Conferência da origem no ciclo individual"
+alwaysApply: false
+---
+
 # ADR-1494 — Conferência da origem no ciclo individual
 
 ## Contexto

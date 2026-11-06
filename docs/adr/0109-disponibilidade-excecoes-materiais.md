@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0109-disponibilidade-excecoes-materiais-md"
+description: "Documento Sinérgica SO: ADR-0109 — Informação e exceção de materiais"
+alwaysApply: false
+---
+
 # ADR-0109 — Informação e exceção de materiais
 
 ## Estado

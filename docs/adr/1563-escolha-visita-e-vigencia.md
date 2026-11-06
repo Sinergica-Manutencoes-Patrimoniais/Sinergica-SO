@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1563-escolha-visita-e-vigencia-md"
+description: "Documento Sinérgica SO: ADR-1563 — Escolha atual de Visita e vigência da substituição"
+alwaysApply: false
+---
+
 # ADR-1563 — Escolha atual de Visita e vigência da substituição
 
 Decisões históricas permanecem imutáveis, mas não reservam permanentemente uma Visita candidata após serem substituídas por outra decisão. O comando recusa reutilização apenas quando outra ocorrência mantém escolha atual para a mesma Visita, Rotina, Cliente, Plano e revisão, sob protocolo transacional existente. O selo aprovado continua único para impedir duas substituições efetivas.

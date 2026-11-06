@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1414-verificacao-evidencia-material-md"
+description: "Documento Sinérgica SO: ADR-1414 — Verificação dos bytes de evidência de material"
+alwaysApply: false
+---
+
 # ADR-1414 — Verificação dos bytes de evidência de material
 
 ## Decisão

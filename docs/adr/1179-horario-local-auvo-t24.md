@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1179-horario-local-auvo-t24-md"
+description: "Documento Sinérgica SO: ADR-1179 — Conversão explícita de horário T−24"
+alwaysApply: false
+---
+
 # ADR-1179 — Conversão explícita de horário T−24
 
 Status: proposta local, não conectada nem homologada.

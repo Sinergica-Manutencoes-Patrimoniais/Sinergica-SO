@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0957-recuperacao-origem-estrutura-xlsx-md"
+description: "Documento Sinérgica SO: ADR-0957 — Recuperação por origem para estrutura XLSX"
+alwaysApply: false
+---
+
 # ADR-0957 — Recuperação por origem para estrutura XLSX
 
 Status: preparação privada, sem habilitação.

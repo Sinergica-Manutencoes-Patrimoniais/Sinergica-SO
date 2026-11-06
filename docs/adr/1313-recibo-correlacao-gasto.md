@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1313-recibo-correlacao-gasto-md"
+description: "Documento Sinérgica SO: ADR-1313 — Recibo da declaração de correlação de gasto"
+alwaysApply: false
+---
+
 # ADR-1313 — Recibo da declaração de correlação de gasto
 
 Consulta autenticada do request e payload exatos, com as capacidades atuais

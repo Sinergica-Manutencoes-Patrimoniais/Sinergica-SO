@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1473-precondicoes-impacto-mediadas-md"
+description: "Documento Sinérgica SO: ADR-1473 — Pré-condições de impacto mediadas"
+alwaysApply: false
+---
+
 # ADR-1473 — Pré-condições de impacto mediadas
 
 Status: preparação local, gate desligado. Complementa ADR-1471.

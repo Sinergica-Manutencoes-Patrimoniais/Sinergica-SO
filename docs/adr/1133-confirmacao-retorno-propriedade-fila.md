@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1133-confirmacao-retorno-propriedade-fila-md"
+description: "Documento Sinérgica SO: ADR-1133 — Confirmação de retorno de propriedade da fila"
+alwaysApply: false
+---
+
 # ADR-1133 — Confirmação de retorno de propriedade da fila
 
 Status: proposta local, não aplicada nem homologada.

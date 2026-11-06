@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1536-afirmacao-explicita-grupo-fila-md"
+description: "Documento Sinérgica SO: ADR-1536 — Afirmação explícita para conferência de Grupo"
+alwaysApply: false
+---
+
 # ADR-1536 — Afirmação explícita para conferência de Grupo
 
 ## Contexto

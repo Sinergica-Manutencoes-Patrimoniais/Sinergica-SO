@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0391-reabertura-explicita-chamado-md"
+description: "Documento Sinérgica SO: ADR-0391 — Reabertura explícita de Chamado"
+alwaysApply: false
+---
+
 # ADR-0391 — Reabertura explícita de Chamado
 
 Status: proposta, não homologada.

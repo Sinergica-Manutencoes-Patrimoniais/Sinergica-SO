@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0212-vinculo-backlog-chamado-existente-md"
+description: "Documento Sinérgica SO: ADR-0212 — Vínculo de composição a Chamado existente"
+alwaysApply: false
+---
+
 # ADR-0212 — Vínculo de composição a Chamado existente
 
 ## Decisão

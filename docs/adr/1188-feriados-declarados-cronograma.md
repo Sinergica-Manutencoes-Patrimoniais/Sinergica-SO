@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1188-feriados-declarados-cronograma-md"
+description: "Documento Sinérgica SO: ADR-1188 — Feriados declarados na exportação parcial"
+alwaysApply: false
+---
+
 # ADR-1188 — Feriados declarados na exportação parcial
 
 Status: preparação local, desativada e não homologada.

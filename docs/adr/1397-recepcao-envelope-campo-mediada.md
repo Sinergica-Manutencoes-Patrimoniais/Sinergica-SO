@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1397-recepcao-envelope-campo-mediada-md"
+description: "Documento Sinérgica SO: ADR-1397 — Recepção manual de envelope de campo mediada"
+alwaysApply: false
+---
+
 # ADR-1397 — Recepção manual de envelope de campo mediada
 
 A recepção manual e a consulta de recibo usam entradas autenticadas separadas, protegidas por `cadastro.gerir`, identidade do ator e gates fechados. O núcleo privado valida Cliente, OS, tarefa, conteúdo estruturado e repetição, criando somente lote pendente para revisão. Não interpreta texto corrido, importa fotos nem incorpora cadastros.

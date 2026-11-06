@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1309-recibo-exigencia-legal-md"
+description: "Documento Sinérgica SO: ADR-1309 — Recibo de declaração de exigência"
+alwaysApply: false
+---
+
 # ADR-1309 — Recibo de declaração de exigência
 
 ## Decisão

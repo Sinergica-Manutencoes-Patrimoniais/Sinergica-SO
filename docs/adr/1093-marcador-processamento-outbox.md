@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1093-marcador-processamento-outbox-md"
+description: "Documento Sinérgica SO: ADR-1093 — Início observado do processamento da outbox"
+alwaysApply: false
+---
+
 # ADR-1093 — Início observado do processamento da outbox
 
 Status: proposta local, não aplicada nem homologada.

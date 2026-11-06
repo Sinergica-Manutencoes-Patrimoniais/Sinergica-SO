@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0963-ranking-retornos-backlog-md"
+description: "Documento Sinérgica SO: ADR-0963 — Ranking privado de retornos"
+alwaysApply: false
+---
+
 # ADR-0963 — Ranking privado de retornos
 
 Status: preparação isolada, não homologada. Depende de ADR-0962.

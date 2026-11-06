@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1369-mediacao-vinculo-resposta-servico-md"
+description: "Documento Sinérgica SO: ADR-1369 — Acesso mediado ao vínculo de resposta de serviço"
+alwaysApply: false
+---
+
 # ADR-1369 — Acesso mediado ao vínculo de resposta de serviço
 
 **Estado:** proposta; não aplicada nem homologada.

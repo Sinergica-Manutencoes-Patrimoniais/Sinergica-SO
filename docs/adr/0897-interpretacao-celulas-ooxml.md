@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0897-interpretacao-celulas-ooxml-md"
+description: "Documento Sinérgica SO: ADR-0897 — Interpretação isolada de células OOXML"
+alwaysApply: false
+---
+
 # ADR-0897 — Interpretação isolada de células OOXML
 
 Data: 2026-10-30 · Status: preparação; importação XLSX permanece bloqueada.

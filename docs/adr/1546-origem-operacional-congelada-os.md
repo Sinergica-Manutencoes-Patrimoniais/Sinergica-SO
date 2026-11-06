@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1546-origem-operacional-congelada-os-md"
+description: "Documento Sinérgica SO: ADR-1546 — Origem operacional congelada por OS"
+alwaysApply: false
+---
+
 # ADR-1546 — Origem operacional congelada por OS
 
 Uma ocorrência pode sobreviver a várias versões; a OS aberta antes da revisão deve preservar a versão e o questionário usados na criação. Novas OS de Chamado preventivo usam a versão operacional efetiva e registram fotografia imutável com versão, Rotina, ocorrência e snapshot aprovado. Alterações posteriores da OS validam a fotografia original, não a versão vigente da ocorrência.

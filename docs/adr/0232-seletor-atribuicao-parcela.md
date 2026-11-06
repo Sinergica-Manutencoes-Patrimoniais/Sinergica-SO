@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0232-seletor-atribuicao-parcela-md"
+description: "Documento Sinérgica SO: ADR-0232 — Seleção de OS para atribuição de parcela"
+alwaysApply: false
+---
+
 # ADR-0232 — Seleção de OS para atribuição de parcela
 
 ## Decisão

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0993-busca-mediada-codigo-publico-md"
+description: "Documento Sinérgica SO: ADR-0993 — Busca mediada de código público"
+alwaysApply: false
+---
+
 # ADR-0993 — Busca mediada de código público
 
 Status: preparação privada, não homologada.

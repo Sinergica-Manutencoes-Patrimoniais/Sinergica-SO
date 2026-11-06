@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1652-local-ativo-leitura-invoker-md"
+description: "Documento Sinérgica SO: ADR-1652 — Detalhe mínimo do ativo no Local"
+alwaysApply: false
+---
+
 # ADR-1652 — Detalhe mínimo do ativo no Local
 
 ## Estado

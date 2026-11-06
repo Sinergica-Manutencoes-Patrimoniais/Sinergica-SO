@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1305-mediacao-referencias-levantamento-md"
+description: "Documento Sinérgica SO: ADR-1305 — Mediação das referências declaradas de fotos"
+alwaysApply: false
+---
+
 # ADR-1305 — Mediação das referências declaradas de fotos
 
 ## Decisão

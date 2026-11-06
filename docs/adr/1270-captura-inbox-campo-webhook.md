@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1270-captura-inbox-campo-webhook-md"
+description: "Documento Sinérgica SO: ADR-1270 — Captura de evento de campo antes da triagem legada"
+alwaysApply: false
+---
+
 # ADR-1270 — Captura de evento de campo antes da triagem legada
 
 Status: proposta local; não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0934-previa-xlsx-estrutura-md"
+description: "Documento Sinérgica SO: ADR-0934 — Prévia de planilha estruturada para levantamento"
+alwaysApply: false
+---
+
 # ADR-0934 — Prévia de planilha estruturada para levantamento
 
 Status: preparação local, sem integração, testes ou habilitação.

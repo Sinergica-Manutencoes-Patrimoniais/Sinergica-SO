@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1292-vincular-localizacao-existente-levantamento-md"
+description: "Documento Sinérgica SO: ADR 1292 — Vincular localização existente no levantamento"
+alwaysApply: false
+---
+
 # ADR 1292 — Vincular localização existente no levantamento
 
 ## Contexto

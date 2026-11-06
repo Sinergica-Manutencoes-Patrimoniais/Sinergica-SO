@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1656-preparacao-unitaria-vencidos-antigos-md"
+description: "Documento Sinérgica SO: ADR-1656 — Preparação unitária de vencimentos antigos"
+alwaysApply: false
+---
+
 # ADR-1656 — Preparação unitária de vencimentos antigos
 
 ## Decisão

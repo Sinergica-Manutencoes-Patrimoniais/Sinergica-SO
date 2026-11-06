@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0956-transporte-xlsx-estrutura-cliente-md"
+description: "Documento Sinérgica SO: ADR-0956 — Retomada local de envio XLSX de estrutura"
+alwaysApply: false
+---
+
 # ADR-0956 — Retomada local de envio XLSX de estrutura
 
 Status: transporte preparado e desconectado; não homologado.

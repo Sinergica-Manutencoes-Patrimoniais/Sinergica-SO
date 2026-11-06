@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0973-promocao-retorno-ciclo-md"
+description: "Documento Sinérgica SO: ADR-0973 — Nova promoção de retorno por ciclo"
+alwaysApply: false
+---
+
 # ADR-0973 — Nova promoção de retorno por ciclo
 
 Status: preparação privada, não homologada.

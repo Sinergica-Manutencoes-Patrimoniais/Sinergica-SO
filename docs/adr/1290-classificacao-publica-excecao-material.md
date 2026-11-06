@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1290-classificacao-publica-excecao-material-md"
+description: "Documento Sinérgica SO: ADR 1290 — Classificação pública da exceção de material"
+alwaysApply: false
+---
+
 # ADR 1290 — Classificação pública da exceção de material
 
 ## Contexto

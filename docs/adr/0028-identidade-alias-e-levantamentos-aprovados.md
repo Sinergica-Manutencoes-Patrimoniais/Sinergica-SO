@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0028-identidade-alias-e-levantamentos-aprovados-md"
+description: "Documento Sinérgica SO: ADR-0028 — Identidade estável, aliases e levantamentos aprovados"
+alwaysApply: false
+---
+
 # ADR-0028 — Identidade estável, aliases e levantamentos aprovados
 
 **Status:** Proposta técnica especificada. **Data:** 2026-10-26.

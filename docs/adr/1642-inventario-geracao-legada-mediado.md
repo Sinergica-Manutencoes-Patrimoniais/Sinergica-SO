@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1642-inventario-geracao-legada-mediado-md"
+description: "Documento Sinérgica SO: ADR-1642: inventário de geração legada mediado"
+alwaysApply: false
+---
+
 # ADR-1642: inventário de geração legada mediado
 
 ## Contexto

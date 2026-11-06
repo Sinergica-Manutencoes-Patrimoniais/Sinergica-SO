@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0915-borda-xlsx-configuracao-md"
+description: "Documento Sinérgica SO: ADR-0915 — Composição protegida da borda XLSX"
+alwaysApply: false
+---
+
 # ADR-0915 — Composição protegida da borda XLSX
 
 Data: 2026-10-30 · Status: preparação, não publicada.

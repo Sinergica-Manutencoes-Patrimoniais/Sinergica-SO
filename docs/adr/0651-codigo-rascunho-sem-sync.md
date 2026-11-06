@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0651-codigo-rascunho-sem-sync-md"
+description: "Documento Sinérgica SO: ADR-0651 — Código de rascunho sem sincronização externa"
+alwaysApply: false
+---
+
 # ADR-0651 — Código de rascunho sem sincronização externa
 
 Status: proposta; gates fechados, não homologada.

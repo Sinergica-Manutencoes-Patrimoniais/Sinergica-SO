@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0951-consulta-decisoes-onda-md"
+description: "Documento Sinérgica SO: ADR-0951 — Consulta privada de decisões por onda"
+alwaysApply: false
+---
+
 # ADR-0951 — Consulta privada de decisões por onda
 
 Status: preparação local, sem homologação.

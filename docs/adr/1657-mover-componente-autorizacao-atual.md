@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1657-mover-componente-autorizacao-atual-md"
+description: "Documento Sinérgica SO: ADR-1657 — Autorização transacional no movimento de Componente"
+alwaysApply: false
+---
+
 # ADR-1657 — Autorização transacional no movimento de Componente
 
 ## Estado

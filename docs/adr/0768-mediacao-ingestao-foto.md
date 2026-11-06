@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0768-mediacao-ingestao-foto-md"
+description: "Documento Sinérgica SO: ADR 0768 — Mediação privada da ingestão de fotos"
+alwaysApply: false
+---
+
 # ADR 0768 — Mediação privada da ingestão de fotos
 
 ## Decisão

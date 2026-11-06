@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s166-concorrencia-md"
+description: "Documento Sinérgica SO: Concorrência S166/PMOC (banco descartável isolado)"
+alwaysApply: false
+---
+
 # Concorrência S166/PMOC (banco descartável isolado)
 
 Use um banco isolado e descartável com migrations até 1645 aplicadas. Execute `setup` em transação e confirme somente nesse banco. Todas as demais sessões são independentes; as sessões A dormem 20 s para manter a transação aberta. Não executar em ambiente compartilhado ou com conexões externas.

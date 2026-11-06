@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1395-triagem-origem-campo-mediada-md"
+description: "Documento Sinérgica SO: ADR-1395 — Triagem de origem de campo mediada"
+alwaysApply: false
+---
+
 # ADR-1395 — Triagem de origem de campo mediada
 
 As telas de triagem, indicação, retificação e recuperação utilizam entradas autenticadas específicas, com permissão global de reconciliação, gates separados e coordenação de autorização. Seleção e alterações preservam a autorização por Cliente exigida pelos núcleos privados; retificação exige acesso aos dois Clientes. A lista de envelopes retorna o ID remoto como texto para preservar precisão.

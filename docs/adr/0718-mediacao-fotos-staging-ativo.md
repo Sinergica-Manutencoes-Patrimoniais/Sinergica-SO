@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0718-mediacao-fotos-staging-ativo-md"
+description: "Documento Sinérgica SO: ADR 0718 — Mediação de fotos de Sistema e Componente"
+alwaysApply: false
+---
+
 # ADR 0718 — Mediação de fotos de Sistema e Componente
 
 ## Decisão

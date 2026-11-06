@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0974-candidatos-devolucao-ciclo-md"
+description: "Documento Sinérgica SO: ADR-0974 — Consulta de candidatos à devolução por ciclo"
+alwaysApply: false
+---
+
 # ADR-0974 — Consulta de candidatos à devolução por ciclo
 
 Status: preparação privada, não homologada.

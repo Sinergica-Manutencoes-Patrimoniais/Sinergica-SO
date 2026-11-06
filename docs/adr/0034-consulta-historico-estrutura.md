@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0034-consulta-historico-estrutura-md"
+description: "Documento Sinérgica SO: ADR-0034 — Consulta do histórico técnico"
+alwaysApply: false
+---
+
 # ADR-0034 — Consulta do histórico técnico
 
 **Status:** decisão para implementação local E01-S176. **Data:** 2026-10-27.

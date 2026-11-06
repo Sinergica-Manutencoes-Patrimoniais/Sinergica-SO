@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0681-pendencia-retorno-grupo-md"
+description: "Documento Sinérgica SO: ADR-0681 — Identidade de Grupo em Pendência de retorno"
+alwaysApply: false
+---
+
 # ADR-0681 — Identidade de Grupo em Pendência de retorno
 
 Pendência passa a admitir exatamente uma origem: ocorrência preventiva legada ou ocorrência de Grupo, sem fabricar Plano, Sistema ou Componente. A adaptação do comando de Pendência verifica a OS declarada, Cliente, Grupo e snapshot da versão aprovada e preserva as verificações de retorno, decisão e Não OK. Registros anteriores continuam com origem legada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1184-fronteira-http-t24-md"
+description: "Documento Sinérgica SO: ADR-1184 — Fronteira interna HTTP T−24"
+alwaysApply: false
+---
+
 # ADR-1184 — Fronteira interna HTTP T−24
 
 Status: proposta local, não registrada nem homologada.

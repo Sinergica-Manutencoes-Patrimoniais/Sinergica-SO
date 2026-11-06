@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1030-historico-supressao-gerador-md"
+description: "Documento Sinérgica SO: ADR-1030 — Histórico de supressão do gerador"
+alwaysApply: false
+---
+
 # ADR-1030 — Histórico de supressão do gerador
 
 Status: preparação privada, não homologada.

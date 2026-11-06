@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0388-guarda-encerramento-chamado-md"
+description: "Documento Sinérgica SO: ADR-0388 — Guarda contra bypass do encerramento conferido"
+alwaysApply: false
+---
+
 # ADR-0388 — Guarda contra bypass do encerramento conferido
 
 Status: proposta, não homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1070-os-parcela-backlog-md"
+description: "Documento Sinérgica SO: ADR-1070 — Criação de OS para parcela vinda do Backlog"
+alwaysApply: false
+---
+
 # ADR-1070 — Criação de OS para parcela vinda do Backlog
 
 **Status:** preparação não homologada. Complementa ADR-1068/1069.

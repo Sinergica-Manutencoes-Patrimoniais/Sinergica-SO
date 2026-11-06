@@ -1,3 +1,9 @@
+---
+name: "docs-planejamento-plano-manutencao-contratos-programa-md"
+description: "Documento Sinérgica SO: Contratos compartilhados do programa SSO"
+alwaysApply: false
+---
+
 # Contratos compartilhados do programa SSO
 
 Fonte vinculante: Caderno Técnico v1 + `definicoes-fabricio-caderno-v1.md`. Specs locais detalham comandos; estas invariantes valem em todas E01-S165–S186.

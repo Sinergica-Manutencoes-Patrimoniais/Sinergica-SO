@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1658-breadcrumb-ativo-md"
+description: "Documento Sinérgica SO: ADR-1658 — Breadcrumb físico de Componente e Equipamento"
+alwaysApply: false
+---
+
 # ADR-1658 — Breadcrumb físico de Componente e Equipamento
 
 ## Estado

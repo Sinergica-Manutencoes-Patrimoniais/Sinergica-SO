@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0490-causa-falha-estruturada-md"
+description: "Documento Sinérgica SO: ADR-0490 — causa estruturada de falha de integração"
+alwaysApply: false
+---
+
 # ADR-0490 — causa estruturada de falha de integração
 
 Status: diagnóstico estático, não aplicado nem homologado. A definição de `pcm.auvo_sync_outbox` em 0024 contém `status`, `attempts` e `last_error` textual, sem coluna estruturada de código de falha; o código do produtor `pcm-auvo-push` registra `status='error'` e `last_error`. Não há base para classificar a causa por categoria confiável a partir desses campos.

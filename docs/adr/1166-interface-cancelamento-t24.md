@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1166-interface-cancelamento-t24-md"
+description: "Documento Sinérgica SO: ADR-1166 — Conferência do cancelamento de candidata"
+alwaysApply: false
+---
+
 # ADR-1166 — Conferência do cancelamento de candidata
 
 Status: proposta local, não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0113-disponibilidade-capacidade-semanal-md"
+description: "Documento Sinérgica SO: ADR-0113 — Disponibilidade declarada por técnico e semana"
+alwaysApply: false
+---
+
 # ADR-0113 — Disponibilidade declarada por técnico e semana
 
 ## Estado

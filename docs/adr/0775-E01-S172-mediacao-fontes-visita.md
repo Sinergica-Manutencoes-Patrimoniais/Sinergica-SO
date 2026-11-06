@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0775-e01-s172-mediacao-fontes-visita-md"
+description: "Documento Sinérgica SO: ADR-0775: mediação das fontes de Visita"
+alwaysApply: false
+---
+
 # ADR-0775: mediação das fontes de Visita
 
 Status: proposta preparada; gates fechados e homologação pendente.

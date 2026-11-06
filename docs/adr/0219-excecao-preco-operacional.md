@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0219-excecao-preco-operacional-md"
+description: "Documento Sinérgica SO: ADR-0219 — Exceção auditada de preço operacional"
+alwaysApply: false
+---
+
 # ADR-0219 — Exceção auditada de preço operacional
 
 **Estado:** preparação bloqueada, sem homologação nem implantação.

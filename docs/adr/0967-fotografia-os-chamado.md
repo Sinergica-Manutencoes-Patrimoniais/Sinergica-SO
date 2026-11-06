@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0967-fotografia-os-chamado-md"
+description: "Documento Sinérgica SO: ADR-0967 — Fotografia paginada das OS do Chamado"
+alwaysApply: false
+---
+
 # ADR-0967 — Fotografia paginada das OS do Chamado
 
 Status: consulta privada preparada, não homologada.

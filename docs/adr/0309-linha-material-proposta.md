@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0309-linha-material-proposta-md"
+description: "Documento Sinérgica SO: ADR-0309 — Vínculo preliminar à linha pública aprovada"
+alwaysApply: false
+---
+
 # ADR-0309 — Vínculo preliminar à linha pública aprovada
 
 Status: proposta; gates fechados, sem testes.

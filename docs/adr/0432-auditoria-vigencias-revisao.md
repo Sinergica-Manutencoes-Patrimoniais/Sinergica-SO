@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0432-auditoria-vigencias-revisao-md"
+description: "Documento Sinérgica SO: ADR-0432 — Diagnóstico de versões e vigências"
+alwaysApply: false
+---
+
 # ADR-0432 — Diagnóstico de versões e vigências
 
 Status: preparado, gate desligado, não aplicado nem homologado. A consulta conta versões aprovadas, rascunhos, inícios ausentes e pares de vigências aprovadas sobrepostas, além de eventos de aprovação e de encerramento da vigência anterior encontrados na auditoria. Os dados são uma fotografia autorizada e não comprovam integridade nem cobertura da auditoria.

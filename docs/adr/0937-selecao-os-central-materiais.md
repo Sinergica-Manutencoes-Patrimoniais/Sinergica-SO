@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0937-selecao-os-central-materiais-md"
+description: "Documento Sinérgica SO: ADR-0937 — Seleção de OS da Central de Materiais"
+alwaysApply: false
+---
+
 # ADR-0937 — Seleção de OS da Central de Materiais
 
 Status: preparação local; sem testes ou homologação.

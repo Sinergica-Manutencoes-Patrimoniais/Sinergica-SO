@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0866-mediacao-tolerancia-reprocessamento-cronograma-md"
+description: "Documento Sinérgica SO: ADR-0866 — Tolerância e reprocessamento de cronograma"
+alwaysApply: false
+---
+
 # ADR-0866 — Tolerância e reprocessamento de cronograma
 
 Status: preparado, gates fechados e homologação pendente.

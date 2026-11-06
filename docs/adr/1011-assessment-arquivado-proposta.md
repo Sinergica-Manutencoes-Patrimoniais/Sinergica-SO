@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1011-assessment-arquivado-proposta-md"
+description: "Documento Sinérgica SO: ADR-1011 — Preservação de assessment arquivado"
+alwaysApply: false
+---
+
 # ADR-1011 — Preservação de assessment arquivado
 
 Status: preparação fechada, não homologada. Complementa ADR-1010.

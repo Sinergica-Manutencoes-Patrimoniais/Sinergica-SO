@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1547-fotografia-os-consumidores-visita-md"
+description: "Documento Sinérgica SO: ADR-1547 — Fotografia de OS nos consumidores de Visita"
+alwaysApply: false
+---
+
 # ADR-1547 — Fotografia de OS nos consumidores de Visita
 
 Status: proposto; implementação parcial, sem homologação. Depende das migrations 1687 e 1689 e da revisão dos consumidores de retorno.

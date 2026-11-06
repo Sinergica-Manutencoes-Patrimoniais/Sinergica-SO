@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0214-revogacao-dispensa-orcamento-md"
+description: "Documento Sinérgica SO: ADR-0214 — Histórico e revogação de dispensa"
+alwaysApply: false
+---
+
 # ADR-0214 — Histórico e revogação de dispensa
 
 **Estado:** proposta preparatória, sem homologação nem implantação.

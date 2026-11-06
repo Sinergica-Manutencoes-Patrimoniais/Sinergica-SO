@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0070-consulta-visitas-md"
+description: "Documento Sinérgica SO: ADR-0070 — Consulta contextual paginada de Visitas"
+alwaysApply: false
+---
+
 # ADR-0070 — Consulta contextual paginada de Visitas
 
 **Status:** decisão para implementação local E01-S171. **Data:** 2026-10-27.

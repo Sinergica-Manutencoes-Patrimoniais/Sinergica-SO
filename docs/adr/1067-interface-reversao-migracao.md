@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1067-interface-reversao-migracao-md"
+description: "Documento Sinérgica SO: ADR-1067 — Consulta e pedido de reversão de rascunho legado"
+alwaysApply: false
+---
+
 # ADR-1067 — Consulta e pedido de reversão de rascunho legado
 
 **Status:** preparado, não homologado. Complementa ADR-1066.

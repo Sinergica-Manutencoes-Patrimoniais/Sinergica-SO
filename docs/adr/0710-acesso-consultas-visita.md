@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0710-acesso-consultas-visita-md"
+description: "Documento Sinérgica SO: ADR-0710 — Acesso limitado às consultas e comandos de Visita"
+alwaysApply: false
+---
+
 # ADR-0710 — Acesso limitado às consultas e comandos de Visita
 
 Status: preparada; não aplicada nem homologada.

@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0313-modo-faturamento-proposta-md"
+description: "Documento Sinérgica SO: ADR-0313 — Exclusividade entre proposta integral e linhas"
+alwaysApply: false
+---
+
 # ADR-0313 — Exclusividade entre proposta integral e linhas
 
 Status: proposta; gate fechado, testes e revisão pendentes.

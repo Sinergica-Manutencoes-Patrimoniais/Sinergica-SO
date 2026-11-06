@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1178-contexto-despacho-t24-md"
+description: "Documento Sinérgica SO: ADR-1178 — Contexto de despacho da candidata T−24"
+alwaysApply: false
+---
+
 # ADR-1178 — Contexto de despacho da candidata T−24
 
 Status: proposta local, não aplicada nem homologada.

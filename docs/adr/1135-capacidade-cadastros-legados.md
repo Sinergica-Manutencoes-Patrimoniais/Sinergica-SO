@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1135-capacidade-cadastros-legados-md"
+description: "Documento Sinérgica SO: ADR-1135 — Capacidade na escrita de cadastros legados"
+alwaysApply: false
+---
+
 # ADR-1135 — Capacidade na escrita de cadastros legados
 
 Status: proposta local, gate fechado; não aplicada nem homologada.

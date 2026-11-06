@@ -1,3 +1,9 @@
+---
+name: "supabase-tests-manual-e01-s165-s166-verificacao-ci-local-md"
+description: "Documento Sinérgica SO: Verificação local dos gates de CI"
+alwaysApply: false
+---
+
 # Verificação local dos gates de CI
 
 Executada com Node 22 e sem iniciar Supabase compartilhado. `eval:spec`, Mermaid e `pnpm --filter @sinergica/web typecheck` passaram. O lote de 18 fixtures SQL e 70 testes web está registrado separadamente em `manual_E01-S165_S166_lote_isolado_1767.md`.

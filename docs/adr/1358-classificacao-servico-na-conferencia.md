@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1358-classificacao-servico-na-conferencia-md"
+description: "Documento Sinérgica SO: ADR 1358 — Classificação comercial na conferência do serviço"
+alwaysApply: false
+---
+
 # ADR 1358 — Classificação comercial na conferência do serviço
 
 ## Contexto

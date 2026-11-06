@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1249-mediacao-substituicao-codigo-grupo-md"
+description: "Documento Sinérgica SO: ADR-1249 — Mediação da substituição de código de Grupo"
+alwaysApply: false
+---
+
 # ADR-1249 — Mediação da substituição de código de Grupo
 
 **Status:** proposta local, não homologada. Complementa ADR-1246.

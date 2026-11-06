@@ -1,3 +1,9 @@
+---
+name: "docs-adr-0040-rotina-rascunho-alvo-tipado-md"
+description: "Documento Sinérgica SO: ADR-0040 — Rotinas de rascunho e alvos tipados"
+alwaysApply: false
+---
+
 # ADR-0040 — Rotinas de rascunho e alvos tipados
 
 **Status:** decisão para implementação local E01-S165. **Data:** 2026-10-27.
