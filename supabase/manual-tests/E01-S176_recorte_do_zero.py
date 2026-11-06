@@ -236,6 +236,21 @@ def main(opcoes):
         ):
             if hashlib.sha256((ROOT / nome).read_bytes()).hexdigest() != digest:
                 raise RuntimeError("Arquivo de ensaio Edge divergente: " + nome)
+    criacao_1817 = None
+    if opcoes.criacao_1817:
+        if not opcoes.gates_1816 or not opcoes.fixtures_pgtap_ci:
+            raise RuntimeError("Criação 1817 exige gates 1816 e lote pgTAP CI")
+        caminho_1817 = "supabase/migrations/1817_E01-S184_criar_contrato_sem_custos.sql"
+        criacao_1817 = (ROOT / caminho_1817).read_bytes()
+        if hashlib.sha256(criacao_1817).hexdigest() != "e65453cef0bade6c58845cbaffb3ce69c0e6df53f8d0092edd6c0c7e7ac3f0dc":
+            raise RuntimeError("Migration 1817 divergente")
+    fixture_1817 = None
+    if criacao_1817 is not None:
+        driver = ROOT / "supabase/manual-tests/s184_criacao_1817_isolada.py"
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "5b95f71f1b1b2a6455b05a0e18832f4cb130e9505bceff727ac77b6e0db2a3f3":
+            raise RuntimeError("Driver de criação 1817 divergente")
+        import s184_criacao_1817_isolada
+        fixture_1817 = s184_criacao_1817_isolada.preparar(ROOT)
     fixtures = None
     isolamento_1810 = None
     upload_1811 = None
@@ -419,7 +434,7 @@ def main(opcoes):
         if not opcoes.integracao_candidata or not opcoes.diagnostico_ac5 or not opcoes.isolamento_1810 or not opcoes.gates_1816 or opcoes.fixtures_pgtap:
             raise RuntimeError("pgTAP CI exige integração, AC5, isolamento 1810 e gates 1816, sem fixtures duplicadas")
         driver = ROOT / "supabase/manual-tests/s176_pgtap_ci_isolada.py"
-        if hashlib.sha256(driver.read_bytes()).hexdigest() != "c481b6a5ff09762c4278a2437d734f3b31e9b89f7041811319d3ec79fba8b633":
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "12220853273b2bc3d6c0cef9b2f28ece6f4f5857cfe4a304f265227a684d8607":
             raise RuntimeError("Driver pgTAP CI divergente")
         runner = ROOT / "supabase/manual-tests/s176_runner_pgtap.py"
         if hashlib.sha256(runner.read_bytes()).hexdigest() != "e45aa2d096c02920bc6b6bf8f186679247ad423db8532ba553989c1e681ecab4":
@@ -644,6 +659,11 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade de gates 1816")
         blobs.append((caminho, gates_1816[0]))
         names.append(caminho)
+    if criacao_1817 is not None:
+        if any(Path(p).name[:4] == "1817" for p in base_files + names) or names[-1] != s178_gates_1816_isolada.MIGRATION:
+            raise RuntimeError("Ordem ou duplicidade da criação 1817")
+        blobs.append((caminho_1817, criacao_1817))
+        names.append(caminho_1817)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -836,6 +856,8 @@ end; $$;"""
             if estado.strip() != "true":
                 raise RuntimeError("Gate diagnóstico AC5 ausente ou aberto: " + tabela + "." + coluna)
         print("Gates AC5 listados confirmados fechados; demais gates exigem revisão independente.", flush=True)
+    if fixture_1817 is not None:
+        s184_criacao_1817_isolada.executar(CONTAINER, fixture_1817, query, watchdog_triggered)
     if isolamento_1810 is not None:
         if query("select not habilitado from config.sso_estrutura_cliente_leitura_gate where id") != "t":
             raise RuntimeError("Gate de isolamento inicial aberto ou ausente")
@@ -1019,6 +1041,7 @@ if __name__ == "__main__":
     grupo = parser.add_mutually_exclusive_group()
     grupo.add_argument("--diagnostico-0415", action="store_true", help="Antecipa duas ações somente no clone; resultado não prova recorte implantável.")
     grupo.add_argument("--integracao-candidata", action="store_true", help="Inclui migrations originais candidatas, sem seeds artificiais; não autoriza release.")
+    parser.add_argument("--criacao-1817", action="store_true", help="Aplica mediação comercial 1817 antes do lote pgTAP; exige gates 1816.")
     parser.add_argument("--fixtures-pgtap-ci", action="store_true", help="Executa seleção SQL da CI no clone; não equivale a supabase start.")
     parser.add_argument("--fixtures-pgtap", action="store_true", help="Executa quatro fixtures sintéticas apenas no candidato de integração descartável.")
     parser.add_argument("--concorrencia-parcial", action="store_true", help="Executa dois cenários concorrentes parciais apenas no candidato de integração descartável.")

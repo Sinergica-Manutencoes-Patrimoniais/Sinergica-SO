@@ -15,6 +15,16 @@ values
   ('00000000-0000-0000-0000-000000000903', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'escrita-s07@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
+-- S184 exige usuários ativos e permissões atuais além das claims sintéticas.
+insert into config.usuarios(user_id,papel,nome,ativo) values
+ ('00000000-0000-0000-0000-000000000901','colaborador','Sem módulo S07',true),
+ ('00000000-0000-0000-0000-000000000902','colaborador','Leitura S07',true),
+ ('00000000-0000-0000-0000-000000000903','colaborador','Escrita S07',true);
+insert into config.usuario_modulos(user_id,modulo,nivel) values
+ ('00000000-0000-0000-0000-000000000902','comercial','leitura'),
+ ('00000000-0000-0000-0000-000000000903','comercial','escrita'),
+ ('00000000-0000-0000-0000-000000000903','financeiro','leitura');
+
 insert into pcm.clientes (id, nome, ativo, created_by)
 values ('00000000-0000-0000-0000-0000000009d1', 'Condomínio Teste E03-S07', true, '00000000-0000-0000-0000-000000000901')
 on conflict (id) do nothing;
@@ -43,6 +53,15 @@ values
 -- ─────────────────────────── AC-1: RLS ───────────────────────────────────────
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000903","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
+-- A mediação operacional deve preservar o bloqueio à composição interna.
+do $$ begin
+  if (select count(*) from comercial.propostas where id in ('00000000-0000-0000-0000-000000000cb1','00000000-0000-0000-0000-000000000cb2','00000000-0000-0000-0000-000000000cb3')) <> 0 then
+    raise exception 'custos_visiveis_ao_colaborador';
+  end if;
+  if (select count(*) from comercial.propostas_sem_custos where id in ('00000000-0000-0000-0000-000000000cb1','00000000-0000-0000-0000-000000000cb2','00000000-0000-0000-0000-000000000cb3')) <> 3 then
+    raise exception 'propostas_operacionais_indisponiveis';
+  end if;
+end $$;
 select is(
   (select tipo from comercial.fn_criar_contrato('00000000-0000-0000-0000-000000000cb1')),
   'residente',
