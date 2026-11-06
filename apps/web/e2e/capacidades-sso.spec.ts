@@ -374,20 +374,34 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     marcarEtapaS170("abrir formulário de Rotina");
     const formulario = rotinas.getByRole("region", { name: "Nova Rotina" });
     await expect(formulario).toBeVisible({ timeout: 15_000 });
-    await formulario.getByLabel("Nome da Rotina").fill(nomeRotina);
-    await formulario.getByLabel("Tipo de alvo").selectOption("sistema");
+    marcarEtapaS170("preencher nome da Rotina");
+    await formulario.getByLabel("Nome da Rotina").fill(nomeRotina, { timeout: 15_000 });
+    marcarEtapaS170("selecionar tipo de alvo");
+    await formulario.getByLabel("Tipo de alvo").selectOption("sistema", { timeout: 15_000 });
+    marcarEtapaS170("selecionar alvo da Rotina");
     await formulario
       .getByLabel("Alvo da Rotina", { exact: true })
-      .selectOption({ label: "Sistema sintético" });
-    await formulario.getByLabel("Modo").selectOption("calendario");
-    await formulario.getByLabel("Intervalo").fill("1");
-    await formulario.getByLabel("Unidade da recorrência").selectOption("meses");
+      .selectOption({ label: "Sistema sintético" }, { timeout: 15_000 });
+    marcarEtapaS170("selecionar modo de recorrência");
+    await formulario.getByLabel("Modo").selectOption("calendario", { timeout: 15_000 });
+    marcarEtapaS170("preencher intervalo");
+    await formulario.getByLabel("Intervalo").fill("1", { timeout: 15_000 });
+    marcarEtapaS170("selecionar unidade de recorrência");
+    await formulario
+      .getByLabel("Unidade da recorrência")
+      .selectOption("meses", { timeout: 15_000 });
+    marcarEtapaS170("preencher data-base");
     await formulario
       .getByLabel("Data-base")
-      .fill(new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10));
-    await formulario.getByLabel("Tempo estimado em minutos").fill("15");
-    await formulario.getByLabel("Referência do tempo").selectOption("total");
-    await formulario.getByLabel("Instrução").fill("Inspecionar o Sistema sintético.");
+      .fill(new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10), { timeout: 15_000 });
+    marcarEtapaS170("preencher tempo estimado");
+    await formulario.getByLabel("Tempo estimado em minutos").fill("15", { timeout: 15_000 });
+    marcarEtapaS170("selecionar referência do tempo");
+    await formulario.getByLabel("Referência do tempo").selectOption("total", { timeout: 15_000 });
+    marcarEtapaS170("preencher instrução da Rotina");
+    await formulario
+      .getByLabel("Instrução")
+      .fill("Inspecionar o Sistema sintético.", { timeout: 15_000 });
     marcarEtapaS170("salvar Rotina");
     await formulario.getByRole("button", { name: "Salvar Rotina" }).click();
     await expect(rotinas.getByRole("listitem").filter({ hasText: nomeRotina })).toBeVisible();

@@ -32,6 +32,7 @@ alwaysApply: false
 - Diagnóstico S166: `57014` foi `canceling statement due to statement timeout` após 8.011 ms no endpoint PostgREST. O limite operacional permanece fechado até capacidade segura; não aumentar timeout global nem remover atomicidade.
 - Segunda rodada do commit `39ceece9`: S165 passou (`42248307771`); S166 confirmou `canceling statement due to statement timeout` em **8.011 ms** (`42248308170`); S170 mostrou a justificativa também no item HTML visível, mas o matcher não localizou o texto, e a jornada concedida expirou após 120 s ao abrir Rotinas (`42248309206`); S176 manteve o formulário montado, porém o seletor Local não ficou habilitado a tempo (`42248308347`).
 - Próxima correção de ensaio: S170 procura o item de histórico e marca cada transição para Rotinas; S176 espera a permissão revalidada antes de interagir com Local. S166 permanece fora do lote liberável até resolver capacidade do endpoint, sem aumentar timeout global nem remover atomicidade.
+- Terceira rodada preparada: S170 passou a asserção do histórico e alcançou o cadastro de Rotina, mas a jornada de concessão ainda expirou em 120 s ao abrir/preencher o formulário; cada campo agora tem marco e timeout limitado para apontar a operação exata. S176 mostrou o campo Local e as opções, mas o envio permaneceu desabilitado durante a revalidação; a última alteração mantém edição local e bloqueia apenas a gravação até a permissão ficar confirmada. Aguardar os runners dedicados antes de concluir.
 
 ## Atualização dos E2E isolados — 2026-11-06
 

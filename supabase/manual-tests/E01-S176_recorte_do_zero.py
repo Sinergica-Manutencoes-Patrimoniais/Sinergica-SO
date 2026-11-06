@@ -427,7 +427,7 @@ def main(opcoes):
             proxy_s165 = s165_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s170_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s170_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "98c0ba10cbb687525d68a39285104234bc2acf1d48f3faf41e729df7d43a21c8":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "ff6878fc7706ebf5448f7ac6d2f1d36676e2d96c45bb5c684e909d8b05433494":
                 raise RuntimeError("Driver UI S170 divergente")
             import s170_ui_isolada
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
