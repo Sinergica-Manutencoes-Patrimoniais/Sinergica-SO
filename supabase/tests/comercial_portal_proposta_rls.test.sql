@@ -1,11 +1,14 @@
 -- comercial_portal_proposta_rls.test.sql — pgTAP (E03-S06)
 -- Isolamento da view `comercial.portal_propostas` (AC-3/AC-4), idempotência/validade/degradação da
--- RPC `comercial.fn_decidir_proposta` (AC-5/AC-6/AC-7/AC-8). Rodar com `supabase test db` (requer
+-- RPC `comercial.portal_decidir_proposta` (AC-5/AC-6/AC-7/AC-8). Rodar com `supabase test db` (requer
 -- Docker/Supabase local). Cenários já confirmados manualmente em produção (smoke test com
 -- `set_config`/rollback) antes desta suíte ser escrita.
 
 begin;
-select plan(15);
+set local app.auvo_sync_write='true';
+select plan(18);
+select is(has_function_privilege('authenticated','comercial.fn_decidir_proposta(uuid,text,text)','execute'),false,'RPC privada antiga não é executável por authenticated');
+select is(exists(select 1 from information_schema.columns where table_schema='comercial' and table_name='portal_propostas' and column_name in ('custo_total_centavos','piso_centavos','preco_sugerido_centavos')),false,'view pública não expõe composição de custos');
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -14,11 +17,22 @@ values
   ('00000000-0000-0000-0000-000000000803', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'interno-comercial-s06@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
+-- Perfis atuais exigidos pelo contrato público S184.
+insert into config.usuarios(user_id,papel,nome,ativo) values
+ ('00000000-0000-0000-0000-000000000801','cliente-sindico','Síndico A sintético',true),
+ ('00000000-0000-0000-0000-000000000802','cliente-sindico','Síndico B sintético',true),
+ ('00000000-0000-0000-0000-000000000803','colaborador','Interno sintético',true);
+insert into config.usuario_modulos(user_id,modulo,nivel) values
+ ('00000000-0000-0000-0000-000000000803','comercial','escrita');
+
 insert into pcm.clientes (id, nome, ativo, created_by)
 values
   ('00000000-0000-0000-0000-0000000009c1', 'Condomínio A — Teste E03-S06', true, '00000000-0000-0000-0000-000000000803'),
   ('00000000-0000-0000-0000-0000000009c2', 'Condomínio B — Teste E03-S06', true, '00000000-0000-0000-0000-000000000803')
 on conflict (id) do nothing;
+insert into config.usuario_cliente(user_id,cliente_id) values
+ ('00000000-0000-0000-0000-000000000801','00000000-0000-0000-0000-0000000009c1'),
+ ('00000000-0000-0000-0000-000000000802','00000000-0000-0000-0000-0000000009c2');
 
 insert into comercial.etapas_funil (id, nome, ordem, cor, tipo)
 values
@@ -72,7 +86,7 @@ select is(
 );
 
 -- 4) usuário interno (comercial:escrita) não é 'cliente-sindico' — view nega, mesmo enxergando a
--- tabela base normalmente por outro caminho (RLS de comercial.propostas, não desta view).
+-- recebe acesso operacional por outro caminho, sujeito às regras atuais de custos.
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000803","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
 select is(
   (select count(*)::int from comercial.portal_propostas),
@@ -85,9 +99,14 @@ select is(
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000801","user_role":"cliente-sindico","cliente_id":"00000000-0000-0000-0000-0000000009c1"}';
 
 select is(
-  (select status from comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'aceita', null)),
+  (comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'aceita', null)->>'status'),
   'aceita',
   'aceite muda o status da proposta pra aceita'
+);
+select is(
+  comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'aceita', null) ?| array['custo_total_centavos','piso_centavos','preco_sugerido_centavos'],
+  false,
+  'recibo público não expõe composição de custos'
 );
 -- cliente-sindico não tem RLS pra ler comercial.oportunidades/oportunidade_eventos direto (só
 -- enxerga propostas pela view do portal) — service_role confirma o efeito colateral da RPC sem
@@ -114,7 +133,7 @@ set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000801","u
 
 -- AC-8: segunda decisão sobre a MESMA proposta é ignorada, sem erro, sem duplicar
 select lives_ok(
-  $$ select comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'aceita', null) $$,
+  $$ select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'aceita', null) $$,
   'segunda decisao sobre proposta ja aceita NAO lanca erro (AC-8)'
 );
 select is(
@@ -126,7 +145,7 @@ select is(
 -- ─────────────────────────── AC-6: recusa com motivo ─────────────────────────
 
 select is(
-  (select status from comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b2', 'recusada', 'Preço acima do orçamento')),
+  (comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b2', 'recusada', 'Preço acima do orçamento')->>'status'),
   'recusada',
   'recusa muda o status da proposta pra recusada'
 );
@@ -141,7 +160,7 @@ select is(
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000801","user_role":"cliente-sindico","cliente_id":"00000000-0000-0000-0000-0000000009c1"}';
 select throws_ok(
-  $$ select comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'recusada', null) $$,
+  $$ select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'recusada', null) $$,
   '23514',
   null,
   'recusar sem motivo e recusado ANTES de olhar o status da proposta (validacao de entrada primeiro)'
@@ -150,7 +169,7 @@ select throws_ok(
 -- ─────────────────────────── AC-7: proposta expirada ─────────────────────────
 
 select throws_ok(
-  $$ select comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b3', 'aceita', null) $$,
+  $$ select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b3', 'aceita', null) $$,
   '23514',
   null,
   'aceitar proposta expirada e recusado no banco'
@@ -160,7 +179,7 @@ select throws_ok(
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000803","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
 select throws_ok(
-  $$ select comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b3', 'aceita', null) $$,
+  $$ select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b3', 'aceita', null) $$,
   '42501',
   null,
   'usuario interno (nao cliente-sindico) nao decide proposta'
