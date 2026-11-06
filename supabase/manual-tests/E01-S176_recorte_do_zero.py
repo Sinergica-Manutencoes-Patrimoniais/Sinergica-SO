@@ -223,16 +223,32 @@ def main(opcoes):
     fixture_s165 = None
     proxy_s165 = None
     if opcoes.ui_s165_e2e:
-        if not opcoes.fixture_s165_e2e:
-            raise RuntimeError("UI S165 exige fixture sintética S165")
+        if not opcoes.fixture_s165_e2e or not opcoes.github_hosted:
+            raise RuntimeError("UI S165 exige fixture sintética e runner GitHub dedicado")
+        run_id = os.environ.get("GITHUB_RUN_ID", "")
+        tentativa = os.environ.get("GITHUB_RUN_ATTEMPT", "")
+        temporario = os.environ.get("RUNNER_TEMP", "")
+        if not run_id.isdigit() or not tentativa.isdigit() or not os.path.isabs(temporario) or not os.path.isdir(temporario):
+            raise RuntimeError("Marcador de limpeza S165 indisponível")
+        marcador = os.path.join(temporario, "s165-recorte-" + run_id + "-" + tentativa)
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+        with os.fdopen(os.open(marcador, flags, 0o600), "w") as arquivo:
+            arquivo.write(IDENT + "\n")
         driver_ui = ROOT / "supabase/manual-tests/s165_ui_isolada.py"
-        if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "e52c5738654762796050cc0ff9a5f5ff5fdd5e85106d9c34df0263e756973c16":
+        if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "40cb2a79df92a1b9a636a20ad27d114fcf172ed7502ec95696ee5f7e13ec5775":
             raise RuntimeError("Driver UI S165 divergente")
         import s165_ui_isolada
         proxy_s165 = s165_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
     if opcoes.fixture_s165_e2e:
-        if not opcoes.jornada_ac5_http:
-            raise RuntimeError("Fixture S165 exige serviços sintéticos da jornada AC5")
+        proibidas_s165 = ("diagnostico_ac5", "isolamento_1810", "fixtures_pgtap", "fixtures_pgtap_ci",
+                          "jornada_ac5_http", "concorrencia_1810", "concorrencia_parcial",
+                          "aprovacao_1804", "aprovacao_1805", "aprovacao_1806", "revisao_1807",
+                          "consulta_1808", "concorrencia_1805", "concorrencia_1807",
+                          "aprovacao_1805_pos_commit", "upload_1811", "documento_1812",
+                          "hierarquia_1813", "policies_1814", "dispatch_1815", "gates_1816",
+                          "criacao_1817", "ativacao_1818", "edge_documento_http", "edge_fotos_http")
+        if not opcoes.integracao_candidata or any(getattr(opcoes, x) for x in proibidas_s165):
+            raise RuntimeError("Fixture S165 exige integração sem fixtures externas ou atalhos")
         driver_s165 = ROOT / "supabase/manual-tests/s165_e2e_clientes_isolada.py"
         if hashlib.sha256(driver_s165.read_bytes()).hexdigest() != "053ac8dbccb2c6c8e00e4c2b2859b7a7338cec82e7c659ffa8495085e45118e1":
             raise RuntimeError("Driver S165 divergente")
@@ -463,10 +479,10 @@ def main(opcoes):
         if not opcoes.integracao_candidata or not opcoes.diagnostico_ac5 or not opcoes.isolamento_1810 or not opcoes.gates_1816 or opcoes.fixtures_pgtap:
             raise RuntimeError("pgTAP CI exige integração, AC5, isolamento 1810 e gates 1816, sem fixtures duplicadas")
         driver = ROOT / "supabase/manual-tests/s176_pgtap_ci_isolada.py"
-        if hashlib.sha256(driver.read_bytes()).hexdigest() != "837e00c049c4c06938f34d5aaa2f46028025a3dea3a43e56bde401e82fda0bd8":
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "2f91c0ecb7014ab126f772183407e199190c454f024573e155c33ca5f85f19cb":
             raise RuntimeError("Driver pgTAP CI divergente")
         runner = ROOT / "supabase/manual-tests/s176_runner_pgtap.py"
-        if hashlib.sha256(runner.read_bytes()).hexdigest() != "e45aa2d096c02920bc6b6bf8f186679247ad423db8532ba553989c1e681ecab4":
+        if hashlib.sha256(runner.read_bytes()).hexdigest() != "ce29a3c1984027e4a772b7f95db7eace72149a67295a6b721db8d6337990275a":
             raise RuntimeError("Runner pgTAP divergente")
         import s176_pgtap_ci_isolada
         fixtures = s176_pgtap_ci_isolada.preparar(ROOT)
@@ -765,7 +781,7 @@ def main(opcoes):
         "GOTRUE_JWT_SECRET": jwt_secret, "GOTRUE_JWT_AUD": "authenticated",
         "GOTRUE_JWT_DEFAULT_GROUP_NAME": "authenticated", "GOTRUE_DISABLE_SIGNUP": "true",
     }
-    if opcoes.jornada_ac5_http:
+    if opcoes.jornada_ac5_http or opcoes.fixture_s165_e2e:
         auth_env.update({"GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED": "true", "GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI": "pg-functions://postgres/config/custom_access_token_hook"})
     args = ["create", "--name", AUTH_CONTAINER, "--network", NETWORK, "--label", "sso.recorte=" + IDENT]
     for key, value in auth_env.items(): args += ["--env", key + "=" + value]
@@ -941,7 +957,7 @@ end; $$;"""
         s176_isolamento_concorrencia_1810.executar(CONTAINER, watchdog_triggered)
         if query("select not habilitado from config.sso_estrutura_cliente_leitura_gate where id") != "t":
             raise RuntimeError("Gate de isolamento alterado após concorrência")
-    if opcoes.jornada_ac5_http:
+    if opcoes.jornada_ac5_http or opcoes.fixture_s165_e2e:
         # pcm só existe após as migrations: recriar apenas o PostgREST próprio,
         # agora expondo o schema real. Nunca criar schema artificialmente.
         if query("select to_regnamespace('pcm') is not null") != "t":
@@ -955,7 +971,11 @@ end; $$;"""
                 raise RuntimeError("Identidade PostgREST divergente")
             docker("rm", "-f", anterior["Id"])
             del platform_container_ids[REST_CONTAINER]
-        rest_env["PGRST_DB_SCHEMAS"] = "public,pcm,atendimento" if opcoes.edge_documento_http else "public,pcm"
+        rest_env["PGRST_DB_SCHEMAS"] = (
+            "public,pcm,atendimento" if opcoes.edge_documento_http
+            else "public,pcm,config" if opcoes.fixture_s165_e2e
+            else "public,pcm"
+        )
         iniciar_plataforma(REST_CONTAINER, REST_IMAGE, rest_env)
         for _ in range(45):
             if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio")
@@ -967,6 +987,7 @@ end; $$;"""
             except Exception: pass
             time.sleep(1)
         else: raise RuntimeError("PostgREST não ficou pronto após migrations: " + diagnostico_plataforma(REST_CONTAINER))
+    if opcoes.jornada_ac5_http:
         import importlib.util
         modulo = importlib.util.spec_from_file_location("s168_jornada_http", ROOT / "apps/web/e2e/s168-retorno-isolado/jornada.py")
         if modulo is None or modulo.loader is None: raise RuntimeError("Driver HTTP indisponível")
@@ -1065,10 +1086,11 @@ end; $$;"""
             fixture_s165, watchdog_triggered,
         )
         if proxy_s165 is not None:
-            s165_ui_isolada.executar(ROOT, docker, inspect, IDENT, NETWORK, S165_BROWSER,
-                                     chave("anon"), credenciais_s165, proxy_s165, watchdog_triggered)
+            s165_ui_isolada.executar(ROOT, docker, docker_monitor, inspect, IDENT, NETWORK, S165_BROWSER,
+                                     chave("anon"), credenciais_s165, proxy_s165, watchdog_triggered,
+                                     watchdog_lock, platform_container_ids)
         del credenciais_s165
-        print("Fixture parcial S165: dois Clientes e operador sintéticos; UI, revisão e histórico não executados.", flush=True)
+        print("Fixture parcial S165: dois Clientes e operador sintéticos; revisão e histórico não executados.", flush=True)
     if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
     if opcoes.diagnostico_0415:
         print("PASS DIAGNÓSTICO: ações antecipadas; NÃO prova recorte implantável nem testes funcionais.")

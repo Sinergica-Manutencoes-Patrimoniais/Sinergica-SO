@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // Fixture obrigatória: Supabase/app descartáveis em 127.0.0.1; operador sintético
 // com plano.gerir individual no Cliente A e sem concessão no Cliente B.
-// Este cenário consulta autorização real; não comprova por si aprovação ou auditoria.
+// A autorização entre Clientes é coberta pelo pgTAP, sem expor config via HTTP.
 const cfg = {
   app: process.env.SSO_S170_APP_URL,
   api: process.env.SSO_S170_SUPABASE_URL,
@@ -30,50 +30,6 @@ if (cfg.app) local(cfg.app);
 if (cfg.api) local(cfg.api);
 if (cfg.banco) conferirBanco(cfg.banco);
 test.use({ storageState: { cookies: [], origins: [] } });
-test("sessão real mantém gestão limitada ao Cliente autorizado", async ({ page, request }) => {
-  test.skip(!pronto, "Fixture S170 isolada não configurada");
-  const app = local(cfg.app!);
-  const api = local(cfg.api!);
-  conferirBanco(cfg.banco!);
-  const clienteA = cfg.clienteA!;
-  const clienteB = cfg.clienteB!;
-  if (!/^[0-9a-f-]{36}$/i.test(clienteA) || !/^[0-9a-f-]{36}$/i.test(clienteB) || clienteA === clienteB)
-    throw new Error("Clientes sintéticos inválidos");
-  await page.routeWebSocket("**/*", (socket) => socket.close());
-  await page.route("**/*", async (route) => {
-    const url = new URL(route.request().url());
-    if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || ![app, api].includes(url.origin)) {
-      await route.abort();
-      return;
-    }
-    await route.continue();
-  });
-  let loginNaApi = false;
-  page.on("request", (r) => {
-    if (r.url().startsWith(`${api}/auth/v1/token`) && r.method() === "POST") loginNaApi = true;
-  });
-  await page.goto(`${app}/login`);
-  await page.locator("#email").fill(cfg.email!);
-  await page.locator("#password").fill(cfg.senha!);
-  await page.getByRole("button", { name: "Entrar" }).click();
-  await expect(page).not.toHaveURL(/\/login/);
-  expect(loginNaApi).toBe(true);
-  const sessao = await request.post(`${api}/auth/v1/token?grant_type=password`, {
-    headers: { apikey: cfg.anon! }, data: { email: cfg.email!, password: cfg.senha! }, maxRedirects: 0,
-  });
-  expect(sessao.status()).toBe(200);
-  const { access_token: token } = await sessao.json();
-  expect(typeof token).toBe("string");
-  for (const [cliente, esperado] of [[clienteA, true], [clienteB, false]] as const) {
-    const resposta = await request.post(`${api}/rest/v1/rpc/sso_autorizar_acao`, {
-      headers: { apikey: cfg.anon!, Authorization: `Bearer ${token}`, "Content-Profile": "config", "Accept-Profile": "config" },
-      data: { p_acao: "plano.gerir", p_cliente_id: cliente }, maxRedirects: 0,
-    });
-    expect(resposta.status()).toBe(200);
-    expect(await resposta.json()).toBe(esperado);
-  }
-});
-
 // Requer retorno sintético preparado, navegável no app, com execucao.validar,
 // cobertura e evidências prontas; aprovação não finaliza OS nem dispara Auvo.
 // O histórico exibido comprova somente os registros retornados, não append-only no banco.

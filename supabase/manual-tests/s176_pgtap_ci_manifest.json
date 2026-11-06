@@ -13,8 +13,8 @@
     },
     {
       "nome": "E01-S170_autorizacao_modulos_1790_1795.test.sql",
-      "sha256": "bc2e6d5bbc80ea92ddc8cf00664283772bae00eec75c291f622806cc5abc2ad2",
-      "plano": 12
+      "sha256": "ae1ebb2f81e7d1c9d61e1438ef9ed17b7a1a8d25a8cf79c5b42c8b3d1a79036b",
+      "plano": 14
     },
     {
       "nome": "E01-S176_isolamento_estrutura_1810.test.sql",

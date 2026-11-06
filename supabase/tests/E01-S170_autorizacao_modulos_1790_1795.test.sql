@@ -2,7 +2,7 @@
 begin;
 -- Os Clientes sintéticos não devem acionar o drain Auvo.
 set local app.auvo_sync_write = 'true';
-select plan(12);
+select plan(14);
 
 select is((select count(*)::integer from config.sso_acao_modulos m join (values
   ('orcamento.operacional.ler','comercial','leitura'),
@@ -34,7 +34,8 @@ insert into config.sso_concessoes(usuario_id,acao,cliente_id) values
  ('17950000-0000-0000-0000-000000000001','orcamento.operacional.ler','17950000-0000-0000-0000-00000000000a'),
  ('17950000-0000-0000-0000-000000000001','orcamento.dispensar','17950000-0000-0000-0000-00000000000a'),
  ('17950000-0000-0000-0000-000000000001','orcamento.excecao_preco','17950000-0000-0000-0000-00000000000a'),
- ('17950000-0000-0000-0000-000000000001','anexo_os.publicar','17950000-0000-0000-0000-00000000000a');
+ ('17950000-0000-0000-0000-000000000001','anexo_os.publicar','17950000-0000-0000-0000-00000000000a'),
+ ('17950000-0000-0000-0000-000000000001','plano.gerir','17950000-0000-0000-0000-00000000000a');
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"17950000-0000-0000-0000-000000000001","role":"authenticated","user_role":"colaborador"}';
 select is(config.sso_autorizar_acao('orcamento.operacional.ler','17950000-0000-0000-0000-00000000000a'),true,'concessão e módulo autorizam leitura comercial');
@@ -42,6 +43,8 @@ select is(config.sso_autorizar_acao('orcamento.dispensar','17950000-0000-0000-00
 select is(config.sso_autorizar_acao('orcamento.excecao_preco','17950000-0000-0000-0000-00000000000a'),true,'concessão e módulo autorizam exceção');
 select is(config.sso_autorizar_acao('anexo_os.publicar','17950000-0000-0000-0000-00000000000a'),true,'concessão e módulo autorizam publicação');
 select is(config.sso_autorizar_acao('anexo_os.publicar','17950000-0000-0000-0000-00000000000b'),false,'concessão não atravessa Cliente');
+select is(config.sso_autorizar_acao('plano.gerir','17950000-0000-0000-0000-00000000000a'),true,'gestão de Plano autorizada no Cliente concedido');
+select is(config.sso_autorizar_acao('plano.gerir','17950000-0000-0000-0000-00000000000b'),false,'gestão de Plano negada no outro Cliente');
 reset role;
 update config.sso_concessoes set ativa=false where usuario_id='17950000-0000-0000-0000-000000000001' and acao='anexo_os.publicar';
 set local role authenticated;
