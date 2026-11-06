@@ -28,6 +28,7 @@ alwaysApply: false
 - S170 falhou no run `42239496782` depois da aprovação: as RPCs de aprovação e leitura responderam 200, mas a justificativa não apareceu no histórico; cenário de revogação também excedeu o timeout.
 - S176 falhou no run `42239496845` depois de abrir o formulário de Grupo Quantitativo. O último marco foi `formulário de grupo aberto`; logs não identificam qual interação de campo parou.
 - Foram adicionados diagnósticos de UI/API a S166, S170 e S176, com pins de hash atualizados nos runners. A validação conjunta ainda aguarda execução; nenhum teste foi reexecutado nesta etapa.
+- O primeiro push diagnóstico iniciou as quatro filas em paralelo. S165 avançou para o clone isolado; S166, S170 e S176 foram interrompidas pelo pin antigo dos scripts de bootstrap dentro de `E01-S176_recorte_do_zero.py`, antes de executar Playwright. Os pins centrais foram corrigidos; esses três fluxos precisam ser reenviados para a mesma rodada final.
 - As quatro stories mantêm T016 aberto. Corrigir os fluxos com base nos próximos diagnósticos e validar o lote em conjunto antes de avançar ao merge.
 
 ## Evidência executada
