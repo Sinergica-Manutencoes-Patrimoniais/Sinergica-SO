@@ -33,7 +33,7 @@
 
 ## Phase 5 — Integration and Gates
 
-- [ ] T014 Escrever e passar teste de adapter e integração entre US em `apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.test.ts`, incluindo rollback e duas sessões concorrentes (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
+- [ ] T014 Escrever e passar teste de adapter e integração entre US em `apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.test.ts`, incluindo rollback e duas sessões concorrentes (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). **Limite:** mocks exercitam transporte; rollback e concorrência de duas sessões exigem ensaio em banco isolado e seguem pendentes.
 - [ ] T015 Cobrir jornada crítica e acesso negado com dois Clientes em `apps/web/e2e/capacidades-sso.spec.ts`; integrar consumidores globais/Cliente360 existentes indicados em `specs/E01-S170-governanca-plano/plan.md` sem duplicar regra (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
 - [ ] T016 Executar `specs/E01-S170-governanca-plano/quickstart.md`, testes focados, eval:spec com seleção conferida, ci:local e revisão adversarial; registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
 

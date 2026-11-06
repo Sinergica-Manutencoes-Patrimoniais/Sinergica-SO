@@ -56,4 +56,23 @@ describe("adapter de capacidades", () => {
     api.rpc.mockResolvedValue({ data: { revision: 1 }, error: null });
     await expect(supabaseCapacidadesSsoAdapter.definirConcessao(command)).rejects.toThrow();
   });
+  it("encaminha separadamente a autorização de dois Clientes e rejeita erro de escopo", async () => {
+    const outro = "17020000-0000-4000-8000-00000000000b";
+    const negado = { code: "42501", message: "sem acesso" };
+    api.rpc.mockResolvedValueOnce({ data: true, error: null }).mockResolvedValueOnce({ data: null, error: negado });
+    await expect(supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir", command.clienteId)).resolves.toBe(true);
+    await expect(supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir", outro)).rejects.toEqual(negado);
+    expect(api.rpc).toHaveBeenNthCalledWith(1, "sso_autorizar_acao", { p_acao: "plano.gerir", p_cliente_id: command.clienteId });
+    expect(api.rpc).toHaveBeenNthCalledWith(2, "sso_autorizar_acao", { p_acao: "plano.gerir", p_cliente_id: outro });
+  });
+  it("propaga conflito e encaminha novamente o mesmo pedido sem inventar rollback", async () => {
+    const conflito = { code: "40001", message: "revisão obsoleta" };
+    api.rpc.mockResolvedValueOnce({ data: null, error: conflito }).mockResolvedValueOnce({ data: null, error: conflito });
+    await expect(supabaseCapacidadesSsoAdapter.definirConcessao(command)).rejects.toEqual(conflito);
+    await expect(supabaseCapacidadesSsoAdapter.definirConcessao(command)).rejects.toEqual(conflito);
+    expect(api.rpc).toHaveBeenCalledTimes(2);
+    expect(api.rpc.mock.calls[0]).toEqual(api.rpc.mock.calls[1]);
+    // Mock comprova somente transporte. Rollback e concorrência exigem banco e duas sessões.
+  });
+
 });

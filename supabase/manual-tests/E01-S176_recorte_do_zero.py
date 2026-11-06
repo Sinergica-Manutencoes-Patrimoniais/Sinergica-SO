@@ -40,6 +40,7 @@ REST_CONTAINER = NETWORK + "-rest"
 STORAGE_CONTAINER = NETWORK + "-storage"
 GATEWAY_CONTAINER = NETWORK + "-gateway"
 EDGE_CONTAINER = NETWORK + "-edge"
+S165_BROWSER = NETWORK + "-s165-browser"
 FOTOS_CONTAINERS = {"sistema": NETWORK + "-foto-ativo", "grupo": NETWORK + "-foto-grupo", "equipamento": NETWORK + "-foto-equipamento"}
 created_net = created_container = False
 initial_volumes = None
@@ -219,6 +220,24 @@ def main(opcoes):
     if opcoes.github_hosted:
         docker_raiz_github = preparar_github_hosted()
         print('Modo GitHub opt-in: reserva hipotética de 20 GiB; efemeridade não atestada.', flush=True)
+    fixture_s165 = None
+    proxy_s165 = None
+    if opcoes.ui_s165_e2e:
+        if not opcoes.fixture_s165_e2e:
+            raise RuntimeError("UI S165 exige fixture sintética S165")
+        driver_ui = ROOT / "supabase/manual-tests/s165_ui_isolada.py"
+        if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "e52c5738654762796050cc0ff9a5f5ff5fdd5e85106d9c34df0263e756973c16":
+            raise RuntimeError("Driver UI S165 divergente")
+        import s165_ui_isolada
+        proxy_s165 = s165_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
+    if opcoes.fixture_s165_e2e:
+        if not opcoes.jornada_ac5_http:
+            raise RuntimeError("Fixture S165 exige serviços sintéticos da jornada AC5")
+        driver_s165 = ROOT / "supabase/manual-tests/s165_e2e_clientes_isolada.py"
+        if hashlib.sha256(driver_s165.read_bytes()).hexdigest() != "053ac8dbccb2c6c8e00e4c2b2859b7a7338cec82e7c659ffa8495085e45118e1":
+            raise RuntimeError("Driver S165 divergente")
+        import s165_e2e_clientes_isolada
+        fixture_s165 = s165_e2e_clientes_isolada.preparar(ROOT)
     if opcoes.edge_fotos_http and not opcoes.edge_documento_http:
         raise RuntimeError("Fotos Edge exigem documento Edge sintético")
     if opcoes.edge_fotos_http:
@@ -1039,6 +1058,17 @@ end; $$;"""
         s176_runner_concorrencia.executar(CONTAINER, watchdog_triggered)
     if pos_commit_1805 is not None:
         s165_aprovacao_1805_pos_commit.executar(CONTAINER, pos_commit_1805, query, watchdog_triggered)
+    if fixture_s165 is not None:
+        credenciais_s165 = s165_e2e_clientes_isolada.executar(
+            sql, query, inspect, IDENT, NETWORK,
+            {"db": CONTAINER, "auth": AUTH_CONTAINER, "rest": REST_CONTAINER},
+            fixture_s165, watchdog_triggered,
+        )
+        if proxy_s165 is not None:
+            s165_ui_isolada.executar(ROOT, docker, inspect, IDENT, NETWORK, S165_BROWSER,
+                                     chave("anon"), credenciais_s165, proxy_s165, watchdog_triggered)
+        del credenciais_s165
+        print("Fixture parcial S165: dois Clientes e operador sintéticos; UI, revisão e histórico não executados.", flush=True)
     if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio por espaço ou falha de medição")
     if opcoes.diagnostico_0415:
         print("PASS DIAGNÓSTICO: ações antecipadas; NÃO prova recorte implantável nem testes funcionais.")
@@ -1052,6 +1082,8 @@ end; $$;"""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--ui-s165-e2e", action="store_true", help="Executa somente cenário parcial UI S165 dentro da rede interna.")
+    parser.add_argument("--fixture-s165-e2e", action="store_true", help="Prepara somente usuários e dois Clientes sintéticos; não executa a interface.")
     parser.add_argument("--edge-fotos-http", action="store_true", help="Valida três rotas de foto em clone sintético; exige --edge-documento-http.")
     parser.add_argument("--edge-documento-http", action="store_true", help="Valida Edge documental com Auth/Storage e revogação em clone; exige jornada AC5 e 1816.")
     parser.add_argument("--github-hosted", action="store_true", help="Modo opt-in Linux/CI; reserva hipotética de 20 GiB, não atesta efemeridade.")
@@ -1104,7 +1136,7 @@ if __name__ == "__main__":
             containers = docker("ps", "-a", "--filter", "label=sso.recorte=" + IDENT, "--format", "{{.ID}}").splitlines()
             for container_id in containers:
                 c = inspect("container", container_id)
-                if c["Name"] not in ("/" + CONTAINER, "/" + AUTH_CONTAINER, "/" + REST_CONTAINER, "/" + STORAGE_CONTAINER, "/" + GATEWAY_CONTAINER, "/" + EDGE_CONTAINER, *("/" + nome for nome in FOTOS_CONTAINERS.values())) or c["Config"].get("Labels", {}).get("sso.recorte") != IDENT:
+                if c["Name"] not in ("/" + CONTAINER, "/" + AUTH_CONTAINER, "/" + REST_CONTAINER, "/" + STORAGE_CONTAINER, "/" + GATEWAY_CONTAINER, "/" + EDGE_CONTAINER, "/" + S165_BROWSER, *("/" + nome for nome in FOTOS_CONTAINERS.values())) or c["Config"].get("Labels", {}).get("sso.recorte") != IDENT:
                     raise RuntimeError("identidade do container divergente")
                 volumes = {m["Name"] for m in c["Mounts"] if m.get("Type") == "volume"}
                 if volumes and (initial_volumes is None or volumes.intersection(initial_volumes)):
