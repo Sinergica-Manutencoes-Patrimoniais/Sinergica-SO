@@ -185,9 +185,12 @@ def sql(data, label):
         raise RuntimeError("Prazo da migration excedido: " + label) from None
     if p.returncode:
         output = p.stderr.decode(errors="replace")
-        # Sem SQL, caminhos de conexão ou dados do erro: registrar só estado e arquivo.
+        # Sem SQL, caminhos de conexão ou valores: registrar estado e objeto ausente,
+        # quando PostgreSQL fornece identificador de relação entre aspas.
         m = re.search(r"ERROR:\s+([A-Z0-9]{5}):", output)
-        raise RuntimeError("Migration " + label + "; SQLSTATE " + (m.group(1) if m else "não identificado"))
+        relacao = re.search(r'relation "([A-Za-z0-9_.]+)" does not exist', output)
+        detalhe = "; relação ausente " + relacao.group(1) if relacao else ""
+        raise RuntimeError("Migration " + label + "; SQLSTATE " + (m.group(1) if m else "não identificado") + detalhe)
 
 
 def query(statement):
@@ -303,7 +306,8 @@ def main(opcoes):
     migracoes_s176_ui = []
     migracoes_s166_ui = []
     if opcoes.ui_s165_e2e or opcoes.fixtures_pgtap:
-        permitidas = {"github_hosted", "integracao_candidata", "fixture_s165_e2e", "ui_s165_e2e", "aprovacao_1804"}
+        permitidas = {"github_hosted", "integracao_candidata", "fixture_s165_e2e", "ui_s165_e2e",
+                      "aprovacao_1804", "aprovacao_1805", "aprovacao_1806", "revisao_1807"}
         if opcoes.ui_s165_e2e and (not opcoes.github_hosted or not opcoes.integracao_candidata or not opcoes.fixture_s165_e2e or any(
             valor is True and nome not in permitidas for nome, valor in vars(opcoes).items()
         )):
@@ -409,26 +413,25 @@ def main(opcoes):
             proxy_s165 = s165_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s170_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s170_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "a2734eb57108eea942ac28142a3946c1116714bcf241eaaad5e159196b1f51bb":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "6a63b362f6ccf7ce7e4d2b219c27483f3e0cc81f55af731e711d62899a20db20":
                 raise RuntimeError("Driver UI S170 divergente")
             import s170_ui_isolada
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s166_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s166_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "1b5866f581c18a77013b8e2420b2bf1417d823a47433e551e1bb933475126d3a":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "633838886cc895f60ba0bb96a590f6f00f360960ae1e6fb78131ed9f83326055":
                 raise RuntimeError("Driver UI S166 divergente")
             import s166_ui_isolada
             proxy_s166 = s166_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s176_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s176_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "d97c1190bdd32864fd92c82efe15e973f3215b184404eee5825ea9d5a30fc81c":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "7101209c55384523186575ab2c0cd81f05aee3133f149c632aa5d914d32732d9":
                 raise RuntimeError("Driver UI S176 divergente")
             import s176_ui_isolada
             proxy_s176 = s176_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
     if opcoes.fixture_s165_e2e:
         proibidas_s165 = ("diagnostico_ac5", "isolamento_1810", "fixtures_pgtap", "fixtures_pgtap_ci",
                           "jornada_ac5_http", "concorrencia_1810", "concorrencia_parcial",
-                          "aprovacao_1805", "aprovacao_1806", "revisao_1807",
                           "consulta_1808", "concorrencia_1805", "concorrencia_1807",
                           "aprovacao_1805_pos_commit", "upload_1811", "documento_1812",
                           "hierarquia_1813", "policies_1814", "dispatch_1815", "gates_1816",

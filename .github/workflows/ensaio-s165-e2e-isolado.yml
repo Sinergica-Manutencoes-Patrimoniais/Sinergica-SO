@@ -96,7 +96,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 supabase/manual-tests/E01-S176_recorte_do_zero.py \
-            --github-hosted --integracao-candidata --aprovacao-1804 --fixture-s165-e2e --ui-s165-e2e
+            --github-hosted --integracao-candidata --aprovacao-1804 --aprovacao-1805 --aprovacao-1806 --revisao-1807 --fixture-s165-e2e --ui-s165-e2e
       - name: Conferir limpeza dos recursos identificados
         if: always()
         run: python3 supabase/manual-tests/s165_limpeza_runner.py

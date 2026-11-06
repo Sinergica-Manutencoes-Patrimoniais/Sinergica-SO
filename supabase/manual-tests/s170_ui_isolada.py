@@ -53,8 +53,31 @@ def _comando(args, *, data=None, timeout=180, watchdog=None):
         encerrado.set()
         vigia.join(timeout=2)
     if processo.returncode or (watchdog is not None and watchdog.is_set()):
-        raise RuntimeError("Bootstrap UI S170 falhou")
+        detalhe = _resumo_playwright(saida) if any("playwright" in str(arg) for arg in args) else ""
+        raise RuntimeError("Bootstrap UI S170 falhou" + ("; " + detalhe if detalhe else ""))
     return saida
+
+
+def _resumo_playwright(saida):
+    """Exibe apenas contagens e títulos dos testes fixos; nunca erros ou valores."""
+    try:
+        relatorio = json.loads(saida)
+        stats = relatorio.get("stats", {})
+        falhas = []
+        def visitar(suites):
+            for suite in suites or []:
+                for spec in suite.get("specs", []):
+                    testes = spec.get("tests", [])
+                    if any(resultado.get("status") in {"failed", "timedOut", "interrupted"}
+                           for teste in testes for resultado in teste.get("results", [])):
+                        titulo = str(spec.get("title", "teste sem título"))
+                        falhas.append("".join(c for c in titulo if c.isalnum() or c in " _-.")[:100])
+                visitar(suite.get("suites", []))
+        visitar(relatorio.get("suites", []))
+        contagens = "expected=" + str(stats.get("expected", "?")) + ", unexpected=" + str(stats.get("unexpected", "?"))
+        return "Playwright " + contagens + ("; cenários com falha: " + ", ".join(falhas[:5]) if falhas else "")
+    except (ValueError, TypeError, AttributeError):
+        return "Playwright retornou relatório inválido"
 
 
 def _copiar_arvore(root, relativo, nome, watchdog):
