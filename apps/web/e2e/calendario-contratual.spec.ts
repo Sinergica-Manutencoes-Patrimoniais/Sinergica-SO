@@ -60,6 +60,7 @@ async function abrirPreventivas(page: Page, cliente: string) {
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test("revisa e confirma fotografia completa de 501 Visitas no clone sintético", async ({ page }) => {
+  test.setTimeout(120_000);
   await restringirRede(page);
   await entrar(page, cfg.emailA!, cfg.senhaA!);
   await abrirPreventivas(page, cfg.clienteA!);

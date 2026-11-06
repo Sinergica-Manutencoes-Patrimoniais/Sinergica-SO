@@ -137,14 +137,18 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await entrar(operador, cfg.email!, cfg.senha!);
     const respostasPermissao: string[] = [];
     operador.on("response", async (response) => {
-      if (!new URL(response.url()).pathname.endsWith("/rpc/sso_autorizar_acao")) return;
+      if (!new URL(response.url()).pathname.includes("/rpc/")) return;
       let resultado = "resposta-indisponivel";
       try {
         const corpo = await response.text();
         if (corpo === "false" || corpo === "true") resultado = corpo;
         else resultado = String(JSON.parse(corpo)?.code ?? "erro").slice(0, 24);
       } catch { /* o status HTTP segue útil sem corpo */ }
-      respostasPermissao.push(`${response.status()}:${resultado}`);
+      respostasPermissao.push(`${new URL(response.url()).pathname.split("/").pop()}:${response.status()}:${resultado}`);
+    });
+    operador.on("requestfailed", (request) => {
+      const url = new URL(request.url());
+      if (url.pathname.includes("/rpc/")) respostasPermissao.push(`${url.pathname.split("/").pop()}:falha-rede`);
     });
     await abrirCalendario();
     try {
