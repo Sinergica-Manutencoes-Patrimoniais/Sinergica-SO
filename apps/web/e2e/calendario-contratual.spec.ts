@@ -84,7 +84,7 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
   const respostasFotografia: string[] = [];
   page.on("response", async (response) => {
     const endpoint = new URL(response.url()).pathname.split("/").pop() ?? "";
-    if (!new Set(["sso_iniciar_mudanca_dia_v2", "sso_pagina_mudanca_dia_v2"]).has(endpoint)) return;
+    if (!new Set(["sso_iniciar_mudanca_dia_v2", "sso_pagina_mudanca_dia_v2", "sso_selar_mudanca_dia_v2", "sso_confirmar_mudanca_dia_v2"]).has(endpoint)) return;
     let codigo = "ok";
     if (!response.ok()) {
       try { codigo = String((await response.json())?.code ?? "erro").slice(0, 24); } catch { codigo = "erro"; }
@@ -94,7 +94,7 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
   });
   page.on("requestfailed", (request) => {
     const endpoint = new URL(request.url()).pathname.split("/").pop() ?? "";
-    if (["sso_iniciar_mudanca_dia_v2", "sso_pagina_mudanca_dia_v2"].includes(endpoint)) {
+    if (["sso_iniciar_mudanca_dia_v2", "sso_pagina_mudanca_dia_v2", "sso_selar_mudanca_dia_v2", "sso_confirmar_mudanca_dia_v2"].includes(endpoint)) {
       respostasFotografia.push(`${endpoint}:falha-rede`);
       marcarDiagnostico("s166-rpc", respostasFotografia.slice(-3).join(","));
     }

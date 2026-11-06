@@ -53,7 +53,7 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   const respostasPermissao: string[] = [];
   let areaCriada: { id: string; cliente_id: string; nome: string } | null = null;
   let consultaArea = "sem-consulta";
-  const endpointsEstrutura = new Set(["areas", "locais", "local_tipos", "equipamentos", "clientes", "sistemas", "sistema_itens", "equipamento_categorias"]);
+  const endpointsEstrutura = new Set(["areas", "locais", "local_tipos", "equipamentos", "clientes", "sistemas", "sistema_itens", "equipamento_categorias", "grupos_quantitativos"]);
   page.on("response", async (response) => {
     const url = new URL(response.url());
     const relacao = url.pathname.split("/").pop() ?? "";
@@ -146,7 +146,14 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   }
   await novoGrupo.click({ timeout: 5_000 });
   marcarEtapa("formulário de grupo aberto");
-  await grupos.getByLabel("Nome do grupo").fill(nomeGrupo);
+  const nomeDoGrupo = grupos.getByLabel("Nome do grupo");
+  try {
+    await expect(nomeDoGrupo).toBeVisible({ timeout: 5_000 });
+  } catch {
+    const texto = (await grupos.innerText().catch(() => "")).replace(/\s+/g, " ").slice(0, 300);
+    throw new Error(`S176_FORMULARIO_GRUPO=${texto}; API=${falhasApi.slice(-8).join(",") || "sem-falhas-http"}; AUTORIZAÇÃO=${respostasPermissao.slice(-6).join(",") || "sem-resposta"}`);
+  }
+  await nomeDoGrupo.fill(nomeGrupo);
   await grupos.getByLabel("Quantidade").fill("20");
   await grupos.getByLabel("Local").selectOption({ label: nomeLocal });
   marcarEtapa("carregar categorias do grupo");
