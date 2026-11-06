@@ -153,8 +153,8 @@
     },
     {
       "nome": "comercial_portal_proposta_rls.test.sql",
-      "sha256": "2417d28d91175a23f5f3c03404936942c291c2023884b34ab2d2b2c771e10893",
-      "plano": 15
+      "sha256": "419547138f427ab552943f7648cd965fff36a56bd6770042ef414a551d80add9",
+      "plano": 18
     },
     {
       "nome": "comercial_precificacao_rls.test.sql",
