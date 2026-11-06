@@ -10,153 +10,98 @@
       "caminho": "supabase/migrations/0323_E01-S180_despesas_visita_fundacao.sql",
       "git_blob": "aef1ddd1bd05eb56553e1de17799099da45a6a1b",
       "sha256": "ab98954bf96b7d0a02464e4bb0298684b8dee294d5ebc5ddfcffcdaf0bd6cc49",
-      "pre_requisitos_diretos_numeros": [
-        "0079",
-        "0282",
-        "0239"
-      ],
+      "pre_requisitos_diretos_numeros": ["0079", "0282", "0239"],
       "efeitos": "Cadastra despesa_visita.gerir; cria fundação de despesas S180, RLS e SELECT/EXECUTE autenticados. Sem concessões automáticas."
     },
     {
       "caminho": "supabase/migrations/0334_E01-S172_disponibilidade_semanal.sql",
       "git_blob": "892864136bfe7a4203eaf2b1f8b264914dbfb7a9",
       "sha256": "b3594fee5d4553bb1336ed873907e7cbf5a24f5ca4372d3cf31b2c8697c40c3a",
-      "pre_requisitos_diretos_numeros": [
-        "0031",
-        "0239",
-        "0246"
-      ],
+      "pre_requisitos_diretos_numeros": ["0031", "0239", "0246"],
       "efeitos": "Cadastra capacidade.gerir; cria disponibilidade S172, RLS e SELECT/EXECUTE autenticados. Sem concessões automáticas."
     },
     {
       "caminho": "supabase/migrations/0669_E01-S173_rastreabilidade_pendencia.sql",
       "git_blob": "b884eb9da550f63f832b58f7005713a23088e5a0",
       "sha256": "635776e283ae5403e4cefc34c7d9892faa2aabb37b60a432681fcf88de4b4622",
-      "pre_requisitos_diretos_numeros": [
-        "0371",
-        "0375",
-        "0438",
-        "0441",
-        "0456"
-      ],
+      "pre_requisitos_diretos_numeros": ["0371", "0375", "0438", "0441", "0456"],
       "efeitos": "Cria gate false e funções privadas de rastreabilidade com dupla autorização; acopla S173/S174."
     },
     {
       "caminho": "supabase/migrations/0803_E01-S168_recebimento_origem_visita.sql",
       "git_blob": "8631831a92af5368840187866b4ec464474f0a7b",
       "sha256": "c338ce1cddb0c5923f0dd43779e55e392b9d9b54d92032e2903dcb134569a24f",
-      "pre_requisitos_diretos_numeros": [
-        "0402",
-        "0726",
-        "0729"
-      ],
+      "pre_requisitos_diretos_numeros": ["0402", "0726", "0729"],
       "efeitos": "Adapta classificador privado para Visita; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/0805_E01-S168_guarda_cobertura_origem_visita.sql",
       "git_blob": "75ce14a4627a57c6a01c749e9fcf5529d4ed0f8e",
       "sha256": "0480611e2a48136ae8354388925ba8d34b6b4db91a74f932d93fd5d3166b44dc",
-      "pre_requisitos_diretos_numeros": [
-        "0582",
-        "0726",
-        "0729"
-      ],
+      "pre_requisitos_diretos_numeros": ["0582", "0726", "0729"],
       "efeitos": "Adapta guarda privada para Visita; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/0807_E01-S173_pendencia_origem_visita.sql",
       "git_blob": "534877fa30bef40a1d43f4a1dde07ac97aa72001",
       "sha256": "a6663bdb65c1ddd23307ae0674059f6319a89fcb97293086924d455416f2ab56",
-      "pre_requisitos_diretos_numeros": [
-        "0371",
-        "0726",
-        "0729"
-      ],
+      "pre_requisitos_diretos_numeros": ["0371", "0726", "0729"],
       "efeitos": "Adapta registrador privado de pendência para Visita; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/0811_E01-S168_previa_cobertura_visita.sql",
       "git_blob": "de662315dd063db5a15c3f13910f933e41e121b7",
       "sha256": "19387af3ecd002db556f2bebf1201f9754fc36b483b5fe2b26dec041c56a9339",
-      "pre_requisitos_diretos_numeros": [
-        "0562",
-        "0726",
-        "0729"
-      ],
+      "pre_requisitos_diretos_numeros": ["0562", "0726", "0729"],
       "efeitos": "Adapta prévia privada para Visita; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/0904_E01-S168_cobertura_retorno_grupo.sql",
       "git_blob": "30ae2e47025510c2d13f7eb493070b367238e4eb",
       "sha256": "5e5ab25b4378163c13ac9f75d8c603f71f947105e57c9486b40dbd56f4116338",
-      "pre_requisitos_diretos_numeros": [
-        "0805",
-        "0815",
-        "0823"
-      ],
+      "pre_requisitos_diretos_numeros": ["0805", "0815", "0823"],
       "efeitos": "Adapta guarda privada para Grupo; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/0905_E01-S168_perguntas_retorno_grupo.sql",
       "git_blob": "972f227f6d95c5ba932851817860fbfa148875be",
       "sha256": "e29b75ed034111a1bc57eb0fb0b4148b30474c413da8e0d094dea502fa600bbf",
-      "pre_requisitos_diretos_numeros": [
-        "0811",
-        "0815",
-        "0823"
-      ],
+      "pre_requisitos_diretos_numeros": ["0811", "0815", "0823"],
       "efeitos": "Adapta prévia privada para Grupo; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/0907_E01-S173_consumidores_origem_grupo.sql",
       "git_blob": "f6a2c0716ec5b27d6cc9975ecc5857bd6a8322fe",
       "sha256": "ba990f3da1bdef1e724dd46801fcdeabe4bd3fce9a828f06ee6ec69580348043",
-      "pre_requisitos_diretos_numeros": [
-        "0669",
-        "0891",
-        "0906"
-      ],
+      "pre_requisitos_diretos_numeros": ["0669", "0891", "0906"],
       "efeitos": "Cria origem v2 privada e adapta descrição para Grupo; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/1587_E01-S168_retorno_grupo_chamado.sql",
       "git_blob": "46ddd506e8d3eb13723d1562f5a828ac89ba25cc",
       "sha256": "60d1243259c47e75b97156a828fa4d219b1ba6c74f2edd541099100c1722a2a3",
-      "pre_requisitos_diretos_numeros": [
-        "0903",
-        "0905",
-        "1586"
-      ],
+      "pre_requisitos_diretos_numeros": ["0903", "0905", "1586"],
       "efeitos": "Admite Chamado canônico em classificador/prévia privadas; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/1588_E01-S173_pendencias_grupo_chamado.sql",
       "git_blob": "c41203f9984d83f7b2ab759ddc0fcdc267ca7c8e",
       "sha256": "8d747c5b465d7f62cd015ecbaf340dec53c2924bb3ba3f0a34878569b6ddbcea",
-      "pre_requisitos_diretos_numeros": [
-        "0906",
-        "0907",
-        "1586"
-      ],
+      "pre_requisitos_diretos_numeros": ["0906", "0907", "1586"],
       "efeitos": "Admite Chamado canônico em registrador e descrição privadas; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/1591_E01-S168_cobertura_grupo_chamado.sql",
       "git_blob": "d660208051ea99947bd3e028c37a251ef0b2cedc",
       "sha256": "e7f8a078dcf28d7c8bd8a246016dc455e94c15901abc0fc7defc635816745312",
-      "pre_requisitos_diretos_numeros": [
-        "0904",
-        "1586"
-      ],
+      "pre_requisitos_diretos_numeros": ["0904", "1586"],
       "efeitos": "Admite Chamado canônico em guarda privada; revoga EXECUTE."
     },
     {
       "caminho": "supabase/migrations/1675_E01-S53_serializar_materializacao_legada.sql",
       "git_blob": "23d95d6fcf528a4c4ce99d3613bc8e738b90ca6b",
       "sha256": "8ca97441b72ffcba86b6311383ba73f21ef338cbe31d9a9eb24ca1ee934046c8",
-      "pre_requisitos_diretos_numeros": [
-        "0224"
-      ],
+      "pre_requisitos_diretos_numeros": ["0224"],
       "efeitos": "Introduz FOR UPDATE no gerador legado e preserva ACL prévia; pode afetar contenção e concorrência."
     }
   ],
