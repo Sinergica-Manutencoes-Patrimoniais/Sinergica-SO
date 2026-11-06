@@ -58,17 +58,21 @@ async function abrirPreventivas(page: Page, cliente: string) {
 }
 
 test.use({ storageState: { cookies: [], origins: [] } });
+function marcarEtapa(etapa: string) {
+  const marcacao = test.info().annotations.find((item) => item.type === "s166-etapa");
+  if (marcacao) marcacao.description = etapa;
+  else test.info().annotations.push({ type: "s166-etapa", description: etapa });
+}
 
 test("revisa e confirma fotografia completa de 501 Visitas no clone sintético", async ({ page }) => {
   test.setTimeout(120_000);
-  let etapa = "restringir rede";
-  try {
+  marcarEtapa("restringir rede");
   await restringirRede(page);
-  etapa = "entrar e abrir Cliente";
+  marcarEtapa("entrar e abrir Cliente");
   await entrar(page, cfg.emailA!, cfg.senhaA!);
   await abrirPreventivas(page, cfg.clienteA!);
 
-  etapa = "abrir Calendário contratual";
+  marcarEtapa("abrir Calendário contratual");
   const calendario = page.getByRole("region", { name: "Calendário contratual" });
   await expect(calendario).toBeVisible();
   const regra = calendario.getByRole("listitem").filter({ hasText: `Contrato ${cfg.contrato}` }).first();
@@ -76,13 +80,13 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
   await regra.getByLabel("Novo dia").first().selectOption(cfg.diaNovo!);
   await regra.getByLabel("Vigência").first().fill(cfg.vigencia!);
   const lote = regra.getByRole("region", { name: "Alteração de dia contratual em lote" });
-  etapa = "iniciar e retomar fotografia";
+  marcarEtapa("iniciar e retomar fotografia");
   await lote.getByRole("button", { name: "Preparar fotografia completa das Visitas" }).click();
   await lote.getByRole("button", { name: /Retomar fotografia/ }).click();
 
   let paginas = 0;
   while (paginas < 20) {
-    etapa = `revisar página ${paginas + 1}`;
+    marcarEtapa(`revisar página ${paginas + 1}`);
     const estadoPagina = lote.getByText(/^Página \d+ ·/);
     await expect(estadoPagina).toBeVisible();
     const numero = Number((await estadoPagina.innerText()).match(/^Página (\d+)/)?.[1]);
@@ -98,18 +102,14 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
     break;
   }
   expect(paginas).toBeGreaterThan(0);
-  etapa = "selar fotografia completa";
+  marcarEtapa("selar fotografia completa");
   await expect(lote.getByRole("button", { name: /Selar fotografia completa/ })).toBeVisible();
   await lote.getByRole("button", { name: /Selar fotografia completa/ }).click();
   await expect(lote.getByText(/Fotografia completa selada · 501 Visitas/)).toBeVisible();
   await lote.getByLabel("Conferi todas as páginas e autorizo esta alteração atômica").check();
-  etapa = "confirmar movimentação das 501 Visitas";
+  marcarEtapa("confirmar movimentação das 501 Visitas");
   await lote.getByRole("button", { name: "Confirmar alteração de 501 Visitas" }).click();
   await expect(lote.getByText(/Concluído: 501 movidas/)).toBeVisible();
-  } catch (error) {
-    const detalhe = error instanceof Error ? error.message.split("\n").slice(0, 2).join(" | ") : "erro sem detalhe";
-    throw new Error(`ETAPA_S166=${etapa}; ${detalhe}`);
-  }
 });
 
 test("nega calendário no segundo Cliente sem iniciar uma fotografia", async ({ page }) => {

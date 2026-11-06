@@ -22,7 +22,7 @@ def preparar(root, esperado):
     if hashlib.sha256(proxy).hexdigest() != esperado:
         raise RuntimeError("Proxy S176 divergente")
     for caminho, digest in (
-        ("apps/web/e2e/estrutura-tecnica.spec.ts", "0eb7f448ba94123762af2eb6d6ddc11eb2ba60ba4f0975e17f2a4451b7f2881b"),
+        ("apps/web/e2e/estrutura-tecnica.spec.ts", "2d7a05dd3e058e8ccd25c8d3d32edabe450ba793e06e05ce082de53fc07b3bbb"),
         ("apps/web/playwright.s176-isolado.config.ts", "0766d6f4ed9a73321f82df9baf9e0a120482f6b9b58c794911224f59e1104287"),
     ):
         if hashlib.sha256((root / caminho).read_bytes()).hexdigest() != digest:

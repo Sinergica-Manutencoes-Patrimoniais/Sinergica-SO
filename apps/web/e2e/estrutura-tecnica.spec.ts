@@ -47,10 +47,28 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   const clienteB = `[TESTE E2E] S176 Cliente B ${sufixo}`;
   const nomeGrupo = `[TESTE E2E] 20 luminárias ${sufixo}`;
   const falhasApi: string[] = [];
+  let areaCriada: { id: string; cliente_id: string } | null = null;
+  let consultaArea = "sem-consulta";
   const endpointsEstrutura = new Set(["areas", "locais", "local_tipos", "equipamentos", "clientes", "sistemas", "sistema_itens", "equipamento_categorias"]);
   page.on("response", async (response) => {
     const url = new URL(response.url());
     const relacao = url.pathname.split("/").pop() ?? "";
+    if (relacao === "areas" && response.request().method() === "POST" && response.ok()) {
+      try {
+        const corpo = await response.json();
+        const linha = Array.isArray(corpo) ? corpo[0] : corpo;
+        if (typeof linha?.id === "string" && typeof linha?.cliente_id === "string") areaCriada = { id: linha.id, cliente_id: linha.cliente_id };
+      } catch { /* status é registrado separadamente */ }
+    }
+    if (relacao === "areas" && response.request().method() === "GET" && areaCriada) {
+      const idArea = areaCriada.id;
+      const clienteDaArea = areaCriada.cliente_id;
+      try {
+        const corpo = await response.json();
+        const linhas = Array.isArray(corpo) ? corpo : [];
+        consultaArea = `${response.status()}:filtro-cliente=${url.searchParams.get("cliente_id") === `eq.${clienteDaArea}`}:presente=${linhas.some((linha) => linha.id === idArea)}`;
+      } catch { consultaArea = `${response.status()}:corpo-invalido`; }
+    }
     if (!url.pathname.startsWith("/rest/v1/") || !endpointsEstrutura.has(relacao) || response.status() < 400) return;
     let codigo = "erro";
     try { codigo = String(JSON.parse(await response.text())?.code ?? "erro").slice(0, 24); } catch { /* só status */ }
@@ -91,7 +109,7 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
     await expect(page.getByText(nomeArea, { exact: true })).toBeVisible({ timeout: 10_000 });
   } catch {
     const erroCarregar = await page.getByText("Não foi possível carregar a estrutura do cliente.", { exact: true }).isVisible().catch(() => false);
-    throw new Error(`POST_AREAS=${respostaArea}; ERRO_CARREGAR=${erroCarregar}; ESTRUTURA_API=${falhasApi.join(",") || "sem-falhas-http"}`);
+    throw new Error(`POST_AREAS=${respostaArea}; GET_AREAS=${consultaArea}; ERRO_CARREGAR=${erroCarregar}; ESTRUTURA_API=${falhasApi.join(",") || "sem-falhas-http"}`);
   }
   await page.getByRole("button", { name: "Local", exact: true }).click();
   await page.getByLabel("Nome *").fill(nomeLocal);

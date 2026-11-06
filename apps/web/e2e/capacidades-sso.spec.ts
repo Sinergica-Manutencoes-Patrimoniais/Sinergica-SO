@@ -30,6 +30,11 @@ function conferirBanco(valor: string): void {
       || url.hostname !== `sso-recorte-${id}-db` || url.username || url.password || url.search || url.hash)
     throw new Error("Banco do ensaio S170 não corresponde ao clone atestado");
 }
+function marcarEtapaS170(etapa: string) {
+  const marcacao = test.info().annotations.find((item) => item.type === "s170-etapa");
+  if (marcacao) marcacao.description = etapa;
+  else test.info().annotations.push({ type: "s170-etapa", description: etapa });
+}
 // Se uma origem for fornecida, rejeitar destino externo mesmo quando faltarem outras variáveis.
 if (cfg.app) local(cfg.app);
 if (cfg.api) local(cfg.api);
@@ -40,6 +45,7 @@ test.use({ storageState: { cookies: [], origins: [] } });
 // O histórico exibido comprova somente os registros retornados, não append-only no banco.
 test("validador devolve, reabre e aprova retorno com histórico", async ({ page }) => {
   test.setTimeout(120_000);
+  marcarEtapaS170("preparar e autenticar");
   const caminho = process.env.SSO_S170_RETORNO_PATH;
   if (process.env.SSO_S170_FIXTURE_OBRIGATORIA === "1" && (!pronto || !caminho))
     throw new Error("Fixture S170 obrigatória incompleta");
@@ -66,6 +72,7 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page).not.toHaveURL(/\/login/);
   expect(loginNaApi).toBe(true);
+  marcarEtapaS170("abrir retorno no Cliente 360");
   await page.goto(new URL(caminho!, app).href);
   // HomePage mantém Cliente e aba em estado React: navegar pela interface real.
   await page.getByText("PCM · Operação", { exact: true }).first().click();
@@ -75,6 +82,7 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
   const retorno = page.getByRole("listitem").filter({ hasText: "16891000-0000-4000-8000-000000000018" });
   await retorno.getByRole("button", { name: "Conferir evidências" }).click();
   const decisoes = page.getByRole("region", { name: "Decisões do retorno" });
+  marcarEtapaS170("devolver retorno");
   await expect(decisoes).toBeVisible();
   await decisoes.getByLabel("Decisão").selectOption("devolver");
   await decisoes.getByLabel("Motivo").fill("Devolução sintética S170");
@@ -84,13 +92,16 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
   await decisoes.getByLabel("Motivo").fill("Reabertura sintética S170");
   await decisoes.getByRole("button", { name: "Registrar decisão" }).click();
   await expect(decisoes.getByText(/Reabertura sintética S170/)).toBeVisible();
+  marcarEtapaS170("reabrir retorno");
   const conferencia = page.getByRole("region", { name: "Conferência estrutural" });
+  marcarEtapaS170("conferir evidência estrutural");
   await expect(conferencia).toBeVisible();
   await conferencia.getByLabel("Justificativa").fill("Conferência sintética S170");
   await conferencia.getByRole("checkbox", { name: /Conferi a evidência/ }).check();
   await conferencia.getByRole("button", { name: /Conferir na revisão/ }).click();
   await expect(conferencia.getByText(/Conferência sintética S170/)).toBeVisible();
   const aprovacao = page.getByRole("region", { name: "Atestação e aprovação PCM" });
+  marcarEtapaS170("aprovar retorno no PCM");
   await expect(aprovacao).toBeVisible();
   await aprovacao.getByLabel("Justificativa").fill("Aprovação sintética S170");
   await aprovacao.getByRole("checkbox", { name: /Conferi o retorno/ }).check();
@@ -123,8 +134,29 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await current.goto(`${app}/login`);
     await current.locator("#email").fill(email);
     await current.locator("#password").fill(senha);
+    let respostaAuth = "sem-resposta";
+    current.on("response", async (response) => {
+      if (new URL(response.url()).pathname !== "/auth/v1/token") return;
+      if (response.ok()) respostaAuth = `${response.status()}:ok`;
+      else {
+        let codigo = "erro";
+        try {
+          const corpo = await response.json();
+          codigo = String(corpo.error_code ?? corpo.code ?? corpo.error ?? "erro").slice(0, 40);
+        } catch { /* só status */ }
+        respostaAuth = `${response.status()}:${codigo}`;
+      }
+    });
+    current.on("requestfailed", (request) => {
+      if (new URL(request.url()).pathname === "/auth/v1/token") respostaAuth = "falha-rede";
+    });
     await current.getByRole("button", { name: "Entrar" }).click();
-    await expect(current).not.toHaveURL(/\/login/);
+    try {
+      await expect(current).not.toHaveURL(/\/login/);
+    } catch {
+      const alertas = (await current.getByRole("alert").allTextContents()).join(" ").replace(/\s+/g, " ").slice(0, 160);
+      throw new Error(`LOGIN_STAYED; AUTH=${respostaAuth}; alerta=${alertas || "sem-alerta"}`);
+    }
   }
   async function abrirCalendario() {
     await operador.goto(app);
