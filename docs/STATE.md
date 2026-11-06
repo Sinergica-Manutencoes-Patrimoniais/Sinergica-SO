@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — ensaio remoto sintético AC5 (Codex)
+
+- O [ensaio 42134160058](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42134160058) concluiu com sucesso na branch dedicada `codex/validacao-lote-isolado`: Auth, PostgREST e Storage oficiais em clone descartável, 228 migrations base e 702 candidatas, gates AC5 listados fechados e recursos exclusivos removidos. É diagnóstico, não autorização de release ou aplicação no destino.
+- Passaram 220 asserções pgTAP: S170 12, S176 vínculos 10, S165 180, S166 7 e S176 isolamento 11; também fixtures 1804–1808 e 1811–1816. Parte do setup S165 usa `session_replication_role=replica`; outbox foi suprimido em cenários específicos, logo essas passagens não comprovam guardas desativadas nem integração externa.
+- O ensaio verificou quatro ordens de concorrência de isolamento 1810. A jornada HTTP parcial com dados sintéticos verificou login, upload, associação, rejeição/aceitação, devolução, reabertura, aprovação, replays e revogação; não comprova Edge Functions nem origem real de OS/Auvo. Fixtures 1812/1813 não comprovam Auth/Storage HTTP de documentos e hierarquia; demais gates, ACL e owners do destino exigem revisão própria.
+- Continuam pendentes CI integral do candidato, Squawk, revisão de segurança e rollout, testes de Edge/Auth/Storage pertinentes, homologação e tratamento do limite S166 acima de 500 visitas. Não foi feito deploy nem disparada tarefa real no Auvo.
+
 ## 2026-11-05 — estado atual e continuidade (Codex)
 
 - Trabalho em andamento no workspace original `codex/handoff-plano-manutencao` e no candidato `/tmp/sso-integracao-s165-s166-s170-s176`, branch `codex/integracao-s165-s166-s170-s176`. Ambos contêm alterações locais; não restaurar ou limpar indiscriminadamente. Referências de backup rastreadas em `origin/backup/sso-wip-20261104` (`dbcc156`) e `origin/backup/sso-integracao-s165-s166-s170-s176` (`af45e46`); novas alterações locais podem não estar incluídas nesses commits. São backups, não aprovação de release.
