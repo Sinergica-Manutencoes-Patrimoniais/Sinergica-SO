@@ -1,4 +1,4 @@
--- ADR-1683/1684: reduzir consultas repetidas sem alterar atomicidade, contrato ou gates.
+-- ADR-1683/1684/1685: reduzir consultas repetidas sem alterar atomicidade, contrato ou gates.
 do $$ begin
  if not has_function_privilege(current_user,'pcm.sso_lock_escritor_composicao(uuid,uuid)','EXECUTE')
    or not has_table_privilege(current_user,'pcm.visita_composicao_conferencia_gate','SELECT')
@@ -210,14 +210,11 @@ begin
  where v.local_id is not null and l.deleted_at is null and a.deleted_at is null
  order by l.id for share of l,a;
 
+ -- Posição, fuso, responsável e deslocamento permanecem iguais; referências foram
+ -- validadas e bloqueadas acima. Evite disparar sso_visita_posicao em cada linha.
  update pcm.visitas v set
-   area_id=v.area_id,
-   local_id=v.local_id,
    inicio_em=i.inicio_proposto,
    fim_em=i.inicio_proposto+(i.fim_original-i.inicio_original),
-   fuso=v_regra.fuso,
-   responsavel_id=v.responsavel_id,
-   deslocamento_minutos=v.deslocamento_minutos,
    revisao=v.revisao+1,updated_at=now(),updated_by=v_actor
  from pg_catalog.jsonb_to_recordset(v_batch) as b(visita_id uuid,request_id uuid,antes jsonb)
  join pcm.sso_mudanca_dia_v2_itens i on i.mudanca_id=p_mudanca_id and i.visita_id=b.visita_id
