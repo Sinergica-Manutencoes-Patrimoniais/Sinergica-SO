@@ -6,6 +6,12 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — ensaio remoto das três rotas de foto (Codex)
+
+- O [ensaio 42139458771](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42139458771) passou na branch isolada `codex/validacao-fotos-isolado`, com Auth, PostgREST, Storage e Edge Runtime sintéticos em rede interna, 228 migrations base e 702 candidatas; recursos próprios removidos ao final.
+- Para `pcm-foto-staging-ativo-segura`, `pcm-foto-staging-grupo-segura` e `pcm-foto-equipamento-segura`, o ensaio verificou bytes de PNG sintético gravado no Storage, negativa de Cliente cruzado e resposta 401 após exclusão da sessão sintética durante a barreira de download. Os gates e a flag do Grupo foram habilitados somente no clone. Também passaram a jornada documental com PDF sintético, 220 asserções pgTAP, quatro ordens de concorrência 1810 e jornada HTTP parcial AC5.
+- Vínculos e decisões de fotos foram preparados diretamente com dados sintéticos: não comprova levantamento, ingestão ou cadastro de foto de Grupo, origem real Auvo, integridade dos bytes contra alterações privilegiadas posteriores, nem revogação após a última checagem. Partes do setup S165 usam `replica`, supressão de outbox ou anti-loop. É diagnóstico; ACL/owners reais, demais gates, CI integral, Squawk, segurança, rollout e homologação permanecem pendentes. Nenhum deploy ou tarefa real no Auvo foi disparado.
+
 ## 2026-11-05 — ensaio remoto da Edge documental (Codex)
 
 - O [ensaio 42137060929](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42137060929) passou na branch isolada `codex/validacao-documento-isolado`: clone sintético com Auth, PostgREST, Storage e Edge Runtime, rede interna, 228 migrations base e 702 candidatas; recursos exclusivos removidos ao final. Os gates e a flag da Edge documental foram habilitados apenas no clone para o cenário.
