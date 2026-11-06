@@ -24,7 +24,9 @@ alwaysApply: false
 - O diagnóstico S176 confirmou que a tela desmontava o formulário de Grupo durante o refetch, antes de localizar `Local`. A UI agora mantém o formulário montado e desabilita o envio durante fetch/erro; falta repetir o fluxo isolado.
 - S166 chegou à selagem das 501 Visitas, mas não registrou a RPC de confirmação nem o recibo esperado. O E2E agora coleta o texto final e o corpo resumido da RPC para localizar a condição de bloqueio.
 - S170 confirmou HTTP 200 na aprovação e na leitura do histórico, sem exibir a justificativa recém-gravada; a revogação excedeu o timeout. O E2E agora preserva as justificativas retornadas e marca etapas da jornada para identificar o ponto preciso.
-- A rodada integrada final destas correções ainda precisa ser disparada. Nenhuma das três falhas atuais autoriza merge ou homologação; S165 segue com o run anterior aprovado e código inalterado nesta correção.
+- A rodada integrada final foi disparada no commit `05a74eb1`; os resultados por story estão registrados abaixo. Nenhuma falha atual autoriza merge ou homologação.
+- Resultado do commit `05a74eb1`: S165 passou (`42245888788`); S166 falhou na confirmação de 501 itens com SQLSTATE `57014` (`42245889029`); S170 confirmou a justificativa correta na resposta RPC, mas o Playwright não a encontrou no DOM, e o ensaio de permissão expirou durante criação do Plano (`42245889674`); S176 ainda não encontra o campo Local após abrir o formulário (`42245889141`). S176 continua bloqueada; a primeira correção visual não resolveu a causa.
+- O hook pre-push executou localmente a suíte web completa apesar da preferência de adiá-la: typecheck passou, mas o Vitest terminou com 3 falhas entre 2.748 testes (7 arquivos falharam). Uma falha conhecida é a expectativa antiga de desmontar o formulário durante atualização/erro da lista; duas expectativas foram atualizadas sem nova execução local. As outras falhas ainda precisam ser classificadas antes do gate final.
 
 ## Atualização dos E2E isolados — 2026-11-06
 

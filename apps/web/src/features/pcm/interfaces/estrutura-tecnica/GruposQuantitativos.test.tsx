@@ -437,11 +437,17 @@ describe("consulta de Grupos Quantitativos", () => {
     });
     await waitFor(() => expect(gateway.listarGrupos).toHaveBeenCalledTimes(2));
     await screen.findByText("Atualizando grupos…");
-    expect(screen.queryByRole("button", { name: "Salvar grupo" })).toBeNull();
-    expect(screen.queryByLabelText("Quantidade")).toBeNull();
+    expect(
+      (screen.getByRole("button", { name: "Salvar grupo" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect((screen.getByLabelText("Quantidade") as HTMLInputElement).value).toBe("22");
     expect(gateway.salvarGrupo).not.toHaveBeenCalled();
     concluir([{ ...grupo, quantidade: 21, revisao: 2 }]);
     expect(await screen.findByText(/Luminárias — 21 unidades/)).toBeTruthy();
+    expect((screen.getByLabelText("Quantidade") as HTMLInputElement).value).toBe("22");
+    expect(
+      (screen.getByRole("button", { name: "Salvar grupo" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
     expect(
       (screen.getByRole("button", { name: "Salvar grupo" }) as HTMLButtonElement).disabled,
     ).toBe(true);
