@@ -8,7 +8,7 @@ FIXTURES = (
     ("E01-S176_vinculos_cliente_final.test.sql", "fd36e462437d579c9f79ff2c31eec3858f98c7d50a3151985cf232c636a9abb6", 10),
     ("E01-S165_plano_manutencao.test.sql", "afb0fd5978775d6808142fcbffcfa0ddf0bf6c716d38d7fcf74eab6c1a74046a", 183),
     ("E01-S166_versoes_recorrencia_tolerancia.test.sql", "0dfa9949c5cb91e3820808ac9c5b9d1c51b8944590289eeb4fe8512b85ffe4d4", 7),
-    ("E01-S166_mudanca_dia_v2_contract.test.sql", "21533f65a13a9f0584653eb5626cfc4f6886add5d9c30b64461dffb8a47b59f8", 38),
+    ("E01-S166_mudanca_dia_v2_contract.test.sql", "c8602260b2028201249663bd42ebebe3a6e6034f7c2e9d35f02e5af7155072eb", 38),
 )
 
 

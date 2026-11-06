@@ -1,6 +1,7 @@
 -- ADR-1683: reduzir consultas repetidas sem alterar atomicidade, contrato ou gates.
 do $$ begin
  if not has_function_privilege(current_user,'pcm.sso_lock_escritor_composicao(uuid,uuid)','EXECUTE')
+   or not has_table_privilege(current_user,'pcm.visita_composicao_conferencia_gate','SELECT')
    or not has_table_privilege(current_user,'pcm.visita_comandos','SELECT')
    or not has_table_privilege(current_user,'pcm.visita_comandos','INSERT')
    or not has_table_privilege(current_user,'audit.events','INSERT') then
@@ -14,7 +15,7 @@ declare v_actor uuid:=auth.uid();v_head pcm.sso_mudancas_dia_v2%rowtype;v_gate p
  v_serie pcm.calendario_contratual_series%rowtype;v_regra pcm.regras_visita_contratual%rowtype;
  v_item record;v_recebido jsonb;v_result jsonb;v_diff boolean;v_data date;v_cancelar boolean;
  v_feriado pcm.feriados_declarados%rowtype;v_tem_ocorrencia boolean;v_supressao_id uuid;v_movidas integer:=0;v_suprimidas integer:=0;
- v_total_edicoes integer:=0;v_batch jsonb;
+ v_total_edicoes integer:=0;v_batch jsonb;v_composicao_habilitada boolean;
 begin
  if v_actor is null or v_actor is distinct from p_ator or p_mudanca_id is null then raise exception 'parametros_invalidos' using errcode='22023'; end if;
  if not pg_catalog.pg_try_advisory_xact_lock_shared(pg_catalog.hashtextextended('sso-autorizacao-confirmacao-visita',0))
@@ -40,6 +41,18 @@ begin
    then raise exception 'feriado_em_alteracao' using errcode='55P03'; end if;
  if config.sso_autorizar_acao('plano.gerir',v_head.cliente_id) is distinct from true
    or config.sso_autorizar_acao('visita.confirmar',v_head.cliente_id) is distinct from true then raise exception 'sem_acesso' using errcode='42501'; end if;
+ -- A composição segue o protocolo escritor -> Visita. Segure a configuração e
+ -- adquira os advisory locks em ordem estável antes dos locks de tabela/linha;
+ -- assim um escritor ativo não pode formar ciclo de espera com esta transação.
+ select habilitado into v_composicao_habilitada
+   from pcm.visita_composicao_conferencia_gate where id for share;
+ if not found then raise exception 'composicao_gate_indisponivel' using errcode='55000'; end if;
+ if v_composicao_habilitada then
+   for v_item in select i.visita_id from pcm.sso_mudanca_dia_v2_itens i
+     where i.mudanca_id=p_mudanca_id order by i.visita_id loop
+     perform pcm.sso_lock_escritor_composicao(gen_random_uuid(),v_item.visita_id);
+   end loop;
+ end if;
  -- Match 1525's relation-lock order. NOWAIT means a writer already holding
  -- RowExclusive aborts this attempt before any source row or operational write.
  lock table pcm.sso_ocorrencias_grupo,pcm.sso_vinculos_os_grupo,pcm.sso_intencoes_os_grupo,
@@ -136,10 +149,6 @@ begin
  where i.mudanca_id=p_mudanca_id and i.feriado_id is null;
  v_total_edicoes:=jsonb_array_length(v_batch);
 
- for v_item in select b.visita_id,b.request_id from pg_catalog.jsonb_to_recordset(v_batch) as b(visita_id uuid,request_id uuid,antes jsonb)
-   order by b.visita_id loop
-   perform pcm.sso_lock_escritor_composicao(v_item.request_id,v_item.visita_id);
- end loop;
  if exists (
    select 1 from pg_catalog.jsonb_to_recordset(v_batch) as b(visita_id uuid,request_id uuid,antes jsonb)
    join pcm.visitas v on v.id=b.visita_id

@@ -78,6 +78,8 @@ update pcm.feriado_declarado_gate set habilitado=true where id;
 update pcm.sso_origem_contratual_unica_gate set habilitado=true where id;
 update pcm.sso_mudanca_dia_v2_gate set max_itens=600,max_bytes=1048576,ttl_seconds=3600 where id;
 update pcm.sso_mudanca_dia_v2_gate set habilitado=true where id;
+-- Exercita o advisory lock de composição no caminho confirmado em lote.
+update pcm.visita_composicao_conferencia_gate set habilitado=true where id;
 set local role authenticated;
 
 -- 501 ocorrências são materializadas pelo produtor canônico; nenhum INSERT direto

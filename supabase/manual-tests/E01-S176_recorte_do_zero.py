@@ -325,7 +325,7 @@ def main(opcoes):
         for nome, digest in (
             ("supabase/migrations/1820_E01-S166_mudanca_dia_v2_fundacao.sql", "83357f5534af165164f45a375d5750829e243e121395270e9d7675167a61b551"),
             ("supabase/migrations/1821_E01-S166_mudanca_dia_v2_rpc.sql", "a8c33a04467c7814c2e8a4aef274129b9a30df4a48690b13dfd5fa41fce9cfba"),
-            ("supabase/migrations/1828_E01-S166_confirmacao_em_lote.sql", "8b5cf5f3cb4c7d77e509cea633ce793d048fce9361e6160745c416faad1cbb31"),
+            ("supabase/migrations/1828_E01-S166_confirmacao_em_lote.sql", "0f2693f5dd66926d977b965f5764aaa58843e6b27863c6b947b7a07ce6e6ce62"),
         ):
             dados = (ROOT / nome).read_bytes()
             if hashlib.sha256(dados).hexdigest() != digest:
@@ -690,7 +690,7 @@ def main(opcoes):
         if hashlib.sha256(driver.read_bytes()).hexdigest() != "2f91c0ecb7014ab126f772183407e199190c454f024573e155c33ca5f85f19cb":
             raise RuntimeError("Driver pgTAP CI divergente")
         runner = ROOT / "supabase/manual-tests/s176_runner_pgtap.py"
-        if hashlib.sha256(runner.read_bytes()).hexdigest() != "307f431e5d2befe313d2ab10ce47ad2fd57f7d143291ae6d2923a47560917bd1":
+        if hashlib.sha256(runner.read_bytes()).hexdigest() != "1d7066269dbb7abd37dd96b4610c89414f38aca33ec9b6a8e9ee179acb8a3100":
             raise RuntimeError("Runner pgTAP divergente")
         import s176_pgtap_ci_isolada
         fixtures = s176_pgtap_ci_isolada.preparar(ROOT)
