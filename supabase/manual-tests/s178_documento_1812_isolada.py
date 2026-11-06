@@ -8,7 +8,7 @@ MIGRATION = "supabase/migrations/1812_E01-S178_documento_ativo_mediado.sql"
 
 def preparar(root):
     arquivos = (
-        (MIGRATION, "a355ce37ac6a8537ec9e03a6414b1efa31778751f2df150f3755e44c61de023d"),
+        (MIGRATION, "8e91668c8bb67c1ae57bba486ef31423cf9f8b066c1c38191c3fa49fdeae2b76"),
         ("supabase/tests/manual_E01-S178_documento_mediado_1812.sql", "2eb51f7cd15cd7725d3a1b5fb5f463aeeef4f3e0b2ed357e1d9b78b697fa8025"),
     )
     dados = []
