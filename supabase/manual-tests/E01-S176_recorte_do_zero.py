@@ -251,6 +251,16 @@ def main(opcoes):
             raise RuntimeError("Driver de criação 1817 divergente")
         import s184_criacao_1817_isolada
         fixture_1817 = s184_criacao_1817_isolada.preparar(ROOT)
+    ativacao_1818 = fixture_1818 = None
+    if opcoes.ativacao_1818:
+        if not opcoes.criacao_1817: raise RuntimeError("Ativação 1818 exige criação 1817")
+        caminho_1818 = "supabase/migrations/1818_E01-S184_ativar_contrato_sem_custos.sql"
+        ativacao_1818 = (ROOT / caminho_1818).read_bytes()
+        if hashlib.sha256(ativacao_1818).hexdigest() != "2ab11bea3b87693e87bad490108a200fe4cf8bb7cb616e973c5e488fc54e6835": raise RuntimeError("Migration 1818 divergente")
+        driver = ROOT / "supabase/manual-tests/s184_ativacao_1818_isolada.py"
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "b379d855c317574c965df6f4344454b97bbce5815085a6412dae8c69795b2fce": raise RuntimeError("Driver de ativação 1818 divergente")
+        import s184_ativacao_1818_isolada
+        fixture_1818 = s184_ativacao_1818_isolada.preparar(ROOT)
     fixtures = None
     isolamento_1810 = None
     upload_1811 = None
@@ -664,6 +674,11 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade da criação 1817")
         blobs.append((caminho_1817, criacao_1817))
         names.append(caminho_1817)
+    if ativacao_1818 is not None:
+        if any(Path(p).name[:4] == "1818" for p in base_files + names) or names[-1] != caminho_1817:
+            raise RuntimeError("Ordem ou duplicidade da ativação 1818")
+        blobs.append((caminho_1818, ativacao_1818))
+        names.append(caminho_1818)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -858,6 +873,8 @@ end; $$;"""
         print("Gates AC5 listados confirmados fechados; demais gates exigem revisão independente.", flush=True)
     if fixture_1817 is not None:
         s184_criacao_1817_isolada.executar(CONTAINER, fixture_1817, query, watchdog_triggered)
+    if fixture_1818 is not None:
+        s184_ativacao_1818_isolada.executar(CONTAINER, fixture_1818, query, watchdog_triggered)
     if isolamento_1810 is not None:
         if query("select not habilitado from config.sso_estrutura_cliente_leitura_gate where id") != "t":
             raise RuntimeError("Gate de isolamento inicial aberto ou ausente")
@@ -1041,6 +1058,7 @@ if __name__ == "__main__":
     grupo = parser.add_mutually_exclusive_group()
     grupo.add_argument("--diagnostico-0415", action="store_true", help="Antecipa duas ações somente no clone; resultado não prova recorte implantável.")
     grupo.add_argument("--integracao-candidata", action="store_true", help="Inclui migrations originais candidatas, sem seeds artificiais; não autoriza release.")
+    parser.add_argument("--ativacao-1818", action="store_true", help="Aplica e testa ativação 1818; exige criação 1817.")
     parser.add_argument("--criacao-1817", action="store_true", help="Aplica mediação comercial 1817 antes do lote pgTAP; exige gates 1816.")
     parser.add_argument("--fixtures-pgtap-ci", action="store_true", help="Executa seleção SQL da CI no clone; não equivale a supabase start.")
     parser.add_argument("--fixtures-pgtap", action="store_true", help="Executa quatro fixtures sintéticas apenas no candidato de integração descartável.")
