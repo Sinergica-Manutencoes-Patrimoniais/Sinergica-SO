@@ -221,6 +221,15 @@ def main(opcoes):
     hierarquia_1813 = None
     policies_1814 = None
     dispatch_1815 = None
+    gates_1816 = None
+    if opcoes.gates_1816:
+        if not opcoes.dispatch_1815 or not opcoes.documento_1812:
+            raise RuntimeError("Gates 1816 exigem dispatch 1815 e documento 1812")
+        driver = ROOT / "supabase/manual-tests/s178_gates_1816_isolada.py"
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "a2ec3febbe19d242718056780ffe26e313312cbb3d6553f1e1e3850c6129b026":
+            raise RuntimeError("Driver de gates 1816 divergente")
+        import s178_gates_1816_isolada
+        gates_1816 = s178_gates_1816_isolada.preparar(ROOT)
     if opcoes.dispatch_1815:
         if not opcoes.policies_1814:
             raise RuntimeError("Dispatch 1815 exige policies 1814")
@@ -247,7 +256,7 @@ def main(opcoes):
     if opcoes.documento_1812:
         if not opcoes.upload_1811: raise RuntimeError("Documento 1812 exige --upload-1811")
         driver_documento = ROOT / "supabase/manual-tests/s178_documento_1812_isolada.py"
-        if hashlib.sha256(driver_documento.read_bytes()).hexdigest() != "278e38d646247691f62bceb0cab945ac112e1c314f2ef023547af68728670b81":
+        if hashlib.sha256(driver_documento.read_bytes()).hexdigest() != "32563c6d1122f54cc39e2a62f7380c1771fff999ae17ccb08c050b84a666c872":
             raise RuntimeError("Driver de documento 1812 divergente")
         import s178_documento_1812_isolada
         documento_1812 = s178_documento_1812_isolada.preparar(ROOT)
@@ -596,6 +605,12 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade de dispatch 1815")
         blobs.append((caminho, dispatch_1815[0]))
         names.append(caminho)
+    if gates_1816 is not None:
+        caminho = s178_gates_1816_isolada.MIGRATION
+        if any(Path(p).name[:4] == "1816" for p in base_files + names) or names[-1] != s168_dispatch_1815_isolada.MIGRATION:
+            raise RuntimeError("Ordem ou duplicidade de gates 1816")
+        blobs.append((caminho, gates_1816[0]))
+        names.append(caminho)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
@@ -813,6 +828,8 @@ end; $$;"""
         s168_dispatch_1815_isolada.executar(CONTAINER, dispatch_1815[1], query, watchdog_triggered)
     if upload_1811 is not None:
         s168_upload_1811_isolada.executar(CONTAINER, upload_1811[1], query, watchdog_triggered)
+    if gates_1816 is not None:
+        s178_gates_1816_isolada.executar(CONTAINER, gates_1816[1], query, watchdog_triggered)
     if documento_1812 is not None:
         if query("select not habilitado from pcm.sso_documento_ativo_mediado_gate where id") != "t":
             raise RuntimeError("Gate de documento inicial aberto ou ausente")
@@ -913,6 +930,7 @@ if __name__ == "__main__":
     parser.add_argument("--diagnostico-ac5", action="store_true", help="Compila sobreposição AC5 revisada em clone; exige integração, sem fixtures.")
     parser.add_argument("--isolamento-1810", action="store_true", help="Inclui 1804–1810 e suas fixtures; aceita --fixtures-pgtap; exige AC5 e integração.")
     parser.add_argument("--concorrencia-1810", action="store_true", help="Executa quatro disputas sintéticas; exige --isolamento-1810 e descarte integral do clone.")
+    parser.add_argument("--gates-1816", action="store_true", help="Aplica e valida gates 1816 antes da fixture 1812; exige dispatch 1815.")
     parser.add_argument("--dispatch-1815", action="store_true", help="Aplica e valida 1815 após policy 1814; exige --policies-1814.")
     parser.add_argument("--policies-1814", action="store_true", help="Aplica 1814 e valida policies antes da fixture 1811; exige hierarquia 1813.")
     parser.add_argument("--upload-1811", action="store_true", help="Aplica 1811 e executa fixture SQL com rollback; exige isolamento 1810.")

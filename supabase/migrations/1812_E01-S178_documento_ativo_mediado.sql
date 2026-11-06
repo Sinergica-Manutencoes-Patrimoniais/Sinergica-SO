@@ -12,11 +12,11 @@ begin
  if auth.uid() is null or auth.uid() is distinct from p_ator_id or p_vinculo_id is null then raise exception 'sem_acesso' using errcode='42501'; end if;
  if current_setting('transaction_isolation') <> 'read committed' then raise exception 'isolamento_nao_suportado' using errcode='25001'; end if;
  if not pg_catalog.pg_try_advisory_xact_lock_shared(pg_catalog.hashtextextended('sso-autorizacao-confirmacao-visita',0)) then raise exception 'autorizacao_em_alteracao' using errcode='55P03'; end if;
- perform 1 from pcm.sso_documento_ativo_mediado_gate where id and habilitado for share nowait;
+ perform 1 from pcm.sso_documento_ativo_mediado_gate g where g.id and g.habilitado for share nowait;
  if not found then raise exception 'documento_desabilitado' using errcode='55000'; end if;
- perform 1 from pcm.sso_documento_staging_ativo_gate where id and habilitado for share nowait;
+ perform 1 from pcm.sso_documento_staging_ativo_gate g where g.id and g.habilitado for share nowait;
  if not found then raise exception 'documento_desabilitado' using errcode='55000'; end if;
- perform 1 from pcm.sso_documentos_levantamento_gate where id and habilitado for share nowait;
+ perform 1 from pcm.sso_documentos_levantamento_gate g where g.id and g.habilitado for share nowait;
  if not found then raise exception 'documento_desabilitado' using errcode='55000'; end if;
  select o.id,d.id,x.cliente_id,o.updated_at into v_objeto,v_documento,v_cliente,v_atualizado
  from pcm.sso_documento_staging_ativo x
@@ -36,11 +36,11 @@ language plpgsql volatile security definer set search_path='' as $$
 begin
  if p_vinculo_id is null then raise exception 'parametros_invalidos' using errcode='22023'; end if;
  if current_setting('transaction_isolation') <> 'read committed' then raise exception 'isolamento_nao_suportado' using errcode='25001'; end if;
- perform 1 from pcm.sso_documento_ativo_mediado_gate where id and habilitado for share nowait;
+ perform 1 from pcm.sso_documento_ativo_mediado_gate g where g.id and g.habilitado for share nowait;
  if not found then raise exception 'documento_desabilitado' using errcode='55000'; end if;
- perform 1 from pcm.sso_documento_staging_ativo_gate where id and habilitado for share nowait;
+ perform 1 from pcm.sso_documento_staging_ativo_gate g where g.id and g.habilitado for share nowait;
  if not found then raise exception 'documento_desabilitado' using errcode='55000'; end if;
- perform 1 from pcm.sso_documentos_levantamento_gate where id and habilitado for share nowait;
+ perform 1 from pcm.sso_documentos_levantamento_gate g where g.id and g.habilitado for share nowait;
  if not found then raise exception 'documento_desabilitado' using errcode='55000'; end if;
  return query select o.name,o.id,d.id,x.cliente_id,o.updated_at from pcm.sso_documento_staging_ativo x
  join pcm.sso_documentos_levantamento d on d.id=x.documento_id and d.cliente_id=x.cliente_id
@@ -63,11 +63,11 @@ begin
  if auth.uid() is null then raise exception 'sem_acesso' using errcode='42501'; end if;
  if current_setting('transaction_isolation') <> 'read committed' then raise exception 'isolamento_nao_suportado' using errcode='25001'; end if;
  if not pg_catalog.pg_try_advisory_xact_lock_shared(pg_catalog.hashtextextended('sso-autorizacao-confirmacao-visita',0)) then raise exception 'autorizacao_em_alteracao' using errcode='55P03'; end if;
- perform 1 from pcm.sso_documento_ativo_mediado_gate where id and habilitado for share nowait;
+ perform 1 from pcm.sso_documento_ativo_mediado_gate g where g.id and g.habilitado for share nowait;
  if not found then raise exception 'documento_desabilitado' using errcode='55000'; end if;
- perform 1 from pcm.sso_documento_staging_ativo_gate where id and habilitado for share nowait;
+ perform 1 from pcm.sso_documento_staging_ativo_gate g where g.id and g.habilitado for share nowait;
  if not found then raise exception 'documento_desabilitado' using errcode='55000'; end if;
- perform 1 from pcm.sso_documentos_levantamento_gate where id and habilitado for share nowait;
+ perform 1 from pcm.sso_documentos_levantamento_gate g where g.id and g.habilitado for share nowait;
  if not found then raise exception 'documento_desabilitado' using errcode='55000'; end if;
  return query select d.id,d.titulo,d.criado_em from pcm.sso_listar_documentos_staging_ativo(p_tipo,p_entidade_id,p_apos,p_limite) d;
 end; $$;
