@@ -340,211 +340,207 @@ function GruposQuantitativosContexto({
             iniciarSalvamento();
           }}
         >
-          <fieldset disabled={permissao.isFetching}>
-            <label>
-              Nome do grupo
-              <input
-                className="input"
-                required
-                maxLength={200}
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-              />
-            </label>
-            <label>
-              Quantidade
-              <input
-                className="input"
-                type="number"
-                min="1"
-                max="9007199254740991"
-                step="1"
-                required
-                value={quantidade}
-                onChange={(e) => setQuantidade(e.target.value)}
-              />
-            </label>
-            <label>
-              Local
-              <select
-                className="input"
-                required
-                value={localId}
-                onChange={(e) => setLocalId(e.target.value)}
-              >
-                <option value="">Selecione</option>
-                {locais.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Sistema
-              <select
-                className="input"
-                value={sistemaId}
-                onChange={(e) => setSistemaId(e.target.value)}
-              >
-                <option value="">Sem Sistema vinculado</option>
-                {sistemas.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nome}
-                  </option>
-                ))}
-                {sistemaId && !sistemas.some((s) => s.id === sistemaId) && (
-                  <option value={sistemaId}>Sistema indisponível</option>
-                )}
-              </select>
-            </label>
-            <fieldset>
-              <legend>Características técnicas</legend>
-              {atributos.map((a, i) => (
-                <div key={a.id}>
-                  <label>
-                    Nome da característica {i + 1}
-                    <input
-                      className="input"
-                      value={a.nome}
-                      onChange={(e) =>
-                        setAtributos((atual) =>
-                          atual.map((item) =>
-                            item.id === a.id ? { ...item, nome: e.target.value } : item,
-                          ),
-                        )
-                      }
-                    />
-                  </label>
-                  <label>
-                    Valor da característica {i + 1}
-                    <input
-                      className="input"
-                      value={a.valor}
-                      onChange={(e) =>
-                        setAtributos((atual) =>
-                          atual.map((item) =>
-                            item.id === a.id ? { ...item, valor: e.target.value } : item,
-                          ),
-                        )
-                      }
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    aria-label={`Remover característica ${i + 1}`}
-                    onClick={() =>
-                      setAtributos((atual) => atual.filter((item) => item.id !== a.id))
-                    }
-                  >
-                    Remover
-                  </button>
-                </div>
+          <label>
+            Nome do grupo
+            <input
+              className="input"
+              required
+              maxLength={200}
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+            />
+          </label>
+          <label>
+            Quantidade
+            <input
+              className="input"
+              type="number"
+              min="1"
+              max="9007199254740991"
+              step="1"
+              required
+              value={quantidade}
+              onChange={(e) => setQuantidade(e.target.value)}
+            />
+          </label>
+          <label>
+            Local
+            <select
+              className="input"
+              required
+              value={localId}
+              onChange={(e) => setLocalId(e.target.value)}
+            >
+              <option value="">Selecione</option>
+              {locais.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.nome}
+                </option>
               ))}
-              <button
-                type="button"
-                onClick={() =>
-                  setAtributos((atual) => [
-                    ...atual,
-                    { id: crypto.randomUUID(), nome: "", valor: "" },
-                  ])
-                }
-              >
-                Adicionar característica
-              </button>
-            </fieldset>
-            <label>
-              Categoria
-              <select
-                className="input"
-                required
-                value={categoriaId}
-                onChange={(e) => setCategoriaId(e.target.value)}
-              >
-                <option value="">Selecione</option>
-                {categorias.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {erroSalvar && <p role="alert">{erroSalvar}</p>}
-            {editando && grupos.isError && (
-              <p role="alert">
-                Não foi possível conferir a revisão. Atualize a lista antes de salvar.
-              </p>
-            )}
-            {editando && !grupos.isFetching && !grupos.isError && edicaoDesatualizada && (
-              <div role="alert">
-                <p>
-                  A revisão mudou ou o grupo não está mais disponível. Seus dados digitados foram
-                  preservados.
-                </p>
-                {grupoAtual && (
-                  <>
-                    <p>
-                      Revisão atual {grupoAtual.revisao}: {grupoAtual.nome} ·{" "}
-                      {grupoAtual.quantidade} unidades ·{" "}
-                      {locais.find((local) => local.id === grupoAtual.localId)?.nome ??
-                        "Local indisponível"}{" "}
-                      ·{" "}
-                      {categorias.find((categoria) => categoria.id === grupoAtual.categoriaId)
-                        ?.nome ?? "Categoria indisponível"}{" "}
-                      ·{" "}
-                      {grupoAtual.sistemaId
-                        ? (sistemas.find((sistema) => sistema.id === grupoAtual.sistemaId)?.nome ??
-                          "Sistema indisponível")
-                        : "sem Sistema"}
-                      .
-                    </p>
-                    <p>Características atuais:</p>
-                    {Object.keys(grupoAtual.caracteristicas).length ? (
-                      <ul>
-                        {Object.entries(grupoAtual.caracteristicas).map(([chave, valor]) => (
-                          <li key={chave}>
-                            {chave}: {valor}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>Nenhuma característica informada.</p>
-                    )}
-                    <p>
-                      Compare com os campos acima. Adotar esta revisão mantém seus campos digitados;
-                      salvar ainda será uma ação separada.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditando(grupoAtual);
-                        setErroSalvar("");
-                      }}
-                    >
-                      Adotar revisão atual e manter edição
-                    </button>
-                  </>
-                )}
-                {!grupoAtual && (
-                  <p>
-                    Atualize a lista ou cancele a edição; não é possível adotar uma revisão
-                    indisponível.
-                  </p>
-                )}
+            </select>
+          </label>
+          <label>
+            Sistema
+            <select
+              className="input"
+              value={sistemaId}
+              onChange={(e) => setSistemaId(e.target.value)}
+            >
+              <option value="">Sem Sistema vinculado</option>
+              {sistemas.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nome}
+                </option>
+              ))}
+              {sistemaId && !sistemas.some((s) => s.id === sistemaId) && (
+                <option value={sistemaId}>Sistema indisponível</option>
+              )}
+            </select>
+          </label>
+          <fieldset>
+            <legend>Características técnicas</legend>
+            {atributos.map((a, i) => (
+              <div key={a.id}>
+                <label>
+                  Nome da característica {i + 1}
+                  <input
+                    className="input"
+                    value={a.nome}
+                    onChange={(e) =>
+                      setAtributos((atual) =>
+                        atual.map((item) =>
+                          item.id === a.id ? { ...item, nome: e.target.value } : item,
+                        ),
+                      )
+                    }
+                  />
+                </label>
+                <label>
+                  Valor da característica {i + 1}
+                  <input
+                    className="input"
+                    value={a.valor}
+                    onChange={(e) =>
+                      setAtributos((atual) =>
+                        atual.map((item) =>
+                          item.id === a.id ? { ...item, valor: e.target.value } : item,
+                        ),
+                      )
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  aria-label={`Remover característica ${i + 1}`}
+                  onClick={() => setAtributos((atual) => atual.filter((item) => item.id !== a.id))}
+                >
+                  Remover
+                </button>
               </div>
-            )}
+            ))}
             <button
-              type="submit"
-              disabled={
-                permissao.isFetching || edicaoIndisponivel || grupos.isFetching || grupos.isError
+              type="button"
+              onClick={() =>
+                setAtributos((atual) => [
+                  ...atual,
+                  { id: crypto.randomUUID(), nome: "", valor: "" },
+                ])
               }
             >
-              Salvar grupo
-            </button>{" "}
-            <button type="button" onClick={() => setAberto(false)}>
-              Cancelar
+              Adicionar característica
             </button>
           </fieldset>
+          <label>
+            Categoria
+            <select
+              className="input"
+              required
+              value={categoriaId}
+              onChange={(e) => setCategoriaId(e.target.value)}
+            >
+              <option value="">Selecione</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+          {erroSalvar && <p role="alert">{erroSalvar}</p>}
+          {editando && grupos.isError && (
+            <p role="alert">
+              Não foi possível conferir a revisão. Atualize a lista antes de salvar.
+            </p>
+          )}
+          {editando && !grupos.isFetching && !grupos.isError && edicaoDesatualizada && (
+            <div role="alert">
+              <p>
+                A revisão mudou ou o grupo não está mais disponível. Seus dados digitados foram
+                preservados.
+              </p>
+              {grupoAtual && (
+                <>
+                  <p>
+                    Revisão atual {grupoAtual.revisao}: {grupoAtual.nome} · {grupoAtual.quantidade}{" "}
+                    unidades ·{" "}
+                    {locais.find((local) => local.id === grupoAtual.localId)?.nome ??
+                      "Local indisponível"}{" "}
+                    ·{" "}
+                    {categorias.find((categoria) => categoria.id === grupoAtual.categoriaId)
+                      ?.nome ?? "Categoria indisponível"}{" "}
+                    ·{" "}
+                    {grupoAtual.sistemaId
+                      ? (sistemas.find((sistema) => sistema.id === grupoAtual.sistemaId)?.nome ??
+                        "Sistema indisponível")
+                      : "sem Sistema"}
+                    .
+                  </p>
+                  <p>Características atuais:</p>
+                  {Object.keys(grupoAtual.caracteristicas).length ? (
+                    <ul>
+                      {Object.entries(grupoAtual.caracteristicas).map(([chave, valor]) => (
+                        <li key={chave}>
+                          {chave}: {valor}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>Nenhuma característica informada.</p>
+                  )}
+                  <p>
+                    Compare com os campos acima. Adotar esta revisão mantém seus campos digitados;
+                    salvar ainda será uma ação separada.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditando(grupoAtual);
+                      setErroSalvar("");
+                    }}
+                  >
+                    Adotar revisão atual e manter edição
+                  </button>
+                </>
+              )}
+              {!grupoAtual && (
+                <p>
+                  Atualize a lista ou cancele a edição; não é possível adotar uma revisão
+                  indisponível.
+                </p>
+              )}
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={
+              permissao.isFetching || edicaoIndisponivel || grupos.isFetching || grupos.isError
+            }
+          >
+            Salvar grupo
+          </button>{" "}
+          <button type="button" onClick={() => setAberto(false)}>
+            Cancelar
+          </button>
         </form>
       )}
       {!permissao.isFetching && (

@@ -254,7 +254,9 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
     .getAttribute("value");
   if (!categoriaId) throw new Error("A fixture não encontrou uma Categoria ativa para o Grupo.");
   await categoria.selectOption(categoriaId);
-  await grupos.getByRole("button", { name: "Salvar grupo" }).click();
+  const salvarGrupo = grupos.getByRole("button", { name: "Salvar grupo" });
+  await expect(salvarGrupo).toBeEnabled({ timeout: 15_000 });
+  await salvarGrupo.click();
   marcarEtapa("salvar grupo");
   await expect(grupos.getByText(`${nomeGrupo} — 20 unidades`, { exact: false })).toBeVisible({
     timeout: 10_000,
