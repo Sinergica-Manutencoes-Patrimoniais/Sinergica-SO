@@ -1,7 +1,7 @@
 # Implementation Plan: E01-S166 — Calendário contratual, recorrência por modo e ocorrências idempotentes
 
 **Branch de documentação:** `codex/handoff-plano-manutencao` | **Date:** 2026-10-26 | **Spec:** [spec.md](spec.md)
-**Status:** T001–T015 implementados; pgTAP integrado passou, inclusive o fluxo V2 com 501 visitas. T016 permanece aberto para medição de capacidade, E2E visual, CI completa, revisão formal e homologação; não declarar PASS.
+**Status:** T001–T018 escritos; confirmação em lote altera o protocolo SQL após timeout observado em 501 visitas. pgTAP anterior não cobre esta alteração. T016 permanece aberto para validação integrada, medição de capacidade, E2E visual, CI completa, revisão formal e homologação; não declarar PASS.
 
 ## Summary
 
@@ -36,7 +36,7 @@ Artefatos de implementação preparados no candidato:
 - `apps/web/src/features/pcm/application/calendario-contratual-queries.ts`: consultas paginadas, cancelamento e invalidação dos consumidores.
 - `apps/web/src/features/pcm/infrastructure/supabase-calendario-contratual-adapter.ts`: RPCs/leituras de dados, sem regra paralela.
 - `apps/web/src/features/pcm/interfaces/calendario-contratual/Workspace.tsx` e componentes associados: simulação, exceções, alterações vigentes e estados de interface.
-- `supabase/migrations/1820_E01-S166_mudanca_dia_v2_fundacao.sql` e `1821_E01-S166_mudanca_dia_v2_rpc.sql`.
+- `supabase/migrations/1820_E01-S166_mudanca_dia_v2_fundacao.sql`, `1821_E01-S166_mudanca_dia_v2_rpc.sql` e a substituição aditiva `1828_E01-S166_confirmacao_em_lote.sql`.
 - `supabase/tests/E01-S166_mudanca_dia_v2_contract.test.sql` e `E01-S166_versoes_recorrencia_tolerancia.test.sql`.
 - `apps/web/e2e/calendario-contratual.spec.ts` e fixture/configuração isoladas em `apps/web/e2e/s166-isolado/` e `apps/web/playwright.s166-isolado.config.ts`.
 
@@ -60,7 +60,7 @@ Inventariar contagens/referências legadas no ambiente de teste; mapear explicit
 
 ### Large-volume change-day flow (AC-8)
 
-Reuse the existing `1820/1821` staged snapshot tables, cursor pagination, per-page review, idempotent request ID and atomic confirmation. Present persisted state `montando` as **Em andamento** and keep all feature/operational gates closed by default. The pgTAP fixture prepares 501 visits with an isolated gate budget of 600; this is authored evidence only until the final combined run. Keep the deployed gate at 500 until the combined isolated run measures database locks, WAL, duration and memory at representative volume; then set an explicit ceiling. Do not replace the atomic transaction with independently committed batches. Compare candidate/source sets and use bounded pages; any optimization must preserve transition/audit routines and lock order. See [ADR-1671](../../docs/adr/1671-mudanca-dia-grande-volume.md) and [ADR-1682](../../docs/adr/1682-mudanca-dia-grande-volume-implementacao.md).
+Reuse the existing `1820/1821` staged snapshot tables, cursor pagination, per-page review, idempotent request ID and atomic confirmation. Present persisted state `montando` as **Em andamento** and keep all feature/operational gates closed by default. The pgTAP fixture prepares 501 visits with an isolated gate budget of 600; this is authored evidence only until the final combined run. Keep the deployed gate at 500 until the combined isolated run measures database locks, WAL, duration and memory at representative volume; then set an explicit ceiling. Do not replace the atomic transaction with independently committed batches. Compare candidate/source sets and use bounded pages; any optimization must preserve transition/audit routines and lock order. See [ADR-1671](../../docs/adr/1671-mudanca-dia-grande-volume.md), [ADR-1682](../../docs/adr/1682-mudanca-dia-grande-volume-implementacao.md) and [ADR-1683](../../docs/adr/1683-confirmacao-em-lote-mudanca-dia-v2.md).
 
 ## Validation and Rollout
 

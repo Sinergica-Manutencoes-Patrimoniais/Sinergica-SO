@@ -35,7 +35,7 @@
 
 - [X] T014 Escrever testes de adapter e integração entre US em `apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.test.ts`, incluindo rollback e concorrência; executar em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7).
 - [X] T015 Escrever a jornada E2E crítica e acesso negado entre dois Clientes em `apps/web/e2e/plano-manutencao.spec.ts`, incluindo consumidores globais/Cliente360; executar em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7).
-- [ ] T016 Executar quickstart, testes focados (incluindo classificação manter/alterar/retirar), eval:spec com seleção conferida, ci:local e revisão adversarial; registrar resultados/ressalvas e futura CI com db-tests habilitado antes do PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): suíte SQL local completa passou (225 arquivos/2.892 assertions); revisão adversarial local não encontrou achados reproduzidos. T016 fica aberto para E2E, CI GitHub, demais gates de integração e homologação.
+- [ ] T016 Executar quickstart, testes focados (incluindo classificação manter/alterar/retirar), eval:spec com seleção conferida, ci:local e revisão adversarial; registrar resultados/ressalvas e futura CI com db-tests habilitado antes do PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): a seleção pgTAP candidata passou 250 assertions no clone descartável; a CI local integrada ainda falhou em gates globais e testes. T016 fica aberto para E2E, CI GitHub, demais gates de integração e homologação.
 
 ### Evidência escrita ainda não executada
 

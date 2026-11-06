@@ -220,11 +220,16 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   const seletorLocal = grupos.getByLabel("Local");
   try {
     await expect(seletorLocal).toBeEnabled({ timeout: 15_000 });
-    await seletorLocal.selectOption({ label: nomeLocal }, { timeout: 5_000 });
   } catch {
     const texto = (await grupos.innerText().catch(() => "sem-texto"))
       .replace(/\s+/g, " ")
       .slice(0, 360);
+    const estado = await seletorLocal
+      .evaluate((elemento) => {
+        const select = elemento as HTMLSelectElement;
+        return `disabled=${select.disabled};fieldset=${select.closest("fieldset")?.disabled ?? false};visible=${Boolean(select.getClientRects().length)}`;
+      })
+      .catch(() => "estado=indisponivel");
     const [selects, locaisDisponiveis] = await Promise.all([
       seletorLocal.count().catch(() => 0),
       seletorLocal
@@ -233,7 +238,32 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
         .catch(() => []),
     ]);
     throw new Error(
-      `S176_LOCAL_SELECTS=${selects}; OPTIONS=${locaisDisponiveis.join("|")}; AUTORIZAÇÃO=${respostasPermissao.slice(-6).join(",")}; REGIÃO=${texto}`,
+      `S176_LOCAL_SELECTS=${selects}; ${estado}; OPTIONS=${locaisDisponiveis.join("|")}; AUTORIZAÇÃO=${respostasPermissao.slice(-6).join(",")}; REGIÃO=${texto}`,
+    );
+  }
+  const valorLocal = await seletorLocal.locator("option").evaluateAll((opcoes, nome) => {
+    const opcao = opcoes.find((elemento) => {
+      const texto = elemento.textContent?.trim() ?? "";
+      return texto === nome || texto.endsWith(`/ ${nome}`);
+    });
+    return opcao?.getAttribute("value") ?? null;
+  }, nomeLocal);
+  if (!valorLocal) {
+    throw new Error(
+      `S176_LOCAL_OPTION_AUSENTE=${nomeLocal}; OPTIONS=${(await seletorLocal.locator("option").allTextContents().catch(() => [])).join("|")}`,
+    );
+  }
+  try {
+    await seletorLocal.selectOption(valorLocal, { timeout: 5_000 });
+  } catch {
+    const estado = await seletorLocal
+      .evaluate((elemento) => {
+        const select = elemento as HTMLSelectElement;
+        return `disabled=${select.disabled};fieldset=${select.closest("fieldset")?.disabled ?? false};value=${select.value};visible=${Boolean(select.getClientRects().length)}`;
+      })
+      .catch(() => "estado=indisponivel");
+    throw new Error(
+      `S176_LOCAL_SELECAO_FALHOU=${estado}; OPTIONS=${(await seletorLocal.locator("option").allTextContents().catch(() => [])).join("|")}; AUTORIZAÇÃO=${respostasPermissao.slice(-6).join(",")}`,
     );
   }
   marcarEtapa("carregar categorias do grupo");

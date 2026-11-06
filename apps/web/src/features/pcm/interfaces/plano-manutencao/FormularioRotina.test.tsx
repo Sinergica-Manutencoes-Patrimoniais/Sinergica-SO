@@ -8,8 +8,8 @@ vi.mock("../../../../lib/supabase-client", () => ({ supabase: { auth: { getUser:
 vi.mock("../../infrastructure/supabase-plano-manutencao-adapter", () => ({
   supabasePlanoManutencaoAdapter: api,
 }));
-import { FormularioRotina } from "./FormularioRotina";
 import { validarRotinaCompleta } from "../../application/plano-manutencao";
+import { FormularioRotina } from "./FormularioRotina";
 
 afterEach(() => {
   cleanup();
@@ -60,4 +60,39 @@ it("não oferece alvos da busca anterior enquanto a nova consulta está pendente
     concluir([{ id: "sistema-2", nome: "QGBT" }]);
   });
   expect(await screen.findByRole("option", { name: "QGBT" })).toBeTruthy();
+});
+
+it("mantém opções da mesma consulta utilizáveis durante refetch de foco", async () => {
+  let concluir!: (opcoes: { id: string; nome: string }[]) => void;
+  api.listarAlvos
+    .mockResolvedValueOnce([{ id: "sistema-1", nome: "Extintores" }])
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          concluir = resolve;
+        }),
+    );
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <FormularioRotina
+        userId="usuario"
+        clienteId="cliente"
+        plano={{ id: "plano", clienteId: "cliente", nome: "Plano", estado: "rascunho", revisao: 1 }}
+        consultaDisponivel
+        onCancelar={() => {}}
+        onAtualizar={() => {}}
+      />
+    </QueryClientProvider>,
+  );
+  await screen.findByRole("option", { name: "Extintores" });
+  void client.invalidateQueries({
+    queryKey: ["plano-manutencao-alvos", "usuario", "cliente", "plano", "sistema", ""],
+  });
+  await waitFor(() => expect(api.listarAlvos).toHaveBeenCalledTimes(2));
+  expect(screen.getByLabelText("Alvo da Rotina").hasAttribute("disabled")).toBe(false);
+  expect(screen.getByRole("option", { name: "Extintores" })).toBeTruthy();
+  await act(async () => {
+    concluir([{ id: "sistema-1", nome: "Extintores" }]);
+  });
 });

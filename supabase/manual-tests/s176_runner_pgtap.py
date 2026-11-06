@@ -6,9 +6,9 @@ import subprocess
 FIXTURES = (
     ("E01-S170_autorizacao_modulos_1790_1795.test.sql", "5d8a18272491f15d1e5e00382959c1e9581b9a4a9a171500a6130d38d372b26c", 12),
     ("E01-S176_vinculos_cliente_final.test.sql", "fd36e462437d579c9f79ff2c31eec3858f98c7d50a3151985cf232c636a9abb6", 10),
-    ("E01-S165_plano_manutencao.test.sql", "bd625e784a8edc76353ba772aed9dbef1c658186f1741f3536a2f392921228bc", 183),
+    ("E01-S165_plano_manutencao.test.sql", "afb0fd5978775d6808142fcbffcfa0ddf0bf6c716d38d7fcf74eab6c1a74046a", 183),
     ("E01-S166_versoes_recorrencia_tolerancia.test.sql", "0dfa9949c5cb91e3820808ac9c5b9d1c51b8944590289eeb4fe8512b85ffe4d4", 7),
-    ("E01-S166_mudanca_dia_v2_contract.test.sql", "894fb4c9ef50fdddf4aeec2f108a7699e887cda7eef149a6f4d146b512242827", 36),
+    ("E01-S166_mudanca_dia_v2_contract.test.sql", "21533f65a13a9f0584653eb5626cfc4f6886add5d9c30b64461dffb8a47b59f8", 38),
 )
 
 

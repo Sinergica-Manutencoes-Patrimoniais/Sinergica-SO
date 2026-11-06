@@ -1,6 +1,6 @@
 # Tasks — E01-S166: Calendário contratual, recorrência por modo e ocorrências idempotentes
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** T001–T015 implementados; pgTAP integrado, incluindo AC-8 com 501 visitas, passou no clone descartável; medição de capacidade, E2E, CI e homologação seguem em T016. Marcação de código escrito não declara PASS.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** T001–T015 e T018 implementados. A confirmação em lote passou 38 assertions pgTAP no clone isolado integrado; medição de capacidade, concorrência real, E2E, CI do candidato e homologação aguardam T016. Código escrito não declara PASS.
 
 ### Estado da evidência no candidato
 
@@ -41,8 +41,9 @@
 
 - [X] T014 Escrever teste do adapter em `apps/web/src/features/pcm/infrastructure/supabase-calendario-contratual-adapter.test.ts` e integrar chamadas entre US. A execução de integração, rollback e duas sessões concorrentes fica em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7).
 - [X] T015 Escrever E2E isolado da jornada de calendário/Plano, grande volume com 501 Visitas e negação entre Clientes em `apps/web/e2e/calendario-contratual.spec.ts`, compondo consumidor Cliente360 sem duplicar regra (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8). Execução fica em T016.
-- [ ] T016 Executar `specs/E01-S166-calendario-ocorrencias-capacidade/quickstart.md`, testes focados (incluindo AC-8), eval:spec com seleção conferida, ci:local e revisão adversarial; medir capacidade do V2 em clone isolado e só então propor teto acima de 500. Registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): suíte SQL local completa passou (225 arquivos/2.892 assertions); revisão adversarial local não encontrou achados reproduzidos. Medição de capacidade, concorrência real em duas sessões, E2E, CI GitHub e homologação permanecem pendentes.
+- [ ] T016 Executar `specs/E01-S166-calendario-ocorrencias-capacidade/quickstart.md`, testes focados (incluindo AC-8), eval:spec com seleção conferida, ci:local e revisão adversarial; medir capacidade do V2 em clone isolado e só então propor teto acima de 500. Registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): a seleção pgTAP candidata passou 250 assertions no clone descartável; a CI local integrada ainda falhou em gates globais e testes. Medição de capacidade, concorrência real em duas sessões, E2E, CI GitHub e homologação permanecem pendentes.
 - [X] T017 Corrigir seletor E2E, habilitar flags necessárias no build isolado e incluir diagnósticos da RPC de confirmação; execução agrupada permanece em T016.
+- [X] T018 Preparar confirmação em conjunto das Visitas sem feriado, mantendo uma transação, revisão/estado, autorização, locks, validação de responsável/local, fuso da regra vigente, triggers, auditoria individual e `visita_comandos`; manter supressões por feriado no fluxo canônico (AC-4, AC-8). Ver [ADR-1683](../../docs/adr/1683-confirmacao-em-lote-mudanca-dia-v2.md). PgTAP de contrato, idempotência e trilha individual passou em 38 assertions no clone integrado; medição de capacidade e concorrência real permanecem em T016.
 
 ## Dependencies & Execution Order
 

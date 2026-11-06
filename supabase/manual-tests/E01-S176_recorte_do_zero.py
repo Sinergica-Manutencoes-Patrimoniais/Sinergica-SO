@@ -302,6 +302,7 @@ def main(opcoes):
     proxy_s170 = None
     fixture_s170 = None
     migracoes_s170_ui = []
+    migracoes_s170_ui_finais = []
     proxy_s176 = None
     migracoes_s165_ui = []
     migracoes_s176_ui = []
@@ -324,6 +325,7 @@ def main(opcoes):
         for nome, digest in (
             ("supabase/migrations/1820_E01-S166_mudanca_dia_v2_fundacao.sql", "83357f5534af165164f45a375d5750829e243e121395270e9d7675167a61b551"),
             ("supabase/migrations/1821_E01-S166_mudanca_dia_v2_rpc.sql", "a8c33a04467c7814c2e8a4aef274129b9a30df4a48690b13dfd5fa41fce9cfba"),
+            ("supabase/migrations/1828_E01-S166_confirmacao_em_lote.sql", "8b5cf5f3cb4c7d77e509cea633ce793d048fce9361e6160745c416faad1cbb31"),
         ):
             dados = (ROOT / nome).read_bytes()
             if hashlib.sha256(dados).hexdigest() != digest:
@@ -359,7 +361,10 @@ def main(opcoes):
             dados = (ROOT / caminho).read_bytes()
             if hashlib.sha256(dados).hexdigest() != digest:
                 raise RuntimeError("Migration UI S170 divergente: " + Path(caminho).name[:4])
-            migracoes_s170_ui.append((caminho, dados))
+            if Path(caminho).name[:4] >= "1825":
+                migracoes_s170_ui_finais.append((caminho, dados))
+            else:
+                migracoes_s170_ui.append((caminho, dados))
     if opcoes.fixture_s166_e2e:
         if not opcoes.github_hosted or not opcoes.integracao_candidata:
             raise RuntimeError("Fixture S166 exige candidato de integração em clone GitHub descartável")
@@ -439,7 +444,7 @@ def main(opcoes):
             proxy_s166 = s166_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s176_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s176_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "0a6c61fcfb443bae2c7b11360e14810debf7be2191e0fb2c5484673ad8d1b33e":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "2c47e5cede5cca438a4abb45b4a24acf61c24c6355934bc9267b7ac114c5bdc6":
                 raise RuntimeError("Driver UI S176 divergente")
             import s176_ui_isolada
             proxy_s176 = s176_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
@@ -685,7 +690,7 @@ def main(opcoes):
         if hashlib.sha256(driver.read_bytes()).hexdigest() != "2f91c0ecb7014ab126f772183407e199190c454f024573e155c33ca5f85f19cb":
             raise RuntimeError("Driver pgTAP CI divergente")
         runner = ROOT / "supabase/manual-tests/s176_runner_pgtap.py"
-        if hashlib.sha256(runner.read_bytes()).hexdigest() != "4e192bc66c3c75c52d92f5f2f9380aa4ee9b91dc87b3f7eb5c1754552b4e8583":
+        if hashlib.sha256(runner.read_bytes()).hexdigest() != "307f431e5d2befe313d2ab10ce47ad2fd57f7d143291ae6d2923a47560917bd1":
             raise RuntimeError("Runner pgTAP divergente")
         import s176_pgtap_ci_isolada
         fixtures = s176_pgtap_ci_isolada.preparar(ROOT)
@@ -960,8 +965,10 @@ def main(opcoes):
             raise RuntimeError("Ordem ou duplicidade da ativação 1818")
         blobs.append((caminho_1818, ativacao_1818))
         names.append(caminho_1818)
-    if migracoes_s166_ui:
-        for caminho, dados in migracoes_s166_ui:
+    migracoes_s166_iniciais = [item for item in migracoes_s166_ui if Path(item[0]).name[:4] < "1828"]
+    migracoes_s166_finais = [item for item in migracoes_s166_ui if Path(item[0]).name[:4] >= "1828"]
+    if migracoes_s166_iniciais:
+        for caminho, dados in migracoes_s166_iniciais:
             if any(Path(p).name[:4] == Path(caminho).name[:4] for p in base_files + names) or names[-1] >= caminho:
                 raise RuntimeError("Ordem ou duplicidade de migration S166 V2")
             blobs.append((caminho, dados))
@@ -974,7 +981,12 @@ def main(opcoes):
                 raise RuntimeError("Ordem ou duplicidade do overlay S165: " + numero)
             blobs.append((caminho, dados))
             names.append(caminho)
-        print("OVERLAY S165: migrations 1822–1824 aplicadas após as demais candidatas.", flush=True)
+        print("OVERLAY S165: migrations 1822–1824 aplicadas após a fundação S166 e antes da migration de confirmação em lote.", flush=True)
+    for caminho, dados in sorted(migracoes_s170_ui_finais + migracoes_s166_finais):
+        if any(Path(p).name[:4] == Path(caminho).name[:4] for p in base_files + names) or (names and names[-1] >= caminho):
+            raise RuntimeError("Ordem ou duplicidade de migration final S166/S170: " + Path(caminho).name[:4])
+        blobs.append((caminho, dados))
+        names.append(caminho)
     if opcoes.diagnostico_0415 and sum(Path(p).name.startswith("0415_") for p in names) != 1:
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]

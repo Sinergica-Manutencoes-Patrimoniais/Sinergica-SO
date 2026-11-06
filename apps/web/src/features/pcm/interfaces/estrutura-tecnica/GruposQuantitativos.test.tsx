@@ -135,7 +135,7 @@ describe("consulta de Grupos Quantitativos", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
     expect(await screen.findByRole("button", { name: "Editar Luminárias" })).toBeTruthy();
   });
-  it("oculta formulário durante revalidação e preserva rascunho", async () => {
+  it("preserva formulário e rascunho durante revalidação e bloqueia o salvamento", async () => {
     gateway.autorizarAcao.mockResolvedValue(true);
     const grupo = {
       id: "grupo",
@@ -149,6 +149,7 @@ describe("consulta de Grupos Quantitativos", () => {
       revisao: 1,
     };
     let concluir!: (valor: (typeof grupo)[]) => void;
+    let revalidacao!: Promise<void>;
     gateway.listarGrupos.mockResolvedValueOnce([grupo]).mockReturnValueOnce(
       new Promise((resolve) => {
         concluir = resolve;
@@ -165,14 +166,21 @@ describe("consulta de Grupos Quantitativos", () => {
       target: { value: "Rascunho não salvo" },
     });
     act(() => {
-      void client.invalidateQueries({
+      revalidacao = client.invalidateQueries({
         queryKey: ["estrutura-tecnica", "usuario", "cliente-a", "grupos"],
       });
     });
-    await waitFor(() => expect(screen.queryByLabelText("Nome do grupo")).toBeNull());
+    await waitFor(() =>
+      expect(screen.getByLabelText("Nome do grupo")).toHaveValue("Rascunho não salvo"),
+    );
+    expect(screen.getByRole("button", { name: "Salvar grupo" })).toBeDisabled();
     expect(screen.queryByText(/Luminárias — 20 unidades/)).toBeNull();
-    concluir([grupo]);
+    await act(async () => {
+      concluir([grupo]);
+      await revalidacao;
+    });
     expect(await screen.findByDisplayValue("Rascunho não salvo")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Salvar grupo" })).toBeEnabled();
   });
   it("impede iniciar edição com dados antigos durante atualização da lista", async () => {
     gateway.autorizarAcao.mockResolvedValue(true);

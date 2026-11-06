@@ -4,7 +4,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 set local app.auvo_sync_write = 'true';
-select plan(36);
+select plan(38);
 
 -- Bootstrap de identidades pelo provisionador oficial. O usuário administrativo cria
 -- a fixture via policies/RPCs normais; o segundo usuário é PCM escrita sem concessão.
@@ -152,6 +152,15 @@ drop function public.s166_v2_fail_selected_transition();
 set local role authenticated;
 select is((pcm.sso_confirmar_mudanca_dia_v2('16670000-0000-4000-8000-000000000001','16670000-0000-4000-8000-000000000301')->>'visitasMovidas')::int,501,'retry sem falha aplica todos os 501 itens');
 reset role;
+select is((select count(*)::int from pcm.sso_mudanca_dia_v2_itens i
+ join audit.events e on e.entity_id=i.visita_id and e.action='visita.editada'
+ where i.mudanca_id='16670000-0000-4000-8000-000000000301'
+   and (e.payload->'depois'->>'revisao')::int=i.revisao_visita+1
+   and e.payload ? 'antes' and e.payload ? 'depois'),501,'lote mantém auditoria individual com snapshots completos');
+select is((select count(*)::int from pcm.sso_mudanca_dia_v2_itens i
+ join pcm.visita_comandos c on c.payload->>'visitaId'=i.visita_id::text and c.payload->>'tipo'='editarVisita'
+ where i.mudanca_id='16670000-0000-4000-8000-000000000301'
+   and (c.resultado->>'revision')::int=i.revisao_visita+1),501,'lote mantém recibo idempotente individual por Visita');
 select set_config('app.s166_expected_receipt',
  (select recibo::text from pcm.sso_mudancas_dia_v2 where id='16670000-0000-4000-8000-000000000301'),true);
 set local role authenticated;

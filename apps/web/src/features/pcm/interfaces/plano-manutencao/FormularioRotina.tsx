@@ -63,7 +63,10 @@ function Seletor({
         : undefined,
     gcTime: 0,
   });
-  const disponiveis = !opcoes.isError && !opcoes.isPlaceholderData && !opcoes.isPending && !opcoes.isFetching;
+  // Durante um refetch da mesma chave, opções já carregadas continuam válidas para
+  // seleção. A autorização e a revisão são conferidas novamente no salvamento.
+  const disponiveis =
+    !opcoes.isError && !opcoes.isPlaceholderData && !opcoes.isPending && Boolean(opcoes.data);
   const itens = disponiveis ? (opcoes.data?.pages.flat() ?? []) : [];
   return (
     <div>
@@ -282,8 +285,7 @@ export function FormularioRotina({
       for (let i = 0; i < sessionStorage.length; i++) {
         const item = sessionStorage.key(i);
         if (
-          item &&
-          item.endsWith(sufixo) &&
+          item?.endsWith(sufixo) &&
           (item.startsWith("sso-rotina-") || item === `sso-plano-revisao${sufixo}`)
         ) {
           setErro(

@@ -1,12 +1,12 @@
 import { Button } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "../../../../lib/supabase-client";
 import { validarPlanoRascunho } from "../../application/plano-manutencao";
 import type { PlanoResumo, SalvarPlanoCommand } from "../../application/plano-manutencao-gateway";
 import { usePlanosManutencao } from "../../application/plano-manutencao-queries";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
-import { supabase } from "../../../../lib/supabase-client";
 import { AcoesRevisaoPlano } from "./AcoesRevisaoPlano";
 import { DetalhePlano } from "./DetalhePlano";
 import { TransicaoPlano } from "./TransicaoPlano";
@@ -235,9 +235,9 @@ function ConteudoPlanoManutencao({
       {!planos.isPending && !planos.isError && itens.length === 0 && (
         <p>Nenhum Plano de Manutenção para este Cliente.</p>
       )}
-      <ul hidden={consultaBloqueada}>
+      <ul>
         {itens.map((plano) => (
-          <li key={plano.id}>
+          <li key={plano.id} hidden={consultaBloqueada && plano.id !== edicaoRotinaId}>
             {plano.nome} — {plano.estado === "rascunho" ? "Rascunho" : plano.estado}
             <AcoesRevisaoPlano
               userId={userId}

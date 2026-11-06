@@ -1,6 +1,6 @@
 # Tasks — E01-S176: Hierarquia técnica, Sistemas distribuídos e Grupos Quantitativos
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** código, migrations e testes implementados; pgTAP integrado (21 assertions combinadas) e suíte web completa passaram. T016 permanece aberto para CI completa, E2E visual, revisão formal e homologação.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** código, migrations e testes implementados; fixture S176 (10 pgTAP assertions) passou no clone descartável. Correção T018 do seletor E2E foi implementada e aguarda validação integrada. T016 permanece aberto para CI completa, E2E visual, revisão formal e homologação.
 
 ## Phase 1 — Setup
 
@@ -35,8 +35,9 @@
 
 - [X] T014 Escrever teste de adapter e integração entre US em `apps/web/src/features/pcm/infrastructure/supabase-estrutura-tecnica-adapter.test.ts`; rollback e duas sessões concorrentes serão executados em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
 - [X] T015 Preparar jornada crítica e acesso negado com dois Clientes em `apps/web/e2e/estrutura-tecnica.spec.ts`; a negação de UI é simulada, autorização real fica coberta por pgTAP. A validação global/Cliente360 e execução estão em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
-- [ ] T016 Executar `specs/E01-S176-estrutura-tecnica-grupos/quickstart.md`, testes focados, eval:spec com seleção conferida, ci:local e revisão adversarial; registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): suíte SQL local completa passou (225 arquivos/2.892 assertions); revisão adversarial local não encontrou achados reproduzidos. E2E, CI GitHub e homologação permanecem pendentes.
+- [ ] T016 Executar `specs/E01-S176-estrutura-tecnica-grupos/quickstart.md`, testes focados, eval:spec com seleção conferida, ci:local e revisão adversarial; registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): a seleção pgTAP candidata passou 250 assertions no clone descartável; a CI local integrada ainda falhou em gates globais e testes. E2E, CI GitHub e homologação permanecem pendentes.
 - [X] T017 Ajustar asserção E2E de criação de Área, ampliar prazo e diagnosticar autorização/etapa de timeout na criação de Grupo; execução integrada permanece em T016.
+- [X] T018 Corrigir seleção E2E de Local para resolver a opção pelo caminho hierárquico completo (`Área / Local`) e selecionar pelo `value`; dividir diagnósticos de habilitação e seleção (AC-1, AC-2). Alteração não executada; validar junto do lote em T016.
 
 ## Dependencies & Execution Order
 

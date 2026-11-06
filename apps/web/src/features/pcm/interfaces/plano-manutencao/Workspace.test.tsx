@@ -56,6 +56,91 @@ function montar() {
     </QueryClientProvider>,
   );
 }
+
+it("mantém apenas o Plano em edição visível durante atualização da lista", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const planoId = "16500000-0000-4000-8000-000000000011";
+  let terminarRefetch!: (dados: unknown[]) => void;
+  api.autorizarAcao.mockResolvedValue(true);
+  api.listarPlanos
+    .mockResolvedValueOnce([
+      { id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 3 },
+      {
+        id: "16500000-0000-4000-8000-000000000012",
+        clienteId,
+        nome: "Outro Plano",
+        estado: "rascunho",
+        revisao: 1,
+      },
+    ])
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          terminarRefetch = resolve;
+        }),
+    );
+  api.listarVersoes.mockResolvedValue([
+    {
+      id: "versao",
+      planoId,
+      numero: 1,
+      estado: "rascunho",
+      vigenciaInicio: null,
+      vigenciaFim: null,
+    },
+  ]);
+  api.listarRotinas.mockResolvedValue([
+    {
+      id: "rotina",
+      planoId,
+      versaoId: "versao",
+      nome: "Inspeção",
+      alvoTipo: "sistema",
+      alvoId: "sistema",
+      alvoNome: "Extintores",
+      alvoAtivo: true,
+      modo: "calendario",
+      intervalo: 1,
+      unidade: "meses",
+      dataBase: "2026-11-01",
+      tempoMinutos: 45,
+      tipoTempo: "total",
+      toleranciaAntes: 0,
+      toleranciaDepois: 0,
+      instrucao: "Inspecionar",
+      questionarioId: null,
+      questionarioNome: null,
+    },
+  ]);
+  api.listarAlvos.mockResolvedValue([]);
+  render(
+    <QueryClientProvider client={client}>
+      <PlanoManutencaoWorkspace userId="usuario" clienteId={clienteId} clienteNome="Guainumbi" />
+    </QueryClientProvider>,
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Ver Rotinas de Preventivo" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Editar Rotina Inspeção" }));
+  expect(screen.getByLabelText("Nome da Rotina")).toBeVisible();
+  void client.invalidateQueries({ queryKey: planoManutencaoKeys.planos("usuario", clienteId) });
+  await waitFor(() => expect(api.listarPlanos).toHaveBeenCalledTimes(2));
+  expect(screen.getByLabelText("Nome da Rotina")).toBeVisible();
+  expect(
+    screen.getByRole("button", { name: "Ver Rotinas de Outro Plano", hidden: true }),
+  ).not.toBeVisible();
+  await act(async () =>
+    terminarRefetch([
+      { id: planoId, clienteId, nome: "Preventivo", estado: "rascunho", revisao: 3 },
+      {
+        id: "16500000-0000-4000-8000-000000000012",
+        clienteId,
+        nome: "Outro Plano",
+        estado: "rascunho",
+        revisao: 1,
+      },
+    ]),
+  );
+});
+
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();

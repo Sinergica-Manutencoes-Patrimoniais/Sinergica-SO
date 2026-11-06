@@ -8,7 +8,7 @@ alwaysApply: false
 
 **Data:** 2026-11-06  
 **Branch:** `codex/handoff-plano-manutencao`  
-**Estado:** implementação do lote escrita; suíte SQL automatizada local completa passou e revisões adversariais locais não encontraram achados reproduzidos; workflow GitHub, E2E visual, medição de capacidade S166, aprovação formal dos ADRs e homologação ainda bloqueiam merge.
+**Estado:** implementação do lote escrita; suíte SQL automatizada local anterior passou e revisões adversariais locais não encontraram achados reproduzidos. Alterações S166/S170/S176 registradas abaixo ainda não foram validadas. T016 permanece aberto; workflow GitHub, E2E visual, medição de capacidade, aprovação formal dos ADRs e homologação bloqueiam merge.
 
 ## Atualização após correções integradas — 2026-11-06
 
@@ -33,6 +33,15 @@ alwaysApply: false
 - Segunda rodada do commit `39ceece9`: S165 passou (`42248307771`); S166 confirmou `canceling statement due to statement timeout` em **8.011 ms** (`42248308170`); S170 mostrou a justificativa também no item HTML visível, mas o matcher não localizou o texto, e a jornada concedida expirou após 120 s ao abrir Rotinas (`42248309206`); S176 manteve o formulário montado, porém o seletor Local não ficou habilitado a tempo (`42248308347`).
 - Próxima correção de ensaio: S170 procura o item de histórico e marca cada transição para Rotinas; S176 espera a permissão revalidada antes de interagir com Local. S166 permanece fora do lote liberável até resolver capacidade do endpoint, sem aumentar timeout global nem remover atomicidade.
 - Terceira rodada preparada: S170 passou a asserção do histórico e alcançou o cadastro de Rotina, mas a jornada de concessão ainda expirou em 120 s ao abrir/preencher o formulário; cada campo agora tem marco e timeout limitado para apontar a operação exata. S176 mostrou o campo Local e as opções, mas o envio permaneceu desabilitado durante a revalidação; a última alteração mantém edição local e bloqueia apenas a gravação até a permissão ficar confirmada. Aguardar os runners dedicados antes de concluir.
+
+## Desenvolvimento após os workflows — 2026-11-06
+
+- Runs `42250895607` (S170) e `42250895744` (S176), ambos no commit `a5e589e2`, falharam nos fluxos visuais. Não foram repetidos após as alterações abaixo.
+- **S170:** o seletor de Alvo ficava desabilitado durante qualquer refetch, mesmo com opções da mesma chave já carregadas; a lista de Planos também ocultava o DOM inteiro durante atualização. A UI mantém opções carregadas e o Plano em edição visíveis enquanto atualiza a lista; oculta os demais Planos até a resposta. Autorização e revisão continuam revalidadas antes de gravar. Testes de seletor e workspace foram escritos, sem execução nesta etapa.
+- **S176:** a falha era no seletor E2E, não no controle. A opção exibia caminho completo `Torre / Salão`, mas o teste procurava somente o nome curto `Salão`. O teste agora localiza o sufixo do caminho e seleciona pelo valor da opção. Diagnósticos distinguem falha de habilitação de falha ao selecionar.
+- **S166:** o run `42248308170` confirmou que a confirmação de 501 Visitas excedeu o timeout PostgREST de 8.011 ms. ADR-1683 registra substituição das chamadas por Visita por atualização em conjunto numa transação, mantendo auditoria/snapshots, fuso da regra e comandos idempotentes por Visita. A migration aditiva `1828_E01-S166_confirmacao_em_lote.sql` preserva `1821`; dois assertions pgTAP cobrem a trilha individual. A migration não foi aplicada e nenhum teste foi executado.
+- Os pins dos runners S166/S176 foram atualizados para a migration aditiva, fixture revisada e seletor corrigido. Nenhum teste foi executado após esses ajustes; validar todo o lote junto, conforme solicitado.
+- S165 não recebeu alteração nesta rodada. Evidência remota existente é anterior ao `HEAD` atual; repetir S165 junto do lote final.
 
 ## Atualização dos E2E isolados — 2026-11-06
 
@@ -86,3 +95,12 @@ alwaysApply: false
 4. Homologar os critérios de aceite antes de qualquer merge.
 
 Os quatro checklists mantêm T016 aberto. Implementação escrita e testes focados verdes não equivalem a homologação.
+
+## Rodada integrada após os ajustes de 06/11/2026
+
+- `ci:local` executado duas vezes para o lote. `typecheck`, build, arquitetura e verificações de acessibilidade visual passaram. A última execução falhou nos gates globais: 81 reticências, 4 primitivas, 2.368 diagnósticos Biome, 474 achados Squawk em 42 migrations e 46 problemas de declaração de Edge Functions. A execução integrada completa não foi repetida após a suíte web ficar verde; esses gates continuam bloqueando `ci:local`.
+- A última suíte Vitest completa, com URL/chave Supabase sintéticas, passou: **490 arquivos e 2.755 testes**, com 6 arquivos e 20 testes ignorados. Ela valida a correção de sincronização de S176 e não acessa Supabase real. `eval:spec` também passou com AC→tasks 100% para as quatro stories; há 14 `SPEC_DEVIATION` abertos em áreas do repositório.
+- A seleção pgTAP do clone isolado para as quatro stories passou **250 assertions**: S170 12, S176 10, S165 183, S166 recorrência 7 e S166 confirmação em lote 38. Fixtures auxiliares 1804–1806 também passaram. Esse ensaio não mede capacidade acima do teto 500 e não substitui o `db-tests` da CI GitHub.
+- S170 e S176 receberam regressões de UI para refetch e seletor hierárquico; os hashes dos runners foram alinhados. O teste S170 passou naquela suíte; E2E visual das duas stories ainda não foi executado no runner dedicado.
+- Nenhum deploy, merge, operação em produção ou chamada real ao Auvo ocorreu. O banco Supabase local continua sem reset completo por falha histórica na migration 1274 (`LOCK TABLE can only be used in transaction blocks`).
+- Estado atual: implementação das quatro stories registrada; **T016 continua aberto nas quatro**. Para liberar merge, faltam resolver os gates globais do `ci:local`, executar E2E e `db-tests` no GitHub, medir capacidade e concorrência de S166, e concluir revisão formal/homologação.
