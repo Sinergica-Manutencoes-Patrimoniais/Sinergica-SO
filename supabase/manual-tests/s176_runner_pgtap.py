@@ -54,12 +54,19 @@ def executar(container, arquivos, sql, query, watchdog):
         try:
             resultado = subprocess.run(
                 ["rtk", "proxy", "docker", "exec", "-i", container, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-qAt"],
-                input=b"set search_path=public,extensions;\n" + dados, capture_output=True, timeout=180,
+                input=b"\\set VERBOSITY verbose\nset search_path=public,extensions;\n" + dados, capture_output=True, timeout=180,
             )
         except subprocess.TimeoutExpired:
             raise RuntimeError("Prazo excedido na fixture " + nome) from None
         if resultado.returncode:
-            raise RuntimeError("Erro SQL na fixture " + nome)
+            erro = resultado.stderr.decode(errors="replace")
+            estado = re.search(r"ERROR:\s+([0-9A-Z]{5}):", erro)
+            linha = re.search(r"(?m)^psql:<stdin>:(\d+):", erro)
+            codigo = estado.group(1) if estado else "não identificado"
+            categorias = {"23502": "campo obrigatório", "23503": "referência", "23505": "duplicidade", "23514": "regra de integridade", "42501": "permissão", "42702": "coluna ambígua", "42703": "coluna ausente", "42883": "função ausente", "42P01": "relação ausente", "P0001": "exceção SQL"}
+            categoria = categorias.get(codigo, "não classificada")
+            raise RuntimeError("Erro SQL na fixture " + nome + "; SQLSTATE " + codigo
+                + "; linha " + (linha.group(1) if linha else "não identificada") + "; categoria " + categoria)
         linhas = resultado.stdout.decode(errors="replace").splitlines()
         planos = [linha for linha in linhas if re.fullmatch(r"1\.\.\d+", linha)]
         testes = [linha for linha in linhas if re.match(r"^(?:not )?ok\b", linha)]
