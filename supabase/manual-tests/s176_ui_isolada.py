@@ -53,7 +53,13 @@ def _comando(args, *, data=None, timeout=180, watchdog=None):
         encerrado.set()
         vigia.join(timeout=2)
     if processo.returncode or (watchdog is not None and watchdog.is_set()):
-        raise RuntimeError("Bootstrap UI S176 falhou")
+        if any("playwright" in str(arg) for arg in args): etapa = "jornada Playwright"
+        elif any("vite" in str(arg) for arg in args): etapa = "build do app"
+        elif any(str(arg) == "tar" for arg in args): etapa = "cópia do checkout"
+        elif any(str(arg) == "node" for arg in args): etapa = "proxy ou teste de rede"
+        elif any(str(arg) == "mkdir" for arg in args): etapa = "preparo de diretórios"
+        else: etapa = "serviço auxiliar"
+        raise RuntimeError("Bootstrap UI S176 falhou na etapa " + etapa)
     return saida
 
 

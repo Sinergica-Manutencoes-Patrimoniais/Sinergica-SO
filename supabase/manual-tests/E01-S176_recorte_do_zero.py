@@ -180,7 +180,7 @@ def sql(data, label):
     if re.search(rb"(?im)^\s*(?:begin|commit|rollback)\s*;|^\s*(?:vacuum|create\s+database|alter\s+system)\b|\bcreate\s+(?:unique\s+)?index\s+concurrently\b", data):
         raise RuntimeError("Migration incompatível com transação única: " + label)
     try:
-        p = subprocess.run(["rtk", "proxy", "docker", "exec", "-i", CONTAINER, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "--single-transaction", "-q"], input=data, capture_output=True, timeout=180)
+        p = subprocess.run(["rtk", "proxy", "docker", "exec", "-i", CONTAINER, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "VERBOSITY=verbose", "-v", "ON_ERROR_STOP=1", "--single-transaction", "-q"], input=data, capture_output=True, timeout=180)
     except subprocess.TimeoutExpired:
         raise RuntimeError("Prazo da migration excedido: " + label) from None
     if p.returncode:
@@ -359,7 +359,7 @@ def main(opcoes):
         if hashlib.sha256(driver_s166.read_bytes()).hexdigest() != "170d80596ccea1b30d58beedccb5e17f2023c1064e0d700dd8e2eb502c9d42bf":
             raise RuntimeError("Driver fixture E2E S166 divergente")
         driver_fixture_s166 = ROOT / "supabase/manual-tests/s166_fixture_isolada.py"
-        if hashlib.sha256(driver_fixture_s166.read_bytes()).hexdigest() != "5fc3adcb3fdb0d6dc61c0e11da8657e10ca5e1da5115942c6809ecc61c482387":
+        if hashlib.sha256(driver_fixture_s166.read_bytes()).hexdigest() != "16f9f4289b9426a326476a1e766014d4a349f79f19017bc8345b96764b91cdf3":
             raise RuntimeError("Wrapper fixture E2E S166 divergente")
         import importlib.util
         spec_s166 = importlib.util.spec_from_file_location("s166_fixture_e2e", driver_s166)
@@ -421,7 +421,7 @@ def main(opcoes):
             proxy_s166 = s166_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s176_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s176_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "17a8c98913c52a3d388eea7f3bc7295ee98aebf08b89faa4cb2d1d7cb49642b1":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "d97c1190bdd32864fd92c82efe15e973f3215b184404eee5825ea9d5a30fc81c":
                 raise RuntimeError("Driver UI S176 divergente")
             import s176_ui_isolada
             proxy_s176 = s176_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
