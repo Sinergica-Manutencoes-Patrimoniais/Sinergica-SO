@@ -21,6 +21,10 @@ import threading
 import time
 from pathlib import Path
 
+# Drivers locais são importados durante o ensaio; não deixe __pycache__ sujar
+# o checkout que as jornadas UI precisam empacotar como HEAD limpo.
+sys.dont_write_bytecode = True
+
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-migrations.json"
 FOTOS = ROOT / "docs/planejamento/plano-manutencao/recorte-candidato-fotos-40e3c9f.json"
@@ -299,7 +303,7 @@ def main(opcoes):
     migracoes_s176_ui = []
     migracoes_s166_ui = []
     if opcoes.ui_s165_e2e or opcoes.fixtures_pgtap:
-        permitidas = {"github_hosted", "integracao_candidata", "fixture_s165_e2e", "ui_s165_e2e"}
+        permitidas = {"github_hosted", "integracao_candidata", "fixture_s165_e2e", "ui_s165_e2e", "aprovacao_1804"}
         if opcoes.ui_s165_e2e and (not opcoes.github_hosted or not opcoes.integracao_candidata or not opcoes.fixture_s165_e2e or any(
             valor is True and nome not in permitidas for nome, valor in vars(opcoes).items()
         )):
@@ -352,7 +356,7 @@ def main(opcoes):
         )):
             raise RuntimeError("Fixture E2E S166 não aceita outros cenários no mesmo clone")
         driver_s166 = ROOT / "apps/web/e2e/s166-isolado/fixture.py"
-        if hashlib.sha256(driver_s166.read_bytes()).hexdigest() != "64a8f43e5ba55fef8c1cf1645b15e3b15e1efecfe0df748ecd88fec05a4d034c":
+        if hashlib.sha256(driver_s166.read_bytes()).hexdigest() != "170d80596ccea1b30d58beedccb5e17f2023c1064e0d700dd8e2eb502c9d42bf":
             raise RuntimeError("Driver fixture E2E S166 divergente")
         driver_fixture_s166 = ROOT / "supabase/manual-tests/s166_fixture_isolada.py"
         if hashlib.sha256(driver_fixture_s166.read_bytes()).hexdigest() != "5fc3adcb3fdb0d6dc61c0e11da8657e10ca5e1da5115942c6809ecc61c482387":
@@ -363,7 +367,7 @@ def main(opcoes):
             raise RuntimeError("Driver fixture E2E S166 indisponível")
         modulo_s166 = importlib.util.module_from_spec(spec_s166)
         spec_s166.loader.exec_module(modulo_s166)
-        fixture_s166 = modulo_s166.preparar(ROOT, "38cf454adc889f1a7ec92288338f98a5000d1d0069bc0698958ff7525266aba5")
+        fixture_s166 = modulo_s166.preparar(ROOT, "894fb4c9ef50fdddf4aeec2f108a7699e887cda7eef149a6f4d146b512242827")
     if opcoes.ui_s166_e2e and not opcoes.fixture_s166_e2e:
         raise RuntimeError("UI S166 exige fixture persistente S166")
     if opcoes.fixture_s170_e2e:
@@ -405,7 +409,7 @@ def main(opcoes):
             proxy_s165 = s165_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s170_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s170_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "7b9f28a6c5de9fb8a7889d20928606eba629b6e8fbea42a77844475f9b298141":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "a2734eb57108eea942ac28142a3946c1116714bcf241eaaad5e159196b1f51bb":
                 raise RuntimeError("Driver UI S170 divergente")
             import s170_ui_isolada
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
@@ -424,7 +428,7 @@ def main(opcoes):
     if opcoes.fixture_s165_e2e:
         proibidas_s165 = ("diagnostico_ac5", "isolamento_1810", "fixtures_pgtap", "fixtures_pgtap_ci",
                           "jornada_ac5_http", "concorrencia_1810", "concorrencia_parcial",
-                          "aprovacao_1804", "aprovacao_1805", "aprovacao_1806", "revisao_1807",
+                          "aprovacao_1805", "aprovacao_1806", "revisao_1807",
                           "consulta_1808", "concorrencia_1805", "concorrencia_1807",
                           "aprovacao_1805_pos_commit", "upload_1811", "documento_1812",
                           "hierarquia_1813", "policies_1814", "dispatch_1815", "gates_1816",
@@ -824,6 +828,25 @@ def main(opcoes):
             blobs.append((caminho, dados))
             names.append(caminho)
     if aprovacao_1804 is not None:
+        # A 1804 sucede a ingestão de fotos S176 no histórico global. O recorte
+        # S165 parte da base 1800–1801, então aplica também 1802–1803 antes dela.
+        for caminho, digest in (
+            ("supabase/migrations/1802_E01-S176_foto_cadastral_grupo_mediada.sql", "7756cb70c7491583b1a279b0ad5dcfee24244df3b5bcf9f284533f8a07374e24"),
+            ("supabase/migrations/1803_E01-S176_ingestao_foto_cadastral_grupo.sql", "cf0228021475f55810bed334dd6b60918a58ace3c68e944bb9abbb01f4171747"),
+        ):
+            numero = Path(caminho).name[:4]
+            existentes = [p for p in base_files + names if Path(p).name[:4] == numero]
+            if existentes:
+                if existentes != [caminho]:
+                    raise RuntimeError("Migration S176 duplicada no recorte S165: " + numero)
+                continue
+            dados = (ROOT / caminho).read_bytes()
+            if hashlib.sha256(dados).hexdigest() != digest:
+                raise RuntimeError("Hash da migration S176 predecessora divergente: " + numero)
+            if not names or names[-1] >= caminho:
+                raise RuntimeError("Ordem da migration S176 predecessora inválida: " + numero)
+            blobs.append((caminho, dados))
+            names.append(caminho)
         if sum(Path(p).name.startswith("1803_") for p in names) != 1 or any(Path(p).name.startswith("1804_") for p in base_files + names):
             raise RuntimeError("Ordem ou duplicidade da migration 1804")
         if names[-1] >= s165_aprovacao_1804_isolada.MIGRATION:
