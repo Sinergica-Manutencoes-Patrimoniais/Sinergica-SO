@@ -22,7 +22,7 @@ def preparar(root, esperado):
     if hashlib.sha256(proxy).hexdigest() != esperado:
         raise RuntimeError("Proxy S170 divergente")
     for caminho, digest in (
-        ("apps/web/e2e/capacidades-sso.spec.ts", "8fbec3fbaf49a914ea0dbb5a162d7eb9d8493c641c43bcfe64458fd773949182"),
+        ("apps/web/e2e/capacidades-sso.spec.ts", "5e4eaaaebeb87cce6c5e94d089a0101fd8222ac66717ff0e466d21c4772cc2f5"),
         ("apps/web/playwright.s170-isolado.config.ts", "42f93c2fc44d26760a8fca6949754717995f25e566f71644f2f7ce88ca0ea1ab"),
     ):
         if hashlib.sha256((root / caminho).read_bytes()).hexdigest() != digest:
@@ -73,9 +73,10 @@ def _resumo_playwright(saida):
                         titulo = str(spec.get("title", "teste sem título"))
                         resultado_falha = next((resultado for teste in testes for resultado in teste.get("results", [])
                                                 if resultado.get("status") in {"failed", "timedOut", "interrupted"}), {})
-                        etapa = next((str(anotacao.get("description", "")) for teste in testes
-                                      for anotacao in (teste.get("annotations", []) + resultado_falha.get("annotations", []))
-                                      if anotacao.get("type") == "s170-etapa"), "")
+                        anotacoes = [anotacao for teste in testes
+                                     for anotacao in teste.get("annotations", []) + resultado_falha.get("annotations", [])
+                                     if anotacao.get("type") in {"s170-etapa", "s170-rpc"}]
+                        diagnostico = "; ".join(f"{anotacao.get('type')}={anotacao.get('description', '')}" for anotacao in anotacoes)
                         local = resultado_falha.get("error", {}).get("location", {})
                         mensagem = resultado_falha.get("error", {}).get("message", "")
                         linhas = [" ".join(linha.split()) for linha in str(mensagem).splitlines()[:3] if linha.strip()]
@@ -86,7 +87,7 @@ def _resumo_playwright(saida):
                         linha = local.get("line", "?")
                         falhas.append("".join(c for c in titulo if c.isalnum() or c in " _-.")[:100]
                                       + (" (" + arquivo + ":" + str(linha) + ")" if arquivo else "")
-                                      + (" [etapa=" + etapa + "]" if etapa else "")
+                                      + (" [" + diagnostico + "]" if diagnostico else "")
                                       + (" — " + detalhe if detalhe else ""))
                 visitar(suite.get("suites", []))
         visitar(relatorio.get("suites", []))

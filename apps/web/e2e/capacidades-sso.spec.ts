@@ -30,11 +30,12 @@ function conferirBanco(valor: string): void {
       || url.hostname !== `sso-recorte-${id}-db` || url.username || url.password || url.search || url.hash)
     throw new Error("Banco do ensaio S170 não corresponde ao clone atestado");
 }
-function marcarEtapaS170(etapa: string) {
-  const marcacao = test.info().annotations.find((item) => item.type === "s170-etapa");
-  if (marcacao) marcacao.description = etapa;
-  else test.info().annotations.push({ type: "s170-etapa", description: etapa });
+function marcarDiagnosticoS170(tipo: string, descricao: string) {
+  const marcacao = test.info().annotations.find((item) => item.type === tipo);
+  if (marcacao) marcacao.description = descricao;
+  else test.info().annotations.push({ type: tipo, description: descricao });
 }
+const marcarEtapaS170 = (etapa: string) => marcarDiagnosticoS170("s170-etapa", etapa);
 // Se uma origem for fornecida, rejeitar destino externo mesmo quando faltarem outras variáveis.
 if (cfg.app) local(cfg.app);
 if (cfg.api) local(cfg.api);
@@ -55,6 +56,24 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
   conferirBanco(cfg.banco!);
   if (!caminho!.startsWith("/") || caminho!.startsWith("//") || new URL(caminho!, app).origin !== app)
     throw new Error("Caminho do retorno isolado inválido");
+  const respostasRpc: string[] = [];
+  page.on("response", async (response) => {
+    const url = new URL(response.url());
+    if (!url.pathname.startsWith("/rest/v1/rpc/sso_")) return;
+    let codigo = "ok";
+    if (!response.ok()) {
+      try { codigo = String((await response.json())?.code ?? "erro").slice(0, 24); } catch { codigo = "erro"; }
+    }
+    respostasRpc.push(`${url.pathname.split("/").pop()}:${response.status()}:${codigo}`);
+    marcarDiagnosticoS170("s170-rpc", respostasRpc.slice(-4).join(","));
+  });
+  page.on("requestfailed", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/rest/v1/rpc/sso_")) {
+      respostasRpc.push(`${url.pathname.split("/").pop()}:falha-rede`);
+      marcarDiagnosticoS170("s170-rpc", respostasRpc.slice(-4).join(","));
+    }
+  });
   await page.routeWebSocket("**/*", (socket) => socket.close());
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());

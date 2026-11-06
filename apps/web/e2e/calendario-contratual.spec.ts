@@ -58,11 +58,12 @@ async function abrirPreventivas(page: Page, cliente: string) {
 }
 
 test.use({ storageState: { cookies: [], origins: [] } });
-function marcarEtapa(etapa: string) {
-  const marcacao = test.info().annotations.find((item) => item.type === "s166-etapa");
-  if (marcacao) marcacao.description = etapa;
-  else test.info().annotations.push({ type: "s166-etapa", description: etapa });
+function marcarDiagnostico(tipo: string, descricao: string) {
+  const marcacao = test.info().annotations.find((item) => item.type === tipo);
+  if (marcacao) marcacao.description = descricao;
+  else test.info().annotations.push({ type: tipo, description: descricao });
 }
+const marcarEtapa = (etapa: string) => marcarDiagnostico("s166-etapa", etapa);
 
 test("revisa e confirma fotografia completa de 501 Visitas no clone sintético", async ({ page }) => {
   test.setTimeout(120_000);
@@ -80,13 +81,35 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
   await regra.getByLabel("Novo dia").first().selectOption(cfg.diaNovo!);
   await regra.getByLabel("Vigência").first().fill(cfg.vigencia!);
   const lote = regra.getByRole("region", { name: "Alteração de dia contratual em lote" });
-  marcarEtapa("iniciar e retomar fotografia");
-  await lote.getByRole("button", { name: "Preparar fotografia completa das Visitas" }).click();
-  await lote.getByRole("button", { name: /Retomar fotografia/ }).click();
+  const respostasFotografia: string[] = [];
+  page.on("response", async (response) => {
+    const endpoint = new URL(response.url()).pathname.split("/").pop() ?? "";
+    if (!new Set(["sso_iniciar_mudanca_dia_v2", "sso_pagina_mudanca_dia_v2"]).has(endpoint)) return;
+    let codigo = "ok";
+    if (!response.ok()) {
+      try { codigo = String((await response.json())?.code ?? "erro").slice(0, 24); } catch { codigo = "erro"; }
+    }
+    respostasFotografia.push(`${endpoint}:${response.status()}:${codigo}`);
+    marcarDiagnostico("s166-rpc", respostasFotografia.slice(-3).join(","));
+  });
+  page.on("requestfailed", (request) => {
+    const endpoint = new URL(request.url()).pathname.split("/").pop() ?? "";
+    if (["sso_iniciar_mudanca_dia_v2", "sso_pagina_mudanca_dia_v2"].includes(endpoint)) {
+      respostasFotografia.push(`${endpoint}:falha-rede`);
+      marcarDiagnostico("s166-rpc", respostasFotografia.slice(-3).join(","));
+    }
+  });
+  marcarEtapa("iniciar fotografia");
+  await lote.getByRole("button", { name: "Preparar fotografia completa das Visitas" }).click({ timeout: 10_000 });
+  marcarEtapa("aguardar disponibilidade de Retomar fotografia");
+  const retomar = lote.getByRole("button", { name: /Retomar fotografia/ });
+  await expect(retomar).toBeVisible({ timeout: 15_000 });
+  marcarEtapa("carregar primeira página da fotografia");
+  await retomar.click({ timeout: 10_000 });
 
   let paginas = 0;
   while (paginas < 20) {
-    marcarEtapa(`revisar página ${paginas + 1}`);
+    marcarEtapa(`aguardar e revisar página ${paginas + 1}`);
     const estadoPagina = lote.getByText(/^Página \d+ ·/);
     await expect(estadoPagina).toBeVisible();
     const numero = Number((await estadoPagina.innerText()).match(/^Página (\d+)/)?.[1]);

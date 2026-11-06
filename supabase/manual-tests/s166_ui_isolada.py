@@ -22,7 +22,7 @@ def preparar(root, esperado):
     if hashlib.sha256(proxy).hexdigest() != esperado:
         raise RuntimeError("Proxy S166 divergente")
     for caminho, digest in (
-        ("apps/web/e2e/calendario-contratual.spec.ts", "5711e8d032690e5168c70c1f8b119e0d92918319b102daf2c6847cab4664b328"),
+        ("apps/web/e2e/calendario-contratual.spec.ts", "54b4fa47cafa2fa22f89fda26b0861b551b3b3cd20683a6e62dc8b12d68721d1"),
         ("apps/web/playwright.s166-isolado.config.ts", "797b227714116086ba3ee45ceed84dbb28bb07aa6823633dd72bf3e93a2f5fa0"),
     ):
         if hashlib.sha256((root / caminho).read_bytes()).hexdigest() != digest:
@@ -74,16 +74,17 @@ def _resumo_playwright(saida):
                     if resultados:
                         local = resultados[0].get("error", {}).get("location", {})
                         mensagem = resultados[0].get("error", {}).get("message", "")
-                        etapa = next((str(anotacao.get("description", "")) for teste in testes
-                                      for anotacao in teste.get("annotations", []) + resultados[0].get("annotations", [])
-                                      if anotacao.get("type") == "s166-etapa"), "")
+                        anotacoes = [anotacao for teste in testes
+                                     for anotacao in teste.get("annotations", []) + resultados[0].get("annotations", [])
+                                     if anotacao.get("type") in {"s166-etapa", "s166-rpc"}]
+                        diagnostico = "; ".join(f"{anotacao.get('type')}={anotacao.get('description', '')}" for anotacao in anotacoes)
                         linhas = [" ".join(linha.split()) for linha in str(mensagem).splitlines()[:3] if linha.strip()]
                         detalhe = " | ".join(re.sub(r"https?://[^\s\"'<>]+", "<url>", re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "<email>", linha)) for linha in linhas)[:240]
                         detalhe = re.sub(r"(?i)(password|senha|token|authorization|anon[_ -]?key)(?:\s*[:=]\s*)\S+", r"\1=<redacted>", detalhe)
                         detalhe = re.sub(r"\b[0-9a-f]{8}-[0-9a-f-]{27,}\b", "<id>", detalhe, flags=re.I)
                         arquivo = str(local.get("file", "")).split("/")[-1]
                         titulo = "".join(c for c in str(spec.get("title", "teste")) if c.isalnum() or c in " _-.")[:100]
-                        falhas.append(titulo + (" (" + arquivo + ":" + str(local.get("line", "?")) + ")" if arquivo else "") + (" [etapa=" + etapa + "]" if etapa else "") + (" — " + detalhe if detalhe else ""))
+                        falhas.append(titulo + (" (" + arquivo + ":" + str(local.get("line", "?")) + ")" if arquivo else "") + (" [" + diagnostico + "]" if diagnostico else "") + (" — " + detalhe if detalhe else ""))
                 visitar(suite.get("suites", []))
         visitar(relatorio.get("suites", []))
         return "Playwright expected=" + str(stats.get("expected", "?")) + ", unexpected=" + str(stats.get("unexpected", "?")) + ("; falhas: " + ", ".join(falhas[:5]) if falhas else "")
