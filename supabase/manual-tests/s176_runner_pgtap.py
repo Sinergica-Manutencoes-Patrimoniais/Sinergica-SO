@@ -65,8 +65,13 @@ def executar(container, arquivos, sql, query, watchdog):
             codigo = estado.group(1) if estado else "não identificado"
             categorias = {"23502": "campo obrigatório", "23503": "referência", "23505": "duplicidade", "23514": "regra de integridade", "42501": "permissão", "42702": "coluna ambígua", "42703": "coluna ausente", "42883": "função ausente", "42P01": "relação ausente", "P0001": "exceção SQL"}
             categoria = categorias.get(codigo, "não classificada")
+            pontos = re.findall(r"(?m)^(?:not )?ok\s+(\d+)\b", resultado.stdout.decode(errors="replace"))
+            ultimo = pontos[-1] if pontos else "nenhum"
+            funcoes = ("fn_criar_contrato", "fn_ativar_contrato", "fn_encerrar_contrato", "fn_criar_plano_faturamento")
+            funcao = next((f for f in funcoes if re.search(r"(?i)PL/pgSQL function (?:comercial|financeiro)\." + re.escape(f) + r"\(", erro)), "não classificada")
             raise RuntimeError("Erro SQL na fixture " + nome + "; SQLSTATE " + codigo
-                + "; linha " + (linha.group(1) if linha else "não identificada") + "; categoria " + categoria)
+                + "; linha " + (linha.group(1) if linha else "não identificada") + "; categoria " + categoria
+                + "; último TAP " + ultimo + "; função " + funcao)
         linhas = resultado.stdout.decode(errors="replace").splitlines()
         planos = [linha for linha in linhas if re.fullmatch(r"1\.\.\d+", linha)]
         testes = [linha for linha in linhas if re.match(r"^(?:not )?ok\b", linha)]
