@@ -398,10 +398,7 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     marcarEtapaS170("selecionar tipo de alvo");
     await formulario.getByLabel("Tipo de alvo").selectOption("sistema", { timeout: 15_000 });
     marcarEtapaS170("selecionar alvo da Rotina");
-    const seletorAlvo = formulario
-      .locator("label")
-      .filter({ hasText: /^Alvo da Rotina\s*$/ })
-      .locator("select");
+    const seletorAlvo = formulario.locator("select[required]");
     try {
       await expect
         .poll(
