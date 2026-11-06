@@ -17,7 +17,7 @@ def preparar(root, sha256):
         raise RuntimeError("Fixture S166 indisponível")
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
-    return modulo.preparar(root, "894fb4c9ef50fdddf4aeec2f108a7699e887cda7eef149a6f4d146b512242827")
+    return modulo.preparar(root, "c8602260b2028201249663bd42ebebe3a6e6034f7c2e9d35f02e5af7155072eb")
 
 
 def executar(sql, query, inspect, ident, network, containers, fixture, watchdog):

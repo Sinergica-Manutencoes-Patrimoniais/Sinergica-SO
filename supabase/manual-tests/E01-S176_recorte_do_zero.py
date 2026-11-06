@@ -382,7 +382,7 @@ def main(opcoes):
         if hashlib.sha256(driver_s166.read_bytes()).hexdigest() != "170d80596ccea1b30d58beedccb5e17f2023c1064e0d700dd8e2eb502c9d42bf":
             raise RuntimeError("Driver fixture E2E S166 divergente")
         driver_fixture_s166 = ROOT / "supabase/manual-tests/s166_fixture_isolada.py"
-        if hashlib.sha256(driver_fixture_s166.read_bytes()).hexdigest() != "16f9f4289b9426a326476a1e766014d4a349f79f19017bc8345b96764b91cdf3":
+        if hashlib.sha256(driver_fixture_s166.read_bytes()).hexdigest() != "361af7b09fd2a385b632a3b5e989e84cfc04ec1ec0e61ea36071004a0b5dc5b0":
             raise RuntimeError("Wrapper fixture E2E S166 divergente")
         import importlib.util
         spec_s166 = importlib.util.spec_from_file_location("s166_fixture_e2e", driver_s166)
@@ -390,7 +390,7 @@ def main(opcoes):
             raise RuntimeError("Driver fixture E2E S166 indisponível")
         modulo_s166 = importlib.util.module_from_spec(spec_s166)
         spec_s166.loader.exec_module(modulo_s166)
-        fixture_s166 = modulo_s166.preparar(ROOT, "894fb4c9ef50fdddf4aeec2f108a7699e887cda7eef149a6f4d146b512242827")
+        fixture_s166 = modulo_s166.preparar(ROOT, "c8602260b2028201249663bd42ebebe3a6e6034f7c2e9d35f02e5af7155072eb")
     if opcoes.ui_s166_e2e and not opcoes.fixture_s166_e2e:
         raise RuntimeError("UI S166 exige fixture persistente S166")
     if opcoes.fixture_s170_e2e:
