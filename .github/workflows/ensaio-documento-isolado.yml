@@ -43,7 +43,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          deno cache --frozen --lock=deno.lock --node-modules-dir=none supabase/functions/pcm-documento-staging-ativo-seguro/index.ts
+          printf '%s  %s\n' de336bac6a7a07a2eb903a185b1004951714134a20cea543e2f35cea4aabde06 apps/web/e2e/s178-documento-isolado/import-map.json | sha256sum --check --status
+          printf '%s  %s\n' c38da5dd6da6281964435002ce204cd586634fe3bdfb24a0ee116f48cf3292e9 apps/web/e2e/s178-documento-isolado/vendor/tslib-2.8.1.mjs | sha256sum --check --status
+          deno cache --frozen --lock=deno.lock --import-map=apps/web/e2e/s178-documento-isolado/import-map.json --node-modules-dir=none supabase/functions/pcm-documento-staging-ativo-seguro/index.ts
       - name: Preparar imagens imutáveis
         shell: bash
         run: |

@@ -224,6 +224,8 @@ def main(opcoes):
         for nome, digest in (
             ("apps/web/e2e/s178-documento-isolado/gateway.ts", "796c0f5bf7cae7248eecd9949cc7b524dfd05b7a73456b62a1b2143fcefa3e8e"),
             ("apps/web/e2e/s178-documento-isolado/jornada.py", "a883b107ea639cd02a2cd693421f10c5a365473ce7dfd3118b6935b37abe6050"),
+            ("apps/web/e2e/s178-documento-isolado/import-map.json", "de336bac6a7a07a2eb903a185b1004951714134a20cea543e2f35cea4aabde06"),
+            ("apps/web/e2e/s178-documento-isolado/vendor/tslib-2.8.1.mjs", "c38da5dd6da6281964435002ce204cd586634fe3bdfb24a0ee116f48cf3292e9"),
         ):
             if hashlib.sha256((ROOT / nome).read_bytes()).hexdigest() != digest:
                 raise RuntimeError("Arquivo de ensaio Edge divergente: " + nome)
@@ -918,7 +920,7 @@ end; $$;"""
             with tempfile.TemporaryDirectory(prefix="sso-documento-bundle-") as temporario:
                 bundle = Path(temporario) / "index.ts"
                 try:
-                    compilacao = subprocess.run(["deno", "bundle", "--deny-import", "--frozen", "--lock", str(ROOT / "deno.lock"), "--node-modules-dir=none", "-o", str(bundle), str(ROOT / "supabase/functions/pcm-documento-staging-ativo-seguro/index.ts")], capture_output=True, timeout=120)
+                    compilacao = subprocess.run(["deno", "bundle", "--deny-import", "--frozen", "--lock", str(ROOT / "deno.lock"), "--import-map", str(ROOT / "apps/web/e2e/s178-documento-isolado/import-map.json"), "--node-modules-dir=none", "-o", str(bundle), str(ROOT / "supabase/functions/pcm-documento-staging-ativo-seguro/index.ts")], capture_output=True, timeout=120)
                 except subprocess.TimeoutExpired: raise RuntimeError("Prazo de compilação Edge excedido") from None
                 if compilacao.returncode or not bundle.is_file(): raise RuntimeError("Bundle Edge indisponível sem rede")
                 iniciar_plataforma(GATEWAY_CONTAINER, EDGE_IMAGE, gateway_env, ["start", "--main-service", "/tmp", "--port", "9000"], gateway_path)
