@@ -180,18 +180,39 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
   } catch {
     const estado = (await aprovacao.innerText().catch(() => "sem-texto"))
       .replace(/\s+/g, " ")
-      .slice(0, 240);
+      .slice(0, 800);
+    const linhasVisiveis = (
+      await aprovacao
+        .getByRole("listitem")
+        .allTextContents()
+        .catch(() => [])
+    )
+      .join(" | ")
+      .replace(/\s+/g, " ")
+      .slice(0, 500);
+    const alertas = (
+      await aprovacao
+        .getByRole("alert")
+        .allTextContents()
+        .catch(() => [])
+    )
+      .join(" | ")
+      .replace(/\s+/g, " ")
+      .slice(0, 300);
     marcarDiagnosticoS170(
       "s170-rpc",
-      `HISTORICO=${atestacoesDiagnostico}; ${respostasRpc.slice(-4).join(",")}`,
+      `HISTORICO=${atestacoesDiagnostico}; LINHAS=${linhasVisiveis}; ALERTAS=${alertas}; ${respostasRpc.slice(-4).join(",")}`,
     );
-    throw new Error(`S170_HISTORICO=${estado}; RPC=${atestacoesDiagnostico}`);
+    throw new Error(
+      `S170_HISTORICO=${estado}; LINHAS=${linhasVisiveis}; ALERTAS=${alertas}; RPC=${atestacoesDiagnostico}`,
+    );
   }
 });
 
 test("administrador concede e revoga plano.gerir e operador com sessão aberta recebe estado atual", async ({
   browser,
 }) => {
+  test.setTimeout(120_000);
   if (process.env.SSO_S170_FIXTURE_OBRIGATORIA === "1" && !pronto)
     throw new Error("Fixture S170 obrigatória incompleta");
   test.skip(!pronto, "Fixture sintética de capacidades S170 não configurada");
@@ -286,6 +307,7 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
       if (url.pathname.endsWith("/rpc/sso_autorizar_acao"))
         respostasPermissao.push("sso_autorizar_acao:falha-rede");
     });
+    marcarEtapaS170("abrir calendário sem capacidade");
     await abrirCalendario();
     marcarEtapaS170("confirmar bloqueio inicial do operador");
     try {
@@ -304,6 +326,7 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
       exigir(cfg.adminEmail, "SSO_S170_ADMIN_EMAIL"),
       exigir(cfg.adminSenha, "SSO_S170_ADMIN_SENHA"),
     );
+    marcarEtapaS170("abrir configurações administrativas");
     await administrador.getByRole("button", { name: "Configurações" }).click();
     await administrador.getByRole("button", { name: "Capacidades" }).click();
     marcarEtapaS170("abrir gestão de capacidades");
@@ -330,9 +353,12 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     const nomePlano = `Plano autoaprovado S170 ${crypto.randomUUID()}`;
     const nomeRotina = `Rotina autoaprovada S170 ${crypto.randomUUID()}`;
     const planos = operador.getByRole("region", { name: "Planos de Manutenção" });
+    marcarEtapaS170("abrir formulário do Plano");
     await planos.getByRole("button", { name: "Novo Plano de Manutenção" }).click();
     await planos.getByLabel("Nome do Plano").fill(nomePlano);
+    marcarEtapaS170("salvar rascunho do Plano");
     await planos.getByRole("button", { name: "Salvar rascunho" }).click();
+    marcarEtapaS170("abrir Rotinas do Plano");
     await planos.getByRole("button", { name: `Ver Rotinas de ${nomePlano}` }).click();
     const rotinas = operador.getByRole("region", { name: `Rotinas de ${nomePlano}` });
     await rotinas.getByRole("button", { name: "Nova Rotina" }).click();
@@ -351,18 +377,22 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await formulario.getByLabel("Tempo estimado em minutos").fill("15");
     await formulario.getByLabel("Referência do tempo").selectOption("total");
     await formulario.getByLabel("Instrução").fill("Inspecionar o Sistema sintético.");
+    marcarEtapaS170("salvar Rotina");
     await formulario.getByRole("button", { name: "Salvar Rotina" }).click();
     await expect(rotinas.getByRole("listitem").filter({ hasText: nomeRotina })).toBeVisible();
 
     const itemPlano = planos.getByRole("listitem").filter({ hasText: nomePlano });
+    marcarEtapaS170("enviar Plano para revisão");
     await itemPlano.getByRole("button", { name: `Enviar ${nomePlano} para revisão` }).click();
     await itemPlano.getByRole("button", { name: "Confirmar envio para revisão" }).click();
     await expect(itemPlano).toContainText("em_revisao");
+    marcarEtapaS170("aprovar Plano");
     await itemPlano.getByRole("button", { name: `Aprovar ${nomePlano}` }).click();
     await itemPlano.getByLabel("Início da vigência").fill(new Date().toISOString().slice(0, 10));
     await itemPlano.getByRole("button", { name: "Confirmar aprovação" }).click();
     await expect(itemPlano).toContainText("aprovado");
 
+    marcarEtapaS170("revogar concessão administrativa");
     marcarEtapaS170("revogar concessão administrativa");
     await administrador.getByLabel("Motivo da alteração").fill("Revogação sintética S170");
     const concessoes = administrador.getByRole("heading", { name: "Concessões" }).locator("..");

@@ -148,6 +148,11 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
   await regra.getByLabel("Vigência").first().fill(exigir(cfg.vigencia, "SSO_S166_VIGENCIA"));
   const lote = regra.getByRole("region", { name: "Alteração de dia contratual em lote" });
   const respostasFotografia: string[] = [];
+  let inicioConfirmacao = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname.endsWith("/sso_confirmar_mudanca_dia_v2"))
+      inicioConfirmacao = Date.now();
+  });
   page.on("response", async (response) => {
     const endpoint = new URL(response.url()).pathname.split("/").pop() ?? "";
     if (
@@ -160,14 +165,20 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
     )
       return;
     let codigo = "ok";
+    let detalhe = "";
     try {
       const corpo = await response.json();
-      if (!response.ok()) codigo = String(corpo?.code ?? "erro").slice(0, 24);
+      if (!response.ok()) {
+        codigo = String(corpo?.code ?? "erro").slice(0, 24);
+        detalhe = String(corpo?.message ?? corpo?.details ?? corpo?.hint ?? "")
+          .replace(/\s+/g, " ")
+          .slice(0, 90);
+      }
       if (endpoint === "sso_confirmar_mudanca_dia_v2") {
         codigo =
-          `${codigo}:movidas=${corpo?.visitasMovidas ?? corpo?.visitas_movidas ?? "?"}`.slice(
+          `${codigo}:movidas=${corpo?.visitasMovidas ?? corpo?.visitas_movidas ?? "?"}:ms=${inicioConfirmacao ? Date.now() - inicioConfirmacao : "?"}:msg=${detalhe}`.slice(
             0,
-            60,
+            180,
           );
       }
     } catch {

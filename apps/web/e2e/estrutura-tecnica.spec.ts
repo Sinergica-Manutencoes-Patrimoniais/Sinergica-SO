@@ -217,7 +217,26 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   marcarEtapa("preencher quantidade do grupo");
   await grupos.getByLabel("Quantidade").fill("20", { timeout: 5_000 });
   marcarEtapa("selecionar Local do grupo");
-  await grupos.getByLabel("Local").selectOption({ label: nomeLocal }, { timeout: 5_000 });
+  try {
+    await grupos.getByLabel("Local").selectOption({ label: nomeLocal }, { timeout: 5_000 });
+  } catch {
+    const texto = (await grupos.innerText().catch(() => "sem-texto"))
+      .replace(/\s+/g, " ")
+      .slice(0, 360);
+    const locaisDisponiveis = await grupos
+      .getByLabel("Local")
+      .locator("option")
+      .allTextContents()
+      .catch(() => []);
+    throw new Error(
+      `S176_LOCAL=${texto}; SELECTS=${await grupos
+        .getByLabel("Local")
+        .count()
+        .catch(
+          () => 0,
+        )}; OPTIONS=${locaisDisponiveis.join("|")}; AUTORIZAÇÃO=${respostasPermissao.slice(-6).join(",")}`,
+    );
+  }
   marcarEtapa("carregar categorias do grupo");
   const categoria = grupos.getByLabel("Categoria");
   try {
