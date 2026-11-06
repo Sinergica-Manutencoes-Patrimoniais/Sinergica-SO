@@ -23,7 +23,7 @@ Deno.serve({ port: 9000 }, async (req) => {
   if (!destino || !/^http:\/\/sso-recorte-[0-9a-f]{12}-(auth|rest|storage):[0-9]+$/.test(destino)) return new Response(null, { status: 503 });
   try {
     const resposta = await fetch(new Request(new URL(url.pathname.slice(prefixo.length) + url.search, `${destino}/`), req), { redirect: "error", signal: AbortSignal.timeout(30000) });
-    if (armado && prefixo === "/storage/v1/" && url.pathname.startsWith("/storage/v1/object/authenticated/sso-levantamento-documentos/") && req.method === "GET" && resposta.ok) {
+    if (armado && prefixo === "/storage/v1/" && ["/storage/v1/object/authenticated/sso-levantamento-documentos/", "/storage/v1/object/authenticated/sso-levantamento-fotos/"].some((p) => url.pathname.startsWith(p)) && req.method === "GET" && resposta.ok) {
       armado = false; aguardando = true;
       try { await Promise.race([new Promise<void>((resolve) => { liberar = resolve; }), new Promise<never>((_, reject) => setTimeout(() => reject(new Error("barreira expirada")), 15000))]); }
       finally { aguardando = false; liberar = undefined; }

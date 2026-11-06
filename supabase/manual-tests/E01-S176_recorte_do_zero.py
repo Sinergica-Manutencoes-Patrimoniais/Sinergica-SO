@@ -40,6 +40,7 @@ REST_CONTAINER = NETWORK + "-rest"
 STORAGE_CONTAINER = NETWORK + "-storage"
 GATEWAY_CONTAINER = NETWORK + "-gateway"
 EDGE_CONTAINER = NETWORK + "-edge"
+FOTOS_CONTAINERS = {"sistema": NETWORK + "-foto-ativo", "grupo": NETWORK + "-foto-grupo", "equipamento": NETWORK + "-foto-equipamento"}
 created_net = created_container = False
 initial_volumes = None
 space_before = None
@@ -218,12 +219,18 @@ def main(opcoes):
     if opcoes.github_hosted:
         docker_raiz_github = preparar_github_hosted()
         print('Modo GitHub opt-in: reserva hipotética de 20 GiB; efemeridade não atestada.', flush=True)
+    if opcoes.edge_fotos_http and not opcoes.edge_documento_http:
+        raise RuntimeError("Fotos Edge exigem documento Edge sintético")
+    if opcoes.edge_fotos_http:
+        arquivo = ROOT / "apps/web/e2e/s178-documento-isolado/jornada_fotos.py"
+        if hashlib.sha256(arquivo.read_bytes()).hexdigest() != "9d3cf0eb51f50ec5680891f3626cdb0a9dc499bc397fee0ca1584429a58ea4c9":
+            raise RuntimeError("Driver de fotos Edge divergente")
     if opcoes.edge_documento_http and (not opcoes.jornada_ac5_http or not opcoes.gates_1816):
         raise RuntimeError("Edge documento exige jornada AC5 e gates 1816 em clone descartável")
     if opcoes.edge_documento_http:
         for nome, digest in (
-            ("apps/web/e2e/s178-documento-isolado/gateway.ts", "796c0f5bf7cae7248eecd9949cc7b524dfd05b7a73456b62a1b2143fcefa3e8e"),
-            ("apps/web/e2e/s178-documento-isolado/jornada.py", "a883b107ea639cd02a2cd693421f10c5a365473ce7dfd3118b6935b37abe6050"),
+            ("apps/web/e2e/s178-documento-isolado/gateway.ts", "7666745c64aed92305fa4dde57eb60d7ecaba6a034c472b7648e22839de0ad25"),
+            ("apps/web/e2e/s178-documento-isolado/jornada.py", "7466b5fb72712e3b1e373c2ba26fbfaf4c324348c918f66d9b044729061eec7f"),
             ("apps/web/e2e/s178-documento-isolado/import-map.json", "de336bac6a7a07a2eb903a185b1004951714134a20cea543e2f35cea4aabde06"),
             ("apps/web/e2e/s178-documento-isolado/vendor/tslib-2.8.1.mjs", "c38da5dd6da6281964435002ce204cd586634fe3bdfb24a0ee116f48cf3292e9"),
         ):
@@ -938,7 +945,7 @@ end; $$;"""
                 if spec is None or spec.loader is None: raise RuntimeError("Driver de documento indisponível")
                 modulo = importlib.util.module_from_spec(spec); spec.loader.exec_module(modulo)
                 def requisitar_edge(url, metodo, headers, corpo):
-                    if url.startswith("http://" + GATEWAY_CONTAINER + ":9000/") or url.startswith("http://" + EDGE_CONTAINER + ":9000/"):
+                    if any(url.startswith("http://" + nome + ":9000/") for nome in (GATEWAY_CONTAINER, EDGE_CONTAINER, *FOTOS_CONTAINERS.values())):
                         cmd = ["rtk", "proxy", "docker", "exec", "-i", CONTAINER, "curl", "--silent", "--show-error", "--max-time", "35", "--request", metodo, "--output", "-", "--write-out", "\n%{http_code}"]
                         for k, v in headers.items(): cmd += ["--header", k + ": " + v]
                         cmd += ["--data-binary", "@-", url]
@@ -951,6 +958,26 @@ end; $$;"""
                         except (ValueError, TypeError): raise RuntimeError("Resposta Edge inválida") from None
                     return requisitar(url, metodo, headers, corpo)
                 modulo.executar(sql, query, requisitar_edge, "http://" + AUTH_CONTAINER + ":9999", "http://" + STORAGE_CONTAINER + ":5000", "http://" + EDGE_CONTAINER + ":9000", "http://" + GATEWAY_CONTAINER + ":9000", chave("anon"), chave("service_role"), segredo_barreira, watchdog_triggered)
+                if opcoes.edge_fotos_http:
+                    fontes = {"sistema": "pcm-foto-staging-ativo-segura", "grupo": "pcm-foto-staging-grupo-segura", "equipamento": "pcm-foto-equipamento-segura"}
+                    for tipo, fonte in fontes.items():
+                        destino = Path(temporario) / (tipo + ".ts")
+                        try:
+                            compilacao = subprocess.run(["deno", "bundle", "--deny-import", "--frozen", "--lock", str(ROOT / "deno.lock"), "--import-map", str(ROOT / "apps/web/e2e/s178-documento-isolado/import-map.json"), "--node-modules-dir=none", "-o", str(destino), str(ROOT / "supabase/functions" / fonte / "index.ts")], capture_output=True, timeout=120)
+                        except subprocess.TimeoutExpired: raise RuntimeError("Prazo do bundle foto excedido") from None
+                        if compilacao.returncode or not destino.is_file(): raise RuntimeError("Bundle foto indisponível: " + tipo)
+                        iniciar_plataforma(FOTOS_CONTAINERS[tipo], EDGE_IMAGE, {**edge_env, "SSO_FOTO_GRUPO_MEDIADA_ENABLED": "true"}, ["start", "--main-service", "/tmp", "--port", "9000"], destino)
+                        for _ in range(30):
+                            if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu foto Edge")
+                            try:
+                                if docker("exec", CONTAINER, "curl", "--silent", "--max-time", "2", "--output", "/dev/null", "--write-out", "%{http_code}", "http://" + FOTOS_CONTAINERS[tipo] + ":9000/") == "405": break
+                            except Exception: pass
+                            time.sleep(1)
+                        else: raise RuntimeError("Rota foto sintética indisponível: " + tipo)
+                    spec = importlib.util.spec_from_file_location("s178_fotos_http", ROOT / "apps/web/e2e/s178-documento-isolado/jornada_fotos.py")
+                    if spec is None or spec.loader is None: raise RuntimeError("Driver de fotos indisponível")
+                    fotos = importlib.util.module_from_spec(spec); spec.loader.exec_module(fotos)
+                    fotos.executar(sql, query, requisitar_edge, "http://" + AUTH_CONTAINER + ":9999", "http://" + STORAGE_CONTAINER + ":5000", {k: "http://" + v + ":9000" for k,v in FOTOS_CONTAINERS.items()}, "http://" + GATEWAY_CONTAINER + ":9000", chave("anon"), chave("service_role"), segredo_barreira, watchdog_triggered)
 
     if concorrencia_1807 is not None:
         s165_concorrencia_1807_isolada.executar(CONTAINER, concorrencia_1807, watchdog_triggered)
@@ -975,6 +1002,7 @@ end; $$;"""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--edge-fotos-http", action="store_true", help="Valida três rotas de foto em clone sintético; exige --edge-documento-http.")
     parser.add_argument("--edge-documento-http", action="store_true", help="Valida Edge documental com Auth/Storage e revogação em clone; exige jornada AC5 e 1816.")
     parser.add_argument("--github-hosted", action="store_true", help="Modo opt-in Linux/CI; reserva hipotética de 20 GiB, não atesta efemeridade.")
     grupo = parser.add_mutually_exclusive_group()
@@ -1023,7 +1051,7 @@ if __name__ == "__main__":
             containers = docker("ps", "-a", "--filter", "label=sso.recorte=" + IDENT, "--format", "{{.ID}}").splitlines()
             for container_id in containers:
                 c = inspect("container", container_id)
-                if c["Name"] not in ("/" + CONTAINER, "/" + AUTH_CONTAINER, "/" + REST_CONTAINER, "/" + STORAGE_CONTAINER, "/" + GATEWAY_CONTAINER, "/" + EDGE_CONTAINER) or c["Config"].get("Labels", {}).get("sso.recorte") != IDENT:
+                if c["Name"] not in ("/" + CONTAINER, "/" + AUTH_CONTAINER, "/" + REST_CONTAINER, "/" + STORAGE_CONTAINER, "/" + GATEWAY_CONTAINER, "/" + EDGE_CONTAINER, *("/" + nome for nome in FOTOS_CONTAINERS.values())) or c["Config"].get("Labels", {}).get("sso.recorte") != IDENT:
                     raise RuntimeError("identidade do container divergente")
                 volumes = {m["Name"] for m in c["Mounts"] if m.get("Type") == "volume"}
                 if volumes and (initial_volumes is None or volumes.intersection(initial_volumes)):

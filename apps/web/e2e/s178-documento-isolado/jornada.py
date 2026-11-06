@@ -65,8 +65,11 @@ def executar(sql, query, request, auth, storage, edge, gateway, anon, service, b
         sql(("delete from auth.sessions where user_id='" + ATOR_A + "';").encode(), "revogação sessão sintética")
         if query("select count(*) from auth.sessions where user_id='" + ATOR_A + "'").strip() != "0": raise RuntimeError("Sessão sintética não revogada")
     finally:
-        request(gateway + "/__barreira/liberar", "POST", controle, b"")
-        thread.join(timeout=20)
+        try:
+            request(gateway + "/__barreira/liberar", "POST", controle, b"")
+        finally:
+            thread.join(timeout=45)
+            if thread.is_alive(): raise RuntimeError("Leitura documental não encerrou")
     if thread.is_alive() or erros or not resultado: raise RuntimeError("Resultado de revogação inconclusivo")
     if resultado[0][0] != 401: raise RuntimeError("Revogação não comprovada: HTTP " + str(resultado[0][0]))
     print("Documento Edge sintético: PDF, Cliente cruzado e revogação durante download verificados.", flush=True)
