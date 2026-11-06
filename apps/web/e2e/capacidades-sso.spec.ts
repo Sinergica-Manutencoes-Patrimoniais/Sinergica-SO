@@ -176,7 +176,9 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
   await aprovacao.getByRole("button", { name: "Atestar e aprovar retorno" }).click();
   await expect(aprovacao.getByText(/Retorno aprovado pelo PCM/)).toBeVisible();
   try {
-    await expect(aprovacao.getByText(/Aprovação sintética S170/)).toBeVisible({ timeout: 15_000 });
+    await expect(
+      aprovacao.getByRole("listitem").filter({ hasText: "Aprovação sintética S170" }),
+    ).toBeVisible({ timeout: 15_000 });
   } catch {
     const estado = (await aprovacao.innerText().catch(() => "sem-texto"))
       .replace(/\s+/g, " ")
@@ -358,11 +360,20 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await planos.getByLabel("Nome do Plano").fill(nomePlano);
     marcarEtapaS170("salvar rascunho do Plano");
     await planos.getByRole("button", { name: "Salvar rascunho" }).click();
-    marcarEtapaS170("abrir Rotinas do Plano");
-    await planos.getByRole("button", { name: `Ver Rotinas de ${nomePlano}` }).click();
+    marcarEtapaS170("verificar botão de Rotinas do Plano");
+    const abrirRotinas = planos.getByRole("button", { name: `Ver Rotinas de ${nomePlano}` });
+    await expect(abrirRotinas).toBeVisible({ timeout: 15_000 });
+    await abrirRotinas.click({ timeout: 15_000 });
+    marcarEtapaS170("esperar painel Rotinas do Plano");
     const rotinas = operador.getByRole("region", { name: `Rotinas de ${nomePlano}` });
-    await rotinas.getByRole("button", { name: "Nova Rotina" }).click();
+    await expect(rotinas).toBeVisible({ timeout: 15_000 });
+    marcarEtapaS170("verificar botão Nova Rotina");
+    const novaRotina = rotinas.getByRole("button", { name: "Nova Rotina" });
+    await expect(novaRotina).toBeVisible({ timeout: 15_000 });
+    await novaRotina.click({ timeout: 15_000 });
+    marcarEtapaS170("abrir formulário de Rotina");
     const formulario = rotinas.getByRole("region", { name: "Nova Rotina" });
+    await expect(formulario).toBeVisible({ timeout: 15_000 });
     await formulario.getByLabel("Nome da Rotina").fill(nomeRotina);
     await formulario.getByLabel("Tipo de alvo").selectOption("sistema");
     await formulario
@@ -392,7 +403,6 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await itemPlano.getByRole("button", { name: "Confirmar aprovação" }).click();
     await expect(itemPlano).toContainText("aprovado");
 
-    marcarEtapaS170("revogar concessão administrativa");
     marcarEtapaS170("revogar concessão administrativa");
     await administrador.getByLabel("Motivo da alteração").fill("Revogação sintética S170");
     const concessoes = administrador.getByRole("heading", { name: "Concessões" }).locator("..");

@@ -217,24 +217,23 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   marcarEtapa("preencher quantidade do grupo");
   await grupos.getByLabel("Quantidade").fill("20", { timeout: 5_000 });
   marcarEtapa("selecionar Local do grupo");
+  const seletorLocal = grupos.getByLabel("Local");
   try {
-    await grupos.getByLabel("Local").selectOption({ label: nomeLocal }, { timeout: 5_000 });
+    await expect(seletorLocal).toBeEnabled({ timeout: 15_000 });
+    await seletorLocal.selectOption({ label: nomeLocal }, { timeout: 5_000 });
   } catch {
     const texto = (await grupos.innerText().catch(() => "sem-texto"))
       .replace(/\s+/g, " ")
       .slice(0, 360);
-    const locaisDisponiveis = await grupos
-      .getByLabel("Local")
-      .locator("option")
-      .allTextContents()
-      .catch(() => []);
+    const [selects, locaisDisponiveis] = await Promise.all([
+      seletorLocal.count().catch(() => 0),
+      seletorLocal
+        .locator("option")
+        .allTextContents()
+        .catch(() => []),
+    ]);
     throw new Error(
-      `S176_LOCAL=${texto}; SELECTS=${await grupos
-        .getByLabel("Local")
-        .count()
-        .catch(
-          () => 0,
-        )}; OPTIONS=${locaisDisponiveis.join("|")}; AUTORIZAÇÃO=${respostasPermissao.slice(-6).join(",")}`,
+      `S176_LOCAL_SELECTS=${selects}; OPTIONS=${locaisDisponiveis.join("|")}; AUTORIZAÇÃO=${respostasPermissao.slice(-6).join(",")}; REGIÃO=${texto}`,
     );
   }
   marcarEtapa("carregar categorias do grupo");
