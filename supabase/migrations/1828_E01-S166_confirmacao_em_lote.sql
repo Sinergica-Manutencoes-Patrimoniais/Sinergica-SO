@@ -14,7 +14,7 @@ returns jsonb language plpgsql volatile security definer set search_path='' set 
 declare v_actor uuid:=auth.uid();v_head pcm.sso_mudancas_dia_v2%rowtype;v_gate pcm.sso_mudanca_dia_v2_gate%rowtype;
  v_serie pcm.calendario_contratual_series%rowtype;v_regra pcm.regras_visita_contratual%rowtype;
  v_item record;v_recebido jsonb;v_result jsonb;v_diff boolean;v_data date;v_cancelar boolean;
- v_feriado pcm.feriados_declarados%rowtype;v_tem_ocorrencia boolean;v_supressao_id uuid;v_movidas integer:=0;v_suprimidas integer:=0;
+ v_supressao_id uuid;v_movidas integer:=0;v_suprimidas integer:=0;
  v_total_edicoes integer:=0;v_batch jsonb;v_composicao_habilitada boolean;
 begin
  if v_actor is null or v_actor is distinct from p_ator or p_mudanca_id is null then raise exception 'parametros_invalidos' using errcode='22023'; end if;
@@ -76,63 +76,85 @@ begin
    join pcm.sso_mudanca_dia_v2_itens i on i.visita_id=o.visita_id
    where i.mudanca_id=p_mudanca_id order by o.id for update of o nowait;
  select exists(
-   (select c.visita_id,c.revisao_visita,c.semana_origem,c.inicio_original,c.fim_original,c.inicio_proposto,c.data_proposta,c.feriado_id,c.feriado_revisao,c.ocorrencia_esperada
-    from pcm.sso_mudanca_dia_v2_conjunto(p_mudanca_id) c
-    except select i.visita_id,i.revisao_visita,i.semana_origem,i.inicio_original,i.fim_original,i.inicio_proposto,i.data_proposta,i.feriado_id,i.feriado_revisao,i.ocorrencia_esperada
-    from pcm.sso_mudanca_dia_v2_itens i where i.mudanca_id=p_mudanca_id)
-   union all
-   (select i.visita_id,i.revisao_visita,i.semana_origem,i.inicio_original,i.fim_original,i.inicio_proposto,i.data_proposta,i.feriado_id,i.feriado_revisao,i.ocorrencia_esperada
-    from pcm.sso_mudanca_dia_v2_itens i where i.mudanca_id=p_mudanca_id
-    except select c.visita_id,c.revisao_visita,c.semana_origem,c.inicio_original,c.fim_original,c.inicio_proposto,c.data_proposta,c.feriado_id,c.feriado_revisao,c.ocorrencia_esperada
-    from pcm.sso_mudanca_dia_v2_conjunto(p_mudanca_id) c)
+   with atual as materialized (
+     select c.* from pcm.sso_mudanca_dia_v2_conjunto(p_mudanca_id) c
+   ), fotografia as materialized (
+     select i.visita_id,i.revisao_visita,i.semana_origem,i.inicio_original,i.fim_original,
+       i.inicio_proposto,i.data_proposta,i.feriado_id,i.feriado_revisao,i.ocorrencia_esperada
+     from pcm.sso_mudanca_dia_v2_itens i where i.mudanca_id=p_mudanca_id
+   )
+   select 1 from atual c full join fotografia i using (visita_id)
+   where c.visita_id is null or i.visita_id is null
+      or row(c.revisao_visita,c.semana_origem,c.inicio_original,c.fim_original,c.inicio_proposto,
+        c.data_proposta,c.feriado_id,c.feriado_revisao,c.ocorrencia_esperada)
+        is distinct from
+         row(i.revisao_visita,i.semana_origem,i.inicio_original,i.fim_original,i.inicio_proposto,
+        i.data_proposta,i.feriado_id,i.feriado_revisao,i.ocorrencia_esperada)
  ) into v_diff;
  if v_diff then
    raise exception 'fotografia_visitas_alterada' using errcode='40001';
  end if;
  if config.sso_autorizar_acao('plano.gerir',v_head.cliente_id) is distinct from true
    or config.sso_autorizar_acao('visita.confirmar',v_head.cliente_id) is distinct from true then raise exception 'sem_acesso' using errcode='42501'; end if;
- -- Conferir todas as regras de ocorrência/feriado antes de qualquer escrita operacional.
- for v_item in select i.*,v.area_id,v.local_id,v.responsavel_id,v.deslocamento_minutos,v.fim_em,v.inicio_em,v.revisao
-   from pcm.sso_mudanca_dia_v2_itens i join pcm.visitas v on v.id=i.visita_id
-   where i.mudanca_id=p_mudanca_id order by v.id loop
-   if v_item.revisao is distinct from v_item.revisao_visita then raise exception 'fotografia_visitas_alterada' using errcode='40001'; end if;
-   v_cancelar:=v_item.feriado_id is not null;v_tem_ocorrencia:=v_item.ocorrencia_esperada;
-   if v_tem_ocorrencia then
-     perform 1 from pcm.sso_ocorrencia_visita_suprimivel_gate where id and habilitado for share;
+ -- Validate the complete set before writes. One set-based pass replaces repeated
+ -- per-Visit gate reads and nested existence queries on the 501-item path.
+ if exists (
+   select 1 from pcm.sso_mudanca_dia_v2_itens i join pcm.visitas v on v.id=i.visita_id
+   where i.mudanca_id=p_mudanca_id and v.revisao is distinct from i.revisao_visita
+ ) then raise exception 'fotografia_visitas_alterada' using errcode='40001'; end if;
+
+ if exists (select 1 from pcm.sso_mudanca_dia_v2_itens i where i.mudanca_id=p_mudanca_id and i.ocorrencia_esperada) then
+   perform 1 from pcm.sso_ocorrencia_visita_suprimivel_gate where id and habilitado for share;
+   if not found then raise exception 'ocorrencia_ou_feriado_exige_reconciliacao' using errcode='23514'; end if;
+
+   if exists(select 1 from pcm.sso_mudanca_dia_v2_itens i
+     where i.mudanca_id=p_mudanca_id and i.ocorrencia_esperada and i.feriado_id is null) then
+     perform 1 from pcm.sso_mudanca_dia_ocorrencia_gate where id and habilitado for share;
      if not found then raise exception 'ocorrencia_ou_feriado_exige_reconciliacao' using errcode='23514'; end if;
-     if not v_cancelar then
-       perform 1 from pcm.sso_mudanca_dia_ocorrencia_gate where id and habilitado for share;
-       if not found then raise exception 'ocorrencia_ou_feriado_exige_reconciliacao' using errcode='23514'; end if;
-       if exists(select 1 from pcm.visita_ordens_servico vo where vo.visita_id=v_item.visita_id) then
-         raise exception 'ocorrencia_vinculada_exige_reconciliacao' using errcode='23514'; end if;
-     end if;
-     if exists(select 1 from pcm.ocorrencias_visita_preparadas o where o.visita_id=v_item.visita_id and (
+     if exists(select 1 from pcm.sso_mudanca_dia_v2_itens i
+       join pcm.visita_ordens_servico vo on vo.visita_id=i.visita_id
+       where i.mudanca_id=p_mudanca_id and i.ocorrencia_esperada and i.feriado_id is null) then
+       raise exception 'ocorrencia_vinculada_exige_reconciliacao' using errcode='23514'; end if;
+   end if;
+
+   if exists(
+     select 1 from pcm.sso_mudanca_dia_v2_itens i
+     join pcm.ocorrencias_visita_preparadas o on o.visita_id=i.visita_id
+     where i.mudanca_id=p_mudanca_id and i.ocorrencia_esperada and (
        exists(select 1 from pcm.sso_vinculos_visita_legado l where l.ocorrencia_visita_id=o.id)
        or exists(select 1 from pcm.sso_materializacoes_visita_legado m where m.preparada_id=o.id)
        or exists(select 1 from pcm.sso_ciclo_visita_versoes c where c.preparada_id=o.id)
        or exists(select 1 from pcm.sso_ciclo_visita_usos_versao c where c.preparada_id=o.id)
-       or exists(select 1 from pcm.sso_ocorrencias_grupo g where g.visita_preparada_id=o.id)))
-       then raise exception 'ocorrencia_vinculada_exige_reconciliacao' using errcode='23514'; end if;
-   end if;
-   if v_cancelar then
-     perform 1 from pcm.sso_supressao_visita_preexistente_gate where id and habilitado for share;
-     if not found then raise exception 'ocorrencia_ou_feriado_exige_reconciliacao' using errcode='23514'; end if;
-     perform 1 from pcm.sso_supressao_semana_gate where id and habilitado for share;
-     if not found then raise exception 'supressao_semana_desabilitada' using errcode='55000'; end if;
-     if config.sso_autorizar_acao('visita.cancelar',v_head.cliente_id) is distinct from true then raise exception 'sem_acesso' using errcode='42501'; end if;
+       or exists(select 1 from pcm.sso_ocorrencias_grupo g where g.visita_preparada_id=o.id)
+     )
+   ) then raise exception 'ocorrencia_vinculada_exige_reconciliacao' using errcode='23514'; end if;
+ end if;
+
+ if exists(select 1 from pcm.sso_mudanca_dia_v2_itens i where i.mudanca_id=p_mudanca_id and i.feriado_id is not null) then
+   perform 1 from pcm.sso_supressao_visita_preexistente_gate where id and habilitado for share;
+   if not found then raise exception 'ocorrencia_ou_feriado_exige_reconciliacao' using errcode='23514'; end if;
+   perform 1 from pcm.sso_supressao_semana_gate where id and habilitado for share;
+   if not found then raise exception 'supressao_semana_desabilitada' using errcode='55000'; end if;
+   if config.sso_autorizar_acao('visita.cancelar',v_head.cliente_id) is distinct from true then
+     raise exception 'sem_acesso' using errcode='42501'; end if;
+   for v_item in select distinct i.semana_origem from pcm.sso_mudanca_dia_v2_itens i
+     where i.mudanca_id=p_mudanca_id and i.feriado_id is not null order by i.semana_origem loop
      if not pg_catalog.pg_try_advisory_xact_lock(pg_catalog.hashtextextended('sso-semana-visita:'||v_head.serie_id::text||':'||v_item.semana_origem::text,0))
        then raise exception 'semana_em_alteracao' using errcode='55P03'; end if;
-     if exists(select 1 from pcm.visita_ordens_servico vo where vo.visita_id=v_item.visita_id)
-       or exists(select 1 from pcm.sso_supressoes_semana_feriado s where s.serie_id=v_head.serie_id and s.semana_origem=v_item.semana_origem
-          and not exists(select 1 from pcm.sso_revogacoes_supressao_semana r where r.supressao_id=s.id))
-       then raise exception 'semana_exige_reconciliacao' using errcode='23514'; end if;
-   end if;
-   if v_cancelar then
-     select * into v_feriado from pcm.feriados_declarados f where f.id=v_item.feriado_id and f.cliente_id=v_head.cliente_id
-       and f.ativo and f.revisao=v_item.feriado_revisao;
-     if not found then raise exception 'impactos_alterados' using errcode='40001'; end if;
-   end if;
- end loop;
+   end loop;
+   if exists(select 1 from pcm.sso_mudanca_dia_v2_itens i
+     join pcm.visita_ordens_servico vo on vo.visita_id=i.visita_id
+     where i.mudanca_id=p_mudanca_id and i.feriado_id is not null)
+     or exists(select 1 from pcm.sso_mudanca_dia_v2_itens i
+       join pcm.sso_supressoes_semana_feriado s on s.serie_id=v_head.serie_id and s.semana_origem=i.semana_origem
+       where i.mudanca_id=p_mudanca_id and i.feriado_id is not null
+         and not exists(select 1 from pcm.sso_revogacoes_supressao_semana r where r.supressao_id=s.id)) then
+     raise exception 'semana_exige_reconciliacao' using errcode='23514'; end if;
+   if exists(select 1 from pcm.sso_mudanca_dia_v2_itens i left join pcm.feriados_declarados f
+       on f.id=i.feriado_id and f.cliente_id=v_head.cliente_id and f.ativo and f.revisao=i.feriado_revisao
+     where i.mudanca_id=p_mudanca_id and i.feriado_id is not null and f.id is null) then
+     raise exception 'impactos_alterados' using errcode='40001'; end if;
+ end if;
 
  update pcm.regras_visita_contratual set vigencia_fim=v_head.vigencia-1 where id=v_regra.id;
  insert into pcm.regras_visita_contratual(id,serie_id,numero,ancora_semana,dia_semana,intervalo_semanas,hora_inicio,duracao_minutos,

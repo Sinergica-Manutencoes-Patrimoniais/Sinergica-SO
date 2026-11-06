@@ -290,6 +290,25 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
       exigir(cfg.senha, "SSO_S170_SENHA"),
     );
     const respostasPermissao: string[] = [];
+    const respostasAlvo: string[] = [];
+    operador.on("response", async (response) => {
+      const url = new URL(response.url());
+      if (!url.pathname.endsWith("/rpc/sso_listar_alvos_plano")) return;
+      let resultado = "corpo-indisponivel";
+      try {
+        const corpo = await response.json();
+        resultado = Array.isArray(corpo)
+          ? `linhas=${corpo.length}`
+          : `codigo=${String(corpo.code ?? "erro").slice(0, 24)}`;
+      } catch {
+        /* status segue útil */
+      }
+      respostasAlvo.push(`${response.status()}:${resultado}`);
+    });
+    operador.on("requestfailed", (request) => {
+      if (new URL(request.url()).pathname.endsWith("/rpc/sso_listar_alvos_plano"))
+        respostasAlvo.push("falha-rede");
+    });
     operador.on("response", async (response) => {
       if (!new URL(response.url()).pathname.endsWith("/rpc/sso_autorizar_acao")) return;
       let resultado = "resposta-indisponivel";
@@ -379,9 +398,37 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     marcarEtapaS170("selecionar tipo de alvo");
     await formulario.getByLabel("Tipo de alvo").selectOption("sistema", { timeout: 15_000 });
     marcarEtapaS170("selecionar alvo da Rotina");
-    await formulario
-      .getByLabel("Alvo da Rotina", { exact: true })
-      .selectOption({ label: "Sistema sintético" }, { timeout: 15_000 });
+    const seletorAlvo = formulario.getByLabel("Alvo da Rotina", { exact: true });
+    try {
+      await seletorAlvo.selectOption({ label: "Sistema sintético" }, { timeout: 15_000 });
+    } catch {
+      const estadoAlvo = await operador.evaluate(() => {
+        const secao = document.querySelector('section[aria-label="Nova Rotina"]');
+        const rotulo = Array.from(secao?.querySelectorAll("label") ?? []).find((item) =>
+          item.textContent?.trim().startsWith("Alvo da Rotina"),
+        );
+        const select = rotulo?.querySelector("select");
+        return {
+          formularioVisivel: Boolean(secao),
+          seletor: select
+            ? {
+                desabilitado: select.disabled,
+                opcoes: Array.from(select.options)
+                  .map((opcao) => opcao.textContent?.trim())
+                  .slice(0, 4),
+              }
+            : null,
+          alertas: Array.from(secao?.querySelectorAll('[role="alert"]') ?? [])
+            .map((item) => item.textContent?.trim())
+            .slice(0, 2),
+        };
+      });
+      marcarDiagnosticoS170(
+        "s170-rpc",
+        `ALVOS=${respostasAlvo.slice(-4).join(",")}; UI=${JSON.stringify(estadoAlvo)}`,
+      );
+      throw new Error("S170_TARGET_SELECT_FAILED");
+    }
     marcarEtapaS170("selecionar modo de recorrência");
     await formulario.getByLabel("Modo").selectOption("calendario", { timeout: 15_000 });
     marcarEtapaS170("preencher intervalo");

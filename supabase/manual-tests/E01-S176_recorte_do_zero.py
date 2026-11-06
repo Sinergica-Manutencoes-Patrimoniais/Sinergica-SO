@@ -325,7 +325,7 @@ def main(opcoes):
         for nome, digest in (
             ("supabase/migrations/1820_E01-S166_mudanca_dia_v2_fundacao.sql", "83357f5534af165164f45a375d5750829e243e121395270e9d7675167a61b551"),
             ("supabase/migrations/1821_E01-S166_mudanca_dia_v2_rpc.sql", "a8c33a04467c7814c2e8a4aef274129b9a30df4a48690b13dfd5fa41fce9cfba"),
-            ("supabase/migrations/1828_E01-S166_confirmacao_em_lote.sql", "0f2693f5dd66926d977b965f5764aaa58843e6b27863c6b947b7a07ce6e6ce62"),
+            ("supabase/migrations/1828_E01-S166_confirmacao_em_lote.sql", "3cec0d5e1f1844c452a5551cf4b7393d3aa2c71531b4c0f1ba5459e73e7bef2d"),
         ):
             dados = (ROOT / nome).read_bytes()
             if hashlib.sha256(dados).hexdigest() != digest:
@@ -432,7 +432,7 @@ def main(opcoes):
             proxy_s165 = s165_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s170_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s170_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "ff6878fc7706ebf5448f7ac6d2f1d36676e2d96c45bb5c684e909d8b05433494":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "018790f52612c80c1b18946c575fcc165d38d722d554967a1d6a32688a53dba0":
                 raise RuntimeError("Driver UI S170 divergente")
             import s170_ui_isolada
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
