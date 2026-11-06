@@ -418,25 +418,25 @@ def main(opcoes):
             arquivo.write(IDENT + "\n")
         if opcoes.ui_s165_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s165_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "0cc91d8103bc888f037daf67aa56f5b534c88bd205c712f09f54132533ae6ea5":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "f91f591aaca6ff28a805bf33c0b181754421dee2e9cbe9e97df5e5896f64d83c":
                 raise RuntimeError("Driver UI S165 divergente")
             import s165_ui_isolada
             proxy_s165 = s165_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s170_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s170_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "6ea4077e8b9823ea1d39711dfd8640a4a77aeacd42fad31100e0c413050b6afc":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "3ed9f307de1b5a597d0341912de02e3d3687771af3584f8bf83c6cceac0a0a61":
                 raise RuntimeError("Driver UI S170 divergente")
             import s170_ui_isolada
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s166_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s166_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "d2874f8a29b69935a5f4525b6184fb8e55f332d54905c3d78a47520760911754":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "fe7b23abe0d793a074f5ae1def86cbd0af13d06a4d607ccae7c24b12798395f9":
                 raise RuntimeError("Driver UI S166 divergente")
             import s166_ui_isolada
             proxy_s166 = s166_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s176_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s176_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "62efcc1c185ed5fda323833139d69e583e7c7c0e16e4404087656adf6364645d":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "bab1c8a2bad60839956fc0b92ab21a17c8abd881bb21942662df8a44f2cee755":
                 raise RuntimeError("Driver UI S176 divergente")
             import s176_ui_isolada
             proxy_s176 = s176_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")

@@ -77,13 +77,19 @@ def _resumo_playwright(saida):
                     if any(resultado.get("status") in {"failed", "timedOut", "interrupted"}
                            for teste in testes for resultado in teste.get("results", [])):
                         titulo = str(spec.get("title", "teste sem título"))
-                        local = next((resultado.get("error", {}).get("location", {})
-                                      for teste in testes for resultado in teste.get("results", [])
-                                      if resultado.get("status") in {"failed", "timedOut", "interrupted"}), {})
+                        resultado_falha = next((resultado for teste in testes for resultado in teste.get("results", [])
+                                                if resultado.get("status") in {"failed", "timedOut", "interrupted"}), {})
+                        local = resultado_falha.get("error", {}).get("location", {})
+                        mensagem = resultado_falha.get("error", {}).get("message", "")
+                        linhas = [" ".join(linha.split()) for linha in str(mensagem).splitlines()[:3] if linha.strip()]
+                        detalhe = " | ".join(re.sub(r"https?://[^\s\"'<>]+", "<url>", re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "<email>", linha)) for linha in linhas)[:240]
+                        detalhe = re.sub(r"(?i)(password|senha|token|authorization|anon[_ -]?key)(?:\s*[:=]\s*)\S+", r"\1=<redacted>", detalhe)
+                        detalhe = re.sub(r"\b[0-9a-f]{8}-[0-9a-f-]{27,}\b", "<id>", detalhe, flags=re.I)
                         arquivo = str(local.get("file", "")).split("/")[-1]
                         linha = local.get("line", "?")
                         falhas.append("".join(c for c in titulo if c.isalnum() or c in " _-.")[:100]
-                                      + (" (" + arquivo + ":" + str(linha) + ")" if arquivo else ""))
+                                      + (" (" + arquivo + ":" + str(linha) + ")" if arquivo else "")
+                                      + (" — " + detalhe if detalhe else ""))
                 visitar(suite.get("suites", []))
         visitar(relatorio.get("suites", []))
         contagens = "expected=" + str(stats.get("expected", "?")) + ", unexpected=" + str(stats.get("unexpected", "?"))

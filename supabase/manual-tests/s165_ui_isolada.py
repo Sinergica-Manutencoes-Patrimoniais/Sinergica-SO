@@ -74,9 +74,14 @@ def _resumo_playwright(saida):
                                   if resultado.get("status") in {"failed", "timedOut", "interrupted"}]
                     if resultados:
                         local = resultados[0].get("error", {}).get("location", {})
+                        mensagem = resultados[0].get("error", {}).get("message", "")
+                        linhas = [" ".join(linha.split()) for linha in str(mensagem).splitlines()[:3] if linha.strip()]
+                        detalhe = " | ".join(re.sub(r"https?://[^\s\"'<>]+", "<url>", re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "<email>", linha)) for linha in linhas)[:240]
+                        detalhe = re.sub(r"(?i)(password|senha|token|authorization|anon[_ -]?key)(?:\s*[:=]\s*)\S+", r"\1=<redacted>", detalhe)
+                        detalhe = re.sub(r"\b[0-9a-f]{8}-[0-9a-f-]{27,}\b", "<id>", detalhe, flags=re.I)
                         arquivo = str(local.get("file", "")).split("/")[-1]
                         titulo = "".join(c for c in str(spec.get("title", "teste")) if c.isalnum() or c in " _-.")[:100]
-                        falhas.append(titulo + (" (" + arquivo + ":" + str(local.get("line", "?")) + ")" if arquivo else ""))
+                        falhas.append(titulo + (" (" + arquivo + ":" + str(local.get("line", "?")) + ")" if arquivo else "") + (" — " + detalhe if detalhe else ""))
                 visitar(suite.get("suites", []))
         visitar(relatorio.get("suites", []))
         return "Playwright expected=" + str(stats.get("expected", "?")) + ", unexpected=" + str(stats.get("unexpected", "?")) + ("; falhas: " + ", ".join(falhas[:5]) if falhas else "")
