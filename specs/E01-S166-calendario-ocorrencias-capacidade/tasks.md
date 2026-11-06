@@ -42,7 +42,7 @@
 - [X] T014 Escrever teste do adapter em `apps/web/src/features/pcm/infrastructure/supabase-calendario-contratual-adapter.test.ts` e integrar chamadas entre US. A execução de integração, rollback e duas sessões concorrentes fica em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7).
 - [X] T015 Escrever E2E isolado da jornada de calendário/Plano, grande volume com 501 Visitas e negação entre Clientes em `apps/web/e2e/calendario-contratual.spec.ts`, compondo consumidor Cliente360 sem duplicar regra (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8). Execução fica em T016.
 - [ ] T016 Executar `specs/E01-S166-calendario-ocorrencias-capacidade/quickstart.md`, testes focados (incluindo AC-8), eval:spec com seleção conferida, ci:local e revisão adversarial; medir capacidade do V2 em clone isolado e só então propor teto acima de 500. Registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): suíte SQL local completa passou (225 arquivos/2.892 assertions); revisão adversarial local não encontrou achados reproduzidos. Medição de capacidade, concorrência real em duas sessões, E2E, CI GitHub e homologação permanecem pendentes.
-- [X] T017 Corrigir o seletor E2E para usar a região acessível efetivamente renderizada pela mudança de dia com Visitas; manter execução agrupada em T016.
+- [X] T017 Corrigir seletor E2E para usar a região acessível "Alteração de dia contratual em lote" e atualizar pin do runner; execução agrupada permanece em T016.
 
 ## Dependencies & Execution Order
 

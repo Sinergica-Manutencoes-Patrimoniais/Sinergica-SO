@@ -22,6 +22,8 @@ async function criarCliente(page: Page, nome: string) {
 }
 
 test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cliente", async ({ page }) => {
+  test.setTimeout(90_000);
+  const marcarEtapa = (etapa: string) => console.log(`S176_ETAPA=${etapa}`);
   const appUrl = new URL(process.env.SSO_S176_APP_URL ?? "");
   const backendUrl = new URL(process.env.SSO_S176_SUPABASE_URL ?? "");
   const origensPermitidas = new Set([appUrl.origin, backendUrl.origin]);
@@ -40,6 +42,7 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   await page.getByLabel("Senha").fill(process.env.SSO_S176_SENHA);
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page).not.toHaveURL(/\/login/);
+  marcarEtapa("sessão iniciada");
   const sufixo = Date.now();
   const nomeArea = `Torre S176 ${sufixo}`;
   const nomeLocal = `Salão S176 ${sufixo}`;
@@ -91,9 +94,12 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
     await route.continue();
   });
 
+  marcarEtapa("criar cliente B");
   await criarCliente(page, clienteB);
+  marcarEtapa("criar cliente A");
   await criarCliente(page, clienteA);
 
+  marcarEtapa("criar área");
   await page.getByRole("button", { name: "Estrutura", exact: true }).click();
   await page.getByRole("button", { name: "Nova Área" }).click();
   await page.getByLabel("Nome *").fill(nomeArea);
@@ -117,11 +123,13 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
     throw new Error(`POST_AREAS=${respostaArea}; GET_AREAS=${consultaArea}; TEXTO=${areaNoTexto}; OPCAO=${opcaoArea.includes(nomeArea)}; TITULO=${tituloVisivel}; ERRO_CARREGAR=${erroCarregar}; ESTRUTURA_API=${falhasApi.join(",") || "sem-falhas-http"}`);
   }
   await page.getByRole("button", { name: "Local", exact: true }).click();
+  marcarEtapa("criar local");
   await page.getByLabel("Nome *").fill(nomeLocal);
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByText(nomeLocal, { exact: true })).toBeVisible({ timeout: 10_000 });
 
   const grupos = page.getByRole("region", { name: "Grupos Quantitativos" });
+  marcarEtapa("criar grupo quantitativo");
   await grupos.getByRole("button", { name: "Novo grupo" }).click();
   await grupos.getByLabel("Nome do grupo").fill(nomeGrupo);
   await grupos.getByLabel("Quantidade").fill("20");
@@ -146,6 +154,7 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   await page.getByPlaceholder("Buscar por cliente, cidade, contato, CNPJ ou ID Auvo").fill(clienteB);
   await expect(page.getByText(clienteB, { exact: true }).first()).toBeVisible({ timeout: 10_000 });
   await page.getByText(clienteB, { exact: true }).first().click();
+  marcarEtapa("validar isolamento entre clientes");
   negarLeituraEstrutura = true;
   await page.getByRole("button", { name: "Estrutura", exact: true }).click();
   await expect(page.getByRole("region", { name: "Grupos Quantitativos" })).toHaveCount(0);

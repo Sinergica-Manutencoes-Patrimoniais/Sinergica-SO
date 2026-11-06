@@ -240,7 +240,7 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     const formulario = rotinas.getByRole("region", { name: "Nova Rotina" });
     await formulario.getByLabel("Nome da Rotina").fill(nomeRotina);
     await formulario.getByLabel("Tipo de alvo").selectOption("sistema");
-    await formulario.getByLabel("Alvo da Rotina").selectOption({ label: "Sistema sintético" });
+    await formulario.getByLabel("Alvo da Rotina", { exact: true }).selectOption({ label: "Sistema sintético" });
     await formulario.getByLabel("Modo").selectOption("calendario");
     await formulario.getByLabel("Intervalo").fill("1");
     await formulario.getByLabel("Unidade da recorrência").selectOption("meses");
