@@ -400,16 +400,22 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     marcarEtapaS170("selecionar alvo da Rotina");
     const seletorAlvo = formulario.getByLabel("Alvo da Rotina", { exact: true });
     try {
-      await expect(seletorAlvo.locator('option:not([value=""])')).toHaveCount(1, {
-        timeout: 30_000,
-      });
-      const alvos = await seletorAlvo.locator("option").evaluateAll((opcoes) =>
-        opcoes
+      await expect
+        .poll(
+          () =>
+            seletorAlvo.evaluate((select) =>
+              Array.from(select.options).filter((opcao) => opcao.value !== "").length,
+            ),
+          { timeout: 30_000 },
+        )
+        .toBe(1);
+      const alvos = await seletorAlvo.evaluate((select) =>
+        Array.from(select.options)
+          .filter((opcao) => opcao.value !== "")
           .map((opcao) => ({
-            id: (opcao as HTMLOptionElement).value,
+            id: opcao.value,
             nome: opcao.textContent?.trim(),
-          }))
-          .filter((opcao) => opcao.id !== ""),
+          })),
       );
       expect(alvos).toHaveLength(1);
       expect(alvos[0]?.nome).toBe("Sistema sintético");
@@ -422,25 +428,19 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
         .split(/\r?\n/, 1)[0]
         .replace(/\b[0-9a-f]{8}-[0-9a-f-]{27,}\b/gi, "<id>")
         .slice(0, 120);
-      const estadoAlvo = await operador.evaluate(() => {
-        const secao = document.querySelector('section[aria-label="Nova Rotina"]');
-        const rotulo = Array.from(secao?.querySelectorAll("label") ?? []).find((item) =>
-          item.textContent?.trim().startsWith("Alvo da Rotina"),
-        );
-        const select = rotulo?.querySelector("select");
-        return {
-          formularioVisivel: Boolean(secao),
-          seletor: select
-            ? {
-                desabilitado: select.disabled,
-                desabilitadoNativo: select.matches(":disabled"),
-                ariaDesabilitado: select.getAttribute("aria-disabled") === "true",
-                quantidadeOpcoes: select.options.length,
-              }
-            : null,
-          alertaPresente: Boolean(secao?.querySelector('[role="alert"]')),
-        };
-      });
+      const quantidadeSeletores = await seletorAlvo.count();
+      const estadoAlvo = quantidadeSeletores === 1
+        ? await seletorAlvo.evaluate((select) => ({
+            desabilitado: select.disabled,
+            desabilitadoNativo: select.matches(":disabled"),
+            ariaDesabilitado: select.getAttribute("aria-disabled") === "true",
+            quantidadeOpcoes: select.options.length,
+            opcoesNaoVazias: Array.from(select.options).filter((opcao) => opcao.value !== "").length,
+            nomeSinteticoPresente: Array.from(select.options).some(
+              (opcao) => opcao.textContent?.trim() === "Sistema sintético",
+            ),
+          }))
+        : { quantidadeSeletores };
       marcarDiagnosticoS170(
         "s170-rpc",
         `ALVOS=${respostasAlvo.slice(-4).join(",")}; UI=${JSON.stringify(estadoAlvo)}`,
