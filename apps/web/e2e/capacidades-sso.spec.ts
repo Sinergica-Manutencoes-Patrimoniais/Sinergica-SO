@@ -88,8 +88,11 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
     if (url.pathname.endsWith("/rpc/sso_listar_atestacoes_pcm_mediada") && response.ok()) {
       try {
         const linhas = await response.json();
-        atestacoesDiagnostico = `${response.status()}:linhas=${Array.isArray(linhas) ? linhas.length : "formato-invalido"}:justificativa=${Array.isArray(linhas) && linhas.some((linha) => linha.justificativa === "Aprovação sintética S170")}`;
-        marcarDiagnosticoS170("s170-atestacoes", atestacoesDiagnostico);
+        const justificativas = Array.isArray(linhas)
+          ? linhas.map((linha) => String(linha.justificativa ?? "").slice(0, 48)).join("|")
+          : "formato-invalido";
+        atestacoesDiagnostico = `${response.status()}:linhas=${Array.isArray(linhas) ? linhas.length : "formato-invalido"}:justificativas=${justificativas}`;
+        marcarDiagnosticoS170("s170-rpc", `HISTORICO=${atestacoesDiagnostico}`);
       } catch {
         atestacoesDiagnostico = `${response.status()}:corpo-invalido`;
       }
@@ -178,6 +181,10 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
     const estado = (await aprovacao.innerText().catch(() => "sem-texto"))
       .replace(/\s+/g, " ")
       .slice(0, 240);
+    marcarDiagnosticoS170(
+      "s170-rpc",
+      `HISTORICO=${atestacoesDiagnostico}; ${respostasRpc.slice(-4).join(",")}`,
+    );
     throw new Error(`S170_HISTORICO=${estado}; RPC=${atestacoesDiagnostico}`);
   }
 });
@@ -253,6 +260,7 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
   }
   try {
     // Manter a sessão do operador aberta durante as duas alterações administrativas.
+    marcarEtapaS170("login do operador para revogação");
     await entrar(
       operador,
       exigir(cfg.email, "SSO_S170_EMAIL"),
@@ -279,6 +287,7 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
         respostasPermissao.push("sso_autorizar_acao:falha-rede");
     });
     await abrirCalendario();
+    marcarEtapaS170("confirmar bloqueio inicial do operador");
     try {
       await expect(
         operador.getByText("Você está sem permissão para gerir o calendário deste Cliente."),
@@ -297,6 +306,7 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     );
     await administrador.getByRole("button", { name: "Configurações" }).click();
     await administrador.getByRole("button", { name: "Capacidades" }).click();
+    marcarEtapaS170("abrir gestão de capacidades");
     await expect(
       administrador.getByRole("heading", { name: "Capacidades e perfis" }),
     ).toBeVisible();
@@ -309,12 +319,14 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await administrador.getByRole("button", { name: "Conceder ação" }).click();
     await expect(administrador.getByText("Alteração registrada.")).toBeVisible();
 
+    marcarEtapaS170("confirmar concessão em sessão existente");
     const abasCliente = operador.getByRole("navigation", { name: "Áreas do Cliente 360" });
     await abasCliente.getByRole("button", { name: "Estrutura" }).click();
     await abasCliente.getByRole("button", { name: "Preventivas" }).click();
     await expect(operador.getByRole("region", { name: "Calendário contratual" })).toBeVisible();
     await expect(operador.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeVisible();
 
+    marcarEtapaS170("criar plano autoaprovado");
     const nomePlano = `Plano autoaprovado S170 ${crypto.randomUUID()}`;
     const nomeRotina = `Rotina autoaprovada S170 ${crypto.randomUUID()}`;
     const planos = operador.getByRole("region", { name: "Planos de Manutenção" });
@@ -351,12 +363,14 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await itemPlano.getByRole("button", { name: "Confirmar aprovação" }).click();
     await expect(itemPlano).toContainText("aprovado");
 
+    marcarEtapaS170("revogar concessão administrativa");
     await administrador.getByLabel("Motivo da alteração").fill("Revogação sintética S170");
     const concessoes = administrador.getByRole("heading", { name: "Concessões" }).locator("..");
     const concessao = concessoes.getByText(/Gerir Plano de Manutenção/).locator("..");
     await concessao.getByRole("button", { name: "Revogar" }).click();
     await expect(administrador.getByText("Alteração registrada.")).toBeVisible();
 
+    marcarEtapaS170("verificar revogação na sessão do operador");
     await operador.getByRole("button", { name: "Estrutura" }).click();
     await operador.getByRole("button", { name: "Preventivas" }).click();
     await expect(

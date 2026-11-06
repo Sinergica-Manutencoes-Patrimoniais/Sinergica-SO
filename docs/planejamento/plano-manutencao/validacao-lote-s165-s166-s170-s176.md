@@ -20,6 +20,11 @@ alwaysApply: false
 - Auditoria remota anterior da PR #71 parou no `audit:esteira` por oito ADRs 1662–1669 sem frontmatter; os documentos novos da branch tinham o mesmo problema. Frontmatter SDD foi acrescentado mecanicamente, preservando o conteúdo, e `pnpm run audit:esteira` agora passa com **2.596 documentos**.
 - O `db-tests` da PR #71 usava CLI `latest` e parou no `supabase start`; aquela execução é anterior à pinagem 2.114.0 desta branch. A validação local limpa com 2.114.0 passou a seleção SQL completa. A execução GitHub do candidato atual ainda não ocorreu.
 - Os hashes do overlay S165 foram atualizados após a correção da migration 1823 e dos testes de reconciliação; isso remove a divergência que bloquearia o runner isolado antes do ensaio.
+- Na rodada seguinte, S165 passou no run `42243112927` (`6a63ce06`). S166 (`42243611673`), S170 (`42243612812`) e S176 (`42243614669`) concluíram migrations no clone isolado, mas falharam nos E2E visuais.
+- O diagnóstico S176 confirmou que a tela desmontava o formulário de Grupo durante o refetch, antes de localizar `Local`. A UI agora mantém o formulário montado e desabilita o envio durante fetch/erro; falta repetir o fluxo isolado.
+- S166 chegou à selagem das 501 Visitas, mas não registrou a RPC de confirmação nem o recibo esperado. O E2E agora coleta o texto final e o corpo resumido da RPC para localizar a condição de bloqueio.
+- S170 confirmou HTTP 200 na aprovação e na leitura do histórico, sem exibir a justificativa recém-gravada; a revogação excedeu o timeout. O E2E agora preserva as justificativas retornadas e marca etapas da jornada para identificar o ponto preciso.
+- A rodada integrada final destas correções ainda precisa ser disparada. Nenhuma das três falhas atuais autoriza merge ou homologação; S165 segue com o run anterior aprovado e código inalterado nesta correção.
 
 ## Atualização dos E2E isolados — 2026-11-06
 

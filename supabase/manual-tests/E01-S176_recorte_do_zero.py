@@ -427,13 +427,13 @@ def main(opcoes):
             proxy_s165 = s165_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s170_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s170_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "c3a72aaa262828944ec2406a7de348653b89443dafdbe81604f80be79ae23ad2":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "485a6b5c98a4e80bc14ac100a2e029a31458ab0c9b1d1b5562f8f36384a18fa2":
                 raise RuntimeError("Driver UI S170 divergente")
             import s170_ui_isolada
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s166_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s166_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "dd37a60d5a22eace9568cac059105bcce9011909218058901e00b2d1676ee7b2":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "9424e6c1ea14b92473af13acfd8c0048d150936d1ec004a5df509ff1583284de":
                 raise RuntimeError("Driver UI S166 divergente")
             import s166_ui_isolada
             proxy_s166 = s166_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")

@@ -160,15 +160,21 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
     )
       return;
     let codigo = "ok";
-    if (!response.ok()) {
-      try {
-        codigo = String((await response.json())?.code ?? "erro").slice(0, 24);
-      } catch {
-        codigo = "erro";
+    try {
+      const corpo = await response.json();
+      if (!response.ok()) codigo = String(corpo?.code ?? "erro").slice(0, 24);
+      if (endpoint === "sso_confirmar_mudanca_dia_v2") {
+        codigo =
+          `${codigo}:movidas=${corpo?.visitasMovidas ?? corpo?.visitas_movidas ?? "?"}`.slice(
+            0,
+            60,
+          );
       }
+    } catch {
+      codigo = response.ok() ? "corpo-invalido" : "erro";
     }
     respostasFotografia.push(`${endpoint}:${response.status()}:${codigo}`);
-    marcarDiagnostico("s166-rpc", respostasFotografia.slice(-3).join(","));
+    marcarDiagnostico("s166-rpc", respostasFotografia.slice(-6).join(","));
   });
   page.on("requestfailed", (request) => {
     const endpoint = new URL(request.url()).pathname.split("/").pop() ?? "";
@@ -181,7 +187,7 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
       ].includes(endpoint)
     ) {
       respostasFotografia.push(`${endpoint}:falha-rede`);
-      marcarDiagnostico("s166-rpc", respostasFotografia.slice(-3).join(","));
+      marcarDiagnostico("s166-rpc", respostasFotografia.slice(-6).join(","));
     }
   });
   marcarEtapa("iniciar fotografia");
@@ -219,7 +225,14 @@ test("revisa e confirma fotografia completa de 501 Visitas no clone sintético",
   await lote.getByLabel("Conferi todas as páginas e autorizo esta alteração atômica").check();
   marcarEtapa("confirmar movimentação das 501 Visitas");
   await lote.getByRole("button", { name: "Confirmar alteração de 501 Visitas" }).click();
-  await expect(lote.getByText(/Concluído: 501 movidas/)).toBeVisible();
+  try {
+    await expect(lote.getByText(/Concluído: 501 movidas/)).toBeVisible({ timeout: 15_000 });
+  } catch {
+    const estado = (await lote.innerText().catch(() => "sem-texto"))
+      .replace(/\s+/g, " ")
+      .slice(0, 320);
+    throw new Error(`S166_CONFIRM=${estado}; RPC=${respostasFotografia.slice(-6).join(",")}`);
+  }
 });
 
 test("nega calendário no segundo Cliente sem iniciar uma fotografia", async ({ page }) => {
