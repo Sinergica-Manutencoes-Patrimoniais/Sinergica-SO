@@ -490,8 +490,8 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await expect(administrador.getByText("Alteração registrada.")).toBeVisible();
 
     marcarEtapaS170("verificar revogação na sessão do operador");
-    await operador.getByRole("button", { name: "Estrutura" }).click();
-    await operador.getByRole("button", { name: "Preventivas" }).click();
+    await abasCliente.getByRole("button", { name: "Estrutura" }).click();
+    await abasCliente.getByRole("button", { name: "Preventivas" }).click();
     await expect(
       operador.getByText("Você está sem permissão para gerir o calendário deste Cliente."),
     ).toBeVisible();
