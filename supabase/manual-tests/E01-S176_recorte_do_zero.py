@@ -415,6 +415,14 @@ def main(opcoes):
         aprovacao_1804 = s165_aprovacao_1804_isolada.preparar(ROOT)
     if opcoes.concorrencia_parcial and not opcoes.integracao_candidata:
         raise RuntimeError("Concorrência parcial exige --integracao-candidata")
+    if opcoes.fixtures_pgtap_ci:
+        if not opcoes.integracao_candidata or not opcoes.diagnostico_ac5 or not opcoes.isolamento_1810 or not opcoes.gates_1816 or opcoes.fixtures_pgtap:
+            raise RuntimeError("pgTAP CI exige integração, AC5, isolamento 1810 e gates 1816, sem fixtures duplicadas")
+        driver = ROOT / "supabase/manual-tests/s176_pgtap_ci_isolada.py"
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "c481b6a5ff09762c4278a2437d734f3b31e9b89f7041811319d3ec79fba8b633":
+            raise RuntimeError("Driver pgTAP CI divergente")
+        import s176_pgtap_ci_isolada
+        fixtures = s176_pgtap_ci_isolada.preparar(ROOT)
     if opcoes.fixtures_pgtap:
         if not opcoes.integracao_candidata:
             raise RuntimeError("Fixtures exigem --integracao-candidata")
@@ -829,7 +837,7 @@ end; $$;"""
         if query("select not habilitado from config.sso_estrutura_cliente_leitura_gate where id") != "t":
             raise RuntimeError("Gate de isolamento inicial aberto ou ausente")
         # Um runner verifica baseline e rollback para todas as fixtures pgTAP selecionadas.
-        s176_runner_pgtap.executar(CONTAINER, (fixtures or []) + fixture_1810, sql, query, watchdog_triggered)
+        s176_runner_pgtap.executar(CONTAINER, fixtures if opcoes.fixtures_pgtap_ci else (fixtures or []) + fixture_1810, sql, query, watchdog_triggered)
     elif fixtures is not None:
         s176_runner_pgtap.executar(CONTAINER, fixtures, sql, query, watchdog_triggered)
     if aprovacao_1804 is not None:
@@ -1008,6 +1016,7 @@ if __name__ == "__main__":
     grupo = parser.add_mutually_exclusive_group()
     grupo.add_argument("--diagnostico-0415", action="store_true", help="Antecipa duas ações somente no clone; resultado não prova recorte implantável.")
     grupo.add_argument("--integracao-candidata", action="store_true", help="Inclui migrations originais candidatas, sem seeds artificiais; não autoriza release.")
+    parser.add_argument("--fixtures-pgtap-ci", action="store_true", help="Executa seleção SQL da CI no clone; não equivale a supabase start.")
     parser.add_argument("--fixtures-pgtap", action="store_true", help="Executa quatro fixtures sintéticas apenas no candidato de integração descartável.")
     parser.add_argument("--concorrencia-parcial", action="store_true", help="Executa dois cenários concorrentes parciais apenas no candidato de integração descartável.")
     parser.add_argument("--aprovacao-1804", action="store_true", help="Aplica 1804 fixada e executa fixture sintética com rollback; exige integração candidata.")
