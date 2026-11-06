@@ -19,15 +19,34 @@ const pronto = Object.values(cfg).every((v) => typeof v === "string" && v.length
 const operadorId = "16891000-0000-4000-8000-000000000001";
 function local(valor: string): string {
   const url = new URL(valor);
-  if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || url.username || url.password || url.search || url.hash)
+  if (
+    url.protocol !== "http:" ||
+    url.hostname !== "127.0.0.1" ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  )
     throw new Error("Ensaio S170 exige origem sintética HTTP em 127.0.0.1");
   return url.origin;
+}
+function exigir(valor: string | undefined, nome: string): string {
+  if (!valor) throw new Error(`Fixture S170 sem ${nome}.`);
+  return valor;
 }
 function conferirBanco(valor: string): void {
   const url = new URL(valor);
   const id = process.env.SSO_RECORTE_ID;
-  if (!id || !/^[0-9a-f]{12}$/.test(id) || !['postgres:', 'postgresql:'].includes(url.protocol)
-      || url.hostname !== `sso-recorte-${id}-db` || url.username || url.password || url.search || url.hash)
+  if (
+    !id ||
+    !/^[0-9a-f]{12}$/.test(id) ||
+    !["postgres:", "postgresql:"].includes(url.protocol) ||
+    url.hostname !== `sso-recorte-${id}-db` ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  )
     throw new Error("Banco do ensaio S170 não corresponde ao clone atestado");
 }
 function marcarDiagnosticoS170(tipo: string, descricao: string) {
@@ -51,18 +70,37 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
   if (process.env.SSO_S170_FIXTURE_OBRIGATORIA === "1" && (!pronto || !caminho))
     throw new Error("Fixture S170 obrigatória incompleta");
   test.skip(!pronto || !caminho, "Fixture sintética de retorno S170 não configurada");
-  const app = local(cfg.app!);
-  const api = local(cfg.api!);
-  conferirBanco(cfg.banco!);
-  if (!caminho!.startsWith("/") || caminho!.startsWith("//") || new URL(caminho!, app).origin !== app)
+  const caminhoRetorno = exigir(caminho, "SSO_S170_RETORNO_PATH");
+  const app = local(exigir(cfg.app, "SSO_S170_APP_URL"));
+  const api = local(exigir(cfg.api, "SSO_S170_SUPABASE_URL"));
+  conferirBanco(exigir(cfg.banco, "SSO_S170_DB_URL"));
+  if (
+    !caminhoRetorno.startsWith("/") ||
+    caminhoRetorno.startsWith("//") ||
+    new URL(caminhoRetorno, app).origin !== app
+  )
     throw new Error("Caminho do retorno isolado inválido");
   const respostasRpc: string[] = [];
+  let atestacoesDiagnostico = "sem-resposta";
   page.on("response", async (response) => {
     const url = new URL(response.url());
     if (!url.pathname.startsWith("/rest/v1/rpc/sso_")) return;
+    if (url.pathname.endsWith("/rpc/sso_listar_atestacoes_pcm_mediada") && response.ok()) {
+      try {
+        const linhas = await response.json();
+        atestacoesDiagnostico = `${response.status()}:linhas=${Array.isArray(linhas) ? linhas.length : "formato-invalido"}:justificativa=${Array.isArray(linhas) && linhas.some((linha) => linha.justificativa === "Aprovação sintética S170")}`;
+        marcarDiagnosticoS170("s170-atestacoes", atestacoesDiagnostico);
+      } catch {
+        atestacoesDiagnostico = `${response.status()}:corpo-invalido`;
+      }
+    }
     let codigo = "ok";
     if (!response.ok()) {
-      try { codigo = String((await response.json())?.code ?? "erro").slice(0, 24); } catch { codigo = "erro"; }
+      try {
+        codigo = String((await response.json())?.code ?? "erro").slice(0, 24);
+      } catch {
+        codigo = "erro";
+      }
     }
     respostasRpc.push(`${url.pathname.split("/").pop()}:${response.status()}:${codigo}`);
     marcarDiagnosticoS170("s170-rpc", respostasRpc.slice(-4).join(","));
@@ -77,28 +115,36 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
   await page.routeWebSocket("**/*", (socket) => socket.close());
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
-    if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || ![app, api].includes(url.origin)) {
+    if (
+      url.protocol !== "http:" ||
+      url.hostname !== "127.0.0.1" ||
+      ![app, api].includes(url.origin)
+    ) {
       await route.abort();
       return;
     }
     await route.continue();
   });
   let loginNaApi = false;
-  page.on("request", (r) => { if (r.url().startsWith(`${api}/auth/v1/token`) && r.method() === "POST") loginNaApi = true; });
+  page.on("request", (r) => {
+    if (r.url().startsWith(`${api}/auth/v1/token`) && r.method() === "POST") loginNaApi = true;
+  });
   await page.goto(`${app}/login`);
-  await page.locator("#email").fill(cfg.email!);
-  await page.locator("#password").fill(cfg.senha!);
+  await page.locator("#email").fill(exigir(cfg.email, "SSO_S170_EMAIL"));
+  await page.locator("#password").fill(exigir(cfg.senha, "SSO_S170_SENHA"));
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page).not.toHaveURL(/\/login/);
   expect(loginNaApi).toBe(true);
   marcarEtapaS170("abrir retorno no Cliente 360");
-  await page.goto(new URL(caminho!, app).href);
+  await page.goto(new URL(caminhoRetorno, app).href);
   // HomePage mantém Cliente e aba em estado React: navegar pela interface real.
   await page.getByText("PCM · Operação", { exact: true }).first().click();
   await page.getByText("Clientes", { exact: true }).first().click();
   await page.getByText("Cliente fechamento sintético", { exact: true }).first().click();
   await page.getByText("Estrutura", { exact: true }).first().click();
-  const retorno = page.getByRole("listitem").filter({ hasText: "16891000-0000-4000-8000-000000000018" });
+  const retorno = page
+    .getByRole("listitem")
+    .filter({ hasText: "16891000-0000-4000-8000-000000000018" });
   await retorno.getByRole("button", { name: "Conferir evidências" }).click();
   const decisoes = page.getByRole("region", { name: "Decisões do retorno" });
   marcarEtapaS170("devolver retorno");
@@ -126,23 +172,36 @@ test("validador devolve, reabre e aprova retorno com histórico", async ({ page 
   await aprovacao.getByRole("checkbox", { name: /Conferi o retorno/ }).check();
   await aprovacao.getByRole("button", { name: "Atestar e aprovar retorno" }).click();
   await expect(aprovacao.getByText(/Retorno aprovado pelo PCM/)).toBeVisible();
-  await expect(aprovacao.getByText(/Aprovação sintética S170/)).toBeVisible();
+  try {
+    await expect(aprovacao.getByText(/Aprovação sintética S170/)).toBeVisible({ timeout: 15_000 });
+  } catch {
+    const estado = (await aprovacao.innerText().catch(() => "sem-texto"))
+      .replace(/\s+/g, " ")
+      .slice(0, 240);
+    throw new Error(`S170_HISTORICO=${estado}; RPC=${atestacoesDiagnostico}`);
+  }
 });
 
-test("administrador concede e revoga plano.gerir e operador com sessão aberta recebe estado atual", async ({ browser }) => {
+test("administrador concede e revoga plano.gerir e operador com sessão aberta recebe estado atual", async ({
+  browser,
+}) => {
   if (process.env.SSO_S170_FIXTURE_OBRIGATORIA === "1" && !pronto)
     throw new Error("Fixture S170 obrigatória incompleta");
   test.skip(!pronto, "Fixture sintética de capacidades S170 não configurada");
-  const app = local(cfg.app!);
-  const api = local(cfg.api!);
-  conferirBanco(cfg.banco!);
+  const app = local(exigir(cfg.app, "SSO_S170_APP_URL"));
+  const api = local(exigir(cfg.api, "SSO_S170_SUPABASE_URL"));
+  conferirBanco(exigir(cfg.banco, "SSO_S170_DB_URL"));
   const administrador = await browser.newPage();
   const operador = await browser.newPage();
   for (const current of [administrador, operador]) {
     await current.routeWebSocket("**/*", (socket) => socket.close());
     await current.route("**/*", async (route) => {
       const url = new URL(route.request().url());
-      if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || ![app, api].includes(url.origin)) {
+      if (
+        url.protocol !== "http:" ||
+        url.hostname !== "127.0.0.1" ||
+        ![app, api].includes(url.origin)
+      ) {
         await route.abort();
         return;
       }
@@ -162,7 +221,9 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
         try {
           const corpo = await response.json();
           codigo = String(corpo.error_code ?? corpo.code ?? corpo.error ?? "erro").slice(0, 40);
-        } catch { /* só status */ }
+        } catch {
+          /* só status */
+        }
         respostaAuth = `${response.status()}:${codigo}`;
       }
     });
@@ -173,7 +234,10 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     try {
       await expect(current).not.toHaveURL(/\/login/);
     } catch {
-      const alertas = (await current.getByRole("alert").allTextContents()).join(" ").replace(/\s+/g, " ").slice(0, 160);
+      const alertas = (await current.getByRole("alert").allTextContents())
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .slice(0, 160);
       throw new Error(`LOGIN_STAYED; AUTH=${respostaAuth}; alerta=${alertas || "sem-alerta"}`);
     }
   }
@@ -182,12 +246,18 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await operador.getByText("PCM · Operação", { exact: true }).first().click();
     await operador.getByText("Clientes", { exact: true }).first().click();
     await operador.getByText("Cliente fechamento sintético", { exact: true }).first().click();
-    await operador.getByRole("navigation", { name: "Áreas do Cliente 360" })
-      .getByRole("button", { name: "Preventivas" }).click();
+    await operador
+      .getByRole("navigation", { name: "Áreas do Cliente 360" })
+      .getByRole("button", { name: "Preventivas" })
+      .click();
   }
   try {
     // Manter a sessão do operador aberta durante as duas alterações administrativas.
-    await entrar(operador, cfg.email!, cfg.senha!);
+    await entrar(
+      operador,
+      exigir(cfg.email, "SSO_S170_EMAIL"),
+      exigir(cfg.senha, "SSO_S170_SENHA"),
+    );
     const respostasPermissao: string[] = [];
     operador.on("response", async (response) => {
       if (!new URL(response.url()).pathname.endsWith("/rpc/sso_autorizar_acao")) return;
@@ -196,29 +266,46 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
         const corpo = await response.text();
         if (corpo === "false" || corpo === "true") resultado = corpo;
         else resultado = String(JSON.parse(corpo)?.code ?? "erro").slice(0, 24);
-      } catch { /* o status HTTP segue útil sem corpo */ }
-      respostasPermissao.push(`${new URL(response.url()).pathname.split("/").pop()}:${response.status()}:${resultado}`);
+      } catch {
+        /* o status HTTP segue útil sem corpo */
+      }
+      respostasPermissao.push(
+        `${new URL(response.url()).pathname.split("/").pop()}:${response.status()}:${resultado}`,
+      );
     });
     operador.on("requestfailed", (request) => {
       const url = new URL(request.url());
-      if (url.pathname.endsWith("/rpc/sso_autorizar_acao")) respostasPermissao.push("sso_autorizar_acao:falha-rede");
+      if (url.pathname.endsWith("/rpc/sso_autorizar_acao"))
+        respostasPermissao.push("sso_autorizar_acao:falha-rede");
     });
     await abrirCalendario();
     try {
-      await expect(operador.getByText("Você está sem permissão para gerir o calendário deste Cliente.")).toBeVisible();
+      await expect(
+        operador.getByText("Você está sem permissão para gerir o calendário deste Cliente."),
+      ).toBeVisible();
     } catch {
       throw new Error(`RPC_AUTORIZAR_ACAO=${respostasPermissao.join(",") || "sem-resposta"}`);
     }
-    await expect(operador.getByText("Você está sem permissão para gerir Planos deste Cliente.")).toBeVisible();
+    await expect(
+      operador.getByText("Você está sem permissão para gerir Planos deste Cliente."),
+    ).toBeVisible();
 
-    await entrar(administrador, cfg.adminEmail!, cfg.adminSenha!);
+    await entrar(
+      administrador,
+      exigir(cfg.adminEmail, "SSO_S170_ADMIN_EMAIL"),
+      exigir(cfg.adminSenha, "SSO_S170_ADMIN_SENHA"),
+    );
     await administrador.getByRole("button", { name: "Configurações" }).click();
     await administrador.getByRole("button", { name: "Capacidades" }).click();
-    await expect(administrador.getByRole("heading", { name: "Capacidades e perfis" })).toBeVisible();
+    await expect(
+      administrador.getByRole("heading", { name: "Capacidades e perfis" }),
+    ).toBeVisible();
     await administrador.getByLabel("Motivo da alteração").fill("Concessão sintética S170");
     await administrador.getByLabel("Usuário", { exact: true }).selectOption(operadorId);
     await administrador.getByLabel("Ação", { exact: true }).selectOption("plano.gerir");
-    await administrador.getByLabel("Escopo", { exact: true }).selectOption(cfg.clienteA!);
+    await administrador
+      .getByLabel("Escopo", { exact: true })
+      .selectOption(exigir(cfg.clienteA, "SSO_S170_CLIENTE_A"));
     await administrador.getByRole("button", { name: "Conceder ação" }).click();
     await expect(administrador.getByText("Alteração registrada.")).toBeVisible();
 
@@ -240,11 +327,15 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     const formulario = rotinas.getByRole("region", { name: "Nova Rotina" });
     await formulario.getByLabel("Nome da Rotina").fill(nomeRotina);
     await formulario.getByLabel("Tipo de alvo").selectOption("sistema");
-    await formulario.getByLabel("Alvo da Rotina", { exact: true }).selectOption({ label: "Sistema sintético" });
+    await formulario
+      .getByLabel("Alvo da Rotina", { exact: true })
+      .selectOption({ label: "Sistema sintético" });
     await formulario.getByLabel("Modo").selectOption("calendario");
     await formulario.getByLabel("Intervalo").fill("1");
     await formulario.getByLabel("Unidade da recorrência").selectOption("meses");
-    await formulario.getByLabel("Data-base").fill(new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10));
+    await formulario
+      .getByLabel("Data-base")
+      .fill(new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10));
     await formulario.getByLabel("Tempo estimado em minutos").fill("15");
     await formulario.getByLabel("Referência do tempo").selectOption("total");
     await formulario.getByLabel("Instrução").fill("Inspecionar o Sistema sintético.");
@@ -268,8 +359,12 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
 
     await operador.getByRole("button", { name: "Estrutura" }).click();
     await operador.getByRole("button", { name: "Preventivas" }).click();
-    await expect(operador.getByText("Você está sem permissão para gerir o calendário deste Cliente.")).toBeVisible();
-    await expect(operador.getByText("Você está sem permissão para gerir Planos deste Cliente.")).toBeVisible();
+    await expect(
+      operador.getByText("Você está sem permissão para gerir o calendário deste Cliente."),
+    ).toBeVisible();
+    await expect(
+      operador.getByText("Você está sem permissão para gerir Planos deste Cliente."),
+    ).toBeVisible();
   } finally {
     await Promise.all([administrador.close(), operador.close()]);
   }

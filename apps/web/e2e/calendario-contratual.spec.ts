@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { type Page, expect, test } from "@playwright/test";
 
 const cfg = {
   app: process.env.SSO_S166_APP_URL,
@@ -18,16 +18,44 @@ const cfg = {
 function origemLoopback(valor: string | undefined): URL {
   if (!valor) throw new Error("Fixture E2E S166 incompleta.");
   const url = new URL(valor);
-  if (url.protocol !== "http:" || !["localhost", "127.0.0.1", "::1"].includes(url.hostname) || url.username || url.password || url.search || url.hash)
+  if (
+    url.protocol !== "http:" ||
+    !["localhost", "127.0.0.1", "::1"].includes(url.hostname) ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  )
     throw new Error("E2E S166 exige serviços HTTP sintéticos em loopback.");
   return url;
 }
 
 const app = origemLoopback(cfg.app);
 const api = origemLoopback(cfg.api);
-if (process.env.SSO_S166_E2E_ISOLADO !== "true" || cfg.api !== process.env.VITE_SUPABASE_URL || !cfg.anon || !cfg.emailA || !cfg.senhaA || !cfg.emailB || !cfg.senhaB || !cfg.clienteA || !cfg.clienteB || !cfg.contrato || !cfg.diaNovo || !cfg.vigencia)
+if (
+  process.env.SSO_S166_E2E_ISOLADO !== "true" ||
+  cfg.api !== process.env.VITE_SUPABASE_URL ||
+  !cfg.anon ||
+  !cfg.emailA ||
+  !cfg.senhaA ||
+  !cfg.emailB ||
+  !cfg.senhaB ||
+  !cfg.clienteA ||
+  !cfg.clienteB ||
+  !cfg.contrato ||
+  !cfg.diaNovo ||
+  !cfg.vigencia
+)
   throw new Error("Fixture E2E S166 incompleta ou URL Supabase diferente da app.");
-if (cfg.diaNovo !== "1" && cfg.diaNovo !== "2" && cfg.diaNovo !== "3" && cfg.diaNovo !== "4" && cfg.diaNovo !== "5" && cfg.diaNovo !== "6" && cfg.diaNovo !== "7")
+if (
+  cfg.diaNovo !== "1" &&
+  cfg.diaNovo !== "2" &&
+  cfg.diaNovo !== "3" &&
+  cfg.diaNovo !== "4" &&
+  cfg.diaNovo !== "5" &&
+  cfg.diaNovo !== "6" &&
+  cfg.diaNovo !== "7"
+)
   throw new Error("SSO_S166_DIA_NOVO deve estar entre 1 e 7.");
 
 async function restringirRede(page: Page) {
@@ -54,7 +82,15 @@ async function entrar(page: Page, email: string, senha: string) {
 
 async function abrirPreventivas(page: Page, cliente: string) {
   await page.getByText(cliente, { exact: true }).first().click();
-  await page.getByRole("region", { name: "Operação" }).getByRole("button", { name: "Preventivas", exact: true }).click();
+  await page
+    .getByRole("region", { name: "Operação" })
+    .getByRole("button", { name: "Preventivas", exact: true })
+    .click();
+}
+
+function exigir(valor: string | undefined, nome: string): string {
+  if (!valor) throw new Error(`Fixture E2E S166 sem ${nome}.`);
+  return valor;
 }
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -65,42 +101,93 @@ function marcarDiagnostico(tipo: string, descricao: string) {
 }
 const marcarEtapa = (etapa: string) => marcarDiagnostico("s166-etapa", etapa);
 
-test("revisa e confirma fotografia completa de 501 Visitas no clone sintético", async ({ page }) => {
+test("revisa e confirma fotografia completa de 501 Visitas no clone sintético", async ({
+  page,
+}) => {
   test.setTimeout(120_000);
   marcarEtapa("restringir rede");
   await restringirRede(page);
   marcarEtapa("entrar e abrir Cliente");
-  await entrar(page, cfg.emailA!, cfg.senhaA!);
-  await abrirPreventivas(page, cfg.clienteA!);
+  await entrar(
+    page,
+    exigir(cfg.emailA, "SSO_S166_EMAIL_A"),
+    exigir(cfg.senhaA, "SSO_S166_SENHA_A"),
+  );
+  let regrasDiagnostico = "sem-resposta";
+  page.on("response", async (response) => {
+    if (!new URL(response.url()).pathname.endsWith("/rpc/sso_listar_regras_calendario")) return;
+    if (!response.ok()) {
+      regrasDiagnostico = `${response.status()}:erro`;
+      return;
+    }
+    try {
+      const linhas = await response.json();
+      regrasDiagnostico = `${response.status()}:linhas=${Array.isArray(linhas) ? linhas.length : "formato-invalido"}:contrato=${Array.isArray(linhas) && linhas.some((linha) => linha.contrato_id === cfg.contrato)}`;
+    } catch {
+      regrasDiagnostico = `${response.status()}:corpo-invalido`;
+    }
+  });
+  await abrirPreventivas(page, exigir(cfg.clienteA, "SSO_S166_CLIENTE_A"));
 
   marcarEtapa("abrir Calendário contratual");
   const calendario = page.getByRole("region", { name: "Calendário contratual" });
   await expect(calendario).toBeVisible();
-  const regra = calendario.getByRole("listitem").filter({ hasText: `Contrato ${cfg.contrato}` }).first();
-  await expect(regra).toContainText(/versão \d+/);
-  await regra.getByLabel("Novo dia").first().selectOption(cfg.diaNovo!);
-  await regra.getByLabel("Vigência").first().fill(cfg.vigencia!);
+  const regra = calendario
+    .getByRole("listitem")
+    .filter({ hasText: `Contrato ${cfg.contrato}` })
+    .first();
+  try {
+    await expect(regra).toContainText(/versão \d+/, { timeout: 15_000 });
+  } catch {
+    const estado = (await calendario.innerText().catch(() => "sem-texto"))
+      .replace(/\s+/g, " ")
+      .slice(0, 240);
+    throw new Error(`S166_REGRA_CALENDARIO=${estado}; RPC=${regrasDiagnostico}`);
+  }
+  await regra.getByLabel("Novo dia").first().selectOption(exigir(cfg.diaNovo, "SSO_S166_DIA_NOVO"));
+  await regra.getByLabel("Vigência").first().fill(exigir(cfg.vigencia, "SSO_S166_VIGENCIA"));
   const lote = regra.getByRole("region", { name: "Alteração de dia contratual em lote" });
   const respostasFotografia: string[] = [];
   page.on("response", async (response) => {
     const endpoint = new URL(response.url()).pathname.split("/").pop() ?? "";
-    if (!new Set(["sso_iniciar_mudanca_dia_v2", "sso_pagina_mudanca_dia_v2", "sso_selar_mudanca_dia_v2", "sso_confirmar_mudanca_dia_v2"]).has(endpoint)) return;
+    if (
+      !new Set([
+        "sso_iniciar_mudanca_dia_v2",
+        "sso_pagina_mudanca_dia_v2",
+        "sso_selar_mudanca_dia_v2",
+        "sso_confirmar_mudanca_dia_v2",
+      ]).has(endpoint)
+    )
+      return;
     let codigo = "ok";
     if (!response.ok()) {
-      try { codigo = String((await response.json())?.code ?? "erro").slice(0, 24); } catch { codigo = "erro"; }
+      try {
+        codigo = String((await response.json())?.code ?? "erro").slice(0, 24);
+      } catch {
+        codigo = "erro";
+      }
     }
     respostasFotografia.push(`${endpoint}:${response.status()}:${codigo}`);
     marcarDiagnostico("s166-rpc", respostasFotografia.slice(-3).join(","));
   });
   page.on("requestfailed", (request) => {
     const endpoint = new URL(request.url()).pathname.split("/").pop() ?? "";
-    if (["sso_iniciar_mudanca_dia_v2", "sso_pagina_mudanca_dia_v2", "sso_selar_mudanca_dia_v2", "sso_confirmar_mudanca_dia_v2"].includes(endpoint)) {
+    if (
+      [
+        "sso_iniciar_mudanca_dia_v2",
+        "sso_pagina_mudanca_dia_v2",
+        "sso_selar_mudanca_dia_v2",
+        "sso_confirmar_mudanca_dia_v2",
+      ].includes(endpoint)
+    ) {
       respostasFotografia.push(`${endpoint}:falha-rede`);
       marcarDiagnostico("s166-rpc", respostasFotografia.slice(-3).join(","));
     }
   });
   marcarEtapa("iniciar fotografia");
-  await lote.getByRole("button", { name: "Preparar fotografia completa das Visitas" }).click({ timeout: 10_000 });
+  await lote
+    .getByRole("button", { name: "Preparar fotografia completa das Visitas" })
+    .click({ timeout: 10_000 });
   marcarEtapa("aguardar disponibilidade de Retomar fotografia");
   const retomar = lote.getByRole("button", { name: /Retomar fotografia/ });
   await expect(retomar).toBeVisible({ timeout: 15_000 });
@@ -141,8 +228,14 @@ test("nega calendário no segundo Cliente sem iniciar uma fotografia", async ({ 
   page.on("request", (request) => {
     if (request.url().includes("sso_iniciar_mudanca_dia_v2")) iniciou = true;
   });
-  await entrar(page, cfg.emailB!, cfg.senhaB!);
-  await abrirPreventivas(page, cfg.clienteB!);
-  await expect(page.getByText("Você está sem permissão para gerir o calendário deste Cliente.")).toBeVisible();
+  await entrar(
+    page,
+    exigir(cfg.emailB, "SSO_S166_EMAIL_B"),
+    exigir(cfg.senhaB, "SSO_S166_SENHA_B"),
+  );
+  await abrirPreventivas(page, exigir(cfg.clienteB, "SSO_S166_CLIENTE_B"));
+  await expect(
+    page.getByText("Você está sem permissão para gerir o calendário deste Cliente."),
+  ).toBeVisible();
   expect(iniciou).toBe(false);
 });

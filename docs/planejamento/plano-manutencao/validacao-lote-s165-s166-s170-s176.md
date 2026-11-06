@@ -21,6 +21,15 @@ alwaysApply: false
 - O `db-tests` da PR #71 usava CLI `latest` e parou no `supabase start`; aquela execução é anterior à pinagem 2.114.0 desta branch. A validação local limpa com 2.114.0 passou a seleção SQL completa. A execução GitHub do candidato atual ainda não ocorreu.
 - Os hashes do overlay S165 foram atualizados após a correção da migration 1823 e dos testes de reconciliação; isso remove a divergência que bloquearia o runner isolado antes do ensaio.
 
+## Atualização dos E2E isolados — 2026-11-06
+
+- S165 passou no run `42236840424`, no commit `052f6fc9`; ainda não há repetição sobre o commit mais recente.
+- S166 falhou no run `42239496722` antes de iniciar a alteração: a tela não exibiu a regra do contrato sintético esperada pelo seletor. O resumo anterior não registrou o estado da lista nem a resposta da RPC.
+- S170 falhou no run `42239496782` depois da aprovação: as RPCs de aprovação e leitura responderam 200, mas a justificativa não apareceu no histórico; cenário de revogação também excedeu o timeout.
+- S176 falhou no run `42239496845` depois de abrir o formulário de Grupo Quantitativo. O último marco foi `formulário de grupo aberto`; logs não identificam qual interação de campo parou.
+- Foram adicionados diagnósticos de UI/API a S166, S170 e S176, com pins de hash atualizados nos runners. A validação conjunta ainda aguarda execução; nenhum teste foi reexecutado nesta etapa.
+- As quatro stories mantêm T016 aberto. Corrigir os fluxos com base nos próximos diagnósticos e validar o lote em conjunto antes de avançar ao merge.
+
 ## Evidência executada
 
 - Auditoria estática das quatro stories: não encontrou tarefas de código T001–T015 pendentes. Nesta rodada foi corrigido o setup E2E S170 (proxy/config/fixture ausentes; operador sem permissão inicial) e adicionada a jornada visual do criador autoaprovar o próprio Plano após concessão individual; execução do E2E permanece pendente. Superfícies S176 continuam atrás dos gates previstos. S166 V2 passou a validação integrada de 501 visitas; medição de capacidade ainda pendente.
@@ -57,7 +66,7 @@ alwaysApply: false
 
 ## Pendências para fechar T016 e homologação
 
-1. Executar E2E visual em runner GitHub dedicado e obter o job oficial `db-tests` verde no candidato rastreado. Reconciliar o manifesto separado do runner manual isolado se esse runner for usado para conferir toda a seleção do candidato.
+1. Corrigir as falhas UI identificadas e executar E2E visual em runner GitHub dedicado em lote; obter também o job oficial `db-tests` verde no candidato rastreado. Reconciliar o manifesto separado do runner manual isolado se esse runner for usado para conferir toda a seleção do candidato.
 2. Corrigir ou classificar as falhas restantes do `ci:local` e obter uma rodada final verde com `db-tests` habilitado. A suíte web passou com ambiente sintético, mas CI não concluiu; gates globais incluem funções não declaradas fora do escopo deste lote e `pcm-foto-grupo-segura` deliberadamente retida para revisão.
 3. Registrar a revisão adversarial local no PR e obter aprovação formal dos ADRs 1676–1681.
 4. Homologar os critérios de aceite antes de qualquer merge.
