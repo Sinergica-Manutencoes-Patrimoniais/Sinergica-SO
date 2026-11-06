@@ -421,6 +421,9 @@ def main(opcoes):
         driver = ROOT / "supabase/manual-tests/s176_pgtap_ci_isolada.py"
         if hashlib.sha256(driver.read_bytes()).hexdigest() != "c481b6a5ff09762c4278a2437d734f3b31e9b89f7041811319d3ec79fba8b633":
             raise RuntimeError("Driver pgTAP CI divergente")
+        runner = ROOT / "supabase/manual-tests/s176_runner_pgtap.py"
+        if hashlib.sha256(runner.read_bytes()).hexdigest() != "1ac6138302c0a5e800079b1572259a3ca8727b3bf8f40db1507172d366640a21":
+            raise RuntimeError("Runner pgTAP divergente")
         import s176_pgtap_ci_isolada
         fixtures = s176_pgtap_ci_isolada.preparar(ROOT)
     if opcoes.fixtures_pgtap:
