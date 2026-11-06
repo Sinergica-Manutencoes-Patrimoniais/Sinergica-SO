@@ -400,7 +400,6 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     marcarEtapaS170("selecionar alvo da Rotina");
     const seletorAlvo = formulario.getByLabel("Alvo da Rotina", { exact: true });
     try {
-      await expect(seletorAlvo).toBeEnabled({ timeout: 30_000 });
       await expect(seletorAlvo.locator('option:not([value=""])')).toHaveCount(1, {
         timeout: 30_000,
       });

@@ -1,6 +1,6 @@
 # Tasks — E01-S170: Permissões por ação e governança configurável do programa
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** implementação e pgTAP (12 assertions) passaram no clone isolado integrado; T018 para refetch do formulário e preservação do Plano em edição foi implementado, aguardando validação integrada. T016 permanece aberto para E2E, CI completa com db-tests, revisão formal e homologação; código escrito não equivale a PASS.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** implementação e pgTAP (12 assertions) passaram no clone isolado integrado; T018 para refetch do formulário e preservação do Plano em edição foi implementado. T019 estabiliza a seleção do alvo após a consulta carregar; aguarda validação integrada. T016 permanece aberto para E2E, CI completa com db-tests, revisão formal e homologação; código escrito não equivale a PASS.
 
 ### Estado da evidência no candidato
 
@@ -44,6 +44,7 @@
 - [ ] T016 Executar `specs/E01-S170-governanca-plano/quickstart.md`, testes focados, eval:spec com seleção conferida, ci:local e revisão adversarial; registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): a seleção pgTAP candidata passou 250 assertions no clone descartável; a CI local integrada ainda falhou em gates globais e testes. E2E, CI GitHub e homologação permanecem pendentes.
 - [X] T017 Corrigir consultas mediadas 1825–1827 para qualificar colunas `id`, cobrir listagens com regressão pgTAP e incluí-las no clone E2E descartável; tornar exato seletor acessível de alvo e atualizar pins. Execução fica em T016.
 - [X] T018 Preservar seletor de Alvo com opções já carregadas durante refetch da mesma chave e manter visível somente o Plano ativo enquanto a consulta da lista atualiza; cobrir seletor e workspace sem executar testes até validação final integrada (AC-1, AC-4). Confirmação de permissão/revisão no salvamento permanece obrigatória.
+- [X] T019 No E2E de governança, aguardar opção de Alvo não vazia antes de ler seu `value` e selecionar; remover a asserção `toBeEnabled` que divergia do estado nativo observado no ensaio anterior. A seleção e o runner permanecem sem execução nesta etapa e serão validados no lote integrado (AC-1, AC-4).
 
 ## Dependencies & Execution Order
 
